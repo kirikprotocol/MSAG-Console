@@ -14,7 +14,7 @@ public class FileSystemException extends AdminException {
     super(key);
   }
 
-  protected FileSystemException(String key, String causeMessage) {
-    super(key, causeMessage);
+  protected FileSystemException(String key, String ... args) {
+    super(key, args);
   }
 }

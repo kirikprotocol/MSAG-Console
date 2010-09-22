@@ -19,21 +19,25 @@ class FileSystemHS extends FileSystem {
   private String errStr;
 
   FileSystemHS(File baseDir, File... mirrorsDir) {
-    assert baseDir != null && mirrorsDir != null : "Some arguments are null";
+    if(baseDir == null || mirrorsDir == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     this.baseDir = baseDir;
     this.mirrorsDir = mirrorsDir;
   }
 
   @Override
-  public OutputStream getOutputStream(File file) throws AdminException {
-    assert file != null : "Some arguments are null";
+  public OutputStream getOutputStream(File file, boolean append) throws AdminException {
+    if(file == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     checkErrors();
     File[] mirrors = getMirrorsFiles(file);
     try {
       final FileOutputStream[] oss = new FileOutputStream[mirrorsDir.length];
       int i = 0;
       for (File f : mirrors) {
-        oss[i] = new FileOutputStream(f);
+        oss[i] = new FileOutputStream(f, append);
         i++;
       }
       return new HSFileOutputStream(file, oss);
@@ -46,7 +50,9 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public void rename(File file, File toFile) throws AdminException {
-    assert file != null && toFile != null : "Some arguments are null";
+    if(file == null || toFile == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     checkErrors();
 
     File[] files = new File[mirrorsDir.length + 1];
@@ -68,7 +74,9 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public void copy(File file, File toFile) throws AdminException {
-    assert file != null && toFile != null : "Some arguments are null";
+    if(file == null || toFile == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     checkErrors();
 
     File[] files = new File[mirrorsDir.length + 1];
@@ -93,7 +101,9 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public void delete(File file) throws AdminException {
-    assert file != null : "Some arguments are null";
+    if(file == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     checkErrors();
 
     File[] files = new File[mirrorsDir.length + 1];
@@ -111,7 +121,9 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public void mkdirs(File file) throws AdminException {
-    assert file != null : "Some arguments are null";
+    if(file == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     checkErrors();
 
     File[] files = new File[mirrorsDir.length + 1];
@@ -129,7 +141,9 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public boolean exists(File file) throws AdminException {
-    assert file != null : "Some arguments are null";
+    if(file == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     checkErrors();
 
     File[] files = new File[mirrorsDir.length + 1];

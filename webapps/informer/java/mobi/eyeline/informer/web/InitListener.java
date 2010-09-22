@@ -1,9 +1,6 @@
 package mobi.eyeline.informer.web;
 
-import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.util.xml.WebXml;
-import mobi.eyeline.informer.web.auth.Authenticator;
-import mobi.eyeline.informer.web.auth.AuthenticatorImpl;
 import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContextEvent;
@@ -29,21 +26,20 @@ public class InitListener implements ServletContextListener {
 
       WebXml webXml = new WebXml(new File(servletContextEvent.getServletContext().getRealPath("WEB-INF/web.xml")));
 
-      AdminContext adminContext;
 
       File webconfig = new File(System.getProperty("informer.config.webconfig"));
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
 
-      if(Mode.testMode) {
-        adminContext = (AdminContext)Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
-            getConstructor(File.class, File.class).newInstance(appBaseDir, webconfig);
-      }else {
-        adminContext = new AdminContext(appBaseDir, webconfig);
-      }
+//      if(Mode.testMode) {
+//        adminContext = (AdminContext)Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
+//            getConstructor(File.class, File.class).newInstance(appBaseDir, webconfig);
+//      }else {
+//        adminContext = new AdminContext(appBaseDir, webconfig);
+//      }
 
-      Authenticator authenticator = new AuthenticatorImpl(adminContext.getUsersManager());
+      WebConfig webConfig = new WebConfig(webconfig);
 
-      WebContext.init(authenticator, webXml, adminContext);
+      WebContext.init(webXml, webConfig, appBaseDir);
 
       servletContextEvent.getServletContext().setAttribute("informer-version", readVersion(servletContextEvent.getServletContext().getRealPath("META-INF")));
       

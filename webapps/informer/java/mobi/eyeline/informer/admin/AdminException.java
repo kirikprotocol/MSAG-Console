@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.admin;
 
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -7,30 +8,41 @@ public abstract class AdminException extends Exception {
 
   protected final String bundleName;
   protected final String key;
-  protected String causeMessage;
 
-  protected AdminException(String key, Throwable cause) {
+  protected String[] args;
+
+  protected AdminException(String bundleName, String key, String ... args) {
+    this.bundleName = bundleName;
+    this.key = key;
+    this.args = args;
+  }
+
+  protected AdminException(String bundleName, String key, Throwable cause, String ... args) {
+    super(cause);
+    this.bundleName = bundleName;
+    this.key = key;
+    this.args = args;
+  }
+
+  protected AdminException(String key, Throwable cause, String ... args) {
     super(cause);
     this.bundleName = getClass().getName();
     this.key = key;
+    this.args = args;
   }
 
-  protected AdminException(String key) {
+  protected AdminException(String key, String ... args) {
     this.bundleName = getClass().getName();
     this.key = key;
-  }
-
-  protected AdminException(String key, String causeMessage) {
-    this.bundleName = getClass().getName();
-    this.key = key;
-    this.causeMessage = causeMessage;
+    this.args = args;
   }
 
   public String getMessage(Locale locale) {
     String result = ResourceBundle.getBundle(bundleName, locale).getString(key);
-    if (causeMessage != null)
-      result += ". " + causeMessage;
-    else if (getCause() != null) {
+    if(args != null && args.length > 0) {
+      result = MessageFormat.format(result, (Object[])args);
+    }
+    if (getCause() != null) {
       Throwable ct = getCause();
       if (ct instanceof AdminException) {
         result += ". " + ((AdminException)ct).getMessage(locale);

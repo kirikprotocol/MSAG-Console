@@ -81,11 +81,23 @@
   </managed-bean>
 
 
+  <managed-bean>
+    <managed-bean-name>journal</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.journal.JournalController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
 
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
       <to-view-id>/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>JOURNAL</from-outcome>
+      <to-view-id>/journal/index.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
   </navigation-rule>

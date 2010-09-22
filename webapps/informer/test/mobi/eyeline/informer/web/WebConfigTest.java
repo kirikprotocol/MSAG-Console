@@ -1,5 +1,7 @@
-package mobi.eyeline.informer.admin;
+package mobi.eyeline.informer.web;
 
+import mobi.eyeline.informer.admin.InstallationType;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -12,17 +14,16 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Aleksandr Khalitov
  */
-public class AdminContextConfigTest {
+public class WebConfigTest {
 
-
-  private static AdminContextConfig config;
+  private static WebConfig config;
 
   @BeforeClass
   public static void init() throws Exception{
     InputStream is = null;
     try{
-      is = AdminContextConfigTest.class.getResourceAsStream("webconfig.xml");
-      config = new AdminContextConfig(is);
+      is = WebConfigTest.class.getResourceAsStream("webconfig.xml");
+      config = new WebConfig(is);
     }finally {
       if(is != null) {
         try{
@@ -33,21 +34,21 @@ public class AdminContextConfigTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testNull1() throws AdminException{
+  public void testNull1() throws InitException{
     InputStream is = null;
-    new AdminContextConfig(is);
+    new WebConfig(is);
   }
   
   @Test(expected = IllegalArgumentException.class)
-  public void testNull2() throws AdminException{
+  public void testNull2() throws InitException {
     File f = null;
-    new AdminContextConfig(f);
+    new WebConfig(f);
   }
 
   @Test
   public void testData() throws Exception{
     assertEquals(config.getUsersFile(), "test/ru/novosoft/smsc/admin/users/users.xml");
-    assertEquals(config.getInstallationType(), InstallationType.HA);
+    Assert.assertEquals(config.getInstallationType(), InstallationType.HA);
     assertEquals(config.getHSDaemonHost(), "localhost");
     assertEquals(config.getSingleDaemonHost(), "localhost");
     assertEquals(config.getHSDaemonPort(), 10000);
@@ -56,6 +57,7 @@ public class AdminContextConfigTest {
     assertEquals(config.getAppMirrorDirs()[0].getAbsoluteFile(), new File("mirror").getAbsoluteFile());
     assertEquals(config.getHSDaemonHosts().size(), 1);
     assertEquals(config.getHSDaemonHosts().iterator().next(),"sunfire");
+    assertEquals(config.getJournalDir(), "journal");
   }
 
 }

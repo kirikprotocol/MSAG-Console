@@ -1,5 +1,7 @@
-package mobi.eyeline.informer.admin;
+package mobi.eyeline.informer.web;
 
+import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.InstallationType;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigSection;
@@ -12,29 +14,28 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Класс для работы с конфигурационным файлом webconfig.xml
- * @author Artem Snopkov
+ * @author Aleksandr Khalitov
  */
-class AdminContextConfig {
+@SuppressWarnings({"EmptyCatchBlock"})
+public class WebConfig {
+
 
   private final XmlConfig webconfig = new XmlConfig();
 
-  public AdminContextConfig(InputStream is) throws AdminException{
+  public WebConfig(InputStream is) throws InitException{
     load(is);
   }
 
-  public AdminContextConfig(File file) throws AdminException {
+  public WebConfig(File file) throws InitException {
     if(file == null) {
-      throw new IllegalArgumentException("Some arguments are null");      
+      throw new IllegalArgumentException("Some arguments are null");
     }
     InputStream is = null;
     try{
       is = new FileInputStream(file);
       load(is);
     }catch (IOException e){
-      throw new AdminContextException("Unable to load " + file.getAbsolutePath() + ".Cause: " + e.getMessage(), e);
-    }catch (AdminException e){
-      throw new AdminContextException("Unable to load " + file.getAbsolutePath() + ".Cause: " + e.getMessage(), e);
+      throw new InitException("Unable to load " + file.getAbsolutePath() + ".Cause: " + e.getMessage(), e);
     }finally {
       if(is != null) {
         try{
@@ -44,14 +45,14 @@ class AdminContextConfig {
     }
   }
 
-  private void load(InputStream is) throws AdminException{
+  private void load(InputStream is) throws InitException{
     if(is == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     try {
       this.webconfig.load(is);
     } catch (XmlConfigException e) {
-      throw new AdminContextException("Unable to load .Cause: " + e.getMessage(), e);
+      throw new InitException("Unable to load .Cause: " + e.getMessage(), e);
     }
   }
 
@@ -65,9 +66,9 @@ class AdminContextConfig {
       else if (installationTypeStr.equalsIgnoreCase("single"))
         return InstallationType.SINGLE;
       else
-        throw new AdminContextException("unknown_inst_type", installationTypeStr);
+        throw new WebConfigException("unknown_inst_type", installationTypeStr);
     } catch (XmlConfigException e) {
-      throw new AdminContextException("invalid_config", e);
+      throw new WebConfigException("invalid_config", e);
     }
   }
 
@@ -77,7 +78,7 @@ class AdminContextConfig {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getString("host");
     } catch (XmlConfigException e) {
-      throw new AdminContextException("invalid_config", e);
+      throw new WebConfigException("invalid_config", e);
     }
   }
 
@@ -87,7 +88,7 @@ class AdminContextConfig {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getInt("port");
     } catch (XmlConfigException e) {
-      throw new AdminContextException("invalid_config", e);
+      throw new WebConfigException("invalid_config", e);
     }
   }
 
@@ -98,7 +99,7 @@ class AdminContextConfig {
       File mirrorPath = new File(installation.getString("mirrorpath"));
       return new File[]{mirrorPath};
     } catch (XmlConfigException e) {
-      throw new AdminContextException("invalid_config", e);
+      throw new WebConfigException("invalid_config", e);
     }
   }
 
@@ -108,7 +109,7 @@ class AdminContextConfig {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getString("host");
     } catch (XmlConfigException e) {
-      throw new AdminContextException("invalid_config", e);
+      throw new WebConfigException("invalid_config", e);
     }
   }
 
@@ -117,7 +118,7 @@ class AdminContextConfig {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getInt("port");
     } catch (XmlConfigException e) {
-      throw new AdminContextException("invalid_config", e);
+      throw new WebConfigException("invalid_config", e);
     }
   }
 
@@ -130,7 +131,7 @@ class AdminContextConfig {
 
       return result;
     } catch (XmlConfigException e) {
-      throw new AdminContextException("invalid_config", e);
+      throw new WebConfigException("invalid_config", e);
     }
   }
 
@@ -139,9 +140,17 @@ class AdminContextConfig {
       XmlConfigSection system = webconfig.getSection("system");
       return system.getString("users file");
     } catch (XmlConfigException e) {
-      throw new AdminContextException("invalid_config", e);
-    }    
+      throw new WebConfigException("invalid_config", e);
+    }
   }
 
+  public String getJournalDir() throws AdminException {
+    try {
+      XmlConfigSection system = webconfig.getSection("system");
+      return system.getString("journal dir");
+    } catch (XmlConfigException e) {
+      throw new WebConfigException("invalid_config", e);
+    }
+  }
 
 }

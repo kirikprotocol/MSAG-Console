@@ -37,7 +37,7 @@ public class FileSystemHSTest {
   private void createRandomFile(File file) throws AdminException, IOException {
     OutputStream os = null;
     try {
-      os = fs.getOutputStream(file);
+      os = fs.getOutputStream(file, false);
 
       for (int i = 0; i < 1000; i++)
         os.write(i);
@@ -186,6 +186,6 @@ public class FileSystemHSTest {
     } catch (AdminException e) {
     }
 
-    fs.getOutputStream(baseFile);
+    fs.getOutputStream(baseFile, false);
   }
 }

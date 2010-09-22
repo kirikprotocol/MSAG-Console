@@ -43,10 +43,11 @@ public abstract class FileSystem {
    * По названию файла, возвращает выходной поток
    *
    * @param file файл
+   * @param append Добавлять в файл или переписать
    * @return поток
    * @throws AdminException ошибка ввода/вывода
    */
-  public abstract OutputStream getOutputStream(File file) throws AdminException;
+  public abstract OutputStream getOutputStream(File file, boolean append) throws AdminException;
 
   /**
    * Переименовывает один файл в другой

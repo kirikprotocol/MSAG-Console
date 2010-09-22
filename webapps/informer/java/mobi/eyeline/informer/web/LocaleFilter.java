@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.web;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.web.users.User;
 import org.apache.log4j.Logger;
 
 import javax.servlet.*;
@@ -29,7 +29,7 @@ public class LocaleFilter implements Filter {
     User u = null;
     if(p != null) {
       try {
-        u = WebContext.getInstance().getUserSettings().getUser(p.getName());
+        u = WebContext.getInstance().getConfiguration().getUserSettings().getUser(p.getName());
       } catch (AdminException e) {
         logger.error(e,e);
       }

@@ -1,8 +1,7 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
-import mobi.eyeline.informer.admin.users.TestUsersManager;
-import mobi.eyeline.informer.admin.users.UsersManagerTest;
+import mobi.eyeline.informer.web.users.UsersManagerTest;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -13,27 +12,19 @@ import java.io.IOException;
  */
 public class TestAdminContext extends AdminContext {
 
-  private void prepareServices(AdminContextConfig cfg) throws IOException, AdminException {
+  private void prepareServices(File usersFile) throws IOException, AdminException {
 
-    File usersFile = new File(cfg.getUsersFile());
     TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), usersFile, false);
 
   }
 
-  public TestAdminContext(File appBaseDir, File initFile) throws AdminException {
-    AdminContextConfig cfg = new AdminContextConfig(initFile);
+  public TestAdminContext(File appBaseDir, InstallationType type, File[] appMirrorDirs) throws AdminException {
     this.appBaseDir = appBaseDir;
 //    this.servicesDir = new File(appBaseDir, "services");
-    this.instType = cfg.getInstallationType();
+    this.instType = type;
 
 //    if (!servicesDir.exists())
 //      servicesDir.mkdirs();
-
-    try {
-      prepareServices(cfg);
-    } catch (IOException e) {
-      throw new AdminContextException("Can't create services dir!");
-    }
 
 
     if (instType == InstallationType.SINGLE) {
@@ -43,15 +34,11 @@ public class TestAdminContext extends AdminContext {
     }
     fileSystem = new TestFileSystem();
 
-    File usersFile = new File(cfg.getUsersFile());
-
-    usersManager = new TestUsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
-
   }
-
-  public TestAdminContext() throws AdminException {
-    this(new File("."), new File("test", "webconfig.xml"));
-  }
+//
+//  public TestAdminContext() throws AdminException {
+//    this(new File("."), new File("test", "webconfig.xml"));
+//  }
 
 
 

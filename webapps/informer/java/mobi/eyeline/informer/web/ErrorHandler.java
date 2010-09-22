@@ -16,11 +16,12 @@ public class ErrorHandler {
   public void handleException(FacesContext context, Exception ex) throws Throwable {
     if(ex.getClass().getName().equals("javax.faces.application.ViewExpiredException")) {
       HttpServletResponse response = (HttpServletResponse)context.getExternalContext().getResponse();
-      response.sendRedirect("index.html");
+      response.sendRedirect(context.getExternalContext().getRequestContextPath()+"/index.html");
     } else {
       logger.error(ex, ex);
+      ex.printStackTrace();
       HttpServletResponse response = (HttpServletResponse)context.getExternalContext().getResponse();
-      response.sendRedirect("redirect?url=/error500.faces");
+      response.sendRedirect(context.getExternalContext().getRequestContextPath()+"/redirect?url=/error500.faces");
     }
   }
 }

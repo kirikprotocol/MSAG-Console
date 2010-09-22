@@ -3,9 +3,9 @@
  */
 package mobi.eyeline.informer.web.auth;
 
-import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.admin.users.UsersManager;
-import mobi.eyeline.informer.admin.users.UsersSettings;
+import mobi.eyeline.informer.web.users.User;
+import mobi.eyeline.informer.web.users.UsersManager;
+import mobi.eyeline.informer.web.users.UsersSettings;
 import org.apache.log4j.Logger;
 
 public class AuthenticatorImpl implements Authenticator {

@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.users.UsersManager;
 
 import java.io.File;
 
@@ -13,21 +12,19 @@ import java.io.File;
 public class AdminContext {
 
   protected File appBaseDir;
-  protected File servicesDir;
+//  protected File servicesDir;
 
 //  protected ServiceManager serviceManager;
   protected FileSystem fileSystem;
-  protected UsersManager usersManager;
   protected InstallationType instType;
 
   protected AdminContext() {
   }
 
-  public AdminContext(File appBaseDir, File initFile) throws AdminException {
-    AdminContextConfig cfg = new AdminContextConfig(initFile);
+  public AdminContext(File appBaseDir, InstallationType type, File[] appMirrorDirs) throws AdminException {
     this.appBaseDir = appBaseDir;
 //    this.servicesDir = new File(appBaseDir, "services");
-    this.instType = cfg.getInstallationType();
+    this.instType = type;
 
     switch (this.instType) {
       case SINGLE:
@@ -36,16 +33,14 @@ public class AdminContext {
         break;
       case HS:
 //        serviceManager = ServiceManager.getServiceManagerForHSInst(cfg.getHSDaemonHost(), cfg.getHSDaemonPort(), servicesDir, cfg.getHSDaemonHosts());
-        fileSystem = FileSystem.getFSForHSInst(appBaseDir, cfg.getAppMirrorDirs());
+        fileSystem = FileSystem.getFSForHSInst(appBaseDir, appMirrorDirs);
         break;
       default:
-//        serviceManager = ServiceManager.getServiceManagerForHAInst(new File(appBaseDir, "conf/resourceGroups.properties"), servicesDir);
+//      serviceManager = ServiceManager.getServiceManagerForHAInst(new File(appBaseDir, "conf/resourceGroups.properties"), servicesDir);
         fileSystem = FileSystem.getFSForHAInst();
     }
 
-    File usersFile = new File(cfg.getUsersFile());
 
-    usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
   }
 
   public FileSystem getFileSystem() {
@@ -55,9 +50,4 @@ public class AdminContext {
   public InstallationType getInstallationType() {
     return instType;
   }
-
-  public UsersManager getUsersManager() {
-    return usersManager;
-  }
-
 }
