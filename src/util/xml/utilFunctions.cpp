@@ -47,14 +47,27 @@ const char * const getLocalEncoding()
 {
   if (encName == 0)
   {
-    const char* lc_all = getenv("LC_ALL");
-    if (!lc_all) {
-        lc_all = getenv("LC_CTYPE");
-        if (!lc_all) { lc_all = getenv("LANG"); }
+    const char* enc =getenv("EYELINE_ICONV_ENCODING");
+    if(!enc)
+    {
+      enc=getenv("LC_ALL");
     }
-    if (lc_all)
-      encName = strrchr(lc_all, '.');
-    encName = encName ? cStringCopy(encName+1) : "WINDOWS-1251";
+    if(!enc)
+    {
+      enc = getenv("LC_CTYPE");
+    }
+    if (!enc)
+    {
+      enc = getenv("LANG");
+    }
+    if (enc && strrchr(enc, '.'))
+    {
+      encName = strrchr(enc, '.')+1;
+    }else
+    {
+      encName = enc;
+    }
+    encName = encName ? cStringCopy(encName) : "WINDOWS-1251";
   }
   return encName;
 }
