@@ -192,6 +192,9 @@ public abstract class InputHandler
   */
  public void invokeAction(String action)
  {
+
+  System.out.println("InputHandler.invokeAction() 195");
+
   invokeAction(jEdit.getAction(action));
  } //}}}
 
@@ -225,9 +228,11 @@ public abstract class InputHandler
   int _repeatCount = repeatCount;
 
   // execute the action
-  if(action.noRepeat() || _repeatCount == 1)
-   action.invoke(view);
-  else
+  if(action.noRepeat() || _repeatCount == 1){
+      System.out.println("InputHandler.invokeAction() 229");      
+
+      action.invoke(view);
+  }else
   {
    // stop people doing dumb stuff like C+ENTER 100 C+n
    if(_repeatCount > REPEAT_COUNT_THRESHOLD)
@@ -255,8 +260,10 @@ public abstract class InputHandler
    {
     buffer.beginCompoundEdit();
 
-    for(int i = 0; i < _repeatCount; i++)
-     action.invoke(view);
+    for(int i = 0; i < _repeatCount; i++){
+        System.out.println("InputHandler.invokeAction() 260");
+        action.invoke(view);
+    }
    }
    finally
    {
@@ -288,8 +295,10 @@ public abstract class InputHandler
  {
   if(lastAction == null)
    view.getToolkit().beep();
-  else
-   invokeAction(lastAction);
+  else{
+      System.out.println("InputHandler.invokeLastAction() 296");
+      invokeAction(lastAction);
+  }
  } //}}}
 
  //{{{ Protected members

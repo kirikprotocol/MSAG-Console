@@ -139,7 +139,7 @@ public class EditServer extends Thread
     client.setSoTimeout(1000);
 
     Log.log(Log.MESSAGE,this,client + ": connected");
-
+    System.out.println("EditServer.run() 142");
     DataInputStream in = new DataInputStream(
      client.getInputStream());
 
@@ -310,6 +310,7 @@ public class EditServer extends Thread
  private boolean handleClient(final Socket client, DataInputStream in)
   throws Exception
  {
+  System.out.println("EditServer.handleClient() 313");   
   int key = in.readInt();
   if(key != authKey)
   {

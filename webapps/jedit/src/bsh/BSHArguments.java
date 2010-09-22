@@ -56,16 +56,22 @@ class BSHArguments extends SimpleNode
   be compounded.
  */
     public Object[] getArguments( CallStack callstack, Interpreter interpreter)
-  throws EvalError
-    {
+    throws EvalError{
+        System.out.println("BSHArguments.getArgument() 61");
+        
         // evaluate each child
         Object[] args = new Object[jjtGetNumChildren()];
-        for(int i = 0; i < args.length; i++)
-  {       args[i] = ((SimpleNode)jjtGetChild(i)).eval(callstack, interpreter);
-          if ( args[i] == Primitive.VOID )
-    throw new EvalError( "Undefined argument: " + 
-     ((SimpleNode)jjtGetChild(i)).getText(), this, callstack );
-  }
+
+        for(int i = 0; i < args.length; i++){
+
+            SimpleNode simpleNode = (SimpleNode)jjtGetChild(i);
+
+            args[i] = simpleNode.eval(callstack, interpreter);
+
+            if ( args[i] == Primitive.VOID )
+                throw new EvalError( "Undefined argument: "
+                    + simpleNode.getText(), this, callstack );
+        }
 
         return args;
     }

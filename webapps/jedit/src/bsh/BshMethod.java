@@ -153,6 +153,7 @@ public class BshMethod
   Object[] argValues, Interpreter interpreter ) 
   throws EvalError 
  {
+  System.out.println("BshMethod.invoke() 156");
   return invoke( argValues, interpreter, null, null, false );
  }
 
@@ -168,6 +169,8 @@ public class BshMethod
   Object[] argValues, Interpreter interpreter, CallStack callstack ) 
   throws EvalError 
  {
+  System.out.println("BshMethod.invoke() 172");
+
   return invoke( argValues, interpreter, callstack, null, false );
  }
 
@@ -176,6 +179,7 @@ public class BshMethod
    SimpleNode callerInfo ) 
   throws EvalError 
  {
+  System.out.println("BshMethod.invoke() 181");   
   return invoke( argValues, interpreter, callstack, callerInfo, false );
  }
 
@@ -205,6 +209,9 @@ public class BshMethod
    SimpleNode callerInfo, boolean overrideNameSpace ) 
   throws EvalError 
  {
+  System.out.println("BshMethod.invoke() 208");
+
+
   if ( javaMethod != null )
    try {
     return Reflect.invokeOnMethod( 
@@ -346,6 +353,9 @@ public class BshMethod
    callstack.push( localNameSpace );
 
   // Invoke the block, overriding namespace with localNameSpace
+  System.out.println("BshMethod.invokeImpl() 349");    
+
+
   Object ret = methodBody.eval( 
    callstack, interpreter, true/*override*/ );
 

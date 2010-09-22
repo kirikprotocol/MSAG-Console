@@ -48,6 +48,7 @@ class BSHAllocationExpression extends SimpleNode
     public Object eval( CallStack callstack, Interpreter interpreter) 
   throws EvalError
     {
+        System.out.println("BSHAllocationExpression.eval() 51");
         // type is either a class name or a primitive type
         SimpleNode type = (SimpleNode)jjtGetChild(0);
 
@@ -75,8 +76,7 @@ class BSHAllocationExpression extends SimpleNode
  ) 
   throws EvalError
     {
-  NameSpace namespace = callstack.top();
-
+  NameSpace namespace = callstack.top();        
         Object[] args = argumentsNode.getArguments( callstack, interpreter );
         if ( args == null)
             throw new EvalError( "Null args in new.", this, callstack );
@@ -202,6 +202,7 @@ class BSHAllocationExpression extends SimpleNode
   NameSpace namespace = callstack.top();
   NameSpace local = new NameSpace(namespace, "AnonymousBlock");
   callstack.push(local);
+  System.out.println("BSHAllocationExpression.constructWithInterfaceBody() 205");
   body.eval( callstack, interpreter, true/*overrideNamespace*/ );
   callstack.pop();
   // statical import fields from the interface so that code inside

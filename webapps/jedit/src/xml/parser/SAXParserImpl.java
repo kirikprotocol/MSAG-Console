@@ -84,6 +84,8 @@ public class SAXParserImpl extends XmlParser
   XMLReader reader = new org.apache.xerces.parsers.SAXParser(symbolTable,grammarPool);
   try
   {
+
+    System.out.println("SAXParserImpl 88 set feature http://xml.org/sax/features/validation");  
     reader.setFeature("http://xml.org/sax/features/validation",
             buffer.getBooleanProperty("xml.validate"));
     reader.setFeature("http://apache.org/xml/features/validation/schema",

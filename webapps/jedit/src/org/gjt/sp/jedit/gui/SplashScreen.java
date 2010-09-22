@@ -39,6 +39,7 @@ public class SplashScreen extends JComponent
   setFont(font);
   fm = getFontMetrics(font);
 
+  System.out.println("SplashScreen splash.png");   
   image = getToolkit().getImage(
    getClass().getResource("/org/gjt/sp/jedit/icons/splash.png"));
   MediaTracker tracker = new MediaTracker(this);

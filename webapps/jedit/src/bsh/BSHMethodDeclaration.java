@@ -149,7 +149,7 @@ class BSHMethodDeclaration extends SimpleNode
   for(int i=firstThrowsClause; i<numThrows+firstThrowsClause; i++)
    ((BSHAmbiguousName)jjtGetChild(i)).toClass( 
     callstack, interpreter );
-
+  System.out.println("5");
   paramsNode.eval( callstack, interpreter );
 
   // if strictJava mode, check for loose parameters and return type

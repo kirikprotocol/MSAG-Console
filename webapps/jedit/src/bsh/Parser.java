@@ -48,6 +48,7 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConsta
   Re-initialize the input stream and token source.
  */
         void reInitInput( Reader in ) {
+             System.out.println("Parser.reinitInput() 51");
                 ReInit(in);
         }
 
@@ -65,6 +66,7 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConsta
   reading bogus input.  See Interpreter.
  */
         void reInitTokenInput( Reader in ) {
+             System.out.println("Parser.reInitTokenInput() 69");
                 jj_input_stream.ReInit( in,
                         jj_input_stream.getEndLine(),
                         jj_input_stream.getEndColumn() );
@@ -80,6 +82,7 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConsta
                         print=true;
                 }
                 for(; i< args.length; i++) {
+                        System.out.println("Parser 85 "+args[i]);
                         Reader in = new FileReader(args[i]);
                         Parser parser = new Parser(in);
                         parser.setRetainComments(true);
@@ -5712,6 +5715,7 @@ void VariableDeclaratorId() #VariableDeclaratorId :
   }
 
   public void ReInit(java.io.InputStream stream) {
+    System.out.println("Parser.ReInit 5718");
     jj_input_stream.ReInit(stream, 1, 1);
     token_source.ReInit(jj_input_stream);
     token = new Token();
@@ -5720,6 +5724,7 @@ void VariableDeclaratorId() #VariableDeclaratorId :
   }
 
   public Parser(java.io.Reader stream) {
+    System.out.println("Parser 5718");
     jj_input_stream = new JavaCharStream(stream, 1, 1);
     token_source = new ParserTokenManager(jj_input_stream);
     token = new Token();

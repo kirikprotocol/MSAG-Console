@@ -142,52 +142,62 @@ class Reflect
   No object instance is needed and there is no possibility of the
   method being a bsh scripted method.
  */
-    public static Object invokeStaticMethod(
-  BshClassManager bcm, Class clas, String methodName, Object [] args )
-        throws ReflectError, UtilEvalError, InvocationTargetException
-    {
+    public static Object invokeStaticMethod(BshClassManager bcm, Class clas, String methodName, Object [] args )
+        throws ReflectError, UtilEvalError, InvocationTargetException{
         Interpreter.debug("invoke static Method");
-       if ( clas.getName().equals("org.gjt.sp.jedit.GUIUtilities")) {
-        String[] FileNames=null;
-         System.out.println("Reflect invokeStaticMethod line 139 class.getName()= "+clas.getName()+" methodName= "+methodName);
-        if (methodName.equals("showVFSFileDialog")) {
-          View view=null; boolean val=false;String str=null;  Primitive prim; int type=0;
-           for (int i = 0; i < args.length; i++) {
-              Object arg = args[i];
-              if (arg instanceof View)  view=(View)arg;
-              if (arg instanceof String)  str=(String)arg;
-              if (arg.toString().equals("true")) val=true;
-              if (arg instanceof Primitive ) { prim=(Primitive)arg; if (prim.isNumber()) type=prim.intValue(); }
-           }
-           FileNames=GUIUtilities.showVFSFileDialog(view,str,type,val);
-        }
-          return  FileNames;
-        }  else  if ( clas.getName().equals("org.gjt.sp.jedit.search.SearchDialog")) {
-         System.out.println("Reflect invokeStaticMethod line 154 class.getName()= "+clas.getName()+" methodName= "+methodName);
-        int type=0;
-          if (methodName.equals("showSearchDialog")) {
-          View view=null; boolean val=false;String str=null;  Primitive prim;
-           for (int i = 0; i < args.length; i++) {
-              Object arg = args[i];
-              if (arg instanceof View)  view=(View)arg;
-              if (arg instanceof String)  str=(String)arg;
-              if (arg instanceof Primitive ) { prim=(Primitive)arg; if (prim.isNumber()) type=prim.intValue(); }
-           }
-           SearchDialog.showSearchDialog(view,str,type);
-        }
-          return  new Integer(type);
-        }   else  if ( clas.getName().equals("org.gjt.sp.jedit.pluginmgr.PluginManager")) {
-         System.out.println("Reflect invokeStaticMethod line 168 class.getName()= "+clas.getName()+" methodName= "+methodName);
-          if (methodName.equals("showPluginManager")) PluginManager.showPluginManager((Frame)args[0]);
-          return  args[0];
-        }
+        if ( clas.getName().equals("org.gjt.sp.jedit.GUIUtilities")) {
+            String[] FileNames=null;
+            System.out.println("Reflect invokeStaticMethod line 139 class.getName()= "+clas.getName()+" methodName= "+methodName);
+            if (methodName.equals("showVFSFileDialog")) {
+                View view=null;
+                boolean val=false;
+                String str=null;
+                Primitive prim;
+                int type=0;
+                for (int i = 0; i < args.length; i++) {
+                    Object arg = args[i];
+                    if (arg instanceof View)  view=(View)arg;
+                    if (arg instanceof String)  str=(String)arg;
+                    if (arg.toString().equals("true")) val=true;
+                    if (arg instanceof Primitive ) {
+                        prim=(Primitive)arg;
+                        if (prim.isNumber()) type=prim.intValue();
+                    }
+                }
+                FileNames=GUIUtilities.showVFSFileDialog(view,str,type,val);
+            }
+            return  FileNames;
+        } else if ( clas.getName().equals("org.gjt.sp.jedit.search.SearchDialog")) {
+            System.out.println("Reflect invokeStaticMethod line 154 class.getName()= "+clas.getName()+" methodName= "+methodName);
+            int type=0;
+            if (methodName.equals("showSearchDialog")) {
+                View view=null;
+                boolean val=false;
+                String str=null;
+                Primitive prim;
+                for (int i = 0; i < args.length; i++) {
+                    Object arg = args[i];
+                    if (arg instanceof View)  view=(View)arg;
+                    if (arg instanceof String)  str=(String)arg;
+                    if (arg instanceof Primitive ) {
+                        prim=(Primitive)arg;
+                        if (prim.isNumber()) type=prim.intValue();
+                    }
+                }
+                SearchDialog.showSearchDialog(view,str,type);
+            }
+            return  new Integer(type);
+        } else if ( clas.getName().equals("org.gjt.sp.jedit.pluginmgr.PluginManager")) {
+            System.out.println("Reflect invokeStaticMethod line 168 class.getName()= "+clas.getName()+" methodName= "+methodName);
+            if (methodName.equals("showPluginManager"))
+                PluginManager.showPluginManager((Frame)args[0]);
+            return  args[0];
+        } else {
+            System.out.println("Reflect invokeStaticMethod line 184 class= "+clas+" methodName= "+methodName);            
 
-        else {
-      System.out.println("Reflect invokeStaticMethod line 184 class= "+clas+" methodName= "+methodName);
-      Method method = resolveExpectedJavaMethod(
-   bcm, clas, null, methodName, args, true );
-  return invokeOnMethod( method, null, args );
-    }
+            Method method = resolveExpectedJavaMethod(bcm, clas, null, methodName, args, true );
+            return invokeOnMethod( method, null, args );
+        }
     }
 
  /**
@@ -1045,10 +1055,10 @@ class Reflect
         System.arraycopy( args, 0, invokeArgs, 2, args.length );
   BshClassManager bcm = interpreter.getClassManager();
   try {
-         return Reflect.invokeStaticMethod( 
-    bcm, commandClass, "invoke", invokeArgs );
+      System.out.println("Reflect 1057 Reflect.invokeStaticMethod()");
+      return Reflect.invokeStaticMethod( bcm, commandClass, "invoke", invokeArgs );
   } catch ( InvocationTargetException e ) {
-   throw new UtilEvalError(
+    throw new UtilEvalError(
     "Error in compiled command: "+e.getTargetException() );
   } catch ( ReflectError e ) {
    throw new UtilEvalError("Error invoking compiled command: "+e );

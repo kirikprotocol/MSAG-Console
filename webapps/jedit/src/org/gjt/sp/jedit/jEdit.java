@@ -107,13 +107,18 @@ public class jEdit extends Applet
     gbc.fill = GridBagConstraints.BOTH;
     //String[] args = new String[5];
 
+
+    //todo debug through appletviewer
+    // comment for debug
     baseUrl = getCodeBase();
 
-//    try{
-//    baseUrl = new URL("http://localhost:20801/msag/rules/rules/"); //todo only for degub - comment
-//    }catch (MalformedURLException e){
-//
-//    }
+    // uncomment for debug
+    /*try{
+        baseUrl = new URL("http://localhost:20801/msag/rules/rules/");
+    }catch (MalformedURLException e){
+
+    }*/
+    // end uncomment area
       
     username = getParameter("username");
     password = getParameter("password");
@@ -133,7 +138,7 @@ public class jEdit extends Applet
     }
     ping_port = Integer.parseInt(getParameter("ping_port"));
     ping_timeout = Integer.parseInt(getParameter("ping_timeout"));
-    System.out.println("jEdit version=1");
+    System.out.println("jEdit version=35");
     System.out.println("baseUrl= " + baseUrl.toString());
     System.out.println("servletUrl= " + servletUrl.toString());
     System.out.println("ping_port= " + ping_port);
@@ -162,7 +167,8 @@ public class jEdit extends Applet
     args[0]=getParameter("file");
     System.out.println("Parameter file="+args[0]);
 
-    // Debug todo debug -comment
+    //todo debug through appletviewer
+    // uncomment for debug
     //openRule("1////SMPP");
   }
     
@@ -2955,6 +2961,7 @@ public class jEdit extends Applet
                                          boolean newPlainView, String[] args,
                                          String scriptFile)
   {
+    System.out.println("jEdit.makeServerScript 2958");
     StringBuffer script = new StringBuffer();
     String userDir = System.getProperty("user.dir");
     script.append("parent = \"");
@@ -3009,6 +3016,7 @@ public class jEdit extends Applet
    */
   private static void initMisc()
   {
+    System.out.println("jEdit.initMisc() 3013");  
     jars = new Vector();
     actionContext = new ActionContext()
     {
@@ -3050,12 +3058,13 @@ public class jEdit extends Applet
     systemProperties.put("file.encoding", StringGet("file",FileEncoding));   
     systemProperties.put("line.separator",StringGet("file",LineSeparator));  //"\n"
     try {
-      //////////Debug  todo debug - commect
-//      String loc = "/home/stepanov/work/smsc/webapps/jedit/src";
-//      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit.props"));
-//      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit_gui.props"));
-//      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit_keys.props"));
-      //////////End Debug
+      //todo debug through appletviewer
+      // uncomment for debug
+      /*String loc = "/home/stepanov/work/smsc/webapps/jedit/src";
+      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit.props"));
+      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit_gui.props"));
+      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit_keys.props"));*/
+      //end uncomment area
 
       propMgr.loadSystemProps(jEdit.class.getResourceAsStream("/org/gjt/sp/jedit/jedit.props"));
       propMgr.loadSystemProps(jEdit.class.getResourceAsStream("/org/gjt/sp/jedit/jedit_gui.props"));

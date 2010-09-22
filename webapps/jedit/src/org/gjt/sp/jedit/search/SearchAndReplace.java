@@ -921,6 +921,7 @@ loop:   while(path != null)
   */
  public static void load()
  {
+  System.out.println("SearchAndReplace.load() 924");   
   search = jEdit.getProperty("search.find.value");
   replace = jEdit.getProperty("search.replace.value");
   ignoreCase = jEdit.getBooleanProperty("search.ignoreCase.toggle");

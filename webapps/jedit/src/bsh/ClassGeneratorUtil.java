@@ -878,8 +878,8 @@ public class ClassGeneratorUtil implements Constants
   Object [] args = null;
   Interpreter interpreter = classStaticThis.declaringInterpreter;
 
-  try {
-   args = argsNode.getArguments( callstack, interpreter );
+  try {            
+      args = argsNode.getArguments( callstack, interpreter );
   } catch ( EvalError e ) {
    throw new InterpreterError(
     "Error evaluating constructor args: "+e );
@@ -985,7 +985,8 @@ public class ClassGeneratorUtil implements Constants
 
    // evaluate the instance portion of the block in it
    try { // Evaluate the initializer block
-    instanceInitBlock.evalBlock( 
+     System.out.println("ClassGeneratorUtil.initInstance() 988");
+     instanceInitBlock.evalBlock(
      callstack, interpreter, true/*override*/, 
      ClassGeneratorImpl.ClassNodeFilter.CLASSINSTANCE );
    } catch ( Exception e ) {
@@ -1016,9 +1017,11 @@ public class ClassGeneratorUtil implements Constants
      "Can't find constructor: "+ className );
 
    // Evaluate the constructor
-   if ( constructor != null )
-    constructor.invoke( args, interpreter, callstack,
+   if ( constructor != null ){
+     System.out.println("ClassGeneratorUtil.initInstance() 1021");
+     constructor.invoke( args, interpreter, callstack,
      null/*callerInfo*/, false/*overrideNameSpace*/ ) ;
+   }
   } catch ( Exception e ) {
    if ( e instanceof TargetError )
     e =(Exception)((TargetError)e).getTarget();

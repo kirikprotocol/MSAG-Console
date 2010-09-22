@@ -91,8 +91,10 @@ public class XmlCompletion extends SideKickCompletion
 
   if(index != -1)
    insert(get(index),ch);
-  else if(ch == '>')
-   XmlActions.insertClosingTagKeyTyped(view);
+  else if(ch == '>') {
+    System.out.println("XmlCompletion.handleKeystroke() 95");  
+    XmlActions.insertClosingTagKeyTyped(view);
+  }
   else
    textArea.userInput(ch);
 
@@ -109,6 +111,7 @@ public class XmlCompletion extends SideKickCompletion
  //{{{ insert() method
  private void insert(Object obj, char ch)
  {
+  System.out.println("XMLCompletion.insert() 114");   
   Macros.Recorder recorder = view.getMacroRecorder();
   String insert;
   int caret;

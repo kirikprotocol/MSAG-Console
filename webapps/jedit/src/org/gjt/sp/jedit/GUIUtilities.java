@@ -115,7 +115,7 @@ public class GUIUtilities
   */
  public static Icon loadIcon(String iconName)
  {
-
+    System.out.println("GUIUtilities.loadIcon() "+iconName);
     if(icons == null)
    icons = new Hashtable();
 

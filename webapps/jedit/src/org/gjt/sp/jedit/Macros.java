@@ -66,7 +66,8 @@ public class Macros
   */
  public static void showRunScriptDialog(View view)
  {
-  String[] paths = GUIUtilities.showVFSFileDialog(view,
+   System.out.println("Macros.showRunScriptDialog() 69");
+   String[] paths = GUIUtilities.showVFSFileDialog(view,
    null,JFileChooser.OPEN_DIALOG,true);
   if(paths != null)
   {
@@ -101,6 +102,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
   */
  public static void runScript(View view, String path, boolean ignoreUnknown)
  {
+  System.out.println("Macros.runScrip() 105");
   Handler handler = getHandlerForPathName(path);
   if(handler != null)
   {
@@ -108,6 +110,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
    {
     Macro newMacro = handler.createMacro(
      MiscUtilities.getFileName(path), path);
+    System.out.println("Macros.runScript() 113");   
     newMacro.invoke(view);
    }
    catch (Exception e)
@@ -128,6 +131,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
   }
   else
   {
+   System.out.println("Macros.runScript() 134");   
    Log.log(Log.ERROR,Macros.class,path +
     ": Cannot find a suitable macro handler, "
     + "assuming BeanShell");
@@ -146,6 +150,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
   */
  public static void message(Component comp, String message)
  {
+  System.out.println("Macros.message() 151");
   GUIUtilities.hideSplashScreen();
 
   JOptionPane.showMessageDialog(comp,message,
@@ -248,6 +253,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
   */
  public static void loadMacros()
  {
+  System.out.println("Macros.loadMacros() 254");
   macroActionSet.removeAllActions();
   macroHierarchy.removeAllElements();
   macroHash.clear();
@@ -595,6 +601,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
   try
   {
    buffer.beginCompoundEdit();
+   System.out.println("Macros.runTemporaryMacro() 604");
    temp.invoke(view);
   }
   finally
@@ -637,6 +644,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
  //{{{ loadMacros() method
  private static void loadMacros(Vector vector, String path, String directoryName)
  {  
+  System.out.println("Macros.loadMacros() 644");
   lastMacro = null;
     HashMap args=new HashMap();args.put("file",directoryName);
   List listFiles=jEdit.HttpGet(args,ListFiles);
@@ -691,6 +699,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
  //{{{ addMacro() method
  private static void addMacro(String filePath, String path, Vector vector)
  {
+  System.out.println("Macros.addMacro() 699");
   File file = new File(filePath);
     String fileName = file.getName();
     String FileNamePath=file.getPath();
@@ -741,6 +750,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
   */
  private static void recordMacro(View view, Buffer buffer, boolean temporary)
  {
+  System.out.println("Macros.recordMacro() 750");
   view.setMacroRecorder(new Recorder(view,buffer,temporary));
 
   // setting the message to 'null' causes the status bar to check
@@ -767,6 +777,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
   //{{{ Recorder constructor
   public Recorder(View view, Buffer buffer, boolean temporary)
   {
+   System.out.println("Macros.Recorder");
    this.view = view;
    this.buffer = buffer;
    this.temporary = temporary;

@@ -1649,7 +1649,8 @@ check_selected: for(int i = 0; i < selectedFiles.length; i++)
     // them all
     if(view == null)
      view = jEdit.getActiveView();
-    action.invoke(view);
+       System.out.println("VFSBrowser.invokeAction() 1652");
+       action.invoke(view);
    }
    catch(UtilEvalError err)
    {

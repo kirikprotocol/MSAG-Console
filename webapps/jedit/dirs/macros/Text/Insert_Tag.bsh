@@ -26,6 +26,7 @@
 
 void insertTag()
 {
+ System.out.print("Insert_Tag.bsh 29");
  caret = textArea.getCaretPosition();
  tag = Macros.input(view, "Enter name of tag:");
  if( tag == null || tag.length() == 0) return;

@@ -205,6 +205,7 @@ public class BeanShell
  public static void runScript(View view, String path, Reader in,
   boolean ownNamespace)
  {
+  System.out.println("BeanShell.runScript() 208");
   try
   {
    _runScript(view,path,in,ownNamespace);
@@ -388,7 +389,7 @@ public class BeanShell
   * @since jEdit 4.0pre8
   */
  public static Object eval(View view, NameSpace namespace, String command)
- {
+ {  
   try
   {
    return _eval(view,namespace,command);
@@ -491,23 +492,24 @@ public class BeanShell
  public static Object runCachedBlock(BshMethod method, View view,
   NameSpace namespace) throws Exception
  {
-  boolean useNamespace;
-  if(namespace == null)
-  {
-   useNamespace = false;
-   namespace = global;
-  }
-  else
-   useNamespace = true;
+  System.out.println("BeanShell.runCachedBlock() 495");        
 
-  try
-  {
-   setupDefaultVariables(namespace,view);
+  boolean useNamespace;
+  if(namespace == null) {
+      useNamespace = false;
+      namespace = global;
+  } else {
+      useNamespace = true;
+  }
+
+  try{
+      setupDefaultVariables(namespace,view);
 
    Object retVal = method.invoke(useNamespace
     ? new Object[] { namespace }
     : NO_ARGS,
     interpForMethods,new CallStack());
+
    if(retVal instanceof Primitive)
    {
     if(retVal == Primitive.VOID)

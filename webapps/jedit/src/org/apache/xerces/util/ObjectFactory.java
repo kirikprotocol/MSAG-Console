@@ -236,6 +236,7 @@ public class ObjectFactory {
             try {
                 FileInputStream fis = ss.getFileInputStream(new File(propertiesFilename));
                 Properties props = new Properties();
+                System.out.println("ObjectFactory 239 load file="+propertiesFilename);
                 props.load(fis);
                 fis.close();
                 factoryClassName = props.getProperty(factoryId);

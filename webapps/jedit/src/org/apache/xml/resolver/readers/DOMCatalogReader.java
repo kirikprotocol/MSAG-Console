@@ -190,11 +190,6 @@ public class DOMCatalogReader implements CatalogReader {
    * @param catalog The catalog for which this reader is called.
    * @param is The input stream that is to be read.
    * @throws IOException if the URL cannot be read.
-   * @throws UnknownCatalogFormatException if the catalog format is
-   * not recognized.
-   * @throws UnparseableCatalogException if the catalog cannot be parsed.
-   * (For example, if it is supposed to be XML and isn't well-formed or
-   * if the parser class cannot be instantiated.)
    */
   public void readCatalog(Catalog catalog, InputStream is)
     throws IOException, CatalogException {
@@ -274,10 +269,6 @@ public class DOMCatalogReader implements CatalogReader {
    * @throws MalformedURLException if the specified URL cannot be
    * turned into a URL object.
    * @throws IOException if the URL cannot be read.
-   * @throws UnknownCatalogFormatException if the catalog format is
-   * not recognized.
-   * @throws UnparseableCatalogException if the catalog cannot be parsed.
-   * (For example, if it is supposed to be XML and isn't well-formed.)
    */
   public void readCatalog(Catalog catalog, String fileUrl)
     throws MalformedURLException, IOException, CatalogException {

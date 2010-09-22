@@ -77,7 +77,7 @@ public class XmlActions
 
    public static boolean checkRootTag(View view)
      {
-       //System.out.println("XmlAction.checkRootTag()");
+       System.out.println("XmlAction.checkRootTag()");
        JEditTextArea textArea = view.getTextArea();
        if(XmlPlugin.isDelegated(textArea))
        {
@@ -930,7 +930,8 @@ loop:   for(;;)
  //{{{ insertClosingTagKeyTyped() method
  public static void insertClosingTagKeyTyped(View view)
  {
-  System.out.println("XmlActios.insertClosingTagTyped()");
+  System.out.println("XmlActios.insertClosingTagTyped()");   
+
   JEditTextArea textArea = view.getTextArea();
 
   Macros.Recorder recorder = view.getMacroRecorder();

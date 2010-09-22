@@ -84,7 +84,8 @@ public class ClassGeneratorImpl extends ClassGenerator
 
   // Evaluate any inner class class definitions in the block 
   // effectively recursively call this method for contained classes first
-  block.evalBlock( 
+  System.out.println("ClassGeneratorImpl.generateClassImpl() 87");
+  block.evalBlock(
    callstack, interpreter, true/*override*/, 
    ClassNodeFilter.CLASSCLASSES );
 
@@ -105,6 +106,7 @@ public class ClassGeneratorImpl extends ClassGenerator
   try {
    FileOutputStream out= 
     new FileOutputStream( dir+"/"+className+".class" );
+   System.out.println("ClassGeneratorImpl.generateClassImpl() 109: "+dir+"/"+className+".class");
    out.write(code);
    out.close();
   } catch ( IOException e ) { }
@@ -141,7 +143,8 @@ public class ClassGeneratorImpl extends ClassGenerator
   classStaticNameSpace.setClassStatic( genClass );
 
   // evaluate the static portion of the block in the static space
-  block.evalBlock( 
+  System.out.println("ClassGeneratorImpl.generateClassImpl() 145");
+  block.evalBlock(
    callstack, interpreter, true/*override*/, 
    ClassNodeFilter.CLASSSTATIC );
 

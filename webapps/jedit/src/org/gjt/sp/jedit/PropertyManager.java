@@ -192,6 +192,7 @@ class PropertyManager
  {
   try
   {
+   System.out.println("PropertyManager 195");
    into.load(in);
   }
   finally

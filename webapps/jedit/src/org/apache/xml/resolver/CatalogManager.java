@@ -39,6 +39,7 @@ public class CatalogManager {
     private static synchronized void readProperties() {
         try {
             propertyFileURI = (org.apache.xml.resolver.CatalogManager.class).getResource("/" + propertyFile);
+            System.out.println("CatalogManager.readProperties() 42 propertyFileURI="+propertyFileURI);
             java.io.InputStream inputstream = (org.apache.xml.resolver.CatalogManager.class).getResourceAsStream("/" + propertyFile);
             if(inputstream == null) {
                 if(!ignoreMissingProperties)

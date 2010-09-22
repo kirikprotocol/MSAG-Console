@@ -45,7 +45,8 @@ class BSHMethodInvocation extends SimpleNode
  }
 
  BSHArguments getArgsNode() {
-  return (BSHArguments)jjtGetChild(1);
+
+     return (BSHArguments)jjtGetChild(1);
  }
 
  /**
@@ -55,6 +56,9 @@ class BSHMethodInvocation extends SimpleNode
  public Object eval( CallStack callstack, Interpreter interpreter )
   throws EvalError
  {
+  System.out.println("BSHMethodInvocation.eval() 59");
+
+
   NameSpace namespace = callstack.top();
   BSHAmbiguousName nameNode = getNameNode();
 
@@ -62,41 +66,49 @@ class BSHMethodInvocation extends SimpleNode
   // (i.e. inside a constructor)
   if ( namespace.getParent() != null && namespace.getParent().isClass
    && ( nameNode.text.equals("super") || nameNode.text.equals("this") )
-  )
+  ) {
+   System.out.println("BSHMethodInvocation.eval()  68");
    return Primitive.VOID;
- 
-  Name name = nameNode.getName(namespace);
-  Object[] args = getArgsNode().getArguments(callstack, interpreter);
-
-  try {
-   return name.invokeMethod( interpreter, args, callstack, this);
-  } catch ( ReflectError e ) {
-// XXX
-//e.printStackTrace();
-   throw new EvalError(
-    "Error in method invocation: " + e.getMessage(), 
-    this, callstack );
-  } catch ( InvocationTargetException e ) 
-  {
-   String msg = "Method Invocation "+name;
-   Throwable te = e.getTargetException();
-
-   /*
-    Try to squeltch the native code stack trace if the exception
-    was caused by a reflective call back into the bsh interpreter
-    (e.g. eval() or source()
-   */
-   boolean isNative = true;
-   if ( te instanceof EvalError ) 
-    if ( te instanceof TargetError )
-     isNative = ((TargetError)te).inNativeCode();
-    else
-     isNative = false;
-   
-   throw new TargetError( msg, te, this, callstack, isNative );
-  } catch ( UtilEvalError e ) {
-   throw e.toEvalError( this, callstack );
   }
- }
+
+
+  Name name = nameNode.getName(namespace);
+  System.out.println("BSHMethodInvocation.eval() 74");    
+
+  // here network
+  BSHArguments bshArguments = getArgsNode();
+
+  Object[] args = bshArguments.getArguments(callstack, interpreter);
+    
+  try {
+      return name.invokeMethod( interpreter, args, callstack, this);
+      } catch ( ReflectError e ) {
+    // XXX
+    //e.printStackTrace();
+       throw new EvalError(
+        "Error in method invocation: " + e.getMessage(),
+        this, callstack );
+      } catch ( InvocationTargetException e )
+      {
+       String msg = "Method Invocation "+name;
+       Throwable te = e.getTargetException();
+    
+
+        //Try to squeltch the native code stack trace if the exception
+        //was caused by a reflective call back into the bsh interpreter
+        //(e.g. eval() or source()
+
+       boolean isNative = true;
+       if ( te instanceof EvalError )
+        if ( te instanceof TargetError )
+         isNative = ((TargetError)te).inNativeCode();
+        else
+         isNative = false;
+
+       throw new TargetError( msg, te, this, callstack, isNative );
+      } catch ( UtilEvalError e ) {
+       throw e.toEvalError( this, callstack );
+      }
+  }
 }
 

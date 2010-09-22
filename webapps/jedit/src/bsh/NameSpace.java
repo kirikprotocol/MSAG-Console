@@ -780,6 +780,7 @@ System.out.println("experiment: creating class manager");
   String name, Class [] sig, boolean declaredOnly ) 
   throws UtilEvalError
  {
+  System.out.println("NameSpace.getMethod 783");   
   BshMethod method = null;
 
   // Change import precedence if we are a class body/instance
@@ -913,6 +914,7 @@ System.out.println("experiment: creating class manager");
    {
     CommandPathEntry entry = (CommandPathEntry)importedCommands
      .elementAt(i);
+    System.out.println("NameSpace.getCommand() 917 path="+entry.path + extName);   
     InputStream in = entry.clas.getResourceAsStream(entry.path + extName);
     if(in != null)
      return in;
@@ -1056,6 +1058,7 @@ System.out.println("experiment: creating class manager");
   Interpreter interpreter )
   throws UtilEvalError
  {
+  System.out.println("NameSpace.loadScriptedCommand() 1061 "+resourcePath);   
   try {
    interpreter.eval( 
     new InputStreamReader(in), this, resourcePath );

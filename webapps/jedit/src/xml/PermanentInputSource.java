@@ -42,6 +42,7 @@ public class PermanentInputSource extends org.xml.sax.InputSource{
 
   public void setCharacterStream (Reader characterStream)
   {
+      
   	read(new BufferedReader(characterStream));
   }
 

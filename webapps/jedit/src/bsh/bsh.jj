@@ -113,6 +113,7 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/
   Re-initialize the input stream and token source.
  */
  void reInitInput( Reader in ) {
+  System.out.println("bsh.jj reInitInput()");
   ReInit(in);
  }
 
@@ -130,6 +131,7 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/
   reading bogus input.  See Interpreter.
  */
  void reInitTokenInput( Reader in ) {
+  System.out.println("bsh.jj reInitTokenInput()");
   jj_input_stream.ReInit( in, 
    jj_input_stream.getEndLine(), 
    jj_input_stream.getEndColumn() );
@@ -145,6 +147,7 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/
    print=true;
   }
   for(; i< args.length; i++) {
+   System.out.println("bsh.jj main() "+args[i]);
    Reader in = new FileReader(args[i]);
    Parser parser = new Parser(in);
    parser.setRetainComments(true);

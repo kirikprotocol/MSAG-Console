@@ -105,6 +105,7 @@ public class AboutDialog extends EnhancedDialog
    fm = getFontMetrics(getFont());
 
    setForeground(new Color(96,96,96));
+   System.out.println("AboutDialog about.png");
    image = new ImageIcon(getClass().getResource(
     "/org/gjt/sp/jedit/icons/about.png"));
 

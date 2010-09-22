@@ -139,7 +139,7 @@ class WindowTableModel extends AbstractTableModel
       // TODO Comment comparing with log-viewer. Log-viewer only for debugging.
       if (/*dockable.compareTo("xml-insert") == 0  ||*/
               dockable.compareTo("sidekick-tree") == 0
-          /*|| dockable.compareTo("log-viewer") == 0*/)
+          || dockable.compareTo("log-viewer") == 0)
       windows.addElement(new Entry(dockables[i]));
   }
 

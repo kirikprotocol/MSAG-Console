@@ -70,12 +70,14 @@ public class BeanShellAction extends EditAction
    if(cachedCode == null)
    {
     String cachedCodeName = "action_" + sanitizedName;
+    System.out.println("BeanShellAction 73 cachedCodeName="+cachedCodeName);   
     cachedCode = BeanShell.cacheBlock(cachedCodeName,code,true);
    }
 
-   BeanShell.runCachedBlock(cachedCode,view,
-    new NameSpace(BeanShell.getNameSpace(),
-    "BeanShellAction.invoke()"));
+   System.out.println("BeanShellAction.invoke() 76");   
+
+   // If comment then not networking
+   BeanShell.runCachedBlock(cachedCode,view,new NameSpace(BeanShell.getNameSpace(),"BeanShellAction.invoke()"));
   }
   catch(Throwable e)
   {
@@ -108,6 +110,7 @@ public class BeanShellAction extends EditAction
    // XXX - clean up in 4.3
    global.setVariable("_comp",comp);
 
+   System.out.println("BeanShellAction.isSelected 112");   
    return Boolean.TRUE.equals(BeanShell.runCachedBlock(
     cachedIsSelected,view,
     new NameSpace(BeanShell.getNameSpace(),

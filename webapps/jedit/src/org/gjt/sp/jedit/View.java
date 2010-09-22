@@ -565,6 +565,7 @@ public class View extends JFrame implements EBComponent
   */
  public void processKeyEvent(KeyEvent evt, int from)
  {
+   System.out.println("View.processKeyEvent() 568");  
    if(Debug.DUMP_KEY_EVENTS && from != VIEW)
   {
    Log.log(Log.DEBUG,this,"Key event: "
@@ -608,20 +609,22 @@ public class View extends JFrame implements EBComponent
     KeyEventTranslator.Key keyStroke
      = KeyEventTranslator
      .translateKeyEvent(evt);
-    if(keyStroke != null)
-    {
-     if(Debug.DUMP_KEY_EVENTS
-      && from != VIEW)
-     {
-      Log.log(Log.DEBUG,this,"Translated: "+ keyStroke);
-     } //System.out.println("View.processKeyEvent line 615");
+
+     if(keyStroke != null) {
+
+         if(Debug.DUMP_KEY_EVENTS&& from != VIEW){
+            Log.log(Log.DEBUG,this,"Translated: "+ keyStroke);
+         } //System.out.println("View.processKeyEvent line 615");
+
          if (jEdit.getBooleanProperty("xml.disableRootElement")) {
              if(XmlActions.checkRootTag(this)) return;
-            }
-      if(inputHandler.handleKey(keyStroke))
-      evt.consume();
-    }
-   }
+         }
+
+         if(inputHandler.handleKey(keyStroke)) evt.consume();
+
+     }
+
+     }
    // we might have been closed as a result of
    // the above
    if(isClosed())
@@ -1220,6 +1223,7 @@ public void setEdittag(boolean edit)
   */
  public void setWaitSocket(Socket waitSocket)
  {
+  System.out.println("View.setWaitSocket() 1223 port="+waitSocket.getPort());
   this.waitSocket = waitSocket;
  } //}}}
 

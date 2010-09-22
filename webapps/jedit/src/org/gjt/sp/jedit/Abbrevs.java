@@ -336,6 +336,7 @@ public class Abbrevs
  //{{{ load() method
  private static void load()
  {
+  System.out.println("Abbrevs.load() 339");
   globalAbbrevs = new Hashtable();
   modes = new Hashtable();
 
@@ -343,6 +344,7 @@ public class Abbrevs
   if(settings != null)
   {
    File file = new File(MiscUtilities.constructPath(settings,"abbrevs"));
+   System.out.println("Abbrevs.load() file="+file);
    abbrevsModTime = file.lastModified();
 
    try

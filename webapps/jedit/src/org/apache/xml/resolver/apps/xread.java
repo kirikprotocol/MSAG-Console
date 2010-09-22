@@ -196,7 +196,9 @@ public class xread
     ResolvingXMLReader reader = new ResolvingXMLReader();
 
     try {
+      System.out.println("xread 199 set feature http://xml.org/sax/features/namespaces");
       reader.setFeature("http://xml.org/sax/features/namespaces", nsAware);
+      System.out.println("xread 199 set feature http://xml.org/sax/features/validation");  
       reader.setFeature("http://xml.org/sax/features/validation", validating);
     } catch (SAXException e) {
       // nop;

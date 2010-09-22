@@ -99,8 +99,10 @@ class BSHPrimarySuffix extends SimpleNode
   if ( obj instanceof SimpleNode )
    if ( obj instanceof BSHAmbiguousName )
     obj = ((BSHAmbiguousName)obj).toObject(callstack, interpreter);
-   else
-    obj = ((SimpleNode)obj).eval(callstack, interpreter); 
+   else {
+    System.out.println("8");
+    obj = ((SimpleNode)obj).eval(callstack, interpreter);
+   }
   else
    if ( obj instanceof LHS )
     try {
@@ -163,8 +165,8 @@ class BSHPrimarySuffix extends SimpleNode
      return Reflect.getObjectField( obj, field );
 
    // Method invocation
-   // (LHS or non LHS evaluation can both encounter method calls)
-   Object[] oa = ((BSHArguments)jjtGetChild(0)).getArguments(
+   // (LHS or non LHS evaluation can both encounter method calls)     
+    Object[] oa = ((BSHArguments)jjtGetChild(0)).getArguments(
     callstack, interpreter);
    return Reflect.invokeObjectMethod( 
     obj, field, oa, interpreter, callstack, this );
@@ -186,6 +188,7 @@ class BSHPrimarySuffix extends SimpleNode
 
   int index;
   try {
+   System.out.println("9");   
    Object indexVal = 
     ((SimpleNode)callerInfo.jjtGetChild(0)).eval( 
      callstack, interpreter );
@@ -238,7 +241,7 @@ class BSHPrimarySuffix extends SimpleNode
   if ( obj instanceof Primitive )
    throw new EvalError("Attempt to access property on a primitive", 
     this, callstack );
-
+  System.out.println("7");
   Object value = ((SimpleNode)jjtGetChild(0)).eval(
    callstack, interpreter);
 

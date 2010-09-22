@@ -3146,6 +3146,8 @@ public class Buffer
    */
   public void setWaitSocket(Socket waitSocket)
   {
+    System.out.println("Buffer.setWaitSocket() 3149 port="+waitSocket.getPort());  
+
     this.waitSocket = waitSocket;
   } //}}}
 

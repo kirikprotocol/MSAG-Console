@@ -3292,7 +3292,10 @@ public class XmlParser {
 
     // Set the new status
       sourceType = INPUT_EXTERNAL;
+
+
       url = new URL(systemId);
+      System.out.println("XmlParser.pushUrl() 3296 url="+url);  
 
       externalEntity = url.openConnection();
       externalEntity.connect();

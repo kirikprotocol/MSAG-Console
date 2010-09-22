@@ -185,8 +185,7 @@ class Name implements java.io.Serializable
   return toObject( callstack, interpreter, false );
  }
 
- /**
-  @see toObject()
+ /**  
   @param forceClass if true then resolution will only produce a class.
   This is necessary to disambiguate in cases where the grammar knows
   that we want a class; where in general the var path may be taken.
@@ -470,12 +469,14 @@ class Name implements java.io.Serializable
   @param callstack may be null, but this is only legitimate in special
   cases where we are sure resolution will not involve this.caller.
 
-  @param namespace the namespace of the this reference (should be the
+  @param thisNameSpace the namespace of the this reference (should be the
   same as the top of the stack?
  */
- Object resolveThisFieldReference( 
-  CallStack callstack, NameSpace thisNameSpace, Interpreter interpreter, 
-  String varName, boolean specialFieldsVisible ) 
+ Object resolveThisFieldReference( CallStack callstack,
+                                   NameSpace thisNameSpace,
+                                   Interpreter interpreter,
+                                   String varName,
+                                   boolean specialFieldsVisible )
   throws UtilEvalError
  {
   if ( varName.equals("this") ) 
@@ -782,28 +783,25 @@ class Name implements java.io.Serializable
             java.lang.Integer.getInteger("foo");
   </pre>
     */
-    public Object invokeMethod(
-  Interpreter interpreter, Object[] args, CallStack callstack,
-  SimpleNode callerInfo
- )
-        throws UtilEvalError, EvalError, ReflectError, InvocationTargetException
-    {
+    public Object invokeMethod(Interpreter interpreter,
+                               Object[] args,
+                               CallStack callstack,
+                               SimpleNode callerInfo)
+        throws UtilEvalError, EvalError, ReflectError, InvocationTargetException{
+
         String methodName = Name.suffix(value, 1);
-  BshClassManager bcm = interpreter.getClassManager();
-  NameSpace namespace = callstack.top();
+        BshClassManager bcm = interpreter.getClassManager();
+        NameSpace namespace = callstack.top();
 
   // Optimization - If classOfStaticMethod is set then we have already 
   // been here and determined that this is a static method invocation.
   // Note: maybe factor this out with path below... clean up.
-        if ( classOfStaticMethod != null )
-  {
-   return Reflect.invokeStaticMethod( 
-    bcm, classOfStaticMethod, methodName, args );
-  }
+        if ( classOfStaticMethod != null ){
+            System.out.println("Name 801 Reflect.invokeStaticMethod()");
+            return Reflect.invokeStaticMethod( bcm, classOfStaticMethod, methodName, args );
+        }
 
-  if ( !Name.isCompound(value) )
-   return invokeLocalMethod( 
-    interpreter, args, callstack, callerInfo );
+        if ( !Name.isCompound(value) ) return invokeLocalMethod( interpreter, args, callstack, callerInfo );
 
   // Note: if we want methods declared inside blocks to be accessible via
   // this.methodname() inside the block we could handle it here as a
@@ -814,33 +812,36 @@ class Name implements java.io.Serializable
         String prefix = Name.prefix(value);
 
   // Superclass method invocation? (e.g. super.foo())
-  if ( prefix.equals("super") && Name.countParts(value) == 2 )
-  {
-   NameSpace classNameSpace = getClassNameSpace( namespace );
-   if ( classNameSpace != null )
-   {
-    Object instance = classNameSpace.getClassInstance();
-    return ClassGenerator.getClassGenerator()
-     .invokeSuperclassMethod( bcm, instance, methodName, args );
-   }
-  }
+        if ( prefix.equals("super") && Name.countParts(value) == 2 ){
+            NameSpace classNameSpace = getClassNameSpace( namespace );
+
+            if ( classNameSpace != null ){
+                Object instance = classNameSpace.getClassInstance();
+                System.out.println("Name 820");
+                return ClassGenerator.getClassGenerator().invokeSuperclassMethod( bcm, instance, methodName, args );
+            }
+        }
 
         // Find target object or class identifier
         Name targetName = namespace.getNameResolver( prefix );
         Object obj = targetName.toObject( callstack, interpreter );
 
-  if ( obj == Primitive.VOID ) 
-   throw new UtilEvalError( "Attempt to resolve method: "+methodName
-     +"() on undefined variable or class name: "+targetName);
+        if ( obj == Primitive.VOID ){
+            System.out.println("Name 830");
+            throw new UtilEvalError( "Attempt to resolve method: "+methodName
+                                     +"() on undefined variable or class name: "+targetName);
+        }
 
         // if we've got an object, resolve the method
         if ( !(obj instanceof ClassIdentifier) ) {
 
             if (obj instanceof Primitive) {
 
-                if (obj == Primitive.NULL)
-                    throw new UtilTargetError( new NullPointerException( 
+                if (obj == Primitive.NULL){
+                    System.out.println("Name 841");
+                    throw new UtilTargetError( new NullPointerException(
       "Null Pointer in Method Invocation" ) );
+                }
 
                 // some other primitive
                 // should avoid calling methods on primitive, as we do
@@ -853,6 +854,8 @@ class Name implements java.io.Serializable
             }
 
             // found an object and it's not an undefined variable
+            System.out.println("Name 857");
+
             return Reflect.invokeObjectMethod(
     obj, methodName, args, interpreter, callstack, callerInfo );
         }
@@ -868,8 +871,11 @@ class Name implements java.io.Serializable
   // cache the fact that this is a static method invocation on this class
   classOfStaticMethod = clas;
   
-        if ( clas != null )
-   return Reflect.invokeStaticMethod( bcm, clas, methodName, args );
+        if ( clas != null ){
+            System.out.println("Name 868 Reflect.invokeStaticMethod()");      
+
+            return Reflect.invokeStaticMethod( bcm, clas, methodName, args );
+        }
 
         // return null; ???
   throw new UtilEvalError("invokeMethod: unknown target: " + targetName);

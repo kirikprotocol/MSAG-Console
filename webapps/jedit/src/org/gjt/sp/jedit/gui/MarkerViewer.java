@@ -50,7 +50,7 @@ public class MarkerViewer extends JPanel implements EBComponent, ActionListener
    jEdit.getProperty("markers.label"))));
 
   toolBar.add(Box.createGlue());
-
+    
   RolloverButton addMarker = new RolloverButton(
    GUIUtilities.loadIcon("Plus.png"));
   addMarker.setToolTipText(GUIUtilities.prettifyMenuLabel(

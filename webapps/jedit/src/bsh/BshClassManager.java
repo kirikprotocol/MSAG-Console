@@ -173,7 +173,7 @@ public class BshClassManager
   } catch ( ClassNotFoundException e ) { /*ignore*/ }
 
   // try scripted class
-  if ( clas == null ) 
+  if ( clas == null )
    clas = loadSourceClass( name );
 
   return clas;
@@ -183,6 +183,7 @@ public class BshClassManager
  protected Class loadSourceClass( String name )
  {
   String fileName = "/"+name.replace('.','/')+".java";
+  //System.out.println("BshClassManager.loadSourceClass fileName="+fileName);
   InputStream in = getResourceAsStream( fileName );
   if ( in == null )
    return null;
@@ -251,6 +252,7 @@ public class BshClassManager
  */
  public URL getResource( String path ) 
  {
+  System.out.println("BshClassManager.getResource() path="+path);   
   if ( externalClassLoader != null )
   {
    // classloader wants no leading slash
@@ -264,6 +266,7 @@ public class BshClassManager
  */
  public InputStream getResourceAsStream( String path ) 
  {
+  //System.out.println("BshClassManager.getResourceAsStream() path="+path.substring(1));   
   if ( externalClassLoader != null )
   {
    // classloader wants no leading slash

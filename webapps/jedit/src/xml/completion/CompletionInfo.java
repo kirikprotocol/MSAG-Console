@@ -169,6 +169,7 @@ public class CompletionInfo
  //{{{ getCompletionInfoFromResource() method
  public static CompletionInfo getCompletionInfoFromResource(String resource)
  {
+  System.out.println("CompletionIfo.getCompletionInfoFromResource() 172 ...");
   synchronized(lock)
   {
    CompletionInfo info = (CompletionInfo)completionInfoResources.get(resource);
@@ -187,6 +188,7 @@ public class CompletionInfo
     parser.setEntityResolver(handler);
     parser.setContentHandler(handler);
     parser.parse(resource);
+    System.out.println("CompletionIfo.getCompletionInfoFromResource() parse http://apache.org/xml/features/validation/dynamic" );   
    }
    catch(SAXException se)
    {

@@ -230,8 +230,10 @@ public class XMLReaderAdapter implements Parser, ContentHandler
     private void setupXMLReader ()
  throws SAXException
     {
+ System.out.println("XMLReaderAdapter 233 set feature http://xml.org/sax/features/namespace-prefixes");       
  xmlReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
  try {
+     System.out.println("XMLReaderAdapter 236 set feature http://xml.org/sax/features/namespaces");
      xmlReader.setFeature("http://xml.org/sax/features/namespaces",
                           false);
  } catch (SAXException e) {

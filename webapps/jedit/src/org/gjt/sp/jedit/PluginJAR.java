@@ -954,7 +954,8 @@ jarCacheDir,file.getName() + ".summary");
     servicesURI = clas.getResource("services.xml");
     cache.servicesURI = servicesURI;
 
-    // todo debug -comment
+    //todo debug through appletviewer
+    // uncommect for debug
     /*System.out.println("shortName="+shortName);
     InputStream in = null;
     if (shortName.equals("ErrorList")){
@@ -973,11 +974,12 @@ jarCacheDir,file.getName() + ".summary");
         String loc = "/home/stepanov/work/smsc/webapps/jedit/src/xml/";      
         in = new FileInputStream(loc+shortName+".props");
     }*/
+    // end uncomment area  
 
 
 
     // End debug
-
+    System.out.println("PluginJAR 980 load file="+shortName+".props");
     InputStream in = clas.getResourceAsStream(shortName+".props");
     properties.load(in);
     in.close();
@@ -1244,6 +1246,7 @@ jarCacheDir,file.getName() + ".summary");
         return false;
 
       actionsURI = readURI(din);
+      System.out.println("PluginJAR.read() 1247actionURI="+actionsURI);
       cachedActionNames = readStringArray(din);
       cachedActionToggleFlags = readBooleanArray(din);
 
@@ -1256,6 +1259,7 @@ jarCacheDir,file.getName() + ".summary");
       cachedDockableActionFlags = readBooleanArray(din);
 
       servicesURI = readURI(din);
+      System.out.println("PluginJAR.read() 1260 servicesURI="+servicesURI);
       int len = din.readInt();
       if(len == 0)
         cachedServices = null;

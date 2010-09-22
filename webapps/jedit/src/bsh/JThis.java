@@ -85,6 +85,7 @@ class JThis extends This implements
 
  void event(String name, Object event)
  {
+  System.out.println("JThis.event() 88 ");
   CallStack callstack = new CallStack( namespace );
   BshMethod method = null;
 

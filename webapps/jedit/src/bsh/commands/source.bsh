@@ -15,7 +15,8 @@ Object source( String filename ) {
 }
 
 Object source( URL url ) {
- return this.interpreter.eval( 
+ return this.interpreter.eval(
+  System.out.println("source.bsh 19 url="+url);
   new InputStreamReader(url.openStream()), this.caller.namespace,  
   "URL: "+url.toString()
  );

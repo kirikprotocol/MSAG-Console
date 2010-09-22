@@ -83,6 +83,7 @@ class HelpTOCPanel extends JPanel
  //{{{ load() method
  void load()
  {
+  System.out.println("HelpTOCPanel.load() 86");   
   DefaultTreeModel empty = new DefaultTreeModel(
    new DefaultMutableTreeNode(
    jEdit.getProperty("helpviewer.toc.loading")));

@@ -94,6 +94,7 @@ public class Remote {
    url = url.substring(6); // remove the bsh://
    // get the index of the : between the host and the port is located
    int index = url.indexOf(":");
+   System.out.println("Remote.doBsh() url="+url);      
    host = url.substring(0,index);
    port = url.substring(index+1,url.length());
   } catch ( Exception ex ) {
@@ -130,6 +131,7 @@ public class Remote {
     private static void sendLine( String line, OutputStream outPipe )
   throws IOException
  {
+  System.out.println("Remote.sendLine() 134");
   outPipe.write( line.getBytes() );
   outPipe.flush();
     }
@@ -146,7 +148,8 @@ public class Remote {
   String formData = sb.toString(  );
 
   try {
-    URL url = new URL( postURL );      
+    URL url = new URL( postURL );
+    System.out.println("Remote.doHttp() 151 url="+url);
     HttpURLConnection urlcon =
      (HttpURLConnection) url.openConnection(  );
     System.out.println("bsh.Remote Open url connection: url="+postURL);  
@@ -194,6 +197,7 @@ public class Remote {
  static String getFile( String name ) 
   throws FileNotFoundException, IOException 
  {
+  System.out.println("Remote.getFile() name="+name);   
   StringBuffer sb = new StringBuffer();
   BufferedReader bin = new BufferedReader( new FileReader( name ) );
   String line;

@@ -112,6 +112,7 @@ public class CallStack
   value.
  */
  public NameSpace swap( NameSpace newTop ) {
+  System.out.println("CallStack.swap() 115");
   NameSpace oldTop = (NameSpace)(stack.elementAt(0));
   stack.setElementAt( newTop, 0 );
   return oldTop;
@@ -142,6 +143,7 @@ public class CallStack
   purposes, etc.
  */
  public CallStack copy() {
+  System.out.println("CallStack.copy() 145");   
   CallStack cs = new CallStack();
   cs.stack = (Vector)this.stack.clone();
   return cs;

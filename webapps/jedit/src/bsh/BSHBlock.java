@@ -43,6 +43,7 @@ class BSHBlock extends SimpleNode
  public Object eval( CallStack callstack, Interpreter interpreter) 
   throws EvalError
  {
+  System.out.println("BSHBlock.eval() 46");   
   return eval( callstack, interpreter, false );
  }
 
@@ -61,12 +62,15 @@ class BSHBlock extends SimpleNode
   boolean overrideNamespace ) 
   throws EvalError
  {
+  System.out.println("BSHBlock.eval() 64");
+
   Object syncValue = null;
   if ( isSynchronized ) 
   {
    // First node is the expression on which to sync
    SimpleNode exp = ((SimpleNode)jjtGetChild(0));
-   syncValue = exp.eval(callstack, interpreter);
+      System.out.println("1");
+      syncValue = exp.eval(callstack, interpreter);
   }
 
   Object ret;
@@ -113,6 +117,7 @@ class BSHBlock extends SimpleNode
 
     if ( nodeFilter != null && !nodeFilter.isVisible( node ) )
      continue;
+    System.out.println("BSHBlock.evalBlock() 118");
 
     if ( node instanceof BSHClassDeclaration )
      node.eval( callstack, interpreter );
@@ -127,6 +132,8 @@ class BSHBlock extends SimpleNode
     if ( nodeFilter != null && !nodeFilter.isVisible( node ) )
      continue;
 
+    System.out.println("BSHBlock.evalBlock() 130");    
+       
     ret = node.eval( callstack, interpreter );
 
     // statement or embedded block evaluated a return statement

@@ -548,10 +548,10 @@ public class CatalogManager
           catalog.parseCatalog(url.toString());
         }
 
-        // todo debug - comment
+        //todo debug through appletviewer
         //String cat = "http://localhost:20801/msag/rules/rules/catalog/catalog";
         //catalog.parseCatalog(Class.forName("xml.CatalogManager").getResource(cat).toString());
-        // debug end
+        // end uncomment area
        
         catalog.parseCatalog(Class.forName("xml.CatalogManager").getResource("dtds/catalog").toString());
 

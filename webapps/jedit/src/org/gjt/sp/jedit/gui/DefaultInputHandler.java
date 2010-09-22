@@ -352,12 +352,16 @@ public class DefaultInputHandler extends InputHandler
   else if(o instanceof String)
   {
    setCurrentBindings(bindings);
-    invokeAction((String)o);
+
+   System.out.println("DefaultInputHandler.handleKey() 355");   
+
+   invokeAction((String)o);
    return true;
   }
   else if(o instanceof EditAction)
   {
    setCurrentBindings(bindings);
+   System.out.println("DefaultInputHandler.handleKey() 361");
    invokeAction((EditAction)o);
    return true;
   }

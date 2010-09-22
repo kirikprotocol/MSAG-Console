@@ -60,6 +60,7 @@ class BSHIfStatement extends SimpleNode
   SimpleNode condExp, CallStack callstack, Interpreter interpreter) 
   throws EvalError
     {
+        System.out.println("4");
         Object obj = condExp.eval(callstack, interpreter);
         if(obj instanceof Primitive) {
    if ( obj == Primitive.VOID )

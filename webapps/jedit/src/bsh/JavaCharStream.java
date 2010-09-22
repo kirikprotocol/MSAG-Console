@@ -380,6 +380,7 @@ public class JavaCharStream
   public JavaCharStream(java.io.Reader dstream,
                  int startline, int startcolumn, int buffersize)
   {
+    System.out.println("JavaCharStream() 383");  
     inputStream = dstream;
     line = startline;
     column = startcolumn - 1;

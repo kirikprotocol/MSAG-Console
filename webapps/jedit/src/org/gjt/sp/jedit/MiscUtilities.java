@@ -459,7 +459,8 @@ public class MiscUtilities
   */
  public static boolean isURL(String str)
  {
-  int fsIndex = Math.max(str.indexOf(jEdit.separatorChar),
+   System.out.println("MiscUtilities.isUrl() "+str);
+   int fsIndex = Math.max(str.indexOf(jEdit.separatorChar),
    str.indexOf('/'));
   if(fsIndex == 0) // /etc/passwd
    return false;

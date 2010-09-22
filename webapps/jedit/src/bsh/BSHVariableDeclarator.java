@@ -82,8 +82,10 @@ class BSHVariableDeclarator extends SimpleNode
              value = ((BSHArrayInitializer)initializer).eval( 
      typeNode.getBaseType(), typeNode.getArrayDims(), 
      callstack, interpreter);
-   else
+   else {
+       System.out.println("10");
     value = initializer.eval( callstack, interpreter);
+   }
   }
 
   if ( value == Primitive.VOID )

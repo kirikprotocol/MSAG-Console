@@ -119,10 +119,6 @@ public class Interpreter
  /** Shared system object visible under bsh.system */
  static This sharedObject;
 
- /** 
-  Strict Java mode 
-  @see setStrictJava( boolean )
- */
  private boolean strictJava = false;
 
  /* --- End static members --- */
@@ -170,6 +166,7 @@ public class Interpreter
   boolean interactive, NameSpace namespace,
   Interpreter parent, String sourceFileInfo )
     {
+     System.out.println("Interpreter constructor 169 sourceFileInfo="+sourceFileInfo);   
   parser = new Parser( in );
   long t1=System.currentTimeMillis();
         this.in = in;
@@ -458,7 +455,6 @@ public class Interpreter
 
                     if(DEBUG)
                         node.dump(">");
-
                     Object ret = node.eval( callstack, this );
     
      // sanity check during development
@@ -564,7 +560,8 @@ public class Interpreter
  {
   File file = pathToFile( filename );
   if ( Interpreter.DEBUG ) debug("Sourcing file: "+file);
-  Reader sourceIn = new BufferedReader( new FileReader(file) );
+     System.out.println("Interpreter.source() 563 file="+file);
+     Reader sourceIn = new BufferedReader( new FileReader(file) );
   try {
    return eval( sourceIn, nameSpace, filename );
   } finally {
@@ -621,7 +618,7 @@ public class Interpreter
         Interpreter localInterpreter = 
    new Interpreter( 
     in, out, err, false, nameSpace, this, sourceFileInfo  );
-
+  System.out.println("Interpreter.eval() 619 createLocalInterpreter sourceFileInfo="+sourceFileInfo);
   CallStack callstack = new CallStack( nameSpace );
 
         boolean eof = false;
@@ -637,6 +634,7 @@ public class Interpreter
      // nodes remember from where they were sourced
      node.setSourceFile( sourceFileInfo );
 
+     System.out.println("Interpreter.eval() 640");
      if ( TRACE )
       println( "// " +node.getText());
                     retVal = node.eval( callstack, localInterpreter );
@@ -1028,6 +1026,7 @@ public class Interpreter
  public static void redirectOutputToFile( String filename ) 
  {
   try {
+   System.out.println("Interpreter.redirectOutputToFile() 1031 filename="+filename);
    PrintStream pout = new PrintStream( 
     new FileOutputStream( filename ) );
    System.setOut( pout );

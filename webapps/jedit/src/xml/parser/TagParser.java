@@ -33,6 +33,7 @@ public class TagParser
  //{{{ getTagAtOffset() method
  public static Tag getTagAtOffset(String text, int pos)
  {
+  //System.out.println("TagParser.getTagOffser 36");
   if(pos < 0 || pos > text.length())
    return null;
 
@@ -235,6 +236,7 @@ loop:  for (int i = Math.min(text.length() - 1,pos); i >= 0; i--)
    }
    else if(ch == '>')
    {
+    System.out.println("TagParser.findEndTag() 238");   
     if(notATag)
      continue;
 
@@ -357,6 +359,7 @@ loop:  for (int i = startTag.end; i < text.length(); i++)
    }
    else if(ch == '>')
    {
+    System.out.println("TagParser.findEndTag() 360");   
     if(i != 0)
     {
      char ch2 = text.charAt(i - 1);

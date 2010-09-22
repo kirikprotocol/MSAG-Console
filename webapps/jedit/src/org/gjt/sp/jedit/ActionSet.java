@@ -339,6 +339,7 @@ public class ActionSet
   */
  public String[] getCacheableActionNames()
  {
+  System.out.println("ActionSet.getCacheableActionNames() 342");   
   LinkedList retVal = new LinkedList();
   Enumeration e = actions.elements();
   while(e.hasMoreElements())
@@ -387,6 +388,7 @@ public class ActionSet
   */
  public boolean contains(String action)
  {
+  System.out.println("ActionSet.containts() action="+action);   
   return actions.containsKey(action);
  } //}}}
 
@@ -454,6 +456,7 @@ public class ActionSet
 
   try
   {
+   System.out.println("ActionSet.load() 457 Loading actions from " + uri);   
    Log.log(Log.DEBUG,this,"Loading actions from " + uri);
       System.out.println("Loading actions from " + uri);
    ActionListHandler ah = new ActionListHandler(uri.toString(),this);
