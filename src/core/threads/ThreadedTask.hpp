@@ -30,6 +30,7 @@ public:
   virtual const char* taskName(void) = 0; //TODO: mark this as const
 
   virtual void stop(void) { isStopping = true; }
+  /// invoked when task is passed into ThreadPool::startTask()
   virtual void onThreadPoolStartTask(void) {}
   virtual void onRelease(void) { isReleased = true; }
 

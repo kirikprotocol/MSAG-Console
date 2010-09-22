@@ -185,7 +185,7 @@ void ThreadPool::preCreateThreads(int count)
 void ThreadPool::startTask(ThreadedTask* task)
 {
   MutexGuard  grd(lock);
-  task->onThreadPoolStartTask();
+  task->onThreadPoolStartTask(); // notify task
 
   PooledThread* t;
   if (freeThreads.Count() > 0) {
