@@ -16,3 +16,5 @@ infosme/infosme3  infosme3 \
  $(SOCKETLIB) -lnsl \
  $(SSL_LIB) \
  -lpthread -lrt -ldl
+
+- SmscConnector.cpp

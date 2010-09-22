@@ -12,9 +12,13 @@ typedef uint32_t regionid_type;
 typedef uint32_t msgid_type;
 typedef uint32_t msgtime_type; // simply converted from time_t
 typedef  int32_t timediff_type; // simply converted from time_t
+typedef int64_t  usectime_type;
 
 /// format message time as yy-mm-dd+00:00:00, buffer must be at least 17 bytes.
 char* formatMsgTime( char* buf, msgtime_type theTime );
+
+/// get current microtime
+usectime_type currentTimeMicro();
 
 namespace MsgState {
 static const uint8_t input = 0;

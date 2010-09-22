@@ -1,6 +1,8 @@
 #ifndef _INFOSME_V3_INFOSMECORE_H
 #define _INFOSME_V3_INFOSMECORE_H
 
+#include <string>
+
 namespace smsc {
 namespace util {
 namespace config {
@@ -24,6 +26,8 @@ public:
     /// enter main loop, exit via 'stop()'
     virtual int Execute() = 0;
 
+    // notification
+    // virtual void notifySmscFinished( const std::string& smscId ) = 0;
 };
 
 } // infosme

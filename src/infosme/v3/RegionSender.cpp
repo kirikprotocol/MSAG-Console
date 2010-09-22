@@ -1,5 +1,5 @@
 #include "RegionSender.h"
-#include "SmscConnector.h"
+#include "SmscSender.h"
 
 namespace smsc {
 namespace infosme {

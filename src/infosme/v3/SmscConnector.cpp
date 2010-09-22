@@ -3,6 +3,7 @@
 namespace smsc {
 namespace infosme {
 
+/*
 int SmscConnector::send( msgtime_type currentTime, Delivery& dlv,
                          regionid_type regionId, Message& msg )
 {
@@ -27,6 +28,12 @@ int SmscConnector::send( msgtime_type currentTime, Delivery& dlv,
     scheduleResponse( currentTime + msg.msgId % 5 + 3, dlvmsg );
     return 1;
 }
+ */
+
+virtual int SmscConnector::Execute()
+{
+}
+
 
 }
 }

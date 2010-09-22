@@ -9,15 +9,15 @@
 namespace smsc {
 namespace infosme {
 
-class SmscConnector;
+class SmscSender;
 
 class RegionSender
 {
     static const int BASEINCREMENT = 1000;
 
 public:
-    RegionSender( SmscConnector* conn, Region* r ) :
-    conn_(conn), region_(r),
+    RegionSender( SmscSender& conn, Region* r ) :
+    conn_(&conn), region_(r),
     log_(smsc::logger::Logger::getInstance("regsend")),
     taskList_(*this,BASEINCREMENT*2,smsc::logger::Logger::getInstance("tsklist")) {}
 
@@ -77,7 +77,7 @@ private:
     friend class ScoredList< RegionSender >;
 
 private:
-    SmscConnector*                     conn_;
+    SmscSender*                        conn_;
     Region*                            region_;
     smsc::logger::Logger*              log_;
     ScoredList< RegionSender >         taskList_;
