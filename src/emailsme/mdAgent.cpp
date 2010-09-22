@@ -23,6 +23,7 @@ String logFile="logs/mdAgent.log";
 String host="";
 int port=0;
 int maxsize=1024*1024;
+int maxlogsize=512*1024*1024;
 
 #ifdef DEBUG
 struct LogFile{
@@ -43,6 +44,13 @@ void logit(const char* fmt,...)
   va_start(arglist,fmt);
   vfprintf(f,fmt,arglist);
   fflush(f);
+  if(ftell(f)>maxlogsize)
+  {
+    fclose(f);
+    String logFileBack=logFile+".1";
+    rename(logFile.Str(),logFileBack.Str());
+    f=fopen(logFile,"at");
+  }
   va_end(arglist);
 }
 ~LogFile()
@@ -96,6 +104,11 @@ bool ReadConfig(const char* cfgfile)
       logger.reopen();
       continue;
     }
+    if(!strcmp(strbuf,"maxlogsize"))
+    {
+      maxlogsize=atoi(val);
+      continue;
+    }
     LOG(("Unknown config parameter %s\n",strbuf));
   }
   fclose(f);
@@ -105,7 +118,7 @@ bool ReadConfig(const char* cfgfile)
 
 int main(int argc,char* argv[])
 {
-  if(argc==0)
+  if(argc==1)
   {
     LOG(("Usage: mdAgent path_to_config_file\n"));
     return(EX_USAGE);
@@ -118,7 +131,8 @@ int main(int argc,char* argv[])
   String msg;
   char buf[1024];
   ssize_t rd;
-  LOG(("Start reading\n"));
+  time_t t=time(0);
+  LOG(("Start reading(%s) %s",argc==3?argv[2]:"",ctime(&t)));
   while((rd=read(0,buf,(int)sizeof(buf)))>0)
   {
     LOG(("Read %d bytes\n",rd));
@@ -159,16 +173,17 @@ int main(int argc,char* argv[])
   }
   if(s.WriteAll(msg.Str(),msg.Length())==-1)
   {
-    LOG(("Network error\n"));
+    LOG(("Network error (write failed)\n"));
     return(EX_IOERR);
   };
-  int code;
-  if(s.Read((char*)&code,4)==-1)
+  int code=0;
+  if(s.ReadAll((char*)&code,4)==-1)
   {
-    LOG(("Network error\n"));
+    LOG(("Network error (status read failed)\n"));
     return(EX_IOERR);
   };
   code=ntohl(code);
+  LOG(("Processed, code=%d\n",code));
   using namespace smsc::emailsme;
   switch(code)
   {
@@ -179,6 +194,5 @@ int main(int argc,char* argv[])
     case StatusCodes::STATUS_CODE_LIMIEXCEEDED:return(EX_UNAVAILABLE);
   }
   s.Abort();
-  LOG(("OK\n"));
   return(EX_OK); // message sent successfully
 }
