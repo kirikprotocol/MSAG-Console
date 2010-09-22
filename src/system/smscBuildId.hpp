@@ -1,2 +1,2 @@
-#define SMSC_BUILD_NUM   B3125
-#define SMSC_BUILD_DATE  "Aug 12 2010"
+#define SMSC_BUILD_NUM   B3126
+#define SMSC_BUILD_DATE  "Sep 22 2010"

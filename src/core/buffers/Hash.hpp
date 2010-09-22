@@ -343,11 +343,23 @@ public:
     if(_count==0)return 0;
     return FindLink(key)!=NULL;
   }
+
   void Delete(pchashstr key)
   {
     if(_count==0) return;
     unsigned index=HashFunc(key) % _bucketsnum;
     if(_buckets[index].Remove(key))_count--;
+  }
+
+  bool Pop(pchashstr key, T& val)
+  {
+    if(!_bucketsnum || !_count) return false;
+    List& list = _buckets[HashFunc(key) % _bucketsnum];
+    Link* link = list.Find(key);
+    if (!link) return false;
+    val = link->_keyval._value;
+    list.Remove(key);
+    return true;
   }
 
   void operator=(const Hash<T>& src)
