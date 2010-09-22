@@ -351,6 +351,7 @@ public:
     if(_buckets[index].Remove(key))_count--;
   }
 
+  /// pop element from hash, return true if popped.
   bool Pop(pchashstr key, T& val)
   {
     if(!_bucketsnum || !_count) return false;
