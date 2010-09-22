@@ -1,8 +1,8 @@
-#ifndef _INFOSME_V3_STOREJOURNAL_H
-#define _INFOSME_V3_STOREJOURNAL_H
+#ifndef _INFORMER_STOREJOURNAL_H
+#define _INFORMER_STOREJOURNAL_H
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 /// two functionality:
 /// 1. journalling all activity on the working storage;
@@ -15,7 +15,7 @@ public:
                          Message& msg );
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

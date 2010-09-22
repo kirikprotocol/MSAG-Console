@@ -2,7 +2,7 @@
 #include "SmscSender.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 InfosmeCoreV1::InfosmeCoreV1() :
 log_(0), stopping_(true), started_(false)
@@ -76,20 +76,44 @@ void InfosmeCoreV1::notifySmscFinished( const std::string& smscId )
  */
 
 
-void InfosmeCoreV1::addSmsc( const std::string&          smscId,
-                             const smsc::sme::SmeConfig* cfg )
+void InfosmeCoreV1::updateSmsc( const std::string&          smscId,
+                                const smsc::sme::SmeConfig* cfg )
 {
     // FIXME
-    {
+    if (cfg) {
+        // create/update
+        SmscSender* p = 0;
+        SmscSender** ptr = 0;
         MutexGuard mg(startMon_);
-        SmscSender** ptr = smscs_.GetPtr(smscId.c_str());
-        if (ptr) {
-            if (*ptr) return;
-            *ptr = new SmscSender(*this,smscId,cfg);
-        } else {
-            ptr = smscs_.SetItem( smscId.c_str(), new SmscSender(*this,smscId,cfg) );
+        try {
+            ptr = smscs_.GetPtr(smscId.c_str());
+            if (!ptr) {
+                p = new SmscSender(*this,smscId,*cfg);
+                ptr = smscs_.SetItem(smscId.c_str(),p);
+            } else if (*ptr) {
+                (*ptr)->updateConfig(*cfg);
+                // (*ptr)->waitUntilReleased();
+            } else {
+                p = new SmscSender(*this,smscId,*cfg);
+                *ptr = p;
+            }
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"smscsender create error: %s", e.what());
+            if (p) {
+                smscs_.Delete(smscId.c_str());
+                delete p;
+            }
         }
-        tp_.startTask(*ptr);
+        if (ptr && *ptr) tp_.startTask(*ptr);
+    } else {
+        // delete the smsc
+        MutexGuard mg(startMon_);
+        SmscSender* ptr = 0;
+        if (smscs_.Pop(smscId.c_str(),ptr) && ptr) {
+            ptr->stop();
+            ptr->waitUntilReleased();
+            delete ptr;
+        }
     }
     // notifySmscFinished(smscId);
 }

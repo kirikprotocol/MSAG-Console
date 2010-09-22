@@ -1,10 +1,10 @@
-#ifndef _INFOSME_V3_INPUTMESSAGESOURCE_H
-#define _INFOSME_V3_INPUTMESSAGESOURCE_H
+#ifndef _INFORMER_INPUTMESSAGESOURCE_H
+#define _INFORMER_INPUTMESSAGESOURCE_H
 
 #include "Message.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class InputMessageUploadRequester
 {
@@ -40,7 +40,7 @@ public:
                                        unsigned count ) = 0;
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

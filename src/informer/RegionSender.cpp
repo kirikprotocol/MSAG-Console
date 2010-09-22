@@ -2,7 +2,7 @@
 #include "SmscSender.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 unsigned RegionSender::scoredObjIsReady( unsigned deltaus, Delivery& dlv )
 {

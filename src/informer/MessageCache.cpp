@@ -2,7 +2,7 @@
 #include "MessageCache.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 MessageCache::MessageCache( const DeliveryInfo& dlvInfo,
                             StoreJournal&       storeLog,

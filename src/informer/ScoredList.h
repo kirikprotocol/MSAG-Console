@@ -6,7 +6,7 @@
 #include <algorithm>
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 /// a templated ScoredList
 /// @param Proc is a class that should define the following:

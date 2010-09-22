@@ -1,10 +1,10 @@
 #include "Message.h"
 #include "InfosmeException.h"
-#include "infosme/v3/io/IOConverter.h"
+#include "informer/io/IOConverter.h"
 #include <cstdio>
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 unsigned char* Message::toBuf( uint16_t version, unsigned char* buf )
 {

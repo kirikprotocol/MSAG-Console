@@ -1,5 +1,5 @@
-#ifndef _INFOSME_V3_INFOSMECOMPONENT_H
-#define _INFOSME_V3_INFOSMECOMPONENT_H
+#ifndef _INFORMER_INFOSMECOMPONENT_H
+#define _INFORMER_INFOSMECOMPONENT_H
 
 #include "logger/Logger.h"
 #include "admin/service/Component.h"
@@ -9,7 +9,7 @@
 // #include "sme/SmppBase.hpp"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class InfosmeComponent : public smsc::admin::service::Component
 {

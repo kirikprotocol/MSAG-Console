@@ -1,5 +1,5 @@
-#ifndef _INFOSME_V3_REGIONSENDER_H
-#define _INFOSME_V3_REGIONSENDER_H
+#ifndef _INFORMER_REGIONSENDER_H
+#define _INFORMER_REGIONSENDER_H
 
 #include "Region.h"
 #include "Delivery.h"
@@ -7,7 +7,7 @@
 #include "SpeedControl.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class SmscSender;
 
@@ -30,6 +30,8 @@ public:
     inline unsigned getBandwidth() const {
         return region_->getBandwidth();
     }
+
+    std::string toString() const;
 
     inline unsigned isReady( unsigned deltaus )
     {
@@ -88,7 +90,7 @@ private:
     Message                            msg_;
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

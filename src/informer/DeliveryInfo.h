@@ -1,10 +1,10 @@
-#ifndef _INFOSME_V3_DELIVERYINFO_H
-#define _INFOSME_V3_DELIVERYINFO_H
+#ifndef _INFORMER_DELIVERYINFO_H
+#define _INFORMER_DELIVERYINFO_H
 
 #include "Typedefs.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class DeliveryInfo
 {
@@ -32,7 +32,7 @@ private:
     dlvid_type dlvid_;
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

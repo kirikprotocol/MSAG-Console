@@ -1,10 +1,10 @@
-#ifndef _INFOSME_V3_UNLOCKMUTEXGUARD_H
-#define _INFOSME_V3_UNLOCKMUTEXGUARD_H
+#ifndef _INFORMER_UNLOCKMUTEXGUARD_H
+#define _INFORMER_UNLOCKMUTEXGUARD_H
 
 #include "core/synchronization/Mutex.hpp"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 template < class T >
 class UnlockMutexGuardTmpl 
@@ -25,7 +25,7 @@ protected:
 
 typedef UnlockMutexGuardTmpl< smsc::core::synchronization::Mutex >  UnlockMutexGuard;
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

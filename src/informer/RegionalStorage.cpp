@@ -5,7 +5,7 @@
 #include "StoreJournal.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class RegionalStorage::MsgLock
 {

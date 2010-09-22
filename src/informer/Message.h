@@ -1,12 +1,12 @@
-#ifndef _INFOSME_V3_MESSAGE_H
-#define _INFOSME_V3_MESSAGE_H
+#ifndef _INFORMER_MESSAGE_H
+#define _INFORMER_MESSAGE_H
 
 #include "Typedefs.h"
 #include "core/buffers/FixedLengthString.hpp"
 #include <list>
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 // 8+24+4+4+4+4+1+1 = 32+32+2 = 66 => 72
 struct Message

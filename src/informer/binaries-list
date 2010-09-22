@@ -1,6 +1,6 @@
-infosme/infosme3  infosme3 \
- -linfosme-v3 \
- -linfosme-v3-io \
+informer/informer  informer \
+ -linformer \
+ -linformer-io \
  -llicense-check \
  -ladmin-service \
  -ladmin-protocol \
@@ -16,5 +16,3 @@ infosme/infosme3  infosme3 \
  $(SOCKETLIB) -lnsl \
  $(SSL_LIB) \
  -lpthread -lrt -ldl
-
-- SmscConnector.cpp

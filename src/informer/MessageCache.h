@@ -1,10 +1,10 @@
-#ifndef _INFOSME_V3_MESSAGECACHE_H
-#define _INFOSME_V3_MESSAGECACHE_H
+#ifndef _INFORMER_MESSAGECACHE_H
+#define _INFORMER_MESSAGECACHE_H
 
 #include "RegionalStorage.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 /// the cache of messages for the task.
 class MessageCache

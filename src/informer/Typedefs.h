@@ -1,11 +1,11 @@
-#ifndef _INFOSME_V3_TYPEDEFS_H
-#define _INFOSME_V3_TYPEDEFS_H
+#ifndef _INFORMER_TYPEDEFS_H
+#define _INFORMER_TYPEDEFS_H
 
 #include <ctime>
 #include "util/int.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 typedef uint32_t dlvid_type;
 typedef uint32_t regionid_type;
@@ -39,7 +39,7 @@ struct DlvRegMsgId
     msgid_type    msgId;
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

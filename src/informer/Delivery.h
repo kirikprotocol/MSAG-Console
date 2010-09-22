@@ -1,11 +1,11 @@
-#ifndef _INFOSME_V3_DELIVERY_H
-#define _INFOSME_V3_DELIVERY_H
+#ifndef _INFORMER_DELIVERY_H
+#define _INFORMER_DELIVERY_H
 
 #include <memory>
 #include "MessageCache.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class StoreJournal;
 class InputMessageSource;
@@ -35,7 +35,7 @@ public:
     MessageCache                cache_;
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

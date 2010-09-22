@@ -1,10 +1,10 @@
-#ifndef _INFOSME_V3_EXCEPTION_H
-#define _INFOSME_V3_EXCEPTION_H
+#ifndef _INFORMER_EXCEPTION_H
+#define _INFORMER_EXCEPTION_H
 
 #include "util/Exception.hpp"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class InfosmeException : public smsc::util::Exception
 {

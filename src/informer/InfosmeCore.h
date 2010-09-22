@@ -1,5 +1,5 @@
-#ifndef _INFOSME_V3_INFOSMECORE_H
-#define _INFOSME_V3_INFOSMECORE_H
+#ifndef _INFORMER_INFOSMECORE_H
+#define _INFORMER_INFOSMECORE_H
 
 #include <string>
 
@@ -9,7 +9,7 @@ namespace config {
 class ConfigView;
 }
 }
-namespace infosme {
+namespace informer {
 
 class InfosmeCore
 {
@@ -30,7 +30,7 @@ public:
     // virtual void notifySmscFinished( const std::string& smscId ) = 0;
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

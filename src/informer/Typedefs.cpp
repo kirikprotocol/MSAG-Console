@@ -5,7 +5,7 @@
 #include "util/TimeSource.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 char* formatMsgTime( char* buf, msgtime_type tmp )
 {

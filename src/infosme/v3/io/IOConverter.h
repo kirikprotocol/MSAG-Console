@@ -1,11 +1,11 @@
-#ifndef _INFOSME_V3_IOCONVERTER_H
-#define _INFOSME_V3_IOCONVERTER_H
+#ifndef _INFORMER_IOCONVERTER_H
+#define _INFORMER_IOCONVERTER_H
 
 #include <iosfwd>
 #include "util/int.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 namespace io {
 
 struct FromBuf
@@ -36,7 +36,7 @@ public:
 };
 
 } // io
-} // infosme
+} // informer
 } // smsc
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef _INFOSME_V3_INFOSMECOREV1_H
-#define _INFOSME_V3_INFOSMECOREV1_H
+#ifndef _INFORMER_INFOSMECOREV1_H
+#define _INFORMER_INFOSMECOREV1_H
 
 #include "InfosmeCore.h"
 #include "logger/Logger.h"
@@ -9,7 +9,7 @@
 #include "sme/SmppBase.hpp"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class SmscSender;
 
@@ -49,7 +49,7 @@ private:
     smsc::core::buffers::Hash< SmscSender* >   smscs_; // owned
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

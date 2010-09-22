@@ -2,7 +2,7 @@
 #include "util/byteorder.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 namespace io {
 
 uint16_t FromBuf::get16()

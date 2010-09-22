@@ -1,10 +1,10 @@
-#ifndef _INFOSME_V3_REGION_H
-#define _INFOSME_V3_REGION_H
+#ifndef _INFORMER_REGION_H
+#define _INFORMER_REGION_H
 
 #include "Typedefs.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class Region
 {
@@ -20,7 +20,7 @@ private:
     unsigned       bw_; //  sms/sec
 };
 
-} // infosme
+} // informer
 } // smsc
 
 #endif

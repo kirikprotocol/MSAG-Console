@@ -1,7 +1,7 @@
 #include "Delivery.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 Delivery::Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
                     StoreJournal&  storeLog,

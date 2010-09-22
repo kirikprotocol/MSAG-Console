@@ -1,5 +1,5 @@
-#ifndef _INFOSME_V3_REGIONALSTORAGE_H
-#define _INFOSME_V3_REGIONALSTORAGE_H
+#ifndef _INFORMER_REGIONALSTORAGE_H
+#define _INFORMER_REGIONALSTORAGE_H
 
 #include <map>
 #include "InputMessageSource.h"
@@ -11,7 +11,7 @@
 #include "DeliveryInfo.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 class StoreJournal;
 class RegionalStoragePtr;

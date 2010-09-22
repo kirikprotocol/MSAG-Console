@@ -1,7 +1,7 @@
 #include "InfosmeComponent.h"
 
 namespace smsc {
-namespace infosme {
+namespace informer {
 
 InfosmeComponent::InfosmeComponent( InfosmeCore& core ) :
 log_(0),
