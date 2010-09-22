@@ -1,9 +1,16 @@
+#include <cstring>
 #include "IOConverter.h"
 #include "util/byteorder.h"
 
 namespace smsc {
 namespace informer {
 namespace io {
+
+uint8_t FromBuf::get8()
+{
+    return *(buf++);
+}
+
 
 uint16_t FromBuf::get16()
 {
@@ -51,6 +58,63 @@ uint64_t FromBuf::get64()
     res <<= 32;
     return res + get32();
 #endif
+}
+
+
+const unsigned char* FromBuf::skip( size_t bytes )
+{
+    const unsigned char* ret = buf;
+    buf += bytes;
+    return ret;
+}
+
+
+void ToBuf::set8( uint8_t c )
+{
+    *(buf++) = c;
+}
+
+
+void ToBuf::set16( uint16_t c )
+{
+    buf += 2;
+    register uint8_t* p = reinterpret_cast<uint8_t*>(buf);
+    *p = uint8_t(c >> 8);
+    *++p = uint8_t(c);
+    buf += 2;
+}
+
+
+void ToBuf::set32( uint32_t c )
+{
+    buf += 4;
+    register uint8_t* p = reinterpret_cast<uint8_t*>(buf);
+    *--p = uint8_t(c);
+    c >>= 8;
+    *--p = uint8_t(c);
+    c >>= 8;
+    *--p = uint8_t(c);
+    c >>= 8;
+    *--p = uint8_t(c);
+}
+
+
+void ToBuf::set64( uint64_t c )
+{
+#if BYTE_ORDER == BIG_ENDIAN
+    buf += 8;
+    memcpy(buf,&c,8);
+#else
+    set32(uint32_t(c>>32));
+    set32(uint32_t(c));
+#endif
+}
+
+
+void ToBuf::copy( size_t bytes, const void* from )
+{
+    memcpy(buf,from,bytes);
+    buf += bytes;
 }
 
 }

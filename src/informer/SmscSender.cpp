@@ -27,6 +27,16 @@ SmscSender::~SmscSender()
 }
 
 
+unsigned SmscSender::send( msgtime_type currentTime,
+                           Delivery& dlv,
+                           regionid_type regionId,
+                           Message& msg )
+{
+    smsc_log_error(log_,"FIXME: send()");
+    return 0;
+}
+
+
 void SmscSender::updateConfig( const smsc::sme::SmeConfig& config )
 {
     waitUntilReleased();
@@ -44,6 +54,18 @@ void SmscSender::waitUntilReleased()
         if (isReleased) break;
         mon_.wait(100);
     }
+}
+
+
+void SmscSender::handleEvent( smsc::sme::SmppHeader* pdu )
+{
+    smsc_log_error(log_,"FIXME: handleEvent, S=%s", smscId_.c_str());
+}
+
+
+void SmscSender::handleError( int errorcode )
+{
+    smsc_log_error(log_,"FIXME: handleError, S=%s", smscId_.c_str());
 }
 
 

@@ -1,8 +1,13 @@
 #ifndef _INFORMER_STOREJOURNAL_H
 #define _INFORMER_STOREJOURNAL_H
 
+#include "Typedefs.h"
+#include "logger/Logger.h"
+
 namespace smsc {
 namespace informer {
+
+class Message;
 
 /// two functionality:
 /// 1. journalling all activity on the working storage;
@@ -10,9 +15,11 @@ namespace informer {
 class StoreJournal
 {
 public:
-    void journalMessage( dlvid_type dlvId,
-                         regionid_type regionId,
-                         Message& msg );
+    void journalMessage( dlvid_type     dlvId,
+                         regionid_type  regionId,
+                         const Message& msg );
+private:
+    smsc::logger::Logger* log_;
 };
 
 } // informer

@@ -4,6 +4,14 @@
 namespace smsc {
 namespace informer {
 
+std::string RegionSender::toString() const
+{
+    char buf[30];
+    sprintf(buf,"R=%u",getRegionId());
+    return buf;
+}
+
+
 unsigned RegionSender::scoredObjIsReady( unsigned deltaus, Delivery& dlv )
 {
     try {

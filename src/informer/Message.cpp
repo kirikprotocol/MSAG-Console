@@ -6,7 +6,7 @@
 namespace smsc {
 namespace informer {
 
-unsigned char* Message::toBuf( uint16_t version, unsigned char* buf )
+unsigned char* Message::toBuf( uint16_t version, unsigned char* buf ) const
 {
     if ( version != 1 ) {
         throw InfosmeException("wrong version %u in Message::toBuf", version);
@@ -40,7 +40,7 @@ const unsigned char* Message::fromBuf( uint16_t version, const unsigned char* bu
 }
 
 
-char* Message::printToBuf( size_t bufsize, char* buf )
+char* Message::printToBuf( size_t bufsize, char* buf ) const
 {
     char lbuf[20];
     char tbuf[20];

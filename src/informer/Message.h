@@ -19,16 +19,17 @@ struct Message
     msgid_type       msgId;      // unique message id (constant)
     msgtime_type     lastTime;   // lasttime / filenumber (for new messages)
     timediff_type    timeLeft;   // ttl / filepos (for new messages)
-    uint32_t         textId;
+    uint32_t         textId;     // glossary text id
     smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // (constant)
     uint8_t          state;
 
     /// conversion (for I/O)
-    unsigned char* toBuf( uint16_t version, unsigned char* buf );
+    unsigned char* toBuf( uint16_t version, unsigned char* buf ) const;
     const unsigned char* fromBuf( uint16_t version, const unsigned char* buf );
 
-    /// textual
-    char* printToBuf( size_t bufsize, char* buf );
+    /// textual representation
+    /// FIXME: should we add 'version' arg?
+    char* printToBuf( size_t bufsize, char* buf ) const;
 };
 
 // a structure which is kept in the list in operational storage.
