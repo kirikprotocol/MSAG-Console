@@ -78,13 +78,14 @@ public class CallStack
  }
 
  public NameSpace top() {
+  System.out.println("CallStack.top() 81");
   return get(0);
  }
 
  /**
   zero based.
  */
- public NameSpace get(int depth) {
+ public NameSpace get(int depth) {  
   if ( depth >= depth() )
    return NameSpace.JAVACODE;
   else

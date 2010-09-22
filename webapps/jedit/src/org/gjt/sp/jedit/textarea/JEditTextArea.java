@@ -4819,6 +4819,7 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
  //{{{ processKeyEvent() method
  public void processKeyEvent(KeyEvent evt)
  {
+  System.out.println("jEditTextArea.processKeyEvent() 4822");   
   view.processKeyEvent(evt,View.TEXT_AREA);
 
   if(!evt.isConsumed())

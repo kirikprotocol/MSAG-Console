@@ -89,7 +89,7 @@ xml.disableRootElement=true
 buffer.xml.validate=true
 
 # Enable network operations
-xml.network=true
+xml.network=false
 
 # Resource cache
 xml.cache=true

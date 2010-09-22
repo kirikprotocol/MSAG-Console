@@ -171,8 +171,9 @@ public class NameSpace
  }
 
     public NameSpace( BshClassManager classManager, String name ) 
- {
+ {     
   this( null, classManager, name );
+     System.out.println("NameSpace() 175");
  }
 
     public NameSpace( 

@@ -873,7 +873,7 @@ class Name implements java.io.Serializable
   
         if ( clas != null ){
             System.out.println("Name 868 Reflect.invokeStaticMethod()");      
-
+            
             return Reflect.invokeStaticMethod( bcm, clas, methodName, args );
         }
 

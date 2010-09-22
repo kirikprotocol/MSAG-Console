@@ -618,7 +618,20 @@ public class Interpreter
         Interpreter localInterpreter = 
    new Interpreter( 
     in, out, err, false, nameSpace, this, sourceFileInfo  );
-  System.out.println("Interpreter.eval() 619 createLocalInterpreter sourceFileInfo="+sourceFileInfo);
+
+  System.out.println("Interpreter.eval() 619 createLocalInterpreter sourceFileInfo.length="+sourceFileInfo.length());
+  for(int i=0;i<sourceFileInfo.length(); i = i + 30){
+     String s = "";
+     if (i+30 < sourceFileInfo.length()) {
+         s =sourceFileInfo.substring(i, i+30);
+     } else {
+         s =sourceFileInfo.substring(i, sourceFileInfo.length());
+     }
+     System.out.println("Interpreter "+s);
+  }           
+
+
+
   CallStack callstack = new CallStack( nameSpace );
 
         boolean eof = false;
