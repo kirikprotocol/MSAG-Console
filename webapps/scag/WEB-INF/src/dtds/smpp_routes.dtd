@@ -6,6 +6,7 @@
 	enabled  (true | false) "true"
         transit  (true | false) "false"
         saa      (true | false) "true"
+        hideSaaText (true | false) "false"
 	slicing  (NONE | SAR | UDH8 | UDH16) "NONE"
         slicedRespPolicy (ALL | ANY) "ALL"
 	srcSmeId CDATA #IMPLIED
