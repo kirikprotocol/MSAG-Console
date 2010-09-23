@@ -274,7 +274,7 @@ public class Route {
 //                    + "\" active=\"" + isActive()
                     + "\" transit=\"" + isTransit()
                     + "\" saa=\"" + isSaa()
-                    + "\" hideSaaText\"" + isHideSaaText()
+                    + "\" hideSaaText=\"" + isHideSaaText()
                     + "\" slicing=\"" + StringEncoderDecoder.encode(getSlicing())
                     + "\" slicedRespPolicy=\"" + StringEncoderDecoder.encode(getSlicedRespPolicy())
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
