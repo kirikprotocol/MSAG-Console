@@ -26,7 +26,11 @@ public class CollapsingGroup extends EyelineComponent {
 
   public void setOpened(boolean opened) {
     this.opened = opened;
-  }    
+  }
+
+  public void processDecodes(javax.faces.context.FacesContext context) {
+    CollapsingGroupRenderer.decodeGroup(context, this);
+  }
 
   public Object saveState(FacesContext context) {
     Object[] values = new Object[5];

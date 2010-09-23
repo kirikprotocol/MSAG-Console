@@ -37,9 +37,9 @@
 
       <h:inputHidden value="#{index1.init}"/>
 
-      <eye:dataTableFilter bean="#{index1}" applyAction="query">
+      <h:commandLink value="APPLY" title="APPLY" action="#{index1.query}"/>
 
-      </eye:dataTableFilter>
+      
 
       <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" rendered="#{index1.init}">
 

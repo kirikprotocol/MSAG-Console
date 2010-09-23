@@ -25,7 +25,6 @@ public class DataTableHandler extends ComponentHandler {
   private final TagAttribute selectedRows;
   private final TagAttribute updateUsingSubmit;
   private final TagAttribute var;
-  private final TagAttribute rendered;
 
   public DataTableHandler(ComponentConfig config) {
     super(config);
@@ -36,7 +35,6 @@ public class DataTableHandler extends ComponentHandler {
     selectedRows = getAttribute("selectedRows");
     updateUsingSubmit = getAttribute("updateUsingSubmit");
     var = getAttribute("var");
-    rendered = getAttribute("rendered");
   }
 
   protected UIComponent createComponent(FaceletContext ctx) {
@@ -54,9 +52,6 @@ public class DataTableHandler extends ComponentHandler {
   }
 
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
-
-    if (rendered != null && !rendered.getBoolean(ctx))
-      return;
 
     DataTable t = (DataTable) c;
 

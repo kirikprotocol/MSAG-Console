@@ -17,14 +17,12 @@ public class CollapsingGroupHandler extends ComponentHandler {
 
   private final TagAttribute label;
   private final TagAttribute opened;
-  private final TagAttribute rendered;
 
   public CollapsingGroupHandler(ComponentConfig config) {
     super(config);
 
     label = getRequiredAttribute("label");
     opened = getAttribute("opened");
-    rendered = getAttribute("rendered");
   }
 
   protected javax.faces.component.UIComponent createComponent(com.sun.facelets.FaceletContext ctx) {
@@ -37,9 +35,6 @@ public class CollapsingGroupHandler extends ComponentHandler {
 
   @Override
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
-    if (rendered != null && !rendered.getBoolean(ctx))
-      return;
-
     CollapsingGroup g = (CollapsingGroup)c;
 
     g.setLabel(label.getValue(ctx));

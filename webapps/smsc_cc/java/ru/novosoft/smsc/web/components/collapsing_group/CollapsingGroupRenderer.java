@@ -13,7 +13,10 @@ public class  CollapsingGroupRenderer extends Renderer {
 
   public void decode(FacesContext context, UIComponent component) {
     CollapsingGroup cg = (CollapsingGroup)component;
+    decodeGroup(context, cg);
+  }
 
+  static void decodeGroup(FacesContext context, CollapsingGroup cg) {
     String opened = context.getExternalContext().getRequestParameterMap().get("sectionOpened_" + cg.getId());
     cg.setOpened((opened != null && opened.equals("true")));
   }

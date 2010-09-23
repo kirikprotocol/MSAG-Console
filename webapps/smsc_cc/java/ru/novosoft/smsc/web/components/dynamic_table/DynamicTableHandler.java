@@ -12,13 +12,11 @@ public class DynamicTableHandler extends ComponentHandler {
 
   private final TagAttribute value;
   private final TagAttribute width;
-  private final TagAttribute rendered;
 
   public DynamicTableHandler(ComponentConfig config) {
     super(config);
     this.value = getRequiredAttribute("value");
     this.width = getAttribute("width");
-    this.rendered = getAttribute("rendered");
   }
 
   protected javax.faces.component.UIComponent createComponent(com.sun.facelets.FaceletContext ctx) {
@@ -31,9 +29,6 @@ public class DynamicTableHandler extends ComponentHandler {
   }
 
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
-    if (rendered != null && !rendered.getBoolean(ctx))
-      return;
-    
     DynamicTable dt = (DynamicTable)c;
     dt.setModel((DynamicTableModel) value.getObject(ctx, DynamicTableModel.class));
     nextHandler.apply(ctx, c);
