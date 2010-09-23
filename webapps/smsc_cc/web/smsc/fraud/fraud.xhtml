@@ -92,7 +92,7 @@
         <tr:inputText value="#{fraud.newAddr}"  required="false" simple="true" contentStyle="width:150px;" >
             <eye:validatePhone/>
         </tr:inputText>
-        <tr:commandLink id="add2" actionListener="#{fraud.addObject}" >
+        <tr:commandLink id="add2" actionListener="#{fraud.addLine}" >
             <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"/>
         </tr:commandLink>
     </h:panelGrid>
