@@ -20,6 +20,8 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitManagerTest;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManagerTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
+import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
+import ru.novosoft.smsc.admin.operative_store.OperativeStoreProviderTest;
 import ru.novosoft.smsc.admin.profile.TestProfileManager;
 import ru.novosoft.smsc.admin.provider.TestProviderManager;
 import ru.novosoft.smsc.admin.region.RegionsConfigTest;
@@ -83,6 +85,10 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TimezonesConfigTest.class.getResourceAsStream("timezones.xml"), new File(smscDir, "timezones.xml"), false);
     TestUtils.exportResource(RegionsConfigTest.class.getResourceAsStream("regions.xml"), new File(smscDir, "regions.xml"), false);
     TestUtils.exportResource(TestProfileManager.emptyProfilesFileAsStream(AdminMode.smsx, PROFILES_VERSION), new File(smscDir, "profiles.bin"), false);
+
+    File operStoreDir = new File(servicesDir, "SMSC1/store/operative");
+    operStoreDir.mkdirs();
+    TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), new File(operStoreDir, "store.bin"), false);
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
@@ -164,6 +170,13 @@ public class TestAdminContext extends AdminContext {
     profileManager = new TestProfileManager(AdminMode.smsx, new File(smscConfigDir, "profiles.bin"), fileSystem, clusterController);
 
     loggerManager = new TestLoggerManager(clusterController);
+
+    File[] operStores = new File[smscInstancesNumber];
+    operStores[0] = new File(servicesDir, "SMSC1/store/operative/store.bin");
+    for (int i =0; i<smscInstancesNumber; i++)
+      operStores[i] = new File(servicesDir, "SMSC" + i + "/store/operative/store.bin");
+
+    operativeStoreProvider = new OperativeStoreProvider(operStores, fileSystem);    
   }
 
   public TestAdminContext() throws AdminException {

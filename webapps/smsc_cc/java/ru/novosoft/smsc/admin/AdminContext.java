@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.logging.LoggerManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
+import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.region.RegionManager;
@@ -20,6 +21,7 @@ import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.route.RouteSubjectManager;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
+import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpManager;
@@ -63,6 +65,8 @@ public class AdminContext {
   protected RegionManager regionManager;
   protected ProfileManager profileManager;
   protected LoggerManager loggerManager;
+
+  protected OperativeStoreProvider operativeStoreProvider;
 
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
@@ -138,6 +142,14 @@ public class AdminContext {
     profileManager = new ProfileManager(AdminMode.smsx, new File(s.getCommonSettings().getProfilerStoreFile()), fileSystem, clusterController);
 
     loggerManager = new LoggerManager(clusterController);
+
+    File[] operativeStorages = new File[s.getSmscInstancesCount()];
+    for (int i=0;i<s.getSmscInstancesCount(); i++) {
+      InstanceSettings is = s.getInstanceSettings(i);
+      operativeStorages[i] = new File(is.getLocalStoreFilename());
+    }
+
+    operativeStoreProvider = new OperativeStoreProvider(operativeStorages, fileSystem);
 
     AdminContextLocator.registerContext(this);
   }
@@ -224,6 +236,10 @@ public class AdminContext {
 
   public LoggerManager getLoggerManager() {
     return loggerManager;
+  }
+
+  public OperativeStoreProvider getOperativeStoreProvider() {
+    return operativeStoreProvider;
   }
 
   public InstallationType getInstallationType() {

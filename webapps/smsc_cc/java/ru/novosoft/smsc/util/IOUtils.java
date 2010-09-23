@@ -121,13 +121,22 @@ public class IOUtils {
     long read = 0;
     while (read < bytesToSkip) {
       long result = is.skip(bytesToSkip - read);
+      
       read += result;
     }
   }
 
   public static void readFully(InputStream is, byte[] bytes) throws IOException {
+    readFully(is, bytes, bytes.length);    
+  }
+
+  public static void readFully(InputStream is, byte[] bytes, int len) throws IOException {
     int start = 0;
-    while (start < bytes.length)
-      start = is.read(bytes, start, bytes.length - start);
+    while (start < len) {
+      int res = is.read(bytes, start, len - start);
+      if (res == -1)
+        throw new EOFException();
+      start += res;
+    }
   }
 }
