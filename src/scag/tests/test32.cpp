@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cstdlib>
 
+#ident "hello, world"
+
 int main()
 {
 #define showenv(x) std::cout << x << "=" << ( getenv(x) ? getenv(x) : "<not set>" ) << std::endl

@@ -209,6 +209,7 @@ throw (SubjectNotFoundException)
                                     getAttribBool(elem, "active") /*not used*/,
                                     getAttribBool(elem, "transit"),
                                     getAttribBool(elem, "saa"),
+                                    getAttribBool(elem, "hideSaaText"),
                                     getAttribStr(elem, "srcSmeId"),
                                     getAttribInt(elem, "serviceId"),
                                     getAttribStr(elem, "slicing"),
@@ -340,6 +341,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" enabled=\""      << (r->isActive() ? "true" : "false")
       << "\" transit=\""       << (r->isTransit() ? "true" : "false")
       << "\" saa=\""           << (r->hasStatistics() ? "true" : "false")
+      << "\" hideSaaText=\""  << (r->hideMessageBody() ? "true" : "false")
       << "\" slicing=\"" << slice <<
             "\" slicedRespPolicy=\"" << slicePol <<
             "\" srcSmeId=\"" << encode(r->getSrcSmeSystemId().c_str()) <<

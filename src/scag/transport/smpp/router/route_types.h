@@ -38,6 +38,7 @@ struct RouteInfo
     srcSmeSystemId.str[0]=0;
     slicing = SlicingType::NONE;
     statistics = true;
+    hideMessage = false;
   }
 
   FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
@@ -46,6 +47,7 @@ struct RouteInfo
   // bool archived;
   bool transit;
   bool statistics;
+  bool hideMessage;
   uint8_t slicing, slicingRespPolicy;
 
   FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> smeSystemId;

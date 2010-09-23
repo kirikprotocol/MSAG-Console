@@ -22,6 +22,8 @@
 namespace {
 using namespace scag2::transport::smpp;
 
+const std::string hiddenMessageBody = "<<hidden>>";
+
 bool isDirFromService( DataSmDirection dir ) {
     return ( dir == dsdSrv2Sc || dir == dsdSrv2Srv );
 }
@@ -838,7 +840,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             timeval tv = { time(0), 0 };
             primaryKey.setBornTime(tv);
             smsc_log_debug(log_, "%s: register traffic info event for transit route", where);
-            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
+            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, ri.hideMessage ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
           }
           hrt.stop();
           break;
@@ -886,7 +888,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
 
         if (st.status == re::STATUS_OK && ri.statistics) {
           smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
-          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
+          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), ri.hideMessage ? hiddenMessageBody : scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
         }
 
     } // while redirect

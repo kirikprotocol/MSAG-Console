@@ -680,3 +680,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: ussd with umr=0 coming from SMSC is ok now
 
 --- current fixes ---
+2010-09-23 14:30 bukind
+  msag: feature: hideSaaText flag in smpp route configuration
