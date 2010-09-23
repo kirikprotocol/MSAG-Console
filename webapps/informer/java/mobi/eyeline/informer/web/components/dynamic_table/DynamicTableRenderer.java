@@ -21,7 +21,10 @@ public class DynamicTableRenderer extends Renderer {
   public void decode(FacesContext context, UIComponent component) {
 
     DynamicTable c = (DynamicTable) component;
+    decodeTable(context, c);
+  }
 
+  static void decodeTable(FacesContext context, DynamicTable c) {
     DynamicTableModel newModel = new DynamicTableModel();
     String paramPrefix = c.getId() + '_';
     String newCellPrefix = c.getId() + "_newcell";

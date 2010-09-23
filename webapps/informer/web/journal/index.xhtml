@@ -13,7 +13,9 @@
   <ui:define name="content">
     <h:form>
 
-      <eye:dataTableFilter bean="#{journal}" clearAction="clearFilter">
+      <h:inputHidden value="#{journal.init}"/>
+
+      <eye:dataTableFilter bean="#{journal}" clearAction="clearFilter" applyAction="query">
         <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">
           <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
             <h:outputText value="#{msg['journal.page.user']}"/>
@@ -32,9 +34,9 @@
         </h:panelGrid>
       </eye:dataTableFilter>
 
-      <eye:dataTable value="#{journal.records}" var="rec">
+      <eye:dataTable value="#{journal.records}" var="rec" rendered="#{journal.init}">
         <eye:row>
-          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="10%" align="center" defaultSortOrder="desc">
+          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="10%" align="center">
             <h:outputText value="#{rec.date}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </h:outputText>

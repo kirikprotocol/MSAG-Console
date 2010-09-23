@@ -48,6 +48,10 @@ public class DynamicTable extends EyelineComponent {
     super.processUpdates(context);
   }
 
+  public void processDecodes(javax.faces.context.FacesContext context) {
+    DynamicTableRenderer.decodeTable(context, this);
+  }
+
   public void setValueExpression(ValueExpression valueExpression) {
     this.valueExpression = valueExpression;
   }

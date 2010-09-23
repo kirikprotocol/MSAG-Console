@@ -27,6 +27,8 @@ public class JournalController extends InformerController {
   private Date filterByStartDate;
   private Date filterByEndDate;
 
+  private boolean init;
+
 
   public JournalController() throws AdminException {
     this.journal = WebContext.getInstance().getJournal();
@@ -39,6 +41,10 @@ public class JournalController extends InformerController {
     filterBySubject = null;
     filterByStartDate = null;
     filterByEndDate = null;
+  }
+
+  public void query() {
+    init = true;
   }
 
   public String getFilterByUser() {
@@ -76,6 +82,14 @@ public class JournalController extends InformerController {
     return result;
   }
 
+  public boolean isInit() {
+    return init;
+  }
+
+  public void setInit(boolean init) {
+    this.init = init;
+  }
+
   public Date getFilterByStartDate() {
     return filterByStartDate;
   }
@@ -93,6 +107,7 @@ public class JournalController extends InformerController {
   }
 
   public DataTableModel getRecords() {
+
     return new DataTableModel() {
 
       private List<JournalRecord> records = null;

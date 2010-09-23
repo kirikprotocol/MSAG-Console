@@ -22,6 +22,10 @@ public class DataTableRenderer extends Renderer {
 
   public void decode(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) {
     DataTable t = (DataTable) component;
+    decodeTable(context, t);
+  }
+
+  static void decodeTable(javax.faces.context.FacesContext context, DataTable t) {
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
     String column = reqParams.get(t.getId() + "_column");
     if (column != null && column.trim().length() == 0)
@@ -46,7 +50,6 @@ public class DataTableRenderer extends Renderer {
     if (pageSize != null && pageSize.trim().length() > 0 && previousPageSize != null && previousPageSize.trim().length() > 0)
       t.updatePageSize(Integer.parseInt(previousPageSize), Integer.parseInt(pageSize));
   }
-
 
 
   private static List<Column> getColumns(DataTable t) {
@@ -83,6 +86,7 @@ public class DataTableRenderer extends Renderer {
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_column" + "\" name=\"" + t.getId() + "_column\" value=\"" + sOrder + "\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\">");
+      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\">");
     }
     String ctxPath = context.getExternalContext().getRequestContextPath();

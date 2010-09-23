@@ -108,7 +108,7 @@ public class DataTable extends EyelineComponent {
   boolean hasInnerData() {
     for (UIComponent c : getChildren()) {
       if (c instanceof Row) {
-        Row r = (Row)c;
+        Row r = (Row) c;
         if (r.hasInnerData() || r.hasInnerRows())
           return true;
       }
@@ -135,6 +135,11 @@ public class DataTable extends EyelineComponent {
     super.processUpdates(context);
   }
 
+  public void processDecodes(javax.faces.context.FacesContext context) {
+    DataTableRenderer.decodeTable(context, this);
+    super.processDecodes(context);
+  }
+
   public Object saveState(FacesContext context) {
     Object[] values = new Object[11];
     values[0] = super.saveState(context);
@@ -151,7 +156,7 @@ public class DataTable extends EyelineComponent {
     Object[] values = (Object[]) state;
     super.restoreState(context, values[0]);
     updateUsingSubmit = (Boolean) values[1];
-    selectedRowsExpression = (ValueExpression)values[2];
+    selectedRowsExpression = (ValueExpression) values[2];
     autoUpdate = (Integer) values[3];
     currentPage = (Integer) values[4];
     pageSize = (Integer) values[5];
