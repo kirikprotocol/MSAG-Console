@@ -169,7 +169,7 @@ public class BshMethod
   Object[] argValues, Interpreter interpreter, CallStack callstack ) 
   throws EvalError 
  {
-  System.out.println("BshMethod.invoke() 172");
+  //System.out.println("BshMethod.invoke() 172");
 
   return invoke( argValues, interpreter, callstack, null, false );
  }

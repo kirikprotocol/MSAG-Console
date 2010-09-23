@@ -181,67 +181,44 @@ public class XmlActions
             break;
         }
       }
-    }
-    catch(IOException io)
-    {
-      // won't happen
-    } //}}}
+    } catch(IOException io) {
+       io.printStackTrace();
+    } 
   boolean autofill= jEdit.getBooleanProperty("xml.autofill");
-  ElementDecl elementDecl = data.getElementDecl(tag.tag);
- /* System.out.println("xml.XmlActions.completeAttributes before new EditTag line 157 elementDecl.completionInfo.entityHash= "+elementDecl.completionInfo.entityHash);
-  System.out.println("elementDecl.attributes= "+elementDecl.attributes);
-  System.out.println("Tag.attributes= "+attributes);   
-  System.out.println("elementDecl.name= "+elementDecl.name);
-  System.out.println("elementDecl.any= "+elementDecl.any);
-  System.out.println("elementDecl.empty= "+elementDecl.empty);
-  System.out.println("data.html= "+data.html);
- */
-     EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
-              elementDecl.completionInfo.entityHash,data.ids,data.html);
-  System.out.println("dialog.getNames().size()= "+dialog.getNames().size());
-     JEditTextArea textArea =view.getTextArea();
-     Buffer buffer=textArea.getBuffer();
 
-     //String newTag = dialog.getNewTag();
-//     System.out.println("newTag1= "+newTag);
-      if (dialog.getNames().size()>0) {
-     textArea.updateMathTag();
-     if (textArea.getStructureMatch()==null) {
-      String closeTag="/>"; //dialog.setCloseTag(closeTag);
-    }
-        //buffer.setBooleanProperty("sidekick.keystroke-parse",false);
-        dialog.setBackCursor(true);
-        view.setEditTag(dialog);//view.setEdittag(true);
-        dialog.updateTag(autofill);//dialog.closeTag ();
-       // int _caret=view.getTextArea().getCaretPosition();
-       // view.getTextArea().setCaretPosition(_caret-4);
-        //newTag=newTag+"/>";
-     //newTag=newTag+view.getEditTag().getCloseTag();// "/>";
- //     System.out.println("newTag2= "+newTag);
-     /* if(newTag != null)
-      {
-        try
-        {
-          buffer.beginCompoundEdit();
+  if (tag.tag != null && !tag.tag.equals("")){
+      ElementDecl elementDecl = data.getElementDecl(tag.tag);
 
-          buffer.remove(tag.start,tag.end - tag.start);
-          buffer.insert(tag.start,newTag);
-        }
-        finally
-        {
-          buffer.endCompoundEdit();
-        }
-      } */
+      if (elementDecl != null){
+          System.out.println("xml.XmlActions.completeAttributes before new EditTag line 157 elementDecl.completionInfo.entityHash= "+elementDecl.completionInfo.entityHash);
+          System.out.println("elementDecl.attributes= "+elementDecl.attributes);
+          System.out.println("Tag.attributes= "+attributes);
+          System.out.println("elementDecl.name= "+elementDecl.name);
+          System.out.println("elementDecl.any= "+elementDecl.any);
+          System.out.println("elementDecl.empty= "+elementDecl.empty);
+          System.out.println("data.html= "+data.html);
 
+          EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
+             elementDecl.completionInfo.entityHash,data.ids,data.html);
+    
+             System.out.println("dialog.getNames().size()= "+dialog.getNames().size());
+             JEditTextArea textArea =view.getTextArea();
+             Buffer buffer=textArea.getBuffer();
+
+          if (dialog.getNames().size()>0) {
+                textArea.updateMathTag();
+                if (textArea.getStructureMatch()==null) {
+                    String closeTag="/>";
+                }
+                dialog.setBackCursor(true);
+                view.setEditTag(dialog);
+                dialog.updateTag(autofill);
+          } else {
+               view.getTextArea().getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
+          }
       }
-    else {
-      //textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
-       //newTag=newTag+"/>";
-       view.getTextArea().getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
-        //dialog.closeTag ();
-    }
-
-
+  }
+       
  }
 
 

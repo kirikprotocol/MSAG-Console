@@ -45,10 +45,10 @@ options.sidekick.complete-delay.toggle=Show completion popups where possible
 options.sidekick.complete-delay=After popup trigger keystroke, wait (seconds):
 
 # Global parse on buffer change switch
-buffer.sidekick.buffer-change-parse=false
+buffer.sidekick.buffer-change-parse=true
 
 # Global parse on keystroke switch
-buffer.sidekick.keystroke-parse=false
+buffer.sidekick.keystroke-parse=true
 
 # Global auto parse
 buffer.sidekick.auto-parse=true
