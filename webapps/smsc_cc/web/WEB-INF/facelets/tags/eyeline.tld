@@ -14,6 +14,13 @@
     <body-content>JSP</body-content>
 
     <attribute>
+      <name>rendered</name>
+      <description>Флаг, определяющий отображать или нет данный элемент на странице</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
       <name>label</name>
       <description>Название (заголовок) группы, отображаемый на странице</description>
       <type>java.lang.String</type>
@@ -32,6 +39,13 @@
   <tag>
     <name>dynamicTable</name>
     <description>Таблица с возможностью добавления и удаления строк</description>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, определяющий отображать или нет данный элемент на странице</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
 
     <attribute>
       <name>value</name>
@@ -124,6 +138,12 @@
   <tag>
     <name>dataTable</name>
     <description>Многостраничная таблица</description>
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, означающий отображать или нет таблицу</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
     <attribute>
       <name>value</name>
       <description>Атрибут, описывающий откуда брать модель для таблицы</description>

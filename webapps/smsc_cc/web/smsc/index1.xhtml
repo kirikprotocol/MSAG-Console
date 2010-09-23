@@ -16,7 +16,7 @@
 
     <h:form>
 
-      <eye:collapsingGroup label="#{index1.label}" opened="#{index1.opened}">
+      <eye:collapsingGroup label="#{index1.label}" opened="#{index1.opened}" rendered="true">
         <f:facet name="header">
           <h:panelGroup>
             <h:outputText value="Label  "/>
@@ -26,7 +26,7 @@
           </h:panelGroup>
         </f:facet>
 
-        <eye:dynamicTable value="#{index1.model}">
+        <eye:dynamicTable value="#{index1.model}" rendered="true">
           <eye:textColumn name="column1" maxLength="20" allowEditAfterAdd="false"/>
           <eye:textColumn name="column2" maxLength="20"/>
           <eye:selectColumn name="column3" values="#{index1.column3Values}" allowEditAfterAdd="false"
@@ -37,8 +37,7 @@
 
       <h:inputHidden value="#{index1.filter}"/>
 
-
-      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" >
+      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" rendered="true">
 
         <eye:row rowId="#{row.id}" innerData="#{row.innerData != null}" innerRows="#{row.innerRows}">
 
