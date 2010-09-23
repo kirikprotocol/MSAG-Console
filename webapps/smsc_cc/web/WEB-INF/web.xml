@@ -30,6 +30,10 @@
     <location>/redirect?url=/smsc/error500.faces</location>
   </error-page>
 
+  <context-param>
+    <param-name>org.apache.myfaces.ERROR_HANDLER</param-name>
+    <param-value>ru.novosoft.smsc.web.ErrorHandler</param-value>
+  </context-param>
 
   <!-- FaceletViewHandler configuration -->
   <context-param>

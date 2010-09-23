@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.web;
 
 import ru.novosoft.smsc.admin.AdminContext;
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.Configuration;

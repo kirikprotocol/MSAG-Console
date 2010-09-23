@@ -10,7 +10,6 @@ import ru.novosoft.smsc.web.controllers.SmscController;
 import ru.novosoft.smsc.web.journal.Journal;
 import ru.novosoft.smsc.web.journal.JournalRecord;
 
-import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 import java.util.*;
 
@@ -26,13 +25,13 @@ public class JournalController extends SmscController {
   private String filterBySubject;
   private Date filterByStartDate;
   private Date filterByEndDate;
-  
+
 
   public JournalController() throws AdminException {
     this.journal = WebContext.getInstance().getJournal();
     this.users = WebContext.getInstance().getConfiguration().getUsersSettings();
     clearFilter();
-  }  
+  }
 
   public void clearFilter() {
     filterByUser = null;
@@ -93,69 +92,74 @@ public class JournalController extends SmscController {
   }
 
   public DataTableModel getRecords() {
-    return new JournalTableModel();
-  }
+    return new DataTableModel() {
 
+      private List<JournalRecord> records = null;
 
-  public class JournalTableModel implements DataTableModel {
-
-    public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-      List<JournalRecord> recs = journal.getRecords();
-
-      // Фильтруем записи
-      for (Iterator<JournalRecord> iter = recs.iterator(); iter.hasNext();) {
-        JournalRecord r = iter.next();
-        if (filterByUser != null && !r.getUser().equals(filterByUser)) {
-          iter.remove();
-        } else if (filterBySubject != null &&  !r.getSubject(getLocale()).equals(filterBySubject)) {
-          iter.remove();
-        } else if (filterByStartDate != null && r.getTime() < filterByStartDate.getTime()) {
-          iter.remove();
-        } else if (filterByEndDate != null && r.getTime() > filterByEndDate.getTime()) {
-          iter.remove();
-        }
-      }
-
-      // Сортируем записи
-      if (sortOrder != null) {
-        final int mul = sortOrder.isAsc() ? 1 : -1;
-        Collections.sort(recs, new Comparator<JournalRecord>() {
-          public int compare(JournalRecord o1, JournalRecord o2) {
-            if (sortOrder.getColumnId().equals("user")) {
-              return mul*o1.getUser().compareTo(o2.getUser());
-            } else if (sortOrder.getColumnId().equals("subject")) {
-              Locale l = getLocale();
-              return mul*o1.getSubject(l).compareTo(o2.getSubject(l));
-            } else if (sortOrder.getColumnId().equals("time")) {
-              return o1.getTime() >= o2.getTime() ? mul : -mul;
+      private synchronized List<JournalRecord> getRecords() {
+        if(records == null) {
+          records = journal.getRecords();
+          // Фильтруем записи
+          for (Iterator<JournalRecord> iter = records.iterator(); iter.hasNext();) {
+            JournalRecord r = iter.next();
+            if (filterByUser != null && !r.getUser().equals(filterByUser)) {
+              iter.remove();
+            } else if (filterBySubject != null &&  !r.getSubject(getLocale()).equals(filterBySubject)) {
+              iter.remove();
+            } else if (filterByStartDate != null && r.getTime() < filterByStartDate.getTime()) {
+              iter.remove();
+            } else if (filterByEndDate != null && r.getTime() > filterByEndDate.getTime()) {
+              iter.remove();
             }
-            return 0;
           }
-        });
+        }
+        return records;
       }
 
-      List<JournalTableRow> result = new ArrayList<JournalTableRow>(journal.size());
-      Locale l = getLocale();
-      for (int i=startPos; i < Math.min(recs.size(), startPos + count); i++) {
-        JournalRecord r = recs.get(i);
-        JournalTableRow row = new JournalTableRow();
-        row.setDate(new Date(r.getTime()));
-        row.setUser(r.getUser());
-        row.setSubject(r.getSubject(l));
-        row.setDescription(r.getDescription(l));
+      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+        List<JournalRecord> recs = getRecords();
 
-        User u = users.getUser(r.getUser());
-        row.setUserDetails(u.getLastName() + " " + u.getFirstName() + " (" + u.getDept() + ")");
+        // Сортируем записи
+        if (sortOrder != null) {
+          final int mul = sortOrder.isAsc() ? 1 : -1;
+          Collections.sort(recs, new Comparator<JournalRecord>() {
+            public int compare(JournalRecord o1, JournalRecord o2) {
+              if (sortOrder.getColumnId().equals("user")) {
+                return mul*o1.getUser().compareTo(o2.getUser());
+              } else if (sortOrder.getColumnId().equals("subject")) {
+                Locale l = getLocale();
+                return mul*o1.getSubject(l).compareTo(o2.getSubject(l));
+              } else if (sortOrder.getColumnId().equals("time")) {
+                return o1.getTime() >= o2.getTime() ? mul : -mul;
+              }
+              return 0;
+            }
+          });
+        }
 
-        result.add(row);
+        List<JournalTableRow> result = new ArrayList<JournalTableRow>(journal.size());
+        Locale l = getLocale();
+        for (int i=startPos; i < Math.min(recs.size(), startPos + count); i++) {
+          JournalRecord r = recs.get(i);
+          JournalTableRow row = new JournalTableRow();
+          row.setDate(new Date(r.getTime()));
+          row.setUser(r.getUser());
+          row.setSubject(r.getSubject(l));
+          row.setDescription(r.getDescription(l));
+
+          User u = users.getUser(r.getUser());
+          row.setUserDetails(u.getLastName() + " " + u.getFirstName() + " (" + u.getDept() + ")");
+
+          result.add(row);
+        }
+
+        return result;
       }
 
-      return result;
-    }
-
-    public int getRowsCount() {
-      return journal.size();
-    }
+      public int getRowsCount() {
+        return getRecords().size();
+      }
+    };
   }
 
   public class JournalTableRow {
