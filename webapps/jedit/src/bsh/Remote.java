@@ -51,6 +51,7 @@ public class Remote {
    System.exit(1);
   }
   String url = args[0];
+  System.out.println("Remote url: "+url);   
   String text = getFile(args[1]);
   int ret = eval( url, text, null );
   System.exit( ret );

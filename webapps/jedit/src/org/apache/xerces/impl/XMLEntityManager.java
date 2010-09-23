@@ -664,7 +664,9 @@ public class XMLEntityManager
     public XMLInputSource resolveEntity(XMLResourceIdentifier resourceIdentifier)
             throws IOException, XNIException {
         if(resourceIdentifier == null ) return null;
+
         String publicId = resourceIdentifier.getPublicId();
+        //System.out.println("XMLEntityManager publicId="+publicId);
         String literalSystemId = resourceIdentifier.getLiteralSystemId();
         String baseSystemId = resourceIdentifier.getBaseSystemId();
         String expandedSystemId = resourceIdentifier.getExpandedSystemId();
