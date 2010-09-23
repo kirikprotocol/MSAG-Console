@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.journal;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.web.informer.InformerSettings;
 import mobi.eyeline.informer.web.users.UsersSettings;
 
 import java.util.*;
@@ -12,9 +13,12 @@ import java.util.*;
 public class Journal {
 
   public static final String USERS = "subject.user";
+  public static final String CONFIG = "subject.config";
 
 
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(USERS);
+
+  private final ConfigSettingsDiffHelper config = new ConfigSettingsDiffHelper(CONFIG);
 
   private final JournalDataSource ds;
 
@@ -31,6 +35,7 @@ public class Journal {
     Map<String, String> l = new TreeMap<String, String>();
     ResourceBundle rb = ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale);
     l.put(USERS, rb.getString(USERS));
+    l.put(CONFIG, rb.getString(CONFIG));
     return l;
   }
 
@@ -98,6 +103,16 @@ public class Journal {
    */
   public void logChanges(UsersSettings oldSettings, UsersSettings newSettings, String user) throws AdminException {
     users.logChanges(this, oldSettings, newSettings, user);
+  }
+
+  /**
+   * Ищет различия между настройками Informer и записывает их в журнал
+   * @param oldSettings старые настройки пользователей
+   * @param newSettings новые настройки пользователей
+   * @param user пользователь, от имени которого надо формировать записи
+   */
+  public void logChanges(InformerSettings oldSettings, InformerSettings newSettings, String user) throws AdminException {
+    config.logChanges(this, oldSettings, newSettings, user);
   }
 
 }

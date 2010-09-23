@@ -1,0 +1,64 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.config']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <h:inputHidden value="#{config.revision}"/>
+
+      <eye:buttons>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{config.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="CONFIG"/>
+        </eye:button>
+      </eye:buttons>
+
+      <tr:panelFormLayout>
+
+        <tr:panelLabelAndMessage label="#{informerSettings.host}">
+          <tr:inputText value="#{config.settings.host}" simple="true" required="true"/>
+        </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{informerSettings.adminPort}">
+          <tr:inputText value="#{config.settings.adminPort}" simple="true" required="true">
+            <eye:validatePositive/>
+          </tr:inputText>
+        </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{informerSettings.deliveriesPort}">
+          <tr:inputText value="#{config.settings.deliveriesPort}" simple="true" required="true">
+            <eye:validatePositive/>
+          </tr:inputText>
+        </tr:panelLabelAndMessage>
+
+      </tr:panelFormLayout>
+
+      <eye:buttons>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{config.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="CONFIG"/>
+        </eye:button>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

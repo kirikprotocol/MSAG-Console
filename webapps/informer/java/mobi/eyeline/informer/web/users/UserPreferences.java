@@ -57,7 +57,7 @@ public class UserPreferences implements Serializable{
     return locale;
   }
 
-  public void setLocale(Locale locale) throws AdminException{
+  public void setLocale(Locale locale) throws AdminException {
     vh.checkNotNull("locale", locale);
     this.locale = locale;
   }

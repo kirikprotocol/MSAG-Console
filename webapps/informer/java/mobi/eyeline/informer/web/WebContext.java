@@ -6,6 +6,7 @@ import mobi.eyeline.informer.util.xml.WebXml;
 import mobi.eyeline.informer.web.auth.Authenticator;
 import mobi.eyeline.informer.web.auth.AuthenticatorImpl;
 import mobi.eyeline.informer.web.config.Configuration;
+import mobi.eyeline.informer.web.informer.InformerConfigManager;
 import mobi.eyeline.informer.web.journal.Journal;
 import mobi.eyeline.informer.web.journal.JournalFileDataSource;
 import mobi.eyeline.informer.web.users.UsersManager;
@@ -36,9 +37,11 @@ public class WebContext {
 
   protected Configuration configuration;
 
+  protected InformerConfigManager informerConfigManager;
+
   public static void init(WebXml webXml, WebConfig config, File baseDir) throws InitException {
     if (instance == null) {
-      if(Mode.testMode) {
+      if(!Mode.testMode) {
         instance = new WebContext();
       }else {
         System.out.println(" -- TEST MODE -- TEST MODE -- TEST MODE -- TEST MODE -- ");
@@ -71,7 +74,9 @@ public class WebContext {
       usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), adminContext.getFileSystem());
       this.authenticator = new AuthenticatorImpl(usersManager);
       journal = new Journal(new JournalFileDataSource(new File(webConfig.getJournalDir()), adminContext.getFileSystem()));       //todo file system
-      configuration = new Configuration(journal, adminContext, usersManager);
+      informerConfigManager = new InformerConfigManager(new File(baseDir,"conf"+File.separatorChar+"config.xml"),
+          new File(baseDir,"conf"+File.separatorChar+"backup"), adminContext.getFileSystem());
+      configuration = new Configuration(journal, adminContext, usersManager, informerConfigManager);
     }catch (AdminException e) {
       throw new InitException(e);
     }

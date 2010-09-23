@@ -22,6 +22,11 @@
       <var>msg</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.web.informer.InformerSettings</base-name>
+      <var>informerSettings</var>
+    </resource-bundle>
+
   </application>
 
   <!--<converter>-->
@@ -68,6 +73,8 @@
     </renderer>
   </render-kit>
 
+  
+
   <managed-bean>
     <managed-bean-name>topMenu</managed-bean-name>
     <managed-bean-class>mobi.eyeline.informer.web.controllers.TopMenu</managed-bean-class>
@@ -80,10 +87,15 @@
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
-
   <managed-bean>
     <managed-bean-name>journal</managed-bean-name>
     <managed-bean-class>mobi.eyeline.informer.web.controllers.journal.JournalController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>config</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.config.InformerConfigController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
@@ -98,6 +110,11 @@
     <navigation-case>
       <from-outcome>JOURNAL</from-outcome>
       <to-view-id>/journal/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>CONFIG</from-outcome>
+      <to-view-id>/config/index.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
   </navigation-rule>

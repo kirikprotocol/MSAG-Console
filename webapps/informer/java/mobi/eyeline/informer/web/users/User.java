@@ -56,7 +56,7 @@ public class User implements Serializable{
     return login;
   }
 
-  public void setLogin(String login) throws AdminException{
+  public void setLogin(String login) throws AdminException {
     vh.checkNotEmpty("login", login);
     this.login = login;
   }

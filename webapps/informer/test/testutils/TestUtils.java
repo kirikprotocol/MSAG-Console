@@ -26,6 +26,9 @@ public class TestUtils {
   }
 
   public static void exportResource(InputStream is, File toFile) throws IOException {
+    if(toFile.getParentFile() != null && !toFile.getParentFile().exists() && toFile.getParentFile().mkdirs()) {
+      throw new IOException("Can't create file: "+toFile.getParent());
+    }
     OutputStream os = null;
     try {
       os = new BufferedOutputStream(new FileOutputStream(toFile));

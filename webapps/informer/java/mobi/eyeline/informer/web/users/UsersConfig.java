@@ -149,7 +149,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     return user;
   }
 
-  static UserPreferences parsePrefs(NodeList prefsList) throws AdminException{
+  static UserPreferences parsePrefs(NodeList prefsList) throws AdminException {
     UserPreferences prefs = new UserPreferences();
 
     Map<String, String> unknown = new HashMap<String, String>();
