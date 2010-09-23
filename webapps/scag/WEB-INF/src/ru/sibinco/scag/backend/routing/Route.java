@@ -42,6 +42,7 @@ public class Route {
     private boolean enabled = true;
     private boolean transit = true;
     private boolean saa = false;
+    private boolean hideSaaText = false;
     private boolean active = true;
     private String slicing;
     private String slicedRespPolicy;
@@ -104,7 +105,8 @@ public class Route {
 
     public Route( final String routeName, final Map sources, final Map destinations, final boolean archived,
                  final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
-                 final String srcSmeId, final Service service, final String notes, final boolean transit, boolean saa ) {
+                 final String srcSmeId, final Service service, final String notes, final boolean transit,
+                 boolean saa, boolean hideSaaText) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
         if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -121,6 +123,7 @@ public class Route {
         this.enabled = enabled;
         this.transit = transit;
         this.saa = saa;
+        this.hideSaaText = hideSaaText;
         this.active = active;
         this.slicing = slicing;
         this.slicedRespPolicy = slicedRespPolicy;
@@ -177,6 +180,8 @@ public class Route {
         } else {
             saa = routeElem.getAttribute("saa").equalsIgnoreCase("true");
         }
+        
+        hideSaaText = routeElem.getAttribute("hideSaaText").equalsIgnoreCase("true");
 
         active = routeElem.getAttribute("active").equalsIgnoreCase("true");
         slicing = routeElem.getAttribute("slicing");
@@ -269,6 +274,7 @@ public class Route {
 //                    + "\" active=\"" + isActive()
                     + "\" transit=\"" + isTransit()
                     + "\" saa=\"" + isSaa()
+                    + "\" hideSaaText\"" + isHideSaaText()
                     + "\" slicing=\"" + StringEncoderDecoder.encode(getSlicing())
                     + "\" slicedRespPolicy=\"" + StringEncoderDecoder.encode(getSlicedRespPolicy())
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
@@ -370,6 +376,14 @@ public class Route {
 
     public void setSaa(boolean saa) {
         this.saa = saa;
+    }
+
+    public boolean isHideSaaText() {
+        return hideSaaText;
+    }
+
+    public void setHideSaaText(boolean hideSaaText) {
+        this.hideSaaText = hideSaaText;
     }
 
     public boolean isActive() {

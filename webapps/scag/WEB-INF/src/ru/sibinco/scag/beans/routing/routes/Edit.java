@@ -43,6 +43,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private boolean active;
     private boolean transit;
     private boolean saa;
+    private boolean hideSaaText;
     private String[] slicingTypes = new String[]{"NONE","SAR","UDH8", "UDH16"};
     private String[] slicingTypesTitles = new String[]{"NO/OFF","Via SAR Fields", "Via UDH8 encoding", "Via UDH16 encoding"};
     private String slicing;
@@ -79,6 +80,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         logger.debug("routing/routes/Edit:process():start" );
         logger.debug("routing/routes/Edit process() saa='" + saa + "'");
+        logger.debug("routing/routes/Edit process() hideSaaText='" + hideSaaText + "'");
         path = request.getContextPath();
         appContext = getAppContext();
         session = request.getSession();
@@ -298,6 +300,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             active = route.isActive();
             transit = route.isTransit();
             saa = route.isSaa();
+            hideSaaText = route.isHideSaaText();
             slicing = route.getSlicing();
             slicedRespPolicy= route.getSlicedRespPolicy();
             srcSmeId = route.getSrcSmeId();
@@ -308,15 +311,18 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             }
         }
         logger.debug("routing/routes/Edit.load() saa='"+ saa + "' end");
+        logger.debug("routing/routes/Edit.load() hideSaaText='"+ hideSaaText + "' end");
         if (isAdd()) {
             enabled = true;
             active = true;
             saa = true;
+            hideSaaText = true;
         }
     }
 
     protected void save() throws SCAGJspException {
         logger.debug("routing/routes/Edit:save():start saa='" + saa + "'");
+        logger.debug("routing/routes/Edit:save():start hideSaaText='" + hideSaaText + "'");
         final Map routes = appContext.getScagRoutingManager().getRoutes();
         String messagetxt = "";
         try {
@@ -347,7 +353,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 //                routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
 //                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
-                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit, saa ) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit, saa, hideSaaText ) );
                 messagetxt = "Added new route: " + id + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id)){
@@ -357,7 +363,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 //                routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
 //                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
-                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit, saa ) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit, saa, hideSaaText ) );
                 messagetxt = "Changed route: " + id + " ";
             }
         } catch (SibincoException e) {
@@ -694,5 +700,13 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public void setSaa(final boolean saa) {
         this.saa = saa;
+    }
+
+    public boolean isHideSaaText(){
+        return this.hideSaaText;
+    }
+
+    public void setHideSaaText(final boolean hideSaaText){
+        this.hideSaaText = hideSaaText;
     }
 }

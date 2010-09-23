@@ -320,6 +320,7 @@
 <%--                  <sm-ep:check title="routes.edit.check.archived" name="archived"/>--%>
                   <sm-ep:check title="routes.edit.check.transit" name="transit"/>
                   <sm-ep:check title="routes.edit.check.statistic_saa" name="saa"/>
+                  <sm-ep:check title="routes.edit.check.hideSaaText" name="hideSaaText"/>
               </sm-ep:properties>
           </td>
       </tr>
