@@ -35,9 +35,13 @@
         </eye:dynamicTable>
       </eye:collapsingGroup>
 
-      <h:inputHidden value="#{index1.filter}"/>
+      <h:inputHidden value="#{index1.init}"/>
 
-      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" rendered="true">
+      <eye:dataTableFilter bean="#{index1}" applyAction="query">
+
+      </eye:dataTableFilter>
+
+      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" rendered="#{index1.init}">
 
         <eye:row rowId="#{row.id}" innerData="#{row.innerData != null}" innerRows="#{row.innerRows}">
 

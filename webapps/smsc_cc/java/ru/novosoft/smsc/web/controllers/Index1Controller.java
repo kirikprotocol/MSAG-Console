@@ -9,12 +9,31 @@ import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.event.ActionEvent;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author Artem Snopkov
  */
 public class Index1Controller implements Serializable {
+
+  private boolean init=false;
+  
+
+  public void query() {
+    init = true;
+  }
+
+
+  public boolean isInit() {
+    return init;
+  }
+
+  public void setInit(boolean init) {
+    this.init = init;
+  }
 
   transient private DynamicTableModel model;
   static int counter;
