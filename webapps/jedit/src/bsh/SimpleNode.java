@@ -183,8 +183,10 @@ class SimpleNode implements Node
     return ((SimpleNode)parent).getSourceFile();
    else
     return "<unknown file>";
-  else
-   return sourceFile;
+  else {    
+      System.out.println("SimpleNode.getSourceFile() 188 sourceFile="+sourceFile);
+      return sourceFile;
+  }
  }
 
  /**

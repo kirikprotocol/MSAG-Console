@@ -565,7 +565,7 @@ public class View extends JFrame implements EBComponent
   */
  public void processKeyEvent(KeyEvent evt, int from)
  {
-   System.out.println("View.processKeyEvent() 568");  
+   //System.out.println("View.processKeyEvent() 568");  
    if(Debug.DUMP_KEY_EVENTS && from != VIEW)
   {
    Log.log(Log.DEBUG,this,"Key event: "

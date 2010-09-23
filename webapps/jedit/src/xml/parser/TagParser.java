@@ -359,7 +359,7 @@ loop:  for (int i = startTag.end; i < text.length(); i++)
    }
    else if(ch == '>')
    {
-    System.out.println("TagParser.findEndTag() 360");   
+    //System.out.println("TagParser.findEndTag() 360");   
     if(i != 0)
     {
      char ch2 = text.charAt(i - 1);

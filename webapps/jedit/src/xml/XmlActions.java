@@ -77,7 +77,7 @@ public class XmlActions
 
    public static boolean checkRootTag(View view)
      {
-       System.out.println("XmlAction.checkRootTag()");
+       //System.out.println("XmlAction.checkRootTag()");
        JEditTextArea textArea = view.getTextArea();
        if(XmlPlugin.isDelegated(textArea))
        {
@@ -107,7 +107,7 @@ public class XmlActions
       return false;
      }
    public static void completeAttrubite(String text,TagParser.Tag tag,XmlParsedData data,View view) {
-    System.out.println("XmlAction.completeAttribute()");
+    System.out.println("XmlAction.completeAttribute() 110");
     HashMap attributes = new HashMap();
     // use a StringTokenizer to parse the tag
     String attributeName = null;

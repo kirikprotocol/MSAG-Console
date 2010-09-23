@@ -3374,6 +3374,7 @@ loop:  for(int i = lineNo - 1; i >= 0; i--)
   */
  public void backspace()
  {
+  System.out.println("JEditTextArea.backspace() 3377");   
   delete(false);
  } //}}}
 
@@ -4819,7 +4820,7 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
  //{{{ processKeyEvent() method
  public void processKeyEvent(KeyEvent evt)
  {
-  System.out.println("jEditTextArea.processKeyEvent() 4822");   
+  //System.out.println("jEditTextArea.processKeyEvent() 4822");   
   view.processKeyEvent(evt,View.TEXT_AREA);
 
   if(!evt.isConsumed())

@@ -119,9 +119,10 @@ public class EvalError extends Exception
  }
 
  public String getErrorSourceFile() {
-  if ( node != null )
-   return node.getSourceFile() ;
-  else
+  if ( node != null ){
+      System.out.println("EvalError.getErrorSourceFile() 123 "+node.getSourceFile());
+      return node.getSourceFile() ;
+  }else
    return "<unknown file>";
  }
 

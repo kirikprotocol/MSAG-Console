@@ -138,9 +138,9 @@ public class EntityResolverWrapper
         // which describes a schema grammar of some namespace, but without
         // any schema location hint. -Sg
         String pubId = resourceIdentifier.getPublicId();
-        System.out.println("EntityResolverWrapper.resolveEntity() 141 pubId="+pubId);
+        //System.out.println("EntityResolverWrapper.resolveEntity() 141 pubId="+pubId);
         String sysId = resourceIdentifier.getExpandedSystemId();
-        System.out.println("EntityResolverWrapper.resolveEntity() 141 sysId="+sysId);
+        //System.out.println("EntityResolverWrapper.resolveEntity() 141 sysId="+sysId);
         if (pubId == null && sysId == null)
             return null;
 

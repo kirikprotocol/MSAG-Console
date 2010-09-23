@@ -89,19 +89,19 @@ xml.disableRootElement=true
 buffer.xml.validate=true
 
 # Enable network operations
-xml.network=false
+xml.network=true
 
 # Resource cache
 xml.cache=true
 
 # Insert closing tag automatically after '</' typed
-xml.close-complete=false
+xml.close-complete=true
 
 # Insert closing tag automatically after '>' typed
-xml.close-complete-open=false
+xml.close-complete-open=true
 
 # Insert space before /> when completing stand-alone tags
-xml.standalone-extra-space=false
+xml.standalone-extra-space=true
 
 # Tag highlight
 xml.tag-highlight=true

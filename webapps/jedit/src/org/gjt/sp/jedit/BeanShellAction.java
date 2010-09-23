@@ -26,6 +26,8 @@ import bsh.*;
 import java.awt.Component;
 import org.gjt.sp.jedit.gui.BeanShellErrorDialog;
 import org.gjt.sp.util.Log;
+import xml.XmlActions;
+import xml.CatalogManager;
 
 /**
  * An action that evaluates BeanShell code when invoked. BeanShell actions are
@@ -73,11 +75,35 @@ public class BeanShellAction extends EditAction
     System.out.println("BeanShellAction 73 cachedCodeName="+cachedCodeName);   
     cachedCode = BeanShell.cacheBlock(cachedCodeName,code,true);
    }
+         
+   System.out.println("BeanShellAction.invoke() 76 cachedCode="+cachedCode);
+   System.out.println("BeanShellAction.invoke() 76 sanitizedName="+sanitizedName);
 
-   System.out.println("BeanShellAction.invoke() 76");   
-
-   // If comment then not networking
-   BeanShell.runCachedBlock(cachedCode,view,new NameSpace(BeanShell.getNameSpace(),"BeanShellAction.invoke()"));
+   if (sanitizedName.equals("xml_insert_closing_tag")) {
+       XmlActions.insertClosingTagKeyTyped(view);
+   } else if (sanitizedName.equals("attribute_completion")){
+       XmlActions.checkCurrentTag(view);
+   } else if (sanitizedName.equals("xml-chars-to-entities")){
+       XmlActions.charactersToEntities(view);
+   } else if (sanitizedName.equals("xml-entities-to-chars")){
+       XmlActions.entitiesToCharacters(view);
+   } else if (sanitizedName.equals("xml-edit-tag")){
+       XmlActions.showEditTagDialog(view);
+   } else if (sanitizedName.equals("xml-close-tag")){
+       XmlActions.insertClosingTag(view);
+   } else if (sanitizedName.equals("xml-split-tag")){
+       XmlActions.split(view);
+   } else if (sanitizedName.equals("xml-match-tag")){
+       XmlActions.matchTag(view.getTextArea());    
+   } else if (sanitizedName.equals("xml-reload-catalogs")){
+       CatalogManager.reloadCatalogs();
+   } else if (sanitizedName.equals("xml-clear-cache")){
+       CatalogManager.clearCache();
+   } else if (sanitizedName.equals("xml-remove-tags")){
+       XmlActions.removeTags(view.getBuffer());
+   } else {
+       BeanShell.runCachedBlock(cachedCode,view,new NameSpace(BeanShell.getNameSpace(),"BeanShellAction.invoke()"));
+   }
   }
   catch(Throwable e)
   {
@@ -110,7 +136,7 @@ public class BeanShellAction extends EditAction
    // XXX - clean up in 4.3
    global.setVariable("_comp",comp);
 
-   System.out.println("BeanShellAction.isSelected 112");   
+   System.out.println("BeanShellAction.isSelected() 112");   
    return Boolean.TRUE.equals(BeanShell.runCachedBlock(
     cachedIsSelected,view,
     new NameSpace(BeanShell.getNameSpace(),

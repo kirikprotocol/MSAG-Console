@@ -1217,6 +1217,7 @@ loop:  for(int counter = 0; ; counter++)
     occur.substitutions[i]);
   }
 
+  System.out.println("SearchAndReplace.regexpBeanShellReplace() 1220");   
   Object obj = BeanShell.runCachedBlock(
    replaceMethod,view,replaceNS);
   if(obj == null)
@@ -1296,6 +1297,7 @@ loop:  for(int counter = 0; ; counter++)
  private static String literalBeanShellReplace(View view, String found)
   throws Exception
  {
+  System.out.println("SearchAndReplace.literalBeanShellReplace() 1299");
   replaceNS.setVariable("_0",found);
   Object obj = BeanShell.runCachedBlock(
    replaceMethod,

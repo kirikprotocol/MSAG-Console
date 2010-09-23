@@ -63,52 +63,52 @@ class Reflect
   invocation may be static (through the object instance) or dynamic.
   Object may be a bsh scripted object (This type).
  */
-    public static Object invokeObjectMethod(
-  Object object, String methodName, Object[] args, 
-  Interpreter interpreter, CallStack callstack, SimpleNode callerInfo ) 
-  throws ReflectError, EvalError, InvocationTargetException
- {
-  // Bsh scripted object
-  if ( object instanceof This && !This.isExposedThisMethod( methodName) ) 
-   return ((This)object).invokeMethod( 
-    methodName, args, interpreter, callstack, callerInfo,
-    false/*delcaredOnly*/ );
-  else 
-  // Java object
-  { 
-   // find the java method
-   try {
-    BshClassManager bcm = 
-     interpreter == null ? null : interpreter.getClassManager();
-    Class clas = object.getClass();
-        if ( (object instanceof Buffer) && (methodName.equals("save") || methodName.equals("saveAs") ) ) {
-          //System.out.println("Reflect invokeObjectMethod: object is instanceof Buffer");
-          Buffer buf=(Buffer)object; View view=null; boolean val=false;String str=null;
-          for (int i = 0; i < args.length; i++) {
-          Object arg = args[i];
-          if (arg instanceof View)  view=(View)arg;
-          if (arg instanceof String)  str=(String)arg;
-          if (arg.toString().equals("true")) val=true;
-          }
-         if (methodName.equals("save") ) { System.out.println("and method is save and view = " + view);
-         switch (args.length) {
-          case 2 : val=buf.save(view,str);
-          case 3 : val=buf.save(view,str,val);
-         }
-        }
-         if (methodName.equals("saveAs") && args.length==2) {System.out.println("and method is saveAs and view = " + view);
-          val=buf.saveAs(view,val);
-         }
-
-          return  new Boolean(val);
-        } else if ( object instanceof String && methodName.equals("equals")) { String o=(String)object; boolean val=false;
-          System.out.println("Reflect object=String object= "+o);
-          for (int i = 0; i < args.length; i++) {
-          Object arg = args[i];
-          System.out.println("Reflect object=String arg= "+arg+" arg.getclass= "+arg.getClass().getName());
-          }
-          if (methodName.equals("equals") ) val=o.equals((String)args[0]);
-          return new Boolean(val);
+    public static Object invokeObjectMethod( Object object,
+                                             String methodName, Object[] args,
+                                             Interpreter interpreter,
+                                             CallStack callstack,
+                                             SimpleNode callerInfo )
+    throws ReflectError, EvalError, InvocationTargetException{
+        System.out.println("Reflect invokeObjectMethod line 72 methodName= "+methodName);
+        // Bsh scripted object
+        if ( object instanceof This && !This.isExposedThisMethod( methodName) )
+            return ((This)object).invokeMethod( methodName, args,
+                                                interpreter, callstack,
+                                                callerInfo, false/*delcaredOnly*/ );
+        else {
+            // find the java method
+            try {
+                BshClassManager bcm = interpreter == null ? null : interpreter.getClassManager();
+                Class clas = object.getClass();
+                if ( (object instanceof Buffer) && (methodName.equals("save") || methodName.equals("saveAs") ) ) {
+                    //System.out.println("Reflect invokeObjectMethod: object is instanceof Buffer");
+                    Buffer buf=(Buffer)object; View view=null; boolean val=false;String str=null;
+                    for (int i = 0; i < args.length; i++) {
+                        Object arg = args[i];
+                        if (arg instanceof View)  view=(View)arg;
+                        if (arg instanceof String)  str=(String)arg;
+                        if (arg.toString().equals("true")) val=true;
+                    }
+                    if (methodName.equals("save") ) { System.out.println("and method is save and view = " + view);
+                    switch (args.length) {
+                        case 2 : val=buf.save(view,str);
+                        case 3 : val=buf.save(view,str,val);
+                    }
+                }
+                if (methodName.equals("saveAs") && args.length==2) {
+                    System.out.println("and method is saveAs and view = " + view);
+                    val=buf.saveAs(view,val);
+                }
+                return new Boolean(val);
+        } else if ( object instanceof String && methodName.equals("equals")) {
+            String o=(String)object; boolean val=false;
+            System.out.println("Reflect object=String object= "+o);
+            for (int i = 0; i < args.length; i++) {
+                Object arg = args[i];
+                System.out.println("Reflect object=String arg= "+arg+" arg.getclass= "+arg.getClass().getName());
+            }
+            if (methodName.equals("equals") ) val=o.equals((String)args[0]);
+            return new Boolean(val);
 
        /* else  if ( object instanceof CallStack) {
           CallStack cal=(CallStack)object; NameSpace name=null; Primitive prim; int depth=0;
