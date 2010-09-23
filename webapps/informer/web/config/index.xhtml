@@ -33,12 +33,12 @@
         </tr:panelLabelAndMessage>
         <tr:panelLabelAndMessage label="#{informerSettings.adminPort}">
           <tr:inputText value="#{config.settings.adminPort}" simple="true" required="true">
-            <eye:validatePositive/>
+            <eye:validatePort/>
           </tr:inputText>
         </tr:panelLabelAndMessage>
         <tr:panelLabelAndMessage label="#{informerSettings.deliveriesPort}">
           <tr:inputText value="#{config.settings.deliveriesPort}" simple="true" required="true">
-            <eye:validatePositive/>
+            <eye:validatePort/>
           </tr:inputText>
         </tr:panelLabelAndMessage>
 
