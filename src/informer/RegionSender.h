@@ -6,7 +6,7 @@
 #include "ScoredList.h"
 #include "SpeedControl.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class SmscSender;

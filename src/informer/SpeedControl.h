@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 template < unsigned TUPERSEC = 1000U, typename COUNTTYPE = unsigned > class SpeedControl

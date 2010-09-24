@@ -2,7 +2,7 @@
 #include "IOConverter.h"
 #include "util/byteorder.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 namespace io {
 

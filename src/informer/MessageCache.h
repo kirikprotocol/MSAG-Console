@@ -3,7 +3,7 @@
 
 #include "RegionalStorage.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 /// the cache of messages for the task.

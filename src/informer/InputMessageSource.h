@@ -3,7 +3,7 @@
 
 #include "Message.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class InputMessageUploadRequester

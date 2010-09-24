@@ -1,7 +1,7 @@
 #include "RegionSender.h"
 #include "SmscSender.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 RegionSender::RegionSender( SmscSender& conn, Region* r ) :

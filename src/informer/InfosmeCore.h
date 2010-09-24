@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace smsc {
+namespace eyeline {
 namespace util {
 namespace config {
 class ConfigView;

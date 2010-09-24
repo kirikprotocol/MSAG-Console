@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 namespace io {
 

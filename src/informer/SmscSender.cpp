@@ -4,7 +4,7 @@
 #include "Typedefs.h"
 #include "RegionSender.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 SmscSender::SmscSender( InfosmeCore& core,

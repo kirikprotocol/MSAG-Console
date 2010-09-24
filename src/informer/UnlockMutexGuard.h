@@ -3,7 +3,7 @@
 
 #include "core/synchronization/Mutex.hpp"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 template < class T >

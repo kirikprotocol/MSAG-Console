@@ -9,7 +9,7 @@
 #include "ScoredList.h"
 #include "Typedefs.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class InfosmeCore;

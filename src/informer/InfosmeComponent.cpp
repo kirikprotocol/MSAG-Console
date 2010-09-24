@@ -1,6 +1,6 @@
 #include "InfosmeComponent.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 InfosmeComponent::InfosmeComponent( InfosmeCore& core ) :

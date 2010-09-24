@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include "util/int.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 namespace io {
 

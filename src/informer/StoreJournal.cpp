@@ -4,7 +4,7 @@
 #include "informer/io/HexDump.h"
 #include "informer/io/IOConverter.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 void StoreJournal::journalMessage( dlvid_type     dlvId,

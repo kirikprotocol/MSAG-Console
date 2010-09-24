@@ -8,7 +8,7 @@
 #include "core/buffers/Hash.hpp"
 #include "sme/SmppBase.hpp"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class SmscSender;

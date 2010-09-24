@@ -3,7 +3,7 @@
 #include "informer/io/IOConverter.h"
 #include <cstdio>
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 unsigned char* Message::toBuf( uint16_t version, unsigned char* buf ) const

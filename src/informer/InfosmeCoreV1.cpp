@@ -1,7 +1,7 @@
 #include "InfosmeCoreV1.h"
 #include "SmscSender.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 InfosmeCoreV1::InfosmeCoreV1() :

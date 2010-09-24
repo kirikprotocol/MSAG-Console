@@ -8,7 +8,7 @@
 #include "InfosmeCore.h"
 // #include "sme/SmppBase.hpp"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class InfosmeComponent : public smsc::admin::service::Component

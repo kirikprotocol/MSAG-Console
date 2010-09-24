@@ -17,7 +17,7 @@ std::auto_ptr<char> getDigits()
 
 }
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 namespace io {
 

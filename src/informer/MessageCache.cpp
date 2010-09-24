@@ -1,7 +1,7 @@
 #include <vector>
 #include "MessageCache.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 MessageCache::MessageCache( const DeliveryInfo& dlvInfo,

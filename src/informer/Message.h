@@ -6,7 +6,7 @@
 #include "MessageText.h"
 #include "core/buffers/FixedLengthString.hpp"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 // 8+8+4+4+16+24+1 = 16+24+24+1 = 40+25 = 65 => 72

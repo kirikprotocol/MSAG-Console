@@ -4,7 +4,7 @@
 #include <memory>
 #include "MessageCache.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class StoreJournal;

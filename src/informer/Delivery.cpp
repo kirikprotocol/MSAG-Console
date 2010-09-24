@@ -1,6 +1,6 @@
 #include "Delivery.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 Delivery::Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,

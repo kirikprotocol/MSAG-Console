@@ -4,7 +4,7 @@
 #include "Typedefs.h"
 #include "logger/Logger.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class Message;

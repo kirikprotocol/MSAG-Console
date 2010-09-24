@@ -4,7 +4,7 @@
 #include "RelockMutexGuard.h"
 #include "StoreJournal.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class RegionalStorage::MsgLock

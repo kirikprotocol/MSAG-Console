@@ -4,7 +4,7 @@
 #include <ctime>
 #include "util/int.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 typedef uint32_t dlvid_type;

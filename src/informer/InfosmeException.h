@@ -3,7 +3,7 @@
 
 #include "util/Exception.hpp"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class InfosmeException : public smsc::util::Exception

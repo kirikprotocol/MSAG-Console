@@ -3,7 +3,7 @@
 
 #include <cstring>
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 /// message text

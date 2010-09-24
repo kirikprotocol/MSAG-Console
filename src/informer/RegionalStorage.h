@@ -10,7 +10,7 @@
 #include "core/synchronization/Condition.hpp"
 #include "DeliveryInfo.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 class StoreJournal;

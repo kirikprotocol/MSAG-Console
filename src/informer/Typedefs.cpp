@@ -4,7 +4,7 @@
 #include "InfosmeException.h"
 #include "util/TimeSource.h"
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 char* formatMsgTime( char* buf, msgtime_type tmp )

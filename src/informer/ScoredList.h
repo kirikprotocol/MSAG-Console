@@ -5,7 +5,7 @@
 #include <vector>
 #include <algorithm>
 
-namespace smsc {
+namespace eyeline {
 namespace informer {
 
 /// a templated ScoredList
