@@ -1,0 +1,10 @@
+include InformerAdmin.def
+
+protocol WebappAdminProto
+  ConfigOp outmsg
+  ConfigOpResult inmsg
+  LoggerGetCategories outmsg
+  LoggerGetCategoriesResp inmsg
+  LoggerSetCategories outmsg
+  LoggerSetCategoriesResp inmsg
+end
