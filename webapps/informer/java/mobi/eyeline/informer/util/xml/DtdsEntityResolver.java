@@ -11,7 +11,7 @@ import java.io.InputStream;
 
 public class DtdsEntityResolver implements EntityResolver {
 
-  Category logger = Category.getInstance(this.getClass());
+  final Category logger = Category.getInstance(this.getClass());
 
   private static String getDtdName(String systemId) {
     int index = systemId.lastIndexOf('/');

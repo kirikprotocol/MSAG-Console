@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.web.journal;
+package mobi.eyeline.informer.admin.journal;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 /**
  * @author Aleksandr Khalitov
  */
-public class JournalFileDSTest {  // todo желательно именовать так: JournalFileDataSourceTest. Так проще тест искать (в idea: Ctrl+Shift+T)
+public class JournalFileDataSourceTest { 
 
   private static JournalFileDataSource ds;
 
@@ -35,7 +35,7 @@ public class JournalFileDSTest {  // todo желательно именоват�
     record.setTime(1000);
     record.setUser("us|er|1");
     record.setDescription("descri|pti|onKey", "arg|1", "ar|g2");
-    record.setSubjectKey("subjec|t1");
+    record.setSubject(Subject.CONFIG);
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     PrintWriter writer = null;
     try{
@@ -70,34 +70,34 @@ public class JournalFileDSTest {  // todo желательно именоват�
   @Test
   public void writeRead() throws Exception {
     final JournalRecord record1 = new JournalRecord(JournalRecord.Type.CHANGE).setTime(new Date(1).getTime()).setUser("user1")
-        .setDescription("descr").setSubjectKey("subj1");
+        .setDescription("descr").setSubject(Subject.USERS);
     final JournalRecord record2 = new JournalRecord(JournalRecord.Type.CHANGE).setTime(new Date(100000).getTime()).setUser("user2")
-        .setDescription("descr").setSubjectKey("subj2");
+        .setDescription("descr").setSubject(Subject.CONFIG);
     final JournalRecord record3 = new JournalRecord(JournalRecord.Type.CHANGE).setTime(new Date().getTime()).setUser("user1")
-        .setDescription("descr").setSubjectKey("subj1");
+        .setDescription("descr").setSubject(Subject.USERS);
     final JournalRecord record4 = new JournalRecord(JournalRecord.Type.CHANGE).setTime(new Date(System.currentTimeMillis()-(1000*60*60*24)).getTime()).setUser("user2")
-        .setDescription("descr").setSubjectKey("subj2");
+        .setDescription("descr").setSubject(Subject.CONFIG);
     ds.addRecords(record1, record2, record3, record4);
 
-    ds.visit(new JournalFilter().setUser("user1"), new JournalDataSource.Visitor() {
+    ds.visit(new JournalFilter().setUser("user1"), new JournalVisitor() {
       public boolean visit(JournalRecord r) {
         assertTrue(r.equals(record1) || r.equals(record3));
         return true;
       }
     });
-    ds.visit(new JournalFilter().setUser("subj1"), new JournalDataSource.Visitor() {
+    ds.visit(new JournalFilter().setUser("subj1"), new JournalVisitor() {
       public boolean visit(JournalRecord r) {
         assertTrue(r.equals(record1) || r.equals(record3));
         return true;
       }
     });
-    ds.visit(new JournalFilter().setEndDate(new Date(100001)), new JournalDataSource.Visitor() {
+    ds.visit(new JournalFilter().setEndDate(new Date(100001)), new JournalVisitor() {
       public boolean visit(JournalRecord r) {
         assertTrue(r.equals(record1) || r.equals(record2));
         return true;
       }
     });
-    ds.visit(new JournalFilter().setStartDate(new Date(System.currentTimeMillis()-(2*1000*60*60*24))), new JournalDataSource.Visitor() {
+    ds.visit(new JournalFilter().setStartDate(new Date(System.currentTimeMillis()-(2*1000*60*60*24))), new JournalVisitor() {
       public boolean visit(JournalRecord r) {
         assertTrue(r.equals(record3) || r.equals(record4));
         return true;
@@ -110,12 +110,12 @@ public class JournalFileDSTest {  // todo желательно именоват�
   public void truncateTest() throws Exception{
     Date date = new Date(System.currentTimeMillis() + 10000000);
     final JournalRecord record1 = new JournalRecord(JournalRecord.Type.CHANGE).setTime(date.getTime()).setUser("user1")
-        .setDescription("descr").setSubjectKey("subj1");
+        .setDescription("descr").setSubject(Subject.CONFIG);
 
 
     ds.addRecords(record1);
 
-    ds.visit(new JournalFilter().setStartDate(new Date(date.getTime() - 1)), new JournalDataSource.Visitor() {
+    ds.visit(new JournalFilter().setStartDate(new Date(date.getTime() - 1)), new JournalVisitor() {
       public boolean visit(JournalRecord r) {
         assertTrue(r.equals(record1));
         return true;
@@ -137,7 +137,7 @@ public class JournalFileDSTest {  // todo желательно именоват�
     }
 
     try{
-      ds.visit(new JournalFilter().setStartDate(new Date(date.getTime() - 1)), new JournalDataSource.Visitor() {
+      ds.visit(new JournalFilter().setStartDate(new Date(date.getTime() - 1)), new JournalVisitor() {
         public boolean visit(JournalRecord r) {
           assertTrue(r.equals(record1));
           return true;
@@ -148,7 +148,7 @@ public class JournalFileDSTest {  // todo желательно именоват�
 
     ds = new JournalFileDataSource(jDir, FileSystem.getFSForSingleInst());
 
-    ds.visit(new JournalFilter().setStartDate(new Date(date.getTime() - 1)), new JournalDataSource.Visitor() {
+    ds.visit(new JournalFilter().setStartDate(new Date(date.getTime() - 1)), new JournalVisitor() {
       public boolean visit(JournalRecord r) {
         assertTrue(r.equals(record1));
         return true;

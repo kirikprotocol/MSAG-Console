@@ -1,9 +1,0 @@
-<config>
-
-  <section name="informer">
-    <param name="host" type="string">host1</param>
-    <param name="adminPort" type="string">8080</param>
-    <param name="deliveriesPort" type="string">8088</param>
-  </section>
-
-</config>

@@ -1,7 +1,11 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
-import mobi.eyeline.informer.web.users.UsersManagerTest;
+import mobi.eyeline.informer.admin.informer.TestInformerConfigManager;
+import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.users.TestUsersManager;
+import mobi.eyeline.informer.admin.users.UsersManagerTest;
+import mobi.eyeline.informer.web.WebConfig;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -12,34 +16,25 @@ import java.io.IOException;
  */
 public class TestAdminContext extends AdminContext {
 
-  private void prepareServices(File usersFile) throws IOException, AdminException {
-
-    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), usersFile, false);
-
+  private void prepareServices(WebConfig config, File baseDir) throws IOException, AdminException {
+    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), new File(config.getUsersFile()), false);
+    TestUtils.exportResource(TestInformerConfigManager.class.getResourceAsStream("config.xml"), new File(baseDir, "conf"+File.separatorChar+"config.xml"), false);
   }
 
-  public TestAdminContext(File appBaseDir, InstallationType type, File[] appMirrorDirs) throws AdminException {
-    this.appBaseDir = appBaseDir;
-//    this.servicesDir = new File(appBaseDir, "services");
-    this.instType = type;
-
-//    if (!servicesDir.exists())
-//      servicesDir.mkdirs();
-
-
-    if (instType == InstallationType.SINGLE) {
-//      serviceManager = new TestServiceManagerSingle(servicesDir, smscInstancesNumber);
-    }else {
-//      serviceManager = new TestServiceManagerHA(servicesDir, smscInstancesNumber, new String[] {"host0", "host1", "host2"});
-    }
+  public TestAdminContext(File appBaseDir, WebConfig webConfig) throws AdminException {
     fileSystem = new TestFileSystem();
+    try {
+      prepareServices(webConfig, appBaseDir);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
+    }
+    File usersFile = new File(webConfig.getUsersFile());
+    usersManager = new TestUsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
+
+    journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
+    informerConfigManager = new TestInformerConfigManager(new File(appBaseDir, "conf"+File.separatorChar+"config.xml"),
+          new File(appBaseDir, "conf"+File.separatorChar+"backup"), fileSystem);
 
   }
-//
-//  public TestAdminContext() throws AdminException {
-//    this(new File("."), new File("test", "webconfig.xml"));
-//  }
-
-
 
 }

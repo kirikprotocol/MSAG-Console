@@ -1,14 +1,16 @@
 package mobi.eyeline.informer.web.controllers.config;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.web.WebContext;
+import mobi.eyeline.informer.admin.config.Revision;
+import mobi.eyeline.informer.admin.informer.InformerSettings;
+import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.SettingsController;
-import mobi.eyeline.informer.web.informer.InformerSettings;
 
 import javax.faces.application.FacesMessage;
 
 /**
- * author: alkhal
+ * Контроллер для конфигурации Informer
+ * @author Aleksandr Khalitov
  */
 public class InformerConfigController extends SettingsController<InformerSettings> {
 
@@ -18,14 +20,20 @@ public class InformerConfigController extends SettingsController<InformerSetting
   private InformerSettings settings;
 
   public InformerConfigController() {
-    super(ConfigType.Logger);
+
+    try{
+      super.init(Configuration.ConfigType.CONFIG);
+    }catch (AdminException e) {
+      addError(e);
+      return;
+    }
 
     if (isSettingsChanged())
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.configuration.locally.changed");
 
     if(getRequestParameter("revision") == null) {
       try{
-        settings = WebContext.getInstance().getConfiguration().getConfigSettings();
+        settings = getConfiguration().getConfigSettings();
       }catch (AdminException e){
         addError(e);
       }
@@ -48,18 +56,28 @@ public class InformerConfigController extends SettingsController<InformerSetting
     }
   }
 
+  public String reset() {
+    try {
+      resetSettings();
+    } catch (AdminException e) {
+      logger.warn(e, e);
+      addError(e);
+    }
+    return null;
+  }
+
   public InformerSettings getSettings() {
     return settings;
   }
 
   @Override
   protected InformerSettings loadSettings() throws AdminException {
-    return WebContext.getInstance().getConfiguration().getConfigSettings();
+    return getConfiguration().getConfigSettings();
   }
 
   @Override
   protected void saveSettings(InformerSettings settings) throws AdminException {
-    WebContext.getInstance().getConfiguration().setConfigSettings(settings, getUserPrincipal().getName());
+    getConfiguration().setConfigSettings(settings, getUserPrincipal().getName());
   }
 
   @Override

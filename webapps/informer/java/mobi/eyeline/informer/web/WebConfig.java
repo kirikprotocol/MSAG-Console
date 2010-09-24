@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
+ * Конфигурация web-приложения
  * @author Aleksandr Khalitov
  */
 @SuppressWarnings({"EmptyCatchBlock"})
@@ -56,6 +57,11 @@ public class WebConfig {
     }
   }
 
+  /**
+   * Возвращает тип установки Informer: SINGLE, HA или HS
+   * @return тип установки
+   * @throws AdminException ошибка чтения конфига
+   */
   public InstallationType getInstallationType() throws AdminException {
     try {
       String installationTypeStr = webconfig.getSection("installation").getString("type", "single");
@@ -73,6 +79,11 @@ public class WebConfig {
   }
 
 
+  /**
+   * Возвращает хост для демона при Single-установке
+   * @return хост для демона при Single-установке
+   * @throws AdminException ошибка чтения конфига
+   */
   public String getSingleDaemonHost() throws AdminException {
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
@@ -82,7 +93,11 @@ public class WebConfig {
     }
   }
 
-
+  /**
+   * Возвращает порт для демона при Single-установке
+   * @return порт для демона при Single-установке
+   * @throws AdminException ошибка чтения конфига
+   */
   public int getSingleDaemonPort() throws AdminException {
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
@@ -92,7 +107,11 @@ public class WebConfig {
     }
   }
 
-
+  /**
+   * Возвращает директории-зеркала (HS-установка)
+   * @return директории-зеркала
+   * @throws AdminException ошибка чтения конфига
+   */
   public File[] getAppMirrorDirs() throws AdminException {
     try {
       XmlConfigSection installation = webconfig.getSection("installation");
@@ -103,7 +122,11 @@ public class WebConfig {
     }
   }
 
-
+  /**
+   * Возвращает хост для демона при HS-установке
+   * @return хост для демона при HS-установке
+   * @throws AdminException ошибка чтения конфига
+   */
   public String getHSDaemonHost() throws AdminException {
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
@@ -112,7 +135,11 @@ public class WebConfig {
       throw new WebConfigException("invalid_config", e);
     }
   }
-
+  /**
+   * Возвращает порт для демона при HS-установке
+   * @return порт для демона при HS-установке
+   * @throws AdminException ошибка чтения конфига
+   */
   public int getHSDaemonPort() throws AdminException {
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
@@ -121,7 +148,11 @@ public class WebConfig {
       throw new WebConfigException("invalid_config", e);
     }
   }
-
+  /**
+   * Возвращает список нод
+   * @return список нод
+   * @throws AdminException ошибка чтения конфига
+   */
   public Collection<String> getHSDaemonHosts() throws AdminException {
     try {
       XmlConfigSection nodes = webconfig.getSection("nodes");
@@ -135,6 +166,11 @@ public class WebConfig {
     }
   }
 
+  /**
+   * Возвращает файл с настройками пользователей
+   * @return файл с настройками пользователей
+   * @throws AdminException ошибка чтения конфига
+   */
   public String getUsersFile() throws AdminException {
     try {
       XmlConfigSection system = webconfig.getSection("system");
@@ -144,6 +180,11 @@ public class WebConfig {
     }
   }
 
+  /**
+   * Возвращает директория журнала
+   * @return директория журнала
+   * @throws AdminException ошибка чтения конфига
+   */
   public String getJournalDir() throws AdminException {
     try {
       XmlConfigSection system = webconfig.getSection("system");

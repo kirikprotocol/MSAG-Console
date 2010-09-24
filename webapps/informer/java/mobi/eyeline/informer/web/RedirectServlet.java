@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
+ * Сервлет для перенаправления (полезен при возникновения http ошибок, для обработки их JSF-сервлетом)
  * author: alkhal
  */
 public class RedirectServlet extends HttpServlet {

@@ -1,21 +1,22 @@
 package mobi.eyeline.informer.web.controllers.journal;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.web.WebContext;
+import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.journal.JournalFilter;
+import mobi.eyeline.informer.admin.journal.JournalRecord;
+import mobi.eyeline.informer.admin.journal.Subject;
+import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.admin.users.UsersSettings;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
-import mobi.eyeline.informer.web.journal.Journal;
-import mobi.eyeline.informer.web.journal.JournalFilter;
-import mobi.eyeline.informer.web.journal.JournalRecord;
-import mobi.eyeline.informer.web.users.User;
-import mobi.eyeline.informer.web.users.UsersSettings;
 
 import javax.faces.model.SelectItem;
 import java.util.*;
 
 /**
- * @author Artem Snopkov
+ * Контроллер для просмотра журнала
+ * @author Aleksandr Khalitov
  */
 public class JournalController extends InformerController {
 
@@ -24,16 +25,15 @@ public class JournalController extends InformerController {
 
   private String filterByUser;
   private String filterBySubject;
-  private Date filterByStartDate;
+  private Date filterByStartDate = new Date(System.currentTimeMillis() - (7*24*60*60*1000));
   private Date filterByEndDate;
 
   private boolean init;
 
 
   public JournalController() throws AdminException {
-    this.journal = WebContext.getInstance().getJournal();
-    this.users = WebContext.getInstance().getConfiguration().getUserSettings();
-    clearFilter();
+    this.journal = getConfiguration().getJournal();
+    this.users = getConfiguration().getUserSettings();
   }
 
   public void clearFilter() {
@@ -76,9 +76,9 @@ public class JournalController extends InformerController {
   public List<SelectItem> getUniqueSubjectNamesFromJournal() {
     List<SelectItem> result = new ArrayList<SelectItem>();
     result.add(new SelectItem(null));
-    for (Map.Entry<String,String> e : journal.getSubjects(getLocale()).entrySet())
-      result.add(new SelectItem(e.getKey(), e.getValue()));
-
+    for (Subject s : journal.getSubjects()) {
+      result.add(new SelectItem(s.getKey(), s.getSubject(getLocale())));
+    }
     return result;
   }
 
@@ -116,7 +116,7 @@ public class JournalController extends InformerController {
         if(records == null) {
           records = journal.getRecords(new JournalFilter().
               setStartDate(filterByStartDate).setEndDate(filterByEndDate).setUser(filterByUser).
-              setSubjectKey(filterBySubject));
+              setSubject(Subject.getByKey(filterBySubject)));
         }
         return records;
       }
@@ -139,7 +139,7 @@ public class JournalController extends InformerController {
               return mul*o1.getUser().compareTo(o2.getUser());
             } else if (sortOrder.getColumnId().equals("subject")) {
               Locale l = getLocale();
-              return mul*o1.getSubject(l).compareTo(o2.getSubject(l));
+              return mul*o1.getSubject().getSubject(l).compareTo(o2.getSubject().getSubject(l));
             } else if (sortOrder.getColumnId().equals("time")) {
               return o1.getTime() >= o2.getTime() ? mul : -mul;
             }
@@ -155,7 +155,7 @@ public class JournalController extends InformerController {
         JournalTableRow row = new JournalTableRow();
         row.setDate(new Date(r.getTime()));
         row.setUser(r.getUser());
-        row.setSubject(r.getSubject(l));
+        row.setSubject(r.getSubject().getSubject(l));
         row.setDescription(r.getDescription(l));
 
         User u = users.getUser(r.getUser());

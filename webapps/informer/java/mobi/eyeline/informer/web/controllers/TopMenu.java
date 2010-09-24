@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.web.controllers;
 
+import mobi.eyeline.informer.admin.WebContext;
 import mobi.eyeline.informer.util.xml.WebXml;
-import mobi.eyeline.informer.web.WebContext;
 
 import javax.faces.context.FacesContext;
 import java.io.Serializable;
@@ -12,11 +12,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
- * author: alkhal
+ * Контроллер для отображения главного меню
+ * @author Aleksandr Khalitov
  */
 public class TopMenu {
 
-  private Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3) {
+  private final Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3) {
     {
       add(new MenuBarItem("informer.admin", "informer.admin.width").
           add(new MenuItem("informer.admin.status", "/status.faces")).
@@ -94,11 +95,11 @@ public class TopMenu {
 
   public static class MenuBarItem implements Serializable {
 
-    public Collection<MenuItem> items = new LinkedList<MenuItem>();
+    public final Collection<MenuItem> items = new LinkedList<MenuItem>();
 
-    private String name;
+    private final String name;
 
-    private String width;
+    private final String width;
 
     public MenuBarItem(String name, String width) {
       this.name = name;
@@ -129,8 +130,8 @@ public class TopMenu {
 
 
   public static class MenuItem implements Serializable {
-    private String name;
-    private String url;
+    private final String name;
+    private final String url;
 
     public MenuItem(String name, String url) {
       this.name = name;

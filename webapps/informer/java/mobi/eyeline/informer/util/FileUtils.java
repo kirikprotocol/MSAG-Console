@@ -83,7 +83,7 @@ public class FileUtils {
     File file = new File(folderUnpackTo, name);
     File p = file.getParentFile();
     if(p != null && !p.exists() && !p.mkdirs()) {
-      throw new IOException("Can't create file: "+file.getParent());
+      throw new IOException("Can't create file: "+p.getAbsolutePath());
     }
     OutputStream out = null;
     try {

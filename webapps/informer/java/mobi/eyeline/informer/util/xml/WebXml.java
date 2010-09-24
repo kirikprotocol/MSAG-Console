@@ -32,12 +32,13 @@ public class WebXml {
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-  private Set<String> roles = new TreeSet<String>();
+  private final Set<String> roles = new TreeSet<String>();
 
   public WebXml(InputStream is) throws TransformerConfigurationException, ParserConfigurationException, SAXException, IOException {
     load(is);
   }
 
+  @SuppressWarnings({"EmptyCatchBlock"})
   public WebXml(File webXmlFile) throws TransformerConfigurationException, ParserConfigurationException, SAXException, IOException {
     InputStream is = null;
     try{
@@ -146,11 +147,11 @@ public class WebXml {
 
   private static class UrlPatterns {
 
-    private Map<String, UrlPattern> exactMatches = new HashMap<String, UrlPattern>();
+    private final Map<String, UrlPattern> exactMatches = new HashMap<String, UrlPattern>();
 
-    private Map<String, UrlPattern> pathPatterns = new HashMap<String, UrlPattern>();
+    private final Map<String, UrlPattern> pathPatterns = new HashMap<String, UrlPattern>();
 
-    private Map<String, UrlPattern> extensionsPatterns = new HashMap<String, UrlPattern>();
+    private final Map<String, UrlPattern> extensionsPatterns = new HashMap<String, UrlPattern>();
 
     private UrlPatterns(Map<String, Set<String>> roles) {
       for (Map.Entry<String, Set<String>> e : roles.entrySet()) {

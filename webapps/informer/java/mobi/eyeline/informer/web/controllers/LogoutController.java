@@ -3,7 +3,8 @@ package mobi.eyeline.informer.web.controllers;
 import javax.servlet.http.HttpSession;
 
 /**
- * author: alkhal
+ * Контроллер для прекращения сеанса пользователя
+ * @author Aleksandr Khalitov
  */
 public class LogoutController extends InformerController{
 

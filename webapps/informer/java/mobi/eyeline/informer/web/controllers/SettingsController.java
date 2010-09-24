@@ -1,12 +1,10 @@
 package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.config.Revision;
+import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.servlet.http.HttpSession;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Абстрактный контроллер для работы с конфигами, все изменения в которых применяются одной операцией "submit".
@@ -15,30 +13,22 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class SettingsController<T> extends InformerController {
 
-  private static Map<ConfigType, Revision> lastRevisions = new EnumMap<ConfigType, Revision>(ConfigType.class);
-  private static Lock submitLock = new ReentrantLock();
+  private String settingsAttr;
+  private String revisionAttr;
 
-  private final String settingsAttr;
-  private final String revisionAttr;
-  private final ConfigType configType;
+  private Integer revision = 0;
 
-  private Integer revision = 0;  // todo по-хорошему ревизию надо вынести на уровень выше. Например в класс Configuration...
+  private Configuration.ConfigType configType;
 
-  protected SettingsController(ConfigType configType) {
-    if (configType == null)
-      throw new NullPointerException();
+  protected Configuration configuration;
 
-    this.settingsAttr = configType.name() + "_settings";
-    this.revisionAttr = configType.name() + "_viewStartTime";
+  protected void init(Configuration.ConfigType configType) throws AdminException{
+    configuration = getConfiguration();
     this.configType = configType;
-
+    this.settingsAttr = configType + "_settings";
+    this.revisionAttr = configType + "_viewStartTime";
     if (getRequestParameter(revisionAttr) == null) {
-      try {
-        resetRevision();
-      } catch (AdminException e) {
-        e.printStackTrace();
-        addError(e);
-      }
+      resetRevision();
     }
   }
 
@@ -46,11 +36,11 @@ public abstract class SettingsController<T> extends InformerController {
     revision = (Integer) getSessionAttr(revisionAttr);
     if (revision == null) {
       try {
-        submitLock.lock();
-        Revision rev = lastRevisions.get(configType);
-        revision = rev == null ? 0 : rev.number;
+        configuration.lockRevision();
+        Revision rev = configuration.getLastRevision(configType);
+        revision = rev == null ? 0 : rev.getNumber();
       } finally {
-        submitLock.unlock();
+        configuration.unlockRevision();
       }
 
       setSessionAttr(settingsAttr, loadSettings());
@@ -112,6 +102,7 @@ public abstract class SettingsController<T> extends InformerController {
    * Возвращает текущую версию конфига для данного пользователя
    * @return текущую версию конфига для данного пользователя
    */
+  @SuppressWarnings({"unchecked"})
   protected T getSettings() {
     return cloneSettings((T) getSessionAttr(settingsAttr));
   }
@@ -131,18 +122,18 @@ public abstract class SettingsController<T> extends InformerController {
    */
   protected Revision submitSettings() throws AdminException {
     try {
-      submitLock.lock();
+      configuration.lockRevision();
 
-      Revision rev = lastRevisions.get(configType);
+      Revision rev = configuration.getLastRevision(configType);
       if (rev != null && rev.getNumber() > revision)
         return rev;
 
-      T settings = getSettings();      
+      T settings = getSettings();
       saveSettings(settings);
 
-      lastRevisions.put(configType, new Revision(getUserPrincipal().getName(), revision + 1));
+      configuration.setRevision(configType, new Revision(getUserPrincipal().getName(), revision + 1));
     } finally {
-      submitLock.unlock();
+      configuration.lockRevision();
     }
     clearSession();
     return null;
@@ -166,37 +157,4 @@ public abstract class SettingsController<T> extends InformerController {
   }
 
 
-  protected enum ConfigType {
-    Main, Reschedule, User, MapLimit, Logger, Fraud, Snmp
-  }
-
-
-  /**
-   *  Структура, содержащая данные о последней ревизии конфига
-   */
-  protected static class Revision {
-    private String user;
-    private int number;
-
-    private Revision(String user, int number) {
-      this.user = user;
-      this.number = number;
-    }
-
-    public String getUser() {
-      return user;
-    }
-
-    public void setUser(String user) {
-      this.user = user;
-    }
-
-    public int getNumber() {
-      return number;
-    }
-
-    public void setNumber(int number) {
-      this.number = number;
-    }
-  }
 }
