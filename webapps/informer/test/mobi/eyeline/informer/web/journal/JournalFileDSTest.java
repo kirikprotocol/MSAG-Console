@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 /**
  * @author Aleksandr Khalitov
  */
-public class JournalFileDSTest {
+public class JournalFileDSTest {  // todo желательно именовать так: JournalFileDataSourceTest. Так проще тест искать (в idea: Ctrl+Shift+T)
 
   private static JournalFileDataSource ds;
 

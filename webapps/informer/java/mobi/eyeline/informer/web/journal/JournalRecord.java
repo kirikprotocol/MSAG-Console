@@ -17,7 +17,7 @@ public class JournalRecord {
   private String descriptionKey;
   private String[] descriptionArgs;
 
-  public JournalRecord(Type type) {
+  public JournalRecord(Type type) { // todo убрать public
     this.type = type;
   }
 

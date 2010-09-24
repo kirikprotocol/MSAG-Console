@@ -6,7 +6,7 @@ import mobi.eyeline.informer.admin.AdminException;
  * Сторадж для журнала
  * @author Aleksandr Khalitov
  */
-public interface JournalDataSource {
+public interface JournalDataSource { // todo убрать public
 
   /**
    * Добавление записей в журнал

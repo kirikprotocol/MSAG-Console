@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Файловый сторадж журнала
  * @author Aleksandr Khalitov
  */
-public class JournalFileDataSource implements JournalDataSource{
+public class JournalFileDataSource implements JournalDataSource{ // todo убрать public
 
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -43,10 +43,10 @@ public class JournalFileDataSource implements JournalDataSource{
           if(logger.isInfoEnabled()) {
             logger.info("Journal file was repaired: "+f.getAbsolutePath());
           }
-          System.out.println("File was repaired: "+f.getAbsolutePath());
+          System.out.println("File was repaired: "+f.getAbsolutePath());     // todo заменить на logger
         }
       }
-      System.out.println("Journal is loaded: "+(System.currentTimeMillis() - time)+" millis");
+      System.out.println("Journal is loaded: "+(System.currentTimeMillis() - time)+" millis"); // todo заменить на logger
     }catch (IOException e){
       logger.error(e,e);
       throw new InitException(e);
@@ -56,6 +56,9 @@ public class JournalFileDataSource implements JournalDataSource{
     }
   }
 
+  // todo врят ли будет ситуация, что в журнал будут записываться записи с разным time. Может упростить этот метод, чтобы он писал записи с time=now?
+  // todo мы обсуждали, что журналы не надо хранить вечно. Достаточно хранить за 1 неделю (можно сделать этот параметр настраиваемым). Поэтому можно их
+  // todo хранить просто в одной директории и надо удалять старые журналы прямо в этом методе (не стоит делать отдельный поток).
   public void addRecords(JournalRecord ... records) throws AdminException {
     Map<File, List<JournalRecord>> byFile = new HashMap<File, List<JournalRecord>>();
     for(JournalRecord record : records) {

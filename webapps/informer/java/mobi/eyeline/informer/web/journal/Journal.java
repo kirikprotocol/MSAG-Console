@@ -12,6 +12,7 @@ import java.util.*;
  */
 public class Journal {
 
+  // todo заменить на enum со стринговым полем. Тогда упростится getSubjects().
   public static final String USERS = "subject.user";
   public static final String CONFIG = "subject.config";
 

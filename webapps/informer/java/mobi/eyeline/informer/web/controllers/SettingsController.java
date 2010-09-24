@@ -22,7 +22,7 @@ public abstract class SettingsController<T> extends InformerController {
   private final String revisionAttr;
   private final ConfigType configType;
 
-  private Integer revision = 0;
+  private Integer revision = 0;  // todo по-хорошему ревизию надо вынести на уровень выше. Например в класс Configuration...
 
   protected SettingsController(ConfigType configType) {
     if (configType == null)

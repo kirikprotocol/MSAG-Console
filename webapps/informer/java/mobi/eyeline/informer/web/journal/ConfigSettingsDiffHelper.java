@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * @author Aleksandr Khalitov
  */
-public class ConfigSettingsDiffHelper extends DiffHelper{
+public class ConfigSettingsDiffHelper extends DiffHelper{      // todo убрать public
 
   public ConfigSettingsDiffHelper(String subject) {
     super(subject);
