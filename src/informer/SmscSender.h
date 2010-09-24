@@ -14,7 +14,7 @@ namespace informer {
 
 class InfosmeCore;
 class RegionSender;
-class Delivery;
+class RegionalStoragePtr;
 class Message;
 
 /// sending messages to one smsc
@@ -25,9 +25,6 @@ public:
     SmscSender( InfosmeCore&            core,
                 const std::string&      smscId,
                 const smsc::sme::SmeConfig& config );
-    // smsc::sme::SmppSession* session );
-
-    // InfosmeCore& getCore() { return *core_; }
 
     virtual ~SmscSender();
 
@@ -35,10 +32,8 @@ public:
 
     /// sending one message
     /// @return number of chunks the message has been splitted or 0
-    unsigned send( msgtime_type currentTime,
-                   Delivery& dlv,
-                   regionid_type regionId,
-                   Message& msg );
+    unsigned send( RegionalStoragePtr& dlv,
+                   Message&            msg );
 
     /// a method allows to wait until sender stops it work
     /// NOTE: post-requisite -- task is released!
@@ -60,10 +55,10 @@ private:
 
     typedef RegionSender ScoredObjType;
 
-    unsigned scoredObjIsReady( unsigned currentTime, ScoredObjType& regionSender );
-    int processScoredObj( unsigned currentTime, ScoredObjType& regionSender );
+    unsigned scoredObjIsReady( unsigned unused, ScoredObjType& regionSender );
+    int processScoredObj( unsigned unused, ScoredObjType& regionSender );
     void scoredObjToString( std::string& s, ScoredObjType& regionSender );
-    void processWaitingEvents( msgtime_type currentTime );
+    void processWaitingEvents();
 
 private:
     smsc::logger::Logger*                     log_;
@@ -71,7 +66,8 @@ private:
     std::string                               smscId_;
     std::auto_ptr<smsc::sme::SmppSession>     session_;
     smsc::core::synchronization::EventMonitor mon_;
-    ScoredList< SmscSender >*                 scoredList_;
+    ScoredList< SmscSender >                  scoredList_;
+    usectime_type                             currentTime_;
 };
 
 } // informer

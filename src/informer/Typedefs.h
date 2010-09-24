@@ -9,16 +9,21 @@ namespace informer {
 
 typedef uint32_t dlvid_type;
 typedef uint32_t regionid_type;
-typedef uint32_t msgid_type;
+typedef uint64_t msgid_type;
 typedef uint32_t msgtime_type; // simply converted from time_t
 typedef  int32_t timediff_type; // simply converted from time_t
 typedef int64_t  usectime_type;
 
-/// format message time as yy-mm-dd+00:00:00, buffer must be at least 17 bytes.
+/// format message time as yyyymmddHHMMSS, buffer must be at least 15 bytes.
 char* formatMsgTime( char* buf, msgtime_type theTime );
 
 /// get current microtime
 usectime_type currentTimeMicro();
+
+/// some constants
+static const unsigned tuPerSec = 1000000U;
+static const unsigned maxScoreIncrement = 10000U;
+static const unsigned flipTimePeriod = 1000*tuPerSec;
 
 namespace MsgState {
 static const uint8_t input = 0;

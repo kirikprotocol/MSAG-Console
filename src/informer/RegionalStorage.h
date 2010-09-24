@@ -46,7 +46,9 @@ public:
     virtual dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
     virtual regionid_type getRegionId() const { return regionId_; }
 
-    // const DlvInfo& getDlvInfo() const { return *dlvInfo_; }
+    // bool isActive() const { return dlvInfo_->isActive(); }
+
+    const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
 
     /// get the message with given messageid.
     /// this method accesses active messages only.
@@ -152,6 +154,9 @@ public:
         return ptr_;
     }
     RegionalStorage* operator-> () {
+        return ptr_;
+    }
+    const RegionalStorage* operator-> () const {
         return ptr_;
     }
     void reset( RegionalStorage* p ) {

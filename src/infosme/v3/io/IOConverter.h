@@ -16,6 +16,7 @@ struct FromBuf
     uint32_t get32();
     uint64_t get64();
     const unsigned char* skip( size_t bytes );
+    const char* getCString();
 private:
     FromBuf();
 public:
@@ -31,6 +32,8 @@ struct ToBuf
     void set32( uint32_t );
     void set64( uint64_t );
     void copy( size_t bytes, const void* from );
+    void setCString( const char* s );
+    unsigned char* getPtr() { return buf; }
 public:
     unsigned char* buf;
 };

@@ -14,6 +14,10 @@ public:
     dlvid_type getDlvId() const { return dlvid_; }
     unsigned getPriority() const { return 1; }
 
+    bool isActive() const {
+        return true; // FIXME
+    }
+
     /// minimal number of input messages per region when request for new
     /// input messages should be issued.
     unsigned getMinInputQueueSize() const { return 5; }

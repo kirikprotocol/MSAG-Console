@@ -61,6 +61,15 @@ uint64_t FromBuf::get64()
 }
 
 
+const char* FromBuf::getCString()
+{
+    const char* ret = reinterpret_cast<const char*>(buf);
+    for ( ; *buf != '\0'; ++buf ) {}
+    ++buf; // to skip '\0'
+    return ret;
+}
+
+
 const unsigned char* FromBuf::skip( size_t bytes )
 {
     const unsigned char* ret = buf;
@@ -115,6 +124,14 @@ void ToBuf::copy( size_t bytes, const void* from )
 {
     memcpy(buf,from,bytes);
     buf += bytes;
+}
+
+
+void ToBuf::setCString( const char* s )
+{
+    register const size_t inc = strlen(s)+1;
+    memcpy(buf,s,inc);
+    buf += inc;
 }
 
 }

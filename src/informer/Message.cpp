@@ -13,12 +13,17 @@ unsigned char* Message::toBuf( uint16_t version, unsigned char* buf ) const
     }
     io::ToBuf tb(buf);
     tb.set64(subscriber);
-    tb.set32(msgId);
+    tb.set64(msgId);
     tb.set32(lastTime);
     tb.set32(timeLeft);
-    tb.set32(textId);
     tb.copy(USERDATA_LENGTH,userData.c_str());
-    tb.set8(state);
+    if (text.getTextId() == 0) {
+        tb.set8(state | 0x80);
+        tb.setCString(text.getText());
+    } else {
+        tb.set8(state & 0x7f);
+        tb.set32(text.getTextId());
+    }
     return tb.buf;
 }
 
@@ -30,16 +35,23 @@ const unsigned char* Message::fromBuf( uint16_t version, const unsigned char* bu
     }
     io::FromBuf tb(buf);
     subscriber = tb.get64();
-    msgId = tb.get32();
+    msgId = tb.get64();
     lastTime = tb.get32();
     timeLeft = tb.get32();
-    textId = tb.get32();
     userData = reinterpret_cast<const char*>(tb.skip(USERDATA_LENGTH));
     state = tb.get8();
+    if (state & 0x80) {
+        state &= 0x7f;
+        text.resetText(tb.getCString(),0);
+    } else {
+        // FIXME: make sure the glossary post-process the message
+        text.resetText(0,tb.get32());
+    }
     return tb.buf;
 }
 
 
+/*
 char* Message::printToBuf( size_t bufsize, char* buf ) const
 {
     char lbuf[20];
@@ -64,6 +76,7 @@ char* Message::printToBuf( size_t bufsize, char* buf ) const
     }
     return buf + (printed < int(bufsize) ? printed : bufsize-1);
 }
+ */
 
 
 }

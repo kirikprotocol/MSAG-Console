@@ -20,6 +20,7 @@ public:
                          const Message& msg );
 private:
     smsc::logger::Logger* log_;
+    uint32_t              version_;
 };
 
 } // informer

@@ -10,26 +10,22 @@ namespace informer {
 SmscSender::SmscSender( InfosmeCore& core,
                         const std::string& smscId,
                         const smsc::sme::SmeConfig& cfg ) :
-log_(0), core_(&core),
+log_(smsc::logger::Logger::getInstance("smscsend")),
+core_(&core),
 smscId_(smscId), session_(0),
-scoredList_(0)
+scoredList_(*this,2*maxScoreIncrement,log_)
 {
-    log_ = smsc::logger::Logger::getInstance("snd");
     session_.reset( new smsc::sme::SmppSession(cfg,this) );
-    scoredList_ = new ScoredList< SmscSender >(*this,500000,0);
 }
 
 
 SmscSender::~SmscSender()
 {
     if (session_.get()) session_->close();
-    delete scoredList_;
 }
 
 
-unsigned SmscSender::send( msgtime_type currentTime,
-                           Delivery& dlv,
-                           regionid_type regionId,
+unsigned SmscSender::send( RegionalStoragePtr& ptr,
                            Message& msg )
 {
     smsc_log_error(log_,"FIXME: send()");
@@ -40,7 +36,7 @@ unsigned SmscSender::send( msgtime_type currentTime,
 void SmscSender::updateConfig( const smsc::sme::SmeConfig& config )
 {
     waitUntilReleased();
-    // FIXME: recreate session
+    MutexGuard mg(mon_);
     session_.reset(new smsc::sme::SmppSession(config,this));
 }
 
@@ -100,62 +96,70 @@ void SmscSender::connectLoop()
     while ( !isStopping ) {
         MutexGuard mg(mon_);
         if ( !session_.get() ) {
-            // FIXME: create a new session from config
+            smsc_log_error(log_,"FIXME: session is not configured");
+            isStopping = true;
         } else if ( !session_->isClosed() ) {
+            // session connected
             break;
         }
-        // FIXME: connect, then sleep if failed
+        smsc_log_error(log_,"FIXME: connect session");
+        mon_.wait(1000); // FIXME: configure timeout
     }
 }
 
 
 void SmscSender::sendLoop()
 {
-    const unsigned sleepTime = 5000000; // 5 sec
+    const unsigned sleepTime = 5000000U; // 5 sec
 
-    usectime_type currentTime = currentTimeMicro();
-    usectime_type movingStart = currentTime;
-    usectime_type nextWakeTime = currentTime;
+    currentTime_ = currentTimeMicro();
+    // usectime_type movingStart = currentTime_;
+    usectime_type nextWakeTime = currentTime_;
     while ( !isStopping ) {
 
         MutexGuard mg(mon_);
         if ( !session_.get() || session_->isClosed() ) break;
 
         // 1. sleeping until next wake time
-        currentTime = currentTimeMicro();
-        int waitTime = int((nextWakeTime - currentTime)/1000); // in msec
+        currentTime_ = currentTimeMicro();
+        int waitTime = int((nextWakeTime - currentTime_)/1000U); // in msec
 
         if (waitTime > 0) {
             if (waitTime < 10) waitTime = 10;
             mon_.wait(waitTime);
         }
 
-        // 2. flipping start time
-        unsigned deltaTime = unsigned(currentTime - movingStart);
-        if (deltaTime > 1000000000U ) {
-            movingStart += deltaTime;
-            smsc_log_debug(log_,"moving start time +%u",deltaTime);
-            deltaTime = 0;
-        }
-
-        nextWakeTime = currentTime + scoredList_->processOnce( deltaTime, sleepTime );
-        processWaitingEvents(currentTime);
+        nextWakeTime = currentTime_ + scoredList_.processOnce(0, sleepTime);
+        processWaitingEvents();
     }
     if (session_.get() && !session_->isClosed()) session_->close();
 }
 
 
-unsigned SmscSender::scoredObjIsReady( unsigned currentTime, ScoredObjType& regionSender )
+unsigned SmscSender::scoredObjIsReady( unsigned, ScoredObjType& regionSender )
 {
-    smsc_log_error(log_,"FIXME: scored obj is ready at %u", unsigned(currentTime));
-    return 10000;
+    const unsigned ret = regionSender.isReady(currentTime_);
+    smsc_log_debug(log_,"R=%u waits %u usec until ready()", regionSender.getRegionId(), ret);
+    return ret;
 }
 
 
-int SmscSender::processScoredObj( unsigned currentTime, ScoredObjType& regionSender )
+int SmscSender::processScoredObj( unsigned, ScoredObjType& regionSender )
 {
-    smsc_log_error(log_,"FIXME: process scored obj at %u", unsigned(currentTime));
-    return -10000;
+    unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
+    try {
+        const unsigned wantToSleep = regionSender.processRegion(currentTime_);
+        smsc_log_debug(log_,"R=%u processed, sleep=%u", regionSender.getRegionId(), wantToSleep);
+        if (wantToSleep>0) {
+            // all deliveries want to sleep
+            regionSender.suspend(currentTime_ + wantToSleep);
+            return -inc;
+        }
+    } catch ( std::exception& e ) {
+        smsc_log_debug(log_,"R=%u send exc: %s", regionSender.getRegionId(), e.what());
+        regionSender.suspend(currentTime_ + 1000000U);
+    }
+    return inc;
 }
 
 
@@ -165,9 +169,9 @@ void SmscSender::scoredObjToString( std::string& s, ScoredObjType& regionSender 
 }
 
 
-void SmscSender::processWaitingEvents( msgtime_type currentTime )
+void SmscSender::processWaitingEvents()
 {
-    smsc_log_error(log_,"FIXME: process waiting events at %u", unsigned(currentTime));
+    smsc_log_error(log_,"FIXME: process waiting events at %llu", currentTime_);
 }
 
 

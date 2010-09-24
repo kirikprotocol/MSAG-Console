@@ -20,8 +20,7 @@ public:
     inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 
     bool isActive() const {
-        // FIXME
-        return true;
+        return dlvInfo_->isActive();
     }
     unsigned getPriority() const { return dlvInfo_->getPriority(); }
 

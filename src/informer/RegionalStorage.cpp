@@ -299,7 +299,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                 s.append(" v");
             }
             char buf[10];
-            sprintf(buf," %u",i->msg.msgId);
+            sprintf(buf," %u",unsigned(i->msg.msgId));
             s.append(buf);
             ++count;
         }
