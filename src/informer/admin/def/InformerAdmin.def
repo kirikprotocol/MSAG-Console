@@ -22,6 +22,10 @@ message SetDefaultSmsc 7
   string id 1
 end
 
+message SetDefaultSmscResp 8
+  bool success 1
+end
+
 message ConfigOpResult 2
   bool success 1
   string msg 2 opt
