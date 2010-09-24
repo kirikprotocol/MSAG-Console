@@ -45,16 +45,16 @@ options.sidekick.complete-delay.toggle=Show completion popups where possible
 options.sidekick.complete-delay=After popup trigger keystroke, wait (seconds):
 
 # Global parse on buffer change switch
-buffer.sidekick.buffer-change-parse=true
+buffer.sidekick.buffer-change-parse=false
 
 # Global parse on keystroke switch
-buffer.sidekick.keystroke-parse=true
+buffer.sidekick.keystroke-parse=false
 
 # Global auto parse
 buffer.sidekick.auto-parse=true
 
 # Delay after typing ends before auto parse, in milliseconds
-sidekick.auto-parse-delay=6000
+sidekick.auto-parse-delay=2000
 
 # Should the tree selection follow the caret position
 sidekick-tree.follows-caret=false
