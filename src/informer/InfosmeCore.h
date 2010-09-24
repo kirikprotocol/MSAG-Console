@@ -3,12 +3,15 @@
 
 #include <string>
 
-namespace eyeline {
+namespace smsc {
 namespace util {
 namespace config {
 class ConfigView;
 }
 }
+}
+
+namespace eyeline {
 namespace informer {
 
 class InfosmeCore

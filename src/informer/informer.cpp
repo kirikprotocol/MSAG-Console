@@ -25,7 +25,7 @@ smsc::logger::Logger* mainlog = 0;
 static sigset_t original_signal_mask;
 static sigset_t blocked_signals;
 
-std::auto_ptr< smsc::informer::InfosmeCore > core;
+std::auto_ptr< eyeline::informer::InfosmeCore > core;
 
 extern "C" void appSignalHandler(int sig)
 {
@@ -188,12 +188,12 @@ int main( int argc, char** argv )
             std::auto_ptr<smsc::util::config::Config> cfg
                 ( smsc::util::config::Config::createFromFile("config.xml") );
             if ( !cfg.get() ) {
-                throw smsc::informer::InfosmeException("cannot create config");
+                throw eyeline::informer::InfosmeException("cannot create config");
             }
 
-            core.reset( new smsc::informer::InfosmeCoreV1 );
+            core.reset( new eyeline::informer::InfosmeCoreV1 );
             if ( !core.get() ) {
-                throw smsc::informer::InfosmeException("cannot create InfosmeCore");
+                throw eyeline::informer::InfosmeException("cannot create InfosmeCore");
             }
 
             // blocking signals
@@ -213,7 +213,7 @@ int main( int argc, char** argv )
                            cv.getInt("port"));
             }
 
-            smsc::informer::InfosmeComponent admin(*core.get());
+            eyeline::informer::InfosmeComponent admin(*core.get());
             smsc::admin::service::ComponentManager::registerComponent(&admin);
             adml->Start();
 

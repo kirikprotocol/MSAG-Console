@@ -38,9 +38,9 @@ protected:
     RelockMutexGuardTmpl< T >& operator = ( const RelockMutexGuardTmpl<T>& );
 };
 
-typedef RelockMutexGuardTmpl< core::synchronization::Mutex >  RelockMutexGuard;
+typedef RelockMutexGuardTmpl< smsc::core::synchronization::Mutex >  RelockMutexGuard;
 
 } // informer
-} // smsc
+} // eyeline
 
 #endif
