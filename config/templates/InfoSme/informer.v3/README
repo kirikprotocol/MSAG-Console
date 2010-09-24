@@ -21,9 +21,9 @@ TTL - int32: number of seconds until message expiration;
 SMPP - int32: smpp error code or 0;
 USERDATA - ASCII-string: up to 23 bytes, should not contain
   special chars and comma, enclosed in quotes;
-TEXT - UTF8-string with the following chars escaped with backslash:
-  linefeed -> \n, backslash -> \\, quote -> \".
+TEXT - UTF8-string with the following chars escaped:
+  linefeed -> \n, backslash -> \\, quote -> "".
 
 Example:
 #1 STATE,MSGID,SUBSCRIBER,LASTTIME,TTL,SMPP,USERDATA,TEXT
-D,556,+79131234567,1285303430,600,0,"msg0x778","Weather forecast:\n\"rain\""
+D,556,+79131234567,1285303430,600,0,"msg0x778","Weather forecast:\n""rain"""
