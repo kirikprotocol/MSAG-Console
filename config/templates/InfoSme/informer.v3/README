@@ -1,6 +1,7 @@
 1. Preliminary per-task Activity.log format description.
 Activity.log is a human-readable (text) file containing
-one line per message state change.
+one line per message state change. The lines are separated
+by a single linefeed.
 
 The first string is in form
 #VERSION FIELDNAME1,FIELDNAME2,...
@@ -8,7 +9,7 @@ where VERSION is an int32 [1..] of the file format version
 and FIELDNAMExx are field names.
 
 Each line of the file version=1 contains the following fields:
-STATE,MSGID,SUBSCRIBER,LASTTIME,TTL,TEXTID,SMPP,USERDATA
+STATE,MSGID,SUBSCRIBER,LASTTIME,TTL,SMPP,USERDATA,TEXT
 where they are:
 STATE - one-letter state: 'N' -- new, 'D' -- delivered,
      'E' -- expired, 'F' -- failed;
