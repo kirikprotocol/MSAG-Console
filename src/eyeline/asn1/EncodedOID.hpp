@@ -105,7 +105,10 @@ public:
     return (length() == cmp_obj.length())
           && !memcmp(_octs.get(), cmp_obj.octets(), length());
   }
-
+  bool operator!= (const EncodedOID & cmp_obj) const
+  {
+    return !(*this == cmp_obj);
+  }
 };
 
 } //asn1
