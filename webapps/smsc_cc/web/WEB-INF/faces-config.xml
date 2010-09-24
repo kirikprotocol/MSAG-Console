@@ -68,6 +68,11 @@
       <var>msg</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.sme.Sme</base-name>
+      <var>sme</var>
+    </resource-bundle>
+
   </application>
 
   <converter>
@@ -232,6 +237,18 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>service</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.service.ServiceListController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>serviceEdit</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.service.ServiceEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -289,6 +306,15 @@
         <from-outcome>SNMP</from-outcome>
         <to-view-id>/smsc/snmp/index.faces</to-view-id>
         <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SERVICE_EDIT</from-outcome>
+      <to-view-id>/smsc/services/edit.faces</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SERVICES</from-outcome>
+      <to-view-id>/smsc/services/index.faces</to-view-id>
+      <redirect/>
     </navigation-case>
 
   </navigation-rule>

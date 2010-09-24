@@ -96,6 +96,10 @@
               <h:outputText value="#{msg['status.page.closed.group.config']}:"/>
               <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.closedGroupsUpToDate}"/>
               <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.closedGroupsUpToDate}"/>
+
+              <h:outputText value="#{msg['status.page.sme.config']}:"/>
+              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.smeConfigUpToDate}"/>
+              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.smeConfigUpToDate}"/>
             </h:panelGrid>
 
           </f:facet>

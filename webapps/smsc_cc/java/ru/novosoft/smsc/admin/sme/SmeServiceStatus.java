@@ -1,12 +1,13 @@
 package ru.novosoft.smsc.admin.sme;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Статус SME в демоне
  * @author Artem Snopkov
  */
-public class SmeServiceStatus {
+public class SmeServiceStatus implements Serializable {
 
   private final String onlineHost;
   private final List<String> hosts;

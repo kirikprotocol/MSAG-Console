@@ -1,0 +1,121 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['service.edit.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="services" rendered="#{!serviceEdit.outOfDate}">
+
+      <h:inputHidden value="#{serviceEdit.add}"/>
+      <h:inputHidden value="#{serviceEdit.systemId}"/>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['done.button']}" action="#{serviceEdit.save}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['cancel.button']}" action="SERVICES" immediate="true"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <tr:panelFormLayout inlineStyle="padding:20px">
+
+        <tr:panelLabelAndMessage label="#{msg['service.edit.page.systemId']}">
+          <tr:inputText value="#{serviceEdit.systemId}" rendered="#{serviceEdit.add}"/>
+          <tr:outputText value="#{serviceEdit.systemId}" rendered="#{!serviceEdit.add}" inlineStyle="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['priority']}">
+          <tr:inputText value="#{serviceEdit.sme.priority}"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['systemType']}">
+          <tr:inputText value="#{serviceEdit.sme.systemType}"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['password']}">
+          <tr:inputText value="#{serviceEdit.sme.password}"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['addrRange']}">
+          <tr:inputText value="#{serviceEdit.sme.addrRange}"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['wantAlias']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.wantAlias}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['carryOrgDescriptor']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.carryOrgDescriptor}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['carryOrgUserInfo']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.carryOrgUserInfo}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['carrySccpInfo']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.carrySccpInfo}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['fillExtraDescriptor']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.fillExtraDescriptor}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['forceSmeReceipt']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.forceSmeReceipt}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['forceGsmDataCoding']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.forceGsmDataCoding}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['smppPlus']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.smppPlus}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['timeout']}">
+          <tr:inputText value="#{serviceEdit.sme.timeout}"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['receiptSchemeName']}">
+          <tr:inputText value="#{serviceEdit.sme.receiptSchemeName}"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{sme['disabled']}">
+          <h:selectBooleanCheckbox value="#{serviceEdit.sme.disabled}" style="margin-left:9px;"/>
+        </tr:panelLabelAndMessage>
+
+         <tr:panelLabelAndMessage label="#{sme['proclimit']}">
+          <tr:inputText value="#{serviceEdit.sme.proclimit}"/>
+        </tr:panelLabelAndMessage>
+
+         <tr:panelLabelAndMessage label="#{sme['schedlimit']}">
+          <tr:inputText value="#{serviceEdit.sme.schedlimit}"/>
+        </tr:panelLabelAndMessage>
+
+         <tr:panelLabelAndMessage label="#{sme['accessMask']}">
+          <tr:inputText value="#{serviceEdit.sme.accessMask}"/>
+        </tr:panelLabelAndMessage>
+
+      </tr:panelFormLayout>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['done.button']}" action="#{serviceEdit.save}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['cancel.button']}" action="SERVICES" immediate="true"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.service.ServiceManager;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -120,13 +121,15 @@ public class SmeManager implements SmscConfiguration {
   public void addSme(String smeId, Sme newSme) throws AdminException {
     checkBroken();
 
+    Sme sme = new Sme(newSme);
+
     boolean exist = smes.containsKey(smeId);
-    smes.put(smeId, newSme);
+    smes.put(smeId, sme);
 
     try {
       save();
 
-      CCSme params = sme2CCSme(smeId, newSme);
+      CCSme params = sme2CCSme(smeId, sme);
 
       if (cc.isOnline()) {
         if (exist)
@@ -194,8 +197,9 @@ public class SmeManager implements SmscConfiguration {
    * Возвращает информацию обо всех SME
    *
    * @return список настроек всех SME
+   * @throws ru.novosoft.smsc.admin.AdminException если произошла ошибка
    */
-  public Map<String, Sme> smes() {
+  public Map<String, Sme> smes() throws AdminException {
     Map<String, Sme> result = new HashMap<String, Sme>();
     for (Map.Entry<String, Sme> e : smes.entrySet())
       result.put(e.getKey(), new Sme(e.getValue()));
@@ -284,11 +288,10 @@ public class SmeManager implements SmscConfiguration {
   /**
    * Возвращает статусы всех зарегистрированных SME с точки зрения СМС центров
    *
-   * @param smeId идентификатор SME
    * @return статус SME в СМСЦ или null, если SME с таким идентификатором не существует
    * @throws AdminException если произошла ошибка
    */
-  public Map<String, SmeSmscStatuses> getSmesSmscStatuses(String smeId) throws AdminException {
+  public Map<String, SmeSmscStatuses> getSmesSmscStatuses() throws AdminException {
     checkBroken();
 
     CCSmeSmscStatuses stateInfos[] = cc.getSmesStatus();
@@ -309,6 +312,20 @@ public class SmeManager implements SmscConfiguration {
   public void disconnectSmeFromSmsc(String... smeIds) throws AdminException {
     checkBroken();
     cc.disconnectSmes(smeIds);
+  }
+
+  /**
+   * Отключает SME с указанными идентификаторами от всех инстанцев SMSC при помощи SMPP UNBIND
+   *
+   * @param smeIds идентификаторы SME-х
+   * @throws AdminException если произошла ошибка
+   */
+  public void disconnectSmeFromSmsc(List<String> smeIds) throws AdminException {
+    checkBroken();
+    String[] strings = new String[smeIds.size()];
+    for (int i=0; i<smeIds.size(); i++)
+      strings[i] = smeIds.get(i);
+    cc.disconnectSmes(strings);
   }
 
   // SME daemon status actions =========================================================================================

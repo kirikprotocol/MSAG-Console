@@ -11,6 +11,7 @@ import ru.novosoft.smsc.web.journal.Journal;
 import ru.novosoft.smsc.web.journal.JournalRecord;
 
 import javax.faces.model.SelectItem;
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -162,7 +163,7 @@ public class JournalController extends SmscController {
     };
   }
 
-  public class JournalTableRow {
+  public class JournalTableRow implements Serializable {
     private Date date;
     private String user;
     private String userDetails;

@@ -21,6 +21,7 @@ public class TestServiceManagerSingle extends ServiceManager {
     services = new HashMap<String, ServiceInfo>();
     services.put("ArchiveDaemon", getInfo("ArchiveDaemon", true));
     services.put("ClusterController", getInfo("ClusterController", true));
+    services.put("emailsme", getInfo("emailsme", true));
     for (int i=0; i<smscInstancesCount; i++)
       services.put("SMSC"+(i+1), getInfo("SMSC" + (i+1), true));
   }

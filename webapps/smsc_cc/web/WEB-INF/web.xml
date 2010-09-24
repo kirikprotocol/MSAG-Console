@@ -67,7 +67,7 @@
   <context-param>
     <param-name>facelets.LIBRARIES</param-name>
     <param-value>/WEB-INF/facelets/tags/eyeline.taglib.xml</param-value>
-</context-param>
+  </context-param>
 
   <context-param>
     <param-name>org.apache.myfaces.trinidad.CACHE_VIEW_ROOT</param-name>
@@ -240,6 +240,19 @@
     </user-data-constraint>
   </security-constraint>
 
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Сервисы</web-resource-name>
+      <url-pattern>/smsc/services/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>services</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
   <security-role>
     <description>Может редактировать главный конфиг СМСЦ, map limits, логирование, запускать и останавливать центры</description>
     <role-name>smsc_service</role-name>
@@ -263,6 +276,11 @@
   <security-role>
     <description>Может редактировать закрытые группы</description>
     <role-name>closed_groups</role-name>
+  </security-role>
+
+  <security-role>
+    <description>Может управлять сервисами</description>
+    <role-name>services</role-name>
   </security-role>
 
 </web-app>

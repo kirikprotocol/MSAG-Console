@@ -54,6 +54,10 @@ public class SmscStatusManager {
     return adminContext.getSnmpManager().getStatusForSmscs().get(instanceNumber);
   }
 
+  public SmscConfigurationStatus getSmeConfigState(int instanceNumber) throws AdminException {
+    return adminContext.getSmeManager().getStatusForSmscs().get(instanceNumber);
+  }
+
   public void stopSmsc(int instanceNumber) throws AdminException {
     adminContext.getSmscManager().stopSmsc(instanceNumber);
   }

@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
+import ru.novosoft.smsc.admin.sme.Sme;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpSettings;
 import ru.novosoft.smsc.admin.users.UsersSettings;
@@ -23,6 +24,7 @@ public class Journal {
   public static final String MAP_LIMIT = "subject.maplimit";
   public static final String FRAUD = "subject.fraud";
   public static final String SNMP="subject.snmp";
+  public static final String SME="subject.sme";
 
   private final List<JournalRecord> records = new ArrayList<JournalRecord>();
 
@@ -33,6 +35,7 @@ public class Journal {
   private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(MAP_LIMIT);
   private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(FRAUD);
   private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(SNMP);
+  private final SmeDiffHelper sme = new SmeDiffHelper(SME);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -49,6 +52,7 @@ public class Journal {
     l.add(rb.getString(CLOSED_GROUPS));
     l.add(rb.getString(FRAUD));
     l.add(rb.getString(SNMP));
+    l.add(rb.getString(SME));
     return l;
   }
 
@@ -274,4 +278,42 @@ public class Journal {
   public void logChanges(SnmpSettings oldSettings, SnmpSettings newSettings, String user) {
     snmp.logChanges(this, oldSettings, newSettings, user);
   }
+
+  // SME
+
+  public void logSmeAdded(String smeId, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.ADD, SME, user);
+    r.setDescription("sme.added", smeId);
+  }
+
+  public void logSmeUpdated(Sme oldSme, Sme newSme, String user) {
+    sme.logChanges(this, oldSme, newSme, user);
+  }
+
+  public void logSmeRemoved(String smeId, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, SME, user);
+    r.setDescription("sme.removed", smeId);
+  }
+
+  public void logSmeDisconnected(String smeId, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.DISCONNECT, SME, user);
+    r.setDescription("sme.disconnected", smeId);
+  }
+
+  public void logSmeStopped(String smeId, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.STOP, SME, user);
+    r.setDescription("sme.stopped", smeId);
+  }
+
+  public void logSmeStarted(String smeId, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.START, SME, user);
+    r.setDescription("sme.started", smeId);
+  }
+
+  public void logSmeSwitched(String smeId, String toHost, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.SWITCH, SME, user);
+    r.setDescription("sme.switched", smeId, toHost);
+  }
+
+
 }

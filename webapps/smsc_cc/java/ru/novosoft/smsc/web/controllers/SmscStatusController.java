@@ -119,6 +119,9 @@ public class SmscStatusController extends SmscController {
 
           SmscConfigurationStatus cgState = smscStatusManager.getClosedGroupsState(i);
           status.setClosedGroupsUpToDate(cgState == null || cgState == SmscConfigurationStatus.UP_TO_DATE);
+
+          SmscConfigurationStatus smeState = smscStatusManager.getSmeConfigState(i);
+          status.setSmeConfigUpToDate(smeState == null || smeState == SmscConfigurationStatus.UP_TO_DATE);
         }
 
         result.add(status);
@@ -144,6 +147,7 @@ public class SmscStatusController extends SmscController {
     private boolean fraudConfigUpToDate;
     private boolean mapLimitsUpToDate;
     private boolean closedGroupsUpToDate;
+    private boolean smeConfigUpToDate;
 
     public SmscStatus(int instanceNumber, String onlineHost, List<String> hosts) {
       this.instanceNumber = instanceNumber;
@@ -212,6 +216,14 @@ public class SmscStatusController extends SmscController {
       this.closedGroupsUpToDate = closedGroupsUpToDate;
     }
 
+    public boolean isSmeConfigUpToDate() {
+      return smeConfigUpToDate;
+    }
+
+    public void setSmeConfigUpToDate(boolean smeConfigUpToDate) {
+      this.smeConfigUpToDate = smeConfigUpToDate;
+    }
+
     public boolean isHasErrors() {
       return onlineHost != null &&
           (
@@ -219,7 +231,8 @@ public class SmscStatusController extends SmscController {
               !mainConfigUpToDate ||
               !fraudConfigUpToDate ||
               !mapLimitsUpToDate ||
-              !closedGroupsUpToDate
+              !closedGroupsUpToDate ||
+              !smeConfigUpToDate
           );
     }
   }

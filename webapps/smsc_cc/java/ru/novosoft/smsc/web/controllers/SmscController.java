@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.web.controllers;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.logging.Logger;
 import ru.novosoft.smsc.web.LocaleFilter;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.config.Configuration;
@@ -22,7 +23,7 @@ import java.util.ResourceBundle;
  */
 public abstract class SmscController implements Serializable {
 
-  final static SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+  private final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(SmscController.class);
 
   protected void addMessage(FacesMessage.Severity severity, String message) {
     addMessage(severity, message, "");
@@ -50,6 +51,7 @@ public abstract class SmscController implements Serializable {
   }
 
   protected void addError(AdminException e) {
+    logger.error(e,e);
     addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
   }
 

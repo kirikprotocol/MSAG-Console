@@ -44,6 +44,17 @@ public class SmeManagerTest {
   }
 
   @Test
+  public void testAddSme() throws AdminException {
+    SmeManager manager = getManager(new ClusterControllerImpl(true));
+
+    try {
+      manager.addSme("newId", new Sme());
+      assertFalse(true);
+    } catch (AdminException ignored) {
+    }
+  }
+
+  @Test
   public void testGetStatusForSmscs() throws AdminException {
     SmeManager manager = getManager(new ClusterControllerImpl(true));
 

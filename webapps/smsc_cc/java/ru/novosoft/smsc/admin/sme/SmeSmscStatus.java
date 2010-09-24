@@ -1,11 +1,13 @@
 package ru.novosoft.smsc.admin.sme;
 
+import java.io.Serializable;
+
 /**
  * Статус SME в СМСЦ
  *
  * @author Artem Snopkov
  */
-public class SmeSmscStatus {
+public class SmeSmscStatus implements Serializable {
 
   private final int smscInstanceNumber;
   private final SmeConnectStatus connectionStatus; // Internal или Disconnected

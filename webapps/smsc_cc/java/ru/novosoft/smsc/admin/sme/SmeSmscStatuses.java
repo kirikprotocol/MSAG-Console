@@ -1,11 +1,13 @@
 package ru.novosoft.smsc.admin.sme;
 
+import java.io.Serializable;
+
 /**
  * Структура, описывающая состояние SME для всех инстанцев СМСЦ
  *
  * @author Artem Snopkov
  */
-public class SmeSmscStatuses {
+public class SmeSmscStatuses implements Serializable {
 
   private final SmeConnectType connectType;
   private final SmeSmscStatus statuses[];

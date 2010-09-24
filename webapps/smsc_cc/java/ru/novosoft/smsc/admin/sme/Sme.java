@@ -39,30 +39,30 @@ public class Sme {
   public Sme() {
   }
 
-  Sme(Sme newSme) {
-    priority = newSme.getPriority();
+  Sme(Sme newSme) throws AdminException {
+    setPriority(newSme.getPriority());
 
-    systemType = newSme.getSystemType();
-    password = newSme.getPassword();
-    addrRange = newSme.getAddrRange();
-    smeN = newSme.getSmeN();
-    wantAlias = newSme.isWantAlias();
-    timeout = newSme.getTimeout();
+    setSystemType(newSme.getSystemType());
+    setPassword(newSme.getPassword());
+    setAddrRange(newSme.getAddrRange());
+    setSmeN(newSme.getSmeN());
+    setWantAlias(newSme.isWantAlias());
+    setTimeout(newSme.getTimeout());
 
-    receiptSchemeName = newSme.getReceiptSchemeName();
-    disabled = newSme.isDisabled();
-    bindMode = newSme.getBindMode();
-    proclimit = newSme.getProclimit();
-    schedlimit = newSme.getSchedlimit();
-    accessMask = newSme.getAccessMask();
+    setReceiptSchemeName(newSme.getReceiptSchemeName());
+    setDisabled(newSme.isDisabled());
+    setBindMode(newSme.getBindMode());
+    setProclimit(newSme.getProclimit());
+    setSchedlimit(newSme.getSchedlimit());
+    setAccessMask(newSme.getAccessMask());
 
-    carryOrgDescriptor = newSme.isCarryOrgDescriptor();
-    carryOrgUserInfo = newSme.isCarryOrgUserInfo();
-    carrySccpInfo = newSme.isCarrySccpInfo();
-    fillExtraDescriptor = newSme.isFillExtraDescriptor();
-    forceSmeReceipt = newSme.isForceSmeReceipt();
-    forceGsmDataCoding = newSme.isForceGsmDataCoding();
-    smppPlus = newSme.isSmppPlus();
+    setCarryOrgDescriptor(newSme.isCarryOrgDescriptor());
+    setCarryOrgUserInfo(newSme.isCarryOrgUserInfo());
+    setCarrySccpInfo(newSme.isCarrySccpInfo());
+    setFillExtraDescriptor(newSme.isFillExtraDescriptor());
+    setForceSmeReceipt(newSme.isForceSmeReceipt());
+    setForceGsmDataCoding(newSme.isForceGsmDataCoding());
+    setSmppPlus(newSme.isSmppPlus());
   }
 
   public int getPriority() {

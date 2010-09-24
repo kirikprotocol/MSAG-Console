@@ -158,6 +158,11 @@ div.query_result {
   width:400px;
 }
 
+.column150WidthRight {
+  width:150px;
+  text-align:right;
+}
+
 .column0WidthRight {
   width:0px;
   text-align:right;
