@@ -33,7 +33,7 @@ public class ClosedGroupsController extends SmscController {
       List<Integer> result = new ArrayList<Integer>();
       SmscStatusManager ssm = getSmscStatusManager();
       for (int i = 0; i < ssm.getSmscInstancesNumber(); i++) {
-        if (ssm.getRescheduleState(i) == SmscConfigurationStatus.OUT_OF_DATE)
+        if (ssm.getClosedGroupsState(i) == SmscConfigurationStatus.OUT_OF_DATE)
           result.add(i);
       }
       if (!result.isEmpty()) {
