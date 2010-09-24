@@ -9,10 +9,7 @@ import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.event.ActionEvent;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Artem Snopkov
@@ -20,12 +17,35 @@ import java.util.List;
 public class Index1Controller implements Serializable {
 
   private boolean init=false;
-  
+
+  private Date date;
+
+  private String selectOne;
+
+  public String getSelectOne() {
+    return selectOne;
+  }
+
+  public void setSelectOne(String selectOne) {
+    this.selectOne = selectOne;
+  }
+
+  public Date getDate() {
+    return date;
+  }
+
+  public void setDate(Date date) {
+    this.date = date;
+    this.selectOne = null;
+  }
 
   public void query() {
     init = true;
   }
 
+  public void clear() {
+    date = null;
+  }
 
   public boolean isInit() {
     return init;
@@ -108,8 +128,12 @@ public class Index1Controller implements Serializable {
     private final List<String> strings = new ArrayList<String>();
 
     public MyPagedTableModel() {
-      for (int i = 0; i < 100; i++)
+      for (int i = 0; i < 100; i++) {
+        if(selectOne != null && selectOne.length()>0 && i> Integer.parseInt(selectOne)) {
+          return;          
+        }
         strings.add(String.valueOf(i));
+      }
     }
 
     public List<DataTableRow> getRows(int startPos, int count, final DataTableSortOrder sortOrder) {

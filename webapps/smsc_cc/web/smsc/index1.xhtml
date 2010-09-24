@@ -10,7 +10,7 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{msg['smsc.title']}"/>    
+  <ui:param name="pageTitle" value="#{msg['smsc.title']}"/>
 
   <ui:define name="content">
 
@@ -37,9 +37,18 @@
 
       <h:inputHidden value="#{index1.init}"/>
 
-      <h:commandLink value="APPLY" title="APPLY" action="#{index1.query}"/>
-
-      
+      <eye:dataTableFilter bean="#{index1}" applyAction="query" clearAction="clear">
+        <h:panelGrid columns="2">
+          <h:outputLabel for="date" value="date"/><t:inputDate id="date" value="#{index1.date}"/>
+          <h:outputLabel for="select" value="limit"/>
+          <h:selectOneMenu id="select" value="#{index1.selectOne}" >
+              <f:selectItem itemLabel="" itemValue=""/>
+              <f:selectItem itemLabel="1" itemValue="1"/>
+              <f:selectItem itemLabel="2" itemValue="2"/>
+              <f:selectItem itemLabel="3" itemValue="3"/>
+            </h:selectOneMenu>
+        </h:panelGrid>
+      </eye:dataTableFilter>
 
       <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" rendered="#{index1.init}">
 
