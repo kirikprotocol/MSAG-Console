@@ -23,11 +23,11 @@ message SetDefaultSmsc 7
 end
 
 message SetDefaultSmscResp 8
-  bool success 1
+  int32 status 1
 end
 
 message ConfigOpResult 2
-  bool success 1
+  int32 status 1
   string msg 2 opt
 end
 
@@ -41,7 +41,7 @@ message CategoryInfo
 end
 
 message LoggerGetCategoriesResp 4
-  bool success 1
+  int32 status 1
   CategoryInfo categories 2 array opt
 end
 
@@ -50,6 +50,6 @@ message LoggerSetCategories 5
 end
 
 message LoggerSetCategoriesResp 6
-  bool success 1
+  int32 status 1
 end
 
