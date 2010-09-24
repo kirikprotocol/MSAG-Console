@@ -1,0 +1,17 @@
+1. Preliminary per-task Activity.log format description.
+  Activity.log is a human-readable (text) file and
+  it contains one line per message state change:
+  STATE,MSGID,SUBSID,LASTTIME,TIMELEFT,TEXTID,SMPP,USERDATA
+    where the fields are (separated with single comma):
+  STATE - one-digit [1..9] integer: representation of the current state
+          (to be specified);
+  MSGID - uint64 [1..]: unique (per-task) message id;
+  SUBSID - uint64: subscriber number (only the part w/o .ton.npi);
+  LASTTIME - uint32: absolute time(2) in seconds of the message state change;
+  TIMELEFT - int32: TTL of the message in seconds;
+  TEXTID - uint32 [1..]: message text id in glossary;
+  SMPP - int32: smpp error code or 0;
+  USERDATA - ASCII-string: up to 23 bytes, should not contain
+            special chars and comma, enclosed in quotes;
+  Example:
+3,556,79131234567,1285303430,600,13,0,"msg0x778899"
