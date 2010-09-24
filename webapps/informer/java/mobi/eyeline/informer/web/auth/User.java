@@ -1,9 +1,9 @@
 package mobi.eyeline.informer.web.auth;
 
 /**
- * author: alkhal
+ * Класс пользователя для JAAS-аутенфикации
+ * @author Aleksandr Khalitov
  */
-
 import java.security.Principal;
 
 public class User implements Principal {

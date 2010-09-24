@@ -23,7 +23,7 @@
     </resource-bundle>
 
     <resource-bundle>
-      <base-name>mobi.eyeline.informer.web.informer.InformerSettings</base-name>
+      <base-name>mobi.eyeline.informer.admin.informer.InformerSettings</base-name>
       <var>informerSettings</var>
     </resource-bundle>
 

@@ -19,7 +19,7 @@ public class GSM7CharSet {
    *
    * @param msg string to convert
    * @return array of bytes containing text in GSM coding
-   * @throws java.io.UnsupportedEncodingException
+   * @throws java.io.UnsupportedEncodingException locale is not supported
    *
    */
   public static byte[] encode(String msg) throws UnsupportedEncodingException {
@@ -83,7 +83,7 @@ public class GSM7CharSet {
    *
    * @param in byte array with GSM symbols
    * @return string containung unicode text
-   * @throws java.io.UnsupportedEncodingException
+   * @throws java.io.UnsupportedEncodingException locale is not supported
    *
    */
   public static String decode(byte in[]) throws UnsupportedEncodingException {
@@ -132,7 +132,7 @@ public class GSM7CharSet {
     return new String(out, 0, k, "ISO8859_1");
   }
 
-  static byte _8bit_2_7bit[] = {
+  private static final byte[] _8bit_2_7bit = {
       0x60, // null
       0x60,
       0x60,
@@ -390,7 +390,7 @@ public class GSM7CharSet {
       0x60,
       0x60};
 
-  static byte _7bit_2_8bit[] = {
+  private static final byte[] _7bit_2_8bit = {
       (byte) 0x40,
       (byte) 0xa3,
       (byte) 0x24,

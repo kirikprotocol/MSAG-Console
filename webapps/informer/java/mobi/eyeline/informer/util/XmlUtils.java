@@ -26,8 +26,8 @@ import java.io.*;
  */
 public class XmlUtils {
 
-  private static DocumentBuilderFactory documentBuilderFactory = null;
-  private static DtdsEntityResolver dtdsEntityResolver = null;
+  private static final DocumentBuilderFactory documentBuilderFactory = null;
+  private static final DtdsEntityResolver dtdsEntityResolver = null;
 
   private static synchronized DocumentBuilderFactory getDocumentBuilderFactory() {
     return documentBuilderFactory == null ? DocumentBuilderFactory.newInstance() : documentBuilderFactory;

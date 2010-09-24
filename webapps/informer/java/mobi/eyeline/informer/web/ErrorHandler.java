@@ -6,6 +6,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletResponse;
 
 /**
+ * Обработчик ошибок
  * @author Aleksandr Khalitov
  */
 

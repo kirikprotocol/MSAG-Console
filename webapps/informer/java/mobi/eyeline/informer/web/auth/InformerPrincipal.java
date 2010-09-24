@@ -1,29 +1,23 @@
 package mobi.eyeline.informer.web.auth;
 
-/*
- * Created by igork
- * Date: 22.11.2002
- * Time: 22:38:32
- */
 
 import java.util.Set;
 
-public final class SmscPrincipal {
+/**
+ * Информациях о правах доступа пользователя
+ * @author Aleksandr Khalitov
+ */
+public final class InformerPrincipal {
   private String name;
-  private String password;
-  private Set<String> roles;
+  private final String password;
+  private final Set<String> roles;
 
-  SmscPrincipal(String name, String password, Set<String> roles) {
+  public InformerPrincipal(String name, String password, Set<String> roles) {
     this.name = name;
     this.password = password;
     this.roles = roles;
   }
 
-  /**
-   * Returns the name of this principal.
-   *
-   * @return the name of this principal.
-   */
   public String getName() {
     return name;
   }

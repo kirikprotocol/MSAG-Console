@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * author: @author Aleksandr Khalitov
+ * Файловая система для Single и HA установок
+ * @author Aleksandr Khalitov
  */
 class FileSystemSingleHA extends FileSystem {
 

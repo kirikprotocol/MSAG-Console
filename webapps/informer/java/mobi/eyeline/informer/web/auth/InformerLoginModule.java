@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.web.auth;
 
-import mobi.eyeline.informer.web.WebContext;
+import mobi.eyeline.informer.admin.WebContext;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -13,9 +13,10 @@ import javax.security.auth.spi.LoginModule;
 import java.util.Map;
 
 /**
- * author: alkhal
+ * JAAS Login module
+ * @author Aleksandr Khalitov
  */
-public class SmscLoginModule implements LoginModule {
+public class InformerLoginModule implements LoginModule {
   private Subject subject;
   private CallbackHandler callbackHandler;
 
@@ -27,7 +28,7 @@ public class SmscLoginModule implements LoginModule {
     return true;
   }
   public boolean commit() throws LoginException {
-    SmscPrincipal p = WebContext.getInstance().getAuthenticator().authenticate(name, password);
+    InformerPrincipal p = WebContext.getInstance().getAuthenticator().authenticate(name, password);
     if (p == null) {
       return false;
     }

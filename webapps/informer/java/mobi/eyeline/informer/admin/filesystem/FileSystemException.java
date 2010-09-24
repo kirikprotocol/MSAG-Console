@@ -3,10 +3,11 @@ package mobi.eyeline.informer.admin.filesystem;
 import mobi.eyeline.informer.admin.AdminException;
 
 /**
+ * Ошибка работы с файловой системой
  * @author Artem Snopkov
  */
-public class FileSystemException extends AdminException {
-  protected FileSystemException(String key, Throwable cause) {
+class FileSystemException extends AdminException {
+  FileSystemException(String key, Throwable cause) {
     super(key, cause);
   }
 
@@ -14,7 +15,7 @@ public class FileSystemException extends AdminException {
     super(key);
   }
 
-  protected FileSystemException(String key, String ... args) {
+  FileSystemException(String key, String ... args) {
     super(key, args);
   }
 }

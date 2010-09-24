@@ -468,7 +468,7 @@ public class XmlConfigSection {
    * @param dateFormat   date format
    * @param defaultValue default value
    * @return param value as date or default value, if param does not exist
-   * @throws ParseException
+   * @throws ParseException error parsing date
    */
   public Date getDate(String paramName, String dateFormat, Date defaultValue) throws ParseException {
     final XmlConfigParam param = getParam(paramName);

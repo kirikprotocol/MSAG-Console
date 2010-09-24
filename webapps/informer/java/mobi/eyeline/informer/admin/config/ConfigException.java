@@ -1,8 +1,9 @@
-package mobi.eyeline.informer.web.config;
+package mobi.eyeline.informer.admin.config;
 
 import mobi.eyeline.informer.admin.AdminException;
 
 /**
+ * Ошибка чтения/записи конфига
  * @author Artem Snopkov
  */
 public class ConfigException extends AdminException {

@@ -96,7 +96,7 @@ public class IOUtils {
     if (size <= 0) return "";
     byte buff[] = new byte[size];
     int pos = 0;
-    int cnt = 0;
+    int cnt;
     while (pos < size) {
       cnt = is.read(buff, pos, size - pos);
       if (cnt == -1) throw new EOFException();

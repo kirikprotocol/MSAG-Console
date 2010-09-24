@@ -3,7 +3,8 @@ package mobi.eyeline.informer.web.auth;
 import java.security.Principal;
 
 /**
- * author: alkhal
+ * Класс роли для JAAS-аутенфикации
+ * @author Aleksandr Khalitov
  */
 public class Role implements Principal {
 

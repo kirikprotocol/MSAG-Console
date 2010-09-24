@@ -1,7 +1,8 @@
 package mobi.eyeline.informer.web;
 
 /**
- * author: alkhal
+ * Ошибка при инициализации приложения
+ * @author Aleksandr Khalitov
  */
 public class InitException extends Exception {
 

@@ -34,7 +34,7 @@ public class WebConfigTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testNull1() throws InitException{
+  public void testNull1() throws InitException {
     InputStream is = null;
     new WebConfig(is);
   }

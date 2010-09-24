@@ -4,12 +4,16 @@ import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+/**
+ * Ошибка web приложения
+ * @author Aleksandr Khalitov
+ */
 public abstract class AdminException extends Exception {
 
   protected final String bundleName;
   protected final String key;
 
-  protected String[] args;
+  protected final String[] args;
 
   protected AdminException(String bundleName, String key, String ... args) {
     this.bundleName = bundleName;

@@ -6,6 +6,7 @@ import mobi.eyeline.informer.util.FileUtils;
 import java.io.*;
 
 /**
+ * Файловая система для HS-установки
  * @author Aleksandr Khalitov
  */
 class FileSystemHS extends FileSystem {

@@ -18,7 +18,7 @@ import java.io.OutputStream;
 
 class XmlConfigWriter {
 
-  private static DocumentBuilder docBuilder;
+  private static final DocumentBuilder docBuilder;
 
   static {
     try{

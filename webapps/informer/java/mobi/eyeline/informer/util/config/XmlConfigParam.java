@@ -21,7 +21,7 @@ public class XmlConfigParam implements Cloneable{
 
   private String name;
   private String value;
-  private Properties attributes = new Properties();
+  private final Properties attributes = new Properties();
   private Type type = Type.STRING;
 
   /**
@@ -36,6 +36,7 @@ public class XmlConfigParam implements Cloneable{
    * Creates new instance of XmlConfigParam with specified name and value
    * @param name param name
    * @param value param value
+   * @param type param type
    */
   public XmlConfigParam(String name, String value, Type type) {
     this.name = name;
@@ -123,7 +124,7 @@ public class XmlConfigParam implements Cloneable{
    * Returns parameter value as String list
    * @param delimiter delimiter
    * @return string list value
-   * @throws XmlConfigException
+   * @throws XmlConfigException error reading config
    */
   public String[] getStringArray(String delimiter) throws XmlConfigException {
     return ConfigTools.getStringArray(name, value, delimiter);
@@ -133,6 +134,7 @@ public class XmlConfigParam implements Cloneable{
    * Returns parameter value as String list
    * @param delimiter delimiter
    * @return string list value
+   * @throws XmlConfigException error reading config
    */
   public List<String> getStringList(String delimiter) throws XmlConfigException {
     return ConfigTools.getStringList(name, value, delimiter);
@@ -223,6 +225,7 @@ public class XmlConfigParam implements Cloneable{
    * Set string list value to parameter
    * @param stringList new value
    * @param delimiter values delimiter
+   * @throws XmlConfigException error writting config
    */
   public void setStringList(Collection stringList, String delimiter) throws XmlConfigException {
     value = Functions.collectionToString(stringList, delimiter);

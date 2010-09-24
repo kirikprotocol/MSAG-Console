@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.web.config;
+package mobi.eyeline.informer.admin.config;
 
 import java.io.InputStream;
 import java.io.OutputStream;
