@@ -14,12 +14,12 @@ struct AdditionalNetworkResource {
 
   enum Id_e {
     nra_sgsn = 0,
-    , nra_ggsn = 1
-    , nra_gmlc = 2
-    , nra_gsmSCF = 3
-    , nra_nplr = 4
-    , nra_auc = 5
-    , nra_ue = 6
+    nra_ggsn = 1,
+    nra_gmlc = 2,
+    nra_gsmSCF = 3,
+    nra_nplr = 4,
+    nra_auc = 5,
+    nra_ue = 6,
     /* ... extensible type */
     nra_unknown = 0xFF
   };
@@ -31,7 +31,7 @@ struct AdditionalNetworkResource {
     return (use_val > 6) ? nra_unknown : static_cast<Id_e>(use_val);
   }
 
-  Value_e value2Id(void) const { return value2Id(_value);
+  Id_e value2Id(void) const { return value2Id(_value); }
 };
 
 typedef AdditionalNetworkResource::value_type AdditionalNetworkResource_t;
