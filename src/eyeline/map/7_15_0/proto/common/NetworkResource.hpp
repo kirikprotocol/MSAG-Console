@@ -10,7 +10,7 @@ namespace map {
 namespace common {
 
 struct NetworkResource {
-  typedef unsigned char value_type : 3;
+  typedef unsigned char value_type;
 
   enum Id_e {
     nr_plmn = 0,
