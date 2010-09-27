@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.web.controllers.service;
+package ru.novosoft.smsc.web.controllers.acl;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
@@ -12,11 +12,11 @@ import java.util.List;
 /**
  * @author Artem Snopkov
  */
-public class ServiceController extends SmscController {
+public class AclController extends SmscController {
 
   private boolean outOfDate;
 
-  protected ServiceController() {
+  public AclController() {
     outOfDate = checkOutOfDate();
   }
 
@@ -25,7 +25,7 @@ public class ServiceController extends SmscController {
       List<Integer> result = new ArrayList<Integer>();
       SmscStatusManager ssm = getSmscStatusManager();
       for (int i = 0; i < ssm.getSmscInstancesNumber(); i++) {
-        if (ssm.getSmeConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
+        if (ssm.getAclConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
           result.add(i);
       }
       if (!result.isEmpty()) {
@@ -42,4 +42,6 @@ public class ServiceController extends SmscController {
   public boolean isOutOfDate() {
     return outOfDate;
   }
+
+
 }

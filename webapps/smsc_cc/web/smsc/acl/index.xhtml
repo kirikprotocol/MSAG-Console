@@ -1,0 +1,58 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['acls.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!acls.outOfDate}">
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['add.button']}" action="ACL_EDIT"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{acls.removeAcl}"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:dataTable value="#{acls.acls}" selectedRows="#{acls.selectedRows}" var="acl">
+        <eye:row rowId="#{acl.id}">
+          <eye:column name="id" title="#{msg['acls.page.id']}" width="5%">
+            <h:commandLink action="ACL_EDIT" value="#{acl.id}">
+              <f:param name="aclId" value="#{acl.id}"/>
+            </h:commandLink>
+          </eye:column>
+          <eye:column name="name" title="#{msg['acls.page.name']}" width="30%" sortable="true" defaultSortOrder="asc">
+            <h:commandLink action="ACL_EDIT" value="#{acl.name}">
+              <f:param name="aclId" value="#{acl.id}"/>
+            </h:commandLink>
+          </eye:column>
+          <eye:column name="description" title="#{msg['acls.page.desc']}" width="74%">
+            <h:commandLink action="ACL_EDIT" value="#{acl.description}">
+              <f:param name="aclId" value="#{acl.id}"/>
+            </h:commandLink>
+          </eye:column>
+        </eye:row>
+
+      </eye:dataTable>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['add.button']}" action="ACL_EDIT"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{acls.removeAcl}"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

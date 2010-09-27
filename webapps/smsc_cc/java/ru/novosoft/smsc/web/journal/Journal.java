@@ -8,6 +8,7 @@ import ru.novosoft.smsc.admin.sme.Sme;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpSettings;
 import ru.novosoft.smsc.admin.users.UsersSettings;
+import ru.novosoft.smsc.util.Address;
 
 import java.util.*;
 
@@ -26,6 +27,7 @@ public class Journal {
   public static final String FRAUD = "subject.fraud";
   public static final String SNMP="subject.snmp";
   public static final String SME="subject.sme";
+  public static final String ACL="subject.acl";
 
   private final List<JournalRecord> records = new ArrayList<JournalRecord>();
 
@@ -55,6 +57,7 @@ public class Journal {
     l.add(rb.getString(FRAUD));
     l.add(rb.getString(SNMP));
     l.add(rb.getString(SME));
+    l.add(rb.getString(ACL));
     return l;
   }
 
@@ -317,5 +320,52 @@ public class Journal {
     r.setDescription("sme.switched", smeId, toHost);
   }
 
+  // ACL
+
+  public void logAclInfoChanged(String oldName, String oldDesc, String newName, String newDesc, String user) {
+    if (!oldName.equals(newName)) {
+      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, ACL, user);
+      r.setDescription("property_changed", "name", oldName, newName);
+    } if (!oldDesc.equals(newDesc)) {
+      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, ACL, user);
+      r.setDescription("property_changed", "description", oldDesc, newDesc);
+    }
+  }
+
+  public void logAddAddressesToAcl(int id, String name, List<Address> addresses, String user) {
+    if (!addresses.isEmpty()) {
+      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, ACL, user);
+      StringBuilder sb = new StringBuilder();
+      for (Address address : addresses) {
+        if (sb.length() > 0)
+          sb.append(", ");
+        sb.append(address);
+      }
+      r.setDescription("acl.add.addresses", name, sb.toString());
+    }
+  }
+
+  public void logRemoveAddressesFromAcl(int id, String name, List<Address> addresses, String user) {
+    if (!addresses.isEmpty()) {
+      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, ACL, user);
+      StringBuilder sb = new StringBuilder();
+      for (Address address : addresses) {
+        if (sb.length() > 0)
+          sb.append(", ");
+        sb.append(address);
+      }
+      r.setDescription("acl.remove.addresses", name, sb.toString());
+    }
+  }
+
+  public void logAclCreate(int id, String name, String description, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.ADD, ACL, user);
+    r.setDescription("acl.created", id+"", name, description);
+  }
+
+  public void logAclRemove(int id, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, ACL, user);
+    r.setDescription("acl.removed", id+"");
+  }
 
 }

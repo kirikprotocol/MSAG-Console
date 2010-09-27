@@ -31,7 +31,8 @@ public class TopMenu {
           add(new MenuItem("smsc.smsc.fraud", "/smsc/fraud/fraud.faces"))
       );
       add(new MenuBarItem("smsc.routes", 154).
-          add(new MenuItem("smsc.routes.subjects", "/smsc/subjects/index.faces"))
+          add(new MenuItem("smsc.routes.subjects", "/smsc/subjects/index.faces")).
+          add(new MenuItem("smsc.routes.acls", "/smsc/acl/index.faces"))
       );
       add(new MenuBarItem("smsc.services", 63).
           add(new MenuItem("smsc.services.services", "/smsc/services/index.faces"))

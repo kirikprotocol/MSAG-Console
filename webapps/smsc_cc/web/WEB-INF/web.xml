@@ -192,6 +192,7 @@
       <url-pattern>/smsc/reschedule/*</url-pattern>
       <url-pattern>/smsc/fraud/*</url-pattern>
       <url-pattern>/smsc/snmp/*</url-pattern>
+      <url-pattern>/smsc/acl/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>smsc_service</role-name>

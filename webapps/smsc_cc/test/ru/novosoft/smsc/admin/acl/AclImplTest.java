@@ -12,33 +12,33 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class AclTest {
+public class AclImplTest {
 
   @Test
   public void testCheckInfo() throws Exception {
     try {
-      Acl.checkInfo(null, null);
+      AclImpl.checkInfo(null, null);
       assertFalse(true);
     } catch (ValidationException ignored) {}
 
     try {
-      Acl.checkInfo("", null);
+      AclImpl.checkInfo("", null);
       assertFalse(true);
     } catch (ValidationException ignored) {}
 
     try {
-      StringBuilder name = new StringBuilder(Acl.MAX_NAME_LEN);
-      for (int i=0; i<Acl.MAX_NAME_LEN + 1; i++)
+      StringBuilder name = new StringBuilder(AclImpl.MAX_NAME_LEN);
+      for (int i=0; i<AclImpl.MAX_NAME_LEN + 1; i++)
         name.append("a");
-      Acl.checkInfo(name.toString() , null);
+      AclImpl.checkInfo(name.toString() , null);
       assertFalse(true);
     } catch (ValidationException ignored) {}
     
     try {
-      StringBuilder desc = new StringBuilder(Acl.MAX_DESCRIPTION_LEN);
-      for (int i=0; i<Acl.MAX_DESCRIPTION_LEN + 1; i++)
+      StringBuilder desc = new StringBuilder(AclImpl.MAX_DESCRIPTION_LEN);
+      for (int i=0; i<AclImpl.MAX_DESCRIPTION_LEN + 1; i++)
         desc.append("a");
-      Acl.checkInfo("ok", desc.toString());
+      AclImpl.checkInfo("ok", desc.toString());
       assertFalse(true);
     } catch (ValidationException ignored) {}
   }
@@ -47,6 +47,6 @@ public class AclTest {
   public void testCheckAddresses() throws Exception {
     ArrayList<Address> addresses = new ArrayList<Address>();
     addresses.add(null);
-    Acl.checkAddresses(addresses);
+    AclImpl.checkAddresses(addresses);
   }
 }

@@ -249,6 +249,18 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>acls</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.acl.AclListController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+   <managed-bean>
+    <managed-bean-name>aclEdit</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.acl.AclEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -314,6 +326,15 @@
     <navigation-case>
       <from-outcome>SERVICES</from-outcome>
       <to-view-id>/smsc/services/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>ACL_EDIT</from-outcome>
+      <to-view-id>/smsc/acl/edit.faces</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>ACLS</from-outcome>
+      <to-view-id>/smsc/acl/index.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

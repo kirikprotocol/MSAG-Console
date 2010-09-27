@@ -1,0 +1,62 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['acl.edit.page.title']}  #{(aclEdit.id == -1) ? '' : aclEdit.idStr}" />
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!aclEdit.outOfDate}">
+
+      <h:inputHidden value="#{aclEdit.id}"/>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['done.button']}" action="#{aclEdit.save}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['cancel.button']}" action="ACLS" immediate="true"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <h:panelGrid style="padding:10px" columns="1">
+        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">          
+
+          <tr:panelLabelAndMessage label="#{msg['acl.edit.page.name']}" >
+            <tr:inputText columns="50" value="#{aclEdit.name}" simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{msg['acl.edit.page.desc']}" >
+            <tr:inputText rows="3" columns="50" value="#{aclEdit.description}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{msg['acl.edit.page.addresses']}">
+            <tr:panelGroupLayout>
+              <h:inputHidden/>
+              <eye:dynamicTable value="#{aclEdit.addresses}" >
+                <eye:textColumn name="address" allowEditAfterAdd="true" maxLength="21" />
+              </eye:dynamicTable>
+            </tr:panelGroupLayout>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['done.button']}" action="#{aclEdit.save}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['cancel.button']}" action="ACLS" immediate="true"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

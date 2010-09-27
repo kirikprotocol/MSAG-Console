@@ -6,7 +6,6 @@ import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
-import ru.novosoft.smsc.admin.util.ValidationHelper;
 import ru.novosoft.smsc.util.Address;
 
 import java.util.*;
@@ -36,11 +35,12 @@ public class AclManager implements SmscConfiguration {
    * @param description описание нового ACL
    * @param addresses   список адресов, содержащихся в новом ACL, или null, если таких нет
    * @throws AdminException если произошла ошибка
+   * @return новый экземпляр ACL
    */
   public Acl createAcl(String name, String description, List<Address> addresses) throws AdminException {
-    Acl.checkInfo(name, description);
+    AclImpl.checkInfo(name, description);
     if (addresses != null)
-      Acl.checkAddresses(addresses);
+      AclImpl.checkAddresses(addresses);
     else
       addresses = Collections.emptyList();
 
@@ -49,7 +49,7 @@ public class AclManager implements SmscConfiguration {
 
     int nextAclId = getNextAclId();
     cc.createAlc(nextAclId, name, description, addresses);
-    return new Acl(this, nextAclId, name, description);
+    return new AclImpl(this, nextAclId, name, description);
   }
 
   /**
@@ -76,7 +76,7 @@ public class AclManager implements SmscConfiguration {
       throw new AclException("acls.not.available");
 
     CCAclInfo acl = cc.getAcl(id);
-    return new Acl(this, acl.getId(), acl.getName(), acl.getDescription());
+    return new AclImpl(this, acl.getId(), acl.getName(), acl.getDescription());
   }
 
   /**
@@ -92,7 +92,7 @@ public class AclManager implements SmscConfiguration {
     List<CCAclInfo> acls = cc.getAcls();
     ArrayList<Acl> result = new ArrayList<Acl>(acls.size() + 1);
     for (CCAclInfo acl : acls)
-      result.add(new Acl(this, acl.getId(), acl.getName(), acl.getDescription()));
+      result.add(new AclImpl(this, acl.getId(), acl.getName(), acl.getDescription()));
     return result;
   }
 
