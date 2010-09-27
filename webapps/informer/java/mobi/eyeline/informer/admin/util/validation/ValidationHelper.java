@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.util;
+package mobi.eyeline.informer.admin.util.validation;
 
 import mobi.eyeline.informer.admin.AdminException;
 

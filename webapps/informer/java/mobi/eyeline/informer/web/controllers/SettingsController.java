@@ -1,8 +1,8 @@
 package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.config.Revision;
 import mobi.eyeline.informer.web.config.Configuration;
+import mobi.eyeline.informer.web.config.Revision;
 
 import javax.servlet.http.HttpSession;
 
@@ -36,11 +36,11 @@ public abstract class SettingsController<T> extends InformerController {
     revision = (Integer) getSessionAttr(revisionAttr);
     if (revision == null) {
       try {
-        configuration.lockRevision();
+        configuration.lock();
         Revision rev = configuration.getLastRevision(configType);
         revision = rev == null ? 0 : rev.getNumber();
       } finally {
-        configuration.unlockRevision();
+        configuration.unlock();
       }
 
       setSessionAttr(settingsAttr, loadSettings());
@@ -122,7 +122,7 @@ public abstract class SettingsController<T> extends InformerController {
    */
   protected Revision submitSettings() throws AdminException {
     try {
-      configuration.lockRevision();
+      configuration.lock();
 
       Revision rev = configuration.getLastRevision(configType);
       if (rev != null && rev.getNumber() > revision)
@@ -131,9 +131,8 @@ public abstract class SettingsController<T> extends InformerController {
       T settings = getSettings();
       saveSettings(settings);
 
-      configuration.setRevision(configType, new Revision(getUserPrincipal().getName(), revision + 1));
     } finally {
-      configuration.lockRevision();
+      configuration.unlock();
     }
     clearSession();
     return null;

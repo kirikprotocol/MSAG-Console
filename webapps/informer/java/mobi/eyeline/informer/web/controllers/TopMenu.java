@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.web.controllers;
 
-import mobi.eyeline.informer.admin.WebContext;
 import mobi.eyeline.informer.util.xml.WebXml;
+import mobi.eyeline.informer.web.WebContext;
 
 import javax.faces.context.FacesContext;
 import java.io.Serializable;

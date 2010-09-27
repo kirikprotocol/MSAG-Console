@@ -1,0 +1,55 @@
+include Types.def
+
+enum byte ConfigOpId
+  coAdd 1
+  coRemove 2
+  coUpdate 3
+end
+
+enum byte ConfigId
+  ciSmsc 1
+  ciRegion 2
+  ciRetry 3
+end
+
+message ConfigOp 1
+  string objId 1
+  ConfigId cfgId 2 
+  ConfigOpId op 3
+end
+
+message SetDefaultSmsc 7
+  string id 1
+end
+
+message SetDefaultSmscResp 8
+  int32 status 1
+end
+
+message ConfigOpResult 2
+  int32 status 1
+  string msg 2 opt
+end
+
+message LoggerGetCategories 3
+end
+
+message CategoryInfo
+  property innerMessage=true
+  string name 1
+  string level 2
+end
+
+message LoggerGetCategoriesResp 4
+  int32 status 1
+  CategoryInfo categories 2 array opt
+end
+
+message LoggerSetCategories 5
+  CategoryInfo categories 1 array
+end
+
+message LoggerSetCategoriesResp 6
+  int32 status 1
+end
+

@@ -13,11 +13,11 @@
     <fileset dir="lib" includes="*.jar"/>
   </path>
 
-  <target name="gen_cc_protocol">
-    <!--<protogen language="java" msgPackage="mobi.eyeline.informer.admin.cluster_controller.protocol" defFile="java/ru/novosoft/smsc/admin/cluster_controller/ControllerWebappProtocol.def" outDir="java"-->
-              <!--tempDir="java/ru/novosoft/smsc/admin/cluster_controller/tmp">-->
-      <!--<cgp name="search.path" value="java/ru/novosoft/smsc/admin/cluster_controller/"/>-->
-    <!--</protogen>-->
+  <target name="gen_admin_protocol">
+    <protogen language="java" msgPackage="mobi.eyeline.informer.admin.infosme.protogen.protocol" defFile="java/mobi/eyeline/informer/admin/config/protogen/WebappProto.def" outDir="java"
+              tempDir="java/mobi/eyeline/informer/admin/config/protogen/tmp">
+      <cgp name="search.path" value="java/mobi/eyeline/informer/admin/config/protogen/"/>
+    </protogen>
   </target>
 
   <target name="mode">
@@ -29,7 +29,7 @@ public class Mode {${line.separator}
     </echo>
   </target>
    
-  <target name="prebuild" depends="gen_cc_protocol, mode"/>
+  <target name="prebuild" depends="gen_admin_protocol, mode"/>
 
   <target name="compile.sources" depends="prebuild">
     <delete dir="${informer.source.classes}" failonerror="false"/>

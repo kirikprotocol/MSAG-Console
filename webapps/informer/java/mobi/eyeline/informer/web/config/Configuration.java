@@ -2,7 +2,6 @@ package mobi.eyeline.informer.web.config;
 
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.config.Revision;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.users.UsersSettings;
@@ -40,8 +39,10 @@ public class Configuration {
   }
 
   public void setUserSettings(UsersSettings newS, String user) throws AdminException {
-    journal.logChanges(usersSettings, newS, user);
+    Revision revision = buildNextRevision(user, ConfigType.USERS);
     context.updateUserSettings(newS);
+    lastRevisions.put(ConfigType.USERS, revision);        
+    journal.logChanges(usersSettings, newS, user);
     usersSettings = context.getUsersSettings();
   }
 
@@ -49,9 +50,21 @@ public class Configuration {
     return informerSettings.cloneSettings();
   }
 
+  private Revision buildNextRevision(String user, ConfigType type) {
+    Revision revision = getLastRevision(type);
+    if(revision == null) {
+      revision = new Revision(user, 1);
+    }else {
+      revision = new Revision(user, revision.getNumber() + 1);
+    }
+    return revision;
+  }
+
   public void setConfigSettings(InformerSettings newS, String user) throws AdminException{
-    journal.logChanges(informerSettings, newS, user);
+    Revision revision = buildNextRevision(user, ConfigType.CONFIG);
     context.updateConfigSettings(newS);
+    lastRevisions.put(ConfigType.CONFIG, revision);
+    journal.logChanges(informerSettings, newS, user);
     informerSettings = context.getConfigSettings();
   }
 
@@ -59,21 +72,17 @@ public class Configuration {
     return journal;
   }
 
-  private final Lock revisionLock = new ReentrantLock();
+  private final Lock lock = new ReentrantLock();
 
-  public void lockRevision() {
-    revisionLock.lock();
+  public void lock() {
+    lock.lock();
   }
-  public void unlockRevision() {
-    revisionLock.unlock();
+  public void unlock() {
+    lock.unlock();
   }
 
   public Revision getLastRevision(ConfigType configType) {
     return lastRevisions.get(configType);
-  }
-
-  public void setRevision(ConfigType configType, Revision r) {
-    lastRevisions.put(configType, r);
   }
 
   public enum ConfigType {

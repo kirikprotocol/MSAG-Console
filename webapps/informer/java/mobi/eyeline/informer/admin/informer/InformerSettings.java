@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.admin.informer;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.util.ValidationHelper;
+import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigSection;

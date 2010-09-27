@@ -2,7 +2,7 @@
 
 <Context path="/" reloadable="true">
   <Realm className="org.apache.catalina.realm.JAASRealm"
-         appName="securitytest"
+         appName="informer"
          userClassNames="mobi.eyeline.informer.web.auth.User"
          roleClassNames="mobi.eyeline.informer.web.auth.Role" debug="99"/>
 </Context>

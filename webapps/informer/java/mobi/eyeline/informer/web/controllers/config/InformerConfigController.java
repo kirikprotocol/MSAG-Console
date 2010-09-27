@@ -1,9 +1,9 @@
 package mobi.eyeline.informer.web.controllers.config;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.config.Revision;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.web.config.Configuration;
+import mobi.eyeline.informer.web.config.Revision;
 import mobi.eyeline.informer.web.controllers.SettingsController;
 
 import javax.faces.application.FacesMessage;
@@ -27,9 +27,6 @@ public class InformerConfigController extends SettingsController<InformerSetting
       addError(e);
       return;
     }
-
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.configuration.locally.changed");
 
     if(getRequestParameter("revision") == null) {
       try{
@@ -63,7 +60,7 @@ public class InformerConfigController extends SettingsController<InformerSetting
       logger.warn(e, e);
       addError(e);
     }
-    return null;
+    return "CONFIG";
   }
 
   public InformerSettings getSettings() {

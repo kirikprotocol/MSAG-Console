@@ -11,25 +11,30 @@ import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
+import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
+import javax.servlet.ServletOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * Контроллер для просмотра журнала
  * @author Aleksandr Khalitov
  */
-public class JournalController extends InformerController {
+public class JournalController extends InformerController{
 
   private final Journal journal;
   private final UsersSettings users;
 
   private String filterByUser;
   private String filterBySubject;
-  private Date filterByStartDate = new Date(System.currentTimeMillis() - (7*24*60*60*1000));
+  private Date filterByStartDate;
   private Date filterByEndDate;
 
-  private boolean init;
+  private boolean init = false;
 
+  private List<JournalRecord> records;
 
   public JournalController() throws AdminException {
     this.journal = getConfiguration().getJournal();
@@ -106,81 +111,98 @@ public class JournalController extends InformerController {
     this.filterByEndDate = filterByEndDate;
   }
 
-  public DataTableModel getRecords() {
+  private void loadRecord() throws AdminException{
+    if(records == null) {
+      records = journal.getRecords(new JournalFilter().
+          setStartDate(filterByStartDate).setEndDate(filterByEndDate).setUser(filterByUser).
+          setSubject(Subject.getByKey(filterBySubject)));
+    }
+  }
 
+  public DataTableModel getRecords() {
+    try{
+      loadRecord();
+    }catch (AdminException e){
+      addError(e);
+      records = Collections.emptyList();
+    }
     return new DataTableModel() {
 
-      private List<JournalRecord> records = null;
+      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
-      private List<JournalRecord> loadRecord() throws AdminException{
-        if(records == null) {
-          records = journal.getRecords(new JournalFilter().
-              setStartDate(filterByStartDate).setEndDate(filterByEndDate).setUser(filterByUser).
-              setSubject(Subject.getByKey(filterBySubject)));
-        }
-        return records;
-      }
-
-    public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-      List<JournalRecord> recs;
-      try{
-        recs = loadRecord();
-      }catch (AdminException e){
-        addError(e);
-        recs = Collections.emptyList();
-      }
-
-      // Сортируем записи
-      if (sortOrder != null) {
-        final int mul = sortOrder.isAsc() ? 1 : -1;
-        Collections.sort(recs, new Comparator<JournalRecord>() {
-          public int compare(JournalRecord o1, JournalRecord o2) {
-            if (sortOrder.getColumnId().equals("user")) {
-              return mul*o1.getUser().compareTo(o2.getUser());
-            } else if (sortOrder.getColumnId().equals("subject")) {
-              Locale l = getLocale();
-              return mul*o1.getSubject().getSubject(l).compareTo(o2.getSubject().getSubject(l));
-            } else if (sortOrder.getColumnId().equals("time")) {
-              return o1.getTime() >= o2.getTime() ? mul : -mul;
+        // Сортируем записи
+        if (sortOrder != null) {
+          final int mul = sortOrder.isAsc() ? 1 : -1;
+          Collections.sort(records, new Comparator<JournalRecord>() {
+            public int compare(JournalRecord o1, JournalRecord o2) {
+              if (sortOrder.getColumnId().equals("user")) {
+                return mul*o1.getUser().compareTo(o2.getUser());
+              } else if (sortOrder.getColumnId().equals("subject")) {
+                Locale l = getLocale();
+                return mul*o1.getSubject().getSubject(l).compareTo(o2.getSubject().getSubject(l));
+              } else if (sortOrder.getColumnId().equals("time")) {
+                return o1.getTime() >= o2.getTime() ? mul : -mul;
+              }
+              return 0;
             }
-            return 0;
-          }
-        });
+          });
+        }
+
+        List<JournalTableRow> result = new ArrayList<JournalTableRow>(records.size());
+        Locale l = getLocale();
+        for (int i=startPos; i < Math.min(records.size(), startPos + count); i++) {
+          JournalRecord r = records.get(i);
+          JournalTableRow row = new JournalTableRow();
+          row.setDate(new Date(r.getTime()));
+          row.setUser(r.getUser());
+          row.setSubject(r.getSubject().getSubject(l));
+          row.setDescription(r.getDescription(l));
+
+          User u = users.getUser(r.getUser());
+          row.setUserDetails(u.getLastName() + " " + u.getFirstName() + " (" + u.getDept() + ")");
+
+          result.add(row);
+        }
+
+        return result;
       }
 
-      List<JournalTableRow> result = new ArrayList<JournalTableRow>(recs.size());
-      Locale l = getLocale();
-      for (int i=startPos; i < Math.min(recs.size(), startPos + count); i++) {
-        JournalRecord r = recs.get(i);
-        JournalTableRow row = new JournalTableRow();
-        row.setDate(new Date(r.getTime()));
-        row.setUser(r.getUser());
-        row.setSubject(r.getSubject().getSubject(l));
-        row.setDescription(r.getDescription(l));
-
-        User u = users.getUser(r.getUser());
-        row.setUserDetails(u.getLastName() + " " + u.getFirstName() + " (" + u.getDept() + ")");
-
-        result.add(row);
+      public int getRowsCount() {
+        return records.size();
       }
-
-      return result;
-    }
-
-    public int getRowsCount() {
-      List<JournalRecord> recs;
-      try{
-        recs = loadRecord();
-      }catch (AdminException e){
-        addError(e);
-        recs = Collections.emptyList();
-      }
-      return recs.size();
-    }
     };
   }
 
 
+  public String csv() {
+    try{
+      loadRecord();
+    }catch (AdminException e){
+      addError(e);
+      records = Collections.emptyList();
+    }
+    try{
+      downloadFile("journal.csv", "application/csv", new DownloadOutputter() {
+        public void output(ServletOutputStream os) throws IOException {
+          String tmp;
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+          Locale locale =  getLocale();
+          for(JournalRecord r : records) {
+            os.println(new StringBuilder().
+                append(r.getUser() == null ? "":r.getUser().replace(",","\\,")).append(',').
+                append(sdf.format(new Date(r.getTime()))).append(',').
+                append(r.getSubject() == null ? "" : r.getSubject().getSubject(locale).replace(",","\\,")).append(',').
+                append(r.getType() == null ? "" : r.getType().toString().replace(",","\\,")).append(',').
+                append((tmp = r.getDescription(locale)) == null ? "" : tmp.replace(",","\\,")).
+                toString());
+          }
+        }
+      });
+    }catch (IOException e){
+     addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "journal.download.error");
+    }
+    return null;
+  }
 
 
   public class JournalTableRow {

@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.web;
 
-import mobi.eyeline.informer.admin.WebContext;
 import mobi.eyeline.informer.util.xml.WebXml;
 import org.apache.log4j.Logger;
 
@@ -31,13 +30,6 @@ public class InitListener implements ServletContextListener {
 
       File webconfig = new File(System.getProperty("informer.config.webconfig"));
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
-
-//      if(Mode.testMode) {
-//        adminContext = (AdminContext)Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
-//            getConstructor(File.class, File.class).newInstance(appBaseDir, webconfig);
-//      }else {
-//        adminContext = new AdminContext(appBaseDir, webconfig);
-//      }
 
       WebConfig webConfig = new WebConfig(webconfig);
 

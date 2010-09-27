@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.util;
+package mobi.eyeline.informer.admin.util.config;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;

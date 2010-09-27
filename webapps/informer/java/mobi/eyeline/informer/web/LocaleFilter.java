@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.web;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.WebContext;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 

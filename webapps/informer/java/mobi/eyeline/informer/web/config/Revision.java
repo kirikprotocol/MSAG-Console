@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.config;
+package mobi.eyeline.informer.web.config;
 
 /**
  * Структура, содержащая данные о последней ревизии конфига

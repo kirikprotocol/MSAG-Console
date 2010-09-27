@@ -13,6 +13,13 @@
   <ui:define name="content">
     <h:form>
 
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink value="#{msg['download.button']}" action="#{journal.csv}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
       <h:inputHidden value="#{journal.init}"/>
 
       <eye:dataTableFilter bean="#{journal}" clearAction="clearFilter" applyAction="query">
@@ -52,6 +59,13 @@
           </eye:column>
         </eye:row>
       </eye:dataTable>
+
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink value="#{msg['download.button']}" action="#{journal.csv}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
     </h:form>
   </ui:define>
 

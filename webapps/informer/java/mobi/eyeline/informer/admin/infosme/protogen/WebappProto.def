@@ -1,0 +1,12 @@
+include InformerAdmin.def
+
+protocol WebappAdminProto
+  ConfigOp outmsg
+  ConfigOpResult inmsg
+  SetDefaultSmsc outmsg
+  SetDefaultSmscResp inmsg
+  LoggerGetCategories outmsg
+  LoggerGetCategoriesResp inmsg
+  LoggerSetCategories outmsg
+  LoggerSetCategoriesResp inmsg
+end

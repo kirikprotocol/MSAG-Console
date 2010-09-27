@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.util.ValidationHelper;
+import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 
 import java.io.Serializable;
 import java.util.Set;

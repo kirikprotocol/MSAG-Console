@@ -1,10 +1,8 @@
-package mobi.eyeline.informer.admin;
+package mobi.eyeline.informer.web;
 
+import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.xml.WebXml;
-import mobi.eyeline.informer.web.InitException;
-import mobi.eyeline.informer.web.Mode;
-import mobi.eyeline.informer.web.WebConfig;
 import mobi.eyeline.informer.web.auth.Authenticator;
 import mobi.eyeline.informer.web.auth.impl.AuthenticatorImpl;
 import mobi.eyeline.informer.web.auth.impl.Users;

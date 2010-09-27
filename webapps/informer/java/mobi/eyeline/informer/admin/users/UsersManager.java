@@ -1,8 +1,8 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.config.ConfigFileManager;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.util.config.ConfigFileManager;
 
 import java.io.File;
 import java.util.concurrent.locks.ReadWriteLock;

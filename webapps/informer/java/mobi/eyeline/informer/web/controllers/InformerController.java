@@ -2,17 +2,19 @@ package mobi.eyeline.informer.web.controllers;
 
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.WebContext;
 import mobi.eyeline.informer.web.LocaleFilter;
+import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
 import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -22,8 +24,6 @@ import java.util.ResourceBundle;
  * @author Aleksandr Khalitov
  */
 public abstract class InformerController implements Serializable {
-
-  final static SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
   protected Configuration getConfiguration() {
     return WebContext.getInstance().getConfiguration();
@@ -59,7 +59,7 @@ public abstract class InformerController implements Serializable {
     FacesContext fc = FacesContext.getCurrentInstance();
 
     FacesMessage facesMessage = new FacesMessage(severity,
-        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Smsc", getLocale()).getString(bundleKey), "");
+        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey), "");
     fc.addMessage("informer_errors", facesMessage);
   }
   /**
@@ -70,7 +70,7 @@ public abstract class InformerController implements Serializable {
    */
   protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey, Object... args) {
     String message = MessageFormat.format(
-        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Smsc", getLocale()).getString(bundleKey),
+        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey),
         args);
     addMessage(severity, message);
   }
@@ -132,6 +132,41 @@ public abstract class InformerController implements Serializable {
   public String getUserName() {
     Principal p = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
     return p == null ? null : p.getName();
+  }
+
+  /**
+   * Метод для отдачи файлов
+   * @param fileName имя файла, показываемое пользователю
+   * @param contentType content type, к примеру "application/csv"
+   * @param outputter интерфейс вывода в файл
+   * @throws IOException ошибка записи в пото
+   */
+  @SuppressWarnings({"EmptyCatchBlock"})
+  protected void downloadFile( String fileName, String contentType, DownloadOutputter outputter) throws IOException{
+    FacesContext context = FacesContext.getCurrentInstance();
+    HttpServletResponse response =(HttpServletResponse) context.getExternalContext().getResponse();
+    response.setContentType(contentType);
+    response.setHeader("Content-Disposition", "attachment;filename=\""+fileName+"\"");
+    ServletOutputStream os = null;
+    try{
+      os = response.getOutputStream();
+      outputter.output(os);
+      os.flush();
+    }finally {
+      if(os != null) {
+        try{
+          os.close();
+        }catch (IOException e){}
+      }
+    }
+    FacesContext.getCurrentInstance().responseComplete();
+  }
+
+  /**
+   * Интерфейс вывода в файл
+   */
+  protected static interface DownloadOutputter {
+    void output(ServletOutputStream s) throws IOException;
   }
 
 }

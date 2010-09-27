@@ -1,8 +1,7 @@
-package mobi.eyeline.informer.admin.config;
+package mobi.eyeline.informer.admin.util.config;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.util.ConfigHelper;
 
 import java.io.File;
 import java.io.IOException;

@@ -108,7 +108,19 @@ public class JournalRecord {
     /**
      * Какае-то сущность была удалена (например, маршрут или политика передоставки)
      */
-    REMOVE
+    REMOVE,
+    /**
+     * Запуск сервиса
+     */
+    SERVICE_START,
+    /**
+     * Остановка сервиса
+     */
+    SERVICE_STOP,
+    /**
+     * Переключанение ноды
+     */
+    SERVICE_NODE_SWITCH
   }
 
   @SuppressWarnings({"RedundantIfStatement"})

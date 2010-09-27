@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.config.ManagedConfigFile;
+import mobi.eyeline.informer.admin.util.config.ManagedConfigFile;
 import mobi.eyeline.informer.util.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

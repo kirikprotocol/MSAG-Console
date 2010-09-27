@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.web.auth;
 
-import mobi.eyeline.informer.admin.WebContext;
+import mobi.eyeline.informer.web.WebContext;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
