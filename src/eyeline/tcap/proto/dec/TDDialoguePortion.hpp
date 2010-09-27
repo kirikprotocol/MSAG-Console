@@ -46,9 +46,9 @@ DialoguePortion ::= [APPLICATION 11] EXPLICIT [UNIVERSAL 8] IMPLICIT SEQUENCE {
     }
 }
 */
-class TDDialoguePortion : public asn1::ber::DecoderOfSequence_T<4> {
+class TDDialoguePortion : public asn1::ber::DecoderOfSequence_T<4,2> {
 private:
-  using asn1::ber::DecoderOfSequence_T<4>::setField;
+  using asn1::ber::DecoderOfSequence_T<4,2>::setField;
 
   union {
     void *    _aligner;
@@ -96,21 +96,21 @@ protected:
   {
     cleanEnc();
     _decEnc._dlg = new (_memEnc._buf) TDStrDialoguePdu(use_val, getVALRule());
-    _decKind == proto::TCDlgPortion::asDLG;
+    _decKind = proto::TCDlgPortion::asDLG;
   }
   //
   void initEncUNI(proto::TCPduAUDT & use_val)
   {
     cleanEnc();
     _decEnc._uni = new (_memEnc._buf) TDAPduAUDT(use_val, getVALRule());
-    _decKind == proto::TCDlgPortion::asUNI;
+    _decKind = proto::TCDlgPortion::asUNI;
   }
   //
   void initEncEXT(asn1::EmbeddedEncoding & use_val)
   {
     cleanEnc();
     _decEnc._embd = new (_memEnc._buf) asn1::ber::DecoderOfEmbdEncoding(use_val, getTSRule());
-    _decKind == proto::TCDlgPortion::asEXT;
+    _decKind = proto::TCDlgPortion::asEXT;
   }
 
   //Initializes ElementDecoder of this type
@@ -129,7 +129,7 @@ public:
   static const asn1::ASTag _typeTag; //[APPLICATION 11] EXPLICIT
   
   explicit TDDialoguePortion(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<4>(_typeTags, TSGroupBER::getTSRule(use_rule))
+    : asn1::ber::DecoderOfSequence_T<4,2>(_typeTags, TSGroupBER::getTSRule(use_rule))
     , _dVal(0), _decDRef(0), _decIRef(0), _decDescr(0)
     , _decKind(proto::TCDlgPortion::asNone)
   {
@@ -139,7 +139,7 @@ public:
   }
   TDDialoguePortion(proto::TCDlgPortion & use_val,
                       TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<4>(_typeTags, TSGroupBER::getTSRule(use_rule))
+    : asn1::ber::DecoderOfSequence_T<4,2>(_typeTags, TSGroupBER::getTSRule(use_rule))
     , _dVal(&use_val), _decDRef(0), _decIRef(0), _decDescr(0)
     , _decKind(proto::TCDlgPortion::asNone)
   {

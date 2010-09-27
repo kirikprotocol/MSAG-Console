@@ -181,7 +181,7 @@ protected:
     else if (_cdcType == cdcDecoder)
       _pCdc.dec->~DecoderOf_TArg();
     _pCdc.enc = 0;
-    _cdcType == cdcNone;
+    _cdcType = cdcNone;
   }
 
 public:

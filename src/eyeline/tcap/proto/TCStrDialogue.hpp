@@ -66,14 +66,12 @@ public:
   TDialogueAssociate::Result_t  _result;
   AssociateSourceDiagnostic     _diagnostic;
 
-  explicit TCPduAARE()
-    : TCDlgPduAC(TCDlgPduAC::pduAARE)
+  TCPduAARE() : TCDlgPduAC(TCDlgPduAC::pduAARE)
     , _protoVer(_dfltProtocolVersion), _result(TDialogueAssociate::dlg_accepted)
   { }
-  TCPduAARE(const asn1::EncodedOID & use_ctx)
-    : TCDlgPduAC(TCDlgPduAC::pduAARE)
-    , _protoVer(_dfltProtocolVersion), _result(TDialogueAssociate::dlg_accepted)
-    , _acId(use_ctx)
+  TCPduAARE(const asn1::EncodedOID & use_ctx) : TCDlgPduAC(TCDlgPduAC::pduAARE)
+    , _protoVer(_dfltProtocolVersion), _acId(use_ctx)
+    , _result(TDialogueAssociate::dlg_accepted)
   { }
   ~TCPduAARE()
   { }

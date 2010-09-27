@@ -29,7 +29,7 @@ void TDDialoguePortion::cleanEnc(void)
     else
       _decEnc._embd->~DecoderOfEmbdEncoding();
     _decEnc._uni = NULL;
-    _decKind == proto::TCDlgPortion::asNone;
+    _decKind = proto::TCDlgPortion::asNone;
   }
 }
 
@@ -63,10 +63,10 @@ DialoguePortion ::= [APPLICATION 11] EXPLICIT [UNIVERSAL 8] IMPLICIT SEQUENCE {
 } */
 void TDDialoguePortion::construct(void)
 {
-  DecoderOfSequence_T<4>::setField(0, asn1::_tagObjectID, asn1::ber::EDAlternative::altOPTIONAL);
-  DecoderOfSequence_T<4>::setField(1, asn1::_tagINTEGER, asn1::ber::EDAlternative::altOPTIONAL);
-  DecoderOfSequence_T<4>::setField(2, asn1::_tagObjDescriptor, asn1::ber::EDAlternative::altOPTIONAL);
-  DecoderOfSequence_T<4>::setField(3, asn1::ber::DecoderOfEmbdEncoding::_tagOptions,
+  asn1::ber::DecoderOfSequence_T<4, 2>::setField(0, asn1::_tagObjectID, asn1::ber::EDAlternative::altOPTIONAL);
+  asn1::ber::DecoderOfSequence_T<4, 2>::setField(1, asn1::_tagINTEGER, asn1::ber::EDAlternative::altOPTIONAL);
+  asn1::ber::DecoderOfSequence_T<4, 2>::setField(2, asn1::_tagObjDescriptor, asn1::ber::EDAlternative::altOPTIONAL);
+  asn1::ber::DecoderOfSequence_T<4, 2>::setField(3, asn1::ber::DecoderOfEmbdEncoding::_tagOptions,
                                                               asn1::ber::EDAlternative::altMANDATORY);
 }
 

@@ -70,7 +70,7 @@ public:
   explicit TDAPduAARQ(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
     : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
                                          TSGroupBER::getTSRule(use_rule))
-    , _dVal(0), _pUI(0), _protoVer(use_rule), _appCtx(use_rule)
+    , _pUI(0), _dVal(0), _protoVer(use_rule), _appCtx(use_rule)
   {
     _memUI._aligner = 0;
     construct();
@@ -79,7 +79,7 @@ public:
             TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
     : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
                                          TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _pUI(0), _protoVer(use_rule), _appCtx(use_rule)
+    , _pUI(0), _dVal(&use_val), _protoVer(use_rule), _appCtx(use_rule)
   {
     _memUI._aligner = 0;
     construct();
