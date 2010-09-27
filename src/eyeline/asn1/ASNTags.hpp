@@ -174,7 +174,7 @@ public:
     conjoin(inner_tags);
   }
 
-  ASTagging(Environment_e use_env, uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
+  ASTagging(Environment_e use_env, uint8_t num_tags, const ASTag * use_tag1, ... /* , const ASTag * use_tagN*/);
   //
   ~ASTagging()
   { }
