@@ -25,6 +25,9 @@ public class ServiceListController extends ServiceController {
   private List selectedRows;
   private Map<String, String> switchToHost = new HashMap<String, String>();
 
+  public ServiceListController() {
+  }
+
   public void setSelectedRows(List selectedRows) {
     this.selectedRows = selectedRows;
   }
