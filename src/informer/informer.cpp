@@ -25,13 +25,20 @@ smsc::logger::Logger* mainlog = 0;
 static sigset_t original_signal_mask;
 static sigset_t blocked_signals;
 
-std::auto_ptr< eyeline::informer::InfosmeCore > core;
+smsc::core::synchronization::EventMonitor startMon;
+bool isStarted = true;
 
 extern "C" void appSignalHandler(int sig)
 {
     smsc_log_info(mainlog,"signal handler invoked, sig=%d",sig);
     if ( sig == smsc::system::SHUTDOWN_SIGNAL || sig == SIGINT ) {
-        if ( core.get() ) core->stop();
+        if (isStarted) {
+            smsc::core::synchronization::MutexGuard mg(startMon);
+            if (isStarted) {
+                isStarted = false;
+                startMon.notifyAll();
+            }
+        }
     }
 }
 
@@ -160,7 +167,7 @@ int main( int argc, char** argv )
         // smsc::logger::Logger::Init();
         smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
 
-        mainlog = smsc::logger::Logger::getInstance("is.main");
+        mainlog = smsc::logger::Logger::getInstance("main");
         smsc_log_info(mainlog,"\n"
                       "------------------------------------------------------------------------");
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
@@ -169,15 +176,22 @@ int main( int argc, char** argv )
             adml( new smsc::admin::service::ServiceSocketListener() );
         // adminListener = adml.get();
 
-        {
-            atexit( atExitHandler );
-            sigset_t set;
-            sigemptyset(&set);
-            sigprocmask(SIG_SETMASK, &set, &original_signal_mask);
-            sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
-            sigset(SIGINT, appSignalHandler);
-            sigset(SIGPIPE, SIG_IGN);
-        }
+        atexit( atExitHandler );
+
+        // block all signals
+        sigfillset(&blocked_signals);
+        sigdelset(&blocked_signals, SIGKILL);
+        sigdelset(&blocked_signals, SIGALRM);
+        sigdelset(&blocked_signals, SIGSEGV);
+        sigdelset(&blocked_signals, SIGBUS);
+        sigdelset(&blocked_signals, SIGFPE);
+        sigdelset(&blocked_signals, SIGILL);
+        pthread_sigmask(SIG_SETMASK, &blocked_signals, &original_signal_mask);
+
+        // setting signal handlers
+        sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
+        sigset(SIGINT, appSignalHandler);
+        sigset(SIGPIPE, SIG_IGN);
 
         try {
 
@@ -191,24 +205,13 @@ int main( int argc, char** argv )
                 throw eyeline::informer::InfosmeException("cannot create config");
             }
 
-            core.reset( new eyeline::informer::InfosmeCoreV1 );
-            if ( !core.get() ) {
-                throw eyeline::informer::InfosmeException("cannot create InfosmeCore");
-            }
+            std::auto_ptr< eyeline::informer::InfosmeCore >
+                core( new eyeline::informer::InfosmeCoreV1 );
 
-            // blocking signals
-            sigfillset(&blocked_signals);
-            sigdelset(&blocked_signals, SIGKILL);
-            sigdelset(&blocked_signals, SIGALRM);
-            sigdelset(&blocked_signals, SIGSEGV);
-            sigdelset(&blocked_signals, SIGBUS);
-            sigdelset(&blocked_signals, SIGFPE);
-            sigdelset(&blocked_signals, SIGILL);
-            sigprocmask(SIG_SETMASK, &blocked_signals, &original_signal_mask);
 
             {
                 /// admin listener configuration
-                smsc::util::config::ConfigView cv(*cfg.get(),"Infosme.Admin");
+                smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme.Admin");
                 adml->init(smsc::util::config::ConfString(cv.getString("host")).c_str(),
                            cv.getInt("port"));
             }
@@ -219,11 +222,19 @@ int main( int argc, char** argv )
 
             {
                 smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme");
-                core->configure(cv);
+                core->init(cv);
             }
 
-            /// enter main loop
-            core->Execute();
+            // enter main loop
+            core->start();
+            pthread_sigmask(SIG_SETMASK, &original_signal_mask, 0);
+            while ( isStarted ) {
+                MutexGuard mg(startMon);
+                startMon.wait(1000);
+            }
+            adml->abort();
+            adml.reset(0);
+            core->stop();
 
         } catch ( std::exception& e ) {
 

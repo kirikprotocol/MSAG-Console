@@ -19,18 +19,13 @@ class InfosmeCore
 public:
     virtual ~InfosmeCore() {}
 
-    /// notify to stop, invoked from main
-    virtual void stop() = 0;
-
-    /// configuration
+    /// init the core, should be invoked before start()
     /// NOTE: do not keep a ref on cfg!
-    virtual void configure( const smsc::util::config::ConfigView& cfg ) = 0;
+    virtual void init( const smsc::util::config::ConfigView& cfg ) = 0;
 
-    /// enter main loop, exit via 'stop()'
-    virtual int Execute() = 0;
-
-    // notification
-    // virtual void notifySmscFinished( const std::string& smscId ) = 0;
+    /// notify to stop, invoked from main
+    virtual void start() = 0;
+    virtual void stop() = 0;
 };
 
 } // informer

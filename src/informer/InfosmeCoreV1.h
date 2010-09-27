@@ -5,6 +5,7 @@
 #include "logger/Logger.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/ThreadPool.hpp"
+#include "core/threads/Thread.hpp"
 #include "core/buffers/Hash.hpp"
 #include "sme/SmppBase.hpp"
 
@@ -13,22 +14,20 @@ namespace informer {
 
 class SmscSender;
 
-class InfosmeCoreV1 : public InfosmeCore
+class InfosmeCoreV1 : public InfosmeCore, public smsc::core::threads::Thread
 {
 public:
     InfosmeCoreV1();
 
     virtual ~InfosmeCoreV1();
 
-    /// notify to stop, invoked from main
-    virtual void stop();
-
     /// configuration
     /// NOTE: do not keep a ref on cfg!
-    virtual void configure( const smsc::util::config::ConfigView& cfg );
+    virtual void init( const smsc::util::config::ConfigView& cfg );
 
-    /// enter main loop, exit via 'stop()'
-    virtual int Execute();
+    /// notify to stop, invoked from main
+    virtual void start();
+    virtual void stop();
 
     // smsc has just been stopped
     // virtual void notifySmscFinished( const std::string& smscId );
@@ -39,6 +38,10 @@ public:
     /// 3. delete smsc: old smscId, cfg=0.
     void updateSmsc( const std::string& smscId,
                      const smsc::sme::SmeConfig* cfg );
+
+protected:
+    /// enter main loop, exit via 'stop()'
+    virtual int Execute();
 
 private:
     smsc::logger::Logger*                      log_;

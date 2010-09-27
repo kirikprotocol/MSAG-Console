@@ -15,6 +15,7 @@ InfosmeCoreV1::~InfosmeCoreV1()
 {
     smsc_log_info(log_,"corev1 dtor");
     tp_.shutdown(0);
+    smsc_log_info(log_,"leaving corev1 dtor");
 }
 
 
@@ -33,13 +34,23 @@ void InfosmeCoreV1::stop()
     while (started_) {
         startMon_.wait(100);
     }
+    smsc_log_debug(log_,"leaving stop()");
 }
 
 
-void InfosmeCoreV1::configure( const smsc::util::config::ConfigView& cfg )
+void InfosmeCoreV1::start()
 {
-    smsc_log_info(log_,"configuring InfosmeCore");
-    // FIXME
+    if (started_) return;
+    MutexGuard mg(startMon_);
+    if (started_) return;
+    stopping_ = false;
+    Start();
+}
+
+
+void InfosmeCoreV1::init( const smsc::util::config::ConfigView& cfg )
+{
+    smsc_log_info(log_,"FIXME: configuring InfosmeCore");
 }
 
 
@@ -47,15 +58,15 @@ int InfosmeCoreV1::Execute()
 {
     {
         MutexGuard mg(startMon_);
-        stopping_ = false;
         started_ = true;
+        stopping_ = false;
     }
     smsc_log_info(log_,"starting main loop");
     while ( !stopping_ ) {
 
+        smsc_log_debug(log_,"main loop pass");
         MutexGuard mg(startMon_);
-        startMon_.wait(10000);
-
+        startMon_.wait(1000);
         // FIXME: flush statistics
     }
     smsc_log_info(log_,"finishing main loop");
