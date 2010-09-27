@@ -12,8 +12,8 @@ void StoreJournal::journalMessage( dlvid_type     dlvId,
                                    const Message& msg )
 {
     smsc::core::buffers::TmpBuf<unsigned char,200> buf;
-    if (!msg.text.getTextId()) {
-        buf.setSize(200+strlen(msg.text.getText()));
+    if (msg.text.get() && msg.text->getTextId()<=0) {
+        buf.setSize(200+strlen(msg.text->getText()));
     }
     io::ToBuf tb(buf.get());
     tb.set32(dlvId);

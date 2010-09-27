@@ -17,12 +17,14 @@ unsigned char* Message::toBuf( uint16_t version, unsigned char* buf ) const
     tb.set32(lastTime);
     tb.set32(timeLeft);
     tb.copy(USERDATA_LENGTH,userData.c_str());
-    if (text.getTextId() == 0) {
-        tb.set8(state | 0x80);
-        tb.setCString(text.getText());
-    } else {
-        tb.set8(state & 0x7f);
-        tb.set32(text.getTextId());
+    if (text.get()) {
+        if (text->getTextId()<=0) {
+            tb.set8(state | 0x80);
+            tb.setCString(text->getText());
+        } else {
+            tb.set8(state & 0x7f);
+            tb.set32(text->getTextId());
+        }
     }
     return tb.buf;
 }
@@ -42,10 +44,11 @@ const unsigned char* Message::fromBuf( uint16_t version, const unsigned char* bu
     state = tb.get8();
     if (state & 0x80) {
         state &= 0x7f;
-        text.resetText(tb.getCString(),0);
+        text.reset(new MessageText(tb.getCString(),0));
     } else {
         // FIXME: make sure the glossary post-process the message
-        text.resetText(0,tb.get32());
+        // FIXME: optimize if textptr already has glossary!
+        text.reset(new MessageText(0,tb.get32()));
     }
     return tb.buf;
 }

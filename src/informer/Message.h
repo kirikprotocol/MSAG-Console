@@ -20,7 +20,7 @@ struct Message
     msgid_type       msgId;      // unique message id (constant)
     msgtime_type     lastTime;   // lasttime / filenumber (for new messages)
     timediff_type    timeLeft;   // ttl / filepos (for new messages)
-    MessageText      text;       // message text
+    MessageTextPtr   text;       // message text
     smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // (constant)
     uint8_t          state;
 
