@@ -8,10 +8,10 @@ import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.security.Principal;
 import java.text.MessageFormat;
@@ -148,16 +148,14 @@ public abstract class InformerController implements Serializable {
     response.setCharacterEncoding("utf-8");
     response.setContentType(contentType);
     response.setHeader("Content-Disposition", "attachment;filename=\""+fileName+"\"");
-    ServletOutputStream os = null;
+    PrintWriter writer = null;
     try{
-      os = response.getOutputStream();
-      outputter.output(os);
-      os.flush();
+      writer = response.getWriter();;
+      outputter.output(writer);
+      writer.flush();
     }finally {
-      if(os != null) {
-        try{
-          os.close();
-        }catch (IOException e){}
+      if(writer != null) {
+          writer.close();
       }
     }
     FacesContext.getCurrentInstance().responseComplete();
@@ -167,7 +165,7 @@ public abstract class InformerController implements Serializable {
    * Интерфейс вывода в файл
    */
   protected static interface DownloadOutputter {
-    void output(ServletOutputStream s) throws IOException;
+    void output(PrintWriter s) throws IOException;
   }
 
 }

@@ -14,8 +14,8 @@ import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import javax.servlet.ServletOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -186,12 +186,12 @@ public class JournalController extends InformerController{
     }
     try{
       downloadFile("journal.csv", "application/csv", new DownloadOutputter() {
-        public void output(ServletOutputStream os) throws IOException {
+        public void output(PrintWriter writer) throws IOException {
           String tmp;
           SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
           Locale locale =  getLocale();
           for(JournalRecord r : records) {
-            os.println(new StringBuilder().
+            writer.println(new StringBuilder().
                 append(r.getUser() == null ? "":r.getUser().replace(",","\\,")).append(',').
                 append(sdf.format(new Date(r.getTime()))).append(',').
                 append(r.getSubject() == null ? "" : r.getSubject().getSubject(locale).replace(",","\\,")).append(',').
