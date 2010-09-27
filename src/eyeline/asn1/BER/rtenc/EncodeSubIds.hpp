@@ -23,12 +23,12 @@ using eyeline::asn1::TSLength;
 // Returns number of bytes of resulted encoding or zero in case of value
 // is too long and cann't be encoded.
 // --------------------------------------------------------------------------
-static uint16_t  estimate_SubIds(const SubIdType * use_vals, RelativeOID::size_type val_num);
+uint16_t  estimate_SubIds(const SubIdType * use_vals, RelativeOID::size_type val_num);
 // --------------------------------------------------------------------------
 // Encodes by BER the array of subIds of RELATIVE-OID or
 // OBJECT-IDENTIFIER value according to X.690 clause 8.19.2
 // --------------------------------------------------------------------------
-static ENCResult encode_SubIds(const SubIdType * use_vals, RelativeOID::size_type val_num,
+ENCResult encode_SubIds(const SubIdType * use_vals, RelativeOID::size_type val_num,
                                 uint8_t * use_enc, TSLength max_len);
 
 } //ber
