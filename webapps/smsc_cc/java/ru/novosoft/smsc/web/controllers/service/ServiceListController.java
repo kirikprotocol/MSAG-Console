@@ -89,7 +89,6 @@ public class ServiceListController extends ServiceController {
   }
 
 
-
   public DataTableModel getServices() {
     final Configuration conf = getConfiguration();
     final List<String> smeIds = new ArrayList<String>();
@@ -113,16 +112,17 @@ public class ServiceListController extends ServiceController {
         }
 
         List<Esme> result = new ArrayList<Esme>(count);
-        // Заполняем список
-        for (int i = startPos; i < Math.min(startPos + count, smeIds.size()); i++) {
-          String smeId = smeIds.get(i);
-          try {
+        try {
+          Map<String, SmeSmscStatuses> smeSmscStats = conf.getSmesSmscStatuses();
+          // Заполняем список
+          for (int i = startPos; i < Math.min(startPos + count, smeIds.size()); i++) {
+            String smeId = smeIds.get(i);
             SmeServiceStatus smeServiceStatus = conf.getSmeServiceStatus(smeId);
-            SmeSmscStatuses smeSmscStatuses = conf.getSmesSmscStatuses().get(smeId);
+            SmeSmscStatuses smeSmscStatuses = smeSmscStats.get(smeId);
             result.add(new Esme(smeId, smeServiceStatus, smeSmscStatuses));
-          } catch (AdminException e) {
-            addError(e);
           }
+        } catch (AdminException e) {
+          addError(e);
         }
 
         return result;
