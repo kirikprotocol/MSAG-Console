@@ -40,10 +40,10 @@ public:
     { }
   };
 
-  ASTypeEncoderNotImplemented(TransferSyntax::Rule_e use_rule = TransferSyntax::undefinedER)
+  ASTypeEncoderNotImplemented_T(TransferSyntax::Rule_e use_rule = TransferSyntax::undefinedER)
     : ASTypeEncoderOf_T<_TArg>(TransferSyntax::undefinedER)
   { }
-  ~ASTypeEncoderNotImplemented()
+  ~ASTypeEncoderNotImplemented_T()
   { }
 
   void setValue(const _TArg & use_value) /*throw(std::exception)*/
@@ -73,9 +73,12 @@ public:
 template <class _TArg>
 class ASTypeDecoderNotImplemented_T : public ASTypeDecoderOf_T<_TArg> {
 public:
-  UnimplementedException()
-    : smsc::util::Exception("ASTypeDecoder: not implemented")
-  { }
+  class UnimplementedException : public smsc::util::Exception {
+  public:
+    UnimplementedException()
+      : smsc::util::Exception("ASTypeDecoder: not implemented")
+    { }
+  };
 
   ASTypeDecoderNotImplemented_T(TransferSyntax::Rule_e use_rule = TransferSyntax::undefinedER)
     : ASTypeDecoderOf_T<_TArg>(TransferSyntax::undefinedER)

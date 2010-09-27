@@ -25,7 +25,8 @@ using eyeline::asn1::ENCResult;
  * ************************************************************************* */
 class ValueEncoderIface {
 protected:
-  ~ValueEncoderIface();
+  virtual ~ValueEncoderIface();
+
 public:
   //Determines properties of addressed value encoding (LD form, constructedness)
   //according to requested encoding rule of BER family. Prepares data, necessary

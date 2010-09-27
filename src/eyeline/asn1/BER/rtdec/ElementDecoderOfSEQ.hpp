@@ -36,7 +36,7 @@ public:
     , _altStore(use_obj._altStore), _occStore(use_obj._occStore)
     , _occBitStore(use_obj._occBitStore)
   {
-    setStorages(_altStore, _occStore, _tdMatrixStore, _occBitStore)
+    setStorages(_altStore, _occStore, _tdMatrixStore, _occBitStore);
   }
   //
   ~SEQElementDecoder_T()

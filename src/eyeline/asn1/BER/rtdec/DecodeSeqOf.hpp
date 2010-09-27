@@ -65,7 +65,7 @@ protected:
   {
     allcValDecoder(fld_tag, tag_env);
     _setofDec.erase();
-    _setofDec.setAlternative(0, fld_tag, fld_env, EDAlternative::altOPTIONAL);
+    _setofDec.setAlternative(0, fld_tag, tag_env, EDAlternative::altOPTIONAL);
     _maxNum = max_sz; _curNum = 0;
   }
   //

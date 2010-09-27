@@ -151,7 +151,7 @@ protected:
   //        by calling init()
   TypeDecoderAC(const TypeDecoderAC & use_obj)
     : ASTypeDecoderAC(use_obj), TypeTagging(use_obj)
-    , _tagDec(use_obj._tagDec), _valDec(0), _relaxedRule(use_obj._relaxedRule)
+    , _relaxedRule(use_obj._relaxedRule), _tagDec(use_obj._tagDec), _valDec(0)
   { }
 
 public:
@@ -160,13 +160,13 @@ public:
   TypeDecoderAC(const ASTagging & eff_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(eff_tags)
-    , _valDec(0), _relaxedRule(false)
+    , _relaxedRule(false), _valDec(0)
   { }
   //'Untagged CHOICE/Opentype type decoder' constructor
   TypeDecoderAC(const TaggingOptions * base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(base_tags)
-    , _valDec(0), _relaxedRule(false)
+    , _relaxedRule(false), _valDec(0)
   { }
   //'Tagged Type decoder' constructor
   //NOTE: base_tags must be a complete tagging of base type!
@@ -174,20 +174,20 @@ public:
                 const ASTagging & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
-    , _valDec(0), _relaxedRule(false)
+    , _relaxedRule(false), _valDec(0)
   { }
   //'Tagged Type referencing untagged CHOICE/Opentype decoder' constructor
   TypeDecoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                 const TaggingOptions & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
-    , _valDec(0), _relaxedRule(false)
+    , _relaxedRule(false), _valDec(0)
   { }
   //'Tagged Type referencing untagged CHOICE/Opentype decoder' constructor
   TypeDecoderAC(const ASTagging & use_tags, const TaggingOptions & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(use_tags, base_tags)
-    , _valDec(0), _relaxedRule(false)
+    , _relaxedRule(false), _valDec(0)
   { }
   //
   virtual ~TypeDecoderAC()

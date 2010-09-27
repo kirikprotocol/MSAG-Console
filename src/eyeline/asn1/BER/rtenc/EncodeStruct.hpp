@@ -101,7 +101,7 @@ template <
 //TODO: modify FieldTagsStore so it is properly reused if clearField() was called
 class EncoderOfStructureMixed_T : public EncoderOfStructure_T<_NumFieldsTArg> {
 private:
-  typedef LWArray_T<ASTagging, uint16_t, _NumTaggedFieldsTArg>  FieldTagsStore;
+  typedef eyeline::util::LWArray_T<ASTagging, uint16_t, _NumTaggedFieldsTArg>  FieldTagsStore;
   FieldTagsStore  _ftagsStore;
 
 protected:
@@ -123,7 +123,7 @@ public:
   EncoderOfStructureMixed_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                             const ASTagging & base_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructure_T<_NumFieldsTArg>(outer_tags, base_tags, use_rule)
+    : EncoderOfStructure_T<_NumFieldsTArg>(use_tag, tag_env, base_tags, use_rule)
     , _ftagsStore(_NumTaggedFieldsTArg)
   { }
   virtual ~EncoderOfStructureMixed_T()
@@ -148,7 +148,7 @@ public:
                 const ASTag & fld_tag, ASTagging::Environment_e fld_env)
                 /*throw(std::exception)*/
   {
-    setFieldTagged(_fieldsStore.size(), type_enc, fld_tag, fld_env);
+    setFieldTagged(this->_fieldsStore.size(), type_enc, fld_tag, fld_env);
   }
 };
 

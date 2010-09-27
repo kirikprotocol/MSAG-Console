@@ -12,10 +12,12 @@ namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-template <uint16_t _SizeTArg>
+//NOTE: altering of _NumOfMandatoryArg is meaningfull only if number of
+//mandatory fields much lesser than number of optional fields.
+template <uint16_t _SizeTArg, uint16_t _NumOfMandatoryArg = _SizeTArg>
 class DecoderOfSequence_T : public DecoderOfStructAC {
 protected:
-  SEQElementDecoder_T<_SizeTArg>  _seqDec;
+  SEQElementDecoder_T<_SizeTArg, _NumOfMandatoryArg>  _seqDec;
   // ----------------------------------------
   // -- DecoderOfStructAC interface methods
   // ----------------------------------------
