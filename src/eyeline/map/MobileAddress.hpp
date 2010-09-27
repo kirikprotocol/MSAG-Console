@@ -17,7 +17,9 @@ struct TonNpiIndicator {
   uint8_t _ToN      : 3; //bit(s) : 654
   uint8_t _NPi      : 4; //bit(s) : 3210
 
-  TonNpiIndicator() : _reserved(1), _NPi(0), _ToN(0)
+  TonNpiIndicator() : _reserved(1), _ToN(0), _NPi(0)
+  { }
+  ~TonNpiIndicator()
   { }
 
   void clear(void) { _reserved = 1; _NPi = _ToN = 0; }

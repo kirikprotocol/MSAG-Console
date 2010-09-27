@@ -16,10 +16,10 @@ using eyeline::sccp::SCCPAddress;
 
 //Attempts to convert SCCPAddress to MobileAddress.
 //Returns true on success.
-static bool convertSCCPAdr2Mobile(const SCCPAddress & sccp_adr, MobileAddress & map_adr);
+bool convertSCCPAdr2Mobile(const SCCPAddress & sccp_adr, MobileAddress & map_adr);
 //Attempts to convert ISDNAddress to MobileAddress.
 //Returns true on success.
-static bool convertSCCPAdr2ISDN(const SCCPAddress & sccp_adr, ISDNAddress & isdn_adr);
+bool convertSCCPAdr2ISDN(const SCCPAddress & sccp_adr, ISDNAddress & isdn_adr);
 
 } //map
 } //eyeline
