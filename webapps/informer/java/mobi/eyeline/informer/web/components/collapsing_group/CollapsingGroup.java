@@ -30,6 +30,7 @@ public class CollapsingGroup extends EyelineComponent {
 
   public void processDecodes(javax.faces.context.FacesContext context) {
     CollapsingGroupRenderer.decodeGroup(context, this);
+    super.processDecodes(context);
   }
 
   public Object saveState(FacesContext context) {

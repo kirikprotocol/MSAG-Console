@@ -49,8 +49,20 @@ function DataTable(tableId, updateUsingSubmit) {
         pname = el.getAttribute("name");
       if (pname != null) {
         var value = el.getAttribute("value");
-        if (value == null && el.checked)
-          value = "true";
+        if (value == null) {
+          if (el.checked)
+            value = "true";
+          else if (el.tagName == "SELECT") {
+
+            for (var op=0; op < el.options.length; op++) {
+              if (el.options[op].getAttribute("selected") != null) {
+                value = el.options[op].value;
+                break;
+              }
+            }
+          } 
+        }
+
 
         if (value != null) {
           if (args.length > 0)
@@ -89,8 +101,7 @@ function DataTable(tableId, updateUsingSubmit) {
       bodyElement.innerHTML = text;
     };
 
-    var params = 'eyelineComponentUpdate=' + tableId + '&' + prepareFormParameters(columnElement.id);
-
+    var params = 'eyelineComponentUpdate=' + tableId + '&' + prepareFormParameters();
     new EXmlHttpRequest(requestUrl, params, onResponse).send();
   };
 
