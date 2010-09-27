@@ -14,9 +14,9 @@
   </path>
 
   <target name="gen_admin_protocol">
-    <protogen language="java" msgPackage="mobi.eyeline.informer.admin.infosme.protogen.protocol" defFile="java/mobi/eyeline/informer/admin/config/protogen/WebappProto.def" outDir="java"
-              tempDir="java/mobi/eyeline/informer/admin/config/protogen/tmp">
-      <cgp name="search.path" value="java/mobi/eyeline/informer/admin/config/protogen/"/>
+    <protogen language="java" msgPackage="mobi.eyeline.informer.admin.infosme.protogen.protocol" defFile="java/mobi/eyeline/informer/admin/infosme/protogen/WebappProto.def" outDir="java"
+              tempDir="java/mobi/eyeline/informer/admin/infosme/protogen/tmp">
+      <cgp name="search.path" value="java/mobi/eyeline/informer/admin/infosme/protogen/"/>
     </protogen>
   </target>
 
