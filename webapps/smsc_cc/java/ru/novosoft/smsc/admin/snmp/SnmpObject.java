@@ -67,179 +67,169 @@ public class SnmpObject {
     return counterOther;
   }
 
-  public SnmpObject setCounterOther(SnmpCounter counterOther) throws AdminException {
+  public void setCounterOther(SnmpCounter counterOther) throws AdminException {
     this.counterOther = counterOther;
-    return this;
   }
 
-  public SnmpObject setCounterOther(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounterOther(new SnmpCounter(warning, minor, major, critical));
+  public void setCounterOther(int warning, int minor, int major, int critical) throws AdminException {
+    setCounterOther(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounter0014() {
     return counter0014;
   }
 
-  public SnmpObject setCounter0014(SnmpCounter counter0014) throws AdminException {
+  public void setCounter0014(SnmpCounter counter0014) throws AdminException {
     this.counter0014 = counter0014;
-    return this;
+
   }
 
-  public SnmpObject setCounter0014(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounter0014(new SnmpCounter(warning, minor, major, critical));
+  public void setCounter0014(int warning, int minor, int major, int critical) throws AdminException {
+     setCounter0014(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounter000d() {
     return counter000d;
   }
 
-  public SnmpObject setCounter000d(SnmpCounter counter000d) throws AdminException {
+  public void setCounter000d(SnmpCounter counter000d) throws AdminException {
     this.counter000d = counter000d;
-    return this;
+
   }
 
-  public SnmpObject setCounter000d(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounter000d(new SnmpCounter(warning, minor, major, critical));
+  public void setCounter000d(int warning, int minor, int major, int critical) throws AdminException {
+    setCounter000d(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounterFailed() {
     return counterFailed;
   }
 
-  public SnmpObject setCounterFailed(SnmpCounter counterFailed) throws AdminException {
+  public void setCounterFailed(SnmpCounter counterFailed) throws AdminException {
     this.counterFailed = counterFailed;
-    return this;
   }
 
-  public SnmpObject setCounterFailed(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounterFailed(new SnmpCounter(warning, minor, major, critical));
+  public void setCounterFailed(int warning, int minor, int major, int critical) throws AdminException {
+    setCounterFailed(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounterAccepted() {
     return counterAccepted;
   }
 
-  public SnmpObject setCounterAccepted(SnmpCounter counterAccepted) throws AdminException {
+  public void setCounterAccepted(SnmpCounter counterAccepted) throws AdminException {
     this.counterAccepted = counterAccepted;
-    return this;
   }
 
-  public SnmpObject setCounterAccepted(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounterAccepted(new SnmpCounter(warning, minor, major, critical));
+  public void setCounterAccepted(int warning, int minor, int major, int critical) throws AdminException {
+    setCounterAccepted(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounterRejected() {
     return counterRejected;
   }
 
-  public SnmpObject setCounterRejected(SnmpCounter counterRejected) throws AdminException {
+  public void setCounterRejected(SnmpCounter counterRejected) throws AdminException {
     this.counterRejected = counterRejected;
-    return this;
   }
 
-  public SnmpObject setCounterRejected(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounterRejected(new SnmpCounter(warning, minor, major, critical));
+  public void setCounterRejected(int warning, int minor, int major, int critical) throws AdminException {
+    setCounterRejected(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounterDelivered() {
     return counterDelivered;
   }
 
-  public SnmpObject setCounterDelivered(SnmpCounter counterDelivered) throws AdminException {
+  public void setCounterDelivered(SnmpCounter counterDelivered) throws AdminException {
     this.counterDelivered = counterDelivered;
-    return this;
+
   }
 
-  public SnmpObject setCounterDelivered(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounterDelivered(new SnmpCounter(warning, minor, major, critical));
+  public void setCounterDelivered(int warning, int minor, int major, int critical) throws AdminException {
+    setCounterDelivered(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounterSDP() {
     return counterSDP;
   }
 
-  public SnmpObject setCounterSDP(SnmpCounter counterSDP) throws AdminException {
+  public void setCounterSDP(SnmpCounter counterSDP) throws AdminException {
     this.counterSDP = counterSDP;
-    return this;
   }
 
-  public SnmpObject setCounterSDP(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounterSDP(new SnmpCounter(warning, minor, major, critical));
+  public void setCounterSDP(int warning, int minor, int major, int critical) throws AdminException {
+    setCounterSDP(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounterRetried() {
     return counterRetried;
   }
 
-  public SnmpObject setCounterRetried(SnmpCounter counterRetried) throws AdminException {
+  public void setCounterRetried(SnmpCounter counterRetried) throws AdminException {
     this.counterRetried = counterRetried;
-    return this;
   }
 
-  public SnmpObject setCounterRetried(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounterRetried(new SnmpCounter(warning, minor, major, critical));
+  public void setCounterRetried(int warning, int minor, int major, int critical) throws AdminException {
+    setCounterRetried(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounter0058() {
     return counter0058;
   }
 
-  public SnmpObject setCounter0058(SnmpCounter counter0058) throws AdminException {
+  public void setCounter0058(SnmpCounter counter0058) throws AdminException {
     this.counter0058 = counter0058;
-    return this;
   }
 
-  public SnmpObject setCounter0058(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounter0058(new SnmpCounter(warning, minor, major, critical));
+  public void setCounter0058(int warning, int minor, int major, int critical) throws AdminException {
+    setCounter0058(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpCounter getCounterTempError() {
     return counterTempError;
   }
 
-  public SnmpObject setCounterTempError(SnmpCounter counterTempError) throws AdminException {
+  public void setCounterTempError(SnmpCounter counterTempError) throws AdminException {
     this.counterTempError = counterTempError;
-    return this;
   }
 
-  public SnmpObject setCounterTempError(int warning, int minor, int major, int critical) throws AdminException {
-    return setCounterTempError(new SnmpCounter(warning, minor, major, critical));
+  public void setCounterTempError(int warning, int minor, int major, int critical) throws AdminException {
+    setCounterTempError(new SnmpCounter(warning, minor, major, critical));
   }
 
   public SnmpSeverity getSeverityRegister() {
     return severityRegister;
   }
 
-  public SnmpObject setSeverityRegister(SnmpSeverity severityRegister) throws AdminException {
+  public void setSeverityRegister(SnmpSeverity severityRegister) throws AdminException {
     this.severityRegister = severityRegister;
-    return this;
   }
 
   public SnmpSeverity getSeverityRegisterFailed() {
     return severityRegisterFailed;
   }
 
-  public SnmpObject setSeverityRegisterFailed(SnmpSeverity severityRegisterFailed) throws AdminException {
+  public void setSeverityRegisterFailed(SnmpSeverity severityRegisterFailed) throws AdminException {
     this.severityRegisterFailed = severityRegisterFailed;
-    return this;
+
   }
 
   public SnmpSeverity getSeverityUnregister() {
     return severityUnregister;
   }
 
-  public SnmpObject setSeverityUnregister(SnmpSeverity severityUnregister) throws AdminException {
+  public void setSeverityUnregister(SnmpSeverity severityUnregister) throws AdminException {
     this.severityUnregister = severityUnregister;
-    return this;
   }
 
   public SnmpSeverity getSeverityUnregisterFailed() {
     return severityUnregisterFailed;
   }
 
-  public SnmpObject setSeverityUnregisterFailed(SnmpSeverity severityUnregisterFailed) throws AdminException {
+  public void setSeverityUnregisterFailed(SnmpSeverity severityUnregisterFailed) throws AdminException {
     this.severityUnregisterFailed = severityUnregisterFailed;
-    return this;
+
   }
   
   private boolean _equals(SnmpCounter v1, SnmpCounter v2) {
