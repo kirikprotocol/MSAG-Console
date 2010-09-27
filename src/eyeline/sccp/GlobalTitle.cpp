@@ -87,12 +87,14 @@ const char * GlobalTitle::nmTranslationType(TranslationType_e use_val)
   case trtNationalNetwork:  return "trtNationalNetwork";
   case trtReserved:         return "trtReserved";
   case trtSpare:            return "trtSpare";
+  case trtUnknown:
+  default:;
   }
   return "trtUnknown";
 }
 
 #define CHECK_RES(pr_res, pr_cnt, buf_len) \
-  if ((pr_res > (buf_len - pr_cnt)) || (pr_res < 1)) \
+  if ((pr_res > (int)(buf_len - pr_cnt)) || (pr_res < 1)) \
     return pr_cnt; pr_cnt += pr_res;
 
 size_t GlobalTitle::toString(char * use_buf, size_t max_len) const
