@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.users.UsersSettings;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
+import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
@@ -23,6 +24,8 @@ import java.util.*;
  * @author Aleksandr Khalitov
  */
 public class JournalController extends InformerController{
+
+  private final static Logger logger = Logger.getLogger(JournalController.class);
 
   private final Journal journal;
   private final UsersSettings users;
@@ -198,8 +201,9 @@ public class JournalController extends InformerController{
           }
         }
       });
-    }catch (IOException e){
-     addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "journal.download.error");
+    }catch (Exception e){
+      logger.error(e,e);
+      addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "journal.download.error");
     }
     return null;
   }
