@@ -9,13 +9,14 @@ namespace informer {
 
 SmscSender::SmscSender( InfosmeCore& core,
                         const std::string& smscId,
-                        const smsc::sme::SmeConfig& cfg ) :
+                        const SmscConfig& cfg ) :
 log_(smsc::logger::Logger::getInstance("smscsend")),
 core_(&core),
 smscId_(smscId), session_(0),
 scoredList_(*this,2*maxScoreIncrement,log_)
 {
-    session_.reset( new smsc::sme::SmppSession(cfg,this) );
+    smsc_log_debug(log_,"FIXME: make use of SmscConfig");
+    session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
 }
 
 
@@ -33,11 +34,11 @@ unsigned SmscSender::send( RegionalStoragePtr& ptr,
 }
 
 
-void SmscSender::updateConfig( const smsc::sme::SmeConfig& config )
+void SmscSender::updateConfig( const SmscConfig& config )
 {
     waitUntilReleased();
     MutexGuard mg(mon_);
-    session_.reset(new smsc::sme::SmppSession(config,this));
+    session_.reset(new smsc::sme::SmppSession(config.smeConfig,this));
 }
 
 
@@ -55,13 +56,14 @@ void SmscSender::waitUntilReleased()
 
 void SmscSender::handleEvent( smsc::sme::SmppHeader* pdu )
 {
-    smsc_log_error(log_,"FIXME: handleEvent, S=%s", smscId_.c_str());
+    smsc_log_error(log_,"FIXME: handleEvent, S='%s'", smscId_.c_str());
+    disposePdu(pdu);
 }
 
 
-void SmscSender::handleError( int errorcode )
+void SmscSender::handleError( int errorCode )
 {
-    smsc_log_error(log_,"FIXME: handleError, S=%s", smscId_.c_str());
+    smsc_log_error(log_,"FIXME: handleError, S='%s', code=%d", smscId_.c_str(), errorCode);
 }
 
 
@@ -102,8 +104,14 @@ void SmscSender::connectLoop()
             // session connected
             break;
         }
-        smsc_log_error(log_,"FIXME: connect session");
-        mon_.wait(1000); // FIXME: configure timeout
+        try {
+            session_->connect();
+            if (!session_->isClosed()) break;
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"connection failed: %s", e.what());
+        }
+        smsc_log_debug(log_,"FIXME: configure timeout b/w attempts");
+        mon_.wait(10000);
     }
 }
 
@@ -126,7 +134,10 @@ void SmscSender::sendLoop()
 
         if (waitTime > 0) {
             if (waitTime < 10) waitTime = 10;
+            smsc_log_debug(log_,"S='%s' is going to sleep %d msec",
+                           smscId_.c_str(),waitTime);
             mon_.wait(waitTime);
+            continue;
         }
 
         nextWakeTime = currentTime_ + scoredList_.processOnce(0, sleepTime);
@@ -171,7 +182,8 @@ void SmscSender::scoredObjToString( std::string& s, ScoredObjType& regionSender 
 
 void SmscSender::processWaitingEvents()
 {
-    smsc_log_error(log_,"FIXME: process waiting events at %llu", currentTime_);
+    smsc_log_error(log_,"FIXME: S='%s'@%p process waiting events at %llu",
+                   smscId_.c_str(), this, currentTime_);
 }
 
 

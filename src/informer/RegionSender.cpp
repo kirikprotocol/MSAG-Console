@@ -65,7 +65,7 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
         smsc_log_warn(log_,"R=%u/D=%u/M=%u send failed, exc: %s",
                       getRegionId(), ptr->getDlvId(), msg_.msgId, e.what());
     }
-    // FIXME: message could not be sent, mark it as failed?
+    smsc_log_debug(log_,"FIXME: message could not be sent, mark it as failed?");
     ptr->retryMessage(msg_.msgId, msgtime_type(currentTime_/tuPerSec), 60, 8 );
     return -maxScoreIncrement;
 }

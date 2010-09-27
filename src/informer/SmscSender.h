@@ -17,6 +17,14 @@ class RegionSender;
 class RegionalStoragePtr;
 class Message;
 
+struct SmscConfig
+{
+    smsc::sme::SmeConfig smeConfig;
+    int ussdPushOp;
+    int ussdPushVlrOp;
+};
+
+
 /// sending messages to one smsc
 class SmscSender : public smsc::core::threads::ThreadedTask, public smsc::sme::SmppPduEventListener
 {
@@ -24,7 +32,7 @@ class SmscSender : public smsc::core::threads::ThreadedTask, public smsc::sme::S
 public:
     SmscSender( InfosmeCore&            core,
                 const std::string&      smscId,
-                const smsc::sme::SmeConfig& config );
+                const SmscConfig&       config );
 
     virtual ~SmscSender();
 
@@ -37,7 +45,7 @@ public:
 
     /// a method allows to wait until sender stops it work
     /// NOTE: post-requisite -- task is released!
-    void updateConfig( const smsc::sme::SmeConfig& config );
+    void updateConfig( const SmscConfig& config );
     void waitUntilReleased();
 
 private:

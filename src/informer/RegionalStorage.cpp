@@ -151,7 +151,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
     Message& m = iter->msg;
     m.lastTime = currentTime;
-    // FIXME: reset m.timeLeft for new messages
+    smsc_log_debug(log_,"FIXME: reset m.timeLeft for new messages");
     m.state = MsgState::process;
     msg = m;
     smsc_log_debug(log_,"taking message R=%u/D=%u/M=%u from %s",
@@ -340,7 +340,7 @@ void RegionalStorage::rollOver()
             mg.Unlock();
             alog_->journalMessage(dlvInfo_->getDlvId(),regionId_,iter->msg);
         }
-        // FIXME: restriction on throughput
+        smsc_log_debug(log_,"FIXME: restriction on throughput");
         mg.Lock();
     }
 }
@@ -350,7 +350,7 @@ void RegionalStorage::uploadFinished()
 {
     MutexGuard mg(cacheLock_);
     if (uploadTasks_ > 0) --uploadTasks_;
-    // FIXME: notify
+    smsc_log_debug(log_,"FIXME: notify that upload finished");
 }
 
 

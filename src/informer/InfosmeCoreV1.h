@@ -7,12 +7,12 @@
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/buffers/Hash.hpp"
-#include "sme/SmppBase.hpp"
 
 namespace eyeline {
 namespace informer {
 
 class SmscSender;
+class SmscConfig;
 
 class InfosmeCoreV1 : public InfosmeCore, public smsc::core::threads::Thread
 {
@@ -36,12 +36,13 @@ public:
     /// 1. create smsc: new smscId, valid cfg;
     /// 2. update smsc: old smscId, valid cfg;
     /// 3. delete smsc: old smscId, cfg=0.
-    void updateSmsc( const std::string& smscId,
-                     const smsc::sme::SmeConfig* cfg );
+    void updateSmsc( const std::string& smscId, const SmscConfig* cfg );
 
 protected:
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
+    static void readSmscConfig( SmscConfig& cfg,
+                                const smsc::util::config::ConfigView& cv );
 
 private:
     smsc::logger::Logger*                      log_;

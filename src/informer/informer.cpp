@@ -163,7 +163,7 @@ int main( int argc, char** argv )
         // infrastructure
         smsc::util::regexp::RegExp::InitLocale();
 
-        // FIXME: replace with real init
+        // FIXME: replace with real logger
         // smsc::logger::Logger::Init();
         smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
 
@@ -232,9 +232,9 @@ int main( int argc, char** argv )
                 MutexGuard mg(startMon);
                 startMon.wait(1000);
             }
-            adml->abort();
-            adml.reset(0);
+            adml->shutdown();
             core->stop();
+            adml.reset(0);
 
         } catch ( std::exception& e ) {
 

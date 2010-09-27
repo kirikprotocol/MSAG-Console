@@ -27,7 +27,7 @@ void StoreJournal::journalMessage( dlvid_type     dlvId,
         hd.utfdump(dump,buf.get(),buflen);
         smsc_log_debug(log_,"buffer to save(%u): %s",buflen,hd.c_str(dump));
     }
-    // FIXME: save buffer
+    smsc_log_error(log_,"FIXME: save buffer");
 }
 
 }
