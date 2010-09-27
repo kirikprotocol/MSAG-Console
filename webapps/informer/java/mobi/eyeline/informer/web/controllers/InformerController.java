@@ -145,7 +145,7 @@ public abstract class InformerController implements Serializable {
   protected void downloadFile( String fileName, String contentType, DownloadOutputter outputter) throws IOException{
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletResponse response =(HttpServletResponse) context.getExternalContext().getResponse();
-    response.setContentType(contentType);
+    response.setContentType(contentType+";charset=utf-8");
     response.setHeader("Content-Disposition", "attachment;filename=\""+fileName+"\"");
     ServletOutputStream os = null;
     try{

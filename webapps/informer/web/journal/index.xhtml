@@ -14,10 +14,10 @@
     <h:form>
 
       <eye:buttons>
+        <eye:space/>
         <eye:button>
           <h:commandLink value="#{msg['download.button']}" action="#{journal.csv}"/>
         </eye:button>
-        <eye:space/>
       </eye:buttons>
 
       <h:inputHidden value="#{journal.init}"/>
@@ -61,10 +61,10 @@
       </eye:dataTable>
 
       <eye:buttons>
+        <eye:space/>
         <eye:button>
           <h:commandLink value="#{msg['download.button']}" action="#{journal.csv}"/>
         </eye:button>
-        <eye:space/>
       </eye:buttons>
     </h:form>
   </ui:define>
