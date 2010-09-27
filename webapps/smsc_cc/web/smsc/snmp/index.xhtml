@@ -5,7 +5,7 @@
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:jstl="http://java.sun.com/jstl/core">
+      xmlns:c="http://java.sun.com/jstl/core">
 
 
 <ui:composition template="/templates/main.xhtml">
@@ -34,67 +34,30 @@
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
-  <eye:collapsingGroup label="#{snmpSettingsBundle['defaultSnmpObject']}">
-    <tr:panelFormLayout inlineStyle="margin-left:15px;">
-      <tr:panelLabelAndMessage label="#{msg['snmp.default.enabled']}" inlineStyle="text-align:left">
-        <h:selectBooleanCheckbox style="margin-left:15px" value="#{snmp.defaultEnabled}" required="true"/>
-      </tr:panelLabelAndMessage>
-    </tr:panelFormLayout>
-    <eye:collapsingGroup label="#{msg['snmp.counters.label']}" >
-          
-    </eye:collapsingGroup>
-    <eye:collapsingGroup label="#{msg['snmp.severities.label']}">
-      <tr:panelFormLayout inlineStyle="margin-left:15px;">
-          <!--<tr:panelLabelAndMessage label="#{msg['snmp.object.severityRegister']}" inlineStyle="text-align:left">-->
-            <!--<h:selectOneMenu value="#{snmp.defaultObject.severityRegister}" converter="severities_converter">-->
-              <!--<ui:include src="snmp_severities_options.xhtml"/>-->
-            <!--</h:selectOneMenu>-->
-          <!--</tr:panelLabelAndMessage>-->
-      </tr:panelFormLayout>
-    </eye:collapsingGroup>
-  </eye:collapsingGroup>
+  <c:set var="n" value="0"/>
+
+  <ui:include src="smnpObject.xhtml">
+     <ui:param name="snmpObjLabel" value="#{msg['snmp.default.object']}"/>
+     <ui:param name="snmpObjItem" value="#{snmp.defaultObject}"/>
+     <ui:param name="num"         value="#{n}"/>
+  </ui:include>
 
 
-  
-  <jstl:forEach var="item" items="#{snmp.snmpObjects}">
-      <eye:collapsingGroup label="#{item.key}">
-        <f:facet name="header">
-          <h:panelGroup>
-            <h:outputText value="#{item.key}"/>
-            <tr:commandLink action="#{snmp.removeObject}">
-              <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
-              <f:param name="objToRemove" value="#{item.key}"/>
-            </tr:commandLink>
-          </h:panelGroup>
-        </f:facet>
+  <c:forEach var="item" items="#{snmp.snmpObjects}">
+      <c:set var="n" value="#{n+1}" />
+      <ui:include src="smnpObject.xhtml">
+          <ui:param name="snmpObjLabel" value="#{item.name}"/>
+          <ui:param name="snmpObjItem" value="#{item}"/>                              
+          <ui:param name="num"         value="#{n}"/>
+      </ui:include>
 
-        <tr:panelFormLayout inlineStyle="margin-left:15px;">
-          <tr:panelLabelAndMessage label="#{msg['snmp.object.enabled']}" inlineStyle="text-align:left">
-            <h:selectBooleanCheckbox style="margin-left:15px" value="#{item.value.enabled}" required="true"/>
-          </tr:panelLabelAndMessage>
-        </tr:panelFormLayout>
-        <eye:collapsingGroup label="#{msg['snmp.counters.label']}">
-
-        </eye:collapsingGroup>
-        <eye:collapsingGroup label="#{msg['snmp.severities.label']}">
-           <jstl:if test="#{item.value.severityRegister!=null}">
-                <tr:panelLabelAndMessage label="#{msg['snmp.object.severityRegister']}" inlineStyle="text-align:left">
-                    <h:selectOneMenu value="#{item.value.severityRegister}">
-                      <ui:include src="snmp_severities_options.xhtml"/>
-                    </h:selectOneMenu>
-                </tr:panelLabelAndMessage>
-           </jstl:if>
-
-
-        </eye:collapsingGroup>
-      </eye:collapsingGroup>
-  </jstl:forEach>
+  </c:forEach>
 
     <!--<eye:dynamicTable value="snmp.snmpobjects">        -->
     <!--</eye:dynamicTable>-->
         
   <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >    
-        <tr:inputText value="#{snmp.newObject}"  required="false" simple="true" contentStyle="width:150px;" >            
+        <tr:inputText value="#{snmp.newObjectName}"  required="false" simple="true" contentStyle="width:150px;" >            
         </tr:inputText>
         <tr:commandLink id="add2" action="#{snmp.addObject}" >
             <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />

@@ -64,6 +64,11 @@
     </resource-bundle>
 
     <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.snmp.SnmpCounter</base-name>
+      <var>snmpCounterBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
       <base-name>ru.novosoft.smsc.web.resources.Smsc</base-name>
       <var>msg</var>
     </resource-bundle>
@@ -84,6 +89,7 @@
     <converter-id>addressesConverter</converter-id>
     <converter-class>ru.novosoft.smsc.web.controllers.closed_groups.AdressesConverter</converter-class>
   </converter>
+
 
   <converter>
     <converter-id>roles_converter</converter-id>

@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+
+<ui:composition>
+    <eye:collapsingGroup label="#{counterLabel}" rendered="#{snmpObjField!=null}">
+        <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{counterLabel}"/>
+              <tr:commandLink action="#{snmpObjItem.removeCounter}" rendered="#{snmpObjItem.name!=null}">
+                <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
+                <f:param name="counterToRemove" value="#{counterName}"/>
+              </tr:commandLink>
+            </h:panelGroup>
+        </f:facet>
+
+            <tr:panelLabelAndMessage label="#{snmpCounterBundle.warning}">
+                  <tr:inputText value="#{snmpObjField.warning}" required="true" simple="true">
+                    <eye:validatePositive/>
+                  </tr:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{snmpCounterBundle.minor}">
+                  <tr:inputText value="#{snmpObjField.minor}" required="true" simple="true">
+                    <eye:validatePositive/>
+                  </tr:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{snmpCounterBundle.major}">
+                  <tr:inputText value="#{snmpObjField.major}" required="true" simple="true">
+                    <eye:validatePositive/>
+                  </tr:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{snmpCounterBundle.critical}">
+                  <tr:inputText value="#{snmpObjField.critical}" required="true" simple="true">
+                    <eye:validatePositive/>
+                  </tr:inputText>
+            </tr:panelLabelAndMessage>
+        
+    </eye:collapsingGroup>
+</ui:composition>
+
+</html>

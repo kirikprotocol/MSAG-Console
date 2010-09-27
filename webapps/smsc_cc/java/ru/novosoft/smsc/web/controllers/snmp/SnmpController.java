@@ -3,13 +3,16 @@ package ru.novosoft.smsc.web.controllers.snmp;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
+import ru.novosoft.smsc.admin.snmp.SnmpCounter;
 import ru.novosoft.smsc.admin.snmp.SnmpObject;
 import ru.novosoft.smsc.admin.snmp.SnmpSettings;
+import ru.novosoft.smsc.admin.snmp.SnmpSeverity;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.controllers.SettingsController;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.event.ActionEvent;
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
 import java.util.*;
 
 /**
@@ -22,20 +25,21 @@ public class SnmpController extends SettingsController<SnmpSettings> {
   private static final Logger logger = Logger.getLogger(SnmpController.class);
 
   SnmpSettings snmpSettings;
-  private String counterInterval;
-  private boolean defaultOpened;
-  private String defaultEnabled;
-  private boolean defaultCountersOpened;
-  private boolean defaultSeveritiesOpened;
-  private String newObject;
-  private Object defaultObject;
+  private String newObjectName;
+  
 
+  TreeMap<String,SnmpObjectWrapper> snmpWrappers = new TreeMap<String,SnmpObjectWrapper>();
 
   public SnmpController() {
     super(ConfigType.Snmp);
     snmpSettings= getSettings();
+    for(Map.Entry<String, SnmpObject> o : snmpSettings.getSnmpObjects().entrySet()) {
+      snmpWrappers.put(o.getKey(), new SnmpObjectWrapper(this, o.getKey(), o.getValue()));
+    }
     checkOutOfDate();
   }
+
+
 
   @Override
   protected SnmpSettings loadSettings() throws AdminException {
@@ -114,20 +118,22 @@ public class SnmpController extends SettingsController<SnmpSettings> {
 
 
 
-  public void setNewObject(String newObject) {
-    this.newObject = newObject;
+  public void setNewObjectName(String newObject) {
+    this.newObjectName = newObject;
   }
 
-  public String getNewObject() {
-    return newObject;
+  public String getNewObjectName() {
+    return newObjectName;
   }
 
   public String addObject() throws AdminException {
-    if(newObject!=null && newObject.trim().length()>0) {
+    if(newObjectName!=null && newObjectName.trim().length()>0) {
       Map<String, SnmpObject> snmpObjects = snmpSettings.getSnmpObjects();
 
-      if(!snmpObjects.containsKey(newObject)) {
-        snmpObjects.put(newObject,new SnmpObject());
+      if(!snmpObjects.containsKey(newObjectName)) {
+        SnmpObject o = new SnmpObject();
+        snmpObjects.put(newObjectName,new SnmpObject());
+        snmpWrappers.put(newObjectName,new SnmpObjectWrapper(this,newObjectName,o));
         snmpSettings.setSnmpObjects(snmpObjects);
         setSettings(snmpSettings);
       }
@@ -139,32 +145,37 @@ public class SnmpController extends SettingsController<SnmpSettings> {
   }
 
 
-  public List<Map.Entry<String, SnmpObject>> getSnmpObjects() {
-    ArrayList<Map.Entry<String, SnmpObject>> ret = new ArrayList<Map.Entry<String, SnmpObject>>(snmpSettings.getSnmpObjects().entrySet());
-    Collections.sort(ret,new Comparator<Map.Entry<String, SnmpObject>>(){
-      public int compare(String s, String s1) {
-        return s.compareTo(s1 );
-      }
-      public int compare(Map.Entry<String, SnmpObject> o, Map.Entry<String, SnmpObject> o1) {
-              return o.getKey().compareTo(o1.getKey() );
-      }
-    });
-    return ret;
+  public Collection<SnmpObjectWrapper> getSnmpObjects() {
+    return snmpWrappers.values();
   }
 
   public String removeObject() throws AdminException {
     String objToRemove = getRequestParameter("objToRemove");
     snmpSettings.getSnmpObjects().remove(objToRemove);
+    snmpWrappers.remove(objToRemove);
     setSettings(snmpSettings);
     return null;
   }
 
 
-  public void setDefaultObject(SnmpObject defaultObject) {
-    this.defaultObject = defaultObject;
+
+  public SnmpObjectWrapper getDefaultObject() {
+    return new SnmpObjectWrapper(this, "", snmpSettings.getDefaultSnmpObject());
   }
 
-  public SnmpObject getDefaultObject() {
-    return snmpSettings.getDefaultSnmpObject();
+  public List<SelectItem> getSeverityOptions() {
+    List<SelectItem> ret = new ArrayList<SelectItem>();
+    for(SnmpSeverity s : SnmpSeverity.values()) {
+      ret.add(new SelectItem(s));
+    }
+    return ret;
+  }
+
+
+
+
+
+  void setSettings() {
+    setSettings(snmpSettings);
   }
 }
