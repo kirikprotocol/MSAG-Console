@@ -202,6 +202,7 @@ public class JournalController extends InformerController{
         }
       });
     }catch (Exception e){
+      e.printStackTrace();//todo
       logger.error(e,e);
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "journal.download.error");
     }
