@@ -12,11 +12,11 @@ import java.util.List;
 /**
  * @author Artem Snopkov
  */
-public class ServiceController extends SmscController {
+class ServiceController extends SmscController {
 
   private boolean outOfDate;
 
-  public ServiceController() {
+  protected ServiceController() {
     outOfDate = checkOutOfDate();
   }
 
