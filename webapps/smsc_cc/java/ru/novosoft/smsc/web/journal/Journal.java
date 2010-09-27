@@ -22,6 +22,7 @@ public class Journal {
   public static final String CLOSED_GROUPS = "subject.closed_groups";
   public static final String USERS = "subject.user";
   public static final String MAP_LIMIT = "subject.maplimit";
+  public static final String LOGGING = "subject.logging";
   public static final String FRAUD = "subject.fraud";
   public static final String SNMP="subject.snmp";
   public static final String SME="subject.sme";
@@ -32,7 +33,7 @@ public class Journal {
   private final RescheduleSettingsDiffHelper reschedule = new RescheduleSettingsDiffHelper(RESCHEDULE);
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(USERS);
   private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(MAP_LIMIT);
-  private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(MAP_LIMIT);
+  private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(LOGGING);
   private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(FRAUD);
   private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(SNMP);
   private final SmeDiffHelper sme = new SmeDiffHelper(SME);
@@ -49,6 +50,7 @@ public class Journal {
     l.add(rb.getString(RESCHEDULE));
     l.add(rb.getString(USERS));
     l.add(rb.getString(MAP_LIMIT));
+    l.add(rb.getString(LOGGING));
     l.add(rb.getString(CLOSED_GROUPS));
     l.add(rb.getString(FRAUD));
     l.add(rb.getString(SNMP));
