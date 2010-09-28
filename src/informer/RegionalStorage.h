@@ -2,20 +2,20 @@
 #define _INFORMER_REGIONALSTORAGE_H
 
 #include <map>
-#include "InputMessageSource.h"
-#include "core/buffers/IntHash.hpp"
-#include "core/buffers/CyclicQueue.hpp"
-#include "logger/Logger.h"
-#include "core/synchronization/Mutex.hpp"
-#include "core/synchronization/Condition.hpp"
 #include "DeliveryInfo.h"
+#include "InputMessageSource.h"
+#include "core/buffers/CyclicQueue.hpp"
+#include "core/buffers/IntHash.hpp"
+#include "core/synchronization/EventMonitor.hpp"
+#include "core/synchronization/Condition.hpp"
+#include "logger/Logger.h"
 
 namespace eyeline {
 namespace informer {
 
 class StoreJournal;
 class RegionalStoragePtr;
-
+class RequestNewMsgTask;
 
 /// Working storage for messages for one Delivery/Region
 class RegionalStorage : public InputMessageUploadRequester
@@ -101,14 +101,14 @@ private:
     void usage( bool incr );
 
 private:
-    smsc::logger::Logger*                               log_;
-    smsc::core::synchronization::Mutex                  cacheLock_;
-    MessageList                                         messageList_;
+    smsc::logger::Logger*                     log_;
+    smsc::core::synchronization::EventMonitor cacheMon_;
+    MessageList                               messageList_;
     // iterator that points to item that will be stored
-    MsgIter                                             storingIter_;
+    MsgIter                                   storingIter_;
     // iterator that points to the beginning of valid items,
     // the items that are before it will be destroyed eventually.
-    MsgIter                                             validItems_;
+    MsgIter                                   validItems_;
 
     /// The message which is stored in the message list
     /// is pointed to from ONLY ONE of messageHash, resendQueue or newQueue!
@@ -119,8 +119,7 @@ private:
 
     StoreJournal*                     alog_;
     InputMessageSource*               messageSource_;
-    unsigned                          uploadTasks_; // a number of upload tasks
-
+    RequestNewMsgTask*                uploadTask_;  // owned
     const DeliveryInfo*               dlvInfo_; // not owned
     regionid_type                     regionId_;
     unsigned                          usage_;

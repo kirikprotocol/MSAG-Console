@@ -46,19 +46,6 @@ public:
         return speedControl_.isReady(unsigned(currentTime % flipTimePeriod));
     }
 
-    /*
-    void addDelivery( Delivery* dlv )
-    {
-        if (dlv) {
-            RegionalStoragePtr ptr = dlv->getRegionalStorage(getRegionId());
-            if (ptr.get()) {
-                MutexGuard mg(lock_);
-                taskList_.add(dlv);
-            }
-        }
-    }
-     */
-
     inline void suspend(usectime_type currentTime)
     {
         speedControl_.suspend(unsigned(currentTime % flipTimePeriod));

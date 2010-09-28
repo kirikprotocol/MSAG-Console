@@ -3,6 +3,8 @@
 
 #include <memory>
 #include "MessageCache.h"
+#include "EmbedRefPtr.h"
+#include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -12,6 +14,7 @@ class InputMessageSource;
 
 class Delivery
 {
+    friend class EmbedRefPtr< Delivery >;
 public:
     Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
               StoreJournal&  storeLog,
@@ -29,10 +32,30 @@ public:
         return cache_.getRegionalStorage(regId);
     }
 
+    void updateDlvInfo( const DeliveryInfo& info );
+
+private:
+    void ref() {
+        smsc::core::synchronization::MutexGuard mg(lock_);
+        ++ref_;
+    }
+    void unref() {
+        smsc::core::synchronization::MutexGuard mg(lock_);
+        if (ref_<=1) {
+            delete this;
+        } else {
+            --ref_;
+        }
+    }
+
 public:
     std::auto_ptr<DeliveryInfo> dlvInfo_;
     MessageCache                cache_;
+    smsc::core::synchronization::Mutex lock_;
+    unsigned                           ref_;
 };
+
+typedef EmbedRefPtr< Delivery >  DeliveryPtr;
 
 } // informer
 } // smsc

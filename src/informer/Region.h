@@ -16,7 +16,7 @@ class Region
 public:
     Region( regionid_type regionId, unsigned bw,
             const std::string& smscId ) :
-    regionId_(regionId), bw_(bw), smscId_(smscId) {}
+    regionId_(regionId), bw_(bw), smscId_(smscId), ref_(0) {}
 
     regionid_type getRegionId() const { return regionId_; }
     unsigned      getBandwidth() const { return bw_; }
@@ -44,7 +44,7 @@ private:
     unsigned       bw_; //  sms/sec
     std::string    smscId_;
     smsc::core::synchronization::Mutex lock_;
-    unsigned       ref_;
+    unsigned                           ref_;
 };
 
 typedef EmbedRefPtr< Region >  RegionPtr;

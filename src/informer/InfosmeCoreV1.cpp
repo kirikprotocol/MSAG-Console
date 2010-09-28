@@ -1,8 +1,10 @@
 #include <memory>
 #include "InfosmeCoreV1.h"
 #include "InfosmeException.h"
+#include "InputMessageSource.h"
 #include "SmscSender.h"
 #include "RegionSender.h"
+#include "StoreJournal.h"
 #include "util/config/ConfigView.h"
 #include "util/config/ConfString.h"
 
@@ -19,6 +21,40 @@ std::string cgetString( const ConfigView& cv, const char* tag, const char* what 
 namespace eyeline {
 namespace informer {
 
+void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
+{
+    smsc::sme::SmeConfig& rv = cfg.smeConfig;
+    rv.host = ::cgetString(config,"host","SMSC host was not defined");
+    rv.sid = ::cgetString(config,"sid","infosme id was not defined");
+    rv.port = config.getInt("port","SMSC port was not defined");
+    rv.timeOut = config.getInt("timeout","connect timeout was not defined");
+    try {
+        rv.password = ::cgetString(config,"password","InfoSme password wasn't defined !");
+    } catch (ConfigException&) {}
+    try {
+        const std::string systemType = ::cgetString(config,"systemType","InfoSme system type wasn't defined !");
+        rv.setSystemType(systemType);
+    } catch (ConfigException&) {}
+    try {
+        rv.interfaceVersion = config.getInt("interfaceVersion","InfoSme interface version wasn't defined!");
+    } catch (ConfigException&) {}
+    try {
+        const std::string ar = ::cgetString(config,"rangeOfAddress","InfoSme range of address was not defined");
+        rv.setAddressRange(ar);
+    } catch (ConfigException&) {}
+    try {
+        cfg.ussdPushOp = config.getInt("ussdPushTag");
+    } catch (ConfigException) {
+        cfg.ussdPushOp = -1;
+    }
+    try {
+        cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
+    } catch (ConfigException) {
+        cfg.ussdPushVlrOp = -1;
+    }
+}
+
+
 InfosmeCoreV1::InfosmeCoreV1() :
 log_(0), stopping_(true), started_(false)
 {
@@ -28,9 +64,33 @@ log_(0), stopping_(true), started_(false)
 
 InfosmeCoreV1::~InfosmeCoreV1()
 {
-    smsc_log_info(log_,"corev1 dtor");
+    smsc_log_info(log_,"FIXME: corev1 dtor, cleanup everything");
     tp_.shutdown(0);
     smsc_log_info(log_,"leaving corev1 dtor");
+}
+
+
+void InfosmeCoreV1::init( const ConfigView& cfg )
+{
+    smsc_log_info(log_,"FIXME: initing InfosmeCore");
+    std::auto_ptr< ConfigView > ccv(cfg.getSubConfig("SMSCConnectors"));
+    ConfString defConn(ccv->getString("default","default SMSC id not found"));
+    std::auto_ptr< CStrSet > connNames(ccv->getShortSectionNames());
+    if ( connNames->find(defConn.str()) == connNames->end() ) {
+        throw ConfigException("default SMSC does not match any section");
+    }
+    for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
+        smsc_log_debug(log_,"processing S='%s'",i->c_str());
+        std::auto_ptr< ConfigView > sect(ccv->getSubConfig(i->c_str()));
+        SmscConfig smscConfig;
+        readSmscConfig(smscConfig, *sect.get());
+        updateSmsc( i->c_str(), &smscConfig );
+    }
+    reloadRegions();
+
+    // starting one test delivery
+    std::auto_ptr< DeliveryInfo > dlvInfo(new DeliveryInfo(22));
+    updateDelivery( dlvInfo->getDlvId(), dlvInfo);
 }
 
 
@@ -60,26 +120,6 @@ void InfosmeCoreV1::start()
     if (started_) return;
     stopping_ = false;
     Start();
-}
-
-
-void InfosmeCoreV1::init( const ConfigView& cfg )
-{
-    smsc_log_info(log_,"FIXME: initing InfosmeCore");
-    std::auto_ptr< ConfigView > ccv(cfg.getSubConfig("SMSCConnectors"));
-    ConfString defConn(ccv->getString("default","default SMSC id not found"));
-    std::auto_ptr< CStrSet > connNames(ccv->getShortSectionNames());
-    if ( connNames->find(defConn.str()) == connNames->end() ) {
-        throw ConfigException("default SMSC does not match any section");
-    }
-    for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
-        smsc_log_debug(log_,"processing S='%s'",i->c_str());
-        std::auto_ptr< ConfigView > sect(ccv->getSubConfig(i->c_str()));
-        SmscConfig smscConfig;
-        readSmscConfig(smscConfig, *sect.get());
-        updateSmsc( i->c_str(), &smscConfig );
-    }
-    reloadRegions();
 }
 
 
@@ -124,27 +164,6 @@ void InfosmeCoreV1::updateSmsc( const std::string& smscId,
 }
 
 
-int InfosmeCoreV1::Execute()
-{
-    {
-        MutexGuard mg(startMon_);
-        started_ = true;
-        stopping_ = false;
-    }
-    smsc_log_info(log_,"starting main loop");
-    while ( !stopping_ ) {
-
-        smsc_log_debug(log_,"FIXME: main loop pass");
-        MutexGuard mg(startMon_);
-        startMon_.wait(1000);
-    }
-    smsc_log_info(log_,"finishing main loop");
-    MutexGuard mg(startMon_);
-    started_ = false;
-    return 0;
-}
-
-
 void InfosmeCoreV1::reloadRegions()
 {
     // FIXME: reload regions
@@ -176,38 +195,58 @@ void InfosmeCoreV1::reloadRegions()
 }
 
 
-void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
+void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
+                                    std::auto_ptr<DeliveryInfo>& dlvInfo )
 {
-    smsc::sme::SmeConfig& rv = cfg.smeConfig;
-    rv.host = ::cgetString(config,"host","SMSC host was not defined");
-    rv.sid = ::cgetString(config,"sid","infosme id was not defined");
-    rv.port = config.getInt("port","SMSC port was not defined");
-    rv.timeOut = config.getInt("timeout","connect timeout was not defined");
-    try {
-        rv.password = ::cgetString(config,"password","InfoSme password wasn't defined !");
-    } catch (ConfigException&) {}
-    try {
-        const std::string systemType = ::cgetString(config,"systemType","InfoSme system type wasn't defined !");
-        rv.setSystemType(systemType);
-    } catch (ConfigException&) {}
-    try {
-        rv.interfaceVersion = config.getInt("interfaceVersion","InfoSme interface version wasn't defined!");
-    } catch (ConfigException&) {}
-    try {
-        const std::string ar = ::cgetString(config,"rangeOfAddress","InfoSme range of address was not defined");
-        rv.setAddressRange(ar);
-    } catch (ConfigException&) {}
-    try {
-        cfg.ussdPushOp = config.getInt("ussdPushTag");
-    } catch (ConfigException) {
-        cfg.ussdPushOp = -1;
+    MutexGuard mg(startMon_);
+    DeliveryPtr* ptr = deliveries_.GetPtr(dlvId);
+    smsc_log_debug(log_,"%s delivery D=%u",
+                   (ptr ? (dlvInfo.get() ? "update" : "delete") : "create"),
+                   unsigned(dlvId));
+    if (ptr) {
+        assert(ptr->get());
+        if (!dlvInfo.get()) {
+            // delete
+            DeliveryPtr d;
+            if (deliveries_.Pop(dlvId,d)) {
+                smsc_log_debug(log_,"FIXME: remove all regions of the delivery");
+            };
+            return;
+        } else {
+            // update
+            (*ptr)->updateDlvInfo(*dlvInfo.get());
+        }
+    } else {
+        // create
+        if (!dlvInfo.get()) {
+            throw InfosmeException("delivery info not passed");
+        }
+        deliveries_.Insert(dlvId, DeliveryPtr(new Delivery(dlvInfo,*storeLog_,*messageSource_)));
     }
-    try {
-        cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
-    } catch (ConfigException) {
-        cfg.ussdPushVlrOp = -1;
-    }
+    startMon_.notify();
 }
+
+
+int InfosmeCoreV1::Execute()
+{
+    {
+        MutexGuard mg(startMon_);
+        started_ = true;
+        stopping_ = false;
+    }
+    smsc_log_info(log_,"starting main loop");
+    while ( !stopping_ ) {
+
+        smsc_log_debug(log_,"FIXME: main loop pass");
+        MutexGuard mg(startMon_);
+        startMon_.wait(1000);
+    }
+    smsc_log_info(log_,"finishing main loop");
+    MutexGuard mg(startMon_);
+    started_ = false;
+    return 0;
+}
+
 
 }
 }

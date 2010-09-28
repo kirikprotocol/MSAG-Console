@@ -3,6 +3,7 @@
 #include "UnlockMutexGuard.h"
 #include "RelockMutexGuard.h"
 #include "StoreJournal.h"
+#include "RequestNewMsgTask.h"
 
 namespace eyeline {
 namespace informer {
@@ -19,7 +20,7 @@ public:
         if (iter->locked) {
             smsc::core::synchronization::Condition& c = rs_->getCnd(iter);
             while (iter->locked) {
-                c.WaitOn(rs_->cacheLock_);
+                c.WaitOn(rs_->cacheMon_);
             }
         }
         iter->locked = true;
@@ -34,7 +35,7 @@ public:
 
     ~MsgLock()
     {
-        MutexGuard mg(rs_->cacheLock_);
+        MutexGuard mg(rs_->cacheMon_);
         iter_->locked = false;
         rs_->getCnd(iter_).Signal();
     }
@@ -54,7 +55,7 @@ storingIter_(messageList_.end()),
 validItems_(messageList_.begin()),
 alog_(&storeLog),
 messageSource_(&messageSource),
-uploadTasks_(0),
+uploadTask_(0),
 dlvInfo_(&dlvInfo),
 regionId_(regionId),
 usage_(0)
@@ -66,18 +67,17 @@ usage_(0)
 
 RegionalStorage::~RegionalStorage()
 {
-    MutexGuard mg(cacheLock_);
-    while (uploadTasks_ > 0) {
-        UnlockMutexGuard umg(cacheLock_);
-        struct timespec tsp = {0,10000000L};
-        nanosleep(&tsp,0);
+    MutexGuard mg(cacheMon_);
+    if (uploadTask_) { uploadTask_->stop(); }
+    while (uploadTask_) {
+        cacheMon_.wait(100);
     }
 }
 
 
 bool RegionalStorage::getMessage( msgid_type msgId, Message& msg )
 {
-    MutexGuard mg(cacheLock_);
+    MutexGuard mg(cacheMon_);
     MsgIter* ptr = messageHash_.GetPtr(msgId);
     if (!ptr) {
         smsc_log_debug(log_,"Message R=%u/D=%u/M=%u is not found (getMessage)",
@@ -92,15 +92,15 @@ bool RegionalStorage::getMessage( msgid_type msgId, Message& msg )
 bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 {
     MsgIter iter;
-    RelockMutexGuard mg(cacheLock_);
+    RelockMutexGuard mg(cacheMon_);
     const char* from;
     do { // fake loop
 
         /// check if we need to request new messages
-        if ( !uploadTasks_ &&
+        if ( !uploadTask_ &&
              unsigned(newQueue_.Count()) <= dlvInfo_->getMinInputQueueSize() &&
              resendQueue_.size() <= dlvInfo_->getMaxResendQueueSize() ) {
-            ++uploadTasks_;
+            // ++uploadTasks_;
             const unsigned newQueueSize = unsigned(newQueue_.Count());
             const unsigned resendQueueSize = unsigned(resendQueue_.size());
             mg.Unlock();
@@ -109,16 +109,17 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
                                unsigned(regionId_),
                                unsigned(dlvInfo_->getDlvId()),
                                newQueueSize, resendQueueSize);
-                messageSource_->requestInputMessages(*this,
-                                                     dlvInfo_->getUploadCount());
+                RequestNewMsgTask* task = messageSource_->requestInputMessages(*this,
+                                                                               dlvInfo_->getUploadCount());
                 mg.Lock();
+                uploadTask_ = task;
             } catch (std::exception& e ) {
                 smsc_log_warn(log_,"exception requesting input msgs in R=%u/D=%u: %s",
                               unsigned(regionId_),
                               unsigned(dlvInfo_->getDlvId()),
                               e.what());
                 mg.Lock();
-                if (uploadTasks_>0) --uploadTasks_;
+                // if (uploadTasks_>0) --uploadTasks_;
             }
         }
 
@@ -167,7 +168,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
                                    msgtime_type currentTime )
     // const char* receipt )
 {
-    RelockMutexGuard mg(cacheLock_);
+    RelockMutexGuard mg(cacheMon_);
     MsgIter* ptr = messageHash_.GetPtr(msgId);
     if (!ptr) {
         throw smsc::util::Exception("message R=%u/D=%u/M=%u is not found (messageSent)",
@@ -189,7 +190,7 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
                                     msgtime_type retryDelay,  // in how many seconds try again
                                     int          smppState )
 {
-    RelockMutexGuard mg(cacheLock_);
+    RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
         // not found
@@ -239,7 +240,7 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
                                        uint8_t      state,
                                        int          smppState )
 {
-    RelockMutexGuard mg(cacheLock_);
+    RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
         throw smsc::util::Exception("message R=%u/D=%u/M=%u is not found (finalizeMessage)",
@@ -281,7 +282,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                        unsigned(m.msgId));
         alog_->journalMessage(dlvInfo_->getDlvId(),regionId_,m);
     }
-    MutexGuard mg(cacheLock_);
+    MutexGuard mg(cacheMon_);
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         newQueue_.Push(i);
     }
@@ -313,7 +314,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
 
 void RegionalStorage::rollOver()
 {
-    RelockMutexGuard mg(cacheLock_);
+    RelockMutexGuard mg(cacheMon_);
     if ( storingIter_ != messageList_.end() ) {
         smsc_log_debug(log_,"rolling in R=%u/D=%u is already in progress",
                        unsigned(regionId_),
@@ -348,8 +349,9 @@ void RegionalStorage::rollOver()
 
 void RegionalStorage::uploadFinished()
 {
-    MutexGuard mg(cacheLock_);
-    if (uploadTasks_ > 0) --uploadTasks_;
+    MutexGuard mg(cacheMon_);
+    delete uploadTask_; // if (uploadTask_ > 0) --uploadTasks_;
+    cacheMon_.notify();
     smsc_log_debug(log_,"FIXME: notify that upload finished");
 }
 
@@ -366,11 +368,11 @@ void RegionalStorage::destroy( Message& msg )
 void RegionalStorage::usage( bool incr )
 {
     if ( incr ) {
-        MutexGuard mg(cacheLock_);
+        MutexGuard mg(cacheMon_);
         ++usage_;
     } else {
         {
-            MutexGuard mg(cacheLock_);
+            MutexGuard mg(cacheMon_);
             if (!usage_) {
                 std::terminate();
             }

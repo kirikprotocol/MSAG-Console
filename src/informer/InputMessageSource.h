@@ -26,6 +26,9 @@ public:
 };
 
 
+class RequestNewMsgTask;
+
+
 /// an interface for an input message source
 class InputMessageSource
 {
@@ -36,8 +39,8 @@ public:
     /// This method should create a ThreadedTask which will upload messages,
     /// or if the task is already running, simply return.
     /// NOTE: throws exception if the task cannot be created/found.
-    virtual void requestInputMessages( InputMessageUploadRequester& requester,
-                                       unsigned count ) = 0;
+    virtual RequestNewMsgTask* requestInputMessages( InputMessageUploadRequester& requester,
+                                                     unsigned count ) = 0;
 };
 
 } // informer

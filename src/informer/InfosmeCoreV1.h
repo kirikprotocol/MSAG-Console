@@ -1,14 +1,16 @@
 #ifndef _INFORMER_INFOSMECOREV1_H
 #define _INFORMER_INFOSMECOREV1_H
 
+#include <memory>
 #include "InfosmeCore.h"
+#include "Region.h"
 #include "logger/Logger.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
-#include "Region.h"
+#include "Delivery.h"
 
 namespace eyeline {
 namespace informer {
@@ -16,10 +18,15 @@ namespace informer {
 class SmscSender;
 class RegionSender;
 class SmscConfig;
+class StoreJournal;
+class InputMessageSource;
 
 class InfosmeCoreV1 : public InfosmeCore, public smsc::core::threads::Thread
 {
 public:
+    static void readSmscConfig( SmscConfig& cfg,
+                                const smsc::util::config::ConfigView& cv );
+
     InfosmeCoreV1();
 
     virtual ~InfosmeCoreV1();
@@ -44,8 +51,11 @@ public:
     /// reload all regions
     void reloadRegions();
 
-    static void readSmscConfig( SmscConfig& cfg,
-                                const smsc::util::config::ConfigView& cv );
+    /// update delivery
+    /// 1. create delivery: new dlvId, valid dlvInfo;
+    /// 2. update delivery: old dlvId, valid dlvInfo;
+    /// 3. delete delivery: old dlvId, dlvInfo=0.
+    void updateDelivery( dlvid_type dlvId, std::auto_ptr<DeliveryInfo>& dlvInfo );
 
 protected:
     /// enter main loop, exit via 'stop()'
@@ -60,6 +70,9 @@ private:
     smsc::core::buffers::Hash< SmscSender* >      smscs_;   // owned
     smsc::core::buffers::IntHash< RegionPtr >     regions_; // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_; // owned
+    smsc::core::buffers::IntHash< DeliveryPtr >   deliveries_; // owned
+    StoreJournal*                                 storeLog_;   // owned
+    InputMessageSource*                           messageSource_;
 };
 
 } // informer
