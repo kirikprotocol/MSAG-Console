@@ -628,7 +628,9 @@ class Pause extends Observable{
         jTabbedPane.addTab( "SMPP", smppPanel );
         HttpPanel httpPanel = new HttpPanel();
         jTabbedPane.addTab( "HTTP", httpPanel );
+        /* Hide MSS
         jTabbedPane.addTab("MMS", new MmsPanel());
+        */
 
         pause.addObserver( smppPanel.viewPanel );
         pause.addObserver( httpPanel.viewPanel );

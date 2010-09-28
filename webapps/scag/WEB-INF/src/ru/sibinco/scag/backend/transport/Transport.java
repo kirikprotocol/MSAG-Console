@@ -26,7 +26,10 @@ public class Transport {
     public static final String MMS_SCHEMA_NAME = "mms_rules.xsd";
 
     public static String[] transportIds = {
-            String.valueOf(SMPP_TRANSPORT_ID), String.valueOf(HTTP_TRANSPORT_ID), String.valueOf(MMS_TRANSPORT_ID)
+            String.valueOf(SMPP_TRANSPORT_ID),
+            String.valueOf(HTTP_TRANSPORT_ID)
+            /* Hide MMS 
+            , String.valueOf(MMS_TRANSPORT_ID)  */
     };
 
     public static String[] transportTitles = {

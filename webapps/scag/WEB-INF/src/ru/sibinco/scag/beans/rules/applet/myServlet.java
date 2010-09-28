@@ -75,6 +75,7 @@ public class myServlet extends HttpServlet
           throws IOException
   {
     String file=req.getParameter("file");
+    logger.debug("file = "+file);  
     String transport=null;
     String[] list=null;
     LinkedList li;

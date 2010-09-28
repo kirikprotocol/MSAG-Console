@@ -216,7 +216,9 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         jTabbedPane.addTab( "SMPP", smppPanel );
         httpPanel = new HttpPanel(this);
         jTabbedPane.addTab("HTTP", httpPanel );
-        jTabbedPane.addTab("MMS", new MmsPanel());
+        /* Hide MMS
+        jTabbedPane.addTab("MMS", new MmsPanel());*/
+
         //jTabbedPane.insertTab("SMPP", null, new SmppPanel() , null, 0);
 
         pause.addObserver( smppPanel.viewButtonPanel );

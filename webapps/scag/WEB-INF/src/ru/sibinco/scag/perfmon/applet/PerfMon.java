@@ -495,8 +495,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         try {
             while (!isStopping) {
                 try {
-                    sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-                    //System.out.println( "PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue() );
+                    System.out.println( "PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue() );
+                    sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());                    
                     is = new DataInputStream( sock.getInputStream() );
                     PerfSnap snap = new PerfSnap();
                     snap.read(is);
@@ -537,9 +537,10 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                     try {
                         Thread.sleep(10000);
                     } catch (InterruptedException e1) {
+                        e1.printStackTrace(System.out);
                     }
                     ex.printStackTrace(System.out);
-                    //System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
+                    System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
                 }
             }
         } catch (Exception e) {

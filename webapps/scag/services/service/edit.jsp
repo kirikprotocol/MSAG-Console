@@ -238,7 +238,8 @@
             <sm-ep:properties title="service.edit.properties.service_rules" noEdit="true" id="rulesT">
               <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp"/>
               <sm:rule tname="HTTP" ttitle="service.edit.rule.transport.http"/>
-              <sm:rule tname="MMS"  ttitle="service.edit.rule.transport.mms"/>
+              <!-- Hide MMS -->
+              <!--sm:rule tname="MMS"  ttitle="service.edit.rule.transport.mms"/-->
             </sm-ep:properties>
 
             <div class=page_subtitle>&nbsp;</div>

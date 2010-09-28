@@ -46,13 +46,17 @@ public class TopMenu  extends ArrayList {
             Collection subjectItems = new ArrayList();
             subjectItems.add(new MenuItem("menu.routing.routes.SMPP", "/routing/subjects/index.jsp?transportId=1",new String[]{"routing"}));
             subjectItems.add(new MenuItem("menu.routing.routes.HTTP", "/routing/subjects/index.jsp?transportId=2",new String[]{"routing"}));
+            /* Hide MMS
             subjectItems.add(new MenuItem("menu.routing.routes.MMS", "/routing/subjects/index.jsp?transportId=3",new String[]{"routing"}));
+            */
             routingItems.add(new MenuItem("menu.routing.subjects", "", subjectItems,new String[]{"routing"}));
             routingItems.add(new MenuItem("menu.routing.options", "/routing/options/index.jsp",new String[]{"routing"}));
             Collection routesStatusItems = new ArrayList();
             routesStatusItems.add(new MenuItem("menu.routing.routes.SMPP", "/routing/routes/index.jsp?transportId=1",new String[]{"routing"}));
             routesStatusItems.add(new MenuItem("menu.routing.routes.HTTP", "/routing/routes/index.jsp?transportId=2",new String[]{"routing"}));
+            /* Hide MMS 
             routesStatusItems.add(new MenuItem("menu.routing.routes.MMS", "/routing/routes/index.jsp?transportId=3",new String[]{"routing"}));
+            */
             routingItems.add(new MenuItem("menu.routing.routes", "", routesStatusItems,new String[]{"routing"}));
             routingItems.add(new MenuItem("menu.routing.tracer", "/routing/tracer/index.jsp",new String[]{"routing"}));
             add(new MenuItem("menu.routing", "", routingItems,new String[]{"routing"}));
