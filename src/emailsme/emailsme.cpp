@@ -58,6 +58,9 @@ using namespace smsc::emailsme;
 
 using namespace std;
 
+namespace cfg{
+int maxPacketSize=65000;
+}
 
 char hostName[256];
 
@@ -654,7 +657,7 @@ public:
       uint32_t pktSize=0;
       memcpy(&pktSize,szbuf,4);
       pktSize=ntohl(pktSize);
-      if(pktSize>65536)
+      if(pktSize>cfg::maxPacketSize)
       {
         smsc_log_warn(log,"Packet size too large:%d",pktSize);
         continue;
@@ -3210,6 +3213,13 @@ int main(int argc,char* argv[])
       __warning__("Failed to start listener");
       return -1;
     };
+
+    try{
+      cfg::maxPacketSize=cfgman.getInt("listener.maxMessageSize");
+    }catch(std::exception& e)
+    {
+      __warning2__("listener.maxMessageSize not found. using default %d",cfg::maxPacketSize);
+    }
 
 
     cfg::mailstripper=cfgman.getString("mail.stripper");
