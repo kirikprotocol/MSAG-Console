@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web;
 
 import mobi.eyeline.informer.admin.InstallationType;
+import mobi.eyeline.informer.admin.WebConfig;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

@@ -22,6 +22,10 @@ public class InfosmeException extends AdminException {
     super(key);
   }
 
+  public InfosmeException(String key, String... args) {
+    super(key, args);
+  }
+
   protected InfosmeException(String key, int[] errorsPerNode, byte[] nodes) {
     super(key);
     this.errorsPerNode = errorsPerNode;

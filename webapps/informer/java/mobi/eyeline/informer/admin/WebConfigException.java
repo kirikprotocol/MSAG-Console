@@ -1,6 +1,4 @@
-package mobi.eyeline.informer.web;
-
-import mobi.eyeline.informer.admin.AdminException;
+package mobi.eyeline.informer.admin;
 
 /**
  * Ошибка чтения web-конфига

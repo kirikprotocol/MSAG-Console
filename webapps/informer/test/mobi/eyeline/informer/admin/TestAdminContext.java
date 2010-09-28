@@ -2,10 +2,10 @@ package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.informer.TestInformerConfigManager;
+import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.UsersManagerTest;
-import mobi.eyeline.informer.web.WebConfig;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -34,7 +34,7 @@ public class TestAdminContext extends AdminContext {
     journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
     informerConfigManager = new TestInformerConfigManager(new File(appBaseDir, "conf"+File.separatorChar+"config.xml"),
           new File(appBaseDir, "conf"+File.separatorChar+"backup"), fileSystem);
-
+    infosme = new TestInfosme();
   }
 
 }

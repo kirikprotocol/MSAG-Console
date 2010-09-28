@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.web;
 
+import mobi.eyeline.informer.admin.WebConfig;
 import mobi.eyeline.informer.util.xml.WebXml;
 import org.apache.log4j.Logger;
 

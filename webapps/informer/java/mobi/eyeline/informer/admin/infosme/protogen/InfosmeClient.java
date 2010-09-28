@@ -112,24 +112,24 @@ class InfosmeClient extends ClientConnection {
   }
 
 
-  boolean isConnected() {
+  protected boolean isConnected() {
     return connected;
   }
 
   
-  ConfigOpResult send(ConfigOp req) throws AdminException{
+  protected ConfigOpResult send(ConfigOp req) throws AdminException{
     return sendPdu(req, new ConfigOpResult());     
   }
   
-  LoggerGetCategoriesResp send(LoggerGetCategories req) throws AdminException{
+  protected LoggerGetCategoriesResp send(LoggerGetCategories req) throws AdminException{
     return sendPdu(req, new LoggerGetCategoriesResp());
   }
   
-  LoggerSetCategoriesResp send(LoggerSetCategories req) throws AdminException {
+  protected LoggerSetCategoriesResp send(LoggerSetCategories req) throws AdminException {
     return sendPdu(req, new LoggerSetCategoriesResp());
   }
   
-  SetDefaultSmscResp send(SetDefaultSmsc req) throws AdminException {
+  protected SetDefaultSmscResp send(SetDefaultSmsc req) throws AdminException {
     return sendPdu(req, new SetDefaultSmscResp());
   }
 

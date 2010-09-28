@@ -44,7 +44,13 @@ public abstract class AdminException extends Exception {
   public String getMessage(Locale locale) {
     String result = ResourceBundle.getBundle(bundleName, locale).getString(key);
     if(args != null && args.length > 0) {
-      result = MessageFormat.format(result, (Object[])args);
+      if(result.indexOf("{")>=0) {
+        result = MessageFormat.format(result, (Object[])args);
+      }else {
+        for(String a : args) {
+          result+=" "+a;
+        }
+      }
     }
     if (getCause() != null) {
       Throwable ct = getCause();

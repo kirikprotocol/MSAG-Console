@@ -3,10 +3,11 @@ package mobi.eyeline.informer.admin;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerConfigManager;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
+import mobi.eyeline.informer.admin.infosme.Infosme;
+import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.admin.users.UsersSettings;
-import mobi.eyeline.informer.web.WebConfig;
 
 import java.io.File;
 
@@ -30,6 +31,8 @@ public class AdminContext {
   protected WebConfig webConfig;
 
   protected InformerConfigManager informerConfigManager;
+
+  protected Infosme infosme;
 
   protected AdminContext() {
   }
@@ -55,7 +58,8 @@ public class AdminContext {
     informerConfigManager = new InformerConfigManager(new File(appBaseDir,"conf"+File.separatorChar+"config.xml"),
         new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
     usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
-
+    InformerSettings is = informerConfigManager.getConfigSettings();
+    infosme = new InfosmeImpl(is.getHost(), is.getAdminPort());
   }
 
   public Journal getJournal() {
@@ -85,4 +89,5 @@ public class AdminContext {
   public void updateConfigSettings(InformerSettings informerSettings) throws AdminException {
     informerConfigManager.updateSettings(informerSettings);
   }
+  
 }

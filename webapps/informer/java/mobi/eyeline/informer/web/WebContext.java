@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web;
 
 import mobi.eyeline.informer.admin.AdminContext;
+import mobi.eyeline.informer.admin.WebConfig;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.xml.WebXml;
 import mobi.eyeline.informer.web.auth.Authenticator;

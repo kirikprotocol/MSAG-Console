@@ -1,10 +1,9 @@
-package mobi.eyeline.informer.web;
+package mobi.eyeline.informer.admin;
 
-import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.InstallationType;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigSection;
+import mobi.eyeline.informer.web.InitException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,7 +22,7 @@ public class WebConfig {
 
   private final XmlConfig webconfig = new XmlConfig();
 
-  public WebConfig(InputStream is) throws InitException{
+  public WebConfig(InputStream is) throws InitException {
     load(is);
   }
 
