@@ -186,7 +186,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <table cellspacing=0 cellpadding=0>
       <tr>
         <td width=380><IMG SRC="content/images/smsc_04.jpg" HEIGHT=45 width=380 ALT=""></td>
-        <td bgcolor="#161E49"><span style="color: #6F77A3; font-size: 11px; font-weight:bold; vertical-align: -10px;">Version&nbsp;1.0</span></td>
+        <td bgcolor="#161E49"><span style="color: #6F77A3; font-size: 11px; font-weight:bold; vertical-align: -10px;">Version&nbsp;2.0</span></td>
         <td width=12 background="content/images/smsc_06.jpg"></td>
       </tr>
       </table>
@@ -302,7 +302,13 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <table cellpadding="0" cellspacing="0">
         <tr>
           <td width="12" background="content/images/smsc_30.jpg"></td>
-          <td align="right" bgcolor="#161E49"><span style="color: #6F77A3;">Copyright&nbsp;&copy;&nbsp;EyeLine Communications, 2006&nbsp;</span></td>
+          <!--Find out the current year-->
+          <%
+          java.util.Calendar calendar = java.util.Calendar.getInstance(java.util.TimeZone.getDefault(), java.util.Locale.getDefault());
+          calendar.setTime(new java.util.Date());
+          int currentYear = calendar.get(java.util.Calendar.YEAR);
+          %>  
+          <td align="right" bgcolor="#161E49"><span style="color: #6F77A3;">Copyright&nbsp;&copy;&nbsp;EyeLine Communications, 2006&nbsp;-&nbsp;<%=currentYear%>&nbsp;</span></td>
           <td width="12" background="content/images/smsc_32.jpg"></td>
         </tr>
       </table>
