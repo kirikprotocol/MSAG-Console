@@ -7,11 +7,14 @@
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/buffers/Hash.hpp"
+#include "core/buffers/IntHash.hpp"
+#include "Region.h"
 
 namespace eyeline {
 namespace informer {
 
 class SmscSender;
+class RegionSender;
 class SmscConfig;
 
 class InfosmeCoreV1 : public InfosmeCore, public smsc::core::threads::Thread
@@ -38,11 +41,15 @@ public:
     /// 3. delete smsc: old smscId, cfg=0.
     void updateSmsc( const std::string& smscId, const SmscConfig* cfg );
 
+    /// reload all regions
+    void reloadRegions();
+
+    static void readSmscConfig( SmscConfig& cfg,
+                                const smsc::util::config::ConfigView& cv );
+
 protected:
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
-    static void readSmscConfig( SmscConfig& cfg,
-                                const smsc::util::config::ConfigView& cv );
 
 private:
     smsc::logger::Logger*                      log_;
@@ -50,7 +57,9 @@ private:
     bool                                       stopping_;
     bool                                       started_;
     smsc::core::threads::ThreadPool            tp_;
-    smsc::core::buffers::Hash< SmscSender* >   smscs_; // owned
+    smsc::core::buffers::Hash< SmscSender* >      smscs_;   // owned
+    smsc::core::buffers::IntHash< RegionPtr >     regions_; // owned
+    smsc::core::buffers::IntHash< RegionSender* > regSends_; // owned
 };
 
 } // informer

@@ -17,7 +17,7 @@ class RegionSender
     friend class ScoredList< RegionSender >;
 
 public:
-    RegionSender( SmscSender& conn, Region* r );
+    RegionSender( SmscSender& conn, const RegionPtr& r );
     /*
     conn_(&conn), region_(r),
     log_(smsc::logger::Logger::getInstance("regsend")),
@@ -26,8 +26,12 @@ public:
 
     ~RegionSender() {}
 
+    // used to switch senders
+    // NOTE: this method should be invoked from locked state.
+    void assignSender( SmscSender& conn, const RegionPtr& r );
+
     inline regionid_type getRegionId() const {
-        return region_->getRegionId(); 
+        return region_.get() ? region_->getRegionId() : 0;
     }
 
     /// in sms/sec
@@ -85,10 +89,10 @@ private:
 private:
 
 private:
-    SmscSender*                        conn_;   // not owned
-    Region*                            region_; // not owned
     smsc::logger::Logger*              log_;
-    ScoredList< RegionSender >         taskList_;
+    SmscSender*                        conn_;     // not owned
+    RegionPtr                          region_;   // shared ownership
+    ScoredList< RegionSender >         taskList_; // not owned
     // smsc::core::synchronization::Mutex lock_;
     SpeedControl<tuPerSec,uint64_t>    speedControl_;
     // RegionalStoragePtr                 ptr_;

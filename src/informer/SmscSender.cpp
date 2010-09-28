@@ -54,6 +54,24 @@ void SmscSender::waitUntilReleased()
 }
 
 
+void SmscSender::detachRegionSender( RegionSender& rs )
+{
+    smsc_log_debug(log_,"S='%s' detaching regsend R=%u",smscId_.c_str(),unsigned(rs.getRegionId()));
+    MutexGuard mg(mon_);
+    scoredList_.remove(ScoredList<SmscSender>::isEqual(&rs));
+    mon_.notify();
+}
+
+
+void SmscSender::attachRegionSender( RegionSender& rs )
+{
+    smsc_log_debug(log_,"S='%s' attaching regsend R=%u",smscId_.c_str(),unsigned(rs.getRegionId()));
+    MutexGuard mg(mon_);
+    scoredList_.add(&rs);
+    mon_.notify();
+}
+
+
 void SmscSender::handleEvent( smsc::sme::SmppHeader* pdu )
 {
     smsc_log_error(log_,"FIXME: handleEvent, S='%s'", smscId_.c_str());

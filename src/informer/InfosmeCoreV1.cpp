@@ -1,6 +1,8 @@
 #include <memory>
 #include "InfosmeCoreV1.h"
+#include "InfosmeException.h"
 #include "SmscSender.h"
+#include "RegionSender.h"
 #include "util/config/ConfigView.h"
 #include "util/config/ConfString.h"
 
@@ -77,6 +79,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
         readSmscConfig(smscConfig, *sect.get());
         updateSmsc( i->c_str(), &smscConfig );
     }
+    reloadRegions();
 }
 
 
@@ -142,6 +145,37 @@ int InfosmeCoreV1::Execute()
 }
 
 
+void InfosmeCoreV1::reloadRegions()
+{
+    // FIXME: reload regions
+    // std::auto_ptr<Config> rcfg(Config::createFromFile("regions.xml"));
+    // ConfigView rcv(*rcfg.get());
+
+    const regionid_type regionId = 1;
+    const std::string smscId = "MSAG0";
+
+    smsc_log_error(log_,"FIXME: reload regions");
+    MutexGuard mg(startMon_); // guaranteed that there is no sending
+    // find smscconn
+    SmscSender** smsc = smscs_.GetPtr(smscId.c_str());
+    if (!smsc || !*smsc) {
+        throw InfosmeException("S='%s' is not found for R=%u",smscId.c_str(),regionId);
+    }
+
+    RegionPtr* ptr = regions_.GetPtr(regionId);
+    if (!ptr) {
+        smsc_log_debug(log_,"creating R=%u for S='%s'",regionId,smscId.c_str());
+        ptr = &regions_.Insert(regionId,RegionPtr(new Region(regionId,10,smscId)));
+    }
+    RegionSender** rs = regSends_.GetPtr(regionId);
+    if (!rs) {
+        rs = &regSends_.Insert(regionId,new RegionSender(**smsc,*ptr));
+    } else {
+        (*rs)->assignSender(**smsc,*ptr);
+    }
+}
+
+
 void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
 {
     smsc::sme::SmeConfig& rv = cfg.smeConfig;
@@ -151,26 +185,26 @@ void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
     rv.timeOut = config.getInt("timeout","connect timeout was not defined");
     try {
         rv.password = ::cgetString(config,"password","InfoSme password wasn't defined !");
-    } catch (smsc::util::config::ConfigException&) {}
+    } catch (ConfigException&) {}
     try {
         const std::string systemType = ::cgetString(config,"systemType","InfoSme system type wasn't defined !");
         rv.setSystemType(systemType);
-    } catch (smsc::util::config::ConfigException&) {}
+    } catch (ConfigException&) {}
     try {
         rv.interfaceVersion = config.getInt("interfaceVersion","InfoSme interface version wasn't defined!");
-    } catch (smsc::util::config::ConfigException&) {}
+    } catch (ConfigException&) {}
     try {
         const std::string ar = ::cgetString(config,"rangeOfAddress","InfoSme range of address was not defined");
         rv.setAddressRange(ar);
-    } catch (smsc::util::config::ConfigException&) {}
+    } catch (ConfigException&) {}
     try {
         cfg.ussdPushOp = config.getInt("ussdPushTag");
-    } catch (smsc::util::config::ConfigException) {
+    } catch (ConfigException) {
         cfg.ussdPushOp = -1;
     }
     try {
         cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
-    } catch (smsc::util::config::ConfigException) {
+    } catch (ConfigException) {
         cfg.ussdPushVlrOp = -1;
     }
 }

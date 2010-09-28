@@ -38,6 +38,8 @@ public:
 
     virtual const char* taskName() { return "smscsender"; }
 
+    const std::string& getSmscId() const { return smscId_; }
+
     /// sending one message
     /// @return number of chunks the message has been splitted or 0
     unsigned send( RegionalStoragePtr& dlv,
@@ -47,6 +49,10 @@ public:
     /// NOTE: post-requisite -- task is released!
     void updateConfig( const SmscConfig& config );
     void waitUntilReleased();
+
+    /// this two methods are invoked from locked state.
+    void detachRegionSender( RegionSender& rs );
+    void attachRegionSender( RegionSender& rs );
 
 private:
     virtual void handleEvent( smsc::sme::SmppHeader* pdu );
@@ -74,7 +80,7 @@ private:
     std::string                               smscId_;
     std::auto_ptr<smsc::sme::SmppSession>     session_;
     smsc::core::synchronization::EventMonitor mon_;
-    ScoredList< SmscSender >                  scoredList_;
+    ScoredList< SmscSender >                  scoredList_; // not owned
     usectime_type                             currentTime_;
 };
 
