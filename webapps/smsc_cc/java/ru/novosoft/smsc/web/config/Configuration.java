@@ -3,6 +3,7 @@ package ru.novosoft.smsc.web.config;
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.acl.Acl;
+import ru.novosoft.smsc.admin.category.CategorySettings;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroup;
 import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.admin.logging.LoggerSettings;
@@ -215,6 +216,18 @@ public class Configuration {
     for (Acl acl : acls)
       result.add(new LoggedAcl(acl, journal, user));
     return result;
+  }
+
+  // CATEGORY
+
+  public CategorySettings getCategorySettings() throws AdminException {
+    return adminContext.getCategoryManager().getSettings();
+  }
+
+  public void updateCategorySettings(CategorySettings settings, String user) throws AdminException {
+    CategorySettings oldSettings = adminContext.getCategoryManager().getSettings();
+    adminContext.getCategoryManager().updateSettings(settings);
+    journal.logChanges(oldSettings, settings, user);    
   }
 
 }

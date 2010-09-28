@@ -177,3 +177,18 @@ div.query_result {
 .column20Width {
   width:20px;
 }
+
+.listTableHeader {
+  background-color: #F8F6EE;
+  border-bottom: 1px solid #161E49;
+  text-align: center;
+  padding: 2px 0px 2px 0px;
+}
+
+.listTableRow0 {
+  background-color: #F2EEDA;
+}
+
+.listTableRow1 {
+  background-color: #F8F6EE;
+}

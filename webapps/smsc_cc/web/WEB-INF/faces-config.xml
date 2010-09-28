@@ -267,6 +267,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>categories</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.category.CategoryController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -341,6 +347,11 @@
     <navigation-case>
       <from-outcome>ACLS</from-outcome>
       <to-view-id>/smsc/acl/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>CATEGORIES</from-outcome>
+      <to-view-id>/smsc/category/index.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

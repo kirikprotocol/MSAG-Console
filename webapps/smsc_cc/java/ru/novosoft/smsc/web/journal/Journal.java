@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.web.journal;
 
+import ru.novosoft.smsc.admin.category.CategorySettings;
 import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
@@ -28,6 +29,7 @@ public class Journal {
   public static final String SNMP="subject.snmp";
   public static final String SME="subject.sme";
   public static final String ACL="subject.acl";
+  public static final String CATEGORY="subject.category";
 
   private final List<JournalRecord> records = new ArrayList<JournalRecord>();
 
@@ -39,6 +41,7 @@ public class Journal {
   private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(FRAUD);
   private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(SNMP);
   private final SmeDiffHelper sme = new SmeDiffHelper(SME);
+  private final CategorySettingsDiffHelper category = new CategorySettingsDiffHelper(CATEGORY);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -58,6 +61,7 @@ public class Journal {
     l.add(rb.getString(SNMP));
     l.add(rb.getString(SME));
     l.add(rb.getString(ACL));
+    l.add(rb.getString(CATEGORY));
     return l;
   }
 
@@ -366,6 +370,12 @@ public class Journal {
   public void logAclRemove(int id, String user) {
     JournalRecord r = addRecord(JournalRecord.Type.REMOVE, ACL, user);
     r.setDescription("acl.removed", id+"");
+  }
+
+  // CATEGORY
+
+  public void logChanges(CategorySettings oldSettings, CategorySettings newSettings, String user) {
+    category.logChanges(oldSettings, newSettings, user, this);
   }
 
 }
