@@ -55,6 +55,13 @@ public class SmeManagerTest {
   }
 
   @Test
+  public void testRemoveSme() throws AdminException {
+    SmeManager manager = getManager(new ClusterControllerImpl(true));
+
+    assertTrue(manager.removeSme("infosme"));
+  }
+
+  @Test
   public void testGetStatusForSmscs() throws AdminException {
     SmeManager manager = getManager(new ClusterControllerImpl(true));
 

@@ -19,7 +19,7 @@ public class CCSmeSmscStatuses {
     this.connectStatuses = new ArrayList<ConnectStatus>();
   }
 
-  void addConnectStatus(int nodeIndex, int status, int bindMode, String peerIn, String peerOut) {
+  void addConnectStatus(int nodeIndex, int status, Integer bindMode, String peerIn, String peerOut) {
     connectStatuses.add(new ConnectStatus(nodeIndex, status, bindMode, peerIn, peerOut));
   }
 
@@ -38,11 +38,11 @@ public class CCSmeSmscStatuses {
   public static class ConnectStatus {
     int nodeIndex;
     int status;
-    int bindMode;
+    Integer bindMode;
     String peerIn;
     String peerOut;
 
-    private ConnectStatus(int nodeIndex, int status, int bindMode, String peerIn, String peerOut) {
+    private ConnectStatus(int nodeIndex, int status, Integer bindMode, String peerIn, String peerOut) {
       this.nodeIndex = nodeIndex;
       this.status = status;
       this.bindMode = bindMode;
@@ -58,7 +58,7 @@ public class CCSmeSmscStatuses {
       return status;
     }
 
-    public int getBindMode() {
+    public Integer getBindMode() {
       return bindMode;
     }
 

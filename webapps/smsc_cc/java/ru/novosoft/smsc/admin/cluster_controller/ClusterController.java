@@ -592,11 +592,21 @@ public class ClusterController {
       SmeStatusInfo smeStatusInfo = statusInfo[i];
       CCSmeSmscStatuses stateInfo = new CCSmeSmscStatuses(smeStatusInfo.getSystemId(), smeStatusInfo.getConnType().getValue());
       for (SmeConnectStatus smeConnectStatus : smeStatusInfo.getStatus()) {
+        Integer bindMode = null;
+        if (smeConnectStatus.hasBindMode())
+          bindMode = (int)smeConnectStatus.getBindMode().getValue();
+        String peerIn = null;
+        if (smeConnectStatus.hasPeerIn())
+          peerIn = smeConnectStatus.getPeerIn();
+        String peerOut = null;
+        if (smeConnectStatus.hasPeerOut())
+          peerOut = smeConnectStatus.getPeerOut();
+
         stateInfo.addConnectStatus(smeConnectStatus.getNodeIdx(),
             smeConnectStatus.getStatus().getValue(),
-            smeConnectStatus.getBindMode().getValue(),
-            smeConnectStatus.getPeerIn(),
-            smeConnectStatus.getPeerOut());
+            bindMode,
+            peerIn,
+            peerOut);
       }
       res[i] = stateInfo;
     }

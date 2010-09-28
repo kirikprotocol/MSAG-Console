@@ -180,7 +180,7 @@ public class SmeManager implements SmscConfiguration {
       broken = true;
       throw e;
     }
-    return false;
+    return true;
   }
 
   /**
@@ -197,7 +197,8 @@ public class SmeManager implements SmscConfiguration {
    * Возвращает информацию обо всех SME
    *
    * @return список настроек всех SME
-   * @throws ru.novosoft.smsc.admin.AdminException если произошла ошибка
+   * @throws ru.novosoft.smsc.admin.AdminException
+   *          если произошла ошибка
    */
   public Map<String, Sme> smes() throws AdminException {
     Map<String, Sme> result = new HashMap<String, Sme>();
@@ -245,19 +246,21 @@ public class SmeManager implements SmscConfiguration {
         connSt = null;
     }
 
-    SmeBindMode bm;
-    switch (cs.getBindMode()) {
-      case CCSme.BIND_MODE_TX:
-        bm = SmeBindMode.TX;
-        break;
-      case CCSme.BIND_MODE_RX:
-        bm = SmeBindMode.RX;
-        break;
-      case CCSme.BIND_MODE_TRX:
-        bm = SmeBindMode.TRX;
-        break;
-      default:
-        bm = null;
+    SmeBindMode bm = null;
+    if (cs.getBindMode() != null) {
+      switch (cs.getBindMode()) {
+        case CCSme.BIND_MODE_TX:
+          bm = SmeBindMode.TX;
+          break;
+        case CCSme.BIND_MODE_RX:
+          bm = SmeBindMode.RX;
+          break;
+        case CCSme.BIND_MODE_TRX:
+          bm = SmeBindMode.TRX;
+          break;
+        default:
+          bm = null;
+      }
     }
 
     return new SmeSmscStatus(cs.getNodeIndex(), connSt, bm, cs.getPeerIn(), cs.getPeerOut());
@@ -323,7 +326,7 @@ public class SmeManager implements SmscConfiguration {
   public void disconnectSmeFromSmsc(List<String> smeIds) throws AdminException {
     checkBroken();
     String[] strings = new String[smeIds.size()];
-    for (int i=0; i<smeIds.size(); i++)
+    for (int i = 0; i < smeIds.size(); i++)
       strings[i] = smeIds.get(i);
     cc.disconnectSmes(strings);
   }
