@@ -20,13 +20,18 @@ public class InformerSettings {
 
   private int deliveriesPort;
 
+  private String persHost;
+
+  private int persPort;
+
   void load(XmlConfig config) throws XmlConfigException{
-    if(config.containsSection("informer")){
-      XmlConfigSection s = config.getSection("informer");
-      host = s.getString("host", null);
-      adminPort = s.getInt("adminPort", 0);
-      deliveriesPort = s.getInt("deliveriesPort", 0);
-    }
+    XmlConfigSection s = config.getSection("informer");
+    host = s.getString("host", null);
+    adminPort = s.getInt("adminPort", 0);
+    deliveriesPort = s.getInt("deliveriesPort", 0);
+    s = config.getSection("pvss");
+    persHost = s.getString("host");
+    persPort = s.getInt("port");
   }
 
   void save(XmlConfig config) throws XmlConfigException{
@@ -34,6 +39,9 @@ public class InformerSettings {
     s.setString("host", host);
     s.setInt("adminPort", adminPort);
     s.setInt("deliveriesPort", deliveriesPort);
+    s = config.getOrCreateSection("pvss");
+    s.setString("host", persHost);
+    s.setInt("port", persPort);
   }
 
   public String getHost() {
@@ -64,6 +72,24 @@ public class InformerSettings {
     this.deliveriesPort = deliveriesPort;
   }
 
+  public String getPersHost() {
+    return persHost;
+  }
+
+  public void setPersHost(String persHost) throws AdminException{
+    vh.checkNotEmpty("persHost", persHost);
+    this.persHost = persHost;
+  }
+
+  public int getPersPort() {
+    return persPort;
+  }
+
+  public void setPersPort(int persPort) throws AdminException{
+    vh.checkPort("persPort", persPort);
+    this.persPort = persPort;
+  }
+
   /**
    * Копирует настройки
    * @return копия настроек
@@ -73,6 +99,8 @@ public class InformerSettings {
     cs.adminPort = adminPort;
     cs.deliveriesPort = deliveriesPort;
     cs.host = host;
+    cs.persHost = persHost;
+    cs.persPort = persPort;
     return cs;
   }
 }

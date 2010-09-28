@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web;
 
 import mobi.eyeline.informer.admin.AdminContext;
+import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.WebConfig;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.xml.WebXml;
@@ -58,7 +59,6 @@ public class WebContext {
         }
         this.adminContext = (AdminContext)Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
             getConstructor(File.class, WebConfig.class).newInstance(baseDir, config);
-        new AdminContext(baseDir, config);
       }else {
         this.adminContext = new AdminContext(baseDir, config);
       }
@@ -73,8 +73,9 @@ public class WebContext {
           }
         }
       });
-
       configuration = new Configuration(adminContext);
+    }catch (InitException e) {
+      throw e;
     }catch (Exception e) {
       throw new InitException(e);
     }
@@ -91,4 +92,11 @@ public class WebContext {
   public Configuration getConfiguration() {
     return configuration;
   }
+
+  void shutdown() {
+    if(adminContext != null) {
+      adminContext.shutdown();
+    }
+  }
+
 }

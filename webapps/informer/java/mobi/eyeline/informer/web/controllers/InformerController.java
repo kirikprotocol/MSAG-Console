@@ -5,14 +5,13 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.web.LocaleFilter;
 import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.config.Configuration;
+import org.apache.myfaces.trinidad.model.UploadedFile;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletResponse;
+import javax.faces.event.ValueChangeEvent;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Serializable;
+import java.io.*;
 import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.Locale;
@@ -136,36 +135,56 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Метод для отдачи файлов
-   * @param fileName имя файла, показываемое пользователю
-   * @param contentType content type, к примеру "application/csv"
-   * @param outputter интерфейс вывода в файл
-   * @throws IOException ошибка записи в пото
+   * @param context Faces context
+   * @param out Output Stream
+   * @throws java.io.IOException ошибка записи
    */
-  @SuppressWarnings({"EmptyCatchBlock"})
-  protected void downloadFile( String fileName, String contentType, DownloadOutputter outputter) throws IOException{
-    FacesContext context = FacesContext.getCurrentInstance();
-    HttpServletResponse response =(HttpServletResponse) context.getExternalContext().getResponse();
-    response.setCharacterEncoding("utf-8");
-    response.setContentType(contentType);
-    response.setHeader("Content-Disposition", "attachment;filename=\""+fileName+"\"");
-    PrintWriter writer = null;
-    try{
-      writer = response.getWriter();;
-      outputter.output(writer);
-      writer.flush();
-    }finally {
-      if(writer != null) {
-          writer.close();
-      }
-    }
-    FacesContext.getCurrentInstance().responseComplete();
+  public void download(FacesContext context, OutputStream out) throws IOException{
+    PrintWriter w = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
+    _download(w);
+    w.flush();
   }
 
   /**
-   * Интерфейс вывода в файл
+   * Метод для отдачи файлов (требует переопределения в наследнике)
+   * @param writer Print writer
+   * @throws java.io.IOException ошибка записи
    */
-  protected static interface DownloadOutputter {
-    void output(PrintWriter s) throws IOException;
+  protected void _download(PrintWriter writer) throws IOException{
+  }
+
+
+  /**
+   * Метод для загрузки файла
+   * @param e ValueChangeEvent
+   */
+  @SuppressWarnings({"EmptyCatchBlock"})
+  public void uploaded(ValueChangeEvent e) {
+    UploadedFile file = (UploadedFile)e.getNewValue();
+    if(file == null) {
+      return;
+    }
+    BufferedReader is = null;
+    try{
+      is = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+      _uploaded(is);
+    }catch (IOException ex) {
+      addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "informer.upload.error");
+    } finally {
+      if(is != null) {
+        try{
+          is.close();
+        }catch (IOException ex){}
+      }
+    }
+  }
+
+   /**
+   * Метод для загрузки файла (требует переопределения в наследнике)
+   * @param reader BufferedReader
+   * @throws java.io.IOException ошибка чтения
+   */
+  protected void _uploaded(BufferedReader reader) throws IOException{  
   }
 
 }

@@ -1,13 +1,10 @@
 package mobi.eyeline.informer.admin.infosme.protogen;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.categories.Category;
+import mobi.eyeline.informer.admin.infosme.Category;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.InfosmeException;
 import mobi.eyeline.informer.admin.infosme.protogen.protocol.*;
-import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
-import mobi.eyeline.informer.admin.smsc.Smsc;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -23,7 +20,7 @@ public class InfosmeImpl implements Infosme {
 
   private InfosmeClient client;
 
-  public InfosmeImpl(String host, int port) throws AdminException {
+  public InfosmeImpl(String host, int port) {
     this.client = new InfosmeClient(host, port);
   }
 
@@ -39,112 +36,112 @@ public class InfosmeImpl implements Infosme {
     }
   }
 
-  public void addSmsc(Smsc smsc) throws AdminException{
-    if(smsc.getSmscId() == null) {
+  public void addSmsc(String smscId) throws AdminException{
+    if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciSmsc);
     configOp.setOp(ConfigOpId.coAdd);
-    configOp.setObjId(smsc.getSmscId());
+    configOp.setObjId(smscId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void removeSmsc(Smsc smsc) throws AdminException {
-    if(smsc.getSmscId() == null) {
+  public void removeSmsc(String smscId) throws AdminException {
+    if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciSmsc);
     configOp.setOp(ConfigOpId.coRemove);
-    configOp.setObjId(smsc.getSmscId());
+    configOp.setObjId(smscId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void updateSmsc(Smsc smsc) throws AdminException {
-    if(smsc.getSmscId() == null) {
+  public void updateSmsc(String smscId) throws AdminException {
+    if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciSmsc);
     configOp.setOp(ConfigOpId.coUpdate);
-    configOp.setObjId(smsc.getSmscId());
+    configOp.setObjId(smscId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void addRegion(Region region) throws AdminException {
-    if(region.getRegionId() == null) {
+  public void addRegion(String regionId) throws AdminException {
+    if(regionId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRegion);
     configOp.setOp(ConfigOpId.coAdd);
-    configOp.setObjId(region.getRegionId());
+    configOp.setObjId(regionId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void updateRegion(Region region) throws AdminException {
-    if(region.getRegionId() == null) {
+  public void updateRegion(String regionId) throws AdminException {
+    if(regionId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRegion);
     configOp.setOp(ConfigOpId.coUpdate);
-    configOp.setObjId(region.getRegionId());
+    configOp.setObjId(regionId);
     ConfigOpResult r = client.send(configOp);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void removeRegion(Region region) throws AdminException {
-    if(region.getRegionId() == null) {
+  public void removeRegion(String regionId) throws AdminException {
+    if(regionId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRegion);
     configOp.setOp(ConfigOpId.coRemove);
-    configOp.setObjId(region.getRegionId());
+    configOp.setObjId(regionId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void addRetryPolicy(RetryPolicy policy) throws AdminException {
-    if(policy.getPolicyId() == null) {
+  public void addRetryPolicy(String policyId) throws AdminException {
+    if(policyId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRetry);
     configOp.setOp(ConfigOpId.coAdd);
-    configOp.setObjId(policy.getPolicyId());
+    configOp.setObjId(policyId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void updateRetryPolicy(RetryPolicy policy) throws AdminException {
-    if(policy.getPolicyId() == null) {
+  public void updateRetryPolicy(String policyId) throws AdminException {
+    if(policyId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRetry);
     configOp.setOp(ConfigOpId.coUpdate);
-    configOp.setObjId(policy.getPolicyId());
+    configOp.setObjId(policyId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void removeRetryPolicy(RetryPolicy policy) throws AdminException {
-    if(policy.getPolicyId() == null) {
+  public void removeRetryPolicy(String policyId) throws AdminException {
+    if(policyId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRetry);
     configOp.setOp(ConfigOpId.coRemove);
-    configOp.setObjId(policy.getPolicyId());
+    configOp.setObjId(policyId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void setDefaultSmsc(Smsc smsc) throws AdminException {
-    if(smsc.getSmscId() == null) {
+  public void setDefaultSmsc(String smscId) throws AdminException {
+    if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     SetDefaultSmsc s = new SetDefaultSmsc();
-    s.setId(smsc.getSmscId());
+    s.setId(smscId);
     checkResponse(client.send(s).getStatus());
   }
 
@@ -156,7 +153,7 @@ public class InfosmeImpl implements Infosme {
     int i = 0;
     for(Category category : categories) {
       CategoryInfo c = new CategoryInfo();
-      c.setLevel(category.getLevel().toString());   //todo undefined!
+      c.setLevel(category.getLevel());
       c.setName(category.getName());
       cs[i] = c;
       i++;
@@ -177,18 +174,29 @@ public class InfosmeImpl implements Infosme {
       List<Category> result = new ArrayList<Category>(cs.length);
       for(CategoryInfo ci : cs) {
         Category category = new Category();
-        category.setLevel(ci.getLevel() != null ? Category.Level.valueOf(ci.getLevel()) : null);   //todo undefined!
+        category.setLevel(ci.getLevel());
         category.setName(ci.getName());
         result.add(category);
       }
       return result;
     }else {
       return Collections.emptyList();
-    }                   
+    }
   }
 
   public boolean isOnline() throws AdminException {
     return client.isConnected();
   }
+
+  @SuppressWarnings({"EmptyCatchBlock"})
+  public void shutdown() {
+    if(client != null) {
+      try{         
+        client.shutdown();
+      }catch (Exception e){}
+    }
+  }
+
+
 
 }

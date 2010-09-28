@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.web;
+package mobi.eyeline.informer.admin;
 
 /**
  * Ошибка при инициализации приложения

@@ -18,7 +18,7 @@ public class UsersManager {
 
   private final ConfigFileManager<UsersSettings> cfgFileManager;
 
-  public UsersManager(File configFile, File backupDir, FileSystem fs) throws AdminException {
+  public UsersManager(File configFile, File backupDir, FileSystem fs) {
     cfgFileManager = new ConfigFileManager<UsersSettings>(configFile, backupDir, fs, new UsersConfig());
   }
 

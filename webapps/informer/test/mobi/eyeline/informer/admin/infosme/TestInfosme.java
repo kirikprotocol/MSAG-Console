@@ -1,10 +1,6 @@
 package mobi.eyeline.informer.admin.infosme;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.categories.Category;
-import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
-import mobi.eyeline.informer.admin.smsc.Smsc;
 
 import java.util.List;
 
@@ -28,74 +24,74 @@ public class TestInfosme implements Infosme{
     this.categoriesHelper = new TestCategoriesHelper();
   }
 
-  public void addSmsc(Smsc smsc) throws AdminException {
-    if(smsc.getSmscId() == null) {
+  public void addSmsc(String smscId) throws AdminException {
+    if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    smscHelper.add(smsc.getSmscId());
+    smscHelper.add(smscId);
   }
 
-  public void removeSmsc(Smsc smsc) throws AdminException {
-    if(smsc.getSmscId() == null) {
+  public void removeSmsc(String smscId) throws AdminException {
+    if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    smscHelper.remove(smsc.getSmscId());
+    smscHelper.remove(smscId);
   }
 
-  public void updateSmsc(Smsc smsc) throws AdminException {
-    if(smsc.getSmscId() == null) {
+  public void updateSmsc(String smscId) throws AdminException {
+    if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    smscHelper.update(smsc.getSmscId());
+    smscHelper.update(smscId);
   }
 
-  public void addRegion(Region region) throws AdminException {
-    if(region.getRegionId() == null) {
+  public void addRegion(String regionId) throws AdminException {
+    if(regionId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    regionHelper.add(region.getRegionId());
+    regionHelper.add(regionId);
   }
 
-  public void updateRegion(Region region) throws AdminException {
-    if(region.getRegionId() == null) {
+  public void updateRegion(String regionId) throws AdminException {
+    if(regionId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    regionHelper.update(region.getRegionId());
+    regionHelper.update(regionId);
   }
 
-  public void removeRegion(Region region) throws AdminException {
-    if(region.getRegionId() == null) {
+  public void removeRegion(String regionId) throws AdminException {
+    if(regionId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    regionHelper.remove(region.getRegionId());
+    regionHelper.remove(regionId);
   }
 
-  public void addRetryPolicy(RetryPolicy policy) throws AdminException {
-    if(policy.getPolicyId() == null) {
+  public void addRetryPolicy(String policyId) throws AdminException {
+    if(policyId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    retryHelper.add(policy.getPolicyId());
+    retryHelper.add(policyId);
   }
 
-  public void updateRetryPolicy(RetryPolicy policy) throws AdminException {
-    if(policy.getPolicyId() == null) {
+  public void updateRetryPolicy(String policyId) throws AdminException {
+    if(policyId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    retryHelper.update(policy.getPolicyId());
+    retryHelper.update(policyId);
   }
 
-  public void removeRetryPolicy(RetryPolicy policy) throws AdminException {
-    if(policy.getPolicyId() == null) {
+  public void removeRetryPolicy(String policyId) throws AdminException {
+    if(policyId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    retryHelper.remove(policy.getPolicyId());
+    retryHelper.remove(policyId);
   }
 
-  public void setDefaultSmsc(Smsc smsc) throws AdminException {
-    if(smsc.getSmscId() == null) {
+  public void setDefaultSmsc(String smscId) throws AdminException {
+    if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
-    smscHelper.setDefaultSmsc(smsc.getSmscId());
+    smscHelper.setDefaultSmsc(smscId);
   }
 
   public void setCategories(List<Category> categories) throws AdminException {
@@ -109,7 +105,13 @@ public class TestInfosme implements Infosme{
     return categoriesHelper.getCategories();
   }
 
+  private boolean online = true;
+
   public boolean isOnline() throws AdminException {
-    return true;
+    return online;
+  }
+
+  public void shutdown() {
+    online = false;
   }
 }

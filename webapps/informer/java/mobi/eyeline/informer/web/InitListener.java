@@ -21,6 +21,8 @@ public class InitListener implements ServletContextListener {
 
   private static final Logger logger = Logger.getLogger(InitListener.class);
 
+  private WebContext context;
+
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
       System.setProperty("java.security.auth.login.config",
@@ -36,8 +38,10 @@ public class InitListener implements ServletContextListener {
 
       WebContext.init(webXml, webConfig, appBaseDir);
 
+      context = WebContext.getInstance();
+
       servletContextEvent.getServletContext().setAttribute("informer-version", readVersion(servletContextEvent.getServletContext().getRealPath("META-INF")));
-      
+
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e, e);
@@ -46,7 +50,9 @@ public class InitListener implements ServletContextListener {
   }
 
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
-
+    if(context != null) {
+      context.shutdown();
+    }
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})

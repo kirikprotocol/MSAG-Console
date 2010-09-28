@@ -32,11 +32,16 @@ public class InformerConfigManagerTest {
     oldS.setHost("host");
     oldS.setAdminPort(1212);
     oldS.setDeliveriesPort(1213);
+    oldS.setPersHost("host1");
+    oldS.setPersPort(1231);
+
     informerConfigManager.updateSettings(oldS);
     InformerSettings newS = informerConfigManager.getConfigSettings();
     assertEquals(oldS.getAdminPort(), newS.getAdminPort());
     assertEquals(oldS.getHost(), newS.getHost());
     assertEquals(oldS.getDeliveriesPort(), newS.getDeliveriesPort());
+    assertEquals(oldS.getPersHost(), newS.getPersHost());
+    assertEquals(oldS.getPersPort(), newS.getPersPort());
   }
 
 

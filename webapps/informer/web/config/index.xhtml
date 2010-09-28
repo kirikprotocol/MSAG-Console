@@ -25,24 +25,38 @@
           <tr:commandLink text="#{msg['reset.button']}" action="#{config.reset}" immediate="true"/>
         </eye:button>
       </eye:buttons>
+      
+      <eye:collapsingGroup label="#{msg['config.informer.section']}" opened="true">
+        <tr:panelFormLayout>
+          <tr:panelLabelAndMessage label="#{informerSettings.host}">
+            <tr:inputText value="#{config.settings.host}" simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{informerSettings.adminPort}">
+            <tr:inputText value="#{config.settings.adminPort}" simple="true" required="true">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{informerSettings.deliveriesPort}">
+            <tr:inputText value="#{config.settings.deliveriesPort}" simple="true" required="true">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+        </tr:panelFormLayout>
+      </eye:collapsingGroup>
 
-      <tr:panelFormLayout inlineStyle="padding:10px">
+      <eye:collapsingGroup label="#{msg['config.pvss.section']}" opened="true">
+        <tr:panelFormLayout>
+          <tr:panelLabelAndMessage label="#{informerSettings.persHost}">
+            <tr:inputText value="#{config.settings.persHost}" simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{informerSettings.persPort}">
+            <tr:inputText value="#{config.settings.persPort}" simple="true" required="true">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+        </tr:panelFormLayout>
+      </eye:collapsingGroup>
 
-        <tr:panelLabelAndMessage label="#{informerSettings.host}">
-          <tr:inputText value="#{config.settings.host}" simple="true" required="true"/>
-        </tr:panelLabelAndMessage>
-        <tr:panelLabelAndMessage label="#{informerSettings.adminPort}">
-          <tr:inputText value="#{config.settings.adminPort}" simple="true" required="true">
-            <eye:validatePort/>
-          </tr:inputText>
-        </tr:panelLabelAndMessage>
-        <tr:panelLabelAndMessage label="#{informerSettings.deliveriesPort}">
-          <tr:inputText value="#{config.settings.deliveriesPort}" simple="true" required="true">
-            <eye:validatePort/>
-          </tr:inputText>
-        </tr:panelLabelAndMessage>
-
-      </tr:panelFormLayout>
 
       <eye:buttons>
         <eye:space/>

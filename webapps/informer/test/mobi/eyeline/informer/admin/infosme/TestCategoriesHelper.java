@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin.infosme;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.categories.Category;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,8 +13,8 @@ public class TestCategoriesHelper {
   private List<Category> categories = new LinkedList<Category>();
 
   public TestCategoriesHelper() {
-    categories.add(new Category().setName("ru.novosoft.informer").setLevel(Category.Level.FATAL));
-    categories.add(new Category().setName("ru.novosoft.informer.admin").setLevel(null));
+    categories.add(new Category().setName("ru.novosoft.informer").setLevel("FATAL"));
+    categories.add(new Category().setName("ru.novosoft.informer.admin").setLevel("INFO"));
   }
 
   public List<Category> getCategories()  throws AdminException {

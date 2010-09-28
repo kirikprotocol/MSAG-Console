@@ -10,9 +10,7 @@ import mobi.eyeline.informer.admin.users.UsersSettings;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
-import org.apache.log4j.Logger;
 
-import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,8 +22,6 @@ import java.util.*;
  * @author Aleksandr Khalitov
  */
 public class JournalController extends InformerController{
-
-  private final static Logger logger = Logger.getLogger(JournalController.class);
 
   private final Journal journal;
   private final UsersSettings users;
@@ -176,37 +172,27 @@ public class JournalController extends InformerController{
     };
   }
 
-
-  public String csv() {
+  @Override
+  protected void _download(PrintWriter writer) throws IOException {
     try{
       loadRecord();
     }catch (AdminException e){
       addError(e);
       records = Collections.emptyList();
     }
-    try{
-      downloadFile("journal.csv", "application/csv", new DownloadOutputter() {
-        public void output(PrintWriter writer) throws IOException {
-          String tmp;
-          SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-          Locale locale =  getLocale();
-          for(JournalRecord r : records) {
-            writer.println(new StringBuilder().
-                append(r.getUser() == null ? "":r.getUser().replace(",","\\,")).append(',').
-                append(sdf.format(new Date(r.getTime()))).append(',').
-                append(r.getSubject() == null ? "" : r.getSubject().getSubject(locale).replace(",","\\,")).append(',').
-                append(r.getType() == null ? "" : r.getType().toString().replace(",","\\,")).append(',').
-                append((tmp = r.getDescription(locale)) == null ? "" : tmp.replace(",","\\,")).
-                toString());
-          }
-        }
-      });
-    }catch (Exception e){
-      e.printStackTrace();//todo
-      logger.error(e,e);
-      addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "journal.download.error");
+    super._download(writer);
+    String tmp;
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    Locale locale =  getLocale();
+    for(JournalRecord r : records) {
+      writer.println(new StringBuilder().
+          append(r.getUser() == null ? "":r.getUser().replace(",","\\,")).append(',').
+          append(sdf.format(new Date(r.getTime()))).append(',').
+          append(r.getSubject() == null ? "" : r.getSubject().getSubject(locale).replace(",","\\,")).append(',').
+          append(r.getType() == null ? "" : r.getType().toString().replace(",","\\,")).append(',').
+          append((tmp = r.getDescription(locale)) == null ? "" : tmp.replace(",","\\,")).
+          toString());
     }
-    return null;
   }
 
 

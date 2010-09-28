@@ -3,7 +3,6 @@ package mobi.eyeline.informer.admin;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigSection;
-import mobi.eyeline.informer.web.InitException;
 
 import java.io.File;
 import java.io.FileInputStream;

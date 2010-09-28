@@ -56,7 +56,9 @@
       <eye:buttons>
         <eye:space/>
         <eye:button>
-          <h:commandLink value="#{msg['download.button']}" action="#{journal.csv}"/>
+          <h:commandLink value="#{msg['download.button']}">
+            <tr:fileDownloadActionListener method="#{journal.download}" contentType="application/csv" filename="journal.csv"/>
+          </h:commandLink>
         </eye:button>
       </eye:buttons>
     </h:form>

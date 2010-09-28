@@ -28,7 +28,7 @@ class InfosmeClient extends ClientConnection {
   private final Map<Integer, ResponseListener> listeners = new HashMap<Integer, ResponseListener>();
   private boolean connected;
 
-  InfosmeClient(String host, int port) throws AdminException {
+  InfosmeClient(String host, int port) {
     Properties initProps = new Properties();
     initProps.setProperty("informer.host", host);
     initProps.setProperty("informer.port", port + "");
@@ -132,6 +132,12 @@ class InfosmeClient extends ClientConnection {
   protected SetDefaultSmscResp send(SetDefaultSmsc req) throws AdminException {
     return sendPdu(req, new SetDefaultSmscResp());
   }
+
+  public void shutdown() {
+    connected = false;
+    super.shutdown();
+  }
+
 
 
   private static class ResponseListener {

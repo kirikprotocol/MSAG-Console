@@ -6,4 +6,9 @@
     <param name="deliveriesPort" type="string">8088</param>
   </section>
 
+  <section name="pvss">
+    <param name="host" type="string">niagara</param>
+    <param name="port" type="string">25403</param>
+  </section>
+
 </config>

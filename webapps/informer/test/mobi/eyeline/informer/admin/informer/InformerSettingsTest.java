@@ -37,6 +37,21 @@ public class InformerSettingsTest {
   }
 
   @Test
+  public void persHost() throws AdminException{
+    try {
+      cs.setPersHost("");
+      assertTrue(false);
+    } catch (AdminException e) {}
+    try {
+      cs.setPersHost(null);
+      assertTrue(false);
+    } catch (AdminException e) {}
+
+    cs.setPersHost("host");
+    assertEquals("host", cs.getPersHost());
+  }
+
+  @Test
   public void adminPort() throws AdminException{
     try {
       cs.setAdminPort(-1);
@@ -49,6 +64,21 @@ public class InformerSettingsTest {
 
     cs.setAdminPort(1);
     assertEquals(1, cs.getAdminPort());
+  }
+
+  @Test
+  public void persPort() throws AdminException{
+    try {
+      cs.setPersPort(-1);
+      assertTrue(false);
+    } catch (AdminException e) {}
+    try {
+      cs.setPersPort(65536);
+      assertTrue(false);
+    } catch (AdminException e) {}
+
+    cs.setPersPort(1);
+    assertEquals(1, cs.getPersPort());
   }
 
   @Test
