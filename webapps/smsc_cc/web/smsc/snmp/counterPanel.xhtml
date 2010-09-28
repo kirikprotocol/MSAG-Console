@@ -21,28 +21,27 @@
               </tr:commandLink>
             </h:panelGroup>
         </f:facet>
+            <h:panelGrid columns="2" style="width:300px;" columnClasses="column0WidthRight,column100Width">
+                <h:outputLabel value="#{snmpCounterBundle.warning}"/>
+                <tr:inputText value="#{snmpObjField.warning}" required="true" simple="true" contentStyle="width:50px;">
+                    <tr:validateLongRange minimum="0"/>
+                </tr:inputText>
 
-            <tr:panelLabelAndMessage label="#{snmpCounterBundle.warning}">
-                  <tr:inputText value="#{snmpObjField.warning}" required="true" simple="true">
-                    <eye:validatePositive/>
-                  </tr:inputText>
-            </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{snmpCounterBundle.minor}">
-                  <tr:inputText value="#{snmpObjField.minor}" required="true" simple="true">
-                    <eye:validatePositive/>
-                  </tr:inputText>
-            </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{snmpCounterBundle.major}">
-                  <tr:inputText value="#{snmpObjField.major}" required="true" simple="true">
-                    <eye:validatePositive/>
-                  </tr:inputText>
-            </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{snmpCounterBundle.critical}">
-                  <tr:inputText value="#{snmpObjField.critical}" required="true" simple="true">
-                    <eye:validatePositive/>
-                  </tr:inputText>
-            </tr:panelLabelAndMessage>
-        
+                <h:outputLabel value="#{snmpCounterBundle.minor}"/>
+                <tr:inputText value="#{snmpObjField.minor}" required="true" simple="true" contentStyle="width:50px;">
+                    <tr:validateLongRange minimum="0"/>
+                </tr:inputText>
+
+                <h:outputLabel value="#{snmpCounterBundle.major}"/>
+                <tr:inputText value="#{snmpObjField.major}" required="true" simple="true" contentStyle="width:50px;">
+                    <tr:validateLongRange minimum="0"/>
+                </tr:inputText>
+
+                <h:outputLabel value="#{snmpCounterBundle.critical}"/>
+                <tr:inputText value="#{snmpObjField.critical}" required="true" simple="true" contentStyle="width:50px;">
+                    <tr:validateLongRange minimum="0"/>
+                </tr:inputText>            
+            </h:panelGrid>
     </eye:collapsingGroup>
 </ui:composition>
 

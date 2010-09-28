@@ -52,9 +52,7 @@ public class SnmpObjectWrapper {
     return obj;
   }
 
-  public void setObj(SnmpObject obj) {
-    this.obj = obj;
-  }
+
 
   public String getName() {
     return name;
@@ -242,4 +240,4 @@ public class SnmpObjectWrapper {
     return null;
   }
 
-}
+  }

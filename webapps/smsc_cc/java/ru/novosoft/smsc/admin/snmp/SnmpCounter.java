@@ -11,10 +11,10 @@ public final class SnmpCounter {
 
   private static final ValidationHelper vh = new ValidationHelper(SnmpCounter.class.getCanonicalName());
 
-  private final int warning;
-  private final int minor;
-  private final int major;
-  private final int critical;
+  private int warning;
+  private int minor;
+  private int major;
+  private int critical;
 
   public SnmpCounter(int warning, int minor, int major, int critical) throws AdminException {
     vh.checkGreaterOrEqualsTo("warning", warning, 0);
@@ -48,6 +48,27 @@ public final class SnmpCounter {
 
   public int getCritical() {
     return critical;
+  }
+
+
+  public void setWarning(int warning) throws AdminException {
+    vh.checkGreaterOrEqualsTo("warning", warning, 0);
+    this.warning = warning;
+  }
+
+  public void setMinor(int minor) throws AdminException {
+    vh.checkGreaterOrEqualsTo("minor", minor, 0);
+    this.minor = minor;
+  }
+
+  public void setMajor(int major) throws AdminException {
+    vh.checkGreaterOrEqualsTo("major", major, 0);
+    this.major = major;
+  }
+
+  public void setCritical(int critical) throws AdminException {
+    vh.checkGreaterOrEqualsTo("critical", critical, 0);
+    this.critical = critical;
   }
 
   public boolean equals(Object o) {
