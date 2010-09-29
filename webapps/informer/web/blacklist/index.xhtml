@@ -26,7 +26,14 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['submit.button']}"/>
+              <tr:commandLink text="#{msg['add.button']}">
+                <f:param name="file_add" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}">
+                <f:param name="file_remove" value="true"/>
+              </tr:commandLink>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -41,7 +48,14 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['submit.button']}"/>
+              <tr:commandLink text="#{msg['add.button']}">
+                <f:param name="file_add" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}">
+                <f:param name="file_remove" value="true"/>
+              </tr:commandLink>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -56,7 +70,19 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['submit.button']}"/>
+              <tr:commandLink text="#{msg['add.button']}">
+                <f:param name="file_add" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['add.button']}">
+                <f:param name="file_add" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}">
+                <f:param name="file_remove" value="true"/>
+              </tr:commandLink>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -78,7 +104,7 @@
               <tr:inputText value="#{blacklist.msisdn}" simple="true"/>
             </tr:panelLabelAndMessage>
             <h:panelGroup>
-              <tr:outputText inlineStyle="font-weight:bold" value="#{blacklist.msisdn} #{msg['blacklist.contains']}" rendered="#{blacklist.init and blacklist.contains}"/>
+              <tr:outputText inlineStyle="font-weight:bold;" value="#{blacklist.msisdn} #{msg['blacklist.contains']}" rendered="#{blacklist.init and blacklist.contains}"/>
               <tr:outputText inlineStyle="font-weight:bold" value="#{blacklist.msisdn} #{msg['blacklist.not.contains']}" rendered="#{blacklist.init and !blacklist.contains}"/>
             </h:panelGroup>
           </tr:panelFormLayout>
@@ -89,7 +115,7 @@
         <h:panelGrid columns="1">
 
           <tr:outputText inlineStyle="#{(blacklist.uploaded == 0) ? 'display:none' : 'font-weight:bold'}" value="#{msg['blacklist.uploaded']} #{blacklist.uploaded}"/>
-          <tr:outputText inlineStyle="#{(blacklist.unrecognized == 0) ? 'display:none' : 'font-weight:bold'}" value="#{msg['blacklist.not.uploaded']} #{blacklist.unrecognized}"/>
+          <tr:outputText inlineStyle="#{(blacklist.unrecognized == 0) ? 'display:none' : 'font-weight:bold; color:red;'}" value="#{msg['blacklist.not.uploaded']} #{blacklist.unrecognized}"/>
 
           <tr:panelFormLayout>
             <tr:panelLabelAndMessage label="#{msg['informer.upload.label']}">
@@ -113,7 +139,14 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['submit.button']}"/>
+              <tr:commandLink text="#{msg['add.button']}">
+                <f:param name="file_add" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}">
+                <f:param name="file_remove" value="true"/>
+              </tr:commandLink>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -128,7 +161,14 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['submit.button']}"/>
+              <tr:commandLink text="#{msg['add.button']}">
+                <f:param name="file_add" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}">
+                <f:param name="file_remove" value="true"/>
+              </tr:commandLink>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -143,7 +183,14 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['submit.button']}"/>
+              <tr:commandLink text="#{msg['add.button']}">
+                <f:param name="file_add" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}">
+                <f:param name="file_remove" value="true"/>
+              </tr:commandLink>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>

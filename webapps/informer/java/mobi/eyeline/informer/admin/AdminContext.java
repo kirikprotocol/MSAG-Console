@@ -141,6 +141,10 @@ public class AdminContext {
     blacklistManager.remove(msisdn);
   }
 
+  public void removeFromBlacklist(Collection<String> msisdns) throws AdminException{
+    blacklistManager.remove(msisdns);
+  }
+
   public boolean blacklistContains(String msisdn) throws AdminException{
     return blacklistManager.contains(msisdn);
   }

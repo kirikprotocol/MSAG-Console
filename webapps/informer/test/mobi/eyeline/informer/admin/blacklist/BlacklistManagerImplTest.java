@@ -10,6 +10,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import static org.junit.Assert.assertFalse;
@@ -80,14 +81,14 @@ public class BlacklistManagerImplTest {
 
   @Test
   public void addAllGetRemove() throws AdminException {
-    manager.add(new ArrayList<String>(2){{
+    List<String> list = new ArrayList<String>(2){{
       add("+79529223755"); add("+79139489906");
-    }});
+    }};
+    manager.add(list);
     assertTrue(manager.contains("+79139489906"));
     assertTrue(manager.contains("+79529223755"));
 
-    manager.remove("+79139489906");
-    manager.remove("+79529223755");
+    manager.remove(list);
 
     assertFalse(manager.contains("+79139489906"));
     assertFalse(manager.contains("+79529223755"));

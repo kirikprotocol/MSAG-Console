@@ -113,4 +113,23 @@ public class Journal {
     informer.logChanges(this, oldSettings, newSettings, user);
   }
 
+  /**
+   * Добавляет в журнал запись о новом запрещённом номере
+   * @param address адрес
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
+   */
+  public void logAddBlacklist(String address, String user) throws AdminException {
+    addRecord(JournalRecord.Type.ADD, Subject.BLACKLIST, user, "blacklist_added", address);
+  }
+  /**
+   * Добавляет в журнал запись об удалении из списка запрещённых номеров
+   * @param address адрес
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
+   */
+  public void logRemoveBlacklist(String address, String user) throws AdminException {
+    addRecord(JournalRecord.Type.REMOVE, Subject.BLACKLIST, user, "blacklist_removed", address);
+  }
+
 }

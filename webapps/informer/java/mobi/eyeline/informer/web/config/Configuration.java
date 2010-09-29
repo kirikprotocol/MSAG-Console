@@ -78,16 +78,27 @@ public class Configuration {
     return journal;
   }
 
-  public void addInBlacklist(Collection<String> msisdn) throws AdminException {
-    context.addInBlacklist(msisdn);
+  public void addInBlacklist(Collection<String> msisdns, String user) throws AdminException {
+    context.addInBlacklist(msisdns);
+    for(String msisdn: msisdns) {
+      journal.logAddBlacklist(msisdn, user);
+    }
   }
 
-  public void addInBlacklist(String msisdn) throws AdminException {
+  public void addInBlacklist(String msisdn, String user) throws AdminException {
     context.addInBlacklist(msisdn);
+    journal.logAddBlacklist(msisdn, user);
   }
 
-  public void removeFromBlacklist(String msisdn) throws AdminException {
+  public void removeFromBlacklist(String msisdn, String user) throws AdminException {
     context.removeFromBlacklist(msisdn);
+  }
+
+  public void removeFromBlacklist(Collection<String> msisdns, String user) throws AdminException {
+    context.removeFromBlacklist(msisdns);
+    for(String msisdn : msisdns) {
+      journal.logAddBlacklist(msisdn, user);
+    }
   }
 
   public boolean blacklistContains(String msisdn) throws AdminException {

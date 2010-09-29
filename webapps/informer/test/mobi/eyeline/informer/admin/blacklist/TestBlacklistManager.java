@@ -25,7 +25,20 @@ public class TestBlacklistManager implements BlacklistManager{
       throw new IllegalArgumentException("Args are null");
     }
     for(String m : msisdn) {
-      blacklist.add(convertNumber(m));
+      if(m != null && (m = m.trim()).length() > 0) {
+        blacklist.add(convertNumber(m));
+      }
+    }
+  }
+
+  public synchronized void remove(Collection<String> msisdn) throws AdminException {
+    if(msisdn == null) {
+      throw new IllegalArgumentException("Args are null");
+    }
+    for(String m : msisdn) {
+      if(m != null && (m = m.trim()).length() > 0) {
+        blacklist.remove(convertNumber(m));
+      }
     }
   }
 

@@ -50,7 +50,7 @@ public class BlackListManagerImpl implements BlacklistManager{
 
   public void add(Collection<String> msisdns) throws AdminException {
     if(msisdns == null) {
-      throw new IllegalArgumentException("Argument is empty: "+msisdns);
+      throw new IllegalArgumentException("Argument is null");
     }
     PersonalizationClient client = null;
     try {
@@ -85,6 +85,33 @@ public class BlackListManagerImpl implements BlacklistManager{
       try{
         lock.writeLock().lock();
         client.deleteProperty(msisdn, INFOSME_BLACK_LIST);
+      }finally {
+        lock.writeLock().unlock();
+
+      }
+    } catch (PersonalizationClientException e) {
+      throw new BlacklistException("interaction_error", e);
+    } finally {
+      close(client);
+    }
+  }
+
+  public void remove(Collection<String> msisdns) throws AdminException {
+    if(msisdns == null) {
+      throw new IllegalArgumentException("Argument is null");
+    }
+    PersonalizationClient client = null;
+    try {
+      client = pool.getClient();
+
+      try{
+        lock.writeLock().lock();
+        for(String msisdn: msisdns) {
+          if(msisdn != null && (msisdn = msisdn.trim()).length() != 0) {
+            msisdn = convertNumber(msisdn);
+            client.deleteProperty(msisdn, INFOSME_BLACK_LIST);
+          }
+        }
       }finally {
         lock.writeLock().unlock();
 

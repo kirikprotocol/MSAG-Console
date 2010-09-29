@@ -48,7 +48,7 @@ public class BlackListController extends InformerController{
   public String add() {
     if(validateMsisdn()) {
       try {
-        getConfiguration().addInBlacklist(msisdn);
+        getConfiguration().addInBlacklist(msisdn, getUserName());
         contains = true;
       } catch (AdminException e) {
         addError(e);
@@ -60,7 +60,7 @@ public class BlackListController extends InformerController{
   public String remove() {
     if(validateMsisdn()) {
       try {
-        getConfiguration().removeFromBlacklist(msisdn);
+        getConfiguration().removeFromBlacklist(msisdn, getUserName());
         contains = false;
       } catch (AdminException e) {
         addError(e);
@@ -104,6 +104,7 @@ public class BlackListController extends InformerController{
   @Override
   protected void _uploaded(BufferedReader reader) throws IOException {
     super._uploaded(reader);
+    boolean add = getRequestParameter("file_add") != null;
     String line;
     List<String> list = new ArrayList<String>(1000);
     try{
@@ -111,17 +112,26 @@ public class BlackListController extends InformerController{
         line = line.trim();
         if(!Address.validate(line)) {
           unrecognized++;
+          continue;
         }
         list.add(line);
         if(list.size() == 1000) {
-          getConfiguration().addInBlacklist(list);
+          if(add) {
+            getConfiguration().addInBlacklist(list, getUserName());
+          }else {
+            getConfiguration().removeFromBlacklist(list, getUserName());
+          }
           uploaded+=1000;
           list.clear();
         }
       }
       if(!list.isEmpty()) {
         int s = list.size();
-        getConfiguration().addInBlacklist(list);
+        if(add) {
+          getConfiguration().addInBlacklist(list, getUserName());
+        }else {
+          getConfiguration().removeFromBlacklist(list, getUserName());
+        }
         uploaded+=s;
       }
     }catch (AdminException e){

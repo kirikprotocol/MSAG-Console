@@ -12,7 +12,8 @@ import java.util.ResourceBundle;
 public enum Subject {
 
   USERS("subject.user"),
-  CONFIG("subject.config");
+  CONFIG("subject.config"),
+  BLACKLIST("subject.blacklist");
 
   private static Map<String, Subject> map = new HashMap<String, Subject>(values().length) {      {
       for(Subject s : Subject.values()) {
