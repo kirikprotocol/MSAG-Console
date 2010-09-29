@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.admin.acl.TestAclManager;
-import ru.novosoft.smsc.admin.alias.AliasManagerTest;
+import ru.novosoft.smsc.admin.alias.AliasManagerImplTest;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfigTest;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
@@ -69,7 +69,7 @@ public class TestAdminContext extends AdminContext {
     File smscDir = new File(servicesDir, "SMSC1/conf");
     smscDir.mkdirs();
     TestUtils.exportResource(SmscManagerTest.class.getResourceAsStream("config.xml"), new File(smscDir, "config.xml"), false);
-    TestUtils.exportResource(AliasManagerTest.class.getResourceAsStream("aliases.bin"), new File(smscDir, "aliases.bin"), false);
+    TestUtils.exportResource(AliasManagerImplTest.class.getResourceAsStream("aliases.bin"), new File(smscDir, "aliases.bin"), false);
     TestUtils.exportResource(ClosedGroupManagerTest.class.getResourceAsStream("ClosedGroups.xml"), new File(smscDir, "ClosedGroups.xml"), false);
     TestUtils.exportResource(FraudManagerTest.class.getResourceAsStream("fraud.xml"), new File(smscDir, "fraud.xml"), false);
     TestUtils.exportResource(MapLimitManagerTest.class.getResourceAsStream("maplimits.xml"), new File(smscDir, "maplimits.xml"), false);

@@ -2,15 +2,11 @@ package ru.novosoft.smsc.admin.smsc;
 
 import org.junit.*;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.util.config.XmlConfig;
-import ru.novosoft.smsc.util.config.XmlConfigException;
 import testutils.TestUtils;
 
 import java.io.File;

@@ -15,7 +15,7 @@ import java.util.Iterator;
  *
  * @author Artem Snopkov
  */
-public class TestAliasManager extends AliasManager {
+public class TestAliasManager extends AliasManagerImpl {
 
   private static final int MSG_SIZE = 48; //1+(1+1+21)+(1+1+21)+1
 

@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.acl.AclManagerImpl;
 import ru.novosoft.smsc.admin.alias.AliasManager;
+import ru.novosoft.smsc.admin.alias.AliasManagerImpl;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
@@ -104,7 +105,7 @@ public class AdminContext {
     if (ArchiveDaemonManager.isDaemonDeployed(serviceManager))
       archiveDaemonManager = new ArchiveDaemonManager(serviceManager, fileSystem);
 
-    aliasManager = new AliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
+    aliasManager = new AliasManagerImpl(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
     rescheduleManager = new RescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 

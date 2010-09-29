@@ -6,7 +6,6 @@ import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
@@ -23,13 +22,13 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class AliasManagerTest {
+public class AliasManagerImplTest {
 
   private static File aliasesFile;
 
   @BeforeClass
   public static void beforeClass() throws IOException {
-    aliasesFile = TestUtils.exportResourceToRandomFile(AliasManagerTest.class.getResourceAsStream("aliases.bin"), ".aliases");
+    aliasesFile = TestUtils.exportResourceToRandomFile(AliasManagerImplTest.class.getResourceAsStream("aliases.bin"), ".aliases");
   }
 
   @AfterClass
@@ -41,7 +40,7 @@ public class AliasManagerTest {
   @Test
   public void testGetAliases() throws Exception {
     ClusterController cc = new TestClusterControllerStub();
-    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
+    AliasManagerImpl manager = new AliasManagerImpl(aliasesFile, cc, FileSystem.getFSForSingleInst());
 
     AliasSet set = null;
     try {
@@ -79,7 +78,7 @@ public class AliasManagerTest {
   @Test
   public void testAddAlias() throws AdminException {
     TestClusterControllerStub cc = new TestClusterControllerStub();
-    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
+    AliasManagerImpl manager = new AliasManagerImpl(aliasesFile, cc, FileSystem.getFSForSingleInst());
 
     long time = cc.getAliasLastUpdateTime();
 
@@ -91,7 +90,7 @@ public class AliasManagerTest {
   @Test
   public void testRemoveAlias() throws AdminException {
     TestClusterControllerStub cc = new TestClusterControllerStub();
-    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
+    AliasManagerImpl manager = new AliasManagerImpl(aliasesFile, cc, FileSystem.getFSForSingleInst());
 
     long time = cc.getAliasLastUpdateTime();
 
@@ -103,7 +102,7 @@ public class AliasManagerTest {
   @Test
   public void testGetStatusForSmscs() throws AdminException {
     ClusterController cc = new ClusterControllerImpl();
-    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
+    AliasManagerImpl manager = new AliasManagerImpl(aliasesFile, cc, FileSystem.getFSForSingleInst());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
 
@@ -116,7 +115,7 @@ public class AliasManagerTest {
   @Test
   public void nullGetStatusForSmscs() throws AdminException {
     ClusterController cc = new ClusterControllerImpl1();
-    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
+    AliasManagerImpl manager = new AliasManagerImpl(aliasesFile, cc, FileSystem.getFSForSingleInst());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
 
