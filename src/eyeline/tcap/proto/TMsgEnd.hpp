@@ -27,7 +27,7 @@ struct TMsgEnd {
   TCDlgPortion    _dlgPart; //Optional
   TComponentsList _compPart;
 
-  explicit TMsgEnd() : _dstTrId(0)
+  TMsgEnd() : _dstTrId(0)
   { }
   ~TMsgEnd()
   { }
@@ -40,6 +40,11 @@ struct TMsgEnd {
   }
 
   const TCPduAARE * getAARE(void) const
+  {
+    return _dlgPart.getDLG()  ? _dlgPart.getDLG()->getAARE() : NULL;
+  }
+
+  TCPduAARE * getAARE(void)
   {
     return _dlgPart.getDLG()  ? _dlgPart.getDLG()->getAARE() : NULL;
   }

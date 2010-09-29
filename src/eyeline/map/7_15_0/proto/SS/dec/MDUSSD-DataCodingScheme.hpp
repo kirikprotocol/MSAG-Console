@@ -25,8 +25,8 @@ private:
   asn1::ber::DecoderOfOCTSTRTiny::ArrayType  _outVal;
 
 public:
-  explicit MDUSSD_DataCodingScheme(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfOCTSTRTiny(TSGroupBER::getTSRule(use_rule))
+  explicit MDUSSD_DataCodingScheme(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfOCTSTRTiny(use_rule)
   { }
   MDUSSD_DataCodingScheme(USSD_DataCodingScheme_t & use_val,
                     TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)

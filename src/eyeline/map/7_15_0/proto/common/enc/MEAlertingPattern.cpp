@@ -13,11 +13,10 @@ namespace enc {
    AlertingPattern ::= OCTET STRING (SIZE (1))
 */
 
-
-void MEAlertingPattern::setValue(const AlertingPattern::value_type & use_val)
+void MEAlertingPattern::setValue(const AlertingPattern & use_val)
   /*throw(std::exception)*/
 {
-  asn1::ber::EncoderOfOCTSTR::setValue((asn1::TSLength)1, &use_val);
+  asn1::ber::EncoderOfOCTSTR::setValue((asn1::TSLength)1, &use_val._value);
 }
 
 }}}}

@@ -26,10 +26,10 @@ AARE-apdu ::= [APPLICATION 1] IMPLICIT SEQUENCE {
   user-information          UserInformation OPTIONAL
 }
 */
-class TEAPduAARE : public asn1::ber::EncoderOfStructure_T<5> {
+class TEAPduAARE : public asn1::ber::EncoderOfPlainStructure_T<5> {
 private:
-  using asn1::ber::EncoderOfStructure_T<5>::addField;
-  using asn1::ber::EncoderOfStructure_T<5>::setField;
+  using asn1::ber::EncoderOfPlainStructure_T<5>::addField;
+  using asn1::ber::EncoderOfPlainStructure_T<5>::setField;
 
   union {
     void *  aligner;
@@ -127,7 +127,7 @@ protected:
   {
     if (!_pUI) {
       _pUI = new (_memUI.buf)TEUserInformation(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfStructure_T<5>::setField(4, *_pUI);
+      asn1::ber::EncoderOfPlainStructure_T<5>::setField(4, *_pUI);
     }
     return _pUI;
   }
@@ -140,9 +140,9 @@ protected:
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 1] IMPLICIT
 
-  explicit TEAPduAARE(const asn1::EncodedOID * app_ctx = 0,
+  TEAPduAARE(const asn1::EncodedOID * app_ctx = 0,
                      TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfStructure_T<5>(asn1::ASTagging(_typeTag, asn1::ASTagging::tagsIMPLICIT),
+    : asn1::ber::EncoderOfPlainStructure_T<5>(asn1::ASTagging(_typeTag, asn1::ASTagging::tagsIMPLICIT),
                                         TSGroupBER::getTSRule(use_rule))
     , _pUI(0), _protoVer(use_rule), _appCtx(use_rule)
     , _ascResult(TDialogueAssociate::dlg_reject_permanent, use_rule)
@@ -151,10 +151,10 @@ public:
     _memUI.aligner = 0;
     if (app_ctx)
       _appCtx.setValue(*app_ctx);
-    asn1::ber::EncoderOfStructure_T<5>::addField(_protoVer);
-    asn1::ber::EncoderOfStructure_T<5>::addField(_appCtx);
-    asn1::ber::EncoderOfStructure_T<5>::addField(_ascResult);
-    asn1::ber::EncoderOfStructure_T<5>::addField(_ascDiagn);
+    asn1::ber::EncoderOfPlainStructure_T<5>::addField(_protoVer);
+    asn1::ber::EncoderOfPlainStructure_T<5>::addField(_appCtx);
+    asn1::ber::EncoderOfPlainStructure_T<5>::addField(_ascResult);
+    asn1::ber::EncoderOfPlainStructure_T<5>::addField(_ascDiagn);
   }
   ~TEAPduAARE()
   {
@@ -189,14 +189,14 @@ public:
     _ascDiagn.setPrvdDiagnostic(use_cause);
   }
 
-  asn1::ber::EncoderOfExternal * addUIValue(const asn1::ASExternal & use_val)
+  void addUIValue(const asn1::ASExternal & use_val) /* throw(std::exception)*/
   {
-    return getUI()->addUIValue(use_val);
+    getUI()->addValue(use_val);
   }
 
-  void addUIList(const tcap::TDlgUserInfoPtrList & ui_list)
+  void addUIList(const tcap::TDlgUserInfoPtrList & ui_list)  /* throw(std::exception)*/
   {
-    return getUI()->addUIList(ui_list);
+    getUI()->addValuesList(ui_list);
   }
 
 };

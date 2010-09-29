@@ -46,8 +46,8 @@ asn1::ber::TypeDecoderAC *
     return &_ussd;
   }
   //if (unique_idx == 2)
-  _uext.setValue(_dVal->_unkExt);
-  return &_uext;
+  _uext.init(getTSRule()).setValue(_dVal->_unkExt);
+  return _uext.get();
 }
 
 

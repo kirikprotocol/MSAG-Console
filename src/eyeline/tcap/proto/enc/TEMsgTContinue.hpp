@@ -22,10 +22,10 @@ Continue ::= [APPLICATION 5] SEQUENCE {
   dialoguePortion  DialoguePortion OPTIONAL,
   components       ComponentPortion OPTIONAL
 } */
-class TETContinue : public asn1::ber::EncoderOfStructure_T<4> {
+class TETContinue : public asn1::ber::EncoderOfPlainStructure_T<4> {
 private:
-  using asn1::ber::EncoderOfStructure_T<4>::addField;
-  using asn1::ber::EncoderOfStructure_T<4>::setField;
+  using asn1::ber::EncoderOfPlainStructure_T<4>::addField;
+  using asn1::ber::EncoderOfPlainStructure_T<4>::setField;
 
   union {
     void * aligner;
@@ -48,7 +48,7 @@ protected:
   {
     if (!_partDlg) {
       _partDlg = new (_memDlg.buf)TEDialoguePortionStructured(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfStructure_T<4>::setField(2, *_partDlg);
+      asn1::ber::EncoderOfPlainStructure_T<4>::setField(2, *_partDlg);
     }
     return _partDlg;
   }
@@ -57,15 +57,9 @@ protected:
   {
     if (!_partComp) {
       _partComp = new (_memComp.buf)TEComponentPortion(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfStructure_T<4>::setField(3, *_partComp);
+      asn1::ber::EncoderOfPlainStructure_T<4>::setField(3, *_partComp);
     }
     return _partComp;
-  }
-
-  //Creates and appends new component to components list
-  TEComponent * initComponent(void)
-  {
-    return getCompPortion()->addComponent();
   }
 
 public:
@@ -73,13 +67,13 @@ public:
 
   explicit TETContinue(uint32_t local_tr_id, uint32_t remote_tr_id,
                      TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfStructure_T<4>(_typeTags, TSGroupBER::getTSRule(use_rule))
+    : asn1::ber::EncoderOfPlainStructure_T<4>(_typeTags, TSGroupBER::getTSRule(use_rule))
     , _trIdSrc(local_tr_id, use_rule), _trIdDst(remote_tr_id, use_rule)
     , _partDlg(NULL), _partComp(NULL)
   {
     _memDlg.aligner = _memComp.aligner = 0;
-    asn1::ber::EncoderOfStructure_T<4>::addField(_trIdSrc);
-    asn1::ber::EncoderOfStructure_T<4>::addField(_trIdDst);
+    asn1::ber::EncoderOfPlainStructure_T<4>::addField(_trIdSrc);
+    asn1::ber::EncoderOfPlainStructure_T<4>::addField(_trIdDst);
   }
   ~TETContinue()
   {
@@ -98,31 +92,15 @@ public:
     return getDlgPortion()->getPduAARE(use_app_ctx);
   }
 
-  //Creates and appends new component (ROS Pdu) to components list
-  void addComponent(const ros::ROSPduPrimitiveAC & ros_req)
+  //Creates and appends new component (ROS Pdu) encoder
+  void addComponent(const ros::ROSPdu & ros_pdu)
   {
-    switch (ros_req.getKind()) {
-    case ros::ROSPduPrimitiveAC::rosInvoke:
-      initComponent()->setInvoke(static_cast<const ros::ROSInvokePdu &>(ros_req)); break;
-    case ros::ROSPduPrimitiveAC::rosResult:
-      initComponent()->setResult(static_cast<const ros::ROSResultPdu &>(ros_req)); break;
-    case ros::ROSPduPrimitiveAC::rosError:
-      initComponent()->setError(static_cast<const ros::ROSErrorPdu &>(ros_req)); break;
-    case ros::ROSPduPrimitiveAC::rosReject:
-      initComponent()->setReject(static_cast<const ros::ROSRejectPdu &>(ros_req)); break;
-    case ros::ROSPduPrimitiveAC::rosResultNL:
-      initComponent()->setResultNL(static_cast<const ros::ROSResultNLPdu &>(ros_req)); break;
-    //case ROSPduPrimitiveAC::rosCancel:
-    default:;
-    }
+    getCompPortion()->addValue(ros_pdu);
   }
 
   void addComponents(const tcap::TComponentsPtrList & comp_list)
   {
-    if (!comp_list.empty()) {
-      for (tcap::TComponentsPtrList::const_iterator cit = comp_list.begin(); cit != comp_list.end(); ++cit)
-        addComponent(**cit);
-    }
+    getCompPortion()->addValuesList(comp_list);
   }
 
   void clearCompPortion(void)

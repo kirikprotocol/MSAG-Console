@@ -29,7 +29,7 @@ struct TMsgContinue {
   TCDlgPortion    _dlgPart; //Optional
   TComponentsList _compPart;
 
-  explicit TMsgContinue() : _orgTrId(0), _dstTrId(0)
+  TMsgContinue() : _orgTrId(0), _dstTrId(0)
   { }
   ~TMsgContinue()
   { }
@@ -40,6 +40,11 @@ struct TMsgContinue {
     return (_dlgPart.empty() || (_dlgPart.getDLG() && _dlgPart.getDLG()->getAARE()));
   }
   const TCPduAARE * getAARE(void) const
+  {
+    return _dlgPart.getDLG()  ? _dlgPart.getDLG()->getAARE() : NULL;
+  }
+
+  TCPduAARE * getAARE(void)
   {
     return _dlgPart.getDLG()  ? _dlgPart.getDLG()->getAARE() : NULL;
   }

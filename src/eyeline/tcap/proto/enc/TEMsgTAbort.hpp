@@ -28,10 +28,10 @@ Abort ::= [APPLICATION 7] SEQUENCE {
 -- which case it could be either an ABRT APDU or data in some user-defined
 -- abstract syntax or AARE APDU as a response to received TBegin.
 */
-class TETAbort : public asn1::ber::EncoderOfStructure_T<2> {
+class TETAbort : public asn1::ber::EncoderOfPlainStructure_T<2> {
 private:
-  using asn1::ber::EncoderOfStructure_T<2>::addField;
-  using asn1::ber::EncoderOfStructure_T<2>::setField;
+  using asn1::ber::EncoderOfPlainStructure_T<2>::addField;
+  using asn1::ber::EncoderOfPlainStructure_T<2>::setField;
 
   union {
     void * aligner;
@@ -50,7 +50,7 @@ protected:
   {
     if (!_causeUser) {
       _causeUser = new (_memCause.buf)TEDialoguePortionStructured(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfStructure_T<2>::setField(1, *_causeUser);
+      asn1::ber::EncoderOfPlainStructure_T<2>::setField(1, *_causeUser);
     }
     return _causeUser;
   }
@@ -59,11 +59,11 @@ public:
   static const asn1::ASTagging _typeTags;
 
   explicit TETAbort(uint32_t remote_tr_id, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfStructure_T<2>(_typeTags, TSGroupBER::getTSRule(use_rule))
+    : asn1::ber::EncoderOfPlainStructure_T<2>(_typeTags, TSGroupBER::getTSRule(use_rule))
     , _trIdDst(remote_tr_id, use_rule), _causePrvd(0), _causeUser(0)
   {
     _memCause.aligner = 0;
-    asn1::ber::EncoderOfStructure_T<2>::addField(_trIdDst);
+    asn1::ber::EncoderOfPlainStructure_T<2>::addField(_trIdDst);
   }
   ~TETAbort()
   {
@@ -76,7 +76,7 @@ public:
   TEPAbortCause * setPrvdAbort(PAbort::Cause_e use_cause = PAbort::p_resourceLimitation)
   {
     _causePrvd = new (_memCause.buf)TEPAbortCause(use_cause, TSGroupBER::getBERRule(getTSRule()));
-    asn1::ber::EncoderOfStructure_T<2>::setField(1, *_causePrvd);
+    asn1::ber::EncoderOfPlainStructure_T<2>::setField(1, *_causePrvd);
     return _causePrvd;
   }
 

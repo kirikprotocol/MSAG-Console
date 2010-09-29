@@ -10,6 +10,7 @@
 #include "eyeline/map/7_15_0/proto/SS/enc/MEUSSD-String.hpp"
 
 #include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
+#include "eyeline/asn1/BER/rtenc/EncodeUExt.hpp"
 
 namespace eyeline {
 namespace map {
@@ -22,37 +23,33 @@ namespace enc {
         ussd-String             USSD-String,
         ...
 } */
-class MEUSSD_Res : public asn1::ber::EncoderOfSequence_T<2> {
+class MEUSSD_Res : public asn1::ber::EncoderOfPlainSequence_T<3> {
 private:
-  using asn1::ber::EncoderOfSequence_T<2>::addField;
-  using asn1::ber::EncoderOfSequence_T<2>::setField;
+  using asn1::ber::EncoderOfPlainSequence_T<3>::addField;
+  using asn1::ber::EncoderOfPlainSequence_T<3>::setField;
 
 protected:
+  typedef asn1::ber::EncoderOfUExtension_T<1> MEArgUExt;
+
   MEUSSD_DataCodingScheme _dcs;
   MEUSSD_String           _ussd;
+  /* -- optionals -- */
+  util::OptionalObj_T<MEArgUExt>  _eUnkExt;
 
   //inits mandatory fields encoders
   void construct(void);
 
 public:
-  //Constructor for asn1::ASTypeValue_T<>
-  MEUSSD_Res(asn1::TransferSyntax::Rule_e use_rule)
-    : asn1::ber::EncoderOfSequence_T<2>(use_rule)
-    , _dcs(TSGroupBER::getBERRule(use_rule))
-    , _ussd(TSGroupBER::getBERRule(use_rule))
-  {
-    construct();
-  }
-  explicit MEUSSD_Res(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfSequence_T<2>(TSGroupBER::getTSRule(use_rule))
+  explicit MEUSSD_Res(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfPlainSequence_T<3>(use_rule)
     , _dcs(use_rule), _ussd(use_rule)
   {
     construct();
   }
   MEUSSD_Res(const USSD_Res & use_val,
             TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfSequence_T<2>(TSGroupBER::getTSRule(use_rule))
-    , _dcs(use_rule), _ussd(use_rule)
+    : asn1::ber::EncoderOfPlainSequence_T<3>(TSGroupBER::getTSRule(use_rule))
+    , _dcs(TSGroupBER::getTSRule(use_rule)), _ussd(TSGroupBER::getTSRule(use_rule))
   {
     construct();
     setValue(use_val);

@@ -22,10 +22,10 @@ ABRT-apdu ::= [APPLICATION 4] IMPLICIT SEQUENCE {
   user-information  UserInformation OPTIONAL
 }
 */
-class TEAPduABRT : public asn1::ber::EncoderOfStructure_T<2> {
+class TEAPduABRT : public asn1::ber::EncoderOfPlainStructure_T<2> {
 private:
-  using asn1::ber::EncoderOfStructure_T<2>::addField;
-  using asn1::ber::EncoderOfStructure_T<2>::setField;
+  using asn1::ber::EncoderOfPlainStructure_T<2>::addField;
+  using asn1::ber::EncoderOfPlainStructure_T<2>::setField;
 
   union {
     void *  aligner;
@@ -60,7 +60,7 @@ protected:
   {
     if (!_pUI) {
       _pUI = new (_memUI.buf)TEUserInformation(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfStructure_T<2>::setField(1, *_pUI);
+      asn1::ber::EncoderOfPlainStructure_T<2>::setField(1, *_pUI);
     }
     return _pUI;
   }
@@ -73,13 +73,13 @@ protected:
 public:
   static const asn1::ASTagging _typeTags; //[APPLICATION 4] IMPLICIT
 
-  explicit TEAPduABRT(TDialogueAssociate::AbrtSource_e abort_source,
-                     TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfStructure_T<2>(_typeTags, TSGroupBER::getTSRule(use_rule))
+  TEAPduABRT(TDialogueAssociate::AbrtSource_e abort_source,
+              TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : asn1::ber::EncoderOfPlainStructure_T<2>(_typeTags, TSGroupBER::getTSRule(use_rule))
     , _pUI(0), _abrtSrc(abort_source)
   {
     _memUI.aligner = 0;
-    asn1::ber::EncoderOfStructure_T<2>::addField(_abrtSrc);
+    asn1::ber::EncoderOfPlainStructure_T<2>::addField(_abrtSrc);
   }
   ~TEAPduABRT()
   {
@@ -91,14 +91,14 @@ public:
     _abrtSrc.setValue(abort_source);
   }
 
-  asn1::ber::EncoderOfExternal * addUIValue(const asn1::ASExternal & use_val)
+  void addUIValue(const asn1::ASExternal & use_val)
   {
-    return getUI()->addUIValue(use_val);
+    getUI()->addValue(use_val);
   }
 
   void addUIList(const tcap::TDlgUserInfoPtrList & ui_list)
   {
-    return getUI()->addUIList(ui_list);
+    getUI()->addValuesList(ui_list);
   }
 };
 

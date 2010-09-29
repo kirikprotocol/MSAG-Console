@@ -15,7 +15,8 @@ namespace dec {
         ussd-String             USSD-String,
         ... ,
         alertingPattern         AlertingPattern OPTIONAL,
-        msisdn              [0] ISDN-AddressString  OPTIONAL 
+        msisdn              [0] ISDN-AddressString  OPTIONAL
+        // ... unknwon extensions
 } */
 
 static const asn1::ASTag  _tag_f3(asn1::ASTag::tagContextSpecific, 0);
@@ -23,15 +24,16 @@ static const asn1::ASTag  _tag_f3(asn1::ASTag::tagContextSpecific, 0);
 //Initializes ElementDecoder for this type
 void MDUSSD_Arg::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<5>::setField(0, *_dcs.getTag(),
+  asn1::ber::DecoderOfSequence_T<5,2>::setField(0, *_dcs.getTag(),
                                               asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<5>::setField(1, *_ussd.getTag(),
+  asn1::ber::DecoderOfSequence_T<5,2>::setField(1, *_ussd.getTag(),
                                               asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<5>::setField(2, *_alrtPtrn.getTag(),
+
+  asn1::ber::DecoderOfSequence_T<5,2>::setField(2, asn1::_tagOCTSTR,
                                               asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<5>::setField(3, _tag_f3, asn1::ASTagging::tagsIMPLICIT,
+  asn1::ber::DecoderOfSequence_T<5,2>::setField(3, _tag_f3, asn1::ASTagging::tagsIMPLICIT,
                                               asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<5>::setUnkExtension(4);
+  asn1::ber::DecoderOfSequence_T<5,2>::setUnkExtension(4);
 }
 
 // ----------------------------------------
@@ -54,29 +56,19 @@ asn1::ber::TypeDecoderAC *
     _ussd.setValue(_dVal->ussd_String);
     return &_ussd;
   }
+  /* -- optionals -- */
   if (unique_idx == 2) {
-    _alrtPtrn.setValue(_dVal->alertingPattern._value);
-    return &_alrtPtrn;
+    _alrtPtrn.init(getTSRule()).setValue(_dVal->alertingPattern.init());
+    return _alrtPtrn.get();
   }
   if (unique_idx == 3) {
-    _msIsdn.setValue(_dVal->msisdn);
-    return &_msIsdn;
+    _msIsdn.init(getTSRule()).setValue(_dVal->msisdn.init());
+    return _msIsdn.get();
   }
   //if (unique_idx == 4)
-  _uext.setValue(_dVal->_unkExt);
-  return &_uext;
+  _uext.init(getTSRule()).setValue(_dVal->_unkExt);
+  return _uext.get();
 }
-
-//Performs actions upon successfull optional element decoding
-void MDUSSD_Arg::markDecodedOptional(uint16_t unique_idx) /*throw() */
-{
-  if (unique_idx == 2)
-    _dVal->_fieldsMask |= USSD_Arg::has_alertingPattern;
-
-  if (unique_idx == 3)
-    _dVal->_fieldsMask |= USSD_Arg::has_msisdn;
-}
-
 
 }}}}
 

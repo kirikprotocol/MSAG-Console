@@ -23,8 +23,8 @@ private:
   using asn1::ber::EncoderOfOCTSTR::setValue;
 
 public:
-  explicit MEUSSD_DataCodingScheme(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfOCTSTR(TSGroupBER::getTSRule(use_rule))
+  explicit MEUSSD_DataCodingScheme(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfOCTSTR(use_rule)
   { }
   MEUSSD_DataCodingScheme(const USSD_DataCodingScheme_t & use_val,
                     TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)

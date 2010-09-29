@@ -13,11 +13,10 @@ namespace dec {
    AlertingPattern ::= OCTET STRING (SIZE (1))
 */
 
-
-void MDAlertingPattern::setValue(AlertingPattern::value_type & use_val)
+void MDAlertingPattern::setValue(AlertingPattern & use_val)
   /*throw(std::exception)*/
 {
-  _outVal.assign(1, &use_val, 0);
+  _outVal.assign(1, &use_val._value, 0);
   asn1::ber::DecoderOfOCTSTRTiny::setValue(_outVal, 1);
 }
 

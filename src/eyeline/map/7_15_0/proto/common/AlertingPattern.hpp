@@ -46,6 +46,10 @@ struct AlertingPattern {
   Id_e  value2Id(void) const { return value2Id(_value); }
   bool  isLevelPattern(void) const { return (_value & 0x0C) == 0; }
   bool  isCategoryPattern(void) const { return !isLevelPattern() && ((_value & 0x0C) != 0x0C); }
+
+
+  AlertingPattern() : _value(alertingCategory_Rsrv)
+  { }
 };
 
 typedef AlertingPattern::value_type AlertingPattern_t;

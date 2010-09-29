@@ -25,13 +25,13 @@ private:
   asn1::ber::DecoderOfOCTSTRTiny::ArrayType  _outVal;
 
 public:
-  explicit MDAlertingPattern(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfOCTSTRTiny(TSGroupBER::getTSRule(use_rule))
+  explicit MDAlertingPattern(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfOCTSTRTiny(use_rule)
   { }
-  MDAlertingPattern(AlertingPattern::value_type & use_val,
-                    TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+  MDAlertingPattern(AlertingPattern & use_val,
+                    TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
     : asn1::ber::DecoderOfOCTSTRTiny(TSGroupBER::getTSRule(use_rule))
-    , _outVal(1, &use_val, 0)
+    , _outVal(1, &use_val._value, 0)
   {
     asn1::ber::DecoderOfOCTSTRTiny::setValue(_outVal, 1);
   }
@@ -39,7 +39,7 @@ public:
   ~MDAlertingPattern()
   { }
 
-  void setValue(AlertingPattern::value_type & use_val)   /*throw(std::exception)*/;
+  void setValue(AlertingPattern & use_val)   /*throw(std::exception)*/;
 };
 
 }}}}

@@ -27,7 +27,7 @@ struct TMsgBegin {
   TCDlgPortion    _dlgPart; //Optional
   TComponentsList _compPart;
 
-  explicit TMsgBegin() : _orgTrId(0)
+  TMsgBegin() : _orgTrId(0)
   { }
   ~TMsgBegin()
   { }
@@ -42,6 +42,12 @@ struct TMsgBegin {
   {
     return _dlgPart.getDLG()  ? _dlgPart.getDLG()->getAARQ() : NULL;
   }
+
+  TCPduAARQ * getAARQ(void)
+  {
+    return _dlgPart.getDLG()  ? _dlgPart.getDLG()->getAARQ() : NULL;
+  }
+
 };
 
 } //proto

@@ -20,10 +20,10 @@ Begin ::= [APPLICATION 2] SEQUENCE {
   dialoguePortion  DialoguePortion OPTIONAL,
   components       ComponentPortion OPTIONAL
 } */
-class TETBegin : public asn1::ber::EncoderOfStructure_T<3> {
+class TETBegin : public asn1::ber::EncoderOfPlainStructure_T<3> {
 private:
-  using asn1::ber::EncoderOfStructure_T<3>::addField;
-  using asn1::ber::EncoderOfStructure_T<3>::setField;
+  using asn1::ber::EncoderOfPlainStructure_T<3>::addField;
+  using asn1::ber::EncoderOfPlainStructure_T<3>::setField;
 
   union {
     void * aligner;
@@ -45,7 +45,7 @@ protected:
   {
     if (!_partDlg) {
       _partDlg = new (_memDlg.buf)TEDialoguePortionStructured(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfStructure_T<3>::setField(1, *_partDlg);
+      asn1::ber::EncoderOfPlainStructure_T<3>::setField(1, *_partDlg);
     }
     return _partDlg;
   }
@@ -54,7 +54,7 @@ protected:
   {
     if (!_partComp) {
       _partComp = new (_memComp.buf)TEComponentPortion(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfStructure_T<3>::setField(2, *_partComp);
+      asn1::ber::EncoderOfPlainStructure_T<3>::setField(2, *_partComp);
     }
     return _partComp;
   }
@@ -62,12 +62,12 @@ protected:
 public:
   static const asn1::ASTagging _typeTags;
 
-  explicit TETBegin(uint32_t local_tr_id, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfStructure_T<3>(_typeTags, TSGroupBER::getTSRule(use_rule))
+  TETBegin(uint32_t local_tr_id, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : asn1::ber::EncoderOfPlainStructure_T<3>(_typeTags, TSGroupBER::getTSRule(use_rule))
     , _trIdSrc(local_tr_id, use_rule), _partDlg(NULL), _partComp(NULL)
   {
     _memDlg.aligner = _memComp.aligner = 0;
-    asn1::ber::EncoderOfStructure_T<3>::addField(_trIdSrc);
+    asn1::ber::EncoderOfPlainStructure_T<3>::addField(_trIdSrc);
   }
   ~TETBegin()
   {
@@ -82,10 +82,15 @@ public:
     return getDlgPortion()->getPduAARQ(use_app_ctx);
   }
 
-  //Creates and appends new Invpoke to components list
-  void addInvoke(const ros::ROSInvokePdu & req_inv)
+  //Creates and appends new component (ROS Pdu) encoder
+  void addComponent(const ros::ROSPdu & ros_pdu) /*throw(std::exception)*/
   {
-    getCompPortion()->addComponent()->setInvoke(req_inv);
+    getCompPortion()->addValue(ros_pdu);
+  }
+
+  void addComponents(const tcap::TComponentsPtrList & comp_list) /*throw(std::exception)*/
+  {
+    getCompPortion()->addValuesList(comp_list);
   }
 
   void clearCompPortion(void)

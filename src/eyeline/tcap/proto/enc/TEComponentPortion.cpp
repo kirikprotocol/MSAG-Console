@@ -14,15 +14,13 @@ const asn1::ASTagging
                               asn1::ASTagging::tagsIMPLICIT);
 
 
-//Creates and appends new component to list
-TEComponent * TEComponentPortion::addComponent(void)
+void TEComponentPortion::addValuesList(const tcap::TComponentsPtrList & comp_list)
+  /*throw(std::exception)*/
 {
-  _comps.reserve(_comps.size() + 1);
-  TEComponent & rval = _comps[_comps.size()]; //just initialize component
-
-  rval.setTSRule(getTSRule());
-  asn1::ber::EncoderOfStructure_T<_dfltNumOfComponents>::addField(rval);
-  return &rval;
+  if (comp_list.empty())
+    return;
+  for (tcap::TComponentsPtrList::const_iterator cit = comp_list.begin(); cit != comp_list.end(); ++cit)
+    addValue(**cit);
 }
 
 }}}}

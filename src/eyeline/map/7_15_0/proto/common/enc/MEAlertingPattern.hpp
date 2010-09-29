@@ -23,10 +23,10 @@ private:
   using asn1::ber::EncoderOfOCTSTR::setValue;
 
 public:
-  explicit MEAlertingPattern(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfOCTSTR(TSGroupBER::getTSRule(use_rule))
+  explicit MEAlertingPattern(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfOCTSTR(use_rule)
   { }
-  MEAlertingPattern(const AlertingPattern::value_type & use_val,
+  MEAlertingPattern(const AlertingPattern & use_val,
                     TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : asn1::ber::EncoderOfOCTSTR(TSGroupBER::getTSRule(use_rule))
   {
@@ -36,7 +36,7 @@ public:
   ~MEAlertingPattern()
   { }
 
-  void setValue(const AlertingPattern::value_type & use_val) /*throw(std::exception)*/;
+  void setValue(const AlertingPattern & use_val) /*throw(std::exception)*/;
 };
 
 }}}}

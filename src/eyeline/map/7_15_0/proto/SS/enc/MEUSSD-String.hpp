@@ -20,8 +20,8 @@ using eyeline::asn1::ber::TSGroupBER;
 */
 class MEUSSD_String : public asn1::ber::EncoderOfOCTSTR {
 public:
-  explicit MEUSSD_String(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfOCTSTR(TSGroupBER::getTSRule(use_rule))
+  explicit MEUSSD_String(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfOCTSTR(use_rule)
   { }
   MEUSSD_String(const USSD_String_t & use_val,
                 TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)

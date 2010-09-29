@@ -21,11 +21,11 @@ using eyeline::asn1::ber::TSGroupBER;
 */
 class MDISDN_AddressString : public asn1::ber::DecoderOfOCTSTRTiny {
 public:
-  explicit MDISDN_AddressString(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfOCTSTRTiny(TSGroupBER::getTSRule(use_rule))
+  explicit MDISDN_AddressString(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfOCTSTRTiny(use_rule)
   { }
   MDISDN_AddressString(ISDN_AddressString_t & use_val,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
     : asn1::ber::DecoderOfOCTSTRTiny(TSGroupBER::getTSRule(use_rule))
   {
     asn1::ber::DecoderOfOCTSTRTiny::setValue(use_val, 9);

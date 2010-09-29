@@ -20,8 +20,8 @@ using eyeline::asn1::ber::TSGroupBER;
 */
 class MDUSSD_String : public asn1::ber::DecoderOfOCTSTRTiny {
 public:
-  explicit MDUSSD_String(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfOCTSTRTiny(TSGroupBER::getTSRule(use_rule))
+  explicit MDUSSD_String(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfOCTSTRTiny(use_rule)
   { }
   MDUSSD_String(USSD_String_t & use_val,
                 TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)

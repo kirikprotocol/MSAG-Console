@@ -11,6 +11,7 @@
 
 #include "eyeline/asn1/BER/rtdec/DecodeSeq.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeUExt.hpp"
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 namespace eyeline {
 namespace map {
@@ -32,8 +33,9 @@ protected:
   /* -- */
   MDUSSD_DataCodingScheme _dcs;
   MDUSSD_String           _ussd;
-  /* -- */
-  asn1::ber::DecoderOfUExtension   _uext;
+  /* -- optionals -- */
+  asn1::ber::DecoderProducer_T<asn1::ber::DecoderOfUExtension>   _uext;
+
 
   //Initializes ElementDecoder for this type
   void construct(void);
@@ -47,25 +49,16 @@ protected:
 
 public:
   //Constructor for asn1::ASTypeValue_T<>
-  MDUSSD_Res(asn1::TransferSyntax::Rule_e use_rule)
+  explicit MDUSSD_Res(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
     : asn1::ber::DecoderOfSequence_T<3>(use_rule)
-    , _dVal(0), _dcs(TSGroupBER::getBERRule(use_rule))
-    , _ussd(TSGroupBER::getBERRule(use_rule)), _uext(use_rule)
-  {
-    construct();
-  }
-  explicit MDUSSD_Res(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSequence_T<3>(TSGroupBER::getTSRule(use_rule))
     , _dVal(0), _dcs(use_rule), _ussd(use_rule)
-    , _uext(TSGroupBER::getTSRule(use_rule))
   {
     construct();
   }
   MDUSSD_Res(USSD_Res & use_val,
             TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : asn1::ber::DecoderOfSequence_T<3>(TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _dcs(use_rule), _ussd(use_rule)
-    , _uext(TSGroupBER::getTSRule(use_rule))
+    , _dVal(&use_val), _dcs(TSGroupBER::getTSRule(use_rule)), _ussd(TSGroupBER::getTSRule(use_rule))
   {
     construct();
   }
