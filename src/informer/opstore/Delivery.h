@@ -5,20 +5,21 @@
 #include "core/synchronization/Mutex.hpp"
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/opstore/MessageCache.h"
+#include "informer/data/DeliveryInfo.h"
 
 namespace eyeline {
 namespace informer {
 
 class StoreJournal;
-class InputMessageSource;
+class InfosmeCore;
 
 class Delivery
 {
     friend class EmbedRefPtr< Delivery >;
 public:
     Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
-              StoreJournal&  storeLog,
-              InputMessageSource& messageSource );
+              StoreJournal&               journal,
+              InputMessageSource&         source );
 
     inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 

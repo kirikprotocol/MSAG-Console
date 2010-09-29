@@ -11,8 +11,8 @@ class MessageCache
 {
 public:
     MessageCache( const DeliveryInfo& dlvInfo,
-                  StoreJournal&       storeLog,
-                  InputMessageSource& messageSource );
+                  StoreJournal&       storeJournal,
+                  InputMessageSource& source );
 
     /// get the regional storage for given region.
     RegionalStoragePtr getRegionalStorage( regionid_type regionId );
@@ -20,14 +20,15 @@ public:
     /// rolling over the whole storage.
     void rollOver();
 
-    const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
+    inline const DeliveryInfo& getDlvInfo() const { return dlvInfo_; }
 
 private:
     smsc::core::synchronization::Mutex                 cacheLock_;
     smsc::core::buffers::IntHash< RegionalStoragePtr > storages_;
-    const DeliveryInfo*                                dlvInfo_;
-    InputMessageSource*                                messageSource_;
-    StoreJournal*                                      storeLog_;
+
+    const DeliveryInfo&                                dlvInfo_;
+    StoreJournal&                                      storeJournal_;
+    InputMessageSource&                                source_;
 };
 
 }

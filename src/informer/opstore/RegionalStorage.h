@@ -8,20 +8,19 @@
 #include "core/synchronization/Condition.hpp"
 #include "informer/data/InputMessageSource.h"
 #include "informer/data/DeliveryInfo.h"
+#include "informer/io/EmbedRefPtr.h"
 #include "logger/Logger.h"
 
 namespace eyeline {
 namespace informer {
 
 class StoreJournal;
-class RegionalStoragePtr;
-class RequestNewMsgTask;
 
 /// Working storage for messages for one Delivery/Region
-class RegionalStorage : public InputMessageUploadRequester
+class RegionalStorage : public TransferRequester
 {
 private:
-    friend class RegionalStoragePtr;
+    friend class EmbedRefPtr<RegionalStorage>;
 
     /// this one is used to increase granularity, i.e. to lower the lock contention
     static const unsigned CONDITION_COUNT = 13;
@@ -40,15 +39,12 @@ public:
     RegionalStorage( const DeliveryInfo& dlvInfo,
                      regionid_type       regionId,
                      StoreJournal&       storeLog,
-                     InputMessageSource& messageSource );
+                     InputMessageSource& source );
 
     virtual ~RegionalStorage();
-    virtual dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
+    virtual dlvid_type getDlvId() const { return dlvInfo_.getDlvId(); }
     virtual regionid_type getRegionId() const { return regionId_; }
-
-    // bool isActive() const { return dlvInfo_->isActive(); }
-
-    const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
+    inline const DeliveryInfo& getDlvInfo() const { return dlvInfo_; }
 
     /// get the message with given messageid.
     /// this method accesses active messages only.
@@ -81,7 +77,7 @@ public:
 
 
     /// invoked when upload task has finished.
-    virtual void uploadFinished();
+    virtual void transferFinished( TransferTask* );
 
     /// add new messages to processing.
     virtual void addNewMessages( msgtime_type currentTime,
@@ -98,7 +94,18 @@ private:
     inline smsc::core::synchronization::Condition& getCnd( MsgIter iter ) {
         return conds_[unsigned(reinterpret_cast<uint64_t>(reinterpret_cast<const void*>(&(*iter))) / 7) % CONDITION_COUNT];
     }
-    void usage( bool incr );
+    void ref() {
+        smsc::core::synchronization::MutexGuard mg(refLock_);
+        ++ref_;
+    }
+    void unref() {
+        smsc::core::synchronization::MutexGuard mg(refLock_);
+        if (ref_<=1) {
+            delete this;
+        } else {
+            --ref_;
+        }
+    }
 
 private:
     smsc::logger::Logger*                     log_;
@@ -117,17 +124,20 @@ private:
     ResendQueue                       resendQueue_;
     NewQueue                          newQueue_;
 
-    StoreJournal*                     alog_;
-    InputMessageSource*               messageSource_;
-    RequestNewMsgTask*                uploadTask_;  // owned
-    const DeliveryInfo*               dlvInfo_; // not owned
+    const DeliveryInfo&               dlvInfo_;
+    StoreJournal&                     storeJournal_;
+    InputMessageSource&               messageSource_;
+    TransferTask*                     transferTask_;  // owned
     regionid_type                     regionId_;
-    unsigned                          usage_;
+
+    smsc::core::synchronization::Mutex refLock_;
+    unsigned                           ref_;
 
     smsc::core::synchronization::Condition conds_[CONDITION_COUNT];
 };
 
 
+/*
 class RegionalStoragePtr
 {
 public:
@@ -169,6 +179,9 @@ public:
 private:
     RegionalStorage* ptr_;
 };
+ */
+
+typedef EmbedRefPtr< RegionalStorage > RegionalStoragePtr;
 
 }
 }

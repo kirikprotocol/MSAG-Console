@@ -5,11 +5,11 @@ namespace eyeline {
 namespace informer {
 
 MessageCache::MessageCache( const DeliveryInfo& dlvInfo,
-                            StoreJournal&       storeLog,
-                            InputMessageSource& messageSource ) :
-dlvInfo_(&dlvInfo),
-messageSource_(&messageSource),
-storeLog_(&storeLog)
+                            StoreJournal&       storeJournal,
+                            InputMessageSource& source ) :
+dlvInfo_(dlvInfo),
+storeJournal_(storeJournal),
+source_(source)
 {
 }
 
@@ -20,10 +20,10 @@ RegionalStoragePtr MessageCache::getRegionalStorage( regionid_type regionId )
     RegionalStoragePtr* ptr = storages_.GetPtr(regionId);
     if (!ptr) {
         return storages_.Insert(regionId,
-                                RegionalStoragePtr(new RegionalStorage(*dlvInfo_,
+                                RegionalStoragePtr(new RegionalStorage(dlvInfo_,
                                                                        regionId,
-                                                                       *storeLog_,
-                                                                       *messageSource_)) );
+                                                                       storeJournal_,
+                                                                       source_)));
     }
     return *ptr;
 }

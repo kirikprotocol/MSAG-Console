@@ -8,13 +8,13 @@
 #include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
 #include "sme/SmppBase.hpp"
+#include "informer/opstore/RegionalStorage.h"
 
 namespace eyeline {
 namespace informer {
 
 class InfosmeCore;
 class RegionSender;
-class RegionalStoragePtr;
 class Message;
 
 struct SmscConfig
