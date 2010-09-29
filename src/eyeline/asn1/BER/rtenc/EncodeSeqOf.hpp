@@ -23,20 +23,20 @@ protected:
   //NOTE: eff_tags must be a complete tagging of type!
   EncoderOfSequenceOf_T(const ASTagging & eff_tags,
                         TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfSequenced_T<_EncoderOfTArg, _NumElemsTArg>(eff_tags, use_rule)
+    : EncoderOfSequenced_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(eff_tags, use_rule)
   { }
 
 public:
   //Untagged SEQUENCE OF type encoder constructor
   explicit EncoderOfSequenceOf_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfSequenced_T<_EncoderOfTArg, _NumElemsTArg>(asn1::_tagsSEQOF, use_rule)
+    : EncoderOfSequenced_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(asn1::_tagsSEQOF, use_rule)
   { }
   //Tagged SEQUENCE OF type encoder constructor
-  EncoderOfSequenced_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+  EncoderOfSequenceOf_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                        TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfSequenced_T<_EncoderOfTArg, _NumElemsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
+    : EncoderOfSequenced_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
   { }
-  virtual ~EncoderOfSequenced_T()
+  virtual ~EncoderOfSequenceOf_T()
   { }
 };
 
