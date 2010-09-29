@@ -113,7 +113,8 @@ public class JournalRecord {
     SNMP("subject.snmp"),
     SME("subject.sme"),
     ACL("subject.acl"),
-    CATEGORY("subject.category");
+    CATEGORY("subject.category"),
+    ALIAS("subject.alias");
 
     private final String key;
 
