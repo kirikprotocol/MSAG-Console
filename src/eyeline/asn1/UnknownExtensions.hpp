@@ -12,7 +12,9 @@ namespace eyeline {
 namespace asn1 {
 
 struct UnknownExtensions {
-  std::list<asn1::TransferSyntax> _tsList;
+  typedef std::list<asn1::TransferSyntax> ValueList;
+
+  ValueList   _tsList;
   /* ... */
   /* additional TransferSyntax specific stuff (f.ex. PER bitmask) */
 };

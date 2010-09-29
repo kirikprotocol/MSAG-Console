@@ -6,64 +6,12 @@
 #ident "@(#)$Id$"
 #define __ASN1_BER_ENCODER_SEQUENCED
 
+#include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeConstructed.hpp"
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
-
-template <
-  //must have tagged & untagged type constructors, copying constructor
-  class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>(TransferSyntax::Rule_e use_rule)*/ 
-> 
-class EncoderProducer_T {
-private:
-  union {
-    void *    _aligner;
-    uint8_t   _buf[sizeof(_EncoderOfTArg)];
-  } _mem;
-
-protected:
-  _EncoderOfTArg  * _ptr;
-
-  void cleanUp(void)
-  {
-    if (_ptr)
-      _ptr->~_EncoderOfTArg();
-  }
-public:
-  EncoderProducer_T() : _ptr(0)
-  {
-    _mem._aligner = 0;
-  }
-  EncoderProducer_T(const EncoderProducer_T & use_obj) : _ptr(0)
-  {
-    _mem._aligner = 0;
-    if (use_obj.get())
-      _ptr = new (_mem._buf)_EncoderOfTArg(*use_obj.get());
-  }
-  //
-  ~EncoderProducer_T()
-  {
-    cleanUp();
-  }
-  //
-  _EncoderOfTArg  * init(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-  {
-    cleanUp();
-    return _ptr = new (_mem._buf)_EncoderOfTArg(use_rule);
-  }
-  //
-  _EncoderOfTArg  * init(const ASTag & use_tag, ASTagging::Environment_e tag_env,
-                         TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-  {
-    cleanUp();
-    return _ptr = new (_mem._buf)_EncoderOfTArg(use_tag, tag_env, use_rule);
-  }
-
-  //
-  _EncoderOfTArg  * get(void) const { return _ptr; }
-};
 
 /* ************************************************************************* *
  * Encodes by BER/DER/CER the value of one of sequenced types (SET OF or
@@ -93,9 +41,9 @@ protected:
   _EncoderOfTArg * allocElementEncoder(void)
   {
     _prdArray->reserve(_prdArray->size() + 1);
-    return _elmTags.empty() ? _prdArray->at(_prdArray->size()).init(getTSRule())
-                              : _prdArray->at(_prdArray->size()).init(_elmTags[0],
-                                          _elmTags.getEnvironment(), getTSRule());
+    return _elmTags.empty() ? &(_prdArray->at(_prdArray->size()).init(getTSRule()))
+                              : &(_prdArray->at(_prdArray->size()).init(_elmTags[0],
+                                          _elmTags.getEnvironment(), getTSRule()));
   }
 
   //NOTE: the copying constructor of successsor MUST properly set _prdArray
