@@ -19,29 +19,17 @@ import java.util.*;
  */
 public class Journal {
 
-  public static final String SMSC = "subject.smsc";
-  public static final String RESCHEDULE = "subject.reschedule";
-  public static final String CLOSED_GROUPS = "subject.closed_groups";
-  public static final String USERS = "subject.user";
-  public static final String MAP_LIMIT = "subject.maplimit";
-  public static final String LOGGING = "subject.logging";
-  public static final String FRAUD = "subject.fraud";
-  public static final String SNMP="subject.snmp";
-  public static final String SME="subject.sme";
-  public static final String ACL="subject.acl";
-  public static final String CATEGORY="subject.category";
-
   private final List<JournalRecord> records = new ArrayList<JournalRecord>();
 
-  private final SmscSettingsDiffHelper smsc = new SmscSettingsDiffHelper(SMSC);
-  private final RescheduleSettingsDiffHelper reschedule = new RescheduleSettingsDiffHelper(RESCHEDULE);
-  private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(USERS);
-  private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(MAP_LIMIT);
-  private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(LOGGING);
-  private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(FRAUD);
-  private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(SNMP);
-  private final SmeDiffHelper sme = new SmeDiffHelper(SME);
-  private final CategorySettingsDiffHelper category = new CategorySettingsDiffHelper(CATEGORY);
+  private final SmscSettingsDiffHelper smsc = new SmscSettingsDiffHelper(JournalRecord.Subject.SMSC);
+  private final RescheduleSettingsDiffHelper reschedule = new RescheduleSettingsDiffHelper(JournalRecord.Subject.RESCHEDULE);
+  private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(JournalRecord.Subject.USERS);
+  private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(JournalRecord.Subject.MAP_LIMIT);
+  private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(JournalRecord.Subject.LOGGING);
+  private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(JournalRecord.Subject.FRAUD);
+  private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(JournalRecord.Subject.SNMP);
+  private final SmeDiffHelper sme = new SmeDiffHelper(JournalRecord.Subject.SME);
+  private final CategorySettingsDiffHelper category = new CategorySettingsDiffHelper(JournalRecord.Subject.CATEGORY);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -51,17 +39,8 @@ public class Journal {
   public List<String> getSubjects(Locale locale) {
     List<String> l = new ArrayList<String>();
     ResourceBundle rb = ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale);
-    l.add(rb.getString(SMSC));
-    l.add(rb.getString(RESCHEDULE));
-    l.add(rb.getString(USERS));
-    l.add(rb.getString(MAP_LIMIT));
-    l.add(rb.getString(LOGGING));
-    l.add(rb.getString(CLOSED_GROUPS));
-    l.add(rb.getString(FRAUD));
-    l.add(rb.getString(SNMP));
-    l.add(rb.getString(SME));
-    l.add(rb.getString(ACL));
-    l.add(rb.getString(CATEGORY));
+    for (JournalRecord.Subject s : JournalRecord.Subject.values())
+      l.add(rb.getString(s.getKey()));
     return l;
   }
 
@@ -156,7 +135,7 @@ public class Journal {
    * @param user пользователь
    * @return новую запись
    */
-  synchronized JournalRecord addRecord(JournalRecord.Type type, String subject, String user) {
+  public synchronized JournalRecord addRecord(JournalRecord.Type type, JournalRecord.Subject subject, String user) {
     JournalRecord r = new JournalRecord(type);
     r.setUser(user);
     r.setTime(System.currentTimeMillis());
@@ -238,7 +217,7 @@ public class Journal {
    * @param user пользователь, от имени которого надо формировать записи
    */
   public void logClosedGroupDescription(String name, String oldDescription, String newDescription, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, CLOSED_GROUPS, user);
+    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
     r.setDescription("closed_group_change_description", oldDescription, newDescription, name);
   }
 
@@ -249,7 +228,7 @@ public class Journal {
    * @param user пользователь, от имени которого надо формировать записи
    */
   public void logClosedGroupAddMask(String name, String mask, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, CLOSED_GROUPS, user);
+    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
     r.setDescription("closed_group_add_mask", mask, name);
   }
 
@@ -260,7 +239,7 @@ public class Journal {
    * @param user пользователь, от имени которого надо формировать записи
    */
   public void logClosedGroupRemoveMask(String name, String mask, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, CLOSED_GROUPS, user);
+    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
     r.setDescription("closed_group_remove_mask", mask, name);
   }
 
@@ -270,7 +249,7 @@ public class Journal {
    * @param user пользователь, от имени которого надо формировать записи
    */
   public void logClosedGroupAdd(String name, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.ADD, CLOSED_GROUPS, user);
+    JournalRecord r = addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.CLOSED_GROUPS, user);
     r.setDescription("closed_group_added", name);
   }
 
@@ -280,7 +259,7 @@ public class Journal {
    * @param user пользователь, от имени которого надо формировать записи
    */
   public void logClosedGroupRemove(String name, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, CLOSED_GROUPS, user);
+    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.CLOSED_GROUPS, user);
     r.setDescription("closed_group_removed", name);
   }
 
@@ -291,7 +270,7 @@ public class Journal {
   // SME
 
   public void logSmeAdded(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.ADD, SME, user);
+    JournalRecord r = addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.SME, user);
     r.setDescription("sme.added", smeId);
   }
 
@@ -300,27 +279,27 @@ public class Journal {
   }
 
   public void logSmeRemoved(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, SME, user);
+    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.SME, user);
     r.setDescription("sme.removed", smeId);
   }
 
   public void logSmeDisconnected(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.DISCONNECT, SME, user);
+    JournalRecord r = addRecord(JournalRecord.Type.DISCONNECT, JournalRecord.Subject.SME, user);
     r.setDescription("sme.disconnected", smeId);
   }
 
   public void logSmeStopped(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.STOP, SME, user);
+    JournalRecord r = addRecord(JournalRecord.Type.STOP, JournalRecord.Subject.SME, user);
     r.setDescription("sme.stopped", smeId);
   }
 
   public void logSmeStarted(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.START, SME, user);
+    JournalRecord r = addRecord(JournalRecord.Type.START, JournalRecord.Subject.SME, user);
     r.setDescription("sme.started", smeId);
   }
 
   public void logSmeSwitched(String smeId, String toHost, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.SWITCH, SME, user);
+    JournalRecord r = addRecord(JournalRecord.Type.SWITCH, JournalRecord.Subject.SME, user);
     r.setDescription("sme.switched", smeId, toHost);
   }
 
@@ -328,17 +307,17 @@ public class Journal {
 
   public void logAclInfoChanged(String oldName, String oldDesc, String newName, String newDesc, String user) {
     if (!oldName.equals(newName)) {
-      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, ACL, user);
+      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
       r.setDescription("property_changed", "name", oldName, newName);
     } if (!oldDesc.equals(newDesc)) {
-      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, ACL, user);
+      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
       r.setDescription("property_changed", "description", oldDesc, newDesc);
     }
   }
 
   public void logAddAddressesToAcl(int id, String name, List<Address> addresses, String user) {
     if (!addresses.isEmpty()) {
-      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, ACL, user);
+      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
       StringBuilder sb = new StringBuilder();
       for (Address address : addresses) {
         if (sb.length() > 0)
@@ -351,7 +330,7 @@ public class Journal {
 
   public void logRemoveAddressesFromAcl(int id, String name, List<Address> addresses, String user) {
     if (!addresses.isEmpty()) {
-      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, ACL, user);
+      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
       StringBuilder sb = new StringBuilder();
       for (Address address : addresses) {
         if (sb.length() > 0)
@@ -363,12 +342,12 @@ public class Journal {
   }
 
   public void logAclCreate(int id, String name, String description, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.ADD, ACL, user);
+    JournalRecord r = addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.ACL, user);
     r.setDescription("acl.created", id+"", name, description);
   }
 
   public void logAclRemove(int id, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, ACL, user);
+    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.ACL, user);
     r.setDescription("acl.removed", id+"");
   }
 

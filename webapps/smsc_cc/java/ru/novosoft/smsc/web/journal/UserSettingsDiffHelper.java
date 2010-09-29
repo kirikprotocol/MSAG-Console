@@ -12,7 +12,7 @@ import java.util.Map;
  */
 class UserSettingsDiffHelper extends DiffHelper {
 
-  public UserSettingsDiffHelper(String subject) {
+  public UserSettingsDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 

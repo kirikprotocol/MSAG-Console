@@ -12,7 +12,7 @@ import java.util.List;
  */
 class CategorySettingsDiffHelper extends DiffHelper {
 
-  public CategorySettingsDiffHelper(String subject) {
+  public CategorySettingsDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 
@@ -20,10 +20,10 @@ class CategorySettingsDiffHelper extends DiffHelper {
     for (Category c : newSettings.getCategories()) {
       Category oc = oldSettings.getCategory(c.getId());
       if (oc == null) {
-        JournalRecord r = j.addRecord(JournalRecord.Type.ADD, Journal.CATEGORY, user);
+        JournalRecord r = j.addRecord(JournalRecord.Type.ADD, subject, user);
         r.setDescription("category.added", c.getName(), c.getId() + "");
       } else if (!c.getName().equals(oc.getName())) {
-        JournalRecord r = j.addRecord(JournalRecord.Type.CHANGE, Journal.CATEGORY, user);
+        JournalRecord r = j.addRecord(JournalRecord.Type.CHANGE, subject, user);
         r.setDescription("category.renamed", c.getId() + "", oc.getName(), c.getName());
       }
     }

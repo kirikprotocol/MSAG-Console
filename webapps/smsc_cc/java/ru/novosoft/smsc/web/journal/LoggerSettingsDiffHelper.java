@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class LoggerSettingsDiffHelper extends DiffHelper {
 
-  public LoggerSettingsDiffHelper(String subject) {
+  public LoggerSettingsDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 

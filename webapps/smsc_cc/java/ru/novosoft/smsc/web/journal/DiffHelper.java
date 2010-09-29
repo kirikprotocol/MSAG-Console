@@ -9,9 +9,9 @@ import java.util.*;
  */
 class DiffHelper {
 
-  protected final String subject;
+  protected final JournalRecord.Subject subject;
 
-  public DiffHelper(String subject) {
+  public DiffHelper(JournalRecord.Subject subject) {
     this.subject = subject;
   }
 

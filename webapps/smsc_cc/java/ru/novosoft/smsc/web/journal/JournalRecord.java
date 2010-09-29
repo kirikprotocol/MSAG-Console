@@ -5,12 +5,13 @@ import java.util.ResourceBundle;
 
 /**
  * Структура, описывающая одну запись в журнале
+ *
  * @author Artem Snopkov
  */
 public class JournalRecord {
 
   private long time;
-  private String subjectKey;
+  private Subject subjectKey;
   private String user;
   private final Type type;
   private String descriptionKey;
@@ -22,6 +23,7 @@ public class JournalRecord {
 
   /**
    * Возвращает время в миллисекундах, в которое произошло изменение
+   *
    * @return время в миллисекундах, в которое произошло изменение
    */
   public long getTime() {
@@ -34,23 +36,25 @@ public class JournalRecord {
 
   /**
    * Возвращает название сабжекта в указанной локали
+   *
    * @param locale локаль
    * @return название сабжекта в указанной локали
    */
   public String getSubject(Locale locale) {
-    return ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale).getString(subjectKey);
+    return ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale).getString(subjectKey.getKey());
   }
 
-  String getSubjectKey() {
+  Subject getSubjectKey() {
     return subjectKey;
   }
 
-  void setSubjectKey(String subject) {
+  void setSubjectKey(Subject subject) {
     this.subjectKey = subject;
   }
 
   /**
    * Возвращает логин пользователь, произвевшего изменение
+   *
    * @return логин пользователь, произвевшего изменение
    */
   public String getUser() {
@@ -61,7 +65,7 @@ public class JournalRecord {
     this.user = user;
   }
 
-  void setDescription(String key, String... args) {
+  public void setDescription(String key, String... args) {
     this.descriptionKey = key;
     this.descriptionArgs = args;
   }
@@ -76,13 +80,14 @@ public class JournalRecord {
 
   /**
    * Возвращает описание изменения в заданной локали
+   *
    * @param locale локаль
    * @return описание изменения в заданной локали
    */
   public String getDescription(Locale locale) {
     String str = ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale).getString(descriptionKey);
     if (descriptionArgs != null) {
-      for (int i=0; i<descriptionArgs.length; i++)
+      for (int i = 0; i < descriptionArgs.length; i++)
         str = str.replaceAll("\\{" + i + "\\}", descriptionArgs[i]);
     }
     return str;
@@ -90,10 +95,35 @@ public class JournalRecord {
 
   /**
    * Возвращает тип изменения
+   *
    * @return тип изменения
    */
   public Type getType() {
     return type;
+  }
+
+  public enum Subject {
+    SMSC("subject.smsc"),
+    RESCHEDULE("subject.reschedule"),
+    CLOSED_GROUPS("subject.closed_groups"),
+    USERS("subject.user"),
+    MAP_LIMIT("subject.maplimit"),
+    LOGGING("subject.logging"),
+    FRAUD("subject.fraud"),
+    SNMP("subject.snmp"),
+    SME("subject.sme"),
+    ACL("subject.acl"),
+    CATEGORY("subject.category");
+
+    private final String key;
+
+    Subject(String key) {
+      this.key = key;
+    }
+
+    public String getKey() {
+      return key;
+    }
   }
 
   public enum Type {
@@ -111,7 +141,7 @@ public class JournalRecord {
     REMOVE,
     /**
      * Запуск какого-то сервиса
-      */
+     */
     START,
     /**
      * Остановка какого-то сервиса

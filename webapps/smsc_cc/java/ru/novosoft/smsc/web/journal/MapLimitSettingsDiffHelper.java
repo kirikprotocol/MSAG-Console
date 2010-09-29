@@ -12,7 +12,7 @@ import java.util.List;
 class MapLimitSettingsDiffHelper extends DiffHelper {
 
 
-  public MapLimitSettingsDiffHelper(String subject) {
+  public MapLimitSettingsDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 

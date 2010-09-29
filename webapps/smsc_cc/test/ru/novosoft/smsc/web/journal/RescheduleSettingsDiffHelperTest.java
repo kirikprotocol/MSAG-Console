@@ -27,7 +27,7 @@ public class RescheduleSettingsDiffHelperTest  {
     newS.setDefaultReschedule("2h");
 
     Journal j = new Journal();
-    RescheduleSettingsDiffHelper h = new RescheduleSettingsDiffHelper("reschedule");
+    RescheduleSettingsDiffHelper h = new RescheduleSettingsDiffHelper(JournalRecord.Subject.RESCHEDULE);
     h.logChanges(j, oldS, newS, "testUser");
 
     List<JournalRecord> records = j.getRecords();
@@ -35,7 +35,7 @@ public class RescheduleSettingsDiffHelperTest  {
 
     JournalRecord r = records.get(0);
     assertEquals("testUser", r.getUser());
-    assertEquals("reschedule", r.getSubjectKey());
+    assertEquals(JournalRecord.Subject.RESCHEDULE, r.getSubjectKey());
     assertEquals("property_changed", r.getDescriptionKey());
     assertArrayEquals(new String[]{"defaultReschedule", "1h", "2h"}, r.getDescriptionArgs());
   }
@@ -68,7 +68,7 @@ public class RescheduleSettingsDiffHelperTest  {
     }
 
     Journal journal = new Journal();
-    RescheduleSettingsDiffHelper h = new RescheduleSettingsDiffHelper("reschedule");
+    RescheduleSettingsDiffHelper h = new RescheduleSettingsDiffHelper(JournalRecord.Subject.RESCHEDULE);
     h.logChanges(journal, oldS, newS, "testUser");
 
     List<JournalRecord> records = journal.getRecords();
@@ -76,7 +76,7 @@ public class RescheduleSettingsDiffHelperTest  {
 
     for (JournalRecord r : records) {
       assertEquals("testUser", r.getUser());
-      assertEquals("reschedule", r.getSubjectKey());
+      assertEquals(JournalRecord.Subject.RESCHEDULE, r.getSubjectKey());
       switch (r.getType()) {
         case ADD:
           assertEquals("reschedule_added", r.getDescriptionKey());

@@ -14,7 +14,7 @@ import java.util.Map;
  * Time: 14:07:58
  */
 public class SnmpSettingsDiffHelper extends DiffHelper {
-  public SnmpSettingsDiffHelper(String subject) {
+  public SnmpSettingsDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 

@@ -11,7 +11,7 @@ import java.util.Collection;
 class FraudSettingsDiffHelper extends DiffHelper {
 
 
-  public FraudSettingsDiffHelper(String subject) {
+  public FraudSettingsDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 

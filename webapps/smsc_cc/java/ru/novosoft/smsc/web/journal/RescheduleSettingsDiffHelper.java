@@ -12,7 +12,7 @@ import java.util.Map;
  */
 class RescheduleSettingsDiffHelper extends DiffHelper {
 
-  public RescheduleSettingsDiffHelper(String subject) {
+  public RescheduleSettingsDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 

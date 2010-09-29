@@ -12,7 +12,7 @@ import java.util.List;
  */
 class SmscSettingsDiffHelper extends DiffHelper {
 
-  SmscSettingsDiffHelper(String subject) {
+  SmscSettingsDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 

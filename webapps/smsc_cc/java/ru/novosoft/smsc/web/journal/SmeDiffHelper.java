@@ -9,7 +9,7 @@ import java.util.List;
  * @author Artem Snopkov
  */
 class SmeDiffHelper extends DiffHelper {
-  public SmeDiffHelper(String subject) {
+  public SmeDiffHelper(JournalRecord.Subject subject) {
     super(subject);
   }
 
