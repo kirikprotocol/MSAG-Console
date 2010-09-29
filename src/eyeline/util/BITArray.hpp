@@ -31,10 +31,11 @@ template <
 >
 class BITArrayExtension_T {
 protected:
-  _SizeTypeArg  _orgBits;  //number of max bits in original array
-  _SizeTypeArg  _heapBufSz;     //size of heap buffer allocated
-  _SizeTypeArg  _numBits;       //number of initialized/assigned bits
-  uint8_t *     _buf;           //pointer to data buffer (either heap or stack)
+  _SizeTypeArg  _orgBits;   //number of max bits in original array
+  uint8_t *     _buf;       //pointer to data buffer (either heap or stack)
+  _SizeTypeArg  _heapBufSz; //size of heap buffer allocated
+  _SizeTypeArg  _numBits;   //number of initialized/assigned bits
+
 
   _SizeTypeArg _MAX_FACTOR(void) const { return _MAX_SIZE()/_orgBits; }
 
@@ -187,7 +188,7 @@ public:
 
   _SizeTypeArg _MAX_SIZE(void) const { return (_SizeTypeArg)(-1); }
 
-  explicit BITArrayExtension_T() //throw()
+  BITArrayExtension_T() //throw()
     : _orgBits(0), _buf(0), _heapBufSz(0), _numBits(0)
   { }
   //Constructor for array, that extends given buffer
@@ -389,7 +390,7 @@ public:
     _SizeTypeArg      _idx;
 
   protected:
-    friend BITArrayExtension_T;
+    friend class BITArrayExtension_T;
     BIT(BITArrayExtension_T * use_arr, _SizeTypeArg use_idx)
       : _arr(use_arr), _idx(use_idx)
     { }
@@ -457,7 +458,7 @@ public:
     if (num_bits_to_reserve)
       reserve(num_bits_to_reserve);
   }
-  explicit BITArray_T(const uint8_t * use_bits, _SizeTypeArg num_bits) //throw()
+  BITArray_T(const uint8_t * use_bits, _SizeTypeArg num_bits) //throw()
     : BITArrayExtension_T<_SizeTypeArg>(_max_STACK_BITS, _stack.buf, 0)
   {
     _stack.alignedPtr = 0;
@@ -473,9 +474,9 @@ public:
   { }
 
   template <_SizeTypeArg _SZArg>
-  BITArray_T & operator= (const BITArray_T<_SZArg> & use_arr) //throw()
+  BITArray_T & operator= (const BITArray_T<_SizeTypeArg, _SZArg> & use_arr) //throw()
   {
-    clear();
+    this->clear();
     append(use_arr.getOcts(), use_arr.size());
     return *this;
   }

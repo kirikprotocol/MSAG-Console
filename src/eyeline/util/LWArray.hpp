@@ -19,13 +19,16 @@ namespace util {
 
 /* ************************************************************************* *
  * Lightweight Extension of array: store elements into referenced array 
- * until its number doesn't exceed specified limit.
- * Afterward allocates new array on heap.
+ * until its number doesn't exceed specified limit. Afterward allocates 
+ * new array on heap. 
+ * NOTE: Element type must have operator<() defined in order to maintain 
+ *       sorted array.
  * ************************************************************************* */
 template <
-    class _TArg                 //Element of array, must have a default & copying constructors!
-  , typename _SizeTypeArg       //must be an unsigned integer type, implicitly
-                                //restricts maximum number of elements in array!
+    class _TArg           //Element of array, must have default & copying
+                          //constructors (operator<() in case of sorted array)
+  , typename _SizeTypeArg //must be an unsigned integer type, implicitly
+                          //restricts maximum number of elements in array!
 >
 class LWArrayExtension_T {
 protected:
@@ -89,6 +92,7 @@ protected:
     return true;
   }
 
+  //NOTE: array should not be empty!
   _SizeTypeArg lower_bound_pos(const _TArg & use_val) const //throw()
   {
     const _TArg * pNext = std::lower_bound(get(), get() + size(), use_val);
@@ -112,6 +116,9 @@ public:
   typedef _SizeTypeArg  size_type;
 
   _SizeTypeArg _MAX_SIZE(void) const { return (_SizeTypeArg)(-1); }
+
+  //Special Not-a-Position marker
+  _SizeTypeArg npos(void) const { return (_SizeTypeArg)(-1); }
 
   explicit LWArrayExtension_T() //throw()
     : _orgSz(0), _buf(0), _heapBufSz(0), _numElem(0)
@@ -188,7 +195,7 @@ public:
   }
 
   //Returns last initialized/assigned element of array.
-  //Throws f array is empty.
+  //Throws if array is empty.
   const _TArg & atLast(void) const //throw(std::exception)
   {
     if (!_numElem)
@@ -381,43 +388,44 @@ public:
   // -------------------------------------------------------------------
   // NOTE: following methods are applicable only to sorted array, i.e.
   // the array that either was explicitly sorted by sort() call, or was
-  // filled in only by insert() method.
+  // filled in by insert() method only.
   // -------------------------------------------------------------------
 
   //Inserts element into sorted array preserving ascending order.
-  //Returns position at which element was inserted.
-  //NOTE: throws if resulting number of elements would exceed limit 
-  _SizeTypeArg insert(const _TArg & use_val) //throw(std::exception)
+  //Returns position at which element was successfully inserted or
+  //Not-A-Position if insertion failed because of limit of number
+  //of elements is already reached.
+  _SizeTypeArg insert(const _TArg & use_val) //throw()
   {
-    _SizeTypeArg atPos = lower_bound(use_val);
+    _SizeTypeArg atPos = _numElem ? lower_bound_pos(use_val) : 0;
 
     if (atPos >= _numElem) { //all elements are less then given one
       if (!append(use_val))
-        denyAddition(1);
+        return npos();
     } else {
       if (!shiftRightOnly(1, atPos))
-        denyAddition(1); //throws
+        return npos();
       _buf[atPos] = use_val;
     }
     return atPos;
   }
 
   //Returns the position of first element that is grater or equal to given value.
-  //If no such element exists, position outside of array bound is returned (i.e. >= size()).
+  //If no such element exists, Not-a-Position is returned.
   _SizeTypeArg lower_bound(const _TArg & use_val) const //throw()
   {
-    _SizeTypeArg atPos = lower_bound_pos(use_val);
-    return  (atPos < _numElem) ? atPos : _MAX_SIZE();
+    _SizeTypeArg atPos = _numElem ? lower_bound_pos(use_val) : 0;
+    return  (atPos < _numElem) ? atPos : npos();
   }
 
   //Returns the position of first element that is equal to given value.
-  //If no such element exists, position outside of array bound is returned (i.e. >= size()).
+  //If no such element exists, Not-A-Position is returned.
   _SizeTypeArg find(const _TArg & use_val) const //throw()
   {
     _SizeTypeArg atPos = lower_bound_pos(use_val);
     return ((atPos < _numElem)
             && !(_buf[atPos] < use_val) && !(use_val < _buf[atPos])) ?
-                atPos : _MAX_SIZE();
+                atPos : npos();
   }
 };
 
@@ -425,7 +433,9 @@ public:
 /* ************************************************************************* *
  * Lightweight Array: store elements on stack until its number doesn't
  * exceed specified limit.
- * NOTE: array reallocation occurs only in case of explicit demand!
+ * NOTE: array reallocation occurs only in case of explicit demand! 
+ * NOTE: Element type must have operator<() defined in order to maintain 
+ *       sorted array.
  * ************************************************************************* */
 template <
     class _TArg                 //Element of array, must have a default & copying constructors!
@@ -466,14 +476,14 @@ public:
   }
   ~LWArray_T()
   {
-    if (!_heapBufSz)
-      clear();
+    if (!this->_heapBufSz)
+      this->clear();
   }
 
   template <_SizeTypeArg _SZArg>
   LWArray_T & operator= (const LWArray_T<_TArg, _SizeTypeArg, _SZArg> & use_arr) //throw()
   {
-    clear();
+    this->clear();
     append(use_arr.get(), use_arr.size()); //cann't fail here
     return *this;
   }
