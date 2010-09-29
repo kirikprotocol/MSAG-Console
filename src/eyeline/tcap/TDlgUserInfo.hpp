@@ -2,7 +2,9 @@
  * TCAP dialogue user information.
  * ************************************************************************** */
 #ifndef __EYELINE_TCAP_USRINFO_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif /* __GNUC__ */
 #define __EYELINE_TCAP_USRINFO_HPP
 
 #include <list>

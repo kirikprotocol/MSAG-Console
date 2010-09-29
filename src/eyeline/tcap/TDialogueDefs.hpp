@@ -2,10 +2,12 @@
  * TCAP dialogue related definitions and constants.
  * ************************************************************************** */
 #ifndef __EYELINE_TCAP_TDIALOGUE_DEFS_HPP__
-# ident "@(#)$Id$"
-# define __EYELINE_TCAP_TDIALOGUE_DEFS_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif /* __GNUC__ */
+#define __EYELINE_TCAP_TDIALOGUE_DEFS_HPP__
 
-# include <inttypes.h>
+#include <inttypes.h>
 
 namespace eyeline {
 namespace tcap {
@@ -20,8 +22,7 @@ struct PAbort {
     , p_unrecognizedTransactionID = 1
     , p_badlyFormattedTransactionPortion = 2
     , p_incorrectTransactionPortion = 3
-    , p_resourceLimitation = 4
-//    , p_dialogueTimeout = 126
+    , p_resourceLimitation = 4 //including dialogueTimeout
     , p_genericError = 127  //That's a max value allowed by protocol
   };
   typedef uint8_t Cause_t;

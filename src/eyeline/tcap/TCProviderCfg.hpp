@@ -2,8 +2,10 @@
  * Transaction Capabilities Provider: configuration parameters.
  * ************************************************************************** */
 #ifndef __EYELINE_TCAP_PROVIDER_CFG_HPP
-# ident "@(#)$Id$"
-# define __EYELINE_TCAP_PROVIDER_CFG_HPP
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif /* __GNUC__ */
+#define __EYELINE_TCAP_PROVIDER_CFG_HPP
 
 #include "eyeline/tcap/TDialogueDefs.hpp"
 #include "eyeline/ss7na/libsccp/SccpConfig.hpp"

@@ -2,14 +2,16 @@
  * TCAP API: structured TCAP dialogue indications primitives.
  * ************************************************************************** */
 #ifndef __EYELINE_TCAP_TDIALOGUEINDICATIONPRIMITIVE_HPP__
-# ident "@(#)$Id$"
-# define __EYELINE_TCAP_TDIALOGUEINDICATIONPRIMITIVE_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif /* __GNUC__ */
+#define __EYELINE_TCAP_TDIALOGUEINDICATIONPRIMITIVE_HPP__
 
-# include "eyeline/sccp/SCCPConsts.hpp"
-# include "eyeline/sccp/SCCPAddress.hpp"
-# include "eyeline/tcap/TDialogueDefs.hpp"
-# include "eyeline/tcap/TDlgUserInfo.hpp"
-# include "eyeline/tcap/TComponentDefs.hpp"
+#include "eyeline/sccp/SCCPConsts.hpp"
+#include "eyeline/sccp/SCCPAddress.hpp"
+#include "eyeline/tcap/TDialogueDefs.hpp"
+#include "eyeline/tcap/TDlgUserInfo.hpp"
+#include "eyeline/tcap/TComponentDefs.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -18,91 +20,83 @@ using eyeline::asn1::EncodedOID;
 using eyeline::sccp::SCCPAddress;
 
 class TDlgIndicationPrimitive {
-protected:
-  TDialogueId               _dlgId;
-  const EncodedOID *        _acOId;
-  const TDlgUserInfoList *  _usrInfo;
-  const TComponentsList  *  _comps;
-
 public:
-  TDlgIndicationPrimitive()
-    : _dlgId(0), _acOId(0), _comps(0), _usrInfo(0)
-  { }
+  enum IKind_e {
+    indTRNone = 0, indTRBegin, indTRCont, indTREnd, indTRUAbort, indTRPAbort, indTRNotice
+  };
+
   virtual ~TDlgIndicationPrimitive()
   { }
 
+  static const char * getIdent(IKind_e ind_kind);
+
+  const char * getIdent(void) const { return getIdent(_iKind); }
   //
   TDialogueId getDialogueId(void) const { return _dlgId; }
   //
-  const TDlgUserInfoList * getUserInfo(void) const { return _usrInfo; }
-  //
   const EncodedOID * getAppCtx(void) const { return _acOId; }
   //
+  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
+  //
+  const TDlgUserInfoList * getUserInfo(void) const { return _usrInfo; }
   const TComponentsList * getCompList(void) const { return _comps; }
+  //
+  TDlgUserInfoList * getUserInfo(void) { return _usrInfo; }
+  TComponentsList *  getCompList(void)  { return _comps; }
+
+protected:
+  const IKind_e       _iKind;
+  TDialogueId         _dlgId;
+  const EncodedOID *  _acOId;
+  TComponentsList  *  _comps;
+  TDlgUserInfoList *  _usrInfo;
+  SCCPAddress         _orgAdr;
+
+  TDlgIndicationPrimitive(IKind_e use_kind)
+    : _iKind(use_kind), _dlgId(0), _acOId(0), _comps(0), _usrInfo(0)
+  { }
 };
 
 //
-class TC_Begin_Ind : public TDlgIndicationPrimitive {
+class TR_Begin_Ind : public TDlgIndicationPrimitive {
 protected:
-  SCCPAddress   _orgAdr;
   SCCPAddress   _dstAdr;
 
 public:
-  TC_Begin_Ind() : TDlgIndicationPrimitive()
+  TR_Begin_Ind() : TDlgIndicationPrimitive(indTRBegin)
   { }
-  ~TC_Begin_Ind()
+  ~TR_Begin_Ind()
   { }
-
-  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
+  //
   const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
 };
 //
-class TC_Cont_Ind : public TDlgIndicationPrimitive {
-protected:
-  SCCPAddress   _orgAdr;
-  SCCPAddress   _dstAdr;
-
+class TR_Cont_Ind : public TDlgIndicationPrimitive {
 public:
-  TC_Cont_Ind() : TDlgIndicationPrimitive()
+  TR_Cont_Ind() : TDlgIndicationPrimitive(indTRCont)
   { }
-  ~TC_Cont_Ind()
-  { }
-
-  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
-  const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
-};
-//
-class TC_End_Ind : public TDlgIndicationPrimitive {
-public:
-  TC_End_Ind() : TDlgIndicationPrimitive()
-  { }
-  ~TC_End_Ind()
+  ~TR_Cont_Ind()
   { }
 };
 //
-class TC_PAbort_Ind : public TDlgIndicationPrimitive {
-protected:
-  PAbort::Cause_t _cause;
-
+class TR_End_Ind : public TDlgIndicationPrimitive {
 public:
-  TC_PAbort_Ind() : TDlgIndicationPrimitive()
-    , _cause(PAbort::p_genericError)
+  TR_End_Ind() : TDlgIndicationPrimitive(indTREnd)
   { }
-  ~TC_PAbort_Ind()
+  ~TR_End_Ind()
   { }
-
-  PAbort::Cause_t getCause(void) const { return _cause; }
 };
+
 //
-class TC_UAbort_Ind : public TDlgIndicationPrimitive {
+class TR_UAbort_Ind : public TDlgIndicationPrimitive {
 protected:
   TDialogueAssociate::Diagnostic_t _diagnostic;
 
 public:
-  TC_UAbort_Ind() : TDlgIndicationPrimitive()
+  TR_UAbort_Ind() : TDlgIndicationPrimitive(indTRUAbort)
     , _diagnostic(0)
   { }
-  ~TC_UAbort_Ind()
+  ~TR_UAbort_Ind()
   { }
 
   TDialogueAssociate::Diagnostic_t getDiagnostic(void) const
@@ -112,22 +106,39 @@ public:
 };
 
 //
-class TC_Notice_Ind : public TDlgIndicationPrimitive {
+class TR_PAbort_Ind : public TDlgIndicationPrimitive {
 protected:
-  sccp::ReturnCause_t _cause;
-  SCCPAddress         _orgAdr;
-  SCCPAddress         _dstAdr;
+  PAbort::Cause_t _cause;
 
 public:
-  TC_Notice_Ind() : TDlgIndicationPrimitive()
-    , _cause(sccp::ReturnCause::rcReserved)
+  TR_PAbort_Ind() : TDlgIndicationPrimitive(indTRPAbort)
+    , _cause(PAbort::p_genericError)
   { }
-  ~TC_Notice_Ind()
+  ~TR_PAbort_Ind()
   { }
+  //
+  PAbort::Cause_t getCause(void) const { return _cause; }
+  //
+  bool islocal(void) const { return _orgAdr.empty(); }
+};
 
+//
+class TR_Notice_Ind : public TDlgIndicationPrimitive {
+protected:
+  sccp::ReturnCause_t _cause;
+  SCCPAddress         _dstAdr;
+  uint16_t            _usrDataLen;
+  const uint8_t *     _usrDataBuf;
+
+public:
+  TR_Notice_Ind() : TDlgIndicationPrimitive(indTRNotice)
+    , _cause(sccp::ReturnCause::rcReserved), _usrDataLen(0), _usrDataBuf(0)
+  { }
+  ~TR_Notice_Ind()
+  { }
+  //
   sccp::ReturnCause_t getReturnCause(void) const { return _cause; }
   //
-  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
   const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
 };
 

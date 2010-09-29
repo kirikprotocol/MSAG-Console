@@ -2,7 +2,9 @@
  * Transaction Capabilities Provider.
  * ************************************************************************** */
 #ifndef __EYELINE_TCAP_TC_PROVIDER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif /* __GNUC__ */
 #define __EYELINE_TCAP_TC_PROVIDER_HPP
 
 #include "core/synchronization/Mutex.hpp"

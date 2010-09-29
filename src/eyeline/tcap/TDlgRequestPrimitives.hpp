@@ -1,25 +1,57 @@
 /* ************************************************************************** *
- * TCAP API: structured TCAP dialogue requests primitives.
+ * TCAP API: structured TCAP dialogue requests primitives(transaction sublayer).
  * ************************************************************************** */
 #ifndef __EYELINE_TCAP_PROVD_TDLGREQUESTPRIMITIVES_HPP__
-# ident "@(#)$Id$"
-# define __EYELINE_TCAP_PROVD_TDLGREQUESTPRIMITIVES_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif /* __GNUC__ */
+#define __EYELINE_TCAP_PROVD_TDLGREQUESTPRIMITIVES_HPP__
 
-# include "eyeline/sccp/SCCPAddress.hpp"
-# include "eyeline/tcap/TDialogueDefs.hpp"
-# include "eyeline/tcap/TDlgUserInfo.hpp"
-# include "eyeline/tcap/TComponentDefs.hpp"
+#include "eyeline/sccp/SCCPAddress.hpp"
+#include "eyeline/tcap/TDialogueDefs.hpp"
+#include "eyeline/tcap/TDlgUserInfo.hpp"
+#include "eyeline/tcap/TComponentDefs.hpp"
 
 namespace eyeline {
 namespace tcap {
 
 using eyeline::asn1::EncodedOID;
 using eyeline::asn1::ASExternal;
-using eyeline::ros::ROSPduPrimitiveAC;
+using eyeline::ros::ROSPdu;
 using eyeline::sccp::SCCPAddress;
 
 class TDlgRequestPrimitive {
+public:
+  enum RKind_e {
+    reqTRNone = 0, reqTRBegin, reqTRCont, reqTREnd, reqTRUAbort, reqTRPAbort
+  };
+
+  virtual ~TDlgRequestPrimitive()
+  { }
+
+  static const char * getIdent(RKind_e req_kind);
+
+  const char * getIdent(void) const { return getIdent(_rKind); }
+
+  //
+  void setDialogueId(const TDialogueId & use_id) { _dlgId = use_id; }
+  const TDialogueId & getDialogueId(void) const { return _dlgId; }
+
+  //NOTE: overrides appCtx from TC_Req
+  void setAppCtx(const EncodedOID & use_acid) { _acOId = &use_acid; }
+  const EncodedOID * getAppCtx(void) const { return _acOId; }
+  //
+  void setReturnOnError(bool ret_on_error = true) { _retOnErr = ret_on_error; }
+  bool getReturnOnError(void) const { return _retOnErr; }
+  //
+  void setInSequenceDelivery(bool use_seq_dlvr = true) { _inSeqDelivery = use_seq_dlvr; }
+  bool getInSequenceDelivery(void) const { return _inSeqDelivery; }
+  //
+  void addUIValue(const ASExternal & use_ui) { _usrInfo.push_back(&use_ui); }
+  const TDlgUserInfoPtrList & getUserInfo(void) const { return _usrInfo; }
+
 protected:
+  const RKind_e _rKind;
   //Next two parameters composes TCAP dialogue 'quality of service' parameter
   bool          _retOnErr;
   bool          _inSeqDelivery;
@@ -31,40 +63,22 @@ protected:
   // -- Component portion parameteres
   TComponentsPtrList  _comps;
 
-public:
-  TDlgRequestPrimitive()
-    : _retOnErr(false), _inSeqDelivery(false), _acOId(0)
-  { }
-  virtual ~TDlgRequestPrimitive()
-  { }
 
-  //
-  void setDialogueId(const TDialogueId & use_id) { _dlgId = use_id; }
-  const TDialogueId & getDialogueId(void) const { return _dlgId; }
-  //
-  void setAppCtx(const EncodedOID & use_acid) { _acOId = &use_acid; }
-  const EncodedOID * getAppCtx(void) const { return _acOId; }
-  //
-  void setReturnOnError(bool ret_on_error = true) { _retOnErr = ret_on_error; }
-  bool getReturnOnError(void) const { return _retOnErr; }
-  //
-  void setInSequenceDelivery(void) { _inSeqDelivery = true; }
-  bool getInSequenceDelivery(void) const { return _inSeqDelivery; }
-  //
-  void addUIValue(const ASExternal & use_ui) { _usrInfo.push_back(&use_ui); }
-  const TDlgUserInfoPtrList & getUserInfo(void) const { return _usrInfo; }
+  TDlgRequestPrimitive(RKind_e req_kind)
+    : _rKind(req_kind), _retOnErr(false), _inSeqDelivery(true), _acOId(0)
+  { }
 };
 
 //
-class TC_Begin_Req : public TDlgRequestPrimitive {
+class TR_Begin_Req : public TDlgRequestPrimitive {
 protected:
   SCCPAddress   _orgAdr;
   SCCPAddress   _dstAdr;
 
 public:
-  TC_Begin_Req()
+  TR_Begin_Req() : TDlgRequestPrimitive(reqTRBegin)
   { }
-  ~TC_Begin_Req()
+  ~TR_Begin_Req()
   { }
 
   void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
@@ -73,52 +87,56 @@ public:
   void setDestAddress(const SCCPAddress & use_adr) { _dstAdr = use_adr; }
   const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
   //
-  void addTComponent(const ROSPduPrimitiveAC & use_comp) { _comps.push_back(&use_comp); }
+  void addTComponent(const ROSPdu & use_comp) { _comps.push_back(&use_comp); }
   const TComponentsPtrList & getCompList(void) const { return _comps; }
 };
 
 //
-class TC_Cont_Req : public TDlgRequestPrimitive {
+class TR_Cont_Req : public TDlgRequestPrimitive {
 protected:
   SCCPAddress   _orgAdr;
 
 public:
-  TC_Cont_Req()
+  TR_Cont_Req() : TDlgRequestPrimitive(reqTRCont)
   { }
-  ~TC_Cont_Req()
+  ~TR_Cont_Req()
   { }
 
   void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
   const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
   //
-  void addTComponent(const ROSPduPrimitiveAC & use_comp) { _comps.push_back(&use_comp); }
+  void addTComponent(const ROSPdu & use_comp) { _comps.push_back(&use_comp); }
   const TComponentsPtrList & getCompList(void) const { return _comps; }
 };
 
 //
-class TC_End_Req : public TDlgRequestPrimitive {
+class TR_End_Req : public TDlgRequestPrimitive {
+protected:
+  SCCPAddress   _orgAdr;
+
 public:
   enum DialogEnding_e { endBASIC = 0, endPREARRANGED };
 
-protected:
-  DialogEnding_e        _termination;
-
-public:
-  TC_End_Req(DialogEnding_e use_term = endBASIC)
-    : _termination(use_term)
+  TR_End_Req(DialogEnding_e use_term = endBASIC)
+    : TDlgRequestPrimitive(reqTREnd), _termination(use_term)
   { }
-  ~TC_End_Req()
+  ~TR_End_Req()
   { }
 
+  void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
+  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
+  //
   void setPrearrangedEnd(void) { _termination = endPREARRANGED; }
   DialogEnding_e getTermination() const { return _termination; }
   //
-  void addTComponent(const ROSPduPrimitiveAC & use_comp) { _comps.push_back(&use_comp); }
+  void addTComponent(const ROSPdu & use_comp) { _comps.push_back(&use_comp); }
   const TComponentsPtrList & getCompList(void) const { return _comps; }
+
+protected:
+  DialogEnding_e        _termination;
 };
 
-
-class TC_UAbort_Req : public TDlgRequestPrimitive {
+class TR_UAbort_Req : public TDlgRequestPrimitive {
 public:
   enum Kind_e {         //There are 3 kinds of user abort:
     uabrtAssociation = 0  //TCUser aborts establishing a dialog
@@ -128,20 +146,11 @@ public:
                           //externally defined DataValue provided as reason.
   };
 
-protected:
-  Kind_e  _kind;
-  bool    _abortFromTCUser; //TCProvider able to generate UAbort in case of unsupported AppCtx
-  TDialogueAssociate::DiagnosticUser_e _ascRejCause; //associate reject diagnostic
-
-public:
-  TC_UAbort_Req(bool abort_from_tc_user = true)
-    : _kind(uabrtDialogueUI), _abortFromTCUser(abort_from_tc_user)
+  TR_UAbort_Req() : TDlgRequestPrimitive(reqTRUAbort)
     , _ascRejCause(TDialogueAssociate::dsu_null)
   { }
-  ~TC_UAbort_Req()
+  ~TR_UAbort_Req()
   { }
-
-  bool isAbortFromTCUser() const { return _abortFromTCUser; }
 
   const Kind_e & getAbortKind(void) const { return _kind; }
 
@@ -179,6 +188,10 @@ public:
   {
     return _ascRejCause;
   }
+
+protected:
+  Kind_e  _kind;
+  TDialogueAssociate::DiagnosticUser_e _ascRejCause; //associate reject diagnostic
 };
 
 } //tcap

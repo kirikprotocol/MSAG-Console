@@ -1,35 +1,42 @@
-#include "AppCtxSMRegistry.hpp"
-#include "eyeline/utilx/Exception.hpp"
+#ifndef MOD_IDENT_OFF
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_OFF */
+
+#include "eyeline/tcap/provd/AppCtxSMRegistry.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
 
-void
-AppCtxSMRegistry::registerDialogueHandlerFactory(const asn1::EncodedOID& ctx,
-                                                 TDlgHandlerIfaceFactory* indHndlrsFactory,
-                                                 unsigned int dialogueTimeout)
+using smsc::core::synchronization::MutexGuard;
+
+bool AppCtxSMRegistry::registerDlgHandlerFactory(const asn1::EncodedOID & ctx_oid,
+                                                 TDlgHandlerFactoryIface * dlg_hndls_factory,
+                                                 TDlgTimeout dlg_exp_tmo/* = 0*/)
 {
-  if ( _registeredAppCtxs.find(ctx) == _registeredAppCtxs.end() )
-    _registeredAppCtxs.insert(std::make_pair(ctx, RegistryEntry_impl(indHndlrsFactory, dialogueTimeout)));
+  MutexGuard  grd(_sync);
+  if ( _registeredAppCtxs.find(ctx_oid) == _registeredAppCtxs.end() ) {
+    _registeredAppCtxs.insert(std::make_pair(ctx_oid, RegistryEntry(dlg_hndls_factory, dlg_exp_tmo)));
+    return true;
+  }
+  return false;
 }
 
-AppCtxSMRegistry::RegistryEntry
-AppCtxSMRegistry::getDialogueHandler(const asn1::EncodedOID& ctx)
+TDlgHandlerInfo
+  AppCtxSMRegistry::getDlgHandler(const asn1::EncodedOID & ctx_oid,
+                                       ros::LocalOpCode init_opcode/* = 0*/) const /*throw()*/
 {
-  registered_app_ctxs_t::iterator iter = _registeredAppCtxs.find(ctx);
-  if ( iter == _registeredAppCtxs.end() )
-    throw utilx::RegistryKeyNotFound("AppCtxSMRegistry::getDialogueHandler::: no entry for key='%s'", ctx.asnValue().c_str());
-  return RegistryEntry(iter->second.dialogueHandlerFactory->createTDlgHandlerIface(),
-                       iter->second.dialogueTimeout);
+  MutexGuard  grd(_sync);
+  registered_app_ctxs_t::const_iterator iter = _registeredAppCtxs.find(ctx_oid);
+  return (iter == _registeredAppCtxs.end()) ? 
+            TDlgHandlerInfo() : iter->second.createDlgHandler(init_opcode);
 }
 
-void
-AppCtxSMRegistry::unregisterDialogueHandlerFactory(const asn1::EncodedOID& ctx)
+void AppCtxSMRegistry::unregisterDlgHandlerFactory(const asn1::EncodedOID & ctx_oid) /*throw()*/
 {
-  registered_app_ctxs_t::iterator iter = _registeredAppCtxs.find(ctx);
+  MutexGuard  grd(_sync);
+  registered_app_ctxs_t::iterator iter = _registeredAppCtxs.find(ctx_oid);
   if ( iter != _registeredAppCtxs.end() ) {
-    delete iter->second.dialogueHandlerFactory;
     _registeredAppCtxs.erase(iter);
   }
 }

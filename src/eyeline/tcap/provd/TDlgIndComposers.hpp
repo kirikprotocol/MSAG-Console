@@ -1,106 +1,179 @@
 /* ************************************************************************** *
- * TCAP dialogue indication composers.
+ * TCAP dialogue indication composers (Transaction sub-layer indications).
  * ************************************************************************** */
 #ifndef __ELC_TCAP_INDICATIONS_COMPOSERS_HPP
 #ident "@(#)$Id$"
 #define __ELC_TCAP_INDICATIONS_COMPOSERS_HPP
 
-#include "eyeline/tcap/TDialogueIndicationPrimitives.hpp"
+#include "eyeline/tcap/ContextlessOps.hpp"
+#include "eyeline/tcap/TDlgIndicationPrimitives.hpp"
+#include "eyeline/tcap/proto/TCMessage.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
 
-
-template <class T_DLG_IND_Arg /* pubic: TDialogueIndicationPrimitive */>
+template <class T_DLG_IND_Arg /* pubic: TDlgIndicationPrimitive */>
 class TDlgIndicationComposerT : public T_DLG_IND_Arg {
+protected:
+  unsigned int _scspLink;
+
 public:
-  TDlgIndicationComposerT(const EncodedOID * use_ac = NULL)
-    : T_DLG_IND_Arg(use_ac)
+  TDlgIndicationComposerT() : T_DLG_IND_Arg()
+  { }
+  ~TDlgIndicationComposerT()
   { }
   //
-  void setDialogueId(const TDialogueId & use_id) { _dlgId = use_id; }
+  T_DLG_IND_Arg & TInd(void) { return *this; }
   //
-  void setTransactionId(const TransactionId & use_id) { _trId = use_id; }
+  const T_DLG_IND_Arg & TInd(void) const { return *this; }
+  //
+  void setDialogueId(const TDialogueId & use_id) { this->_dlgId = use_id; }
+  //
+  void setSCSPLink(unsigned int scsp_link_num) { _scspLink = scsp_link_num; }
+  //Returns true on success
+  bool setOrigAddress(const uint8_t * use_buf, unsigned buf_len)
+  {
+    return this->_orgAdr.unpackOcts(use_buf, buf_len) != 0;
+  }
+  //
+  unsigned int getSCSPLink(void) const { return _scspLink; }
 };
 
+// -----------------------------------------------
+// TR_BEGIN_IND: TR_Begin_Ind composer
+// -----------------------------------------------
+class TBeginIndComposer : public TDlgIndicationComposerT<TR_Begin_Ind> {
+protected:
+  uint32_t _orgTrId;
 
-// -----------------------------------------------
-// -- specialization: TC_Begin_Ind composer
-// -----------------------------------------------
-class TBeginIndComposer : public TDlgIndicationComposerT<TC_Begin_Ind> {
 public:
-  TBeginIndComposer(const EncodedOID * use_ac = NULL)
-    : TDlgIndicationComposerT<TC_Begin_Ind>(use_ac)
+  TBeginIndComposer() : TDlgIndicationComposerT<TR_Begin_Ind>()
+  { }
+  ~TBeginIndComposer()
   { }
 
-  void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
-  void setDestAddress(const SCCPAddress & use_adr) { _dstAdr = use_adr; }
-  void setCompList(ROSComponentsList * use_comps) { _comps = use_comps; }
+  void init(proto::TMsgBegin & use_msg) /*throw(std::exception)*/;
+  //
+  bool setDestAddress(const uint8_t * use_buf, unsigned buf_len)
+  {
+    return _dstAdr.unpackOcts(use_buf, buf_len) != 0;
+  }
+  //
+  uint32_t getOrigTrId(void) const { return _orgTrId; }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_Cont_Ind composer
+// TR_CONT_IND: TR_Cont_Ind composer
 // -----------------------------------------------
-class TContIndComposer : public TDlgIndicationComposerT<TC_Cont_Ind> {
+class TContIndComposer : public TDlgIndicationComposerT<TR_Cont_Ind> {
+protected:
+  uint32_t _orgTrId;
+  uint32_t _dstTrId;
+
 public:
-  TContIndComposer(const EncodedOID * use_ac = NULL)
-    : TDlgIndicationComposerT<TC_Cont_Ind>(use_ac)
+  TContIndComposer() : TDlgIndicationComposerT<TR_Cont_Ind>()
+  { }
+  ~TContIndComposer()
   { }
 
-  void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
-  void setDestAddress(const SCCPAddress & use_adr) { _dstAdr = use_adr; }
-  void setCompList(ROSComponentsList * use_comps) { _comps = use_comps; }
+  void init(proto::TMsgContinue & use_msg) /*throw(std::exception)*/;
+  //
+  uint32_t getOrigTrId(void) const { return _orgTrId; }
+  //
+  uint32_t getDestTrId(void) const { return _dstTrId; }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_End_Ind composer
+// TR_END_IND: TR_End_Ind composer
 // -----------------------------------------------
-class TEndIndComposer : public TDlgIndicationComposerT<TC_End_Ind> {
+class TEndIndComposer : public TDlgIndicationComposerT<TR_End_Ind> {
+protected:
+  uint32_t _dstTrId;
+
 public:
-  TEndIndComposer(const EncodedOID * use_ac = NULL)
-    : TDlgIndicationComposerT<TC_End_Ind>(use_ac)
+  TEndIndComposer() : TDlgIndicationComposerT<TR_End_Ind>()
+  { }
+  ~TEndIndComposer()
   { }
   //
-  void setCompList(ROSComponentsList * use_comps) { _comps = use_comps; }
+  void init(proto::TMsgEnd & use_msg) /*throw(std::exception)*/;
+  //
+  uint32_t getDestTrId(void) const { return _dstTrId; }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_PAbort_Ind composer
+// TR_U_ABORT_IND: TR_UAbort_Ind composer
 // -----------------------------------------------
-class TPAbortIndComposer : public TDlgIndicationComposerT<TC_PAbort_Ind> {
+class TUAbortIndComposer : public TDlgIndicationComposerT<TR_UAbort_Ind> {
+protected:
+  uint32_t _dstTrId;
+
 public:
-  TPAbortIndComposer(const EncodedOID * use_ac = NULL)
-    : TDlgIndicationComposerT<TC_PAbort_Ind>(use_ac)
+  TUAbortIndComposer() : TDlgIndicationComposerT<TR_UAbort_Ind>()
+  { }
+  ~TUAbortIndComposer()
   { }
 
-  void setPAbortCause(PAbort::Cause_e use_cause) { _cause = use_cause; }
+  //NOTE: use_msg has _reason == u-abortCause
+  void init(proto::TMsgAbort & use_msg)  /*throw(std::exception)*/;
+  //
+  uint32_t getDestTrId(void) const { return _dstTrId; }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_UAbort_Ind composer
+// TR_P_ABORT_IND: TR_PAbort_Ind composer
 // -----------------------------------------------
-class TUAbortIndComposer : public TDlgIndicationComposerT<TC_UAbort_Ind> {
+class TPAbortIndComposer : public TDlgIndicationComposerT<TR_PAbort_Ind> {
+protected:
+  uint32_t _dstTrId;
+
 public:
-  TUAbortIndComposer(const EncodedOID * use_ac = NULL)
-    : TDlgIndicationComposerT<TC_UAbort_Ind>(use_ac)
+  TPAbortIndComposer() : TDlgIndicationComposerT<TR_PAbort_Ind>()
   { }
-  //TODO: setters for abort data
+  ~TPAbortIndComposer()
+  { }
+
+  //Local TCProvider abort
+  void init(uint32_t dst_trId, PAbort::Cause_t use_reason)
+  {
+    _dstTrId = dst_trId; _cause = use_reason;
+  }
+  //Remote TCProvider abort
+  //NOTE: use_msg has _reason == p-abortCause
+  void init(proto::TMsgAbort & use_msg)
+  {
+    _dstTrId = use_msg._dstTrId;
+    _cause = *use_msg._reason.getPrvd();
+  }
+  //
+  uint32_t getDestTrId(void) const { return _dstTrId; }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_Notice_Ind composer
+// TR_NOTICE_IND: TR_Notice_Ind composer
 // -----------------------------------------------
-class TNoticeIndComposer : public TDlgIndicationComposerT<TC_Notice_Ind> {
+class TNoticeIndComposer : public TDlgIndicationComposerT<TR_Notice_Ind> {
 public:
-  TNoticeIndComposer(const EncodedOID * use_ac = NULL)
-    : TDlgIndicationComposerT<TC_Notice_Ind>(use_ac)
+  TNoticeIndComposer() : TDlgIndicationComposerT<TR_Notice_Ind>()
   { }
-
-  void setReportCause(ReportCause_e use_cause) { _cause = use_cause; }
-  void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
-  void setDestAddress(const SCCPAddress & use_adr) { _dstAdr = use_adr; }
-  void setCompList(ROSComponentsList * use_comps) { _comps = use_comps; }
+  ~TNoticeIndComposer()
+  { }
+  //
+  void setReturnCause(sccp::ReturnCause_t ret_err)
+  {
+    _cause = ret_err;
+  }
+  //
+  bool setDestAddress(const uint8_t * dst_adr_buf, unsigned buf_len)
+  {
+    return _dstAdr.unpackOcts(dst_adr_buf, buf_len) != 0;
+  }
+  //
+  void setUserData(const uint8_t * user_data, uint16_t data_len)
+  {
+    _usrDataLen = data_len; _usrDataBuf = user_data;
+  }
 };
 
 } //provd

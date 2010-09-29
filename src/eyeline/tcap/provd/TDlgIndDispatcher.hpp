@@ -5,26 +5,19 @@
 #ident "@(#)$Id$"
 #define __ELC_TCAP_INDICATIONS_DISPATCHER_HPP
 
-#include "eyeline/tcap/provd/TDlgIndComposers.hpp"
-#include "eyeline/tcap/provd/SUAIndications.hpp"
-#include "eyeline/tcap/provd/TCAPIndicationsProcessor.hpp"
-#include "eyeline/tcap/proto/TCAPMessage.hpp"
-#include "eyeline/tcap/proto/TCUserInfo.hpp"
+#include "eyeline/tcap/proto/TCMessage.hpp"
+#include "eyeline/tcap/provd/SCSPIndications.hpp"
+//#include "eyeline/tcap/provd/TDlgIndComposers.hpp"
+#include "eyeline/tcap/provd/TDlgIndProcessor.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
 
-using eyeline::tcap::proto::TCAPMessage;
-
-//Basic abstract class for all indication dispatchers
+//Basic abstract class for all TC indication dispatchers
 class TDlgIndicationDispatcherAC {
-protected:
-  TCAPMessage & _tMsg;
-
 public:
-  TDlgIndicationDispatcherAC(TCAPMessage & use_tmsg)
-    : _tMsg(use_tmsg)
+  TDlgIndicationDispatcherAC()
   { }
   virtual ~TDlgIndicationDispatcherAC()
   { }
@@ -33,161 +26,163 @@ public:
   // -- TDlgIndicationDispatcherAC interface methods
   // -----------------------------------------------
   //calls appropriate dispatching method of TDlgHandler
-  virtual bool dispatchTInd(TCAPIndicationsProcessor * use_hdl, unsigned int suaConnectNum) = 0;
+  virtual bool dispatchTInd(TDlgIndProcessorIface * use_hdl, unsigned int scsp_link_num) = 0;
 };
 
 
 template <class T_IND_COMPOSER_Arg /* pubic: TDialogueIndicationComposerT<> */>
 class TDlgIndicationDispatcherT : public TDlgIndicationDispatcherAC {
 protected:
-  T_IND_COMPOSER_Arg _tInit;
+  T_IND_COMPOSER_Arg _indComposer;
 
 public:
-  TDlgIndicationDispatcherT(TCAPMessage & use_tmsg)
-    : TDlgIndicationDispatcherAC(use_tmsg)
-    , _tInit(use_tmsg.getAppCtx())
-  {
-    proto::TCUserInformation * usrInfo = _tMsg.getUsrInfo();
-    if (usrInfo && !usrInfo->empty())
-      usrInfo->export2TDlgUI(_tInit.getUserInfo());
-  }
+  TDlgIndicationDispatcherT() : TDlgIndicationDispatcherAC()
+  { }
   virtual ~TDlgIndicationDispatcherT()
   { }
 
   // -----------------------------------------------
   // -- TDlgIndicationDispatcherAC interface methods
   // -----------------------------------------------
-  bool dispatchTInd(TCAPIndicationsProcessor * use_hdl, unsigned int suaConnectNum)
+  virtual bool dispatchTInd(TDlgIndProcessorIface * use_hdl, unsigned int scsp_link_num)
   {
-    return use_hdl->updateDialogue(_tInit, suaConnectNum);
+    _indComposer.setSCSPLink(scsp_link_num);
+    use_hdl->updateDlgByIndication(_indComposer);
+    return true;
   }
-
 };
 
 // -----------------------------------------------
-// -- specialization: TC_Begin_Ind dispatcher
+// -- specialization: TR_Begin_Ind dispatcher
 // -----------------------------------------------
 class TBeginIndDispatcher : public TDlgIndicationDispatcherT<TBeginIndComposer> {
 public:
-  TBeginIndDispatcher(TCAPMessage & use_tmsg)
-    : TDlgIndicationDispatcherT<TBeginIndComposer>(use_tmsg)
-  {
-    if (!use_tmsg.CompList().empty())
-      _tInit.setCompList(&use_tmsg.CompList());
-  }
+  TBeginIndDispatcher() : TDlgIndicationDispatcherT<TBeginIndComposer>()
+  { }
+  ~TBeginIndDispatcher()
+  { }
   //
-  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool processSCSPInd(const SCSPUnitdataInd & scsp_ind, proto::TMsgBegin & use_tmsg)
+    /*throw(std::exception)*/
   {
-    //TODO: Compose TC_Begin_Ind
+    _indComposer.init(use_tmsg); //throws
+    if (_indComposer.setOrigAddress(scsp_ind.callingAddr(), scsp_ind.callingAddrLen()))
+      return _indComposer.setDestAddress(scsp_ind.calledAddr(), scsp_ind.calledAddrLen());
     return false;
   }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_Cont_Ind dispatcher
+// -- specialization: TR_Cont_Ind dispatcher
 // -----------------------------------------------
 class TContIndDispatcher : public TDlgIndicationDispatcherT<TContIndComposer> {
 public:
-  TContIndDispatcher(TCAPMessage & use_tmsg)
-    : TDlgIndicationDispatcherT<TContIndComposer>(use_tmsg)
-  {
-    if (!use_tmsg.CompList().empty())
-      _tInit.setCompList(&use_tmsg.CompList());
-  }
+  TContIndDispatcher() : TDlgIndicationDispatcherT<TContIndComposer>()
+  { }
+  ~TContIndDispatcher()
+  { }
   //
-  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool processSCSPInd(const SCSPUnitdataInd & scsp_ind, proto::TMsgContinue & use_tmsg)
+    /*throw(std::exception)*/
   {
-    //TODO: Compose TC_Cont_Ind 
-    return false;
+    _indComposer.init(use_tmsg);
+    return _indComposer.setOrigAddress(scsp_ind.callingAddr(), scsp_ind.callingAddrLen());
   }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_End_Ind dispatcher
+// -- specialization: TR_End_Ind dispatcher
 // -----------------------------------------------
 class TEndIndDispatcher : public TDlgIndicationDispatcherT<TEndIndComposer> {
 public:
-  TEndIndDispatcher(TCAPMessage & use_tmsg)
-    : TDlgIndicationDispatcherT<TEndIndComposer>(use_tmsg)
-  {
-    if (!use_tmsg.CompList().empty())
-      _tInit.setCompList(&use_tmsg.CompList());
-  }
+  TEndIndDispatcher() : TDlgIndicationDispatcherT<TEndIndComposer>()
+  { }
+  ~TEndIndDispatcher()
+  { }
   //
-  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool processSCSPInd(const SCSPUnitdataInd & scsp_ind, proto::TMsgEnd & use_tmsg)
+    /*throw(std::exception)*/
   {
-    //TODO: Compose TC_End_Ind 
-    return false;
+    _indComposer.init(use_tmsg);
+    return _indComposer.setOrigAddress(scsp_ind.callingAddr(), scsp_ind.callingAddrLen());
   }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_PAbort_Ind dispatcher
+// -- specialization: TR_PAbort_Ind dispatcher
 // -----------------------------------------------
 class TPAbortIndDispatcher : public TDlgIndicationDispatcherT<TPAbortIndComposer> {
 public:
-  TPAbortIndDispatcher(TCAPMessage & use_tmsg)
-    : TDlgIndicationDispatcherT<TPAbortIndComposer>(use_tmsg)
+  TPAbortIndDispatcher() : TDlgIndicationDispatcherT<TPAbortIndComposer>()
+  { }
+  ~TPAbortIndDispatcher()
   { }
   //
-  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool processSCSPInd(const SCSPUnitdataInd & scsp_ind, proto::TMsgAbort & use_tmsg)
+    /*throw(std::exception)*/
   {
-    //TODO: Compose TC_PAbort_Ind 
-    return false;
+    _indComposer.init(use_tmsg);
+    return _indComposer.setOrigAddress(scsp_ind.callingAddr(), scsp_ind.callingAddrLen());
   }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_UAbort_Ind dispatcher
+// -- specialization: TR_UAbort_Ind dispatcher
 // -----------------------------------------------
 class TUAbortIndDispatcher : public TDlgIndicationDispatcherT<TUAbortIndComposer> {
 public:
-  TUAbortIndDispatcher(TCAPMessage & use_tmsg)
-    : TDlgIndicationDispatcherT<TUAbortIndComposer>(use_tmsg)
+  TUAbortIndDispatcher() : TDlgIndicationDispatcherT<TUAbortIndComposer>()
+  { }
+  ~TUAbortIndDispatcher()
   { }
   //
-  bool bindSUAInd(const SUAUnitdataInd & sua_ind)
+  bool processSCSPInd(const SCSPUnitdataInd & scsp_ind, proto::TMsgAbort & use_tmsg)
+    /*throw(std::exception)*/
   {
-    //TODO: Compose TC_UAbort_Ind 
-    return false;
+    _indComposer.init(use_tmsg);
+    return _indComposer.setOrigAddress(scsp_ind.callingAddr(), scsp_ind.callingAddrLen());
   }
 };
 
 // -----------------------------------------------
-// -- specialization: TC_Notice_Ind dispatcher
+// -- specialization: TR_Notice_Ind dispatcher
 // -----------------------------------------------
 class TNoticeIndDispatcher : public TDlgIndicationDispatcherT<TNoticeIndComposer> {
 public:
-  TNoticeIndDispatcher(TCAPMessage & use_tmsg)
-    : TDlgIndicationDispatcherT<TNoticeIndComposer>(use_tmsg)
-  {
-    if (!use_tmsg.CompList().empty())
-      _tInit.setCompList(&use_tmsg.CompList());
-  }
+  TNoticeIndDispatcher() : TDlgIndicationDispatcherT<TNoticeIndComposer>()
+  { }
+  ~TNoticeIndDispatcher()
+  { }
   //
-  bool bindSUAInd(const SUANoticeInd & sua_ind)
+  bool processSCSPInd(const SCSPNoticeInd & scsp_ind) /*throw(std::exception)*/
   {
-    //TODO: Compose TC_Notice_Ind 
+    _indComposer.setReturnCause(scsp_ind.getCauseValue());
+    if (_indComposer.setOrigAddress(scsp_ind.callingAddr(), scsp_ind.callingAddrLen())
+        && _indComposer.setDestAddress(scsp_ind.calledAddr(), scsp_ind.calledAddrLen())) {
+      _indComposer.setUserData(scsp_ind.userData(), scsp_ind.userDataLen());
+      return true;
+    }
     return false;
   }
 };
 
 
 //TCAP dialogue indications dispatcher: implements functionality on creating
-//  TCAP dialogue indications from received SUA message and dispatching the
+//  TCAP dialogue indications from received SCCP message and dispatching the
 //  former to appropriate TCAP dialogue handler.
-class TDlgIndicationDispatcher : SUAIndHandlerIface {
-public:
-  enum IKind_e {
-    indNone = 0, indTBegin, indTCont, indTEnd, indTPAbrt, indTUAbrt, indTNotice
-  };
-
+class TDlgIndicationDispatcher : SCSPIndHandlerIface {
 private:
-  uint8_t objMem[eyeline::util::MaxSizeOf6_T<
-                                  TBeginIndDispatcher, TContIndDispatcher,
-                                  TEndIndDispatcher, TUAbortIndDispatcher,
-                                  TPAbortIndDispatcher, TNoticeIndDispatcher
-                                >::VALUE];
+  union {
+    void *  _aligner;
+    uint8_t _buf[eyeline::util::MaxSizeOf6_T<
+                                    TBeginIndDispatcher, TContIndDispatcher,
+                                    TEndIndDispatcher, TUAbortIndDispatcher,
+                                    TPAbortIndDispatcher, TNoticeIndDispatcher
+                                  >::VALUE];
+  } _objMem;
+
+protected:
+  TDlgIndicationPrimitive::IKind_e  _kind;
   union { //NOTE: this union provides correct pointer translation 
           //only in case of SINLE inheritance from TDlgIndicationDispatcherAC
     TDlgIndicationDispatcherAC * pAc;
@@ -197,59 +192,53 @@ private:
     TPAbortIndDispatcher * tPAbrt;
     TUAbortIndDispatcher * tUAbrt;
     TNoticeIndDispatcher * tNotice;
-  }           _dsp;
-  IKind_e     _kind;
-  MessageInfo _msgSUA;
-  TCAPMessage _msgTC; //has references to _msgSUA.msgData
+  }                 _dsp;
+  SCSPMessageInfo   _msgSCSP;
+  proto::TCMessage  _msgTC; //has references to _msgSCSP.msgData
 
-protected:
-  void resetObj(void)
+  // --------------------------------------------------------
+  // -- SCSPIndHandlerIface interface methods implementation
+  // --------------------------------------------------------
+  virtual bool processSCSPInd(const SCSPUnitdataInd & scsp_ind) /*throw(std::exception)*/;
+  virtual bool processSCSPInd(const SCSPNoticeInd & scsp_ind) /*throw(std::exception)*/;
+
+public:
+  explicit TDlgIndicationDispatcher() : _kind(TDlgIndicationPrimitive::indTRNone)
+  {
+    _objMem._aligner = _dsp.pAc = 0;
+  }
+  //
+  ~TDlgIndicationDispatcher()
+  {
+    clear();
+  }
+
+  void clear(void)
   {
     if (_dsp.pAc) {
       _dsp.pAc->~TDlgIndicationDispatcherAC();
       _dsp.pAc = 0;
-      _msgTC.Reset();
+      _kind = TDlgIndicationPrimitive::indTRNone;
     }
+    _msgTC.clear();
+    _msgSCSP.clear();
   }
 
-  void Reset(IKind_e use_ikind = indNone);
+  TDlgIndicationPrimitive::IKind_e indKind(void) const { return _kind; }
 
-  // ----------------------------------------
-  // -- SUAIndHandlerIface interface methods
-  // ----------------------------------------
-  bool processSuaInd(const SUAUnitdataInd & sua_ind);
-  bool processSuaInd(const SUANoticeInd & sua_ind);
+  SCSPMessageInfo * getSCSPMessage(void) { return &_msgSCSP; }
 
-public:
-  TDlgIndicationDispatcher(IKind_e use_ikind = indNone)
-    : _kind(use_ikind)
-  {
-    _dsp.pAc = 0;
-    if (_kind != indNone)
-      Reset(_kind);
-  }
-
-  ~TDlgIndicationDispatcher()
-  {
-    resetObj();
-    _kind = indNone;
-  }
-
-  IKind_e indKind(void) const { return _kind; }
-
-  MessageInfo * suaMsgBuf(void) { return &_msgSUA; }
-
-  //Parses SUA mesage buffer, decodes TCAP message, composes appropriate TCAP
+  //Parses SCCP mesage buffer, decodes TCAP message, composes appropriate TCAP
   //Indication prinitive and creates its dispatcher (by calling processSuaInd())
-  bool processSuaMsgBuf(void);
+  bool processSCSPMessage(void) /*throw(std::exception)*/;
 
   // ------------------------------------------------------------
   // NOTE: following methods should be called ONLY after one of
   // process*() methods was executed !
   // ------------------------------------------------------------
-  bool dispatchTInd(TCAPIndicationsProcessor * use_hdl)
+  bool dispatchTInd(TDlgIndProcessorIface * use_hdl) /*throw(std::exception)*/
   {
-    return _dsp.pAc ? _dsp.pAc->dispatchTInd(use_hdl, _msgSUA.suaConnectNum) : false;
+    return _dsp.pAc ? _dsp.pAc->dispatchTInd(use_hdl, _msgSCSP.connectNum) : false;
   }
 };
 

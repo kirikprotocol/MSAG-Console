@@ -3,17 +3,15 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "eyeline/sccp/SCCPDefs.hpp"
-#include "TDlgReqComposers.hpp"
-#include "TDialogueServiceDataRegistry.hpp"
+#include "eyeline/tcap/provd/TDlgReqComposers.hpp"
+#include "eyeline/tcap/provd/TDlgFSMRegistry.hpp"
 
-#include "eyeline/tcap/proto/enc/Abort.hpp"
-#include "eyeline/tcap/proto/enc/AARE_APdu.hpp"
-#include "eyeline/tcap/proto/enc/ABRT_APdu.hpp"
-#include "eyeline/tcap/proto/enc/Begin.hpp"
-#include "eyeline/tcap/proto/enc/ComponentPortion.hpp"
-#include "eyeline/tcap/proto/enc/PAbortCause.hpp"
+#include "eyeline/tcap/proto/enc/TEMsgTBegin.hpp"
+#include "eyeline/tcap/proto/enc/TEMsgTContinue.hpp"
+#include "eyeline/tcap/proto/enc/TEMsgTEnd.hpp"
+#include "eyeline/tcap/proto/enc/TEMsgTAbort.hpp"
+
 #include "eyeline/utilx/Exception.hpp"
-#include "SUARequests.hpp"
 
 //NOTE.1: Providing in-sequence delivery functionality for locally initiated
 //        TCAP dialogue.
@@ -29,16 +27,22 @@ namespace provd {
 
 using eyeline::sccp::UDTParms;
 
-TDlgRequestComposerAC::SerializationResult_e
-  TDlgRequestComposerAC::initUDT(SUAUnitdataReq & use_udt,
-                                 const TDialogueRequestPrimitive & use_req,
-                                 const SCCPAddress& src_addr,
-                                 const SCCPAddress& dst_addr) const
+TDlgRequestComposerAC::UDTStatus
+  TDlgRequestComposerAC::initUDT(SCSPUnitdataReq & use_udt,
+                                  const TDlgRequestPrimitive & use_req,
+                                  const SCCPAddress & src_addr,
+                                  const SCCPAddress & dst_addr) const
 {
-  if (!use_udt.setCallingAddr(src_addr))
-    return TDlgRequestComposerAC::srlzBadSrcAddr;
-  if (!use_udt.setCalledAddr(dst_addr))
-    return TDlgRequestComposerAC::srlzBadDstAddr;
+  UDTStatus rval;
+  if (!use_udt.setCallingAddr(src_addr)) {
+    rval._status = TCError::errSrcAddress;
+    return rval;
+  }
+
+  if (!use_udt.setCalledAddr(dst_addr)) {
+    rval._status = TCError::errDstAddress;
+    return rval;
+  }
 
   //TODO: implement some logic to determine required values of
   //  'importance' and/or 'hopCount' field(s) if necessary.
@@ -47,197 +51,258 @@ TDlgRequestComposerAC::SerializationResult_e
 
   use_udt.setReturnOnError(use_req.getReturnOnError());
   if (use_req.getInSequenceDelivery())
-    use_udt.setSequenceControl(getTransactionId().localId()); //read NOTE.1
+    use_udt.setSequenceControl(getTransactionId().getIdLocal()); //read NOTE.1
 
   //check for overall data length
   uint8_t optionalsMask = (use_udt.getHopCount() ? UDTParms::has_HOPCOUNT : 0)
                           | (use_udt.getImportance() ? UDTParms::has_IMPORTANCE : 0);
 
-  uint16_t maxDataSz = UDTParms::calculateMaxDataSz(
+  rval._maxDataSz = UDTParms::calculateMaxDataSz(
                           use_udt.getSCCPStandard(), optionalsMask,
                           use_udt.calledAddrLen(),  use_udt.callingAddrLen());
-  if (!maxDataSz)
-    return TDlgRequestComposerAC::srlzBadDialoguePortion;
-
-  use_udt.dataBuf().resize(maxDataSz);
-
-  return TDlgRequestComposerAC::srlzOk;
+  if (rval._maxDataSz) {
+    use_udt.dataBuf().resize(rval._maxDataSz);
+  } else
+    rval._status = TCError::errDialoguePortion;
+  return rval;
 }
 
 /* ************************************************************************* *
  * class TBeginReqComposer implementation
  * ************************************************************************* */
-TDlgRequestComposerAC::SerializationResult_e
-  TBeginReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
+TCRCode_e
+  TBeginReqComposer::serialize2UDT(SCSPUnitdataReq & use_udt,
                                    const SCCPAddress& src_addr,
                                    const SCCPAddress& dst_addr) const
 {
-  TDlgRequestComposerAC::SerializationResult_e
-    rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  UDTStatus rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  if (rval._status != TCError::dlgOk)
+    return rval._status;
 
-  if (rval != TDlgRequestComposerAC::srlzOk)
-    return rval;
-
-  TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
-      TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(_tReq.getDialogueId());
-
-  proto::enc::Begin beginMsgEncoder(tDlgSvcData->getTransactionId());
-
-  proto::enc::ComponentPortion componentPortion;
-  const ros::ROSComponentsList& compList = _tReq.getCompList();
-  for(ROSComponentsList::const_iterator iter = compList.begin(), end_iter = compList.end();
-      iter != end_iter; ++iter) {
-    componentPortion.addComponent(*iter);
+  proto::enc::TETBegin encTMsg(_trId.getIdLocal());
+  //Initialize DialoguePortion if required
+  if (getAppCtx() && (*getAppCtx() != _ac_contextless_ops)) {
+    //AARQ_Apdu must be present if TCUser suggests appCtx
+    proto::enc::TEAPduAARQ * pdu = encTMsg.initDlgRequest(*getAppCtx());
+    pdu->addUIList(_tReq.getUserInfo());
   }
-  beginMsgEncoder.setComponentPortion(&componentPortion);
-  return encodeMessage(beginMsgEncoder, use_udt, "TBeginReqComposer::serialize2UDT");
+
+  //Initialize ComponentPortion (verified by DialogueFSM) if required
+  encTMsg.addComponents(_tReq.getCompList());
+
+  //Encode composed message
+  asn1::ENCResult eRes = encTMsg.encode(use_udt.dataBuf().get(), rval._maxDataSz);
+  if (!eRes.isOk()) {
+    if (eRes.status == asn1::ENCResult::encMoreMem) {
+      smsc_log_error(_logger, "TDlg[%s]: %s::serialize2UDT(): message length limit(%u) is exceeded",
+                    _trId.toString().c_str(), _tReq.getIdent(), rval._maxDataSz);
+      
+      if (_tReq.getCompList().empty())
+        return TCError::errComponentPortion; //UsrInfo is too long
+      //check for srlzTooMuchComponents
+      encTMsg.clearCompPortion();
+      asn1::ENCResult nRes = encTMsg.calculate();
+      if (nRes.isOk())
+        return TCError::errTooMuchComponents;
+    }
+    return TCError::errTCAPUnknown;
+  }
+  use_udt.dataBuf().setDataSize(eRes.nbytes);
+  use_udt.dataBuf().setPos(0);
+  return TCError::dlgOk;
 }
 
 /* ************************************************************************* *
  * class TContReqComposer implementation
  * ************************************************************************* */
-TDlgRequestComposerAC::SerializationResult_e
-  TContReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
+TCRCode_e
+  TContReqComposer::serialize2UDT(SCSPUnitdataReq & use_udt,
                                   const SCCPAddress& src_addr,
                                   const SCCPAddress& dst_addr) const
 {
-  TDlgRequestComposerAC::SerializationResult_e
-    rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  UDTStatus rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  if (rval._status != TCError::dlgOk)
+    return rval._status;
 
-  if (rval != TDlgRequestComposerAC::srlzOk)
-    return rval;
+  proto::enc::TETContinue encTMsg(_trId.getIdLocal(), _trId.getIdRemote());
 
-  uint16_t maxDataSz = use_udt.dataBuf().getMaxSize();
+  //Initialize DialoguePortion if required
+  if (isDialogueResponse()) { //AARE_Apdu must be present if TCont is response to TBegin 
+                              //and either appCtx was used while dialog establishment
+                              //or TCUser suggests new appCtx
+    if (getAppCtx() && (*getAppCtx() != _ac_contextless_ops)) {
+      proto::enc::TEAPduAARE * pdu = encTMsg.initDlgResponse(*getAppCtx());
+      pdu->acceptByUser();
+      pdu->addUIList(_tReq.getUserInfo());
+    }
+  }
+  //Initialize ComponentPortion (verified by DialogueFSM) if required
+  encTMsg.addComponents(_tReq.getCompList());
 
-  //TODO: serialize TContReq to use_udt.dataBuf() taking in account 'maxDataSz'
-  //If serialized data is too long perform TCAP segmenting: split the UserInfo
-  //and/or ComponentsList into several TContRequests preserving the order of
-  //components and forcedly setting the in-sequence-delivery transferring by
-  //calling 
-  //  use_udt.setSequenceControl(getTransactionId().localId()); //read NOTE.1
-  // 
-  return TDlgRequestComposerAC::srlzBadTransactionPortion;
+  //Encode composed message
+  asn1::ENCResult eRes = encTMsg.encode(use_udt.dataBuf().get(), rval._maxDataSz);
+  if (!eRes.isOk()) {
+    if (eRes.status == asn1::ENCResult::encMoreMem) {
+      //TODO: If serialized data is too long perform TCAP segmenting: split the
+      //UserInfo and/or ComponentsList into several TContRequests preserving the
+      //order of components and forcedly setting the in-sequence-delivery
+      //transferring by calling 
+      //  use_udt.setSequenceControl(getTransactionId().localId()); //read NOTE.1
+      //
+      smsc_log_error(_logger, "TDlg[%s]: %s::serialize2UDT(): message length limit(%u) is exceeded",
+                    _trId.toString().c_str(), _tReq.getIdent(), rval._maxDataSz);
+
+      if (_tReq.getCompList().empty())
+        return TCError::errDialoguePortion; //UsrInfo is too long
+      //check for srlzTooMuchComponents
+      encTMsg.clearCompPortion();
+      asn1::ENCResult nRes = encTMsg.calculate();
+      if (nRes.isOk())
+        return TCError::errTooMuchComponents;
+    }
+    return TCError::errTCAPUnknown;
+  }
+  use_udt.dataBuf().setDataSize(eRes.nbytes);
+  use_udt.dataBuf().setPos(0);
+  return TCError::dlgOk;
 }
 
 /* ************************************************************************* *
  * class TEndReqComposer implementation
  * ************************************************************************* */
-TDlgRequestComposerAC::SerializationResult_e
-  TEndReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
+TCRCode_e
+  TEndReqComposer::serialize2UDT(SCSPUnitdataReq & use_udt,
                                  const SCCPAddress& src_addr,
                                  const SCCPAddress& dst_addr) const
 {
-  TDlgRequestComposerAC::SerializationResult_e
-    rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  UDTStatus rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  if (rval._status != TCError::dlgOk)
+    return rval._status;
 
-  if (rval != TDlgRequestComposerAC::srlzOk)
-    return rval;
+  proto::enc::TETEnd encTMsg(_trId.getIdRemote());
+  //Initialize DialoguePortion if required
+  if (isDialogueResponse()) { //AARE_Apdu may be present if TEnd is response to TBegin
+                              //and appCtx was used while dialog establishment
+    if (getAppCtx() && (*getAppCtx() != _ac_contextless_ops)) {
+      proto::enc::TEAPduAARE * pdu = encTMsg.initDlgResponse(*getAppCtx());
+      pdu->acceptByUser();
+      pdu->addUIList(_tReq.getUserInfo());
+    }
+  }
+  //Initialize ComponentPortion (verified by DialogueFSM) if required
+  encTMsg.addComponents(_tReq.getCompList());
 
-  uint16_t maxDataSz = use_udt.dataBuf().getMaxSize();
+  //Encode composed message
+  asn1::ENCResult eRes = encTMsg.encode(use_udt.dataBuf().get(), rval._maxDataSz);
+  if (!eRes.isOk()) {
+    if (eRes.status == asn1::ENCResult::encMoreMem) {
+      smsc_log_error(_logger, "TDlg[%s]: %s::serialize2UDT(): message length limit(%u) is exceeded",
+                    _trId.toString().c_str(), _tReq.getIdent(), rval._maxDataSz);
 
-  //TODO: serialize TEndReq to use_udt.dataBuf() taking in account 'maxDataSz'
-  //If serialized data is too long determine the portion of TCAPMessage that is
-  //too large (either UserInfo or ComponentsList) and return associated value
-  //of SerializationResult_e
-  return TDlgRequestComposerAC::srlzBadTransactionPortion;
-}
-
-/* ************************************************************************* *
- * class TPAbortReqComposer implementation
- * ************************************************************************* */
-TDlgRequestComposerAC::SerializationResult_e
-TPAbortReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
-                                  const SCCPAddress& src_addr,
-                                  const SCCPAddress& dst_addr) const
-{
-  TDlgRequestComposerAC::SerializationResult_e
-    rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
-
-  if (rval != TDlgRequestComposerAC::srlzOk)
-    return rval;
-
-  TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
-    TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(_tReq.getDialogueId());
-
-  proto::enc::PAbortCause pAbortCauseEncoder(_tReq.getAbortCause());
-  proto::enc::Abort abortMsgEncoder(tDlgSvcData->getTransactionId(), &pAbortCauseEncoder);
-
-  return encodeMessage(abortMsgEncoder, use_udt, "TPAbortReqComposer::serialize2UDT");
+      if (_tReq.getCompList().empty())
+        return TCError::errDialoguePortion; //UsrInfo is too long
+      //check for srlzTooMuchComponents
+      encTMsg.clearCompPortion();
+      asn1::ENCResult nRes = encTMsg.calculate();
+      if (nRes.isOk())
+        return TCError::errTooMuchComponents;
+    }
+    return TCError::errTCAPUnknown;
+  }
+  use_udt.dataBuf().setDataSize(eRes.nbytes);
+  use_udt.dataBuf().setPos(0);
+  return TCError::dlgOk;
 }
 
 /* ************************************************************************* *
  * class TUAbortReqComposer implementation
  * ************************************************************************* */
-TDlgRequestComposerAC::SerializationResult_e
-TUAbortReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
+TCRCode_e
+  TUAbortReqComposer::serialize2UDT(SCSPUnitdataReq & use_udt,
+                                  const SCCPAddress& src_addr,
+                                  const SCCPAddress& dst_addr) const
+    /*throw(std::exception)*/
+{
+  UDTStatus rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  if (rval._status != TCError::dlgOk)
+    return rval._status;
+
+  proto::enc::TETAbort encTMsg(_trId.getIdRemote());
+
+  switch(_tReq.getAbortKind()) {
+  case TR_UAbort_Req::uabrtAssociation: {
+    if (!isDialogueResponse()) //assertion!!!
+      throw smsc::util::Exception("uabrtAssociation && !isDialogueResponse");
+    //AARE_Apdu may be present if TAbort is response to TBegin
+    //and appCtx was used while dialog establishment
+    if (getAppCtx() && (*getAppCtx() != _ac_contextless_ops)) {
+
+      proto::enc::TEAPduAARE * pdu = encTMsg.setUserReject(*getAppCtx(), _tReq.getAssociateDiagnostic());
+      pdu->addUIList(_tReq.getUserInfo());
+    }
+  } break;
+
+  case TR_UAbort_Req::uabrtDialogueUI: {
+    if (isDialogueResponse()) //assertion!!!
+      throw smsc::util::Exception("uabrtDialogueUI && isDialogueResponse");
+
+    proto::enc::TEAPduABRT * pdu = encTMsg.setUserAbort();
+    pdu->addUIList(_tReq.getUserInfo());
+  } break;
+
+  //case TR_UAbort_Req::uabrtDialogueEXT:
+  default:
+    if (isDialogueResponse()) //assertion!!!
+      throw smsc::util::Exception("uabrtDialogueEXT && isDialogueResponse");
+
+    if (_tReq.getUserInfo().empty())
+      return TCError::errDialoguePortion;
+    encTMsg.setUserAbort(*_tReq.getUserInfo().front());
+  } /*eosw*/
+
+  //Encode composed message
+  asn1::ENCResult eRes = encTMsg.encode(use_udt.dataBuf().get(), rval._maxDataSz);
+  if (!eRes.isOk()) {
+    if (eRes.status == asn1::ENCResult::encMoreMem) {
+      smsc_log_error(_logger, "TDlg[%s]: %s::serialize2UDT(): message length limit(%u) is exceeded",
+                    _trId.toString().c_str(), _tReq.getIdent(), rval._maxDataSz);
+    }
+    return TCError::errTCAPUnknown;
+  }
+  use_udt.dataBuf().setDataSize(eRes.nbytes);
+  use_udt.dataBuf().setPos(0);
+  return TCError::dlgOk;
+}
+   
+/* ************************************************************************* *
+ * class TPAbortReqComposer implementation
+ * ************************************************************************* */
+TCRCode_e
+  TPAbortReqComposer::serialize2UDT(SCSPUnitdataReq & use_udt,
                                   const SCCPAddress& src_addr,
                                   const SCCPAddress& dst_addr) const
 {
-  TDlgRequestComposerAC::SerializationResult_e
-    rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  UDTStatus rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
+  if (rval._status != TCError::dlgOk)
+    return rval._status;
 
-  if (rval != TDlgRequestComposerAC::srlzOk)
-    return rval;
+  proto::enc::TETAbort encTMsg(_trId.getIdRemote());
+  encTMsg.setPrvdAbort(_tReq.getAbortCause());
 
-  TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
-      TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(_tReq.getDialogueId());
-
-  switch(_tReq.getAbortKind()) {
-  case TC_UAbort_Req::uabrtAssociation:
-    if ( !isDialogueResponse() )
-      throw utilx::SerializationException("TUAbortReqComposer::serialize2UDT::: isDialogueResponse() is not true");
-
-    return formAARE_APdu(_tReq, tDlgSvcData->getTransactionId(), use_udt);
-  case TC_UAbort_Req::uabrtDialogueUI:
-    if ( isDialogueResponse() )
-      throw utilx::SerializationException("TUAbortReqComposer::serialize2UDT::: invalid abortKind=uabrtDialogueUI in response to dialogue initiation");
-
-    return formABRT_APdu(_tReq, tDlgSvcData->getTransactionId(), use_udt);
-  case TC_UAbort_Req::uabrtDialogueEXT:
-    return formEXTERNAL_APdu(_tReq, tDlgSvcData->getTransactionId(), use_udt);
-  default:
-    throw utilx::SerializationException("TUAbortReqComposer::serialize2UDT::: invalid abortKind value=[%d]", _tReq.getAbortKind());
+  //Encode composed message
+  asn1::ENCResult eRes = encTMsg.encode(use_udt.dataBuf().get(), rval._maxDataSz);
+  if (!eRes.isOk()) {
+    if (eRes.status == asn1::ENCResult::encMoreMem) {
+      smsc_log_error(_logger, "TDlg[%s]: %s::serialize2UDT(): message length limit(%u) is exceeded",
+                    _trId.toString().c_str(), _tReq.getIdent(), rval._maxDataSz);
+    }
+    return TCError::errTCAPUnknown;
   }
-  return TDlgRequestComposerAC::srlzError;
+  use_udt.dataBuf().setDataSize(eRes.nbytes);
+  use_udt.dataBuf().setPos(0);
+  return TCError::dlgOk;
 }
-
-TDlgRequestComposerAC::SerializationResult_e
-TUAbortReqComposer::formAARE_APdu(const TC_UAbort_Req& t_req,
-                                  const proto::TransactionId& transaction_id,
-                                  SUAUnitdataReq& used_udt) const
-{
-  proto::enc::AARE_APdu aareAPduEncoder(t_req.getAppCtx());
-  aareAPduEncoder.rejectByUser(t_req.getRejectCause());
-  aareAPduEncoder.setUserInfo(t_req.getUserInfo());
-
-  //TODO: proto::enc::DialoguePortion dlgPortion(&aareAPdu);
-  proto::enc::Abort abortMsgEncoder(transaction_id, &aareAPduEncoder);
-  return encodeMessage(abortMsgEncoder, used_udt, "TUAbortReqComposer::formAARE_APdu");
-}
-
-TDlgRequestComposerAC::SerializationResult_e
-TUAbortReqComposer::formABRT_APdu(const TC_UAbort_Req& t_req,
-                                  const proto::TransactionId& transaction_id,
-                                  SUAUnitdataReq& used_udt) const
-{
-  proto::enc::ABRT_APdu abrtAPduEncoder(t_req.isAbortFromTCUser() ? TDialogueAssociate::dlgServiceUser
-                                                                  : TDialogueAssociate::dlgServiceProvider);
-  abrtAPduEncoder.setUserInfo(t_req.getUserInfo());
-  proto::enc::Abort abortMsgEncoder(transaction_id, &abrtAPduEncoder);
-  return encodeMessage(abortMsgEncoder, used_udt, "TUAbortReqComposer::formABRT_APdu");
-}
-
-TDlgRequestComposerAC::SerializationResult_e
-TUAbortReqComposer::formEXTERNAL_APdu(const TC_UAbort_Req& t_req,
-                                      const proto::TransactionId& transaction_id,
-                                      SUAUnitdataReq& used_udt) const
-{
-//  proto::enc::EXTERNAL_APdu externalAPdu(t_req.getUserInfo());
-//
-//  proto::enc::AbortMessage tcapMsg(transaction_id, &externalAPdu);
-//  return encodeMessage(tcapMsg, used_udt, "TUAbortReqComposer::formEXTERNAL_APdu");
-  return srlzOk;
-}
+  
    
 } //provd
 } //tcap

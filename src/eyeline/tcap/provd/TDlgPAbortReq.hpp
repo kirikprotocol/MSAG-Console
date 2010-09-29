@@ -1,11 +1,11 @@
 /* ************************************************************************** *
- * TCAP dialogue requests senders (serialization and sending).
+ * structured TCAP dialogue requests primitives(transaction sublayer). 
  * ************************************************************************** */
 #ifndef __ELC_TCAP_PABORT_REQUEST_HPP
 #ident "@(#)$Id$"
 #define __ELC_TCAP_PABORT_REQUEST_HPP
 
-#include "eyeline/tcap/TDialogueRequestPrimitives.hpp"
+#include "eyeline/tcap/TDlgRequestPrimitives.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -13,13 +13,14 @@ namespace provd {
 
 using eyeline::tcap::PAbort;
 //
-class TC_PAbort_Req : public eyeline::tcap::TDialogueRequestPrimitive {
+class TR_PAbort_Req : public eyeline::tcap::TDlgRequestPrimitive {
 protected:
   PAbort::Cause_e _cause;
 
 public:
-  TC_PAbort_Req()
-    : TDialogueRequestPrimitive()
+  TR_PAbort_Req() : TDlgRequestPrimitive(reqTRPAbort)
+  { }
+  ~TR_PAbort_Req()
   { }
 
   PAbort::Cause_e getAbortCause(void) const { return _cause; }
