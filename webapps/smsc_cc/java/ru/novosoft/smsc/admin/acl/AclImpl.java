@@ -16,11 +16,11 @@ class AclImpl implements Acl {
   private static final transient ValidationHelper vh = new ValidationHelper(Acl.class);
 
   private final int id;
-  private transient final AclManager manager;
+  private transient final AclManagerImpl manager;
   private String name;
   private String description;
 
-  AclImpl(AclManager manager, int id, String name, String description) {
+  AclImpl(AclManagerImpl manager, int id, String name, String description) {
     this.id = id;
     this.manager = manager;
     this.name = name;

@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.admin.acl.AclManager;
+import ru.novosoft.smsc.admin.acl.AclManagerImpl;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
@@ -131,7 +132,7 @@ public class AdminContext {
 
     categoryManager = new CategoryManager(initFile, smscConfigBackupDir, fileSystem);
 
-    aclManager = new AclManager(clusterController);
+    aclManager = new AclManagerImpl(clusterController);
 
     routeSubjectManager = new RouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
 

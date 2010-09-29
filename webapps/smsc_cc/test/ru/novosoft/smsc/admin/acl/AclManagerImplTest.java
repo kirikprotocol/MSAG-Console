@@ -16,10 +16,10 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class AclManagerTest {
+public class AclManagerImplTest {
   @Test
   public void testCreateAcl() throws Exception {
-    AclManager manager = new AclManager(new ClusterControllerImpl(false));
+    AclManager manager = new AclManagerImpl(new ClusterControllerImpl(false));
 
     try {
       manager.createAcl("ok", "ok", new ArrayList<Address>());
@@ -30,7 +30,7 @@ public class AclManagerTest {
 
   @Test
   public void testRemoveAcl() throws Exception {
-    AclManager manager = new AclManager(new ClusterControllerImpl(false));
+    AclManager manager = new AclManagerImpl(new ClusterControllerImpl(false));
 
     try {
       manager.removeAcl(1);
@@ -40,7 +40,7 @@ public class AclManagerTest {
 
   @Test
   public void testUpdateAcl() throws Exception {
-    AclManager manager = new AclManager(new ClusterControllerImpl(false));
+    AclManagerImpl manager = new AclManagerImpl(new ClusterControllerImpl(false));
 
     try {
       manager.updateAcl(1, "ok", "ok");
@@ -50,7 +50,7 @@ public class AclManagerTest {
 
   @Test
   public void testAddAddresses() throws Exception {
-    AclManager manager = new AclManager(new ClusterControllerImpl(false));
+    AclManagerImpl manager = new AclManagerImpl(new ClusterControllerImpl(false));
 
     try {
       manager.addAddresses(1, new ArrayList<Address>());
@@ -60,7 +60,7 @@ public class AclManagerTest {
 
   @Test
   public void testRemoveAddresses() throws Exception {
-    AclManager manager = new AclManager(new ClusterControllerImpl(false));
+    AclManagerImpl manager = new AclManagerImpl(new ClusterControllerImpl(false));
 
     try {
       manager.removeAddresses(1, new ArrayList<Address>());
@@ -70,7 +70,7 @@ public class AclManagerTest {
 
   @Test
   public void testGetStatusForSmscs() throws AdminException {
-    AclManager manager = new AclManager(new ClusterControllerImpl(true));
+    AclManagerImpl manager = new AclManagerImpl(new ClusterControllerImpl(true));
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
     assertNotNull(states);
@@ -80,12 +80,12 @@ public class AclManagerTest {
     assertEquals(SmscConfigurationStatus.OUT_OF_DATE, states.get(0));
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
 
-    assertNull(new AclManager(new ClusterControllerImpl(false)).getStatusForSmscs());
+    assertNull(new AclManagerImpl(new ClusterControllerImpl(false)).getStatusForSmscs());
   }
 
    @Test
   public void nullGetStatusForSmscs() throws AdminException {
-    AclManager manager = new AclManager(new ClusterControllerImpl1());
+    AclManagerImpl manager = new AclManagerImpl(new ClusterControllerImpl1());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
     assertTrue(states.isEmpty());
