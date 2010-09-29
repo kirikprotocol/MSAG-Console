@@ -1,7 +1,7 @@
 #ifndef _INFORMER_INPUTMESSAGESOURCE_H
 #define _INFORMER_INPUTMESSAGESOURCE_H
 
-#include "Message.h"
+#include "informer/data/Message.h"
 
 namespace eyeline {
 namespace informer {

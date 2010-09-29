@@ -1,12 +1,12 @@
 #include <memory>
 #include "InfosmeCoreV1.h"
-#include "InfosmeException.h"
-#include "InputMessageSource.h"
-#include "SmscSender.h"
-#include "RegionSender.h"
-#include "StoreJournal.h"
-#include "util/config/ConfigView.h"
+#include "informer/data/InputMessageSource.h"
+#include "informer/io/InfosmeException.h"
+#include "informer/opstore/StoreJournal.h"
+#include "informer/sender/RegionSender.h"
+#include "informer/sender/SmscSender.h"
 #include "util/config/ConfString.h"
+#include "util/config/ConfigView.h"
 
 using namespace smsc::util::config;
 

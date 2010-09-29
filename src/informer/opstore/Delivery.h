@@ -2,9 +2,9 @@
 #define _INFORMER_DELIVERY_H
 
 #include <memory>
-#include "MessageCache.h"
-#include "EmbedRefPtr.h"
 #include "core/synchronization/Mutex.hpp"
+#include "informer/io/EmbedRefPtr.h"
+#include "informer/opstore/MessageCache.h"
 
 namespace eyeline {
 namespace informer {

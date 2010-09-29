@@ -2,12 +2,12 @@
 #define _INFORMER_SMSCSENDER_H
 
 #include <memory>
-#include "logger/Logger.h"
-#include "core/threads/ThreadedTask.hpp"
-#include "core/synchronization/EventMonitor.hpp"
-#include "sme/SmppBase.hpp"
 #include "ScoredList.h"
-#include "Typedefs.h"
+#include "core/synchronization/EventMonitor.hpp"
+#include "core/threads/ThreadedTask.hpp"
+#include "informer/io/Typedefs.h"
+#include "logger/Logger.h"
+#include "sme/SmppBase.hpp"
 
 namespace eyeline {
 namespace informer {

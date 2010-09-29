@@ -2,8 +2,8 @@
 #define _INFORMER_MESSAGE_H
 
 #include <list>
-#include "Typedefs.h"
 #include "MessageText.h"
+#include "informer/io/Typedefs.h"
 #include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {

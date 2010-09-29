@@ -1,0 +1,4 @@
+Contents: sender part types.  This includes connecting to SMSC, and
+dynamic scheduling of regions to send into.
+
+Depends: io, data, opstore.

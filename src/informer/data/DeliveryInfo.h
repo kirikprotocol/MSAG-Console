@@ -1,7 +1,7 @@
 #ifndef _INFORMER_DELIVERYINFO_H
 #define _INFORMER_DELIVERYINFO_H
 
-#include "Typedefs.h"
+#include "informer/io/Typedefs.h"
 
 namespace eyeline {
 namespace informer {

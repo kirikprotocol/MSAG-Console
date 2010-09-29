@@ -1,7 +1,7 @@
 #include <cassert>
 #include "RegionalStorage.h"
-#include "UnlockMutexGuard.h"
-#include "RelockMutexGuard.h"
+#include "informer/io/UnlockMutexGuard.h"
+#include "informer/io/RelockMutexGuard.h"
 #include "StoreJournal.h"
 #include "RequestNewMsgTask.h"
 

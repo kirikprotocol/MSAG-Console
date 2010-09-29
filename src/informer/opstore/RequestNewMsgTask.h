@@ -1,7 +1,7 @@
 #ifndef _INFORMER_REQUESTNEWMSGTASK_H
 #define _INFORMER_REQUESTNEWMSGTASK_H
 
-#include "InputMessageSource.h"
+#include "informer/data/InputMessageSource.h"
 #include "core/threads/ThreadedTask.hpp"
 
 namespace eyeline {

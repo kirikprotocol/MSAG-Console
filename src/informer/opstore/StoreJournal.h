@@ -1,7 +1,7 @@
 #ifndef _INFORMER_STOREJOURNAL_H
 #define _INFORMER_STOREJOURNAL_H
 
-#include "Typedefs.h"
+#include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
 
 namespace eyeline {

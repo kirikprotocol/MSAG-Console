@@ -2,15 +2,15 @@
 #define _INFORMER_INFOSMECOREV1_H
 
 #include <memory>
-#include "InfosmeCore.h"
-#include "Region.h"
-#include "logger/Logger.h"
-#include "core/synchronization/EventMonitor.hpp"
-#include "core/threads/ThreadPool.hpp"
-#include "core/threads/Thread.hpp"
+#include "informer/data/Region.h"
+#include "informer/opstore/Delivery.h"
+#include "informer/opstore/InfosmeCore.h"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
-#include "Delivery.h"
+#include "core/synchronization/EventMonitor.hpp"
+#include "core/threads/Thread.hpp"
+#include "core/threads/ThreadPool.hpp"
+#include "logger/Logger.h"
 
 namespace eyeline {
 namespace informer {

@@ -1,8 +1,8 @@
-#include "SmscSender.h"
-#include "InfosmeException.h"
-#include "InfosmeCore.h"
-#include "Typedefs.h"
 #include "RegionSender.h"
+#include "SmscSender.h"
+#include "informer/io/InfosmeException.h"
+#include "informer/io/Typedefs.h"
+#include "informer/opstore/InfosmeCore.h"
 
 namespace eyeline {
 namespace informer {

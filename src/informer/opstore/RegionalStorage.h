@@ -2,12 +2,12 @@
 #define _INFORMER_REGIONALSTORAGE_H
 
 #include <map>
-#include "DeliveryInfo.h"
-#include "InputMessageSource.h"
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Condition.hpp"
+#include "informer/data/InputMessageSource.h"
+#include "informer/data/DeliveryInfo.h"
 #include "logger/Logger.h"
 
 namespace eyeline {

@@ -1,5 +1,5 @@
 #include "StoreJournal.h"
-#include "Message.h"
+#include "informer/data/Message.h"
 #include "core/buffers/TmpBuf.hpp"
 #include "informer/io/HexDump.h"
 #include "informer/io/IOConverter.h"

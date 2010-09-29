@@ -1,5 +1,4 @@
 #include "RequestNewMsgTask.h"
-#include "InputMessageSource.h"
 
 namespace eyeline {
 namespace informer {

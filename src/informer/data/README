@@ -1,0 +1,4 @@
+Contents: data types and common ifaces intended for inter-package binding.
+E.g.: InputMessageSource binds opstore/main.
+
+Depends: io

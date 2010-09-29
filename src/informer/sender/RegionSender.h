@@ -1,8 +1,8 @@
 #ifndef _INFORMER_REGIONSENDER_H
 #define _INFORMER_REGIONSENDER_H
 
-#include "Region.h"
-#include "Delivery.h"
+#include "informer/data/Region.h"
+#include "informer/opstore/RegionalStorage.h"
 #include "ScoredList.h"
 #include "SpeedControl.h"
 

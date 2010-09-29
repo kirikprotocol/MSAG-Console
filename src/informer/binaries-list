@@ -1,5 +1,8 @@
 informer/informer  informer \
- -linformer \
+ -linformer-main \
+ -linformer-sender \
+ -linformer-opstore \
+ -linformer-data \
  -linformer-io \
  -llicense-check \
  -ladmin-service \

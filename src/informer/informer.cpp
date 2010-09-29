@@ -16,9 +16,9 @@
 #include "util/regexp/RegExp.hpp"
 #include "util/xml/init.h"
 #include "version.inc"
-#include "InfosmeCoreV1.h"
-#include "InfosmeComponent.h"
-#include "InfosmeException.h"
+#include "informer/main/InfosmeCoreV1.h"
+#include "informer/main/InfosmeComponent.h"
+#include "informer/io/InfosmeException.h"
 
 smsc::logger::Logger* mainlog = 0;
 

@@ -1,10 +1,10 @@
 #ifndef _INFORMER_REGION_H
 #define _INFORMER_REGION_H
 
-#include "Typedefs.h"
-#include "core/synchronization/Mutex.hpp"
-#include "EmbedRefPtr.h"
 #include <string>
+#include "core/synchronization/Mutex.hpp"
+#include "informer/io/EmbedRefPtr.h"
+#include "informer/io/Typedefs.h"
 
 namespace eyeline {
 namespace informer {

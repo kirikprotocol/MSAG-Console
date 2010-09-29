@@ -1,0 +1,6 @@
+Contents: input-output types and
+the most common light-weight types/ifaces
+intended to be optimized-compiled.
+
+NOTE: we have to create a full-coverage tests for the contents of the
+package.

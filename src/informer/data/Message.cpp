@@ -1,5 +1,5 @@
 #include "Message.h"
-#include "InfosmeException.h"
+#include "informer/io/InfosmeException.h"
 #include "informer/io/IOConverter.h"
 #include <cstdio>
 

@@ -5,8 +5,7 @@
 #include "admin/service/Component.h"
 #include "admin/service/Method.h"
 #include "admin/service/Type.h"
-#include "InfosmeCore.h"
-// #include "sme/SmppBase.hpp"
+#include "informer/opstore/InfosmeCore.h"
 
 namespace eyeline {
 namespace informer {
