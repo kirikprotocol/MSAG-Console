@@ -301,55 +301,7 @@ public class Journal {
   public void logSmeSwitched(String smeId, String toHost, String user) {
     JournalRecord r = addRecord(JournalRecord.Type.SWITCH, JournalRecord.Subject.SME, user);
     r.setDescription("sme.switched", smeId, toHost);
-  }
-
-  // ACL
-
-  public void logAclInfoChanged(String oldName, String oldDesc, String newName, String newDesc, String user) {
-    if (!oldName.equals(newName)) {
-      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
-      r.setDescription("property_changed", "name", oldName, newName);
-    } if (!oldDesc.equals(newDesc)) {
-      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
-      r.setDescription("property_changed", "description", oldDesc, newDesc);
-    }
-  }
-
-  public void logAddAddressesToAcl(int id, String name, List<Address> addresses, String user) {
-    if (!addresses.isEmpty()) {
-      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
-      StringBuilder sb = new StringBuilder();
-      for (Address address : addresses) {
-        if (sb.length() > 0)
-          sb.append(", ");
-        sb.append(address);
-      }
-      r.setDescription("acl.add.addresses", name, sb.toString());
-    }
-  }
-
-  public void logRemoveAddressesFromAcl(int id, String name, List<Address> addresses, String user) {
-    if (!addresses.isEmpty()) {
-      JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
-      StringBuilder sb = new StringBuilder();
-      for (Address address : addresses) {
-        if (sb.length() > 0)
-          sb.append(", ");
-        sb.append(address);
-      }
-      r.setDescription("acl.remove.addresses", name, sb.toString());
-    }
-  }
-
-  public void logAclCreate(int id, String name, String description, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.ACL, user);
-    r.setDescription("acl.created", id+"", name, description);
-  }
-
-  public void logAclRemove(int id, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.ACL, user);
-    r.setDescription("acl.removed", id+"");
-  }
+  }  
 
   // CATEGORY
 

@@ -2,7 +2,9 @@ package ru.novosoft.smsc.web.controllers.acl;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.acl.Acl;
+import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.util.Address;
+import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
@@ -21,12 +23,13 @@ public class AclEditController extends AclController {
   private String description;
   private DynamicTableModel addresses = new DynamicTableModel();
 
+
   public AclEditController() {
     String idParam = getRequestParameter("aclId");
     if (idParam != null && getRequestParameter("initialized") == null) {
       try {
         id = Integer.parseInt(idParam);
-        Acl acl = getConfiguration().getAcl(id, getUserName());
+        Acl acl = aclManager.getAcl(id);
         name = acl.getName();
         description = acl.getDescription();
         for (Address addr : acl.getAddresses()) {
@@ -47,9 +50,9 @@ public class AclEditController extends AclController {
         addresses.add(new Address((String) r.getValue("address")));
 
       if (id == -1) {
-        getConfiguration().createAcl(name, description, addresses, getUserName());
+        aclManager.createAcl(name, description, addresses);
       } else {
-        Acl acl = getConfiguration().getAcl(id, getUserName());
+        Acl acl = aclManager.getAcl(id);
         acl.updateInfo(name, description);
         if (addresses != null) {
           List<Address> oldAddresses = acl.getAddresses();

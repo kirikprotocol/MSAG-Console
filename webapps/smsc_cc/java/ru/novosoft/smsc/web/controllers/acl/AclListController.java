@@ -17,11 +17,12 @@ public class AclListController extends AclController {
 
   private List selectedRows;
 
+
   public String removeAcl() {
     if (selectedRows != null) {
       for (Object aclId : selectedRows)
       try {
-        getConfiguration().removeAcl(Integer.parseInt((String)aclId), getUserName());
+        aclManager.removeAcl(Integer.parseInt((String)aclId));
       } catch (AdminException e) {
         addError(e);
       }
@@ -36,7 +37,7 @@ public class AclListController extends AclController {
   public DataTableModel getAcls() {
     List<Acl> aclsLst;
     try {
-      aclsLst = getConfiguration().acls(getUserName());
+      aclsLst = aclManager.acls();
     } catch (AdminException e) {
       addError(e);
       aclsLst = Collections.emptyList();

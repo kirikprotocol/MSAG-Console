@@ -15,11 +15,9 @@ import ru.novosoft.smsc.admin.sme.SmeSmscStatuses;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpSettings;
 import ru.novosoft.smsc.admin.users.UsersSettings;
-import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -190,32 +188,6 @@ public class Configuration {
 
   public SmeServiceStatus getSmeServiceStatus(String smeId) throws AdminException {
     return adminContext.getSmeManager().getSmeServiceStatus(smeId);
-  }
-
-
-  // ACL
-
-  public Acl createAcl(String name, String description, List<Address> addresses, String user) throws AdminException {
-    Acl acl = adminContext.getAclManager().createAcl(name, description, addresses);
-    journal.logAclCreate(acl.getId(), acl.getName(), acl.getDescription(), user);
-    return new LoggedAcl(acl, journal, user);
-  }
-
-  public void removeAcl(int aclId, String user) throws AdminException {
-    adminContext.getAclManager().removeAcl(aclId);
-    journal.logAclRemove(aclId, user);
-  }
-
-  public Acl getAcl(int id, String user) throws AdminException {
-    return new LoggedAcl(adminContext.getAclManager().getAcl(id), journal, user);
-  }
-
-  public List<Acl> acls(String user) throws AdminException {
-    List<Acl>  acls = adminContext.getAclManager().acls();
-    List<Acl> result = new ArrayList<Acl>(acls.size());
-    for (Acl acl : acls)
-      result.add(new LoggedAcl(acl, journal, user));
-    return result;
   }
 
   // CATEGORY

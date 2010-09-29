@@ -27,7 +27,7 @@ public class SmscLoginModule implements LoginModule {
     return true;
   }
   public boolean commit() throws LoginException {
-    SmscPrincipal p = WebContext.getInstance().getAuthenticator().authenticate(name, password);
+    SmscPrincipal p = WebContext.getAuthenticator().authenticate(name, password);
     if (p == null) {
       return false;
     }

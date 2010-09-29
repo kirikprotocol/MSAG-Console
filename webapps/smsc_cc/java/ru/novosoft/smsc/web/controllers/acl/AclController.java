@@ -1,7 +1,9 @@
 package ru.novosoft.smsc.web.controllers.acl;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
+import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.controllers.SmscController;
 
@@ -15,9 +17,11 @@ import java.util.List;
 public class AclController extends SmscController {
 
   private boolean outOfDate;
+  protected AclManager aclManager;
 
   public AclController() {
     outOfDate = checkOutOfDate();
+    aclManager = WebContext.getInstance().getAclManager();
   }
 
   private boolean checkOutOfDate() {
