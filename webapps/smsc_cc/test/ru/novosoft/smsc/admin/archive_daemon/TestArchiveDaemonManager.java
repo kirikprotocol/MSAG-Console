@@ -9,7 +9,7 @@ import ru.novosoft.smsc.admin.service.ServiceManager;
  *
  * @author Artem Snopkov
  */
-public class TestArchiveDaemonManager extends ArchiveDaemonManager {
+public class TestArchiveDaemonManager extends ArchiveDaemonManagerImpl {
 
   public TestArchiveDaemonManager(ServiceManager serviceManager, FileSystem fs) throws AdminException {
     super(serviceManager, fs);

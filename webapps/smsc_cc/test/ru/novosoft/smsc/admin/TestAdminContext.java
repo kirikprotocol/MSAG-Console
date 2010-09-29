@@ -4,7 +4,7 @@ import ru.novosoft.smsc.admin.acl.TestAclManager;
 import ru.novosoft.smsc.admin.alias.AliasManagerImplTest;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfigTest;
-import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManagerImpl;
 import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonManager;
 import ru.novosoft.smsc.admin.category.TestCategoryManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManagerTest;
@@ -128,7 +128,7 @@ public class TestAdminContext extends AdminContext {
     File smscConfigDir = smscManager.getConfigDir();
     File smscConfigBackupDir = smscManager.getConfigBackupDir();
 
-    if (ArchiveDaemonManager.isDaemonDeployed(serviceManager))
+    if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager))
       archiveDaemonManager = new TestArchiveDaemonManager(serviceManager, fileSystem);
 
     aliasManager = new TestAliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);

@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.acl.AclManagerImpl;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.alias.AliasManagerImpl;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManagerImpl;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
@@ -102,8 +103,8 @@ public class AdminContext {
     File smscConfigDir = smscManager.getConfigDir();
     File smscConfigBackupDir = smscManager.getConfigBackupDir();
 
-    if (ArchiveDaemonManager.isDaemonDeployed(serviceManager))
-      archiveDaemonManager = new ArchiveDaemonManager(serviceManager, fileSystem);
+    if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager))
+      archiveDaemonManager = new ArchiveDaemonManagerImpl(serviceManager, fileSystem);
 
     aliasManager = new AliasManagerImpl(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 

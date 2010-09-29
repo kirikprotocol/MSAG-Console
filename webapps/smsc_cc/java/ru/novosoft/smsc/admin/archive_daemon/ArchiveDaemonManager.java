@@ -1,82 +1,60 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.ConfigFileManager;
-import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.service.ServiceManager;
 
-import java.io.File;
 import java.util.List;
 
 /**
- * класс, управляющий настройками Archive Daemon-а
- *
  * @author Artem Snopkov
  */
-public class ArchiveDaemonManager {
-
-  public static final String SERVICE_ID = "ArchiveDaemon";
-
-  private final ConfigFileManager<ArchiveDaemonSettings> cfgFileManager;
-  private final ServiceManager serviceManager;
-
-  public ArchiveDaemonManager(ServiceManager serviceManager, FileSystem fs) throws AdminException {
-    this.serviceManager = serviceManager;
-    ServiceInfo info = getInfo();
-    File archiveDaemonConf = new File(info.getBaseDir(), "conf");
-    File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
-    this.cfgFileManager = new ConfigFileManager<ArchiveDaemonSettings>(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fs, new ArchiveDaemonConfig());
-  }
-
-  public static boolean isDaemonDeployed(ServiceManager serviceManager) throws AdminException {
-    return serviceManager.getService(SERVICE_ID) != null;
-  }
+public interface ArchiveDaemonManager {
 
   /**
    * Возвращает текущие настройки ArchiveDaemon-а
    *
    * @return текущие настройки ArchiveDaemon-а
-   * @throws AdminException, если произошла ошибка
+   * @throws ru.novosoft.smsc.admin.AdminException, если произошла ошибка
    */
-  public ArchiveDaemonSettings getSettings() throws AdminException {
-    return cfgFileManager.load();
-  }
+  public ArchiveDaemonSettings getSettings() throws AdminException;
 
   /**
    * Обновляет настройки ArchiveDaemon-а.
    *
    * @param settings новый настройки ArchiveDaemon-а
-   * @throws AdminException
+   * @throws AdminException, если произошла ошибка
    */
-  public void updateSettings(ArchiveDaemonSettings settings) throws AdminException {
-    cfgFileManager.save(settings);
-  }
+  public void updateSettings(ArchiveDaemonSettings settings) throws AdminException;
 
-  private ServiceInfo getInfo() throws AdminException {
-    ServiceInfo info = serviceManager.getService(SERVICE_ID);
-    if (info == null)
-      throw new ArchiveDaemonException("archive_daemon_not_found");
-    return info;
-  }
+  /**
+   * Возвращает хост, на котором запущен демон или null, если демон offline
+   * @return хост, на котором запущен демон или null, если демон offline
+   * @throws AdminException, если произошла ошибка
+   */
+  public String getDaemonOnlineHost() throws AdminException;
 
-  public String getDaemonOnlineHost() throws AdminException {
-    return getInfo().getOnlineHost();
-  }
+  /**
+   * Переключает демона на указанную ноду
+   * @param toHost хост, на который надо переключить демона.
+   * @throws AdminException, если произошла ошибка
+   */
+  public void switchDaemon(String toHost) throws AdminException;
 
-  public void switchDaemon(String toHost) throws AdminException {
-    serviceManager.swichService(SERVICE_ID, toHost);
-  }
+  /**
+   * Запускает демона
+   * @throws AdminException если произошла ошибка
+   */
+  public void startDaemon() throws AdminException;
 
-  public void startDaemon() throws AdminException {
-    serviceManager.startService(SERVICE_ID);
-  }
+  /**
+   * Останавливает демона
+   * @throws AdminException если произошла ошибка
+   */
+  public void stopDaemon() throws AdminException;
 
-  public void stopDaemon() throws AdminException {
-    serviceManager.stopService(SERVICE_ID);
-  }
-
-  public List<String> getDaemonHosts() throws AdminException {
-    return getInfo().getHosts();
-  }
+  /**
+   * Водвращает список хостов, на которых может быть запущен демон
+   * @return список хостов, на которых может быть запущен демон
+   * @throws AdminException если произошла ошибка
+   */
+  public List<String> getDaemonHosts() throws AdminException;
 }

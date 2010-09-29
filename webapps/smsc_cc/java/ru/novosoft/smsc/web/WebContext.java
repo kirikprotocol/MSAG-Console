@@ -3,12 +3,14 @@ package ru.novosoft.smsc.web;
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.alias.AliasManager;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.Configuration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.config.acl.WAclManager;
 import ru.novosoft.smsc.web.config.alias.WAliasManager;
+import ru.novosoft.smsc.web.config.archive_daemon.WArchiveDaemonManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import javax.faces.context.FacesContext;
@@ -33,6 +35,7 @@ public class WebContext {
   private final SmscStatusManager smscStatusManager;
   private final AclManager aclManager;
   private final AliasManager aliasManager;
+  private final WArchiveDaemonManager archiveDaemonManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -70,6 +73,7 @@ public class WebContext {
 
     aclManager = new WAclManager(adminContext.getAclManager(), journal, user);
     aliasManager = new WAliasManager(adminContext.getAliasManager(), user, journal);
+    archiveDaemonManager = new WArchiveDaemonManager(adminContext.getArchiveDaemonManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -95,6 +99,10 @@ public class WebContext {
 
   public AliasManager getAliasManager() {
     return aliasManager;
+  }
+
+  public WArchiveDaemonManager getArchiveDaemonManager() {
+    return archiveDaemonManager;
   }
 
   public Journal getJournal() {
