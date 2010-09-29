@@ -14,7 +14,7 @@ namespace ber {
 
 template <
   //must have tagged & untagged type constructors, copying constructor
-  class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>*/ 
+  class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>(TransferSyntax::Rule_e use_rule)*/ 
 > 
 class EncoderProducer_T {
 private:
@@ -36,7 +36,7 @@ public:
   {
     _mem._aligner = 0;
   }
-  explicit EncoderProducer_T(const EncoderProducer_T & use_obj) : _ptr(0)
+  EncoderProducer_T(const EncoderProducer_T & use_obj) : _ptr(0)
   {
     _mem._aligner = 0;
     if (use_obj.get())
@@ -47,7 +47,6 @@ public:
   {
     cleanUp();
   }
-
   //
   _EncoderOfTArg  * init(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
   {
@@ -94,9 +93,9 @@ protected:
   _EncoderOfTArg * allocElementEncoder(void)
   {
     _prdArray->reserve(_prdArray->size() + 1);
-    return _elmTags.empty() ? _prdArray->at(_prdArray->size()).init(getVALRule())
+    return _elmTags.empty() ? _prdArray->at(_prdArray->size()).init(getTSRule())
                               : _prdArray->at(_prdArray->size()).init(_elmTags[0],
-                                          _elmTags.getEnvironment(), getVALRule());
+                                          _elmTags.getEnvironment(), getTSRule());
   }
 
   //NOTE: the copying constructor of successsor MUST properly set _prdArray
@@ -112,7 +111,8 @@ public:
   EncoderOfSequencedAC_T(ProducersArray & prd_store, ElementsArray & elm_store,
                          const ASTagging & eff_tags,
                          TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfConstructedAC(prd_store, elm_store, eff_tags, use_rule)
+    : EncoderOfConstructedAC(elm_store, eff_tags, use_rule)
+    , _prdArray(&prd_store)
   { }
   //'Generic tagged sequenced type encoder' constructor
   //NOTE: base_tags must be a complete tagging of base type!
@@ -120,10 +120,11 @@ public:
                          const ASTag & use_tag, ASTagging::Environment_e tag_env,
                          const ASTagging & base_tags,
                          TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfConstructedAC(prd_store, elm_store, use_tag, tag_env, base_tags, use_rule)
+    : EncoderOfConstructedAC(elm_store, use_tag, tag_env, base_tags, use_rule)
+    , _prdArray(&prd_store)
   { }
   //
-  ~EncoderOfSequencedAC_T()
+  virtual ~EncoderOfSequencedAC_T()
   { }
 
   // ----------------------------------------------------------
@@ -136,16 +137,16 @@ public:
 
   void addValue(const _TArg & use_val) /*throw(std::exception)*/
   {
-    _EncoderOfTArg & valEnc = allocElementEncoder();
-    valEnc.setValue(use_val);
-    initElement(valEnc.getTagging(), *(valEnc.getVALEncoder()));
+    _EncoderOfTArg * valEnc = allocElementEncoder();
+    valEnc->setValue(use_val);
+    initElement(valEnc->getTagging(), *(valEnc->getVALEncoder()));
   }
 };
 
 template <
   class _TArg
   //must have tagged & untagged type constructors
-  , class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>*/ 
+  , class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>*/
   , uint16_t _NumElemsTArg //estimated number of element values
 >
 class EncoderOfSequenced_T : public EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg> {
@@ -157,13 +158,6 @@ private:
 
   ElementsStore   _elmStore;
   ProducersStore  _prdStore;
-protected:
-  EncoderOfSequenced_T(const EncoderOfSequenced_T & use_onj)
-    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg>(use_obj)
-  {
-    setProducersStorage(_prdStore);
-    setElementsStorage(_elmStore);
-  }
 
 public:
   //'Generic sequenced type encoder' constructor
@@ -186,7 +180,7 @@ public:
     setElementsStorage(_elmStore);
   }
   //
-  ~EncoderOfSequenced_T()
+  virtual ~EncoderOfSequenced_T()
   { }
 };
 } //ber

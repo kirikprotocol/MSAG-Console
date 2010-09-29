@@ -59,12 +59,12 @@ public:
 };
 
 //Template for Encoder of structured type with known number of fields/elements,
-//which all are untagged (so-called 'Basic structure').
+//which all are untagged (so-called 'Plain structure').
 //All fields/elements housekeeping structures are allocated as class members at once
 template <
   uint16_t _NumFieldsTArg     /* overall number of fields/elements */
 >
-class EncoderOfStructure_T : public EncoderOfStructureAC {
+class EncoderOfPlainStructure_T : public EncoderOfStructureAC {
 private:
   typedef eyeline::util::LWArray_T<TLVLayoutEncoder, uint16_t, _NumFieldsTArg> FieldsStore;
   FieldsStore     _fieldsStore;
@@ -72,34 +72,34 @@ private:
 public:
   //'Generic structured type encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
-  EncoderOfStructure_T(const ASTagging & eff_tags,
+  EncoderOfPlainStructure_T(const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfStructureAC(_fieldsStore, eff_tags, use_rule)
     , _fieldsStore(_NumFieldsTArg)
   { }
   //'Generic tagged structured type encoder' constructor
   //NOTE: base_tags must be a complete tagging of base type!
-  EncoderOfStructure_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+  EncoderOfPlainStructure_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                        const ASTagging & base_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfStructureAC(_fieldsStore, use_tag, tag_env, base_tags, use_rule)
     ,  _fieldsStore(_NumFieldsTArg)
   { }
   //
-  virtual ~EncoderOfStructure_T()
+  virtual ~EncoderOfPlainStructure_T()
   { }
 };
 
 
 //Template for Encoder of structured type with known number of fields/elements,
-//which may be optionally tagged  (so-called 'Mixed structure').
+//which may be optionally tagged  (so-called 'generic structure').
 //All fields/elements housekeeping structures are allocated as class members at once
 template <
   uint16_t _NumFieldsTArg       /* overall number of fields/elements */
 , uint16_t _NumTaggedFieldsTArg /* number of tagged fields/elements */
 >
 //TODO: modify FieldTagsStore so it is properly reused if clearField() was called
-class EncoderOfStructureMixed_T : public EncoderOfStructure_T<_NumFieldsTArg> {
+class EncoderOfStructure_T : public EncoderOfPlainStructure_T<_NumFieldsTArg> {
 private:
   typedef eyeline::util::LWArray_T<ASTagging, uint16_t, _NumTaggedFieldsTArg>  FieldTagsStore;
   FieldTagsStore  _ftagsStore;
@@ -113,20 +113,20 @@ protected:
 
 public:
   //'Generic structured type encoder' constructor
-  EncoderOfStructureMixed_T(const ASTagging & eff_tags,
+  EncoderOfStructure_T(const ASTagging & eff_tags,
                             TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructure_T<_NumFieldsTArg>(eff_tags, use_rule)
+    : EncoderOfPlainStructure_T<_NumFieldsTArg>(eff_tags, use_rule)
     , _ftagsStore(_NumTaggedFieldsTArg)
   { }
   //'Generic tagged structured type encoder' constructor
   //NOTE: base_tags must be a complete tagging of base type!
-  EncoderOfStructureMixed_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+  EncoderOfStructure_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                             const ASTagging & base_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructure_T<_NumFieldsTArg>(use_tag, tag_env, base_tags, use_rule)
+    : EncoderOfPlainStructure_T<_NumFieldsTArg>(use_tag, tag_env, base_tags, use_rule)
     , _ftagsStore(_NumTaggedFieldsTArg)
   { }
-  virtual ~EncoderOfStructureMixed_T()
+  virtual ~EncoderOfStructure_T()
   { }
 
   //Assigns untagged field/element with specified index

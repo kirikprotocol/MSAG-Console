@@ -19,13 +19,13 @@ namespace enc {
 /* ROS ReturnError PDU is defined in IMPLICIT tagging environment as follow:
 ReturnError ::= [3] SEQUENCE {
     invokeId	InvokeIdType,
-    errcode	INTEGER,
+    errcode	    INTEGER,
     parameter	ABSTRACT-SYNTAX.&Type({Errors}) OPTIONAL
 } */
-class RERErrorPdu : public asn1::ber::EncoderOfSequence_T<3> {
+class RERErrorPdu : public asn1::ber::EncoderOfPlainSequence_T<3> {
 private:
-  using asn1::ber::EncoderOfSequence_T<3>::addField;
-  using asn1::ber::EncoderOfSequence_T<3>::setField;
+  using asn1::ber::EncoderOfPlainSequence_T<3>::addField;
+  using asn1::ber::EncoderOfPlainSequence_T<3>::setField;
 
   union {
     void *   _aligner;
@@ -41,15 +41,15 @@ protected:
 
   void construct(void)
   {
-    asn1::ber::EncoderOfSequence_T<3>::setField(0, _invId);
-    asn1::ber::EncoderOfSequence_T<3>::setField(1, _errCode);
+    asn1::ber::EncoderOfPlainSequence_T<3>::setField(0, _invId);
+    asn1::ber::EncoderOfPlainSequence_T<3>::setField(1, _errCode);
   }
 
 public:
   static const asn1::ASTag _pduTag; //[3] IMPLICIT
 
   explicit RERErrorPdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfSequence_T<3>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
+    : asn1::ber::EncoderOfPlainSequence_T<3>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
                                         TSGroupBER::getTSRule(use_rule))
     , _invId(use_rule), _errCode(use_rule), _argType(0)
   {
@@ -58,7 +58,7 @@ public:
   }
   RERErrorPdu(const ROSErrorPdu & use_val,
               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfSequence_T<3>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
+    : asn1::ber::EncoderOfPlainSequence_T<3>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
                                         TSGroupBER::getTSRule(use_rule))
     , _invId(use_rule), _errCode(use_rule), _argType(0)
   {

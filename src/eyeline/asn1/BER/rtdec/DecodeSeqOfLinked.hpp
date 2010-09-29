@@ -48,7 +48,7 @@ protected:
 
 public:
   // constructor for untagged SEQUENCE OF
-  DecoderOfSeqOfLinked_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfSeqOfLinked_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfSeqOfAC_T<_TArg, _DecoderOfTArg>(use_rule)
     , _dVal(0)
   { }
@@ -63,7 +63,7 @@ public:
     , _dVal(use_obj._dVal)
   { }
   //
-  ~DecoderOfSeqOfLinked_T()
+  virtual ~DecoderOfSeqOfLinked_T()
   { }
 
   // ----------------------------------------------------------

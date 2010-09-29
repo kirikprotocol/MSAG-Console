@@ -24,16 +24,18 @@ namespace ber {
 template <
   uint16_t _NumFieldsTArg                         /* overall number of fields/elements */
 >
-class EncoderOfSequence_T : public EncoderOfStructure_T<_NumFieldsTArg> {
+class EncoderOfPlainSequence_T : public EncoderOfPlainStructure_T<_NumFieldsTArg> {
 public:
   //Constructor for SEQUENCE/SEQUENCE OF type
-  EncoderOfSequence_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructure_T<_NumFieldsTArg>(asn1::_tagsSEQOF, use_rule)
+  EncoderOfPlainSequence_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfPlainStructure_T<_NumFieldsTArg>(asn1::_tagsSEQOF, use_rule)
   { }
   //Constructor for tagged SEQUENCE/SEQUENCE OF type
-  EncoderOfSequence_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+  EncoderOfPlainSequence_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructure_T<_NumFieldsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
+    : EncoderOfPlainStructure_T<_NumFieldsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
+  { }
+  virtual ~EncoderOfPlainSequence_T()
   { }
 };
 
@@ -44,16 +46,18 @@ template <
   uint16_t _NumFieldsTArg                         /* overall number of fields/elements */
 , uint16_t _NumTaggedFieldsTArg = _NumFieldsTArg  /* number of tagged fields/elements */
 >
-class EncoderOfSequenceMixed_T : public EncoderOfStructureMixed_T<_NumFieldsTArg, _NumTaggedFieldsTArg> {
+class EncoderOfSequence_T : public EncoderOfStructure_T<_NumFieldsTArg, _NumTaggedFieldsTArg> {
 public:
   //Constructor for SEQUENCE/SEQUENCE OF type
-  EncoderOfSequenceMixed_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructureMixed_T<_NumFieldsTArg, _NumTaggedFieldsTArg>(asn1::_tagsSEQOF, use_rule)
+  EncoderOfSequence_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfStructure_T<_NumFieldsTArg, _NumTaggedFieldsTArg>(asn1::_tagsSEQOF, use_rule)
   { }
   //Constructor for tagged SEQUENCE/SEQUENCE OF type
-  EncoderOfSequenceMixed_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+  EncoderOfSequence_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfStructureMixed_T<_NumFieldsTArg, _NumTaggedFieldsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
+    : EncoderOfStructure_T<_NumFieldsTArg, _NumTaggedFieldsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
+  { }
+  virtual ~EncoderOfSequence_T()
   { }
 };
 

@@ -24,16 +24,16 @@ ReturnResultType ::= SEQUENCE {
       result	ABSTRACT-SYNTAX.&Type({Operations})
     } OPTIONAL
 } */
-class REReturnResult : public asn1::ber::EncoderOfSequence_T<2> {
+class REReturnResult : public asn1::ber::EncoderOfPlainSequence_T<2> {
 private:
-  using asn1::ber::EncoderOfSequence_T<2>::addField;
-  using asn1::ber::EncoderOfSequence_T<2>::setField;
+  using asn1::ber::EncoderOfPlainSequence_T<2>::addField;
+  using asn1::ber::EncoderOfPlainSequence_T<2>::setField;
 
 protected:
-  class REResultField : public asn1::ber::EncoderOfSequence_T<2> {
+  class REResultField : public asn1::ber::EncoderOfPlainSequence_T<2> {
   private:
-    using asn1::ber::EncoderOfSequence_T<2>::addField;
-    using asn1::ber::EncoderOfSequence_T<2>::setField;
+    using asn1::ber::EncoderOfPlainSequence_T<2>::addField;
+    using asn1::ber::EncoderOfPlainSequence_T<2>::setField;
 
   protected:
     RELocalOpCode               _opCode;
@@ -41,12 +41,12 @@ protected:
 
   public:
     REResultField(ros::LocalOpCode op_code = 0, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-      : asn1::ber::EncoderOfSequence_T<2>(TSGroupBER::getTSRule(use_rule))
+      : asn1::ber::EncoderOfPlainSequence_T<2>(TSGroupBER::getTSRule(use_rule))
       , _opCode(op_code, use_rule)
       , _resType(TSGroupBER::getTSRule(use_rule))
     {
-      asn1::ber::EncoderOfSequence_T<2>::setField(0, _opCode);
-      asn1::ber::EncoderOfSequence_T<2>::setField(1, _resType);
+      asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _opCode);
+      asn1::ber::EncoderOfPlainSequence_T<2>::setField(1, _resType);
     }
     ~REResultField()
     { }
@@ -86,12 +86,12 @@ protected:
 public:
   REReturnResult(const asn1::ASTag & pdu_tag,
                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfSequence_T<2>(pdu_tag, asn1::ASTagging::tagsIMPLICIT,
+    : asn1::ber::EncoderOfPlainSequence_T<2>(pdu_tag, asn1::ASTagging::tagsIMPLICIT,
                                         TSGroupBER::getTSRule(use_rule))
     , _invId(use_rule), _result(0)
   {
     _memRes._aligner = 0;
-    asn1::ber::EncoderOfSequence_T<2>::setField(0, _invId);
+    asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _invId);
   }
   ~REReturnResult()
   {

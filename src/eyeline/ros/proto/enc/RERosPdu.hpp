@@ -56,25 +56,22 @@ protected:
   void cleanUp(void);
 
 public:
-  explicit RERosPdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfChoice(TSGroupBER::getTSRule(use_rule))
-    , _valTag(altNone)
+  explicit RERosPdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfChoice(use_rule), _valTag(altNone)
   {
     _memSelection.aligner = 0;
     _value._any = 0;
     //add canonical alternative tagging (see EncodeChoice.hpp:NOTE.1)
     addCanonicalAlternative(REInvokePdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
   }
-  RERosPdu(const ros::ROSPdu & use_val,
-          TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfChoice(TSGroupBER::getTSRule(use_rule))
-    , _valTag(altNone)
+  RERosPdu(const asn1::ASTag & use_tag, asn1::ASTagging::Environment_e tag_env,
+           asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfChoice(use_tag, tag_env, use_rule), _valTag(altNone)
   {
     _memSelection.aligner = 0;
     _value._any = 0;
     //add canonical alternative tagging (see EncodeChoice.hpp:NOTE.1)
     addCanonicalAlternative(REInvokePdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
-    setValue(use_val);
   }
   //
   ~RERosPdu()

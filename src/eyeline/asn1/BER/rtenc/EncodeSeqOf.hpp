@@ -17,7 +17,7 @@ template <
   , class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>*/ 
   , uint16_t _NumElemsTArg //estimated number of element values
 >
-class EncoderOfSeqOf_T : public EncoderOfSequenced_T<_TArg, _EncoderOfTArg, _NumElemsTArg> {
+class EncoderOfSequenceOf_T : public EncoderOfSequenced_T<_TArg, _EncoderOfTArg, _NumElemsTArg> {
 protected:
   //Tagged type referencing SEQUENCE OF type encoder constructor
   //NOTE: eff_tags must be a complete tagging of type!
@@ -28,7 +28,7 @@ protected:
 
 public:
   //Untagged SEQUENCE OF type encoder constructor
-  EncoderOfSequenceOf_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+  explicit EncoderOfSequenceOf_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfSequenced_T<_EncoderOfTArg, _NumElemsTArg>(asn1::_tagsSEQOF, use_rule)
   { }
   //Tagged SEQUENCE OF type encoder constructor
@@ -36,15 +36,8 @@ public:
                        TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfSequenced_T<_EncoderOfTArg, _NumElemsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
   { }
-  ~EncoderOfSequenced_T()
+  virtual ~EncoderOfSequenced_T()
   { }
-
-  void addValue(const _TArg & use_val) /*throw(std::exception)*/
-  {
-    _EncoderOfTArg & valEnc = allocElementEncoder();
-    valEnc.setValue(use_val);
-    addElementValue(valEnc);
-  }
 };
 
 } //ber

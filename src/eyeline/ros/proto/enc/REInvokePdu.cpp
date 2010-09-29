@@ -15,7 +15,7 @@ void REInvokePdu::setLinkedId(const ros::LinkedId & link_id) /*throw(std::except
 {
   if (!_linkedId) {
     _linkedId = new (_memLinkId._buf) RELinkedIdType(link_id._invId, getVALRule());
-    asn1::ber::EncoderOfSequence_T<4>::setField(1, *_linkedId);
+    asn1::ber::EncoderOfPlainSequence_T<4>::setField(1, *_linkedId);
   } else
     _linkedId->setIdLinked(link_id._invId);
 }
@@ -24,7 +24,7 @@ void REInvokePdu::setArgType(const PDUArgument & use_arg) /*throw(std::exception
 {
   if (!_argType) {
     _argType = new (_memArgType._buf) asn1::ber::EncoderOfASType(getTSRule());
-    asn1::ber::EncoderOfSequence_T<4>::setField(3, *_argType);
+    asn1::ber::EncoderOfPlainSequence_T<4>::setField(3, *_argType);
   }
 
   if (use_arg._kind & PDUArgument::asvTSyntax)

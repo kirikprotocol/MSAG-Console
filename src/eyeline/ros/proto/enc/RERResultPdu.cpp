@@ -17,7 +17,7 @@ void REReturnResult::setResultField(ros::LocalOpCode op_code)
 {
   if (!_result) {
     _result = new (_memRes._buf) REResultField(op_code, getVALRule());
-    asn1::ber::EncoderOfSequence_T<2>::setField(1, *_result);
+    asn1::ber::EncoderOfPlainSequence_T<2>::setField(1, *_result);
   } else
     _result->setOpCode(op_code);
 }

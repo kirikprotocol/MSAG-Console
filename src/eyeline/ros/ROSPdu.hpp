@@ -128,10 +128,17 @@ public:
   }
 };
 
-//NOTE: The X.880 replaces the old X.219 concept of OperationClasses by
-//      introduction of the combination of two Operaton flags:
-//       &synchronous          BOOLEAN DEFAULT FALSE,
-//       &alwaysReturns        BOOLEAN DEFAULT TRUE,
+//NOTE: The X.880 replaces the old X.219 concept of OperationClasses
+//    Operation Class 1: Synchronous, reporting success or failure (result or error).
+//    Operation Class 2: Asynchronous, reporting success or failure (result or error).
+//    Operation Class 3: Asynchronous, reporting failure (error) only, if any.
+//    Operation Class 4: Asynchronous, reporting success (result) only.
+//    Operation Class 5: Asynchronous, outcome not reported.
+//
+//  by introduction of the combination of two Operaton flags, which are defined in
+//  OPERATION CLASS as follow:
+//    &synchronous          BOOLEAN DEFAULT FALSE,
+//    &alwaysReturns        BOOLEAN DEFAULT TRUE,
 // 
 struct InvokeParm {
   enum FlagBit_e { bitSync = 0x01, bitReturn = 0x02 };

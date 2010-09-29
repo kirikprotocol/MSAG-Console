@@ -15,7 +15,7 @@ void RERErrorPdu::setArgType(const PDUArgument & use_arg) /*throw(std::exception
 {
   if (!_argType) {
     _argType = new (_memArg._buf) asn1::ber::EncoderOfASType(getTSRule());
-    asn1::ber::EncoderOfSequence_T<3>::setField(2, *_argType);
+    asn1::ber::EncoderOfPlainSequence_T<3>::setField(2, *_argType);
   }
 
   if (use_arg._kind & PDUArgument::asvTSyntax)

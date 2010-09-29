@@ -25,10 +25,10 @@ Invoke ::= [1] SEQUENCE {
   opcode      INTEGER,
   argument    ABSTRACT-SYNTAX.&Type({Operations}) OPTIONAL
 } */
-class REInvokePdu : public asn1::ber::EncoderOfSequence_T<4> {
+class REInvokePdu : public asn1::ber::EncoderOfPlainSequence_T<4> {
 private:
-  using asn1::ber::EncoderOfSequence_T<4>::addField;
-  using asn1::ber::EncoderOfSequence_T<4>::setField;
+  using asn1::ber::EncoderOfPlainSequence_T<4>::addField;
+  using asn1::ber::EncoderOfPlainSequence_T<4>::setField;
   // -- OPTIONALs
   union {
     void *  _aligner;
@@ -54,14 +54,14 @@ protected:
   //
   void construct(void)
   {
-    asn1::ber::EncoderOfSequence_T<4>::setField(0, _invId);
-    asn1::ber::EncoderOfSequence_T<4>::setField(2, _opCode);
+    asn1::ber::EncoderOfPlainSequence_T<4>::setField(0, _invId);
+    asn1::ber::EncoderOfPlainSequence_T<4>::setField(2, _opCode);
   }
 public:
   static const asn1::ASTag _pduTag; //[1] IMPLICIT
 
   explicit REInvokePdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfSequence_T<4>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
+    : asn1::ber::EncoderOfPlainSequence_T<4>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
                                         TSGroupBER::getTSRule(use_rule))
     , _invId(use_rule), _opCode(use_rule)
     , _linkedId(0), _argType(0)
@@ -71,7 +71,7 @@ public:
   }
   REInvokePdu(const ROSInvokePdu & use_val,
               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfSequence_T<4>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
+    : asn1::ber::EncoderOfPlainSequence_T<4>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
                                         TSGroupBER::getTSRule(use_rule))
     , _invId(use_rule), _opCode(use_rule)
     , _linkedId(0), _argType(0)
