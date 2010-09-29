@@ -18,16 +18,17 @@ namespace libsccp {
 class SccpApi {
 public:
   enum ErrorCode_e { OK = 0,
-    //NOTE: bind result related values of SuaApi::ErrorCode_e biuniquely conform
+    //NOTE: bind result related values of SccpApi::ErrorCode_e biuniquely conform
     //to corresponding BindConfirmMessage::BindResult_e values !!!
     BIND_CONFIRM_UNKNOWN_APP_ID_VALUE = 1, BIND_CONFIRM_UNSUPPORTED_PROTOCOL_VERSION = 2,
     BIND_CONFIRM_COMPONENT_IS_INACTIVE = 3, ACTIVE_APP_ALREADY_EXISTS = 4,
     LIB_NOT_INITIALIZED = 5, NOT_CONNECTED = 6, NOT_BINDED = 7, WRONG_CONNECT_NUM = 8,
     GOT_TOO_LONG_MESSAGE = 9, SOCKET_TIMEOUT = 10, ALREADY_BINDED = 11,
     GOT_UNKOWN_MESSAGE = 12, SYSTEM_MALFUNCTION = 255, SYSTEM_ERROR = -1
-    // Note: value ACTIVE_APP_ALREADY_EXISTS is returned when second application with
-    // the same appId attempt to connect. Value ALREADY_BINDED is returned when application
-    // call bind() second time.
+    // Note: 
+    // - value ACTIVE_APP_ALREADY_EXISTS is returned if an application attempts
+    //   to connect using appId that is already used by another connected application.
+    // - value ALREADY_BINDED is returned if an application calls bind() twice.
   };
 
   virtual ~SccpApi() {}
