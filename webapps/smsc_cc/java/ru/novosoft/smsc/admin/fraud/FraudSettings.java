@@ -4,15 +4,16 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
 import ru.novosoft.smsc.util.Address;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
 /**
  * @author Artem Snopkov
  */
-public class FraudSettings {
+public class FraudSettings implements Serializable {
 
-  private static final ValidationHelper vh = new ValidationHelper(FraudSettings.class);
+  private static transient final ValidationHelper vh = new ValidationHelper(FraudSettings.class);
 
   private int tail;
   private boolean enableCheck;

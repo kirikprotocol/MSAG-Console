@@ -14,8 +14,8 @@
 
   <ui:define name="content">
 
-    <h:form>
-      <tr:inputHidden value="#{fraud.revision}" id="revision"/>  
+    <h:form rendered="#{!fraud.initError}">
+      <tr:inputHidden value="#{fraud.revision}"/>  
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{fraud.save}"/>
@@ -44,15 +44,7 @@
           </tr:panelLabelAndMessage>
         </tr:panelFormLayout>
     </h:panelGrid>
-        
-    <!--<h:panelGrid style="align:left; width:35%" columns="1" columnClasses="column0Width">-->
-        <!--<eye:pageSubtitle value="#{fraudSettingsBundle['whiteList']}"/>-->
-        <!--<eye:dynamicTable value="#{fraud.whiteList}">-->
-          <!--<eye:textColumn name="address" allowEditAfterAdd="false" maxLength="20">-->
-              <!--&lt;!&ndash;eye:validatePhone/&ndash;&gt;-->
-          <!--</eye:textColumn>-->
-        <!--</eye:dynamicTable>-->
-    <!--</h:panelGrid>-->
+
     <p/>
 
     <h:panelGrid style="align:left;" columns="1" columnClasses="column0Width">

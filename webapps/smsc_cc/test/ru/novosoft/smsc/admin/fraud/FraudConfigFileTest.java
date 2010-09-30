@@ -27,7 +27,7 @@ public class FraudConfigFileTest {
 
   @Before
   public void before() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(FraudManagerTest.class.getResourceAsStream("fraud.xml"), ".fraud");
+    configFile = TestUtils.exportResourceToRandomFile(FraudManagerImplTest.class.getResourceAsStream("fraud.xml"), ".fraud");
   }
 
   @After

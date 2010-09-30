@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
+import ru.novosoft.smsc.admin.fraud.FraudManagerImpl;
 import ru.novosoft.smsc.admin.logging.LoggerManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
@@ -116,7 +117,7 @@ public class AdminContext {
 
     usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
 
-    fraudManager = new FraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);    
+    fraudManager = new FraudManagerImpl(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     mapLimitManager = new MapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
 

@@ -1,9 +1,15 @@
 package ru.novosoft.smsc.web.controllers;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.config.SmscConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.web.config.SettingsManager;
 
+import javax.faces.application.FacesMessage;
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -24,11 +30,28 @@ public class SettingsMController<T> extends SmscController {
     this.mngr = mngr;
     this.settingsAttr = getClass().getCanonicalName() + "_settings";
     this.revisionAttr = getClass().getCanonicalName() + "_viewStartTime";
-
   }
 
   protected void init() throws AdminException {
     resetRevision();
+    
+    if (isSettingsChanged())
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
+
+    if (this instanceof SmscConfiguration) {
+      try {
+        List<Integer> result = new ArrayList<Integer>();
+        Map<Integer, SmscConfigurationStatus> s = ((SmscConfiguration)this).getStatusForSmscs();
+        for (Map.Entry<Integer, SmscConfigurationStatus> en : s.entrySet()) {
+          if (en.getValue() == SmscConfigurationStatus.OUT_OF_DATE)
+            result.add(en.getKey());
+        }
+        if (!result.isEmpty())
+          addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", result.toString());
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
   }
 
   private void resetRevision() throws AdminException {

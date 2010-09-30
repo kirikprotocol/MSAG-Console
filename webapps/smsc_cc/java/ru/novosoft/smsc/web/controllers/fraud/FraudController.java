@@ -4,9 +4,10 @@ import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.util.Address;
+import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.controllers.SettingsController;
+import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.event.ActionEvent;
@@ -18,7 +19,7 @@ import java.util.*;
  * Date: 16.09.2010
  * Time: 15:32:53
  */
-public class FraudController extends SettingsController<FraudSettings> {
+public class FraudController extends SettingsMController<FraudSettings> {
   private static final Logger logger = Logger.getLogger(FraudController.class);
 
   //private DynamicTableModel whiteList = new DynamicTableModel();
@@ -26,24 +27,24 @@ public class FraudController extends SettingsController<FraudSettings> {
   private String newAddr;
   FraudSettings frSettings;
   List<Address> addresses;
-
+  private boolean initError;
 
   public FraudController() {
-    super(ConfigType.Fraud);
+    super(WebContext.getInstance().getFraudManager());
+    try {
+      init();
+    } catch (AdminException e) {
+      initError = true;
+      addError(e);
+    }
     frSettings = getSettings();
     addresses= new ArrayList(frSettings.getWhiteList());
   }
 
 
-
-//  public void setWhiteList(DynamicTableModel whiteList) {
-//    this.whiteList = whiteList;
-//  }
-//
-//  public DynamicTableModel getWhiteList() {
-//    return whiteList;
-//  }
-
+  public boolean isInitError() {
+    return initError;
+  }
 
   private List selectedRows;
   public void setSelectedRows(List rows) {
@@ -98,17 +99,13 @@ public class FraudController extends SettingsController<FraudSettings> {
   public String save() {
 
     try {
-      //frSettings.setWhiteList(wl);
       setSettings(frSettings);
-      Revision rev = submitSettings();
-      if (rev != null) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
-        return null;
-      }
+      submitSettings();
 
     } catch (AdminException e) {
       logger.error(e, e);
       addError(e);
+      return null;
     }
 
     return "INDEX";
@@ -126,22 +123,6 @@ public class FraudController extends SettingsController<FraudSettings> {
   public void viewChanges() {
     addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.users.submit.hint");
   }
-
-  @Override
-  protected FraudSettings loadSettings() throws AdminException {
-    return getConfiguration().getFraudSettings();
-  }
-
-  @Override
-  protected void saveSettings(FraudSettings settings) throws AdminException {
-    getConfiguration().updateFraudSettings(settings, getUserPrincipal().getName());
-  }
-
-  @Override
-  protected FraudSettings cloneSettings(FraudSettings settings) {
-    return settings.cloneSettings();
-  }
-
 
   public boolean isEnableCheck() {
     return frSettings.isEnableCheck();

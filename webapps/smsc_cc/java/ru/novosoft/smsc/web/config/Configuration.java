@@ -83,17 +83,6 @@ public class Configuration {
     journal.logChanges(oldSettings, settings, user);
   }
 
-  public FraudSettings getFraudSettings() throws AdminException {
-    return adminContext.getFraudManager().getSettings();
-  }
-
-  public void updateFraudSettings(FraudSettings settings, String user) throws AdminException{
-    FraudSettings oldSettings = getFraudSettings();
-    adminContext.getFraudManager().updateSettings(settings);
-    journal.logChanges(oldSettings, settings, user);
-  }
-
-
   public SnmpSettings getSnmpSettings() throws AdminException {
     return adminContext.getSnmpManager().getSettings();
   }

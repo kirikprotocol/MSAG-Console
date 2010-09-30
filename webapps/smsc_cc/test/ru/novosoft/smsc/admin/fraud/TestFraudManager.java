@@ -11,7 +11,7 @@ import java.io.File;
  *
  * @author Artem Snopkov
  */
-public class TestFraudManager extends FraudManager {
+public class TestFraudManager extends FraudManagerImpl {
 
   public TestFraudManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     super(configFile, backupDir, cc, fs);

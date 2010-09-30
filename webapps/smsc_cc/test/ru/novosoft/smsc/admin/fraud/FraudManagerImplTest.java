@@ -23,13 +23,13 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Artem Snopkov
  */
-public class FraudManagerTest {
+public class FraudManagerImplTest {
 
   private File configFile, backupDir;
 
   @Before
   public void before() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(FraudManagerTest.class.getResourceAsStream("fraud.xml"), ".fraud");
+    configFile = TestUtils.exportResourceToRandomFile(FraudManagerImplTest.class.getResourceAsStream("fraud.xml"), ".fraud");
     backupDir = TestUtils.createRandomDir(".fraudbackup");
   }
 
@@ -41,14 +41,14 @@ public class FraudManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
-  private FraudManager getManager(ClusterController cc) throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+  private FraudManagerImpl getManager(ClusterController cc) throws AdminException {
+    FraudManagerImpl fm = new FraudManagerImpl(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
     return fm;
   }
 
   @Test
   public void testGetStatusForSmscs() throws AdminException {
-    FraudManager fm = getManager(new ClusterControllerImpl());
+    FraudManagerImpl fm = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = fm.getStatusForSmscs();
 
@@ -60,7 +60,7 @@ public class FraudManagerTest {
 
   @Test
   public void nullGetStatusForSmscs() throws AdminException {
-    FraudManager fm = getManager(new ClusterControllerImpl1());
+    FraudManagerImpl fm = getManager(new ClusterControllerImpl1());
 
     Map<Integer, SmscConfigurationStatus> states = fm.getStatusForSmscs();
 

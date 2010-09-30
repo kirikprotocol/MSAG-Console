@@ -26,7 +26,6 @@ public class Journal {
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(JournalRecord.Subject.USERS);
   private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(JournalRecord.Subject.MAP_LIMIT);
   private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(JournalRecord.Subject.LOGGING);
-  private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(JournalRecord.Subject.FRAUD);
   private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(JournalRecord.Subject.SNMP);
   private final SmeDiffHelper sme = new SmeDiffHelper(JournalRecord.Subject.SME);
 
@@ -203,10 +202,6 @@ public class Journal {
    */
   public void logChanges(LoggerSettings oldSettings, LoggerSettings newSettings, String user) {
     logger.logChanges(this, oldSettings, newSettings, user);
-  }
-  
-  public void logChanges(FraudSettings oldSettings, FraudSettings newSettings, String user) {
-    fraud.logChanges(this, oldSettings, newSettings, user);
   }
   
 

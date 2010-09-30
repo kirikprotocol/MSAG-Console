@@ -30,7 +30,6 @@ public class CategoryController extends SettingsMController<CategorySettings> {
       return;
     }
     resetCategories();
-    checkChanges();
   }
 
   public boolean isInitError() {
