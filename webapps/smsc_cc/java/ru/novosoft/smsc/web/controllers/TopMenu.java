@@ -30,6 +30,9 @@ public class TopMenu {
           add(new MenuItem("smsc.smsc.regions", "/smsc/regions/regions.faces")).
           add(new MenuItem("smsc.smsc.fraud", "/smsc/fraud/fraud.faces"))
       );
+      add(new MenuBarItem("smsc.statistic", 154).
+          add(new MenuItem("smsc.statistic.archiveDaemon", "/smsc/archive_daemon/index.faces"))
+      );
       add(new MenuBarItem("smsc.routes", 154).
           add(new MenuItem("smsc.routes.subjects", "/smsc/subjects/index.faces")).
           add(new MenuItem("smsc.routes.categories", "/smsc/category/index.faces")).

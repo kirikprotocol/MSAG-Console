@@ -78,6 +78,11 @@
       <var>sme</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonSettings</base-name>
+      <var>archiveDaemonBundle</var>
+    </resource-bundle>
+
   </application>
 
   <converter>
@@ -273,6 +278,13 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>archiveDaemon</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.archive_daemon.ArchiveDaemonController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -355,11 +367,15 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
+      <from-outcome>ARCHIVEDAEMON</from-outcome>
+      <to-view-id>/smsc/archive_daemon/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
       <from-outcome>LOGGING</from-outcome>
       <to-view-id>/smsc/smsc_service/logging.faces</to-view-id>
       <redirect/>
     </navigation-case>
-
 
   </navigation-rule>
 
