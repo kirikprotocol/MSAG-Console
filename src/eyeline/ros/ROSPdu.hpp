@@ -273,13 +273,6 @@ protected:
     ROSResultNLPdu *  _resultNL;
   } _value;
 
-  void cleanUp(void)
-  {
-    if (_value._any) {
-      _value._any->~ROSPduPrimitiveAC();
-      _value._any = 0;
-    }
-  }
 public:
   ROSPdu()
   {
@@ -287,7 +280,7 @@ public:
   }
   ~ROSPdu()
   {
-    cleanUp();
+    clear();
   }
 
   ROSPduPrimitiveAC::Kind_e getKind(void) const
@@ -312,37 +305,45 @@ public:
 
   ROSInvokePdu &    initInvoke(void)
   {
-    cleanUp();
+    clear();
     _value._invoke = new (_memPdu._buf)ROSInvokePdu();
     return *_value._invoke;
   }
   //
   ROSResultPdu &    initResult(void)
   {
-    cleanUp();
+    clear();
     _value._result = new (_memPdu._buf)ROSResultPdu();
     return *_value._result;
   }
   //
   ROSErrorPdu &     initError(void)
   {
-    cleanUp();
+    clear();
     _value._error = new (_memPdu._buf)ROSErrorPdu();
     return *_value._error;
   }
   //
   ROSRejectPdu &    initReject(void)
   {
-    cleanUp();
+    clear();
     _value._reject = new (_memPdu._buf)ROSRejectPdu();
     return *_value._reject;
   }
   //
   ROSResultNLPdu &  initResultNL(void)
   {
-    cleanUp();
+    clear();
     _value._resultNL = new (_memPdu._buf)ROSResultNLPdu();
     return *_value._resultNL;
+  }
+
+  void clear(void)
+  {
+    if (_value._any) {
+      _value._any->~ROSPduPrimitiveAC();
+      _value._any = 0;
+    }
   }
 };
 
