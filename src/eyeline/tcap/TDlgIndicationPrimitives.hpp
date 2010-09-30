@@ -25,6 +25,19 @@ public:
     indTRNone = 0, indTRBegin, indTRCont, indTREnd, indTRUAbort, indTRPAbort, indTRNotice
   };
 
+protected:
+  const IKind_e       _iKind;
+  TDialogueId         _dlgId;
+  const EncodedOID *  _acOId;
+  TComponentsList  *  _comps;
+  TDlgUserInfoList *  _usrInfo;
+  SCCPAddress         _orgAdr;
+
+  TDlgIndicationPrimitive(IKind_e use_kind)
+    : _iKind(use_kind), _dlgId(0), _acOId(0), _comps(0), _usrInfo(0)
+  { }
+
+public:
   virtual ~TDlgIndicationPrimitive()
   { }
 
@@ -38,23 +51,23 @@ public:
   //
   const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
   //
-  const TDlgUserInfoList * getUserInfo(void) const { return _usrInfo; }
-  const TComponentsList * getCompList(void) const { return _comps; }
+  const TDlgUserInfoList * getUserInfo(void) const
+  {
+    return (_usrInfo && !_usrInfo->empty()) ? _usrInfo : NULL;
+  }
+  const TComponentsList * getCompList(void) const
+  {
+    return (_comps && !_comps->empty()) ? _comps : NULL;
+  }
   //
-  TDlgUserInfoList * getUserInfo(void) { return _usrInfo; }
-  TComponentsList *  getCompList(void)  { return _comps; }
-
-protected:
-  const IKind_e       _iKind;
-  TDialogueId         _dlgId;
-  const EncodedOID *  _acOId;
-  TComponentsList  *  _comps;
-  TDlgUserInfoList *  _usrInfo;
-  SCCPAddress         _orgAdr;
-
-  TDlgIndicationPrimitive(IKind_e use_kind)
-    : _iKind(use_kind), _dlgId(0), _acOId(0), _comps(0), _usrInfo(0)
-  { }
+  TDlgUserInfoList * getUserInfo(void)
+  {
+    return (_usrInfo && !_usrInfo->empty()) ? _usrInfo : NULL;
+  }
+  TComponentsList *  getCompList(void)
+  {
+    return (_comps && !_comps->empty()) ? _comps : NULL;
+  }
 };
 
 //

@@ -167,11 +167,17 @@ TDlgProperties
 void TCService::updateDlgByIndication(TBeginIndComposer & tc_begin_ind)
   /*throw(std::exception)*/
 {
+//TODO; possibly it's helpfull to maintain std::set<{rmt_adr, rmt_TrId}> of
+//      active dialogs and check TR_BeginInd{rmt_adr, rmt_TrId} aginst it.
+
   const asn1::EncodedOID * acOid = tc_begin_ind.getAppCtx(); //NOTE: always non-zero
   ros::LocalOpCode opCode = 0;
 
-  if (tc_begin_ind.getCompList() && !tc_begin_ind.getCompList()->empty())
-    opCode = tc_begin_ind.getCompList()->front().get()->getOpCode();
+  if (tc_begin_ind.getCompList()) {
+    ros::ROSPdu & firstComp = tc_begin_ind.getCompList()->front();
+    if (firstComp.get()->isInvoke())
+      opCode = firstComp.get()->getOpCode();
+  }
 
   TDlgHandlerInfo hdlInfo = _appCtxReg.getDlgHandler(*acOid, opCode);
   if (hdlInfo.empty()) { //unregistered AppCtx

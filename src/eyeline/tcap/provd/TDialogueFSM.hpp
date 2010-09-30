@@ -56,7 +56,7 @@ protected:
   unsigned        _refCnt;
 
 public:
-  explicit ObjRefGuard() : _refCnt(0)
+  ObjRefGuard() : _refCnt(0)
   { }
   ~ObjRefGuard()
   { }
@@ -244,14 +244,12 @@ public:
   TCRCode_e prepareDlgRequest(TContReqComposer & treq_cont, SCSPUnitdataReq * req_udt) const /*throw()*/;
   TCRCode_e prepareDlgRequest(TEndReqComposer & treq_end, SCSPUnitdataReq * req_udt) const /*throw()*/;
   TCRCode_e prepareDlgRequest(TUAbortReqComposer & treq_uAbort, SCSPUnitdataReq * req_udt) const /*throw()*/;
-//  TCRCode_e prepareDlgRequest(TPAbortReqComposer & treq_pAbort, SCSPUnitdataReq * req_udt) const /*throw()*/;
 
   // -- Dialogue(Component contained) request primitives handling
   TCRCode_e updateDlgByRequest(const TBeginReqComposer & treq_begin) /*throw(std::exception)*/;
   TCRCode_e updateDlgByRequest(const TContReqComposer & treq_cont) /*throw(std::exception)*/;
   TCRCode_e updateDlgByRequest(const TEndReqComposer & treq_end) /*throw(std::exception)*/;
   TCRCode_e updateDlgByRequest(const TUAbortReqComposer & treq_uAbort) /*throw(std::exception)*/;
-//  TCRCode_e updateDlgByRequest(const TPAbortReqComposer & treq_pAbort) /*throw(std::exception)*/;
   // -- Component only request primitives handling
   TCRCode_e updateDlgByRequest(const TC_U_Cancel_Req & tc_req) /*throw()*/;
   TCRCode_e updateDlgByRequest(const TC_Timer_Reset_Req & tc_req) /*throw()*/;
@@ -265,7 +263,6 @@ public:
   void updateDlgByIndication(TNoticeIndComposer & tind_notice) /*throw(std::exception)*/;
   // -- Component only handling primitives
   void updateDlgByIndication(TC_LCancelIndComposer & tc_ind) /*throw(std::exception)*/;
-  void updateDlgByIndication(TC_LRejectIndComposer & tc_ind) /*throw(std::exception)*/;
 };
 
 #include "eyeline/tcap/provd/TDialogueFSM_impl.hpp"

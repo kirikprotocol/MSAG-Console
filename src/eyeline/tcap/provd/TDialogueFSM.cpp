@@ -179,35 +179,99 @@ bool TDialogueFSM::verifyTCIndComponents(TComponentsList * comps,
   if (!comps || comps->empty())
     return true;
 
-  bool rval = true;
+  _rejComps.clear();
 
   for (TComponentsList::iterator it = comps->begin(); it != comps->end(); ++it) {
-    const ros::ROSPduPrimitiveAC * rosComp = it->get();
+    const ROSPduPrimitiveAC * rosComp = it->get();
     uint8_t invId = rosComp->getInvokeId();
+    TimerInfo * pTmo = NULL;
 
-    if (rosComp->isInvoke()) { //verify remote invocation id
+    switch (rosComp->getKind()) {
+    case ROSPduPrimitiveAC::rosInvoke: {
+      //verify remote invocation id
       if (_rmtInv.find(invId) == _rmtInv.npos()) {
         _rmtInv.insert(invId);
       } else {
         smsc_log_error(_logger, "%s: invalid %s, duplicate invokeId=%u of %s", _logId,
                        tind_id, (unsigned)invId, rosComp->nmKind());
-        //TODO: reject this component
-        rval = false;
+        //reject this component
+        TC_LRejectIndComposer indReject;
+        indReject.setDialogueId(_trnUId.getIdLocal());
+        indReject.setProblem(RejectProblem::InvokeProblem_e,
+                             RejectProblem::rji_duplicateInvocation);
+        indReject.setInvokeId(rosComp->getInvokeId());
+        /**/
+        _rejComps.push_back(indReject);
+        it->clear();
       }
-    } else { //verify local invocation id
-      TimerInfo * pTmo = (invId < _lclInv.size()) ? &_lclInv[invId] : NULL;
-      if (!pTmo) {
+    } break;
+
+    case ROSPduPrimitiveAC::rosError: {
+      //verify local invocation id
+      if (invId < _lclInv.size()) {
+        pTmo = &_lclInv[invId];
+      } else {
         smsc_log_error(_logger, "%s: invalid %s, unknown invokeId=%u of %s", _logId,
                        tind_id, (unsigned)invId, rosComp->nmKind());
-        //TODO: reject this component
-        rval = false;
-      } else if (!stopTimer(*pTmo)) {
-          smsc_log_fatal(_logger, "%s: failed to stop invoke[%u] timer[%s]",  _logId,
-                         (unsigned)invId, pTmo->_uid.c_str());
+        //reject this component
+        TC_LRejectIndComposer indReject;
+        indReject.setDialogueId(_trnUId.getIdLocal());
+        indReject.setInvokeId(rosComp->getInvokeId());
+        indReject.setProblem(RejectProblem::RErrorProblem_e,
+                             RejectProblem::rje_unrecognizedInvocation);
+        /**/
+        _rejComps.push_back(indReject);
+        it->clear();
       }
+    } break;
+
+    case ROSPduPrimitiveAC::rosResult:
+    case ROSPduPrimitiveAC::rosResultNL: {
+      //verify local invocation id
+      if (invId < _lclInv.size()) {
+        pTmo = (rosComp->getKind() == ROSPduPrimitiveAC::rosResult) ? &_lclInv[invId] : NULL;
+      } else {
+        smsc_log_error(_logger, "%s: invalid %s, unknown invokeId=%u of %s", _logId,
+                       tind_id, (unsigned)invId, rosComp->nmKind());
+        //reject this component
+        TC_LRejectIndComposer indReject;
+        indReject.setDialogueId(_trnUId.getIdLocal());
+        indReject.setInvokeId(rosComp->getInvokeId());
+        indReject.setProblem(ros::RejectProblem::RResultProblem_e,
+                             ros::RejectProblem::rjr_unrecognizedInvocation);
+        /**/
+        _rejComps.push_back(indReject);
+        it->clear();
+      }
+    } break;
+
+    case ROSPduPrimitiveAC::rosReject: {
+      ROSRejectPdu * pdu = it->getReject();
+      //check if local invocation was rejected by remote peer
+      if (pdu->getParam().getProblemKind() == RejectProblem::InvokeProblem_e)
+        pTmo = (invId < _lclInv.size()) ? &_lclInv[invId] : NULL;
+    } break;
+
+    case ROSPduPrimitiveAC::rosCancel: {
+      //component wasn't properly identified/decoded by underlying layer
+      //reject this component
+      TC_LRejectIndComposer indReject;
+      indReject.setDialogueId(_trnUId.getIdLocal());
+      indReject.setProblem(ros::RejectProblem::GeneralProblem_e,
+                           ros::RejectProblem::rjg_unrecognizedPDU);
+      /**/
+      _rejComps.push_back(indReject);
+      it->clear();
+    } break;
+    //default:;
+    } /*eosw*/
+
+    if (pTmo && !stopTimer(*pTmo)) {
+      smsc_log_fatal(_logger, "%s: failed to stop invoke[%u] timer[%s]",  _logId,
+                     (unsigned)invId, pTmo->_uid.c_str());
     }
-  }
-  return rval;
+  } /*eofr*/
+  return !_rejComps.empty();
 }
 
 
@@ -610,8 +674,6 @@ void TDialogueFSM::updateDlgByIndication(TBeginIndComposer & t_begin_ind)
 
   if (_trnState != fsmIDLE) { //assertion!!!
     log_error_state(t_begin_ind.getIdent());
-    //TODO; possibly it's helpfull to maintain std::set<{rmt_adr, rmt_TrId}> of
-    //active dialogs and check TR_BeginInd{rmt_adr, rmt_TrId} aginst it.
     return;
   }
   
@@ -638,14 +700,10 @@ void TDialogueFSM::updateDlgByIndication(TBeginIndComposer & t_begin_ind)
     return;
   }
   //TODO: report all rejected components, for now only 1st one
-  if (!_rejComps.empty()) {
-    if (!notifyLocalTCUser(grdUser, _rejComps.front())) {
-      _dlgMgr->notifyRmtTCUser(_trnUId, TDialogueAssociate::dsu_no_reason_given,
-                               _cfg._scspLink, _cfg._ownAddr, _rmtAddr);
-      stopDialogue();
-      return;
-    }
-    _rejComps.clear();
+  if (!_rejComps.empty() && !notifyLocalTCUser(grdUser, _rejComps.front())) {
+    _dlgMgr->notifyRmtTCUser(_trnUId, TDialogueAssociate::dsu_no_reason_given,
+                             _cfg._scspLink, _cfg._ownAddr, _rmtAddr);
+    stopDialogue();
   }
 }
 
@@ -680,14 +738,10 @@ void TDialogueFSM::updateDlgByIndication(TContIndComposer & t_cont_ind)
     return;
   }
   //TODO: report all rejected components, for now only 1st one
-  if (!_rejComps.empty()) {
-    if (!notifyLocalTCUser(grdUser, _rejComps.front())) {
-      _dlgMgr->notifyRmtTCUser(_trnUId, TDialogueAssociate::dsu_no_reason_given,
-                               _cfg._scspLink, _cfg._ownAddr, _rmtAddr);
-      stopDialogue();
-      return;
-    }
-    _rejComps.clear();
+  if (!_rejComps.empty() && !notifyLocalTCUser(grdUser, _rejComps.front())) {
+    _dlgMgr->notifyRmtTCUser(_trnUId, TDialogueAssociate::dsu_no_reason_given,
+                             _cfg._scspLink, _cfg._ownAddr, _rmtAddr);
+    stopDialogue();
   }
 }
 
@@ -718,10 +772,8 @@ void TDialogueFSM::updateDlgByIndication(TEndIndComposer & t_end_ind)
     return;
   }
   //TODO: report all rejected components, for now only 1st one
-  if (!_rejComps.empty()) {
+  if (!_rejComps.empty())
     notifyLocalTCUser(grdUser, _rejComps.front());
-    _rejComps.clear();
-  }
   stopDialogue();
 }
 
@@ -748,6 +800,7 @@ void TDialogueFSM::updateDlgByIndication(TUAbortIndComposer & t_uAbort_ind)
   stopDialogue();
 }
 
+//Initiated either by local DialogCorrdinator or by SCCP Service Providec
 void TDialogueFSM::updateDlgByIndication(TPAbortIndComposer & t_pAbort_ind)
   /*throw(std::exception)*/
 {
@@ -761,6 +814,7 @@ void TDialogueFSM::updateDlgByIndication(TPAbortIndComposer & t_pAbort_ind)
   stopDialogue();
 }
 
+//Initiated either by local DialogCorrdinator or by SCCP Service Providec
 void TDialogueFSM::updateDlgByIndication(TNoticeIndComposer & t_notice_ind)
   /*throw(std::exception)*/
 {
@@ -773,7 +827,7 @@ void TDialogueFSM::updateDlgByIndication(TNoticeIndComposer & t_notice_ind)
     stopDialogue();
 }
 
-
+//Initiated only by local DialogCorrdinator
 void TDialogueFSM::updateDlgByIndication(TC_LCancelIndComposer & tc_ind)
   /*throw(std::exception)*/
 {
@@ -786,16 +840,6 @@ void TDialogueFSM::updateDlgByIndication(TC_LCancelIndComposer & tc_ind)
                              _cfg._scspLink, _cfg._ownAddr, _rmtAddr);
     stopDialogue();
   }
-}
-
-void TDialogueFSM::updateDlgByIndication(TC_LRejectIndComposer & tc_ind)
-  /*throw(std::exception)*/
-{
-  //ensure first that TC User has finished processing of previous indications
-  TDlgIndHandlerGuard   grdUser(_dlgUser);
-  MutexGuard            grd(_sync);
-
-  //TODO:
 }
 
 }}}
