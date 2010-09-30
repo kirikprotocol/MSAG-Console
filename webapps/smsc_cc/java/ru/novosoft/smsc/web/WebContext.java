@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
+import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.Configuration;
@@ -12,6 +13,7 @@ import ru.novosoft.smsc.web.config.acl.WAclManager;
 import ru.novosoft.smsc.web.config.alias.WAliasManager;
 import ru.novosoft.smsc.web.config.archive_daemon.WArchiveDaemonManager;
 import ru.novosoft.smsc.web.config.category.WCategoryManager;
+import ru.novosoft.smsc.web.config.closed_groups.WClosedGroupManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import javax.faces.context.FacesContext;
@@ -38,6 +40,7 @@ public class WebContext {
   private final AliasManager aliasManager;
   private final WArchiveDaemonManager archiveDaemonManager;
   private final WCategoryManager categoryManager;
+  private final ClosedGroupManager closedGroupManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -77,6 +80,7 @@ public class WebContext {
     aliasManager = new WAliasManager(adminContext.getAliasManager(), user, journal);
     archiveDaemonManager = new WArchiveDaemonManager(adminContext.getArchiveDaemonManager(), journal, user);
     categoryManager = new WCategoryManager(adminContext.getCategoryManager(), journal, user);
+    closedGroupManager = new WClosedGroupManager(adminContext.getClosedGroupManager(), user, journal);
   }
 
   public WebXml getWebXml() {
@@ -110,6 +114,10 @@ public class WebContext {
 
   public WCategoryManager getCategoryManager() {
     return categoryManager;
+  }
+
+  public ClosedGroupManager getClosedGroupManager() {
+    return closedGroupManager;
   }
 
   public Journal getJournal() {

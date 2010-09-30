@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web.controllers.closed_groups;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.config.Configuration;
@@ -21,11 +22,11 @@ public class ClosedGroupsController extends SmscController {
 
   private boolean outOfDate;
 
-  protected Configuration configuration;
+  protected ClosedGroupManager manager;
 
   protected ClosedGroupsController() {
     outOfDate = checkOutOfDate();
-    configuration = WebContext.getInstance().getConfiguration();
+    manager = WebContext.getInstance().getClosedGroupManager();
   }
 
   private boolean checkOutOfDate() {

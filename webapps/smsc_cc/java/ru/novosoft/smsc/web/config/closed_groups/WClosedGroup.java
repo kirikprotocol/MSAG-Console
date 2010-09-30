@@ -1,9 +1,10 @@
-package ru.novosoft.smsc.web.config;
+package ru.novosoft.smsc.web.config.closed_groups;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroup;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.journal.Journal;
+import ru.novosoft.smsc.web.journal.JournalRecord;
 
 import java.util.Collection;
 
@@ -12,7 +13,7 @@ import java.util.Collection;
  * @author Aleksander Khalitov
  */
 
-class LoggedClosedGroup implements ClosedGroup{
+class WClosedGroup implements ClosedGroup{
 
   private ClosedGroup group;
 
@@ -20,7 +21,7 @@ class LoggedClosedGroup implements ClosedGroup{
   
   private String user;
 
-  LoggedClosedGroup(ClosedGroup group, Journal journal, String user) {
+  WClosedGroup(ClosedGroup group, Journal journal, String user) {
     if(group == null || journal == null) {
       throw new IllegalArgumentException("Some arguments are null: group="+group+" journal="+journal);
 
@@ -45,7 +46,8 @@ class LoggedClosedGroup implements ClosedGroup{
   public void setDescription(String description) throws AdminException {
     String old = getDescription();
     group.setDescription(description);
-    journal.logClosedGroupDescription(getName(), old, description, user);
+     JournalRecord r = journal.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
+    r.setDescription("closed_group_change_description", old, description, getName());
   }
 
   public Collection<Address> getMasks() throws AdminException {
@@ -54,12 +56,14 @@ class LoggedClosedGroup implements ClosedGroup{
 
   public void removeMask(Address mask) throws AdminException {
     group.removeMask(mask);
-    journal.logClosedGroupRemoveMask(getName(), mask.getSimpleAddress(), user);
+    JournalRecord r = journal.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
+    r.setDescription("closed_group_remove_mask", mask.getSimpleAddress(), getName());
   }
 
   public void addMask(Address mask) throws AdminException {
     group.addMask(mask);
-    journal.logClosedGroupAddMask(getName(), mask.getSimpleAddress(), user);
+    JournalRecord r = journal.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
+    r.setDescription("closed_group_add_mask", mask.getSimpleAddress(), getName());
   }
 
 

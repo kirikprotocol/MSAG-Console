@@ -42,7 +42,7 @@ public class ClosedGroupEditController extends ClosedGroupsController{
   }
 
   private void reload(int id) throws AdminException{
-    ClosedGroup oldGroup = configuration.getClosedGroup(id, getUserName());
+    ClosedGroup oldGroup = manager.getGroup(id);
     name = oldName = oldGroup.getName();
     description = oldGroup.getDescription();
     dynamicModel = new DynamicTableModel();
@@ -62,16 +62,16 @@ public class ClosedGroupEditController extends ClosedGroupsController{
         System.out.println("SAVE id="+id);
         if(!oldName.equals(name)) {
           System.out.println("SAVE name change");
-          configuration.removeGroup(Integer.parseInt(id), user);
-          cg = configuration.addGroup(name, description, user);
+          manager.removeGroup(Integer.parseInt(id));
+          cg = manager.addGroup(name, description);
           id = Long.toString(cg.getId());
         }else {
           System.out.println("SAVE name is not change");
-          cg = configuration.getClosedGroup(Integer.parseInt(id), getUserName());
+          cg = manager.getGroup(Integer.parseInt(id));
         }
       }else {
         System.out.println("SAVE id=null");
-        cg = configuration.addGroup(name, description, user);
+        cg = manager.addGroup(name, description);
       }
 
       Set<String> newM = new HashSet<String>();

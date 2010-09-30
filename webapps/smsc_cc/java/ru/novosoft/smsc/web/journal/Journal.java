@@ -208,59 +208,7 @@ public class Journal {
   public void logChanges(FraudSettings oldSettings, FraudSettings newSettings, String user) {
     fraud.logChanges(this, oldSettings, newSettings, user);
   }
-  /**
-   * Добавляет в журнал запись об изменении описания закрытой группы
-   * @param name имя группы
-   * @param oldDescription старое описание
-   * @param newDescription новое описание
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logClosedGroupDescription(String name, String oldDescription, String newDescription, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_change_description", oldDescription, newDescription, name);
-  }
-
-  /**
-   * Добавляет в журнал запись о создании маски закрытой группы
-   * @param name имя группы
-   * @param mask маска
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logClosedGroupAddMask(String name, String mask, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_add_mask", mask, name);
-  }
-
-  /**
-   * Добавляет в журнал запись об удалении маски закрытой группы
-   * @param name имя группы
-   * @param mask маска
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logClosedGroupRemoveMask(String name, String mask, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_remove_mask", mask, name);
-  }
-
-  /**
-   * Добавляет в журнал запись о создании закрытой группы
-   * @param name имя группы
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logClosedGroupAdd(String name, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_added", name);
-  }
-
-  /**
-   * Добавляет в журнал запись об удалении закрытой группы 
-   * @param name имя группы
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logClosedGroupRemove(String name, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_removed", name);
-  }
+  
 
   public void logChanges(SnmpSettings oldSettings, SnmpSettings newSettings, String user) {
     snmp.logChanges(this, oldSettings, newSettings, user);

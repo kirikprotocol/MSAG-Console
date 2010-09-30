@@ -17,9 +17,9 @@ public class ClosedGroupImpl implements ClosedGroup{
   protected String description;
   protected Collection<Address> masks;
   private ClusterController cc;
-  protected ClosedGroupManager cgm;
+  protected ClosedGroupManagerImpl cgm;
 
-  ClosedGroupImpl(int id, String name, String description, Collection<Address> masks, ClusterController cc, ClosedGroupManager cgm) {
+  ClosedGroupImpl(int id, String name, String description, Collection<Address> masks, ClusterController cc, ClosedGroupManagerImpl cgm) {
     this.id= id;
     this.name = name;
     this.description = description;

@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManagerImpl;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.category.CategoryManagerImpl;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
+import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManagerImpl;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
@@ -121,7 +122,7 @@ public class AdminContext {
 
     snmpManager = new SnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    closedGroupManager = new ClosedGroupManager(new File(smscConfigDir, "ClosedGroups.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    closedGroupManager = new ClosedGroupManagerImpl(new File(smscConfigDir, "ClosedGroups.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     SmscSettings s = smscManager.getSettings();
 

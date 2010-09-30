@@ -2,8 +2,6 @@ package ru.novosoft.smsc.web.config;
 
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.acl.Acl;
-import ru.novosoft.smsc.admin.category.CategorySettings;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroup;
 import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.admin.logging.LoggerSettings;
@@ -83,34 +81,6 @@ public class Configuration {
     MapLimitSettings oldSettings = getMapLimitSettings();
     adminContext.getMapLimitManager().updateSettings(settings);
     journal.logChanges(oldSettings, settings, user);
-  }
-
-  public ClosedGroup getClosedGroup(int groupId, String user) throws AdminException {
-    return new LoggedClosedGroup(adminContext.getClosedGroupManager().getGroup(groupId), journal, user);
-  }
-
-  public List<ClosedGroup> getClosedGroups(String user) throws AdminException {
-    List<ClosedGroup> gs = adminContext.getClosedGroupManager().groups();
-    List<ClosedGroup> result = new ArrayList<ClosedGroup>(gs.size());
-    for(ClosedGroup g : gs) {
-      result.add(new LoggedClosedGroup(g, journal, user));
-    }
-    return result;
-  }
-
-  public ClosedGroup addGroup(String name, String description, String user) throws AdminException {
-    ClosedGroup g = new LoggedClosedGroup(adminContext.getClosedGroupManager().addGroup(name, description), journal, user);
-    journal.logClosedGroupAdd(name, user);
-    return g;
-  }
-
-  public boolean removeGroup(int groupId, String user) throws AdminException {
-    ClosedGroup cg = adminContext.getClosedGroupManager().removeGroup(groupId);
-    if(cg != null) {
-      journal.logClosedGroupRemove(cg.getName(), user);
-      return true;
-    }
-    return false;
   }
 
   public FraudSettings getFraudSettings() throws AdminException {

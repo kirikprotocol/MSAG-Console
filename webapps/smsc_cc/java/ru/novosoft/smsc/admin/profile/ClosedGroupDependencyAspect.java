@@ -7,7 +7,7 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminContextLocator;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
-import ru.novosoft.smsc.admin.resource.ResourceManager;
+import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManagerImpl;
 
 /**
  * @author Artem Snopkov

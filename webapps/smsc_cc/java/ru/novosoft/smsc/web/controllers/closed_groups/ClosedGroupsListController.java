@@ -42,7 +42,7 @@ public class ClosedGroupsListController extends ClosedGroupsController{
       for (String s : (List<String>) selectedRows) {
         int id = Integer.parseInt(s);
         try {
-          configuration.removeGroup(id, getUserName());
+          manager.removeGroup(id);
         } catch (AdminException ex) {
           addError(ex);
         }
@@ -107,7 +107,7 @@ public class ClosedGroupsListController extends ClosedGroupsController{
         if(groups == null) {
           groups = new LinkedList<ClosedGroup>();
           try{
-            for(ClosedGroup g : configuration.getClosedGroups(getUserName())) {
+            for(ClosedGroup g : manager.groups()) {
               if(filterById != null && g.getId() != filterById) {
                 continue;
               }
