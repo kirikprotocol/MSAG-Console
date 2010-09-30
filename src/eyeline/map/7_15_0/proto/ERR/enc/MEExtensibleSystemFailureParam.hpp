@@ -57,15 +57,15 @@ public:
 
   ~MEExtensibleSystemFailureParam() {
     if (_networkResource)
-      _networkResource->~EncoderOfENUM();
+      _networkResource->~MENetworkResource();
     if (_extensionContainer)
       _extensionContainer->~MEExtensionContainer();
     if (_encoderOfUExt)
       _encoderOfUExt->~EncoderOfUExtension_T();
     if (_additionalNetworkResource)
-      _additionalNetworkResource->~EncoderOfENUM();
+      _additionalNetworkResource->~MEAdditionalNetworkResource();
     if (_failureCauseParam)
-      _failureCauseParam->~EncoderOfENUM();
+      _failureCauseParam->~MEFailureCauseParam();
   }
 
   void setValue(const ExtensibleSystemFailureParam& value) {
