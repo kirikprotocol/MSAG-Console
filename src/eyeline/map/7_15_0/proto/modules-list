@@ -8,7 +8,7 @@
 common  # -- Common types
 #CH     # -- Call Handling types
 ERR     # -- Errors Types
-#EXT    # -- Extensions types
+EXT    # -- Extensions types
 #GR     # -- Group Call types
 #LCS    # -- Location Services types
 #MS     # -- Mobile Services types
