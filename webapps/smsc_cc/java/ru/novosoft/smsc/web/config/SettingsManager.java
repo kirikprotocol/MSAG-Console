@@ -11,6 +11,8 @@ public interface SettingsManager<S> {
 
   public void updateSettings(S settings) throws AdminException;
 
+  public S cloneSettings(S settings);
+
   public long getLastUpdateTime();
 
   public String getLastUpdateUser();

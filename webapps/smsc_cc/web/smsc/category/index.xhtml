@@ -13,7 +13,7 @@
 
   <ui:define name="content">
 
-    <tr:form>
+    <tr:form rendered="#{!categories.initError}">
 
       <h:inputHidden value="#{categories.revision}"/>
 

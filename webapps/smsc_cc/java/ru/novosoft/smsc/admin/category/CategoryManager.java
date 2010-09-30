@@ -1,27 +1,23 @@
 package ru.novosoft.smsc.admin.category;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.ConfigFileManager;
-import ru.novosoft.smsc.admin.filesystem.FileSystem;
-
-import java.io.File;
 
 /**
  * @author Artem Snopkov
  */
-public class CategoryManager {
-  
-  private final ConfigFileManager<CategorySettings> cfgFileManager;
+public interface CategoryManager {
 
-  public CategoryManager(File configFile, File backupDir, FileSystem fileSystem) {
-    this.cfgFileManager = new ConfigFileManager<CategorySettings>(configFile, backupDir, fileSystem, new CategoryConfigFile());
-  }
+  /**
+   * Возвращает настройки категорий
+   * @return настройки категорий
+   * @throws AdminException если произошла ошибка
+   */
+  public CategorySettings getSettings() throws AdminException;
 
-  public CategorySettings getSettings() throws AdminException {
-    return this.cfgFileManager.load();
-  }
-
-  public void updateSettings(CategorySettings settings) throws AdminException {
-    this.cfgFileManager.save(settings);
-  }
+  /**
+   * Обновляет настройки категорий
+   * @param settings новые настройки категорий
+   * @throws AdminException если произошла ошибка
+   */
+  public void updateSettings(CategorySettings settings) throws AdminException;
 }

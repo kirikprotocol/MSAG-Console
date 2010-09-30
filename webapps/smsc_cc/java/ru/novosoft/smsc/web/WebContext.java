@@ -11,6 +11,7 @@ import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.config.acl.WAclManager;
 import ru.novosoft.smsc.web.config.alias.WAliasManager;
 import ru.novosoft.smsc.web.config.archive_daemon.WArchiveDaemonManager;
+import ru.novosoft.smsc.web.config.category.WCategoryManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import javax.faces.context.FacesContext;
@@ -36,6 +37,7 @@ public class WebContext {
   private final AclManager aclManager;
   private final AliasManager aliasManager;
   private final WArchiveDaemonManager archiveDaemonManager;
+  private final WCategoryManager categoryManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -74,6 +76,7 @@ public class WebContext {
     aclManager = new WAclManager(adminContext.getAclManager(), journal, user);
     aliasManager = new WAliasManager(adminContext.getAliasManager(), user, journal);
     archiveDaemonManager = new WArchiveDaemonManager(adminContext.getArchiveDaemonManager(), journal, user);
+    categoryManager = new WCategoryManager(adminContext.getCategoryManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -103,6 +106,10 @@ public class WebContext {
 
   public WArchiveDaemonManager getArchiveDaemonManager() {
     return archiveDaemonManager;
+  }
+
+  public WCategoryManager getCategoryManager() {
+    return categoryManager;
   }
 
   public Journal getJournal() {

@@ -166,4 +166,8 @@ public class ArchiveDaemonSettings {
     vh.checkNoNulls("indexatorSmeAddrChunkSizes", indexatorSmeAddrChunkSizes);
     this.indexatorSmeAddrChunkSizes = indexatorSmeAddrChunkSizes;
   }
+
+  public ArchiveDaemonSettings cloneSettings() {
+    return new ArchiveDaemonSettings(this);
+  }
 }

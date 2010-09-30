@@ -3,8 +3,8 @@ package ru.novosoft.smsc.web.config.archive_daemon;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonSettings;
+import ru.novosoft.smsc.web.config.BaseSettingsManager;
 import ru.novosoft.smsc.web.config.DiffHelper;
-import ru.novosoft.smsc.web.config.SettingsManager;
 import ru.novosoft.smsc.web.journal.Journal;
 import ru.novosoft.smsc.web.journal.JournalRecord;
 
@@ -16,34 +16,33 @@ import java.util.List;
  *
  * @author Artem Snopkov
  */
-public class WArchiveDaemonManager implements ArchiveDaemonManager, SettingsManager<ArchiveDaemonSettings> {
+public class WArchiveDaemonManager extends BaseSettingsManager<ArchiveDaemonSettings> implements ArchiveDaemonManager {
 
-  private static String lastUpdateUser;
-  private static long lastUpdateTime;
 
   private final ArchiveDaemonManager wrapped;
   private final Journal j;
-  private final String user;
 
   public WArchiveDaemonManager(ArchiveDaemonManager wrapped, Journal j, String user) {
+    super(user);
     this.wrapped = wrapped;
     this.j = j;
-    this.user = user;
   }
 
   public ArchiveDaemonSettings getSettings() throws AdminException {
     return wrapped.getSettings();
   }
 
-  public void updateSettings(ArchiveDaemonSettings settings) throws AdminException {
+  public void _updateSettings(ArchiveDaemonSettings settings) throws AdminException {
     ArchiveDaemonSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
     List<Method> getters = DiffHelper.getGetters(ArchiveDaemonSettings.class);
     List<Object> oldValues = DiffHelper.callGetters(getters, oldSettings);
     List<Object> newValues = DiffHelper.callGetters(getters, settings);
     DiffHelper.logChanges(j, JournalRecord.Subject.ARCHIVE_DAEMON, oldValues, newValues, getters, user);
-    lastUpdateUser = user;
-    lastUpdateTime = System.currentTimeMillis();
+  }
+
+  public ArchiveDaemonSettings cloneSettings(ArchiveDaemonSettings settings) {
+    return settings.cloneSettings();
   }
 
   public String getDaemonOnlineHost() throws AdminException {
@@ -70,13 +69,5 @@ public class WArchiveDaemonManager implements ArchiveDaemonManager, SettingsMana
 
   public List<String> getDaemonHosts() throws AdminException {
     return wrapped.getDaemonHosts();
-  }
-
-  public String getLastUpdateUser() {
-    return lastUpdateUser;
-  }
-
-  public long getLastUpdateTime() {
-    return lastUpdateTime;
   }
 }

@@ -188,18 +188,6 @@ public class Configuration {
 
   public SmeServiceStatus getSmeServiceStatus(String smeId) throws AdminException {
     return adminContext.getSmeManager().getSmeServiceStatus(smeId);
-  }
-
-  // CATEGORY
-
-  public CategorySettings getCategorySettings() throws AdminException {
-    return adminContext.getCategoryManager().getSettings();
-  }
-
-  public void updateCategorySettings(CategorySettings settings, String user) throws AdminException {
-    CategorySettings oldSettings = adminContext.getCategoryManager().getSettings();
-    adminContext.getCategoryManager().updateSettings(settings);
-    journal.logChanges(oldSettings, settings, user);    
-  }
+  }  
 
 }

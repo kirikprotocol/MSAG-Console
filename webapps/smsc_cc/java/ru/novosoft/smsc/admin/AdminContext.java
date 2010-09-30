@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.alias.AliasManagerImpl;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManagerImpl;
 import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.category.CategoryManagerImpl;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
@@ -132,7 +133,7 @@ public class AdminContext {
 
     providerManager = new ProviderManager(initFile, smscConfigBackupDir, fileSystem);
 
-    categoryManager = new CategoryManager(initFile, smscConfigBackupDir, fileSystem);
+    categoryManager = new CategoryManagerImpl(initFile, smscConfigBackupDir, fileSystem);
 
     aclManager = new AclManagerImpl(clusterController);
 

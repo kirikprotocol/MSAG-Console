@@ -29,7 +29,6 @@ public class Journal {
   private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(JournalRecord.Subject.FRAUD);
   private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(JournalRecord.Subject.SNMP);
   private final SmeDiffHelper sme = new SmeDiffHelper(JournalRecord.Subject.SME);
-  private final CategorySettingsDiffHelper category = new CategorySettingsDiffHelper(JournalRecord.Subject.CATEGORY);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -302,11 +301,5 @@ public class Journal {
     JournalRecord r = addRecord(JournalRecord.Type.SWITCH, JournalRecord.Subject.SME, user);
     r.setDescription("sme.switched", smeId, toHost);
   }  
-
-  // CATEGORY
-
-  public void logChanges(CategorySettings oldSettings, CategorySettings newSettings, String user) {
-    category.logChanges(oldSettings, newSettings, user, this);
-  }
 
 }

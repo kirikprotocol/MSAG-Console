@@ -3,23 +3,38 @@ package ru.novosoft.smsc.web.controllers.category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.category.Category;
 import ru.novosoft.smsc.admin.category.CategorySettings;
-import ru.novosoft.smsc.web.controllers.SettingsController;
+import ru.novosoft.smsc.web.WebContext;
+import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author Artem Snopkov
  */
-public class CategoryController extends SettingsController<CategorySettings> {
+public class CategoryController extends SettingsMController<CategorySettings> {
 
   private Map<Long, String> categories;
   private String newCategory;
+  private boolean initError;
 
   public CategoryController() {
-    super(ConfigType.Category);
+    super(WebContext.getInstance().getCategoryManager());
+    try {
+      init();
+    } catch (AdminException e) {
+      addError(e);
+      initError = true;
+      return;
+    }
     resetCategories();
     checkChanges();
+  }
+
+  public boolean isInitError() {
+    return initError;
   }
 
   private void checkChanges() {
@@ -39,21 +54,6 @@ public class CategoryController extends SettingsController<CategorySettings> {
     categories = new TreeMap<Long, String>();
     for (Category c : getSettings().getCategories())
       categories.put(c.getId(), c.getName());
-  }
-
-  @Override
-  protected CategorySettings loadSettings() throws AdminException {
-    return getConfiguration().getCategorySettings();
-  }
-
-  @Override
-  protected void saveSettings(CategorySettings settings) throws AdminException {
-    getConfiguration().updateCategorySettings(settings, getUserName());
-  }
-
-  @Override
-  protected CategorySettings cloneSettings(CategorySettings settings) {
-    return settings.cloneSettings();
   }
 
   public Collection<Long> getIds() {
@@ -85,11 +85,7 @@ public class CategoryController extends SettingsController<CategorySettings> {
       updateCategories(s);
       setSettings(s);
 
-      Revision rev = submitSettings();
-      if (rev != null) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
-        return null;
-      }
+      submitSettings();      
 
     } catch (AdminException e) {
       addError(e);
