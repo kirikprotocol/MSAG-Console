@@ -354,6 +354,12 @@
       <to-view-id>/smsc/category/index.faces</to-view-id>
       <redirect/>
     </navigation-case>
+    <navigation-case>
+      <from-outcome>LOGGING</from-outcome>
+      <to-view-id>/smsc/smsc_service/logging.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+
 
   </navigation-rule>
 

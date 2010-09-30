@@ -3,34 +3,43 @@ package ru.novosoft.smsc.web.controllers.logging;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.logging.Logger;
 import ru.novosoft.smsc.admin.logging.LoggerSettings;
-import ru.novosoft.smsc.web.controllers.SettingsController;
+import ru.novosoft.smsc.web.WebContext;
+import ru.novosoft.smsc.web.controllers.SettingsMController;
 
-import javax.faces.application.FacesMessage;
 import java.io.Serializable;
 import java.util.*;
 
 /**
  * author: alkhal
  */
-public class LoggingController extends SettingsController<LoggerSettings> {
+public class LoggingController extends SettingsMController<LoggerSettings> {
 
   private static final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(LoggingController.class);
 
   private HierarchicalLogger rLogger;
+  private boolean initFailed;
 
   public LoggingController() {
-    super(ConfigType.Logger);
+    super(WebContext.getInstance().getLoggerManager());
 
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.configuration.locally.changed");
-
-    if(getRequestParameter("revision") == null) {
-      System.out.println("INIT LOGGING");
+    try {
       init();
+    } catch (AdminException e) {
+      addError(e);
+      initFailed = true;
+      return;
+    }
+
+    if (getRequestParameter("revision") == null) {
+      _init();
     }
   }
 
-  private void init() {
+  public boolean isInitFailed() {
+    return initFailed;
+  }
+
+  private void _init() {
     LoggerSettings s = getSettings();
     Collection<String> logCategories = s.getNames();
     String rootPriority = logCategories.contains("") && s.getLogger("").getLevel() != null ? s.getLogger("").getLevel().toString() : null;
@@ -38,7 +47,7 @@ public class LoggingController extends SettingsController<LoggerSettings> {
     rLogger = new HierarchicalLogger("", "", rootPriority);
     Collection<String> keys = new TreeSet<String>(logCategories);
     for (String key : keys) {
-      if(key.equals("")) {
+      if (key.equals("")) {
         continue;
       }
       Logger.Level l = s.getLogger(key).getLevel();
@@ -58,11 +67,11 @@ public class LoggingController extends SettingsController<LoggerSettings> {
   public String reset() {
     try {
       resetSettings();
-      init();
+      _init();
     } catch (AdminException e) {
       addError(e);
     }
-    return null;
+    return "LOGGING";
   }
 
   private void convert(HierarchicalLogger logger, Map<String, Logger> loggers) {
@@ -70,7 +79,8 @@ public class LoggingController extends SettingsController<LoggerSettings> {
     if (!logger.getLevel().equals("NOTSET")) {
       l.setLevel(Logger.Level.valueOf(logger.getLevel()));
     }
-    System.out.println("CONVERT "+logger.getFullName()+" => "+logger.getLevel());
+    if (LoggingController.logger.isDebugEnabled())
+      LoggingController.logger.debug("CONVERT " + logger.getFullName() + " => " + logger.getLevel());
     loggers.put(logger.getFullName(), l);
     for (HierarchicalLogger c : logger.getChildList()) {
       convert(c, loggers);
@@ -82,15 +92,12 @@ public class LoggingController extends SettingsController<LoggerSettings> {
     try {
       Map<String, Logger> loggers = new HashMap<String, Logger>();
       convert(rLogger, loggers);
-      for(Map.Entry<String, Logger> e : loggers.entrySet()) {
-        System.out.println("Save: "+e.getKey()+" => "+e.getValue().getLevel());
+      if (logger.isDebugEnabled()) {
+        for (Map.Entry<String, Logger> e : loggers.entrySet())
+          logger.debug("Save: " + e.getKey() + " => " + e.getValue().getLevel());
       }
       setSettings(new LoggerSettings(loggers));
-      Revision rev = submitSettings();
-      if (rev != null) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
-        return null;
-      }
+      submitSettings();
 
       return "INDEX";
 
@@ -99,21 +106,6 @@ public class LoggingController extends SettingsController<LoggerSettings> {
       addError(e);
       return null;
     }
-  }
-
-  @Override
-  protected LoggerSettings loadSettings() throws AdminException {
-    return getConfiguration().getLoggerSettings();
-  }
-
-  @Override
-  protected void saveSettings(LoggerSettings settings) throws AdminException {
-    getConfiguration().updateLoggerSettings(settings, getUserPrincipal().getName());
-  }
-
-  @Override
-  protected LoggerSettings cloneSettings(LoggerSettings settings) {
-    return settings.cloneSettings();
   }
 
 
@@ -201,7 +193,7 @@ public class LoggingController extends SettingsController<LoggerSettings> {
     }
 
     public void setLevel(String level) {
-      System.out.println("SET LEVEL : "+fullName+" => "+level);
+      System.out.println("SET LEVEL : " + fullName + " => " + level);
       this.level = level;
     }
 

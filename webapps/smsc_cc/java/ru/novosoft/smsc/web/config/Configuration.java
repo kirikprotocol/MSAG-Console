@@ -30,17 +30,7 @@ public class Configuration {
   public Configuration(AdminContext adminContext, Journal journal) {
     this.adminContext = adminContext;
     this.journal = journal;
-  }
-
-  public LoggerSettings getLoggerSettings() throws AdminException {
-    return adminContext.getLoggerManager().getSettings();
-  }
-
-  public void updateLoggerSettings(LoggerSettings loggerSettings, String user) throws AdminException {
-    LoggerSettings oldSettings = getLoggerSettings();
-    adminContext.getLoggerManager().updateSettings(loggerSettings);
-    journal.logChanges(oldSettings, loggerSettings, user);
-  }
+  } 
 
   public SmscSettings getSmscSettings() throws AdminException {
     return adminContext.getSmscManager().getSettings();

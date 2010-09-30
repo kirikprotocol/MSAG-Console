@@ -16,6 +16,7 @@ import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.fraud.FraudManagerImpl;
 import ru.novosoft.smsc.admin.logging.LoggerManager;
+import ru.novosoft.smsc.admin.logging.LoggerManagerImpl;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
@@ -147,7 +148,7 @@ public class AdminContext {
 
     profileManager = new ProfileManager(AdminMode.smsx, new File(s.getCommonSettings().getProfilerStoreFile()), fileSystem, clusterController);
 
-    loggerManager = new LoggerManager(clusterController);
+    loggerManager = new LoggerManagerImpl(clusterController);
 
     File[] operativeStorages = new File[s.getSmscInstancesCount()];
     for (int i=0;i<s.getSmscInstancesCount(); i++) {

@@ -15,6 +15,7 @@ import ru.novosoft.smsc.web.config.archive_daemon.WArchiveDaemonManager;
 import ru.novosoft.smsc.web.config.category.WCategoryManager;
 import ru.novosoft.smsc.web.config.closed_groups.WClosedGroupManager;
 import ru.novosoft.smsc.web.config.fraud.WFraudManager;
+import ru.novosoft.smsc.web.config.logging.WLoggerManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import javax.faces.context.FacesContext;
@@ -43,6 +44,7 @@ public class WebContext {
   private final WCategoryManager categoryManager;
   private final ClosedGroupManager closedGroupManager;
   private final WFraudManager fraudManager;
+  private final WLoggerManager loggerManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -84,6 +86,7 @@ public class WebContext {
     categoryManager = new WCategoryManager(adminContext.getCategoryManager(), journal, user);
     closedGroupManager = new WClosedGroupManager(adminContext.getClosedGroupManager(), user, journal);
     fraudManager = new WFraudManager(adminContext.getFraudManager(), journal, user);
+    loggerManager = new WLoggerManager(adminContext.getLoggerManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -125,6 +128,10 @@ public class WebContext {
 
   public WFraudManager getFraudManager() {
     return fraudManager;
+  }
+
+  public WLoggerManager getLoggerManager() {
+    return loggerManager;
   }
 
   public Journal getJournal() {

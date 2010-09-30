@@ -25,7 +25,6 @@ public class Journal {
   private final RescheduleSettingsDiffHelper reschedule = new RescheduleSettingsDiffHelper(JournalRecord.Subject.RESCHEDULE);
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(JournalRecord.Subject.USERS);
   private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(JournalRecord.Subject.MAP_LIMIT);
-  private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(JournalRecord.Subject.LOGGING);
   private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(JournalRecord.Subject.SNMP);
   private final SmeDiffHelper sme = new SmeDiffHelper(JournalRecord.Subject.SME);
 
@@ -192,16 +191,6 @@ public class Journal {
    */
   public void logChanges(MapLimitSettings oldSettings, MapLimitSettings newSettings, String user) {
     mapLimit.logChanges(this, oldSettings, newSettings, user);
-  }
-
-  /**
-   * Ищет различия между настройками Logger и записывает их в журнал
-   * @param oldSettings старые настройки Logger
-   * @param newSettings новые настройки Logger
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logChanges(LoggerSettings oldSettings, LoggerSettings newSettings, String user) {
-    logger.logChanges(this, oldSettings, newSettings, user);
   }
   
 

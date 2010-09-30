@@ -5,7 +5,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 /**
  * author: alkhal
  */
-public class TestLoggerManager extends LoggerManager{
+public class TestLoggerManager extends LoggerManagerImpl {
   public TestLoggerManager(ClusterController cc) {
     super(cc);
   }

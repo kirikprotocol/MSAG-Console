@@ -15,7 +15,7 @@
 
     <t:saveState value="#{logging.rLogger}"/>
 
-    <tr:form id="smsc_config">
+    <tr:form rendered="#{!logging.initFailed}">
 
 
       <eye:buttons>
