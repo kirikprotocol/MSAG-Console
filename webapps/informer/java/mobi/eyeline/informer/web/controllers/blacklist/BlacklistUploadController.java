@@ -83,6 +83,13 @@ public class BlacklistUploadController extends InformerController{
     return "BLACKLIST";
   }
 
+  public String stop() {
+    if(thread != null) {
+      thread.stop = true;
+    }
+    return null;
+  }
+
   public boolean isFinished() {
     return thread != null && thread.isFinished();
   }
@@ -111,6 +118,8 @@ public class BlacklistUploadController extends InformerController{
 
     private Locale locale;
 
+    private boolean stop = false;
+
     private UploadThread(boolean add, UploadedFile file, String user, Locale locale) {
       this.add = add;
       this.file = file;
@@ -128,7 +137,7 @@ public class BlacklistUploadController extends InformerController{
       BufferedReader reader = null;
       try{
         reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
-        while((line = reader.readLine()) != null) {
+        while((line = reader.readLine()) != null && !stop) {
           line = line.trim();
           current.addAndGet(line.length());
           if(!Address.validate(line)) {
@@ -165,8 +174,10 @@ public class BlacklistUploadController extends InformerController{
             reader.close();
           }catch (Exception e){}
         }
+        if(!stop) {
+          current = maximum;        
+        }
         finished = true;
-        current = maximum;
       }
     }
 
