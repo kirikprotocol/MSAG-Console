@@ -138,6 +138,10 @@ div.query_result {
  text-align:left;
 }
 
+.columnCenter {
+ text-align:center;
+}
+
 .column50Width {
   width:50px;
 }

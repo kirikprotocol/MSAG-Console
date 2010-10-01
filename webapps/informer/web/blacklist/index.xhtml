@@ -11,11 +11,10 @@
   <ui:param name="pageTitle" value="#{msg['informer.admin.blacklist']}"/>
 
   <ui:define name="content">
-    <tr:form usesUpload="true">
+    <tr:form>
 
       <tr:inputHidden value="#{blacklist.init}"/>
       <tr:inputHidden value="#{blacklist.contains}"/>
-
 
 
       <h:panelGroup>
@@ -26,14 +25,7 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['add.button']}">
-                <f:param name="file_add" value="true"/>
-              </tr:commandLink>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}">
-                <f:param name="file_remove" value="true"/>
-              </tr:commandLink>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -48,14 +40,7 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['add.button']}">
-                <f:param name="file_add" value="true"/>
-              </tr:commandLink>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}">
-                <f:param name="file_remove" value="true"/>
-              </tr:commandLink>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -70,19 +55,7 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['add.button']}">
-                <f:param name="file_add" value="true"/>
-              </tr:commandLink>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['add.button']}">
-                <f:param name="file_add" value="true"/>
-              </tr:commandLink>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}">
-                <f:param name="file_remove" value="true"/>
-              </tr:commandLink>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -95,7 +68,7 @@
 
 
 
-      <h:panelGrid columns="2" style="padding:10px" cellspacing="0" cellpadding="0" columnClasses=",column0WidthRight">
+      <h:panelGrid columns="2" style="padding:10px" cellspacing="0" cellpadding="0">
 
         <h:panelGroup style="padding-left:20px">
 
@@ -111,20 +84,6 @@
 
         </h:panelGroup>
 
-
-        <h:panelGrid columns="1">
-
-          <tr:outputText inlineStyle="#{(blacklist.uploaded == 0) ? 'display:none' : 'font-weight:bold'}" value="#{msg['blacklist.uploaded']} #{blacklist.uploaded}"/>
-          <tr:outputText inlineStyle="#{(blacklist.unrecognized == 0) ? 'display:none' : 'font-weight:bold; color:red;'}" value="#{msg['blacklist.not.uploaded']} #{blacklist.unrecognized}"/>
-
-          <tr:panelFormLayout>
-            <tr:panelLabelAndMessage label="#{msg['informer.upload.label']}">
-              <tr:inputFile columns="50" valueChangeListener="#{blacklist.uploaded}" simple="true"/>
-            </tr:panelLabelAndMessage>
-          </tr:panelFormLayout>
-
-        </h:panelGrid>
-
       </h:panelGrid>
 
 
@@ -139,14 +98,7 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['add.button']}">
-                <f:param name="file_add" value="true"/>
-              </tr:commandLink>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}">
-                <f:param name="file_remove" value="true"/>
-              </tr:commandLink>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -161,14 +113,7 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['add.button']}">
-                <f:param name="file_add" value="true"/>
-              </tr:commandLink>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}">
-                <f:param name="file_remove" value="true"/>
-              </tr:commandLink>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -183,14 +128,7 @@
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['add.button']}">
-                <f:param name="file_add" value="true"/>
-              </tr:commandLink>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}">
-                <f:param name="file_remove" value="true"/>
-              </tr:commandLink>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>

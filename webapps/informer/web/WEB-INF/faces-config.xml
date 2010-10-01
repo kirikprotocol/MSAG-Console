@@ -71,6 +71,12 @@
       <renderer-type>dataTableRow</renderer-type>
       <renderer-class>mobi.eyeline.informer.web.components.data_table.RowRenderer</renderer-class>
     </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>updatableContent</renderer-type>
+      <renderer-class>mobi.eyeline.informer.web.components.updatable_content.UpdatableContentRenderer</renderer-class>
+    </renderer>
   </render-kit>
 
   
@@ -101,8 +107,20 @@
 
   <managed-bean>
     <managed-bean-name>blacklist</managed-bean-name>
-    <managed-bean-class>mobi.eyeline.informer.web.controllers.blacklist.BlackListController</managed-bean-class>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.blacklist.BlacklistController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>blacklistUpload</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.blacklist.BlacklistUploadController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>index1</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.Index1Controller</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
   <navigation-rule>
@@ -124,6 +142,11 @@
     <navigation-case>
       <from-outcome>BLACKLIST</from-outcome>
       <to-view-id>/blacklist/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>BLACKLIST_UPLOAD</from-outcome>
+      <to-view-id>/blacklist/upload.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
   </navigation-rule>
