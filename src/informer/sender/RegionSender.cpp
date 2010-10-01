@@ -1,6 +1,18 @@
 #include "RegionSender.h"
 #include "SmscSender.h"
 
+namespace {
+using namespace eyeline::informer;
+struct EqualById {
+    inline EqualById(dlvid_type dlvId) : d(dlvId) {}
+    inline bool operator () ( const RegionalStorage* ptr ) const {
+        return (ptr->getDlvId() == d);
+    }
+    dlvid_type d;
+};
+}
+
+
 namespace eyeline {
 namespace informer {
 
@@ -35,26 +47,42 @@ std::string RegionSender::toString() const
 }
 
 
+void RegionSender::addDelivery( RegionalStorage& ptr )
+{
+    taskList_.add(&ptr);
+}
+
+
+void RegionSender::removeDelivery( dlvid_type dlvId )
+{
+    taskList_.remove(EqualById(dlvId));
+}
+
+
 unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredObjType& ptr )
 {
     static const unsigned sleepTimeNotReady = unsigned(1*tuPerSec);
     static const unsigned sleepTimeException = unsigned(5*tuPerSec);
     try {
-        if ( ptr->getDlvInfo().isActive() ) {
+        if ( ptr.getDlvInfo().isActive() ) {
             // delivery is active
-            if ( ptr->getNextMessage(msgtime_type(currentTime_/tuPerSec),msg_) ) {
-                smsc_log_debug(log_,"R=%u/D=%u/M=%u is ready to be sent",
-                               getRegionId(), ptr->getDlvId(), msg_.msgId);
+            if ( ptr.getNextMessage(msgtime_type(currentTime_/tuPerSec),msg_) ) {
+                smsc_log_debug(log_,"R=%u/D=%u/M=%llu is ready to be sent",
+                               unsigned(getRegionId()),
+                               unsigned(ptr.getDlvId()),
+                               ulonglong(msg_.msgId));
                 return 0;
             } else {
-                smsc_log_debug(log_,"R=%u/D=%u: is not ready, will sleep %u usec",
-                               getRegionId(), ptr->getDlvId(), sleepTimeNotReady);
+                smsc_log_debug(log_,"R=%u/D=%u: is not ready, will sleep %llu usec",
+                               unsigned(getRegionId()),
+                               unsigned(ptr.getDlvId()),
+                               ulonglong(sleepTimeNotReady));
                 return sleepTimeNotReady; // wait one second
             }
         }
     } catch ( std::exception& e ) {
         smsc_log_warn(log_,"R=%u/D=%u exc in isReady: %s",
-                      getRegionId(), ptr->getDlvId());
+                      unsigned(getRegionId()), unsigned(ptr.getDlvId()));
     }
     return sleepTimeException;  // wait 5 seconds
 }
@@ -67,21 +95,27 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
         const int nchunks = conn_->send(ptr, msg_);
         if ( nchunks > 0 ) {
             // message has been put into output queue
-            smsc_log_debug(log_,"R=%u/D=%u/M=%u sent nchunks=%d",
-                           getRegionId(), ptr->getDlvId(), msg_.msgId, nchunks);
-            ptr->messageSent(msg_.msgId, msgtime_type(currentTime_/tuPerSec));
-            return maxScoreIncrement / nchunks / ptr->getDlvInfo().getPriority();
+            smsc_log_debug(log_,"R=%u/D=%u/M=%llu sent nchunks=%d",
+                           unsigned(getRegionId()),
+                           unsigned(ptr.getDlvId()),
+                           ulonglong(msg_.msgId), nchunks);
+            ptr.messageSent(msg_.msgId, msgtime_type(currentTime_/tuPerSec));
+            return maxScoreIncrement / nchunks / ptr.getDlvInfo().getPriority();
         } else {
-            smsc_log_warn(log_,"R=%u/D=%u/M=%u send failed nchunks=%d",
-                          getRegionId(), ptr->getDlvId(), msg_.msgId, nchunks);
+            smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed nchunks=%d",
+                          unsigned(getRegionId()),
+                          unsigned(ptr.getDlvId()),
+                          ulonglong(msg_.msgId), nchunks);
         }
 
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"R=%u/D=%u/M=%u send failed, exc: %s",
-                      getRegionId(), ptr->getDlvId(), msg_.msgId, e.what());
+        smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed, exc: %s",
+                      unsigned(getRegionId()),
+                      unsigned(ptr.getDlvId()),
+                      ulonglong(msg_.msgId), e.what());
     }
     smsc_log_debug(log_,"FIXME: message could not be sent, mark it as failed?");
-    ptr->retryMessage(msg_.msgId, msgtime_type(currentTime_/tuPerSec), 60, 8 );
+    ptr.retryMessage(msg_.msgId, msgtime_type(currentTime_/tuPerSec), 60, 8 );
     return -maxScoreIncrement;
 }
 

@@ -1,6 +1,7 @@
 informer/informer  informer \
  -linformer-main \
  -linformer-sender \
+ -linformer-newstore \
  -linformer-opstore \
  -linformer-data \
  -linformer-io \

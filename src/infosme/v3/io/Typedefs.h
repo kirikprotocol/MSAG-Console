@@ -7,6 +7,8 @@
 namespace eyeline {
 namespace informer {
 
+typedef unsigned long long ulonglong;
+
 typedef uint32_t dlvid_type;
 typedef uint32_t regionid_type;
 typedef uint64_t msgid_type;

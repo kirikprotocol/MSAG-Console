@@ -15,6 +15,7 @@ class Message;
 class StoreJournal
 {
 public:
+    /// journal messages.
     void journalMessage( dlvid_type     dlvId,
                          regionid_type  regionId,
                          const Message& msg );

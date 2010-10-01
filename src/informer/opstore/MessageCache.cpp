@@ -14,11 +14,15 @@ source_(source)
 }
 
 
-RegionalStoragePtr MessageCache::getRegionalStorage( regionid_type regionId )
+RegionalStoragePtr MessageCache::getRegionalStorage( regionid_type regionId,
+                                                     bool create )
 {
     MutexGuard mg(cacheLock_);
     RegionalStoragePtr* ptr = storages_.GetPtr(regionId);
     if (!ptr) {
+        if (!create) {
+            return RegionalStoragePtr();
+        }
         return storages_.Insert(regionId,
                                 RegionalStoragePtr(new RegionalStorage(dlvInfo_,
                                                                        regionId,

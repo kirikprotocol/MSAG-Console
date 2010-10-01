@@ -2,6 +2,7 @@
 #include "InfosmeCoreV1.h"
 #include "informer/data/InputMessageSource.h"
 #include "informer/io/InfosmeException.h"
+#include "informer/newstore/InputStorage.h"
 #include "informer/opstore/StoreJournal.h"
 #include "informer/sender/RegionSender.h"
 #include "informer/sender/SmscSender.h"
@@ -56,9 +57,12 @@ void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
 
 
 InfosmeCoreV1::InfosmeCoreV1() :
-log_(0), stopping_(true), started_(false)
+log_(smsc::logger::Logger::getInstance("core")),
+stopping_(true),
+started_(false),
+storeLog_(0),
+messageSource_(0)
 {
-    log_ = smsc::logger::Logger::getInstance("core");
 }
 
 
@@ -66,6 +70,8 @@ InfosmeCoreV1::~InfosmeCoreV1()
 {
     smsc_log_info(log_,"FIXME: corev1 dtor, cleanup everything");
     tp_.shutdown(0);
+    delete storeLog_;
+    delete messageSource_;
     smsc_log_info(log_,"leaving corev1 dtor");
 }
 
@@ -73,6 +79,9 @@ InfosmeCoreV1::~InfosmeCoreV1()
 void InfosmeCoreV1::init( const ConfigView& cfg )
 {
     smsc_log_info(log_,"FIXME: initing InfosmeCore");
+    storeLog_ = new StoreJournal;
+    messageSource_ = new InputStorage(*this);
+
     std::auto_ptr< ConfigView > ccv(cfg.getSubConfig("SMSCConnectors"));
     ConfString defConn(ccv->getString("default","default SMSC id not found"));
     std::auto_ptr< CStrSet > connNames(ccv->getShortSectionNames());
@@ -89,8 +98,14 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     reloadRegions();
 
     // starting one test delivery
-    std::auto_ptr< DeliveryInfo > dlvInfo(new DeliveryInfo(22));
+    const dlvid_type dlvId = 22;
+    std::auto_ptr< DeliveryInfo > dlvInfo(new DeliveryInfo(dlvId));
     updateDelivery( dlvInfo->getDlvId(), dlvInfo);
+
+    // bind delivery and regions
+    std::vector<regionid_type> regIds;
+    regIds.push_back(1);
+    deliveryRegions(dlvId,regIds,true);
 }
 
 
@@ -224,6 +239,69 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
         deliveries_.Insert(dlvId, DeliveryPtr(new Delivery(dlvInfo,*storeLog_,*messageSource_)));
     }
     startMon_.notify();
+}
+
+
+void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
+                                     const std::vector<regionid_type>& regIds,
+                                     bool bind )
+{
+    typedef std::vector<regionid_type> regIdVector;
+    if (log_->isDebugEnabled()) {
+        smsc::core::buffers::TmpBuf<char,100> sbuf;
+        for (regIdVector::const_iterator i = regIds.begin();
+             i != regIds.end(); ++i ) {
+            char buf[30];
+            sprintf(buf," R=%u",unsigned(*i));
+            size_t shift = sbuf.GetPos() ? 0 : 1;
+            sbuf.Append(buf+shift,strlen(buf)-shift);
+        }
+        sbuf.Append("\0",1);
+        smsc_log_debug(log_,"%sbinding D=%u with [%s]",
+                       bind ? "" : "un", unsigned(dlvId), sbuf.get());
+    }
+    MutexGuard mg(startMon_);
+    if (!bind) {
+        // unbind from senders
+        for (regIdVector::const_iterator i = regIds.begin();
+             i != regIds.end(); ++i) {
+            RegionSender** rs = regSends_.GetPtr(*i);
+            if (!rs || !*rs) {
+                smsc_log_warn(log_,"RS=%u is not found",unsigned(*i));
+                continue;
+            }
+            (*rs)->removeDelivery(dlvId);
+        }
+        return;
+    }
+
+    // getting delivery
+    DeliveryPtr* dlv = deliveries_.GetPtr(dlvId);
+    if (!dlv || !dlv->get()) {
+        smsc_log_warn(log_,"D=%u is not found",unsigned(dlvId));
+        return;
+    }
+    for ( regIdVector::const_iterator i = regIds.begin();
+          i != regIds.end(); ++i ) {
+        RegionPtr* ptr = regions_.GetPtr(*i);
+        if (!ptr || !ptr->get()) {
+            // no such region
+            smsc_log_warn(log_,"R=%u is not found",unsigned(*i));
+            continue;
+        }
+        RegionSender** rs = regSends_.GetPtr(*i);
+        if (!rs || !*rs) {
+            // no such region sender
+            smsc_log_warn(log_,"RS=%u is not found",unsigned(*i));
+            continue;
+        }
+        RegionalStoragePtr rptr = (*dlv)->getRegionalStorage(*i,true);
+        if (!rptr.get()) {
+            smsc_log_warn(log_,"D=%u cannot create R=%u",unsigned(dlvId),unsigned(*i));
+            continue;
+        }
+        (*rs)->addDelivery(*rptr.get());
+    }
 }
 
 

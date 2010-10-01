@@ -2,7 +2,7 @@
 #include "SmscSender.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/Typedefs.h"
-#include "informer/opstore/InfosmeCore.h"
+#include "informer/data/InfosmeCore.h"
 
 namespace eyeline {
 namespace informer {
@@ -26,10 +26,13 @@ SmscSender::~SmscSender()
 }
 
 
-unsigned SmscSender::send( RegionalStoragePtr& ptr,
+unsigned SmscSender::send( RegionalStorage& ptr,
                            Message& msg )
 {
-    smsc_log_error(log_,"FIXME: send()");
+    smsc_log_error(log_,"FIXME: send(R=%u/D=%u/M=%llu)",
+                   unsigned(ptr.getRegionId()),
+                   unsigned(ptr.getDlvId()),
+                   ulonglong(msg.msgId));
     return 0;
 }
 

@@ -111,7 +111,8 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
                                newQueueSize, resendQueueSize);
                 // mg.Lock();
                 transferTask_ = messageSource_.startTransferTask(*this,
-                                                                 dlvInfo_.getUploadCount());
+                                                                 dlvInfo_.getUploadCount(),
+                                                                 resendQueue_.empty() && newQueue_.Count()==0);
             } catch (std::exception& e ) {
                 smsc_log_warn(log_,"exception requesting input msgs in R=%u/D=%u: %s",
                               unsigned(regionId_),

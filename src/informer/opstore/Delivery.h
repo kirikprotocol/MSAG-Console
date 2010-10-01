@@ -29,11 +29,12 @@ public:
     unsigned getPriority() const { return dlvInfo_->getPriority(); }
 
     /// get regional storage
-    RegionalStoragePtr getRegionalStorage( regionid_type regId ) {
-        return cache_.getRegionalStorage(regId);
+    RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false) {
+        return cache_.getRegionalStorage(regId,create);
     }
 
     void updateDlvInfo( const DeliveryInfo& info );
+    void createRegionalStorage( regionid_type regId );
 
 private:
     void ref() {

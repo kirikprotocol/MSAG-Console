@@ -2,9 +2,10 @@
 #define _INFORMER_INFOSMECOREV1_H
 
 #include <memory>
+#include <vector>
 #include "informer/data/Region.h"
+#include "informer/data/InfosmeCore.h"
 #include "informer/opstore/Delivery.h"
-#include "informer/opstore/InfosmeCore.h"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
@@ -57,6 +58,13 @@ public:
     /// 3. delete delivery: old dlvId, dlvInfo=0.
     void updateDelivery( dlvid_type dlvId, std::auto_ptr<DeliveryInfo>& dlvInfo );
 
+    /// bind regions to delivery
+    /// @param bind - true if bind, false if unbind.
+    void deliveryRegions( dlvid_type dlvId,
+                          const std::vector<regionid_type>& regIds,
+                          bool bind );
+
+
 protected:
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
@@ -72,7 +80,7 @@ private:
     smsc::core::buffers::IntHash< RegionSender* > regSends_; // owned
     smsc::core::buffers::IntHash< DeliveryPtr >   deliveries_; // owned
     StoreJournal*                                 storeLog_;   // owned
-    InputMessageSource*                           messageSource_;
+    InputMessageSource*                           messageSource_; // owned
 };
 
 } // informer

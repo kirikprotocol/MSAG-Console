@@ -65,7 +65,8 @@ public:
     // or if the task is already running, simply return.
     // NOTE: throws exception if the task cannot be created/found.
     virtual TransferTask* startTransferTask( TransferRequester& requester,
-                                             unsigned           count ) = 0;
+                                             unsigned           count,
+                                             bool mayDetachRegion ) = 0;
 };
 
 } // informer

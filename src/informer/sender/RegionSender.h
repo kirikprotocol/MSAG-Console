@@ -60,13 +60,16 @@ public:
         return taskList_.processOnce(0,sleepTime);
     }
 
+    void addDelivery( RegionalStorage& ptr );
+    void removeDelivery( dlvid_type dlvId );
+
 private:
-    typedef RegionalStoragePtr ScoredObjType;
+    typedef RegionalStorage ScoredObjType;
 
     void scoredObjToString( std::string& s, const ScoredObjType& dlv )
     {
         char buf[20];
-        sprintf(buf,"D=%u",dlv->getDlvId());
+        sprintf(buf,"D=%u",dlv.getDlvId());
         s.append(buf);
     }
 

@@ -15,7 +15,7 @@ public:
                   InputMessageSource& source );
 
     /// get the regional storage for given region.
-    RegionalStoragePtr getRegionalStorage( regionid_type regionId );
+    RegionalStoragePtr getRegionalStorage( regionid_type regionId, bool create=false );
 
     /// rolling over the whole storage.
     void rollOver();

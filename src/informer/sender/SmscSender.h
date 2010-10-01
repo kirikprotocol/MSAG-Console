@@ -42,7 +42,7 @@ public:
 
     /// sending one message
     /// @return number of chunks the message has been splitted or 0
-    unsigned send( RegionalStoragePtr& dlv,
+    unsigned send( RegionalStorage&    dlv,
                    Message&            msg );
 
     /// a method allows to wait until sender stops it work
