@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 /**
  * Утилиты ввода/вывода
@@ -53,7 +54,8 @@ public class IOUtils {
 
   public static void writeString(OutputStream os, String str, int len) throws IOException {
     byte[] bytes = new byte[len];
-    System.arraycopy(str.getBytes(), 0, bytes, 0, len);
+    Arrays.fill(bytes, (byte)' ');
+    System.arraycopy(str.getBytes(), 0, bytes, 0, Math.min(len, str.getBytes().length)); 
     os.write(bytes);
   }
 
