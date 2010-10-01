@@ -155,7 +155,7 @@ public class BlacklistUploadController extends InformerController{
             list.clear();
           }
         }
-        if(!list.isEmpty()) {
+        if(!list.isEmpty() && !stop) {
           int s = list.size();
           if(add) {
             getConfiguration().addInBlacklist(list, user);

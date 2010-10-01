@@ -83,6 +83,9 @@
           <eye:button rendered="#{blacklistUpload.finished}">
             <tr:commandLink text="#{msg['next.button']}" action="#{blacklistUpload.next}"/>
           </eye:button>
+          <eye:button rendered="#{!blacklistUpload.finished}">
+            <tr:commandLink text="#{msg['stop.button']}" action="#{blacklistUpload.stop}"/>
+          </eye:button>
           <eye:space/>
         </eye:buttons>
       </eye:updatableContent>
