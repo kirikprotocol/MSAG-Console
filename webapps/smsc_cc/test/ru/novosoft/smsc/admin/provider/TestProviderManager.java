@@ -7,7 +7,7 @@ import java.io.File;
 /**
  * @author Artem Snopkov
  */
-public class TestProviderManager extends ProviderManager {
+public class TestProviderManager extends ProfiledManagerImpl {
   public TestProviderManager(File configFile, File backupDir, FileSystem fileSystem) {
     super(configFile, backupDir, fileSystem);
   }

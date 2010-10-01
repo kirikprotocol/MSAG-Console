@@ -24,6 +24,7 @@ import ru.novosoft.smsc.admin.msc.MscManagerImpl;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.profile.ProfileManagerImpl;
+import ru.novosoft.smsc.admin.provider.ProfiledManagerImpl;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.region.RegionManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
@@ -138,7 +139,7 @@ public class AdminContext {
 
     resourceManager = new ResourceManager(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
 
-    providerManager = new ProviderManager(initFile, smscConfigBackupDir, fileSystem);
+    providerManager = new ProfiledManagerImpl(initFile, smscConfigBackupDir, fileSystem);
 
     categoryManager = new CategoryManagerImpl(initFile, smscConfigBackupDir, fileSystem);
 

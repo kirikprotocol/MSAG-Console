@@ -20,6 +20,7 @@ import ru.novosoft.smsc.web.config.logging.WLoggerManager;
 import ru.novosoft.smsc.web.config.map_limit.WMapLimitManager;
 import ru.novosoft.smsc.web.config.msc.WMscManager;
 import ru.novosoft.smsc.web.config.profile.WProfileManager;
+import ru.novosoft.smsc.web.config.provider.WProviderManager;
 import ru.novosoft.smsc.web.config.snmp.WSnmpManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
@@ -54,6 +55,7 @@ public class WebContext {
   private final WSnmpManager snmpManager;
   private final MscManager mscManager;
   private final ProfileManager profileManager;
+  private final WProviderManager providerManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -100,6 +102,7 @@ public class WebContext {
     snmpManager = new WSnmpManager(adminContext.getSnmpManager(), journal, user);
     mscManager = new WMscManager(adminContext.getMscManager(), journal, user);
     profileManager = new WProfileManager(adminContext.getProfileManager(), journal, user);
+    providerManager = new WProviderManager(adminContext.getProviderManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -161,6 +164,10 @@ public class WebContext {
 
   public ProfileManager getProfileManager() {
     return profileManager;
+  }
+
+  public WProviderManager getProviderManager() {
+    return providerManager;
   }
 
   public Journal getJournal() {
