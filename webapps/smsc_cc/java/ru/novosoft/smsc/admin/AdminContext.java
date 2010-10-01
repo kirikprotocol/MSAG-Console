@@ -23,6 +23,7 @@ import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.msc.MscManagerImpl;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
+import ru.novosoft.smsc.admin.profile.ProfileManagerImpl;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.region.RegionManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
@@ -149,7 +150,7 @@ public class AdminContext {
 
     regionManager = new RegionManager(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
 
-    profileManager = new ProfileManager(AdminMode.smsx, new File(s.getCommonSettings().getProfilerStoreFile()), fileSystem, clusterController);
+    profileManager = new ProfileManagerImpl(AdminMode.smsx, new File(s.getCommonSettings().getProfilerStoreFile()), fileSystem, clusterController);
 
     loggerManager = new LoggerManagerImpl(clusterController);
 

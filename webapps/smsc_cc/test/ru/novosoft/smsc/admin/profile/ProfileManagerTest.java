@@ -9,7 +9,6 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -42,7 +41,7 @@ public class ProfileManagerTest {
   }
 
   public ProfileManager getManager(ClusterController cc) throws AdminException {
-    ProfileManager m = new ProfileManager(false, configFile, FileSystem.getFSForSingleInst(), cc);
+    ProfileManager m = new ProfileManagerImpl(false, configFile, FileSystem.getFSForSingleInst(), cc);
     return m;
   }
 

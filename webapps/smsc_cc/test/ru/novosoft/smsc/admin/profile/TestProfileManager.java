@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * @author Artem Snopkov
  */
-public class TestProfileManager extends ProfileManager {
+public class TestProfileManager extends ProfileManagerImpl {
   public TestProfileManager(boolean smsx, File profilesFile, FileSystem fs, ClusterController cc) {
     super(smsx, profilesFile, fs, cc);
   }
