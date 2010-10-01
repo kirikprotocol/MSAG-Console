@@ -26,8 +26,13 @@ public:
   explicit MEAlertingPattern(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
     : asn1::ber::EncoderOfOCTSTR(use_rule)
   { }
-  MEAlertingPattern(const AlertingPattern & use_val,
-                    TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+  MEAlertingPattern(const asn1::ASTag & outer_tag,
+                    const asn1::ASTagging::Environment_e tag_env,
+                    asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+  : asn1::ber::EncoderOfOCTSTR(outer_tag, tag_env, use_rule)
+  {}
+  explicit MEAlertingPattern(const AlertingPattern & use_val,
+                             TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : asn1::ber::EncoderOfOCTSTR(TSGroupBER::getTSRule(use_rule))
   {
     setValue(use_val);

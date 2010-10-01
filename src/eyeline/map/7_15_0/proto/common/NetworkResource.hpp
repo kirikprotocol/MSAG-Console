@@ -24,6 +24,8 @@ struct NetworkResource {
   };
 
   value_type _value;
+
+  bool validate(value_type use_val) const { return use_val <= nr_rss; }
 };
 
 typedef NetworkResource::value_type NetworkResource_t;

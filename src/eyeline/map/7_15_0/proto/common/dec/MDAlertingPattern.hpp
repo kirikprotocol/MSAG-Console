@@ -28,8 +28,8 @@ public:
   explicit MDAlertingPattern(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
     : asn1::ber::DecoderOfOCTSTRTiny(use_rule)
   { }
-  MDAlertingPattern(AlertingPattern & use_val,
-                    TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
+  explicit MDAlertingPattern(AlertingPattern & use_val,
+                             TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
     : asn1::ber::DecoderOfOCTSTRTiny(TSGroupBER::getTSRule(use_rule))
     , _outVal(1, &use_val._value, 0)
   {

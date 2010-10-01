@@ -29,8 +29,8 @@ public:
     : asn1::ber::EncoderOfOCTSTR(use_tag, tag_env, use_rule)
   { }
   //
-  MEISDN_AddressString(const ISDN_AddressString_t & use_val,
-                       TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+  explicit MEISDN_AddressString(const ISDN_AddressString_t & use_val,
+                                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : asn1::ber::EncoderOfOCTSTR(TSGroupBER::getTSRule(use_rule))
   {
     asn1::ber::EncoderOfOCTSTR::setValue(use_val);
