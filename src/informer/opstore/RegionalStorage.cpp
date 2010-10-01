@@ -50,7 +50,7 @@ RegionalStorage::RegionalStorage( const DeliveryInfo&  dlvInfo,
                                   regionid_type        regionId,
                                   StoreJournal&        storeJournal,
                                   InputMessageSource&  messageSource ) :
-log_(smsc::logger::Logger::getInstance("str.reg")),
+log_(smsc::logger::Logger::getInstance("regstore")),
 storingIter_(messageList_.end()),
 validItems_(messageList_.begin()),
 dlvInfo_(dlvInfo),

@@ -18,11 +18,6 @@ class RegionSender
 
 public:
     RegionSender( SmscSender& conn, const RegionPtr& r );
-    /*
-    conn_(&conn), region_(r),
-    log_(smsc::logger::Logger::getInstance("regsend")),
-    taskList_(*this,BASEINCREMENT*2,smsc::logger::Logger::getInstance("tsklist")) {}
-     */
 
     ~RegionSender() {}
 

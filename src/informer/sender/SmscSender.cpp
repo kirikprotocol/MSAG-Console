@@ -13,7 +13,8 @@ SmscSender::SmscSender( InfosmeCore& core,
 log_(smsc::logger::Logger::getInstance("smscsend")),
 core_(&core),
 smscId_(smscId), session_(0),
-scoredList_(*this,2*maxScoreIncrement,log_)
+scoredList_(*this,2*maxScoreIncrement,
+            smsc::logger::Logger::getInstance("reglist"))
 {
     smsc_log_debug(log_,"FIXME: make use of SmscConfig");
     session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
