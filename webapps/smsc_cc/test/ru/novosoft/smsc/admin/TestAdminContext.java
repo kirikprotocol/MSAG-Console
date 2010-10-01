@@ -131,7 +131,7 @@ public class TestAdminContext extends AdminContext {
     if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager))
       archiveDaemonManager = new TestArchiveDaemonManager(serviceManager, fileSystem);
 
-    aliasManager = new TestAliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
+    aliasManager = new TestAliasManager(new File(smscConfigDir, "aliases.bin"), clusterController, fileSystem);
 
     rescheduleManager = new TestRescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
