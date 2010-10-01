@@ -24,7 +24,6 @@ public class Journal {
   private final SmscSettingsDiffHelper smsc = new SmscSettingsDiffHelper(JournalRecord.Subject.SMSC);
   private final RescheduleSettingsDiffHelper reschedule = new RescheduleSettingsDiffHelper(JournalRecord.Subject.RESCHEDULE);
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(JournalRecord.Subject.USERS);
-  private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(JournalRecord.Subject.SNMP);
   private final SmeDiffHelper sme = new SmeDiffHelper(JournalRecord.Subject.SME);
 
   /**
@@ -173,10 +172,6 @@ public class Journal {
     users.logChanges(this, oldSettings, newSettings, user);
   }
 
-
-  public void logChanges(SnmpSettings oldSettings, SnmpSettings newSettings, String user) {
-    snmp.logChanges(this, oldSettings, newSettings, user);
-  }
 
   // SME
 

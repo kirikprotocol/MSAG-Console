@@ -23,7 +23,7 @@ public class SnmpConfigFileTest {
 
   @Before
   public void before() throws IOException {
-    configFile = TestUtils.exportResourceToRandomFile(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), ".snmp");
+    configFile = TestUtils.exportResourceToRandomFile(SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"), ".snmp");
   }
 
   @After

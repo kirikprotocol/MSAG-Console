@@ -39,7 +39,7 @@ import ru.novosoft.smsc.admin.sme.TestSmeManager;
 import ru.novosoft.smsc.admin.smsc.SmscManagerTest;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.smsc.TestSmscManager;
-import ru.novosoft.smsc.admin.snmp.SnmpManagerTest;
+import ru.novosoft.smsc.admin.snmp.SnmpManagerImplTest;
 import ru.novosoft.smsc.admin.snmp.TestSnmpManager;
 import ru.novosoft.smsc.admin.timezone.TestTimezoneManager;
 import ru.novosoft.smsc.admin.timezone.TimezonesConfigTest;
@@ -77,7 +77,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"), false);
     File usersFile = new File(cfg.getUsersFile());
     TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), usersFile, false);
-    TestUtils.exportResource(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"), false);
+    TestUtils.exportResource(SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"), false);
     TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"), false);
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"), false);
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"), false);

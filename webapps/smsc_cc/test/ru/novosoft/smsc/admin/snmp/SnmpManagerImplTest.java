@@ -22,13 +22,13 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class SnmpManagerTest {
+public class SnmpManagerImplTest {
 
   private File configFile, backupDir;
 
   @Before
   public void before() throws IOException {
-    configFile = TestUtils.exportResourceToRandomFile(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), ".snmp");
+    configFile = TestUtils.exportResourceToRandomFile(SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"), ".snmp");
     backupDir = TestUtils.createRandomDir(".snmpbackup");
   }
 
@@ -40,14 +40,14 @@ public class SnmpManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
-  private SnmpManager getManager(ClusterController cc) throws AdminException {
-    SnmpManager m = new SnmpManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+  private SnmpManagerImpl getManager(ClusterController cc) throws AdminException {
+    SnmpManagerImpl m = new SnmpManagerImpl(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
     return m;
   }
 
   @Test
   public void testGetStatusForSmscs() throws AdminException {
-    SnmpManager m = getManager(new ClusterControllerImpl());
+    SnmpManagerImpl m = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = m.getStatusForSmscs();
 
@@ -59,7 +59,7 @@ public class SnmpManagerTest {
 
   @Test
   public void nullGetStatusForSmscs() throws AdminException {
-    SnmpManager m = getManager(new ClusterControllerImpl1());
+    SnmpManagerImpl m = getManager(new ClusterControllerImpl1());
 
     Map<Integer, SmscConfigurationStatus> states = m.getStatusForSmscs();
 

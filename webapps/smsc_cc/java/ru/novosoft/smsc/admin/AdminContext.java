@@ -33,6 +33,7 @@ import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpManager;
+import ru.novosoft.smsc.admin.snmp.SnmpManagerImpl;
 import ru.novosoft.smsc.admin.timezone.TimezoneManager;
 import ru.novosoft.smsc.admin.users.UsersManager;
 
@@ -123,7 +124,7 @@ public class AdminContext {
 
     mapLimitManager = new MapLimitManagerImpl(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    snmpManager = new SnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    snmpManager = new SnmpManagerImpl(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     closedGroupManager = new ClosedGroupManagerImpl(new File(smscConfigDir, "ClosedGroups.xml"), smscConfigBackupDir, clusterController, fileSystem);
 

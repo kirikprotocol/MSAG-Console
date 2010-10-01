@@ -17,6 +17,7 @@ import ru.novosoft.smsc.web.config.closed_groups.WClosedGroupManager;
 import ru.novosoft.smsc.web.config.fraud.WFraudManager;
 import ru.novosoft.smsc.web.config.logging.WLoggerManager;
 import ru.novosoft.smsc.web.config.map_limit.WMapLimitManager;
+import ru.novosoft.smsc.web.config.snmp.WSnmpManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import javax.faces.context.FacesContext;
@@ -47,6 +48,7 @@ public class WebContext {
   private final WFraudManager fraudManager;
   private final WLoggerManager loggerManager;
   private final WMapLimitManager mapLimitManager;
+  private final WSnmpManager snmpManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -90,6 +92,7 @@ public class WebContext {
     fraudManager = new WFraudManager(adminContext.getFraudManager(), journal, user);
     loggerManager = new WLoggerManager(adminContext.getLoggerManager(), journal, user);
     mapLimitManager = new WMapLimitManager(adminContext.getMapLimitManager(), journal, user);
+    snmpManager = new WSnmpManager(adminContext.getSnmpManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -139,6 +142,10 @@ public class WebContext {
 
   public WMapLimitManager getMapLimitManager() {
     return mapLimitManager;
+  }
+
+  public WSnmpManager getSnmpManager() {
+    return snmpManager;
   }
 
   public Journal getJournal() {

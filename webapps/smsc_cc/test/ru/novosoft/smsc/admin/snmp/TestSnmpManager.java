@@ -9,7 +9,7 @@ import java.io.File;
 /**
  * @author Artem Snopkov
  */
-public class TestSnmpManager extends SnmpManager {
+public class TestSnmpManager extends SnmpManagerImpl {
 
   public TestSnmpManager(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
     super(configFile, backupDir, cc, fileSystem);

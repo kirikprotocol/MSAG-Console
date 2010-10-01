@@ -69,9 +69,7 @@ public class Configuration {
 
 
   public void updateSnmpSettings(SnmpSettings settings, String user) throws AdminException {
-    SnmpSettings oldSettings = getSnmpSettings();
     adminContext.getSnmpManager().updateSettings(settings);
-    journal.logChanges(oldSettings, settings, user);
   }
 
   // SME
