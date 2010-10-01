@@ -9,9 +9,11 @@ namespace eyeline {
 namespace map {
 namespace ext {
 
-/*
+/* Type is defined in IMPLICIT tagging environment as follow:
   PrivateExtensionList ::= SEQUENCE SIZE (1..maxNumOfPrivateExtensions) OF
                                 PrivateExtension
+ 
+  maxNumOfPrivateExtensions  INTEGER ::= 10
  */
 class PrivateExtensionList : public std::list<PrivateExtension> {
 public:

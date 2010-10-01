@@ -8,7 +8,7 @@ namespace eyeline {
 namespace map {
 namespace ext {
 
-/*
+/* Type is defined in IMPLICIT tagging environment as follow:
  PCS-Extensions ::= SEQUENCE { ... }
  */
 struct PCS_Extensions {
@@ -17,4 +17,5 @@ struct PCS_Extensions {
 
 }}}
 
-#endif
+#endif /* __EYELINE_MAP_7F0_PROTO_EXT_PCS_EXTENSIONS_HPP__ */
+
