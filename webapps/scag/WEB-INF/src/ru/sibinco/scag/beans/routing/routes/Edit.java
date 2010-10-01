@@ -316,7 +316,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             enabled = true;
             active = true;
             saa = true;
-            hideSaaText = true;
+            hideSaaText = false;
         }
     }
 
