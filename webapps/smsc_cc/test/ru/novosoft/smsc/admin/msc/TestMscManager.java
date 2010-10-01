@@ -11,7 +11,7 @@ import java.util.Collection;
 /**
  * @author Artem Snopkov
  */
-public class TestMscManager extends MscManager {
+public class TestMscManager extends MscManagerImpl {
 
   public TestMscManager(File aliasesFile, ClusterController cc, FileSystem fs) {
     super(aliasesFile, cc, fs);

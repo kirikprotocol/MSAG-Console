@@ -115,7 +115,8 @@ public class JournalRecord {
     ACL("subject.acl"),
     CATEGORY("subject.category"),
     ALIAS("subject.alias"),
-    ARCHIVE_DAEMON("subject.archive_daemon");
+    ARCHIVE_DAEMON("subject.archive_daemon"),
+    MSC("subject.msc");
 
     private final String key;
 

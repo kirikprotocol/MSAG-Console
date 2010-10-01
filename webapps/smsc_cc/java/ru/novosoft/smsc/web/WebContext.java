@@ -3,8 +3,8 @@ package ru.novosoft.smsc.web;
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.alias.AliasManager;
-import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
+import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.Configuration;
@@ -17,6 +17,7 @@ import ru.novosoft.smsc.web.config.closed_groups.WClosedGroupManager;
 import ru.novosoft.smsc.web.config.fraud.WFraudManager;
 import ru.novosoft.smsc.web.config.logging.WLoggerManager;
 import ru.novosoft.smsc.web.config.map_limit.WMapLimitManager;
+import ru.novosoft.smsc.web.config.msc.WMscManager;
 import ru.novosoft.smsc.web.config.snmp.WSnmpManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
@@ -49,6 +50,7 @@ public class WebContext {
   private final WLoggerManager loggerManager;
   private final WMapLimitManager mapLimitManager;
   private final WSnmpManager snmpManager;
+  private final MscManager mscManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -93,6 +95,7 @@ public class WebContext {
     loggerManager = new WLoggerManager(adminContext.getLoggerManager(), journal, user);
     mapLimitManager = new WMapLimitManager(adminContext.getMapLimitManager(), journal, user);
     snmpManager = new WSnmpManager(adminContext.getSnmpManager(), journal, user);
+    mscManager = new WMscManager(adminContext.getMscManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -146,6 +149,10 @@ public class WebContext {
 
   public WSnmpManager getSnmpManager() {
     return snmpManager;
+  }
+
+  public MscManager getMscManager() {
+    return mscManager;
   }
 
   public Journal getJournal() {

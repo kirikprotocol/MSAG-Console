@@ -20,6 +20,7 @@ import ru.novosoft.smsc.admin.logging.LoggerManagerImpl;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImpl;
 import ru.novosoft.smsc.admin.msc.MscManager;
+import ru.novosoft.smsc.admin.msc.MscManagerImpl;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
@@ -130,7 +131,7 @@ public class AdminContext {
 
     SmscSettings s = smscManager.getSettings();
 
-    mscManager = new MscManager(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
+    mscManager = new MscManagerImpl(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
 
     smeManager = new SmeManager(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
 
