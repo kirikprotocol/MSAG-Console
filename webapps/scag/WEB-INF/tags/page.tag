@@ -239,6 +239,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
           <c:when test="${!empty beanClass}"><sm:bean className="ru.sibinco.scag.beans.${beanClass}"/></c:when>
           <c:otherwise><c:if test="${!empty generatedBeanClass}"><sm:bean className="ru.sibinco.scag.beans.${generatedBeanClass}"/></c:if></c:otherwise>
         </c:choose>
+            
         <%--sm:message></sm:message--%>
 <%
   //errorMessages=(java.util.List)request.getAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME);

@@ -1,3 +1,5 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="ru.sibinco.scag.backend.SCAGAppContext,
                  ru.sibinco.scag.backend.users.UserPreferences,
                  ru.sibinco.scag.backend.users.ScagUser,
@@ -29,6 +31,7 @@
     <param name="resource_servlet_uri" value="<%=request.getContextPath()+"/resource/?"%>">
     <param name="graph.scale" value="<%=monPrefs.get("svcmon.graph.scale")%>">
     <param name="locales.messages" value="RUSSIA">
+    <param name="locale" value="${locale}">
     <param name="graph.grid" value="<%=monPrefs.get("svcmon.graph.grid")%>">
     <param name="graph.higrid" value="<%=monPrefs.get("svcmon.graph.higrid")%>">
     <param name="graph.head" value="<%=monPrefs.get("svcmon.graph.head")%>">

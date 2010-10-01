@@ -18,12 +18,9 @@ import java.awt.event.*;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Locale;
-import java.util.HashSet;
+import java.util.*;
 import java.io.InputStream;
-import java.util.Calendar;
-import java.util.Observable;
-import java.util.Observer;
+
 /**
  * The <code>SvcMon</code> class represents
  * <p><p/>
@@ -50,7 +47,7 @@ class Pause extends Observable{
 
 public class SvcMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
 
-    public static RemoteResourceBundle localText;
+    public static ResourceBundle localText;
     public static Locale locale;
     private Label connectingLabel;
     private SnapSmppHistory snapSmppHistory;
@@ -129,10 +126,19 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     public void init() {
 
         //System.out.println("Initing..." );
-        localText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
+
+        if (getParameter("locale") != null){
+            localText = ResourceBundle.getBundle("ru.sibinco.scag.svcmon.applet.text", new Locale(getParameter("locale")) );
+        } else {
+            localText = ResourceBundle.getBundle("ru.sibinco.scag.svcmon.applet.text", getLocale() );
+        }
+        System.out.println(localText != null ?
+                "Successfully loaded resources form jar." : "Could not load resources from jar.");
+        //localText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         //System.out.println("SvcMon:getCodeBase()=" + getCodeBase() + ".");
         locale=localText.getLocale();
-
+        System.out.println("locale="+locale);
+        
         maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
 //        graphScale = Integer.valueOf(getParameter("graph.scale")).intValue();
         graphGrid = Integer.valueOf(getParameter("graph.grid")).intValue();

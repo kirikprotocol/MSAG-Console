@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
+import java.util.ResourceBundle;
 
 /**
  * The <code>HttpTopGraph</code> class represents
@@ -99,7 +100,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int smeNameWidth = 0;
     int maxSpeed = 50;
     int rowHeight = HttpSnap.COUNTERS * 2;
-    RemoteResourceBundle localeText;
+    ResourceBundle localeText;
     int graphScale;
     int graphGrid;
     int graphHiGrid;
@@ -138,7 +139,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapHttpHistory snapHttpHistory) {
         super();
         this.maxSpeed = maxSpeed;
@@ -158,7 +159,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapHttpHistory snapHttpHistory, HashSet httpViewList) {
         super();
         this.maxSpeed = maxSpeed;
@@ -178,7 +179,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapHttpHistory snapHttpHistory, HashSet httpViewList, boolean viewGraph) {
         super();
         this.maxSpeed = maxSpeed;

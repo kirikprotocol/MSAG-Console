@@ -120,7 +120,14 @@ public class StatusManager {
         String line;
         File fileToRead = new File(filename);
         if (!fileToRead.exists()) {
-            throw new NullPointerException("File: " + filename + " doesn't exist!");
+            logger.debug("File: " + filename + " doesn't exist.");
+            try{
+                if (fileToRead.createNewFile()) {
+                    logger.debug("Create file: "+filename);
+                } 
+            } catch (IOException e){
+                throw new NullPointerException("File: " + filename + " could not create!");
+            }
         }
         try {
             filereader = new FileReader(fileToRead);

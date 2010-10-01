@@ -14,13 +14,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Date;
-import java.util.Calendar;
+import java.util.*;
 import java.text.SimpleDateFormat;
-import java.util.Vector;
-import java.util.ArrayList;
 
 /**
  * The <code>SmppTopGraph</code> class represents
@@ -101,7 +96,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int smeNameWidth = 0;
     int maxSpeed = 200;
     int rowHeight = SmppSnap.COUNTERS * 2;
-    RemoteResourceBundle localeText;
+    ResourceBundle localeText;
 //    int graphScale;
     float graphScale;
     int graphGrid;
@@ -144,7 +139,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public SmppTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapSmppHistory snapSmppHistory) {
         super();
         this.maxSpeed = maxSpeed;
@@ -165,7 +160,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public SmppTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapSmppHistory snapSmppHistory, HashSet viewList) {
         super();
         this.maxSpeed = maxSpeed;
@@ -187,7 +182,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     public SmppTopGraph(SvcSnap snap, int maxSpeed, int graphScale,int graphGrid, int graphHiGrid, int graphHead,
-                        RemoteResourceBundle localeText,SnapSmppHistory snapSmppHistory,
+                        ResourceBundle localeText,SnapSmppHistory snapSmppHistory,
                         HashSet viewList, boolean viewGraph) {
         super();
         this.maxSpeed = maxSpeed;

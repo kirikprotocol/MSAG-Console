@@ -97,7 +97,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int smeNameWidth = 0;
     int maxSpeed = 50;
     int rowHeight = HttpSnap.COUNTERS * 2;
-    RemoteResourceBundle localeText;
+    ResourceBundle localeText;
     int graphScale;
     int graphGrid;
     int graphHiGrid;
@@ -136,7 +136,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public HttpTopGraph(ScSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapHttpHistory snapHttpHistory) {
         super();
         this.maxSpeed = maxSpeed;
@@ -156,7 +156,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public HttpTopGraph(ScSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapHttpHistory snapHttpHistory, HashSet viewList) {
         super();
         this.maxSpeed = maxSpeed;

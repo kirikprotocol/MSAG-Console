@@ -56,6 +56,9 @@
     <javac srcdir="${java_src}" destdir="${java_out}" source="1.5" target="1.5" 
            classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}" debug="yes"/>    
     <native2ascii encoding="UTF-8" src="${java_src}/locales" dest="${java_out}/locales" excludes="*.xml"/>
+    <native2ascii encoding="UTF-8" src="${perfmon_src}/applet" dest="${perfmon_out}/applet" excludes="*.java"/>
+    <native2ascii encoding="UTF-8" src="${svcmon_src}/applet" dest="${svcmon_out}/applet" excludes="*.java"/>
+    <native2ascii encoding="UTF-8" src="${scmon_src}/applet" dest="${scmon_out}/applet" excludes="*.java"/>
     <mkdir dir="${java_out}/dtds"/>
     <copydir src="${java_src}/dtds" dest="${java_out}/dtds"/>
   </target>
@@ -77,6 +80,7 @@
     <jar jarfile="${exploded}/stat/monitor/perfmon.jar">
       <fileset dir="${java_out}">
         <include name="${perfmon_path}/applet/**/*.class"/>
+        <include name="${perfmon_path}/applet/*.properties"/>  
         <include name="${perfmon_path}/PerfSnap.class"/>
         <include name="${perfmon_path}/PerfSnap*.class"/>
         <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>
@@ -90,6 +94,7 @@
     <jar jarfile="${exploded}/endpoints/services/monitor/svcmon.jar">
       <fileset dir="${java_out}">
         <include name="${svcmon_path}/applet/**/*.class"/>
+        <include name="${svcmon_path}/applet/**/*.properties"/>  
         <include name="${svcmon_path}/snap/**"/>
         <include name="${svcmon_path}/SvcSnap.class"/>
         <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>
@@ -103,6 +108,7 @@
     <jar jarfile="${exploded}/endpoints/centers/monitor/scmon.jar">
       <fileset dir="${java_out}">
         <include name="${scmon_path}/applet/**/*.class"/>
+        <include name="${scmon_path}/applet/**/*.properties"/>  
         <include name="${scmon_path}/ScSnap.class"/>
         <include name="${scmon_path}/snap/**"/>
         <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>

@@ -86,7 +86,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     double yScale = 1;
     int xScale = 10;
     int rowHeight = SmppSnap.COUNTERS * 2;
-    RemoteResourceBundle localeText;
+    ResourceBundle localeText;
     int graphScale;
     int graphGrid;
     int graphHiGrid;
@@ -125,7 +125,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public SmppTopGraph(ScSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapSmppHistory snapSmppHistory) {
         super();
         this.maxSpeed = maxSpeed;
@@ -145,7 +145,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public SmppTopGraph(ScSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, RemoteResourceBundle localeText,
+                        int graphHead, ResourceBundle localeText,
                         SnapSmppHistory snapSmppHistory, HashSet viewList) {
         super();
         this.maxSpeed = maxSpeed;

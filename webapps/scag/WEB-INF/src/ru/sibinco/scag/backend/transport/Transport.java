@@ -33,10 +33,10 @@ public class Transport {
     };
 
     public static String[] transportTitles = {
-            SMPP_TRANSPORT_NAME, HTTP_TRANSPORT_NAME, MMS_TRANSPORT_NAME};
+            SMPP_TRANSPORT_NAME, HTTP_TRANSPORT_NAME/* Hide MMS , MMS_TRANSPORT_NAME*/};
 
     public static String[] schemaNames = {
-            SMPP_SCHEMA_NAME, HTTP_SCHEMA_NAME, MMS_SCHEMA_NAME};
+            SMPP_SCHEMA_NAME, HTTP_SCHEMA_NAME/* Hide MMS , MMS_SCHEMA_NAME*/};
 
     public static int getTransportId(final String transport) {
         int Id = -1;

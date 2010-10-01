@@ -24,13 +24,32 @@
                 return true;
             }
         </script>
-        <sm-ep:properties title="">
+        <%--<sm-ep:properties title="">
+            <set var="transportIds" value=""/>
+            <c:forEach items="${bean.transportIds}" var="transportId">
+                <c:if test="${transportId != '2'}">
+                    <c:set var="transportIds" value="${transportIds}${transportId},"/>
+                </c:if>
+            </c:forEach>
+            <c:if test="${fn:length(transportIds)>0}">
+                <c:set var="transportIds" value="${fn:substring(transportIds, 0, fn:length(transportIds)-1)}"/>
+            </c:if>
+            <c:set var="transportTitles" value=""/>
+            <c:forEach items="${bean.transportTitles}" var="transportTitle">
+                <c:if test="${transportTitle != 'HTTP'}">
+                    <c:set var="transportTitles" value="${transportTitles}${transportTitle},"/>
+                </c:if>
+            </c:forEach>
+            <c:if test="${fn:length(transportTitles)>0}">
+                <c:set var="transportTitles" value="${fn:substring(transportTitles, 0, fn:length(transportTitles)-1)}"/>
+            </c:if>
             <sm-ep:list title="centers.edit.list.transportid" onChange="changeTransportId();" name="transportId"
-                        values="${fn:join(bean.transportIds, ',')}" valueTitles="${fn:join(bean.transportTitles, ',')}"/>
+                        values="${transportIds}" valueTitles="${transportTitles}"/>
         </sm-ep:properties>
         <br>
         <br>
-        <br>
+        <br> --%>
+        <input type="hidden" id="transportId" name="transportId" value="1"/>
         <c:choose>
             <c:when test="${bean.transportId == 1}">
                 <c:set var="smes" value="${fn:join(bean.smes, ',')}"/>

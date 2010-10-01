@@ -16,6 +16,7 @@ import java.io.*;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class PerfMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
 
@@ -82,7 +83,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     MenuItem menuDecrBlock;
     MenuItem menuDecrPix;
 
-    public static RemoteResourceBundle localeText;
+    public static ResourceBundle localeText;
     public static Locale locale;
     public static SimpleDateFormat dateFormat;
     public static SimpleDateFormat gridFormat;
@@ -114,8 +115,15 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     String test;
 
     public void init() {
-        System.out.println("new PerfMon.init() Initing...");
-        localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
+        System.out.println("Initialize performance monitor ...");
+        if (getParameter("locale") != null){
+            localeText = ResourceBundle.getBundle("ru.sibinco.scag.perfmon.applet.text", new Locale(getParameter("locale")) );
+        } else {
+            localeText = ResourceBundle.getBundle("ru.sibinco.scag.perfmon.applet.text", getLocale() );
+        }
+        System.out.println(localeText != null ?
+                "Successfully loaded resources form jar." : "Could not load resources from jar.");
+        //localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         locale=localeText.getLocale();
         System.out.println("locale="+locale);
         dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);

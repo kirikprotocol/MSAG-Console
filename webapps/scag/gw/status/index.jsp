@@ -3,8 +3,8 @@
     <jsp:attribute name="menu">
         <sm-pm:menu>
             <sm-pm:space/>
-            <sm-pm:item name="mbStart" value="status.item.mbstart.value" title="status.item.mbstart.title" isCheckSensible="false"/>
-            <sm-pm:item name="mbStop" value="status.item.mbstop.value" title="status.item.mbstop.title" isCheckSensible="false"/>
+            <!--sm-pm:item name="mbStart" value="status.item.mbstart.value" title="status.item.mbstart.title" isCheckSensible="false"/-->
+            <!--sm-pm:item name="mbStop" value="status.item.mbstop.value" title="status.item.mbstop.title" isCheckSensible="false"/-->
         </sm-pm:menu>
     </jsp:attribute>
 
