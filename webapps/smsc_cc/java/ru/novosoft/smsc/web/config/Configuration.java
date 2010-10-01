@@ -63,16 +63,6 @@ public class Configuration {
   }
 
 
-  public MapLimitSettings getMapLimitSettings() throws AdminException {
-    return adminContext.getMapLimitManager().getSettings();
-  }
-
-  public void updateMapLimitSettings(MapLimitSettings settings, String user) throws AdminException {
-    MapLimitSettings oldSettings = getMapLimitSettings();
-    adminContext.getMapLimitManager().updateSettings(settings);
-    journal.logChanges(oldSettings, settings, user);
-  }
-
   public SnmpSettings getSnmpSettings() throws AdminException {
     return adminContext.getSnmpManager().getSettings();
   }

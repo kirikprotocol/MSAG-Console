@@ -21,13 +21,13 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class MapLimitManagerTest {
+public class MapLimitManagerImplTest {
 
   private File configFile, backupDir;
 
   @Before
   public void before() throws IOException {
-    configFile = TestUtils.exportResourceToRandomFile(MapLimitManagerTest.class.getResourceAsStream("maplimits.xml"), ".maplimits");
+    configFile = TestUtils.exportResourceToRandomFile(MapLimitManagerImplTest.class.getResourceAsStream("maplimits.xml"), ".maplimits");
     backupDir = TestUtils.createRandomDir(".maplimitsbackup");
   }
 
@@ -39,14 +39,14 @@ public class MapLimitManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
-  private MapLimitManager getManager(ClusterController cc) throws AdminException {
-    MapLimitManager m = new MapLimitManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+  private MapLimitManagerImpl getManager(ClusterController cc) throws AdminException {
+    MapLimitManagerImpl m = new MapLimitManagerImpl(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
     return m;
   }
 
   @Test
   public void testGetStatusForSmscs() throws AdminException {
-    MapLimitManager manager = getManager(new ClusterControllerImpl());
+    MapLimitManagerImpl manager = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
 
@@ -58,7 +58,7 @@ public class MapLimitManagerTest {
 
   @Test
   public void nullGetStatusForSmscs() throws AdminException {
-    MapLimitManager manager = getManager(new ClusterControllerImpl1());
+    MapLimitManagerImpl manager = getManager(new ClusterControllerImpl1());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
 

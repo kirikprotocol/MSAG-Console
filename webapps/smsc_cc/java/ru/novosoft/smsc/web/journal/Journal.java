@@ -24,7 +24,6 @@ public class Journal {
   private final SmscSettingsDiffHelper smsc = new SmscSettingsDiffHelper(JournalRecord.Subject.SMSC);
   private final RescheduleSettingsDiffHelper reschedule = new RescheduleSettingsDiffHelper(JournalRecord.Subject.RESCHEDULE);
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(JournalRecord.Subject.USERS);
-  private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(JournalRecord.Subject.MAP_LIMIT);
   private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(JournalRecord.Subject.SNMP);
   private final SmeDiffHelper sme = new SmeDiffHelper(JournalRecord.Subject.SME);
 
@@ -142,16 +141,7 @@ public class Journal {
     return r;
   }
 
-  public void logChangesForObjects(Object oldObj, Object newObj, String user) {
-    if (oldObj instanceof SmscSettings)
-      logChanges((SmscSettings)oldObj, (SmscSettings)newObj, user);
-    else if (oldObj instanceof RescheduleSettings)
-      logChanges((RescheduleSettings)oldObj, (RescheduleSettings)newObj, user);
-    else if (oldObj instanceof UsersSettings)
-      logChanges((UsersSettings)oldObj, (UsersSettings)newObj, user);
-    else if (oldObj instanceof MapLimitSettings)
-      logChanges((MapLimitSettings)oldObj, (MapLimitSettings)newObj, user);
-  }
+
 
   /**
    * Ищет различия между настройками СМСЦ и записывает их в журнал
@@ -183,16 +173,6 @@ public class Journal {
     users.logChanges(this, oldSettings, newSettings, user);
   }
 
-  /**
-   * Ищет различия между настройками Map Limits и записывает их в журнал
-   * @param oldSettings старые настройки Map Limits
-   * @param newSettings новые настройки Map Limits
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logChanges(MapLimitSettings oldSettings, MapLimitSettings newSettings, String user) {
-    mapLimit.logChanges(this, oldSettings, newSettings, user);
-  }
-  
 
   public void logChanges(SnmpSettings oldSettings, SnmpSettings newSettings, String user) {
     snmp.logChanges(this, oldSettings, newSettings, user);

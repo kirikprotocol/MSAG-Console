@@ -9,7 +9,7 @@ import java.io.File;
 /**
  * @author Artem Snopkov
  */
-public class TestMapLimitManager extends MapLimitManager {
+public class TestMapLimitManager extends MapLimitManagerImpl {
 
   public TestMapLimitManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     super(configFile, backupDir, cc, fs);

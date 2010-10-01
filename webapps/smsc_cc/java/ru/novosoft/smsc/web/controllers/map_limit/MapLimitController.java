@@ -9,6 +9,7 @@ import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.controllers.SettingsController;
+import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
 import java.util.LinkedList;
@@ -17,33 +18,22 @@ import java.util.List;
 /**
  * author: alkhal
  */
-public class MapLimitController extends SettingsController<MapLimitSettings> {
+public class MapLimitController extends SettingsMController<MapLimitSettings> {
 
   private static final Logger logger = Logger.getLogger(MapLimitController.class);
 
   private DynamicTableModel codes = new DynamicTableModel();
   private MapLimitSettings mlSettings;
+  private boolean initFailed;
 
   public MapLimitController() {
 
-    super(ConfigType.MapLimit);
-
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.configuration.locally.changed");
+    super(WebContext.getInstance().getMapLimitManager());
 
     try {
-
+      init();
+      
       mlSettings = getSettings();
-
-      List<Integer> outOfDate = new LinkedList<Integer>();
-
-      SmscStatusManager smscStatusManager = WebContext.getInstance().getSmscStatusManager();
-      for (int i = 0; i < smscStatusManager.getSmscInstancesNumber(); i++) {
-        if (smscStatusManager.getMapLimitState(i) == SmscConfigurationStatus.OUT_OF_DATE)
-          outOfDate.add(i);
-      }
-      if (!outOfDate.isEmpty())
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", outOfDate.toString());
 
       for (int c : mlSettings.getUssdNoSriCodes()) {
         DynamicTableRow row = new DynamicTableRow();
@@ -51,10 +41,14 @@ public class MapLimitController extends SettingsController<MapLimitSettings> {
         codes.addRow(row);
       }
     } catch (AdminException e) {
-      logger.error(e, e);
-      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
+      addError(e);
+      initFailed = true;
     }
 
+  }
+
+  public boolean isInitFailed() {
+    return initFailed;
   }
 
   public String reset() {
@@ -94,15 +88,12 @@ public class MapLimitController extends SettingsController<MapLimitSettings> {
       mlSettings.setUssdNoSriCodes(noSriCodes);
       setSettings(mlSettings);
 
-      Revision rev = submitSettings();
-      if (rev != null) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
-        return null;
-      }
+      submitSettings();
 
     } catch (AdminException e) {
       logger.error(e, e);
       addError(e);
+      return null;
     }
 
     return "INDEX";
@@ -122,20 +113,5 @@ public class MapLimitController extends SettingsController<MapLimitSettings> {
 
   public void setMlSettings(MapLimitSettings mlSettings) {
     this.mlSettings = mlSettings;
-  }
-
-  @Override
-  protected MapLimitSettings loadSettings() throws AdminException {
-    return getConfiguration().getMapLimitSettings();
-  }
-
-  @Override
-  protected void saveSettings(MapLimitSettings settings) throws AdminException {
-    getConfiguration().updateMapLimitSettings(settings, getUserPrincipal().getName());
-  }
-
-  @Override
-  protected MapLimitSettings cloneSettings(MapLimitSettings settings) {
-    return settings.cloneSettings();
   }
 }

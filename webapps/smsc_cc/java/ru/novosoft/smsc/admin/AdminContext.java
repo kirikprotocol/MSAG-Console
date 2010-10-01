@@ -18,6 +18,7 @@ import ru.novosoft.smsc.admin.fraud.FraudManagerImpl;
 import ru.novosoft.smsc.admin.logging.LoggerManager;
 import ru.novosoft.smsc.admin.logging.LoggerManagerImpl;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
+import ru.novosoft.smsc.admin.map_limit.MapLimitManagerImpl;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
@@ -120,7 +121,7 @@ public class AdminContext {
 
     fraudManager = new FraudManagerImpl(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    mapLimitManager = new MapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    mapLimitManager = new MapLimitManagerImpl(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     snmpManager = new SnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
 

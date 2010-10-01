@@ -56,7 +56,7 @@ public class MapLimitConfigTest {
 
     CongestionLevel clevels[] = settings.getCongestionLevels();
     assertNotNull(clevels);
-    assertEquals(MapLimitManager.MAX_CONGESTON_LEVELS, clevels.length);
+    assertEquals(MapLimitManagerImpl.MAX_CONGESTON_LEVELS, clevels.length);
     assertEquals(new CongestionLevel(4000, 800, 1000, 100), clevels[0]);
     assertEquals(new CongestionLevel(3000, 1800, 2000, 100), clevels[1]);
     assertEquals(new CongestionLevel(2000, 2800, 3000, 100), clevels[2]);
