@@ -37,8 +37,8 @@ public:
   ~EncoderOfUExtension_T()
   { }
 
-  //
-  void setValue(const asn1::UnknownExtensions & use_val,
+  //Returns field index is to use for field following last unknown extension.
+  uint16_t setValue(const asn1::UnknownExtensions & use_val,
                 EncoderOfStructureAC & struct_enc, uint16_t fld_idx)
     /*throw(std::exception)*/
   {
@@ -49,6 +49,7 @@ public:
       valEnc->setValue(*it);
       struct_enc.setField(fld_idx, *valEnc);
     }
+    return fld_idx;
   }
 };
 
