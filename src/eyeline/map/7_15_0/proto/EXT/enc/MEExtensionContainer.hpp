@@ -2,6 +2,8 @@
 # ident "@(#)$Id$"
 # define __EYELINE_MAP_7F0_PROTO_EXT_ENC_MEEXTENSIONCONTAINER_HPP__
 
+# include "eyeline/util/OptionalObjT.hpp"
+# include "eyeline/asn1/BER/rtenc/EncodeUExt.hpp"
 # include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
 # include "eyeline/map/7_15_0/proto/EXT/ExtensionContainer.hpp"
 # include "eyeline/map/7_15_0/proto/EXT/enc/MEPrivateExtensionList.hpp"
@@ -19,17 +21,15 @@ namespace enc {
     ...
  }
 */
-class MEExtensionContainer : public asn1::ber::EncoderOfSequence_T<3,2> {
+class MEExtensionContainer : public asn1::ber::EncoderOfSequence_T<3> {
 public:
   explicit MEExtensionContainer(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<3,2>(use_rule),
-    _privateExtensionList(NULL), _pcsExtensions(NULL)
+  : asn1::ber::EncoderOfSequence_T<3>(use_rule)
   {}
 
   MEExtensionContainer(const ExtensionContainer& ext_container,
                        asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<3,2>(use_rule),
-    _privateExtensionList(NULL), _pcsExtensions(NULL)
+  : asn1::ber::EncoderOfSequence_T<3>(use_rule)
   {
     setValue(ext_container);
   }
@@ -37,49 +37,20 @@ public:
   MEExtensionContainer(const asn1::ASTag& outer_tag,
                        const asn1::ASTagging::Environment_e tag_env,
                        asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<3,2>(outer_tag, tag_env, use_rule),
-    _privateExtensionList(NULL), _pcsExtensions(NULL)
+  : asn1::ber::EncoderOfSequence_T<3>(outer_tag, tag_env, use_rule)
   {}
 
-  ~MEExtensionContainer() {
-    if (_privateExtensionList)
-      _privateExtensionList->~MEPrivateExtensionList();
-    if (_pcsExtensions)
-      _pcsExtensions->~MEPCS_Extensions();
-  }
-
-  void setValue(const ExtensionContainer& ext_container) {
-    const PrivateExtensionList* privateExtList= ext_container.getPrivateExtensionList();
-    if (privateExtList) {
-      _privateExtensionList= new (_memAlloc_MEPrivateExtensionList.buf) MEPrivateExtensionList(*privateExtList, getTSRule());
-      //_privateExtensionList->setValue(*privateExtList);
-      setField(0, *_privateExtensionList);
-    }
-    const PCS_Extensions* pcsExts= ext_container.getPCS_Extensions();
-    if (pcsExts) {
-      _pcsExtensions= new (_memAlloc_MEPCS_Extensions.buf) MEPCS_Extensions(*pcsExts, getTSRule());
-      setField(1, *_pcsExtensions);
-    }
-    //    if ( !value._unkExt._tsList.empty() ) {
-    //      asn1::ber::EncoderOfUExtension* encoderOfUExt= new asn1::ber::EncoderOfUExtension();
-    //      encoderOfUExt->setValue(value._unkExt);
-    //    }
-
-  }
+  void setValue(const ExtensionContainer& ext_container);
 
 private:
-  union {
-    void* aligner;
-    uint8_t buf[sizeof(MEPrivateExtensionList)];
-  } _memAlloc_MEPrivateExtensionList;
+  const static asn1::ASTag _tag_PrivateExtensionList;
+  const static asn1::ASTag _tag_PcsExtensions;
 
-  union {
-    void* aligner;
-    uint8_t buf[sizeof(MEPCS_Extensions)];
-  } _memAlloc_MEPCS_Extensions;
+  asn1::ber::EncoderProducer_T<MEPrivateExtensionList> _ePrivateExtensionList;
+  asn1::ber::EncoderProducer_T<MEPCS_Extensions>       _ePcsExtensions;
 
-  MEPrivateExtensionList* _privateExtensionList;
-  MEPCS_Extensions* _pcsExtensions;
+  typedef asn1::ber::EncoderOfUExtension_T<1> MEArgUExt;
+  util::OptionalObj_T<MEArgUExt>                       _eUnkExt;
 };
 
 }}}}

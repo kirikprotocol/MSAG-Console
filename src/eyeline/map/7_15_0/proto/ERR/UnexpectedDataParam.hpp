@@ -5,6 +5,7 @@
 #include "eyeline/util/OptionalObjT.hpp"
 
 # include "eyeline/map/7_15_0/proto/EXT/ExtensionContainer.hpp"
+# include "eyeline/asn1/UnknownExtensions.hpp"
 
 namespace eyeline {
 namespace map {
@@ -18,7 +19,7 @@ using eyeline::util::OptionalObj_T;
    ...
  } */
 struct UnexpectedDataParam {
-  OptionalObj_T<ExtensionContainer> extensionContainer;
+  OptionalObj_T<ext::ExtensionContainer> extensionContainer;
   asn1::UnknownExtensions           _unkExt;
 };
 

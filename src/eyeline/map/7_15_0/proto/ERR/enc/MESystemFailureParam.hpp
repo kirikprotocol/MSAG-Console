@@ -63,7 +63,7 @@ public:
   void setNetworkResource(const common::NetworkResource& val) {
     cleanup();
     _value.networkResource= new (_memAlloc.buf) common::enc::MENetworkResource(getTSRule());
-    _value.networkResource->setValue(val._value);
+    _value.networkResource->setValue(val);
     asn1::ber::EncoderOfChoice::setSelection(*_value.networkResource);
   }
 

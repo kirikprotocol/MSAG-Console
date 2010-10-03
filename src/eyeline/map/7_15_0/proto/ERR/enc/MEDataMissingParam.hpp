@@ -2,6 +2,7 @@
 # define __EYELINE_MAP_7F0_PROTO_ERR_ENC_MEDATAMISSINGPARAM_HPP__
 
 # include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
+# include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"
 # include "eyeline/map/7_15_0/proto/ERR/DataMissingParam.hpp"
 # include "eyeline/map/7_15_0/proto/EXT/enc/MEExtensionContainer.hpp"
 
@@ -16,17 +17,15 @@ DataMissingParam ::= SEQUENCE {
   ...
 }
 */
-class MEDataMissingParam : public asn1::ber::EncoderOfSequence_T<2> {
+class MEDataMissingParam : public asn1::ber::EncoderOfPlainSequence_T<2> {
 public:
   explicit MEDataMissingParam(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<2>(use_rule),
-    _extensionContainer(NULL)
+  : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule)
   {}
 
   explicit MEDataMissingParam(const DataMissingParam& value,
                               asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<2>(use_rule),
-    _extensionContainer(NULL)
+  : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule)
   {
     setValue(value);
   }
@@ -34,37 +33,15 @@ public:
   MEDataMissingParam(const asn1::ASTag& outer_tag,
                      const asn1::ASTagging::Environment_e tag_env,
                      asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<2>(outer_tag, tag_env, use_rule),
-    _extensionContainer(NULL)
+  : asn1::ber::EncoderOfPlainSequence_T<2>(outer_tag, tag_env, use_rule)
   {}
 
-  ~MEDataMissingParam() {
-    if (_extensionContainer)
-      _extensionContainer->~MEExtensionContainer();
-//    if (_encoderOfUExt)
-//      _encoderOfUExt->~EncoderOfUExtension();
-  }
-
-  void setValue(const DataMissingParam& value) {
-    const ext::ExtensionContainer* extContainer= value.getExtensionContainer();
-    if (extContainer) {
-      _extensionContainer= new (_memAlloc_ExtensionContainer.buf) ext::enc::MEExtensionContainer(*extContainer, getTSRule());
-      setField(0, *_extensionContainer);
-    }
-//    if ( !value._unkExt._tsList.empty() ) {
-//      asn1::ber::EncoderOfUExtension* encoderOfUExt= new asn1::ber::EncoderOfUExtension();
-//      encoderOfUExt->setValue(value._unkExt);
-//    }
-  }
+  void setValue(const DataMissingParam& value);
 
 private:
-  union {
-    void* aligenr;
-    uint8_t buf[sizeof(ext::enc::MEExtensionContainer)];
-  } _memAlloc_ExtensionContainer;
-
-  ext::enc::MEExtensionContainer* _extensionContainer;
-  //asn1::ber::EncoderOfUExtension* _encoderOfUExt;
+  typedef asn1::ber::EncoderOfUExtension_T<1> MEArgUExt;
+  asn1::ber::EncoderProducer_T<ext::enc::MEExtensionContainer> _extensionContainer;
+  util::OptionalObj_T<MEArgUExt>                      _unkExt;
 };
 
 }}}}

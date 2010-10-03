@@ -2,8 +2,8 @@
 # ident "@(#)$Id$"
 # define __EYELINE_MAP_7F0_PROTO_ERR_DATAMISSINGPARAM_HPP__
 
-#include "eyeline/util/OptionalObjT.hpp"
-
+# include "eyeline/asn1/UnknownExtensions.hpp"
+# include "eyeline/util/OptionalObjT.hpp"
 # include "eyeline/map/7_15_0/proto/EXT/ExtensionContainer.hpp"
 
 namespace eyeline {
@@ -18,8 +18,8 @@ using eyeline::util::OptionalObj_T;
    ...
  } */
 struct DataMissingParam {
-  OptionalObj_T<ExtensionContainer> extensionContainer;
-  asn1::UnknownExtensions           _unkExt;
+  OptionalObj_T<ext::ExtensionContainer> extensionContainer;
+  asn1::UnknownExtensions           unkExt;
 };
 
 }}}

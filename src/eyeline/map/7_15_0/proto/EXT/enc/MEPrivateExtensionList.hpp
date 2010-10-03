@@ -19,28 +19,26 @@ namespace enc {
 class MEPrivateExtensionList : public asn1::ber::EncoderOfSequenceOf_T<PrivateExtension, MEPrivateExtension, 2> {
 public:
   explicit MEPrivateExtensionList(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequenceOf_T<PrivateExtension, MEPrivateExtension, 2>(use_rule), _idx(0)
+  : asn1::ber::EncoderOfSequenceOf_T<PrivateExtension, MEPrivateExtension, 2>(use_rule)
   {}
 
   MEPrivateExtensionList(const PrivateExtensionList& private_ext_list,
                          asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequenceOf_T<PrivateExtension, MEPrivateExtension, 2>(use_rule), _idx(0)
+  : asn1::ber::EncoderOfSequenceOf_T<PrivateExtension, MEPrivateExtension, 2>(use_rule)
   {
     setValue(private_ext_list);
   }
 
-  void setValue(const PrivateExtensionList& private_ext_list) {
-    for(PrivateExtensionList::const_iterator iter= private_ext_list.begin(), end_iter= private_ext_list.end();
-        iter != end_iter; ++iter ) {
-      if (_idx == maxNumOfPrivateExtensions)
-        throw smsc::util::Exception("MEPrivateExtensionList::MEPrivateExtensionList::: too long PrivateExtensionList");
-      ++_idx;
-      addValue(*iter);
-    }
-  }
+  MEPrivateExtensionList(const asn1::ASTag& outer_tag,
+                         const asn1::ASTagging::Environment_e tag_env,
+                         asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+  : asn1::ber::EncoderOfSequenceOf_T<PrivateExtension, MEPrivateExtension, 2>(outer_tag, tag_env, use_rule)
+  {}
+
+  void setValue(const PrivateExtensionList& private_ext_list);
+
 private:
   static const unsigned maxNumOfPrivateExtensions= 10;
-  unsigned _idx;
 };
 
 }}}}

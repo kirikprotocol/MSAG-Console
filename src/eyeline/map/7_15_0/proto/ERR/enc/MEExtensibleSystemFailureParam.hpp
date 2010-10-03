@@ -33,16 +33,12 @@ ExtensibleSystemFailureParam ::= SEQUENCE {
 class MEExtensibleSystemFailureParam : public asn1::ber::EncoderOfSequence_T<5> {
 public:
   explicit MEExtensibleSystemFailureParam(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<5>(use_rule),
-    _networkResource(NULL), _extensionContainer(NULL), _encoderOfUExt(NULL),
-    _additionalNetworkResource(NULL), _failureCauseParam(NULL)
+  : asn1::ber::EncoderOfSequence_T<5>(use_rule)
   {}
 
   explicit MEExtensibleSystemFailureParam(const ExtensibleSystemFailureParam& value,
                                           asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<5>(use_rule),
-    _networkResource(NULL), _extensionContainer(NULL), _encoderOfUExt(NULL),
-    _additionalNetworkResource(NULL), _failureCauseParam(NULL)
+  : asn1::ber::EncoderOfSequence_T<5>(use_rule)
   {
     setValue(value);
   }
@@ -50,89 +46,21 @@ public:
   MEExtensibleSystemFailureParam(const asn1::ASTag& outer_tag,
                                  const asn1::ASTagging::Environment_e tag_env,
                                  asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<5>(outer_tag, tag_env, use_rule),
-    _networkResource(NULL), _extensionContainer(NULL), _encoderOfUExt(NULL),
-    _additionalNetworkResource(NULL), _failureCauseParam(NULL)
+  : asn1::ber::EncoderOfSequence_T<5>(outer_tag, tag_env, use_rule)
   {}
 
-  ~MEExtensibleSystemFailureParam() {
-    if (_networkResource)
-      _networkResource->~MENetworkResource();
-    if (_extensionContainer)
-      _extensionContainer->~MEExtensionContainer();
-    if (_encoderOfUExt)
-      _encoderOfUExt->~EncoderOfUExtension_T();
-    if (_additionalNetworkResource)
-      _additionalNetworkResource->~MEAdditionalNetworkResource();
-    if (_failureCauseParam)
-      _failureCauseParam->~MEFailureCauseParam();
-  }
-
-  void setValue(const ExtensibleSystemFailureParam& value) {
-    uint16_t idx=0;
-    const common::NetworkResource* networkResource= value.getNetworkResource();
-    if (networkResource) {
-      _networkResource= new (_memAlloc_NetworkResource.buf) common::enc::MENetworkResource(getTSRule());
-      _networkResource->setValue(networkResource->_value);
-      setField(idx++, *_networkResource);
-    }
-    const ext::ExtensionContainer* extContainer= value.getExtensionContainer();
-    if (extContainer) {
-      _extensionContainer= new (_memAlloc_ExtensionContainer.buf) ext::enc::MEExtensionContainer(*extContainer, getTSRule());
-      setField(idx++, *_extensionContainer);
-    }
-    if ( !value._unkExt._tsList.empty() ) {
-      asn1::ber::EncoderOfUExtension_T<1>* encoderOfUExt= new (_memAlloc_EncoderOfUExtension.buf) asn1::ber::EncoderOfUExtension_T<1>();
-      encoderOfUExt->setValue(value._unkExt, *this, idx);
-    }
-    const common::AdditionalNetworkResource* additionalNetworkResource= value.getAdditionalNetworkResource();
-    if (additionalNetworkResource) {
-      _additionalNetworkResource= new (_memAlloc_NetworkResource.buf) common::enc::MEAdditionalNetworkResource(_tag_additionalNetworkResource, getTSRule());
-      _additionalNetworkResource->setValue(additionalNetworkResource->_value);
-      setField(idx++, *_additionalNetworkResource);
-    }
-    const FailureCauseParam* failureCause= value.getFailureCauseParam();
-    if (failureCause) {
-      _failureCauseParam= new (_memAlloc_FailureCauseParam.buf) MEFailureCauseParam(_tag_failureCauseParam, getTSRule());
-      _failureCauseParam->setValue(failureCause->value);
-      setField(idx++, *_failureCauseParam);
-    }
-  }
+  void setValue(const ExtensibleSystemFailureParam& value);
 
 private:
-  union {
-    void* aligner;
-    uint8_t buf[sizeof(common::enc::MENetworkResource)];
-  } _memAlloc_NetworkResource;
+  static const asn1::ASTag _tag_additionalNetworkResource;
+  static const asn1::ASTag _tag_failureCauseParam;
 
-  union {
-    void* aligenr;
-    uint8_t buf[sizeof(ext::enc::MEExtensionContainer)];
-  } _memAlloc_ExtensionContainer;
-
-  union {
-    void* aligner;
-    uint8_t buf[sizeof(common::enc::MEAdditionalNetworkResource)];
-  } _memAlloc_AdditionalNetworkResource;
-
-  union {
-    void* aligner;
-    uint8_t buf[sizeof(asn1::ber::EncoderOfUExtension_T<1>)];
-  } _memAlloc_EncoderOfUExtension;
-
-  union {
-    void* aligner;
-    uint8_t buf[sizeof(MEFailureCauseParam)];
-  } _memAlloc_FailureCauseParam;
-
-  static const asn1::ASTagging _tag_additionalNetworkResource;
-  static const asn1::ASTagging _tag_failureCauseParam;
-
-  common::enc::MENetworkResource* _networkResource;
-  ext::enc::MEExtensionContainer* _extensionContainer;
-  asn1::ber::EncoderOfUExtension_T<1>* _encoderOfUExt;
-  common::enc::MEAdditionalNetworkResource* _additionalNetworkResource;
-  MEFailureCauseParam* _failureCauseParam;
+  asn1::ber::EncoderProducer_T<common::enc::MENetworkResource> _eNetworkResource;
+  asn1::ber::EncoderProducer_T<ext::enc::MEExtensionContainer> _eExtensionContainer;
+  typedef asn1::ber::EncoderOfUExtension_T<1> MEArgUExt;
+  util::OptionalObj_T<MEArgUExt> _eUnkExt;
+  asn1::ber::EncoderProducer_T<common::enc::MEAdditionalNetworkResource> _eAdditionalNetworkResource;
+  asn1::ber::EncoderProducer_T<MEFailureCauseParam> _eFailureCauseParam;
 };
 
 }}}}
