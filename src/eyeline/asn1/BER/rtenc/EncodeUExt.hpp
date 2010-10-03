@@ -8,6 +8,8 @@
 
 #include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeASType.hpp"
+#include "eyeline/asn1/BER/rtenc/EncodeStruct.hpp"
+#include "eyeline/asn1/UnknownExtensions.hpp"
 
 namespace eyeline {
 namespace asn1 {
