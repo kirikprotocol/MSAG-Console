@@ -1,5 +1,9 @@
-#include "MEExtensibleSystemFailureParam.hpp"
-#include "eyeline/asn1/ASNTags.hpp"
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
+#include "eyeline/map/7_15_0/proto/ERR/enc/MEExtensibleSystemFailureParam.hpp"
+
 
 namespace eyeline {
 namespace map {
@@ -12,33 +16,31 @@ const asn1::ASTag MEExtensibleSystemFailureParam::_tag_failureCauseParam= asn1::
 void
 MEExtensibleSystemFailureParam::setValue(const ExtensibleSystemFailureParam& value)
 {
+  //clear optionals first
+  clearFields();
+
   if (value.networkResource.get()) {
     _eNetworkResource.init(getTSRule()).setValue(*value.networkResource.get());
     setField(0, *_eNetworkResource.get());
-  } else
-    clearField(0);
+  }
 
   if (value.extensionContainer.get()) {
     _eExtensionContainer.init(getTSRule()).setValue(*value.extensionContainer.get());
     setField(1, *_eExtensionContainer.get());
-  } else
-    clearField(1);
+  }
 
   if (value.additionalNetworkResource.get()) {
     _eAdditionalNetworkResource.init(_tag_additionalNetworkResource, asn1::ASTagging::tagsIMPLICIT,
                                      getTSRule()).setValue(*value.additionalNetworkResource.get());
     setField(2, *_eAdditionalNetworkResource.get());
-  } else
-    clearField(2);
+  }
 
   if (value.failureCauseParam.get()) {
     _eFailureCauseParam.init(_tag_failureCauseParam, asn1::ASTagging::tagsIMPLICIT,
-                             getTSRule()).setValue(value.failureCauseParam.get()->value);
+                             getTSRule()).setValue(*value.failureCauseParam.get());
     setField(3, *_eFailureCauseParam.get());
-  } else
-    clearField(3);
+  }
 
-  clearFields(4);
   if ( !value._unkExt._tsList.empty() )
     _eUnkExt.init().setValue(value._unkExt, *this, 4);
 }

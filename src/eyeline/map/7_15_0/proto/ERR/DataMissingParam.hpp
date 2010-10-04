@@ -18,8 +18,8 @@ using eyeline::util::OptionalObj_T;
    ...
  } */
 struct DataMissingParam {
-  OptionalObj_T<ext::ExtensionContainer> extensionContainer;
-  asn1::UnknownExtensions           unkExt;
+  OptionalObj_T<ext::ExtensionContainer>  extensionContainer;
+  asn1::UnknownExtensions                 _unkExt;
 };
 
 }}}

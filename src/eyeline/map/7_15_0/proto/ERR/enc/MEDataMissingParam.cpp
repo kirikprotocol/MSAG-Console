@@ -1,4 +1,8 @@
-#include "MEDataMissingParam.hpp"
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
+#include "eyeline/map/7_15_0/proto/ERR/enc/MEDataMissingParam.hpp"
 
 namespace eyeline {
 namespace map {
@@ -6,17 +10,17 @@ namespace err {
 namespace enc {
 
 void
-MEDataMissingParam::setValue(const DataMissingParam& value) {
-  uint16_t idx=0;
+MEDataMissingParam::setValue(const DataMissingParam& value)
+{
+  //clear optionals first
+  clearFields();
+
   if (value.extensionContainer.get()) {
     _extensionContainer.init(getTSRule()).setValue(*value.extensionContainer.get());
-    setField(0, *_eMsIsdn.get());
-  } else
-    clearField(0);
-
-  clearFields(1);
-  if (!value.unkExt._tsList.empty())
-    _unkExt.init().setValue(value.unkExt, *this, 1);
+    setField(0, *_extensionContainer.get());
+  }
+  if (!value._unkExt._tsList.empty())
+    _unkExt.init().setValue(value._unkExt, *this, 1);
 }
 
 }}}}

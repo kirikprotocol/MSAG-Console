@@ -2,14 +2,10 @@
 # ident "@(#)$Id$"
 # define __EYELINE_MAP_7F0_PROTO_ERR_ENC_MEEXTENSIBLESYSTEMFAILUREPARAM_HPP__
 
-# include "util/Exception.hpp"
-
 # include "eyeline/asn1/BER/rtenc/EncodeUExt.hpp"
 # include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
-# include "eyeline/map/7_15_0/proto/common/AdditionalNetworkResource.hpp"
-# include "eyeline/map/7_15_0/proto/common/NetworkResource.hpp"
-# include "eyeline/map/7_15_0/proto/EXT/ExtensionContainer.hpp"
-# include "eyeline/map/7_15_0/proto/ERR/FailureCauseParam.hpp"
+
+# include "eyeline/map/7_15_0/proto/ERR/ExtensibleSystemFailureParam.hpp"
 
 # include "eyeline/map/7_15_0/proto/common/enc/MEAdditionalNetworkResource.hpp"
 # include "eyeline/map/7_15_0/proto/common/enc/MENetworkResource.hpp"
@@ -30,15 +26,15 @@ ExtensibleSystemFailureParam ::= SEQUENCE {
         failureCauseParam       [1] FailureCauseParam   OPTIONAL }
 */
 
-class MEExtensibleSystemFailureParam : public asn1::ber::EncoderOfSequence_T<5> {
+class MEExtensibleSystemFailureParam : public asn1::ber::EncoderOfPlainSequence_T<5> {
 public:
   explicit MEExtensibleSystemFailureParam(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<5>(use_rule)
+  : asn1::ber::EncoderOfPlainSequence_T<5>(use_rule)
   {}
 
   explicit MEExtensibleSystemFailureParam(const ExtensibleSystemFailureParam& value,
                                           asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<5>(use_rule)
+  : asn1::ber::EncoderOfPlainSequence_T<5>(use_rule)
   {
     setValue(value);
   }
@@ -46,10 +42,10 @@ public:
   MEExtensibleSystemFailureParam(const asn1::ASTag& outer_tag,
                                  const asn1::ASTagging::Environment_e tag_env,
                                  asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-  : asn1::ber::EncoderOfSequence_T<5>(outer_tag, tag_env, use_rule)
+  : asn1::ber::EncoderOfPlainSequence_T<5>(outer_tag, tag_env, use_rule)
   {}
 
-  void setValue(const ExtensibleSystemFailureParam& value);
+  void setValue(const ExtensibleSystemFailureParam& value) /*throw(std::exception)*/;
 
 private:
   static const asn1::ASTag _tag_additionalNetworkResource;

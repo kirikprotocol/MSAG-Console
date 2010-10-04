@@ -2,6 +2,8 @@
 # ident "@(#)$Id$"
 # define __EYELINE_MAP_7F0_PROTO_ERR_FAILURECAUSEPARAM_HPP__
 
+#include <inttypes.h>
+
 namespace eyeline {
 namespace map {
 namespace err {
@@ -21,9 +23,7 @@ struct FailureCauseParam {
 
   //return true if ok, else false
   bool validate(value_type val) const {
-    if (val == limitReachedOnNumberOfConcurrentLocationRequests)
-      return true;
-    return false;
+    return (val == limitReachedOnNumberOfConcurrentLocationRequests);
   }
   bool validate() const {
     return validate(value);

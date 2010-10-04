@@ -17,10 +17,7 @@ struct CallBarringCause {
 
   //return true if ok, else false
   bool validate(value_type val) const {
-    if (val == bcBarringServiceActive ||
-        val == bcOperatorBarring)
-      return true;
-    return false;
+    return ((val == bcBarringServiceActive) || (val == bcOperatorBarring));
   }
   bool validate() const {
     return validate(value);
