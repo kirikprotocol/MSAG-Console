@@ -284,6 +284,16 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>aliases</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.alias.AliasController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+  <managed-bean>
+    <managed-bean-name>aliasEdit</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.alias.AliasEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <navigation-rule>
     <navigation-case>
@@ -374,6 +384,16 @@
     <navigation-case>
       <from-outcome>LOGGING</from-outcome>
       <to-view-id>/smsc/smsc_service/logging.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>ALIASES</from-outcome>
+      <to-view-id>/smsc/alias/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>ALIAS_EDIT</from-outcome>
+      <to-view-id>/smsc/alias/edit.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

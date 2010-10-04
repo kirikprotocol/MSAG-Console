@@ -1,0 +1,95 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smsc.alias.title']}"/>
+
+  <ui:define name="content">
+
+    <h:form rendered="#{!aliases.initError}">
+
+    <eye:dataTableFilter bean="#{users}" clearAction="clearFilter">
+        <eye:pageSubtitle value="#{msg['smsc.alias.subtitle.aliases']}"/>
+        <tr:panelFormLayout inlineStyle="width:300px;">
+        <eye:dynamicTable value="#{aliases.aliasesFilter}">
+            <eye:textColumn name="alias"   allowEditAfterAdd="true"/>
+        </eye:dynamicTable>
+        </tr:panelFormLayout>
+
+        <eye:pageSubtitle value="#{msg['smsc.alias.subtitle.addresses']}"/>
+        <tr:panelFormLayout inlineStyle="width:300px;">
+        <eye:dynamicTable value="#{aliases.adressesFilter}" >
+            <eye:textColumn name="address"  allowEditAfterAdd="true"/>
+        </eye:dynamicTable>
+        </tr:panelFormLayout>
+
+        <eye:pageSubtitle value="#{msg['smsc.alias.subtitle.options']}"/>
+        <tr:panelFormLayout inlineStyle="width:300px;">
+        <tr:panelLabelAndMessage label="#{msg['smsc.alias.select.hide']}">
+            <h:selectOneMenu value="#{aliases.hideFilter}" style="width:100px;" >
+                <f:selectItems value="#{aliases.hideOptions}"/>
+            </h:selectOneMenu>
+        </tr:panelLabelAndMessage>
+        </tr:panelFormLayout>
+    </eye:dataTableFilter>
+
+    <eye:buttons>
+        <eye:button>
+          <h:commandLink value="#{msg['add.button']}" id="add1" action="ALIAS_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <h:commandLink value="#{msg['delete.button']}" id="delete1" actionListener="#{aliases.removeSelected}"
+                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+        </eye:button>
+        <eye:space/>
+    </eye:buttons>
+
+    <!--<eye:dataTable value="#{aliases.aliasesModel}" selectedRows="#{aliases.selectedRows}" var="a">-->
+
+        <!--<eye:row rowId="#{a.alias.simpleAddress}" opened="true">-->
+
+          <!--<eye:column name="alias" title="#{msg['smsc.alias.column.alias']}" width="33%" sortable="true" defaultSortOrder="asc">-->
+            <!--<h:commandLink  value="#{a.alias.simpleAddress}" action="#{aliases.edit}">-->
+              <!--<f:param name="aliasToEdit" value="#{a.alias.simpleAddress}"/>-->
+            <!--</tr:commandLink>-->
+          <!--</eye:column>-->
+          <!--<eye:column name="address" title="#{msg['smsc.alias.column.address']}" width="33%" sortable="true">-->
+            <!--<h:outputText value="#{a.address.simpleAddress}"/>-->
+          <!--</eye:column>-->
+          <!--<eye:column name="hidden" title="#{msg['smsc.alias.column.hidden']}" width="33%" sortable="true">-->
+            <!--<h:outputText value="#{msg['smsc.alias.options.hidden']}" rendered="#{a.hide}"/>-->
+            <!--<h:outputText value="#{msg['smsc.alias.options.nothidden']}" rendered="#{!a.hide}"/>-->
+          <!--</eye:column>-->
+        <!--</eye:row>-->
+
+      <!--</eye:dataTable>-->
+
+
+      <eye:buttons>
+                <eye:button>
+                  <h:commandLink value="#{msg['add.button']}" id="add2" action="ALIAS_EDIT"/>
+                </eye:button>
+                <eye:button>
+                  <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{aliases.removeSelected}"
+                                  onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+                </eye:button>
+                <eye:space/>
+      </eye:buttons>
+
+    </h:form>
+
+  </ui:define>
+
+
+</ui:composition>
+
+
+</html>

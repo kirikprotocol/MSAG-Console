@@ -240,4 +240,58 @@ public class SnmpObjectWrapper {
     return null;
   }
 
+  public SnmpCounterWrapper getCounterOther() {
+    SnmpCounter counter = obj.getCounterOther();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
   }
+
+  public SnmpCounterWrapper getCounter0014() {
+    SnmpCounter counter = obj.getCounter0014();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounter000d() {
+    SnmpCounter counter = obj.getCounter000d();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounterFailed() {
+    SnmpCounter counter = obj.getCounterFailed();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounterAccepted() {
+    SnmpCounter counter = obj.getCounterAccepted();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounterRejected() {
+    SnmpCounter counter = obj.getCounterRejected();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounterDelivered() {
+    SnmpCounter counter =  obj.getCounterDelivered();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounterSDP() {
+    SnmpCounter counter = obj.getCounterSDP();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounterRetried() {
+    SnmpCounter counter =  obj.getCounterRetried();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounterTempError() {
+    SnmpCounter counter = obj.getCounterTempError();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+
+  public SnmpCounterWrapper getCounter0058() {
+    SnmpCounter counter = obj.getCounter0058();
+    return counter==null ? null : new SnmpCounterWrapper(controller,counter);
+  }
+}

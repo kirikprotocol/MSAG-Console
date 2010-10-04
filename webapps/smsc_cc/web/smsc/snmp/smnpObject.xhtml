@@ -31,74 +31,74 @@
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counter000d']}"/>
                   <ui:param name="counterName" value="counter000d"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counter000d}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counter000d}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counter0014']}"/>
                   <ui:param name="counterName" value="counter0014"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counter0014}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counter0014}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counter0058']}"/>
                   <ui:param name="counterName" value="counter0058"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counter0058}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counter0058}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counterAccepted']}"/>
                   <ui:param name="counterName" value="counterAccepted"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counterAccepted}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counterAccepted}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counterDelivered']}"/>
                   <ui:param name="counterName" value="counterDelivered"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counterDelivered}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counterDelivered}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counterFailed']}"/>
                   <ui:param name="counterName" value="counterFailed"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counterFailed}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counterFailed}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counterOther']}"/>
                   <ui:param name="counterName" value="counterOther"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counterOther}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counterOther}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counterRejected']}"/>
                   <ui:param name="counterName" value="counterRejected"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counterRejected}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counterRejected}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counterRetried']}"/>
                   <ui:param name="counterName" value="counterRetried"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counterRetried}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counterRetried}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counterSDP']}"/>
                   <ui:param name="counterName" value="counterSDP"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counterSDP}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counterSDP}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <ui:include src="counterPanel.xhtml">
                   <ui:param name="counterLabel" value="#{msg['snmp.object.counterTempError']}"/>
                   <ui:param name="counterName" value="counterTempError"/>
-                  <ui:param name="snmpObjField" value="#{snmpObjItem.obj.counterTempError}"/>
+                  <ui:param name="snmpObjField" value="#{snmpObjItem.counterTempError}"/>
                   <ui:param name="snmpObjName"  value="#{snmpObjItem.name}"/>
               </ui:include>
               <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" rendered="#{not empty snmpObjItem.countersToAdd}" >
                   <h:selectOneMenu value="#{snmpObjItem.counterToAdd}" >
                       <f:selectItems id="ca#{num}" value="#{snmpObjItem.countersToAdd}"/>
                   </h:selectOneMenu>
-                  <tr:commandLink id="add2" action="#{snmpObjItem.addCounter}" >
+                  <tr:commandLink id="addCounter#{num}" action="#{snmpObjItem.addCounter}" >
                       <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
                       <f:param name="toObj" value="#{snmpObjItem.name}"/>
                       <f:param name="fieldId" value="ca#{num}"/>
@@ -138,7 +138,7 @@
                   <h:selectOneMenu value="#{snmpObjItem.severityToAdd}" >
                       <f:selectItems id="sa#{num}" value="#{snmpObjItem.severitiesToAdd}"/>
                   </h:selectOneMenu>
-                  <tr:commandLink id="add2" action="#{snmpObjItem.addSeverity}" >
+                  <tr:commandLink id="addSeverity#{num}" action="#{snmpObjItem.addSeverity}" >
                       <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
                       <f:param name="toObj" value="#{snmpObjItem.name}"/>
                       <f:param name="fieldId" value="sa#{num}"/>

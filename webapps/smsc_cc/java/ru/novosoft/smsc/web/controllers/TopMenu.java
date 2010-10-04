@@ -34,6 +34,7 @@ public class TopMenu {
           add(new MenuItem("smsc.statistic.archiveDaemon", "/smsc/archive_daemon/index.faces"))
       );
       add(new MenuBarItem("smsc.routes", 154).
+          add(new MenuItem("smsc.routes.alias", "/smsc/alias/index.faces")).    
           add(new MenuItem("smsc.routes.subjects", "/smsc/subjects/index.faces")).
           add(new MenuItem("smsc.routes.categories", "/smsc/category/index.faces")).
           add(new MenuItem("smsc.routes.acls", "/smsc/acl/index.faces"))

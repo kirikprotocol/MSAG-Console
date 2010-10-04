@@ -36,30 +36,32 @@
 
   <c:set var="n" value="0"/>
 
-  <ui:include src="smnpObject.xhtml">
-     <ui:param name="snmpObjLabel" value="#{msg['snmp.default.object']}"/>
-     <ui:param name="snmpObjItem" value="#{snmp.defaultObject}"/>
-     <ui:param name="num"         value="#{n}"/>
-  </ui:include>
+  <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >
+
+  <h:commandLink value="#{msg['snmp.default.object']}" action="#{snmp.editObject}">
+    <f:param name="objName" value="#{snmp.defaultObject}"/>
+  </h:commandLink>
+  <h:outputText/>
 
 
-  <c:forEach var="item" items="#{snmp.snmpObjects}">
-      <c:set var="n" value="#{n+1}" />
-      <ui:include src="smnpObject.xhtml">
-          <ui:param name="snmpObjLabel" value="#{item.name}"/>
-          <ui:param name="snmpObjItem" value="#{item}"/>                              
-          <ui:param name="num"         value="#{n}"/>
-      </ui:include>
-
+      
+  <c:forEach var="item" items="#{snmp.snmpObjectNames}">
+      <h:commandLink value="#{item}" action="#{snmp.editObject}">
+        <f:param name="objName" value="#{item}"/>
+      </h:commandLink>
+      <tr:commandLink action="#{snmp.removeObject}" rendered="true">
+        <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
+        <f:param name="objToRemove" value="#{item}"/>
+      </tr:commandLink>
   </c:forEach>
-
+  </h:panelGrid>
     <!--<eye:dynamicTable value="snmp.snmpobjects">        -->
     <!--</eye:dynamicTable>-->
         
   <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >    
         <tr:inputText value="#{snmp.newObjectName}"  required="false" simple="true" contentStyle="width:150px;" >            
         </tr:inputText>
-        <tr:commandLink id="add2" action="#{snmp.addObject}" >
+        <tr:commandLink id="addSnmpObj" action="#{snmp.addObject}" >
             <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
         </tr:commandLink>
   </h:panelGrid>      

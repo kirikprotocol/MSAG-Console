@@ -1,0 +1,84 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+
+<ui:composition template="/templates/main.xhtml">
+
+  <c:choose>
+      <c:when test="#{aliasEdit.oldAliasSimpleAddr!=null}">
+            <ui:param name="pageTitle" value="#{msg['smsc.alias.edit.title']}"/>
+      </c:when>
+      <c:otherwise>
+            <ui:param name="pageTitle" value="#{msg['smsc.alias.add.title']}"/>
+      </c:otherwise>
+  </c:choose>
+
+
+  <ui:define name="content">
+
+    <h:form rendered="#{!aliases.initError}">
+    <h:inputHidden value="#{aliasEdit.oldAliasSimpleAddr}"/>
+
+        <eye:buttons>
+            <eye:button>
+              <tr:commandLink text="#{msg['submit.button']}" id="add1" action="#{aliasEdit.submit}"/>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}" id="delete1" action="#{aliasEdit.remove}"
+                   rendered="#{aliasEdit.oldAliasSimpleAddr!=null}"
+                   onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+            </eye:button>
+            <eye:space/>
+            <eye:button>
+              <tr:commandLink text="#{msg['reset.button']}" id="cancel1" action="ALIASES"/>
+            </eye:button>
+        </eye:buttons>
+
+
+    <eye:pageSubtitle value="#{msg['alias.edit.subtitle']}"/>    
+    <tr:panelFormLayout inlineStyle="width:300px;">
+        <tr:panelLabelAndMessage label="#{msg['smsc.alias.column.alias']}">
+            <h:inputText  value="#{aliasEdit.simpleAlias}">
+                <tr:validateLength minimum="1"/>
+            </h:inputText>
+        </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{msg['smsc.alias.column.address']}">
+            <h:inputText  value="#{aliasEdit.simpleAddress}">
+                <tr:validateLength minimum="1"/>
+            </h:inputText>
+        </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{msg['smsc.alias.column.hidden']}">
+            <h:selectBooleanCheckbox value="#{aliasEdit.hide}"/>
+        </tr:panelLabelAndMessage>
+    </tr:panelFormLayout>
+
+    <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" id="add2" action="#{aliasEdit.submit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" id="delete2" action="#{aliasEdit.remove}"
+               rendered="#{aliasEdit.oldAliasSimpleAddr!=null}"
+               onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" id="cancel2" action="ALIASES"/>
+        </eye:button>
+    </eye:buttons>
+
+    </h:form>
+
+  </ui:define>
+
+
+</ui:composition>
+
+
+</html>

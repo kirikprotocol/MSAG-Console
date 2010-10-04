@@ -3,7 +3,6 @@ package ru.novosoft.smsc.web.controllers.snmp;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
-import ru.novosoft.smsc.admin.snmp.SnmpCounter;
 import ru.novosoft.smsc.admin.snmp.SnmpObject;
 import ru.novosoft.smsc.admin.snmp.SnmpSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpSeverity;
@@ -11,7 +10,6 @@ import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.controllers.SettingsController;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import java.util.*;
 
@@ -26,16 +24,12 @@ public class SnmpController extends SettingsController<SnmpSettings> {
 
   SnmpSettings snmpSettings;
   private String newObjectName;
-  
+  private Object snmpObjectNames;
 
-  TreeMap<String,SnmpObjectWrapper> snmpWrappers = new TreeMap<String,SnmpObjectWrapper>();
 
   public SnmpController() {
     super(ConfigType.Snmp);
     snmpSettings= getSettings();
-    for(Map.Entry<String, SnmpObject> o : snmpSettings.getSnmpObjects().entrySet()) {
-      snmpWrappers.put(o.getKey(), new SnmpObjectWrapper(this, o.getKey(), o.getValue()));
-    }
     checkOutOfDate();
   }
 
@@ -129,12 +123,9 @@ public class SnmpController extends SettingsController<SnmpSettings> {
   public String addObject() throws AdminException {
     if(newObjectName!=null && newObjectName.trim().length()>0) {
       Map<String, SnmpObject> snmpObjects = snmpSettings.getSnmpObjects();
-
       if(!snmpObjects.containsKey(newObjectName)) {
         SnmpObject o = new SnmpObject();
         snmpObjects.put(newObjectName,new SnmpObject());
-        snmpWrappers.put(newObjectName,new SnmpObjectWrapper(this,newObjectName,o));
-        snmpSettings.setSnmpObjects(snmpObjects);
         setSettings(snmpSettings);
       }
       else {
@@ -145,14 +136,13 @@ public class SnmpController extends SettingsController<SnmpSettings> {
   }
 
 
-  public Collection<SnmpObjectWrapper> getSnmpObjects() {
-    return snmpWrappers.values();
+  public Set<Map.Entry<String,SnmpObject>> getSnmpObjects() {
+    return snmpSettings.getSnmpObjects().entrySet();
   }
 
   public String removeObject() throws AdminException {
     String objToRemove = getRequestParameter("objToRemove");
     snmpSettings.getSnmpObjects().remove(objToRemove);
-    snmpWrappers.remove(objToRemove);
     setSettings(snmpSettings);
     return null;
   }
@@ -177,5 +167,13 @@ public class SnmpController extends SettingsController<SnmpSettings> {
 
   void setSettings() {
     setSettings(snmpSettings);
+  }
+
+  public Object editObject() {
+    return null;
+  }
+
+  public List<String> getSnmpObjectNames() {
+    return new ArrayList<String>(snmpSettings.getSnmpObjects().keySet());
   }
 }
