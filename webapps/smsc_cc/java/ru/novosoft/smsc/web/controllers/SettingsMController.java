@@ -28,8 +28,8 @@ public class SettingsMController<T> extends SmscController {
 
   protected SettingsMController(SettingsManager<T> mngr) {
     this.mngr = mngr;
-    this.settingsAttr = getClass().getCanonicalName() + "_settings";
-    this.revisionAttr = getClass().getCanonicalName() + "_viewStartTime";
+    this.settingsAttr = mngr.getClass().getCanonicalName() + "_settings";
+    this.revisionAttr = mngr.getClass().getCanonicalName() + "_viewStartTime";
   }
 
   protected void init() throws AdminException {
