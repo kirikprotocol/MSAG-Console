@@ -38,12 +38,10 @@ public class Route {
     private String name;
     private Map sources;
     private Map destinations;
-    private boolean archived;
     private boolean enabled = true;
     private boolean transit = true;
     private boolean saa = false;
     private boolean hideSaaText = false;
-    private boolean active = true;
     private String slicing;
     private String slicedRespPolicy;
     private String srcSmeId;
@@ -51,8 +49,8 @@ public class Route {
     private String notes;
 
 
-    public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
-                 final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
+    public Route(final String routeName, final Map sources, final Map destinations,
+                 final boolean enabled, final String slicing, final String slicedRespPolicy,
                  final String srcSmeId, final Service service, final String notes) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
@@ -65,10 +63,8 @@ public class Route {
 
         this.name = routeName;
         this.sources = sources;
-        this.destinations = destinations;
-        this.archived = archived;
+        this.destinations = destinations;        
         this.enabled = enabled;
-        this.active = active;
         this.slicing = slicing;
         this.slicedRespPolicy = slicedRespPolicy;
         this.srcSmeId = srcSmeId;
@@ -76,8 +72,8 @@ public class Route {
         this.notes = notes;
     }
 
-    public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
-                 final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
+    public Route(final String routeName, final Map sources, final Map destinations,
+                 final boolean enabled, final String slicing, final String slicedRespPolicy,
                  final String srcSmeId, final Service service, final String notes, final boolean transit) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
@@ -91,10 +87,8 @@ public class Route {
         this.name = routeName;
         this.sources = sources;
         this.destinations = destinations;
-        this.archived = archived;
         this.enabled = enabled;
         this.transit = transit;
-        this.active = active;
         this.slicing = slicing;
         this.slicedRespPolicy = slicedRespPolicy;
         this.srcSmeId = srcSmeId;
@@ -103,8 +97,8 @@ public class Route {
 
     }
 
-    public Route( final String routeName, final Map sources, final Map destinations, final boolean archived,
-                 final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
+    public Route( final String routeName, final Map sources, final Map destinations,
+                 final boolean enabled, final String slicing, final String slicedRespPolicy,
                  final String srcSmeId, final Service service, final String notes, final boolean transit,
                  boolean saa, boolean hideSaaText) {
         if (routeName == null)
@@ -119,12 +113,10 @@ public class Route {
         this.name = routeName;
         this.sources = sources;
         this.destinations = destinations;
-        this.archived = archived;
         this.enabled = enabled;
         this.transit = transit;
         this.saa = saa;
         this.hideSaaText = hideSaaText;
-        this.active = active;
         this.slicing = slicing;
         this.slicedRespPolicy = slicedRespPolicy;
         this.srcSmeId = srcSmeId;
@@ -142,10 +134,8 @@ public class Route {
         this.name = routeName;
         this.sources = new HashMap();
         this.destinations = new HashMap();
-        this.archived = false;
         this.enabled = false;
         this.transit = false;
-        this.active = false;
         this.slicing = "NONE";
         this.slicedRespPolicy = "ALL";
         this.srcSmeId = "";
@@ -165,7 +155,6 @@ public class Route {
         }
         sources = loadSources(routeElem, subjects);
         destinations = loadDestinations(routeElem, subjects, smppManager);
-        archived = routeElem.getAttribute("archived").equalsIgnoreCase("true");
         enabled = routeElem.getAttribute("enabled").equalsIgnoreCase("true");
 
         String trStr = routeElem.getAttribute("transit");
@@ -183,7 +172,6 @@ public class Route {
         
         hideSaaText = routeElem.getAttribute("hideSaaText").equalsIgnoreCase("true");
 
-        active = routeElem.getAttribute("active").equalsIgnoreCase("true");
         slicing = routeElem.getAttribute("slicing");
         slicedRespPolicy = routeElem.getAttribute("slicedRespPolicy");
         srcSmeId = routeElem.getAttribute("srcSmeId");
@@ -269,9 +257,7 @@ public class Route {
         String name = StringEncoderDecoder.encode(getName());
         try {
             out.println("  <route id=\"" + name
-//                    + "\" archived=\"" + isArchived()
                     + "\" enabled=\"" + isEnabled()
-//                    + "\" active=\"" + isActive()
                     + "\" transit=\"" + isTransit()
                     + "\" saa=\"" + isSaa()
                     + "\" hideSaaText=\"" + isHideSaaText()
@@ -346,14 +332,6 @@ public class Route {
         return destinations;
     }
 
-    public boolean isArchived() {
-        return archived;
-    }
-
-    public void setArchived(final boolean archived) {
-        this.archived = archived;
-    }
-
     public boolean isEnabled() {
         return enabled;
     }
@@ -384,14 +362,6 @@ public class Route {
 
     public void setHideSaaText(boolean hideSaaText) {
         this.hideSaaText = hideSaaText;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(final boolean active) {
-        this.active = active;
     }
 
     public String getSlicing() {

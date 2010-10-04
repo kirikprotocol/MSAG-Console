@@ -39,8 +39,6 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private String[] dstMasks = new String[0];
     private String[] dstSubjs = new String[0];
     private boolean enabled;
-    private boolean archived;
-    private boolean active;
     private boolean transit;
     private boolean saa;
     private boolean hideSaaText;
@@ -296,8 +294,6 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             dstSubjs = (String[]) subjList.toArray(new String[0]);
 
             enabled = route.isEnabled();
-            archived = route.isArchived();
-            active = route.isActive();
             transit = route.isTransit();
             saa = route.isSaa();
             hideSaaText = route.isHideSaaText();
@@ -314,7 +310,6 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         logger.debug("routing/routes/Edit.load() hideSaaText='"+ hideSaaText + "' end");
         if (isAdd()) {
             enabled = true;
-            active = true;
             saa = true;
             hideSaaText = false;
         }
@@ -350,9 +345,9 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 if( routes.containsKey(id) ){
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 }
-//                routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
+//                routes.put( id, new Route(id, sources, destinations, isEnabled(),
 //                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
-                routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
+                routes.put( id, new Route(id, sources, destinations, isEnabled(),
                                          getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit, saa, hideSaaText ) );
                 messagetxt = "Added new route: " + id + " ";
             } else {
@@ -360,9 +355,9 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 }
                 routes.remove(getEditId());
-//                routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
+//                routes.put( id, new Route(id, sources, destinations, enabled,
 //                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
-                routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
+                routes.put( id, new Route(id, sources, destinations, enabled,
                                          getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit, saa, hideSaaText ) );
                 messagetxt = "Changed route: " + id + " ";
             }
@@ -471,14 +466,6 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         this.enabled = enabled;
     }
 
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(final boolean active) {
-        this.active = active;
-    }
-
     public String getSrcSmeId() {
         return srcSmeId;
     }
@@ -493,15 +480,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public void setNotes(final String notes) {
         this.notes = notes;
-    }
-
-    public boolean isArchived() {
-        return archived;
-    }
-
-    public void setArchived(boolean archived) {
-        this.archived = archived;
-    }
+    }    
 
     public String[] getSlicingTypes() {
         return slicingTypes;
