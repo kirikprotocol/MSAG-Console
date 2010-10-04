@@ -10,7 +10,7 @@ import java.util.Set;
  */
 class TestConfigHelper {
 
-  protected Set<String> obj = new HashSet<String>();
+  protected Set<String> objects = new HashSet<String>();
 
 //  protected TestConfigHelper(Collection<String> obj) {
 //    for(String s : obj) {
@@ -18,17 +18,17 @@ class TestConfigHelper {
 //    }
 //  }
 
-  synchronized void add(String obj) throws AdminException {
-    if(obj.contains(obj)) {
+  synchronized void add(String o) throws AdminException {
+    if(objects.contains(o)) {
       throw new InfosmeException("interaction_error","");
     }
-    this.obj.add(obj);
+    this.objects.add(o);
   }
 
-  synchronized void remove(String obj) throws AdminException {
-    this.obj.remove(obj);
+  synchronized void remove(String o) throws AdminException {
+    this.objects.remove(o);
   }
 
-  synchronized void update(String obj) throws AdminException {
+  synchronized void update(String o) throws AdminException {
   }
 }

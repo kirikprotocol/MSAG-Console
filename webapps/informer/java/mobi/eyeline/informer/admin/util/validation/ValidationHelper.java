@@ -126,6 +126,23 @@ public class ValidationHelper {
     }
   }
 
+  public void checkСontains(String argName, Collection collection, Object value) throws AdminException {
+    if(!collection.contains(value)){
+      throw new ValidationException(paramNameBundle, argName);
+    }
+  }
+  public void checkСontainsKey(String argName, Map map, Object value) throws AdminException {
+    if(!map.containsKey(value)){
+      throw new ValidationException(paramNameBundle, argName);
+    }
+  }
+
+  public void checkNotСontainsKey(String argName, Map map, Object value) throws AdminException {
+    if(map.containsKey(value)){
+      throw new ValidationException(paramNameBundle, argName);
+    }
+  }
+
   public void checkSize(String argName, Object[] value, int size) throws AdminException {
     if (value.length != size)
       throw new ValidationException(paramNameBundle, argName);

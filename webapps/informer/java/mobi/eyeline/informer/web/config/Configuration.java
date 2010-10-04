@@ -5,10 +5,12 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.UsersSettings;
 
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -103,6 +105,34 @@ public class Configuration {
 
   public boolean blacklistContains(String msisdn) throws AdminException {
     return context.blacklistContains(msisdn);
+  }
+
+  public String getDefaultSmsc() {
+    return context.getDefaultSmsc();
+  }
+
+  public void setDefaultSmsc(String smsc) throws AdminException {
+    context.setDefaultSmsc(smsc);        //todo journal
+  }
+
+  public void removeSmsc(String smscName) throws AdminException {
+    context.removeSmsc(smscName);        //todo journal
+  }
+
+  public Smsc getSmsc(String name) {
+    return context.getSmsc(name);
+  }
+
+  public List<Smsc> getSmscs() {
+    return context.getSmscs();
+  }
+
+  public void updateSmsc(Smsc smsc) throws AdminException {
+    context.updateSmsc(smsc);            //todo journal
+  }
+
+  public void addSmsc(Smsc smsc) throws AdminException {
+    context.addSmsc(smsc);               //todo journal
   }
 
   private final Lock lock = new ReentrantLock();

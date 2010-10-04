@@ -10,11 +10,14 @@ import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.smsc.Smsc;
+import mobi.eyeline.informer.admin.smsc.SmscManager;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.admin.users.UsersSettings;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -43,6 +46,8 @@ public class AdminContext {
   protected BlacklistManager blacklistManager;
 
   protected PersonalizationClientPool personalizationClientPool;
+
+  protected SmscManager smscManager;
 
   protected AdminContext() {
   }
@@ -81,6 +86,9 @@ public class AdminContext {
       personalizationClientPool = new PersonalizationClientPool(pers);
 
       blacklistManager = new BlackListManagerImpl(personalizationClientPool);
+
+      smscManager = new SmscManager(infosme, new File(appBaseDir,"conf"+File.separatorChar+"smsc.xml"),
+          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
     }catch (AdminException e) {
       throw new InitException(e);
     }catch (PersonalizationClientException e) {
@@ -149,4 +157,31 @@ public class AdminContext {
     return blacklistManager.contains(msisdn);
   }
 
+  public void addSmsc(Smsc smsc) throws AdminException {
+    smscManager.addSmsc(smsc);
+  }
+
+  public void updateSmsc(Smsc smsc) throws AdminException {
+    smscManager.updateSmsc(smsc);
+  }
+
+  public List<Smsc> getSmscs() {
+    return smscManager.getSmscs();
+  }
+
+  public Smsc getSmsc(String name) {
+    return smscManager.getSmsc(name);
+  }
+
+  public void removeSmsc(String smscName) throws AdminException {
+    smscManager.removeSmsc(smscName);
+  }
+
+  public void setDefaultSmsc(String smsc) throws AdminException {
+    smscManager.setDefaultSmsc(smsc);
+  }
+
+  public String getDefaultSmsc() {
+    return smscManager.getDefaultSmsc();
+  }
 }

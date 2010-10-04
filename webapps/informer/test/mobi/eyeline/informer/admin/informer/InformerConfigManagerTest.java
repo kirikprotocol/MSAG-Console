@@ -55,6 +55,5 @@ public class InformerConfigManagerTest {
     if(backupDir != null) {
       TestUtils.recursiveDeleteFolder(backupDir);
     }
-
   }  
 }

@@ -1,0 +1,21 @@
+<config>
+
+  <section name="SMSCConnectors">
+
+    <param name="default" type="string">SMSC0</param>
+
+    <section name="SMSC0">
+      <param name="host" type="string">niagara</param>
+      <param name="interfaceVersion" type="int">89</param>
+      <param name="password" type="string">infosme</param>
+      <param name="port" type="int">25004</param>
+      <param name="sid" type="string">infosme</param>
+      <param name="systemType" type="string">sysType</param>
+      <param name="ussdPushTag" type="int">131</param>
+      <param name="ussdPushVlrTag" type="int">153</param>
+    </section>
+    
+  </section>
+
+
+</config>
