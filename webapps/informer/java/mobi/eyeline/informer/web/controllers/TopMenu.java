@@ -20,32 +20,32 @@ public class TopMenu {
   private final Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3) {
     {
       add(new MenuBarItem("informer.admin", "informer.admin.width").
-          add(new MenuItem("informer.admin.status", "/status.faces")).
-          add(new MenuItem("informer.admin.config", "/config/index.faces")).
+//          add(new MenuItem("informer.admin.status", "/status.faces")).
+//          add(new MenuItem("informer.admin.config", "/config/index.faces")).
           add(new MenuItem("informer.admin.users", "/users/index.faces")).
-          add(new MenuItem("informer.admin.regions", "/regions/index.faces")).
-          add(new MenuItem("informer.admin.smsc", "/smsc/index.faces")).
+//          add(new MenuItem("informer.admin.regions", "/regions/index.faces")).
+//          add(new MenuItem("informer.admin.smsc", "/smsc/index.faces")).
           add(new MenuItem("informer.admin.blacklist", "/blacklist/index.faces")).
-          add(new MenuItem("informer.admin.reschedules", "/reschedule/index.faces")).
-          add(new MenuItem("informer.admin.prohibitions", "/prohibitions/index.faces")).
-          add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
-          add(new MenuItem("informer.admin.import", "/import/index.faces")).
-          add(new MenuItem("informer.admin.archieve", "/archieve/index.faces")).
-          add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
+//          add(new MenuItem("informer.admin.reschedules", "/reschedule/index.faces")).
+//          add(new MenuItem("informer.admin.prohibitions", "/prohibitions/index.faces")).
+//          add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
+//          add(new MenuItem("informer.admin.import", "/import/index.faces")).
+//          add(new MenuItem("informer.admin.archieve", "/archieve/index.faces")).
+//          add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
           add(new MenuItem("informer.admin.journal", "/journal/index.faces"))
       );
-      add(new MenuBarItem("informer.deliveries", "informer.deliveries.width").
-          add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
-          add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
-          add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
-      );
-      add(new MenuBarItem("informer.stats", "informer.stats.width").
-          add(new MenuItem("informer.stats.common", "/stats/common.faces")).
-          add(new MenuItem("informer.stats.messages", "/stats/messages.faces")).
-          add(new MenuItem("informer.stats.deliveries", "/stats/deliveries.faces")).
-          add(new MenuItem("informer.stats.messages.recipients", "/stats/messagesByRecs.faces")).
-          add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDels.faces"))
-      );
+//      add(new MenuBarItem("informer.deliveries", "informer.deliveries.width").
+//          add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
+//          add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
+//          add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
+//      );
+//      add(new MenuBarItem("informer.stats", "informer.stats.width").
+//          add(new MenuItem("informer.stats.common", "/stats/common.faces")).
+//          add(new MenuItem("informer.stats.messages", "/stats/messages.faces")).
+//          add(new MenuItem("informer.stats.deliveries", "/stats/deliveries.faces")).
+//          add(new MenuItem("informer.stats.messages.recipients", "/stats/messagesByRecs.faces")).
+//          add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDels.faces"))
+//      );
     }
   };
 

@@ -15,6 +15,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * Контроллер для загрузки запрещённых номеров
  * @author Aleksandr Khalitov
  */
 public class BlacklistUploadController extends InformerController{

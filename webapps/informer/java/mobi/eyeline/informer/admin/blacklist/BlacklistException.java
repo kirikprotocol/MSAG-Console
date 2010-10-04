@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.blacklist;
 import mobi.eyeline.informer.admin.AdminException;
 
 /**
+ * Ошибка управления запрещенными номера
  * @author Aleksandr Khalitov
  */
 class BlacklistException extends AdminException{
