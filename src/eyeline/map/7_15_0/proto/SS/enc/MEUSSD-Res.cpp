@@ -29,10 +29,12 @@ void MEUSSD_Res::setValue(const USSD_Res & use_val) /*throw(std::exception)*/
   _dcs.setValue(use_val.ussd_DataCodingScheme);
   _ussd.setValue(use_val.ussd_String);
 
+  //clear optionals first
+  asn1::ber::EncoderOfPlainSequence_T<3>::clearFields(2);
+
   if (!use_val._unkExt._tsList.empty()) {
     _eUnkExt.init().setValue(use_val._unkExt, *this, 2);
-  } else
-    asn1::ber::EncoderOfPlainSequence_T<3>::clearField(2);
+  }
 }
 
 }}}}
