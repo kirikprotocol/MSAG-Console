@@ -21,8 +21,8 @@ public class TopMenu {
     {
       add(new MenuBarItem("informer.admin", "informer.admin.width").
 //          add(new MenuItem("informer.admin.status", "/status.faces")).
-//          add(new MenuItem("informer.admin.config", "/config/index.faces")).
-          add(new MenuItem("informer.admin.users", "/users/index.faces")).
+          add(new MenuItem("informer.admin.config", "/config/index.faces")).
+//          add(new MenuItem("informer.admin.users", "/users/index.faces")).
 //          add(new MenuItem("informer.admin.regions", "/regions/index.faces")).
 //          add(new MenuItem("informer.admin.smsc", "/smsc/index.faces")).
           add(new MenuItem("informer.admin.blacklist", "/blacklist/index.faces")).
