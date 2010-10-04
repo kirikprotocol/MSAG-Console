@@ -16,7 +16,25 @@
 
     <h:form rendered="#{!aliases.initError}">
 
-    <eye:dataTableFilter bean="#{users}" clearAction="clearFilter">
+    <!--<eye:dataTableFilter bean="#{users}" clearAction="clearFilter">-->
+
+        <table class="page_menu" width="100%">
+            <tr>
+                <td align="left" width="10%">
+                    <h:outputText value="#{msg['filter.by']}"/>
+                </td>
+                <td align="left" width="80%">
+
+                </td>
+                <td width="10%" align="right">
+                    <h:commandLink id="data_table_filter" value="#{msg['apply.button']}"
+                                   onclick="new DataTableFilter('data_table_filter').clickApply()"/>
+                    <h:outputText value=" | "/>
+                    <tr:commandLink text="#{msg['clear.button']}" action="#{aliases.clearFilter}"/>
+                </td>
+            </tr>
+        </table>
+
         <eye:pageSubtitle value="#{msg['smsc.alias.subtitle.aliases']}"/>
         <tr:panelFormLayout inlineStyle="width:300px;">
         <eye:dynamicTable value="#{aliases.aliasesFilter}">
@@ -39,7 +57,7 @@
             </h:selectOneMenu>
         </tr:panelLabelAndMessage>
         </tr:panelFormLayout>
-    </eye:dataTableFilter>
+    <!--</eye:dataTableFilter>-->
 
     <eye:buttons>
         <eye:button>
@@ -52,25 +70,25 @@
         <eye:space/>
     </eye:buttons>
 
-    <!--<eye:dataTable value="#{aliases.aliasesModel}" selectedRows="#{aliases.selectedRows}" var="a">-->
+    <eye:dataTable value="#{aliases.aliasesModel}" selectedRows="#{aliases.selectedRows}" var="a">
 
-        <!--<eye:row rowId="#{a.alias.simpleAddress}" opened="true">-->
+        <eye:row rowId="#{a.alias.simpleAddress}" opened="true">
 
-          <!--<eye:column name="alias" title="#{msg['smsc.alias.column.alias']}" width="33%" sortable="true" defaultSortOrder="asc">-->
-            <!--<h:commandLink  value="#{a.alias.simpleAddress}" action="#{aliases.edit}">-->
-              <!--<f:param name="aliasToEdit" value="#{a.alias.simpleAddress}"/>-->
-            <!--</tr:commandLink>-->
-          <!--</eye:column>-->
-          <!--<eye:column name="address" title="#{msg['smsc.alias.column.address']}" width="33%" sortable="true">-->
-            <!--<h:outputText value="#{a.address.simpleAddress}"/>-->
-          <!--</eye:column>-->
-          <!--<eye:column name="hidden" title="#{msg['smsc.alias.column.hidden']}" width="33%" sortable="true">-->
-            <!--<h:outputText value="#{msg['smsc.alias.options.hidden']}" rendered="#{a.hide}"/>-->
-            <!--<h:outputText value="#{msg['smsc.alias.options.nothidden']}" rendered="#{!a.hide}"/>-->
-          <!--</eye:column>-->
-        <!--</eye:row>-->
+          <eye:column name="alias" title="#{msg['smsc.alias.column.alias']}" width="33%" sortable="true" defaultSortOrder="asc">
+            <h:commandLink  value="#{a.alias.simpleAddress}" action="#{aliases.edit}">
+              <f:param name="aliasToEdit" value="#{a.alias.simpleAddress}"/>
+            </h:commandLink>
+          </eye:column>
+          <eye:column name="address" title="#{msg['smsc.alias.column.address']}" width="33%" sortable="true">
+            <h:outputText value="#{a.address.simpleAddress}"/>
+          </eye:column>
+          <eye:column name="hidden" title="#{msg['smsc.alias.column.hidden']}" width="33%" sortable="true">
+            <h:outputText value="#{msg['smsc.alias.options.hidden']}" rendered="#{a.hide}"/>
+            <h:outputText value="#{msg['smsc.alias.options.nothidden']}" rendered="#{!a.hide}"/>
+          </eye:column>
+        </eye:row>
 
-      <!--</eye:dataTable>-->
+      </eye:dataTable>
 
 
       <eye:buttons>

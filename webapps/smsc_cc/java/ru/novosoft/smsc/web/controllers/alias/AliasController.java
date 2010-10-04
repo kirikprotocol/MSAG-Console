@@ -239,7 +239,5 @@ public class AliasController extends SmscController {
     return "ALIAS_EDIT";
   }
 
-  public String query() {
-    return null;
-  }
+
 }
