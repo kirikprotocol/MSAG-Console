@@ -2,16 +2,17 @@ package ru.novosoft.smsc.web.controllers.snmp;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.snmp.SnmpObject;
 import ru.novosoft.smsc.admin.snmp.SnmpSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpSeverity;
-import ru.novosoft.smsc.web.config.SmscStatusManager;
-import ru.novosoft.smsc.web.controllers.SettingsController;
+import ru.novosoft.smsc.web.WebContext;
+import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Copyright Eyeline.mobi
@@ -19,51 +20,37 @@ import java.util.*;
  * Date: 20.09.2010
  * Time: 13:50:14
  */
-public class SnmpController extends SettingsController<SnmpSettings> {
+public class SnmpController extends SettingsMController<SnmpSettings> {
   private static final Logger logger = Logger.getLogger(SnmpController.class);
 
   SnmpSettings snmpSettings;
   private String newObjectName;
   private Object snmpObjectNames;
+  boolean initError=false;
 
 
   public SnmpController() {
-    super(ConfigType.Snmp);
-    snmpSettings= getSettings();
-    checkOutOfDate();
-  }
-
-
-
-  @Override
-  protected SnmpSettings loadSettings() throws AdminException {
-    return getConfiguration().getSnmpSettings();
-  }
-
-  @Override
-  protected void saveSettings(SnmpSettings settings) throws AdminException {
-    getConfiguration().updateSnmpSettings(settings, getUserPrincipal().getName());
-  }
-
-  @Override
-  protected SnmpSettings cloneSettings(SnmpSettings settings) {
-    return settings.cloneSettings();
-  }
-
-  private void checkOutOfDate() {
+    super(WebContext.getInstance().getSnmpManager());
     try {
-      List<Integer> result = new ArrayList<Integer>();
-      SmscStatusManager ssm = getSmscStatusManager();
-      for (int i = 0; i < ssm.getSmscInstancesNumber(); i++) {
-        if (ssm.getSnmpConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
-          result.add(i);
-      }
-      if (!result.isEmpty())
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", result.toString());
+      init();
     } catch (AdminException e) {
-      logger.error(e, e);
       addError(e);
+      initError = true;
+      
     }
+
+  }
+
+  @Override
+  protected void init() throws AdminException {
+    super.init();    //To change body of overridden methods use File | Settings | File Templates.
+    snmpSettings=getSettings();
+  }
+
+
+  private void checkChanges() {
+    if (isSettingsChanged())
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
   }
 
   public String reset() {
@@ -79,12 +66,7 @@ public class SnmpController extends SettingsController<SnmpSettings> {
     try {
       //frSettings.setWhiteList(wl);
       setSettings(snmpSettings);
-      Revision rev = submitSettings();
-      if (rev != null) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
-        return null;
-      }
-
+      submitSettings();
     } catch (AdminException e) {
       logger.error(e, e);
       addError(e);
@@ -132,25 +114,23 @@ public class SnmpController extends SettingsController<SnmpSettings> {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "snmp.object.exists");
       }
     }
+    checkChanges();
     return null;
   }
 
-
-  public Set<Map.Entry<String,SnmpObject>> getSnmpObjects() {
-    return snmpSettings.getSnmpObjects().entrySet();
-  }
 
   public String removeObject() throws AdminException {
     String objToRemove = getRequestParameter("objToRemove");
     snmpSettings.getSnmpObjects().remove(objToRemove);
     setSettings(snmpSettings);
+    checkChanges();
     return null;
   }
 
 
 
-  public SnmpObjectWrapper getDefaultObject() {
-    return new SnmpObjectWrapper(this, "", snmpSettings.getDefaultSnmpObject());
+  public SnmpObject getDefaultObject() {
+    return snmpSettings.getDefaultSnmpObject();
   }
 
   public List<SelectItem> getSeverityOptions() {
@@ -160,20 +140,24 @@ public class SnmpController extends SettingsController<SnmpSettings> {
     }
     return ret;
   }
-
-
-
-
-
-  void setSettings() {
-    setSettings(snmpSettings);
-  }
-
+  
   public Object editObject() {
-    return null;
+    return "SNMP_EDIT";
   }
 
   public List<String> getSnmpObjectNames() {
     return new ArrayList<String>(snmpSettings.getSnmpObjects().keySet());
+  }
+
+  public void setSettings() {
+    setSettings(snmpSettings);
+  }
+
+  public boolean isInitError() {
+    return initError;
+  }
+
+  public void setInitError(boolean initError) {
+    this.initError = initError;
   }
 }

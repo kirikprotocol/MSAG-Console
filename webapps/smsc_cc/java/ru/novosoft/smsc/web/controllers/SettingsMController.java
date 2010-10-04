@@ -33,6 +33,10 @@ public class SettingsMController<T> extends SmscController {
   }
 
   protected void init() throws AdminException {
+    init(true);
+  }
+
+  protected void init(boolean checkChanges) throws AdminException {
     resetRevision();
     
     if (isSettingsChanged())

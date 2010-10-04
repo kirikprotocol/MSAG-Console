@@ -1,0 +1,179 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smsc.snmp.edit.title']}"/>
+
+  <ui:define name="content">
+
+    <h:form rendered="#{!snmp.initError and snmpObj.obj!=null}">       
+       <tr:inputHidden value="#{snmpObj.objName}"  id="objName"/>
+    <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{snmpObj.done}">
+              <f:param name="objName" value="#{snmpObj.objName}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="SNMP"/>
+        </eye:button>
+        <eye:space/>
+    </eye:buttons>
+
+    <eye:pageSubtitle value="#{snmpObj.objTitle}"/>    
+
+    <tr:panelFormLayout inlineStyle="margin-left:15px;">
+        <tr:panelLabelAndMessage label="#{msg['snmp.object.enabled']}" inlineStyle="text-align:left">
+          <h:selectBooleanCheckbox style="margin-left:15px" value="#{snmpObj.obj.enabled}" required="true"/>
+        </tr:panelLabelAndMessage>
+    </tr:panelFormLayout>
+        
+
+        
+            <eye:collapsingGroup label="#{msg['snmp.counters.label']}">
+                <tr:panelFormLayout inlineStyle="margin-left:15px;">
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counter000d']}"/>
+                        <ui:param name="counterName" value="counter000d"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counter000d}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counter0014']}"/>
+                        <ui:param name="counterName" value="counter0014"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counter0014}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counter0058']}"/>
+                        <ui:param name="counterName" value="counter0058"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counter0058}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counterAccepted']}"/>
+                        <ui:param name="counterName" value="counterAccepted"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counterAccepted}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counterDelivered']}"/>
+                        <ui:param name="counterName" value="counterDelivered"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counterDelivered}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counterFailed']}"/>
+                        <ui:param name="counterName" value="counterFailed"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counterFailed}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counterOther']}"/>
+                        <ui:param name="counterName" value="counterOther"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counterOther}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counterRejected']}"/>
+                        <ui:param name="counterName" value="counterRejected"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counterRejected}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counterRetried']}"/>
+                        <ui:param name="counterName" value="counterRetried"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counterRetried}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counterSDP']}"/>
+                        <ui:param name="counterName" value="counterSDP"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counterSDP}"/>
+
+                    </ui:include>
+                    <ui:include src="counterPanel.xhtml">
+                        <ui:param name="counterLabel" value="#{msg['snmp.object.counterTempError']}"/>
+                        <ui:param name="counterName" value="counterTempError"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.counterTempError}"/>
+
+                    </ui:include>
+                    <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" rendered="#{not empty snmpObj.countersToAdd}" >
+                        <h:selectOneMenu value="#{snmpObj.counterToAdd}" >
+                            <f:selectItems value="#{snmpObj.countersToAdd}"/>
+                        </h:selectOneMenu>
+                        <tr:commandLink action="#{snmpObj.addCounter}" >
+                            <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
+                            <f:param name="objName" value="#{snmpObj.objName}"/>                        
+                        </tr:commandLink>
+                    </h:panelGrid>
+                </tr:panelFormLayout>
+            </eye:collapsingGroup>
+
+
+            <eye:collapsingGroup label="#{msg['snmp.severities.label']}">
+                <tr:panelFormLayout inlineStyle="margin-left:15px;">
+                    <ui:include src="severityPanel.xhtml">
+                        <ui:param name="label" value="#{msg['snmp.object.severityRegister']}"/>
+                        <ui:param name="severityName" value="severityRegister"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.severityRegister}"/>
+
+                    </ui:include>
+                    <ui:include src="severityPanel.xhtml">
+                        <ui:param name="label" value="#{msg['snmp.object.severityRegisterFailed']}"/>
+                        <ui:param name="severityName" value="severityRegisterFailed"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.severityRegisterFailed}"/>
+
+                    </ui:include>
+                    <ui:include src="severityPanel.xhtml">
+                        <ui:param name="label" value="#{msg['snmp.object.severityUnregister']}"/>
+                        <ui:param name="severityName" value="severityUnregister"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.severityUnregister}"/>
+
+                    </ui:include>
+                    <ui:include src="severityPanel.xhtml">
+                        <ui:param name="label" value="#{msg['snmp.object.severityUnregisterFailed']}"/>
+                        <ui:param name="severityName" value="severityUnregister"/>
+                        <ui:param name="snmpObjField" value="#{snmpObj.obj.severityUnregisterFailed}"/>
+
+                    </ui:include>
+                    <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" rendered="#{not empty snmpObj.severitiesToAdd}" >
+                        <h:selectOneMenu value="#{snmpObj.severityToAdd}" >
+                            <f:selectItems  value="#{snmpObj.severitiesToAdd}"/>
+                        </h:selectOneMenu>
+                        <tr:commandLink  action="#{snmpObj.addSeverity}" >
+                            <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
+                            <f:param name="objName" value="#{snmpObj.objName}"/>
+                        </tr:commandLink>
+                    </h:panelGrid>
+
+                </tr:panelFormLayout>
+
+            </eye:collapsingGroup>
+        
+
+    <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{snmpObj.done}">
+              <f:param name="objName" value="#{snmpObj.objName}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="SNMP"/>
+        </eye:button>
+        <eye:space/>
+    </eye:buttons>
+
+
+    </h:form>
+  </ui:define>
+</ui:composition>
+</html>

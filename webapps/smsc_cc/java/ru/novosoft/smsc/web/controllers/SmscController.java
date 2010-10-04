@@ -47,10 +47,16 @@ public abstract class SmscController implements Serializable {
     return ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString(bundleKey);
   }
 
+  protected String getLocalizedString(String bundleKey, Object... args) {
+    return MessageFormat.format(
+            ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString(bundleKey),
+            args
+           );
+
+  }
+
   protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey, Object... args) {
-    String message = MessageFormat.format(
-            getLocalizedString(bundleKey),
-        args);
+    String message = getLocalizedString(bundleKey,args);
     addMessage(severity, message);
   }
 
