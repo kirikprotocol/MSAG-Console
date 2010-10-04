@@ -80,6 +80,12 @@ protected:
     if (fld_idx < _elmArray->size())
       _elmArray->at(fld_idx).clear();
   }
+  void clearElements(uint16_t start_idx = 0)
+  {
+    for (; start_idx < _elmArray->size(); ++start_idx)
+      _elmArray->at(start_idx).clear();
+  }
+
   ElementsArray * getElementsStorage(void) const { return _elmArray; }
 
   // -- -------------------------------------------------- --

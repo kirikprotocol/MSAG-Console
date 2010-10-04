@@ -56,6 +56,9 @@ public:
   }
   //
   void clearField(uint16_t fld_idx) { clearElement(fld_idx); }
+  //Clears fields starting from specified index up to last
+  void clearFields(uint16_t fld_idx = 0) { clearElements(fld_idx); }
+
 };
 
 //Template for Encoder of structured type with known number of fields/elements,
