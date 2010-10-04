@@ -41,6 +41,17 @@
     <param-value>ru.novosoft.smsc.web.SmscViewHandler</param-value>
   </context-param>
 
+
+  <context-param>
+    <param-name>facelets.DEVELOPMENT</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>facelets.REFRESH_PERIOD</param-name>
+    <param-value>-1</param-value>
+  </context-param>
+
   <!-- Use documents saved as *.xhtml for Facelets -->
   <context-param>
     <param-name>javax.faces.DEFAULT_SUFFIX</param-name>
