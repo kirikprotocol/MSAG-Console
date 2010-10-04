@@ -81,7 +81,7 @@ public class TestAliasManager extends AliasManagerImpl {
         IOUtils.writeUInt8(os, alias.getNpi());
         IOUtils.writeString(os, alias.getAddress(), 21);
 
-        IOUtils.writeUInt8(os, a.isHide() ? 0 : 1);
+        IOUtils.writeUInt8(os, a.isHide() ? 1 : 0);
       }
 
     } catch (IOException e) {
