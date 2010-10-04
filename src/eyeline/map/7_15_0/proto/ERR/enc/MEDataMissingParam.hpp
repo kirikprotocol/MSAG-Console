@@ -41,7 +41,7 @@ public:
 private:
   typedef asn1::ber::EncoderOfUExtension_T<1> MEArgUExt;
   asn1::ber::EncoderProducer_T<ext::enc::MEExtensionContainer> _extensionContainer;
-  util::OptionalObj_T<MEArgUExt>                      _unkExt;
+  util::OptionalObj_T<MEArgUExt> _unkExt;
 };
 
 }}}}

@@ -10,15 +10,13 @@ MEDataMissingParam::setValue(const DataMissingParam& value) {
   uint16_t idx=0;
   if (value.extensionContainer.get()) {
     _extensionContainer.init(getTSRule()).setValue(*value.extensionContainer.get());
-    setField(idx++, *_eMsIsdn.get());
-  }
-//    else
-//      asn1::ber::EncoderOfPlainSequence_T<5>::clearField(3);  <===== Na huja vot eto?!
+    setField(0, *_eMsIsdn.get());
+  } else
+    clearField(0);
 
-  if (!value.unkExt._tsList.empty()) {
-    _unkExt.init().setValue(use_val._unkExt, *this, idx);
-  } //else
-    //asn1::ber::EncoderOfPlainSequence_T<5>::clearField(4); ???
+  clearFields(1);
+  if (!value.unkExt._tsList.empty())
+    _unkExt.init().setValue(value.unkExt, *this, 1);
 }
 
 }}}}

@@ -24,22 +24,31 @@ class MEPrivateExtension : public asn1::ber::EncoderOfPlainSequence_T<2> {
 public:
   explicit MEPrivateExtension(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
   : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule)
-  {}
+  {
+    construct();
+  }
 
   MEPrivateExtension(const PrivateExtension& private_ext, asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
   : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule)
   {
+    construct();
     setValue(private_ext);
   }
 
   MEPrivateExtension(const asn1::ASTag & use_tag, asn1::ASTagging::Environment_e tag_env,
                      asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
   : asn1::ber::EncoderOfPlainSequence_T<2>(use_tag, tag_env, use_rule)
-  {}
+  {
+    construct();
+  }
 
   void setValue(const PrivateExtension& private_ext);
 
 private:
+  void construct() {
+    setField(0, _eExtId);
+  }
+
   asn1::ber::EncoderOfEOID _eExtId;
   asn1::ber::EncoderProducer_T<asn1::ber::EncoderOfASType> _eExtType;
 };

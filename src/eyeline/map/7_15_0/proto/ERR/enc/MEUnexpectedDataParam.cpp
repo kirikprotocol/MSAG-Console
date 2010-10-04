@@ -8,13 +8,15 @@ namespace enc {
 void
 MEUnexpectedDataParam::setValue(const DataMissingParam& value)
 {
-  uint16_t idx=0;
   if (value.extensionContainer.get()) {
     _eExtensionContainer.init(getTSRule).setValue(*value.extensionContainer.get());
-    setField(idx++, *_eExtensionContainer.get());
-  }
+    setField(0, *_eExtensionContainer.get());
+  } else
+    clearField(0);
+
+  clearFields(1);
   if (!value._unkExt._tsList.empty())
-    _eUnkExt.init().setValue(value._unkExt, *this, idx);
+    _eUnkExt.init().setValue(value._unkExt, *this, 1);
 }
 
 }}}}

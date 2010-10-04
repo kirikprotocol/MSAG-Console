@@ -14,13 +14,12 @@ namespace enc {
 void
 MEPrivateExtension::setValue(const PrivateExtension& value)
 {
-  uint16_t idx=0;
   _eExtId.setValue(value.extId);
-  setField(idx++, _eExtId);
   if (value.extType.get()) {
     _eExtType.init(getTSRule()).setValue(*value.extType.get());
-    setField(idx, *_eExtType.get());
-  }
+    setField(1, *_eExtType.get());
+  } else
+    clearField(1);
 }
 
 }}}}

@@ -12,28 +12,35 @@ const asn1::ASTag MEExtensibleSystemFailureParam::_tag_failureCauseParam= asn1::
 void
 MEExtensibleSystemFailureParam::setValue(const ExtensibleSystemFailureParam& value)
 {
-  uint16_t idx=0;
   if (value.networkResource.get()) {
     _eNetworkResource.init(getTSRule()).setValue(*value.networkResource.get());
-    setField(idx++, *_eNetworkResource.get());
-  }
+    setField(0, *_eNetworkResource.get());
+  } else
+    clearField(0);
+
   if (value.extensionContainer.get()) {
     _eExtensionContainer.init(getTSRule()).setValue(*value.extensionContainer.get());
-    setField(idx++, *_eExtensionContainer.get());
-  }
-  if ( !value._unkExt._tsList.empty() )
-    idx= _eUnkExt.init().setValue(value._unkExt, *this, idx);
+    setField(1, *_eExtensionContainer.get());
+  } else
+    clearField(1);
 
   if (value.additionalNetworkResource.get()) {
     _eAdditionalNetworkResource.init(_tag_additionalNetworkResource, asn1::ASTagging::tagsIMPLICIT,
                                      getTSRule()).setValue(*value.additionalNetworkResource.get());
-    setField(idx++, *_eAdditionalNetworkResource.get());
-  }
+    setField(2, *_eAdditionalNetworkResource.get());
+  } else
+    clearField(2);
+
   if (value.failureCauseParam.get()) {
     _eFailureCauseParam.init(_tag_failureCauseParam, asn1::ASTagging::tagsIMPLICIT,
                              getTSRule()).setValue(value.failureCauseParam.get()->value);
-    setField(idx++, *_eFailureCauseParam.get());
-  }
+    setField(3, *_eFailureCauseParam.get());
+  } else
+    clearField(3);
+
+  clearFields(4);
+  if ( !value._unkExt._tsList.empty() )
+    _eUnkExt.init().setValue(value._unkExt, *this, 4);
 }
 
 }}}}
