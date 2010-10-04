@@ -44,6 +44,9 @@ public class AliasEditController extends SmscController {
     }
   }
 
+
+
+
   private Alias getAliasBySimpleAddr(String oldAliasSimpleAddr) throws AdminException {
     if(oldAliasSimpleAddr!=null && oldAliasSimpleAddr.length()>0) {
       AliasSet aset = null;
@@ -105,6 +108,7 @@ public class AliasEditController extends SmscController {
     if(!check(simpleAddress)){
       addLocalizedMessage(FacesMessage.SEVERITY_WARN,"smsc.aliasedit.address.checkFail");
     }
+    remove();
     Alias a = new Alias(new Address(simpleAddress),new Address(simpleAlias),hide);    
     WebContext.getInstance().getAliasManager().addAlias(a);
     return "ALIASES";
@@ -115,8 +119,10 @@ public class AliasEditController extends SmscController {
   }
 
   public String remove() throws AdminException {
-    Alias a = getAliasBySimpleAddr(oldAliasSimpleAddr);
-    WebContext.getInstance().getAliasManager().deleteAlias(a.getAlias());
+    if(oldAliasSimpleAddr!=null && oldAliasSimpleAddr.length()>0) {
+      Alias a = getAliasBySimpleAddr(oldAliasSimpleAddr);
+      WebContext.getInstance().getAliasManager().deleteAlias(a.getAlias());
+    }
     return "ALIASES";
   }
 }
