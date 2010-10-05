@@ -536,13 +536,14 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st,
         if ( st.status == re::STATUS_LONG_CALL ) {
             what = "gone to longcall";
             break;
-        } else if ( st.status == re::STATUS_FAILED ) {
-            what = "failed already";
-            break;
         }
 
         Operation* op = session_->getCurrentOperation();
         if ( ! op ) {
+            if (st.status == re::STATUS_FAILED) {
+                what = "failed already";
+                break;
+            }
             st.status = re::STATUS_FAILED;
             st.result = smsc::system::Status::SYSERR;
             what_ = "Logic error: no current operation is set";
@@ -578,9 +579,14 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st,
 
         if ( op->type() == CO_USSD_DIALOG ) {
 
-            if ( op->getStatus() == OPERATION_COMPLETED && cmd_->isResp() ) {
-                what = "ussd completed, closed on resp";
-                session_->closeCurrentOperation();
+            if ( cmd_->isResp() ) {
+                if ( op->getStatus() == OPERATION_COMPLETED ) {
+                    what = "ussd completed, closed on resp";
+                    session_->closeCurrentOperation();
+                } else if ( cmd_->get_status() ) {
+                    what = "ussd bad resp, closed";
+                    session_->closeCurrentOperation();
+                }
             }
 
         } else {
