@@ -7,10 +7,10 @@ import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.config.BaseSettingsManager;
 import ru.novosoft.smsc.web.journal.Journal;
-import ru.novosoft.smsc.web.journal.JournalRecord;
 
 import java.util.Collection;
 import java.util.Map;
+import static ru.novosoft.smsc.web.config.DiffHelper.*;
 
 /**
  * @author Artem Snopkov
@@ -30,23 +30,22 @@ public class WFraudManager extends BaseSettingsManager<FraudSettings> implements
   protected void _updateSettings(FraudSettings newSettings) throws AdminException {
     FraudSettings oldSettings = getSettings();
     wrapped.updateSettings(newSettings);    
-    
-    if(oldSettings.isEnableCheck()!= newSettings.isEnableCheck())
-      j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.FRAUD, user).setDescription("fraudsettings_changed", "enableCheck", Boolean.valueOf(oldSettings.isEnableCheck()).toString(), Boolean.valueOf(newSettings.isEnableCheck()).toString());
-    if(oldSettings.isEnableReject()!= newSettings.isEnableReject())
-      j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.FRAUD, user).setDescription("fraudsettings_changed", "enableReject", Boolean.valueOf(oldSettings.isEnableReject()).toString(), Boolean.valueOf(newSettings.isEnableReject()).toString());
-    if(oldSettings.getTail()!= newSettings.getTail())
-      j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.FRAUD, user).setDescription("fraudsettings_changed", "tail", Integer.valueOf(oldSettings.getTail()).toString(), Integer.valueOf(newSettings.getTail()).toString());
+
+    findChanges(oldSettings, newSettings, FraudSettings.class, new ChangeListener() {
+      public void foundChange(String propertyName, Object oldValue, Object newValue) {
+        j.user(user).change("property_changed", "enableCheck", valueToString(oldValue), valueToString(newValue)).fraud();
+      }
+    }, "whiteList");
 
     Collection<Address> oldAdresses = oldSettings.getWhiteList();
     Collection<Address> newAdresses = newSettings.getWhiteList();
     for (Address oldAddr : oldAdresses) {
       if(!newAdresses.contains(oldAddr))
-         j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.FRAUD, user).setDescription("fraudsettings_removed", oldAddr.toString());
+        j.user(user).change("addr_removed", oldAddr.toString()).fraud();
     }
     for (Address newAddr : newAdresses) {
       if(!oldAdresses.contains(newAddr))
-         j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.FRAUD, user).setDescription("fraudsettings_added", newAddr.toString());
+        j.user(user).change("addr_removed", newAddr.toString()).fraud();
     }
   }
 

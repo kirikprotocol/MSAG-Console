@@ -32,13 +32,10 @@ public class WCategoryManager extends BaseSettingsManager<CategorySettings> impl
     
     for (Category c : settings.getCategories()) {
       Category oc = oldSettings.getCategory(c.getId());
-      if (oc == null) {
-        JournalRecord r = j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.CATEGORY, user);
-        r.setDescription("category.added", c.getName(), c.getId() + "");
-      } else if (!c.getName().equals(oc.getName())) {
-        JournalRecord r = j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CATEGORY, user);
-        r.setDescription("category.renamed", c.getId() + "", oc.getName(), c.getName());
-      }
+      if (oc == null)
+        j.user(user).add().category(c.getName(), c.getId() + "");
+      else if (!c.getName().equals(oc.getName()))
+        j.user(user).change("renamed", oc.getName(), c.getName()).category(c.getId() + "");
     }
   }
 

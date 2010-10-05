@@ -6,10 +6,11 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonSettings;
 import ru.novosoft.smsc.web.config.BaseSettingsManager;
 import ru.novosoft.smsc.web.config.DiffHelper;
 import ru.novosoft.smsc.web.journal.Journal;
-import ru.novosoft.smsc.web.journal.JournalRecord;
 
-import java.lang.reflect.Method;
 import java.util.List;
+
+import static ru.novosoft.smsc.web.config.DiffHelper.ChangeListener;
+import static ru.novosoft.smsc.web.config.DiffHelper.findChanges;
 
 /**
  * Декоратор, добавляющий журналирование вызовов ArchiveDaemonManager
@@ -35,10 +36,11 @@ public class WArchiveDaemonManager extends BaseSettingsManager<ArchiveDaemonSett
   public void _updateSettings(ArchiveDaemonSettings settings) throws AdminException {
     ArchiveDaemonSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    List<Method> getters = DiffHelper.getGetters(ArchiveDaemonSettings.class);
-    List<Object> oldValues = DiffHelper.callGetters(getters, oldSettings);
-    List<Object> newValues = DiffHelper.callGetters(getters, settings);
-    DiffHelper.logChanges(j, JournalRecord.Subject.ARCHIVE_DAEMON, oldValues, newValues, getters, user);
+    findChanges(oldSettings, settings, ArchiveDaemonSettings.class, new ChangeListener() {
+      public void foundChange(String propertyName, Object oldValue, Object newValue) {
+        j.user(user).change("property.changed", propertyName, DiffHelper.valueToString(oldValue), DiffHelper.valueToString(newValue));
+      }
+    });
   }
 
   public ArchiveDaemonSettings cloneSettings(ArchiveDaemonSettings settings) {
@@ -51,20 +53,17 @@ public class WArchiveDaemonManager extends BaseSettingsManager<ArchiveDaemonSett
 
   public void switchDaemon(String toHost) throws AdminException {
     wrapped.switchDaemon(toHost);
-    JournalRecord r = j.addRecord(JournalRecord.Type.SWITCH, JournalRecord.Subject.ARCHIVE_DAEMON, user);
-    r.setDescription("archive_daemon.switched", toHost);
+    j.user(user).switchTo(toHost).archiveDaemon();
   }
 
   public void startDaemon() throws AdminException {
     wrapped.startDaemon();
-    JournalRecord r = j.addRecord(JournalRecord.Type.START, JournalRecord.Subject.ARCHIVE_DAEMON, user);
-    r.setDescription("archive_daemon.started");
+    j.user(user).start().archiveDaemon();
   }
 
   public void stopDaemon() throws AdminException {
     wrapped.stopDaemon();
-    JournalRecord r = j.addRecord(JournalRecord.Type.STOP, JournalRecord.Subject.ARCHIVE_DAEMON, user);
-    r.setDescription("archive_daemon.stopped");
+    j.user(user).stop().archiveDaemon();    
   }
 
   public List<String> getDaemonHosts() throws AdminException {

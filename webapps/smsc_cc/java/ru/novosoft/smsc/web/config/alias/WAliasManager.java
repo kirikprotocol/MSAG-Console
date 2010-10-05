@@ -28,14 +28,12 @@ public class WAliasManager implements AliasManager {
 
   public void addAlias(Alias alias) throws AdminException {
     wrapped.addAlias(alias);
-    JournalRecord r = j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.ALIAS, user);
-    r.setDescription("alias.added", alias.getAddress().getNormalizedAddress(), alias.getAlias().getNormalizedAddress(), String.valueOf(alias.isHide()));
+    j.user(user).add().alias(alias.getAddress().getNormalizedAddress(), alias.getAlias().getNormalizedAddress(), String.valueOf(alias.isHide()));
   }
 
   public void deleteAlias(Address alias) throws AdminException {
     wrapped.deleteAlias(alias);
-    JournalRecord r = j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.ALIAS, user);
-    r.setDescription("alias.deleted", alias.getNormalizedAddress());
+    j.user(user).remove().alias(alias.getNormalizedAddress());    
   }
 
   public AliasSet getAliases() throws AdminException {

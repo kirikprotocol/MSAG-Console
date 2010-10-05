@@ -5,13 +5,11 @@ import ru.novosoft.smsc.admin.logging.Logger;
 import ru.novosoft.smsc.admin.logging.LoggerManager;
 import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.web.config.BaseSettingsManager;
-import ru.novosoft.smsc.web.config.DiffHelper;
-import ru.novosoft.smsc.web.journal.Journal;
-import ru.novosoft.smsc.web.journal.JournalRecord;
 
-import java.lang.reflect.Method;
+import static ru.novosoft.smsc.web.config.DiffHelper.*;
+import ru.novosoft.smsc.web.journal.Journal;
+
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author Artem Snopkov
@@ -37,18 +35,20 @@ public class WLoggerManager extends BaseSettingsManager<LoggerSettings> implemen
       Logger oldLogger = oldSettings.getLogger(oldName);
       Logger newLogger = newSettings.getLogger(oldName);
       if (newLogger == null) {
-        j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.LOGGING, user).setDescription("logger_removed", oldName);
+        j.user(user).remove().logger(oldName);
       } else {
-        List<Method> getters = DiffHelper.getGetters(Logger.class);
-        List<Object> oldValues = DiffHelper.callGetters(getters, oldLogger);
-        List<Object> newValues = DiffHelper.callGetters(getters, newLogger);
-        DiffHelper.logChanges(j, JournalRecord.Subject.LOGGING, oldValues, newValues, getters, user, "logger_property_changed", oldName);
+        final String loggerName = oldName;
+        findChanges(oldLogger, newLogger, Logger.class, new ChangeListener() {
+          public void foundChange(String propertyName, Object oldValue, Object newValue) {
+            j.user(user).change("property_changed", valueToString(oldValue), valueToString(newValue)).logger(loggerName);
+          }
+        });
       }
     }
 
     for (String newName : newSettings.getNames()) {
       if (!oldNames.contains(newName))
-        j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.LOGGING, user).setDescription("logger_added", newName);
+        j.user(user).add().logger(newName);        
     }
   }
 

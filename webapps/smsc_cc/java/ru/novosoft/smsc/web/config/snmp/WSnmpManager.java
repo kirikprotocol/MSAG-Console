@@ -4,8 +4,8 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.snmp.*;
 import ru.novosoft.smsc.web.config.BaseSettingsManager;
+import static ru.novosoft.smsc.web.config.DiffHelper.*;
 import ru.novosoft.smsc.web.journal.Journal;
-import ru.novosoft.smsc.web.journal.JournalRecord;
 
 import java.util.Map;
 
@@ -46,9 +46,8 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
     oldSettings.getCounterInterval();
 
     if (oldSettings.getCounterInterval() != newSettings.getCounterInterval()) {
-      j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.SNMP, user).setDescription("snmp.counterInterval.change",
-          Integer.toString(oldSettings.getCounterInterval()),
-          Integer.toString(newSettings.getCounterInterval()));
+      j.user(user).change("counterInterval.change", Integer.toString(oldSettings.getCounterInterval()),
+          Integer.toString(newSettings.getCounterInterval())).snmp();
     }
     logObjectChanges(null, oldSettings.getDefaultSnmpObject(), newSettings.getDefaultSnmpObject());
 
@@ -74,7 +73,7 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
         logSeverity(objName, "severityRegisterFailed", oldSnmpObject.getSeverityRegisterFailed(), null);
         logSeverity(objName, "severityUnregister", oldSnmpObject.getSeverityUnregister(), null);
         logSeverity(objName, "severityUnregisterFailed", oldSnmpObject.getSeverityUnregisterFailed(), null);
-        j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.SNMP, user).setDescription("snmp.object.remove", objName);
+        j.user(user).remove().snmp(objName);
       } else {
         logObjectChanges(objName, oldSnmpObjects.get(objName), newSnmpObjects.get(objName));
       }
@@ -83,7 +82,7 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
     for (String objName : newSettings.getSnmpObjects().keySet()) {
       if (oldSettings.getSnmpObjects().get(objName) == null) {
         SnmpObject newSnmpObject = newSettings.getSnmpObjects().get(objName);
-        j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.SNMP, user).setDescription("snmp.object.add", objName);
+        j.user(user).add().snmp(objName);
         logCounter(objName, "counter000d", null, newSnmpObject.getCounter000d());
         logCounter(objName, "counter0014", null, newSnmpObject.getCounter0014());
         logCounter(objName, "counter0058", null, newSnmpObject.getCounter0058());
@@ -109,11 +108,9 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
 
   private void logObjectChanges(String objName, SnmpObject oldSnmpObject, SnmpObject newSnmpObject) {
     if (objName == null) objName = "DEFAULT";
-    if (oldSnmpObject.isEnabled() != newSnmpObject.isEnabled()) {
-      j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.SNMP, user).setDescription("snmp.object.enableChanged", objName,
-          Boolean.toString(newSnmpObject.isEnabled())
-      );
-    }
+    if (oldSnmpObject.isEnabled() != newSnmpObject.isEnabled()) 
+      j.user(user).change("object.enableChanged", Boolean.toString(newSnmpObject.isEnabled())).snmp(objName);
+
     logCounter(objName, "counter000d", oldSnmpObject.getCounter000d(), newSnmpObject.getCounter000d());
     logCounter(objName, "counter0014", oldSnmpObject.getCounter0014(), newSnmpObject.getCounter0014());
     logCounter(objName, "counter0058", oldSnmpObject.getCounter0058(), newSnmpObject.getCounter0058());
@@ -135,59 +132,34 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
   private void logSeverity(String objName, String severityKey, SnmpSeverity severityOld, SnmpSeverity severityNew) {
     if (severityNew == null && severityOld == null) return;
     if (severityOld == null) {
-      j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.SNMP, user).setDescription("snmp.severity.add", severityKey, objName,
-          severityNew.toString()
-      );
+      j.user(user).change("severity.add", severityKey, severityNew.toString()).snmp(objName);
     } else if (severityNew == null) {
-      j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.SNMP, user).setDescription("snmp.severity.remove", severityKey, objName,
-          severityOld.toString()
-      );
+      j.user(user).change("severity.remove", severityKey, severityOld.toString()).snmp(objName);
     } else {
       if (!severityOld.equals(severityNew)) {
-        j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.SNMP, user).setDescription("snmp.severity.change", severityKey, objName,
-            severityOld.toString(), severityNew.toString()
-        );
+        j.user(user).change("severity.change", severityKey, severityOld.toString(), severityNew.toString()).snmp(objName);
       }
     }
   }
 
-  private void logCounter(String objName, String counterKey, SnmpCounter counterOld, SnmpCounter counterNew) {
+  private void logCounter(final String objName, final String counterKey, SnmpCounter counterOld, SnmpCounter counterNew) {
     if (counterOld == null && counterNew == null) return;
     if (counterOld == null) {
-      j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.SNMP, user).setDescription("snmp.counter.add", counterKey, objName,
-          Integer.toString(counterNew.getWarning()),
+      j.user(user).change("counter.add", counterKey, Integer.toString(counterNew.getWarning()),
           Integer.toString(counterNew.getMinor()),
           Integer.toString(counterNew.getMajor()),
-          Integer.toString(counterNew.getCritical())
-      );
+          Integer.toString(counterNew.getCritical())).snmp(objName);
     } else if (counterNew == null) {
-      j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.SNMP, user).setDescription("snmp.counter.remove", counterKey, objName,
-          Integer.toString(counterOld.getWarning()),
+      j.user(user).change("counter.remove", counterKey, Integer.toString(counterOld.getWarning()),
           Integer.toString(counterOld.getMinor()),
           Integer.toString(counterOld.getMajor()),
-          Integer.toString(counterOld.getCritical())
-      );
+          Integer.toString(counterOld.getCritical())).snmp(objName);
     } else {
-      if (counterOld.getWarning() != counterNew.getWarning()) {
-        j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.SNMP, user).setDescription("snmp.counter.change.warining", counterKey, objName,
-            Integer.toString(counterOld.getWarning()),
-            Integer.toString(counterNew.getWarning()));
-      }
-      if (counterOld.getMinor() != counterNew.getMinor()) {
-        j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.SNMP, user).setDescription("snmp.counter.change.minor", counterKey, objName,
-            Integer.toString(counterOld.getMinor()),
-            Integer.toString(counterNew.getMinor()));
-      }
-      if (counterOld.getMajor() != counterNew.getMajor()) {
-        j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.SNMP, user).setDescription("snmp.counter.change.major", counterKey, objName,
-            Integer.toString(counterOld.getMajor()),
-            Integer.toString(counterNew.getMajor()));
-      }
-      if (counterOld.getCritical() != counterNew.getCritical()) {
-        j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.SNMP, user).setDescription("snmp.counter.change.critical", counterKey, objName,
-            Integer.toString(counterOld.getCritical()),
-            Integer.toString(counterNew.getCritical()));
-      }
+      findChanges(counterOld, counterNew, SnmpCounter.class, new ChangeListener() {
+        public void foundChange(String propertyName, Object oldValue, Object newValue) {
+          j.user(user).change("counter.property_changed", counterKey, propertyName, valueToString(oldValue), valueToString(newValue)).snmp(objName);
+        }
+      });      
     }
   }
 }

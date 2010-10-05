@@ -29,12 +29,10 @@ class WAcl implements Acl {
     String oldDesc = wrappedValue.getDescription();
     wrappedValue.updateInfo(name, description);
     if (!oldName.equals(name)) {
-      JournalRecord r = j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
-      r.setDescription("property_changed", "name", oldName, name);
+      j.user(user).change("property.changed", "name", oldName, name).acl(wrappedValue.getId()+ "");
     }
     if (!oldDesc.equals(description)) {
-      JournalRecord r = j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
-      r.setDescription("property_changed", "description", oldDesc, description);
+      j.user(user).change("property.changed", "description", oldName, name).acl(wrappedValue.getId()+ "");
     }
   }
 
@@ -45,28 +43,26 @@ class WAcl implements Acl {
   public void addAddresses(List<Address> addresses) throws AdminException {
     wrappedValue.addAddresses(addresses);
     if (!addresses.isEmpty()) {
-      JournalRecord r = j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
       StringBuilder sb = new StringBuilder();
       for (Address address : addresses) {
         if (sb.length() > 0)
           sb.append(", ");
         sb.append(address);
       }
-      r.setDescription("acl.add.addresses", getName(), sb.toString());
+      j.user(user).change("add.addresses", getName(), sb.toString()).acl(wrappedValue.getId() + "");
     }
   }
 
   public void removeAddresses(List<Address> addresses) throws AdminException {
     wrappedValue.removeAddresses(addresses);
     if (!addresses.isEmpty()) {
-      JournalRecord r = j.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.ACL, user);
       StringBuilder sb = new StringBuilder();
       for (Address address : addresses) {
         if (sb.length() > 0)
           sb.append(", ");
         sb.append(address);
       }
-      r.setDescription("acl.remove.addresses", getName(), sb.toString());
+      j.user(user).change("remove.addresses", getName(), sb.toString()).acl(wrappedValue.getId() + "");
     }
   }
 

@@ -127,4 +127,8 @@ public class RegionSettings implements Serializable {
   public void setDefaultEmail(String defaultEmail) {
     this.defaultEmail = defaultEmail;
   }
+
+  public RegionSettings cloneSettings() {
+    return new RegionSettings(this);
+  }
 }

@@ -22,10 +22,9 @@ class WClosedGroup implements ClosedGroup{
   private String user;
 
   WClosedGroup(ClosedGroup group, Journal journal, String user) {
-    if(group == null || journal == null) {
+    if(group == null || journal == null)
       throw new IllegalArgumentException("Some arguments are null: group="+group+" journal="+journal);
-
-    }
+    
     this.group = group;
     this.journal = journal;
     this.user = user;
@@ -46,8 +45,7 @@ class WClosedGroup implements ClosedGroup{
   public void setDescription(String description) throws AdminException {
     String old = getDescription();
     group.setDescription(description);
-     JournalRecord r = journal.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_change_description", old, description, getName());
+    journal.user(user).change("change_description", old, description).closedGroup(getName());     
   }
 
   public Collection<Address> getMasks() throws AdminException {
@@ -56,14 +54,13 @@ class WClosedGroup implements ClosedGroup{
 
   public void removeMask(Address mask) throws AdminException {
     group.removeMask(mask);
-    JournalRecord r = journal.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_remove_mask", mask.getSimpleAddress(), getName());
+    journal.user(user).change("remove_mask", mask.getSimpleAddress()).closedGroup(getName());
   }
 
   public void addMask(Address mask) throws AdminException {
     group.addMask(mask);
-    JournalRecord r = journal.addRecord(JournalRecord.Type.CHANGE, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_add_mask", mask.getSimpleAddress(), getName());
+    journal.user(user).change("add_mask").closedGroup(getName());
+
   }
 
 

@@ -27,6 +27,7 @@ import ru.novosoft.smsc.admin.profile.ProfileManagerImpl;
 import ru.novosoft.smsc.admin.provider.ProfiledManagerImpl;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.region.RegionManager;
+import ru.novosoft.smsc.admin.region.RegionManagerImpl;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.route.RouteSubjectManager;
@@ -149,7 +150,7 @@ public class AdminContext {
 
     timezoneManager = new TimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
-    regionManager = new RegionManager(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
+    regionManager = new RegionManagerImpl(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
 
     profileManager = new ProfileManagerImpl(AdminMode.smsx, new File(s.getCommonSettings().getProfilerStoreFile()), fileSystem, clusterController);
 

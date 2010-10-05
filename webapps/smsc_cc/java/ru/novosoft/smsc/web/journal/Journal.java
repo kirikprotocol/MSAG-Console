@@ -35,7 +35,7 @@ public class Journal {
     List<String> l = new ArrayList<String>();
     ResourceBundle rb = ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale);
     for (JournalRecord.Subject s : JournalRecord.Subject.values())
-      l.add(rb.getString(s.getKey()));
+      l.add(rb.getString("subject." + s.getKey()));
     return l;
   }
 
@@ -64,34 +64,14 @@ public class Journal {
   }
 
   /**
-   * Возвращает последнюю запись для указанного subject, с датой после afterTime или null, если такой нет.
-   *
-   * @param subject   сабжект
-   * @param afterTime время, начиная с которого надо искать запись
-   * @return последнюю запись для указанного subject, с датой после afterTime или null, если такой нет.
-   */
-  public synchronized JournalRecord getLastRecord(String subject, long afterTime) {
-    for (int i = records.size() - 1; i >= 0; i--) {
-      JournalRecord r = records.get(i);
-      if (r.getSubjectKey().equals(subject)) {
-        if (r.getTime() > afterTime)
-          return r;
-        else
-          return null;
-      }
-    }
-    return null;
-  }
-
-  /**
    * Возвращает все записи с указанным субъектом
    * @param subject субъект, для которого надо вернуть записи
    * @return все записи с указанным субъектом
    */
-  public synchronized List<JournalRecord> getRecords(String subject) {
+  public synchronized List<JournalRecord> getRecords(JournalRecord.Subject subject) {
     List<JournalRecord> res = new ArrayList<JournalRecord>();
     for (JournalRecord r : records) {
-      if (r.getSubjectKey().equals(subject))
+      if (r.getSubjectKey() == subject)
         res.add(r);
     }
     return res;
@@ -102,10 +82,10 @@ public class Journal {
    *
    * @param subject сабжект, записи которого надо удалить
    */
-  public synchronized void removeRecords(String subject) {
+  public synchronized void removeRecords(JournalRecord.Subject subject) {
     for (Iterator<JournalRecord> i = records.iterator(); i.hasNext();) {
       JournalRecord r = i.next();
-      if (r.getSubjectKey().equals(subject))
+      if (r.getSubjectKey() == subject)
         i.remove();
     }
   }
@@ -115,9 +95,9 @@ public class Journal {
    * @param subject субъект
    * @return true, если в журнале имеются записи с данным subject. Иначе возвращает false
    */
-  public synchronized boolean hasRecords(String subject) {
+  public synchronized boolean hasRecords(JournalRecord.Subject subject) {
     for (JournalRecord r : records) {
-      if (r.getSubjectKey().equals(subject))
+      if (r.getSubjectKey() == subject)
         return true;
     }
     return false;
@@ -140,7 +120,9 @@ public class Journal {
     return r;
   }
 
-
+  public UserJournal user(String user) {
+    return new UserJournal(user, this);
+  }
 
   /**
    * Ищет различия между настройками СМСЦ и записывает их в журнал

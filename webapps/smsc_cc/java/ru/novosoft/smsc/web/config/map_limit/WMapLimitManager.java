@@ -6,13 +6,11 @@ import ru.novosoft.smsc.admin.map_limit.CongestionLevel;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.web.config.BaseSettingsManager;
-import ru.novosoft.smsc.web.config.DiffHelper;
 import ru.novosoft.smsc.web.journal.Journal;
-import ru.novosoft.smsc.web.journal.JournalRecord;
 
-import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Map;
+
+import static ru.novosoft.smsc.web.config.DiffHelper.*;
 
 /**
  * @author Artem Snopkov
@@ -34,21 +32,24 @@ public class WMapLimitManager extends BaseSettingsManager<MapLimitSettings> impl
 
     wrapped.updateSettings(newSettings);
 
-    {
-      List<Method> getters = DiffHelper.getGetters(MapLimitSettings.class, "getCongestionLevels");
-      List<Object> oldValues = DiffHelper.callGetters(getters, oldSettings);
-      List<Object> newValues = DiffHelper.callGetters(getters, newSettings);
-      DiffHelper.logChanges(j, JournalRecord.Subject.MAP_LIMIT, oldValues, newValues, getters, user);
-    }
+    findChanges(oldSettings, newSettings, MapLimitSettings.class, new ChangeListener() {
+      public void foundChange(String propertyName, Object oldValue, Object newValue) {
+        j.user(user).change("property_changed", propertyName, valueToString(oldValue), valueToString(newValue));
+      }
+    }, "congestionLevels");
+
     CongestionLevel[] oldLevels = oldSettings.getCongestionLevels();
     CongestionLevel[] newLevels = newSettings.getCongestionLevels();
-    List<Method> getters = DiffHelper.getGetters(CongestionLevel.class);
     for (int i = 0; i < MapLimitSettings.MAX_CONGESTION_LEVELS; i++) {
       CongestionLevel oldLevel = oldLevels[i];
       CongestionLevel newLevel = newLevels[i];
-      List<Object> oldValues = DiffHelper.callGetters(getters, oldLevel);
-      List<Object> newValues = DiffHelper.callGetters(getters, newLevel);
-      DiffHelper.logChanges(j, JournalRecord.Subject.MAP_LIMIT, oldValues, newValues, getters, user, "map_limis_cong_level_changed", Integer.toString(i));
+      final int congestionLenvelNumber = i;
+
+      findChanges(oldLevel, newLevel, CongestionLevel.class, new ChangeListener() {
+        public void foundChange(String propertyName, Object oldValue, Object newValue) {
+          j.user(user).change("cong_level_changed", propertyName, valueToString(oldValue), valueToString(newValue), valueToString(congestionLenvelNumber)).mapLimit();
+        }
+      });
     }
   }
 

@@ -41,7 +41,7 @@ public class JournalRecord {
    * @return название сабжекта в указанной локали
    */
   public String getSubject(Locale locale) {
-    return ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale).getString(subjectKey.getKey());
+    return ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale).getString("subject." + subjectKey.getKey());
   }
 
   Subject getSubjectKey() {
@@ -103,22 +103,23 @@ public class JournalRecord {
   }
 
   public enum Subject {
-    SMSC("subject.smsc"),
-    RESCHEDULE("subject.reschedule"),
-    CLOSED_GROUPS("subject.closed_groups"),
-    USERS("subject.user"),
-    MAP_LIMIT("subject.maplimit"),
-    LOGGING("subject.logging"),
-    FRAUD("subject.fraud"),
-    SNMP("subject.snmp"),
-    SME("subject.sme"),
-    ACL("subject.acl"),
-    CATEGORY("subject.category"),
-    ALIAS("subject.alias"),
-    ARCHIVE_DAEMON("subject.archive_daemon"),
-    MSC("subject.msc"),
-    PROFILE("subject.profile"),
-    PROVIDER("subject.provider");
+    SMSC("smsc"),
+    RESCHEDULE("reschedule"),
+    CLOSED_GROUPS("closed_groups"),
+    USERS("user"),
+    MAP_LIMIT("maplimit"),
+    LOGGING("logging"),
+    FRAUD("fraud"),
+    SNMP("snmp"),
+    SME("sme"),
+    ACL("acl"),
+    CATEGORY("category"),
+    ALIAS("alias"),
+    ARCHIVE_DAEMON("archive_daemon"),
+    MSC("msc"),
+    PROFILE("profile"),
+    PROVIDER("provider"),
+    REGION("region");
 
     private final String key;
 

@@ -51,8 +51,7 @@ public class WClosedGroupManager implements ClosedGroupManager {
     ClosedGroup g = wrapped.addGroup(name, description);
     if (g == null)
       return null;
-    JournalRecord r = j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_added", name);
+    j.user(user).add().closedGroup(name);
     return new WClosedGroup(g, j, user);
   }
 
@@ -60,8 +59,7 @@ public class WClosedGroupManager implements ClosedGroupManager {
     ClosedGroup g = wrapped.removeGroup(groupId);
     if (g == null)
       return null;
-    JournalRecord r =j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.CLOSED_GROUPS, user);
-    r.setDescription("closed_group_removed", g.getName());
+    j.user(user).remove().closedGroup(g.getName());    
     return new WClosedGroup(g, j, user);
   }
 

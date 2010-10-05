@@ -12,20 +12,20 @@ import java.util.*;
  */
 public class DiffHelper {
 
-  public static List<Method> getGetters(Class clazz, String ... except) {
+  private static List<Method> getGetters(Class clazz, String... except) {
     List<Method> getters = new ArrayList<Method>();
     for (Method m : clazz.getMethods()) {
       String methodName = m.getName();
       if (methodName.startsWith("get") || methodName.startsWith("is")) {
-        if(except != null) {
+        if (except != null) {
           boolean accept = true;
-          for(String s : except) {
-            if(s.equals(methodName)) {
+          for (String s : except) {
+            if (s.equals(methodName)) {
               accept = false;
               break;
             }
           }
-          if(!accept) {
+          if (!accept) {
             continue;
           }
         }
@@ -35,6 +35,13 @@ public class DiffHelper {
     return getters;
   }
 
+  /**
+   * По очереди вызывает все геттеры из getters на instance и возвращает список с результатами
+   *
+   * @param getters  список геттеров, которые надо вызвать
+   * @param instance экземпляр, на котором вызываются геттеры
+   * @return список значений, которые вернули геттеры
+   */
   public static List<Object> callGetters(List<Method> getters, Object instance) {
     List<Object> values = new ArrayList<Object>();
     for (Method getter : getters) {
@@ -64,7 +71,7 @@ public class DiffHelper {
     return sb.toString();
   }
 
-  private static String valueToString(Object value) {
+  public static String valueToString(Object value) {
     if (value == null)
       return "";
 
@@ -111,60 +118,86 @@ public class DiffHelper {
     return value.toString();
   }
 
-  public static void logChanges(Journal j, JournalRecord.Subject subject, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user, String bundleMessage, String... addParameters) {
+  private static boolean isEquals(Object oldValue, Object newValue) {
+    boolean changed = oldValue == null && newValue != null;
+    changed = changed || (oldValue != null && newValue == null);
+
+    if (!changed && oldValue != null) {
+      if (oldValue instanceof Object[]) {
+        changed = !Arrays.equals((Object[]) oldValue, (Object[]) newValue);
+      } else if (oldValue instanceof int[]) {
+        changed = !Arrays.equals((int[]) oldValue, (int[]) newValue);
+      } else if (oldValue instanceof long[]) {
+        changed = !Arrays.equals((long[]) oldValue, (long[]) newValue);
+      } else if (oldValue instanceof double[]) {
+        changed = !Arrays.equals((double[]) oldValue, (double[]) newValue);
+      } else if (oldValue instanceof float[]) {
+        changed = !Arrays.equals((float[]) oldValue, (float[]) newValue);
+      } else if (oldValue instanceof byte[]) {
+        changed = !Arrays.equals((byte[]) oldValue, (byte[]) newValue);
+      } else if (oldValue instanceof short[]) {
+        changed = !Arrays.equals((short[]) oldValue, (short[]) newValue);
+      } else if (oldValue instanceof char[]) {
+        changed = !Arrays.equals((char[]) oldValue, (char[]) newValue);
+      } else if (oldValue instanceof boolean[]) {
+        changed = !Arrays.equals((boolean[]) oldValue, (boolean[]) newValue);
+      } else {
+        changed = !oldValue.equals(newValue);
+      }
+    }
+    return !changed;
+  }
+
+  private static String extractPropertyNameFromGetterName(Method getter) {
+    String propertyName;
+
+    if (getter.getReturnType() != Boolean.TYPE)
+      propertyName = getter.getName().substring(3);
+    else
+      propertyName = getter.getName().substring(2);
+
+    char firstChar = propertyName.charAt(0);
+    if (propertyName.length() > 1)
+      propertyName = Character.toLowerCase(firstChar) + propertyName.substring(1);
+    else
+      propertyName = Character.toLowerCase(firstChar) + "";
+
+    return propertyName;
+  }
+
+  private static void findChanges(List<Object> oldValues, List<Object> newValues, List<Method> getters, ChangeListener l) {
     for (int i = 0; i < getters.size(); i++) {
       Object oldValue = oldValues.get(i);
       Object newValue = newValues.get(i);
 
-      boolean changed = oldValue == null && newValue != null;
-      changed = changed || (oldValue != null && newValue == null);
-
-      if (!changed && oldValue != null) {
-        if (oldValue instanceof Object[]) {
-          changed = !Arrays.equals((Object[]) oldValue, (Object[]) newValue);
-        } else if (oldValue instanceof int[]) {
-          changed = !Arrays.equals((int[]) oldValue, (int[]) newValue);
-        } else if (oldValue instanceof long[]) {
-          changed = !Arrays.equals((long[]) oldValue, (long[]) newValue);
-        } else if (oldValue instanceof double[]) {
-          changed = !Arrays.equals((double[]) oldValue, (double[]) newValue);
-        } else if (oldValue instanceof float[]) {
-          changed = !Arrays.equals((float[]) oldValue, (float[]) newValue);
-        } else if (oldValue instanceof byte[]) {
-          changed = !Arrays.equals((byte[]) oldValue, (byte[]) newValue);
-        } else if (oldValue instanceof short[]) {
-          changed = !Arrays.equals((short[]) oldValue, (short[]) newValue);
-        } else if (oldValue instanceof char[]) {
-          changed = !Arrays.equals((char[]) oldValue, (char[]) newValue);
-        } else if (oldValue instanceof boolean[]) {
-          changed = !Arrays.equals((boolean[]) oldValue, (boolean[]) newValue);
-        } else {
-          changed = !oldValue.equals(newValue);
-        }
-      }
-
-      if (changed) {
-        Method getter = getters.get(i);
-        String propertyName = getter.getName().substring(3);
-        char firstChar = propertyName.charAt(0);
-        if (propertyName.length() > 1)
-          propertyName = Character.toLowerCase(firstChar) + propertyName.substring(1);
-        else
-          propertyName = Character.toLowerCase(firstChar) + "";
-
-        String[] args = new String[addParameters.length + 3];
-        args[0] = propertyName;
-        args[1] = valueToString(oldValue);
-        args[2] = valueToString(newValue);
-        System.arraycopy(addParameters, 0, args, 3, addParameters.length);
-
-        j.addRecord(JournalRecord.Type.CHANGE, subject, user).setDescription(bundleMessage, args);
+      if (!isEquals(oldValue, newValue)) {
+        String propertyName = extractPropertyNameFromGetterName(getters.get(i));
+        l.foundChange(propertyName, oldValue, newValue);
       }
     }
-
   }
 
-  public static void logChanges(Journal j, JournalRecord.Subject subject, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user) {
-    logChanges(j, subject, oldValues, newValues, getters, user, "property_changed");
+  public static <T> void findChanges(T oldObj, T newObj, Class<T> clazz, ChangeListener l) {
+    List<Method> getters = getGetters(clazz);
+    List<Object> oldValues = callGetters(getters, oldObj);
+    List<Object> newValues = callGetters(getters, newObj);
+    findChanges(oldValues, newValues, getters, l);
   }
+
+  public static <T> void findChanges(T oldObj, T newObj, Class<T> clazz, ChangeListener l, String... excludeProperties) {
+    List<Method> getters = getGetters(clazz);
+    for (Iterator<Method> iter = getters.iterator(); iter.hasNext();) {
+      for (String prop : excludeProperties)
+        if (prop.equals(extractPropertyNameFromGetterName(iter.next())))
+          iter.remove();
+    }
+    List<Object> oldValues = callGetters(getters, oldObj);
+    List<Object> newValues = callGetters(getters, newObj);
+    findChanges(oldValues, newValues, getters, l);
+  }
+
+  public static interface ChangeListener {
+    public void foundChange(String propertyName, Object oldValue, Object newValue);
+  }
+
 }

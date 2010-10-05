@@ -30,15 +30,13 @@ public class WAclManager implements AclManager {
 
   public Acl createAcl(String name, String description, List<Address> addresses) throws AdminException {
     Acl acl = wrapped.createAcl(name, description, addresses);
-    JournalRecord r = j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.ACL, user);
-    r.setDescription("acl.created", acl.getId()+"", name, description);
+    j.user(user).add().acl(acl.getId()+"", name, description);    
     return new WAcl(acl, j, user);
   }
 
   public void removeAcl(int aclId) throws AdminException {
     wrapped.removeAcl(aclId);
-    JournalRecord r = j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.ACL, user);
-    r.setDescription("acl.removed", aclId+"");
+    j.user(user).remove().acl(aclId+"");
   }
 
   public Acl getAcl(int id) throws AdminException {

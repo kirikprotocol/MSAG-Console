@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.journal.Journal;
-import ru.novosoft.smsc.web.journal.JournalRecord;
 
 import java.util.Collection;
 import java.util.Map;
@@ -31,14 +30,12 @@ public class WMscManager implements MscManager {
 
   public void addMsc(Address msc) throws AdminException {
     wrapped.addMsc(msc);
-    JournalRecord r = j.addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.MSC, user);
-    r.setDescription("msc.added", msc.getSimpleAddress());
+    j.user(user).add().msc(msc.getSimpleAddress());
   }
 
   public void removeMsc(Address msc) throws AdminException {
     wrapped.removeMsc(msc);
-    JournalRecord r = j.addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.MSC, user);
-    r.setDescription("msc.deleted", msc.getSimpleAddress());
+    j.user(user).remove().msc(msc.getSimpleAddress());
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
