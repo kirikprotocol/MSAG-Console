@@ -1,6 +1,5 @@
 package ru.novosoft.smsc.web.controllers.alias;
 
-import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.alias.AliasSet;
@@ -106,11 +105,11 @@ public class AliasEditController extends SmscController {
 
   public String submit() throws AdminException {
     if(!check(simpleAlias)) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN,"smsc.aliasedit.alias.checkFail");
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.alias.edit.alias.checkFail");
       return null;
     }
     if(!check(simpleAddress)){
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN,"smsc.aliasedit.address.checkFail");
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.alias.edit.address.checkFail");
       return null;
     }
     remove();

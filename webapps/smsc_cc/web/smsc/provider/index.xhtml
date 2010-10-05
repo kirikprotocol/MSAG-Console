@@ -1,0 +1,68 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['providers.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!providers.initError}">
+
+      <h:inputHidden value="#{providers.revision}"/>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{providers.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{providers.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <h:panelGrid columns="1">
+
+        <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign" rowClasses="listTableHeader">
+          <h:outputText value="Id"/>
+          <h:outputText value="#{msg['providers.page.provider']}"/>
+        </h:panelGrid>
+
+        <c:set var="row" value="0"/>
+        <c:forEach items="#{providers.ids}" var="id">
+          <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign" rowClasses="listTableRow#{row%2}">
+            <h:outputText value="#{id}"/>
+            <tr:inputText value="#{providers.providers[id]}" columns="50" simple="true"/>
+          </h:panelGrid>
+          <c:set var="row" value="#{row+1}"/>
+        </c:forEach>
+
+      </h:panelGrid>
+
+      <p/>
+
+      <eye:pageSubtitle value="#{msg['providers.page.add']}"/>
+      <h:panelGrid columns="3" columnClasses="column20Width, column0WidthLeft, columnTopLeftAlign" rowClasses="listTableRow0">
+        <h:inputHidden/>
+        <tr:inputText value="#{providers.newProvider}" columns="50" simple="true"/>
+        <tr:commandLink action="#{providers.addProvider}">
+          <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"/>
+        </tr:commandLink>
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{providers.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{providers.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

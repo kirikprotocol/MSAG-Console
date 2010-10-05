@@ -38,7 +38,8 @@ public class TopMenu {
           add(new MenuItem("smsc.routes.alias", "/smsc/alias/index.faces")).    
           add(new MenuItem("smsc.routes.subjects", "/smsc/subjects/index.faces")).
           add(new MenuItem("smsc.routes.categories", "/smsc/category/index.faces")).
-          add(new MenuItem("smsc.routes.acls", "/smsc/acl/index.faces"))
+          add(new MenuItem("smsc.routes.acls", "/smsc/acl/index.faces")).
+          add(new MenuItem("smsc.routes.providers", "/smsc/provider/index.faces"))
       );
       add(new MenuBarItem("smsc.services", 63).
           add(new MenuItem("smsc.services.services", "/smsc/services/index.faces"))

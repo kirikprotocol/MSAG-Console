@@ -31,8 +31,8 @@
             <eye:button>
               <tr:commandLink text="#{msg['submit.button']}" id="add1" action="#{aliasEdit.submit}"/>
             </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['reset.button']}" id="reset1" action="#{aliasEdit.reset}" rendered="#{aliasEdit.oldAliasSimpleAddr!=null}">
+            <eye:button rendered="#{aliasEdit.oldAliasSimpleAddr!=null}">
+              <tr:commandLink text="#{msg['reset.button']}" id="reset1" action="#{aliasEdit.reset}">
                 <f:param name="aliasToEdit" value="#{aliasEdit.oldAliasSimpleAddr}"/>
               </tr:commandLink>
             </eye:button>
@@ -44,7 +44,7 @@
         </eye:buttons>
 
 
-    <eye:pageSubtitle value="#{msg['alias.edit.subtitle']}"/>    
+    <eye:pageSubtitle value="#{msg['smsc.alias.edit.data']}"/>
     <tr:panelFormLayout inlineStyle="width:300px;">
         <tr:panelLabelAndMessage label="#{msg['smsc.alias.column.alias']}">
             <h:inputText  value="#{aliasEdit.simpleAlias}">
@@ -65,8 +65,8 @@
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" id="add2" action="#{aliasEdit.submit}"/>
         </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" id="reset2" action="#{aliasEdit.reset}" rendered="#{aliasEdit.oldAliasSimpleAddr!=null}">
+        <eye:button rendered="#{aliasEdit.oldAliasSimpleAddr!=null}">
+          <tr:commandLink text="#{msg['reset.button']}" id="reset2" action="#{aliasEdit.reset}">
             <f:param name="aliasToEdit" value="#{aliasEdit.oldAliasSimpleAddr}"/>
           </tr:commandLink>
         </eye:button>

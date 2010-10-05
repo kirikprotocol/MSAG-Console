@@ -304,8 +304,12 @@
       <managed-bean-name>msc</managed-bean-name>
       <managed-bean-class>ru.novosoft.smsc.web.controllers.msc.MscController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
-    </managed-bean>
-
+  </managed-bean>
+  <managed-bean>
+    <managed-bean-name>providers</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.provider.ProviderController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <navigation-rule>
     <navigation-case>
@@ -414,6 +418,10 @@
     <navigation-case>
       <from-outcome>MSC</from-outcome>
       <to-view-id>/smsc/msc/index.faces</to-view-id>      
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>PROVIDERS</from-outcome>
+      <to-view-id>/smsc/provider/index.faces</to-view-id>
     </navigation-case>
 
   </navigation-rule>
