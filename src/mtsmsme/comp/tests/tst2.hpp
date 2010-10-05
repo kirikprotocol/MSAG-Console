@@ -15,7 +15,7 @@ class AmericaTestFixture : public CppUnit::TestFixture {
   CPPUNIT_TEST (sendRoutingInfo_arg_encoding);
   CPPUNIT_TEST (sendRoutingInfo_sending);
   CPPUNIT_TEST (sendRoutingInfo_res_decoding);
-  CPPUNIT_TEST (dialogue_limit_check);
+  /*CPPUNIT_TEST (dialogue_limit_check);*/
   CPPUNIT_TEST (slow_smpp_sender);
   CPPUNIT_TEST_SUITE_END ();
 public:
