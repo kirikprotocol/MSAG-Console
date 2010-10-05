@@ -10,14 +10,16 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <c:choose>
-      <c:when test="#{aliasEdit.oldAliasSimpleAddr!=null}">
-            <ui:param name="pageTitle" value="#{msg['smsc.alias.edit.title']}"/>
-      </c:when>
-      <c:otherwise>
-            <ui:param name="pageTitle" value="#{msg['smsc.alias.add.title']}"/>
-      </c:otherwise>
-  </c:choose>
+  <ui:param name="pageTitle" value="#{ aliasEdit.oldAliasSimpleAddr!=null ? msg['smsc.alias.edit.title'] : msg['smsc.alias.add.title']}"/>
+
+  <!--<c:choose>-->
+      <!--<c:when test="#{aliasEdit.oldAliasSimpleAddr!=null}">-->
+            <!--<ui:param name="pageTitle" value="#{msg['smsc.alias.edit.title']}"/>-->
+      <!--</c:when>-->
+      <!--<c:otherwise>-->
+            <!--<ui:param name="pageTitle" value="#{msg['smsc.alias.add.title']}"/>-->
+      <!--</c:otherwise>-->
+  <!--</c:choose>-->
 
 
   <ui:define name="content">
@@ -30,13 +32,14 @@
               <tr:commandLink text="#{msg['submit.button']}" id="add1" action="#{aliasEdit.submit}"/>
             </eye:button>
             <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}" id="delete1" action="#{aliasEdit.remove}"
-                   rendered="#{aliasEdit.oldAliasSimpleAddr!=null}"
-                   onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+              <tr:commandLink text="#{msg['reset.button']}" id="reset1" action="#{aliasEdit.reset}" rendered="#{aliasEdit.oldAliasSimpleAddr!=null}">
+                <f:param name="aliasToEdit" value="#{aliasEdit.oldAliasSimpleAddr}"/>
+              </tr:commandLink>
             </eye:button>
+
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['reset.button']}" id="cancel1" action="ALIASES"/>
+              <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="ALIASES"/>
             </eye:button>
         </eye:buttons>
 
@@ -63,13 +66,14 @@
           <tr:commandLink text="#{msg['submit.button']}" id="add2" action="#{aliasEdit.submit}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" id="delete2" action="#{aliasEdit.remove}"
-               rendered="#{aliasEdit.oldAliasSimpleAddr!=null}"
-               onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+          <tr:commandLink text="#{msg['reset.button']}" id="reset2" action="#{aliasEdit.reset}" rendered="#{aliasEdit.oldAliasSimpleAddr!=null}">
+            <f:param name="aliasToEdit" value="#{aliasEdit.oldAliasSimpleAddr}"/>
+          </tr:commandLink>
         </eye:button>
+
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" id="cancel2" action="ALIASES"/>
+          <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="ALIASES"/>
         </eye:button>
     </eye:buttons>
 

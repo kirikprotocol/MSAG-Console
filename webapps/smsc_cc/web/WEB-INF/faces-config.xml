@@ -300,6 +300,13 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+      <managed-bean-name>msc</managed-bean-name>
+      <managed-bean-class>ru.novosoft.smsc.web.controllers.msc.MscController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+    </managed-bean>
+
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -403,6 +410,10 @@
     <navigation-case>
       <from-outcome>ALIAS_EDIT</from-outcome>
       <to-view-id>/smsc/alias/edit.faces</to-view-id>      
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>MSC</from-outcome>
+      <to-view-id>/smsc/msc/index.faces</to-view-id>      
     </navigation-case>
 
   </navigation-rule>

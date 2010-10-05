@@ -42,6 +42,11 @@ public class AliasEditController extends SmscController {
       simpleAlias  = a.getAlias().getSimpleAddress();
       hide         = a.isHide();
     }
+    else {
+      simpleAddress=null;
+      simpleAlias=null;
+      hide=false;
+    }
   }
 
 
@@ -124,5 +129,10 @@ public class AliasEditController extends SmscController {
       WebContext.getInstance().getAliasManager().deleteAlias(a.getAlias());
     }
     return "ALIASES";
+  }
+
+  public String reset() throws AdminException {
+    init();
+    return null;
   }
 }
