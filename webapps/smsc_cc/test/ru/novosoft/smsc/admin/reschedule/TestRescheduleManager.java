@@ -9,7 +9,7 @@ import java.io.File;
 /**
  * @author Artem Snopkov
  */
-public class TestRescheduleManager extends RescheduleManager {
+public class TestRescheduleManager extends RescheduleManagerImpl {
 
   public TestRescheduleManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     super(configFile, backupDir, cc, fs);

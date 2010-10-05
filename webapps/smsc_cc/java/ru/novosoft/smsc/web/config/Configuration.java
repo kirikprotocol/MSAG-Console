@@ -42,16 +42,6 @@ public class Configuration {
     journal.logChanges(oldSettings, smscSettings, user);
   }
 
-  public RescheduleSettings getRescheduleSettings() throws AdminException {
-    return adminContext.getRescheduleManager().getSettings();
-  }
-
-  public void updateRescheduleSettings(RescheduleSettings rescheduleSettings, String user) throws AdminException {
-    RescheduleSettings oldSettings = getRescheduleSettings();
-    adminContext.getRescheduleManager().updateSettings(rescheduleSettings);
-    journal.logChanges(oldSettings, rescheduleSettings, user);
-  }
-
   public UsersSettings getUsersSettings() throws AdminException {
     return adminContext.getUsersManager().getUsersSettings();
   }

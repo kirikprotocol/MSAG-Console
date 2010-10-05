@@ -2,12 +2,10 @@ package ru.novosoft.smsc.web.controllers.reschedule;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.reschedule.Reschedule;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.config.SmscStatusManager;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.event.ActionEvent;
@@ -25,11 +23,7 @@ public class RescheduleListController extends RescheduleController {
   private Collection<Reschedule> reschedules;
 
   public RescheduleListController() {
-
-    if (isSettingsChanged())
-      viewChanges();
-
-    checkOutOfDate();
+    super(true);
 
     RescheduleSettings s = getSettings();
     defaultReschedule = s.getDefaultReschedule();
@@ -62,7 +56,7 @@ public class RescheduleListController extends RescheduleController {
       RescheduleSettings settings = getSettings();
       settings.setReschedules(reschedules);
       setSettings(settings);
-      viewChanges();
+      checkChanges();
     } catch (AdminException ex) {
       addError(ex);
     }
@@ -78,11 +72,7 @@ public class RescheduleListController extends RescheduleController {
       s.setDefaultReschedule(defaultReschedule);
       setSettings(s);
       
-      Revision rev = submitSettings();
-      if (rev != null) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
-        return null;
-      }
+      submitSettings();
 
       return "INDEX";
     } catch (AdminException e) {
@@ -110,7 +100,7 @@ public class RescheduleListController extends RescheduleController {
     } catch (AdminException e) {
       addError(e);
     }
-    return null;
+    return "RESCHEDULE";
   }
 
   public String edit() {
@@ -156,23 +146,4 @@ public class RescheduleListController extends RescheduleController {
     this.defaultReschedule = defaultReschedule;
   }
 
-  public void viewChanges() {
-    addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.reschedule.submit.hint");
-  }
-
-  private void checkOutOfDate() {
-    try {
-      List<Integer> result = new ArrayList<Integer>();
-      SmscStatusManager ssm = getSmscStatusManager();
-      for (int i = 0; i < ssm.getSmscInstancesNumber(); i++) {
-        if (ssm.getRescheduleState(i) == SmscConfigurationStatus.OUT_OF_DATE)
-          result.add(i);
-      }
-      if (!result.isEmpty())
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", result.toString());
-    } catch (AdminException e) {
-      logger.error(e, e);
-      addError(e);
-    }
-  } 
 }

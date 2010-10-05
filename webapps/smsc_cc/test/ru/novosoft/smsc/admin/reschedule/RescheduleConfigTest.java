@@ -6,7 +6,6 @@ import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigHelper;
 import ru.novosoft.smsc.util.config.XmlConfig;
-import ru.novosoft.smsc.util.config.XmlConfigException;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -26,7 +25,7 @@ public class RescheduleConfigTest {
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), ".reschedule");
+    configFile = TestUtils.exportResourceToRandomFile(RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"), ".reschedule");
   }
 
   @After

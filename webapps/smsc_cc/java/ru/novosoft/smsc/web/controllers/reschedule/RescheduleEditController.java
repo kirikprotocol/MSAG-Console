@@ -34,6 +34,8 @@ public class RescheduleEditController extends RescheduleController {
 
   public RescheduleEditController() {
 
+    super(false);
+
     if (getRequestParameter("edit_initialized") == null) {
       oldReschedule = getRequestParameter("reschedule");
       newReschedule = oldReschedule;

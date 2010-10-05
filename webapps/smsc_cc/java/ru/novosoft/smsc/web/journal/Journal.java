@@ -22,7 +22,6 @@ public class Journal {
   private final List<JournalRecord> records = new ArrayList<JournalRecord>();
 
   private final SmscSettingsDiffHelper smsc = new SmscSettingsDiffHelper(JournalRecord.Subject.SMSC);
-  private final RescheduleSettingsDiffHelper reschedule = new RescheduleSettingsDiffHelper(JournalRecord.Subject.RESCHEDULE);
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(JournalRecord.Subject.USERS);
   private final SmeDiffHelper sme = new SmeDiffHelper(JournalRecord.Subject.SME);
 
@@ -132,16 +131,6 @@ public class Journal {
    */
   public void logChanges(SmscSettings oldSettings, SmscSettings newSettings, String user) {
     smsc.logChanges(this, oldSettings, newSettings, user);
-  }
-
-  /**
-   * Ищет различия между настройками политик передоставки и записывает их в журнал
-   * @param oldSettings старые политики передоставки
-   * @param newSettings новые политики передоставки
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logChanges(RescheduleSettings oldSettings, RescheduleSettings newSettings, String user) {
-    reschedule.logChanges(this, oldSettings, newSettings, user);
   }
 
   /**

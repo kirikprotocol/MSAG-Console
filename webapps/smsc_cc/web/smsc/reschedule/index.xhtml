@@ -12,7 +12,7 @@
 
   <ui:define name="content">
 
-    <tr:form id="reschedule_list">
+    <tr:form rendered="#{!reschedule.initFailed}">
 
       <tr:inputHidden value="#{reschedule.revision}" id="revision"/>
 

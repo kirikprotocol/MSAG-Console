@@ -36,11 +36,6 @@ public class CategoryController extends SettingsMController<CategorySettings> {
     return initError;
   }
 
-  private void checkChanges() {
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
-  }
-
   private void updateCategories(CategorySettings s) throws AdminException {
     for (Long categoryId : categories.keySet()) {
       Category cat = s.getCategory(categoryId);

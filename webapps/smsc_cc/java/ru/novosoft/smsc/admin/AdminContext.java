@@ -29,6 +29,7 @@ import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.region.RegionManager;
 import ru.novosoft.smsc.admin.region.RegionManagerImpl;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
+import ru.novosoft.smsc.admin.reschedule.RescheduleManagerImpl;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.route.RouteSubjectManager;
 import ru.novosoft.smsc.admin.service.ServiceManager;
@@ -118,7 +119,7 @@ public class AdminContext {
 
     aliasManager = new AliasManagerImpl(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
-    rescheduleManager = new RescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    rescheduleManager = new RescheduleManagerImpl(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     File usersFile = new File(cfg.getUsersFile());
 

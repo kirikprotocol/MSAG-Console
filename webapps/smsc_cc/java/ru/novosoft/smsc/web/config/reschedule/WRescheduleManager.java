@@ -1,7 +1,13 @@
-package ru.novosoft.smsc.web.journal;
+package ru.novosoft.smsc.web.config.reschedule;
 
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.reschedule.Reschedule;
+import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
+import ru.novosoft.smsc.web.config.BaseSettingsManager;
+import ru.novosoft.smsc.web.journal.Journal;
+import ru.novosoft.smsc.web.journal.JournalRecord;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,10 +16,34 @@ import java.util.Map;
 /**
  * @author Artem Snopkov
  */
-class RescheduleSettingsDiffHelper extends DiffHelper {
+public class WRescheduleManager extends BaseSettingsManager<RescheduleSettings> implements RescheduleManager {
 
-  public RescheduleSettingsDiffHelper(JournalRecord.Subject subject) {
-    super(subject);
+  private final RescheduleManager wrapped;
+  private final Journal j;
+
+  public WRescheduleManager(RescheduleManager wrapped, Journal j, String user) {
+    super(user);
+    this.wrapped = wrapped;
+    this.j = j;
+  }
+
+  public RescheduleSettings getSettings() throws AdminException {
+    return wrapped.getSettings();
+  }
+
+  @Override
+  protected void _updateSettings(RescheduleSettings settings) throws AdminException {
+    RescheduleSettings oldSettings = getSettings();
+    wrapped.updateSettings(settings);
+    logChanges(oldSettings, settings);
+  }
+
+  public RescheduleSettings cloneSettings(RescheduleSettings settings) {
+    return settings.cloneSettings();
+  }
+
+  public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    return wrapped.getStatusForSmscs();
   }
 
   /**
@@ -32,7 +62,7 @@ class RescheduleSettingsDiffHelper extends DiffHelper {
     return result;
   }
 
-  public void logChanges(Journal j, RescheduleSettings oldSettings, RescheduleSettings newSettings, String user) {
+  public void logChanges(RescheduleSettings oldSettings, RescheduleSettings newSettings) {
     Map<Integer, String> oldReschedules = expandReschedules(oldSettings.getReschedules());
     Map<Integer, String> newReschedules = expandReschedules(newSettings.getReschedules());
 
@@ -41,18 +71,18 @@ class RescheduleSettingsDiffHelper extends DiffHelper {
       String oldReschedule = e.getValue();
       String newReschedule = newReschedules.get(smppStatus);
       if (newReschedule == null)
-        j.addRecord(JournalRecord.Type.REMOVE, subject, user).setDescription("reschedule_removed", String.valueOf(smppStatus));
+        j.user(user).remove().reschedule(String.valueOf(smppStatus));
       else if (!newReschedule.equals(oldReschedule))
-        j.addRecord(JournalRecord.Type.CHANGE, subject, user).setDescription("reschedule_changed", String.valueOf(smppStatus), oldReschedule, newReschedule);
+        j.user(user).change("changed", oldReschedule, newReschedule).reschedule(String.valueOf(smppStatus));
     }
 
     for (Map.Entry<Integer, String> e : newReschedules.entrySet()) {
       int smppStatus = e.getKey();
       if (!oldReschedules.containsKey(smppStatus))
-        j.addRecord(JournalRecord.Type.ADD, subject, user).setDescription("reschedule_added", String.valueOf(smppStatus), e.getValue());
+        j.user(user).add().reschedule(String.valueOf(smppStatus), e.getValue());
     }
 
     if (!oldSettings.getDefaultReschedule().equals(newSettings.getDefaultReschedule()))
-      j.addRecord(JournalRecord.Type.CHANGE, subject, user).setDescription("property_changed", "defaultReschedule", oldSettings.getDefaultReschedule(), newSettings.getDefaultReschedule());
+      j.user(user).change("change_default", oldSettings.getDefaultReschedule(), newSettings.getDefaultReschedule()).reschedule();
   }
 }

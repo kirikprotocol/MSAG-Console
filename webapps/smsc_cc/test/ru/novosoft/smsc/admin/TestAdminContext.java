@@ -26,7 +26,7 @@ import ru.novosoft.smsc.admin.profile.TestProfileManager;
 import ru.novosoft.smsc.admin.provider.TestProviderManager;
 import ru.novosoft.smsc.admin.region.RegionsConfigTest;
 import ru.novosoft.smsc.admin.region.TestRegionManager;
-import ru.novosoft.smsc.admin.reschedule.RescheduleManagerTest;
+import ru.novosoft.smsc.admin.reschedule.RescheduleManagerImplTest;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceFileTest;
 import ru.novosoft.smsc.admin.resource.TestResourceManager;
@@ -74,7 +74,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(FraudManagerImplTest.class.getResourceAsStream("fraud.xml"), new File(smscDir, "fraud.xml"), false);
     TestUtils.exportResource(MapLimitManagerImplTest.class.getResourceAsStream("maplimits.xml"), new File(smscDir, "maplimits.xml"), false);
     TestUtils.exportResource(MscManagerImplTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"), false);
-    TestUtils.exportResource(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"), false);
+    TestUtils.exportResource(RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"), false);
     File usersFile = new File(cfg.getUsersFile());
     TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), usersFile, false);
     TestUtils.exportResource(SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"), false);

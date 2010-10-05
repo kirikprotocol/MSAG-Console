@@ -58,12 +58,7 @@ public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSe
 
   public boolean isInitError() {
     return initError;
-  }
-
-  private void checkChanges() {
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
-  }
+  }  
 
 
   public String submit() {

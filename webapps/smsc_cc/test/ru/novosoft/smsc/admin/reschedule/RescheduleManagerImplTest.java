@@ -9,15 +9,11 @@ import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.util.config.XmlConfig;
-import ru.novosoft.smsc.util.config.XmlConfigException;
 import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -25,13 +21,13 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class RescheduleManagerTest {
+public class RescheduleManagerImplTest {
 
   private File configFile, backupDir;
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), ".reschedule");
+    configFile = TestUtils.exportResourceToRandomFile(RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"), ".reschedule");
     backupDir = TestUtils.createRandomDir(".reschedule.backup");
   }
 
@@ -44,7 +40,7 @@ public class RescheduleManagerTest {
   }
 
   public RescheduleManager getManager(ClusterController cc) throws AdminException {
-    RescheduleManager m = new RescheduleManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+    RescheduleManager m = new RescheduleManagerImpl(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
     return m;
   }
 

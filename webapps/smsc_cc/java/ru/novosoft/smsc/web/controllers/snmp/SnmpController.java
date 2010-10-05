@@ -46,11 +46,6 @@ public class SnmpController extends SettingsMController<SnmpSettings> {
   }
 
 
-  private void checkChanges() {
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
-  }
-
   public String reset() {
     try {
       resetSettings();
