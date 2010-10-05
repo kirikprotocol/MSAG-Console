@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.web.controllers.service;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.sme.SmeConnectType;
 import ru.novosoft.smsc.admin.sme.SmeServiceStatus;
 import ru.novosoft.smsc.admin.sme.SmeSmscStatus;
@@ -9,10 +8,7 @@ import ru.novosoft.smsc.admin.sme.SmeSmscStatuses;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.config.Configuration;
-import ru.novosoft.smsc.web.config.SmscStatusManager;
-import ru.novosoft.smsc.web.controllers.SmscController;
 
-import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
 import java.util.*;
@@ -39,7 +35,7 @@ public class ServiceListController extends ServiceController {
   public String switchSme() {
     String smeId = getRequestParameter("smeId");
     try {
-      getConfiguration().switchSme(smeId, switchToHost.get(smeId), getUserName());
+      mngr.switchSme(smeId, switchToHost.get(smeId));
     } catch (AdminException e) {
       addError(e);
     }
@@ -49,7 +45,7 @@ public class ServiceListController extends ServiceController {
   public String stopSme() {
     String smeId = getRequestParameter("smeId");
     try {
-      getConfiguration().stopSme(smeId, getUserName());
+      mngr.stopSme(smeId);
     } catch (AdminException e) {
       addError(e);
     }
@@ -59,7 +55,7 @@ public class ServiceListController extends ServiceController {
   public String startSme() {
     String smeId = getRequestParameter("smeId");
     try {
-      getConfiguration().startSme(smeId, getUserName());
+      mngr.startSme(smeId);
     } catch (AdminException e) {
       addError(e);
     }
@@ -69,7 +65,7 @@ public class ServiceListController extends ServiceController {
   public String disconnectSmes() {
     if (selectedRows != null) {
       try {
-        getConfiguration().disconnectSmeFromSmsc(selectedRows, getUserName());
+        mngr.disconnectSmeFromSmsc(selectedRows);
       } catch (AdminException e) {
         addError(e);
       }
@@ -80,10 +76,8 @@ public class ServiceListController extends ServiceController {
   public String deleteSmes() {
     if (selectedRows != null) {
       try {
-        Configuration conf = getConfiguration();
-        String userName = getUserName();
         for (Object smeId : selectedRows)
-          conf.removeSme((String) smeId, userName);
+          mngr.removeSme((String) smeId);
       } catch (AdminException e) {
         addError(e);
       }
@@ -96,7 +90,7 @@ public class ServiceListController extends ServiceController {
     final Configuration conf = getConfiguration();
     final List<String> smeIds = new ArrayList<String>();
     try {
-      smeIds.addAll(conf.smes().keySet());
+      smeIds.addAll(mngr.smes().keySet());
     } catch (AdminException e) {
       addError(e);
     }
@@ -116,11 +110,11 @@ public class ServiceListController extends ServiceController {
 
         List<Esme> result = new ArrayList<Esme>(count);
         try {
-          Map<String, SmeSmscStatuses> smeSmscStats = conf.getSmesSmscStatuses();
+          Map<String, SmeSmscStatuses> smeSmscStats = mngr.getSmesSmscStatuses();
           // Заполняем список
           for (int i = startPos; i < Math.min(startPos + count, smeIds.size()); i++) {
             String smeId = smeIds.get(i);
-            SmeServiceStatus smeServiceStatus = conf.getSmeServiceStatus(smeId);
+            SmeServiceStatus smeServiceStatus = mngr.getSmeServiceStatus(smeId);
             SmeSmscStatuses smeSmscStatuses = smeSmscStats.get(smeId);
             result.add(new Esme(smeId, smeServiceStatus, smeSmscStatuses));
           }

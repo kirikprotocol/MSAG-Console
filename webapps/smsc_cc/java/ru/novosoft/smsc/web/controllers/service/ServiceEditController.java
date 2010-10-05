@@ -17,7 +17,7 @@ public class ServiceEditController extends ServiceController {
     systemId = getRequestParameter("smeId");
     if (systemId != null) {
       try {
-        sme = getConfiguration().getSme(systemId);
+        sme = mngr.getSme(systemId);
         add = false;
       } catch (AdminException e) {
         addError(e);
@@ -55,7 +55,7 @@ public class ServiceEditController extends ServiceController {
 
   public String save() {
     try {
-      getConfiguration().addSme(systemId, sme, getUserName());
+      mngr.addSme(systemId, sme);
       return "SERVICES";
     } catch (AdminException e) {
       addError(e);

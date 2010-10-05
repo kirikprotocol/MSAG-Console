@@ -23,7 +23,6 @@ public class Journal {
 
   private final SmscSettingsDiffHelper smsc = new SmscSettingsDiffHelper(JournalRecord.Subject.SMSC);
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(JournalRecord.Subject.USERS);
-  private final SmeDiffHelper sme = new SmeDiffHelper(JournalRecord.Subject.SME);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -142,42 +141,5 @@ public class Journal {
   public void logChanges(UsersSettings oldSettings, UsersSettings newSettings, String user) {
     users.logChanges(this, oldSettings, newSettings, user);
   }
-
-
-  // SME
-
-  public void logSmeAdded(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.ADD, JournalRecord.Subject.SME, user);
-    r.setDescription("sme.added", smeId);
-  }
-
-  public void logSmeUpdated(Sme oldSme, Sme newSme, String user) {
-    sme.logChanges(this, oldSme, newSme, user);
-  }
-
-  public void logSmeRemoved(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, JournalRecord.Subject.SME, user);
-    r.setDescription("sme.removed", smeId);
-  }
-
-  public void logSmeDisconnected(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.DISCONNECT, JournalRecord.Subject.SME, user);
-    r.setDescription("sme.disconnected", smeId);
-  }
-
-  public void logSmeStopped(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.STOP, JournalRecord.Subject.SME, user);
-    r.setDescription("sme.stopped", smeId);
-  }
-
-  public void logSmeStarted(String smeId, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.START, JournalRecord.Subject.SME, user);
-    r.setDescription("sme.started", smeId);
-  }
-
-  public void logSmeSwitched(String smeId, String toHost, String user) {
-    JournalRecord r = addRecord(JournalRecord.Type.SWITCH, JournalRecord.Subject.SME, user);
-    r.setDescription("sme.switched", smeId, toHost);
-  }  
 
 }

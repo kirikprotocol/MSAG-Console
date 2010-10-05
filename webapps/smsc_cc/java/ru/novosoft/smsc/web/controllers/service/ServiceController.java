@@ -2,6 +2,8 @@ package ru.novosoft.smsc.web.controllers.service;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
+import ru.novosoft.smsc.admin.sme.SmeManager;
+import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.controllers.SmscController;
 
@@ -15,9 +17,11 @@ import java.util.List;
 public class ServiceController extends SmscController {
 
   private boolean outOfDate;
+  protected SmeManager mngr;
 
   protected ServiceController() {
     outOfDate = checkOutOfDate();
+    mngr = WebContext.getInstance().getSmeManager();
   }
 
   private boolean checkOutOfDate() {
