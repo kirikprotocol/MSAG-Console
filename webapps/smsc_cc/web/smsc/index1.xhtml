@@ -29,28 +29,12 @@
 
       <!--<h:inputHidden value="#{index1.init}"/>-->
 
-      <!--<eye:dataTableFilter bean="#{index1}" applyAction="query" clearAction="clear">-->
-
-        <table class="page_menu" width="100%">
-            <tr>
-                <td align="left" width="10%">
-                    <h:outputText value="#{msg['filter.by']}"/>
-                </td>
-                <td align="left" width="80%">
-                    
-                </td>
-                <td width="10%" align="right">
-                    <tr:commandLink text="#{msg['apply.button']}" />
-                    <h:commandLink id="data_table_filter" value="#{msg['apply.button']}" onclick="new DataTableFilter('data_table_filter').clickApply()" />
-                    <h:outputText value=" | " />
-                    <tr:commandLink text="#{msg['clear.button']}" />
-                </td>
-            </tr>
-        </table>
-        <hr/>
+      <eye:dataTableFilter bean="#{index1}" applyAction="query" clearAction="clear">
 
 
-        <h:panelGroup>
+
+
+        <!--<h:panelGroup>-->
             <eye:dynamicTable value="#{index1.model}" rendered="true">
                 <eye:textColumn name="column1" maxLength="20" allowEditAfterAdd="false"/>
                 <eye:textColumn name="column2" maxLength="20"/>
@@ -59,7 +43,7 @@
                 <eye:selectColumn name="column4" values="#{index1.column4Values}" allowEditAfterAdd="false"/>
 
             </eye:dynamicTable>
-        </h:panelGroup>
+        <!--</h:panelGroup>-->
         <!--<h:panelGrid columns="2">-->
         <!--<h:outputLabel for="date" value="date"/><t:inputDate id="date" value="#{index1.date}"/>-->
         <!--<h:outputLabel for="select" value="limit"/>-->
@@ -70,7 +54,7 @@
               <!--<f:selectItem itemLabel="3" itemValue="3"/>-->
             <!--</h:selectOneMenu>-->
         <!--</h:panelGrid>-->
-      <!--</eye:dataTableFilter>-->
+      </eye:dataTableFilter>
 
       <!--<eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" rendered="#{index1.init}">-->
 
