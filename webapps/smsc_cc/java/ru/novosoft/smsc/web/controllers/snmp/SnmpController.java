@@ -25,7 +25,6 @@ public class SnmpController extends SettingsMController<SnmpSettings> {
 
   SnmpSettings snmpSettings;
   private String newObjectName;
-  private Object snmpObjectNames;
   boolean initError=false;
 
 
@@ -36,7 +35,6 @@ public class SnmpController extends SettingsMController<SnmpSettings> {
     } catch (AdminException e) {
       addError(e);
       initError = true;
-      
     }
 
   }
@@ -64,7 +62,6 @@ public class SnmpController extends SettingsMController<SnmpSettings> {
 
   public String save() {
     try {
-      //frSettings.setWhiteList(wl);
       setSettings(snmpSettings);
       submitSettings();
     } catch (AdminException e) {
@@ -87,7 +84,7 @@ public class SnmpController extends SettingsMController<SnmpSettings> {
   public boolean getDefaultEnabled() {
     return snmpSettings.getDefaultSnmpObject().isEnabled();
   }
-  
+
   public void setDefaultEnabled(boolean v) {
     snmpSettings.getDefaultSnmpObject().setEnabled(v);
   }
@@ -140,7 +137,7 @@ public class SnmpController extends SettingsMController<SnmpSettings> {
     }
     return ret;
   }
-  
+
   public Object editObject() {
     return "SNMP_EDIT";
   }

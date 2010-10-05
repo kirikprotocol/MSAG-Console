@@ -19,7 +19,7 @@ import javax.faces.application.FacesMessage;
  */
 public class AliasEditController extends SmscController {
 
-  String oldAliasSimpleAddr;
+  String oldAliasSimpleAddr=null;
   String simpleAlias=null;
   String simpleAddress =null;
   boolean hide = false;
@@ -51,15 +51,13 @@ public class AliasEditController extends SmscController {
     if(oldAliasSimpleAddr!=null && oldAliasSimpleAddr.length()>0) {
       AliasSet aset = null;
       try {
-           
-           aset = WebContext.getInstance().getAliasManager().getAliases();
-
-           while(aset.next()) {
-             Alias a = aset.get();
-             if(a.getAlias().getSimpleAddress().equals(oldAliasSimpleAddr)) {
-                return a;
-             }
-           }
+        aset = WebContext.getInstance().getAliasManager().getAliases();
+        while(aset.next()) {
+          Alias a = aset.get();
+          if(a.getAlias().getSimpleAddress().equals(oldAliasSimpleAddr)) {
+            return a;
+          }
+        }
       }
       finally {
         if(aset!=null) aset.close();
@@ -104,12 +102,14 @@ public class AliasEditController extends SmscController {
   public String submit() throws AdminException {
     if(!check(simpleAlias)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN,"smsc.aliasedit.alias.checkFail");
+      return null;
     }
     if(!check(simpleAddress)){
       addLocalizedMessage(FacesMessage.SEVERITY_WARN,"smsc.aliasedit.address.checkFail");
+      return null;
     }
     remove();
-    Alias a = new Alias(new Address(simpleAddress),new Address(simpleAlias),hide);    
+    Alias a = new Alias(new Address(simpleAddress),new Address(simpleAlias),hide);
     WebContext.getInstance().getAliasManager().addAlias(a);
     return "ALIASES";
   }

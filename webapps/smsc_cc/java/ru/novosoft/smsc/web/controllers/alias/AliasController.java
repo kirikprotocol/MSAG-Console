@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.alias.AliasSet;
+import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
@@ -38,17 +39,9 @@ public class AliasController extends SmscController {
   }
 
   private void init() {
-//    try {
-      //any init
-      aliasesFilter  = new DynamicTableModel();
-      adressesFilter = new DynamicTableModel();
-      selectedRows = new ArrayList();
-//    }
-//    catch (AdminException e){
-//      log.error("init error",e);
-//      addError(e);
-//      initError=true;
-//    }
+    aliasesFilter  = new DynamicTableModel();
+    adressesFilter = new DynamicTableModel();
+    selectedRows = new ArrayList();
   }
 
   public String clearFilter() {
@@ -102,59 +95,50 @@ public class AliasController extends SmscController {
     return ret;
   }
 
-
+  private boolean filter(DynamicTableModel m, String columnId, Address addr) {
+    if(m==null || m.getRowCount() == 0) return true;
+    for(DynamicTableRow row : m.getRows()) {
+      String filterVal = ((String) row.getValue(columnId)).trim();
+      if(addr.getSimpleAddress().indexOf(filterVal)>=0) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   public DataTableModel getAliasesModel() throws AdminException {
     final List<Alias> aliases = new ArrayList<Alias>();
-    final long start=System.currentTimeMillis();
 
-      AliasSet aset=null;
-      try {
-
-        aset = WebContext.getInstance().getAliasManager().getAliases();
-
-        while(aset.next()) {
-          Alias alias = aset.get();
-          if (hideFilter != null && hideFilter.booleanValue()!=(alias.isHide())) {
-            continue;
-          }
-          if(aliasesFilter!=null && aliasesFilter.getRows().size()>0) {
-            boolean found=false;
-            for(DynamicTableRow row : aliasesFilter.getRows()) {
-              String filterVal = ((String) row.getValue("alias")).trim();
-              if(alias.getAlias().getSimpleAddress().indexOf(filterVal)>=0) {
-                found=true;
-                break;
-              }
-            }
-            if(!found) continue;
-          }
-          if(adressesFilter!=null && adressesFilter.getRows().size()>0) {
-            boolean found=false;
-            for(DynamicTableRow row : adressesFilter.getRows()) {
-              String filterVal = ((String) row.getValue("address")).trim();
-              if(alias.getAddress().getSimpleAddress().indexOf(filterVal)>=0) {
-                found=true;
-                break;
-              }
-            }
-            if(!found) continue;
-          }
-          aliases.add(alias);
+    AliasSet aset=null;
+    try {
+      aset = WebContext.getInstance().getAliasManager().getAliases();
+      while(aset.next()) {
+        Alias alias = aset.get();
+        if (hideFilter != null && hideFilter.booleanValue()!=(alias.isHide())) {
+          continue;
         }
+        if(!filter(aliasesFilter, "alias", alias.getAlias())) {
+          continue;
+        }
+        if(!filter(adressesFilter, "alias", alias.getAddress())) {
+           continue;
+        }
+        aliases.add(alias);
       }
-      finally {
-        if(aset!=null) aset.close();
-      }
+    }
+    finally {
+      if(aset!=null) aset.close();
+    }
 
-      return new DataTableModel() {
-        public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
-        List<Alias> tmp = new LinkedList<Alias>(aliases);
 
-        Collections.sort(tmp, new Comparator<Alias>() {
-          public int compare(Alias o1, Alias o2) {
-            if (sortOrder != null) {
+    return new DataTableModel() {
+      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+
+
+        if (sortOrder != null) {
+          Collections.sort(aliases, new Comparator<Alias>() {
+            public int compare(Alias o1, Alias o2) {
               int mul = sortOrder.isAsc() ? 1 : -1;
               if ("alias".equals(sortOrder.getColumnId())) {
                 return (mul) * o1.getAlias().getSimpleAddress().compareTo(o2.getAlias().getSimpleAddress());
@@ -167,20 +151,18 @@ public class AliasController extends SmscController {
                 if(cmp!=0) return cmp;
                 return (mul) * o1.getAddress().getSimpleAddress().compareTo(o2.getAddress().getSimpleAddress());
               }
+              return 0;
             }
-            return o1.getAlias().getSimpleAddress().compareTo(o2.getAlias().getSimpleAddress());
-          }
-        });
-
+          });
+        }
         List<Alias> result = new LinkedList<Alias>();
-        for (Iterator<Alias> i = tmp.iterator(); i.hasNext() && count > 0;) {
+        for (Iterator<Alias> i = aliases.iterator(); i.hasNext() && count > 0;) {
           Alias a = i.next();
           if (--startPos < 0) {
             result.add(a);
             count--;
           }
         }
-        System.out.println(start-System.currentTimeMillis());
         return result;
       }
 
@@ -188,7 +170,7 @@ public class AliasController extends SmscController {
         return aliases.size();
       }
     };
-    
+
   }
 
 
@@ -200,7 +182,7 @@ public class AliasController extends SmscController {
     return selectedRows;
   }
 
- 
+
 
   public void removeSelected(ActionEvent e) throws AdminException {
     List<Alias> toDelete = new ArrayList<Alias>();
@@ -208,17 +190,17 @@ public class AliasController extends SmscController {
 
       AliasSet aset=null;
       try {
-          aset = WebContext.getInstance().getAliasManager().getAliases();
-          while(aset.next()) {
-            Alias alias = aset.get();
-            String sa = alias.getAlias().getSimpleAddress();
-            for(String rsa : (List<String>)selectedRows) {
-              if(rsa.equals(sa)) {
-                toDelete.add(alias);
-                break;
-              }
+        aset = WebContext.getInstance().getAliasManager().getAliases();
+        while(aset.next()) {
+          Alias alias = aset.get();
+          String sa = alias.getAlias().getSimpleAddress();
+          for(String rsa : (List<String>)selectedRows) {
+            if(rsa.equals(sa)) {
+              toDelete.add(alias);
+              break;
             }
           }
+        }
       }
       catch (AdminException e1) {
         addError(e1);

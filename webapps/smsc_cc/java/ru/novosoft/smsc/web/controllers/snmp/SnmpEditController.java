@@ -21,30 +21,25 @@ import java.util.List;
  */
 public class SnmpEditController  extends SettingsMController<SnmpSettings> {
 
-static final String SEVERITY_REGISTER = "severityRegister";
-  static final String SEVERITY_REGISTER_FAILED = "severityRegisterFailed";
-  static final String SEVERITY_UNREGISTER = "severityUnregister";
-  static final String SEVERITY_UNREGISTER_FAILED="severityUnregisterFailed";
+  public enum SeverityName {
+    severityRegister,severityRegisterFailed,severityUnregister,severityUnregisterFailed
+  }
 
-  static final String COUNTER_ACCEPTED="counterAccepted";
-  static final String COUNTER_OTHER="counterOther";
-  static final String COUNTER_0014="counter0014";
-  static final String COUNTER_000d="counter000d";
-  static final String COUNTER_FAILED="counterFailed";
-  static final String COUNTER_REJECTED="counterRejected";
-  static final String COUNTER_DELIVERED="counterDelivered";
-  static final String COUNTER_SDP="counterSDP";
-  static final String COUNTER_RETIRED="counterRetried";
-  static final String COUNTER_0058="counter0058";
-  static final String COUNTER_TEMPERROR ="counterTempError";
+  public enum CounterName {
+    counterAccepted,counterOther,counter0014,counter000d,counterFailed,
+    counterRejected,counterDelivered,counterSDP,counterRetried,counter0058,
+    counterTempError
+  }
+
+
 
 
   private SnmpSettings settings;
   private boolean initError=false;
   private String  objName=null;
   private SnmpObject obj=null;
-  private String counterToAdd;
-  private String severityToAdd;
+  private CounterName counterToAdd;
+  private SeverityName severityToAdd;
 
 
   @Override
@@ -111,201 +106,209 @@ static final String SEVERITY_REGISTER = "severityRegister";
 
   //-------- counters -------
 
-  public String getCounterToAdd() {
+  public CounterName getCounterToAdd() {
     return counterToAdd;
   }
 
-  public void setCounterToAdd(String counterToAdd) {
+  public void setCounterToAdd(CounterName counterToAdd) {
     this.counterToAdd = counterToAdd;
   }
 
   public List<SelectItem> getCountersToAdd() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    if(obj.getCounter000d()==null) ret.add(new SelectItem(COUNTER_000d));
-    if(obj.getCounter0014()==null) ret.add(new SelectItem(COUNTER_0014));
-    if(obj.getCounter0058()==null) ret.add(new SelectItem(COUNTER_0058));
-    if(obj.getCounterAccepted()==null) ret.add(new SelectItem(COUNTER_ACCEPTED));
-    if(obj.getCounterDelivered()==null) ret.add(new SelectItem(COUNTER_DELIVERED));
-    if(obj.getCounterFailed()==null) ret.add(new SelectItem(COUNTER_FAILED));
-    if(obj.getCounterOther()==null) ret.add(new SelectItem(COUNTER_OTHER));
-    if(obj.getCounterRejected()==null) ret.add(new SelectItem(COUNTER_REJECTED));
-    if(obj.getCounterRetried()==null) ret.add(new SelectItem(COUNTER_RETIRED));
-    if(obj.getCounterSDP()==null) ret.add(new SelectItem(COUNTER_SDP));
-    if(obj.getCounterTempError()==null) ret.add(new SelectItem(COUNTER_TEMPERROR));
+    if(obj.getCounter000d()==null) ret.add(new SelectItem(CounterName.counter000d));
+    if(obj.getCounter0014()==null) ret.add(new SelectItem(CounterName.counter0014));
+    if(obj.getCounter0058()==null) ret.add(new SelectItem(CounterName.counter0058));
+    if(obj.getCounterAccepted()==null) ret.add(new SelectItem(CounterName.counterAccepted));
+    if(obj.getCounterDelivered()==null) ret.add(new SelectItem(CounterName.counterDelivered));
+    if(obj.getCounterFailed()==null) ret.add(new SelectItem(CounterName.counterFailed));
+    if(obj.getCounterOther()==null) ret.add(new SelectItem(CounterName.counterOther));
+    if(obj.getCounterRejected()==null) ret.add(new SelectItem(CounterName.counterRejected));
+    if(obj.getCounterRetried()==null) ret.add(new SelectItem(CounterName.counterRetried));
+    if(obj.getCounterSDP()==null) ret.add(new SelectItem(CounterName.counterSDP));
+    if(obj.getCounterTempError()==null) ret.add(new SelectItem(CounterName.counterTempError));
     return ret;
   }
 
   public String removeCounter() throws AdminException {
-
-    String counterToRemove = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("counterToRemove");
-    if(counterToRemove!=null) {
-       if(COUNTER_000d.equals(counterToRemove)) obj.setCounter000d(null);
-       else if(COUNTER_0014.equals(counterToRemove)) obj.setCounter0014(null);
-       else if(COUNTER_0058.equals(counterToRemove)) obj.setCounter0058(null);
-       else if(COUNTER_ACCEPTED.equals(counterToRemove)) obj.setCounterAccepted(null);
-       else if(COUNTER_DELIVERED.equals(counterToRemove)) obj.setCounterDelivered(null);
-       else if(COUNTER_FAILED.equals(counterToRemove)) obj.setCounterFailed(null);
-       else if(COUNTER_OTHER.equals(counterToRemove)) obj.setCounterOther(null);
-       else if(COUNTER_REJECTED.equals(counterToRemove)) obj.setCounterRejected(null);
-       else if(COUNTER_RETIRED.equals(counterToRemove)) obj.setCounterRetried(null);
-       else if(COUNTER_SDP.equals(counterToRemove)) obj.setCounterSDP(null);
-       else if(COUNTER_TEMPERROR.equals(counterToRemove)) obj.setCounterTempError(null);
-       setSettings(settings);
+    String s = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("counterToRemove");
+    if(s==null) return null;
+    CounterName counterToRemove = CounterName.valueOf(s);
+    switch (counterToRemove) {
+      case counter000d:
+        obj.setCounter000d(null);
+        break;
+      case counter0014:
+        obj.setCounter0014(null);
+        break;
+      case counter0058:
+        obj.setCounter0058(null);
+        break;
+      case counterAccepted:
+        obj.setCounterAccepted(null);
+        break;
+      case counterDelivered:
+        obj.setCounterDelivered(null);
+        break;
+      case counterFailed:
+        obj.setCounterFailed(null);
+        break;
+      case counterOther:
+        obj.setCounterOther(null);
+        break;
+      case counterRejected:
+        obj.setCounterRejected(null);
+        break;
+      case counterRetried:
+        obj.setCounterRetried(null);
+        break;
+      case counterSDP:
+        obj.setCounterSDP(null);
+        break;
+      case counterTempError:
+        obj.setCounterTempError(null);
+        break;
     }
+    setSettings(settings);
     return null;
   }
 
 
   public String addCounter()  throws AdminException {
     if(counterToAdd==null) return null;
+    switch (counterToAdd) {
 
-    if(COUNTER_000d.equals(counterToAdd)) {
-       if(obj.getCounter000d()==null) {
-         obj.setCounter000d(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
+      case counter000d :
+        if(obj.getCounter000d()==null)
+          obj.setCounter000d(new SnmpCounter(0,0,0,0));
+        break;
+
+      case counter0014:
+        if(obj.getCounter0014()==null)
+          obj.setCounter0014(new SnmpCounter(0,0,0,0));
+        break;
+      case counter0058:
+        if(obj.getCounter0058()==null)
+          obj.setCounter0058(new SnmpCounter(0,0,0,0));
+        break;
+
+      case counterAccepted:
+        if(obj.getCounterAccepted()==null)
+          obj.setCounterAccepted(new SnmpCounter(0,0,0,0));
+        break;
+      case counterDelivered:
+        if(obj.getCounterDelivered()==null)
+          obj.setCounterDelivered(new SnmpCounter(0,0,0,0));
+        break;
+      case counterFailed:
+        if(obj.getCounterFailed()==null)
+          obj.setCounterFailed(new SnmpCounter(0,0,0,0));
+        break;
+      case counterOther:
+        if(obj.getCounterOther()==null)
+          obj.setCounterOther(new SnmpCounter(0,0,0,0));
+        break;
+      case counterRejected:
+        if(obj.getCounterRejected()==null)
+          obj.setCounterRejected(new SnmpCounter(0,0,0,0));
+        break;
+      case counterRetried:
+        if(obj.getCounterRetried()==null)
+          obj.setCounterRetried(new SnmpCounter(0,0,0,0));
+        break;
+      case counterSDP:
+        if(obj.getCounterSDP()==null)
+          obj.setCounterSDP(new SnmpCounter(0,0,0,0));
+        break;
+      case counterTempError:
+        if(obj.getCounterTempError()==null)
+          obj.setCounterTempError(new SnmpCounter(0,0,0,0));
+        break;
     }
-    if(COUNTER_0014.equals(counterToAdd)) {
-       if(obj.getCounter0014()==null) {
-         obj.setCounter0014(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_0058.equals(counterToAdd)) {
-       if(obj.getCounter0058()==null) {
-         obj.setCounter0058(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_ACCEPTED.equals(counterToAdd)) {
-       if(obj.getCounterAccepted()==null) {
-         obj.setCounterAccepted(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_DELIVERED.equals(counterToAdd)) {
-       if(obj.getCounterDelivered()==null) {
-         obj.setCounterDelivered(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_FAILED.equals(counterToAdd)) {
-       if(obj.getCounterFailed()==null) {
-         obj.setCounterFailed(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_OTHER.equals(counterToAdd)) {
-       if(obj.getCounterOther()==null) {
-         obj.setCounterOther(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_REJECTED.equals(counterToAdd)) {
-       if(obj.getCounterRejected()==null) {
-         obj.setCounterRejected(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_RETIRED.equals(counterToAdd)) {
-       if(obj.getCounterRetried()==null) {
-         obj.setCounterRetried(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_SDP.equals(counterToAdd)) {
-       if(obj.getCounterSDP()==null) {
-         obj.setCounterSDP(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
-    if(COUNTER_TEMPERROR.equals(counterToAdd)) {
-       if(obj.getCounterTempError()==null) {
-         obj.setCounterTempError(new SnmpCounter(0,0,0,0));
-         setSettings(settings);
-         return null;
-       }
-    }
+    setSettings(settings);
     return null;
   }
 
   //------- severities -----
-   public List<SelectItem> getSeveritiesToAdd() {
+  public List<SelectItem> getSeveritiesToAdd() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    if(obj.getSeverityRegister()==null) ret.add(new SelectItem(SEVERITY_REGISTER));
-    if(obj.getSeverityRegisterFailed()==null) ret.add(new SelectItem(SEVERITY_REGISTER_FAILED));
-    if(obj.getSeverityUnregister()==null) ret.add(new SelectItem(SEVERITY_UNREGISTER));
-    if(obj.getSeverityUnregisterFailed()==null) ret.add(new SelectItem(SEVERITY_UNREGISTER_FAILED));
+    if(obj.getSeverityRegister()==null)
+      ret.add(new SelectItem(SeverityName.severityRegister));
+    if(obj.getSeverityRegisterFailed()==null)
+      ret.add(new SelectItem(SeverityName.severityRegisterFailed));
+    if(obj.getSeverityUnregister()==null)
+      ret.add(new SelectItem(SeverityName.severityUnregister));
+    if(obj.getSeverityUnregisterFailed()==null)
+      ret.add(new SelectItem(SeverityName.severityUnregisterFailed));
     return ret;
   }
 
-  public String getSeverityToAdd() {
+  public SeverityName getSeverityToAdd() {
     return severityToAdd;
   }
 
-  public void setSeverityToAdd(String severityToAdd) {
+  public void setSeverityToAdd(SeverityName severityToAdd) {
     this.severityToAdd = severityToAdd;
   }
 
   public String removeSeverity() throws AdminException {
-    String severityToRemove = getRequestParameter("severityToRemove");
-    if(severityToRemove!=null) {
-       if(SEVERITY_REGISTER.equals(severityToRemove)) obj.setSeverityRegister(null);
-       else if(SEVERITY_REGISTER_FAILED.equals(severityToRemove)) obj.setSeverityRegisterFailed(null);
-       else if(SEVERITY_UNREGISTER.equals(severityToRemove)) obj.setSeverityUnregister(null);
-       else if(SEVERITY_UNREGISTER_FAILED.equals(severityToRemove)) obj.setSeverityUnregisterFailed(null);
-       setSettings(settings);
+    SeverityName severityToRemove = SeverityName.valueOf(getRequestParameter("severityToRemove"));
+    if(severityToRemove==null) return null;
+
+    switch (severityToRemove) {
+      case severityRegister :
+        obj.setSeverityRegister(null);
+        break;
+      case severityRegisterFailed:
+        obj.setSeverityRegisterFailed(null);
+        break;
+      case severityUnregister:
+        obj.setSeverityUnregister(null);
+        break;
+      case severityUnregisterFailed:
+        obj.setSeverityUnregisterFailed(null);
+        break;
     }
+    setSettings(settings);
     return null;
   }
 
   public String addSeverity()  throws AdminException {
     if(severityToAdd==null) return null;
+    switch (severityToAdd) {
+      case severityRegister :
+        if(obj.getSeverityRegister()==null) {
+          obj.setSeverityRegister(SnmpSeverity.OFF);
+          setSettings(settings);
+        }
+        break;
 
-    if(SEVERITY_REGISTER.equals(severityToAdd)) {
-       if(obj.getSeverityRegister()==null) {
-         obj.setSeverityRegister(SnmpSeverity.OFF);
-         setSettings(settings);
-         return null;
-       }
-    }
-    else if(SEVERITY_REGISTER_FAILED.equals(severityToAdd)) {
-       if(obj.getSeverityRegisterFailed()==null) {
-         obj.setSeverityRegisterFailed(SnmpSeverity.OFF);
-         setSettings(settings);
-         return null;
-       }
-    }
-    else if(SEVERITY_UNREGISTER.equals(severityToAdd)) {
+      case severityRegisterFailed :
+        if(obj.getSeverityRegisterFailed()==null) {
+          obj.setSeverityRegisterFailed(SnmpSeverity.OFF);
+          setSettings(settings);
+        }
+        break;
+
+      case severityUnregister :
         if(obj.getSeverityUnregister()==null) {
           obj.setSeverityUnregister(SnmpSeverity.OFF);
           setSettings(settings);
-          return null;
         }
-    }
-    else if(SEVERITY_UNREGISTER_FAILED.equals(severityToAdd)) {
+        break;
+
+      case severityUnregisterFailed:
         if(obj.getSeverityUnregisterFailed()==null) {
           obj.setSeverityUnregisterFailed(SnmpSeverity.OFF);
           setSettings(settings);
-          return null;
         }
+        break;
     }
     return null;
   }
 
   public String getObjTitle() {
-    String name = objName;
-    if(name==null || name.length()==0) name=getLocalizedString("snmp.default.object");
+    String name = (objName==null || objName.length()==0) ? getLocalizedString("snmp.default.object") : objName;
     return getLocalizedString("snmp.edit.object.subtitle",name);
   }
 }
