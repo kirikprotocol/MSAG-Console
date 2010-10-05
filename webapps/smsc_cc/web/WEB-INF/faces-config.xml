@@ -310,6 +310,11 @@
     <managed-bean-class>ru.novosoft.smsc.web.controllers.provider.ProviderController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+  <managed-bean>
+    <managed-bean-name>subjects</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.subjects.SubjectsController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <navigation-rule>
     <navigation-case>
@@ -422,6 +427,12 @@
     <navigation-case>
       <from-outcome>PROVIDERS</from-outcome>
       <to-view-id>/smsc/provider/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SUBJECTS</from-outcome>
+      <to-view-id>/smsc/subjects/index.faces</to-view-id>
+      <redirect/>
     </navigation-case>
 
   </navigation-rule>

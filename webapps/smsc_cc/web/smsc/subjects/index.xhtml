@@ -1,0 +1,90 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+    >
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['subjects.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!subjects.initError}">
+
+      <h:inputHidden value="#{subjects.revision}"/>
+
+      <eye:dataTableFilter bean="#{subjects}" clearAction="clearFilter">
+
+        <eye:pageSubtitle value="#{msg['subjects.subtitle.maskFilter']}"/>
+        <tr:panelFormLayout inlineStyle="width:300px;">
+          <eye:dynamicTable value="#{subjects.masksFilter}">
+            <eye:textColumn name="mask"   allowEditAfterAdd="true"/>
+          </eye:dynamicTable>
+        </tr:panelFormLayout>
+
+        <eye:pageSubtitle value="#{msg['subjects.subtitle.nameFilter']}"/>
+        <tr:panelFormLayout inlineStyle="width:300px;">
+          <h:inputText value="#{subjects.namesFilter}" />
+        </tr:panelFormLayout>
+
+      </eye:dataTableFilter>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['add.button']}" action="#{subjects.add}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{subjects.deleteSelected}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{subjects.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:space/>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{subjects.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+
+      </eye:buttons>
+
+      <eye:dataTable value="#{subjects.subjectsModel}" selectedRows="#{subjects.selectedRows}" var="s">
+        <eye:row rowId="#{s.name}" opened="true">
+          <eye:column name="name" title="#{msg['subjects.page.column.name']}" width="33%" sortable="true" defaultSortOrder="asc">
+            <h:commandLink  value="#{s.name}" action="#{subjects.edit}">
+              <f:param name="subjectToEdit" value="#{s.name}"/>
+            </h:commandLink>
+          </eye:column>
+          <eye:column name="defaultSme" title="#{msg['subjects.page.column.defaultSme']}" width="33%" sortable="true">
+            <h:outputText  value="#{s.defaultSmeId}"/>
+          </eye:column>
+          <eye:column name="masks" title="#{msg['subjects.page.column.masks']}" width="33%">
+            <c:set var="len" value="#{fn:length(s.masks)}"/>
+
+            <eye:collapsingGroup label="#{s.masks[0].simpleAddress},..." rendered="#{len>1}">
+              <tr:panelFormLayout>
+                <c:forEach var="i" begin="1" end="#{len-1}" step="1">
+                  <h:outputText value="#{s.masks[i].simpleAddress}"/>
+                </c:forEach>
+              </tr:panelFormLayout>
+            </eye:collapsingGroup>
+            <tr:panelGroupLayout rendered="#{len==1}">
+              <h:outputText value="#{s.masks[0].simpleAddress}"/>
+            </tr:panelGroupLayout>
+
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['add.button']}" action="#{subjects.add}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{subjects.deleteSelected}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{subjects.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:space/>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{subjects.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

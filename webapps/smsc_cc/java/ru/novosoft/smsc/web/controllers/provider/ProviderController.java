@@ -34,10 +34,6 @@ public class ProviderController extends SettingsMController<ProviderSettings> {
     return initError;
   }
 
-  private void checkChanges() {
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
-  }
 
   private void updateProviders(ProviderSettings s) throws AdminException {
     for (Long categoryId : providers.keySet()) {
