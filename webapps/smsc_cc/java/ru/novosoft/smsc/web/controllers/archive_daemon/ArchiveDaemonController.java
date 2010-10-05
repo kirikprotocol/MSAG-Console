@@ -9,10 +9,7 @@ import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSettings> {
@@ -25,28 +22,25 @@ public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSe
   private DynamicTableModel locationSources;
   private DynamicTableModel indexatorSmeAddrChunkSizes;
 
+
+  protected  DynamicTableModel buildModel(Set entrySet) {
+    DynamicTableModel dm = new DynamicTableModel();
+    for (Map.Entry e : (Set<Map.Entry>)entrySet) {
+      DynamicTableRow row = new DynamicTableRow();
+      row.setValue("key", e.getKey());
+      row.setValue("value", e.getValue());
+      dm.addRow(row);
+    }
+    return dm;
+  }
+
   @Override
   protected void init() throws AdminException {
     super.init();    //To change body of overridden methods use File | Settings | File Templates.
     config=getSettings();
     switchToHost = WebContext.getInstance().getArchiveDaemonManager().getDaemonOnlineHost();
-
-    locationSources = new DynamicTableModel();
-    for (Map.Entry<String, String> e : config.getLocationsSources().entrySet()) {
-      DynamicTableRow row = new DynamicTableRow();
-      row.setValue("key", e.getKey());
-      row.setValue("value", e.getValue());
-      locationSources.addRow(row);
-    }
-
-    indexatorSmeAddrChunkSizes = new DynamicTableModel();
-    for (Map.Entry<String, Integer> e : config.getIndexatorSmeAddrChunkSizes().entrySet()) {
-      DynamicTableRow row = new DynamicTableRow();
-      row.setValue("key", e.getKey());
-      row.setValue("value", e.getValue());
-      indexatorSmeAddrChunkSizes.addRow(row);
-    }
-
+    locationSources = buildModel(config.getLocationsSources().entrySet());
+    indexatorSmeAddrChunkSizes = buildModel(config.getIndexatorSmeAddrChunkSizes().entrySet());
   }
 
   public ArchiveDaemonController() {
