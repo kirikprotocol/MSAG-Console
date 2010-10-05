@@ -16,23 +16,23 @@
 
     <h:form >
 
-    <eye:dataTableFilter bean="#{msc}" clearAction="clearFilter">
+      <eye:dataTableFilter bean="#{msc}" clearAction="clearFilter">
         <tr:panelFormLayout inlineStyle="width:300px;">
-        <tr:panelLabelAndMessage label="#{msg['smsc.msc.prefix.filter']}">
+          <tr:panelLabelAndMessage label="#{msg['smsc.msc.prefix.filter']}">
             <h:inputText value="#{msc.prefixFilter}" style="width:100px;"/>
-        </tr:panelLabelAndMessage>
+          </tr:panelLabelAndMessage>
         </tr:panelFormLayout>
-    </eye:dataTableFilter>
+      </eye:dataTableFilter>
 
-    <eye:buttons>
+      <eye:buttons>
         <eye:button>
           <h:commandLink value="#{msg['delete.button']}" id="delete1" actionListener="#{msc.removeSelected}"
-                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+                         onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
-    </eye:buttons>
+      </eye:buttons>
 
-    <eye:dataTable value="#{msc.commutatorsModel}" selectedRows="#{msc.selectedRows}" var="a">
+      <eye:dataTable value="#{msc.commutatorsModel}" selectedRows="#{msc.selectedRows}" var="a">
 
         <eye:row rowId="#{a.simpleAddress}" opened="true">
           <eye:column name="addr" title="#{msg['smsc.msc.column.addr']}" width="33%" sortable="true" defaultSortOrder="asc">
@@ -42,24 +42,24 @@
 
       </eye:dataTable>
 
-      
+
 
       <eye:buttons>
-            <eye:button>
-              <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{msc.removeSelected}"
-                              onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
-            </eye:button>
-            <eye:space/>
+        <eye:button>
+          <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{msc.removeSelected}"
+                         onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+        </eye:button>
+        <eye:space/>
       </eye:buttons>
 
       <eye:pageSubtitle value="#{msg['smsc.msc.add.address']}" />
       <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >
-          <tr:inputText value="#{msc.newAddress}"  required="false" simple="true" contentStyle="width:150px;" >
-              <eye:validatePhone/>
-          </tr:inputText>
-          <tr:commandLink id="add2" actionListener="#{msc.addAddress}" >
-              <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"/>
-          </tr:commandLink>
+        <tr:inputText value="#{msc.newAddress}"  required="false" simple="true" contentStyle="width:150px;" >
+          <eye:validatePhone/>
+        </tr:inputText>
+        <tr:commandLink id="add2" actionListener="#{msc.addAddress}" >
+          <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"/>
+        </tr:commandLink>
       </h:panelGrid>
 
 

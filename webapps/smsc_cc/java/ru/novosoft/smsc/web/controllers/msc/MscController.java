@@ -29,10 +29,8 @@ public class MscController extends SmscController {
 
   public MscController() {
     super();
-    
+
   }
-
-
 
   public String getPrefixFilter() {
     return prefixFilter;
@@ -56,7 +54,6 @@ public class MscController extends SmscController {
   }
 
   public void setNewAddress(String newAddres) {
-
     this.newAddress = newAddres;
   }
 
@@ -68,21 +65,21 @@ public class MscController extends SmscController {
 
   public void removeSelected(ActionEvent actionEvent) throws AdminException {
     if(selectedRows!=null)
-    for(String s : selectedRows) {
-       Address a = new Address(s);
-       WebContext.getInstance().getMscManager().removeMsc(a);
-    }
+      for(String s : selectedRows) {
+        Address a = new Address(s);
+        WebContext.getInstance().getMscManager().removeMsc(a);
+      }
   }
 
-public DataTableModel getCommutatorsModel() throws AdminException {
+  public DataTableModel getCommutatorsModel() throws AdminException {
     final List<Address> filteredMscs = new ArrayList<Address>();
 
     Collection<Address> mscs = WebContext.getInstance().getMscManager().mscs();
     for(Address msc : mscs) {
-        if (prefixFilter != null && !msc.getSimpleAddress().startsWith(prefixFilter)) {
-          continue;
-        }
-        filteredMscs.add(msc);
+      if (prefixFilter != null && !msc.getSimpleAddress().startsWith(prefixFilter)) {
+        continue;
+      }
+      filteredMscs.add(msc);
     }
 
     return new DataTableModel() {
