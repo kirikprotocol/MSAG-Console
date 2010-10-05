@@ -49,6 +49,13 @@ private:
 
 typedef EmbedRefPtr< Region >  RegionPtr;
 
+class RegionFinder
+{
+public:
+    virtual ~RegionFinder() {}
+    virtual regionid_type findRegion( uint64_t subscriber ) = 0;
+};
+
 } // informer
 } // smsc
 

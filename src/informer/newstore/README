@@ -1,3 +1,27 @@
 Contents: input storage types.
 
 Depends: io, data.
+
+Architecture:
+new/RRRR/NNNN.data
+new/reconf/NNNN.data
+new/journal.jnl
+
+1. Append-new-msg task (one task per delivery, lock).
+   messages are processed (region determination)
+   and appended to the last file (getNextMsgId()) for given region.
+   When a new region appeared, its pointer is written to the journal,
+   and core notified.
+
+2. Region reconfigure task.  When this task is active, no new messages
+   can be added.
+   messages are processed (region determination).
+
+3. Message reading task.  Read messages from given file, offset for
+   given region.  If there is no more files for this region, stop.
+
+For each storage we keep:
+1. next file number;
+2. for each region:
+   reading current file number + offset in the file;
+   writing current file number + offset in the file;

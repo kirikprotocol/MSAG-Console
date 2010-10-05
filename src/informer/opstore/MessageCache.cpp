@@ -1,12 +1,13 @@
 #include <vector>
 #include "MessageCache.h"
+#include "informer/data/InputMessageSource.h"
 
 namespace eyeline {
 namespace informer {
 
 MessageCache::MessageCache( const DeliveryInfo& dlvInfo,
                             StoreJournal&       storeJournal,
-                            InputMessageSource& source ) :
+                            InputMessageSource* source ) :
 dlvInfo_(dlvInfo),
 storeJournal_(storeJournal),
 source_(source)
@@ -27,7 +28,7 @@ RegionalStoragePtr MessageCache::getRegionalStorage( regionid_type regionId,
                                 RegionalStoragePtr(new RegionalStorage(dlvInfo_,
                                                                        regionId,
                                                                        storeJournal_,
-                                                                       source_)));
+                                                                       *source_)));
     }
     return *ptr;
 }
@@ -51,6 +52,12 @@ void MessageCache::rollOver()
           ++i ) {
         (*i)->rollOver();
     }
+}
+
+
+void MessageCache::addNewMessages( MsgIter begin, MsgIter end )
+{
+    source_->addNewMessages(begin,end);
 }
 
 }

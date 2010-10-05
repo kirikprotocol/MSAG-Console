@@ -3,7 +3,6 @@
 #include "informer/io/UnlockMutexGuard.h"
 #include "informer/io/RelockMutexGuard.h"
 #include "StoreJournal.h"
-// #include "RequestNewMsgTask.h"
 
 namespace eyeline {
 namespace informer {
@@ -105,7 +104,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
             const unsigned resendQueueSize = unsigned(resendQueue_.size());
             // mg.Unlock();
             try {
-                smsc_log_debug(log_,"R=%u/D=%u wants to request input messages as it has new/resend=%u/%u",
+                smsc_log_debug(log_,"R=%u/D=%u wants to request input transfer as it has new/resend=%u/%u",
                                unsigned(regionId_),
                                unsigned(dlvInfo_.getDlvId()),
                                newQueueSize, resendQueueSize);
@@ -305,8 +304,9 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
             ++count;
         }
         smsc_log_debug(log_,"messages (%u) in R=%u/D=%u: %s",
+                       count,
                        unsigned(regionId_),
-                       count,unsigned(dlvInfo_.getDlvId()),
+                       unsigned(dlvInfo_.getDlvId()),
                        s.c_str());
     }
 }

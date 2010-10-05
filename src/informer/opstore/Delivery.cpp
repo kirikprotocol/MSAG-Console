@@ -6,7 +6,7 @@ namespace informer {
 
 Delivery::Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
                     StoreJournal&               journal,
-                    InputMessageSource&         source ) :
+                    InputMessageSource*         source ) :
 dlvInfo_(dlvInfo),
 cache_(*dlvInfo_.get(),journal,source),
 ref_(0)

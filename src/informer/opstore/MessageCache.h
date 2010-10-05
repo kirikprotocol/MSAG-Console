@@ -12,7 +12,7 @@ class MessageCache
 public:
     MessageCache( const DeliveryInfo& dlvInfo,
                   StoreJournal&       storeJournal,
-                  InputMessageSource& source );
+                  InputMessageSource* source );
 
     /// get the regional storage for given region.
     RegionalStoragePtr getRegionalStorage( regionid_type regionId, bool create=false );
@@ -22,13 +22,15 @@ public:
 
     inline const DeliveryInfo& getDlvInfo() const { return dlvInfo_; }
 
+    void addNewMessages( MsgIter begin, MsgIter end );
+
 private:
     smsc::core::synchronization::Mutex                 cacheLock_;
     smsc::core::buffers::IntHash< RegionalStoragePtr > storages_;
 
     const DeliveryInfo&                                dlvInfo_;
     StoreJournal&                                      storeJournal_;
-    InputMessageSource&                                source_;
+    InputMessageSource*                                source_; // owned
 };
 
 }

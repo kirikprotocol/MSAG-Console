@@ -4,7 +4,7 @@
 #include <memory>
 #include "ScoredList.h"
 #include "core/synchronization/EventMonitor.hpp"
-#include "core/threads/ThreadedTask.hpp"
+#include "core/threads/Thread.hpp"
 #include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
 #include "sme/SmppBase.hpp"
@@ -26,7 +26,7 @@ struct SmscConfig
 
 
 /// sending messages to one smsc
-class SmscSender : public smsc::core::threads::ThreadedTask, public smsc::sme::SmppPduEventListener
+class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPduEventListener
 {
     friend class ScoredList< SmscSender >;
 public:
@@ -36,9 +36,10 @@ public:
 
     virtual ~SmscSender();
 
-    virtual const char* taskName() { return "smscsender"; }
-
     const std::string& getSmscId() const { return smscId_; }
+
+    void start();
+    void stop();
 
     /// sending one message
     /// @return number of chunks the message has been splitted or 0
@@ -48,7 +49,7 @@ public:
     /// a method allows to wait until sender stops it work
     /// NOTE: post-requisite -- task is released!
     void updateConfig( const SmscConfig& config );
-    void waitUntilReleased();
+    // void waitUntilReleased();
 
     /// this two methods are invoked from locked state.
     void detachRegionSender( RegionSender& rs );
@@ -61,8 +62,8 @@ private:
     /// sending messages
     virtual int Execute();
 
-    virtual void onThreadPoolStartTask();
-    virtual void onRelease();
+    // virtual void onThreadPoolStartTask();
+    // virtual void onRelease();
 
     void connectLoop();
     void sendLoop();
@@ -82,6 +83,7 @@ private:
     smsc::core::synchronization::EventMonitor mon_;
     ScoredList< SmscSender >                  scoredList_; // not owned
     usectime_type                             currentTime_;
+    bool                                      isStopping_;
 };
 
 } // informer

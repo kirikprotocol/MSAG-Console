@@ -6,9 +6,9 @@
 #include "core/buffers/IntHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Condition.hpp"
-#include "informer/data/InputMessageSource.h"
 #include "informer/data/DeliveryInfo.h"
 #include "informer/io/EmbedRefPtr.h"
+#include "informer/data/InputMessageSource.h"
 #include "logger/Logger.h"
 
 namespace eyeline {
@@ -42,7 +42,7 @@ public:
                      InputMessageSource& source );
 
     virtual ~RegionalStorage();
-    virtual dlvid_type getDlvId() const { return dlvInfo_.getDlvId(); }
+    dlvid_type getDlvId() const { return dlvInfo_.getDlvId(); }
     virtual regionid_type getRegionId() const { return regionId_; }
     inline const DeliveryInfo& getDlvInfo() const { return dlvInfo_; }
 

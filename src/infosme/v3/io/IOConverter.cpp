@@ -1,19 +1,27 @@
 #include <cstring>
 #include "IOConverter.h"
+#include "InfosmeException.h"
 #include "util/byteorder.h"
+
+#define checksz(sz) { \
+    register const size_t newpos = pos + sz; \
+    if (newpos>buflen) { throw InfosmeException("buffer is too small: len=%u",unsigned(buflen)); } \
+    pos = newpos; \
+}
 
 namespace eyeline {
 namespace informer {
-namespace io {
 
 uint8_t FromBuf::get8()
 {
+    checksz(1);
     return *(buf++);
 }
 
 
 uint16_t FromBuf::get16()
 {
+    checksz(2);
     register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
     register uint16_t res(*p);
     res <<= 8;
@@ -25,6 +33,7 @@ uint16_t FromBuf::get16()
 
 uint32_t FromBuf::get32()
 {
+    checksz(4);
     register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
     register uint32_t res(*p);
     res <<= 8;
@@ -41,6 +50,7 @@ uint32_t FromBuf::get32()
 uint64_t FromBuf::get64()
 {
 #if BYTE_ORDER == BIG_ENDIAN
+    checksz(8);
     const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
     unsigned shift = unsigned(reinterpret_cast<uint64_t>(p)) & 0x7;
     p -= shift;
@@ -63,29 +73,46 @@ uint64_t FromBuf::get64()
 
 const char* FromBuf::getCString()
 {
-    const char* ret = reinterpret_cast<const char*>(buf);
-    for ( ; *buf != '\0'; ++buf ) {}
-    ++buf; // to skip '\0'
+    register const unsigned char* bnew = buf;
+    for ( ; *bnew != '\0'; ++bnew ) {}
+    ++bnew; // to skip '\0'
+    checksz((bnew-buf));
+    register const char* ret = reinterpret_cast<const char*>(buf);
+    buf = bnew;
     return ret;
 }
 
 
 const unsigned char* FromBuf::skip( size_t bytes )
 {
-    const unsigned char* ret = buf;
+    checksz(bytes);
+    register const unsigned char* ret = buf;
     buf += bytes;
     return ret;
 }
 
 
+void FromBuf::setPos( size_t newpos )
+{
+    if (newpos>buflen) {
+        throw InfosmeException("buffer is too small: len=%u, pos=%u",unsigned(buflen), unsigned(newpos));
+    }
+    register int off = int(newpos) - int(pos);
+    buf += off;
+    pos = newpos;
+}
+
+
 void ToBuf::set8( uint8_t c )
 {
+    checksz(1);
     *(buf++) = c;
 }
 
 
 void ToBuf::set16( uint16_t c )
 {
+    checksz(2);
     buf += 2;
     register uint8_t* p = reinterpret_cast<uint8_t*>(buf);
     *p = uint8_t(c >> 8);
@@ -96,6 +123,7 @@ void ToBuf::set16( uint16_t c )
 
 void ToBuf::set32( uint32_t c )
 {
+    checksz(4);
     buf += 4;
     register uint8_t* p = reinterpret_cast<uint8_t*>(buf);
     *--p = uint8_t(c);
@@ -111,6 +139,7 @@ void ToBuf::set32( uint32_t c )
 void ToBuf::set64( uint64_t c )
 {
 #if BYTE_ORDER == BIG_ENDIAN
+    checksz(8);
     buf += 8;
     memcpy(buf,&c,8);
 #else
@@ -122,6 +151,7 @@ void ToBuf::set64( uint64_t c )
 
 void ToBuf::copy( size_t bytes, const void* from )
 {
+    checksz(bytes);
     memcpy(buf,from,bytes);
     buf += bytes;
 }
@@ -130,10 +160,28 @@ void ToBuf::copy( size_t bytes, const void* from )
 void ToBuf::setCString( const char* s )
 {
     register const size_t inc = strlen(s)+1;
+    checksz(inc);
     memcpy(buf,s,inc);
     buf += inc;
 }
 
+
+void ToBuf::skip( size_t bytes )
+{
+    checksz(bytes);
+    buf += bytes;
 }
+
+
+void ToBuf::setPos( size_t newpos )
+{
+    if (newpos>buflen) {
+        throw InfosmeException("buffer is too small: len=%u, pos=%u",unsigned(buflen), unsigned(newpos));
+    }
+    register int off = int(newpos) - int(pos);
+    buf += off;
+    pos = newpos;
+}
+
 }
 }

@@ -9,12 +9,23 @@
 namespace eyeline {
 namespace informer {
 
+class ToBuf;
+class FromBuf;
+
 // 8+8+4+4+16+24+1 = 16+24+24+1 = 40+25 = 65 => 72
 struct Message
 {
     static const size_t USERDATA_LENGTH = 24;
 
     Message() {}
+    Message( const Message& m ) :
+    subscriber(m.subscriber),
+    msgId(m.msgId),
+    lastTime(m.lastTime),
+    timeLeft(m.timeLeft),
+    text(m.text),
+    userData(m.userData),
+    state(m.state) {}
 
     uint64_t         subscriber; // not changed (constant)
     msgid_type       msgId;      // unique message id (constant)
@@ -25,9 +36,12 @@ struct Message
     uint8_t          state;
 
     /// conversion (for I/O)
-    unsigned char* toBuf( uint16_t version, unsigned char* buf ) const;
-    const unsigned char* fromBuf( uint16_t version, const unsigned char* buf );
+    ToBuf& toBuf( uint16_t version, ToBuf& tb ) const;
+    FromBuf& fromBuf( uint16_t version, FromBuf& fb );
 
+    inline bool isTextUnique() const {
+        return (text->getTextId() <= 0);
+    }
     // textual representation
     // FIXME: should we add 'version' arg?
     // char* printToBuf( size_t bufsize, char* buf ) const;
@@ -51,9 +65,10 @@ inline uint64_t addressToSubscriber( uint8_t ton, uint8_t npi, uint64_t value )
 // it contains the message itself and the 'locked' flag.
 struct MessageLocker
 {
-    MessageLocker() : locked(false) {}
+    MessageLocker() : locked(0) {}
+    MessageLocker(const MessageLocker& mlk) : msg(mlk.msg), locked(mlk.locked) {}
     Message          msg;
-    volatile uint8_t locked;
+    volatile regionid_type locked;
 };
 
 // a list of messages

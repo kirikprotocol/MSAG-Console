@@ -20,9 +20,10 @@ class SmscSender;
 class RegionSender;
 class SmscConfig;
 class StoreJournal;
+class InputJournal;
 class InputMessageSource;
 
-class InfosmeCoreV1 : public InfosmeCore, public smsc::core::threads::Thread
+class InfosmeCoreV1 : public InfosmeCore, public RegionFinder, public smsc::core::threads::Thread
 {
 public:
     static void readSmscConfig( SmscConfig& cfg,
@@ -40,6 +41,20 @@ public:
     virtual void start();
     virtual void stop();
 
+    virtual RegionFinder& getRegionFinder() { return *this; }
+
+    virtual void selfTest();
+
+    /// bind regions to delivery
+    /// @param bind - true if bind, false if unbind.
+    virtual void deliveryRegions( dlvid_type dlvId,
+                                  std::vector<regionid_type>& regIds,
+                                  bool bind );
+
+    virtual void startTransfer( TransferTask* task );
+
+    // --------------------
+
     // smsc has just been stopped
     // virtual void notifySmscFinished( const std::string& smscId );
 
@@ -52,35 +67,42 @@ public:
     /// reload all regions
     void reloadRegions();
 
+    virtual regionid_type findRegion( uint64_t subscriber );
+
     /// update delivery
     /// 1. create delivery: new dlvId, valid dlvInfo;
     /// 2. update delivery: old dlvId, valid dlvInfo;
     /// 3. delete delivery: old dlvId, dlvInfo=0.
     void updateDelivery( dlvid_type dlvId, std::auto_ptr<DeliveryInfo>& dlvInfo );
 
-    /// bind regions to delivery
-    /// @param bind - true if bind, false if unbind.
-    void deliveryRegions( dlvid_type dlvId,
-                          const std::vector<regionid_type>& regIds,
-                          bool bind );
-
-
 protected:
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
+
+    struct BindSignal {
+        dlvid_type dlvId;
+        std::vector<regionid_type> regIds;
+        bool bind;
+    };
+
+    void bindDeliveryRegions( BindSignal& bs );
 
 private:
     smsc::logger::Logger*                      log_;
     smsc::core::synchronization::EventMonitor  startMon_;
     bool                                       stopping_;
     bool                                       started_;
-    smsc::core::threads::ThreadPool            tp_;
+    smsc::core::threads::ThreadPool            ttp_;        // transfer task pool
     smsc::core::buffers::Hash< SmscSender* >      smscs_;   // owned
     smsc::core::buffers::IntHash< RegionPtr >     regions_; // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_; // owned
     smsc::core::buffers::IntHash< DeliveryPtr >   deliveries_; // owned
     StoreJournal*                                 storeLog_;   // owned
-    InputMessageSource*                           messageSource_; // owned
+    InputJournal*                                 inputJournal_; // owned
+    std::string                                   path_;
+
+    smsc::core::synchronization::Mutex            bindQueueLock_;
+    smsc::core::buffers::CyclicQueue<BindSignal>  bindQueue_;
 };
 
 } // informer

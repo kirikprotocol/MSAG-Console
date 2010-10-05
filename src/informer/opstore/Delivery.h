@@ -19,7 +19,7 @@ class Delivery
 public:
     Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
               StoreJournal&               journal,
-              InputMessageSource&         source );
+              InputMessageSource*         source );
 
     inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 
@@ -34,7 +34,11 @@ public:
     }
 
     void updateDlvInfo( const DeliveryInfo& info );
-    void createRegionalStorage( regionid_type regId );
+    // void createRegionalStorage( regionid_type regId );
+
+    void addNewMessages( MsgIter begin, MsgIter end ) {
+        cache_.addNewMessages(begin,end);
+    }
 
 private:
     void ref() {

@@ -7,27 +7,40 @@
 namespace eyeline {
 namespace informer {
 
+StoreJournal::StoreJournal( const std::string& path ) :
+log_(smsc::logger::Logger::getInstance("storelog")),
+path_(path + "store.jnl"),
+version_(1)
+{
+    // FIXME: read store journal
+    fg_.create( path_.c_str(),true,true);
+}
+
+
 void StoreJournal::journalMessage( dlvid_type     dlvId,
                                    regionid_type  regionId,
                                    const Message& msg )
 {
     smsc::core::buffers::TmpBuf<unsigned char,200> buf;
-    if (msg.text.get() && msg.text->getTextId()<=0) {
-        buf.setSize(200+strlen(msg.text->getText()));
+    if (msg.isTextUnique()) {
+        buf.setSize(90+strlen(msg.text->getText()));
     }
-    io::ToBuf tb(buf.get());
+    ToBuf tb(buf.get(),buf.getSize());
+    tb.skip(4);
     tb.set32(dlvId);
     tb.set32(regionId);
-    const unsigned buflen = unsigned(msg.toBuf(version_,tb.getPtr()) - buf.get());
+    const unsigned buflen = unsigned(msg.toBuf(version_,tb).buf - buf.get());
+    tb.setPos(0);
+    tb.set32(buflen-4);
     if (log_->isDebugEnabled()) {
-        io::HexDump hd;
-        io::HexDump::string_type dump;
+        HexDump hd;
+        HexDump::string_type dump;
         dump.reserve(buflen*5);
         hd.hexdump(dump,buf.get(),buflen);
-        hd.utfdump(dump,buf.get(),buflen);
+        hd.strdump(dump,buf.get(),buflen);
         smsc_log_debug(log_,"buffer to save(%u): %s",buflen,hd.c_str(dump));
     }
-    smsc_log_error(log_,"FIXME: save buffer");
+    fg_.write(buf.get(),buflen);
 }
 
 }

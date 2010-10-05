@@ -2,6 +2,8 @@
 #define _INFORMER_TYPEDEFS_H
 
 #include <ctime>
+#include <string>
+#include <cstdio>
 #include "util/int.h"
 
 namespace eyeline {
@@ -45,6 +47,20 @@ struct DlvRegMsgId
     regionid_type regId;
     msgid_type    msgId;
 };
+
+
+template <typename RegIter> std::string formatRegionList( RegIter begin, RegIter end )
+{
+    std::string s;
+    s.reserve(std::distance(begin,end)*10);
+    for ( RegIter i = begin; i != end; ++i ) {
+        char buf[20];
+        sprintf(buf," R=%u",unsigned(*i));
+        s.append(buf);
+    }
+    return s;
+}
+
 
 } // informer
 } // smsc

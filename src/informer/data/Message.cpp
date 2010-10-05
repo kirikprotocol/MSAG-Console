@@ -6,36 +6,32 @@
 namespace eyeline {
 namespace informer {
 
-unsigned char* Message::toBuf( uint16_t version, unsigned char* buf ) const
+ToBuf& Message::toBuf( uint16_t version, ToBuf& tb ) const
 {
     if ( version != 1 ) {
         throw InfosmeException("wrong version %u in Message::toBuf", version);
     }
-    io::ToBuf tb(buf);
     tb.set64(subscriber);
     tb.set64(msgId);
     tb.set32(lastTime);
     tb.set32(timeLeft);
     tb.copy(USERDATA_LENGTH,userData.c_str());
-    if (text.get()) {
-        if (text->getTextId()<=0) {
-            tb.set8(state | 0x80);
-            tb.setCString(text->getText());
-        } else {
-            tb.set8(state & 0x7f);
-            tb.set32(text->getTextId());
-        }
+    if (isTextUnique()) {
+        tb.set8(state | 0x80);
+        tb.setCString(text->getText());
+    } else {
+        tb.set8(state & 0x7f);
+        tb.set32(text->getTextId());
     }
-    return tb.buf;
+    return tb;
 }
 
 
-const unsigned char* Message::fromBuf( uint16_t version, const unsigned char* buf )
+FromBuf& Message::fromBuf( uint16_t version, FromBuf& tb )
 {
     if ( version != 1 ) {
         throw InfosmeException("wrong version %u in Message::fromBuf", version);
     }
-    io::FromBuf tb(buf);
     subscriber = tb.get64();
     msgId = tb.get64();
     lastTime = tb.get32();
@@ -50,7 +46,7 @@ const unsigned char* Message::fromBuf( uint16_t version, const unsigned char* bu
         // FIXME: optimize if textptr already has glossary!
         text.reset(new MessageText(0,tb.get32()));
     }
-    return tb.buf;
+    return tb;
 }
 
 

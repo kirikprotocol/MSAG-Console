@@ -6,7 +6,6 @@
 
 namespace eyeline {
 namespace informer {
-namespace io {
 
 class HexDump
 {
@@ -38,7 +37,6 @@ private:
     static std::auto_ptr<char> digits_;
 };
 
-}
 }
 }
 

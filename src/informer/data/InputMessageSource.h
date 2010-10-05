@@ -8,6 +8,7 @@ namespace eyeline {
 namespace informer {
 
 class TransferTask;
+class MessageGlossary;
 
 /// a class requesting transfer of input messages
 /// from instore into opstore.
@@ -16,8 +17,8 @@ class TransferRequester
 public:    
     virtual ~TransferRequester() {}
 
-    /// identification
-    virtual dlvid_type getDlvId() const = 0;
+    // identification
+    // virtual dlvid_type getDlvId() const = 0;
     virtual regionid_type getRegionId() const = 0;
 
     /// notify that current upload is finished
@@ -37,6 +38,7 @@ public:
     virtual ~TransferTask() {}
 protected:
     TransferTask( TransferRequester& req, unsigned count ) :
+    smsc::core::threads::ThreadedTask(false),
     requester_(req), count_(count) {}
 
     virtual void onRelease() {
@@ -60,6 +62,10 @@ class InputMessageSource
 public:
     virtual ~InputMessageSource() {}
 
+    /// add new messages, the list of messages is modified
+    /// and will contain msgids.
+    virtual void addNewMessages( MsgIter begin, MsgIter end ) = 0;
+
     // request 'count' messages to be uploaded for 'requester'.
     // This method should create a ThreadedTask which will upload messages,
     // or if the task is already running, simply return.
@@ -67,6 +73,8 @@ public:
     virtual TransferTask* startTransferTask( TransferRequester& requester,
                                              unsigned           count,
                                              bool mayDetachRegion ) = 0;
+
+    virtual MessageGlossary& getGlossary() = 0;
 };
 
 } // informer

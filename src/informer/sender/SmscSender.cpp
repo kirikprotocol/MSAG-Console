@@ -14,7 +14,8 @@ log_(smsc::logger::Logger::getInstance("smscsend")),
 core_(&core),
 smscId_(smscId), session_(0),
 scoredList_(*this,2*maxScoreIncrement,
-            smsc::logger::Logger::getInstance("reglist"))
+            smsc::logger::Logger::getInstance("reglist")),
+isStopping_(true)
 {
     smsc_log_debug(log_,"FIXME: make use of SmscConfig");
     session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
@@ -23,6 +24,7 @@ scoredList_(*this,2*maxScoreIncrement,
 
 SmscSender::~SmscSender()
 {
+    stop();
     if (session_.get()) session_->close();
 }
 
@@ -40,12 +42,13 @@ unsigned SmscSender::send( RegionalStorage& ptr,
 
 void SmscSender::updateConfig( const SmscConfig& config )
 {
-    waitUntilReleased();
+    stop();
     MutexGuard mg(mon_);
     session_.reset(new smsc::sme::SmppSession(config.smeConfig,this));
 }
 
 
+/*
 void SmscSender::waitUntilReleased()
 {
     if (isReleased) return;
@@ -56,6 +59,7 @@ void SmscSender::waitUntilReleased()
         mon_.wait(100);
     }
 }
+ */
 
 
 void SmscSender::detachRegionSender( RegionSender& rs )
@@ -89,39 +93,64 @@ void SmscSender::handleError( int errorCode )
 }
 
 
+void SmscSender::start()
+{
+    if (!isStopping_) return;
+    MutexGuard mg(mon_);
+    if (!isStopping_) return;
+    isStopping_ = false;
+    Start();
+}
+
+
+void SmscSender::stop()
+{
+    if (!isStopping_) {
+        MutexGuard mg(mon_);
+        isStopping_ = true;
+        mon_.notify();
+    }
+    WaitFor();
+}
+
+
 int SmscSender::Execute()
 {
-    while ( !isStopping ) {
+    while ( !isStopping_ ) {
         connectLoop();
-        if (isStopping) break;
+        if (isStopping_) break;
         sendLoop();
     }
     return 0;
 }
 
 
+/*
 void SmscSender::onThreadPoolStartTask()
 {
-    isStopping = false;
+    isStopping_ = false;
     isReleased = false;
 }
+ */
 
 
+/*
 void SmscSender::onRelease()
 {
     MutexGuard mg(mon_);
     isReleased = true;
     mon_.notify();
 }
+ */
 
 
 void SmscSender::connectLoop()
 {
-    while ( !isStopping ) {
+    while ( !isStopping_ ) {
         MutexGuard mg(mon_);
         if ( !session_.get() ) {
             smsc_log_error(log_,"FIXME: session is not configured");
-            isStopping = true;
+            isStopping_ = true;
         } else if ( !session_->isClosed() ) {
             // session connected
             break;
@@ -145,7 +174,7 @@ void SmscSender::sendLoop()
     currentTime_ = currentTimeMicro();
     // usectime_type movingStart = currentTime_;
     usectime_type nextWakeTime = currentTime_;
-    while ( !isStopping ) {
+    while ( !isStopping_ ) {
 
         MutexGuard mg(mon_);
         if ( !session_.get() || session_->isClosed() ) break;

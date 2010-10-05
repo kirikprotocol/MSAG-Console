@@ -2,6 +2,9 @@
 #define _INFORMER_INFOSMECORE_H
 
 #include <string>
+#include <vector>
+
+#include "informer/io/Typedefs.h"
 
 namespace smsc {
 namespace util {
@@ -13,6 +16,9 @@ class ConfigView;
 
 namespace eyeline {
 namespace informer {
+
+class RegionFinder;
+class TransferTask;
 
 class InfosmeCore
 {
@@ -26,6 +32,18 @@ public:
     /// notify to stop, invoked from main
     virtual void start() = 0;
     virtual void stop() = 0;
+
+    /// get region finder
+    virtual RegionFinder& getRegionFinder() = 0;
+
+    virtual void selfTest() = 0;
+
+    /// NOTE: regs will be stripped!
+    virtual void deliveryRegions( dlvid_type dlvId,
+                                  std::vector<regionid_type>& regs,
+                                  bool bind ) = 0;
+
+    virtual void startTransfer( TransferTask* ) = 0;
 };
 
 } // informer

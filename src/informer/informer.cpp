@@ -164,8 +164,8 @@ int main( int argc, char** argv )
         smsc::util::regexp::RegExp::InitLocale();
 
         // FIXME: replace with real logger
-        // smsc::logger::Logger::Init();
-        smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
+        smsc::logger::Logger::Init();
+        // smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
 
         mainlog = smsc::logger::Logger::getInstance("main");
         smsc_log_info(mainlog,"\n"
@@ -228,6 +228,14 @@ int main( int argc, char** argv )
             // enter main loop
             core->start();
             pthread_sigmask(SIG_SETMASK, &original_signal_mask, 0);
+
+            try {
+                core->selfTest();
+            } catch (std::exception& e ) {
+                smsc_log_error(mainlog,"self test failed: %s",e.what());
+                isStarted = false;
+            }
+
             while ( isStarted ) {
                 MutexGuard mg(startMon);
                 startMon.wait(1000);

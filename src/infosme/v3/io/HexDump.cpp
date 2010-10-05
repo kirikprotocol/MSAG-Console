@@ -19,7 +19,6 @@ std::auto_ptr<char> getDigits()
 
 namespace eyeline {
 namespace informer {
-namespace io {
 
 std::auto_ptr< char > HexDump::digits_;
 
@@ -134,6 +133,5 @@ void HexDump::addstr( string_type& out, const char* cstring )
     ::memcpy( &out[pos], cstring, i ); // will copy \0 also
 }
 
-}
 }
 }
