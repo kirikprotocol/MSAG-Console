@@ -36,6 +36,7 @@ import ru.novosoft.smsc.admin.route.RouteSubjectManager;
 import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
+import ru.novosoft.smsc.admin.sme.SmeManagerImpl;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
@@ -139,7 +140,7 @@ public class AdminContext {
 
     mscManager = new MscManagerImpl(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
 
-    smeManager = new SmeManager(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
+    smeManager = new SmeManagerImpl(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
 
     resourceManager = new ResourceManagerImpl(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
 

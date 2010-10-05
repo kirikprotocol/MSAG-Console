@@ -21,13 +21,13 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class SmeManagerTest {
+public class SmeManagerImplTest {
 
   private File configFile, backupDir;
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(SmeManagerTest.class.getResourceAsStream("sme.xml"), ".sme");
+    configFile = TestUtils.exportResourceToRandomFile(SmeManagerImplTest.class.getResourceAsStream("sme.xml"), ".sme");
     backupDir = TestUtils.createRandomDir(".sme.backup");
   }
 
@@ -40,7 +40,7 @@ public class SmeManagerTest {
   }
 
   public SmeManager getManager(ClusterController cc) throws AdminException {
-    return new SmeManager(configFile, backupDir, cc, null, FileSystem.getFSForSingleInst());
+    return new SmeManagerImpl(configFile, backupDir, cc, null, FileSystem.getFSForSingleInst());
   }
 
   @Test

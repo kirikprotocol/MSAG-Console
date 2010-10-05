@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
+import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.Configuration;
@@ -25,6 +26,7 @@ import ru.novosoft.smsc.web.config.provider.WProviderManager;
 import ru.novosoft.smsc.web.config.reschedule.WRescheduleManager;
 import ru.novosoft.smsc.web.config.resource.WResourceManager;
 import ru.novosoft.smsc.web.config.route.WRouteSubjectManager;
+import ru.novosoft.smsc.web.config.sme.WSmeManager;
 import ru.novosoft.smsc.web.config.snmp.WSnmpManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
@@ -63,6 +65,7 @@ public class WebContext {
   private final WRescheduleManager rescheduleManager;
   private final WRouteSubjectManager routeSubjectManager;
   private final ResourceManager resourceManager;
+  private final SmeManager smeManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -113,6 +116,7 @@ public class WebContext {
     rescheduleManager = new WRescheduleManager(adminContext.getRescheduleManager(), journal, user);
     routeSubjectManager = new WRouteSubjectManager(adminContext.getRouteSubjectManager(), journal, user);
     resourceManager = new WResourceManager(adminContext.getResourceManager(), journal, user);
+    smeManager = new WSmeManager(adminContext.getSmeManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -190,6 +194,10 @@ public class WebContext {
 
   public ResourceManager getResourceManager() {
     return resourceManager;
+  }
+
+  public SmeManager getSmeManager() {
+    return smeManager;
   }
 
   public Journal getJournal() {

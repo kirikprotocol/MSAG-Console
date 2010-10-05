@@ -8,13 +8,12 @@ import ru.novosoft.smsc.admin.service.ServiceManager;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author Artem Snopkov
  */
-public class TestSmeManager extends SmeManager {
+public class TestSmeManager extends SmeManagerImpl {
 
   public TestSmeManager(File configFile, File backupDir, ClusterController cc, ServiceManager sm, FileSystem fs) throws AdminException {
     super(configFile, backupDir, cc, sm, fs);
