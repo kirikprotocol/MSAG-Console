@@ -21,7 +21,7 @@ public class BlacklistController extends InformerController{
     if(validateMsisdn()) {
       init = true;
       try {
-        contains = getConfiguration().blacklistContains(msisdn);
+        contains = getConfig().blacklistContains(msisdn);
       } catch (AdminException e) {
         addError(e);
       }
@@ -32,7 +32,7 @@ public class BlacklistController extends InformerController{
   public String add() {
     if(validateMsisdn()) {
       try {
-        getConfiguration().addInBlacklist(msisdn, getUserName());
+        getConfig().addInBlacklist(msisdn, getUserName());
         contains = true;
       } catch (AdminException e) {
         addError(e);
@@ -44,7 +44,7 @@ public class BlacklistController extends InformerController{
   public String remove() {
     if(validateMsisdn()) {
       try {
-        getConfiguration().removeFromBlacklist(msisdn, getUserName());
+        getConfig().removeFromBlacklist(msisdn, getUserName());
         contains = false;
       } catch (AdminException e) {
         addError(e);

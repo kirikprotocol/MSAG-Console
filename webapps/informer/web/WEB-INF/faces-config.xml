@@ -27,6 +27,11 @@
       <var>informerSettings</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.smsc.Smsc</base-name>
+      <var>smscBundle</var>
+    </resource-bundle>
+
   </application>
 
   <!--<converter>-->
@@ -112,6 +117,18 @@
   </managed-bean>
 
   <managed-bean>
+    <managed-bean-name>smsc</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.smsc.SmscListController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>smscEdit</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.smsc.SmscEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
     <managed-bean-name>blacklistUpload</managed-bean-name>
     <managed-bean-class>mobi.eyeline.informer.web.controllers.blacklist.BlacklistUploadController</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
@@ -148,6 +165,15 @@
       <from-outcome>BLACKLIST_UPLOAD</from-outcome>
       <to-view-id>/blacklist/upload.xhtml</to-view-id>
       <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMSC</from-outcome>
+      <to-view-id>/smsc/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMSC_EDIT</from-outcome>
+      <to-view-id>/smsc/edit.xhtml</to-view-id>
     </navigation-case>
   </navigation-rule>
 

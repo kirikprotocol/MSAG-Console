@@ -111,12 +111,17 @@ public class Configuration {
     return context.getDefaultSmsc();
   }
 
-  public void setDefaultSmsc(String smsc) throws AdminException {
-    context.setDefaultSmsc(smsc);        //todo journal
+  public void setDefaultSmsc(String newSmsc, String user) throws AdminException {
+    String oldSmsc = context.getDefaultSmsc();
+    if(!oldSmsc.equals(newSmsc)) {
+      context.setDefaultSmsc(newSmsc);
+      journal.logSetDefaultSmsc(oldSmsc, newSmsc, user);
+    }
   }
 
-  public void removeSmsc(String smscName) throws AdminException {
-    context.removeSmsc(smscName);        //todo journal
+  public void removeSmsc(String smscName, String user) throws AdminException {
+    context.removeSmsc(smscName);
+    journal.logRemoveSmsc(smscName, user);
   }
 
   public Smsc getSmsc(String name) {
@@ -127,12 +132,15 @@ public class Configuration {
     return context.getSmscs();
   }
 
-  public void updateSmsc(Smsc smsc) throws AdminException {
-    context.updateSmsc(smsc);            //todo journal
+  public void updateSmsc(Smsc smsc, String user) throws AdminException {
+    Smsc oldSmsc = context.getSmsc(smsc.getName());
+    context.updateSmsc(smsc);
+    journal.logUpdateSmsc(oldSmsc, smsc, user);
   }
 
-  public void addSmsc(Smsc smsc) throws AdminException {
-    context.addSmsc(smsc);               //todo journal
+  public void addSmsc(Smsc smsc, String user) throws AdminException {
+    context.addSmsc(smsc);
+    journal.logAddSmsc(smsc.getName(), user);
   }
 
   private final Lock lock = new ReentrantLock();

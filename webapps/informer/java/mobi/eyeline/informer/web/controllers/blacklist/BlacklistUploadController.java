@@ -148,9 +148,9 @@ public class BlacklistUploadController extends InformerController{
           list.add(line);
           if(list.size() == 1000) {
             if(add) {
-              getConfiguration().addInBlacklist(list,user);
+              getConfig().addInBlacklist(list,user);
             }else {
-              getConfiguration().removeFromBlacklist(list, user);
+              getConfig().removeFromBlacklist(list, user);
             }
             uploaded+=1000;
             list.clear();
@@ -159,9 +159,9 @@ public class BlacklistUploadController extends InformerController{
         if(!list.isEmpty() && !stop) {
           int s = list.size();
           if(add) {
-            getConfiguration().addInBlacklist(list, user);
+            getConfig().addInBlacklist(list, user);
           }else {
-            getConfiguration().removeFromBlacklist(list,user);
+            getConfig().removeFromBlacklist(list,user);
           }
           uploaded+=s;
         }

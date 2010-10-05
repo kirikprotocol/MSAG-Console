@@ -36,8 +36,8 @@ public class JournalController extends InformerController{
   private List<JournalRecord> records;
 
   public JournalController() throws AdminException {
-    this.journal = getConfiguration().getJournal();
-    this.users = getConfiguration().getUserSettings();
+    this.journal = getConfig().getJournal();
+    this.users = getConfig().getUserSettings();
   }
 
   public void clearFilter() {
@@ -158,7 +158,7 @@ public class JournalController extends InformerController{
           row.setDescription(r.getDescription(l));
 
           User u = users.getUser(r.getUser());
-          row.setUserDetails(u.getLastName() + " " + u.getFirstName() + " (" + u.getDept() + ")");
+          row.setUserDetails(u != null ? u.getLastName() + " " + u.getFirstName() + " (" + u.getDept() + ")" : r.getUser());
 
           result.add(row);
         }

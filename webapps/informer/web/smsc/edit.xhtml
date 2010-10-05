@@ -1,0 +1,98 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smsc.edit']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+      
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{smscEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="SMSC" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <tr:inputHidden id="smsc_name" value="#{smscEdit.oldName}"/>
+
+      <h:panelGrid style="padding:10px" columns="1">
+
+        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
+
+          <tr:panelLabelAndMessage label="#{smscBundle.name}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.name}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.host}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.host}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.port}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.port}" required="true" simple="true">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.interfaceVersion}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.interfaceVersion}" required="true" simple="true">
+              <tr:validateLongRange minimum="0"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.systemType}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.systemType}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.systemId}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.systemId}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.password}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.password}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.ussdServiceOp}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.ussdServiceOp}" required="true" simple="true">
+              <tr:validateLongRange minimum="0"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.vlrUssdServiceOp}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.vlrUssdServiceOp}" required="true" simple="true">
+              <tr:validateLongRange minimum="0"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{smscEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="SMSC" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

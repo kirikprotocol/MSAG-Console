@@ -30,7 +30,7 @@ public class InformerConfigController extends SettingsController<InformerSetting
 
     if(getRequestParameter("revision") == null) {
       try{
-        settings = getConfiguration().getConfigSettings();
+        settings = getConfig().getConfigSettings();
       }catch (AdminException e){
         addError(e);
       }
@@ -69,12 +69,12 @@ public class InformerConfigController extends SettingsController<InformerSetting
 
   @Override
   protected InformerSettings loadSettings() throws AdminException {
-    return getConfiguration().getConfigSettings();
+    return getConfig().getConfigSettings();
   }
 
   @Override
   protected void saveSettings(InformerSettings settings) throws AdminException {
-    getConfiguration().setConfigSettings(settings, getUserPrincipal().getName());
+    getConfig().setConfigSettings(settings, getUserPrincipal().getName());
   }
 
   @Override

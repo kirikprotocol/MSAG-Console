@@ -65,11 +65,6 @@ public class Smsc {
     return name;
   }
 
-  public void setName(String name) throws AdminException{
-    vh.checkNotEmpty("name", name);
-    this.name = name;
-  }
-
   public String getHost() {
     return host;
   }

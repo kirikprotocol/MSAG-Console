@@ -23,7 +23,7 @@ public abstract class SettingsController<T> extends InformerController {
   protected Configuration configuration;
 
   protected void init(Configuration.ConfigType configType) throws AdminException{
-    configuration = getConfiguration();
+    configuration = getConfig();
     this.configType = configType;
     this.settingsAttr = configType + "_settings";
     this.revisionAttr = configType + "_viewStartTime";

@@ -13,7 +13,8 @@ public enum Subject {
 
   USERS("subject.user"),
   CONFIG("subject.config"),
-  BLACKLIST("subject.blacklist");
+  BLACKLIST("subject.blacklist"),
+  SMSC("subject.smsc");
 
   private static Map<String, Subject> map = new HashMap<String, Subject>(values().length) {      {
       for(Subject s : Subject.values()) {

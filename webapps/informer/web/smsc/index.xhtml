@@ -1,0 +1,120 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.smsc']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smsc">
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="SMSC_EDIT"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <t:dataTable value="#{smsc.smscs}" var="g" styleClass="list" style="padding:10px" rowIndexVar="rowIndex" rowStyleClass="row#{requestScope['rowIndex']%2}">
+        <h:column headerClass="column100Width">
+          <f:facet name="header">
+            <h:outputText value="#{msg['smsc.default']}"/>
+          </f:facet>
+          <tr:selectBooleanRadio simple="true" group="DEFAULT" value="#{g.def}" onclick="this.form.submit();" valueChangeListener="#{smsc.change}">
+            <f:attribute name="smsc_name" value="#{g.name}"/>
+          </tr:selectBooleanRadio>
+        </h:column>
+
+        <h:column>
+          <f:facet name="header">
+            <h:outputText value="#{smscBundle['name']}"/>
+          </f:facet>
+          <tr:commandLink text="#{g.name}" action="SMSC_EDIT">
+            <f:param name="smsc_name" value="#{g.name}"/>
+          </tr:commandLink>
+        </h:column>
+
+        <h:column>
+          <f:facet name="header">
+            <h:outputText value="#{smscBundle['host']}"/>
+          </f:facet>
+          <tr:outputText value="#{g.host}"/>
+        </h:column>
+
+        <h:column>
+          <f:facet name="header">
+            <h:outputText value="#{smscBundle['port']}"/>
+          </f:facet>
+          <tr:outputText value="#{g.port}"/>
+        </h:column>
+
+
+        <h:column>
+          <f:facet name="header">
+            <h:outputText value="&#160;"/>
+          </f:facet>
+          <tr:commandLink rendered="#{smsc.defaultSmsc != g.name}" text="#{msg['delete.button']}" action="#{smsc.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false">
+            <f:param name="smsc_name" value="#{g.name}"/>
+          </tr:commandLink>
+        </h:column>
+
+
+
+        <!--<eye:row rowId="#{g.name}">-->
+
+        <!--<eye:column name="radio" title="" width="10%" sortable="true">-->
+        <!--<tr:selectBooleanRadio group="DEFAULT" value="#{g.def}" valueChangeListener="#{smsc.change}">-->
+        <!--<f:attribute name="smsc" value="#{g.name}"/>-->
+        <!--</tr:selectBooleanRadio>-->
+        <!--</eye:column>-->
+
+        <!--<eye:column name="name" title="#{smscBundle['name']}" width="25%" sortable="true">-->
+        <!--<tr:commandLink text="#{g.name}" action="SMSC_EDIT">-->
+        <!--<f:param name="smsc_name" value="#{g.name}"/>-->
+        <!--</tr:commandLink>-->
+        <!--</eye:column>-->
+
+        <!--<eye:column name="host" title="#{smscBundle['host']}" width="25%">-->
+        <!--<h:outputText value="#{g.host}"/>-->
+        <!--</eye:column>-->
+
+        <!--<eye:column name="port" title="#{smscBundle['port']}" width="25%">-->
+        <!--<h:outputText value="#{g.port}"/>-->
+        <!--</eye:column>-->
+
+        <!--<eye:column name="delete" title="" width="15%">-->
+        <!--<tr:commandLink text="#{msg['delete.button']}">-->
+        <!--<f:param name="smsc_name" value="#{g.name}"/>-->
+        <!--</tr:commandLink>-->
+        <!--</eye:column>-->
+
+
+        <!--</eye:row>-->
+
+      </t:dataTable>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="SMSC_EDIT"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+
+    

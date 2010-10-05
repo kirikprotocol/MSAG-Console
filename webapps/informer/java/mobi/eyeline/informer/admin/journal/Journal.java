@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.journal;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
+import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.UsersSettings;
 
 import java.io.File;
@@ -20,6 +21,8 @@ public class Journal {
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(Subject.USERS);
 
   private final InformerSettingsDiffHelper informer = new InformerSettingsDiffHelper(Subject.CONFIG);
+
+  private final SmscDiffHelper smsc = new SmscDiffHelper(Subject.SMSC);
 
   private final JournalDataSource ds;
 
@@ -130,6 +133,48 @@ public class Journal {
    */
   public void logRemoveBlacklist(String address, String user) throws AdminException {
     addRecord(JournalRecord.Type.REMOVE, Subject.BLACKLIST, user, "blacklist_removed", address);
+  }
+
+  /**
+   * Добавляет в журнал запись о новом СМСЦ
+   * @param smsc СМСЦ
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logAddSmsc(String smsc, String user) throws AdminException{
+    this.smsc.logAddSmsc(smsc, this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об удалении СМСЦ
+   * @param smsc СМСЦ
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logRemoveSmsc(String smsc, String user) throws AdminException{
+    this.smsc.logRemoveSmsc(smsc, this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об обновлении СМСЦ
+   * @param oldSmsc старый СМСЦ
+   * @param newSmsc новый СМСЦ
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logUpdateSmsc(Smsc oldSmsc, Smsc newSmsc, String user) throws AdminException{
+    this.smsc.logChanges(oldSmsc, newSmsc, this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об изменении СМСЦ по умолчанию СМСЦ
+   * @param oldSmsc старый СМСЦ
+   * @param newSmsc новый СМСЦ
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logSetDefaultSmsc(String oldSmsc, String newSmsc, String user) throws AdminException{
+    this.smsc.logSetDefault(oldSmsc, newSmsc, this, user);
   }
 
 }

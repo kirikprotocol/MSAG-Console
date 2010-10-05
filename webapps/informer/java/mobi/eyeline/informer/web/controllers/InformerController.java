@@ -24,7 +24,11 @@ import java.util.ResourceBundle;
  */
 public abstract class InformerController implements Serializable {
 
-  protected Configuration getConfiguration() {
+  /**
+   * Возвращает Configuration
+   * @return Configuration
+   */
+  protected Configuration getConfig() {
     return WebContext.getInstance().getConfiguration();
   }
 

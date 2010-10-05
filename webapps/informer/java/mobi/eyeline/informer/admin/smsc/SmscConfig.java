@@ -42,6 +42,7 @@ class SmscConfig implements ManagedConfigFile<SmscSettings> {
       smsc.load(s);
       result.addSmsc(smsc);
     }
+    result.setDefaultSmsc(smscConnectors.getString("default"));
 
     return result;
   }
