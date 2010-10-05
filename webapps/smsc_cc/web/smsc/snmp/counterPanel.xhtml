@@ -11,39 +11,39 @@
 
 
 <ui:composition>
-    <eye:collapsingGroup label="#{counterLabel}" rendered="#{snmpObjField!=null}">
-        <f:facet name="header">
-            <h:panelGroup>
-              <h:outputText value="#{counterLabel}"/>
-              <tr:commandLink action="#{snmpObj.removeCounter}" rendered="#{snmpObj.objName!=null and snmpObj.objName!=''}">
-                <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
-                <f:param name="objName" value="#{snmpObj.objName}"/>
-                <f:param name="counterToRemove" value="#{counterName}"/>
-              </tr:commandLink>
-            </h:panelGroup>
-        </f:facet>
-            <h:panelGrid columns="2" style="width:300px;" columnClasses="column0WidthRight,column100Width">
-                <h:outputLabel value="#{snmpCounterBundle.warning}"/>
-                <tr:inputText value="#{snmpObjField.warning}" required="true" simple="true" contentStyle="width:50px;">
-                    <tr:validateLongRange minimum="0"/>
-                </tr:inputText>
+  <eye:collapsingGroup label="#{counterLabel}" rendered="#{snmpObjField!=null}">
+    <f:facet name="header">
+      <h:panelGroup>
+        <h:outputText value="#{counterLabel}"/>
+        <tr:commandLink action="#{snmpObj.removeCounter}" rendered="#{snmpObj.objName!=null and snmpObj.objName!=''}">
+          <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
+          <f:param name="objName" value="#{snmpObj.objName}"/>
+          <f:param name="counterToRemove" value="#{counterName}"/>
+        </tr:commandLink>
+      </h:panelGroup>
+    </f:facet>
+    <h:panelGrid columns="2" style="width:300px;" columnClasses="column0WidthRight,column100Width">
+      <h:outputLabel value="#{snmpCounterBundle.warning}"/>
+      <tr:inputText value="#{snmpObjField.warning}" required="true" simple="true" contentStyle="width:50px;">
+        <tr:validateLongRange minimum="0"/>
+      </tr:inputText>
 
-                <h:outputLabel value="#{snmpCounterBundle.minor}"/>
-                <tr:inputText value="#{snmpObjField.minor}" required="true" simple="true" contentStyle="width:50px;">
-                    <tr:validateLongRange minimum="0"/>
-                </tr:inputText>
+      <h:outputLabel value="#{snmpCounterBundle.minor}"/>
+      <tr:inputText value="#{snmpObjField.minor}" required="true" simple="true" contentStyle="width:50px;">
+        <tr:validateLongRange minimum="0"/>
+      </tr:inputText>
 
-                <h:outputLabel value="#{snmpCounterBundle.major}"/>
-                <tr:inputText value="#{snmpObjField.major}" required="true" simple="true" contentStyle="width:50px;">
-                    <tr:validateLongRange minimum="0"/>
-                </tr:inputText>
+      <h:outputLabel value="#{snmpCounterBundle.major}"/>
+      <tr:inputText value="#{snmpObjField.major}" required="true" simple="true" contentStyle="width:50px;">
+        <tr:validateLongRange minimum="0"/>
+      </tr:inputText>
 
-                <h:outputLabel value="#{snmpCounterBundle.critical}"/>
-                <tr:inputText value="#{snmpObjField.critical}" required="true" simple="true" contentStyle="width:50px;">
-                    <tr:validateLongRange minimum="0"/>
-                </tr:inputText>            
-            </h:panelGrid>
-    </eye:collapsingGroup>
+      <h:outputLabel value="#{snmpCounterBundle.critical}"/>
+      <tr:inputText value="#{snmpObjField.critical}" required="true" simple="true" contentStyle="width:50px;">
+        <tr:validateLongRange minimum="0"/>
+      </tr:inputText>
+    </h:panelGrid>
+  </eye:collapsingGroup>
 </ui:composition>
 
 </html>

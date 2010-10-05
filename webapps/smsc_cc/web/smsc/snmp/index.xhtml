@@ -15,8 +15,8 @@
   <ui:define name="content">
 
     <h:form>
-       <tr:inputHidden value="#{snmp.revision}" id="revision"/> 
-    <eye:buttons>
+      <tr:inputHidden value="#{snmp.revision}" id="revision"/>
+      <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{snmp.save}"/>
         </eye:button>
@@ -24,49 +24,46 @@
           <tr:commandLink text="#{msg['reset.button']}" action="#{snmp.reset}"/>
         </eye:button>
         <eye:space/>
-    </eye:buttons>
+      </eye:buttons>
 
-    <eye:pageSubtitle value="#{msg['smsc.snmp.subtitle.settings']}"/>
+      <eye:pageSubtitle value="#{msg['smsc.snmp.subtitle.settings']}"/>
 
-    <tr:panelLabelAndMessage label="#{snmpSettingsBundle['counterInterval']}" labelStyle="width:130px; align:left; text-align:left;">
-      <tr:inputText value="#{snmp.counterInterval}"  required="true" simple="true" contentStyle="width:70px; margin-left:5px;" >
-        <eye:validatePositive/>
-      </tr:inputText>
-    </tr:panelLabelAndMessage>
+      <tr:panelLabelAndMessage label="#{snmpSettingsBundle['counterInterval']}" labelStyle="width:130px; align:left; text-align:left;">
+        <tr:inputText value="#{snmp.counterInterval}"  required="true" simple="true" contentStyle="width:70px; margin-left:5px;" >
+          <eye:validatePositive/>
+        </tr:inputText>
+      </tr:panelLabelAndMessage>
 
-  <c:set var="n" value="0"/>
+      <c:set var="n" value="0"/>
 
-  <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >
+      <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >
 
-  <h:commandLink value="#{msg['snmp.default.object']}" action="#{snmp.editObject}">
-    <f:param name="objName" value=""/>
-  </h:commandLink>
-  <h:outputText/>
+        <h:commandLink value="#{msg['snmp.default.object']}" action="#{snmp.editObject}">
+          <f:param name="objName" value=""/>
+        </h:commandLink>
+        <h:outputText/>
 
+        <c:forEach var="item" items="#{snmp.snmpObjectNames}">
+          <h:commandLink value="#{item}" action="#{snmp.editObject}">
+            <f:param name="objName" value="#{item}"/>
+          </h:commandLink>
+          <tr:commandLink action="#{snmp.removeObject}" rendered="true">
+            <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
+            <f:param name="objToRemove" value="#{item}"/>
+          </tr:commandLink>
+        </c:forEach>
 
-      
-  <c:forEach var="item" items="#{snmp.snmpObjectNames}">
-      <h:commandLink value="#{item}" action="#{snmp.editObject}">
-        <f:param name="objName" value="#{item}"/>
-      </h:commandLink>
-      <tr:commandLink action="#{snmp.removeObject}" rendered="true">
-        <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
-        <f:param name="objToRemove" value="#{item}"/>
-      </tr:commandLink>
-  </c:forEach>
-  </h:panelGrid>
-    <!--<eye:dynamicTable value="snmp.snmpobjects">        -->
-    <!--</eye:dynamicTable>-->
-        
-  <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >    
-        <tr:inputText value="#{snmp.newObjectName}"  required="false" simple="true" contentStyle="width:150px;" >            
+      </h:panelGrid>
+
+      <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >
+        <tr:inputText value="#{snmp.newObjectName}"  required="false" simple="true" contentStyle="width:150px;" >
         </tr:inputText>
         <tr:commandLink id="addSnmpObj" action="#{snmp.addObject}" >
-            <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
+          <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
         </tr:commandLink>
-  </h:panelGrid>      
+      </h:panelGrid>
 
-    <eye:buttons>
+      <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{snmp.save}"/>
         </eye:button>
@@ -74,7 +71,7 @@
           <tr:commandLink text="#{msg['reset.button']}" action="#{snmp.reset}"/>
         </eye:button>
         <eye:space/>
-    </eye:buttons>
+      </eye:buttons>
 
     </h:form>
 
