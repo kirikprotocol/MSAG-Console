@@ -119,7 +119,10 @@ public class JournalRecord {
     MSC("msc"),
     PROFILE("profile"),
     PROVIDER("provider"),
-    REGION("region");
+    REGION("region"),
+    RESOURCE("resource"),
+    ROUTE("route"),
+    SUBJECT("subject");
 
     private final String key;
 

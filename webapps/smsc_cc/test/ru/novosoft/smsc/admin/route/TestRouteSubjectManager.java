@@ -8,7 +8,7 @@ import java.io.File;
 /**
  * @author Artem Snopkov
  */
-public class TestRouteSubjectManager extends RouteSubjectManager {
+public class TestRouteSubjectManager extends RouteSubjectManagerImpl {
 
   public TestRouteSubjectManager(File configFile, File backupDir, FileSystem fs, ClusterController cc) {
     super(configFile, backupDir, fs, cc);

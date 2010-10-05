@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
+import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.Configuration;
@@ -22,6 +23,8 @@ import ru.novosoft.smsc.web.config.msc.WMscManager;
 import ru.novosoft.smsc.web.config.profile.WProfileManager;
 import ru.novosoft.smsc.web.config.provider.WProviderManager;
 import ru.novosoft.smsc.web.config.reschedule.WRescheduleManager;
+import ru.novosoft.smsc.web.config.resource.WResourceManager;
+import ru.novosoft.smsc.web.config.route.WRouteSubjectManager;
 import ru.novosoft.smsc.web.config.snmp.WSnmpManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
@@ -58,6 +61,8 @@ public class WebContext {
   private final ProfileManager profileManager;
   private final WProviderManager providerManager;
   private final WRescheduleManager rescheduleManager;
+  private final WRouteSubjectManager routeSubjectManager;
+  private final ResourceManager resourceManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -106,6 +111,8 @@ public class WebContext {
     profileManager = new WProfileManager(adminContext.getProfileManager(), journal, user);
     providerManager = new WProviderManager(adminContext.getProviderManager(), journal, user);
     rescheduleManager = new WRescheduleManager(adminContext.getRescheduleManager(), journal, user);
+    routeSubjectManager = new WRouteSubjectManager(adminContext.getRouteSubjectManager(), journal, user);
+    resourceManager = new WResourceManager(adminContext.getResourceManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -175,6 +182,14 @@ public class WebContext {
 
   public WRescheduleManager getRescheduleManager() {
     return rescheduleManager;
+  }
+
+  public WRouteSubjectManager getRouteSubjectManager() {
+    return routeSubjectManager;
+  }
+
+  public ResourceManager getResourceManager() {
+    return resourceManager;
   }
 
   public Journal getJournal() {

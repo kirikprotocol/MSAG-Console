@@ -31,7 +31,9 @@ import ru.novosoft.smsc.admin.region.RegionManagerImpl;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManagerImpl;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
+import ru.novosoft.smsc.admin.resource.ResourceManagerImpl;
 import ru.novosoft.smsc.admin.route.RouteSubjectManager;
+import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
@@ -139,7 +141,7 @@ public class AdminContext {
 
     smeManager = new SmeManager(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
 
-    resourceManager = new ResourceManager(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
+    resourceManager = new ResourceManagerImpl(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
 
     providerManager = new ProfiledManagerImpl(initFile, smscConfigBackupDir, fileSystem);
 
@@ -147,7 +149,7 @@ public class AdminContext {
 
     aclManager = new AclManagerImpl(clusterController);
 
-    routeSubjectManager = new RouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
+    routeSubjectManager = new RouteSubjectManagerImpl(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
     timezoneManager = new TimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
 

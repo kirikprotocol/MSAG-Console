@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
@@ -24,15 +23,15 @@ import java.util.Map;
 /**
  * @author Artem Snopkov
  */
-public class ResourceManagerTest {
+public class ResourceManagerImplTest {
 
   private File configDir;
 
   @Before
   public void beforeClass() throws IOException, AdminException {
     configDir = TestUtils.createRandomDir(".resource");
-    TestUtils.exportResource(ResourceManagerTest.class.getResourceAsStream("resources_en_en.xml"), new File(configDir, "resources_en_en.xml"));
-    TestUtils.exportResource(ResourceManagerTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(configDir, "resources_ru_ru.xml"));
+    TestUtils.exportResource(ResourceManagerImplTest.class.getResourceAsStream("resources_en_en.xml"), new File(configDir, "resources_en_en.xml"));
+    TestUtils.exportResource(ResourceManagerImplTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(configDir, "resources_ru_ru.xml"));
   }
 
   @After
@@ -42,7 +41,7 @@ public class ResourceManagerTest {
   }
 
   private ResourceManager getManager(ClusterController cc) throws AdminException {
-    return new ResourceManager(configDir, new File(configDir, "backup"), cc, FileSystem.getFSForSingleInst());
+    return new ResourceManagerImpl(configDir, new File(configDir, "backup"), cc, FileSystem.getFSForSingleInst());
   }
 
   @Test

@@ -22,9 +22,9 @@ import java.util.List;
  */
 class RoutesConfig implements ManagedConfigFile<RouteSubjectSettings> {
 
-  private final RouteSubjectManager manager;
+  private final RouteSubjectManagerImpl manager;
 
-  RoutesConfig(RouteSubjectManager manager) {
+  RoutesConfig(RouteSubjectManagerImpl manager) {
     this.manager = manager;
   }
 

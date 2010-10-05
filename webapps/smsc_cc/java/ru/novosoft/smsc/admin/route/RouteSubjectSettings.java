@@ -19,9 +19,9 @@ public class RouteSubjectSettings implements Serializable {
 
   private List<Subject> subjects = new ArrayList<Subject>();
   private List<Route> routes = new ArrayList<Route>();
-  private final transient RouteSubjectManager manager;
+  private final transient RouteSubjectManagerImpl manager;
 
-  RouteSubjectSettings(RouteSubjectManager manager) {
+  RouteSubjectSettings(RouteSubjectManagerImpl manager) {
     this.manager = manager;
   }
 

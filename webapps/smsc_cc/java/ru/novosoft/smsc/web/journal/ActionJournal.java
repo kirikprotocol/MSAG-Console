@@ -105,4 +105,16 @@ public class ActionJournal {
   public void region(String... args) {
     addRecord(JournalRecord.Subject.REGION, args);
   }
+
+  public void resource(String... args) {
+    addRecord(JournalRecord.Subject.RESOURCE, args);
+  }
+
+  public void route(String... args) {
+    addRecord(JournalRecord.Subject.ROUTE, args);
+  }
+
+  public void subject(String... args) {
+    addRecord(JournalRecord.Subject.SUBJECT, args);
+  }
 }

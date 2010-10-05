@@ -8,7 +8,7 @@ import java.io.File;
 /**
  * @author Artem Snopkov
  */
-public class TestResourceManager extends ResourceManager {
+public class TestResourceManager extends ResourceManagerImpl {
   public TestResourceManager(File configsDir, File backupDir, ClusterController cc, FileSystem fs) {
     super(configsDir, backupDir, cc, fs);
   }

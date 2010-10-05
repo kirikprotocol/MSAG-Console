@@ -4,13 +4,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -26,13 +24,13 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Artem Snopkov
  */
-public class RouteSubjectManagerTest {
+public class RouteSubjectManagerImplTest {
 
   private File configFile, backupDir;
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(RouteSubjectManagerTest.class.getResourceAsStream("routes.xml"), ".routes");
+    configFile = TestUtils.exportResourceToRandomFile(RouteSubjectManagerImplTest.class.getResourceAsStream("routes.xml"), ".routes");
     backupDir = TestUtils.createRandomDir(".routes.backup");
   }
 
@@ -45,7 +43,7 @@ public class RouteSubjectManagerTest {
   }
 
   public RouteSubjectManager getManager(ClusterController cc) throws AdminException {
-    return new RouteSubjectManager(configFile, backupDir, FileSystem.getFSForSingleInst(), cc);
+    return new RouteSubjectManagerImpl(configFile, backupDir, FileSystem.getFSForSingleInst(), cc);
   }
 
   @Test
