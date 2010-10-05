@@ -120,7 +120,7 @@ public class AliasController extends SmscController {
         if(!filter(aliasesFilter, "alias", alias.getAlias())) {
           continue;
         }
-        if(!filter(adressesFilter, "alias", alias.getAddress())) {
+        if(!filter(adressesFilter, "address", alias.getAddress())) {
            continue;
         }
         aliases.add(alias);
