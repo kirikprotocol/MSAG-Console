@@ -22,6 +22,7 @@ public class SettingsMController<T> extends SmscController {
 
   private final String settingsAttr;
   private final String revisionAttr;
+  private boolean submitHintAdded;
 
   private Long revision = 0L;
   private final SettingsManager<T> mngr;
@@ -36,11 +37,18 @@ public class SettingsMController<T> extends SmscController {
     init(true);
   }
 
+  protected void checkChanges() {
+    if (isSettingsChanged() && !submitHintAdded) {
+      submitHintAdded = true;
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
+    }
+  }
+
   protected void init(boolean checkChanges) throws AdminException {
     resetRevision();
-    
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
+
+    if (checkChanges)
+      checkChanges();
 
     if (this instanceof SmscConfiguration) {
       try {
