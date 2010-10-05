@@ -16,24 +16,7 @@
 
     <h:form rendered="#{!aliases.initError}">
 
-    <!--<eye:dataTableFilter bean="#{users}" clearAction="clearFilter">-->
-
-        <table class="page_menu" width="100%">
-            <tr>
-                <td align="left" width="10%">
-                    <h:outputText value="#{msg['filter.by']}"/>
-                </td>
-                <td align="left" width="80%">
-
-                </td>
-                <td width="10%" align="right">
-                    <h:commandLink id="data_table_filter" value="#{msg['apply.button']}"
-                                   onclick="new DataTableFilter('data_table_filter').clickApply()"/>
-                    <h:outputText value=" | "/>
-                    <tr:commandLink text="#{msg['clear.button']}" action="#{aliases.clearFilter}"/>
-                </td>
-            </tr>
-        </table>
+    <eye:dataTableFilter bean="#{aliases}" clearAction="clearFilter">        
 
         <eye:pageSubtitle value="#{msg['smsc.alias.subtitle.aliases']}"/>
         <tr:panelFormLayout inlineStyle="width:300px;">
@@ -57,7 +40,7 @@
             </h:selectOneMenu>
         </tr:panelLabelAndMessage>
         </tr:panelFormLayout>
-    <!--</eye:dataTableFilter>-->
+    </eye:dataTableFilter>
 
     <eye:buttons>
         <eye:button>
