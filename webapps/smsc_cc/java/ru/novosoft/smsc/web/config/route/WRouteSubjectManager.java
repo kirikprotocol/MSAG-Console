@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web.config.route;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
+import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.admin.route.RouteSubjectManager;
 import ru.novosoft.smsc.admin.route.RouteSubjectSettings;
 import ru.novosoft.smsc.admin.route.Subject;
@@ -46,6 +47,8 @@ public class WRouteSubjectManager extends BaseSettingsManager<RouteSubjectSettin
   }
 
   private void logChanges(RouteSubjectSettings oldSettings, RouteSubjectSettings newSettings) {
+    logChangesInSubjects(oldSettings.getSubjects(), newSettings.getSubjects());
+    logChangesInRoutes(oldSettings.getRoutes(), newSettings.getRoutes());
   }
 
   private Subject getSubjectByName(List<Subject> subjects, String name) {
@@ -55,6 +58,48 @@ public class WRouteSubjectManager extends BaseSettingsManager<RouteSubjectSettin
     return null;
   }
 
-  private void logChangesInSubjects(List<Subject> oldSubjects, List<Subject> newSubjects) {    
+  private Route getRouteByName(List<Route> routes, String name) {
+    for (Route s : routes)
+      if (s.getName().equals(name))
+        return s;
+    return null;
+  }
+
+  private void logChangesInSubjects(List<Subject> oldSubjects, List<Subject> newSubjects) {
+    for (Subject s : oldSubjects) {
+      final Subject newSubj = getSubjectByName(newSubjects, s.getName());
+      if (newSubj == null)
+        j.user(user).remove().subject(s.getName());
+      else
+        findChanges(s, newSubj, Subject.class, new ChangeListener() {
+          public void foundChange(String propertyName, Object oldValue, Object newValue) {
+            j.user(user).change("property_changed", valueToString(oldValue), valueToString(newValue)).subject(newSubj.getName());
+          }
+        });
+    }
+
+    for (Subject s : newSubjects) {
+      if (!oldSubjects.contains(s))
+        j.user(user).add().subject(s.getName());
+    }
+  }
+
+  private void logChangesInRoutes(List<Route> oldRoutes, List<Route> newRoutes) {
+    for (Route oldRoute : oldRoutes) {
+      final Route newRoute = getRouteByName(newRoutes, oldRoute.getName());
+      if (newRoute == null)
+        j.user(user).remove().route(oldRoute.getName());
+      else
+        findChanges(oldRoute, newRoute, Route.class, new ChangeListener() {
+          public void foundChange(String propertyName, Object oldValue, Object newValue) {
+            j.user(user).change("property_changed", valueToString(oldValue), valueToString(newValue)).route(newRoute.getName());
+          }
+        });
+    }
+
+    for (Route route : newRoutes) {
+      if (!oldRoutes.contains(route))
+        j.user(user).add().route(route.getName());
+    }
   }
 }
