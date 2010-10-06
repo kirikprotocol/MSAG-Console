@@ -139,7 +139,6 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   begin.setInvokeReq(1 /* invokeId */, 2 /* updateLocation operation */, temp_arg);
   vector<unsigned char> data;
   begin.encode(data);
-  CPPUNIT_ASSERT(etalon_buf == data);
   smsc_log_debug(logger,"etalon data[%d]={%s}",
                          sizeof(etalon),
                          dump((uint16_t)sizeof(etalon),etalon).c_str());
@@ -150,6 +149,7 @@ void AmericaTestFixture::updateLocation_arg_encoding()
                          data.size(),
                          dump((uint16_t)data.size(),&data[0]).c_str());
   smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_arg_encoding END ========\n");
+  CPPUNIT_ASSERT(etalon_buf == data);
 }
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
 {
