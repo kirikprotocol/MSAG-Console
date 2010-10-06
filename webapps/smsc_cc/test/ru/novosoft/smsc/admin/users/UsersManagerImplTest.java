@@ -17,7 +17,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * author: alkhal
  */
-public class UsersManagerTest {
+public class UsersManagerImplTest {
 
   private static File configFile, backupDir;
 
@@ -25,9 +25,9 @@ public class UsersManagerTest {
 
   @BeforeClass
   public static void init() throws Exception {
-    configFile = TestUtils.exportResourceToRandomFile(UsersManagerTest.class.getResourceAsStream("users.xml"), ".user");
+    configFile = TestUtils.exportResourceToRandomFile(UsersManagerImplTest.class.getResourceAsStream("users.xml"), ".user");
     backupDir = TestUtils.createRandomDir(".users.backup");
-    usersManager = new UsersManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    usersManager = new UsersManagerImpl(configFile, backupDir, FileSystem.getFSForSingleInst());
   }
 
   @Test

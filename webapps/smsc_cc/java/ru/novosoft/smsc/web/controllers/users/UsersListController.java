@@ -22,8 +22,7 @@ public class UsersListController extends UsersController {
   private String filterByLogin;
 
   public UsersListController() {
-    if (isSettingsChanged())
-      viewChanges();
+    super(true);
   }
 
   public void clearFilter() {
@@ -46,7 +45,7 @@ public class UsersListController extends UsersController {
       try {
         settings.setUsers(users.values());
         setSettings(settings);
-        viewChanges();
+        checkChanges();
       } catch (AdminException e1) {
         addError(e1);
       }
@@ -57,11 +56,7 @@ public class UsersListController extends UsersController {
 
     try {
 
-      Revision rev = submitSettings();
-      if (rev != null) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
-        return null;
-      }
+      submitSettings();
 
       return "INDEX";
 
@@ -144,7 +139,4 @@ public class UsersListController extends UsersController {
     this.filterByLogin = filterByLogin;
   }
 
-  public void viewChanges() {
-    addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.users.submit.hint");
-  }
 }

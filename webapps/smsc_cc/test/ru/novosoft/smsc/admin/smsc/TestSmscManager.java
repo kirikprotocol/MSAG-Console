@@ -10,7 +10,7 @@ import ru.novosoft.smsc.admin.service.ServiceManager;
  *
  * @author Artem Snopkov
  */
-public class TestSmscManager extends SmscManager {
+public class TestSmscManager extends SmscManagerImpl {
 
   public TestSmscManager(ServiceManager serviceManager, ClusterController cc, FileSystem fileSystem) throws AdminException {
     super(serviceManager, cc, fileSystem);

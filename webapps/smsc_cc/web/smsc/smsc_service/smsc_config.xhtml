@@ -14,7 +14,7 @@
 
 <ui:define name="content">
 
-<tr:form id="smsc_config">
+<tr:form id="smsc_config" rendered="#{!smscConfig.initFailed}">
 
 <h:outputText id="dummy" rendered="#{smscConfig == null ? false : false}"/>
 

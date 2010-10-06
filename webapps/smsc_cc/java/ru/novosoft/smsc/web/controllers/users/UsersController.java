@@ -2,28 +2,28 @@ package ru.novosoft.smsc.web.controllers.users;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.UsersSettings;
-import ru.novosoft.smsc.web.controllers.SettingsController;
+import ru.novosoft.smsc.web.WebContext;
+import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 /**
  * author: alkhal
  */
-public class UsersController extends SettingsController<UsersSettings> {
-  protected UsersController() {
-    super(ConfigType.User);
+public class UsersController extends SettingsMController<UsersSettings> {
+
+  private boolean initFailed;
+
+  public UsersController(boolean checkChanges) {
+    super(WebContext.getInstance().getUserManager());
+
+    try {
+      init(checkChanges);
+    } catch (AdminException e) {
+      addError(e);
+      initFailed = true;
+    }
   }
 
-  @Override
-  protected UsersSettings loadSettings() throws AdminException {
-    return getConfiguration().getUsersSettings();
-  }
-
-  @Override
-  protected void saveSettings(UsersSettings settings) throws AdminException {
-    getConfiguration().updateUsersSettings(settings, getUserPrincipal().getName());
-  }
-
-  @Override
-  protected UsersSettings cloneSettings(UsersSettings settings) {
-    return settings.cloneSettings();
+  public boolean isInitFailed() {
+    return initFailed;
   }
 }

@@ -20,13 +20,13 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Artem Snopkov
  */
-public class SmscManagerTest {
+public class SmscManagerImplTest {
 
   private File configFile, backupDir;
 
   @Before
   public void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(SmscManagerTest.class.getResourceAsStream("config.xml"), ".smsc");
+    configFile = TestUtils.exportResourceToRandomFile(SmscManagerImplTest.class.getResourceAsStream("config.xml"), ".smsc");
     backupDir = TestUtils.createRandomDir(".smscbackup");
   }
 
@@ -39,7 +39,7 @@ public class SmscManagerTest {
   }
 
   private SmscManager getManager(ClusterController cc) throws AdminException {
-    SmscManager manager = new SmscManager(configFile, backupDir, FileSystem.getFSForSingleInst(), cc, null);
+    SmscManager manager = new SmscManagerImpl(configFile, backupDir, FileSystem.getFSForSingleInst(), cc, null);
     return manager;
   }
 

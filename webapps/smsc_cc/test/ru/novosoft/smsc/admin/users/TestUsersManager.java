@@ -8,7 +8,7 @@ import java.io.File;
 /**
  * author: alkhal
  */
-public class TestUsersManager extends UsersManager {
+public class TestUsersManager extends UsersManagerImpl {
 
   public TestUsersManager(File configFile, File backupDir, FileSystem fs) throws AdminException {
     super(configFile, backupDir, fs);

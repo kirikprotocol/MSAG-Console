@@ -8,7 +8,7 @@ import java.io.File;
 /**
  * @author Artem Snopkov
  */
-public class TestTimezoneManager extends TimezoneManager {
+public class TestTimezoneManager extends TimezoneManagerImpl {
   public TestTimezoneManager(File configFile, File backupDir, FileSystem fileSystem, ClusterController cc) {
     super(configFile, backupDir, fileSystem, cc);
   }

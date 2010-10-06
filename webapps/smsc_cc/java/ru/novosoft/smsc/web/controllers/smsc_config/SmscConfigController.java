@@ -2,14 +2,13 @@ package ru.novosoft.smsc.web.controllers.smsc_config;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
+import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
-import ru.novosoft.smsc.web.config.SmscStatusManager;
-import ru.novosoft.smsc.web.controllers.SettingsController;
+import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
 import java.util.*;
@@ -17,7 +16,7 @@ import java.util.*;
 /**
  * author: alkhal
  */
-public class SmscConfigController extends SettingsController<SmscSettings> {
+public class SmscConfigController extends SettingsMController<SmscSettings> {
 
   private static final Logger logger = Logger.getLogger(SmscConfigController.class);
 
@@ -33,18 +32,27 @@ public class SmscConfigController extends SettingsController<SmscSettings> {
 
   private DynamicTableModel directivesModel = new DynamicTableModel();
 
+  private boolean initFailed;
+
   public SmscConfigController() {
-    super(ConfigType.Main);
+    super(WebContext.getInstance().getSmscManager());
 
-    checkOutOfDate();
-
-    if (isSettingsChanged())
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.configuration.locally.changed");    
-
-    init();
+    try {
+      init();
+    } catch (AdminException e) {
+      addError(e);
+      initFailed = true;
+    }
   }
 
-  private void init() {
+  public boolean isInitFailed() {
+    return initFailed;
+  }
+
+  protected void init() throws AdminException {
+
+    super.init();
+
     SmscSettings s = getSettings();
 
     commonConfig = s.getCommonSettings();
@@ -176,11 +184,7 @@ public class SmscConfigController extends SettingsController<SmscSettings> {
       }
 
       setSettings(smscSettings);
-      Revision rev = submitSettings();
-      if (rev != null) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
-        return null;
-      }
+      submitSettings();
 
       return "INDEX";
 
@@ -221,34 +225,4 @@ public class SmscConfigController extends SettingsController<SmscSettings> {
     return commonSettings;
   }
 
-  private void checkOutOfDate() {
-    try {
-      List<Integer> result = new ArrayList<Integer>();
-      SmscStatusManager ssm = getSmscStatusManager();
-      for (int i = 0; i < ssm.getSmscInstancesNumber(); i++) {
-        if (ssm.getMainConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
-          result.add(i);
-      }
-      if (!result.isEmpty())
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", result.toString());
-    } catch (AdminException e) {
-      logger.error(e, e);
-      addError(e);
-    }
-  }
-
-  @Override
-  protected SmscSettings loadSettings() throws AdminException {
-    return getConfiguration().getSmscSettings();
-  }
-
-  @Override
-  protected void saveSettings(SmscSettings settings) throws AdminException {
-    getConfiguration().updateSmscSettings(settings, getUserPrincipal().getName());
-  }
-
-  @Override
-  protected SmscSettings cloneSettings(SmscSettings settings) {
-    return settings.cloneSettings();
-  }
 }

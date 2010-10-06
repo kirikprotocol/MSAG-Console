@@ -36,7 +36,7 @@ import ru.novosoft.smsc.admin.service.TestServiceManagerHA;
 import ru.novosoft.smsc.admin.service.TestServiceManagerSingle;
 import ru.novosoft.smsc.admin.sme.SmeConfigFileTest;
 import ru.novosoft.smsc.admin.sme.TestSmeManager;
-import ru.novosoft.smsc.admin.smsc.SmscManagerTest;
+import ru.novosoft.smsc.admin.smsc.SmscManagerImplTest;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.smsc.TestSmscManager;
 import ru.novosoft.smsc.admin.snmp.SnmpManagerImplTest;
@@ -44,7 +44,7 @@ import ru.novosoft.smsc.admin.snmp.TestSnmpManager;
 import ru.novosoft.smsc.admin.timezone.TestTimezoneManager;
 import ru.novosoft.smsc.admin.timezone.TimezonesConfigTest;
 import ru.novosoft.smsc.admin.users.TestUsersManager;
-import ru.novosoft.smsc.admin.users.UsersManagerTest;
+import ru.novosoft.smsc.admin.users.UsersManagerImplTest;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -68,7 +68,7 @@ public class TestAdminContext extends AdminContext {
 
     File smscDir = new File(servicesDir, "SMSC1/conf");
     smscDir.mkdirs();
-    TestUtils.exportResource(SmscManagerTest.class.getResourceAsStream("config.xml"), new File(smscDir, "config.xml"), false);
+    TestUtils.exportResource(SmscManagerImplTest.class.getResourceAsStream("config.xml"), new File(smscDir, "config.xml"), false);
     TestUtils.exportResource(AliasManagerImplTest.class.getResourceAsStream("aliases.bin"), new File(smscDir, "aliases.bin"), false);
     TestUtils.exportResource(ClosedGroupManagerImplTest.class.getResourceAsStream("ClosedGroups.xml"), new File(smscDir, "ClosedGroups.xml"), false);
     TestUtils.exportResource(FraudManagerImplTest.class.getResourceAsStream("fraud.xml"), new File(smscDir, "fraud.xml"), false);
@@ -76,7 +76,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(MscManagerImplTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"), false);
     TestUtils.exportResource(RescheduleManagerImplTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"), false);
     File usersFile = new File(cfg.getUsersFile());
-    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), usersFile, false);
+    TestUtils.exportResource(UsersManagerImplTest.class.getResourceAsStream("users.xml"), usersFile, false);
     TestUtils.exportResource(SnmpManagerImplTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"), false);
     TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"), false);
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"), false);

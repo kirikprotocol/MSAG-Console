@@ -27,6 +27,8 @@ public class UserEditController extends UsersController{
 
   public UserEditController() {
 
+    super(false);
+
     Map<String, User> users = getSettings().getUsersMap();
 
     if(getRequestParameter("edit_initialized") == null) {

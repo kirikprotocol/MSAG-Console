@@ -2,18 +2,13 @@ package ru.novosoft.smsc.web.controllers.map_limit;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
-import ru.novosoft.smsc.web.config.SmscStatusManager;
-import ru.novosoft.smsc.web.controllers.SettingsController;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
 import javax.faces.application.FacesMessage;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * author: alkhal

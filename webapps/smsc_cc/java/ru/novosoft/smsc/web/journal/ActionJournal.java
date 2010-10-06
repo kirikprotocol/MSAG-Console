@@ -117,4 +117,8 @@ public class ActionJournal {
   public void subject(String... args) {
     addRecord(JournalRecord.Subject.SUBJECT, args);
   }
+
+  public void timezone(String... args) {
+    addRecord(JournalRecord.Subject.TIMEZONE, args);
+  }
 }

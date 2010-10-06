@@ -29,7 +29,7 @@ public class LocaleFilter implements Filter {
     User u = null;
     if(p != null) {
       try {
-        u = WebContext.getInstance().getConfiguration().getUsersSettings().getUser(p.getName());
+        u = WebContext.getInstance().getUserManager().getUsersSettings().getUser(p.getName());
       } catch (AdminException e) {
         logger.error(e,e);
       }

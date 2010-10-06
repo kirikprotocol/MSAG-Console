@@ -10,7 +10,6 @@ import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
-import ru.novosoft.smsc.web.config.Configuration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.config.acl.WAclManager;
 import ru.novosoft.smsc.web.config.alias.WAliasManager;
@@ -27,7 +26,10 @@ import ru.novosoft.smsc.web.config.reschedule.WRescheduleManager;
 import ru.novosoft.smsc.web.config.resource.WResourceManager;
 import ru.novosoft.smsc.web.config.route.WRouteSubjectManager;
 import ru.novosoft.smsc.web.config.sme.WSmeManager;
+import ru.novosoft.smsc.web.config.smsc.WSmscManager;
 import ru.novosoft.smsc.web.config.snmp.WSnmpManager;
+import ru.novosoft.smsc.web.config.timezone.WTimezoneManager;
+import ru.novosoft.smsc.web.config.user.WUserManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import javax.faces.context.FacesContext;
@@ -48,7 +50,6 @@ public class WebContext {
   private static Journal journal = new Journal();
   private static WebContext nullUserInstance;
 
-  private final Configuration configuration;
   private final SmscStatusManager smscStatusManager;
   private final AclManager aclManager;
   private final AliasManager aliasManager;
@@ -66,6 +67,9 @@ public class WebContext {
   private final WRouteSubjectManager routeSubjectManager;
   private final ResourceManager resourceManager;
   private final SmeManager smeManager;
+  private final WSmscManager smscManager;
+  private final WTimezoneManager timezoneManager;
+  private final WUserManager userManager;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -98,7 +102,6 @@ public class WebContext {
   }
 
   public WebContext(String user) {
-    configuration = new Configuration(adminContext, journal);
     smscStatusManager = new SmscStatusManager(adminContext);
 
     aclManager = new WAclManager(adminContext.getAclManager(), journal, user);
@@ -117,6 +120,9 @@ public class WebContext {
     routeSubjectManager = new WRouteSubjectManager(adminContext.getRouteSubjectManager(), journal, user);
     resourceManager = new WResourceManager(adminContext.getResourceManager(), journal, user);
     smeManager = new WSmeManager(adminContext.getSmeManager(), journal, user);
+    smscManager = new WSmscManager(adminContext.getSmscManager(), journal, user);
+    timezoneManager = new WTimezoneManager(adminContext.getTimezoneManager(), journal, user);
+    userManager = new WUserManager(adminContext.getUsersManager(), journal, user);
   }
 
   public WebXml getWebXml() {
@@ -200,11 +206,20 @@ public class WebContext {
     return smeManager;
   }
 
+  public WSmscManager getSmscManager() {
+    return smscManager;
+  }
+
+  public WTimezoneManager getTimezoneManager() {
+    return timezoneManager;
+  }
+
+  public WUserManager getUserManager() {
+    return userManager;
+  }
+
   public Journal getJournal() {
     return journal;
   }
 
-  public Configuration getConfiguration() {
-    return configuration;
-  }
 }

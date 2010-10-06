@@ -7,7 +7,6 @@ import ru.novosoft.smsc.admin.sme.SmeSmscStatus;
 import ru.novosoft.smsc.admin.sme.SmeSmscStatuses;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.config.Configuration;
 
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
@@ -87,7 +86,6 @@ public class ServiceListController extends ServiceController {
 
 
   public DataTableModel getServices() {
-    final Configuration conf = getConfiguration();
     final List<String> smeIds = new ArrayList<String>();
     try {
       smeIds.addAll(mngr.smes().keySet());

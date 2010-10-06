@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.config.Configuration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.controllers.SmscController;
 

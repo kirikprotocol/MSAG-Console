@@ -39,11 +39,14 @@ import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.sme.SmeManagerImpl;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
+import ru.novosoft.smsc.admin.smsc.SmscManagerImpl;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpManager;
 import ru.novosoft.smsc.admin.snmp.SnmpManagerImpl;
 import ru.novosoft.smsc.admin.timezone.TimezoneManager;
+import ru.novosoft.smsc.admin.timezone.TimezoneManagerImpl;
 import ru.novosoft.smsc.admin.users.UsersManager;
+import ru.novosoft.smsc.admin.users.UsersManagerImpl;
 
 import java.io.File;
 
@@ -59,7 +62,7 @@ public class AdminContext {
 
   protected ServiceManager serviceManager;
   protected FileSystem fileSystem;
-  protected SmscManager smscManager;
+  protected SmscManagerImpl smscManager;
   protected ArchiveDaemonManager archiveDaemonManager;
   protected ClusterController clusterController;
   protected AliasManager aliasManager;
@@ -112,7 +115,7 @@ public class AdminContext {
     clusterControllerManager = new ClusterControllerManager(serviceManager, fileSystem);    
     clusterController = new ClusterController(clusterControllerManager);
 
-    smscManager = new SmscManager(serviceManager, clusterController, fileSystem);
+    smscManager = new SmscManagerImpl(serviceManager, clusterController, fileSystem);
 
     File smscConfigDir = smscManager.getConfigDir();
     File smscConfigBackupDir = smscManager.getConfigBackupDir();
@@ -126,7 +129,7 @@ public class AdminContext {
 
     File usersFile = new File(cfg.getUsersFile());
 
-    usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
+    usersManager = new UsersManagerImpl(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
 
     fraudManager = new FraudManagerImpl(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
@@ -152,7 +155,7 @@ public class AdminContext {
 
     routeSubjectManager = new RouteSubjectManagerImpl(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
-    timezoneManager = new TimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
+    timezoneManager = new TimezoneManagerImpl(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
     regionManager = new RegionManagerImpl(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
 

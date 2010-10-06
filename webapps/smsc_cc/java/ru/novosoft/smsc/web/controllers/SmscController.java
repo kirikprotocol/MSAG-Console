@@ -4,7 +4,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.logging.Logger;
 import ru.novosoft.smsc.web.LocaleFilter;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.config.Configuration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 
 import javax.faces.application.FacesMessage;
@@ -92,10 +91,6 @@ public abstract class SmscController implements Serializable {
 
   public boolean isAccessToUsers() {
     return FacesContext.getCurrentInstance().getExternalContext().isUserInRole("users");
-  }
-
-  protected Configuration getConfiguration() {
-    return WebContext.getInstance().getConfiguration();
   }
 
   protected SmscStatusManager getSmscStatusManager() {

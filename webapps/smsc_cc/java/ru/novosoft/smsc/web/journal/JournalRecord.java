@@ -122,7 +122,8 @@ public class JournalRecord {
     REGION("region"),
     RESOURCE("resource"),
     ROUTE("route"),
-    SUBJECT("subject");
+    SUBJECT("subject"),
+    TIMEZONE("timezone");
 
     private final String key;
 

@@ -1,16 +1,5 @@
 package ru.novosoft.smsc.web.journal;
 
-import ru.novosoft.smsc.admin.category.CategorySettings;
-import ru.novosoft.smsc.admin.fraud.FraudSettings;
-import ru.novosoft.smsc.admin.logging.LoggerSettings;
-import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
-import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
-import ru.novosoft.smsc.admin.sme.Sme;
-import ru.novosoft.smsc.admin.smsc.SmscSettings;
-import ru.novosoft.smsc.admin.snmp.SnmpSettings;
-import ru.novosoft.smsc.admin.users.UsersSettings;
-import ru.novosoft.smsc.util.Address;
-
 import java.util.*;
 
 /**
@@ -20,9 +9,6 @@ import java.util.*;
 public class Journal {
 
   private final List<JournalRecord> records = new ArrayList<JournalRecord>();
-
-  private final SmscSettingsDiffHelper smsc = new SmscSettingsDiffHelper(JournalRecord.Subject.SMSC);
-  private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(JournalRecord.Subject.USERS);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -120,26 +106,6 @@ public class Journal {
 
   public UserJournal user(String user) {
     return new UserJournal(user, this);
-  }
-
-  /**
-   * Ищет различия между настройками СМСЦ и записывает их в журнал
-   * @param oldSettings старые настройки СМСЦ
-   * @param newSettings новые настройки СМСЦ
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logChanges(SmscSettings oldSettings, SmscSettings newSettings, String user) {
-    smsc.logChanges(this, oldSettings, newSettings, user);
-  }
-
-  /**
-   * Ищет различия между настройками пользователей и записывает их в журнал
-   * @param oldSettings старые настройки пользователей
-   * @param newSettings новые настройки пользователей
-   * @param user пользователь, от имени которого надо формировать записи
-   */
-  public void logChanges(UsersSettings oldSettings, UsersSettings newSettings, String user) {
-    users.logChanges(this, oldSettings, newSettings, user);
   }
 
 }
