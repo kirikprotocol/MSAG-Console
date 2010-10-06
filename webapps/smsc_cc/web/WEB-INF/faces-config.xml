@@ -320,6 +320,11 @@
     <managed-bean-class>ru.novosoft.smsc.web.controllers.subjects.SubjectsController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+  <managed-bean>
+    <managed-bean-name>subjectEdit</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.subjects.SubjectEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <managed-bean>
     <managed-bean-name>defaultProfile</managed-bean-name>
@@ -451,6 +456,10 @@
       <to-view-id>/smsc/subjects/index.faces</to-view-id>
       <redirect/>
     </navigation-case>
+    <navigation-case>
+      <from-outcome>SUBJECT_EDIT</from-outcome>
+      <to-view-id>/smsc/subjects/edit.faces</to-view-id>      
+    </navigation-case>    
     <navigation-case>
       <from-outcome>DEFAULT_PROFILE</from-outcome>
       <to-view-id>/smsc/profile/default.faces</to-view-id>

@@ -45,30 +45,46 @@
       </eye:buttons>
 
       <eye:dataTable value="#{subjects.subjectsModel}" selectedRows="#{subjects.selectedRows}" var="s">
-        <eye:row rowId="#{s.name}" opened="true">
-          <eye:column name="name" title="#{msg['subjects.page.column.name']}" width="33%" sortable="true" defaultSortOrder="asc">
+        <eye:row rowId="#{s.name}"  innerData="#{!empty s.masks or !empty s.children}">
+          <eye:column name="name" title="#{msg['subjects.page.column.name']}" width="50%"
+                      sortable="true" defaultSortOrder="asc">
             <h:commandLink  value="#{s.name}" action="#{subjects.edit}">
-              <f:param name="subjectToEdit" value="#{s.name}"/>
+              <f:param name="oldName" value="#{s.name}"/>
             </h:commandLink>
           </eye:column>
-          <eye:column name="defaultSme" title="#{msg['subjects.page.column.defaultSme']}" width="33%" sortable="true">
+          <eye:column name="defaultSme" title="#{msg['subjects.page.column.defaultSme']}" width="48%" sortable="true">
             <h:outputText  value="#{s.defaultSmeId}"/>
           </eye:column>
-          <eye:column name="masks" title="#{msg['subjects.page.column.masks']}" width="33%">
-            <c:set var="len" value="#{fn:length(s.masks)}"/>
 
-            <eye:collapsingGroup label="#{s.masks[0].simpleAddress},..." rendered="#{len>1}">
-              <tr:panelFormLayout>
-                <c:forEach var="i" begin="1" end="#{len-1}" step="1">
-                  <h:outputText value="#{s.masks[i].simpleAddress}"/>
-                </c:forEach>
-              </tr:panelFormLayout>
-            </eye:collapsingGroup>
-            <tr:panelGroupLayout rendered="#{len==1}">
-              <h:outputText value="#{s.masks[0].simpleAddress}"/>
-            </tr:panelGroupLayout>
 
-          </eye:column>
+          <f:facet name="innerData">
+            <h:panelGrid columns="3" columnClasses="columnTopLeftAlign,columnTopLeftAlign" style="width:350px;">
+
+
+                <h:dataTable value="#{s.masks}" var="mask" columnClasses="columnTopLeftAlign" style="margin-left:50px; width:150px;">
+                  <h:column>
+                    <f:facet name="header">
+                      <h:outputText value="#{msg['subjects.page.column.masks']}" />
+                    </f:facet>
+                    <tr:outputText value="#{mask.simpleAddress}"/>
+                  </h:column>
+                </h:dataTable>
+
+                <h:dataTable value="#{s.children}" var="child" columnClasses="columnTopLeftAlign" style="width:150px;;">
+                  <h:column>
+                    <f:facet name="header">
+                      <h:outputText value="#{msg['subjects.page.column.subjects']}" />
+                    </f:facet>
+                    <h:commandLink  value="#{child}" action="#{subjects.edit}">
+                        <f:param name="oldName" value="#{child}"/>
+                    </h:commandLink>
+                    <!--<tr:outputText value="#{child}"/>-->
+                  </h:column>
+                </h:dataTable>
+
+
+            </h:panelGrid>
+          </f:facet>
         </eye:row>
       </eye:dataTable>
 

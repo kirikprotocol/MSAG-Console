@@ -25,7 +25,7 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
   boolean initError = false;
   private DynamicTableModel masksFilter;
   private String namesFilter;
-  private List selectedRows;
+  private List<String> selectedRows;
   private RouteSubjectSettings settings;
 
 
@@ -64,13 +64,15 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
 
 
 
-  public String reset() {
-    //todo
+  public String reset() throws AdminException {
+    resetSettings();
+    settings = getSettings();
     return "SUBJECTS";
   }
 
-  public String submit() {
-    //todo
+  public String submit() throws AdminException {
+    setSettings(settings);
+    submitSettings();
     return "INDEX";
   }
 
@@ -150,11 +152,11 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
     };
   }
 
-  public void setSelectedRows(List selectedRows) {
+  public void setSelectedRows(List<String> selectedRows) {
     this.selectedRows = selectedRows;
   }
 
-  public List getSelectedRows() {
+  public List<String> getSelectedRows() {
     return selectedRows;
   }
 
@@ -162,11 +164,27 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
     return "SUBJECT_EDIT";
   }
 
-  public String deleteSelected() {
-
-
-    setSettings(settings);
+  public String deleteSelected() throws AdminException {
+    if(selectedRows!=null && selectedRows.size()>0) {
+      List<Subject> subjs = settings.getSubjects();
+      for(int i=0; i<subjs.size();i++) {
+        Subject subj = subjs.get(i);
+        for(String s : selectedRows) {
+           if(subj.getName().equals(s)) {
+             subjs.remove(i);
+             i--;
+             break;
+           }
+        }
+      }
+      settings.setSubjects(subjs);
+      setSettings(settings);
+    }
     checkChanges();
     return null;
+  }
+
+  public Object edit() {
+    return "SUBJECT_EDIT";
   }
 }

@@ -1,0 +1,95 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{ subjectEdit.oldName!=null ? msg['subject.edit.edit.title'] : msg['subject.edit.add.title']}"/>
+
+
+
+  <ui:define name="content">
+
+    <h:form rendered="#{!subjectEdit.initError}">
+      <h:inputHidden value="#{subjectEdit.oldName}"/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" id="add1" action="#{subjectEdit.done}">
+            <f:param name="oldName" value="#{subjectEdit.oldName}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="SUBJECTS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+
+
+
+
+      <h:panelGrid columns="3" columnClasses="columnTopLeftAlign,columnTopLeftAlign,columnTopLeftAlign" style="width:600px;" >
+        <h:panelGroup style="width:200px;">
+          <eye:pageSubtitle value="#{msg['subject.edit.subject.info']}"/>
+          <tr:panelFormLayout>
+            <tr:panelLabelAndMessage label="#{msg['subjects.page.column.name']}">
+              <h:inputText  value="#{subjectEdit.subj.name}">
+                <tr:validateLength minimum="1"/>
+              </h:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['subjects.page.column.notes']}">
+              <h:inputText  value="#{subjectEdit.subj.notes}"/>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['subjects.page.column.defaultSme']}">
+              <h:selectOneMenu value="#{subjectEdit.subj.defaultSmeId}">
+                <f:selectItems value="#{subjectEdit.smeIds}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+          </tr:panelFormLayout>
+        </h:panelGroup>
+
+        <h:panelGroup style="width:200px;">
+          <eye:pageSubtitle value="#{msg['subjects.page.column.masks']}"/>
+          <eye:dynamicTable value="#{subjectEdit.masksModel}">
+            <eye:textColumn name="mask" allowEditAfterAdd="true"/>
+          </eye:dynamicTable>
+        </h:panelGroup>
+
+        <h:panelGroup style="width:200px;">
+          <eye:pageSubtitle value="#{msg['subjects.page.column.subjects']}"/>
+          <eye:dynamicTable value="#{subjectEdit.subjectsModel}">
+            <eye:selectColumn name="child" allowEditAfterAdd="false" values="#{subjectEdit.allowedChildren}"/>
+          </eye:dynamicTable>
+        </h:panelGroup>
+      </h:panelGrid>
+
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" id="add2" action="#{subjectEdit.done}">
+            <f:param name="oldName" value="#{subjectEdit.oldName}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="SUBJECTS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+
+    </h:form>
+
+  </ui:define>
+
+
+</ui:composition>
+
+
+</html>
