@@ -21,6 +21,9 @@ public class Subject implements Serializable {
   private List<Address> masks;
   private List<String> children;
 
+  public Subject() {
+  }
+
   public Subject(String name) throws AdminException {
     vh.checkNotEmpty("name", name);
     this.name = name;
