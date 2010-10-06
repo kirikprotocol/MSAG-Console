@@ -24,7 +24,8 @@ core_(core),
 jnl_(jnl),
 lastfn_(0),
 dlvId_(dlvId),
-lastMsgId_(0)
+lastMsgId_(0),
+glossary_(*this)
 {
     smsc_log_debug(log_,"ctor for D=%u, FIXME: read journal", unsigned(dlvId_));
 }
@@ -299,10 +300,11 @@ void InputStorage::setRecord( regionid_type regId, InputRegionRecord& ro, uint64
 std::string InputStorage::makeFilePath( regionid_type regId, uint32_t fn ) const
 {
     if (fn==0) return "";
-    char buf[50];
-    sprintf(buf,"%u/%u/%u.data",unsigned(dlvId_),unsigned(regId),unsigned(fn));
-    smsc_log_debug(log_,"filepath for R=%u F=%u is %s",unsigned(regId),unsigned(fn),buf);
-    return jnl_.getPath() + buf;
+    char buf[70];
+    sprintf(makeDeliveryPath(dlvId_,buf),"%u/%u.data",unsigned(regId),unsigned(fn));
+    smsc_log_debug(log_,"filepath for D=%u/R=%u/F=%u is %s",
+                   unsigned(dlvId_),unsigned(regId),unsigned(fn),buf);
+    return jnl_.getStorePath() + buf;
 }
 
 }

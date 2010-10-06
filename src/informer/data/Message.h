@@ -56,10 +56,16 @@ inline uint64_t subscriberToAddress( uint64_t subsc, uint8_t& ton, uint8_t& npi 
     return subsc & 0xffffffffffffffULL;
 }
 
+
 inline uint64_t addressToSubscriber( uint8_t ton, uint8_t npi, uint64_t value )
 {
     return ( uint64_t((ton & 0xf << 4) | (npi & 0xf)) << 56 ) | (value & 0xffffffffffffffULL);
 }
+
+
+// buf must be at least 40 bytes
+char* makeDeliveryPath( dlvid_type dlvId, char* buf );
+
 
 // a structure which is kept in the list in operational storage.
 // it contains the message itself and the 'locked' flag.

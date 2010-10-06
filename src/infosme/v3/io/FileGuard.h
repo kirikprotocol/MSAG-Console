@@ -36,6 +36,7 @@ public:
         // open file readonly
         close();
         if (fn && fn[0]) {
+            smsc_log_debug(log_,"ropen %s",fn);
             fd_ = open(fn,O_RDONLY);
             if (fd_==-1) {
                 const size_t buflen = 100;
@@ -50,9 +51,11 @@ public:
         // create file, open for writing
         close();
         if (fn && fn[0]) {
+            smsc_log_debug(log_,"create %s mkdirs=%u trunc=%u",fn,mkdirs,truncate);
             int flags = O_WRONLY|O_CREAT;
             if (truncate) flags |= O_TRUNC;
             if (mkdirs) {
+                // FIXME: try to create dirs only after open failed
                 std::string dir;
                 const char* p = strrchr(fn,'/');
                 if (p) {
@@ -72,9 +75,11 @@ public:
         }
     }
 
+
     void seek( uint32_t pos ) {
         if (fd_!=-1) lseek(fd_,off_t(pos),SEEK_SET);
     }
+
 
     void write( const void* buf, unsigned buflen ) {
         if (fd_==-1) {
@@ -91,6 +96,7 @@ public:
             buflen -= written;
         }
     }
+
 
     int read( void* buf, unsigned buflen ) {
         if (fd_==-1) {
@@ -112,6 +118,7 @@ public:
         }
         return wasread;
     }
+
 
     void fsync() {
         if (fd_!=-1) ::fsync(fd_);

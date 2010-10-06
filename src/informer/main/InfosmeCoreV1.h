@@ -94,13 +94,11 @@ private:
     bool                                       started_;
     smsc::core::threads::ThreadPool            ttp_;        // transfer task pool
     smsc::core::buffers::Hash< SmscSender* >      smscs_;   // owned
-    smsc::core::buffers::IntHash< RegionPtr >     regions_; // owned
-    smsc::core::buffers::IntHash< RegionSender* > regSends_; // owned
-    smsc::core::buffers::IntHash< DeliveryPtr >   deliveries_; // owned
-    StoreJournal*                                 storeLog_;   // owned
+    smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
+    smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned
+    smsc::core::buffers::IntHash< DeliveryPtr >   deliveries_;   // owned
+    StoreJournal*                                 storeLog_;     // owned
     InputJournal*                                 inputJournal_; // owned
-    std::string                                   path_;
-
     smsc::core::synchronization::Mutex            bindQueueLock_;
     smsc::core::buffers::CyclicQueue<BindSignal>  bindQueue_;
 };

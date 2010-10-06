@@ -61,7 +61,6 @@ template <typename RegIter> std::string formatRegionList( RegIter begin, RegIter
     return s;
 }
 
-
 } // informer
 } // smsc
 

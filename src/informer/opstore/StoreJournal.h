@@ -17,6 +17,7 @@ class Message;
 class StoreJournal
 {
 public:
+    /// @a path -- a path to the storage root.
     StoreJournal( const std::string& path );
 
     /// journal messages.
@@ -25,7 +26,7 @@ public:
                          const Message& msg );
 private:
     smsc::logger::Logger* log_;
-    std::string           path_;
+    std::string           path_; // path to the journal
     uint32_t              version_;
     FileGuard             fg_;
 };

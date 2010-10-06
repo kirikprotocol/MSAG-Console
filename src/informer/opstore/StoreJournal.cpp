@@ -9,11 +9,11 @@ namespace informer {
 
 StoreJournal::StoreJournal( const std::string& path ) :
 log_(smsc::logger::Logger::getInstance("storelog")),
-path_(path + "store.jnl"),
+path_(path),
 version_(1)
 {
     // FIXME: read store journal
-    fg_.create( path_.c_str(),true,true);
+    fg_.create((path_ + "operative/.journal").c_str(),true,true);
 }
 
 

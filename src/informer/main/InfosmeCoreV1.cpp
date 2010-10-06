@@ -88,10 +88,11 @@ InfosmeCoreV1::~InfosmeCoreV1()
 void InfosmeCoreV1::init( const ConfigView& cfg )
 {
     smsc_log_info(log_,"FIXME: initing InfosmeCore");
-    path_ = "store/";
 
-    if (!storeLog_) storeLog_ = new StoreJournal(path_+ "ops/");
-    if (!inputJournal_) inputJournal_ = new InputJournal(path_ + "new/");
+    const std::string path = "store/";
+
+    if (!inputJournal_) inputJournal_ = new InputJournal(path);
+    if (!storeLog_) storeLog_ = new StoreJournal(path);
 
     std::auto_ptr< ConfigView > ccv(cfg.getSubConfig("SMSCConnectors"));
     ConfString defConn(ccv->getString("default","default SMSC id not found"));
@@ -287,16 +288,14 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
         if (!dlvInfo.get()) {
             throw InfosmeException("delivery info not passed");
         }
-        char buf[40];
-        sprintf(buf,"%u/new/",dlvInfo->getDlvId());
         InputMessageSource* ims = new InputStorage(*this,dlvInfo->getDlvId(),*inputJournal_);
         deliveries_.Insert(dlvId, DeliveryPtr(new Delivery(dlvInfo,*storeLog_,ims)));
         // filling glossary
         MessageGlossary& glos(ims->getGlossary());
-        MessageTextPtr mtp( new MessageText("my first message",1) );
-        glos.bindMessage(mtp);
-        mtp.reset( new MessageText("the second text",2) );
-        glos.bindMessage(mtp);
+        MessageGlossary::TextList tlist;
+        tlist.push_back(new MessageText("my \"first\" message\nwill be written\\later",1));
+        tlist.push_back(new MessageText("the second text",2));
+        glos.registerMessages(*ims,tlist);
     }
     startMon_.notify();
 }

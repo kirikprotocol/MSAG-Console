@@ -18,10 +18,11 @@ public:
                         const InputRegionRecord& rec,
                         uint64_t maxMsgId );
 
-    inline const std::string& getPath() const { return path_; }
+    /// the path to the store root.
+    inline const std::string& getStorePath() const { return path_; }
 
 private:
-    std::string path_;  // path to new storage
+    std::string path_;  // path to storage root directory
     FileGuard   jnl_;
 };
 

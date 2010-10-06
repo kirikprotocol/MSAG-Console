@@ -75,6 +75,9 @@ public:
                                              bool mayDetachRegion ) = 0;
 
     virtual MessageGlossary& getGlossary() = 0;
+
+    virtual dlvid_type getDlvId() const = 0;
+    virtual const std::string& getStorePath() const = 0;
 };
 
 } // informer

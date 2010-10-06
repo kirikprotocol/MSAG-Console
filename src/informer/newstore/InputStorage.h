@@ -46,6 +46,13 @@ public:
 
     virtual MessageGlossary& getGlossary() { return glossary_; }
 
+    virtual dlvid_type getDlvId() const {
+        return dlvId_;
+    }
+    virtual const std::string& getStorePath() const {
+        return jnl_.getStorePath();
+    }
+
 private:
     void dispatchMessages( MsgIter begin, MsgIter end, std::vector<regionid_type>& regs);
 
@@ -63,10 +70,10 @@ private:
     smsc::core::synchronization::Mutex lock_;  // to add new regions
     smsc::core::buffers::IntHash< InputRegionRecord >  regions_;
     InputJournal&                              jnl_;
-    MessageGlossary                            glossary_;
     uint32_t                                   lastfn_;
     dlvid_type                                 dlvId_;
     msgid_type                                 lastMsgId_;
+    MessageGlossary                            glossary_;
 };
 
 } // informer

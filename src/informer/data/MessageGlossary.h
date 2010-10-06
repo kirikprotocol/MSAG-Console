@@ -10,19 +10,32 @@
 namespace eyeline {
 namespace informer {
 
+class InputMessageSource;
+
 class MessageGlossary
 {
     friend class MessageTextPtr;
 public:
-    MessageGlossary();
+    typedef std::list< MessageText* > TextList;
+    MessageGlossary( InputMessageSource& ims );
 
     /// bind message to glossary.
     void bindMessage( MessageTextPtr& ptr );
 
-private:
-    typedef std::list< MessageText* >                          TextList;
-    typedef smsc::core::buffers::IntHash< TextList::iterator > TextHash;
+    /// NOTE: texts will be empty on exit
+    void registerMessages( InputMessageSource&  ims,
+                           TextList&            texts );
 
+private:
+    struct Node {
+        Node() {}
+        Node(TextList::iterator i,TextList::iterator r) : iter(i), repl(r) {}
+        TextList::iterator iter;
+        TextList::iterator repl;
+    };
+    typedef smsc::core::buffers::IntHash< Node > TextHash;
+
+    void registerFailed( TextList& texts, TextList::iterator upto );
     void ref( MessageText* ptr );
     void unref( MessageText* ptr );
 
@@ -31,7 +44,8 @@ private:
     smsc::core::synchronization::Mutex                 lock_;
     TextList                                           list_; // owned
     TextHash                                           hash_;
-    int32_t                                            lastMsgId_;
+    int32_t                                            negMsgId_;
+    int32_t                                            posMsgId_;
 };
 
 
