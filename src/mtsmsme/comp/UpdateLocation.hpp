@@ -15,28 +15,6 @@ using smsc::mtsmsme::processor::TrId;
 using smsc::mtsmsme::processor::AC;
 using std::string;
 
-class UpdateLocationMessage: public  CompIF {
-  public:
-    UpdateLocationMessage();
-    ~UpdateLocationMessage();
-    void setOTID(TrId _otid);
-    void setComponent(const string& imsi, const string& msc,const string& vlr);
-    virtual void encode(vector<unsigned char>& buf);
-    virtual void decode(const vector<unsigned char>& buf);
-private:
-    TCMessage_t begin;
-    EXT_t         dp;
-    ComponentPortion_t comps;
-    Component_t *arr[1];
-    Component_t comp;
-    UpdateLocationArg_t arg;
-    VLR_Capability_t vlrcap;
-    uint8_t otid[4];
-    AC ac;
-    OCTET_STRING_DECL(_imsi,20);
-    OCTET_STRING_DECL(_vlr, 20);
-    OCTET_STRING_DECL(_msc, 20);
-};
 class UpdateLocationReq : public CompIF {
   public:
     void setParameters(const string& imsi, const string& msc, const string& vlr);

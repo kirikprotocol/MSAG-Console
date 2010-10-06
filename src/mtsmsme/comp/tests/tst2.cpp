@@ -108,22 +108,13 @@ void AmericaTestFixture::updateLocation_arg_encoding()
     0x07, 0x91, 0x97, 0x31, 0x89, 0x96, 0x89, 0x31,
     0xa6, 0x04, 0x80, 0x02, 0x05, 0x80
   };
-  using smsc::mtsmsme::comp::UpdateLocationMessage;
-  using smsc::mtsmsme::processor::TrId;
-  using smsc::mtsmsme::processor::util::dump;
-  UpdateLocationMessage msg;
-  TrId id; id.size=4; id.buf[0] = 0xba; id.buf[1] = 0xbe; id.buf[2] = 0x00; id.buf[3] = 0x16;
-  msg.setOTID(id);
-  msg.setComponent("272017011521691","791398699812","791398699813");
-  vector<unsigned char> ulmsg;
-  msg.encode(ulmsg);
-  //printf("UpdateLocation[%d]={%s}",ulmsg.size(),dump((uint16_t)ulmsg.size(),&ulmsg[0]).c_str());
   vector<unsigned char> etalon_buf(etalon, etalon + sizeof(etalon) / sizeof(unsigned char) );
   vector<unsigned char> bad_buf(bad, bad + sizeof(bad) / sizeof(unsigned char) );
 
   using smsc::mtsmsme::comp::UpdateLocationReq;
   using smsc::mtsmsme::processor::net_loc_upd_v2;
   using smsc::mtsmsme::processor::BeginMsg;
+  using smsc::mtsmsme::processor::TrId;
   UpdateLocationReq ulreq;
   ulreq.setParameters("272017011521691","791398699812","791398699813");
   vector<unsigned char> temp_arg;
@@ -139,16 +130,12 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   smsc_log_debug(logger,"etalon data[%d]={%s}",
                          sizeof(etalon),
                          dump((uint16_t)sizeof(etalon),etalon).c_str());
-  smsc_log_debug(logger,"old type API encoded data[%d]={%s}",
-                         ulmsg.size(),
-                         dump((uint16_t)ulmsg.size(),&ulmsg[0]).c_str());
   smsc_log_debug(logger,"new type API encoded data[%d]={%s}",
                          data.size(),
                          dump((uint16_t)data.size(),&data[0]).c_str());
 
-  CPPUNIT_ASSERT(etalon_buf == ulmsg);
-//  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
-  CPPUNIT_ASSERT( bad_buf != ulmsg );
+//  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == data ) );
+  CPPUNIT_ASSERT( bad_buf != data );
   CPPUNIT_ASSERT(etalon_buf == data);
 }
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
