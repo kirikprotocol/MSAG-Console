@@ -24,9 +24,7 @@
           </tr:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="#{snmpObj.cancel}">
-            <f:param name="objName" value="#{snmpObj.objName}"/>
-          </tr:commandLink>
+          <tr:commandLink text="#{msg['cancel.button']}" action="SNMP" immediate="true"/>          
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -171,9 +169,7 @@
           </tr:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="#{snmpObj.cancel}">
-            <f:param name="objName" value="#{snmpObj.objName}"/>
-          </tr:commandLink>
+          <tr:commandLink text="#{msg['cancel.button']}" action="SNMP" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
