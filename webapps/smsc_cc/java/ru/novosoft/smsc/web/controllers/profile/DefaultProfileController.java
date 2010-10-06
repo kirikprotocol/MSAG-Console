@@ -6,9 +6,7 @@ import ru.novosoft.smsc.admin.profile.AliasHide;
 import ru.novosoft.smsc.admin.profile.Profile;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.profile.ReportOption;
-import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.controllers.SmscConfigurationController;
 
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;
@@ -17,7 +15,7 @@ import java.util.List;
 /**
  * @author Artem Snopkov
  */
-public class DefaultProfileController extends SmscConfigurationController {
+public class DefaultProfileController extends ProfileController {
 
   private static final List<SelectItem> reportOptions;
   private static final List<SelectItem> aliasHideOptions;
@@ -39,7 +37,6 @@ public class DefaultProfileController extends SmscConfigurationController {
   private boolean initFailed;
 
   public DefaultProfileController() {
-    super(WebContext.getInstance().getProfileManager());
     mngr = WebContext.getInstance().getProfileManager();
     try {
       profile = new ProfileWrapper(mngr.getDefaultProfile());

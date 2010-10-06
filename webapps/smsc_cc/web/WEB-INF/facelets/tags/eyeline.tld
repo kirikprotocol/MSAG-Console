@@ -118,6 +118,12 @@
       <type>java.lang.String</type>
       <required>true</required>
     </attribute>
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, означающий отображать или нет таблицу</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
   </tag>
 
   <tag>

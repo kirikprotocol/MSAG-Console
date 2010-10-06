@@ -1,0 +1,154 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['lookup.profile.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <tr:panelFormLayout inlineStyle="padding:20px">
+        <tr:panelLabelAndMessage label="#{profile['address']}">
+          <tr:inputText value="#{lookupProfile.address}" simple="true"/>
+        </tr:panelLabelAndMessage>
+      </tr:panelFormLayout>
+
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink value="#{msg['lookup.button']}" action="#{lookupProfile.lookup}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <p/>
+
+      <h:panelGroup rendered="#{lookupProfile.lookupResult != null}">
+
+        <eye:pageSubtitle value="#{msg['lookup.profile.page.exact.match']}" rendered="#{lookupProfile.lookupResult.exactMatch}"/>
+        <eye:pageSubtitle value="#{msg['lookup.profile.page.mask.match']}: #{lookupProfile.lookupResult.profile.address.simpleAddress}" rendered="#{lookupProfile.lookupResult.maskMatch}"/>
+        <eye:pageSubtitle value="#{msg['lookup.profile.page.default.match']}" rendered="#{lookupProfile.lookupResult.defaultMatch}"/>
+
+        <tr:panelFormLayout inlineStyle="padding:20px">
+
+          <tr:panelLabelAndMessage label="#{profile['ucs2']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ucs2}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.ucs2}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['latin1']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.latin1}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.latin1}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['ussd7bit']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ussd7bit}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.ussd7bit}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['reportOptions']}">
+            <tr:outputText value="#{lookupProfile.lookupResult.profile.reportOptions}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['locale']}">
+            <tr:outputText value="#{lookupProfile.lookupResult.profile.locale}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['aliasHide']}">
+            <tr:outputText value="#{lookupProfile.lookupResult.profile.aliasHide}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['aliasModifiable']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.aliasModifiable}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.aliasModifiable}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['divert']}">
+            <tr:outputText value="#{lookupProfile.lookupResult.profile.divert}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['divertActive']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActive}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActive}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['divertActiveAbsent']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveAbsent}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveAbsent}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['divertActiveBlocked']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveBlocked}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveBlocked}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['divertActiveBarred']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveBarred}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveBarred}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['divertActiveCapacity']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertActiveCapacity}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertActiveCapacity}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['divertModifiable']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.divertModifiable}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.divertModifiable}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['udhConcat']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.udhConcat}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.udhConcat}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['translit']}">
+            <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.translit}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!lookupProfile.lookupResult.profile.translit}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['groupId']}">
+            <h:commandLink value="#{lookupProfile.lookupResult.profile.groupId}" rendered="#{lookupProfile.lookupResult.profile.groupId != null}">
+              <f:param name="closed_group" value="#{lookupProfile.lookupResult.profile.groupId}"/>
+            </h:commandLink>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['inputAccessMask']}">
+            <tr:outputText value="#{lookupProfile.lookupResult.profile.inputAccessMask}"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{profile['outputAccessMask']}">
+            <tr:outputText value="#{lookupProfile.lookupResult.profile.outputAccessMask}"/>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+
+        <eye:buttons>
+          <eye:button rendered="#{!lookupProfile.lookupResult.exactMatch}">
+            <h:commandLink value="#{msg['add.button']}" action="PROFILE_EDIT"/>
+          </eye:button>
+          <eye:button rendered="#{!lookupProfile.lookupResult.defaultMatch}">
+            <h:commandLink value="#{msg['edit.button']}" action="PROFILE_EDIT">
+              <f:param name="profile" value="#{lookupProfile.lookupResult.profile.address.simpleAddress}"/>
+            </h:commandLink>
+          </eye:button>
+          <eye:space/>
+        </eye:buttons>
+
+      </h:panelGroup>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

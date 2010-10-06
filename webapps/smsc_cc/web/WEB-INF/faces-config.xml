@@ -327,6 +327,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>lookupProfile</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.profile.LookupProfileController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -448,6 +454,11 @@
     <navigation-case>
       <from-outcome>DEFAULT_PROFILE</from-outcome>
       <to-view-id>/smsc/profile/default.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>PROFILE_EDIT</from-outcome>
+      <to-view-id>/smsc/profile/edit.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

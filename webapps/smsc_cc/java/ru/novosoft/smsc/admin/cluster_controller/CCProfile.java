@@ -187,7 +187,7 @@ public class CCProfile {
   }
 
   public Integer getClosedGroupId() {
-    return profile.getClosedGroupId() == 0 ? null : profile.getClosedGroupId();
+    return !profile.hasClosedGroupId() || profile.getClosedGroupId() == 0 ? null : profile.getClosedGroupId();
   }
 
   public void setClosedGroupId(Integer closedGroupId) {
