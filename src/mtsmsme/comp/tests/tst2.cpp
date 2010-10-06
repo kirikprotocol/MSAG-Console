@@ -120,9 +120,6 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   //printf("UpdateLocation[%d]={%s}",ulmsg.size(),dump((uint16_t)ulmsg.size(),&ulmsg[0]).c_str());
   vector<unsigned char> etalon_buf(etalon, etalon + sizeof(etalon) / sizeof(unsigned char) );
   vector<unsigned char> bad_buf(bad, bad + sizeof(bad) / sizeof(unsigned char) );
-  CPPUNIT_ASSERT(etalon_buf == ulmsg);
-//  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
-  CPPUNIT_ASSERT( bad_buf != ulmsg );
 
   using smsc::mtsmsme::comp::UpdateLocationReq;
   using smsc::mtsmsme::processor::net_loc_upd_v2;
@@ -148,10 +145,10 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   smsc_log_debug(logger,"new type API encoded data[%d]={%s}",
                          data.size(),
                          dump((uint16_t)data.size(),&data[0]).c_str());
-  smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_arg_encoding END ========\n");
-  /*
-   * 0x62,  0x54,  0x48,
-   */
+
+  CPPUNIT_ASSERT(etalon_buf == ulmsg);
+//  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
+  CPPUNIT_ASSERT( bad_buf != ulmsg );
   CPPUNIT_ASSERT(etalon_buf == data);
 }
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
