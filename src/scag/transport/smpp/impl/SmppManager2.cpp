@@ -370,20 +370,13 @@ void SmppManagerImpl::Init(const char* cfgFile)
   DOMDocument* doc=reader.read(cfgFile);
   DOMElement *elem = doc->getDocumentElement();
 
-  DOMNodeList *list = elem->getElementsByTagName(XmlStr("metasmerecord"));
-  ParseMetaTag(this,list,mtMetaService);
-
-  list = elem->getElementsByTagName(XmlStr("metasmscrecord"));
-  ParseMetaTag(this,list,mtMetaSmsc);
-
-
-  list = elem->getElementsByTagName(XmlStr("smerecord"));
-  ParseTag(this,list,etService);
-
-  list = elem->getElementsByTagName(XmlStr("smscrecord"));
-  ParseTag(this,list,etSmsc);
-
-  LoadRoutes("conf/smpp_routes.xml");
+    // initialization of sm
+    unsigned socketsPerThread = getUnsigned( "smpp.core.socketsPerMultiplexer", 16 );
+    unsigned bindTimeout = getUnsigned( "smpp.core.bindWaitTimeout", 10 );
+    unsigned connectionsPerIp = getUnsigned( "smpp.core.connectionsPerIp", 100 );
+    unsigned failTimeout = getUnsigned( "smpp.core.ipBlockingTime", 60 );
+    unsigned maxMultiCount = getUnsigned( "smpp.core.maxRWMultiplexersCount", 100 );
+    sm.init( socketsPerThread, bindTimeout, connectionsPerIp, failTimeout, maxMultiCount );
 
     // collecting whitelisted ips
     try {
@@ -415,13 +408,19 @@ void SmppManagerImpl::Init(const char* cfgFile)
         smsc_log_info(log,"whitelist exc: unknown");
     }
 
-    // initialization of sm
-    unsigned socketsPerThread = getUnsigned( "smpp.core.socketsPerMultiplexer", 16 );
-    unsigned bindTimeout = getUnsigned( "smpp.core.bindWaitTimeout", 10 );
-    unsigned connectionsPerIp = getUnsigned( "smpp.core.connectionsPerIp", 100 );
-    unsigned failTimeout = getUnsigned( "smpp.core.ipBlockingTime", 60 );
-    unsigned maxMultiCount = getUnsigned( "smpp.core.maxRWMultiplexersCount", 100 );
-    sm.init( socketsPerThread, bindTimeout, connectionsPerIp, failTimeout, maxMultiCount );
+  LoadRoutes("conf/smpp_routes.xml");
+
+  DOMNodeList *list = elem->getElementsByTagName(XmlStr("metasmerecord"));
+  ParseMetaTag(this,list,mtMetaService);
+
+  list = elem->getElementsByTagName(XmlStr("metasmscrecord"));
+  ParseMetaTag(this,list,mtMetaSmsc);
+
+  list = elem->getElementsByTagName(XmlStr("smerecord"));
+  ParseTag(this,list,etService);
+
+  list = elem->getElementsByTagName(XmlStr("smscrecord"));
+  ParseTag(this,list,etSmsc);
 
   running=true;
 

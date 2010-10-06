@@ -328,7 +328,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                         fail("USSD: opid is set but op is not found", st,
                              smsc::system::Status::SYSERR );
                         return;
-                    } else if ( op->getUSSDLastTime() + Session::ussdReplaceTimeout() < currentTime_ ) {
+                    } else if ( unsigned(op->getUSSDLastTime() + Session::ussdReplaceTimeout()) < currentTime_ ) {
                         // the operation is too old
                         smsc_log_info( log_, "current USSD dialog op=%p opid=%u is inactive during %u seconds and be replaced",
                                        op, found_ussd, unsigned(currentTime_ - op->getUSSDLastTime()) );

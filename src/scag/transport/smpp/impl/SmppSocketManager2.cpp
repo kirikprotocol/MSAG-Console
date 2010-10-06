@@ -203,7 +203,14 @@ void SmppSocketManager::unregisterSocket(SmppSocket* sock)
 
 void SmppSocketManager::shutdown()
 {
-  conn->shutdown();
+  if (conn) conn->shutdown();
+  if (acc) {
+      acc->Stop();
+      // wait until acc is stopped
+      while ( !acc->isStopped() ) {
+          Thread::Yield();
+      }
+  }
   tp.shutdown();
   readers.Empty();
   writers.Empty();

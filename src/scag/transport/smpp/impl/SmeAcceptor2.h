@@ -19,7 +19,7 @@ namespace smpp {
 class SmeAcceptor: public ThreadedTask
 {
 public:
-  SmeAcceptor(SmppSMInterface* argSm):sm(argSm)
+  SmeAcceptor(SmppSMInterface* argSm):sm(argSm), isStopped_(false)
   {
     log=smsc::logger::Logger::getInstance("smpp.acc");
   }
@@ -38,6 +38,7 @@ public:
   }
     int Execute()
     {
+        if (isStopped_) return 0;
         while(!isStopping)
         {
             smsc_log_debug(log,"prior to accept");
@@ -59,6 +60,7 @@ public:
             }
         }
         smsc_log_info(log,"SmeAcceptor stopped");
+        isStopped_ = true;
         return 0;
     }
   void Stop()
@@ -67,10 +69,12 @@ public:
     sock.Close();
     isStopping=true;
   }
+  bool isStopped() const { return isStopped_; }
 protected:
   Socket sock;
   SmppSMInterface* sm;
   smsc::logger::Logger* log;
+  bool isStopped_;
 };
 
 

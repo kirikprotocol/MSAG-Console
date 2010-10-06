@@ -81,6 +81,8 @@ public:
             maxReaderCount_ = maxReaderCount;
             tp.setMaxThreads( 2*maxReaderCount_ + 1 );
         }
+        smsc_log_info(log,"SocketManager::init sockPerThread=%u bindTimeout=%u connPerIp=%u failTimeout=%u maxRWCount=%u",
+                      socketsPerThread_, bindTimeout_, connectionsPerIp_, failTimeout_, maxReaderCount_ );
     }
 
     /// add whitelisted ip address
