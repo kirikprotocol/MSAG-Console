@@ -30,14 +30,14 @@ public class Profile implements Serializable {
   private boolean ussd7bit;
 
   private ReportOption reportOptions = ReportOption.NONE;
-  private String locale;             // todo зависимость от локали
+  private String locale;
 
   private AliasHide aliasHide = AliasHide.TRUE;
   private boolean aliasModifiable = false;
   private boolean udhConcat = true;
   private boolean translit = true;
 
-  private Integer groupId; // todo зависимость от закрытых групп
+  private Integer groupId;
   private int inputAccessMask = 1;
   private int outputAccessMask = 1;
 
@@ -52,6 +52,36 @@ public class Profile implements Serializable {
 
   Profile() {    
   }
+
+  protected Profile(Profile copy) {
+    address = copy.address;
+    
+    divert = copy.divert;
+    divertActive = copy.divertActive;
+    divertActiveAbsent = copy.divertActiveAbsent;
+    divertActiveBlocked = copy.divertActiveBlocked;
+    divertActiveBarred = copy.divertActiveBarred;
+    divertActiveCapacity = copy.divertActiveCapacity;
+    divertModifiable = copy.divertModifiable;
+
+    latin1 = copy.latin1;
+    ucs2 = copy.ucs2;
+    ussd7bit = copy.ussd7bit;
+    reportOptions = copy.reportOptions;
+    locale = copy.locale;
+    aliasHide = copy.aliasHide;
+    aliasModifiable = copy.aliasModifiable;
+    udhConcat = copy.udhConcat;
+    translit = copy.translit;
+    groupId = copy.groupId;
+    inputAccessMask = copy.inputAccessMask;
+    outputAccessMask = copy.outputAccessMask;
+    sponsored = copy.sponsored;
+    nick = copy.nick;
+    subscription = copy.subscription;
+  }
+
+
 
   public Address getAddress() {
     return address;

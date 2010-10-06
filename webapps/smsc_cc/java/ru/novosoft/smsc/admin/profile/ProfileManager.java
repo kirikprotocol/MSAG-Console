@@ -10,6 +10,20 @@ import ru.novosoft.smsc.util.Address;
 public interface ProfileManager extends SmscConfiguration {
 
   /**
+   * Возвращает дефолтный профиль
+   * @return дефолтный профиль
+   * @throws AdminException если произошла ошибка
+   */
+  Profile getDefaultProfile() throws AdminException;
+
+  /**
+   * Обновляет дефолтный профиль
+   * @param profile новые параметры дефолтного профиля
+   * @throws AdminException
+   */
+  void updateDefaultProfile(Profile profile) throws AdminException;
+
+  /**
    * Ищет профиль, максимально подходящий под указанный адрес(маску)
    *
    * @param mask адрес или маска

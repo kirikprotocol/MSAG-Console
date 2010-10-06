@@ -20,6 +20,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class ProfileManagerImpl implements ProfileManager {
 
+  private static final Address DEFAULT_PROFILE = new Address(5,0,"DEFAULT");
+
   private final File profilesFile;
   private final FileSystem fs;
   private final ClusterController cc;
@@ -31,6 +33,16 @@ public class ProfileManagerImpl implements ProfileManager {
     this.profilesFile = profilesFile;
     this.cc = cc;
     this.fs = fs;
+  }
+
+  public Profile getDefaultProfile() throws AdminException {
+    ProfileLookupResult dpr = lookupProfile(DEFAULT_PROFILE);
+    return dpr.getProfile();
+  }
+
+  public void updateDefaultProfile(Profile profile) throws AdminException {
+    profile.setAddress(DEFAULT_PROFILE);
+    updateProfile(profile);
   }
 
   public ProfileLookupResult lookupProfile(Address mask) throws AdminException {

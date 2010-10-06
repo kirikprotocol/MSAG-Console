@@ -209,6 +209,7 @@
       <url-pattern>/smsc/alias/*</url-pattern>
       <url-pattern>/smsc/msc/*</url-pattern>
       <url-pattern>/smsc/subjects/*</url-pattern>
+      <url-pattern>/smsc/profile/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>smsc_service</role-name>

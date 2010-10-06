@@ -16,6 +16,8 @@ public class DiffHelper {
     List<Method> getters = new ArrayList<Method>();
     for (Method m : clazz.getMethods()) {
       String methodName = m.getName();
+      if (methodName.equals("getClass"))
+        continue;
       if (methodName.startsWith("get") || methodName.startsWith("is")) {
         if (except != null) {
           boolean accept = true;

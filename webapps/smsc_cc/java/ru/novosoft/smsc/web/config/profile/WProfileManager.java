@@ -29,6 +29,16 @@ public class WProfileManager implements ProfileManager {
     this.user = user;
   }
 
+  public Profile getDefaultProfile() throws AdminException {
+    return wrapped.getDefaultProfile();
+  }
+
+  public void updateDefaultProfile(Profile profile) throws AdminException {
+    Profile oldProfile = getDefaultProfile();
+    wrapped.updateDefaultProfile(profile);
+    logChanges(oldProfile, profile);
+  }
+
   public ProfileLookupResult lookupProfile(Address mask) throws AdminException {
     return wrapped.lookupProfile(mask);
   }
@@ -39,14 +49,18 @@ public class WProfileManager implements ProfileManager {
     wrapped.updateProfile(profile);
 
     if (oldProfileRes.isExactMatch()) {
-      findChanges(oldProfile, profile, Profile.class, new ChangeListener() {
-        public void foundChange(String propertyName, Object oldValue, Object newValue) {
-          j.user(user).change("property_changed", propertyName, valueToString(oldValue), valueToString(newValue)).profile(profile.getAddress().getNormalizedAddress());
-        }
-      });
+      logChanges(oldProfile, profile);
     } else {
       j.user(user).add().profile(profile.getAddress().getNormalizedAddress());
     }
+  }
+
+  private void logChanges(final Profile oldProfile, final Profile profile) {
+    findChanges(oldProfile, profile, Profile.class, new ChangeListener() {
+        public void foundChange(String propertyName, Object oldValue, Object newValue) {
+          j.user(user).change("change_property", propertyName, valueToString(oldValue), valueToString(newValue)).profile(oldProfile.getAddress().getNormalizedAddress());
+        }
+      });
   }
 
   public void deleteProfile(Address mask) throws AdminException {

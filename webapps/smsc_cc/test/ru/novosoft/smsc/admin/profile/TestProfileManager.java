@@ -15,9 +15,32 @@ import java.util.Map;
  * @author Artem Snopkov
  */
 public class TestProfileManager extends ProfileManagerImpl {
+
+  private Profile defaultProfile;
+
   public TestProfileManager(boolean smsx, File profilesFile, FileSystem fs, ClusterController cc) {
     super(smsx, profilesFile, fs, cc);
+
+    try {
+      defaultProfile = new Profile(new Address(5,0,"DEFAULT"));
+
+      defaultProfile.setUdhConcat(true);
+      defaultProfile.setDivert("qwerty");
+      defaultProfile.setLatin1(true);
+      defaultProfile.setOutputAccessMask(1);
+    } catch (AdminException e) {
+      e.printStackTrace();
+    }
   }
+
+  public Profile getDefaultProfile() throws AdminException {
+    return new Profile(defaultProfile);
+  }
+
+  public void updateDefaultProfile(Profile profile) throws AdminException {
+    defaultProfile = new Profile(profile);
+  }
+
 
   public static InputStream emptyProfilesFileAsStream(boolean smsx, int version) throws IOException {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
