@@ -929,7 +929,7 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
         snmpTracking = (*ptr)->info.snmpTracking;
         if(!(**ptr).info.enabled)
         {
-            smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
+            smsc_log_info(log,"Failed to register smsc with sysId='%s' - disabled",ch->getSystemId());
             text = "smsc is disabled";
             break;
         }
