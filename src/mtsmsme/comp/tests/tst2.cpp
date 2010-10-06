@@ -142,7 +142,7 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   CPPUNIT_ASSERT(etalon_buf == data);
   smsc_log_debug(logger,"etalon data[%d]={%s}",
                          sizeof(etalon),
-                         dump(sizeof(etalon),etalon));
+                         dump((uint16_t)sizeof(etalon),etalon).c_str());
   smsc_log_debug(logger,"old type API encoded data[%d]={%s}",
                          ulmsg.size(),
                          dump((uint16_t)ulmsg.size(),&ulmsg[0]).c_str());
