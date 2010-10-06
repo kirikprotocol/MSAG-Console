@@ -23,10 +23,12 @@ public class WProviderManager extends BaseSettingsManager<ProviderSettings> impl
 
   @Override
   protected void _updateSettings(ProviderSettings settings) throws AdminException {
-    ProviderSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    
-    for (Provider provider : settings.getProviders()) {
+  }
+
+  @Override
+  protected void logChanges(ProviderSettings oldSettings, ProviderSettings newSettings) {
+    for (Provider provider : newSettings.getProviders()) {
       Provider oc = oldSettings.getProvider(provider.getId());
       if (oc == null)
         j.user(user).add().provider(provider.getName(), provider.getId() + "");

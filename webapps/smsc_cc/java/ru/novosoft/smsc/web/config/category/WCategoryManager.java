@@ -27,10 +27,12 @@ public class WCategoryManager extends BaseSettingsManager<CategorySettings> impl
   }
 
   public void _updateSettings(CategorySettings settings) throws AdminException {
-    CategorySettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    
-    for (Category c : settings.getCategories()) {
+  }
+
+  @Override
+  protected void logChanges(CategorySettings oldSettings, CategorySettings newSettings) {
+    for (Category c : newSettings.getCategories()) {
       Category oc = oldSettings.getCategory(c.getId());
       if (oc == null)
         j.user(user).add().category(c.getName(), c.getId() + "");

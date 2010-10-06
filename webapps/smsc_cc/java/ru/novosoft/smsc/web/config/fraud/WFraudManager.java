@@ -28,9 +28,11 @@ public class WFraudManager extends BaseSettingsManager<FraudSettings> implements
 
   @Override
   protected void _updateSettings(FraudSettings newSettings) throws AdminException {
-    FraudSettings oldSettings = getSettings();
-    wrapped.updateSettings(newSettings);    
+    wrapped.updateSettings(newSettings);
+  }
 
+  @Override
+  protected void logChanges(FraudSettings oldSettings, FraudSettings newSettings) {
     findChanges(oldSettings, newSettings, FraudSettings.class, new ChangeListener() {
       public void foundChange(String propertyName, Object oldValue, Object newValue) {
         j.user(user).change("property_changed", "enableCheck", valueToString(oldValue), valueToString(newValue)).fraud();

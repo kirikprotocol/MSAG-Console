@@ -10,7 +10,6 @@ import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
-import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.config.acl.WAclManager;
 import ru.novosoft.smsc.web.config.alias.WAliasManager;
 import ru.novosoft.smsc.web.config.archive_daemon.WArchiveDaemonManager;
@@ -50,7 +49,6 @@ public class WebContext {
   private static Journal journal = new Journal();
   private static WebContext nullUserInstance;
 
-  private final SmscStatusManager smscStatusManager;
   private final AclManager aclManager;
   private final AliasManager aliasManager;
   private final WArchiveDaemonManager archiveDaemonManager;
@@ -102,8 +100,6 @@ public class WebContext {
   }
 
   public WebContext(String user) {
-    smscStatusManager = new SmscStatusManager(adminContext);
-
     aclManager = new WAclManager(adminContext.getAclManager(), journal, user);
     aliasManager = new WAliasManager(adminContext.getAliasManager(), user, journal);
     archiveDaemonManager = new WArchiveDaemonManager(adminContext.getArchiveDaemonManager(), journal, user);
@@ -136,10 +132,6 @@ public class WebContext {
     } catch (InterruptedException e) {
       return null;
     }
-  }
-
-  public SmscStatusManager getSmscStatusManager() {
-    return smscStatusManager;
   }
 
   public AclManager getAclManager() {

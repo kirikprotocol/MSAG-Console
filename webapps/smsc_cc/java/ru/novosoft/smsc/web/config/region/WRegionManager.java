@@ -25,9 +25,7 @@ public class WRegionManager extends BaseSettingsManager<RegionSettings> implemen
 
   @Override
   protected void _updateSettings(RegionSettings settings) throws AdminException {
-    RegionSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    logChanges(oldSettings, settings);
   }
 
   public RegionSettings getSettings() throws AdminException {
@@ -38,7 +36,7 @@ public class WRegionManager extends BaseSettingsManager<RegionSettings> implemen
     return settings.cloneSettings();
   }
 
-  private void logChanges(RegionSettings oldSettings, RegionSettings newSettings) {
+  protected void logChanges(RegionSettings oldSettings, RegionSettings newSettings) {
     findChanges(oldSettings, newSettings, RegionSettings.class, new ChangeListener() {
       public void foundChange(String propertyName, Object oldValue, Object newValue) {
         j.user(user).change("settings_changed", propertyName, valueToString(oldValue), valueToString(newValue));

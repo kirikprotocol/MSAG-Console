@@ -22,8 +22,12 @@ public abstract class BaseSettingsManager<S> implements SettingsManager<S> {
 
   protected abstract void _updateSettings(S settings) throws AdminException;
 
+  protected abstract void logChanges(S oldSettings, S newSettings);
+
   public final void updateSettings(S settings) throws AdminException {
+    S oldSettings = getSettings();
     _updateSettings(settings);
+    logChanges(oldSettings, settings);
     revisions.put(id, new Revision(user, System.currentTimeMillis()));
   }
 

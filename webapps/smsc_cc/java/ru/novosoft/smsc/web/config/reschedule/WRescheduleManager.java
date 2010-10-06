@@ -33,9 +33,7 @@ public class WRescheduleManager extends BaseSettingsManager<RescheduleSettings> 
 
   @Override
   protected void _updateSettings(RescheduleSettings settings) throws AdminException {
-    RescheduleSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    logChanges(oldSettings, settings);
   }
 
   public RescheduleSettings cloneSettings(RescheduleSettings settings) {
@@ -62,7 +60,7 @@ public class WRescheduleManager extends BaseSettingsManager<RescheduleSettings> 
     return result;
   }
 
-  public void logChanges(RescheduleSettings oldSettings, RescheduleSettings newSettings) {
+  protected void logChanges(RescheduleSettings oldSettings, RescheduleSettings newSettings) {
     Map<Integer, String> oldReschedules = expandReschedules(oldSettings.getReschedules());
     Map<Integer, String> newReschedules = expandReschedules(newSettings.getReschedules());
 

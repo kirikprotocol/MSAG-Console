@@ -26,9 +26,7 @@ public class WUserManager extends BaseSettingsManager<UsersSettings> implements 
 
   @Override
   protected void _updateSettings(UsersSettings settings) throws AdminException {
-    UsersSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    logChanges(oldSettings, settings);
   }
 
   public UsersSettings getSettings() throws AdminException {

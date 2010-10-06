@@ -50,16 +50,12 @@ public class SettingsMController<T> extends SmscController {
     if (checkChanges)
       checkChanges();
 
-    if (this instanceof SmscConfiguration) {
+    if (mngr instanceof SmscConfiguration) {
       try {
-        List<Integer> result = new ArrayList<Integer>();
-        Map<Integer, SmscConfigurationStatus> s = ((SmscConfiguration)this).getStatusForSmscs();
-        for (Map.Entry<Integer, SmscConfigurationStatus> en : s.entrySet()) {
-          if (en.getValue() == SmscConfigurationStatus.OUT_OF_DATE)
-            result.add(en.getKey());
+        Map<Integer, SmscConfigurationStatus> statuses = ((SmscConfiguration) mngr).getStatusForSmscs();
+        if (statuses.containsValue(SmscConfigurationStatus.OUT_OF_DATE)) {
+          addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.instance.out_of_date");
         }
-        if (!result.isEmpty())
-          addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", result.toString());
       } catch (AdminException e) {
         addError(e);
       }

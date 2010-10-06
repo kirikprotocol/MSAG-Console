@@ -29,9 +29,7 @@ public class WRouteSubjectManager extends BaseSettingsManager<RouteSubjectSettin
 
   @Override
   protected void _updateSettings(RouteSubjectSettings settings) throws AdminException {
-    RouteSubjectSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    logChanges(oldSettings, settings);
   }
 
   public RouteSubjectSettings getSettings() throws AdminException {
@@ -46,7 +44,7 @@ public class WRouteSubjectManager extends BaseSettingsManager<RouteSubjectSettin
     return wrapped.getStatusForSmscs();
   }
 
-  private void logChanges(RouteSubjectSettings oldSettings, RouteSubjectSettings newSettings) {
+  protected void logChanges(RouteSubjectSettings oldSettings, RouteSubjectSettings newSettings) {
     logChangesInSubjects(oldSettings.getSubjects(), newSettings.getSubjects());
     logChangesInRoutes(oldSettings.getRoutes(), newSettings.getRoutes());
   }

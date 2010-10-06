@@ -4,7 +4,9 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
 
 <ui:composition template="/templates/main.xhtml">
 
@@ -77,29 +79,10 @@
           <f:facet name="innerData">
 
             <h:panelGrid columns="2" columnClasses="column50Width,columnTopLeftAlign">
-              <h:outputText value="#{msg['status.page.main.config']}:"/>
-              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.mainConfigUpToDate}"/>
-              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.mainConfigUpToDate}"/>
-
-              <h:outputText value="#{msg['status.page.reschedule.config']}:"/>
-              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.rescheduleConfigUpToDate}"/>
-              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.rescheduleConfigUpToDate}"/>
-
-              <h:outputText value="#{msg['status.page.fraud.config']}:"/>
-              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.fraudConfigUpToDate}"/>
-              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.fraudConfigUpToDate}"/>
-
-              <h:outputText value="#{msg['status.page.map.limit.config']}:"/>
-              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.mapLimitsUpToDate}"/>
-              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.mapLimitsUpToDate}"/>
-
-              <h:outputText value="#{msg['status.page.closed.group.config']}:"/>
-              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.closedGroupsUpToDate}"/>
-              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.closedGroupsUpToDate}"/>
-
-              <h:outputText value="#{msg['status.page.sme.config']}:"/>
-              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.smeConfigUpToDate}"/>
-              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.smeConfigUpToDate}"/>
+              <c:forEach items="#{data.errors}" var="error">
+                <h:outputText value="#{msg[error]}:"/>
+                <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED"/>
+              </c:forEach>
             </h:panelGrid>
 
           </f:facet>

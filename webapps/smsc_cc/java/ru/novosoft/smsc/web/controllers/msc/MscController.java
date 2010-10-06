@@ -6,6 +6,7 @@ import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
+import ru.novosoft.smsc.web.controllers.SmscConfigurationController;
 import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.application.FacesMessage;
@@ -18,7 +19,7 @@ import java.util.*;
  * Date: 16.09.2010
  * Time: 15:32:53
  */
-public class MscController extends SmscController {
+public class MscController extends SmscConfigurationController {
 
 
 
@@ -28,8 +29,7 @@ public class MscController extends SmscController {
 
 
   public MscController() {
-    super();
-
+    super(WebContext.getInstance().getMscManager());
   }
 
   public String getPrefixFilter() {

@@ -34,9 +34,12 @@ public class WArchiveDaemonManager extends BaseSettingsManager<ArchiveDaemonSett
   }
 
   public void _updateSettings(ArchiveDaemonSettings settings) throws AdminException {
-    ArchiveDaemonSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    findChanges(oldSettings, settings, ArchiveDaemonSettings.class, new ChangeListener() {
+  }
+
+  @Override
+  protected void logChanges(ArchiveDaemonSettings oldSettings, ArchiveDaemonSettings newSettings) {
+    findChanges(oldSettings, newSettings, ArchiveDaemonSettings.class, new ChangeListener() {
       public void foundChange(String propertyName, Object oldValue, Object newValue) {
         j.user(user).change("property.changed", propertyName, DiffHelper.valueToString(oldValue), DiffHelper.valueToString(newValue));
       }

@@ -13,7 +13,7 @@ public interface SmscConfiguration {
   /**
    * Возвращает состояние конфигурации для всех запущенных инстанцев СМСЦ. Ключем является номер инстанца,
    * значением - статус конфига. Инстанцы СМСЦ, которые в данный момент остановлены в результате не учитываются.
-   * @return состояние конфигурации для всех запущенных инстанцев СМСЦ или null, если Cluster Controller отключен // todo проверить возврат null
+   * @return состояние конфигурации для всех запущенных инстанцев СМСЦ или null, если Cluster Controller отключен
    */
   Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException;
 }

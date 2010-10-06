@@ -25,9 +25,7 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
 
   @Override
   protected void _updateSettings(SnmpSettings settings) throws AdminException {
-    SnmpSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-    logChanges(oldSettings, settings);
   }
 
   public SnmpSettings getSettings() throws AdminException {
@@ -42,7 +40,7 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
     return wrapped.getStatusForSmscs();
   }
 
-  private void logChanges(SnmpSettings oldSettings, SnmpSettings newSettings) {
+  protected void logChanges(SnmpSettings oldSettings, SnmpSettings newSettings) {
     oldSettings.getCounterInterval();
 
     if (oldSettings.getCounterInterval() != newSettings.getCounterInterval()) {

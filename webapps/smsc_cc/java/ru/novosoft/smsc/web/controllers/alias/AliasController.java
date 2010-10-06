@@ -10,6 +10,7 @@ import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
+import ru.novosoft.smsc.web.controllers.SmscConfigurationController;
 import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.event.ActionEvent;
@@ -22,7 +23,7 @@ import java.util.*;
  * Date: 01.10.2010
  * Time: 11:03:55
  */
-public class AliasController extends SmscController {
+public class AliasController extends SmscConfigurationController {
 
 
   private DynamicTableModel aliasesFilter;
@@ -34,7 +35,7 @@ public class AliasController extends SmscController {
 
 
   public AliasController() {
-    super();
+    super(WebContext.getInstance().getAliasManager());
     init();
   }
 

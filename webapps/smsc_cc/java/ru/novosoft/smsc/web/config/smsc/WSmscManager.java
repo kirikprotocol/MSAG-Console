@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.web.config.BaseSettingsManager;
 
 import static ru.novosoft.smsc.web.config.DiffHelper.*;
+import static ru.novosoft.smsc.web.config.DiffHelper.findChanges;
 
 import ru.novosoft.smsc.web.journal.Journal;
 
@@ -31,9 +32,11 @@ public class WSmscManager extends BaseSettingsManager<SmscSettings> implements S
 
   @Override
   protected void _updateSettings(SmscSettings settings) throws AdminException {
-    SmscSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
+  }
 
+  @Override
+  protected void logChanges(SmscSettings oldSettings, SmscSettings settings) {
     findChanges(oldSettings.getCommonSettings(), settings.getCommonSettings(), CommonSettings.class, new ChangeListener() {
       public void foundChange(String propertyName, Object oldValue, Object newValue) {
         j.user(user).change("common_property_changed", propertyName, valueToString(oldValue), valueToString(newValue)).smsc();

@@ -29,10 +29,7 @@ public class WTimezoneManager extends BaseSettingsManager<TimezoneSettings> impl
 
   @Override
   protected void _updateSettings(TimezoneSettings settings) throws AdminException {
-    TimezoneSettings oldSettings = getSettings();
     wrapped.updateSettings(settings);
-
-
   }
 
   public TimezoneSettings getSettings() throws AdminException {

@@ -28,10 +28,11 @@ public class WMapLimitManager extends BaseSettingsManager<MapLimitSettings> impl
 
   @Override
   protected void _updateSettings(MapLimitSettings newSettings) throws AdminException {
-    MapLimitSettings oldSettings = getSettings();
-
     wrapped.updateSettings(newSettings);
+  }
 
+  @Override
+  protected void logChanges(MapLimitSettings oldSettings, MapLimitSettings newSettings) {
     findChanges(oldSettings, newSettings, MapLimitSettings.class, new ChangeListener() {
       public void foundChange(String propertyName, Object oldValue, Object newValue) {
         j.user(user).change("property_changed", propertyName, valueToString(oldValue), valueToString(newValue));

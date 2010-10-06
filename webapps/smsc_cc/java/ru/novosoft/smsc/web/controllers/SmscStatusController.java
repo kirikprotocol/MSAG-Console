@@ -1,11 +1,12 @@
 package ru.novosoft.smsc.web.controllers;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
+import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.config.SmscStatusManager;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.html.HtmlSelectOneMenu;
@@ -14,19 +15,38 @@ import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Artem Snopkov
  */
 public class SmscStatusController extends SmscController {
 
-  private final SmscStatusManager smscStatusManager;
-
   private String switchToHost;
 
+  private final SmscManager smscManager;
+  private final Map<String, SmscConfiguration> configs;
+
   public SmscStatusController() {
-    smscStatusManager = WebContext.getInstance().getSmscStatusManager();
+    WebContext ctx = WebContext.getInstance();
+    smscManager = ctx.getSmscManager();
+    configs = new HashMap<String, SmscConfiguration>();
+
+    configs.put("acl", ctx.getAclManager());
+    configs.put("alias", ctx.getAliasManager());
+    configs.put("closed_group", ctx.getClosedGroupManager());
+    configs.put("fraud", ctx.getFraudManager());
+    configs.put("map_limit", ctx.getMapLimitManager());
+    configs.put("msc", ctx.getMscManager());
+    configs.put("profile", ctx.getProfileManager());
+    configs.put("reschedule", ctx.getRescheduleManager());
+    configs.put("resource", ctx.getResourceManager());
+    configs.put("sme", ctx.getSmeManager());
+    configs.put("smsc", ctx.getSmscManager());
+    configs.put("snmp", ctx.getSnmpManager());
+    configs.put("timezone", ctx.getTimezoneManager());
   }
 
   public void switchToHost(ValueChangeEvent e) {
@@ -42,7 +62,7 @@ public class SmscStatusController extends SmscController {
     String instanceNumber = getRequestParameter("instanceNumber");
     if (instanceNumber != null && switchToHost != null)
       try {
-        smscStatusManager.switchSmsc(Integer.parseInt(instanceNumber), switchToHost);
+        smscManager.switchSmsc(Integer.parseInt(instanceNumber), switchToHost);
       } catch (AdminException e) {
         logError(e);
       }
@@ -52,7 +72,7 @@ public class SmscStatusController extends SmscController {
     String instanceNumber = getRequestParameter("instanceNumber");
     if (instanceNumber != null)
       try {
-        smscStatusManager.startSmsc(Integer.parseInt(instanceNumber));
+        smscManager.startSmsc(Integer.parseInt(instanceNumber));
       } catch (AdminException e) {
         logError(e);
       }
@@ -62,7 +82,7 @@ public class SmscStatusController extends SmscController {
     String instanceNumber = getRequestParameter("instanceNumber");
     if (instanceNumber != null)
       try {
-        smscStatusManager.stopSmsc(Integer.parseInt(instanceNumber));
+        smscManager.stopSmsc(Integer.parseInt(instanceNumber));
       } catch (AdminException e) {
         logError(e);
       }
@@ -70,9 +90,9 @@ public class SmscStatusController extends SmscController {
 
   public void startAll(ActionEvent e) {
     try {
-      for (int i = 0; i < smscStatusManager.getSmscInstancesNumber(); i++) {
-        if (smscStatusManager.getSmscOnlineHost(i) == null)
-          smscStatusManager.startSmsc(i);
+      for (int i = 0; i < smscManager.getSettings().getSmscInstancesCount(); i++) {
+        if (smscManager.getSmscOnlineHost(i) == null)
+          smscManager.startSmsc(i);
       }
     } catch (AdminException ex) {
       logError(ex);
@@ -81,9 +101,9 @@ public class SmscStatusController extends SmscController {
 
   public void stopAll(ActionEvent e) {
     try {
-      for (int i = 0; i < smscStatusManager.getSmscInstancesNumber(); i++) {
-        if (smscStatusManager.getSmscOnlineHost(i) != null)
-          smscStatusManager.stopSmsc(i);
+      for (int i = 0; i < smscManager.getSettings().getSmscInstancesCount(); i++) {
+        if (smscManager.getSmscOnlineHost(i) != null)
+          smscManager.stopSmsc(i);
       }
     } catch (AdminException ex) {
       logError(ex);
@@ -99,31 +119,9 @@ public class SmscStatusController extends SmscController {
     List<SmscStatus> result = new ArrayList<SmscStatus>();
 
     try {
-      for (int i = 0; i < smscStatusManager.getSmscInstancesNumber(); i++) {
-
-        String onlineHost = smscStatusManager.getSmscOnlineHost(i);
-
-        SmscStatus status = new SmscStatus(i, onlineHost, smscStatusManager.getSmscHosts(i));
-        if (onlineHost != null) {
-          SmscConfigurationStatus mainConfigState = smscStatusManager.getMainConfigState(i);
-          status.setMainConfigUpToDate(mainConfigState == null || mainConfigState == SmscConfigurationStatus.UP_TO_DATE);
-
-          SmscConfigurationStatus rescheduleConfigState = smscStatusManager.getRescheduleState(i);
-          status.setRescheduleConfigUpToDate(rescheduleConfigState == null || rescheduleConfigState == SmscConfigurationStatus.UP_TO_DATE);
-
-          SmscConfigurationStatus fraudConfigState = smscStatusManager.getFraudConfigState(i);
-          status.setFraudConfigUpToDate(fraudConfigState == null || fraudConfigState == SmscConfigurationStatus.UP_TO_DATE);
-
-          SmscConfigurationStatus mapLimitsState = smscStatusManager.getMapLimitState(i);
-          status.setMapLimitsUpToDate(mapLimitsState == null || mapLimitsState == SmscConfigurationStatus.UP_TO_DATE);
-
-          SmscConfigurationStatus cgState = smscStatusManager.getClosedGroupsState(i);
-          status.setClosedGroupsUpToDate(cgState == null || cgState == SmscConfigurationStatus.UP_TO_DATE);
-
-          SmscConfigurationStatus smeState = smscStatusManager.getSmeConfigState(i);
-          status.setSmeConfigUpToDate(smeState == null || smeState == SmscConfigurationStatus.UP_TO_DATE);
-        }
-
+      for (int i = 0; i < smscManager.getSettings().getSmscInstancesCount(); i++) {
+        String onlineHost = smscManager.getSmscOnlineHost(i);
+        SmscStatus status = new SmscStatus(i, onlineHost, smscManager.getSmscHosts(i));
         result.add(status);
       }
     } catch (AdminException e) {
@@ -136,23 +134,30 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  public static class SmscStatus implements Serializable {
+  public class SmscStatus implements Serializable {
 
     private final int instanceNumber;
     private final String onlineHost;
     private final List<String> hosts;
-
-    private boolean mainConfigUpToDate;
-    private boolean rescheduleConfigUpToDate;
-    private boolean fraudConfigUpToDate;
-    private boolean mapLimitsUpToDate;
-    private boolean closedGroupsUpToDate;
-    private boolean smeConfigUpToDate;
+    private List<String> errors;
 
     public SmscStatus(int instanceNumber, String onlineHost, List<String> hosts) {
       this.instanceNumber = instanceNumber;
       this.onlineHost = onlineHost;
       this.hosts = hosts;
+
+      if (onlineHost != null) {
+        errors = new ArrayList<String>();
+        for (Map.Entry<String, SmscConfiguration> e : configs.entrySet()) {
+          SmscConfiguration cfg = e.getValue();
+          try {
+            if (cfg.getStatusForSmscs().get(instanceNumber) == SmscConfigurationStatus.OUT_OF_DATE)
+              errors.add("status.page." + e.getKey());
+          } catch (AdminException e1) {
+            addError(e1);
+          }
+        }
+      }
     }
 
     public int getInstanceNumber() {
@@ -176,64 +181,12 @@ public class SmscStatusController extends SmscController {
       return hosts != null && hosts.size() > 1;
     }
 
-    public boolean isMainConfigUpToDate() {
-      return mainConfigUpToDate;
-    }
-
-    public void setMainConfigUpToDate(boolean mainConfigUpToDate) {
-      this.mainConfigUpToDate = mainConfigUpToDate;
-    }
-
-    public boolean isRescheduleConfigUpToDate() {
-      return rescheduleConfigUpToDate;
-    }
-
-    public void setRescheduleConfigUpToDate(boolean rescheduleConfigUpToDate) {
-      this.rescheduleConfigUpToDate = rescheduleConfigUpToDate;
-    }
-
-    public boolean isFraudConfigUpToDate() {
-      return fraudConfigUpToDate;
-    }
-
-    public void setFraudConfigUpToDate(boolean fraudConfigUpToDate) {
-      this.fraudConfigUpToDate = fraudConfigUpToDate;
-    }
-
-    public boolean isMapLimitsUpToDate() {
-      return mapLimitsUpToDate;
-    }
-
-    public void setMapLimitsUpToDate(boolean mapLimitsUpToDate) {
-      this.mapLimitsUpToDate = mapLimitsUpToDate;
-    }
-
-    public boolean isClosedGroupsUpToDate() {
-      return closedGroupsUpToDate;
-    }
-
-    public void setClosedGroupsUpToDate(boolean closedGroupsUpToDate) {
-      this.closedGroupsUpToDate = closedGroupsUpToDate;
-    }
-
-    public boolean isSmeConfigUpToDate() {
-      return smeConfigUpToDate;
-    }
-
-    public void setSmeConfigUpToDate(boolean smeConfigUpToDate) {
-      this.smeConfigUpToDate = smeConfigUpToDate;
+    public List<String> getErrors() {
+      return errors;
     }
 
     public boolean isHasErrors() {
-      return onlineHost != null &&
-          (
-              !rescheduleConfigUpToDate ||
-              !mainConfigUpToDate ||
-              !fraudConfigUpToDate ||
-              !mapLimitsUpToDate ||
-              !closedGroupsUpToDate ||
-              !smeConfigUpToDate
-          );
+      return onlineHost != null && !errors.isEmpty();
     }
   }
 

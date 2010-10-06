@@ -27,9 +27,11 @@ public class WLoggerManager extends BaseSettingsManager<LoggerSettings> implemen
 
   @Override
   protected void _updateSettings(LoggerSettings newSettings) throws AdminException {
-    LoggerSettings oldSettings = getSettings();
     wrapped.updateSettings(newSettings);
-    
+  }
+
+  @Override
+  protected void logChanges(LoggerSettings oldSettings, LoggerSettings newSettings) {
     Collection<String> oldNames = oldSettings.getNames();
     for (String oldName : oldNames) {
       Logger oldLogger = oldSettings.getLogger(oldName);
@@ -48,7 +50,7 @@ public class WLoggerManager extends BaseSettingsManager<LoggerSettings> implemen
 
     for (String newName : newSettings.getNames()) {
       if (!oldNames.contains(newName))
-        j.user(user).add().logger(newName);        
+        j.user(user).add().logger(newName);
     }
   }
 
