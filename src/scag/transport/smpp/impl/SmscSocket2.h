@@ -42,11 +42,12 @@ struct SmscSocket:SmppSocket{
     {
       case smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP:
       {
-        if(chReg->registerSmscChannel(this)!=rarOk) {
-          smsc_log_warn(log, "Registration of smsc channel failed???");
-        }
-  else {
-          bindType=btTransceiver;
+        if(pdu->get_commandStatus()) {
+            smsc_log_warn(log, "SMSC bind failed: RESP status=%u",unsigned(pdu->get_commandStatus()));
+        } else if (chReg->registerSmscChannel(this)!=rarOk) {
+            smsc_log_warn(log, "Registration of smsc channel failed???");
+        } else {
+            bindType=btTransceiver;
         }
       }break;
       default: return false;
