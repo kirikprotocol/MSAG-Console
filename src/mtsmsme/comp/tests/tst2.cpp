@@ -149,6 +149,7 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   smsc_log_debug(logger,"new type API encoded data[%d]={%s}",
                          data.size(),
                          dump((uint16_t)data.size(),&data[0]).c_str());
+  smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_arg_encoding END ========\n");
 }
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
 {
