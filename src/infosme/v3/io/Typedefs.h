@@ -29,16 +29,26 @@ static const unsigned tuPerSec = 1000000U;
 static const unsigned maxScoreIncrement = 10000U;
 static const unsigned flipTimePeriod = 1000*tuPerSec;
 
-namespace MsgState {
-static const uint8_t input = 0;
-static const uint8_t process = 1;
-static const uint8_t sent = 2;
-static const uint8_t delivered = 3;
-static const uint8_t expired = 4;
-static const uint8_t failed = 5;
-static const uint8_t retry = 6;
-const char* toString( uint8_t state );
-}
+typedef enum {
+    MSGSTATE_INPUT = 0,
+    MSGSTATE_PROCESS = 1,
+    MSGSTATE_SENT = 2,
+    MSGSTATE_DELIVERED = 3,
+    MSGSTATE_EXPIRED = 4,
+    MSGSTATE_FAILED = 5,
+    MSGSTATE_RETRY = 6
+} MsgState;
+const char* msgStateToString( MsgState state );
+
+typedef enum {
+    DLVSTATE_PAUSED = 0,
+    DLVSTATE_PLANNED = 1,
+    DLVSTATE_ACTIVE = 2,
+    DLVSTATE_FINISHED = 3,
+    DLVSTATE_CANCELLED = 4
+} DlvState;
+
+const char* dlvStateToString( DlvState state );
 
 
 struct DlvRegMsgId

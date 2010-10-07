@@ -6,7 +6,7 @@ namespace informer {
 InputJournal::InputJournal( const std::string& path ) :
 path_(path)
 {
-    // FIXME: reading journal
+    // FIXME: reading journal, move this to init()
     jnl_.create((path_ + "input/.journal").c_str(),true,true);
     const char* head = "# D,R,RFN,ROFF,WFN,WOFF,CNT,MSGID\n";
     jnl_.write(head,strlen(head));

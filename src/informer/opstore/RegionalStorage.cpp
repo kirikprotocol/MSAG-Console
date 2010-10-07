@@ -152,7 +152,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     Message& m = iter->msg;
     m.lastTime = currentTime;
     smsc_log_debug(log_,"FIXME: reset m.timeLeft for new messages");
-    m.state = MsgState::process;
+    m.state = MSGSTATE_PROCESS;
     msg = m;
     smsc_log_debug(log_,"taking message R=%u/D=%u/M=%u from %s",
                    unsigned(regionId_),
@@ -179,7 +179,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
     mg.Unlock();
     Message& m = (*ptr)->msg;
     m.lastTime = currentTime;
-    m.state = MsgState::sent;
+    m.state = MSGSTATE_SENT;
     storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m);
 }
 
@@ -209,7 +209,7 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
         resendQueue_.insert( std::make_pair(retryDelay,iter) );
         mg.Unlock();
         m.lastTime = currentTime;
-        m.state = MsgState::retry;
+        m.state = MSGSTATE_RETRY;
         char fmtime[20];
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%u into retry at %s",
                        unsigned(regionId_),
@@ -223,7 +223,7 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
         ++validItems_;
         mg.Unlock();
         m.lastTime = currentTime;
-        m.state = MsgState::expired;
+        m.state = MSGSTATE_EXPIRED;
         smsc_log_debug(log_,"message R=%u/D=%u/M=%u is expired, smpp=%u",
                        unsigned(regionId_),
                        unsigned(dlvInfo_.getDlvId()),
@@ -274,7 +274,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         Message& m = i->msg;
         // m.lastTime = currentTime;
-        m.state = MsgState::input;
+        m.state = MSGSTATE_INPUT;
         smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%u",
                        unsigned(regionId_),
                        unsigned(dlvInfo_.getDlvId()),

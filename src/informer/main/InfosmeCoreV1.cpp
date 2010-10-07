@@ -99,9 +99,11 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
 
     const std::string path = "store/";
 
+    // create journals
     if (!inputJournal_) inputJournal_ = new InputJournal(path);
     if (!storeLog_) storeLog_ = new StoreJournal(path);
 
+    // create smscs and regions
     std::auto_ptr< ConfigView > ccv(cfg.getSubConfig("SMSCConnectors"));
     ConfString defConn(ccv->getString("default","default SMSC id not found"));
     std::auto_ptr< CStrSet > connNames(ccv->getShortSectionNames());
@@ -117,7 +119,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     }
     reloadRegions();
 
-    // starting one test delivery
+    // loading deliveries
     const dlvid_type dlvId = 22;
     std::auto_ptr< DeliveryInfo > dlvInfo(new DeliveryInfo(dlvId));
     updateDelivery( dlvInfo->getDlvId(), dlvInfo);

@@ -27,21 +27,33 @@ usectime_type currentTimeMicro()
 }
 
 
-namespace MsgState {
-const char* toString( uint8_t state )
+const char* msgStateToString( MsgState state )
 {
     switch (state) {
-    case input : return "inpt";
-    case process : return "proc";
-    case sent : return "sent";
-    case delivered : return "dlvr";
-    case expired : return "xprd";
-    case failed : return "fail";
-    case retry : return "rtry";
-    default : return "????";
+    case MSGSTATE_INPUT     : return "inpt";
+    case MSGSTATE_PROCESS   : return "proc";
+    case MSGSTATE_SENT      : return "sent";
+    case MSGSTATE_DELIVERED : return "dlvr";
+    case MSGSTATE_EXPIRED   : return "xprd";
+    case MSGSTATE_FAILED    : return "fail";
+    case MSGSTATE_RETRY     : return "rtry";
+    default                 : return "????";
     }
 }
+
+
+const char* dlvStateToString( DlvState state )
+{
+    switch (state) {
+    case DLVSTATE_PAUSED    : return "paused";
+    case DLVSTATE_PLANNED   : return "plannd";
+    case DLVSTATE_ACTIVE    : return "active";
+    case DLVSTATE_FINISHED  : return "finish";
+    case DLVSTATE_CANCELLED : return "cancel";
+    default                 : return "??????";
+    };
 }
+
 
 }
 }

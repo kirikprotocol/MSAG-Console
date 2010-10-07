@@ -12,7 +12,7 @@ log_(smsc::logger::Logger::getInstance("storelog")),
 path_(path),
 version_(1)
 {
-    // FIXME: read store journal
+    // FIXME: read store journal, move to init()
     fg_.create((path_ + "operative/.journal").c_str(),true,true);
 }
 

@@ -93,7 +93,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
     for ( MsgIter i = begin; i != end; ++i ) {
         const regionid_type regId = rf.findRegion( i->msg.subscriber );
         i->msg.msgId = ++lastMsgId_;
-        i->msg.state = MsgState::input;
+        i->msg.state = MSGSTATE_INPUT;
         i->locked = regId;
         if (log_->isDebugEnabled()) {
             uint8_t ton, npi;
