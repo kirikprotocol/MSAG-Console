@@ -53,7 +53,9 @@
             </h:commandLink>
           </eye:column>
           <eye:column name="defaultSme" title="#{msg['subjects.page.column.defaultSme']}" width="48%" sortable="true">
-            <h:outputText  value="#{s.defaultSmeId}"/>
+            <h:commandLink  value="#{s.defaultSmeId}" action="SERVICE_EDIT" immediate="true">
+              <f:param name="smeId" value="#{s.defaultSmeId}"/>
+            </h:commandLink>
           </eye:column>
 
 

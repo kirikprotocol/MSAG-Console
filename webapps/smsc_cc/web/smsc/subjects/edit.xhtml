@@ -65,7 +65,7 @@
         <h:panelGroup style="width:200px;">
           <eye:pageSubtitle value="#{msg['subjects.page.column.subjects']}" />
           <eye:dynamicTable value="#{subjectEdit.subjectsModel}">
-            <eye:selectColumn name="child" allowEditAfterAdd="false" values="#{subjectEdit.allowedChildren}"/>
+            <eye:selectColumn name="child" allowEditAfterAdd="false" values="#{subjectEdit.allowedChildren}" uniqueValues="true"/>
           </eye:dynamicTable>
         </h:panelGroup>
       </h:panelGrid>
