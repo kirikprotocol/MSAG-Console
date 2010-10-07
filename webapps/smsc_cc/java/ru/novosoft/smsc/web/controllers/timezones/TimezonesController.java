@@ -145,6 +145,7 @@ public class TimezonesController extends SettingsMController<TimezoneSettings> {
     }
     catch (AdminException e) {
       addError(e);
+      return null;
     }
     return "INDEX";
   }

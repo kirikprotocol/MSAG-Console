@@ -1,0 +1,57 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+    >
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['timezones.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!subjects.initError}">
+
+      <h:inputHidden value="#{timezones.revision}"/>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{timezones.save}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:space/>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{timezones.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+      </eye:buttons>
+
+      <p/>
+      <eye:collapsingGroup label="#{msg['timezones.page.masks']}">
+        <eye:dynamicTable value="#{timezones.masksModel}">
+          <eye:textColumn name="mask" maxLength="20" allowEditAfterAdd="true"/>
+          <eye:selectColumn name="tzm" values="#{timezones.timesonesItems}" allowEditAfterAdd="true"/>
+        </eye:dynamicTable>
+      </eye:collapsingGroup>
+      <p/>
+      <eye:collapsingGroup label="#{msg['timezones.page.subjects']}">
+        <eye:dynamicTable value="#{timezones.subjsModel}" >
+          <eye:selectColumn name="subj" values="#{timezones.availableSubjects}" allowEditAfterAdd="false" uniqueValues="true"/>
+          <eye:selectColumn name="tzs" values="#{timezones.timesonesItems}" allowEditAfterAdd="true"/>
+        </eye:dynamicTable>
+      </eye:collapsingGroup>
+      <p/>
+      
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{timezones.save}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:space/>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{timezones.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
