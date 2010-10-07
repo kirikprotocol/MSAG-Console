@@ -25,10 +25,29 @@ public class InitListener implements ServletContextListener {
 
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
+
+      WebXml webXml;
+      InputStream is = null;
+        try{
+          is = servletContextEvent.getServletContext().getResourceAsStream("WEB-INF/web.xml");
+          webXml = new WebXml(is);
+        }finally {
+          if(is != null) {
+            try{
+              is.close();
+            }catch (IOException e){}
+          }
+        }
+
+      String webInf = servletContextEvent.getServletContext().getRealPath("WEB-INF");
+      if(webInf != null) {
       System.setProperty("java.security.auth.login.config",
           servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
-
-      WebXml webXml = new WebXml(new File(servletContextEvent.getServletContext().getRealPath("WEB-INF/web.xml")));
+      }else {
+        if(System.getProperty("java.security.auth.login.config") == null) {
+          throw new Exception("Jaas config is not found");
+        }
+      }
 
 
       File webconfig = new File(System.getProperty("informer.config.webconfig"));
