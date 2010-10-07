@@ -37,7 +37,7 @@
 
       <h:panelGrid columns="3" columnClasses="columnTopLeftAlign,columnTopLeftAlign,columnTopLeftAlign" style="width:600px;" >
         <h:panelGroup style="width:200px;">
-          <eye:pageSubtitle value="#{msg['subject.edit.subject.info']}"/>
+          <eye:pageSubtitle value="#{msg['subject.edit.subject.info']}" />
           <tr:panelFormLayout>
             <tr:panelLabelAndMessage label="#{msg['subjects.page.column.name']}">
               <h:inputText  value="#{subjectEdit.subj.name}">
@@ -56,14 +56,14 @@
         </h:panelGroup>
 
         <h:panelGroup style="width:200px;">
-          <eye:pageSubtitle value="#{msg['subjects.page.column.masks']}"/>
+          <eye:pageSubtitle value="#{msg['subjects.page.column.masks']}" />
           <eye:dynamicTable value="#{subjectEdit.masksModel}">
             <eye:textColumn name="mask" allowEditAfterAdd="true"/>
           </eye:dynamicTable>
         </h:panelGroup>
 
         <h:panelGroup style="width:200px;">
-          <eye:pageSubtitle value="#{msg['subjects.page.column.subjects']}"/>
+          <eye:pageSubtitle value="#{msg['subjects.page.column.subjects']}" />
           <eye:dynamicTable value="#{subjectEdit.subjectsModel}">
             <eye:selectColumn name="child" allowEditAfterAdd="false" values="#{subjectEdit.allowedChildren}"/>
           </eye:dynamicTable>

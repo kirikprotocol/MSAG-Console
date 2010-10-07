@@ -9,9 +9,9 @@ import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
-import ru.novosoft.smsc.web.config.SettingsManager;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
+import javax.faces.application.FacesMessage;
 import java.util.*;
 
 /**
@@ -64,15 +64,30 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
 
 
 
-  public String reset() throws AdminException {
-    resetSettings();
-    settings = getSettings();
+  public String reset()  {
+    try {
+      resetSettings();
+      settings = getSettings();
+    }
+    catch (AdminException e) {
+      addError(e);
+      return null;
+    }
     return "SUBJECTS";
   }
 
-  public String submit() throws AdminException {
-    setSettings(settings);
-    submitSettings();
+  public String submit()  {
+    try {
+      setSettings(settings);
+      settings = getSettings();
+      submitSettings();
+
+    }
+    catch (AdminException e) {
+      addError(e);
+      return null;
+    }
+
     return "INDEX";
   }
 
@@ -164,21 +179,38 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
     return "SUBJECT_EDIT";
   }
 
-  public String deleteSelected() throws AdminException {
-    if(selectedRows!=null && selectedRows.size()>0) {
-      List<Subject> subjs = settings.getSubjects();
-      for(int i=0; i<subjs.size();i++) {
-        Subject subj = subjs.get(i);
-        for(String s : selectedRows) {
-           if(subj.getName().equals(s)) {
-             subjs.remove(i);
-             i--;
-             break;
-           }
+  public String deleteSelected() {
+    try {
+      if(selectedRows!=null && selectedRows.size()>0) {
+
+        List<Subject> subjs = settings.getSubjects();
+        for (Subject subj : subjs) {
+          List<String> children = subj.getChildren();
+          for(String s : selectedRows) {
+            if(children.contains(s)) {
+              addLocalizedMessage(FacesMessage.SEVERITY_WARN,"subjects.cant.delete.child",s,subj.getName());
+              return null;
+            }
+          }
         }
+
+
+        for(int i=0; i<subjs.size();i++) {
+          Subject subj = subjs.get(i);
+          for(String s : selectedRows) {
+            if(subj.getName().equals(s)) {
+              subjs.remove(i);
+              i--;
+              break;
+            }
+          }
+        }
+        settings.setSubjects(subjs);
+        setSettings(settings);
       }
-      settings.setSubjects(subjs);
-      setSettings(settings);
+    }
+    catch (AdminException e) {
+      addError(e);
     }
     checkChanges();
     return null;
