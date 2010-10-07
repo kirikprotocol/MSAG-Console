@@ -40,7 +40,9 @@ public class InitListener implements ServletContextListener {
 
       context = WebContext.getInstance();
 
-      servletContextEvent.getServletContext().setAttribute("informer-version", readVersion(servletContextEvent.getServletContext().getRealPath("META-INF")));
+      String metaInf = servletContextEvent.getServletContext().getRealPath("META-INF");
+
+      servletContextEvent.getServletContext().setAttribute("informer-version", metaInf == null ? "" : readVersion(metaInf));
 
     } catch (Exception e) {
       e.printStackTrace();
