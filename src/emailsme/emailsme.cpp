@@ -657,7 +657,7 @@ public:
       uint32_t pktSize=0;
       memcpy(&pktSize,szbuf,4);
       pktSize=ntohl(pktSize);
-      if(pktSize>cfg::maxPacketSize)
+      if(pktSize>65536)
       {
         smsc_log_warn(log,"Packet size too large:%d",pktSize);
         continue;
@@ -2309,7 +2309,7 @@ public:
       }
       sz=ntohl(sz);
       smsc_log_debug(log,"Message size:%d",sz);
-      if(sz>65536)
+      if(sz>cfg::maxPacketSize)
       {
         smsc_log_warn(log,"Ignoring message with size:%d",sz);
         clnt->Abort();
