@@ -1,3 +1,4 @@
+#include <cassert>
 #include "MessageGlossary.h"
 #include "MessageText.h"
 #include "informer/io/TextEscaper.h"
@@ -9,9 +10,29 @@ namespace eyeline {
 namespace informer {
 
 MessageGlossary::MessageGlossary( InputMessageSource& ims ) :
-log_(smsc::logger::Logger::getInstance("glossary"))
+log_(smsc::logger::Logger::getInstance("glossary")),
+negTxtId_(0), posTxtId_(0)
 {
     smsc_log_warn(log_,"FIXME: reading glossary at start");
+}
+
+
+MessageGlossary::~MessageGlossary()
+{
+    // destroying all messages
+    smsc::core::synchronization::MutexGuard mg(lock_);
+    hash_.Empty();
+    for ( TextList::iterator i = list_.begin(); i != list_.end(); ++i ) {
+        if (*i) {
+            if ( (*i)->ref_ > 1 || (*i)->id_<=0 ) {
+                smsc_log_warn(log_,"wrong ref/id of text='%s' id=%d ref=%u p=%p",
+                              (*i)->text_, (*i)->id_, (*i)->ref_, *i );
+            }
+            delete *i;
+        }
+    }
+    list_.clear();
+    posTxtId_ = negTxtId_ = 0;
 }
 
 
@@ -37,29 +58,29 @@ void MessageGlossary::bindMessage( MessageTextPtr& p )
             }
             // message is new to glossary, assign dynamic id
             while (true) {
-                --negMsgId_;
-                if (negMsgId_>=0) {
-                    negMsgId_ = 0;
+                --negTxtId_;
+                if (negTxtId_>=0) {
+                    negTxtId_ = 0;
                     continue;
                 }
-                Node* node = hash_.GetPtr(negMsgId_);
+                Node* node = hash_.GetPtr(negTxtId_);
                 if (node) { continue; } // busy
-                hash_.Insert(negMsgId_,
+                hash_.Insert(negTxtId_,
                              Node(list_.insert(list_.begin(),msg),list_.end()));
-                msg->id_ = negMsgId_;
-                msg->ref_ = 1;
+                msg->id_ = negTxtId_;
+                msg->ref_ = 2;
                 msg->gloss_ = this;
                 break;
             }
         } else if (msg->id_< 0) {
             // negative id on input
-            smsc_log_fatal(log_,"cannot bind negative msgid on input");
+            smsc_log_fatal(log_,"cannot bind negative txtId on input");
             abort();
         } else {
             // msg has positive id
             Node* node = hash_.GetPtr(msg->id_);
             if (!node) { // new message
-                smsc_log_fatal(log_,"msgId=%d not found, should be registered first",msg->id_);
+                smsc_log_fatal(log_,"txtId=%d not found, should be registered first",msg->id_);
                 abort();
                 /*
                 if (!msg->text_) {
@@ -99,46 +120,47 @@ void MessageGlossary::registerMessages( InputMessageSource& ims,
     // adding all messages to the hash and list
     const dlvid_type dlvId = ims.getDlvId();
     for ( TextList::iterator i = texts.begin(); i != texts.end(); ++i ) {
-        int32_t msgId = (*i)->id_;
+        int32_t txtId = (*i)->id_;
         Node toInsert(i,list_.end());
-        if ( msgId < 0 ) {
+        if ( txtId < 0 ) {
             registerFailed(texts,i);
-            throw InfosmeException("D=%u: negative txtId=%d cannot be registered",dlvId,msgId);
+            throw InfosmeException("D=%u: negative txtId=%d cannot be registered",dlvId,txtId);
         } else if ( ! (*i)->text_ ) {
             registerFailed(texts,i);
-            throw InfosmeException("message w/o text, D=%u, txtId=%d",dlvId,msgId);
-        } else if ( msgId == 0 ) {
+            throw InfosmeException("message w/o text, D=%u, txtId=%d",dlvId,txtId);
+        } else if ( txtId == 0 ) {
             // new message, get dynamic id
-            if ( ++posMsgId_ <= 0 ) {
-                --posMsgId_;
+            if ( ++posTxtId_ <= 0 ) {
+                --posTxtId_;
                 registerFailed(texts,i);
-                throw InfosmeException("D=%u: msgIds exhausted",dlvId);
+                throw InfosmeException("D=%u: txtIds exhausted",dlvId);
             }
-            msgId = (*i)->id_ = posMsgId_;
+            txtId = (*i)->id_ = posTxtId_;
         } else {
-            // positive msgId
-            Node* node = hash_.GetPtr(msgId);
+            // positive txtId
+            Node* node = hash_.GetPtr(txtId);
             if (node) {
                 if (0 == strcmp((*node->iter)->text_,(*i)->text_)) {
                     registerFailed(texts,i);
                     throw InfosmeException("D=%u: attempt to replace w/ same text",dlvId);
                 }
                 // different text
-                if (++posMsgId_ <= 0 ) {
-                    --posMsgId_;
+                if (++posTxtId_ <= 0 ) {
+                    --posTxtId_;
                     registerFailed(texts,i);
-                    throw InfosmeException("D=%u: msgIds exhausted on repl",dlvId);
+                    throw InfosmeException("D=%u: txtIds exhausted on repl",dlvId);
                 }
-                msgId = (*i)->id_ = posMsgId_;
+                txtId = (*i)->id_ = posTxtId_;
                 toInsert.repl = node->iter;
                 node->iter = i;
             } else {
                 // explicitly specified textid
-                if (msgId>posMsgId_) posMsgId_ = msgId;
+                if (txtId>posTxtId_) posTxtId_ = txtId;
             }
         }
         (*i)->ref_ = 1;
-        hash_.Insert(msgId,toInsert);
+        (*i)->gloss_ = this;
+        hash_.Insert(txtId,toInsert);
     }
     // inserting texts into glossary file
     smsc::core::buffers::TmpBuf<char,200> buf;
@@ -188,10 +210,13 @@ void MessageGlossary::registerFailed( TextList& texts, TextList::iterator upto )
 
 void MessageGlossary::ref( MessageText* ptr )
 {
-    smsc_log_debug(log_,"ref text='%s' id=%d ref=%u p=%p gloss=%p",
-                   ptr->text_, ptr->id_, ptr->ref_, ptr, ptr->gloss_ );
-    MutexGuard mg(lock_);
-    ++(ptr->ref_);
+    {
+        MutexGuard mg(lock_);
+        ++(ptr->ref_);
+    }
+    smsc_log_debug(log_,"ref text='%s' id=%d ref=%u p=%p",
+                   ptr->text_, ptr->id_, ptr->ref_, ptr);
+    assert(ptr->gloss_ == this);
 }
 
 
@@ -200,24 +225,27 @@ void MessageGlossary::unref( MessageText* ptr )
     smsc_log_debug(log_,"unref text='%s' id=%d ref=%u p=%p gloss=%p",
                    ptr->text_, ptr->id_, ptr->ref_, ptr, ptr->gloss_ );
     MessageText* other = 0;
-    {
+    do {
         MutexGuard mg(lock_);
-        if (ptr->ref_>1) {
-            --(ptr->ref_);
+        --ptr->ref_;
+        // ref must be 1,2,3,etc
+        assert(ptr->ref_>0);
+        if (ptr->ref_>1 || ptr->id_>0) {
+            // still reffed or positive
             ptr = 0;
-        } else if (ptr->id_>0) {
-            smsc_log_warn(log_,"unreffing positive txtId=%d",ptr->id_);
-        } else {
-            Node node;
-            if ( hash_.Pop(ptr->id_,node) ) {
-                other = *node.iter;
-                list_.erase(node.iter);
-            } else {
-                other = ptr;
-                ptr = 0;
-            }
+            break;
         }
-    }
+        Node node;
+        if ( hash_.Pop(ptr->id_,node) ) {
+            other = *node.iter;
+            assert(node.repl == list_.end());
+            list_.erase(node.iter);
+        } else {
+            other = ptr;
+            ptr = 0;
+        }
+    } while (false);
+
     if (other) {
         if (!ptr) {
             smsc_log_error(log_,"id=%d ptr=%p is not in the texts",

@@ -14,6 +14,8 @@ public:
                   StoreJournal&       storeJournal,
                   InputMessageSource* source );
 
+    ~MessageCache();
+
     /// get the regional storage for given region.
     RegionalStoragePtr getRegionalStorage( regionid_type regionId, bool create=false );
 

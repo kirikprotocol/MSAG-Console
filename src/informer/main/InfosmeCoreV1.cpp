@@ -78,6 +78,14 @@ InfosmeCoreV1::~InfosmeCoreV1()
         smsc_log_debug(log_,"destroying smsc '%s'",smscId);
         delete sender;
     }
+    int regId;
+    RegionSender* regsend;
+    for ( IntHash< RegionSender* >::Iterator i(regSends_); i.Next(regId,regsend); ) {
+        smsc_log_debug(log_,"destroying regsend %u", regionid_type(regId));
+        delete regsend;
+    }
+    regions_.Empty();
+    deliveries_.Empty();
 
     delete storeLog_;
     delete inputJournal_;

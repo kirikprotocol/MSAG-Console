@@ -2,6 +2,15 @@
 #include "MessageCache.h"
 #include "informer/data/InputMessageSource.h"
 
+namespace {
+smsc::logger::Logger* log_ = 0;
+void getlog() {
+    if (!log_) {
+        log_ = smsc::logger::Logger::getInstance("msgcache");
+    }
+}
+}
+
 namespace eyeline {
 namespace informer {
 
@@ -12,6 +21,17 @@ dlvInfo_(dlvInfo),
 storeJournal_(storeJournal),
 source_(source)
 {
+    getlog();
+    smsc_log_debug(log_,"ctor D=%u",dlvInfo.getDlvId());
+}
+
+
+MessageCache::~MessageCache()
+{
+    smsc_log_debug(log_,"dtor D=%u",dlvInfo_.getDlvId());
+    storages_.Empty();
+    delete source_;
+    smsc_log_debug(log_,"dtor D=%u done",dlvInfo_.getDlvId());
 }
 
 

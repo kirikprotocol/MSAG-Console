@@ -17,7 +17,10 @@ class MessageGlossary
     friend class MessageTextPtr;
 public:
     typedef std::list< MessageText* > TextList;
+
     MessageGlossary( InputMessageSource& ims );
+
+    ~MessageGlossary();
 
     /// bind message to glossary.
     void bindMessage( MessageTextPtr& ptr );
@@ -44,8 +47,8 @@ private:
     smsc::core::synchronization::Mutex                 lock_;
     TextList                                           list_; // owned
     TextHash                                           hash_;
-    int32_t                                            negMsgId_;
-    int32_t                                            posMsgId_;
+    int32_t                                            negTxtId_;
+    int32_t                                            posTxtId_;
 };
 
 
