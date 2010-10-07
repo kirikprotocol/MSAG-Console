@@ -1,4 +1,5 @@
 #include "FileGuard.h"
+#include "Typedefs.h"
 
 namespace eyeline {
 namespace informer {
@@ -58,6 +59,22 @@ void FileGuard::create( const char* fn, bool mkdirs, bool truncate )
 }
 
 
+size_t FileGuard::seek( size_t pos )
+{
+    if (fd_!=-1) {
+        off_t res = lseek(fd_,off_t(pos),SEEK_SET);
+        if (res==off_t(-1)) {
+            const size_t buflen = 100;
+            char ebuf[buflen];
+            strerror_r(errno,ebuf,buflen);
+            throw InfosmeException("seek %llu failed: %d, %d, %s",ulonglong(pos),fd_,errno,ebuf);
+        }
+        pos_ = res;
+    }
+    return pos_;
+}
+
+
 void FileGuard::write( const void* buf, unsigned buflen, bool atomic )
 {
     if (fd_==-1) {
@@ -72,6 +89,7 @@ void FileGuard::write( const void* buf, unsigned buflen, bool atomic )
             throw InfosmeException("write failed: %d, %s",fd_,errno,ebuf);
         }
         buflen -= written;
+        pos_ += written;
         if (atomic && buflen>0) {
             const size_t ebuflen = 100;
             char ebuf[ebuflen];
@@ -98,6 +116,7 @@ unsigned FileGuard::read( void* buf, unsigned buflen )
             strerror_r(errno,ebuf,ebuflen);
             throw InfosmeException("read failed: %d, %d, %s", fd_, errno, ebuf);
         }
+        pos_ += readlen;
         wasread += readlen;
         buflen -= readlen;
         buf = reinterpret_cast<char*>(buf) + readlen;
@@ -128,6 +147,19 @@ void FileGuard::makedirs( const std::string& dir )
             char buf[buflen];
             strerror_r(errno,buf,buflen);
             throw InfosmeException("cannot create dir '%s': %d, %s",wk->c_str(),errno,buf);
+        }
+    }
+}
+
+
+void FileGuard::truncate( size_t pos )
+{
+    if (fd_!=-1) {
+        if (-1 == ftruncate(fd_,pos)) {
+            const size_t ebuflen = 100;
+            char ebuf[ebuflen];
+            strerror_r(errno,ebuf,ebuflen);
+            throw InfosmeException("truncate failed: %d, %d, %s", fd_, errno, ebuf);
         }
     }
 }

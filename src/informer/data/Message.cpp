@@ -42,40 +42,11 @@ FromBuf& Message::fromBuf( uint16_t version, FromBuf& tb )
         state &= 0x7f;
         text.reset(new MessageText(tb.getCString(),0));
     } else {
-        // FIXME: make sure the glossary post-process the message
         // FIXME: optimize if textptr already has glossary!
         text.reset(new MessageText(0,tb.get32()));
     }
     return tb;
 }
-
-
-/*
-char* Message::printToBuf( size_t bufsize, char* buf ) const
-{
-    char lbuf[20];
-    char tbuf[20];
-    if ( state == MsgState::input ) {
-        // new message
-        sprintf(lbuf,"%u",unsigned(lastTime));
-        sprintf(tbuf,"%u",unsigned(timeLeft));
-    } else {
-        formatMsgTime(lbuf,lastTime);
-        formatMsgTime(tbuf,timeLeft);
-    }
-    register int printed = snprintf( buf, bufsize,
-                                     "%llu,%u,%s,%s,%u,%s,%s",
-                                     static_cast<unsigned long long>(subscriber),
-                                     unsigned(msgId),
-                                     lbuf, tbuf,
-                                     unsigned(textId),userData.c_str(),
-                                     MsgState::toString(state));
-    if ( printed < 0 ) {
-        throw InfosmeException("snprintf failed: %d",printed);
-    }
-    return buf + (printed < int(bufsize) ? printed : bufsize-1);
-}
- */
 
 
 char* makeDeliveryPath( dlvid_type dlvId, char* buf )

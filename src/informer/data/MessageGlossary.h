@@ -38,7 +38,9 @@ private:
     };
     typedef smsc::core::buffers::IntHash< Node > TextHash;
 
+    void doRegisterMessages( InputMessageSource& ims, TextList& texts );
     void registerFailed( TextList& texts, TextList::iterator upto );
+    void readGlossaryFailed( InputMessageSource& ims, size_t trunc, const char* msg );
     void ref( MessageText* ptr );
     void unref( MessageText* ptr );
 

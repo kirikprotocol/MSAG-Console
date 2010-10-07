@@ -299,11 +299,13 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
         InputMessageSource* ims = new InputStorage(*this,dlvInfo->getDlvId(),*inputJournal_);
         deliveries_.Insert(dlvId, DeliveryPtr(new Delivery(dlvInfo,*storeLog_,ims)));
         // filling glossary
+        /*
         MessageGlossary& glos(ims->getGlossary());
         MessageGlossary::TextList tlist;
         tlist.push_back(new MessageText("my \"first\" message\nwill be written\\later",1));
         tlist.push_back(new MessageText("the second text",2));
         glos.registerMessages(*ims,tlist);
+         */
     }
     startMon_.notify();
 }

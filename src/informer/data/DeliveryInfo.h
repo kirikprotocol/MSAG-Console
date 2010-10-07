@@ -9,13 +9,13 @@ namespace informer {
 class DeliveryInfo
 {
 public:
-    DeliveryInfo( dlvid_type dlvid ) : dlvid_(dlvid) {}
+    DeliveryInfo( dlvid_type dlvid ) : dlvid_(dlvid), active_(true) {}
 
     dlvid_type getDlvId() const { return dlvid_; }
     unsigned getPriority() const { return 1; }
 
     bool isActive() const {
-        return true; // FIXME
+        return active_;
     }
 
     /// minimal number of input messages per region when request for new
@@ -34,6 +34,7 @@ public:
 
 private:
     dlvid_type dlvid_;
+    bool       active_;
 };
 
 } // informer

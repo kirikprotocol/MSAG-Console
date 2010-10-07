@@ -9,7 +9,7 @@
 namespace eyeline {
 namespace informer {
 
-template <size_t N> struct TextEscaper
+struct TextEscaper
 {
 public:
     TextEscaper() {
@@ -18,8 +18,9 @@ public:
         }
     }
 
-    void escape( smsc::core::buffers::TmpBuf<char,N>& buf,
-                 const char* from, size_t len )
+    template <size_t N>
+    void escapeText( smsc::core::buffers::TmpBuf<char,N>& buf,
+                     const char* from, size_t len )
     {
         size_t extra = len/10 + 10;
         size_t cursize = buf.GetPos() + len + extra;
@@ -36,7 +37,7 @@ public:
                 *to = '\\';
                 *++to = '\\';
                 --extra;
-            break;
+                break;
             case '\n' :
                 *to = '\\';
                 *++to = 'n';
@@ -46,6 +47,7 @@ public:
                 *to = '\\';
                 *++to = '"';
                 --extra;
+                break;
             default:
                 *to = *p;
                 goto nocheck;
@@ -67,20 +69,26 @@ nocheck:
         buf.SetPos(to-buf.get());
         smsc_log_debug(log_,"after escape '%s'",buf.get());
     }
+
+    char* unescapeText( char* text, const char* from = 0, size_t len = 0 );
+
 private:
     static smsc::logger::Logger* log_;
 };
-
-template <size_t N> smsc::logger::Logger* TextEscaper<N>::log_ = 0;
 
 template <size_t N> 
     void escapeText( smsc::core::buffers::TmpBuf<char,N>& buf,
                      const char* from, size_t len ) 
 {
-    TextEscaper<N> te;
-    te.escape(buf,from,len);
+    TextEscaper te;
+    te.escapeText(buf,from,len);
 }
 
+
+inline char* unescapeText( char* text, const char* from = 0, size_t len = 0 ) {
+    TextEscaper te;
+    return te.unescapeText(text,from,len);
+}
 
 } // informer
 } // smsc

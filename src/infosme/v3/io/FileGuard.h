@@ -14,7 +14,7 @@ namespace informer {
 class FileGuard
 {
 public:
-    FileGuard() : fd_(-1) {
+    FileGuard() : fd_(-1), pos_(0) {
         if (!log_) {
             log_ = smsc::logger::Logger::getInstance("fileguard");
         }
@@ -24,38 +24,46 @@ public:
         close();
     }
 
-    inline bool isOpened() const { return fd_ != -1; }
+    inline bool isOpened() const {
+        return fd_ != -1;
+    }
 
     void ropen( const char* fn );
 
     void create( const char* fn, bool mkdirs = false, bool truncate = false );
 
-    void seek( uint32_t pos ) {
-        if (fd_!=-1) lseek(fd_,off_t(pos),SEEK_SET);
-    }
+    size_t seek( size_t pos );
+    inline size_t getPos() const { return pos_; }
 
     /// write buffer
     /// @a atomic - true: generate exception if write was not atomic
-    void write( const void* buf, unsigned buflen, bool atomic = false );
+    void write( const void* buf, size_t buflen, bool atomic = false );
 
     /// read buffer
     /// @return number of bytes read
-    unsigned read( void* buf, unsigned buflen );
+    size_t read( void* buf, size_t buflen );
 
     void fsync() {
         if (fd_!=-1) ::fsync(fd_);
     }
 
+    /// NOTE: pos is preserved
+    void truncate( size_t pos );
+
     void close() {
         if (fd_!=-1) ::close(fd_);
         fd_ = -1;
+        pos_ = 0;
     }
 
     static void makedirs( const std::string& dir );
 
 private:
     static smsc::logger::Logger* log_;
-    int fd_;
+
+private:
+    int    fd_;
+    size_t pos_;
 };
 
 } // informer

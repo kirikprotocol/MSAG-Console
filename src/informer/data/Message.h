@@ -37,14 +37,14 @@ struct Message
 
     /// conversion (for I/O)
     ToBuf& toBuf( uint16_t version, ToBuf& tb ) const;
+
+    /// read message from buf
+    /// NOTE: make sure to invoke MessageGlossary:bind(text);
     FromBuf& fromBuf( uint16_t version, FromBuf& fb );
 
     inline bool isTextUnique() const {
         return (text->getTextId() <= 0);
     }
-    // textual representation
-    // FIXME: should we add 'version' arg?
-    // char* printToBuf( size_t bufsize, char* buf ) const;
 };
 
 

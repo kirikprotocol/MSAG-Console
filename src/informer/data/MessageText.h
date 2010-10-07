@@ -7,18 +7,10 @@
 namespace eyeline {
 namespace informer {
 
-/*
-class MessageGlossary
-{
-    const char* getText( uint32_t id ) const { return "FIXME"; }
-};
- */
-
 class MessageGlossary;
 class MessageTextPtr;
 
 /// message text.
-/// FIXME: hige optimization required.
 class MessageText
 {
     friend class MessageTextPtr;
