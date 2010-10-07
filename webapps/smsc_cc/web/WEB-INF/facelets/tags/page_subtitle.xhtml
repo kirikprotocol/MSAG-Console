@@ -10,7 +10,7 @@
 
 <ui:composition>
 
-  <t:div styleClass="page_subtitle" rendered="#{rendered}">
+  <t:div styleClass="page_subtitle" rendered="#{rendered == null ? true : rendered}">
     <tr:outputText value="#{value}"/>
   </t:div>
 
