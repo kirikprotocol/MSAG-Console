@@ -210,6 +210,7 @@
       <url-pattern>/smsc/msc/*</url-pattern>
       <url-pattern>/smsc/subjects/*</url-pattern>
       <url-pattern>/smsc/profile/*</url-pattern>
+      <url-pattern>/smsc/timezones/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>smsc_service</role-name>
