@@ -6,11 +6,12 @@ import ru.novosoft.smsc.admin.timezone.Timezone;
 import ru.novosoft.smsc.admin.timezone.TimezoneSettings;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
 
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import java.util.*;
 
@@ -95,7 +96,7 @@ public class TimezonesController extends SettingsMController<TimezoneSettings> {
     this.subjsModel = subjsModel;
   }
 
-  public List<String> getTimesonesItems() {    
+  public List<String> getTimesonesItems() {
     String[] tzIds = TimeZone.getAvailableIDs();
     Arrays.sort(tzIds);
     return Arrays.asList(tzIds);
@@ -127,10 +128,16 @@ public class TimezonesController extends SettingsMController<TimezoneSettings> {
       List<Timezone> newTimeZones = new ArrayList<Timezone>();
       for(DynamicTableRow row : masksModel.getRows()) {
         String mask = (String) row.getValue("mask");
-        Address a = new Address(mask);
-        TimeZone tz = TimeZone.getTimeZone((String) row.getValue("tzm"));
-        Timezone tzm = new Timezone(a,tz);
-        newTimeZones.add(tzm);
+        try {
+          Address a = new Address(mask);
+          TimeZone tz = TimeZone.getTimeZone((String) row.getValue("tzm"));
+          Timezone tzm = new Timezone(a,tz);
+          newTimeZones.add(tzm);
+        }
+        catch (IllegalArgumentException e) {
+          addLocalizedMessage(FacesMessage.SEVERITY_WARN,"timezones.illegal.mask",mask);
+          return null;
+        }
       }
 
       for(DynamicTableRow row : subjsModel.getRows()) {

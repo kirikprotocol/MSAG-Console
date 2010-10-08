@@ -25,22 +25,23 @@
         <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{timezones.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
       </eye:buttons>
 
-      <p/>
-      <eye:collapsingGroup label="#{msg['timezones.page.masks']}">
-        <eye:dynamicTable value="#{timezones.masksModel}">
+
+      <eye:collapsingGroup label="#{msg['timezones.page.masks']}" opened="true">
+        <eye:dynamicTable value="#{timezones.masksModel}" >
           <eye:textColumn name="mask" maxLength="20" allowEditAfterAdd="true"/>
           <eye:selectColumn name="tzm" values="#{timezones.timesonesItems}" allowEditAfterAdd="true"/>
         </eye:dynamicTable>
       </eye:collapsingGroup>
       <p/>
-      <eye:collapsingGroup label="#{msg['timezones.page.subjects']}">
+
+      <eye:collapsingGroup label="#{msg['timezones.page.subjects']}" opened="true">
         <eye:dynamicTable value="#{timezones.subjsModel}" >
           <eye:selectColumn name="subj" values="#{timezones.availableSubjects}" allowEditAfterAdd="false" uniqueValues="true"/>
           <eye:selectColumn name="tzs" values="#{timezones.timesonesItems}" allowEditAfterAdd="true"/>
         </eye:dynamicTable>
       </eye:collapsingGroup>
       <p/>
-      
+
       <eye:buttons>
         <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{timezones.save}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
         <eye:space/>

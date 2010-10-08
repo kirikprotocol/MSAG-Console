@@ -18,6 +18,7 @@
     <tr:form rendered="#{!subjects.initError}">
 
       <h:inputHidden value="#{subjects.revision}"/>
+      
 
       <eye:dataTableFilter bean="#{subjects}" clearAction="clearFilter">
 
@@ -48,7 +49,7 @@
         <eye:row rowId="#{s.name}"  innerData="#{!empty s.masks or !empty s.children}">
           <eye:column name="name" title="#{msg['subjects.page.column.name']}" width="50%"
                       sortable="true" defaultSortOrder="asc">
-            <h:commandLink  value="#{s.name}" action="#{subjects.edit}">
+            <h:commandLink  value="#{s.name}" action="SUBJECT_EDIT" immediate="true">
               <f:param name="oldName" value="#{s.name}"/>
             </h:commandLink>
           </eye:column>
@@ -60,8 +61,7 @@
 
 
           <f:facet name="innerData">
-            <h:panelGrid columns="3" columnClasses="columnTopLeftAlign,columnTopLeftAlign" style="width:350px;">
-
+            <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign" style="width:350px;">
 
                 <h:dataTable value="#{s.masks}" var="mask" columnClasses="columnTopLeftAlign" style="margin-left:50px; width:150px;">
                   <h:column>
@@ -77,7 +77,7 @@
                     <f:facet name="header">
                       <h:outputText value="#{msg['subjects.page.column.subjects']}" />
                     </f:facet>
-                    <h:commandLink  value="#{child}" action="#{subjects.edit}">
+                    <h:commandLink  value="#{child}" action="SUBJECT_EDIT" immediate="true">
                         <f:param name="oldName" value="#{child}"/>
                     </h:commandLink>
                   </h:column>

@@ -6,8 +6,10 @@ import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.web.config.SettingsManager;
 
 import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -46,6 +48,9 @@ public class SettingsMController<T> extends SmscController {
 
   protected void init(boolean checkChanges) throws AdminException {
     resetRevision();
+
+    for(Iterator it = FacesContext.getCurrentInstance().getMessages(); it.hasNext() ;it.remove())
+      it.next();
 
     if (checkChanges)
       checkChanges();

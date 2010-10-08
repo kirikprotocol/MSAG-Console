@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.web.controllers.subjects;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.alias.Alias;
-import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.route.RouteSubjectSettings;
 import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.util.Address;
@@ -10,11 +8,9 @@ import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.controllers.SettingsMController;
-import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import javax.swing.table.DefaultTableModel;
 import java.util.*;
 
 
@@ -30,16 +26,17 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
   private boolean initError;
   RouteSubjectSettings settings;
   Subject subj=null;
+  String childToAdd;
   private DynamicTableModel masksModel;
-  private DynamicTableModel subjectsModel;
+
   private Map<String, Subject> subjMap;
 
   public SubjectEditController() {
     super(WebContext.getInstance().getRouteSubjectManager());
     try {
       setOldName(getRequestParameter("oldName"));
-      super.init();
-      init();
+      super.init(false);
+      initData();
     } catch (AdminException e) {
       addError(e);
       initError = true;
@@ -71,12 +68,13 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
     return subjMap;
   }
 
-  @Override
-  protected void init() throws AdminException {
+
+  protected void initData() throws AdminException {
+    checkChanges();
     settings = getSettings();
     subjMap = buildSubjectsMap();
     masksModel=new DynamicTableModel();
-    subjectsModel=new DynamicTableModel();
+
     if(oldName!=null) {
       subj = subjMap.get(oldName);
       if(subj!=null) {
@@ -89,7 +87,6 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
           for(String child : subj.getChildren()) {
             DynamicTableRow row = new DynamicTableRow();
             row.setValue("child", child);
-            subjectsModel.addRow(row);
           }
         }
       }
@@ -137,24 +134,17 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
         }
         subj.setMasks(masks);
 
-        List<String> children = new ArrayList<String>();
-        for(DynamicTableRow row : subjectsModel.getRows()) {
-          String child = (String)row.getValue("child");
-          children.add(child);
-        }
-        subj.setChildren(children);
 
         settings.setSubjects(new ArrayList<Subject>(subjMap.values()));
         setSettings(settings);
         setOldName(subj.getName());
-        init();
+        initData();
         return "SUBJECTS";
       }
     }
     catch (AdminException e) {
       addError(e);
-    }
-    checkChanges();
+    }       
     return null;
   }
 
@@ -195,17 +185,10 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
     this.masksModel=masksModel;
   }
 
-  public void setSubjectsModel(DynamicTableModel subjectsModel) {
-    this.subjectsModel = subjectsModel;
-  }
 
-  public DynamicTableModel getSubjectsModel() {
-    return subjectsModel;
-  }
+  public List<SelectItem> getAllowedChildren() {
 
-  public List getAllowedChildren() {
-
-    List<String> ret = new ArrayList<String>();
+    List<SelectItem> ret = new ArrayList<SelectItem>();
     for(String sId : subjMap.keySet()) {
       String nameToCheck = subj.getName();
       if(nameToCheck!=null &&  nameToCheck.length()==0) nameToCheck=null;
@@ -217,11 +200,61 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
           continue;
         }
       }
-      ret.add(sId);
+      ret.add(new SelectItem(sId));
     }
     return ret;
   }
 
+  public String getChildToAdd() {
+    return childToAdd;
+  }
+
+  public void setChildToAdd(String childToAdd) {
+    this.childToAdd = childToAdd;
+  }
+
+  public String removeChild() {
+    String childToRemove = getRequestParameter("childToRemove");
+    try {
+
+    if(childToRemove!=null && childToRemove.length()>0) {
+        List<String> children = subj.getChildren();
+        if(children.contains(childToRemove)) {
+          children.remove(childToRemove);
+          subj.setChildren(children);
+          settings.setSubjects(new ArrayList<Subject>(subjMap.values()));
+          setSettings(settings);
+          setOldName(subj.getName());
+          initData();
+        }
+    }
+    }
+    catch (AdminException e) {
+      addError(e);
+    }
+    return null;
+  }
+
+  public String addChild() {
+    try {
+      if(childToAdd !=null && childToAdd.length()>0) {
+        List<String> children = subj.getChildren();
+        if(!children.contains(childToAdd)) {
+          children.add(childToAdd);
+          childToAdd =null;
+          subj.setChildren(children);
+          settings.setSubjects(new ArrayList<Subject>(subjMap.values()));
+          setSettings(settings);
+          setOldName(subj.getName());
+          initData();
+        }
+      }
+    }
+    catch (AdminException e) {
+      addError(e);
+    }
+    return null;
+  }
 
 
   private boolean checkContainsDescendant(Map<String, Subject> subjMap, String one, String other) {
@@ -236,4 +269,6 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
     }
     return false;
   }
+
+
 }

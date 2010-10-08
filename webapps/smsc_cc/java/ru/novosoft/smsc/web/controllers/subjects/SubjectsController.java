@@ -215,8 +215,5 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
     checkChanges();
     return null;
   }
-
-  public Object edit() {
-    return "SUBJECT_EDIT";
-  }
+ 
 }
