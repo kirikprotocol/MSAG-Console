@@ -3,6 +3,7 @@
 
 #include "informer/data/InputMessageSource.h"
 #include "informer/data/MessageGlossary.h"
+#include "informer/data/CommonSettings.h"
 #include "InputJournal.h"
 #include "logger/Logger.h"
 #include "core/buffers/IntHash.hpp"
@@ -50,7 +51,7 @@ public:
         return dlvId_;
     }
     virtual const std::string& getStorePath() const {
-        return jnl_.getStorePath();
+        return jnl_.getCS().getStorePath();
     }
 
 private:

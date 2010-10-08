@@ -1,13 +1,14 @@
+#include "informer/data/CommonSettings.h"
 #include "InputJournal.h"
 
 namespace eyeline {
 namespace informer {
 
-InputJournal::InputJournal( const std::string& path ) :
-path_(path)
+InputJournal::InputJournal( const CommonSettings& cs ) :
+cs_(cs)
 {
     // FIXME: reading journal, move this to init()
-    jnl_.create((path_ + "input/.journal").c_str(),true,true);
+    jnl_.create((cs_.getStorePath() + "input/.journal").c_str(),true,true);
     const char* head = "# D,R,RFN,ROFF,WFN,WOFF,CNT,MSGID\n";
     jnl_.write(head,strlen(head));
 }
@@ -27,7 +28,6 @@ void InputJournal::journalRecord( dlvid_type dlvId,
     jnl_.write(buf,strlen(buf));
     jnl_.fsync();
 }
-
 
 }
 }

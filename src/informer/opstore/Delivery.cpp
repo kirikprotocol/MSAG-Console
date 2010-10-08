@@ -19,7 +19,7 @@ void Delivery::updateDlvInfo( const DeliveryInfo& info )
     assert( dlvInfo_.get() );
     assert(dlvInfo_->getDlvId() == info.getDlvId());
     // FIXME: update dlvinfo
-    *dlvInfo_.get() = info;
+    //*dlvInfo_.get() = info;
 }
 
 }

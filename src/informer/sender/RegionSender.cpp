@@ -50,13 +50,21 @@ std::string RegionSender::toString() const
 
 void RegionSender::addDelivery( RegionalStorage& ptr )
 {
+    smsc_log_debug(log_,"add delivery D=%u",ptr.getDlvId());
     taskList_.add(&ptr);
 }
 
 
 void RegionSender::removeDelivery( dlvid_type dlvId )
 {
+    smsc_log_debug(log_,"remove delivery D=%u",dlvId);
     taskList_.remove(EqualById(dlvId));
+    if (log_->isDebugEnabled()) {
+        std::string dumpstring;
+        dumpstring.reserve(200);
+        taskList_.dump(dumpstring);
+        smsc_log_debug(log_,"list after remove: %s",dumpstring.c_str());
+    }
 }
 
 

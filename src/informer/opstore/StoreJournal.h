@@ -10,6 +10,7 @@ namespace eyeline {
 namespace informer {
 
 class Message;
+class CommonSettings;
 
 /// two functionality:
 /// 1. journalling all activity on the working storage;
@@ -18,7 +19,7 @@ class StoreJournal
 {
 public:
     /// @a path -- a path to the storage root.
-    StoreJournal( const std::string& path );
+    StoreJournal( const CommonSettings& cs );
 
     /// journal messages.
     void journalMessage( dlvid_type     dlvId,
@@ -26,7 +27,7 @@ public:
                          const Message& msg );
 private:
     smsc::logger::Logger* log_;
-    std::string           path_; // path to the journal
+    const CommonSettings& cs_;
     uint32_t              version_;
     FileGuard             fg_;
 };

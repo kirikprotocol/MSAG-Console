@@ -1,4 +1,5 @@
 #include "StoreJournal.h"
+#include "informer/data/CommonSettings.h"
 #include "informer/data/Message.h"
 #include "core/buffers/TmpBuf.hpp"
 #include "informer/io/HexDump.h"
@@ -7,13 +8,13 @@
 namespace eyeline {
 namespace informer {
 
-StoreJournal::StoreJournal( const std::string& path ) :
+StoreJournal::StoreJournal( const CommonSettings& cs ) :
 log_(smsc::logger::Logger::getInstance("storelog")),
-path_(path),
+cs_(cs),
 version_(1)
 {
     // FIXME: read store journal, move to init()
-    fg_.create((path_ + "operative/.journal").c_str(),true,true);
+    fg_.create((cs_.getStorePath() + "operative/.journal").c_str(),true,true);
 }
 
 

@@ -45,15 +45,25 @@ const char* msgStateToString( MsgState state )
 const char* dlvStateToString( DlvState state )
 {
     switch (state) {
-    case DLVSTATE_PAUSED    : return "paused";
-    case DLVSTATE_PLANNED   : return "plannd";
-    case DLVSTATE_ACTIVE    : return "active";
-    case DLVSTATE_FINISHED  : return "finish";
-    case DLVSTATE_CANCELLED : return "cancel";
+    case DLVSTATE_PAUSED    : return "PAUSED";
+    case DLVSTATE_PLANNED   : return "PLANNED";
+    case DLVSTATE_ACTIVE    : return "ACTIVE";
+    case DLVSTATE_FINISHED  : return "FINISHED";
+    case DLVSTATE_CANCELLED : return "CANCELLED";
     default                 : return "??????";
     };
 }
 
+
+char* makeDeliveryPath( dlvid_type dlvId, char* buf )
+{
+    const unsigned chunk = unsigned(dlvId/100)*100;
+    const int rv = sprintf(buf,"deliveries/%010u/%u/",chunk,dlvId);
+    if (rv<0) {
+        throw InfosmeException("cannot form delivery path D=%u, chunk=%u",dlvId,chunk);
+    }
+    return buf + rv;
+}
 
 }
 }

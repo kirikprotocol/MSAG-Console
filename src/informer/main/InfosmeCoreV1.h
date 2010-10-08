@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include "informer/data/CommonSettings.h"
 #include "informer/data/Region.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/opstore/Delivery.h"
@@ -67,7 +68,7 @@ public:
     /// reload all regions
     void reloadRegions();
 
-    virtual regionid_type findRegion( uint64_t subscriber );
+    virtual regionid_type findRegion( personid_type subscriber );
 
     /// update delivery
     /// 1. create delivery: new dlvId, valid dlvInfo;
@@ -89,6 +90,7 @@ protected:
 
 private:
     smsc::logger::Logger*                      log_;
+    CommonSettings                             cs_;
     smsc::core::synchronization::EventMonitor  startMon_;
     bool                                       stopping_;
     bool                                       started_;

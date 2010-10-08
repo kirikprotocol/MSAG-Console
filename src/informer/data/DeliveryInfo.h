@@ -2,20 +2,27 @@
 #define _INFORMER_DELIVERYINFO_H
 
 #include "informer/io/Typedefs.h"
+#include "logger/Logger.h"
 
 namespace eyeline {
 namespace informer {
 
+class CommonSettings;
+
 class DeliveryInfo
 {
 public:
-    DeliveryInfo( dlvid_type dlvid ) : dlvid_(dlvid), active_(true) {}
+    DeliveryInfo( const CommonSettings& cs,
+                  dlvid_type dlvId ) :
+    cs_(cs), dlvId_(dlvId), state_(DLVSTATE_PAUSED) {
+        if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
+    }
 
-    dlvid_type getDlvId() const { return dlvid_; }
+    dlvid_type getDlvId() const { return dlvId_; }
     unsigned getPriority() const { return 1; }
 
     bool isActive() const {
-        return active_;
+        return (state_ == DLVSTATE_ACTIVE);
     }
 
     /// minimal number of input messages per region when request for new
@@ -32,9 +39,16 @@ public:
     /// minimal time between retries, seconds
     unsigned getMinRetryTime() const { return 60; }
 
+    /// read delivery info
+    void read();
+
 private:
-    dlvid_type dlvid_;
-    bool       active_;
+    static smsc::logger::Logger* log_;
+
+private:
+    const CommonSettings& cs_;
+    dlvid_type      dlvId_;
+    DlvState        state_;
 };
 
 } // informer

@@ -48,17 +48,5 @@ FromBuf& Message::fromBuf( uint16_t version, FromBuf& tb )
     return tb;
 }
 
-
-char* makeDeliveryPath( dlvid_type dlvId, char* buf )
-{
-    const unsigned chunk = unsigned(dlvId/100)*100;
-    const int rv = sprintf(buf,"deliveries/%010u/%u/",chunk,dlvId);
-    if (rv<0) {
-        throw InfosmeException("cannot form delivery path D=%u, chunk=%u",dlvId,chunk);
-    }
-    return buf + rv;
-}
-
-
 }
 }

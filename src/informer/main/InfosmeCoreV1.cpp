@@ -9,6 +9,7 @@
 #include "informer/sender/SmscSender.h"
 #include "util/config/ConfString.h"
 #include "util/config/ConfigView.h"
+#include "informer/io/DirListing.h"
 
 using namespace smsc::util::config;
 
@@ -18,6 +19,15 @@ std::string cgetString( const ConfigView& cv, const char* tag, const char* what 
     std::auto_ptr<char> str(cv.getString(tag,what));
     return std::string(str.get());
 }
+
+struct NumericNameFilter {
+    inline bool operator()( const char* fn ) const {
+        char* endptr;
+        strtoul(fn,&endptr,10);
+        return (*endptr=='\0');
+    }
+};
+
 }
 
 namespace eyeline {
@@ -97,11 +107,11 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
 {
     smsc_log_info(log_,"FIXME: initing InfosmeCore");
 
-    const std::string path = "store/";
+    cs_.init("store/");
 
     // create journals
-    if (!inputJournal_) inputJournal_ = new InputJournal(path);
-    if (!storeLog_) storeLog_ = new StoreJournal(path);
+    if (!inputJournal_) inputJournal_ = new InputJournal(cs_);
+    if (!storeLog_) storeLog_ = new StoreJournal(cs_);
 
     // create smscs and regions
     std::auto_ptr< ConfigView > ccv(cfg.getSubConfig("SMSCConnectors"));
@@ -119,15 +129,47 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     }
     reloadRegions();
 
-    // loading deliveries
-    const dlvid_type dlvId = 22;
-    std::auto_ptr< DeliveryInfo > dlvInfo(new DeliveryInfo(dlvId));
-    updateDelivery( dlvInfo->getDlvId(), dlvInfo);
+    {
+        // loading deliveries
+        smsc::core::buffers::TmpBuf<char,200> buf;
+        const std::string& path = cs_.getStorePath();
+        buf.setSize(path.size()+50);
+        strcpy(buf.get(),path.c_str());
+        strcat(buf.get(),"deliveries/");
+        buf.SetPos(strlen(buf.get()));
+        std::vector<std::string> chunks;
+        std::vector<std::string> dlvs;
+        smsc_log_debug(log_,"listing deliveries storage '%s'",buf.get());
+        makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), chunks);
+        std::sort( chunks.begin(), chunks.end() );
+        for ( std::vector<std::string>::iterator ichunk = chunks.begin();
+              ichunk != chunks.end(); ++ichunk ) {
+            strcpy(buf.GetCurPtr(),ichunk->c_str());
+            strcat(buf.GetCurPtr(),"/");
+            dlvs.clear();
+            smsc_log_debug(log_,"listing delivery chunk '%s'",buf.get());
+            makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), dlvs);
+            for ( std::vector<std::string>::iterator idlv = dlvs.begin();
+                  idlv != dlvs.end();
+                  ++idlv ) {
+                // get dlvid
+                const dlvid_type dlvId = strtoul(idlv->c_str(),0,10);
+                std::auto_ptr<DeliveryInfo> info(new DeliveryInfo(cs_,dlvId));
+                try {
+                    info->read();
+                    updateDelivery(dlvId,info);
+                } catch (std::exception& e) {
+                    smsc_log_warn(log_,"cannot read dlvInfo D=%u: %s",dlvId,e.what());
+                    continue;
+                }
+            }
+        }
+    }
 
     // bind delivery and regions
-    std::vector<regionid_type> regIds;
-    regIds.push_back(1);
-    deliveryRegions(dlvId,regIds,true);
+    // std::vector<regionid_type> regIds;
+    // regIds.push_back(1);
+    // deliveryRegions(dlvId,regIds,true);
 }
 
 
@@ -263,7 +305,7 @@ void InfosmeCoreV1::reloadRegions()
 }
 
 
-regionid_type InfosmeCoreV1::findRegion( uint64_t subscriber )
+regionid_type InfosmeCoreV1::findRegion( personid_type subscriber )
 {
     uint8_t ton, npi;
     uint64_t addr = subscriberToAddress(subscriber,ton,npi);

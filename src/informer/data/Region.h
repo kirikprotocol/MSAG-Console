@@ -53,7 +53,7 @@ class RegionFinder
 {
 public:
     virtual ~RegionFinder() {}
-    virtual regionid_type findRegion( uint64_t subscriber ) = 0;
+    virtual regionid_type findRegion( personid_type subscriber ) = 0;
 };
 
 } // informer

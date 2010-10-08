@@ -2,6 +2,7 @@
 #include <cassert>
 #include <algorithm>
 #include "InputStorage.h"
+#include "informer/data/CommonSettings.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/Region.h"
 #include "informer/io/FileGuard.h"
@@ -304,7 +305,7 @@ std::string InputStorage::makeFilePath( regionid_type regId, uint32_t fn ) const
     sprintf(makeDeliveryPath(dlvId_,buf),"%u/%u.data",unsigned(regId),unsigned(fn));
     smsc_log_debug(log_,"filepath for D=%u/R=%u/F=%u is %s",
                    unsigned(dlvId_),unsigned(regId),unsigned(fn),buf);
-    return jnl_.getStorePath() + buf;
+    return jnl_.getCS().getStorePath() + buf;
 }
 
 }

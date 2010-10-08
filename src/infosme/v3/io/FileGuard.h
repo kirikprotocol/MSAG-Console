@@ -15,9 +15,7 @@ class FileGuard
 {
 public:
     FileGuard() : fd_(-1), pos_(0) {
-        if (!log_) {
-            log_ = smsc::logger::Logger::getInstance("fileguard");
-        }
+        getlog();
     }
 
     ~FileGuard() {
@@ -59,6 +57,11 @@ public:
     static void makedirs( const std::string& dir );
 
 private:
+    inline static void getlog() {
+        if (!log_) {
+            log_ = smsc::logger::Logger::getInstance("fileguard");
+        }
+    }
     static smsc::logger::Logger* log_;
 
 private:
