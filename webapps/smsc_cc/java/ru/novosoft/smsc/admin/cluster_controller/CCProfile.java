@@ -250,7 +250,8 @@ public class CCProfile {
   }
 
   public void setNick(String nick) {
-    profile.setNick(nick);
+    if (nick != null)
+      profile.setNick(nick);
   }
 
   public enum HideOptions {
