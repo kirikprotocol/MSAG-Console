@@ -58,9 +58,9 @@ public class WProfileManager implements ProfileManager {
   private void logChanges(final Profile oldProfile, final Profile profile) {
     findChanges(oldProfile, profile, Profile.class, new ChangeListener() {
         public void foundChange(String propertyName, Object oldValue, Object newValue) {
-          j.user(user).change("change_property", propertyName, valueToString(oldValue), valueToString(newValue)).profile(oldProfile.getAddress().getNormalizedAddress());
+          j.user(user).change("change_property", propertyName, valueToString(oldValue), valueToString(newValue)).profile(profile.getAddress().getNormalizedAddress());
         }
-      });
+      }, "address");
   }
 
   public void deleteProfile(Address mask) throws AdminException {

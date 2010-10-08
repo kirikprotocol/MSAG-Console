@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class TestProfilesHelper {
 
-  private final TemplatesRTree<CCProfileWithAddress> profilesTree = new TemplatesRTree<CCProfileWithAddress>();
+  private final Map<String, CCProfileWithAddress> profilesTree = new HashMap<String, CCProfileWithAddress>();
   private final File profilesFile;
   private final FileSystem fileSystem;
   private final boolean smsx;
@@ -40,8 +40,20 @@ public class TestProfilesHelper {
     }
   }
 
+  private CCProfileWithAddress _lookup(String address) {
+    CCProfileWithAddress res = profilesTree.get(address);
+    String concat = "?";
+    for (int i=1; res == null && i<address.length(); i++) {
+      address = address.substring(0, address.length() - i);
+      address += concat;
+      concat += "?";
+      res = profilesTree.get(address);
+    }
+    return res;
+  }
+
   public CCLookupProfileResult lookupProfile(Address address) {
-    CCProfileWithAddress profile = profilesTree.get(address.getSimpleAddress());
+    CCProfileWithAddress profile = _lookup(address.getSimpleAddress());
     if (profile == null)
       profile = profilesTree.get(".5.0.DEFAULT");
 
@@ -54,7 +66,7 @@ public class TestProfilesHelper {
 
   private void saveProfiles() throws AdminException {
     Map<Address, CCProfile> profiles = new HashMap<Address, CCProfile>();
-    for (String key : profilesTree.keys()) {
+    for (String key : profilesTree.keySet()) {
       CCProfileWithAddress p = profilesTree.get(key);
       profiles.put(p.address, p.profile);
     }

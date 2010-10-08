@@ -59,7 +59,10 @@ public class CCProfile {
   }
 
   public void setLatin1(boolean latin1) {
-    profile.setCodepage((byte)(profile.getCodepage() | 1));
+    if (latin1)
+      profile.setCodepage((byte)(profile.getCodepage() | 1));
+    else
+      profile.setCodepage((byte)(profile.getCodepage() & 0xFE));
   }
 
   public boolean isUcs2() {
@@ -67,7 +70,10 @@ public class CCProfile {
   }
 
   public void setUcs2(boolean ucs2) {
-    profile.setCodepage((byte)(profile.getCodepage() | 8));
+    if (ucs2)
+      profile.setCodepage((byte)(profile.getCodepage() | 8));
+    else
+      profile.setCodepage((byte)(profile.getCodepage() & 0xF7));
   }
 
   public boolean isUssdIn7Bit() {
@@ -75,7 +81,10 @@ public class CCProfile {
   }
 
   public void setUssdIn7Bit(boolean ussdIn7Bit) {
-    profile.setCodepage((byte)(profile.getCodepage() | 128));
+    if (ussdIn7Bit)
+      profile.setCodepage((byte)(profile.getCodepage() | 128));
+    else
+      profile.setCodepage((byte)(profile.getCodepage() & 0x7F));
   }
 
   public ReportOptions getReportOptions() {
@@ -108,7 +117,7 @@ public class CCProfile {
   public void setHide(HideOptions hide) {
     switch (hide) {
       case HideDisabled: profile.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideDisabled); break;
-      case HideEnabled: profile.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideEnabled); break;
+      case HideSubstitute: profile.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideSubstitute); break;
       default:
         profile.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideEnabled);
     }

@@ -51,7 +51,8 @@ public class TopMenu {
       );
       add(new MenuBarItem("smsc.profile", 135).
           add(new MenuItem("smsc.profile.default", "/smsc/profile/default.faces")).
-          add(new MenuItem("smsc.profile.lookup", "/smsc/profile/lookup.faces"))
+          add(new MenuItem("smsc.profile.lookup", "/smsc/profile/lookup.faces")).
+          add(new MenuItem("smsc.profile.groups", "/smsc/profile/groups.faces"))
       );
       add(new MenuBarItem("smsc.help", 196).
           add(new MenuItem("smsc.help.manual", "/smsc/admin_guide.faces"))

@@ -1,0 +1,61 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['edit.profile.page.title']} #{editProfile.profileAddress}" />
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!editProfile.initFailed}">
+
+      <tr:inputHidden id="profileAddr" value="#{editProfile.profileAddress}" rendered="#{!editProfile.newProfile}"/>
+      <tr:inputHidden value="#{editProfile.newProfile}"/>
+      <tr:inputHidden id="backPage" value="#{editProfile.backPage}"/>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{editProfile.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{editProfile.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <tr:panelFormLayout inlineStyle="padding:10px" rendered="#{editProfile.newProfile}">
+        <tr:panelLabelAndMessage label="#{profile['address']}">
+          <tr:inputText id="profileAddr" value="#{editProfile.profileAddress}" required="true"/>
+        </tr:panelLabelAndMessage>
+      </tr:panelFormLayout>
+
+
+      <eye:pageSubtitle value="Parameters:" rendered="#{editProfile.newProfile}"/>
+
+      <p/>
+
+      <ui:include src="profile_body.xhtml">
+        <ui:param name="profile_to_edit" value="#{editProfile.profile}"/>
+        <ui:param name="reportOptions" value="#{editProfile.reportOptions}"/>
+        <ui:param name="locales" value="#{editProfile.locales}"/>
+        <ui:param name="aliasHideOptions" value="#{editProfile.aliasHideOptions}"/>
+      </ui:include>
+
+      <p/>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{editProfile.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{editProfile.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

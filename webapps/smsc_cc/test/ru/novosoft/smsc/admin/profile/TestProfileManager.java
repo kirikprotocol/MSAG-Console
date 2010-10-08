@@ -16,31 +16,12 @@ import java.util.Map;
  */
 public class TestProfileManager extends ProfileManagerImpl {
 
-  private Profile defaultProfile;
 
   public TestProfileManager(boolean smsx, File profilesFile, FileSystem fs, ClusterController cc) {
     super(smsx, profilesFile, fs, cc);
 
-    try {
-      defaultProfile = new Profile(new Address(5,0,"DEFAULT"));
 
-      defaultProfile.setUdhConcat(true);
-      defaultProfile.setDivert("qwerty");
-      defaultProfile.setLatin1(true);
-      defaultProfile.setOutputAccessMask(1);
-    } catch (AdminException e) {
-      e.printStackTrace();
-    }
   }
-
-  public Profile getDefaultProfile() throws AdminException {
-    return new Profile(defaultProfile);
-  }
-
-  public void updateDefaultProfile(Profile profile) throws AdminException {
-    defaultProfile = new Profile(profile);
-  }
-
 
   public static InputStream emptyProfilesFileAsStream(boolean smsx, int version) throws IOException {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -78,6 +59,7 @@ public class TestProfileManager extends ProfileManagerImpl {
         Address a = e.getKey();
         CCProfile p = e.getValue();
 
+        IOUtils.writeUInt8(os, 1);
         IOUtils.writeString(os, "SmScPrOf", 8);
 
         IOUtils.writeUInt8(os, a.getTone());
@@ -86,11 +68,11 @@ public class TestProfileManager extends ProfileManagerImpl {
 
         int codepage = 0;
         if (p.isLatin1())
-          codepage = codepage & 1;
+          codepage = codepage | 1;
         if (p.isUcs2())
-          codepage = codepage & 8;
+          codepage = codepage | 8;
         if (p.isUssdIn7Bit())
-          codepage = codepage & 128;
+          codepage = codepage | 128;
 
         IOUtils.writeUInt32(os, codepage);
         switch (p.getReportOptions()) {

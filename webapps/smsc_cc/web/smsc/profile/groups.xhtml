@@ -1,0 +1,84 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['group.profiles.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <h:inputHidden value="#{groupsProfile.applyCalled}"/>
+
+      <eye:dataTableFilter bean="#{groupsProfile}" applyAction="applyFilter" clearAction="clearFilter">
+        <h:panelGrid columns="2" columnClasses="column0WidthLeft, columnTopLeftAlign">
+          <tr:panelLabelAndMessage label="#{profile['address']}">
+            <tr:inputText value="#{groupsProfile.mask}" simple="true"/>
+          </tr:panelLabelAndMessage>
+          <h:outputText value=""/>
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <eye:dataTable value="#{groupsProfile.groups}" var="group" selectedRows="#{groupsProfile.groups2remove}">
+
+        <eye:row rowId="#{group.address.simpleAddress}">
+
+          <eye:column name="address" title="#{profile['address']}" sortable="true" defaultSortOrder="asc" width="50%">
+            <h:commandLink action="PROFILE_EDIT" value="#{group.address.simpleAddress}" immediate="true">
+              <f:param name="profileAddr" value="#{group.address.simpleAddress}"/>
+              <f:param name="backPage" value="PROFILE_GROUPS"/>
+            </h:commandLink>
+          </eye:column>
+
+          <eye:column name="codepage" title="#{msg['group.profiles.page.codepage']}" width="10%" align="center">
+            <h:outputText value="Default" rendered="#{!group.latin1 and !group.ucs2}"/>
+            <h:outputText value="Latin1" rendered="#{group.latin1}"/>
+            <h:outputText value=" " rendered="#{group.latin1}"/>
+            <h:outputText value="UCS2" rendered="#{group.ucs2}"/>
+          </eye:column>
+
+          <eye:column name="ussd7bit" title="#{profile['ussd7bit']}" width="10%" align="center">
+            <tr:image source="/images/ic_checked.gif" rendered="#{group.ussd7bit}"/>
+            <tr:image source="/images/ic_not_checked.gif" rendered="#{!group.ussd7bit}"/>
+          </eye:column>
+
+          <eye:column name="reportData" title="#{profile['reportOptions']}" width="10%" align="center">
+            <h:outputText value="#{group.reportOptions}"/>
+          </eye:column>
+
+          <eye:column name="locale" title="#{profile['locale']}" width="10%" align="center">
+            <h:outputText value="#{group.locale}"/>
+          </eye:column>
+
+          <eye:column name="reportData" title="#{profile['aliasHide']}" width="10%" align="center">
+            <h:outputText value="#{group.aliasHide}"/>
+          </eye:column>
+        </eye:row>
+
+      </eye:dataTable>
+
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink value="#{msg['add.button']}" action="PROFILE_EDIT" immediate="true">
+            <f:param name="backPage" value="PROFILE_GROUPS"/>
+          </h:commandLink>
+        </eye:button>
+        <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{groupsProfile.removeGroup}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

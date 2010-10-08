@@ -140,8 +140,10 @@ public class ProfileManagerImpl implements ProfileManager {
       default:
         p.setReportOptions(CCProfile.ReportOptions.ReportFull);
     }
-    p.setSponsored(profile.getSponsored());
-    p.setSubscription(profile.getSubscription());
+    if (profile.getSponsored() != null)
+      p.setSponsored(profile.getSponsored());
+    if (profile.getSubscription() != null)
+      p.setSubscription(profile.getSubscription());
     p.setTranslit(profile.isTranslit());
     p.setUcs2(profile.isUcs2());
     p.setUdhConcat(profile.isUdhConcat());
@@ -152,6 +154,8 @@ public class ProfileManagerImpl implements ProfileManager {
   public void updateProfile(Profile profile) throws AdminException {
     if (!cc.isOnline())
       throw new ProfileException("profiler.offline");
+    // Проверка адреса
+    profile.setAddress(profile.getAddress());
 
     try {
       profilesLock.writeLock().lock();

@@ -21,93 +21,12 @@
         <eye:space/>
       </eye:buttons>
 
-      <tr:panelFormLayout inlineStyle="padding:20px">
-
-        <tr:panelLabelAndMessage label="#{profile['ucs2']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.ucs2}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['latin1']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.latin1}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['ussd7bit']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.ussd7bit}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['reportOptions']}">
-          <h:selectOneMenu value="#{defaultProfile.profile.reportOptions}" >
-            <f:selectItems value="#{defaultProfile.reportOptions}"/>
-          </h:selectOneMenu>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['locale']}">
-          <h:selectOneMenu value="#{defaultProfile.profile.locale}" >
-            <f:selectItems value="#{defaultProfile.locales}"/>
-          </h:selectOneMenu>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['aliasHide']}">
-          <h:selectOneMenu value="#{defaultProfile.profile.aliasHide}" >
-            <f:selectItems value="#{defaultProfile.aliasHideOptions}"/>
-          </h:selectOneMenu>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['aliasModifiable']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.aliasModifiable}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['divert']}">
-          <tr:inputText value="#{defaultProfile.profile.divert}" simple="true"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['divertActive']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.divertActive}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['divertActiveAbsent']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.divertActiveAbsent}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['divertActiveBlocked']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.divertActiveBlocked}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['divertActiveBarred']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.divertActiveBarred}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['divertActiveCapacity']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.divertActiveCapacity}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['divertModifiable']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.divertModifiable}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['udhConcat']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.udhConcat}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['translit']}">
-          <h:selectBooleanCheckbox value="#{defaultProfile.profile.translit}" style="margin-left:0px;"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['groupId']}">
-          <h:selectOneMenu value="#{defaultProfile.profile.groupId}" >
-            <f:selectItems value="#{defaultProfile.closedGroups}"/>
-          </h:selectOneMenu>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['inputAccessMask']}">
-          <tr:inputText value="#{defaultProfile.profile.inputAccessMask}" simple="true"/>
-        </tr:panelLabelAndMessage>
-
-        <tr:panelLabelAndMessage label="#{profile['outputAccessMask']}">
-          <tr:inputText value="#{defaultProfile.profile.outputAccessMask}" simple="true"/>
-        </tr:panelLabelAndMessage>
-
-      </tr:panelFormLayout>
+      <ui:include src="profile_body.xhtml">
+        <ui:param name="profile_to_edit" value="#{defaultProfile.profile}"/>
+        <ui:param name="reportOptions" value="#{defaultProfile.reportOptions}"/>
+        <ui:param name="locales" value="#{defaultProfile.locales}"/>
+        <ui:param name="aliasHideOptions" value="#{defaultProfile.aliasHideOptions}"/>
+      </ui:include>
 
       <eye:buttons>
         <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{defaultProfile.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>

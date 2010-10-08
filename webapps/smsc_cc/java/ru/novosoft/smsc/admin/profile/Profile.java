@@ -50,7 +50,7 @@ public class Profile implements Serializable {
     this.address = address;
   }
 
-  Profile() {    
+  public Profile() {    
   }
 
   protected Profile(Profile copy) {

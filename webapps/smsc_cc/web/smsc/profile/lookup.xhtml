@@ -13,13 +13,15 @@
 
   <ui:define name="content">
 
-    <tr:form>
+    <h:form>
 
-      <tr:panelFormLayout inlineStyle="padding:20px">
+      <tr:panelFormLayout >
         <tr:panelLabelAndMessage label="#{profile['address']}">
           <tr:inputText value="#{lookupProfile.address}" simple="true"/>
         </tr:panelLabelAndMessage>
       </tr:panelFormLayout>
+
+      <p/>
 
       <eye:buttons>
         <eye:button>
@@ -30,13 +32,13 @@
 
       <p/>
 
-      <h:panelGroup rendered="#{lookupProfile.lookupResult != null}">
+      <h:panelGroup rendered="#{lookupProfile.canView}">
 
         <eye:pageSubtitle value="#{msg['lookup.profile.page.exact.match']}" rendered="#{lookupProfile.lookupResult.exactMatch}"/>
         <eye:pageSubtitle value="#{msg['lookup.profile.page.mask.match']}: #{lookupProfile.lookupResult.profile.address.simpleAddress}" rendered="#{lookupProfile.lookupResult.maskMatch}"/>
         <eye:pageSubtitle value="#{msg['lookup.profile.page.default.match']}" rendered="#{lookupProfile.lookupResult.defaultMatch}"/>
 
-        <tr:panelFormLayout inlineStyle="padding:20px">
+        <tr:panelFormLayout inlineStyle="padding:10px">
 
           <tr:panelLabelAndMessage label="#{profile['ucs2']}">
             <tr:image source="/images/ic_checked.gif" rendered="#{lookupProfile.lookupResult.profile.ucs2}"/>
@@ -115,7 +117,8 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{profile['groupId']}">
-            <h:commandLink value="#{lookupProfile.lookupResult.profile.groupId}" rendered="#{lookupProfile.lookupResult.profile.groupId != null}">
+            <h:commandLink value="#{lookupProfile.lookupResult.profile.groupId}" action="CLOSED_GROUP_EDIT" immediate="true">
+              <f:param name="canView" value="true"/>
               <f:param name="closed_group" value="#{lookupProfile.lookupResult.profile.groupId}"/>
             </h:commandLink>
           </tr:panelLabelAndMessage>
@@ -130,21 +133,35 @@
 
         </tr:panelFormLayout>
 
-        <eye:buttons>
-          <eye:button rendered="#{!lookupProfile.lookupResult.exactMatch}">
-            <h:commandLink value="#{msg['add.button']}" action="PROFILE_EDIT"/>
-          </eye:button>
-          <eye:button rendered="#{!lookupProfile.lookupResult.defaultMatch}">
-            <h:commandLink value="#{msg['edit.button']}" action="PROFILE_EDIT">
-              <f:param name="profile" value="#{lookupProfile.lookupResult.profile.address.simpleAddress}"/>
-            </h:commandLink>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
-
       </h:panelGroup>
 
-    </tr:form>
+      <eye:buttons rendered="#{lookupProfile.canAdd or lookupProfile.canEdit}">
+        <eye:button rendered="#{lookupProfile.canAdd}">
+          <h:commandLink value="#{msg['add.button']}" action="PROFILE_EDIT" immediate="true">
+            <f:param name="canAdd" value="#{lookupProfile.canAdd}"/>
+            <f:param name="canEdit" value="#{lookupProfile.canEdit}"/>
+            <f:param name="profileAddr" value="#{lookupProfile.address}"/>
+            <f:param name="backPage" value="PROFILE_LOOKUP"/>
+          </h:commandLink>
+        </eye:button>
+        <eye:button rendered="#{lookupProfile.canEdit}">
+          <h:commandLink value="#{msg['edit.button']}" action="PROFILE_EDIT" immediate="true">
+            <f:param name="canAdd" value="#{lookupProfile.canAdd}"/>
+            <f:param name="canEdit" value="#{lookupProfile.canEdit}"/>
+            <f:param name="profileAddr" value="#{lookupProfile.address}"/>
+            <f:param name="backPage" value="PROFILE_LOOKUP"/>
+          </h:commandLink>
+        </eye:button>
+        <eye:button rendered="#{lookupProfile.canEdit}">
+          <h:commandLink value="#{msg['delete.button']}" action="#{lookupProfile.remove}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false">
+            <f:param name="canAdd" value="#{lookupProfile.canAdd}"/>
+            <f:param name="canEdit" value="#{lookupProfile.canEdit}"/>
+          </h:commandLink>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </h:form>
 
   </ui:define>
 

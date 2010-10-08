@@ -55,7 +55,7 @@ import java.io.IOException;
  */
 public class TestAdminContext extends AdminContext {
 
-  private static final int PROFILES_VERSION=0x00010100;
+  private static final int PROFILES_VERSION=AdminMode.smsx ? 0x00010100 : 0x00010000;
 
   private void prepareServices(File servicesDir, AdminContextConfig cfg) throws IOException, AdminException {
     File ccDir = new File(servicesDir, "ClusterController/conf");

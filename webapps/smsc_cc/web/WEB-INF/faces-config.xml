@@ -337,6 +337,18 @@
     <managed-bean-class>ru.novosoft.smsc.web.controllers.profile.LookupProfileController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+  
+  <managed-bean>
+    <managed-bean-name>editProfile</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.profile.ProfileEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>groupsProfile</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.profile.ProfileGroupsController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <managed-bean>
     <managed-bean-name>timezones</managed-bean-name>
@@ -472,9 +484,18 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
+      <from-outcome>PROFILE_LOOKUP</from-outcome>
+      <to-view-id>/smsc/profile/lookup.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>PROFILE_GROUPS</from-outcome>
+      <to-view-id>/smsc/profile/groups.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
       <from-outcome>PROFILE_EDIT</from-outcome>
       <to-view-id>/smsc/profile/edit.faces</to-view-id>
-      <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>TIMEZONES</from-outcome>
