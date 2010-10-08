@@ -9,6 +9,7 @@ namespace informer {
 
 class TransferTask;
 class MessageGlossary;
+struct InputRegionRecord;
 
 /// a class requesting transfer of input messages
 /// from instore into opstore.
@@ -78,6 +79,10 @@ public:
 
     virtual dlvid_type getDlvId() const = 0;
     virtual const std::string& getStorePath() const = 0;
+
+    virtual void setInputRecord( regionid_type      regionId,
+                                 const InputRegionRecord& rec,
+                                 uint64_t           maxMsgId ) = 0;
 };
 
 } // informer

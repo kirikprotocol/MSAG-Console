@@ -22,5 +22,15 @@ void Delivery::updateDlvInfo( const DeliveryInfo& info )
     //*dlvInfo_.get() = info;
 }
 
+
+void Delivery::setInputRecord( regionid_type            regionId,
+                               const InputRegionRecord& rec,
+                               uint64_t                 maxMsgId )
+{
+    InputMessageSource& ims = cache_.getInputSource();
+    ims.setInputRecord(regionId,rec,maxMsgId);
+}
+
+
 }
 }

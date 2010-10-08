@@ -14,11 +14,13 @@
 using namespace smsc::util::config;
 
 namespace {
+
 std::string cgetString( const ConfigView& cv, const char* tag, const char* what )
 {
     std::auto_ptr<char> str(cv.getString(tag,what));
     return std::string(str.get());
 }
+
 
 struct NumericNameFilter {
     inline bool operator()( const char* fn ) const {
@@ -32,6 +34,30 @@ struct NumericNameFilter {
 
 namespace eyeline {
 namespace informer {
+
+
+class InfosmeCoreV1::InputJournalReader : public InputJournal::Reader
+{
+public:
+    InputJournalReader( InfosmeCoreV1& core ) : core_(core) {}
+    virtual void setRecord( dlvid_type    dlvId,
+                            regionid_type regionId,
+                            const InputRegionRecord& rec,
+                            uint64_t maxMsgId )
+    {
+        smsc_log_debug(core_.log_,"setting input record D=%u/R=%u",dlvId,regionId);
+        DeliveryPtr* ptr = core_.deliveries_.GetPtr(dlvId);
+        if (!ptr) {
+            smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);
+            return;
+        }
+        (*ptr)->setInputRecord( regionId, rec, maxMsgId );
+    }
+
+private:
+    InfosmeCoreV1& core_;
+};
+
 
 void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
 {
@@ -165,6 +191,12 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
             }
         }
     }
+
+    // reading journals
+    smsc_log_info(log_,"FIXME: reading journals");
+    InputJournalReader ijr(*this);
+    inputJournal_->init(ijr);
+    // storeLog_->read();
 
     // bind delivery and regions
     // std::vector<regionid_type> regIds;
@@ -342,14 +374,6 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
         }
         InputMessageSource* ims = new InputStorage(*this,dlvInfo->getDlvId(),*inputJournal_);
         deliveries_.Insert(dlvId, DeliveryPtr(new Delivery(dlvInfo,*storeLog_,ims)));
-        // filling glossary
-        /*
-        MessageGlossary& glos(ims->getGlossary());
-        MessageGlossary::TextList tlist;
-        tlist.push_back(new MessageText("my \"first\" message\nwill be written\\later",1));
-        tlist.push_back(new MessageText("the second text",2));
-        glos.registerMessages(*ims,tlist);
-         */
     }
     startMon_.notify();
 }

@@ -26,6 +26,8 @@ public:
 
     void addNewMessages( MsgIter begin, MsgIter end );
 
+    InputMessageSource& getInputSource() const { return *source_; }
+
 private:
     smsc::core::synchronization::Mutex                 cacheLock_;
     smsc::core::buffers::IntHash< RegionalStoragePtr > storages_;

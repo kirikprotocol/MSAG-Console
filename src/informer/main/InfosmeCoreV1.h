@@ -26,6 +26,8 @@ class InputMessageSource;
 
 class InfosmeCoreV1 : public InfosmeCore, public RegionFinder, public smsc::core::threads::Thread
 {
+private:
+    class InputJournalReader;
 public:
     static void readSmscConfig( SmscConfig& cfg,
                                 const smsc::util::config::ConfigView& cv );

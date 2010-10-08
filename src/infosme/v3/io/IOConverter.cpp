@@ -103,6 +103,14 @@ void FromBuf::setPos( size_t newpos )
 }
 
 
+void FromBuf::setLen( size_t newlen )
+{
+    if (newlen<pos) {
+        throw InfosmeException("buffer newlen is too small: len=%u, pos=%u", unsigned(newlen), unsigned(pos));
+    }
+    buflen = newlen;
+}
+
 void ToBuf::set8( uint8_t c )
 {
     checksz(1);

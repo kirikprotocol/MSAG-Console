@@ -40,7 +40,8 @@ void DeliveryInfo::read()
     buf.setSize(path.size()+70);
     strcpy(buf.get(),path.c_str());
     assert(*(buf.get()+path.size()-1) == '/');
-    char* end = makeDeliveryPath(dlvId_,buf.get()+path.size());
+    // char* end = 
+    makeDeliveryPath(dlvId_,buf.get()+path.size());
     smsc_log_debug(log_,"FIXME: reading D=%u info '%s'",dlvId_,buf.get());
     // reading state
     std::vector< std::string > files;
@@ -49,8 +50,11 @@ void DeliveryInfo::read()
     if (files.size()==1) {
         // ok
     } else {
-        smsc_log_warn(log_,"wrong number of state files in D=%u: %u",dlvId_,unsigned(files.size()));
+        // FIXME: should we be non-invasive? I.e. do not touch delivery elements
+        throw InfosmeException("D=%u has wrong number of state files: %u",dlvId_,unsigned(files.size()));
+        // smsc_log_warn(log_,"wrong number of state files in D=%u: %u",dlvId_,unsigned(files.size()));
         // unlink all states
+        /*
         for ( DlvState st = DLVSTATE_PAUSED; st <= DLVSTATE_MAX; st = DlvState(int(st)+1) ) {
             strcpy(end,dlvStateToString(st));
             unlink(buf.get()); // dont care about rc
@@ -61,6 +65,7 @@ void DeliveryInfo::read()
         FileGuard fg;
         fg.create(buf.get());
         fg.close();
+         */
     }
 }
 

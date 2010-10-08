@@ -40,6 +40,11 @@ public:
         cache_.addNewMessages(begin,end);
     }
 
+    // NOTE: should be invoked at start only!
+    void setInputRecord( regionid_type            regionId,
+                         const InputRegionRecord& rec,
+                         uint64_t                 maxMsgId );
+
 private:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);

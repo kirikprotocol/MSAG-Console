@@ -66,7 +66,7 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
             core_.startTransfer(task);
         } else {
             // no data
-            smsc_log_debug(log_,"R=%u/D=%u data is not ready: rfn=%u, roff=%u, wfn=%u, woff=%u",
+            smsc_log_debug(log_,"R=%u/D=%u data is not ready: RP=%u/%u, WP=%u/%u",
                            regId, dlvId_,
                            ro.rfn, ro.roff, ro.wfn, ro.woff );
         }
@@ -79,6 +79,27 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
         core_.deliveryRegions(dlvId_,regs,false);
     }
     return task;
+}
+
+
+void InputStorage::setInputRecord( regionid_type regId,
+                                   const InputRegionRecord& ro,
+                                   uint64_t maxMsgId )
+{
+    InputRegionRecord* ptr = regions_.GetPtr(regId);
+    if (ptr) {
+        doSetRecord(*ptr,ro);
+    } else {
+        ptr = &regions_.Insert(regId,ro);
+    }
+    if (maxMsgId>lastMsgId_) lastMsgId_ = maxMsgId;
+    if (ptr->wfn>lastfn_) lastfn_ = ptr->wfn;
+    smsc_log_debug(log_,"set input record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u, msgs=%llu, lastfn=%u",
+                   unsigned(dlvId_), unsigned(regId),
+                   unsigned(ptr->rfn), unsigned(ptr->roff),
+                   unsigned(ptr->wfn), unsigned(ptr->woff),
+                   unsigned(ptr->count), ulonglong(lastMsgId_),
+                   unsigned(lastfn_) );
 }
 
 
@@ -162,15 +183,16 @@ void InputStorage::dispatchMessages( MsgIter begin,
 void InputStorage::doTransfer( TransferRequester& req, unsigned count )
 {
     const regionid_type regId = req.getRegionId();
-    smsc_log_debug(log_,"transfer R=%u/D=%u started, count=%u", regId, dlvId_, count);
+    smsc_log_debug(log_,"FIXME: NEED OPTIMIZATION transfer R=%u/D=%u started, count=%u", regId, dlvId_, count);
     try {
-        smsc::core::buffers::TmpBuf<unsigned char,200> buf;
         InputRegionRecord ro;
         getRecord(regId,ro);
         if (ro.rfn==0) { ro.rfn=1; ro.roff=0; }
         FileGuard fg;
         MessageList msglist;
+        smsc::core::buffers::TmpBuf<char,8192> buf;
         while (count>0) {
+
             if (!fg.isOpened()) {
                 // need new file
                 if ( ro.rfn<ro.wfn || (ro.rfn==ro.wfn && ro.roff<ro.woff)) {
@@ -185,49 +207,81 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                 fg.ropen(fname.c_str());
                 fg.seek(ro.roff);
             }
-            // reading a message length
-            unsigned readlen = fg.read(buf,4);
-            if (readlen == 0) {
-                smsc_log_debug(log_,"R=%u/D=%u rfn=%u, roff=%u: EOF",
-                               regId, dlvId_, ro.rfn, ro.roff );
+
+            char* ptr = buf.get();
+            size_t wasread = fg.read(buf.GetCurPtr(),buf.getSize()-buf.GetPos());
+            if (wasread == 0) {
                 fg.close();
+                if (ptr<buf.GetCurPtr()) {
+                    smsc_log_warn(log_,"R=%u/D=%u RP=%u/%u: last record garbled, will wait here",
+                                  regId, dlvId_, ro.rfn, ro.roff );
+                    if (ro.rfn<ro.wfn) {
+                        throw InfosmeException("R=%u/D=%u garbled intermediate file", regId, dlvId_ );
+                    }
+                    break;
+                }
+                smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u: EOF",
+                               regId, dlvId_, ro.rfn, ro.roff );
                 if (ro.rfn<ro.wfn) {
                     ++ro.rfn;
                     ro.roff=0;
                 }
                 continue;
-            } else if (readlen != 4) {
-                throw InfosmeException("FIXME: R=%u/D=%u rfn=%u, roff=%u is corrupted: cannot read msglen",
-                                       regId, dlvId_, ro.rfn, ro.roff );
+            }
+            
+            buf.SetPos(buf.GetPos()+wasread);
+            while (ptr < buf.GetCurPtr()) {
                 
+                if (buf.GetCurPtr()-ptr < 2) {
+                    // too few items
+                    break;
+                }
+                FromBuf fb(ptr,2);
+                uint16_t reclen = fb.get16();
+                if (reclen>10000) {
+                    throw InfosmeException("FIXME: R=%u/D=%u RP=%u/%u is corrupted: reclen=%u is too big",
+                                           regId, dlvId_, ro.rfn, unsigned(fg.getPos()-(buf.GetCurPtr()-ptr)), reclen);
+                }
+                if ( ptr+2+reclen > buf.GetCurPtr() ) {
+                    // read more
+                    break;
+                }
+                fb.setLen(2+reclen);
+                msglist.push_back(MessageLocker());
+                MessageLocker& mlk = msglist.back();
+                mlk.locked = 0;
+                const uint8_t version = fb.get8();
+                if ( mlk.msg.fromBuf(version,fb).getPos() != size_t(2+reclen) ) {
+                    throw InfosmeException("R=%u/D=%u RP=%u/%u has extra data",
+                                           regId, dlvId_, ro.rfn, ro.roff );
+                }
+                glossary_.bindMessage(mlk.msg.text);
+                ptr += reclen+2;
+                ro.roff += reclen+2;
+                --count;
+                if (count==0) break;
+
+            } // while reading the chunk
+            
+            if (count == 0) break; // done
+
+            if (ptr>buf.get()) {
+                // shifting buffer back
+                char* o = buf.get();
+                const char* i = ptr;
+                const char* e = buf.GetCurPtr();
+                for ( ; i < e ; ) {
+                    *o++ = *i++;
+                }
+                buf.SetPos(o-buf.get());
+            } else if ( buf.GetPos() >= buf.getSize() ) {
+                // resize needed
+                buf.reserve(buf.getSize()+buf.getSize()/2+100);
             }
-            ro.roff += 4;
-            FromBuf fb(buf.get(),4);
-            const unsigned msglen = fb.get32();
-            if (msglen>10000) {
-                throw InfosmeException("FIXME: R=%u/D=%u rfn=%u, roff=%u is corrupted: msglen=%u is too big",
-                                       regId, dlvId_, ro.rfn, ro.roff, msglen);
-            }
-            buf.setSize(msglen);
-            readlen = fg.read(buf,msglen);
-            if (readlen != msglen) {
-                throw InfosmeException("FIXME: R=%u/D=%u rfn=%u, roff=%u is corrupted: msglen=%u != readlen=%u",
-                                       regId, dlvId_, ro.rfn, ro.roff, msglen, readlen);
-            }
-            ro.roff += msglen;
-            msglist.push_back(MessageLocker());
-            MessageLocker& mlk = msglist.back();
-            mlk.locked = 0;
-            fb.buflen = msglen;
-            fb.setPos(0);
-            readlen = unsigned(mlk.msg.fromBuf(::defaultVersion,fb).buf - buf.get());
-            if (readlen != msglen) {
-                throw InfosmeException("FIXME: R=%u/D=%u rfn=%u, roff=%u is corrupted: msglen=%u != msg.len=%u",
-                                       regId, dlvId_, ro.rfn, ro.roff, msglen, readlen);
-            }
-            glossary_.bindMessage(mlk.msg.text);
-            --count;
+
         } // while we need more messages
+
+        // we have read things
         if ( ! msglist.empty() ) {
             // write back record
             const msgtime_type currentTime = currentTimeMicro() / tuPerSec;
@@ -258,7 +312,7 @@ void InputStorage::getRecord( regionid_type regId, InputRegionRecord& ro )
             ro = *ptr;
         }
     }
-    smsc_log_debug(log_,"got record for D=%u R=%u: rfn=%u, roff=%u, wfn=%u, woff=%u, count=%u",
+    smsc_log_debug(log_,"got record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u",
                    unsigned(dlvId_), unsigned(regId),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
@@ -272,29 +326,37 @@ void InputStorage::setRecord( regionid_type regId, InputRegionRecord& ro, uint64
         smsc::core::synchronization::MutexGuard mg(lock_);
         InputRegionRecord* ptr = regions_.GetPtr(regId);
         assert(ptr);
-        if (ro.rfn>ptr->rfn) {
-            ptr->rfn = ro.rfn;
-            ptr->roff = ro.roff;
-        } else if (ro.rfn==ptr->rfn && ro.roff>ptr->roff) {
-            ptr->roff = ro.roff;
-        }
-        if (ro.wfn>ptr->wfn) {
-            ptr->wfn = ro.wfn;
-            ptr->woff = ro.woff;
-        } else if (ro.wfn==ptr->wfn && ro.woff>ptr->woff) {
-            ptr->woff = ro.woff;
-        }
-        if (ro.count>ptr->count) {
-            ptr->count = ro.count;
-        }
+        doSetRecord(*ptr,ro);
         ro = *ptr;
     }
-    smsc_log_debug(log_,"set record for D=%u R=%u: rfn=%u, roff=%u, wfn=%u, woff=%u, count=%u",
+    smsc_log_debug(log_,"set record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u",
                    unsigned(dlvId_), unsigned(regId),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
                    unsigned(ro.count) );
     jnl_.journalRecord(dlvId_,regId,ro,maxMsgId);
+}
+
+
+void InputStorage::doSetRecord( InputRegionRecord& to, const InputRegionRecord& ro )
+{
+    if (ro.rfn>to.rfn) {
+        to.rfn = ro.rfn;
+        to.roff = ro.roff;
+    } else if (ro.rfn==to.rfn && ro.roff>to.roff) {
+        to.roff = ro.roff;
+    }
+
+    if (ro.wfn>to.wfn) {
+        to.wfn = ro.wfn;
+        to.woff = ro.woff;
+    } else if (ro.wfn==to.wfn && ro.woff>to.woff) {
+        to.woff = ro.woff;
+    }
+
+    if (ro.count>to.count) {
+        to.count = ro.count;
+    }
 }
 
 

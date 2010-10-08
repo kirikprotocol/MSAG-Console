@@ -54,6 +54,8 @@ public:
         return jnl_.getCS().getStorePath();
     }
 
+    virtual void setInputRecord(regionid_type regid, const InputRegionRecord& ro, msgid_type maxMsgId);
+
 private:
     void dispatchMessages( MsgIter begin, MsgIter end, std::vector<regionid_type>& regs);
 
@@ -62,6 +64,7 @@ private:
 
     void getRecord(regionid_type regid, InputRegionRecord& ro);
     void setRecord(regionid_type regid, InputRegionRecord& ro, msgid_type maxMsgId = 0);
+    void doSetRecord( InputRegionRecord& to, const InputRegionRecord& from );
     std::string makeFilePath(regionid_type regId,uint32_t fn) const;
 
 private:

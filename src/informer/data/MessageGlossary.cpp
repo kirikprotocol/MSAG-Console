@@ -41,18 +41,15 @@ negTxtId_(0), posTxtId_(0)
         buf.SetPos(buf.GetPos()+wasread);
         std::auto_ptr< MessageText > mt;
         while ( ptr < buf.GetCurPtr() ) {
-            const char* end = reinterpret_cast<const char*>(memchr(ptr,'\n',buf.GetCurPtr()-ptr));
-            if (!end) break;
-            if (*(end-1)!='"') {
-                const size_t trunc = fg.getPos() - (buf.GetCurPtr()-ptr);
-                fg.close();
-                readGlossaryFailed(ims,trunc,"glossary text is not ended by quote");
-                break;
-            }
+            char* end = const_cast<char*>
+                (reinterpret_cast<const char*>
+                    (memchr(ptr,'\n',buf.GetCurPtr()-ptr)));
+            if (!end) break; // EOL not found
             // reading message text
+            *end = '\0';
             int shift = 0;
             unsigned txtId, replId;
-            sscanf(ptr,"%u,%u,\"%n",&replId,&txtId,&shift);
+            sscanf(ptr,"%u,%u,%n",&replId,&txtId,&shift);
             if (!shift) {
                 const size_t trunc = fg.getPos() - (buf.GetCurPtr()-ptr);
                 fg.close();
@@ -60,10 +57,10 @@ negTxtId_(0), posTxtId_(0)
                 break;
             }
             // scanning text
-            MessageText* mt = new MessageText(unescapeText(ptr+shift,0,end-ptr-1-shift),txtId);
+            MessageText* mt = new MessageText(unescapeText(ptr+shift,0,end-ptr-shift-1),txtId);
             mt->ref_ = replId;
             texts.push_back(mt);
-            ptr = const_cast<char*>(end+1);
+            ptr = end+1;
         }
         if ( ptr > buf.get() ) {
             // shifting buffer
@@ -201,7 +198,7 @@ void MessageGlossary::registerMessages( InputMessageSource& ims,
     FileGuard fg;
     fg.create((ims.getStorePath()+buf.get()).c_str(),true);
     for ( TextList::iterator i = texts.begin(); i != texts.end(); ++i ) {
-        int newpos = sprintf(buf.get(),"%u,%u,\"",(*i)->id_,(*i)->ref_);
+        int newpos = sprintf(buf.get(),"%u,%u,",(*i)->id_,(*i)->ref_);
         (*i)->ref_ = 1;
         if (newpos<=0) {
             registerFailed(texts,texts.end());
@@ -209,8 +206,8 @@ void MessageGlossary::registerMessages( InputMessageSource& ims,
         }
         buf.SetPos(size_t(newpos));
         escapeText(buf,(*i)->text_,strlen((*i)->text_));
-        buf.Append("\"\n",2);
-        fg.write(buf.get(),buf.GetPos());
+        *buf.GetCurPtr() = '\n';
+        fg.write(buf.get(),buf.GetPos()+1);
     }
     fg.close();
     list_.splice(list_.begin(),texts,texts.begin(),texts.end());

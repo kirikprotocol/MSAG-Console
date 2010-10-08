@@ -18,9 +18,11 @@ struct FromBuf
     const unsigned char* skip( size_t bytes );
     const char* getCString();
     void setPos( size_t newpos );
+    void setLen( size_t newlen );
+    inline size_t getPos() const { return pos; }
 private:
     FromBuf();
-public:
+private:
     const unsigned char* buf;
     size_t               buflen;
     size_t               pos;
@@ -39,6 +41,7 @@ struct ToBuf
     void setCString( const char* s );
     void skip( size_t bytes );
     void setPos( size_t newpos );
+    inline size_t getPos() const { return pos; }
 public:
     unsigned char* buf;
     size_t         buflen;
