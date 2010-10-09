@@ -2,7 +2,7 @@
 # ident "@(#)$Id$"
 # define __EYELINE_MAP_7F0_PROTO_ERR_CALLBARRINGCAUSE_HPP__
 
-# include <sys/types.h>
+# include <inttypes.h>
 
 namespace eyeline {
 namespace map {

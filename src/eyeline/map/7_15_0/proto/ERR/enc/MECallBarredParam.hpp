@@ -63,10 +63,10 @@ public:
     }
   }
 
-  void setCallBarringCause(const CallBarringCause& val) {
+  void setCallBarringCause(const CallBarringCause& value) {
     cleanup();
     _value.callBarringCause= new (_memAlloc.buf) MECallBarringCause(getTSRule());
-    _value.callBarringCause->setValue(val.value);
+    _value.callBarringCause->setValue(value);
     asn1::ber::EncoderOfChoice::setSelection(*_value.callBarringCause);
   }
 
