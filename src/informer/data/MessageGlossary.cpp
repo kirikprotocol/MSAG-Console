@@ -57,7 +57,7 @@ negTxtId_(0), posTxtId_(0)
                 break;
             }
             // scanning text
-            MessageText* mt = new MessageText(unescapeText(ptr+shift,0,end-ptr-shift-1),txtId);
+            MessageText* mt = new MessageText(unescapeText(ptr+shift,0,end-ptr-shift),txtId);
             mt->ref_ = replId;
             texts.push_back(mt);
             ptr = end+1;
