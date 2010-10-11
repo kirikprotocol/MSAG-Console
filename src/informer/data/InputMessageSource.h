@@ -80,9 +80,10 @@ public:
     virtual dlvid_type getDlvId() const = 0;
     virtual const std::string& getStorePath() const = 0;
 
-    virtual void setInputRecord( regionid_type      regionId,
-                                 const InputRegionRecord& rec,
-                                 uint64_t           maxMsgId ) = 0;
+    /// NOTE: this method is invoked at init ONLY!
+    virtual void setRecordAtInit( regionid_type            regionId,
+                                  const InputRegionRecord& rec,
+                                  uint64_t                 maxMsgId ) = 0;
 };
 
 } // informer

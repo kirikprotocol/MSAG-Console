@@ -16,10 +16,11 @@ class InputJournal
 public:
     struct Reader {
         virtual ~Reader() {}
-        virtual void setRecord( dlvid_type dlvId,
-                                regionid_type regionId,
-                                const InputRegionRecord& rec,
-                                uint64_t maxMsgId ) = 0;
+        /// NOTE: this method is invoked at init ONLY!
+        virtual void setRecordAtInit( dlvid_type               dlvId,
+                                      regionid_type            regionId,
+                                      const InputRegionRecord& rec,
+                                      uint64_t                 maxMsgId ) = 0;
     };
 
     InputJournal( const CommonSettings& cs );

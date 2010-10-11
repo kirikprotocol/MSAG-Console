@@ -54,7 +54,7 @@ public:
         return jnl_.getCS().getStorePath();
     }
 
-    virtual void setInputRecord(regionid_type regid, const InputRegionRecord& ro, msgid_type maxMsgId);
+    virtual void setRecordAtInit(regionid_type regid, const InputRegionRecord& ro, msgid_type maxMsgId);
 
 private:
     void dispatchMessages( MsgIter begin, MsgIter end, std::vector<regionid_type>& regs);

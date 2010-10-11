@@ -40,10 +40,10 @@ class InfosmeCoreV1::InputJournalReader : public InputJournal::Reader
 {
 public:
     InputJournalReader( InfosmeCoreV1& core ) : core_(core) {}
-    virtual void setRecord( dlvid_type    dlvId,
-                            regionid_type regionId,
-                            const InputRegionRecord& rec,
-                            uint64_t maxMsgId )
+    virtual void setRecordAtInit( dlvid_type               dlvId,
+                                  regionid_type            regionId,
+                                  const InputRegionRecord& rec,
+                                  uint64_t                 maxMsgId )
     {
         smsc_log_debug(core_.log_,"setting input record D=%u/R=%u",dlvId,regionId);
         DeliveryPtr* ptr = core_.deliveries_.GetPtr(dlvId);
@@ -51,7 +51,7 @@ public:
             smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);
             return;
         }
-        (*ptr)->setInputRecord( regionId, rec, maxMsgId );
+        (*ptr)->setRecordAtInit( regionId, rec, maxMsgId );
     }
 
 private:

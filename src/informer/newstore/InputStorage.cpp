@@ -28,13 +28,13 @@ dlvId_(dlvId),
 lastMsgId_(0),
 glossary_(*this)
 {
-    smsc_log_debug(log_,"ctor for D=%u, FIXME: read journal", unsigned(dlvId_));
+    smsc_log_debug(log_,"ctor for D=%u", unsigned(dlvId_));
 }
 
 
 InputStorage::~InputStorage()
 {
-    smsc_log_debug(log_,"dtor");
+    smsc_log_debug(log_,"dtor for D=%u", unsigned(dlvId_));
 }
 
 
@@ -82,9 +82,9 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
 }
 
 
-void InputStorage::setInputRecord( regionid_type regId,
-                                   const InputRegionRecord& ro,
-                                   uint64_t maxMsgId )
+void InputStorage::setRecordAtInit( regionid_type regId,
+                                    const InputRegionRecord& ro,
+                                    uint64_t maxMsgId )
 {
     InputRegionRecord* ptr = regions_.GetPtr(regId);
     if (ptr) {
@@ -183,7 +183,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
 void InputStorage::doTransfer( TransferRequester& req, unsigned count )
 {
     const regionid_type regId = req.getRegionId();
-    smsc_log_debug(log_,"FIXME: NEED OPTIMIZATION transfer R=%u/D=%u started, count=%u", regId, dlvId_, count);
+    smsc_log_debug(log_,"transfer R=%u/D=%u started, count=%u", regId, dlvId_, count);
     try {
         InputRegionRecord ro;
         getRecord(regId,ro);

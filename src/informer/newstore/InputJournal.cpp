@@ -113,11 +113,11 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
             rec.woff = fb.get32();
             rec.count = fb.get32();
             const uint64_t maxMsgId = fb.get32();
-            if (fb.getPos() != reclen+2) {
+            if (fb.getPos() != unsigned(reclen+2)) {
                 throw InfosmeException("journal '%s' record at %llu has extra data",
                                        jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)));
             }
-            reader.setRecord(dlvId,regId,rec,maxMsgId);
+            reader.setRecordAtInit(dlvId,regId,rec,maxMsgId);
             ++total;
             ptr += reclen+2;
         }

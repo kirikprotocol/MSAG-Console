@@ -40,10 +40,10 @@ public:
         cache_.addNewMessages(begin,end);
     }
 
-    // NOTE: should be invoked at start only!
-    void setInputRecord( regionid_type            regionId,
-                         const InputRegionRecord& rec,
-                         uint64_t                 maxMsgId );
+    // NOTE: this method is invoked at init ONLY!
+    void setRecordAtInit( regionid_type            regionId,
+                          const InputRegionRecord& rec,
+                          uint64_t                 maxMsgId );
 
 private:
     void ref() {
