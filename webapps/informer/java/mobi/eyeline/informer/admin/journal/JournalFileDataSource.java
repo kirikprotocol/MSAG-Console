@@ -262,7 +262,7 @@ class JournalFileDataSource implements JournalDataSource{
           for(File h : d.listFiles()) {
             Date hd = hdf.parse(y.getName()+m.getName()+d.getName()+h.getName().substring(0, h.getName().indexOf(".")));
 
-            if(hd.getTime() < SHOW_PERIOD) {
+            if(hd.getTime() < showFrom) {
               continue;
             }
 
