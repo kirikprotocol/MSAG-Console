@@ -49,7 +49,7 @@
         </eye:dataTableFilter>
 
         <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="r">
-          <eye:row>
+          <eye:row rowId="#{r.regionId}">
 
             <eye:column name="name" title="#{regionBundle.name}" sortable="true" width="25%" align="center">
               <h:commandLink value="#{r.name}" action="REGION_EDIT">
