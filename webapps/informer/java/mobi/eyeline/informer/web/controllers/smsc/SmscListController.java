@@ -60,6 +60,7 @@ public class SmscListController extends SmscController{
         getConfig().removeSmsc(smsc, getUserName());
       }catch (AdminException e){
         addError(e);
+        return null;
       }
       Iterator<RadioSmsc> i = smscs.iterator();
       while(i.hasNext()) {

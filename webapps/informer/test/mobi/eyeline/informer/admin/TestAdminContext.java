@@ -5,6 +5,8 @@ import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.informer.TestInformerConfigManager;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.regions.TestRegionsManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
@@ -23,6 +25,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), new File(config.getUsersFile()), false);
     TestUtils.exportResource(TestInformerConfigManager.class.getResourceAsStream("config.xml"), new File(baseDir, "conf"+File.separatorChar+"config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(baseDir, "conf"+File.separatorChar+"smsc.xml"), false);
+    TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(baseDir, "conf"+File.separatorChar+"regions.xml"), false);
   }
 
   public TestAdminContext(File appBaseDir, WebConfig webConfig) throws InitException {
@@ -41,6 +44,11 @@ public class TestAdminContext extends AdminContext {
           new File(appBaseDir, "conf"+File.separatorChar+"backup"), fileSystem);
       for(Smsc s : smscManager.getSmscs()) {
         infosme.addSmsc(s.getName());
+      }
+      regionsManager = new TestRegionsManager(infosme, new File(appBaseDir, "conf"+File.separatorChar+"regions.xml"),
+          new File(appBaseDir, "conf"+File.separatorChar+"backup"), fileSystem);
+      for(Region s : regionsManager.getRegions()) {
+        infosme.addRegion(s.getRegionId());
       }
     } catch (IOException e) {
       throw new InitException(e);

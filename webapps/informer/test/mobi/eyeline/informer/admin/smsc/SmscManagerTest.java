@@ -83,7 +83,7 @@ public class SmscManagerTest {
   @Test
   public void addRemove() throws Exception {
 
-    Smsc smsc = new Smsc("SMSC1");
+    Smsc smsc = new Smsc("SMSC8");
 
     smsc.setHost("niagara1");
     smsc.setInterfaceVersion(3113);
@@ -100,11 +100,11 @@ public class SmscManagerTest {
 
     Smsc s1 = smscManager.getSmsc(smsc.getName());
     assertTrue(s1.equals(smsc));
-    smscManager.removeSmsc("SMSC1");
+    smscManager.removeSmsc("SMSC8");
 
     before();
 
-    s1 = smscManager.getSmsc("SMSC1");
+    s1 = smscManager.getSmsc("SMSC8");
     assertTrue(s1 == null);
   }
 

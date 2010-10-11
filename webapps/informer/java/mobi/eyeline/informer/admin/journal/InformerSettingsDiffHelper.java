@@ -12,8 +12,8 @@ import java.util.List;
  */
 class InformerSettingsDiffHelper extends DiffHelper{
 
-  InformerSettingsDiffHelper(Subject subject) {
-    super(subject);
+  InformerSettingsDiffHelper() {
+    super(Subject.CONFIG);
   }
 
   void logChanges(Journal j, InformerSettings oldSettings, InformerSettings newSettings, String user) throws AdminException {

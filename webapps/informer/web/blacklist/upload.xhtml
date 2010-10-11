@@ -62,14 +62,15 @@
 
 
       <eye:updatableContent updatePeriod="1" rendered="#{blacklistUpload.state == 1}">
+
+        <tr:message id="upload_message"/>
+
         <eye:buttons>
           <eye:button rendered="#{blacklistUpload.finished}">
             <tr:commandLink text="#{msg['next.button']}" action="#{blacklistUpload.next}"/>
           </eye:button>
           <eye:space/>
         </eye:buttons>
-        
-        <h:outputText style="color:red;font-weight:bold" value="#{blacklistUpload.error}" rendered="#{blacklistUpload.error != null}"/>
 
         <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
           <h:outputText value="#{msg['processing.label']}"/>

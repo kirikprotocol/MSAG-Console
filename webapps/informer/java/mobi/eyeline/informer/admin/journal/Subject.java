@@ -14,7 +14,8 @@ public enum Subject {
   USERS("subject.user"),
   CONFIG("subject.config"),
   BLACKLIST("subject.blacklist"),
-  SMSC("subject.smsc");
+  SMSC("subject.smsc"),
+  REGIONS("subject.regions");
 
   private static Map<String, Subject> map = new HashMap<String, Subject>(values().length) {      {
       for(Subject s : Subject.values()) {

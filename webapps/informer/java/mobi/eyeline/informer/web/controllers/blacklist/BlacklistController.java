@@ -71,7 +71,7 @@ public class BlacklistController extends InformerController{
 
   private boolean validateMsisdn() {
     if(msisdn == null || !Address.validate(msisdn)) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "blacklist.validation.msisdn");
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "validation.msisdn");
       return false;
     }
     return true;

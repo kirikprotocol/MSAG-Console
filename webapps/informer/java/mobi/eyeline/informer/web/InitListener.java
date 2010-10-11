@@ -4,10 +4,10 @@ import mobi.eyeline.informer.admin.WebConfig;
 import mobi.eyeline.informer.util.xml.WebXml;
 import org.apache.log4j.Logger;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.Attributes;
@@ -28,27 +28,21 @@ public class InitListener implements ServletContextListener {
 
       WebXml webXml;
       InputStream is = null;
-        try{
-          is = servletContextEvent.getServletContext().getResourceAsStream("WEB-INF/web.xml");
-          webXml = new WebXml(is);
-        }finally {
-          if(is != null) {
-            try{
-              is.close();
-            }catch (IOException e){}
-          }
-        }
-
-      String webInf = servletContextEvent.getServletContext().getRealPath("WEB-INF");
-      if(webInf != null) {
-      System.setProperty("java.security.auth.login.config",
-          servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
-      }else {
-        if(System.getProperty("java.security.auth.login.config") == null) {
-          throw new Exception("Jaas config is not found");
+      try{
+        is = servletContextEvent.getServletContext().getResourceAsStream("WEB-INF/web.xml");
+        webXml = new WebXml(is);
+      }finally {
+        if(is != null) {
+          try{
+            is.close();
+          }catch (IOException e){}
         }
       }
 
+      if(System.getProperty("java.security.auth.login.config") == null) {
+        System.setProperty("java.security.auth.login.config",
+            servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
+      }
 
       File webconfig = new File(System.getProperty("informer.config.webconfig"));
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
@@ -59,9 +53,8 @@ public class InitListener implements ServletContextListener {
 
       context = WebContext.getInstance();
 
-      String metaInf = servletContextEvent.getServletContext().getRealPath("META-INF");
-
-      servletContextEvent.getServletContext().setAttribute("informer-version", metaInf == null ? "" : readVersion(metaInf));
+      servletContextEvent.getServletContext().setAttribute("informer-version",
+          readVersion(servletContextEvent.getServletContext()));
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -77,18 +70,17 @@ public class InitListener implements ServletContextListener {
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
-  private static String readVersion(String manifestDir) {
-    File f = new File(manifestDir + File.separator + "MANIFEST.MF");
-    if (!f.exists()) {
-      f = new File(manifestDir + File.separator + "manifest.mf");
-    }
-    if (!f.exists()) {
-      return null;
-    }
+  private static String readVersion(ServletContext context) {
     Manifest mf = new Manifest();
     InputStream is = null;
     try {
-      is = new FileInputStream(f);
+      is = context.getResourceAsStream("META-INF/MANIFEST.MF");
+      if(is == null) {
+        is = context.getResourceAsStream("META-INF/manifest.mf");
+      }
+      if(is == null) {
+        return null;
+      }
       mf.read(is);
     } catch (IOException e) {
       e.printStackTrace();

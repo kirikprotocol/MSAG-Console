@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.regions']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smsc">
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['upload.button']}" action="REGION_UPLOAD"/>
+        </eye:button>
+      </eye:buttons>
+
+      <h:panelGroup style="padding:10px">
+        <eye:dataTableFilter bean="#{regions}" clearAction="clearFilter">
+          <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
+              <h:outputText value="#{regionBundle.name}"/>
+              <h:inputText value="#{regions.regionPrefix}"/>
+              <h:outputText value="#{regionBundle.smsc}"/>
+              <h:selectOneMenu value="#{regions.smscPrefix}">
+                <f:selectItem itemLabel="" itemValue=""/>
+                <f:selectItems value="#{regions.smscs}"/>
+              </h:selectOneMenu>
+            </h:panelGrid>
+            <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
+              <h:outputText value="#{regionBundle.mask}"/>
+              <t:inputText value="#{regions.address}"/>
+            </h:panelGrid>
+          </h:panelGrid>
+        </eye:dataTableFilter>
+
+        <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="r">
+          <eye:row>
+
+            <eye:column name="name" title="#{regionBundle.name}" sortable="true" width="25%" align="center">
+              <h:commandLink value="#{r.name}" action="REGION_EDIT">
+                <f:param name="REGION_ID" value="#{r.regionId}"/>
+              </h:commandLink>
+            </eye:column>
+
+            <eye:column name="smsc" title="#{regionBundle.smsc}" sortable="true" width="25%" align="center">
+              <h:outputText value="#{r.smsc}"/>
+            </eye:column>
+
+            <eye:column name="timezone" title="#{regionBundle.timeZone}" sortable="true" width="25%" align="center">
+              <h:outputText value="#{r.timeZone}" converter="timeZoneConverter"/>
+            </eye:column>
+
+            <eye:column name="maxPerSecond" title="#{regionBundle.maxSmsPerSecond}" sortable="true" width="25%" align="center">
+              <h:outputText value="#{r.maxSmsPerSecond}"/>
+            </eye:column>
+
+          </eye:row>
+        </eye:dataTable>
+
+      </h:panelGroup>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['upload.button']}" action="REGION_UPLOAD"/>
+        </eye:button>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

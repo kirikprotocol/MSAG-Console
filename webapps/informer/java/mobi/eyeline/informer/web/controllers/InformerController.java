@@ -42,15 +42,24 @@ public abstract class InformerController implements Serializable {
   }
 
   /**
+   * Добавляет сообщение на страницу. Все осталные методы по добавлению используют этот метод.
+   * @param facesContext Faces Context
+   * @param message соббщение
+   * @param id id на странице
+   */
+  protected void addMessage(FacesContext facesContext, FacesMessage message, String id) {
+    facesContext.addMessage(id, message);
+  }
+
+  /**
    * Добавляет сообщение на страницу
    * @param severity severiry
    * @param message сообщение
    * @param detail подробности
    */
   protected void addMessage(FacesMessage.Severity severity, String message, String detail) {
-    FacesContext fc = FacesContext.getCurrentInstance();
     FacesMessage facesMessage = new FacesMessage(severity, message, detail);
-    fc.addMessage("informer_errors", facesMessage);
+    addMessage(FacesContext.getCurrentInstance(), facesMessage, "informer_errors");
   }
 
   /**
@@ -59,11 +68,7 @@ public abstract class InformerController implements Serializable {
    * @param bundleKey ключ сообщения в ResourceBundle-е
    */
   protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey) {
-    FacesContext fc = FacesContext.getCurrentInstance();
-
-    FacesMessage facesMessage = new FacesMessage(severity,
-        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey), "");
-    fc.addMessage("informer_errors", facesMessage);
+    addMessage(severity, ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey), "");
   }
   /**
    * Добавляет локализованное сообщение на страницу с дополнительными параметрами шаблона
@@ -183,12 +188,12 @@ public abstract class InformerController implements Serializable {
     }
   }
 
-   /**
+  /**
    * Метод для загрузки файла (требует переопределения в наследнике)
    * @param reader BufferedReader
    * @throws java.io.IOException ошибка чтения
    */
-  protected void _uploaded(BufferedReader reader) throws IOException{  
+  protected void _uploaded(BufferedReader reader) throws IOException{
   }
 
 }

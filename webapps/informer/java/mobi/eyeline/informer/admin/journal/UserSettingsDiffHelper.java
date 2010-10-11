@@ -14,8 +14,8 @@ import java.util.Map;
  */
 class UserSettingsDiffHelper extends DiffHelper {
 
-  public UserSettingsDiffHelper(Subject subject) {
-    super(subject);
+  public UserSettingsDiffHelper() {
+    super(Subject.USERS);
   }
 
   public void logChanges(Journal j, UsersSettings oldSettings, UsersSettings newSettings, String user) throws AdminException {

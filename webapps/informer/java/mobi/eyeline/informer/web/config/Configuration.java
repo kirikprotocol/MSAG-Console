@@ -5,8 +5,10 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.UsersSettings;
+import mobi.eyeline.informer.util.Address;
 
 import java.util.Collection;
 import java.util.EnumMap;
@@ -94,12 +96,13 @@ public class Configuration {
 
   public void removeFromBlacklist(String msisdn, String user) throws AdminException {
     context.removeFromBlacklist(msisdn);
+    journal.logRemoveBlacklist(msisdn, user);
   }
 
   public void removeFromBlacklist(Collection<String> msisdns, String user) throws AdminException {
     context.removeFromBlacklist(msisdns);
     for(String msisdn : msisdns) {
-      journal.logAddBlacklist(msisdn, user);
+      journal.logRemoveBlacklist(msisdn, user);
     }
   }
 
@@ -141,6 +144,38 @@ public class Configuration {
   public void addSmsc(Smsc smsc, String user) throws AdminException {
     context.addSmsc(smsc);
     journal.logAddSmsc(smsc.getName(), user);
+  }
+
+  public void removeRegion(String regionId, String user) throws AdminException {
+    Region r = getRegion(regionId);
+    if(r != null) {
+      context.removeRegion(r.getRegionId());
+      journal.logRemoveRegion(r.getName(), user);
+    }
+  }
+
+  public Region getRegion(String id) {
+    return context.getRegion(id);
+  }
+
+  public Region getRegion(Address a) {
+    return context.getRegion(a);
+  }
+
+
+  public List<Region> getRegions() {
+    return context.getRegions();
+  }
+
+  public void updateRegion(Region region, String user) throws AdminException {
+    Region oldRegion = context.getRegion(region.getRegionId());
+    context.updateRegion(region);
+    journal.logUpdateRegion(oldRegion, region, user);
+  }
+
+  public void addRegion(Region region, String user) throws AdminException {
+    context.addRegion(region);
+    journal.logAddRegion(region.getName(), user);
   }
 
   private final Lock lock = new ReentrantLock();

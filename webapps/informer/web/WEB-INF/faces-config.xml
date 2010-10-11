@@ -32,12 +32,21 @@
       <var>smscBundle</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.regions.Region</base-name>
+      <var>regionBundle</var>
+    </resource-bundle>
+
   </application>
 
-  <!--<converter>-->
-  <!--<converter-id>smpp_status_converter</converter-id>-->
-  <!--<converter-class>mobi.eyeline.informer.web.controllers.reschedule.SmppStatusConverter</converter-class>-->
-  <!--</converter>-->
+  <converter>
+    <converter-id>timeZoneConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.TimeZoneNameConverter</converter-class>
+  </converter>
+  <converter>
+    <converter-id>timeZoneIdConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.TimeZoneIdConverter</converter-class>
+  </converter>
 
 
   <render-kit>
@@ -84,7 +93,7 @@
     </renderer>
   </render-kit>
 
-  
+
 
   <managed-bean>
     <managed-bean-name>topMenu</managed-bean-name>
@@ -115,6 +124,25 @@
     <managed-bean-class>mobi.eyeline.informer.web.controllers.blacklist.BlacklistController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>regions</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.regions.RegionsListController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>regionsUpload</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.regions.RegionsUploadController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>regionEdit</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.regions.RegionEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
 
   <managed-bean>
     <managed-bean-name>smsc</managed-bean-name>
@@ -174,6 +202,20 @@
     <navigation-case>
       <from-outcome>SMSC_EDIT</from-outcome>
       <to-view-id>/smsc/edit.xhtml</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>REGION</from-outcome>
+      <to-view-id>/regions/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>REGION_UPLOAD</from-outcome>   
+      <to-view-id>/regions/upload.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>REGION_EDIT</from-outcome>
+      <to-view-id>/regions/edit.xhtml</to-view-id>
     </navigation-case>
   </navigation-rule>
 

@@ -10,15 +10,22 @@ import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.regions.RegionException;
+import mobi.eyeline.informer.admin.regions.RegionsManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
+import mobi.eyeline.informer.admin.smsc.SmscException;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.admin.users.UsersSettings;
+import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Класс для управления моделью
@@ -48,6 +55,8 @@ public class AdminContext {
   protected PersonalizationClientPool personalizationClientPool;
 
   protected SmscManager smscManager;
+
+  protected RegionsManager regionsManager;
 
   protected AdminContext() {
   }
@@ -88,6 +97,8 @@ public class AdminContext {
       blacklistManager = new BlackListManagerImpl(personalizationClientPool);
 
       smscManager = new SmscManager(infosme, new File(appBaseDir,"conf"+File.separatorChar+"smsc.xml"),
+          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
+      regionsManager = new RegionsManager(infosme, new File(appBaseDir,"conf"+File.separatorChar+"regions.xml"),
           new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
     }catch (AdminException e) {
       throw new InitException(e);
@@ -157,6 +168,8 @@ public class AdminContext {
     return blacklistManager.contains(msisdn);
   }
 
+  final private Lock regionsSmscLock = new ReentrantLock();
+
   public void addSmsc(Smsc smsc) throws AdminException {
     smscManager.addSmsc(smsc);
   }
@@ -174,7 +187,15 @@ public class AdminContext {
   }
 
   public void removeSmsc(String smscName) throws AdminException {
-    smscManager.removeSmsc(smscName);
+    try{
+      regionsSmscLock.lock();
+      if(!regionsManager.getRegionsBySmsc(smscName).isEmpty()) {
+        throw new SmscException("smsc_used_in_regions", smscName);
+      }
+      smscManager.removeSmsc(smscName);
+    }finally {
+      regionsSmscLock.unlock();
+    }
   }
 
   public void setDefaultSmsc(String smsc) throws AdminException {
@@ -184,4 +205,46 @@ public class AdminContext {
   public String getDefaultSmsc() {
     return smscManager.getDefaultSmsc();
   }
+
+  public void addRegion(Region region) throws AdminException{
+    try{
+      regionsSmscLock.lock();
+      if(smscManager.getSmsc(region.getSmsc()) == null) {
+        throw new RegionException("smsc_not_exist", region.getSmsc());
+      }
+      regionsManager.addRegion(region);
+    }finally {
+      regionsSmscLock.unlock();
+    }
+  }
+
+  public void updateRegion(Region region) throws AdminException{
+    try{
+      regionsSmscLock.lock();
+      if(smscManager.getSmsc(region.getSmsc()) == null) {
+        throw new RegionException("smsc_not_exist", region.getSmsc());
+      }
+      regionsManager.updateRegion(region);
+    }finally {
+      regionsSmscLock.unlock();
+    }
+  }
+
+  public void removeRegion(String regionId) throws AdminException{
+    regionsManager.removeRegion(regionId);
+  }
+
+  public Region getRegion(String regionId){
+    return regionsManager.getRegion(regionId);
+  }
+
+  public Region getRegion(Address address){
+    return regionsManager.getRegion(address);
+  }
+
+  public List<Region> getRegions() {
+    return regionsManager.getRegions();
+  }
+
+
 }

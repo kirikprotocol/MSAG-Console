@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.journal;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
+import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.UsersSettings;
 
@@ -18,11 +19,13 @@ import java.util.List;
 public class Journal {
 
 
-  private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(Subject.USERS);
+  private final UserSettingsDiffHelper users = new UserSettingsDiffHelper();
 
-  private final InformerSettingsDiffHelper informer = new InformerSettingsDiffHelper(Subject.CONFIG);
+  private final InformerSettingsDiffHelper informer = new InformerSettingsDiffHelper();
 
-  private final SmscDiffHelper smsc = new SmscDiffHelper(Subject.SMSC);
+  private final SmscDiffHelper smsc = new SmscDiffHelper();
+
+  private final RegionsDiffHelper regions = new RegionsDiffHelper();
 
   private final JournalDataSource ds;
 
@@ -82,17 +85,6 @@ public class Journal {
     ds.addRecords(new JournalRecord(type).
         setSubject(subject).setUser(user).setDescription(description, args));
   }
-//
-//  public void logChangesForObjects(Object oldObj, Object newObj, String user) {
-//    if (oldObj instanceof SmscSettings)
-//      logChanges((SmscSettings)oldObj, (SmscSettings)newObj, user);
-//    else if (oldObj instanceof RescheduleSettings)
-//      logChanges((RescheduleSettings)oldObj, (RescheduleSettings)newObj, user);
-//    else if (oldObj instanceof UsersSettings)
-//      logChanges((UsersSettings)oldObj, (UsersSettings)newObj, user);
-//    else if (oldObj instanceof MapLimitSettings)
-//      logChanges((MapLimitSettings)oldObj, (MapLimitSettings)newObj, user);
-//  }
 
   /**
    * Ищет различия между настройками пользователей и записывает их в журнал
@@ -133,6 +125,38 @@ public class Journal {
    */
   public void logRemoveBlacklist(String address, String user) throws AdminException {
     addRecord(JournalRecord.Type.REMOVE, Subject.BLACKLIST, user, "blacklist_removed", address);
+  }
+
+
+  /**
+   * Добавляет в журнал запись о новом регионе
+   * @param region регион
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logAddRegion(String region, String user) throws AdminException{
+    this.regions.logAddRegion(region, this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об удалении региона
+   * @param region регион
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logRemoveRegion(String region, String user) throws AdminException{
+    this.regions.logRemoveRegion(region, this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об обновлении региона
+   * @param oldRegion старый регион
+   * @param newRegion новый регион
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logUpdateRegion(Region oldRegion, Region newRegion, String user) throws AdminException{
+    this.regions.logChanges(oldRegion, newRegion, this, user);
   }
 
   /**
