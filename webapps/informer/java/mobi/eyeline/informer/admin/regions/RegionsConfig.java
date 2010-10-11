@@ -27,7 +27,7 @@ class RegionsConfig  implements ManagedConfigFile<RegionsSettings> {
       region.setAttribute("id", r.getRegionId());
       region.setAttribute("name", r.getName());
       region.setAttribute("timezone", new StringBuilder(50).
-          append(r.getTimeZone().getRawOffset()).append(',').append(r.getTimeZone().getID()).toString());
+          append(r.getTimeZone().getRawOffset()/1000).append(',').append(r.getTimeZone().getID()).toString());
       region.setAttribute("infosme_smsc", r.getSmsc());
       region.setAttribute("max_per_second", Integer.toString(r.getMaxSmsPerSecond()));
       for(Address a : r.getMasks()) {
