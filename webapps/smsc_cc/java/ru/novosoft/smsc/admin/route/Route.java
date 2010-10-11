@@ -47,6 +47,10 @@ public class Route implements Serializable {
     this.name = name;
   }
 
+  public Route() {
+    
+  }
+
   public String getName() {
     return name;
   }

@@ -88,6 +88,11 @@
       <var>profile</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.route.Route</base-name>
+      <var>route</var>
+    </resource-bundle>
+
   </application>
 
   <converter>
@@ -356,6 +361,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>routes</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.route.RouteListController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -501,6 +512,15 @@
       <from-outcome>TIMEZONES</from-outcome>
       <to-view-id>/smsc/timezones/edit.faces</to-view-id>
       <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>ROUTES</from-outcome>
+      <to-view-id>/smsc/route/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>ROUTE_EDIT</from-outcome>
+      <to-view-id>/smsc/route/edit.faces</to-view-id>
     </navigation-case>
 
   </navigation-rule>

@@ -1,0 +1,103 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+    >
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['routes.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!routes.initFailed}">
+
+      <h:inputHidden value="#{routes.revision}"/>
+
+      <eye:dataTableFilter bean="#{routes}" clearAction="clearFilter">
+        <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <tr:panelFormLayout inlineStyle="padding:10px">
+            <tr:panelLabelAndMessage label="#{msg['routes.page.name']}">
+              <tr:inputText value="#{routes.nameFilter}"/>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['routes.page.srcSmeId']}">
+              <tr:inputText value="#{routes.srcSmeFilter}"/>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['routes.page.dstSmeId']}">
+              <tr:inputText value="#{routes.dstSmeFilter}"/>
+            </tr:panelLabelAndMessage>
+          </tr:panelFormLayout>
+
+          <tr:panelFormLayout inlineStyle="padding:10px">
+            <tr:panelLabelAndMessage label="#{msg['routes.page.subject']}">
+              <tr:inputText value="#{routes.subjectFilter}"/>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['routes.page.mask']}">
+              <tr:inputText value="#{routes.maskFilter}"/>
+            </tr:panelLabelAndMessage>
+          </tr:panelFormLayout>
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <eye:dataTable value="#{routes.routes}" var="route" selectedRows="#{routes.routes2remove}">
+        <eye:row innerData="#{not empty route.notes}" rowId="#{route.name}">
+
+          <eye:column name="name" title="#{route['name']}" sortable="true" defaultSortOrder="asc" width="60%">
+            <h:commandLink accesskey="ROUTE_EDIT" value="#{route.name}" immediate="true">
+              <f:param name="route" value="#{route.name}"/>
+            </h:commandLink>
+          </eye:column>
+
+          <eye:column name="active" title="#{route['active']}" width="7%" align="center">
+            <tr:image source="/images/ic_checked.gif" rendered="#{route.active}"/>
+          </eye:column>
+
+          <eye:column name="allowed" title="#{route['enabling']}" width="7%" align="center">
+            <tr:image source="/images/ic_checked.gif" rendered="#{route.enabling}"/>
+          </eye:column>
+
+          <eye:column name="billing" title="#{route['billing']}" width="7%" align="center">
+            <h:outputText value="#{route.billing}"/>
+          </eye:column>
+
+          <eye:column name="archiving" title="#{route['archiving']}" width="7%" align="center">
+            <tr:image source="/images/ic_checked.gif" rendered="#{route.archiving}"/>
+          </eye:column>
+
+          <eye:column name="reports" title="#{msg['routes.page.reports']}" width="7%" align="center">
+            <tr:image source="/images/ic_checked.gif" rendered="#{route.suppressDeliveryReports}"/>
+          </eye:column>
+
+          <eye:column name="transit" title="#{route['transit']}" width="7%" align="center">
+            <tr:image source="/images/ic_checked.gif" rendered="#{route.transit}"/>
+          </eye:column>
+
+          <f:facet name="innerData">
+            <h:outputText value="#{route.notes}"/>
+          </f:facet>
+
+        </eye:row>
+
+      </eye:dataTable>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['add.button']}" action="ROUTE_EDIT" immediate="true"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{routes.removeRoutes}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/></eye:button>
+        <eye:space/>
+        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{routes.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{routes.reset}" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
