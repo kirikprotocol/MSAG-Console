@@ -14,10 +14,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Файловый сторадж журнала
+ * Возвращает записи, созданные не более 1 недели назад
  * @author Aleksandr Khalitov
  */
-class JournalFileDataSource implements JournalDataSource{ 
+class JournalFileDataSource implements JournalDataSource{
 
+  private static final long SHOW_PERIOD = 7*24*60*60*1000;
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -231,6 +233,8 @@ class JournalFileDataSource implements JournalDataSource{
 
     List<File> results = new LinkedList<File>();
 
+    long showFrom = System.currentTimeMillis() - SHOW_PERIOD;
+
     for(File y : journalDir.listFiles()) {
       Date yd = ydf.parse(y.getName());
       if(toDate != null && yd.after(ydf.parse(ydf.format(toDate))))  {
@@ -257,6 +261,11 @@ class JournalFileDataSource implements JournalDataSource{
           }
           for(File h : d.listFiles()) {
             Date hd = hdf.parse(y.getName()+m.getName()+d.getName()+h.getName().substring(0, h.getName().indexOf(".")));
+
+            if(hd.getTime() < SHOW_PERIOD) {
+              continue;
+            }
+
             if(toDate != null && hd.after(hdf.parse(hdf.format(toDate))))  {
               continue;
             }
@@ -269,7 +278,7 @@ class JournalFileDataSource implements JournalDataSource{
       }
     }
     if(!results.isEmpty()) {
-      Collections.sort(results); 
+      Collections.sort(results);
     }
     return results;
   }
