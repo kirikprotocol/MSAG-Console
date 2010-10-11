@@ -217,7 +217,7 @@ class JournalFileDataSource implements JournalDataSource{
     return record;
   }
 
-  private Collection<File> getFiles(final JournalFilter filter) throws ParseException {
+  private List<File> getFiles(final JournalFilter filter) throws ParseException {
 
     SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHH");
 
@@ -229,7 +229,7 @@ class JournalFileDataSource implements JournalDataSource{
     SimpleDateFormat ddf = new SimpleDateFormat("yyyyMMdd");
     SimpleDateFormat hdf = new SimpleDateFormat("yyyyMMddHH");
 
-    Collection<File> results = new LinkedList<File>();
+    List<File> results = new LinkedList<File>();
 
     for(File y : journalDir.listFiles()) {
       Date yd = ydf.parse(y.getName());
@@ -268,7 +268,9 @@ class JournalFileDataSource implements JournalDataSource{
         }
       }
     }
-
+    if(!results.isEmpty()) {
+      Collections.sort(results); 
+    }
     return results;
   }
 }

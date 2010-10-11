@@ -42,20 +42,21 @@ public class Journal {
   }
 
   /**
-   * Возвращает все записи из журнала, удовлетворяющие фильтру
+   * Возвращает все записи из журнала, удовлетворяющие фильтру (ограничение: 1000 записей)
    * @param filter фильтр записей
    * @return все записи из журнала, удовлетворяющие фильтру
    * @throws mobi.eyeline.informer.admin.AdminException ошибка при извлечении записей
    */
   public List<JournalRecord> getRecords(JournalFilter filter) throws AdminException {
-    final List<JournalRecord> records = new LinkedList<JournalRecord>();
+    final LinkedList<JournalRecord> records = new LinkedList<JournalRecord>();
     ds.visit(filter, new JournalVisitor() {
       private static final int LIMIT = 1000;
-      private int count = 0;
       public boolean visit(JournalRecord r) {
-        records.add(r);
-        count++;
-        return count != LIMIT;
+        if(records.size() == LIMIT) {
+          records.removeFirst();
+        }
+        records.addLast(r);
+        return true;
       }
     });
     return records;
