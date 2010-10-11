@@ -17,7 +17,8 @@ class SmscConfig implements ManagedConfigFile<SmscSettings> {
   public void save(InputStream oldFile, OutputStream newFile, SmscSettings conf) throws Exception {
     XmlConfig config = new XmlConfig();
     config.load(oldFile);
-    XmlConfigSection  smscConnectors = new XmlConfigSection("SMSCConnectors");
+    XmlConfigSection  smscConnectors = config.getOrCreateSection("SMSCConnectors");
+    smscConnectors.clearSections();
     for(Smsc s : conf.getSmscs()) {
       XmlConfigSection section = new XmlConfigSection(s.getName());
       s.save(section);

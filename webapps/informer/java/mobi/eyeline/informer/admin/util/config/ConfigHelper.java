@@ -34,7 +34,7 @@ public class ConfigHelper {
   public static void saveXmlConfig(XmlConfig config, File toFile, File backupDir, FileSystem fileSystem) throws AdminException, XmlConfigException {
 
     if (backupDir != null) {
-      createBackup(toFile, backupDir, fileSystem);
+      rollbackConfig(toFile, backupDir, fileSystem);
     }
 
     File tmp = new File(toFile.getAbsolutePath() + ".tmp");
@@ -56,11 +56,37 @@ public class ConfigHelper {
     fileSystem.rename(tmp, toFile);
   }
 
-  public static void createBackup(File file, File backupDir, FileSystem fileSystem) throws AdminException {
-    if (!fileSystem.exists(backupDir))
-        fileSystem.mkdirs(backupDir);
-      File backupFile = new File(backupDir, file.getName() + "." + sdf.format(new Date()));
-      if (fileSystem.exists(file))
-        fileSystem.copy(file, backupFile);
+  /**
+   * Создаёт бэкап файла
+   * @param file имя файла
+   * @param backupDir директория для бэкапа
+   * @param fileSystem файловая система
+   * @return файл бэкапа
+   * @throws AdminException ошибка при создании файла
+   */
+  public static File createBackup(File file, File backupDir, FileSystem fileSystem) throws AdminException {
+    if (!fileSystem.exists(backupDir)) {
+      fileSystem.mkdirs(backupDir);
+    }
+    File backupFile = new File(backupDir, file.getName() + "." + sdf.format(new Date()));
+    if (fileSystem.exists(file)) {
+      fileSystem.copy(file, backupFile);
+    }
+    return backupFile;
   }
+
+  /**
+   * Восстанавливает файл из бэкапа
+   * @param file имя файла
+   * @param configFile файл конфига
+   * @param fileSystem файловая система
+   * @throws AdminException ошибка при создании файла
+   */
+  public static void rollbackConfig(File file, File configFile, FileSystem fileSystem) throws AdminException {
+    if (fileSystem.exists(file)) {
+      fileSystem.copy(file, configFile);
+    }
+  }
+
+
 }

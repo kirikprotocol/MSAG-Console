@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.util.config.ConfigFileManager;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -17,6 +18,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Aleksandr Khalitov
  */
 public class SmscManager {
+
+  private static final Logger logger = Logger.getLogger(SmscManager.class);
 
   private Infosme infosme;
 
@@ -41,8 +44,17 @@ public class SmscManager {
   }
 
 
-  private void save() throws AdminException {
-      cfgFileManager.save(settings);
+  private File save() throws AdminException {
+    return cfgFileManager.save(settings);
+  }
+
+  private void rollback(File backupFile) {
+    try{
+      cfgFileManager.rollback(backupFile);
+      settings = cfgFileManager.load();
+    }catch (Exception ex){
+      logger.error(ex,ex);
+    }
   }
 
   /**
@@ -54,9 +66,14 @@ public class SmscManager {
     try{
       lock.writeLock().lock();
       settings.addSmsc(smsc);
-      save();
+      File backup = save();
       if(infosme.isOnline()) {
-        infosme.addSmsc(smsc.getName());
+        try{
+          infosme.addSmsc(smsc.getName());
+        }catch (AdminException e) {
+          rollback(backup);
+          throw e;
+        }
       }
     }finally {
       lock.writeLock().unlock();
@@ -73,9 +90,14 @@ public class SmscManager {
     try{
       lock.writeLock().lock();
       settings.updateSmsc(smsc);
-      save();
+      File backup = save();
       if(infosme.isOnline()) {
-        infosme.updateSmsc(smsc.getName());
+        try{
+          infosme.updateSmsc(smsc.getName());
+        }catch (AdminException e) {
+          rollback(backup);
+          throw e;
+        }
       }
     }finally {
       lock.writeLock().unlock();
@@ -123,9 +145,14 @@ public class SmscManager {
     try{
       lock.writeLock().lock();
       settings.removeSmsc(smscName);
-      save();
+      File backup = save();
       if(infosme.isOnline()) {
-        infosme.removeSmsc(smscName);
+        try{
+          infosme.removeSmsc(smscName);
+        }catch (AdminException e) {
+          rollback(backup);
+          throw e;
+        }
       }
     }finally {
       lock.writeLock().unlock();
@@ -141,9 +168,14 @@ public class SmscManager {
     try{
       lock.writeLock().lock();
       settings.setDefaultSmsc(smsc);
-      save();
+      File backup = save();
       if(infosme.isOnline()) {
-        infosme.setDefaultSmsc(smsc);
+        try{
+          infosme.setDefaultSmsc(smsc);
+        }catch (AdminException e) {
+          rollback(backup);
+          throw e;
+        }
       }
     }finally {
       lock.writeLock().unlock();

@@ -39,9 +39,9 @@ public class ConfigFileManager<C> {
     return fileSystem;
   }
 
-  public void save(C conf) throws AdminException {
+  public File save(C conf) throws AdminException {
 
-    ConfigHelper.createBackup(configFile, backupDir, fileSystem);
+    File backup = ConfigHelper.createBackup(configFile, backupDir, fileSystem);
 
     InputStream is = null;
     OutputStream os = null;
@@ -72,6 +72,11 @@ public class ConfigFileManager<C> {
 
     fileSystem.delete(configFile);
     fileSystem.rename(tmpConfigFile, configFile);
+    return backup;
+  }
+
+  public void rollback(File backupFile) throws AdminException {
+    ConfigHelper.rollbackConfig(backupFile, configFile, fileSystem);
   }
 
   public C load() throws AdminException {

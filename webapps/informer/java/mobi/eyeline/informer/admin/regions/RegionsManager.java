@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.util.config.ConfigFileManager;
 import mobi.eyeline.informer.util.Address;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.Collection;
@@ -20,6 +21,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class RegionsManager {
 
+  private static final Logger logger = Logger.getLogger(RegionsManager.class);
 
   private Infosme infosme;
 
@@ -42,10 +44,19 @@ public class RegionsManager {
     }
   }
 
-
-  private void save() throws AdminException {
-    cfgFileManager.save(settings);
+  private File save() throws AdminException {
+    return cfgFileManager.save(settings);
   }
+
+  private void rollback(File backupFile) {
+    try{
+      cfgFileManager.rollback(backupFile);
+      settings = cfgFileManager.load();
+    }catch (Exception ex){
+      logger.error(ex,ex);
+    }
+  }
+
 
   /**
    * Добавляет новый регион
@@ -56,9 +67,14 @@ public class RegionsManager {
     try{
       lock.writeLock().lock();
       settings.addRegion(region);
-      save();
+      File backup = save();
       if(infosme.isOnline()) {
-        infosme.addRegion(region.getRegionId());
+        try{
+          infosme.addRegion(region.getRegionId());
+        }catch (AdminException e){
+          rollback(backup);
+          throw e;
+        }
       }
     }finally {
       lock.writeLock().unlock();
@@ -75,9 +91,14 @@ public class RegionsManager {
     try{
       lock.writeLock().lock();
       settings.updateRegion(region);
-      save();
+      File backup = save();
       if(infosme.isOnline()) {
-        infosme.updateRegion(region.getRegionId());
+        try{
+          infosme.updateRegion(region.getRegionId());
+        }catch (AdminException e){
+          rollback(backup);
+          throw e;
+        }
       }
     }finally {
       lock.writeLock().unlock();
@@ -125,9 +146,14 @@ public class RegionsManager {
     try{
       lock.writeLock().lock();
       settings.removeRegion(regionId);
-      save();
+      File backup = save();
       if(infosme.isOnline()) {
-        infosme.removeRegion(regionId);
+        try{
+          infosme.removeRegion(regionId);
+        }catch (AdminException e){
+          rollback(backup);
+          throw e;
+        }
       }
     }finally {
       lock.writeLock().unlock();

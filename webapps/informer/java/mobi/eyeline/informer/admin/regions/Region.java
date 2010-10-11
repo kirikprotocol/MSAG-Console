@@ -105,7 +105,7 @@ public class Region {
     r.smsc = smsc;
     r.maxSmsPerSecond = maxSmsPerSecond;
     r.name = name;
-    r.timeZone = TimeZone.getTimeZone(timeZone.getID());
+    r.timeZone = timeZone == null ? null : TimeZone.getTimeZone(timeZone.getID());
     for(Address a : masks) {
       r.masks.add(new Address(a.getTone(), a.getNpi(), a.getAddress()));
     }

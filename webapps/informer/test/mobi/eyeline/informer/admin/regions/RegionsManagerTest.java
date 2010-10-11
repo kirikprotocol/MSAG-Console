@@ -1,7 +1,9 @@
 package mobi.eyeline.informer.admin.regions;
 
+import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
+import mobi.eyeline.informer.admin.infosme.InfosmeException;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.util.Address;
 import org.junit.AfterClass;
@@ -21,10 +23,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class RegionsManagerTest {
 
-
   private static File configFile, backupDir;
 
   private RegionsManager regionsManager;
+
+  private boolean infosmeError = false;
 
   @BeforeClass
   public static void init() throws Exception{
@@ -34,15 +37,39 @@ public class RegionsManagerTest {
 
   @Before
   public void before() throws Exception {
-    Infosme infosem = new TestInfosme();
+    Infosme infosem = new TestInfosme(){
+      @Override
+      public void addRegion(String regionId) throws AdminException {
+        if(infosmeError) {
+          throw new InfosmeException("interaction_error","");
+        }
+        super.addRegion(regionId);
+      }
+
+      @Override
+      public void updateRegion(String regionId) throws AdminException {
+        if(infosmeError) {
+          throw new InfosmeException("interaction_error","");
+        }
+        super.updateRegion(regionId);
+      }
+
+      @Override
+      public void removeRegion(String regionId) throws AdminException {
+        if(infosmeError) {
+          throw new InfosmeException("interaction_error","");
+        }
+        super.removeRegion(regionId);
+      }
+    };
     regionsManager = new RegionsManager(infosem, configFile, backupDir, FileSystem.getFSForSingleInst());
     for(Region s : regionsManager.getRegions()) {
       infosem.addRegion(s.getName());
     }
   }
-  
-  
-  
+
+
+
   @Test
   public void update() throws Exception {
     Region region = regionsManager.getRegion(new Address("+79139??????"));
@@ -108,12 +135,79 @@ public class RegionsManagerTest {
     r1 = regionsManager.getRegion(r1.getRegionId());
     assertTrue(r1 == null);
   }
-  
-  
 
-  
-  
-  
+
+  @Test
+  public void testAddRollback() throws AdminException {
+    try{
+      infosmeError = true;
+      Region r1 = new Region();
+      r1.setName("МР СЕВЕР");
+      r1.setMaxSmsPerSecond(3113);
+      r1.setSmsc("SMSC_ERROR");
+      r1.setTimeZone(TimeZone.getDefault());
+
+      r1.addMask(new Address("+79039??????"));
+
+      long beforeLenght = configFile.length();
+      try{
+        regionsManager.addRegion(r1);
+        assertTrue(false);
+      }catch (AdminException e){}
+
+      long afterLenght = configFile.length();
+      assertEquals(beforeLenght, afterLenght);
+      assertEquals(regionsManager.getRegionsBySmsc(r1.getSmsc()).size(), 0);
+    }finally {
+      infosmeError = false;
+    }
+  }
+
+  @Test
+  public void testRemoveRollback() throws AdminException {
+    try{
+      infosmeError = true;
+
+      Region r1 = regionsManager.getRegions().iterator().next();
+
+      long beforeLenght = configFile.length();
+      try{
+        regionsManager.removeRegion(r1.getRegionId());
+        assertTrue(false);
+      }catch (AdminException e){}
+
+      long afterLenght = configFile.length();
+      assertEquals(beforeLenght, afterLenght);
+      assertTrue(regionsManager.getRegion(r1.getRegionId()) != null);
+    }finally {
+      infosmeError = false;
+    }
+  }
+
+  @Test
+  public void testUpdateRollback() throws AdminException {
+    try{
+      infosmeError = true;
+
+      Region r1 = regionsManager.getRegions().iterator().next();
+      r1.setName(r1.getName()+"-");
+
+      long beforeLenght = configFile.length();
+      try{
+        regionsManager.updateRegion(r1);
+        assertTrue(false);
+      }catch (AdminException e){}
+
+      long afterLenght = configFile.length();
+      assertEquals(beforeLenght, afterLenght);
+      assertTrue(regionsManager.getRegion(r1.getRegionId()) != null);
+      assertTrue(regionsManager.getRegion(r1.getRegionId()).getName().equals(r1.getName().substring(0, r1.getName().length()-1)));
+    }finally {
+      infosmeError = false;
+    }
+  }   
+
+
   @SuppressWarnings({"ResultOfMethodCallIgnored"})
   @AfterClass
   public static void shutdown() {
