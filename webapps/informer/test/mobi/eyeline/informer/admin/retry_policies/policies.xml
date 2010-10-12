@@ -1,0 +1,22 @@
+<config>
+
+  <section name="RetryPolicies">
+
+    <section name="default">
+      <param name="default" type="int">601</param>
+
+      <param name="1025" type="int">500</param>
+    </section>
+
+    <section name="somepolicy">
+      <param name="default" type="int">3600</param>
+    </section>
+
+    <section name="test policy">
+      <param name="default" type="int">60</param>
+      <param name="1024" type="int">800</param>
+    </section>
+
+  </section>
+
+</config>

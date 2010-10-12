@@ -13,6 +13,8 @@ import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.RegionException;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
+import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
+import mobi.eyeline.informer.admin.retry_policies.RetryPolicyManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.SmscException;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
@@ -58,6 +60,8 @@ public class AdminContext {
 
   protected RegionsManager regionsManager;
 
+  protected RetryPolicyManager retryPolicyManager;
+  
   protected AdminContext() {
   }
 
@@ -100,6 +104,10 @@ public class AdminContext {
           new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
       regionsManager = new RegionsManager(infosme, new File(appBaseDir,"conf"+File.separatorChar+"regions.xml"),
           new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
+
+      retryPolicyManager = new RetryPolicyManager(infosme, new File(appBaseDir,"conf"+File.separatorChar+"policies.xml"),
+          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
+      
     }catch (AdminException e) {
       throw new InitException(e);
     }catch (PersonalizationClientException e) {
@@ -246,5 +254,26 @@ public class AdminContext {
     return regionsManager.getRegions();
   }
 
+
+  public RetryPolicy getRetryPolicy(String policyId) throws AdminException{
+    return retryPolicyManager.getRetryPolicy(policyId);
+  }
+
+  public List<RetryPolicy> getRetryPolicies() throws AdminException{
+    return retryPolicyManager.getRetryPolicies();
+  }
+
+  public void addRetryPolicy(RetryPolicy rp) throws AdminException{
+    retryPolicyManager.addRetryPolicy(rp);
+  }
+
+  public void updateRetryPolicy(RetryPolicy rp) throws AdminException{
+    retryPolicyManager.updateRetryPolicy(rp);
+  }
+
+  public void removeRetryPolicy(String policyId) throws AdminException{
+    retryPolicyManager.removeRetryPolicy(policyId);
+  }
+  
 
 }

@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.UsersSettings;
 import mobi.eyeline.informer.util.Address;
@@ -177,6 +178,31 @@ public class Configuration {
     context.addRegion(region);
     journal.logAddRegion(region.getName(), user);
   }
+  
+  public List<RetryPolicy> getRetryPolicies() throws AdminException {
+    return context.getRetryPolicies();
+  }
+
+  public RetryPolicy getRetryPolicy(String policyId) throws AdminException {
+    return context.getRetryPolicy(policyId);
+  }
+
+  public void updateRetryPolicy(RetryPolicy rp, String user) throws AdminException {
+    RetryPolicy rpOld = context.getRetryPolicy(rp.getPolicyId());
+    context.updateRetryPolicy(rp);
+    journal.logUpdateRetryPolicy(rpOld,rp,user);
+  }
+
+  public void addRetryPolicy(RetryPolicy rp, String user) throws AdminException {
+    context.addRetryPolicy(rp);
+    journal.logAddRetryPolicy(rp,user);
+  }
+
+  public void removeRetryPolicy(String policyId, String user) throws AdminException {
+    context.removeRetryPolicy(policyId);
+    journal.logRemoveRetryPolicy(policyId,user);
+  }
+  
 
   private final Lock lock = new ReentrantLock();
 

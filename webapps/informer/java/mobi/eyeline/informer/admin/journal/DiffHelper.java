@@ -206,4 +206,26 @@ class DiffHelper {
     logChanges(j, oldValues, newValues, getters, user, "property_changed");
   }
 
+
+  public void logMapsDiff(Journal journal,Subject subject, String objectId, Map oldMap,  Map newMap, String userName) throws AdminException {
+    for(Object key : oldMap.keySet()) {
+       Object oldVal = oldMap.get(key);
+       Object newVal = newMap.get(key);
+       if(newVal==null) {
+            journal.addRecord(JournalRecord.Type.CHANGE, subject, userName,"property_removed",objectId,valueToString(key),valueToString(oldVal));
+       }
+       else {
+         if(!newVal.equals(oldVal)) {
+            journal.addRecord(JournalRecord.Type.CHANGE, subject, userName,"property_changed",objectId,valueToString(key), valueToString(oldVal), valueToString(newVal));
+         }
+       }
+    }
+    for(Object key : newMap.keySet()) {
+       Object oldVal = oldMap.get(key);
+       if(oldVal==null) {
+          Object newVal = newMap.get(key);
+          journal.addRecord(JournalRecord.Type.CHANGE, subject, userName,"property_added",objectId, valueToString(key), valueToString(newVal));
+       }
+    }
+  }
 }

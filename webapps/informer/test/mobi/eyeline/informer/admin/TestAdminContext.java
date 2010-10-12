@@ -6,6 +6,8 @@ import mobi.eyeline.informer.admin.informer.TestInformerConfigManager;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
+import mobi.eyeline.informer.admin.retry_policies.TestRetryPolicyManager;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.TestSmscManager;
@@ -26,6 +28,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestInformerConfigManager.class.getResourceAsStream("config.xml"), new File(baseDir, "conf"+File.separatorChar+"config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(baseDir, "conf"+File.separatorChar+"smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(baseDir, "conf"+File.separatorChar+"regions.xml"), false);
+    TestUtils.exportResource(TestRetryPolicyManager.class.getResourceAsStream("policies.xml"), new File(baseDir, "conf"+File.separatorChar+"policies.xml"), false);    
   }
 
   public TestAdminContext(File appBaseDir, WebConfig webConfig) throws InitException {
@@ -50,6 +53,15 @@ public class TestAdminContext extends AdminContext {
       for(Region s : regionsManager.getRegions()) {
         infosme.addRegion(s.getRegionId());
       }
+
+      retryPolicyManager = new TestRetryPolicyManager(infosme, new File(appBaseDir, "conf"+File.separatorChar+"policies.xml"),
+          new File(appBaseDir, "conf"+File.separatorChar+"backup"), fileSystem);
+      
+      infosme.addRetryPolicy("default");
+      for(RetryPolicy rp : retryPolicyManager.getRetryPolicies()) {
+        infosme.addRetryPolicy(rp.getPolicyId());
+      }
+      
     } catch (IOException e) {
       throw new InitException(e);
     }catch (AdminException e) {
