@@ -28,6 +28,7 @@ class InfosmeCoreV1 : public InfosmeCore, public RegionFinder, public smsc::core
 {
 private:
     class InputJournalReader;
+    class StoreJournalReader;
 public:
     static void readSmscConfig( SmscConfig& cfg,
                                 const smsc::util::config::ConfigView& cv );
@@ -88,7 +89,7 @@ protected:
         bool bind;
     };
 
-    void bindDeliveryRegions( BindSignal& bs );
+    void bindDeliveryRegions( const BindSignal& bs );
 
 private:
     smsc::logger::Logger*                      log_;
@@ -101,7 +102,7 @@ private:
     smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned
     smsc::core::buffers::IntHash< DeliveryPtr >   deliveries_;   // owned
-    StoreJournal*                                 storeLog_;     // owned
+    StoreJournal*                                 storeJournal_; // owned
     InputJournal*                                 inputJournal_; // owned
     smsc::core::synchronization::Mutex            bindQueueLock_;
     smsc::core::buffers::CyclicQueue<BindSignal>  bindQueue_;

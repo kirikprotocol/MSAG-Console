@@ -27,10 +27,22 @@ void Delivery::setRecordAtInit( regionid_type            regionId,
                                 const InputRegionRecord& rec,
                                 uint64_t                 maxMsgId )
 {
-    InputMessageSource& ims = cache_.getInputSource();
-    ims.setRecordAtInit(regionId,rec,maxMsgId);
+    cache_.getInputSource().setRecordAtInit(regionId,rec,maxMsgId);
 }
 
+
+void Delivery::setRecordAtInit( regionid_type            regionId,
+                                Message&                 msg,
+                                regionid_type            serial )
+{
+    cache_.setRecordAtInit(regionId,msg,serial);
+}
+
+
+void Delivery::postInitInput( std::vector< regionid_type >& filledRegs )
+{
+    cache_.getInputSource().postInit(filledRegs);
+}
 
 }
 }

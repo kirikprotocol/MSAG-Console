@@ -47,10 +47,11 @@ typedef enum {
     MSGSTATE_INPUT = 0,
     MSGSTATE_PROCESS = 1,
     MSGSTATE_SENT = 2,
-    MSGSTATE_DELIVERED = 3,
-    MSGSTATE_EXPIRED = 4,
-    MSGSTATE_FAILED = 5,
-    MSGSTATE_RETRY = 6,
+    MSGSTATE_RETRY = 3,     // non-final
+    MSGSTATE_DELIVERED = 4,
+    MSGSTATE_FINAL = MSGSTATE_DELIVERED,
+    MSGSTATE_EXPIRED = 5,
+    MSGSTATE_FAILED = 6,
     MSGSTATE_MAX = 6
 } MsgState;
 const char* msgStateToString( MsgState state );

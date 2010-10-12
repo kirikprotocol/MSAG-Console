@@ -88,9 +88,16 @@ public:
     /// rolling over the storage
     void rollOver();
 
+    /// invoked at init stage ONLY!
+    void setRecordAtInit( Message& msg, regionid_type serial );
+
+    /// invoked after opstore is loaded
+    bool postInit();
+
 private:
-    /// message cleanup
-    void destroy( Message& msg );
+    // message cleanup
+    // void destroy( Message& msg );
+
     inline smsc::core::synchronization::Condition& getCnd( MsgIter iter ) {
         return conds_[unsigned(reinterpret_cast<uint64_t>(reinterpret_cast<const void*>(&(*iter))) / 7) % CONDITION_COUNT];
     }
@@ -110,12 +117,12 @@ private:
 private:
     smsc::logger::Logger*                     log_;
     smsc::core::synchronization::EventMonitor cacheMon_;
+
+    // the list of all messages
     MessageList                               messageList_;
-    // iterator that points to item that will be stored
+
+    // iterator that points to item that will be stored automatically from rollOver()
     MsgIter                                   storingIter_;
-    // iterator that points to the beginning of valid items,
-    // the items that are before it will be destroyed eventually.
-    MsgIter                                   validItems_;
 
     /// The message which is stored in the message list
     /// is pointed to from ONLY ONE of messageHash, resendQueue or newQueue!

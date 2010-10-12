@@ -49,13 +49,26 @@ struct Message
 
 
 // a structure which is kept in the list in operational storage.
-// it contains the message itself and the 'locked' flag.
+// it contains the message itself and the 'serial' flag.
+// Serial flag has several purposes:
+// 1. At creation stage in InputStorage it keeps the region id
+//    to be sorted by regions;
+// 2. At opstore stage it keeps the current serial number of the storage
+//    journal file.  If the serial number of the message in memory is not equal
+//    to the current serial number of the storage journal file, then the message
+//    should be fully written, otherwise only the delta may be written.
+//    The main idea is to reduce the size of the written data.
+//    To fulfill the task there are the serial can take the following values:
+//    0 -- not equal to any serial (used at input to guarantee the full write);
+//    regionid_type(-1) -- locked;
+//    any other value -- valid value for the serial number.
 struct MessageLocker
 {
-    MessageLocker() : locked(0) {}
-    MessageLocker(const MessageLocker& mlk) : msg(mlk.msg), locked(mlk.locked) {}
-    Message          msg;
-    volatile regionid_type locked;
+    static const regionid_type lockedSerial = regionid_type(-1);
+    MessageLocker() : serial(0) {}
+    MessageLocker(const MessageLocker& mlk) : msg(mlk.msg), serial(mlk.serial) {}
+    Message                msg;
+    volatile regionid_type serial;
 };
 
 // a list of messages

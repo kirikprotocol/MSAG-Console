@@ -41,11 +41,16 @@ struct ToBuf
     void setCString( const char* s );
     void skip( size_t bytes );
     void setPos( size_t newpos );
+    void setBuf( void* thebuf, size_t bufLen ) {
+        buf = reinterpret_cast<unsigned char*>(thebuf);
+        buflen = bufLen;
+        pos = 0;
+    }
     inline size_t getPos() const { return pos; }
 public:
-    unsigned char* buf;
+    unsigned char* buf;    // current pointer
     size_t         buflen;
-    size_t         pos;
+    size_t         pos;    // position since beginning
 };
 
 } // informer

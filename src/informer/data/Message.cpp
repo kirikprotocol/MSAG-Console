@@ -15,7 +15,7 @@ ToBuf& Message::toBuf( uint16_t version, ToBuf& tb ) const
     tb.set64(msgId);
     tb.set32(lastTime);
     tb.set32(timeLeft);
-    tb.copy(USERDATA_LENGTH,userData.c_str());
+    tb.setCString(userData.c_str());
     if (isTextUnique()) {
         tb.set8(state | 0x80);
         tb.setCString(text->getText());
@@ -36,7 +36,7 @@ FromBuf& Message::fromBuf( uint16_t version, FromBuf& tb )
     msgId = tb.get64();
     lastTime = tb.get32();
     timeLeft = tb.get32();
-    userData = reinterpret_cast<const char*>(tb.skip(USERDATA_LENGTH));
+    userData = tb.getCString();
     state = tb.get8();
     if (state & 0x80) {
         state &= 0x7f;

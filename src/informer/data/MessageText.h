@@ -21,7 +21,7 @@ public:
     ~MessageText(); // { if (text_) delete[] text_; }
 
     /// return 0 if non-glossary
-    inline uint32_t getTextId() const { return id_; }
+    inline int32_t getTextId() const { return id_; }
     inline const char* getText() const { return text_; }
 
 private:

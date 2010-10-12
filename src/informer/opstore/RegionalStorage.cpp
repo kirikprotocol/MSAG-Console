@@ -16,31 +16,36 @@ public:
     rs_(s)
     {
         // rs must be locked
-        if (iter->locked) {
+        if (iter->serial == MessageLocker::lockedSerial) {
             smsc::core::synchronization::Condition& c = rs_->getCnd(iter);
-            while (iter->locked) {
+            while (iter->serial == MessageLocker::lockedSerial) {
                 c.WaitOn(rs_->cacheMon_);
             }
         }
-        iter->locked = true;
-        if (iter == rs_->storingIter_) {
+        serial = iter->serial; // get the previous serial
+        iter->serial = MessageLocker::lockedSerial;
+        MessageList& l = rs_->messageList_;
+        if (iter != l.begin()) {
+            // moving iter before begin
+            l.splice(l.begin(),l,iter);
+        } else if (iter == rs_->storingIter_) {
+            // simply move storingiter forward
             ++rs_->storingIter_;
         }
-        // moving iter before begin
-        MessageList& l = rs_->messageList_;
-        l.splice( rs_->validItems_, l, iter );
-        rs_->validItems_ = iter;
     }
 
     ~MsgLock()
     {
         MutexGuard mg(rs_->cacheMon_);
-        iter_->locked = false;
+        iter_->serial = serial;
         rs_->getCnd(iter_).Signal();
     }
 private:
     MsgIter          iter_;
     RegionalStorage* rs_;
+public:
+    // used to pass to journal
+    regionid_type    serial;
 };
 
 
@@ -51,7 +56,6 @@ RegionalStorage::RegionalStorage( const DeliveryInfo&  dlvInfo,
                                   InputMessageSource&  messageSource ) :
 log_(smsc::logger::Logger::getInstance("regstore")),
 storingIter_(messageList_.end()),
-validItems_(messageList_.begin()),
 dlvInfo_(dlvInfo),
 storeJournal_(storeJournal),
 messageSource_(messageSource),
@@ -151,14 +155,14 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
     Message& m = iter->msg;
     m.lastTime = currentTime;
-    smsc_log_debug(log_,"FIXME: reset m.timeLeft for new messages");
+    m.timeLeft = dlvInfo_.getMessageValidityTime();
     m.state = MSGSTATE_PROCESS;
     msg = m;
     smsc_log_debug(log_,"taking message R=%u/D=%u/M=%u from %s",
                    unsigned(regionId_),
                    unsigned(dlvInfo_.getDlvId()),
                    unsigned(m.msgId),from);
-    storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m);
+    storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m,ml.serial);
     return true;
 }
 
@@ -180,7 +184,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
     Message& m = (*ptr)->msg;
     m.lastTime = currentTime;
     m.state = MSGSTATE_SENT;
-    storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m);
+    storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m,ml.serial);
 }
 
 
@@ -198,6 +202,7 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
                                     unsigned(dlvInfo_.getDlvId()),
                                     unsigned(msgId));
     }
+    MessageList tokill;
     MsgLock ml(iter,this);
     Message& m = iter->msg;
     // fixing time left according
@@ -205,22 +210,22 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
     if ( m.timeLeft > int(dlvInfo_.getMinRetryTime()) ) {
         // there is enough validity time to try the next time
         if ( m.timeLeft < int(retryDelay) ) retryDelay = m.timeLeft;
+        m.timeLeft -= retryDelay;
         retryDelay += currentTime;
         resendQueue_.insert( std::make_pair(retryDelay,iter) );
         mg.Unlock();
-        m.lastTime = currentTime;
+        m.lastTime = retryDelay;
         m.state = MSGSTATE_RETRY;
         char fmtime[20];
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%u into retry at %s",
                        unsigned(regionId_),
                        unsigned(dlvInfo_.getDlvId()),
                        unsigned(msgId), formatMsgTime(fmtime,retryDelay) );
-        storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m);
+        storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m,ml.serial);
     } else {
         // not enough time to retry
         // moving element to a not-valid part of the list
-        assert(validItems_ == iter);
-        ++validItems_;
+        tokill.splice(tokill.begin(),messageList_,iter);
         mg.Unlock();
         m.lastTime = currentTime;
         m.state = MSGSTATE_EXPIRED;
@@ -228,8 +233,8 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
                        unsigned(regionId_),
                        unsigned(dlvInfo_.getDlvId()),
                        unsigned(msgId), smppState );
-        storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m);
-        destroy(m);
+        storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m,ml.serial);
+        // destroy(m);
     }
 }
 
@@ -247,9 +252,9 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
                                     unsigned(dlvInfo_.getDlvId()),
                                     unsigned(msgId));
     }
+    MessageList tokill;
     MsgLock ml(iter,this);
-    assert(validItems_ == iter);
-    ++validItems_;
+    tokill.splice(tokill.begin(),messageList_,iter);
     mg.Unlock();
     Message& m = iter->msg;
     m.lastTime = currentTime;
@@ -258,92 +263,8 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
                    unsigned(regionId_),
                    unsigned(dlvInfo_.getDlvId()),
                    unsigned(msgId),state,smppState);
-    storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m);
-    destroy(m);
-}
-
-
-void RegionalStorage::addNewMessages( msgtime_type currentTime,
-                                      MessageList& listFrom,
-                                      MsgIter      iter1,
-                                      MsgIter      iter2 )
-{
-    smsc_log_debug(log_,"adding new messages to storage R=%u/D=%u",
-                   unsigned(regionId_),
-                   unsigned(dlvInfo_.getDlvId()) );
-    for ( MsgIter i = iter1; i != iter2; ++i ) {
-        Message& m = i->msg;
-        // m.lastTime = currentTime;
-        m.state = MSGSTATE_INPUT;
-        smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%u",
-                       unsigned(regionId_),
-                       unsigned(dlvInfo_.getDlvId()),
-                       unsigned(m.msgId));
-        storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m);
-    }
-    MutexGuard mg(cacheMon_);
-    for ( MsgIter i = iter1; i != iter2; ++i ) {
-        newQueue_.Push(i);
-    }
-    messageList_.splice( validItems_, listFrom, iter1, iter2 );
-    validItems_ = iter1;
-    if ( log_->isDebugEnabled() ) {
-        std::string s;
-        s.reserve(300);
-        unsigned count = 0;
-        for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
-            if ( i == storingIter_ ) {
-                s.append(" s");
-            }
-            if ( i == validItems_ ) {
-                s.append(" v");
-            }
-            char buf[10];
-            sprintf(buf," %u",unsigned(i->msg.msgId));
-            s.append(buf);
-            ++count;
-        }
-        smsc_log_debug(log_,"messages (%u) in R=%u/D=%u: %s",
-                       count,
-                       unsigned(regionId_),
-                       unsigned(dlvInfo_.getDlvId()),
-                       s.c_str());
-    }
-}
-
-
-void RegionalStorage::rollOver()
-{
-    RelockMutexGuard mg(cacheMon_);
-    if ( storingIter_ != messageList_.end() ) {
-        smsc_log_debug(log_,"rolling in R=%u/D=%u is already in progress",
-                       unsigned(regionId_),
-                       unsigned(dlvInfo_.getDlvId()));
-        return;
-    }
-    // cleanup invalid elements
-    for ( MsgIter iter = messageList_.begin();
-          iter != validItems_;
-          ) {
-        if ( ! iter->locked ) {
-            iter = messageList_.erase(iter);
-        } else {
-            ++iter;
-        }
-    }
-
-    storingIter_ = messageList_.begin();
-    while ( true ) {
-        MsgIter iter = storingIter_;
-        if ( iter == messageList_.end() ) break;
-        {
-            MsgLock ml(iter,this);
-            mg.Unlock();
-            storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,iter->msg);
-        }
-        smsc_log_debug(log_,"FIXME: restriction on throughput");
-        mg.Lock();
-    }
+    storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m,ml.serial);
+    // destroy(m);
 }
 
 
@@ -363,31 +284,140 @@ void RegionalStorage::transferFinished( TransferTask* task )
 }
 
 
-void RegionalStorage::destroy( Message& msg )
+void RegionalStorage::addNewMessages( msgtime_type currentTime,
+                                      MessageList& listFrom,
+                                      MsgIter      iter1,
+                                      MsgIter      iter2 )
 {
-    smsc_log_debug(log_,"dtor message R=%u/D=%u/M=%u",
+    smsc_log_debug(log_,"adding new messages to storage R=%u/D=%u",
+                   unsigned(regionId_),
+                   unsigned(dlvInfo_.getDlvId()) );
+    for ( MsgIter i = iter1; i != iter2; ++i ) {
+        Message& m = i->msg;
+        // m.lastTime = currentTime;
+        m.state = MSGSTATE_INPUT;
+        smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%u",
+                       unsigned(regionId_),
+                       unsigned(dlvInfo_.getDlvId()),
+                       unsigned(m.msgId));
+        regionid_type serial = 0;
+        storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,m,serial);
+        i->serial = serial;
+    }
+    MutexGuard mg(cacheMon_);
+    for ( MsgIter i = iter1; i != iter2; ++i ) {
+        newQueue_.Push(i);
+    }
+    messageList_.splice( messageList_.begin(), listFrom, iter1, iter2 );
+    if ( log_->isDebugEnabled() ) {
+        std::string s;
+        s.reserve(300);
+        unsigned count = 0;
+        for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
+            if ( i == storingIter_ ) {
+                s.append(" s");
+            }
+            char buf[10];
+            sprintf(buf," %u",unsigned(i->msg.msgId));
+            s.append(buf);
+            ++count;
+        }
+        smsc_log_debug(log_,"messages (%u) in R=%u/D=%u: %s",
+                       count,
+                       unsigned(regionId_),
+                       unsigned(dlvInfo_.getDlvId()),
+                       s.c_str());
+    }
+}
+
+
+void RegionalStorage::rollOver()
+{
+    RelockMutexGuard mg(cacheMon_);
+    if ( storingIter_ != messageList_.end() ) {
+        throw InfosmeException("logic error: rolling in R=%u/D=%u is already in progress",
+                               unsigned(regionId_),
+                               unsigned(dlvInfo_.getDlvId()));
+    }
+    storingIter_ = messageList_.begin();
+    while ( true ) {
+        MsgIter iter = storingIter_;
+        if ( iter == messageList_.end() ) break;
+        {
+            MsgLock ml(iter,this);
+            mg.Unlock();
+            storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,iter->msg,ml.serial);
+        }
+        smsc_log_debug(log_,"FIXME: restriction on throughput");
+        mg.Lock();
+    }
+}
+
+
+void RegionalStorage::setRecordAtInit( Message& msg, regionid_type serial )
+{
+    smsc_log_debug(log_,"adding R=%u/D=%u/M=%llu state=%s serial=%u",
                    unsigned(regionId_),
                    unsigned(dlvInfo_.getDlvId()),
-                   unsigned(msg.msgId));
+                   ulonglong(msg.msgId),
+                   msgStateToString(MsgState(msg.state)),
+                   serial );
+    MsgIter* iter = messageHash_.GetPtr(msg.msgId);
+    if (!iter) {
+        // no such message
+        if (msg.state<uint8_t(MSGSTATE_FINAL)) {
+            // NOTE: we do not bind to glossary here
+            // need to create message
+            iter = &messageHash_.Insert(msg.msgId,
+                                        messageList_.insert(messageList_.end(),MessageLocker()));
+            (*iter)->serial = serial;
+            (*iter)->msg = msg;
+        }
+    } else if (msg.state>=uint8_t(MSGSTATE_FINAL)) {
+        // msg found and is final
+        messageList_.erase(*iter);
+        messageHash_.Delete(msg.msgId);
+    } else {
+        // non-final msg found
+        Message& m = (*iter)->msg;
+        assert(m.msgId==msg.msgId);
+        m.state = msg.state;
+        m.lastTime = msg.lastTime;
+        m.timeLeft = msg.timeLeft;
+        (*iter)->serial = serial;
+    }
+}
+
+
+bool RegionalStorage::postInit()
+{
+    unsigned total = 0;
+    for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
+        ++total;
+        Message& m = i->msg;
+        if (m.state == MSGSTATE_INPUT) {
+            // need to be moved to newQueue
+            messageHash_.Delete( m.msgId );
+            newQueue_.Push(i);
+        } else if (m.state == MSGSTATE_RETRY) {
+            // need to be moved to resendQueue
+            messageHash_.Delete( m.msgId );
+            resendQueue_.insert( std::make_pair(m.lastTime,i));
+        }
+    }
+    smsc_log_debug(log_,"D=%u/R=%u postInit: total/new/resend=%u/%u/%u",
+                   total,unsigned(newQueue_.Count()),unsigned(resendQueue_.size()));
+    return !messageList_.empty();
 }
 
 
 /*
-void RegionalStorage::usage( bool incr )
+void RegionalStorage::destroy( Message& msg )
 {
-    if ( incr ) {
-        MutexGuard mg(cacheMon_);
-        ++usage_;
-    } else {
-        {
-            MutexGuard mg(cacheMon_);
-            if (!usage_) {
-                std::terminate();
-            }
-            if (--usage_) return;
-        }
-        delete this;
-    }
+    smsc_log_debug(log_,"dtor message R=%u/D=%u/M=%llu",
+                   unsigned(regionId_),
+                   unsigned(dlvInfo_.getDlvId()),
+                   ulonglong(msg.msgId));
 }
  */
 

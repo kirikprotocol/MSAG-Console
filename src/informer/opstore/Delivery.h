@@ -45,6 +45,17 @@ public:
                           const InputRegionRecord& rec,
                           uint64_t                 maxMsgId );
 
+    // NOTE: this method is invoked at init ONLY!
+    void setRecordAtInit( regionid_type            regionId,
+                          Message&                 msg,
+                          regionid_type            serial );
+
+    // post process regions and collect empty ones
+    void postInitInput( std::vector<regionid_type>& filledRegs );
+    void postInitOperative( std::vector<regionid_type>& emptyRegs ) {
+        cache_.postInit(emptyRegs);
+    }
+
 private:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);

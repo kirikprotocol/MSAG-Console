@@ -18,18 +18,39 @@ class CommonSettings;
 class StoreJournal
 {
 public:
+    struct Reader {
+        virtual ~Reader() {}
+        // NOTE: message is not bound to glossary yet.
+        virtual void setRecordAtInit( dlvid_type     dlvId,
+                                      regionid_type  regionId,
+                                      Message&       msg,
+                                      regionid_type  serial ) = 0;
+        virtual void postInit() = 0;
+    };
+
     /// @a path -- a path to the storage root.
     StoreJournal( const CommonSettings& cs );
 
     /// journal messages.
+    /// @a serial: input -- the serial number of the journal file at previous write,
+    ///            at exit -- the serial number of the journal file.
     void journalMessage( dlvid_type     dlvId,
                          regionid_type  regionId,
-                         const Message& msg );
+                         const Message& msg,
+                         regionid_type& serial );
+
+    void init( Reader& jr );
+
 private:
-    smsc::logger::Logger* log_;
-    const CommonSettings& cs_;
-    uint32_t              version_;
-    FileGuard             fg_;
+    void readRecordsFrom( const std::string& path, Reader& reader );
+
+private:
+    smsc::logger::Logger*              log_;
+    smsc::core::synchronization::Mutex lock_;
+    const CommonSettings&              cs_;
+    uint32_t                           version_;
+    FileGuard                          fg_;
+    regionid_type                      serial_; // it may not take values of 0 and -1
 };
 
 } // informer

@@ -1,6 +1,7 @@
 #ifndef _INFORMER_MESSAGECACHE_H
 #define _INFORMER_MESSAGECACHE_H
 
+#include <vector>
 #include "RegionalStorage.h"
 
 namespace eyeline {
@@ -27,6 +28,12 @@ public:
     void addNewMessages( MsgIter begin, MsgIter end );
 
     InputMessageSource& getInputSource() const { return *source_; }
+
+    void setRecordAtInit( regionid_type regionId,
+                          Message& msg,
+                          regionid_type serial );
+
+    void postInit( std::vector<regionid_type>& emptyRegs );
 
 private:
     smsc::core::synchronization::Mutex                 cacheLock_;

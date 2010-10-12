@@ -39,6 +39,9 @@ public:
     /// minimal time between retries, seconds
     unsigned getMinRetryTime() const { return 60; }
 
+    /// message validity time, seconds
+    unsigned getMessageValidityTime() const { return 3600; }
+
     /// read delivery info
     void read();
 

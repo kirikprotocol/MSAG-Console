@@ -4,11 +4,17 @@
 #include "logger/Logger.h"
 #include "core/buffers/TmpBuf.hpp"
 
+namespace {
+const unsigned LENSIZE = 2;
+const unsigned VERSIZE = 4;
+}
+
 namespace eyeline {
 namespace informer {
 
 InputJournal::InputJournal( const CommonSettings& cs ) :
-cs_(cs)
+cs_(cs),
+version_(1)
 {
 }
 
@@ -19,12 +25,8 @@ void InputJournal::journalRecord( dlvid_type dlvId,
                                   uint64_t maxMsgId )
 {
     char buf[100];
-    // if (version_!=1) {
-    // throw InfosmeException("invalid journal version=%u",version_);
-    // }
     ToBuf tb(buf,100);
-    tb.skip(2); // len
-    tb.set8(1); // version
+    tb.skip(LENSIZE); // len
     tb.set32(dlvId);
     tb.set32(regId);
     tb.set32(rec.rfn);
@@ -33,15 +35,11 @@ void InputJournal::journalRecord( dlvid_type dlvId,
     tb.set32(rec.woff);
     tb.set32(rec.count);
     tb.set64(maxMsgId);
-    size_t pos = tb.getPos();
+    const size_t pos = tb.getPos();
     tb.setPos(0);
-    tb.set16(pos-2);
+    tb.set16(pos-LENSIZE);
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
-        if (!jnl_.isOpened()) {
-            jnl_.create((cs_.getStorePath() + "input/.journal").c_str(),true,true);
-            jnl_.seek(0,SEEK_END);
-        }
         jnl_.write(buf,pos);
     }
     jnl_.fsync();
@@ -53,6 +51,17 @@ void InputJournal::init( Reader& reader )
     std::string jpath = cs_.getStorePath() + "input/.journal";
     readRecordsFrom(jpath+".old",reader);
     readRecordsFrom(jpath,reader);
+    // reopen journal
+    jnl_.create(jpath.c_str(),true,true);
+    if ( 0 == jnl_.seek(0,SEEK_END) ) {
+        // new file
+        version_ = 1;
+        char verbuf[VERSIZE];
+        ToBuf tb(verbuf,VERSIZE);
+        tb.set32(version_);
+        jnl_.write(verbuf,VERSIZE);
+    }
+    reader.postInit();
 }
     
 
@@ -62,6 +71,15 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
     FileGuard fg;
     try {
         fg.ropen(jpath.c_str());
+        char buf[VERSIZE];
+        fg.read(buf,VERSIZE);
+        FromBuf fb(buf,VERSIZE);
+        uint32_t v = fb.get32();
+        if ( v != 1 ) {
+            throw InfosmeException("file '%s' version %u is not supported",jpath.c_str(),v);
+        }
+        version_ = v;
+        smsc_log_debug(log_,"file '%s' header is ok, version=%u",jpath.c_str(),version_);
     } catch (std::exception& e) {
         smsc_log_debug(log_,"journal '%s' is not found, ok",jpath.c_str());
         return;
@@ -77,33 +95,36 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
             // EOF
             if (ptr<buf.GetCurPtr()) {
                 const size_t pos = fg.getPos() - (buf.GetCurPtr()-ptr);
-                throw InfosmeException("journal '%s' is not terminated at %llu",jpath.c_str(),ulonglong(pos));
+                throw InfosmeException("journal '%s' is not terminated at %llu",
+                                       jpath.c_str(),ulonglong(pos));
             }
             break;
         }
             
         buf.SetPos(buf.GetPos()+wasread);
         while ( ptr < buf.GetCurPtr() ) {
-            if ( buf.GetCurPtr()-ptr < 2 ) {
+            if ( ptr+LENSIZE > buf.GetCurPtr()) {
                 // too few items
                 break;
             }
-            FromBuf fb(ptr,2);
+            FromBuf fb(ptr,LENSIZE);
             uint16_t reclen = fb.get16();
             if (reclen>100) {
                 throw InfosmeException("journal '%s' record at %llu has invalid len: %u",
                                        jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)), reclen );
             }
-            if (ptr+2+reclen > buf.GetCurPtr()) {
+            if (ptr+LENSIZE+reclen > buf.GetCurPtr()) {
                 // read more
                 break;
             }
-            fb.setLen(2+reclen);
+            fb.setLen(LENSIZE+reclen);
+            /*
             const uint8_t version = fb.get8();
             if (version!=1) {
                 throw InfosmeException("journal '%s' record at %llu has wrong version: %u",
                                        jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)), version);
             }
+             */
             const dlvid_type dlvId = fb.get32();
             const regionid_type regId = fb.get32();
             InputRegionRecord rec;
@@ -112,14 +133,14 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
             rec.wfn = fb.get32();
             rec.woff = fb.get32();
             rec.count = fb.get32();
-            const uint64_t maxMsgId = fb.get32();
-            if (fb.getPos() != unsigned(reclen+2)) {
+            const uint64_t maxMsgId = fb.get64();
+            if (fb.getPos() != unsigned(reclen+LENSIZE)) {
                 throw InfosmeException("journal '%s' record at %llu has extra data",
                                        jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)));
             }
             reader.setRecordAtInit(dlvId,regId,rec,maxMsgId);
             ++total;
-            ptr += reclen+2;
+            ptr += reclen+LENSIZE;
         }
         if (ptr>buf.get()) {
             // shifting buffer back

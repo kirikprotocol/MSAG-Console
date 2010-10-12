@@ -35,8 +35,7 @@ public:
         DIR* dir = opendir(path);
         if (!dir) {
             char buf[100];
-            strerror_r(errno,buf,100);
-            throw InfosmeException("opendir('%s') failed: %d, %s",path,errno,buf);
+            throw InfosmeException("opendir('%s') failed: %d, %s",path,errno,STRERROR(errno,buf,sizeof(buf)));
         }
         struct CloseDirGuard {
             CloseDirGuard(DIR* d) : dir(d) {}
@@ -56,8 +55,7 @@ public:
         do {
             int err = readdir_r(dir,de,&ptr);
             if (err) {
-                strerror_r(err,buf.get(),bufsize);
-                throw InfosmeException("readdir %s failed: %d, %s",path,err,buf.get());
+                throw InfosmeException("readdir %s failed: %d, %s",path,err,STRERROR(err,buf.get(),bufsize));
             }
             if (!ptr) break;
             do {
@@ -71,8 +69,8 @@ public:
                     if (!fpath.empty() && fpath[fpath.size()-1] != '/') fpath += '/';
                     fpath += ptr->d_name;
                     if (-1 == ::stat(fpath.c_str(),&st)) {
-                        strerror_r(errno,buf.get(),bufsize);
-                        throw InfosmeException("stat %s failed: %d, %s",fpath.c_str(),errno,buf.get());
+                        throw InfosmeException("stat %s failed: %d, %s",
+                                               fpath.c_str(),errno,STRERROR(errno,buf.get(),bufsize));
                     }
                     if ( (st.st_mode & statFilter_) ==0 ) {
                         // filtered

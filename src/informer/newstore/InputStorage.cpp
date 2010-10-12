@@ -7,10 +7,12 @@
 #include "informer/data/Region.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/IOConverter.h"
+#include "informer/io/HexDump.h"
 #include "core/buffers/TmpBuf.hpp"
 
 namespace {
-const unsigned defaultVersion = 1;
+const unsigned LENSIZE = 2;
+const uint16_t defaultVersion = 1;
 }
 
 
@@ -103,6 +105,18 @@ void InputStorage::setRecordAtInit( regionid_type regId,
 }
 
 
+void InputStorage::postInit( std::vector<regionid_type>& regs )
+{
+    int regId;
+    InputRegionRecord* ro;
+    for ( smsc::core::buffers::IntHash< InputRegionRecord >::Iterator i(regions_);
+          i.Next(regId,ro); ) {
+        if ( ro->rfn == ro->wfn && ro->roff == ro->woff ) { continue; }
+        regs.push_back(regionid_type(regId));
+    }
+}
+
+
 void InputStorage::dispatchMessages( MsgIter begin,
                                      MsgIter end,
                                      std::vector< regionid_type >& regs )
@@ -116,7 +130,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
         const regionid_type regId = rf.findRegion( i->msg.subscriber );
         i->msg.msgId = ++lastMsgId_;
         i->msg.state = MSGSTATE_INPUT;
-        i->locked = regId;
+        i->serial = regId;
         if (log_->isDebugEnabled()) {
             uint8_t ton, npi;
             uint64_t addr = subscriberToAddress(i->msg.subscriber,ton,npi);
@@ -145,7 +159,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
         fg.seek(ro.woff);
         msgid_type maxMsgId = 0;
         for ( MsgIter i = begin; i != end; ++i ) {
-            if (i->locked != regId) continue;
+            if (i->serial != regId) continue;
             if (ro.count % fileSize == 0) {
                 // need to create new file.
                 ro.wfn = ++lastfn_;
@@ -164,11 +178,20 @@ void InputStorage::dispatchMessages( MsgIter begin,
             i->msg.timeLeft = ro.woff;
             maxMsgId = i->msg.msgId;
             ToBuf tb(msgbuf.get(),msgbuf.getSize());
-            tb.skip(4);
-            const unsigned buflen = 
-                unsigned(i->msg.toBuf(::defaultVersion,tb).buf - msgbuf.get());
+            tb.skip(LENSIZE);
+            tb.set16(::defaultVersion);
+            i->msg.toBuf(::defaultVersion,tb);
+            const size_t buflen = tb.getPos();
             tb.setPos(0);
-            tb.set32(buflen-4);
+            tb.set16(buflen-LENSIZE);
+            if (log_->isDebugEnabled()) {
+                HexDump hd;
+                HexDump::string_type dump;
+                dump.reserve(hd.hexdumpsize(buflen)+buflen+10);
+                hd.hexdump(dump,msgbuf.get(),buflen);
+                hd.strdump(dump,msgbuf.get(),buflen);
+                smsc_log_debug(log_,"record(%u): %s",buflen,hd.c_str(dump));
+            }
             fg.write(msgbuf.get(),buflen);
             ro.woff += buflen;
             ++ro.count;
@@ -230,34 +253,38 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
             }
             
             buf.SetPos(buf.GetPos()+wasread);
+            smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u read/inbuf=%u/%u bytes",
+                           regId, dlvId_, ro.rfn, ro.roff, wasread, buf.GetPos() );
             while (ptr < buf.GetCurPtr()) {
                 
-                if (buf.GetCurPtr()-ptr < 2) {
+                if (ptr+LENSIZE > buf.GetCurPtr()) {
                     // too few items
                     break;
                 }
-                FromBuf fb(ptr,2);
-                uint16_t reclen = fb.get16();
+                FromBuf fb(ptr,LENSIZE);
+                const uint16_t reclen = fb.get16();
                 if (reclen>10000) {
                     throw InfosmeException("FIXME: R=%u/D=%u RP=%u/%u is corrupted: reclen=%u is too big",
                                            regId, dlvId_, ro.rfn, unsigned(fg.getPos()-(buf.GetCurPtr()-ptr)), reclen);
                 }
-                if ( ptr+2+reclen > buf.GetCurPtr() ) {
+                if ( ptr+LENSIZE+reclen > buf.GetCurPtr() ) {
                     // read more
                     break;
                 }
-                fb.setLen(2+reclen);
+                smsc_log_debug(log_,"record len is %u", reclen);
+                fb.setLen(LENSIZE+reclen);
                 msglist.push_back(MessageLocker());
                 MessageLocker& mlk = msglist.back();
-                mlk.locked = 0;
-                const uint8_t version = fb.get8();
-                if ( mlk.msg.fromBuf(version,fb).getPos() != size_t(2+reclen) ) {
-                    throw InfosmeException("R=%u/D=%u RP=%u/%u has extra data",
+                mlk.serial = 0;
+                const uint16_t version = fb.get16();
+                mlk.msg.fromBuf(version,fb);
+                if ( fb.getPos() != reclen+LENSIZE ) {
+                    throw InfosmeException("FIXME: R=%u/D=%u RP=%u/%u has extra data",
                                            regId, dlvId_, ro.rfn, ro.roff );
                 }
                 glossary_.bindMessage(mlk.msg.text);
-                ptr += reclen+2;
-                ro.roff += reclen+2;
+                ptr += reclen+LENSIZE;
+                ro.roff += reclen+LENSIZE;
                 --count;
                 if (count==0) break;
 

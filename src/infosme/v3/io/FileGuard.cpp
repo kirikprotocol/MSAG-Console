@@ -1,3 +1,5 @@
+#include <cerrno>
+#include <cstring>
 #include "FileGuard.h"
 #include "Typedefs.h"
 
@@ -15,10 +17,8 @@ void FileGuard::ropen( const char* fn )
         smsc_log_debug(log_,"ropen %s",fn);
         fd_ = open(fn,O_RDONLY);
         if (fd_==-1) {
-            const size_t buflen = 100;
-            char buf[buflen];
-            strerror_r(errno,buf,buflen);
-            throw InfosmeException("cannot open '%s' for reading: %d, %s", fn, errno, buf);
+            char buf[100];
+            throw InfosmeException("cannot open '%s' for reading: %d, %s", fn, errno, STRERROR(errno,buf,sizeof(buf)));
         }
     }
 }
@@ -50,10 +50,8 @@ void FileGuard::create( const char* fn, bool mkdirs, bool truncate )
         } while (true);
 
         if (fd_==-1) {
-            const size_t buflen = 100;
-            char buf[buflen];
-            strerror_r(errno,buf,buflen);
-            throw InfosmeException("cannot open '%s' for writing: %d, %s", fn, errno, buf);
+            char buf[100];
+            throw InfosmeException("cannot open '%s' for writing: %d, %s", fn, errno, STRERROR(errno,buf,sizeof(buf)));
         }
     }
 }
@@ -64,10 +62,8 @@ size_t FileGuard::seek( size_t pos, int whence )
     if (fd_!=-1) {
         off_t res = lseek(fd_,off_t(pos),whence);
         if (res==off_t(-1)) {
-            const size_t buflen = 100;
-            char ebuf[buflen];
-            strerror_r(errno,ebuf,buflen);
-            throw InfosmeException("seek(%llu,%d) failed: %d, %d, %s",ulonglong(pos),whence,fd_,errno,ebuf);
+            char ebuf[100];
+            throw InfosmeException("seek(%llu,%d) failed: %d, %d, %s",ulonglong(pos),whence,fd_,errno,STRERROR(errno,ebuf,sizeof(ebuf)));
         }
         pos_ = res;
     }
@@ -83,17 +79,12 @@ void FileGuard::write( const void* buf, unsigned buflen, bool atomic )
     while (buflen>0) {
         ssize_t written = ::write(fd_,buf,buflen);
         if (written == -1) {
-            const size_t ebuflen = 100;
-            char ebuf[ebuflen];
-            strerror_r(errno,ebuf,ebuflen);
-            throw InfosmeException("write failed: %d, %s",fd_,errno,ebuf);
+            char ebuf[100];
+            throw InfosmeException("write failed: %d, %s",fd_,errno,STRERROR(errno,ebuf,sizeof(ebuf)));
         }
         buflen -= written;
         pos_ += written;
         if (atomic && buflen>0) {
-            const size_t ebuflen = 100;
-            char ebuf[ebuflen];
-            strerror_r(errno,ebuf,ebuflen);
             throw InfosmeException("write was not atomic: %d, buflen=%u written=%u",
                                    fd_,buflen+written,written);
         }
@@ -111,10 +102,8 @@ unsigned FileGuard::read( void* buf, unsigned buflen )
         ssize_t readlen = ::read(fd_,buf,buflen);
         if (readlen==0) break; // EOF
         else if (readlen==-1) {
-            const size_t ebuflen = 100;
-            char ebuf[ebuflen];
-            strerror_r(errno,ebuf,ebuflen);
-            throw InfosmeException("read failed: %d, %d, %s", fd_, errno, ebuf);
+            char ebuf[100];
+            throw InfosmeException("read failed: %d, %d, %s", fd_, errno, STRERROR(errno,ebuf,sizeof(ebuf)));
         }
         pos_ += readlen;
         wasread += readlen;
@@ -143,10 +132,8 @@ void FileGuard::makedirs( const std::string& dir )
         } else if ( errno == EEXIST ) {
             smsc_log_debug(log_,"directory '%s' already exist, ok",wk->c_str());
         } else {
-            const size_t buflen = 100;
-            char buf[buflen];
-            strerror_r(errno,buf,buflen);
-            throw InfosmeException("cannot create dir '%s': %d, %s",wk->c_str(),errno,buf);
+            char buf[100];
+            throw InfosmeException("cannot create dir '%s': %d, %s",wk->c_str(),errno,STRERROR(errno,buf,sizeof(buf)));
         }
     }
 }
@@ -156,10 +143,8 @@ void FileGuard::truncate( size_t pos )
 {
     if (fd_!=-1) {
         if (-1 == ftruncate(fd_,pos)) {
-            const size_t ebuflen = 100;
-            char ebuf[ebuflen];
-            strerror_r(errno,ebuf,ebuflen);
-            throw InfosmeException("truncate failed: %d, %d, %s", fd_, errno, ebuf);
+            char ebuf[100];
+            throw InfosmeException("truncate failed: %d, %d, %s", fd_, errno, STRERROR(errno,ebuf,sizeof(ebuf)));
         }
     }
 }

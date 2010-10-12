@@ -111,6 +111,7 @@ void FromBuf::setLen( size_t newlen )
     buflen = newlen;
 }
 
+
 void ToBuf::set8( uint8_t c )
 {
     checksz(1);
@@ -121,7 +122,6 @@ void ToBuf::set8( uint8_t c )
 void ToBuf::set16( uint16_t c )
 {
     checksz(2);
-    buf += 2;
     register uint8_t* p = reinterpret_cast<uint8_t*>(buf);
     *p = uint8_t(c >> 8);
     *++p = uint8_t(c);
@@ -148,8 +148,8 @@ void ToBuf::set64( uint64_t c )
 {
 #if BYTE_ORDER == BIG_ENDIAN
     checksz(8);
-    buf += 8;
     memcpy(buf,&c,8);
+    buf += 8;
 #else
     set32(uint32_t(c>>32));
     set32(uint32_t(c));

@@ -56,6 +56,8 @@ public:
 
     virtual void setRecordAtInit(regionid_type regid, const InputRegionRecord& ro, msgid_type maxMsgId);
 
+    virtual void postInit( std::vector<regionid_type>& regs );
+
 private:
     void dispatchMessages( MsgIter begin, MsgIter end, std::vector<regionid_type>& regs);
 

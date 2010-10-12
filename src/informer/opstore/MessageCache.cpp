@@ -80,5 +80,35 @@ void MessageCache::addNewMessages( MsgIter begin, MsgIter end )
     source_->addNewMessages(begin,end);
 }
 
+
+void MessageCache::setRecordAtInit( regionid_type regionId,
+                                    Message& msg,
+                                    regionid_type serial )
+{
+    RegionalStoragePtr* ptr = storages_.GetPtr(regionId);
+    if (!ptr) {
+        ptr = &storages_.Insert(regionId,
+                                RegionalStoragePtr(new RegionalStorage(dlvInfo_,
+                                                                       regionId,
+                                                                       storeJournal_,
+                                                                       *source_)));
+    }
+    (*ptr)->setRecordAtInit(msg,serial);
+}
+
+
+void MessageCache::postInit( std::vector<regionid_type>& emptyRegs )
+{
+    int regId;
+    RegionalStoragePtr* ptr;
+    for ( smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
+          i.Next(regId,ptr); ) {
+        if ( !(*ptr)->postInit() ) {
+            emptyRegs.push_back(regionid_type(regId));
+            storages_.Delete(regId);
+        }
+    }
+}
+
 }
 }

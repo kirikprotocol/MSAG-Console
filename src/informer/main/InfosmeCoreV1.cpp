@@ -52,6 +52,69 @@ public:
             return;
         }
         (*ptr)->setRecordAtInit( regionId, rec, maxMsgId );
+        smsc_log_debug(core_.log_,"FIXME: bind D=%u and R=%u",dlvId,regionId);
+    }
+
+
+    virtual void postInit()
+    {
+        BindSignal bs;
+        bs.bind = true;
+        int dlvId;
+        DeliveryPtr* ptr;
+        smsc_log_debug(core_.log_,"invoking postInit to bind filled regions");
+        for ( smsc::core::buffers::IntHash< DeliveryPtr >::Iterator i(core_.deliveries_);
+              i.Next(dlvId,ptr); ) {
+            bs.regIds.clear();
+            (*ptr)->postInitInput(bs.regIds);
+            if (!bs.regIds.empty()) {
+                bs.dlvId = (*ptr)->getDlvId();
+                core_.bindDeliveryRegions(bs);
+            }
+        }
+    }
+
+private:
+    InfosmeCoreV1& core_;
+};
+
+
+class InfosmeCoreV1::StoreJournalReader : public StoreJournal::Reader
+{
+public:
+    StoreJournalReader( InfosmeCoreV1& core ) : core_(core) {}
+    virtual void setRecordAtInit( dlvid_type    dlvId,
+                                  regionid_type regionId,
+                                  Message&      msg,
+                                  regionid_type serial )
+    {
+        smsc_log_error(core_.log_,"load store record D=%u/R=%u/M=%llu state=%s serial=%u",
+                       dlvId, regionId, ulonglong(msg.msgId),
+                       msgStateToString(MsgState(msg.state)), serial);
+        DeliveryPtr* ptr = core_.deliveries_.GetPtr(dlvId);
+        if (!ptr) {
+            smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);
+            return;
+        }
+        (*ptr)->setRecordAtInit(regionId,msg,serial);
+    }
+
+    virtual void postInit()
+    {
+        BindSignal bs;
+        bs.bind = false;
+        int dlvId;
+        DeliveryPtr* ptr;
+        smsc_log_debug(core_.log_,"invoking postInit to unbind empty regions");
+        for ( smsc::core::buffers::IntHash< DeliveryPtr >::Iterator i(core_.deliveries_);
+              i.Next(dlvId,ptr); ) {
+            bs.regIds.clear();
+            (*ptr)->postInitOperative(bs.regIds);
+            if (!bs.regIds.empty()) {
+                bs.dlvId = (*ptr)->getDlvId();
+                core_.bindDeliveryRegions(bs);
+            }
+        }
     }
 
 private:
@@ -97,7 +160,7 @@ InfosmeCoreV1::InfosmeCoreV1() :
 log_(smsc::logger::Logger::getInstance("core")),
 stopping_(true),
 started_(false),
-storeLog_(0),
+storeJournal_(0),
 inputJournal_(0)
 {
 }
@@ -123,7 +186,7 @@ InfosmeCoreV1::~InfosmeCoreV1()
     regions_.Empty();
     deliveries_.Empty();
 
-    delete storeLog_;
+    delete storeJournal_;
     delete inputJournal_;
     smsc_log_info(log_,"leaving corev1 dtor");
 }
@@ -137,7 +200,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
 
     // create journals
     if (!inputJournal_) inputJournal_ = new InputJournal(cs_);
-    if (!storeLog_) storeLog_ = new StoreJournal(cs_);
+    if (!storeJournal_) storeJournal_ = new StoreJournal(cs_);
 
     // create smscs and regions
     std::auto_ptr< ConfigView > ccv(cfg.getSubConfig("SMSCConnectors"));
@@ -196,7 +259,8 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     smsc_log_info(log_,"FIXME: reading journals");
     InputJournalReader ijr(*this);
     inputJournal_->init(ijr);
-    // storeLog_->read();
+    StoreJournalReader sjr(*this);
+    storeJournal_->init(sjr);
 
     // bind delivery and regions
     // std::vector<regionid_type> regIds;
@@ -373,7 +437,7 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
             throw InfosmeException("delivery info not passed");
         }
         InputMessageSource* ims = new InputStorage(*this,dlvInfo->getDlvId(),*inputJournal_);
-        deliveries_.Insert(dlvId, DeliveryPtr(new Delivery(dlvInfo,*storeLog_,ims)));
+        deliveries_.Insert(dlvId, DeliveryPtr(new Delivery(dlvInfo,*storeJournal_,ims)));
     }
     startMon_.notify();
 }
@@ -432,7 +496,7 @@ int InfosmeCoreV1::Execute()
 }
 
 
-void InfosmeCoreV1::bindDeliveryRegions( BindSignal& bs )
+void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
 {
     typedef std::vector<regionid_type> regIdVector;
     smsc_log_debug(log_,"%sbinding D=%u with [%s]",

@@ -1,6 +1,7 @@
 #ifndef _INFORMER_INPUTMESSAGESOURCE_H
 #define _INFORMER_INPUTMESSAGESOURCE_H
 
+#include <vector>
 #include "informer/data/Message.h"
 #include "core/threads/ThreadedTask.hpp"
 
@@ -84,6 +85,10 @@ public:
     virtual void setRecordAtInit( regionid_type            regionId,
                                   const InputRegionRecord& rec,
                                   uint64_t                 maxMsgId ) = 0;
+
+    /// invoked at init stage ONLY!
+    /// @a filledRegs at return contains regions that have some messages to send.
+    virtual void postInit( std::vector<regionid_type>& filledRegs ) = 0;
 };
 
 } // informer

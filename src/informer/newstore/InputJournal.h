@@ -21,6 +21,7 @@ public:
                                       regionid_type            regionId,
                                       const InputRegionRecord& rec,
                                       uint64_t                 maxMsgId ) = 0;
+        virtual void postInit() = 0;
     };
 
     InputJournal( const CommonSettings& cs );
@@ -43,6 +44,7 @@ private:
     // smsc::logger::Logger*              log_;
     smsc::core::synchronization::Mutex lock_;
     FileGuard                          jnl_;
+    uint32_t                           version_;
 };
 
 } // informer
