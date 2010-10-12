@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.admin.retry_policies;
 
+import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
@@ -40,7 +41,7 @@ public class RetryPolicyManagerTest {
   }
   
   @Test
-  public void testLoad() {
+  public void testLoad() throws AdminException {
     RetryPolicy rp = manager.getRetryPolicy("default");
     assertTrue(rp!=null);
     assertTrue(rp.getDefaultTime()==601);

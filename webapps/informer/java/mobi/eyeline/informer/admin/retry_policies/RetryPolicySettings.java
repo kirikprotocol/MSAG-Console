@@ -42,7 +42,7 @@ class RetryPolicySettings {
     policies.put(p.getPolicyId(),p);
   }
 
-  public void updateRetryPolicy(RetryPolicy p) throws AdminException {
+  public void updateRetryPolicy( RetryPolicy p) throws AdminException {
     vh.checkСontainsKey("name",policies,p.getPolicyId());
     policies.put(p.getPolicyId(),p);
   }

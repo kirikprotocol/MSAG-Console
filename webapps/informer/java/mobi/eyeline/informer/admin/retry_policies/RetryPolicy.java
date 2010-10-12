@@ -17,7 +17,7 @@ public class RetryPolicy {
 
 
   public RetryPolicy(String policyId,int defaultTime) throws AdminException {
-    vh.checkPositive("time",defaultTime);
+    vh.checkPositive("policy",defaultTime);
     vh.checkNotEmpty("name",policyId);
     this.policyId = policyId;
     this.defaultTime = defaultTime;
@@ -32,6 +32,13 @@ public class RetryPolicy {
     }
   }
 
+  public RetryPolicy() {
+    
+  }
+
+  public void setPolicyId(String policyId) {
+    this.policyId = policyId;
+  }
 
   public String getPolicyId() {
     return policyId;
@@ -44,7 +51,7 @@ public class RetryPolicy {
   }
 
   public void setDefaultTime(int defaultTime) throws AdminException {
-    vh.checkPositive("time",defaultTime);
+    vh.checkPositive("policy",defaultTime);
     this.defaultTime = defaultTime;
   }
 

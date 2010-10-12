@@ -26,6 +26,7 @@ public class TopMenu {
           add(new MenuItem("informer.admin.regions", "/regions/index.faces")).
           add(new MenuItem("informer.admin.smsc", "/smsc/index.faces")).
           add(new MenuItem("informer.admin.blacklist", "/blacklist/index.faces")).
+          add(new MenuItem("informer.admin.retry_policies", "/retry_policies/index.faces")).
 //          add(new MenuItem("informer.admin.reschedules", "/reschedule/index.faces")).
 //          add(new MenuItem("informer.admin.prohibitions", "/prohibitions/index.faces")).
 //          add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).

@@ -180,3 +180,23 @@ div.query_result {
 .column20Width {
   width:20px;
 }
+
+.column200Width {
+  width:200px;
+}
+
+.column200WidthTopLeft {
+  width:200px;
+  vertical-align:top;
+  text-align:left;
+}
+
+.column300Width {
+  width:300px;
+}
+
+.column300WidthTopLeft {
+  width:300px;
+  vertical-align:top;
+  text-align:left;
+}

@@ -50,7 +50,7 @@ public class RetryPolicySettingsTest {
     assertTrue(aPolicy.equals(settings.getRetryPolicy(aPolicy.getPolicyId())));
 
     try{
-      settings.updateRetryPolicy(new RetryPolicy("bPolicy",200));
+      settings.updateRetryPolicy( new RetryPolicy("bPolicy",300));
       assertTrue(false);
     }
     catch (AdminException e){}
