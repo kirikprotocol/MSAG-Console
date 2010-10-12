@@ -7,7 +7,9 @@ import mobi.eyeline.informer.util.config.XmlConfigSection;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 /**
  * @author Aleksandr Khalitov
@@ -17,12 +19,21 @@ class SmscConfig implements ManagedConfigFile<SmscSettings> {
   public void save(InputStream oldFile, OutputStream newFile, SmscSettings conf) throws Exception {
     XmlConfig config = new XmlConfig();
     config.load(oldFile);
+
     XmlConfigSection  smscConnectors = config.getOrCreateSection("SMSCConnectors");
-    smscConnectors.clearSections();
+
+    Set<String> newSections = new HashSet<String>();
+
     for(Smsc s : conf.getSmscs()) {
-      XmlConfigSection section = new XmlConfigSection(s.getName());
+      XmlConfigSection section = smscConnectors.getOrCreateSection(s.getName());
       s.save(section);
-      smscConnectors.addSection(section);
+      newSections.add(section.getName());
+    }
+
+    for(XmlConfigSection section : smscConnectors.sections()) {
+      if(!newSections.contains(section.getName())) {
+        smscConnectors.removeSection(section);
+      }
     }
 
     config.addSection(smscConnectors);
