@@ -56,8 +56,7 @@ public class TestAdminContext extends AdminContext {
 
       retryPolicyManager = new TestRetryPolicyManager(infosme, new File(appBaseDir, "conf"+File.separatorChar+"policies.xml"),
           new File(appBaseDir, "conf"+File.separatorChar+"backup"), fileSystem);
-      
-      infosme.addRetryPolicy("default");
+
       for(RetryPolicy rp : retryPolicyManager.getRetryPolicies()) {
         infosme.addRetryPolicy(rp.getPolicyId());
       }
