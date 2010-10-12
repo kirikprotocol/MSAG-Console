@@ -81,11 +81,14 @@ public class ConfigHelper {
    * @param configFile файл конфига
    * @param fileSystem файловая система
    * @throws AdminException ошибка при создании файла
+   * @return true - восстановление прошло успешно, false - иначе
    */
-  public static void rollbackConfig(File file, File configFile, FileSystem fileSystem) throws AdminException {
+  public static boolean rollbackConfig(File file, File configFile, FileSystem fileSystem) throws AdminException {
     if (fileSystem.exists(file)) {
       fileSystem.copy(file, configFile);
+      return true;
     }
+    return false;
   }
 
 

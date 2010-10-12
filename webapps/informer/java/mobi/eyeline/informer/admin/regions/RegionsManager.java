@@ -50,8 +50,11 @@ public class RegionsManager {
 
   private void rollback(File backupFile) {
     try{
-      cfgFileManager.rollback(backupFile);
-      settings = cfgFileManager.load();
+      if(cfgFileManager.rollback(backupFile)) {
+        settings = cfgFileManager.load();
+      }else {
+        logger.error("Can't rollback config file");
+      }
     }catch (Exception ex){
       logger.error(ex,ex);
     }

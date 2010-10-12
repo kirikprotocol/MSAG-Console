@@ -75,8 +75,8 @@ public class ConfigFileManager<C> {
     return backup;
   }
 
-  public void rollback(File backupFile) throws AdminException {
-    ConfigHelper.rollbackConfig(backupFile, configFile, fileSystem);
+  public boolean rollback(File backupFile) throws AdminException {
+    return ConfigHelper.rollbackConfig(backupFile, configFile, fileSystem);
   }
 
   public C load() throws AdminException {
