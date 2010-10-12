@@ -202,7 +202,29 @@ public class Configuration {
     context.removeRetryPolicy(policyId);
     journal.logRemoveRetryPolicy(policyId,user);
   }
-  
+
+  public void startInformer(String user) throws AdminException {
+    context.startInformer();
+    journal.logInformerStart(user);
+  }
+
+  public void stopInformer(String user) throws AdminException {
+    context.stopInformer();
+    journal.logInformerStop(user);
+  }
+
+  public void switchInformer(String toHost, String user) throws AdminException {
+    context.switchInformer(toHost);
+    journal.logInformerSwitch(toHost, user);
+  }
+
+  public String getInformerOnlineHost() throws AdminException {
+    return context.getInformerOnlineHost();
+  }
+
+  public List<String> getInformerHosts() throws AdminException {
+    return context.getInformerHosts();
+  }
 
   private final Lock lock = new ReentrantLock();
 

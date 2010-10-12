@@ -5,7 +5,8 @@ import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientExc
 import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.informer.InformerConfigManager;
+import mobi.eyeline.informer.admin.informer.InformerManager;
+import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
@@ -15,6 +16,7 @@ import mobi.eyeline.informer.admin.regions.RegionException;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
 import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.retry_policies.RetryPolicyManager;
+import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.SmscException;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
@@ -48,7 +50,7 @@ public class AdminContext {
 
   protected WebConfig webConfig;
 
-  protected InformerConfigManager informerConfigManager;
+  protected InformerManager informerManager;
 
   protected Infosme infosme;
 
@@ -60,6 +62,8 @@ public class AdminContext {
 
   protected RegionsManager regionsManager;
 
+  protected ServiceManager serviceManager;
+  
   protected RetryPolicyManager retryPolicyManager;
   
   protected AdminContext() {
@@ -72,25 +76,29 @@ public class AdminContext {
 
       this.instType = webConfig.getInstallationType();
 
+      File servicesDir = new File(appBaseDir, "services");
+
       switch (this.instType) {
         case SINGLE:
+          serviceManager = ServiceManager.getServiceManagerForSingleInst(webConfig.getSingleDaemonHost(), webConfig.getSingleDaemonPort(), servicesDir);
           fileSystem = FileSystem.getFSForSingleInst();
           break;
         case HS:
+          serviceManager = ServiceManager.getServiceManagerForHSInst(webConfig.getHSDaemonHost(), webConfig.getHSDaemonPort(), servicesDir, webConfig.getHSDaemonHosts());
           fileSystem = FileSystem.getFSForHSInst(appBaseDir, webConfig.getAppMirrorDirs());
           break;
         default:
+          serviceManager = ServiceManager.getServiceManagerForHAInst(new File(appBaseDir, "conf/resourceGroups.properties"), servicesDir);
           fileSystem = FileSystem.getFSForHAInst();
       }
+
       File usersFile = new File(webConfig.getUsersFile());
       journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
-      informerConfigManager = new InformerConfigManager(new File(appBaseDir,"conf"+File.separatorChar+"config.xml"),
-          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
+      informerManager = new InformerManagerImpl(new File(appBaseDir,"conf"+File.separatorChar+"config.xml"),
+          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem, serviceManager);
       usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
-      InformerSettings is = informerConfigManager.getConfigSettings();
+      InformerSettings is = informerManager.getConfigSettings();
       infosme = new InfosmeImpl(is.getHost(), is.getAdminPort());
-
-
 
       Properties pers = new Properties();
       pers.setProperty("personalization.host",is.getPersHost());
@@ -149,11 +157,11 @@ public class AdminContext {
   }
 
   public InformerSettings getConfigSettings() throws AdminException {
-    return informerConfigManager.getConfigSettings();
+    return informerManager.getConfigSettings();
   }
 
   public void updateConfigSettings(InformerSettings informerSettings) throws AdminException {
-    informerConfigManager.updateSettings(informerSettings);
+    informerManager.updateSettings(informerSettings);
   }
 
   public void addInBlacklist(String msisdn) throws AdminException{
@@ -274,6 +282,24 @@ public class AdminContext {
   public void removeRetryPolicy(String policyId) throws AdminException{
     retryPolicyManager.removeRetryPolicy(policyId);
   }
-  
 
+  public void startInformer() throws AdminException {
+    informerManager.startInformer();
+  }
+
+  public void stopInformer() throws AdminException {
+    informerManager.stopInformer();
+  }
+
+  public void switchInformer(String toHost) throws AdminException {
+    informerManager.switchInformer(toHost);
+  }
+
+  public String getInformerOnlineHost() throws AdminException {
+    return informerManager.getInformerOnlineHost();
+  }
+
+  public List<String> getInformerHosts() throws AdminException {
+    return informerManager.getInformerHosts();
+  }
 }

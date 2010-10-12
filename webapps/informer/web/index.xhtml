@@ -10,8 +10,57 @@
 
   <ui:param name="pageTitle" value="#{msg['informer.title']}"/>
 
+
   <ui:define name="content">
-      
+    <tr:form>
+
+      <h:panelGroup style="padding: 20px">
+        <eye:pageSubtitle value="#{msg['status.page.informer']}"/>
+
+        <h:panelGrid columns="2" columnClasses="column600Width," style="padding-left:20px">
+          <h:panelGroup>
+            <table class="list">
+
+              <tr>
+                <th>
+                  <h:outputText value="#{msg['status.page.online.host']}"/>
+                </th>
+                <th>
+                  <h:outputText value="#{msg['status.page.action']}"/>
+                </th>
+              </tr>
+
+              <tr>
+                <td width="center"><h:outputText value="#{informerStatus.onlineHost}" style="color:GREEN"/></td>
+                <td width="center">
+                  <h:panelGroup>
+                    <h:panelGroup rendered="#{!informerStatus.switchAllowed}">
+                      <h:commandLink value="#{msg['status.page.start']}" action="#{informerStatus.start}" rendered="#{informerStatus.onlineHost == null}"/>
+                      <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stop}" rendered="#{informerStatus.onlineHost != null}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup rendered="#{informerStatus.switchAllowed}">
+                      <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stop}" rendered="#{informerStatus.onlineHost != null}"/>
+                      <h:outputText value=" #{msg['status.page.or']} " rendered="#{informerStatus.onlineHost != null}"/>
+                      <h:commandLink value="#{msg['status.page.switch']}" action="#{informerStatus.switchHost}" rendered="#{informerStatus.onlineHost != null}"/>
+
+                      <h:commandLink value="#{msg['status.page.start_at']}" action="#{informerStatus.switchHost}" rendered="#{informerStatus.onlineHost == null}"/>
+                      <h:outputText value="  "/>
+
+                      <h:selectOneMenu value="#{informerStatus.switchTo}">
+                        <f:selectItems value="#{informerStatus.hosts}"/>
+                      </h:selectOneMenu>
+                    </h:panelGroup>
+                  </h:panelGroup>
+                </td>
+              </tr>
+
+            </table>
+          </h:panelGroup>
+          <h:outputText/>
+        </h:panelGrid>
+      </h:panelGroup>
+    </tr:form>
   </ui:define>
 
 </ui:composition>

@@ -168,6 +168,12 @@
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>informerStatus</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.InformerStatusController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>

@@ -20,7 +20,7 @@ public class TopMenu {
   private final Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3) {
     {
       add(new MenuBarItem("informer.admin", "informer.admin.width").
-//          add(new MenuItem("informer.admin.status", "/status.faces")).
+          add(new MenuItem("informer.admin.status", "/index.faces")).
           add(new MenuItem("informer.admin.config", "/config/index.faces")).
 //          add(new MenuItem("informer.admin.users", "/users/index.faces")).
           add(new MenuItem("informer.admin.regions", "/regions/index.faces")).

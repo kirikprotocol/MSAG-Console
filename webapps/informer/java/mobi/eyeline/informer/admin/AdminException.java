@@ -60,7 +60,7 @@ public abstract class AdminException extends Exception {
         result += ". " + ct.getMessage();
       }
     }
-    return  result;
+    return result;
   }
 
   public String getMessage() {

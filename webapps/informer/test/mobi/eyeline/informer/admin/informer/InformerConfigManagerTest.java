@@ -17,13 +17,13 @@ public class InformerConfigManagerTest {
 
   private static File configFile, backupDir;
 
-  private static InformerConfigManager informerConfigManager;
+  private static InformerManager informerManager;
 
   @BeforeClass
   public static void init() throws Exception {
     configFile = TestUtils.exportResourceToRandomFile(InformerConfigManagerTest.class.getResourceAsStream("config.xml"), ".config");
     backupDir = TestUtils.createRandomDir(".config.backup");
-    informerConfigManager = new InformerConfigManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    informerManager = new InformerManagerImpl(configFile, backupDir, FileSystem.getFSForSingleInst(), null);
   }
 
   @Test
@@ -35,8 +35,8 @@ public class InformerConfigManagerTest {
     oldS.setPersHost("host1");
     oldS.setPersPort(1231);
 
-    informerConfigManager.updateSettings(oldS);
-    InformerSettings newS = informerConfigManager.getConfigSettings();
+    informerManager.updateSettings(oldS);
+    InformerSettings newS = informerManager.getConfigSettings();
     assertEquals(oldS.getAdminPort(), newS.getAdminPort());
     assertEquals(oldS.getHost(), newS.getHost());
     assertEquals(oldS.getDeliveriesPort(), newS.getDeliveriesPort());

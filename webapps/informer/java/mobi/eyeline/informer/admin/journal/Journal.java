@@ -22,7 +22,7 @@ public class Journal {
 
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper();
 
-  private final InformerSettingsDiffHelper informer = new InformerSettingsDiffHelper();
+  private final InformerSettingsDiffHelper informerSettings = new InformerSettingsDiffHelper();
 
   private final BlackListDiffHelper blacklist = new BlackListDiffHelper();
 
@@ -31,6 +31,8 @@ public class Journal {
   private final RegionsDiffHelper regions = new RegionsDiffHelper();
 
   private final RetryPolicyDiffHelper retryPolicy = new RetryPolicyDiffHelper(Subject.RETRY_POLICY);
+
+  private final InformerDIffHelper informer = new InformerDIffHelper();
 
   private final JournalDataSource ds;
 
@@ -111,7 +113,7 @@ public class Journal {
    * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
    */
   public void logChanges(InformerSettings oldSettings, InformerSettings newSettings, String user) throws AdminException {
-    informer.logChanges(this, oldSettings, newSettings, user);
+    informerSettings.logChanges(this, oldSettings, newSettings, user);
   }
 
   /**
@@ -215,5 +217,33 @@ public class Journal {
   }
   public void logRemoveRetryPolicy( String policyId, String user) throws AdminException {
     this.retryPolicy.logRemoveRetryPolicy(this,  policyId, user); 
+  }
+
+  /**
+   * Добавляет в журнал запись о старте Informer
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logInformerStart(String user) throws AdminException {
+    informer.logInformerStart(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об остановке Informer
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logInformerStop(String user) throws AdminException {
+    informer.logInformerStop(this, user);            
+  }
+
+  /**
+   * Добавляет в журнал запись о переключении Informer на другой хост
+   * @param toHost новый хост
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logInformerSwitch(String toHost, String user) throws AdminException {
+    informer.logInformerSwitch(this, toHost, user);
   }
 }

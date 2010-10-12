@@ -21,7 +21,7 @@
           <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}"/>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
         <eye:button>
@@ -79,7 +79,7 @@
           <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}"/>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
         <eye:button>
