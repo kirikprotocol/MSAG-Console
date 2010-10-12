@@ -36,7 +36,7 @@ protected:
   virtual void setNextValue(void) /*throw(std::exception)*/
   {
     _dVal->reserve(_dVal->size() + 1);
-    _pDec->setValue(_dVal[_dVal->size()]);
+    DecoderOfSeqOfAC_T<_TArg, _DecoderOfTArg>::_pDec->setValue(_dVal->operator[](_dVal->size()));
   }
 
   //constructor for types defined as SEQUENCE OF with own tagging
@@ -59,7 +59,7 @@ public:
     , _dVal(0)
   { }
   DecoderOfSeqOfArrayed_T(const DecoderOfSeqOfArrayed_T & use_obj)
-    : DecoderOfSeqOfAC_T<_TArg, _DecoderOfTArg>(use_obj)
+    : DecoderOfSeqOfAC_T<_TArg, _DecoderOfTArg>(use_obj),
     _dVal(use_obj._dVal)
   { }
   //
@@ -72,14 +72,14 @@ public:
   void setValue(ElementsArray & use_arr, uint16_t max_sz = 0)
   {
     _dVal = &use_arr;
-    initElementDecoder(max_sz);
+    DecoderOfSeqOfAC_T<_TArg, _DecoderOfTArg>::initElementDecoder(max_sz);
   }
   //
   void setValue(const ASTag & fld_tag, ASTagging::Environment_e tag_env,
                 ElementsArray & use_arr, uint16_t max_sz = 0)
   {
     _dVal = &use_arr;
-    initElementDecoder(fld_tag, tag_env, max_sz);
+    DecoderOfSeqOfAC_T<_TArg, _DecoderOfTArg>::initElementDecoder(fld_tag, tag_env, max_sz);
   }
 };
 

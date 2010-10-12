@@ -5,7 +5,7 @@
 #ident "@(#)$Id: "
 #define __ASN1_BER_DECODER_ENUM
 
-#include "eyeline/asn1/BER/rtdec/DecodeIINT.hpp"
+#include "eyeline/asn1/BER/rtdec/DecodeINT.hpp"
 
 namespace eyeline {
 namespace asn1 {
