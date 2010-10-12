@@ -23,6 +23,8 @@ public class Journal {
 
   private final InformerSettingsDiffHelper informer = new InformerSettingsDiffHelper();
 
+  private final BlackListDiffHelper blacklist = new BlackListDiffHelper();
+
   private final SmscDiffHelper smsc = new SmscDiffHelper();
 
   private final RegionsDiffHelper regions = new RegionsDiffHelper();
@@ -116,7 +118,7 @@ public class Journal {
    * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
    */
   public void logAddBlacklist(String address, String user) throws AdminException {
-    addRecord(JournalRecord.Type.ADD, Subject.BLACKLIST, user, "blacklist_added", address);
+    blacklist.logAddBlacklist(this, address, user);
   }
   /**
    * Добавляет в журнал запись об удалении из списка запрещённых номеров
@@ -125,7 +127,7 @@ public class Journal {
    * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
    */
   public void logRemoveBlacklist(String address, String user) throws AdminException {
-    addRecord(JournalRecord.Type.REMOVE, Subject.BLACKLIST, user, "blacklist_removed", address);
+    blacklist.logRemoveBlacklist(this, address, user);
   }
 
 
