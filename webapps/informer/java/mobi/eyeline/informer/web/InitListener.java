@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web;
 import mobi.eyeline.informer.admin.WebConfig;
 import mobi.eyeline.informer.util.xml.WebXml;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -23,8 +24,17 @@ public class InitListener implements ServletContextListener {
 
   private WebContext context;
 
+  private void initLog4j(File confDir) {
+    PropertyConfigurator.configureAndWatch(new File(confDir,"log4j.properties").getAbsolutePath(), 60000L);
+  }
+
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
+
+      File webconfig = new File(System.getProperty("informer.config.webconfig"));
+      File appBaseDir = new File(System.getProperty("informer.base.dir"));
+
+      initLog4j(new File(appBaseDir, "conf"));
 
       WebXml webXml;
       InputStream is = null;
@@ -44,8 +54,6 @@ public class InitListener implements ServletContextListener {
             servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
       }
 
-      File webconfig = new File(System.getProperty("informer.config.webconfig"));
-      File appBaseDir = new File(System.getProperty("informer.base.dir"));
 
       WebConfig webConfig = new WebConfig(webconfig);
 

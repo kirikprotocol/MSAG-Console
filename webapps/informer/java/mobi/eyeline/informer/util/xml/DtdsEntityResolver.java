@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.util.xml;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -11,7 +11,7 @@ import java.io.InputStream;
 
 public class DtdsEntityResolver implements EntityResolver {
 
-  final Category logger = Category.getInstance(this.getClass());
+  private final static Logger logger = Logger.getLogger(DtdsEntityResolver.class);
 
   private static String getDtdName(String systemId) {
     int index = systemId.lastIndexOf('/');
