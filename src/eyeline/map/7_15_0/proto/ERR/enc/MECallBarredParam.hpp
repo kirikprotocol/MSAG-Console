@@ -50,31 +50,9 @@ public:
     cleanup();
   }
 
-  void setValue(const CallBarredParam& value) {
-    switch (value.getKind()) {
-    case CallBarredParam::KindCallBarringCause:
-      setCallBarringCause(*value.getCallBarringCause());
-      break;
-    case CallBarredParam::KindExtensibleCallBarredParam:
-      setExtensibleCallBarredParam(*value.getExtensibleCallBarredParam());
-      break;
-    default:
-      throw smsc::util::Exception("map::7_15_0::proto::ERR::enc::MECallBarredParam::setValue() : invalid value");
-    }
-  }
-
-  void setCallBarringCause(const CallBarringCause& value) {
-    cleanup();
-    _value.callBarringCause= new (_memAlloc.buf) MECallBarringCause(getTSRule());
-    _value.callBarringCause->setValue(value);
-    asn1::ber::EncoderOfChoice::setSelection(*_value.callBarringCause);
-  }
-
-  void setExtensibleCallBarredParam(const ExtensibleCallBarredParam& value) {
-    cleanup();
-    _value.any = new (_memAlloc.buf) MEExtensibleCallBarredParam(value, getTSRule());
-    asn1::ber::EncoderOfChoice::setSelection(*_value.callBarringCause);
-  }
+  void setValue(const CallBarredParam& value);
+  void setCallBarringCause(const CallBarringCause& value);
+  void setExtensibleCallBarredParam(const ExtensibleCallBarredParam& value);
 
 private:
   void cleanup() {

@@ -6,6 +6,7 @@
 # include "eyeline/asn1/BER/rtenc/EncodeChoice.hpp"
 # include "eyeline/map/7_15_0/proto/common/NetworkResource.hpp"
 # include "eyeline/map/7_15_0/proto/common/enc/MENetworkResource.hpp"
+# include "eyeline/map/7_15_0/proto/ERR/SystemFailureParam.hpp"
 # include "eyeline/map/7_15_0/proto/ERR/ExtensibleSystemFailureParam.hpp"
 # include "eyeline/map/7_15_0/proto/ERR/enc/MEExtensibleSystemFailureParam.hpp"
 
@@ -47,31 +48,9 @@ public:
     cleanup();
   }
 
-  void setValue(const SystemFailureParam& value) {
-    switch (value.getKind()) {
-    case SystemFailureParam::KindNetworkResource:
-      setNetworkResource(*value.getNetworkResource());
-      break;
-    case SystemFailureParam::KindExtensibleSystemFailureParam:
-      setExtensibleSystemFailureParam(*value.getExtensibleSystemFailureParam());
-      break;
-    default:
-      throw smsc::util::Exception("enc::MESystemFailureParam::setValue() : invalid value");
-    }
-  }
-
-  void setNetworkResource(const common::NetworkResource& val) {
-    cleanup();
-    _value.networkResource= new (_memAlloc.buf) common::enc::MENetworkResource(getTSRule());
-    _value.networkResource->setValue(val);
-    asn1::ber::EncoderOfChoice::setSelection(*_value.networkResource);
-  }
-
-  void setExtensibleSystemFailureParam(const ExtensibleSystemFailureParam& value) {
-    cleanup();
-    _value.any = new (_memAlloc.buf) MEExtensibleSystemFailureParam(value, getTSRule());
-    asn1::ber::EncoderOfChoice::setSelection(*_value.extensibleSystemFailureParam);
-  }
+  void setValue(const SystemFailureParam& value);
+  void setNetworkResource(const common::NetworkResource& val);
+  void setExtensibleSystemFailureParam(const ExtensibleSystemFailureParam& value);
 
 private:
   void cleanup() {
