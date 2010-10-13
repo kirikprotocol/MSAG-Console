@@ -1,5 +1,6 @@
 #include <memory>
 #include "InfosmeCoreV1.h"
+#include "RegionLoader.h"
 #include "informer/data/InputMessageSource.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/newstore/InputStorage.h"
@@ -384,37 +385,44 @@ void InfosmeCoreV1::updateSmsc( const std::string& smscId,
 
 void InfosmeCoreV1::reloadRegions( const std::string& defaultSmscId )
 {
-    const regionid_type regionId = 1;
-    const std::string smscId = "MSAG0";
+    // reading region file
+    RegionLoader rl("regions.xml",defaultSmscId.c_str());
 
-    smsc_log_error(log_,"FIXME: reload regions");
     MutexGuard mg(startMon_); // guaranteed that there is no sending
-    // find smscconn
-    SmscSender** smsc = smscs_.GetPtr(smscId.c_str());
-    if (!smsc || !*smsc) {
-        throw InfosmeException("S='%s' is not found for R=%u",smscId.c_str(),regionId);
-    }
+    do {
+        std::auto_ptr<Region> r(rl.popNext());
+        if (!r.get()) break;
 
-    RegionPtr* ptr = regions_.GetPtr(regionId);
-    if (!ptr) {
-        smsc_log_debug(log_,"creating R=%u for S='%s'",regionId,smscId.c_str());
-        ptr = &regions_.Insert(regionId,RegionPtr(new Region(regionId,10,smscId)));
-    }
-    RegionSender** rs = regSends_.GetPtr(regionId);
-    if (!rs) {
-        rs = &regSends_.Insert(regionId,new RegionSender(**smsc,*ptr));
-    } else {
-        (*rs)->assignSender(**smsc,*ptr);
-    }
-}
+        const regionid_type regionId = r->getRegionId();
 
+        // find smscconn
+        const std::string& smscId = r->getSmscId();
+        SmscSender** smsc = smscs_.GetPtr(smscId.c_str());
+        if (!smsc || !*smsc) {
+            throw InfosmeException("S='%s' is not found for R=%u",smscId.c_str(),regionId);
+        }
 
-regionid_type InfosmeCoreV1::findRegion( personid_type subscriber )
-{
-    uint8_t ton, npi;
-    uint64_t addr = subscriberToAddress(subscriber,ton,npi);
-    smsc_log_debug(log_,"FIXME: findRegion(.%u.%u.%llu)",ton,npi,ulonglong(addr));
-    return 1;
+        RegionPtr* ptr = regions_.GetPtr(regionId);
+
+        // update masks
+        rf_.updateMasks(ptr ? ptr->get() : 0, *r.get());
+
+        if (!ptr) {
+            smsc_log_debug(log_,"creating R=%u for S='%s'",regionId,smscId.c_str());
+            ptr = &regions_.Insert(regionId,RegionPtr(r.release()));
+        } else {
+            smsc_log_debug(log_,"updating R=%u for S='%s'",regionId,smscId.c_str());
+            (*ptr)->replaceBy( *r.get() );
+        }
+
+        RegionSender** rs = regSends_.GetPtr(regionId);
+        if (!rs) {
+            rs = &regSends_.Insert(regionId,new RegionSender(**smsc,*ptr));
+        } else {
+            (*rs)->assignSender(**smsc,*ptr);
+        }
+
+    } while (true);
 }
 
 

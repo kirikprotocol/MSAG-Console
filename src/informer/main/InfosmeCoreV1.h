@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 #include "informer/data/CommonSettings.h"
-#include "informer/data/Region.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/opstore/Delivery.h"
 #include "core/buffers/Hash.hpp"
@@ -13,6 +12,7 @@
 #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "logger/Logger.h"
+#include "RegionFinderV1.h"
 
 namespace eyeline {
 namespace informer {
@@ -24,7 +24,7 @@ class StoreJournal;
 class InputJournal;
 class InputMessageSource;
 
-class InfosmeCoreV1 : public InfosmeCore, public RegionFinder, public smsc::core::threads::Thread
+class InfosmeCoreV1 : public InfosmeCore, public smsc::core::threads::Thread
 {
 private:
     class InputJournalReader;
@@ -46,7 +46,7 @@ public:
     virtual void stop();
     virtual bool isStopping() const { return stopping_; }
 
-    virtual RegionFinder& getRegionFinder() { return *this; }
+    virtual RegionFinder& getRegionFinder() { return rf_; }
 
     virtual void selfTest();
 
@@ -71,8 +71,6 @@ public:
 
     /// reload all regions
     void reloadRegions( const std::string& defaultSmscId );
-
-    virtual regionid_type findRegion( personid_type subscriber );
 
     /// update delivery
     /// 1. create delivery: new dlvId, valid dlvInfo;
@@ -107,6 +105,7 @@ private:
     InputJournal*                                 inputJournal_; // owned
     smsc::core::synchronization::Mutex            bindQueueLock_;
     smsc::core::buffers::CyclicQueue<BindSignal>  bindQueue_;
+    RegionFinderV1                                rf_;
 };
 
 } // informer
