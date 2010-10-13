@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <poll.h>
 
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
@@ -180,13 +181,19 @@ int Socket::canRead(int to)
   if(bufPos<inBuffer)return 1;
   if(to==0)to=timeOut;
   if(to==0)return 1;
-
+    /*
   FD_ZERO(&fd);
   FD_SET(sock,&fd);
   tv.tv_sec=to;
   tv.tv_usec=0;
   int retval=select(sock+1,&fd,NULL,NULL,&tv);
   return retval;
+     */
+    pollfd fd;
+    fd.fd = sock;
+    fd.events = POLLIN;
+    fd.revents = 0;
+    return poll(&fd,1,to*1000);
 }
 
 int Socket::canWrite(int to)
@@ -194,11 +201,18 @@ int Socket::canWrite(int to)
   if(!connected || sock==INVALID_SOCKET) return -1;
   if(to==0)to=timeOut;
   if(to==0)return 1;
+    /*
   FD_ZERO(&fd);
   FD_SET(sock,&fd);
   tv.tv_sec=to;
   tv.tv_usec=0;
   return select(sock+1,NULL,&fd,NULL,&tv);
+     */
+    pollfd fd;
+    fd.fd = sock;
+    fd.events = POLLOUT;
+    fd.revents = 0;
+    return poll(&fd,1,to*1000);
 }
 
 

@@ -34,7 +34,7 @@ namespace network{
 class Socket{
 protected:
   sockaddr_in sockAddr;
-  fd_set fd;
+  // fd_set fd;
   timeval tv;
   char buffer[256];
   int connected;
