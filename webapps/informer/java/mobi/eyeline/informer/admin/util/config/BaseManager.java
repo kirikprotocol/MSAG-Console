@@ -1,11 +1,9 @@
-package mobi.eyeline.informer.admin.retry_policies;
+package mobi.eyeline.informer.admin.util.config;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
-import mobi.eyeline.informer.admin.util.config.ConfigFileManager;
-import mobi.eyeline.informer.admin.util.config.ManagedConfigFile;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -53,45 +51,32 @@ public class BaseManager<C> {
     }
   }
 
-
-  abstract class BaseManagerWriteExecutor {
-
-    abstract void changeSettings(C settings) throws AdminException ;
-
-    abstract void infosmeCommand(Infosme infosme) throws AdminException ;
-
-    protected final void execute() throws AdminException {
-      try{
-        lock.writeLock().lock();
-        changeSettings(settings);
-        File backup = save();
-        if(infosme.isOnline()) {
-          try {
-            infosmeCommand(infosme);
-          }
-          catch (AdminException e){
-            rollback(backup);
-            throw e;
-          }
+  protected void updateSettings(SettingsWriter<C> e) throws AdminException {
+    try{
+      lock.writeLock().lock();
+      e.changeSettings(settings);
+      File backup = save();
+      if(infosme.isOnline()) {
+        try {
+          e.infosmeCommand(infosme);
         }
-      }finally {
-        lock.writeLock().unlock();
+        catch (AdminException ex){
+          rollback(backup);
+          throw ex;
+        }
       }
+    }finally {
+      lock.writeLock().unlock();
     }
   }
 
-
-  abstract class BaseManagerReadExecutor<ReturnType> {
-        
-    abstract ReturnType executeRead(C settings) throws AdminException ;
-
-    protected final ReturnType execute() throws AdminException {
-      try{
-        lock.readLock().lock();
-        return executeRead(settings);
-      }finally {
-        lock.readLock().unlock();
-      }
+  protected <R> R readSettings(SettingsReader<C,R> e)  {
+    try{
+      lock.readLock().lock();
+      return e.executeRead(settings);
+    }finally {
+      lock.readLock().unlock();
     }
   }
+    
 }

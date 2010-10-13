@@ -4,60 +4,24 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
-import mobi.eyeline.informer.admin.util.config.ConfigFileManager;
-import org.apache.log4j.Logger;
+import mobi.eyeline.informer.admin.util.config.BaseManager;
+import mobi.eyeline.informer.admin.util.config.SettingsReader;
+import mobi.eyeline.informer.admin.util.config.SettingsWriter;
 
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Управление СМС-Центрами
  * @author Aleksandr Khalitov
  */
-public class SmscManager {
-
-  private static final Logger logger = Logger.getLogger(SmscManager.class);
-
-  private Infosme infosme;
-
-  private final ConfigFileManager<SmscSettings> cfgFileManager;
-
-  private ReadWriteLock lock = new ReentrantReadWriteLock();
-
-  private SmscSettings settings;
-
+public class SmscManager extends BaseManager<SmscSettings>{
 
 
   public SmscManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException{
+    super(infosme,  config, backup, fileSystem,new SmscConfig());
 
-    this.infosme = infosme;
-
-    cfgFileManager = new ConfigFileManager<SmscSettings>(config, backup, fileSystem, new SmscConfig());
-    try{
-      this.settings = cfgFileManager.load();
-    }catch (AdminException e){
-      throw new InitException(e);
-    }
-  }
-
-
-  private File save() throws AdminException {
-    return cfgFileManager.save(settings);
-  }
-
-  private void rollback(File backupFile) {
-    try{
-      if(cfgFileManager.rollback(backupFile)) {
-        settings = cfgFileManager.load();
-      }else {
-        logger.error("Can't rollback config file");
-      }
-    }catch (Exception ex){
-      logger.error(ex,ex);
-    }
   }
 
   /**
@@ -65,23 +29,15 @@ public class SmscManager {
    * @param smsc СМСЦ
    * @throws AdminException ошибка сохранения
    */
-  public void addSmsc(Smsc smsc) throws AdminException{
-    try{
-      lock.writeLock().lock();
-      settings.addSmsc(smsc);
-      File backup = save();
-      if(infosme.isOnline()) {
-        try{
-          infosme.addSmsc(smsc.getName());
-        }catch (AdminException e) {
-          rollback(backup);
-          throw e;
-        }
+  public void addSmsc(final Smsc smsc) throws AdminException{
+     updateSettings(new SettingsWriter<SmscSettings>() {
+      public void changeSettings(SmscSettings settings) throws AdminException{
+        settings.addSmsc(smsc);
       }
-    }finally {
-      lock.writeLock().unlock();
-    }
-
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        infosme.addSmsc(smsc.getName());
+      }
+    });
   }
 
   /**
@@ -89,22 +45,15 @@ public class SmscManager {
    * @param smsc СМСЦ
    * @throws AdminException ошибка сохранения
    */
-  public void updateSmsc(Smsc smsc) throws AdminException{
-    try{
-      lock.writeLock().lock();
-      settings.updateSmsc(smsc);
-      File backup = save();
-      if(infosme.isOnline()) {
-        try{
-          infosme.updateSmsc(smsc.getName());
-        }catch (AdminException e) {
-          rollback(backup);
-          throw e;
-        }
+  public void updateSmsc(final Smsc smsc) throws AdminException{
+    updateSettings(new SettingsWriter<SmscSettings>() {
+      public void changeSettings(SmscSettings settings) throws AdminException{
+        settings.updateSmsc(smsc);
       }
-    }finally {
-      lock.writeLock().unlock();
-    }
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        infosme.updateSmsc(smsc.getName());
+      }
+    });
   }
 
   /**
@@ -112,16 +61,15 @@ public class SmscManager {
    * @return список СМСЦ
    */
   public List<Smsc> getSmscs() {
-    try{
-      lock.readLock().lock();
-      List<Smsc> result = new LinkedList<Smsc>();
-      for(Smsc s : settings.getSmscs()) {
-        result.add(s.cloneSmsc());
+    return readSettings(new SettingsReader<SmscSettings,List<Smsc>>(){
+      public List<Smsc> executeRead(SmscSettings settings)  {
+        List<Smsc> result = new LinkedList<Smsc>();
+        for(Smsc s : settings.getSmscs()) {
+          result.add(s.cloneSmsc());
+        }
+        return result;
       }
-      return result;
-    }finally {
-      lock.readLock().unlock();
-    }
+    });            
   }
 
   /**
@@ -129,14 +77,13 @@ public class SmscManager {
    * @param name имя СМСЦ
    * @return СМСЦ
    */
-  public Smsc getSmsc(String name){
-    try{
-      lock.readLock().lock();
-      Smsc smsc = settings.getSmsc(name);
-      return smsc == null ? null : smsc.cloneSmsc();
-    }finally {
-      lock.readLock().unlock();
-    }
+  public Smsc getSmsc(final String name){
+    return readSettings(new SettingsReader<SmscSettings,Smsc>(){
+      public Smsc executeRead(SmscSettings settings)  {
+        Smsc smsc = settings.getSmsc(name);
+        return smsc == null ? null : smsc.cloneSmsc();
+      }
+    });
   }
 
   /**
@@ -144,22 +91,15 @@ public class SmscManager {
    * @param smscName имя СМСЦ
    * @throws AdminException ошибка сохранения
    */
-  public void removeSmsc(String smscName) throws AdminException{
-    try{
-      lock.writeLock().lock();
-      settings.removeSmsc(smscName);
-      File backup = save();
-      if(infosme.isOnline()) {
-        try{
-          infosme.removeSmsc(smscName);
-        }catch (AdminException e) {
-          rollback(backup);
-          throw e;
-        }
+  public void removeSmsc(final String smscName) throws AdminException{
+    updateSettings(new SettingsWriter<SmscSettings>() {
+      public void changeSettings(SmscSettings settings) throws AdminException{
+        settings.removeSmsc(smscName);
       }
-    }finally {
-      lock.writeLock().unlock();
-    }
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        infosme.removeSmsc(smscName);
+      }
+    });
   }
 
   /**
@@ -167,22 +107,15 @@ public class SmscManager {
    * @param smsc имя СМСЦ
    * @throws AdminException ошибка сохранения
    */
-  public void setDefaultSmsc(String smsc) throws AdminException {
-    try{
-      lock.writeLock().lock();
-      settings.setDefaultSmsc(smsc);
-      File backup = save();
-      if(infosme.isOnline()) {
-        try{
-          infosme.setDefaultSmsc(smsc);
-        }catch (AdminException e) {
-          rollback(backup);
-          throw e;
-        }
+  public void setDefaultSmsc(final String smsc) throws AdminException {
+    updateSettings(new SettingsWriter<SmscSettings>() {
+      public void changeSettings(SmscSettings settings) throws AdminException{
+        settings.setDefaultSmsc(smsc);
       }
-    }finally {
-      lock.writeLock().unlock();
-    }
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        infosme.setDefaultSmsc(smsc);
+      }
+    });
   }
 
   /**
@@ -190,12 +123,11 @@ public class SmscManager {
    * @return СМСЦ по умолчанию
    */
   public String getDefaultSmsc() {
-    try{
-      lock.writeLock().lock();
-      return settings.getDefaultSmsc();
-    }finally {
-      lock.writeLock().unlock();
-    }
+    return readSettings(new SettingsReader<SmscSettings,String>(){
+      public String executeRead(SmscSettings settings)  {
+        return settings.getDefaultSmsc();
+      }
+    });
   }
 
 }
