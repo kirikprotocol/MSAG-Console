@@ -29,14 +29,14 @@ public:
   //
   _DecoderOfTArg  & init(TransferSyntax::Rule_e use_rule)
   {
-    this->cleanUp();
+    this->clear();
     return *(this->_ptr = new (this->_mem._buf)_DecoderOfTArg(use_rule));
   }
   //
   _DecoderOfTArg  & init(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                          TransferSyntax::Rule_e use_rule)
   {
-    this->cleanUp();
+    this->clear();
     return *(this->_ptr = new (this->_mem._buf)_DecoderOfTArg(use_tag, tag_env, use_rule));
   }
 

@@ -23,12 +23,6 @@ protected:
 
   _TArg  * _ptr;
 
-  void cleanUp(void)
-  {
-    if (_ptr)
-      _ptr->~_TArg();
-  }
-
 public:
   OptionalObj_T() : _ptr(0)
   {
@@ -43,19 +37,25 @@ public:
   //
   ~OptionalObj_T()
   {
-    cleanUp();
+    clear();
   }
 
   //
   _TArg  & init(void)
   {
-    cleanUp();
+    clear();
     return *(_ptr = new (_mem._buf)_TArg());
   }
   //
   _TArg  * get(void) { return _ptr; }
   //
   const _TArg  * get(void) const { return _ptr; }
+  //
+  void clear(void)
+  {
+    if (_ptr)
+      _ptr->~_TArg();
+  }
 };
 
 

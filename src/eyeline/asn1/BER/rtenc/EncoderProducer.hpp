@@ -29,17 +29,16 @@ public:
   //
   _EncoderOfTArg  & init(TransferSyntax::Rule_e use_rule)
   {
-    this->cleanUp();
+    this->clear();
     return *(this->_ptr = new (this->_mem._buf)_EncoderOfTArg(use_rule));
   }
   //
   _EncoderOfTArg  & init(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                          TransferSyntax::Rule_e use_rule)
   {
-    this->cleanUp();
+    this->clear();
     return *(this->_ptr = new (this->_mem._buf)_EncoderOfTArg(use_tag, tag_env, use_rule));
   }
-
 };
 
 } //ber
