@@ -46,8 +46,8 @@ void SmscSender::updateConfig( const SmscConfig& config )
     stop();
     MutexGuard mg(mon_);
     session_.reset(new smsc::sme::SmppSession(config.smeConfig,this));
-    ussdPushOp_ = cfg.ussdPushOp;
-    ussdPushVlrOp_ = cfg.ussdPushVlrOp;
+    ussdPushOp_ = config.ussdPushOp;
+    ussdPushVlrOp_ = config.ussdPushVlrOp;
 }
 
 

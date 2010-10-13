@@ -169,9 +169,9 @@ int main( int argc, char** argv )
                       "------------------------------------------------------------------------");
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
 
-        std::auto_ptr< smsc::admin::service::ServiceSocketListener>
-            adml( new smsc::admin::service::ServiceSocketListener() );
-        // adminListener = adml.get();
+        std::auto_ptr< eyeline::informer::InfosmeCore > core;
+        std::auto_ptr< eyeline::informer::InfosmeComponent > admin;
+        std::auto_ptr< smsc::admin::service::ServiceSocketListener> adml;
 
         atexit( atExitHandler );
 
@@ -202,9 +202,12 @@ int main( int argc, char** argv )
                 throw eyeline::informer::InfosmeException("cannot create config");
             }
 
-            std::auto_ptr< eyeline::informer::InfosmeCore >
-                core( new eyeline::informer::InfosmeCoreV1 );
+            // NOTE: we need to start admin earlier, to be able to provide connection
+            // for tcp-check-daemon.
 
+            core.reset( new eyeline::informer::InfosmeCoreV1 );
+            admin.reset( new eyeline::informer::InfosmeComponent(*core.get()) );
+            adml.reset( new smsc::admin::service::ServiceSocketListener() );
 
             {
                 /// admin listener configuration
@@ -213,10 +216,11 @@ int main( int argc, char** argv )
                            cv.getInt("port"));
             }
 
-            eyeline::informer::InfosmeComponent admin(*core.get());
-            smsc::admin::service::ComponentManager::registerComponent(&admin);
+            smsc::admin::service::ComponentManager::registerComponent(admin.get());
             adml->Start();
-
+            // a guarantee that adml is started
+            timespec ts = {0,50000000};
+            nanosleep(&ts,0);
             {
                 smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme");
                 core->init(cv);
@@ -239,13 +243,13 @@ int main( int argc, char** argv )
             }
             adml->shutdown();
             core->stop();
-            adml.reset(0);
 
         } catch ( std::exception& e ) {
 
             smsc_log_error(mainlog,"error: %s", e.what());
 
         }
+        smsc_log_debug(mainlog,"end of main scope");
 
     } catch ( std::exception& e ) {
         fprintf(stderr,"exception caught %s\n",e.what());

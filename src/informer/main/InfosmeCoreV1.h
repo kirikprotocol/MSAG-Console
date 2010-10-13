@@ -70,7 +70,7 @@ public:
     void updateSmsc( const std::string& smscId, const SmscConfig* cfg );
 
     /// reload all regions
-    void reloadRegions();
+    void reloadRegions( const std::string& defaultSmscId );
 
     virtual regionid_type findRegion( personid_type subscriber );
 
@@ -99,7 +99,7 @@ private:
     bool                                       stopping_;
     bool                                       started_;
     smsc::core::threads::ThreadPool            ttp_;        // transfer task pool
-    smsc::core::buffers::Hash< SmscSender* >      smscs_;   // owned
+    smsc::core::buffers::Hash< SmscSender* >      smscs_;        // owned
     smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned
     smsc::core::buffers::IntHash< DeliveryPtr >   deliveries_;   // owned

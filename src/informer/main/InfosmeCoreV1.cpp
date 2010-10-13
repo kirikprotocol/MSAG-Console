@@ -212,21 +212,30 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     if (!inputJournal_) inputJournal_ = new InputJournal(cs_);
     if (!storeJournal_) storeJournal_ = new StoreJournal(cs_);
 
-    // create smscs and regions
-    std::auto_ptr< ConfigView > ccv(cfg.getSubConfig("SMSCConnectors"));
-    ConfString defConn(ccv->getString("default","default SMSC id not found"));
-    std::auto_ptr< CStrSet > connNames(ccv->getShortSectionNames());
-    if ( connNames->find(defConn.str()) == connNames->end() ) {
-        throw ConfigException("default SMSC does not match any section");
+    // create smscs
+    {
+        const char* fname = "smsc.xml";
+        std::auto_ptr< Config > centerConfig( Config::createFromFile(fname));
+        if (!centerConfig.get()) {
+            throw InfosmeException("cannot create config from '%s'",fname);
+        }
+        std::auto_ptr< ConfigView > ccv(new ConfigView(*centerConfig.get(),"SMSCConnectors"));
+        const ConfString defConn(ccv->getString("default","default SMSC id not found"));
+        std::auto_ptr< CStrSet > connNames(ccv->getShortSectionNames());
+        if ( connNames->find(defConn.str()) == connNames->end() ) {
+            throw ConfigException("default SMSC '%s' does not match any section",defConn.c_str());
+        }
+        for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
+            smsc_log_debug(log_,"processing S='%s'",i->c_str());
+            std::auto_ptr< ConfigView > sect(ccv->getSubConfig(i->c_str()));
+            SmscConfig smscConfig;
+            readSmscConfig(smscConfig, *sect.get());
+            updateSmsc( i->c_str(), &smscConfig );
+        }
+
+        // create regions
+        reloadRegions( defConn.str() );
     }
-    for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
-        smsc_log_debug(log_,"processing S='%s'",i->c_str());
-        std::auto_ptr< ConfigView > sect(ccv->getSubConfig(i->c_str()));
-        SmscConfig smscConfig;
-        readSmscConfig(smscConfig, *sect.get());
-        updateSmsc( i->c_str(), &smscConfig );
-    }
-    reloadRegions();
 
     {
         // loading deliveries
@@ -373,7 +382,7 @@ void InfosmeCoreV1::updateSmsc( const std::string& smscId,
 }
 
 
-void InfosmeCoreV1::reloadRegions()
+void InfosmeCoreV1::reloadRegions( const std::string& defaultSmscId )
 {
     const regionid_type regionId = 1;
     const std::string smscId = "MSAG0";
