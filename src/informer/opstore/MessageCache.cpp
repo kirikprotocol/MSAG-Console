@@ -97,13 +97,16 @@ void MessageCache::setRecordAtInit( regionid_type regionId,
 }
 
 
-void MessageCache::postInit( std::vector<regionid_type>& emptyRegs )
+void MessageCache::postInit( std::vector<regionid_type>& filledRegs,
+                             std::vector<regionid_type>& emptyRegs )
 {
     int regId;
     RegionalStoragePtr* ptr;
     for ( smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
           i.Next(regId,ptr); ) {
-        if ( !(*ptr)->postInit() ) {
+        if ( (*ptr)->postInit() ) {
+            filledRegs.push_back(regionid_type(regId));
+        } else {
             emptyRegs.push_back(regionid_type(regId));
             storages_.Delete(regId);
         }

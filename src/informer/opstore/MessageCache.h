@@ -33,7 +33,8 @@ public:
                           Message& msg,
                           regionid_type serial );
 
-    void postInit( std::vector<regionid_type>& emptyRegs );
+    void postInit( std::vector<regionid_type>& filledRegs,
+                   std::vector<regionid_type>& emptyRegs );
 
 private:
     smsc::core::synchronization::Mutex                 cacheLock_;

@@ -101,18 +101,24 @@ public:
 
     virtual void postInit()
     {
-        BindSignal bs;
-        bs.bind = false;
+        BindSignal bsEmpty, bsFilled;
+        bsEmpty.bind = false;
+        bsFilled.bind = true;
         int dlvId;
         DeliveryPtr* ptr;
-        smsc_log_debug(core_.log_,"invoking postInit to unbind empty regions");
+        smsc_log_debug(core_.log_,"invoking postInit to bind/unbind regions");
         for ( smsc::core::buffers::IntHash< DeliveryPtr >::Iterator i(core_.deliveries_);
               i.Next(dlvId,ptr); ) {
-            bs.regIds.clear();
-            (*ptr)->postInitOperative(bs.regIds);
-            if (!bs.regIds.empty()) {
-                bs.dlvId = (*ptr)->getDlvId();
-                core_.bindDeliveryRegions(bs);
+            bsEmpty.regIds.clear();
+            bsFilled.regIds.clear();
+            (*ptr)->postInitOperative(bsFilled.regIds,bsEmpty.regIds);
+            if (!bsEmpty.regIds.empty()) {
+                bsEmpty.dlvId = (*ptr)->getDlvId();
+                core_.bindDeliveryRegions(bsEmpty);
+            }
+            if (!bsFilled.regIds.empty()) {
+                bsFilled.dlvId = (*ptr)->getDlvId();
+                core_.bindDeliveryRegions(bsFilled);
             }
         }
     }
@@ -255,17 +261,11 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
         }
     }
 
-    // reading journals
-    smsc_log_info(log_,"FIXME: reading journals");
-    InputJournalReader ijr(*this);
-    inputJournal_->init(ijr);
+    // reading journals and binding deliveries and regions
     StoreJournalReader sjr(*this);
     storeJournal_->init(sjr);
-
-    // bind delivery and regions
-    // std::vector<regionid_type> regIds;
-    // regIds.push_back(1);
-    // deliveryRegions(dlvId,regIds,true);
+    InputJournalReader ijr(*this);
+    inputJournal_->init(ijr);
 }
 
 

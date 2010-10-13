@@ -280,7 +280,7 @@ void RegionalStorage::transferFinished( TransferTask* task )
         delete task;
     }
     cacheMon_.notify();
-    smsc_log_debug(log_,"FIXME: notify that transfer finished");
+    smsc_log_debug(log_,"transfer has been finished");
 }
 
 
@@ -348,7 +348,7 @@ void RegionalStorage::rollOver()
             mg.Unlock();
             storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,iter->msg,ml.serial);
         }
-        smsc_log_debug(log_,"FIXME: restriction on throughput");
+        smsc_log_debug(log_,"FIXME: place the restriction on throughput here");
         mg.Lock();
     }
 }

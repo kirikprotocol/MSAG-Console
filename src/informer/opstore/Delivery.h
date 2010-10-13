@@ -52,8 +52,9 @@ public:
 
     // post process regions and collect empty ones
     void postInitInput( std::vector<regionid_type>& filledRegs );
-    void postInitOperative( std::vector<regionid_type>& emptyRegs ) {
-        cache_.postInit(emptyRegs);
+    void postInitOperative( std::vector<regionid_type>& filledRegs,
+                            std::vector<regionid_type>& emptyRegs ) {
+        cache_.postInit(filledRegs,emptyRegs);
     }
 
 private:
