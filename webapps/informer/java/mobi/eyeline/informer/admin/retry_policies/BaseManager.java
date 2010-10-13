@@ -53,29 +53,21 @@ public class BaseManager<C> {
     }
   }
 
-  protected C getSettings() {
-    return settings;
-  }
-
-  protected Infosme getInfosme() {
-    return infosme;
-  }
-
 
   abstract class BaseManagerWriteExecutor {
 
-    abstract void changeSettings() throws AdminException ;
+    abstract void changeSettings(C settings) throws AdminException ;
 
-    abstract void infosmeCommand() throws AdminException ;
+    abstract void infosmeCommand(Infosme infosme) throws AdminException ;
 
     protected final void execute() throws AdminException {
       try{
         lock.writeLock().lock();
-        changeSettings();
+        changeSettings(settings);
         File backup = save();
         if(infosme.isOnline()) {
           try {
-            infosmeCommand();
+            infosmeCommand(infosme);
           }
           catch (AdminException e){
             rollback(backup);
@@ -91,12 +83,12 @@ public class BaseManager<C> {
 
   abstract class BaseManagerReadExecutor<ReturnType> {
         
-    abstract ReturnType executeRead() throws AdminException ;
+    abstract ReturnType executeRead(C settings) throws AdminException ;
 
     protected final ReturnType execute() throws AdminException {
       try{
         lock.readLock().lock();
-        return executeRead();
+        return executeRead(settings);
       }finally {
         lock.readLock().unlock();
       }
