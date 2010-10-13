@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.TreeSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -82,7 +83,6 @@ public class UserTest {
     catch (AdminException e) {}
   }
 
-
   @Test
   public void testSetPassword() throws AdminException {
     User o = new User();
@@ -110,6 +110,31 @@ public class UserTest {
       assertTrue(false);
     }catch (AdminException e) {}
   }
+
+  public void testSetOrganization() throws AdminException {
+    User o = new User();
+    o.setOrganization("1");
+    assertEquals("1",o.getOrganization());
+  }
+
+  public void testSetLocale() throws AdminException {
+    User o = new User();
+    o.setLocale(new Locale("en"));
+    assertEquals(o.getLocale().getLanguage(),"en");
+  }
+
+  public void testRoles() {
+    User o = new User();
+    TreeSet<String> roles = new TreeSet<String>();
+    roles.add("roleA");
+    roles.add("roleB");
+    assertTrue(o.hasRole("roleA"));
+    assertTrue(o.hasRole("roleB"));
+    assertTrue(!o.hasRole("roleC"));
+  }
+
+
+
 
   @Test
   public void testClone() throws AdminException{
