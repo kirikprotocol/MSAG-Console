@@ -33,7 +33,7 @@
         <eye:dataTable value="#{retryPolicies.policiesModel}" selectedRows="#{retryPolicies.selectedRows}" var="rp">
           <eye:row rowId="#{rp.policyId}">
 
-            <eye:column name="name" title="#{rp.policyId}" sortable="true" width="99%" align="left">
+            <eye:column name="name" title="#{retryPolicyBundle.name}" sortable="true" width="99%" align="left">
               <h:commandLink value="#{rp.policyId}" action="RETRY_POLICY_EDIT">
                 <f:param name="policyId" value="#{rp.policyId}"/>
               </h:commandLink>
