@@ -26,7 +26,7 @@ import java.io.IOException;
 public class TestAdminContext extends AdminContext {
 
   private void prepareServices(WebConfig config, File baseDir) throws IOException, AdminException {
-    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), new File(config.getUsersFile()), false);
+    TestUtils.exportResource(TestUsersManager.class.getResourceAsStream("users.xml"), new File(config.getUsersFile()), false);
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(baseDir, "conf"+File.separatorChar+"config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(baseDir, "conf"+File.separatorChar+"smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(baseDir, "conf"+File.separatorChar+"regions.xml"), false);

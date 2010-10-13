@@ -36,7 +36,7 @@ public class LocaleFilter implements Filter {
       }
     }
 
-    l = u != null && u.getPrefs() != null && u.getPrefs().getLocale() != null ? u.getPrefs().getLocale() :
+    l = u != null && u.getLocale() != null ? u.getLocale() :
         request.getLocale() != null ? request.getLocale() : Locale.ENGLISH;
 
     request.setAttribute(LOCALE_PARAMETER, l);

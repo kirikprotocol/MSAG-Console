@@ -1,13 +1,38 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE users SYSTEM "users.dtd">
-<users>
-  <user cellPhone="+414224" dept="a" email="a@a.ru" firstName="a" homePhone="131313" lastName="a" login="a" password="1" workPhone="+133412">
-    <role name="informer-admin"/>
-    <role name="informer-user"/>
-    <pref name="locale" value="en"/>
-  </user>
-  <user cellPhone="532532" dept="a" email="b@b.ru" firstName="a" homePhone="+73423523" lastName="a" login="b" password="1" workPhone="+2424">
-    <role name="informer-user"/>
-    <pref name="locale" value="en"/>
-  </user>
-</users>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+  <section name="USERS">
+    <section name="a">
+      <param name="password"  type="string">1</param>
+      <param name="status"    type="string">ENABLED</param>
+      <param name="firstName" type="string">AfirstName</param>
+      <param name="lastName"  type="string">AlastName</param>
+      <param name="phone"     type="string">+414224</param>
+      <param name="email"     type="string">a@nowhere.com</param>
+      <param name="organization"  type="string">eyeline inc.</param>
+      <param name="locale"        type="string">en</param>
+      <section name="ROLES">
+        <param name="informer-admin" type="bool">true</param>
+        <param name="informer-user"  type="bool">true</param>
+      </section>
+    </section>
+    <section name="b">      
+      <param name="password"  type="string">1</param>
+      <param name="status"    type="string">ENABLED</param>
+      <param name="firstName" type="string">BfirstName</param>
+      <param name="lastName"  type="string">BlastName</param>
+      <param name="phone"     type="string">+37857835</param>
+      <param name="email"     type="string">b@nowhere.com</param>
+      <param name="locale"        type="string">en</param>
+      <param name="organization"  type="string">eyeline inc.</param>
+      <param name="locale"        type="string">en</param>
+      <section name="ROLES">
+        <param name="informer-admin" type="bool">true</param>
+        <param name="informer-user"  type="bool">true</param>
+      </section>
+    </section>
+  </section>
+</config>
+
+
+

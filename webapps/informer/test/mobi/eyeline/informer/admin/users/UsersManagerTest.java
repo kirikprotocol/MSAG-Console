@@ -51,46 +51,19 @@ public class UsersManagerTest {
       boolean found = false;
       for(User n : newU) {
         if(o.getLogin().equals(n.getLogin())) {
-          assertEquals(o.getCellPhone(), n.getCellPhone());
-          assertEquals(o.getDept(), n.getDept());
+          assertEquals(o.getPhone(), n.getPhone());
           assertEquals(o.getEmail(), n.getEmail());
           assertEquals(o.getFirstName(), n.getFirstName());
-          assertEquals(o.getHomePhone(), n.getHomePhone());
           assertEquals(o.getLastName(), n.getLastName());
+          assertEquals(o.getStatus(), n.getStatus());
           assertEquals(o.getPassword(), n.getPassword());
-          assertEquals(o.getWorkPhone(), n.getWorkPhone());
+          assertEquals(o.getOrganization(), n.getOrganization());
+          assertEquals(o.getLocale(), n.getLocale());
           assertEquals(o.getRoles().size(), n.getRoles().size());
           for(String ro : o.getRoles()) {
             boolean foundR = false;
             for(String no : n.getRoles()) {
               if(no.equals(ro)) {
-                foundR = true;
-                break;
-              }
-            }
-            assertTrue(foundR);
-          }
-          UserPreferences oPr = o.getPrefs();
-          UserPreferences nPr = n.getPrefs();
-
-          assertEquals(oPr.getLocale(),nPr.getLocale());
-          assertEquals(oPr.getPerfMonBlock(),nPr.getPerfMonBlock());
-          assertEquals(oPr.getPerfMonPixPerSecond(),nPr.getPerfMonPixPerSecond());
-          assertEquals(oPr.getPerfMonScale(),nPr.getPerfMonScale());
-          assertEquals(oPr.getPerfMonVLightGrid(),nPr.getPerfMonVLightGrid());
-          assertEquals(oPr.getTopMonGraphGrid(),nPr.getTopMonGraphGrid());
-          assertEquals(oPr.getPerfMonVMinuteGrid(),nPr.getPerfMonVMinuteGrid());
-          assertEquals(oPr.getTopMonGraphHead(),nPr.getTopMonGraphHead());
-          assertEquals(oPr.getTopMonGraphScale(),nPr.getTopMonGraphScale());
-          assertEquals(oPr.getTopMonMaxSpeed(),nPr.getTopMonMaxSpeed());
-          assertEquals(oPr.getTopMonMaxSpeed(),nPr.getTopMonMaxSpeed());
-          assertEquals(oPr.getTopMonGraphHigrid(),nPr.getTopMonGraphHigrid());
-          assertEquals(oPr.getUnknown().size(), nPr.getUnknown().size());
-
-          for(Map.Entry<String, String> uo : oPr.getUnknown().entrySet()) {
-            boolean foundR = false;
-            for(Map.Entry<String, String> un : nPr.getUnknown().entrySet()) {
-              if(uo.equals(un)) {
                 foundR = true;
                 break;
               }
