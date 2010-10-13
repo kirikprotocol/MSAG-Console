@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -15,18 +16,21 @@ public class User implements Serializable{
 
   private String login;
   private String password;
-  private Set<String> roles = new TreeSet<String>();
+  private Status status;
   private String firstName;
   private String lastName;
-  private String dept;
-  private String workPhone;
-  private String homePhone;
-  private String cellPhone;
+  private String phone;
   private String email;
+  private String organization;
+  private Locale locale;
+  private Set<String> roles = new TreeSet<String>();
 
-  private UserPreferences prefs = new UserPreferences();
+
+
 
   private final ValidationHelper vh = new ValidationHelper(User.class);
+
+
 
   public User() {
   }
@@ -37,21 +41,13 @@ public class User implements Serializable{
     this.roles = user.getRoles() == null ? null : new TreeSet<String>(user.getRoles());
     this.firstName = user.firstName;
     this.lastName = user.lastName;
-    this.dept = user.dept;
-    this.workPhone = user.workPhone;
-    this.homePhone = user.homePhone;
-    this.cellPhone = user.cellPhone;
+    this.phone = user.phone;
     this.email = user.email;
-    this.prefs = user.prefs != null ? new UserPreferences(user.prefs) : null;
+    this.status = user.status;
+    this.organization=user.organization;
+    this.locale = user.locale == null ? null : new Locale(user.locale.getLanguage());
   }
 
-  public UserPreferences getPrefs() {
-    return prefs;
-  }
-
-  public void setPrefs(UserPreferences prefs) {
-    this.prefs = prefs;
-  }
 
   public String getLogin() {
     return login;
@@ -97,40 +93,14 @@ public class User implements Serializable{
     this.lastName = lastName;
   }
 
-  public String getDept() {
-    return dept;
+
+  public String getPhone() {
+    return phone;
   }
 
-  public void setDept(String dept) throws AdminException {
-    vh.checkNotEmpty("dept", dept);
-    this.dept = dept;
-  }
-
-  public String getWorkPhone() {
-    return workPhone;
-  }
-
-  public void setWorkPhone(String workPhone) throws AdminException {
-    vh.checkNotEmpty("workPhone", workPhone);
-    this.workPhone = workPhone;
-  }
-
-  public String getHomePhone() {
-    return homePhone;
-  }
-
-  public void setHomePhone(String homePhone) throws AdminException {
-    vh.checkNotEmpty("homePhone", homePhone);
-    this.homePhone = homePhone;
-  }
-
-  public String getCellPhone() {
-    return cellPhone;
-  }
-
-  public void setCellPhone(String cellPhone) throws AdminException {
-    vh.checkNotEmpty("cellPhone", cellPhone);
-    this.cellPhone = cellPhone;
+  public void setPhone(String phone) throws AdminException {
+    vh.checkNotEmpty("phone", phone);
+    this.phone = phone;
   }
 
   public String getEmail() {
@@ -144,5 +114,35 @@ public class User implements Serializable{
 
   public boolean hasRole(String name) {
     return roles.contains(name);
+  }
+
+  public void setStatus(Status status) throws AdminException {
+    vh.checkNotNull("status", status);
+    this.status = status;
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  public void setOrganization(String organization) {
+    this.organization = organization;
+  }
+
+  public String getOrganization() {
+    return organization;
+  }
+
+  public void setLocale(Locale locale) {
+      this.locale = locale;
+  }
+
+  public Locale getLocale() {
+    return locale;
+  }
+
+  public enum Status {
+    ENABLED,
+    DISABLED
   }
 }

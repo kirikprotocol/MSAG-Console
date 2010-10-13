@@ -27,7 +27,6 @@
       <param name="organization"  type="string">eyeline inc.</param>
       <param name="locale"        type="string">en</param>
       <section name="ROLES">
-        <param name="informer-admin" type="bool">true</param>
         <param name="informer-user"  type="bool">true</param>
       </section>
     </section>

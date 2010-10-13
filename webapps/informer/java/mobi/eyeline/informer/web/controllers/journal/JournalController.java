@@ -158,8 +158,7 @@ public class JournalController extends InformerController{
           row.setDescription(r.getDescription(l));
 
           User u = users.getUser(r.getUser());
-          row.setUserDetails(u != null ? u.getLastName() + " " + u.getFirstName() + " (" + u.getDept() + ")" : r.getUser());
-
+          row.setUserDetails(u != null ? u.getLastName() + " " + u.getFirstName()  : r.getUser());
           result.add(row);
         }
 
