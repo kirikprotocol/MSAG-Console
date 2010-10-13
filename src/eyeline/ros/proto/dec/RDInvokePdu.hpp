@@ -5,12 +5,15 @@
 #ident "@(#)$Id$"
 #define __EYELINE_ROS_PROTO_DEC_INVOKE_HPP
 
-#include "eyeline/ros/ROSPdu.hpp"
+#include "eyeline/ros/ROSPrimitives.hpp"
+
 #include "eyeline/ros/proto/dec/RDOperationCode.hpp"
 #include "eyeline/ros/proto/dec/RDInvokeIdType.hpp"
 #include "eyeline/ros/proto/dec/RDLinkedIdType.hpp"
-#include "eyeline/asn1/BER/rtdec/DecodeASType.hpp"
+#include "eyeline/ros/proto/dec/RDPduArgument.hpp"
+
 #include "eyeline/asn1/BER/rtdec/DecodeSeq.hpp"
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 namespace eyeline {
 namespace ros {
@@ -19,7 +22,7 @@ namespace dec {
 
 /* ROS::Invoke PDU is defined in IMPLICIT tagging environment as follow:
 
-Invoke ::= [1] SEQUENCE {
+Invoke ::= SEQUENCE {
   invokeId    InvokeIdType,
   linkedId    LinkedIdType OPTIONAL,
   opcode      INTEGER,
@@ -29,24 +32,14 @@ class RDInvokePdu : public asn1::ber::DecoderOfSequence_T<4> {
 private:
   using asn1::ber::DecoderOfSequence_T<4>::setField;
 
-  // -- OPTIONALs
-  union {
-    void *   _aligner;
-    uint8_t  _buf[sizeof(RDLinkedIdType)];
-  } _memLinkId;
-  union {
-    void *    _aligner;
-    uint64_t  _buf[sizeof(asn1::ber::DecoderOfASType)];
-  } _memArgType;
-
 protected:
   ROSInvokePdu *  _dVal;
 
   RDInvokeIdType  _invId;
   RDLocalOpCode   _opCode;
   // -- OPTIONALs
-  RDLinkedIdType *              _linkedId;
-  asn1::ber::DecoderOfASType *  _argType;
+  asn1::ber::DecoderProducer_T<RDLinkedIdType>  _linkedId;
+  asn1::ber::DecoderProducer_T<RDPduArgument>   _argument;
 
   //Initializes ElementDecoder for this type
   void construct(void);
@@ -61,38 +54,25 @@ protected:
   //If necessary, allocates optional element and initializes associated TypeDecoderAC
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
   //Performs actions upon successfull optional element decoding
-  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */;
+  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ { }
 
 public:
-  static const asn1::ASTag _pduTag; //[1] IMPLICIT
-
-  explicit RDInvokePdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSequence_T<4>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
+  explicit RDInvokePdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<4>(use_rule)
     , _dVal(0), _invId(use_rule), _opCode(use_rule)
-    , _linkedId(0), _argType(0)
   {
-    _memLinkId._aligner = _memArgType._aligner = 0;
     construct();
   }
-  RDInvokePdu(ROSInvokePdu & use_val,
-            TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSequence_T<4>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _invId(use_rule), _opCode(use_rule)
-    , _linkedId(0), _argType(0)
+  RDInvokePdu(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+              asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<4>(use_rule)
+    , _dVal(0), _invId(use_rule), _opCode(use_rule)
   {
-    _memLinkId._aligner = _memArgType._aligner = 0;
     construct();
   }
   //
   ~RDInvokePdu()
-  {
-    if (_linkedId)
-      _linkedId->~RDLinkedIdType();
-    if (_argType)
-      _argType->~DecoderOfASType();
-  }
+  { }
 
   void setValue(ROSInvokePdu & use_val)
   {

@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/ros/proto/dec/RDProblemType.hpp"
 
@@ -21,6 +21,15 @@ const asn1::ASTag
 const asn1::ASTag
   RDProblemType::_tagErrorProblem(asn1::ASTag::tagContextSpecific, 3);
 
+/* ProblemType is defined in IMPLICIT tagging environment as follow:
+
+ProblemType ::= CHOICE {
+    general       [0]  GeneralProblem,
+    invoke        [1]  InvokeProblem,
+    returnResult  [2]  ReturnResultProblem,
+    returnError   [3]  ReturnErrorProblem
+} */
+
 //Initializes ElementDecoder for this type
 //NOTE: alternative indexes match values of ros::RejectProblem::ProblemKind_e
 void RDProblemType::construct(void)
@@ -33,9 +42,7 @@ void RDProblemType::construct(void)
 
 void RDProblemType::initAlt(const asn1::ASTag & problem_tag)
 {
-  _pDec = new (_memAlt._buf) asn1::ber::DecoderOfINTEGER(problem_tag,
-                                  asn1::ASTagging::tagsIMPLICIT, getTSRule());
-  _pDec->setValue(_tmpVal);
+  _pDec.init(problem_tag, eyeline::asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(_tmpVal);
 }
 
 
@@ -51,8 +58,6 @@ asn1::ber::TypeDecoderAC *
   if (unique_idx > 3) //assertion!!!
     throw smsc::util::Exception("ros::proto::dec::RDProblemType::prepareAlternative() : undefined UId");
 
-  resetAlt();
-
   switch (unique_idx) {
   case 3:
     initAlt(_tagErrorProblem); break;
@@ -63,7 +68,7 @@ asn1::ber::TypeDecoderAC *
   default: //case 0:
     initAlt(_tagGeneralProblem);
   }
-  return _pDec;
+  return _pDec.get();
 }
 
 //Perfoms actions finalizing alternative decoding

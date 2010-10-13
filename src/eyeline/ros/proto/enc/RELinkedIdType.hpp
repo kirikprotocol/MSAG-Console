@@ -5,19 +5,17 @@
 #ident "@(#)$Id$"
 #define __EYELINE_ROS_PROTO_ENC_LINKEDIDTYPE_HPP
 
-#include "eyeline/util/MaxSizeof.hpp"
-
 #include "eyeline/ros/ROSTypes.hpp"
+
 #include "eyeline/asn1/BER/rtenc/EncodeINT.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeNULL.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeChoice.hpp"
+#include "eyeline/asn1/BER/rtenc/EncodersChoiceT.hpp"
 
 namespace eyeline {
 namespace ros {
 namespace proto {
 namespace enc {
-
-using eyeline::asn1::ber::TSGroupBER;
 
 /* LinkedIdType is defined in IMPLICIT tagging environment as follow:
   LinkedIdType ::=  CHOICE {
@@ -32,47 +30,40 @@ using eyeline::asn1::ber::TSGroupBER;
 */
 
 class RELinkedIdType : public asn1::ber::EncoderOfChoice {
-private:
-  union {
-    void * _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf2_T<asn1::ber::EncoderOfINTEGER,
-                                            asn1::ber::EncoderOfNULL>::VALUE];
-  } _memAlt;
-
 protected:
-  union {
-    asn1::ber::TypeEncoderAC *    _none;
-    asn1::ber::EncoderOfINTEGER * _present;
-    asn1::ber::EncoderOfNULL *    _absent;
-  } _alt;
+  using asn1::ber::EncoderOfChoice::setSelection;
 
-  void resetAlt(void);
+  class AltEncoder : public asn1::ber::ChoiceOfEncoders2_T<
+                      asn1::ber::EncoderOfINTEGER, asn1::ber::EncoderOfNULL> {
+  public:
+    Alternative_T<asn1::ber::EncoderOfINTEGER, 0> present() { return alternative0(); }
+    Alternative_T<asn1::ber::EncoderOfNULL, 1>     absent()  { return alternative1(); }
+
+    ConstAlternative_T<asn1::ber::EncoderOfINTEGER, 0> present() const { return alternative0(); }
+    ConstAlternative_T<asn1::ber::EncoderOfNULL, 1>     absent()  const { return alternative1(); }
+  };
+
+  AltEncoder  _alt;
 
 public:
-  static const asn1::ASTagging _tagsPresent;
-  static const asn1::ASTagging _tagsAbsent;
+  static const asn1::ASTag _tagPresent;
+  static const asn1::ASTag _tagAbsent;
 
-  explicit RELinkedIdType(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfChoice(TSGroupBER::getTSRule(use_rule))
+  explicit RELinkedIdType(asn1::TransferSyntax::Rule_e use_rule
+                          = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfChoice(use_rule)
   {
-    _memAlt._aligner = 0;
-    _alt._none = NULL;
-    addCanonicalAlternative(_tagsPresent);
+    addCanonicalAlternative(_tagPresent, asn1::ASTagging::tagsIMPLICIT);
   }
-  RELinkedIdType(ros::InvokeId inv_id,
-                 TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfChoice(TSGroupBER::getTSRule(use_rule))
+  RELinkedIdType(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+                 asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfChoice(outer_tag, tag_env, use_rule)
   {
-    _memAlt._aligner = 0;
-    _alt._none = NULL;
-    addCanonicalAlternative(_tagsPresent);
-    setIdLinked(inv_id);
+    addCanonicalAlternative(_tagPresent, asn1::ASTagging::tagsIMPLICIT);
   }
   //
   ~RELinkedIdType()
-  {
-    resetAlt();
-  }
+  { }
 
   void setIdLinked(ros::InvokeId inv_id) /*throw(std::exception)*/;
 

@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/ros/proto/dec/RDRosPdu.hpp"
 
@@ -9,23 +9,30 @@ namespace ros {
 namespace proto {
 namespace dec {
 
+const asn1::ASTag  RDRosPdu::_tagInvoke(asn1::ASTag::tagContextSpecific, 1);
+const asn1::ASTag  RDRosPdu::_tagResult(asn1::ASTag::tagContextSpecific, 2);
+const asn1::ASTag  RDRosPdu::_tagError(asn1::ASTag::tagContextSpecific, 3);
+const asn1::ASTag  RDRosPdu::_tagReject(asn1::ASTag::tagContextSpecific, 4);
+const asn1::ASTag  RDRosPdu::_tagResultNL(asn1::ASTag::tagContextSpecific, 7);
+
+/* ROS PDU is defined in IMPLICIT TAGS environment as following CHOICE:
+
+ROS ::= CHOICE {
+  invoke              [1]  Invoke,
+  returnResult        [2]  ReturnResult,
+  returnError         [3]  ReturnError,
+  reject              [4]  Reject
+  returnResultNotLast [7]  ReturnResult
+} */
 //Initializes ElementDecoder for this type
 void RDRosPdu::construct(void)
 {
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(0, RDInvokePdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(1, RDRResultPdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(2, RDRErrorPdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(3, RDRejectPdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(4, RDRResultNLPdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
+  asn1::ber::DecoderOfChoice_T<5>::setAlternative(0, _tagInvoke, asn1::ASTagging::tagsIMPLICIT);
+  asn1::ber::DecoderOfChoice_T<5>::setAlternative(1, _tagResult, asn1::ASTagging::tagsIMPLICIT);
+  asn1::ber::DecoderOfChoice_T<5>::setAlternative(2, _tagError, asn1::ASTagging::tagsIMPLICIT);
+  asn1::ber::DecoderOfChoice_T<5>::setAlternative(3, _tagReject, asn1::ASTagging::tagsIMPLICIT);
+  asn1::ber::DecoderOfChoice_T<5>::setAlternative(4, _tagResultNL, asn1::ASTagging::tagsIMPLICIT);
 }
-/*
-void RDRosPdu::initAlt(const asn1::ASTag & problem_tag)
-{
-  _pDec = new (_memAlt._buf) asn1::ber::DecoderOfINTEGER(problem_tag,
-                                  asn1::ASTagging::tagsIMPLICIT, getTSRule());
-  _pDec->setValue(_tmpVal);
-}
-*/
 
 // ----------------------------------------
 // -- DecoderOfChoiceAC interface methods
@@ -39,26 +46,23 @@ asn1::ber::TypeDecoderAC *
   if (unique_idx > 4) //assertion!!!
     throw smsc::util::Exception("ros::proto::dec::RDRosPdu::prepareAlternative() : undefined UId");
 
-  cleanUp();
-
   switch (unique_idx) {
   case 4:
-    _pDec._resultNL = new (_memAlt._buf) RDRResultNLPdu(_dVal->initResultNL(), getVALRule());
+    _alt.returnResultNL().init(_tagResultNL, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(_dVal->resultNL().init());
     break;
   case 3:
-    _pDec._reject = new (_memAlt._buf) RDRejectPdu(_dVal->initReject(), getVALRule());
+    _alt.reject().init(_tagReject, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(_dVal->reject().init());
     break;
   case 2:
-    _pDec._error = new (_memAlt._buf) RDRErrorPdu(_dVal->initError(), getVALRule());
+    _alt.returnError().init(_tagError, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(_dVal->error().init());
     break;
   case 1:
-    _pDec._result = new (_memAlt._buf) RDRResultPdu(_dVal->initResult(), getVALRule());
+    _alt.returnResult().init(_tagResult, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(_dVal->result().init());
     break;
   default: //case 0:
-    _pDec._invoke = new (_memAlt._buf) RDInvokePdu(_dVal->initInvoke(), getVALRule());
+    _alt.invoke().init(_tagInvoke, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(_dVal->invoke().init());
   }
-  return _pDec._any;
+  return _alt.get();
 }
-
 
 }}}}

@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/ros/proto/enc/RELinkedIdType.hpp"
 
@@ -9,32 +9,26 @@ namespace ros {
 namespace proto {
 namespace enc {
 
-const asn1::ASTagging RELinkedIdType::_tagsPresent(
-  asn1::ASTag::tagContextSpecific, 0, asn1::ASTagging::tagsIMPLICIT);
+const asn1::ASTag RELinkedIdType::_tagPresent(asn1::ASTag::tagContextSpecific, 0);
+const asn1::ASTag RELinkedIdType::_tagAbsent(asn1::ASTag::tagContextSpecific, 1);
 
-const asn1::ASTagging RELinkedIdType::_tagsAbsent(
-  asn1::ASTag::tagContextSpecific, 1, asn1::ASTagging::tagsIMPLICIT);
-
-
-void RELinkedIdType::resetAlt(void)
-{
-  if (_alt._none) {
-    _alt._none->~TypeEncoderAC();
-    _alt._none = NULL;
+/* LinkedIdType is defined in IMPLICIT tagging environment as follow:
+  LinkedIdType ::=  CHOICE {
+      present  [0] IMPLICIT InvokeIdType,
+      absent   [1] IMPLICIT NULL
   }
-}
+*/
 
 void RELinkedIdType::setIdLinked(ros::InvokeId inv_id)
 {
-  resetAlt();
-  _alt._present = new (_memAlt._buf) asn1::ber::EncoderOfINTEGER(_tagsPresent, getTSRule());
-  _alt._present->setValue(inv_id);
+  _alt.present().init(_tagPresent, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(inv_id);
+  setSelection(*_alt.get());
 }
 
 void RELinkedIdType::setIdAbsent(void)
 {
-  resetAlt();
-  _alt._absent = new (_memAlt._buf) asn1::ber::EncoderOfNULL(_tagsAbsent, getTSRule());
+  _alt.absent().init(_tagAbsent, asn1::ASTagging::tagsIMPLICIT, getTSRule());
+  setSelection(*_alt.get());
 }
 
 }}}}

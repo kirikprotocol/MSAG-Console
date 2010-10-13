@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/ros/proto/dec/RDRejectPdu.hpp"
 
@@ -8,8 +8,6 @@ namespace eyeline {
 namespace ros {
 namespace proto {
 namespace dec {
-
-const asn1::ASTag RDRejectPdu::_pduTag(asn1::ASTag::tagContextSpecific, 4);
 
 /* ROS::Reject PDU is defined in IMPLICIT tagging environment as following:
 

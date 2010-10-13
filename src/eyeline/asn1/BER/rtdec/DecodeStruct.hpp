@@ -18,10 +18,9 @@ private:
   ElementDecoderAC * _elDec; //NOTE: actually it's just a reference to a successor
                              //member, so its copying constructor MUST properly set
                              //that pointer.
-protected:
   DECResult decodeElement(const uint8_t * use_enc, TSLength max_len,
                           bool relaxed_rule) /*throw(std::exception)*/;
-
+protected:
   // -- ************************************************* --
   // -- ValueDecoderIface abstract methods are to implement
   // -- ************************************************* --
@@ -37,7 +36,7 @@ protected:
   //If necessary, allocates optional element and initializes associated TypeDecoderAC
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */ = 0;
   //Performs actions upon successfull optional element decoding
-  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ = 0;
+  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */  { return; }
 
 
   void setElementDecoder(ElementDecoderAC & elm_dec) { _elDec = &elm_dec; }
@@ -48,12 +47,9 @@ protected:
     : TypeValueDecoderAC(use_obj), _elDec(0)
   { }
 
-public:
   DecoderOfStructAC(ElementDecoderAC & use_eldec, const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(eff_tags, use_rule), _elDec(&use_eldec)
-  { }
-  virtual ~DecoderOfStructAC()
   { }
 
   //adds tagged field
@@ -88,6 +84,10 @@ public:
   {
     _elDec->setUnkExtension(unique_idx);
   }
+
+public:
+  virtual ~DecoderOfStructAC()
+  { }
 };
 
 } //ber

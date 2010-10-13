@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/ros/proto/dec/RDLinkedIdType.hpp"
 
@@ -12,15 +12,12 @@ namespace dec {
 const asn1::ASTag RDLinkedIdType::_tagPresent(asn1::ASTag::tagContextSpecific, 0);
 const asn1::ASTag RDLinkedIdType::_tagAbsent(asn1::ASTag::tagContextSpecific, 1);
 
-void RDLinkedIdType::resetAlt(void)
-{
-  if (_alt._none) {
-    _alt._none->~TypeDecoderAC();
-    _alt._none = NULL;
+/* LinkedIdType is defined in IMPLICIT tagging environment as follow:
+  LinkedIdType ::=  CHOICE {
+      present  [0] IMPLICIT InvokeIdType,
+      absent   [1] IMPLICIT NULL
   }
-}
-
-//Initializes ElementDecoder for this type
+*/
 void RDLinkedIdType::construct(void)
 {
   asn1::ber::DecoderOfChoice_T<2>::setAlternative(0, _tagPresent, asn1::ASTagging::tagsIMPLICIT);
@@ -39,18 +36,24 @@ asn1::ber::TypeDecoderAC *
   if (unique_idx > 1) //assertion!!!
     throw smsc::util::Exception("ros::proto::dec::RDLinkedIdType::prepareAlternative() : undefined UId");
 
-  resetAlt();
-
   if (!unique_idx) {
-    _alt._present = new (_memAlt._buf) asn1::ber::DecoderOfINTEGER(getTSRule());
-    _dVal->_present = true;
-    _alt._present->setValue(_dVal->_invId);
-    return _alt._present;
+    _alt.present().init(getTSRule()).setValue(_dVal->_invId);
+    return _alt.present().get();
   }
-  _alt._absent = new (_memAlt._buf) asn1::ber::DecoderOfNULL(getTSRule());
-  _dVal->_present = false;
-  return _alt._absent;
+  _alt.absent().init(getTSRule());
+  return _alt.absent().get();
 }
+
+//Perfoms actions finalizing alternative decoding
+void RDLinkedIdType::markDecodedAlternative(uint16_t unique_idx)
+  /*throw(throw(std::exception)) */
+{
+  if (!unique_idx)
+    _dVal->_present = true;
+  else
+    _dVal->_present = false;
+}
+
 
 }}}}
 

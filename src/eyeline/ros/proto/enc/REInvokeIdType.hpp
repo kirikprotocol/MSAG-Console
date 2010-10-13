@@ -13,8 +13,6 @@ namespace ros {
 namespace proto {
 namespace enc {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 /* InvokeIdType is defined in IMPLICIT tagging environment as follow:
    InvokeIdType ::= INTEGER(-128..127)
 */
@@ -23,15 +21,14 @@ private:
   using asn1::ber::EncoderOfINTEGER::setValue;
 
 public:
-  explicit REInvokeIdType(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfINTEGER(TSGroupBER::getTSRule(use_rule))
+  explicit REInvokeIdType(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfINTEGER(use_rule)
   { }
-  REInvokeIdType(const ros::InvokeId & invoke_id,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfINTEGER(TSGroupBER::getTSRule(use_rule))
-  {
-    asn1::ber::EncoderOfINTEGER::setValue(invoke_id);
-  }
+  REInvokeIdType(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+                 asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfINTEGER(outer_tag, tag_env, use_rule)
+  { }
+  //
   ~REInvokeIdType()
   { }
 

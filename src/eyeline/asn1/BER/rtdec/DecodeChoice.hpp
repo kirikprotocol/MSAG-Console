@@ -18,11 +18,10 @@ private:
   CHCElementDecoderAC * _elDec;   //actually it's just a reference to a successor
                                   //member, so its copying constructor MUST properly
                                   //that pointer.
-protected:
 
   DECResult decodeElement(const uint8_t * use_enc, TSLength max_len,
                           bool relaxed_rule) /*throw(std::exception)*/;
-
+protected:
   // -- ************************************************* --
   // -- ValueDecoderIface abstract methods are to implement
   // -- ************************************************* --
@@ -52,7 +51,6 @@ protected:
     setOptions(_altTags);
   }
 
-public:
   DecoderOfChoiceAC(CHCElementDecoderAC & use_eldec,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(&_altTags, use_rule), _elDec(&use_eldec)
@@ -65,8 +63,6 @@ public:
   DecoderOfChoiceAC(CHCElementDecoderAC & use_eldec, const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(eff_tags, _altTags, use_rule), _elDec(&use_eldec)
-  { }
-  ~DecoderOfChoiceAC()
   { }
 
   //Sets tagged alternative of some type
@@ -108,6 +104,10 @@ public:
       _altTags.addTagging(asn1::_tagUNI0, ASTagging::tagsIMPLICIT);
     _elDec->setUnkExtension(unique_idx);
   }
+
+public:
+  virtual ~DecoderOfChoiceAC()
+  { }
 };
 
 

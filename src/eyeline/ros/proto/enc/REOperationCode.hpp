@@ -5,15 +5,13 @@
 #ident "@(#)$Id$"
 #define __EYELINE_ROS_PROTO_ENC_OPERATION_LOCAL_CODE_HPP
 
-#include "eyeline/ros/ROSPdu.hpp"
+#include "eyeline/ros/ROSTypes.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeINT.hpp"
 
 namespace eyeline {
 namespace ros {
 namespace proto {
 namespace enc {
-
-using eyeline::asn1::ber::TSGroupBER;
 
 /* LocalOperationCode is defined in EXPLICIT tagging environment as follow:
    LocalOperationCode ::= INTEGER
@@ -23,15 +21,15 @@ private:
   using asn1::ber::EncoderOfINTEGER::setValue;
 
 public:
-  explicit RELocalOpCode(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfINTEGER(TSGroupBER::getTSRule(use_rule))
+  explicit RELocalOpCode(asn1::TransferSyntax::Rule_e use_rule
+                          = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfINTEGER(use_rule)
   { }
-  RELocalOpCode(const ros::LocalOpCode & op_code,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfINTEGER(TSGroupBER::getTSRule(use_rule))
-  {
-    asn1::ber::EncoderOfINTEGER::setValue(op_code);
-  }
+  RELocalOpCode(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+                asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfINTEGER(outer_tag, tag_env, use_rule)
+  { }
+  //
   ~RELocalOpCode()
   { }
 

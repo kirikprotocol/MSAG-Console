@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/ros/proto/enc/RERosPdu.hpp"
 
@@ -9,81 +9,57 @@ namespace ros {
 namespace proto {
 namespace enc {
 
-void RERosPdu::cleanUp(void)
-{
-  if (_value._any) {
-    _value._any->~TypeEncoderAC();
-    _value._any = NULL;
-  }
-  _valTag = altNone;
-}
+const asn1::ASTag  RERosPdu::_tagInvoke(asn1::ASTag::tagContextSpecific, 1);
+const asn1::ASTag  RERosPdu::_tagResult(asn1::ASTag::tagContextSpecific, 2);
+const asn1::ASTag  RERosPdu::_tagError(asn1::ASTag::tagContextSpecific, 3);
+const asn1::ASTag  RERosPdu::_tagReject(asn1::ASTag::tagContextSpecific, 4);
+const asn1::ASTag  RERosPdu::_tagResultNL(asn1::ASTag::tagContextSpecific, 7);
 
 //
-REInvokePdu * RERosPdu::setInvoke(const ros::ROSInvokePdu & req_inv)
+void RERosPdu::setInvoke(const ros::ROSInvokePdu & use_val)
 {
-  cleanUp();
-  _value._invoke = new (_memSelection.buf)
-                    REInvokePdu(req_inv, getVALRule());
-  _valTag = altInvoke;
-  asn1::ber::EncoderOfChoice::setSelection(*_value._invoke);
-  return _value._invoke;
+  _alt.invoke().init(_tagInvoke, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val);
+  asn1::ber::EncoderOfChoice::setSelection(*_alt.get());
 }
 //
-RERResultPdu * RERosPdu::setResult(const ros::ROSResultPdu & req_res)
+void RERosPdu::setResult(const ros::ROSResultPdu & use_val)
 {
-  cleanUp();
-  _value._result = new (_memSelection.buf)
-                    RERResultPdu(req_res, getVALRule());
-  _valTag = altResult;
-  asn1::ber::EncoderOfChoice::setSelection(*_value._resultNL);
-  return _value._result;
+  _alt.returnResult().init(_tagResult, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val);
+  asn1::ber::EncoderOfChoice::setSelection(*_alt.get());
 }
 //
-RERResultNLPdu * RERosPdu::setResultNL(const ros::ROSResultNLPdu & req_res)
+void RERosPdu::setResultNL(const ros::ROSResultNLPdu & use_val)
 {
-  cleanUp();
-  _value._resultNL = new (_memSelection.buf)
-                    RERResultNLPdu(req_res, getVALRule());
-  _valTag = altResultNL;
-  asn1::ber::EncoderOfChoice::setSelection(*_value._resultNL);
-  return _value._resultNL;
+  _alt.returnResultNL().init(_tagResultNL, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val);
+  asn1::ber::EncoderOfChoice::setSelection(*_alt.get());
 }
 //
-RERErrorPdu * RERosPdu::setError(const ros::ROSErrorPdu & req_err)
+void RERosPdu::setError(const ros::ROSErrorPdu & use_val)
 {
-  cleanUp();
-  _value._error = new (_memSelection.buf)
-                    RERErrorPdu(req_err, getVALRule());
-  _valTag = altError;
-  asn1::ber::EncoderOfChoice::setSelection(*_value._reject);
-  return _value._error;
+  _alt.returnError().init(_tagError, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val);
+  asn1::ber::EncoderOfChoice::setSelection(*_alt.get());
 }
 //
-RERejectPdu * RERosPdu::setReject(const ros::ROSRejectPdu & req_rej)
+void RERosPdu::setReject(const ros::ROSRejectPdu & use_val)
 {
-  cleanUp();
-  _value._reject = new (_memSelection.buf)
-                    RERejectPdu(req_rej, getVALRule());
-  _valTag = altReject;
-  asn1::ber::EncoderOfChoice::setSelection(*_value._reject);
-  return _value._reject;
+  _alt.reject().init(_tagReject, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val);
+  asn1::ber::EncoderOfChoice::setSelection(*_alt.get());
 }
-
 
 //
 void RERosPdu::setValue(const ros::ROSPdu & use_val) /*throw(std::exception)*/
 {
   switch (use_val.getKind()) {
   case ROSPduPrimitiveAC::rosInvoke:
-    setInvoke(*use_val.getInvoke()); break;
+    setInvoke(*use_val.invoke().get()); break;
   case ROSPduPrimitiveAC::rosResult:
-    setResult(*use_val.getResult()); break;
+    setResult(*use_val.result().get()); break;
   case ROSPduPrimitiveAC::rosError:
-    setError(*use_val.getError()); break;
+    setError(*use_val.error().get()); break;
   case ROSPduPrimitiveAC::rosReject:
-    setReject(*use_val.getReject()); break;
+    setReject(*use_val.reject().get()); break;
   case ROSPduPrimitiveAC::rosResultNL:
-    setResultNL(*use_val.getResultNL()); break;
+    setResultNL(*use_val.resultNL().get()); break;
   default:
     throw smsc::util::Exception("ros::proto::enc::RERosPdu::setValue() : invalid value");
   }

@@ -5,7 +5,7 @@
 #ident "@(#)$Id$"
 #define __EYELINE_ROS_PROTO_DEC_REJECT_HPP
 
-#include "eyeline/ros/ROSPdu.hpp"
+#include "eyeline/ros/ROSPrimitives.hpp"
 #include "eyeline/ros/proto/dec/RDInvokeIdType.hpp"
 #include "eyeline/ros/proto/dec/RDProblemType.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeSeq.hpp"
@@ -17,14 +17,11 @@ namespace dec {
 
 /* ROS::Reject PDU is defined in IMPLICIT tagging environment as following:
 
-Reject ::= [4] SEQUENCE {
+Reject ::= SEQUENCE {
     invokeId	InvokeId,
     problem     ProblemType
 } */
 class RDRejectPdu : public asn1::ber::DecoderOfSequence_T<2> {
-private:
-  using asn1::ber::DecoderOfSequence_T<2>::setField;
-
 protected:
   ROSRejectPdu *  _dVal;
   RDInvokeIdType  _invId;
@@ -38,24 +35,18 @@ protected:
   // ----------------------------------------
   //If necessary, allocates optional element and initializes associated TypeDecoderAC
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
-  //Performs actions upon successfull optional element decoding
-  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ { return; }
 
 public:
-  static const asn1::ASTag _pduTag; //[4] IMPLICIT
-
-  explicit RDRejectPdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSequence_T<2>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
+  explicit RDRejectPdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<2>(use_rule)
     , _dVal(0), _invId(use_rule), _problem(use_rule)
   {
     construct();
   }
-  RDRejectPdu(ROSRejectPdu & use_val,
-            TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSequence_T<2>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _invId(use_rule), _problem(use_rule)
+  RDRejectPdu(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+              asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<2>(outer_tag, tag_env, use_rule)
+    , _dVal(0), _invId(use_rule), _problem(use_rule)
   {
     construct();
   }

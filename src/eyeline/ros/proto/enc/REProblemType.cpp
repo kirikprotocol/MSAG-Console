@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/ros/proto/enc/REProblemType.hpp"
 
@@ -9,37 +9,27 @@ namespace ros {
 namespace proto {
 namespace enc {
 
-const asn1::ASTagging
-  REProblemType::_tagsGeneralProblem(asn1::ASTag::tagContextSpecific,
-                             0, asn1::ASTagging::tagsIMPLICIT);
+const asn1::ASTag REProblemType::_tagGeneralProblem(asn1::ASTag::tagContextSpecific, 0);
+const asn1::ASTag REProblemType::_tagInvokeProblem(asn1::ASTag::tagContextSpecific, 1);
+const asn1::ASTag REProblemType::_tagResultProblem(asn1::ASTag::tagContextSpecific, 2);
+const asn1::ASTag REProblemType::_tagErrorProblem(asn1::ASTag::tagContextSpecific, 3);
 
-const asn1::ASTagging
-  REProblemType::_tagsInvokeProblem(asn1::ASTag::tagContextSpecific,
-                             1, asn1::ASTagging::tagsIMPLICIT);
-
-const asn1::ASTagging
-  REProblemType::_tagsResultProblem(asn1::ASTag::tagContextSpecific,
-                               2, asn1::ASTagging::tagsIMPLICIT);
-
-const asn1::ASTagging
-  REProblemType::_tagsErrorProblem(asn1::ASTag::tagContextSpecific,
-                              3, asn1::ASTagging::tagsIMPLICIT);
-
+//asn1::ASTagging::tagsIMPLICIT
 
 void REProblemType::setValue(const ros::RejectProblem & use_val) /*throw(std::exception)*/
 {
   switch (use_val.getProblemKind()) {
   case ros::RejectProblem::rejInvoke:
-    initAlt(_tagsInvokeProblem)->setValue((uint8_t)use_val.getInvokeProblem());
+    _pEnc.init(_tagInvokeProblem, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val.getProblem());
     break;
   case ros::RejectProblem::rejResult:
-    initAlt(_tagsResultProblem)->setValue((uint8_t)use_val.getRResultProblem());
+    _pEnc.init(_tagResultProblem, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val.getProblem());
     break;
   case ros::RejectProblem::rejError:
-    initAlt(_tagsErrorProblem)->setValue((uint8_t)use_val.getRErrorProblem());
+    _pEnc.init(_tagErrorProblem, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val.getProblem());
     break;
   default: //ros::RejectProblem::rejGeneral:
-    initAlt(_tagsGeneralProblem)->setValue((uint8_t)use_val.getGeneralProblem());
+    _pEnc.init(_tagGeneralProblem, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val.getProblem());
   }
 }
 

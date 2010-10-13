@@ -5,12 +5,11 @@
 #ident "@(#)$Id$"
 #define __EYELINE_ROS_PROTO_DEC_LINKEDIDTYPE_HPP
 
-#include "eyeline/util/MaxSizeof.hpp"
-
 #include "eyeline/ros/ROSTypes.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeINT.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeNULL.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeChoice.hpp"
+#include "eyeline/asn1/BER/rtdec/DecodersChoiceT.hpp"
 
 namespace eyeline {
 namespace ros {
@@ -31,22 +30,20 @@ using eyeline::asn1::ber::TSGroupBER;
   LinkedIdType ::= [0] IMPLICIT InvokeIdType
 */
 class RDLinkedIdType : public asn1::ber::DecoderOfChoice_T<2> {
-private:
-  union {
-    void *  _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf2_T<asn1::ber::DecoderOfINTEGER,
-                                            asn1::ber::DecoderOfNULL>::VALUE];
-  } _memAlt;
-
 protected:
-  ros::LinkedId * _dVal;
-  union {
-    asn1::ber::TypeDecoderAC *    _none;
-    asn1::ber::DecoderOfINTEGER * _present;
-    asn1::ber::DecoderOfNULL *    _absent;
-  } _alt;
+  class AltDecoder : public asn1::ber::ChoiceOfDecoders2_T<
+                      asn1::ber::DecoderOfINTEGER, asn1::ber::DecoderOfNULL> {
+  public:
+    Alternative_T<asn1::ber::DecoderOfINTEGER, 0> present() { return alternative0(); }
+    Alternative_T<asn1::ber::DecoderOfNULL, 1>    absent()  { return alternative1(); }
 
-  void resetAlt(void);
+    ConstAlternative_T<asn1::ber::DecoderOfINTEGER, 0>  present() const { return alternative0(); }
+    ConstAlternative_T<asn1::ber::DecoderOfNULL, 1>     absent()  const { return alternative1(); }
+  };
+
+  AltDecoder      _alt;
+  ros::LinkedId * _dVal;
+
   //Initializes ElementDecoder for this type
   void construct(void);
 
@@ -55,6 +52,8 @@ protected:
   // ----------------------------------------
   //If necessary, allocates alternative and initializes associated TypeDecoderAC
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception)*/;
+  //Perfoms actions finalizing alternative decoding
+  virtual void markDecodedAlternative(uint16_t unique_idx) /*throw(throw(std::exception)) */;
 
 public:
   static const asn1::ASTag _tagPresent;
@@ -71,26 +70,22 @@ public:
 
   static const TaggingOptions _tagOptions;
 
-  explicit RDLinkedIdType(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfChoice_T<2>(TSGroupBER::getTSRule(use_rule))
+  explicit RDLinkedIdType(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<2>(use_rule)
     , _dVal(0)
   {
-    _memAlt._aligner = 0;
     construct();
   }
-  RDLinkedIdType(ros::LinkedId & use_val,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfChoice_T<2>(TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val)
+  RDLinkedIdType(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+                asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<2>(outer_tag, tag_env, use_rule)
+    , _dVal(0)
   {
-    _memAlt._aligner = 0;
     construct();
   }
   //
   ~RDLinkedIdType()
-  {
-    resetAlt();
-  }
+  { }
 
   void setValue(ros::LinkedId & use_val) /*throw(std::exception)*/
   {

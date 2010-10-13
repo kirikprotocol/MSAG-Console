@@ -13,8 +13,6 @@ namespace ros {
 namespace proto {
 namespace dec {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 /* LocalOperationCode is defined in EXPLICIT tagging environment as follow:
    LocalOperationCode ::= INTEGER
 */
@@ -23,12 +21,16 @@ private:
   using asn1::ber::DecoderOfINTEGER::setValue;
 
 public:
-  explicit RDLocalOpCode(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfINTEGER(TSGroupBER::getTSRule(use_rule))
+  explicit RDLocalOpCode(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfINTEGER(use_rule)
   { }
-  RDLocalOpCode(ros::LocalOpCode & op_code,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfINTEGER(TSGroupBER::getTSRule(use_rule))
+  RDLocalOpCode(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+                asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfINTEGER(outer_tag, tag_env, use_rule)
+  { }
+  explicit RDLocalOpCode(ros::LocalOpCode & op_code,
+                asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfINTEGER(use_rule)
   {
     asn1::ber::DecoderOfINTEGER::setValue(op_code);
   }

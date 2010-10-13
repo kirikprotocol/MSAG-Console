@@ -8,13 +8,12 @@
 #include "eyeline/ros/ROSRejectProblem.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeINT.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeChoice.hpp"
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 namespace eyeline {
 namespace ros {
 namespace proto {
 namespace dec {
-
-using eyeline::asn1::ber::TSGroupBER;
 
 /* ProblemType is defined in IMPLICIT tagging environment as follow:
 
@@ -23,29 +22,14 @@ ProblemType ::= CHOICE {
     invoke        [1]  InvokeProblem,
     returnResult  [2]  ReturnResultProblem,
     returnError   [3]  ReturnErrorProblem
-}
-*/
+} */
 class RDProblemType : public asn1::ber::DecoderOfChoice_T<4> {
 private:
-  union {
-    void *  _aligner;
-    uint8_t _buf[sizeof(asn1::ber::DecoderOfINTEGER)];
-  } _memAlt;
-
   uint8_t  _tmpVal;
 
 protected:
-  ros::RejectProblem *          _dVal;
-  asn1::ber::DecoderOfINTEGER * _pDec;
-
-  void resetAlt(void)
-  {
-    if (_pDec) {
-      _pDec->~DecoderOfINTEGER();
-      _pDec = NULL;
-    }
-  }
-  void initAlt(const asn1::ASTag & problem_tag) /*throw(std::exception)*/;
+  ros::RejectProblem *  _dVal;
+  asn1::ber::DecoderProducer_T<asn1::ber::DecoderOfINTEGER> _pDec;
 
   // ----------------------------------------
   // -- DecoderOfChoiceAC interface methods
@@ -58,6 +42,8 @@ protected:
 
   //Initializes ElementDecoder for this type
   void construct(void);
+  //
+  void initAlt(const asn1::ASTag & problem_tag);
 
 public:
   static const asn1::ASTag _tagGeneralProblem;
@@ -78,26 +64,22 @@ public:
 
   static const TaggingOptions _tagOptions;
 
-  explicit RDProblemType(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfChoice_T<4>(TSGroupBER::getTSRule(use_rule))
-    , _tmpVal(0), _dVal(0), _pDec(0)
+  explicit RDProblemType(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<4>(use_rule)
+    , _tmpVal(0), _dVal(0)
   {
-    _memAlt._aligner = 0;
     construct();
   }
-  RDProblemType(ros::RejectProblem & use_val,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfChoice_T<4>(TSGroupBER::getTSRule(use_rule))
-    , _tmpVal(0), _dVal(&use_val), _pDec(0)
+  RDProblemType(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+                asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<4>(outer_tag, tag_env, use_rule)
+    , _tmpVal(0), _dVal(0)
   {
-    _memAlt._aligner = 0;
     construct();
   }
   //
   ~RDProblemType()
-  {
-    resetAlt();
-  }
+  { }
 
   void setValue(ros::RejectProblem & use_val) /*throw(std::exception)*/
   {

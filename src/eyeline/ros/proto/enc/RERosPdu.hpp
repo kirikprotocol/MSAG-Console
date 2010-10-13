@@ -5,18 +5,20 @@
 #ident "@(#)$Id$"
 #define __EYELINE_ROS_PROTO_ENC_ROSPDU_HPP
 
+#include "eyeline/ros/ROSPdu.hpp"
+
 #include "eyeline/ros/proto/enc/REInvokePdu.hpp"
 #include "eyeline/ros/proto/enc/RERResultPdu.hpp"
 #include "eyeline/ros/proto/enc/RERErrorPdu.hpp"
 #include "eyeline/ros/proto/enc/RERejectPdu.hpp"
+
 #include "eyeline/asn1/BER/rtenc/EncodeChoice.hpp"
+#include "eyeline/asn1/BER/rtenc/EncodersChoiceT.hpp"
 
 namespace eyeline {
 namespace ros {
 namespace proto {
 namespace enc {
-
-using eyeline::asn1::ber::TSGroupBER;
 
 /* ROS PDU is defined in IMPLICIT TAGS environment as following CHOICE:
 
@@ -31,64 +33,59 @@ class RERosPdu : public asn1::ber::EncoderOfChoice {
 private:
   using asn1::ber::EncoderOfChoice::setSelection;
 
-  enum Selection_e {
-    altNone = 0, altInvoke = 1, altResult = 2,
-    altError = 3, altReject = 4, altResultNL = 7
+protected:
+  class AltEncoder : public asn1::ber::ChoiceOfEncoders5_T<
+                REInvokePdu, REReturnResult, RERErrorPdu, RERejectPdu, REReturnResult> {
+  public:
+    Alternative_T<REInvokePdu, 0>     invoke()        { return alternative0(); }
+    Alternative_T<REReturnResult, 1>  returnResult()  { return alternative1(); }
+    Alternative_T<RERErrorPdu, 2>     returnError()   { return alternative2(); }
+    Alternative_T<RERejectPdu, 3>     reject()        { return alternative3(); }
+    Alternative_T<REReturnResult, 4>  returnResultNL()  { return alternative4(); }
+
+    ConstAlternative_T<REInvokePdu, 0>     invoke()        const { return alternative0(); }
+    ConstAlternative_T<REReturnResult, 1>  returnResult()  const { return alternative1(); }
+    ConstAlternative_T<RERErrorPdu, 2>     returnError()   const { return alternative2(); }
+    ConstAlternative_T<RERejectPdu, 3>     reject()        const { return alternative3(); }
+    ConstAlternative_T<REReturnResult, 4>  returnResultNL()  const { return alternative4(); }
   };
 
-  union {
-    void *  aligner;
-    uint8_t buf[eyeline::util::MaxSizeOf4_T<REInvokePdu, RERResultPdu,
-                                              RERErrorPdu, RERejectPdu>::VALUE];
-  } _memSelection;
-
-protected:
-  Selection_e       _valTag;
-  union {
-    asn1::ber::TypeEncoderAC * _any;
-    REInvokePdu *   _invoke;
-    RERResultPdu *  _result;
-    RERErrorPdu *   _error;
-    RERejectPdu *   _reject;
-    RERResultNLPdu *  _resultNL;
-  } _value;
-
-  void cleanUp(void);
+  AltEncoder  _alt;
 
 public:
+  static const asn1::ASTag  _tagInvoke;
+  static const asn1::ASTag  _tagResult;
+  static const asn1::ASTag  _tagError;
+  static const asn1::ASTag  _tagReject;
+  static const asn1::ASTag  _tagResultNL;
+
   explicit RERosPdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfChoice(use_rule), _valTag(altNone)
+    : asn1::ber::EncoderOfChoice(use_rule)
   {
-    _memSelection.aligner = 0;
-    _value._any = 0;
     //add canonical alternative tagging (see EncodeChoice.hpp:NOTE.1)
-    addCanonicalAlternative(REInvokePdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
+    addCanonicalAlternative(_tagInvoke, asn1::ASTagging::tagsIMPLICIT);
   }
   RERosPdu(const asn1::ASTag & use_tag, asn1::ASTagging::Environment_e tag_env,
            asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfChoice(use_tag, tag_env, use_rule), _valTag(altNone)
+    : asn1::ber::EncoderOfChoice(use_tag, tag_env, use_rule)
   {
-    _memSelection.aligner = 0;
-    _value._any = 0;
     //add canonical alternative tagging (see EncodeChoice.hpp:NOTE.1)
-    addCanonicalAlternative(REInvokePdu::_pduTag, asn1::ASTagging::tagsIMPLICIT);
+    addCanonicalAlternative(_tagInvoke, asn1::ASTagging::tagsIMPLICIT);
   }
   //
   ~RERosPdu()
-  {
-    cleanUp();
-  }
+  { }
 
   //
-  REInvokePdu * setInvoke(const ros::ROSInvokePdu & req_inv);
+  void setInvoke(const ros::ROSInvokePdu & use_val);
   //
-  RERResultPdu * setResult(const ros::ROSResultPdu & req_res);
+  void setResult(const ros::ROSResultPdu & use_val);
   //
-  RERResultNLPdu * setResultNL(const ros::ROSResultNLPdu & req_res);
+  void setResultNL(const ros::ROSResultNLPdu & use_val);
   //
-  RERErrorPdu * setError(const ros::ROSErrorPdu & req_err);
+  void setError(const ros::ROSErrorPdu & use_val);
   //
-  RERejectPdu * setReject(const ros::ROSRejectPdu & req_rej);
+  void setReject(const ros::ROSRejectPdu & use_val);
 
   //
   void setValue(const ros::ROSPdu & use_val) /*throw(std::exception)*/;

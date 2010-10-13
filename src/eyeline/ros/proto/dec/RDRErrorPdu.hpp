@@ -5,11 +5,14 @@
 #ident "@(#)$Id$"
 #define __EYELINE_ROS_PROTO_DEC_RETURN_ERROR_HPP
 
-#include "eyeline/ros/ROSPdu.hpp"
+#include "eyeline/ros/ROSPrimitives.hpp"
+
 #include "eyeline/ros/proto/dec/RDInvokeIdType.hpp"
 #include "eyeline/ros/proto/dec/RDOperationCode.hpp"
-#include "eyeline/asn1/BER/rtdec/DecodeASType.hpp"
+#include "eyeline/ros/proto/dec/RDPduArgument.hpp"
+
 #include "eyeline/asn1/BER/rtdec/DecodeSeq.hpp"
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 namespace eyeline {
 namespace ros {
@@ -17,27 +20,18 @@ namespace proto {
 namespace dec {
 
 /* ROS ReturnError PDU is defined in IMPLICIT tagging environment as follow:
-ReturnError ::= [3] SEQUENCE {
+ReturnError ::= SEQUENCE {
     invokeId	InvokeIdType,
-    errcode	INTEGER,
+    errcode	    INTEGER,
     parameter	ABSTRACT-SYNTAX.&Type({Errors}) OPTIONAL
 } */
 class RDRErrorPdu : public asn1::ber::DecoderOfSequence_T<3> {
-private:
-  using asn1::ber::DecoderOfSequence_T<3>::setField;
-
-  union {
-    void *   _aligner;
-    uint8_t  _buf[sizeof(asn1::ber::DecoderOfASType)];
-  } _memArg;
-
 protected:
   ROSErrorPdu *   _dVal;
   RDInvokeIdType  _invId;
   RDLocalOpCode   _errCode;
-  asn1::ber::DecoderOfASType *  _argType; //Optional
-
-  void setArgType(PDUArgument & use_arg) /*throw(std::exception)*/;
+  //Optionals:
+  asn1::ber::DecoderProducer_T<RDPduArgument> _argument;
 
   //Initializes ElementDecoder for this type
   void construct(void);
@@ -47,35 +41,24 @@ protected:
   // ----------------------------------------
   //If necessary, allocates optional element and initializes associated TypeDecoderAC
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
-  //Performs actions upon successfull optional element decoding
-  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */;
 
 public:
-  static const asn1::ASTag _pduTag; //[3] IMPLICIT
-
-  explicit RDRErrorPdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSequence_T<3>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _dVal(0), _invId(use_rule), _errCode(use_rule), _argType(0)
+  explicit RDRErrorPdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<3>(use_rule)
+    , _dVal(0), _invId(use_rule), _errCode(use_rule)
   {
-    _memArg._aligner = 0;
     construct();
   }
-  RDRErrorPdu(ROSErrorPdu & use_val,
-              TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSequence_T<3>(_pduTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _invId(use_rule), _errCode(use_rule), _argType(0)
+  RDRErrorPdu(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+              asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<3>(outer_tag, tag_env, use_rule)
+    , _dVal(0), _invId(use_rule), _errCode(use_rule)
   {
-    _memArg._aligner = 0;
     construct();
   }
   //
   ~RDRErrorPdu()
-  {
-    if (_argType)
-      _argType->~DecoderOfASType();
-  }
+  { }
 
   void setValue(ROSErrorPdu & use_val) /*throw(std::exception)*/
   {

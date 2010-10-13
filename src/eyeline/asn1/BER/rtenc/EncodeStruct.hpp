@@ -19,7 +19,7 @@ namespace ber {
  * encodings implied by appropriate DER/CER restrictions.
  * ************************************************************************* */
 class EncoderOfStructureAC : public EncoderOfConstructedAC {
-public:
+protected:
   //'Generic structured type encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
   EncoderOfStructureAC(EncoderOfConstructedAC::ElementsArray & use_store,
@@ -34,9 +34,6 @@ public:
                        const ASTagging & base_tags,
                        TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfConstructedAC(use_store, use_tag, tag_env, base_tags, use_rule)
-  { }
-  //
-  virtual ~EncoderOfStructureAC()
   { }
 
   //Assigns untagged field/element with specified index
@@ -59,6 +56,10 @@ public:
   //Clears fields starting from specified index up to last
   void clearFields(uint16_t fld_idx = 0) { clearElements(fld_idx); }
 
+public:
+  //
+  virtual ~EncoderOfStructureAC()
+  { }
 };
 
 //Template for Encoder of structured type with known number of fields/elements,
@@ -72,7 +73,7 @@ private:
   typedef eyeline::util::LWArray_T<TLVLayoutEncoder, uint16_t, _NumFieldsTArg> FieldsStore;
   FieldsStore     _fieldsStore;
 
-public:
+protected:
   //'Generic structured type encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
   EncoderOfPlainStructure_T(const ASTagging & eff_tags,
@@ -88,6 +89,7 @@ public:
     : EncoderOfStructureAC(_fieldsStore, use_tag, tag_env, base_tags, use_rule)
     ,  _fieldsStore(_NumFieldsTArg)
   { }
+public:
   //
   virtual ~EncoderOfPlainStructure_T()
   { }
@@ -107,31 +109,13 @@ private:
   typedef eyeline::util::LWArray_T<ASTagging, uint16_t, _NumTaggedFieldsTArg>  FieldTagsStore;
   FieldTagsStore  _ftagsStore;
 
-protected:
   ASTagging & reserveTag(void) /*throw(std::exception)*/
   { //allocate (if necessary) and initialize tagging
     _ftagsStore.reserve(_ftagsStore.size() + 1);
     return _ftagsStore[_ftagsStore.size()];
   }
 
-public:
-  //'Generic structured type encoder' constructor
-  EncoderOfStructure_T(const ASTagging & eff_tags,
-                            TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfPlainStructure_T<_NumFieldsTArg>(eff_tags, use_rule)
-    , _ftagsStore(_NumTaggedFieldsTArg)
-  { }
-  //'Generic tagged structured type encoder' constructor
-  //NOTE: base_tags must be a complete tagging of base type!
-  EncoderOfStructure_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
-                            const ASTagging & base_tags,
-                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfPlainStructure_T<_NumFieldsTArg>(use_tag, tag_env, base_tags, use_rule)
-    , _ftagsStore(_NumTaggedFieldsTArg)
-  { }
-  virtual ~EncoderOfStructure_T()
-  { }
-
+protected:
   //Assigns untagged field/element with specified index
   void setFieldTagged(uint16_t fld_idx, TypeEncoderAC & type_enc,
                       const ASTag & fld_tag, ASTagging::Environment_e fld_env) /*throw(std::exception)*/
@@ -153,6 +137,26 @@ public:
   {
     setFieldTagged(this->_fieldsStore.size(), type_enc, fld_tag, fld_env);
   }
+
+  //'Generic structured type encoder' constructor
+  EncoderOfStructure_T(const ASTagging & eff_tags,
+                            TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfPlainStructure_T<_NumFieldsTArg>(eff_tags, use_rule)
+    , _ftagsStore(_NumTaggedFieldsTArg)
+  { }
+  //'Generic tagged structured type encoder' constructor
+  //NOTE: base_tags must be a complete tagging of base type!
+  EncoderOfStructure_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                            const ASTagging & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfPlainStructure_T<_NumFieldsTArg>(use_tag, tag_env, base_tags, use_rule)
+    , _ftagsStore(_NumTaggedFieldsTArg)
+  { }
+
+public:
+  //
+  virtual ~EncoderOfStructure_T()
+  { }
 };
 
 } //ber

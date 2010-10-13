@@ -13,8 +13,6 @@ namespace ros {
 namespace proto {
 namespace dec {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 /* InvokeIdType is defined in IMPLICIT tagging environment as follow:
    InvokeIdType ::= INTEGER(-128..127)
 */
@@ -23,8 +21,12 @@ private:
   using asn1::ber::DecoderOfINTEGER::setValue;
 
 public:
-  explicit RDInvokeIdType(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfINTEGER(TSGroupBER::getTSRule(use_rule))
+  explicit RDInvokeIdType(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfINTEGER(use_rule)
+  { }
+  RDInvokeIdType(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+                 asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfINTEGER(use_rule)
   { }
   ~RDInvokeIdType()
   { }

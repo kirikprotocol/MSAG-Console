@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/ros/proto/dec/RDRResultPdu.hpp"
 
@@ -9,9 +9,20 @@ namespace ros {
 namespace proto {
 namespace dec {
 
-
-const asn1::ASTag RDRResultPdu::_pduTag(asn1::ASTag::tagContextSpecific, 2);
-const asn1::ASTag RDRResultNLPdu::_pduTag(asn1::ASTag::tagContextSpecific, 7);
+/* ROS ReturnResult type is defined in IMPLICIT tagging environment as follow:
+ReturnResultType ::= SEQUENCE {
+    invokeId	InvokeIdType,
+    result	    SEQUENCE {
+      opcode	INTEGER,
+      result	ABSTRACT-SYNTAX.&Type({Operations})
+    } OPTIONAL
+} */
+//Initializes ElementDecoder for this type
+void RDReturnResult::construct(void)
+{
+  asn1::ber::DecoderOfSequence_T<2>::setField(0, asn1::_tagINTEGER, asn1::ber::EDAlternative::altMANDATORY);
+  asn1::ber::DecoderOfSequence_T<2>::setField(1, asn1::_tagSEQOF, asn1::ber::EDAlternative::altOPTIONAL);
+}
 
 asn1::ber::TypeDecoderAC *
   RDReturnResult::RDResultField::prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */
@@ -23,18 +34,8 @@ asn1::ber::TypeDecoderAC *
   
   if (!unique_idx)
     return &_opCode;
-
   //if (unique_idx == 1)
-  _valMask = false;
   return &_resType;
-}
-
-void RDReturnResult::setResultField(ros::LocalOpCode & op_code, 
-                                    ros::PDUArgument & use_arg)
-{
-  if (!_result)
-    _result = new (_memRes._buf) RDResultField(getVALRule());
-  _result->setValue(op_code, use_arg._tsEnc);
 }
 
 // ----------------------------------------
@@ -54,15 +55,8 @@ asn1::ber::TypeDecoderAC *
     return &_invId;
   }
   //if (unique_idx == 1)
-  setResultField(_dVal->getHeader()._opCode, _dVal->getArg());
-  return _result;
-
-}
-//Performs actions upon successfull optional element decoding
-void RDReturnResult::markDecodedOptional(uint16_t unique_idx) /*throw() */
-{
-  if (unique_idx == 1)
-    _dVal->getArg()._kind = ros::PDUArgument::asvTSyntax;
+  _result.init(getTSRule()).setValue(_dVal->getHeader()._opCode, _dVal->getArg());
+  return _result.get();
 }
 
 }}}}

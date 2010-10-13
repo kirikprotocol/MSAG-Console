@@ -105,7 +105,6 @@ protected:
   //
   void setElementsStorage(ElementsArray & use_store) { _elmArray = &use_store; }
 
-public:
   //'Generic structured type encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
   EncoderOfConstructedAC(ElementsArray & use_store, const ASTagging & eff_tags,
@@ -122,6 +121,8 @@ public:
     : TypeValueEncoderAC(use_tag, tag_env, base_tags, use_rule)
     , _elmArray(&use_store)
   { }
+
+public:
   //
   virtual ~EncoderOfConstructedAC()
   { }

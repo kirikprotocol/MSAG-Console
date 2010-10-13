@@ -1,15 +1,18 @@
 /* ************************************************************************* *
- * ROS ReturnResult PDU encoder.
+ * ROS ReturnResult/ReturnResultNotLast PDU encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_ENC_RETURN_RESULT_HPP
 #ident "@(#)$Id$"
 #define __EYELINE_ROS_PROTO_ENC_RETURN_RESULT_HPP
 
-#include "eyeline/ros/ROSPdu.hpp"
+#include "eyeline/ros/ROSPrimitives.hpp"
+
 #include "eyeline/ros/proto/enc/REInvokeIdType.hpp"
 #include "eyeline/ros/proto/enc/REOperationCode.hpp"
-#include "eyeline/asn1/BER/rtenc/EncodeASType.hpp"
+#include "eyeline/ros/proto/enc/REPduArgument.hpp"
+
 #include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
+#include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"
 
 namespace eyeline {
 namespace ros {
@@ -28,138 +31,62 @@ class REReturnResult : public asn1::ber::EncoderOfPlainSequence_T<2> {
 private:
   using asn1::ber::EncoderOfPlainSequence_T<2>::addField;
   using asn1::ber::EncoderOfPlainSequence_T<2>::setField;
+  using asn1::ber::EncoderOfPlainSequence_T<2>::clearField;
 
 protected:
   class REResultField : public asn1::ber::EncoderOfPlainSequence_T<2> {
   private:
     using asn1::ber::EncoderOfPlainSequence_T<2>::addField;
     using asn1::ber::EncoderOfPlainSequence_T<2>::setField;
+    using asn1::ber::EncoderOfPlainSequence_T<2>::clearField;
 
   protected:
-    RELocalOpCode               _opCode;
-    asn1::ber::EncoderOfASType  _resType;
+    RELocalOpCode   _opCode;
+    REPduArgument   _resType;
 
   public:
-    REResultField(ros::LocalOpCode op_code = 0, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-      : asn1::ber::EncoderOfPlainSequence_T<2>(TSGroupBER::getTSRule(use_rule))
-      , _opCode(op_code, use_rule)
-      , _resType(TSGroupBER::getTSRule(use_rule))
+    explicit REResultField(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+      : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule)
+      , _opCode(use_rule), _resType(use_rule)
     {
       asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _opCode);
       asn1::ber::EncoderOfPlainSequence_T<2>::setField(1, _resType);
     }
     ~REResultField()
     { }
-
-    void setOpCode(ros::LocalOpCode op_code) { _opCode.setValue(op_code); }
     //
-    void setValue(asn1::ber::TypeEncoderAC & use_result)
+    void setValue(ros::LocalOpCode op_code, const PDUArgument & op_res) /*throw(std::exception)*/
     {
-      _resType.setValue(use_result);
-    }
-    void setValue(const asn1::TransferSyntax & use_ts_enc)
-    {
-      _resType.setValue(use_ts_enc);
-    }
-    void setValue(asn1::ASTypeValueAC & use_val)
-    {
-      TypeEncoderAC * pEnc = static_cast<TypeEncoderAC *>(use_val.getEncoder(getTSRule()));
-      _resType.setValue(*pEnc);
+      _opCode.setValue(op_code);
+      _resType.setValue(op_res);
     }
   };
 
   REInvokeIdType  _invId;
-  REResultField * _result;
-
-  union {
-    void *  _aligner;
-    uint8_t _buf[sizeof(REResultField)];
-  } _memRes;
-
-
-  void setResultField(ros::LocalOpCode op_code) /*throw(std::exception)*/;
-
-  //NOTE: PDUArgument cann't be empty
-  void setArgType(ros::LocalOpCode op_code, const ros::PDUArgument & use_arg)
-    /*throw(std::exception)*/;
+  //Optionals:
+  asn1::ber::EncoderProducer_T<REResultField>   _result;
 
 public:
-  REReturnResult(const asn1::ASTag & pdu_tag,
-               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<2>(pdu_tag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _invId(use_rule), _result(0)
+  explicit REReturnResult(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule), _invId(use_rule)
   {
-    _memRes._aligner = 0;
     asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _invId);
   }
-  ~REReturnResult()
+  REReturnResult(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+               asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfPlainSequence_T<2>(outer_tag, tag_env, use_rule)
+    , _invId(use_rule)
   {
-    if (_result)
-      _result->~REResultField();
+    asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _invId);
   }
+  //
+  ~REReturnResult()
+  { }
 
   //
   void setValue(const ros::ROSPduWithArgument & use_val) /*throw(std::exception)*/;
 };
 
-/* ROS ReturnResult PDU is defined in IMPLICIT tagging environment as follow:
-  ReturnResult ::= [2] ReturnResultType
-*/
-class RERResultPdu : public REReturnResult {
-protected:
-  using REReturnResult::setValue;
-
-public:
-  static const asn1::ASTag _pduTag; //[2] IMPLICIT
-
-  explicit RERResultPdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : REReturnResult(_pduTag, use_rule)
-  { }
-  RERResultPdu(const ros::ROSResultPdu & use_val,
-               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : REReturnResult(_pduTag, use_rule)
-  {
-    REReturnResult::setValue(use_val);
-  }
-  //
-  ~RERResultPdu()
-  { }
-
-  void setValue(const ros::ROSResultPdu & use_val) /*throw(std::exception)*/
-  {
-    REReturnResult::setValue(use_val);
-  }
-};
-
-/* ROS ReturnResultNotLast PDU is defined in IMPLICIT tagging environment as follow:
-  ReturnResultNotLast ::= [7] ReturnResultType
-*/
-class RERResultNLPdu : public REReturnResult {
-protected:
-  using REReturnResult::setValue;
-
-public:
-  static const asn1::ASTag _pduTag; //[7] IMPLICIT
-
-  explicit RERResultNLPdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : REReturnResult(_pduTag, use_rule)
-  { }
-  RERResultNLPdu(const ros::ROSResultNLPdu & use_val,
-                 TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : REReturnResult(_pduTag, use_rule)
-  {
-    REReturnResult::setValue(use_val);
-  }
-  //
-  ~RERResultNLPdu()
-  { }
-
-  void setValue(const ros::ROSResultNLPdu & use_val) /*throw(std::exception)*/
-  {
-    REReturnResult::setValue(use_val);
-  }
-};
 
 }}}}
 

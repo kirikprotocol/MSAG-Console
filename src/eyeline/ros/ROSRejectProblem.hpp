@@ -49,22 +49,22 @@ protected:
 
 public:
   RejectProblem(GeneralProblem_e rjg_code = rjg_unrecognizedPDU)
-      : rejKind(rejGeneral)
+    : rejKind(rejGeneral)
   {
     rejCode.general = rjg_code;
   }
   RejectProblem(InvokeProblem_e rji_code)
-      : rejKind(rejInvoke)
+    : rejKind(rejInvoke)
   {
     rejCode.invoke = rji_code;
   }
   RejectProblem(RResultProblem_e rjr_code)
-      : rejKind(rejResult)
+    : rejKind(rejResult)
   {
     rejCode.rResult = rjr_code;
   }
   RejectProblem(RErrorProblem_e rje_code)
-      : rejKind(rejError)
+    : rejKind(rejError)
   {
     rejCode.rError = rje_code;
   }
@@ -88,6 +88,8 @@ public:
       { rejKind = rejResult; rejCode.rResult = use_val; }
   void setRErrorProblem(RErrorProblem_e use_val)
       { rejKind = rejError; rejCode.rError = use_val; }
+
+  value_type getProblem(void) const { return (value_type)rejCode.general; }
 
   void setProblem(ProblemKind_e use_kind, value_type use_val)
   {

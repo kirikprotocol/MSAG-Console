@@ -6,15 +6,15 @@
 #define __EYELINE_ROS_PROTO_ENC_REJECT_PROBLEM_HPP
 
 #include "eyeline/ros/ROSRejectProblem.hpp"
+
 #include "eyeline/asn1/BER/rtenc/EncodeINT.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeChoice.hpp"
+#include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"
 
 namespace eyeline {
 namespace ros {
 namespace proto {
 namespace enc {
-
-using eyeline::asn1::ber::TSGroupBER;
 
 /* ProblemType is defined in IMPLICIT tagging environment as follow:
 
@@ -23,61 +23,33 @@ ProblemType ::= CHOICE {
     invoke        [1]  InvokeProblem,
     returnResult  [2]  ReturnResultProblem,
     returnError   [3]  ReturnErrorProblem
-}
-*/
-
+} */
 class REProblemType : public asn1::ber::EncoderOfChoice {
-private:
-  union {
-    void *  _aligner;
-    uint8_t _buf[sizeof(asn1::ber::EncoderOfINTEGER)];
-  } _memAlt;
-
 protected:
-  static const asn1::ASTagging _tagsGeneralProblem;
-  static const asn1::ASTagging _tagsInvokeProblem;
-  static const asn1::ASTagging _tagsResultProblem;
-  static const asn1::ASTagging _tagsErrorProblem;
+  using asn1::ber::EncoderOfChoice::setSelection;
 
-  ros::RejectProblem::ProblemKind_e _altId;
-  asn1::ber::EncoderOfINTEGER *     _pEnc;
+  static const asn1::ASTag _tagGeneralProblem;
+  static const asn1::ASTag _tagInvokeProblem;
+  static const asn1::ASTag _tagResultProblem;
+  static const asn1::ASTag _tagErrorProblem;
 
-  void resetAlt(void)
-  {
-    if (_pEnc) {
-      _pEnc->~EncoderOfINTEGER();
-      _pEnc = NULL;
-    }
-  }
-  asn1::ber::EncoderOfINTEGER * initAlt(const asn1::ASTagging & problem_tags)
-  {
-    resetAlt();
-    _pEnc = new (_memAlt._buf) asn1::ber::EncoderOfINTEGER(problem_tags, getTSRule());
-    return _pEnc;
-  }
+  asn1::ber::EncoderProducer_T<asn1::ber::EncoderOfINTEGER> _pEnc;
 
 public:
-  explicit REProblemType(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfChoice(TSGroupBER::getTSRule(use_rule))
-    , _altId(ros::RejectProblem::rejGeneral), _pEnc(0)
+  explicit REProblemType(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfChoice(use_rule)
   {
-    _memAlt._aligner = 0;
-    addCanonicalAlternative(_tagsGeneralProblem);
+    addCanonicalAlternative(_tagGeneralProblem, asn1::ASTagging::tagsIMPLICIT);
   }
-  REProblemType(const ros::RejectProblem & use_val,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfChoice(TSGroupBER::getTSRule(use_rule))
-    , _altId(ros::RejectProblem::rejGeneral), _pEnc(0)
+  REProblemType(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
+                asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfChoice(outer_tag, tag_env, use_rule)
   {
-    _memAlt._aligner = 0;
-    addCanonicalAlternative(_tagsGeneralProblem);
-    setValue(use_val);
+    addCanonicalAlternative(_tagGeneralProblem, asn1::ASTagging::tagsIMPLICIT);
   }
   //
   ~REProblemType()
-  {
-    resetAlt();
-  }
+  { }
 
   void setValue(const ros::RejectProblem & use_val) /*throw(std::exception)*/;
 };
