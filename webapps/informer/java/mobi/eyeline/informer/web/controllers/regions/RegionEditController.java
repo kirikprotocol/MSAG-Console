@@ -126,8 +126,6 @@ public class RegionEditController extends RegionsController{
     }
 
     try{
-      config.lock();
-
       if(region.getRegionId() != null) {
         config.updateRegion(region, user);
       }else {
@@ -138,8 +136,6 @@ public class RegionEditController extends RegionsController{
     }catch (AdminException e){
       addError(e);
       return null;
-    }finally {
-      config.unlock();
     }
 
   }
