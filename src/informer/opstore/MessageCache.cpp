@@ -54,6 +54,19 @@ RegionalStoragePtr MessageCache::getRegionalStorage( regionid_type regionId,
 }
 
 
+void MessageCache::getRegionList( std::vector< regionid_type >& regIds )
+{
+    MutexGuard mg(cacheLock_);
+    regIds.reserve(storages_.Count());
+    int regId;
+    RegionalStoragePtr* ptr;
+    for (smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
+         i.Next(regId,ptr); ) {
+        regIds.push_back(regionid_type(regId));
+    }
+}
+
+
 void MessageCache::rollOver()
 {
     std::vector<RegionalStoragePtr> ptrs;

@@ -84,6 +84,8 @@ private:
     ScoredList< SmscSender >                  scoredList_; // not owned
     usectime_type                             currentTime_;
     bool                                      isStopping_;
+    int                                       ussdPushOp_;
+    int                                       ussdPushVlrOp_;
 };
 
 } // informer

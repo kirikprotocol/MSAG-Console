@@ -33,6 +33,10 @@ public:
         return cache_.getRegionalStorage(regId,create);
     }
 
+    void getRegionList( std::vector<regionid_type>& regIds ) {
+        cache_.getRegionList(regIds);
+    }
+
     void updateDlvInfo( const DeliveryInfo& info );
     // void createRegionalStorage( regionid_type regId );
 

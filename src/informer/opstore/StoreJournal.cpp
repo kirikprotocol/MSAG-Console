@@ -107,6 +107,7 @@ void StoreJournal::init( Reader& jr )
     std::string jpath = cs_.getStorePath() + "operative/.journal";
     readRecordsFrom(jpath+".old",jr);
     readRecordsFrom(jpath,jr);
+    if (jr.isStopping()) return;
     fg_.create(jpath.c_str(),true,true);
     if ( 0 == fg_.seek(0,SEEK_END) ) {
         // new file
@@ -126,6 +127,7 @@ void StoreJournal::init( Reader& jr )
 
 void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
+    if (reader.isStopping()) return;
     FileGuard fg;
     try {
         fg.ropen(jpath.c_str());
@@ -165,6 +167,7 @@ void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
         
         buf.SetPos(buf.GetPos()+wasread);
         while (ptr < buf.GetCurPtr()) {
+            if (reader.isStopping()) return;
             if (ptr+LENSIZE > buf.GetCurPtr()) {
                 // too few items
                 break;

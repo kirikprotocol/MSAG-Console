@@ -15,9 +15,10 @@ core_(&core),
 smscId_(smscId), session_(0),
 scoredList_(*this,2*maxScoreIncrement,
             smsc::logger::Logger::getInstance("reglist")),
-isStopping_(true)
+isStopping_(true),
+ussdPushOp_(cfg.ussdPushOp),
+ussdPushVlrOp_(cfg.ussdPushVlrOp)
 {
-    smsc_log_debug(log_,"FIXME: make use of SmscConfig");
     session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
 }
 
@@ -45,6 +46,8 @@ void SmscSender::updateConfig( const SmscConfig& config )
     stop();
     MutexGuard mg(mon_);
     session_.reset(new smsc::sme::SmppSession(config.smeConfig,this));
+    ussdPushOp_ = cfg.ussdPushOp;
+    ussdPushVlrOp_ = cfg.ussdPushVlrOp;
 }
 
 
@@ -149,8 +152,8 @@ void SmscSender::connectLoop()
     while ( !isStopping_ ) {
         MutexGuard mg(mon_);
         if ( !session_.get() ) {
-            smsc_log_error(log_,"FIXME: session is not configured");
-            isStopping_ = true;
+            throw InfosmeException("logic error: session is not configured");
+            // isStopping_ = true;
         } else if ( !session_->isClosed() ) {
             // session connected
             break;
@@ -161,7 +164,7 @@ void SmscSender::connectLoop()
         } catch ( std::exception& e ) {
             smsc_log_error(log_,"connection failed: %s", e.what());
         }
-        smsc_log_debug(log_,"FIXME: configure timeout b/w attempts");
+        // smsc_log_debug(log_,"FIXME: configure timeout b/w attempts");
         mon_.wait(10000);
     }
 }
@@ -236,7 +239,6 @@ void SmscSender::processWaitingEvents()
     smsc_log_error(log_,"FIXME: S='%s'@%p process waiting events at %llu",
                    smscId_.c_str(), this, currentTime_);
 }
-
 
 }
 }

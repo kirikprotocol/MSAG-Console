@@ -20,6 +20,8 @@ public:
     /// get the regional storage for given region.
     RegionalStoragePtr getRegionalStorage( regionid_type regionId, bool create=false );
 
+    void getRegionList( std::vector< regionid_type >& regIds );
+
     /// rolling over the whole storage.
     void rollOver();
 

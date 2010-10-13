@@ -10,6 +10,7 @@
 #include "util/config/ConfString.h"
 #include "util/config/ConfigView.h"
 #include "informer/io/DirListing.h"
+#include "informer/io/RelockMutexGuard.h"
 
 using namespace smsc::util::config;
 
@@ -40,6 +41,7 @@ class InfosmeCoreV1::InputJournalReader : public InputJournal::Reader
 {
 public:
     InputJournalReader( InfosmeCoreV1& core ) : core_(core) {}
+    virtual bool isStopping() const { return core_.isStopping(); }
     virtual void setRecordAtInit( dlvid_type               dlvId,
                                   regionid_type            regionId,
                                   const InputRegionRecord& rec,
@@ -52,7 +54,6 @@ public:
             return;
         }
         (*ptr)->setRecordAtInit( regionId, rec, maxMsgId );
-        smsc_log_debug(core_.log_,"FIXME: bind D=%u and R=%u",dlvId,regionId);
     }
 
 
@@ -65,6 +66,7 @@ public:
         smsc_log_debug(core_.log_,"invoking postInit to bind filled regions");
         for ( smsc::core::buffers::IntHash< DeliveryPtr >::Iterator i(core_.deliveries_);
               i.Next(dlvId,ptr); ) {
+            if (core_.isStopping()) break;
             bs.regIds.clear();
             (*ptr)->postInitInput(bs.regIds);
             if (!bs.regIds.empty()) {
@@ -83,6 +85,7 @@ class InfosmeCoreV1::StoreJournalReader : public StoreJournal::Reader
 {
 public:
     StoreJournalReader( InfosmeCoreV1& core ) : core_(core) {}
+    virtual bool isStopping() const { return core_.isStopping(); }
     virtual void setRecordAtInit( dlvid_type    dlvId,
                                   regionid_type regionId,
                                   Message&      msg,
@@ -109,6 +112,7 @@ public:
         smsc_log_debug(core_.log_,"invoking postInit to bind/unbind regions");
         for ( smsc::core::buffers::IntHash< DeliveryPtr >::Iterator i(core_.deliveries_);
               i.Next(dlvId,ptr); ) {
+            if (core_.isStopping()) break;
             bsEmpty.regIds.clear();
             bsFilled.regIds.clear();
             (*ptr)->postInitOperative(bsFilled.regIds,bsEmpty.regIds);
@@ -164,7 +168,7 @@ void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
 
 InfosmeCoreV1::InfosmeCoreV1() :
 log_(smsc::logger::Logger::getInstance("core")),
-stopping_(true),
+stopping_(false),
 started_(false),
 storeJournal_(0),
 inputJournal_(0)
@@ -174,7 +178,7 @@ inputJournal_(0)
 
 InfosmeCoreV1::~InfosmeCoreV1()
 {
-    smsc_log_info(log_,"FIXME: corev1 dtor, cleanup everything");
+    smsc_log_info(log_,"dtor started, FIXME: cleanup");
     stop();
 
     char* smscId;
@@ -194,13 +198,13 @@ InfosmeCoreV1::~InfosmeCoreV1()
 
     delete storeJournal_;
     delete inputJournal_;
-    smsc_log_info(log_,"leaving corev1 dtor");
+    smsc_log_info(log_,"dtor finished");
 }
 
 
 void InfosmeCoreV1::init( const ConfigView& cfg )
 {
-    smsc_log_info(log_,"FIXME: initing InfosmeCore");
+    smsc_log_info(log_,"initing InfosmeCore");
 
     cs_.init("store/");
 
@@ -300,7 +304,6 @@ void InfosmeCoreV1::start()
     if (started_) return;
     MutexGuard mg(startMon_);
     if (started_) return;
-    stopping_ = false;
     Start();
 }
 
@@ -372,10 +375,6 @@ void InfosmeCoreV1::updateSmsc( const std::string& smscId,
 
 void InfosmeCoreV1::reloadRegions()
 {
-    // FIXME: reload regions
-    // std::auto_ptr<Config> rcfg(Config::createFromFile("regions.xml"));
-    // ConfigView rcv(*rcfg.get());
-
     const regionid_type regionId = 1;
     const std::string smscId = "MSAG0";
 
@@ -413,7 +412,7 @@ regionid_type InfosmeCoreV1::findRegion( personid_type subscriber )
 void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
                                     std::auto_ptr<DeliveryInfo>& dlvInfo )
 {
-    MutexGuard mg(startMon_);
+    RelockMutexGuard mg(startMon_);
     DeliveryPtr* ptr = deliveries_.GetPtr(dlvId);
     smsc_log_debug(log_,"%s delivery D=%u",
                    (ptr ? (dlvInfo.get() ? "update" : "delete") : "create"),
@@ -424,7 +423,12 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
             // delete
             DeliveryPtr d;
             if (deliveries_.Pop(dlvId,d)) {
-                smsc_log_debug(log_,"FIXME: remove all regions of the delivery");
+                mg.Unlock();
+                BindSignal bs;
+                bs.bind = false;
+                bs.dlvId = dlvId;
+                d->getRegionList(bs.regIds);
+                bindDeliveryRegions(bs);
             };
             return;
         } else {
@@ -470,12 +474,10 @@ int InfosmeCoreV1::Execute()
     {
         MutexGuard mg(startMon_);
         started_ = true;
-        stopping_ = false;
     }
     smsc_log_info(log_,"starting main loop");
     while ( !stopping_ ) {
 
-        smsc_log_debug(log_,"FIXME: main loop pass");
         // processing signals
         BindSignal bs;
         while (true) {

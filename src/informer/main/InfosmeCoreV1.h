@@ -44,6 +44,7 @@ public:
     /// notify to stop, invoked from main
     virtual void start();
     virtual void stop();
+    virtual bool isStopping() const { return stopping_; }
 
     virtual RegionFinder& getRegionFinder() { return *this; }
 

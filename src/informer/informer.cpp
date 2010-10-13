@@ -162,10 +162,7 @@ int main( int argc, char** argv )
 
         // infrastructure
         smsc::util::regexp::RegExp::InitLocale();
-
-        // FIXME: replace with real logger
         smsc::logger::Logger::Init();
-        // smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
 
         mainlog = smsc::logger::Logger::getInstance("main");
         smsc_log_info(mainlog,"\n"

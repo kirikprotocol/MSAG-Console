@@ -16,6 +16,7 @@ class InputJournal
 public:
     struct Reader {
         virtual ~Reader() {}
+        virtual bool isStopping() const = 0;
         /// NOTE: this method is invoked at init ONLY!
         virtual void setRecordAtInit( dlvid_type               dlvId,
                                       regionid_type            regionId,

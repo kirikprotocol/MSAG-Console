@@ -32,6 +32,7 @@ public:
     /// notify to stop, invoked from main
     virtual void start() = 0;
     virtual void stop() = 0;
+    virtual bool isStopping() const = 0;
 
     /// get region finder
     virtual RegionFinder& getRegionFinder() = 0;

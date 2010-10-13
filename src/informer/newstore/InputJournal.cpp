@@ -52,6 +52,7 @@ void InputJournal::init( Reader& reader )
     readRecordsFrom(jpath+".old",reader);
     readRecordsFrom(jpath,reader);
     // reopen journal
+    if (reader.isStopping()) return;
     jnl_.create(jpath.c_str(),true,true);
     if ( 0 == jnl_.seek(0,SEEK_END) ) {
         // new file
@@ -67,6 +68,7 @@ void InputJournal::init( Reader& reader )
 
 void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
+    if (reader.isStopping()) return;
     smsc::logger::Logger* log_ = smsc::logger::Logger::getInstance("injnl");
     FileGuard fg;
     try {
@@ -103,6 +105,7 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
             
         buf.SetPos(buf.GetPos()+wasread);
         while ( ptr < buf.GetCurPtr() ) {
+            if (reader.isStopping()) return;
             if ( ptr+LENSIZE > buf.GetCurPtr()) {
                 // too few items
                 break;
