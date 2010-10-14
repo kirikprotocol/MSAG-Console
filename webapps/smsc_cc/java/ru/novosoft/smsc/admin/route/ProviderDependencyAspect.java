@@ -30,7 +30,7 @@ public class ProviderDependencyAspect {
 
     for (Route r : settings.getRoutes()) {
       if (r.getProviderId() != null && ps.getProvider(r.getProviderId()) == null)
-        throw new RouteException("provider.not.found", String.valueOf(r.getAclId()));
+        throw new RouteException("provider.not.found", String.valueOf(r.getProviderId()));
     }
   }
 }

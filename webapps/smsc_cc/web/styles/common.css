@@ -154,8 +154,25 @@ div.query_result {
   text-align:left;
 }
 
+.column200WidthTopLeft {
+  width:200px;
+  vertical-align:top;
+  text-align:left;
+}
+
+.column300WidthTopLeft {
+  width:300px;
+  vertical-align:top;
+  text-align:left;
+}
+
 .column400Width {
   width:400px;
+}
+
+.column500TopLeft {
+  width:500px;
+  vertical-align:top;
 }
 
 .column150WidthRight {

@@ -6,7 +6,7 @@ package ru.novosoft.smsc.web.components.dynamic_table;
 abstract class Column  {
 
   private String name;
-  private int width = 49;
+  private String width = "99%";
   private String title;
 
   public String getName() {
@@ -17,11 +17,11 @@ abstract class Column  {
     this.name = name;
   }
 
-  public int getWidth() {
+  public String getWidth() {
     return width;
   }
 
-  public void setWidth(int width) {
+  public void setWidth(String width) {
     this.width = width;
   }
 

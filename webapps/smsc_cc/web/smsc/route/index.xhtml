@@ -48,7 +48,7 @@
         <eye:row innerData="#{not empty route.notes}" rowId="#{route.name}">
 
           <eye:column name="name" title="#{route['name']}" sortable="true" defaultSortOrder="asc" width="60%">
-            <h:commandLink accesskey="ROUTE_EDIT" value="#{route.name}" immediate="true">
+            <h:commandLink action="ROUTE_EDIT" value="#{route.name}" immediate="true">
               <f:param name="route" value="#{route.name}"/>
             </h:commandLink>
           </eye:column>

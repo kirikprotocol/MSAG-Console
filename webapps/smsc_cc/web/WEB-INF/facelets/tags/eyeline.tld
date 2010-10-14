@@ -70,6 +70,12 @@
     </attribute>
 
     <attribute>
+      <name>width</name>
+      <description>Ширина колонки в процентах или пикселях</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
       <name>allowEditAfterAdd</name>
       <description>Флаг, разрешающий или запрещающий редактирование поля, после добавления его в таблицу</description>
       <type>boolean</type>
@@ -90,6 +96,11 @@
       <description>Название колонки. Служит ключем при чтении/записи данных в DynamicTableRow</description>
       <type>java.lang.String</type>
       <required>true</required>
+    </attribute>
+    <attribute>
+      <name>width</name>
+      <description>Ширина колонки в процентах или пикселях</description>
+      <type>java.lang.String</type>
     </attribute>
     <attribute>
       <name>allowEditAfterAdd</name>

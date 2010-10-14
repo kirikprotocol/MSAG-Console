@@ -1,0 +1,190 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+    >
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['route.edit.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!routeEdit.initFailed}">
+
+      <c:set var="r" value="#{routeEdit.route}"/>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['done.button']}" action="#{routeEdit.save}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['cancel.button']}" action="ROUTES" immediate="true"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <p/>
+
+      <h:panelGrid columns="2" columnClasses="column500TopLeft, columnTopLeftAlign">
+
+        <h:panelGroup> <!-- ROUTE INFO -->
+          <eye:pageSubtitle value="#{msg['route.edit.page.route.info']}"/>
+          <tr:panelFormLayout inlineStyle="padding:10px">
+            <tr:inputText id="route" value="#{r.name}" label="#{route['name']}"/>
+            <tr:inputText value="#{r.notes}" label="#{route['notes']}"/>
+            <tr:inputText value="#{r.priority}" label="#{route['priority']}"/>
+            <tr:inputText value="#{r.serviceId}" label="#{route['serviceId']}"/>
+            <tr:panelLabelAndMessage label="#{route['deliveryMode']}">
+              <h:selectOneMenu value="#{r.deliveryMode}">
+                <f:selectItems value="#{routeEdit.deliveryModes}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{route['srcSmeId']}">
+              <h:selectOneMenu value="#{routeEdit.srcSme}">
+                <f:selectItems value="#{routeEdit.smesWithEmpty}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{route['providerId']}">
+              <h:selectOneMenu value="#{routeEdit.provider}">
+                <f:selectItems value="#{routeEdit.providers}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{route['categoryId']}">
+              <h:selectOneMenu value="#{routeEdit.category}">
+                <f:selectItems value="#{routeEdit.categories}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:inputText value="#{r.forwardTo}" label="#{route['forwardTo']}"/>
+            <tr:panelLabelAndMessage label="#{route['aclId']}">
+              <h:selectOneMenu value="#{routeEdit.acl}">
+                <f:selectItems value="#{routeEdit.acls}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{route['replayPath']}">
+              <h:selectOneMenu value="#{r.replayPath}">
+                <f:selectItems value="#{routeEdit.replayPaths}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{route['backupSmeId']}">
+              <h:selectOneMenu value="#{routeEdit.backupSme}">
+                <f:selectItems value="#{routeEdit.smesWithEmpty}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{route['billing']}">
+              <h:selectOneMenu value="#{r.billing}">
+                <f:selectItems value="#{routeEdit.billingModes}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+          </tr:panelFormLayout>
+        </h:panelGroup>
+
+        <h:panelGroup> <!-- ROUTE OPTIONS -->
+          <eye:pageSubtitle value="#{msg['route.edit.page.route.options']}"/>
+          <tr:panelFormLayout inlineStyle="padding:10px">
+            <tr:selectBooleanCheckbox text="#{route['active']}" value="#{r.active}" simple="true"/>
+            <tr:selectBooleanCheckbox text="#{route['enabling']}" value="#{r.enabling}" simple="true"/>
+            <tr:selectBooleanCheckbox text="#{route['archiving']}" value="#{r.archiving}" simple="true"/>
+            <tr:selectBooleanCheckbox text="#{route['suppressDeliveryReports']}" value="#{r.suppressDeliveryReports}" simple="true"/>
+            <tr:selectBooleanCheckbox text="#{route['hide']}" value="#{r.hide}" simple="true"/>
+            <tr:selectBooleanCheckbox text="#{route['forceDelivery']}" value="#{r.forceDelivery}" simple="true"/>
+            <tr:selectBooleanCheckbox text="#{route['transit']}" value="#{r.transit}" simple="true"/>
+          </tr:panelFormLayout>
+        </h:panelGroup>
+      </h:panelGrid>
+
+      <hr/>
+
+      <h:panelGrid columns="2" columnClasses="column500TopLeft, columnTopLeftAlign">
+        <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign"> <!-- SOURCES -->
+          <h:panelGroup>
+            <eye:pageSubtitle value="#{msg['route.edit.page.source.masks']}"/>
+
+            <eye:dynamicTable value="#{routeEdit.sourceMasks}">
+              <eye:textColumn name="mask" allowEditAfterAdd="false"/>
+            </eye:dynamicTable>
+
+            <p/>
+
+            <eye:pageSubtitle value="#{msg['route.edit.page.source.subjects']}"/>
+
+            <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, column0WidthLeft">
+
+              <c:forEach items="#{routeEdit.sourceSubjects}" var="sourceSubject">
+                <h:commandLink value="#{sourceSubject}" action="SUBJECT_EDIT"><f:param name="oldName" value="#{sourceSubject}"/></h:commandLink>
+                <tr:commandLink action="#{routeEdit.removeSourceSubject}">
+                  <tr:image source="/images/but_del.gif" inlineStyle="position:relative;"/>
+                  <f:param name="sourceSubject2remove" value="#{sourceSubject}"/>
+                </tr:commandLink>
+              </c:forEach>
+
+              <h:selectOneMenu styleClass="selectW" value="#{routeEdit.sourceSubjectToAdd}">
+                <f:selectItems value="#{routeEdit.sourceSubjects2Add}"/>
+              </h:selectOneMenu>
+              <tr:commandLink action="#{routeEdit.addSourceSubject}">
+                <tr:image source="/images/but_add.gif" inlineStyle="position:relative; border:none;"/>
+              </tr:commandLink>
+            </h:panelGrid>
+          </h:panelGroup>
+          <h:outputText value=""/>
+        </h:panelGrid>
+
+        <h:panelGroup> <!-- DESTINATIONS -->
+          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign"> <!-- SOURCES -->
+            <h:panelGroup>
+              <eye:pageSubtitle value="#{msg['route.edit.page.destination.masks']}"/>
+
+              <eye:dynamicTable value="#{routeEdit.destinationMasks}">
+                <eye:textColumn name="mask" allowEditAfterAdd="false" width="200px"/>
+                <eye:selectColumn values="#{routeEdit.smeIds}" name="sme" width="100px" allowEditAfterAdd="false"/>
+              </eye:dynamicTable>
+
+              <p/>
+
+              <eye:pageSubtitle value="#{msg['route.edit.page.destination.subjects']}"/>
+
+              <h:panelGrid columns="3" columnClasses="column200WidthTopLeft, column100WidthLeft, column0WidthLeft">
+
+                <c:forEach items="#{routeEdit.destinations}" var="dst">
+                  <h:commandLink value="#{dst.subject}" action="SUBJECT_EDIT"><f:param name="oldName" value="#{dst.subject}"/></h:commandLink>
+                  <h:outputText value="#{dst.smeId}"/>
+                  <tr:commandLink action="#{routeEdit.removeDestinationSubject}">
+                    <tr:image source="/images/but_del.gif" inlineStyle="position:relative;"/>
+                    <f:param name="destinationSubject2remove" value="#{dst.subject}"/>
+                  </tr:commandLink>
+                </c:forEach>
+
+                <h:selectOneMenu style="width:200px" value="#{routeEdit.destinationSubjectToAdd}">
+                  <f:selectItems value="#{routeEdit.destinationSubjects2Add}"/>
+                </h:selectOneMenu>
+                <h:selectOneMenu style="width:100px" value="#{routeEdit.destinationSmeToAdd}">
+                  <f:selectItems value="#{routeEdit.smes}"/>
+                </h:selectOneMenu>
+                <tr:commandLink action="#{routeEdit.addDestinationSubject}">
+                  <tr:image source="/images/but_add.gif" inlineStyle="position:relative; border:none;"/>
+                </tr:commandLink>
+              </h:panelGrid>
+
+            </h:panelGroup>
+            <h:outputText value=""/>
+          </h:panelGrid>
+        </h:panelGroup>
+      </h:panelGrid>
+
+      <p/>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['done.button']}" action="#{routeEdit.save}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['cancel.button']}" action="ROUTES" immediate="true"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

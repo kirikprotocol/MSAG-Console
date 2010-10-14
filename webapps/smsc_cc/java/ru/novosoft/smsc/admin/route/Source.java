@@ -16,6 +16,11 @@ public class Source implements Serializable {
   private Address mask;
   private String subject;
 
+  Source(Source copy) {
+    mask = copy.mask;
+    subject = copy.subject;
+  }
+
   public Source(Address mask) throws AdminException {
     vh.checkNotNull("mask", mask);
     this.mask = mask;

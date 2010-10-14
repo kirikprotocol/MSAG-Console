@@ -2,8 +2,11 @@ package ru.novosoft.smsc.admin.route;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
+import ru.novosoft.smsc.util.Address;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -19,8 +22,8 @@ public class Route implements Serializable {
   private int priority = 0;
 
   private String srcSmeId;
-  private List<Source> sources;
-  private List<Destination> destinations;
+  private List<Source> sources = new ArrayList<Source>();
+  private List<Destination> destinations = new ArrayList<Destination>();
 
   private BillingMode billing = null;
 
@@ -85,8 +88,51 @@ public class Route implements Serializable {
     this.srcSmeId = srcSmeId;
   }
 
+  public void addSource(Source source) throws AdminException {
+    vh.checkNotNull("sources", source);
+    sources.add(new Source(source));
+  }
+
+  public boolean removeSource(String subject) {
+    for (Iterator<Source> iter  = sources.iterator(); iter.hasNext();) {
+      Source s = iter.next();
+      if (s.getSubject() != null && s.getSubject().equals(subject)) {
+        iter.remove();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean removeSource(Address mask) {
+    for (Iterator<Source> iter  = sources.iterator(); iter.hasNext();) {
+      Source s = iter.next();
+      if (s.getMask() != null && s.getMask().equals(mask)) {
+        iter.remove();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean containsSource(String subject) {
+    for (Source s : sources) {
+      if (s.getSubject() != null && s.getSubject().equals(subject))
+        return true;
+    }
+    return false;
+  }
+
+  public boolean containsSource(Address mask) {
+    for (Source s : sources) {
+      if (s.getMask() != null && s.getMask().equals(mask))
+        return true;
+    }
+    return false;
+  }
+
   public List<Source> getSources() {
-    return sources;
+    return new ArrayList<Source>(sources);
   }
 
   public void setSources(List<Source> sources) throws AdminException {
@@ -95,8 +141,51 @@ public class Route implements Serializable {
     this.sources = sources;
   }
 
+  public boolean containsDestination(String subject) {
+    for (Destination s : destinations) {
+      if (s.getSubject() != null && s.getSubject().equals(subject))
+        return true;
+    }
+    return false;
+  }
+
+  public void addDestination(Destination dst) throws AdminException {
+    vh.checkNotNull("destinations", dst);
+    destinations.add(dst);
+  }
+
+  public boolean removeDestination(String subject) {
+    for (Iterator<Destination> iter  = destinations.iterator(); iter.hasNext();) {
+      Destination s = iter.next();
+      if (s.getSubject() != null && s.getSubject().equals(subject)) {
+        iter.remove();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean removeDestination(Address mask) {
+    for (Iterator<Destination> iter  = destinations.iterator(); iter.hasNext();) {
+      Destination s = iter.next();
+      if (s.getMask() != null && s.getMask().equals(mask)) {
+        iter.remove();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean containsDestination(Address mask) {
+    for (Destination s : destinations) {
+      if (s.getMask() != null && s.getMask().equals(mask))
+        return true;
+    }
+    return false;
+  }
+
   public List<Destination> getDestinations() {
-    return destinations;
+    return new ArrayList<Destination>(destinations);
   }
 
   public void setDestinations(List<Destination> destinations) throws AdminException {

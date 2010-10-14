@@ -28,7 +28,7 @@ public class CategoryDependencyAspect {
 
     for (Route r : settings.getRoutes()) {
       if (r.getCategoryId() != null && ps.getCategory(r.getCategoryId()) == null)
-        throw new RouteException("category.not.found", String.valueOf(r.getAclId()));
+        throw new RouteException("category.not.found", String.valueOf(r.getCategoryId()));
     }
   }
 }
