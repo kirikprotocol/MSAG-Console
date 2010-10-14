@@ -219,8 +219,6 @@ int main( int argc, char** argv )
             smsc::admin::service::ComponentManager::registerComponent(admin.get());
             adml->Start();
             // a guarantee that adml is started
-            timespec ts = {0,50000000};
-            nanosleep(&ts,0);
             {
                 smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme");
                 core->init(cv);
