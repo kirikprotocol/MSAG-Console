@@ -17,7 +17,7 @@ public class RegionsSettingTest {
 
   private Region region;
 
-  private RegionsSettings settings = new RegionsSettings(Collections.<Region>emptyList());
+  private RegionsSettings settings = new RegionsSettings(Collections.<Region>emptyList(), 100);
 
 
   private static Region buildRegion() throws AdminException{
@@ -58,6 +58,21 @@ public class RegionsSettingTest {
     assertTrue(settings.getRegion(r.getRegionId()) == null);
     assertTrue(settings.getRegionByAddress(r.getMasks().iterator().next()) == null);
     assertTrue(settings.getRegionsBySmsc(r.getSmsc()).isEmpty());
+  }
+
+
+  @Test
+  public void setGetDefault() throws AdminException{
+    try{
+      settings.setDefaultMaxPerSecond(-1);
+      assertTrue(false);
+    }catch (AdminException e){}
+    try{
+      settings.setDefaultMaxPerSecond(0);
+      assertTrue(false);
+    }catch (AdminException e){}
+    settings.setDefaultMaxPerSecond(143);
+    assertTrue(settings.getDefaultMaxPerSecond() == 143);
   }
 
   @Test

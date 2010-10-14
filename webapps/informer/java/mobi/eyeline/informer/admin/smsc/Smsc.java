@@ -30,6 +30,10 @@ public class Smsc {
 
   private int vlrUssdServiceOp;
 
+  private int timeout;
+
+  private int rangeOfAddress;
+
   private Smsc() {
   }
 
@@ -47,6 +51,8 @@ public class Smsc {
     systemType = s.getString("systemType");
     ussdServiceOp = s.getInt("ussdPushTag");
     vlrUssdServiceOp = s.getInt("ussdPushVlrTag");
+    timeout = s.getInt("timeout");
+    rangeOfAddress = s.getInt("rangeOfAddress");
   }
 
   void save(XmlConfigSection s) throws XmlConfigException {
@@ -59,6 +65,25 @@ public class Smsc {
     s.setString("systemType", systemType);
     s.setInt("ussdPushTag", ussdServiceOp);
     s.setInt("ussdPushVlrTag", vlrUssdServiceOp);
+    s.setInt("timeout", timeout);
+    s.setInt("rangeOfAddress", rangeOfAddress);
+  }
+
+  public int getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(int timeout) throws AdminException{
+    vh.checkGreaterThan("timeout", timeout, 0);
+    this.timeout = timeout;
+  }
+
+  public int getRangeOfAddress() {
+    return rangeOfAddress;
+  }
+
+  public void setRangeOfAddress(int rangeOfAddress) throws AdminException{
+    this.rangeOfAddress = rangeOfAddress;
   }
 
   public String getName() {
@@ -147,6 +172,8 @@ public class Smsc {
 
     if (interfaceVersion != smsc.interfaceVersion) return false;
     if (port != smsc.port) return false;
+    if (rangeOfAddress != smsc.rangeOfAddress) return false;
+    if (timeout != smsc.timeout) return false;
     if (ussdServiceOp != smsc.ussdServiceOp) return false;
     if (vlrUssdServiceOp != smsc.vlrUssdServiceOp) return false;
     if (host != null ? !host.equals(smsc.host) : smsc.host != null) return false;
@@ -169,6 +196,8 @@ public class Smsc {
     s.interfaceVersion=interfaceVersion;
     s.ussdServiceOp=ussdServiceOp;
     s.vlrUssdServiceOp=vlrUssdServiceOp;
+    s.timeout=timeout;
+    s.rangeOfAddress=rangeOfAddress;
     return s;
   }
 

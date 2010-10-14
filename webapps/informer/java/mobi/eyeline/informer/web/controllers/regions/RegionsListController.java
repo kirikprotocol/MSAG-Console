@@ -28,16 +28,36 @@ public class RegionsListController extends RegionsController{
   private String address;
 
   private List<SelectItem> smscs = new LinkedList<SelectItem>();
+  
+  private int defaultMax;
 
 
   public RegionsListController() {
     for(Smsc s : getConfig().getSmscs()) {
       smscs.add(new SelectItem(s.getName(), s.getName()));
     }
+    defaultMax = getConfig().getDefaultMaxPerSecond();
+  }
+
+  public String submitDefault() {
+    try{
+      getConfig().setDefaultMaxPerSecond(defaultMax, getUserName());
+    }catch (AdminException e){
+      addError(e);
+    }
+    return null;
   }
 
   public List<SelectItem> getSmscs() {
     return smscs;
+  }
+
+  public int getDefaultMax() {
+    return defaultMax;
+  }
+
+  public void setDefaultMax(int defaultMax) {
+    this.defaultMax = defaultMax;
   }
 
   public void clearFilter() {

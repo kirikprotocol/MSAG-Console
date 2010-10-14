@@ -1,14 +1,17 @@
-<!ELEMENT regions (region*)>
+<!ELEMENT regions (region*, region_default)>
 <!ELEMENT region (mask*)>
 <!ATTLIST region
         id CDATA #REQUIRED
         name CDATA #REQUIRED
         timezone CDATA #REQUIRED
         infosme_smsc CDATA #REQUIRED
-        max_per_second (int) #REQUIRED
+        bandwidth (int) #REQUIRED
 >
 <!ELEMENT mask EMPTY>
 <!ATTLIST mask
         value CDATA #REQUIRED
 >
-
+<!ELEMENT region_default EMPTY>
+<!ATTLIST region_default
+        bandwidth (int) #REQUIRED
+>

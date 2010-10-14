@@ -74,6 +74,18 @@
             </tr:inputText>
           </tr:panelLabelAndMessage>
 
+          <tr:panelLabelAndMessage label="#{smscBundle.timeout}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.timeout}" required="true" simple="true">
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.rangeOfAddress}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.rangeOfAddress}" required="true" simple="true">
+              <tr:validateLongRange/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
         </tr:panelFormLayout>
 
       </h:panelGrid>

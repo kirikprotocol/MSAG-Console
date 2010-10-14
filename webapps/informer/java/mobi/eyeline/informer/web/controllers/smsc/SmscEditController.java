@@ -51,6 +51,8 @@ public class SmscEditController extends SmscController{
     smsc.interfaceVersion = s.getInterfaceVersion();
     smsc.ussdServiceOp = s.getUssdServiceOp();
     smsc.vlrUssdServiceOp = s.getVlrUssdServiceOp();
+    smsc.timeout = s.getTimeout();
+    smsc.rangeOfAddress = s.getRangeOfAddress();
     return s;
   }
 
@@ -65,6 +67,8 @@ public class SmscEditController extends SmscController{
     s.setSystemType(smsc.systemType);
     s.setUssdServiceOp(smsc.ussdServiceOp);
     s.setVlrUssdServiceOp(smsc.vlrUssdServiceOp);
+    s.setTimeout(smsc.timeout);
+    s.setRangeOfAddress(smsc.rangeOfAddress);
     return s;
   }
 
@@ -134,6 +138,26 @@ public class SmscEditController extends SmscController{
     private int ussdServiceOp;
 
     private int vlrUssdServiceOp;
+
+    private int timeout;
+
+    private int rangeOfAddress;
+
+    public int getTimeout() {
+      return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+      this.timeout = timeout;
+    }
+
+    public int getRangeOfAddress() {
+      return rangeOfAddress;
+    }
+
+    public void setRangeOfAddress(int rangeOfAddress) {
+      this.rangeOfAddress = rangeOfAddress;
+    }
 
     public String getName() {
       return name;

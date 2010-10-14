@@ -15,6 +15,31 @@ public class SmscTest {
 
   @SuppressWarnings({"UnusedAssignment"})
   @Test
+  public void testTimeout() throws AdminException{
+    Smsc smsc = new Smsc("smsc1");
+    try{
+      smsc.setTimeout(0);
+      assertTrue(false);
+    }catch (AdminException e){}
+    try{
+      smsc.setTimeout(-1);
+      assertTrue(false);
+    }catch (AdminException e){}
+
+    smsc.setTimeout(234);
+    assertEquals(234, smsc.getTimeout());
+  }
+
+  @SuppressWarnings({"UnusedAssignment"})
+  @Test
+  public void testRangeOfAddress() throws AdminException{
+    Smsc smsc = new Smsc("smsc1");
+    smsc.setRangeOfAddress(234);
+    assertEquals(234, smsc.getRangeOfAddress());
+  }
+
+  @SuppressWarnings({"UnusedAssignment"})
+  @Test
   public void testName() throws AdminException{
     Smsc smsc;
     try{
@@ -158,6 +183,8 @@ public class SmscTest {
     s1.setSystemType("sType");
     s1.setUssdServiceOp(12);
     s1.setVlrUssdServiceOp(562);
+    s1.setTimeout(12);
+    s1.setRangeOfAddress(34);
     Smsc s2 = s1.cloneSmsc();
     assertTrue(s1 != s2);
     assertEquals(s1, s2);

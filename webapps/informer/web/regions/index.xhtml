@@ -29,6 +29,24 @@
         </eye:button>
       </eye:buttons>
 
+      <h:outputText style="padding-top:20px" value="&#160;"/>
+
+      <eye:pageSubtitle value="#{msg['region.default.max']}"/>
+
+      <tr:subform>
+        <h:panelGrid columns="3" columnClasses="column100Width, column100Width," style="padding-top:10px;padding-bottom:10px;">
+          <tr:inputText columns="8" value="#{regions.defaultMax}" required="true">
+            <eye:validatePositive/>
+          </tr:inputText>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{regions.submitDefault}"/>
+          <h:outputText/>
+        </h:panelGrid>
+      </tr:subform>
+
+      <h:outputText style="padding-top:10px" value="&#160;"/>
+
+      <eye:pageSubtitle value="#{msg['region.regions']}"/>
+
       <h:panelGroup style="padding:10px">
         <eye:dataTableFilter bean="#{regions}" clearAction="clearFilter">
           <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">

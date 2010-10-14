@@ -61,6 +61,7 @@ public class RegionsManagerTest {
         }
         super.removeRegion(regionId);
       }
+      
     };
     regionsManager = new RegionsManager(infosem, configFile, backupDir, FileSystem.getFSForSingleInst());
     for(Region s : regionsManager.getRegions()) {
@@ -136,6 +137,18 @@ public class RegionsManagerTest {
     assertTrue(r1 == null);
   }
 
+  @Test
+  public void setDef() throws Exception {
+
+    int newDef = regionsManager.getDefaultMaxPerSecond() != 532 ? 532 : 674;
+
+    regionsManager.setDefaultMaxPerSecond(newDef);
+
+    before();
+
+    assertTrue(regionsManager.getDefaultMaxPerSecond() == newDef);
+  }
+
 
   @Test
   public void testAddRollback() throws AdminException {
@@ -205,8 +218,7 @@ public class RegionsManagerTest {
     }finally {
       infosmeError = false;
     }
-  }   
-
+  }
 
   @SuppressWarnings({"ResultOfMethodCallIgnored"})
   @AfterClass

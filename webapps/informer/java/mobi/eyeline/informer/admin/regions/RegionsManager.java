@@ -59,7 +59,6 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
   /**
    * Возвращает список регионов
    * @return список регионов
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка чтения
    */
   public List<Region> getRegions()  {
     return readSettings(new SettingsReader<RegionsSettings, List<Region>>(){
@@ -77,7 +76,6 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
    * Возвращает регион по id
    * @param id id региона
    * @return регион
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка чтения
    */
   public Region getRegion(final String id)  {
     return readSettings(new SettingsReader<RegionsSettings, Region>(){
@@ -106,10 +104,34 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
   }
 
   /**
+   * Установка максимального кол-ва смс по умолчанию
+   * @param defMaxPerSecond максимального кол-ва смс по умолчанию
+   * @throws AdminException ошибка сохранения
+   */
+  public void setDefaultMaxPerSecond(final int defMaxPerSecond) throws AdminException{
+    updateSettings(new SettingsWriter<RegionsSettings>() {
+      public void changeSettings(RegionsSettings settings) throws AdminException {
+        settings.setDefaultMaxPerSecond(defMaxPerSecond);
+      }
+      public void infosmeCommand(Infosme infosme) throws AdminException {}
+    });
+  }
+  /**
+   * Возвращает максимальное кол-во смс по умолчанию
+   * @return максимального кол-ва смс по умолчанию
+   */
+  public int getDefaultMaxPerSecond(){
+    return readSettings(new SettingsReader<RegionsSettings, Integer>(){
+      public Integer executeRead(RegionsSettings settings) {
+        return settings.getDefaultMaxPerSecond();
+      }
+    });
+  }
+
+  /**
    * Возвращает регион по маске
    * @param address маска
    * @return регион
-   * @throws mobi.eyeline.informer.admin.AdminException  ошибка чтения
    */
   public Region getRegion(final Address address) {
     return readSettings(new SettingsReader<RegionsSettings, Region>(){
@@ -124,7 +146,6 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
    * Возвращает список регионов по названию СМСЦ
    * @param smsc название СМСЦ
    * @return список регионов
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка чтения
    */
   public Collection<Region> getRegionsBySmsc(final String smsc)  {
     return readSettings(new SettingsReader<RegionsSettings, Collection<Region>>(){

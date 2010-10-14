@@ -13,13 +13,16 @@ class RegionsSettings {
   private Map<String, Region> regionsByMasks = new HashMap<String, Region>();
   private Map<String, Region> regions = new LinkedHashMap<String, Region>();
 
-  RegionsSettings(Collection<Region> regions) {
+  private int defaultMaxPerSecond;
+
+  RegionsSettings(Collection<Region> regions, int defaultMaxPerSecond) {
     for(Region r : regions) {
       this.regions.put(r.getRegionId(), r);
       for(Address a : r.getMasks()) {
         regionsByMasks.put(a.getSimpleAddress(), r);
       }
     }
+    this.defaultMaxPerSecond = defaultMaxPerSecond;
 
   }
 
@@ -110,4 +113,15 @@ class RegionsSettings {
     return result;
   }
 
+
+  int getDefaultMaxPerSecond() {
+    return defaultMaxPerSecond;
+  }
+
+  void setDefaultMaxPerSecond(int defaultMaxPerSecond) throws AdminException{
+    if(defaultMaxPerSecond <= 0) {
+      throw new RegionException("def_region_incorrect");
+    }
+    this.defaultMaxPerSecond = defaultMaxPerSecond;
+  }
 }

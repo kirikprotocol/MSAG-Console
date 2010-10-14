@@ -13,6 +13,8 @@
       <param name="systemType" type="string">sysType</param>
       <param name="ussdPushTag" type="int">131</param>
       <param name="ussdPushVlrTag" type="int">153</param>
+      <param name="timeout" type="int">1</param>
+      <param name="rangeOfAddress" type="int">2</param>
     </section>
 
     <section name="SMSC1">
@@ -24,6 +26,8 @@
       <param name="systemType" type="string">sysType</param>
       <param name="ussdPushTag" type="int">131</param>
       <param name="ussdPushVlrTag" type="int">153</param>
+      <param name="timeout" type="int">1</param>
+      <param name="rangeOfAddress" type="int">2</param>
     </section>
 
     <section name="SMSC2">
@@ -35,6 +39,8 @@
       <param name="systemType" type="string">sysType</param>
       <param name="ussdPushTag" type="int">131</param>
       <param name="ussdPushVlrTag" type="int">153</param>
+      <param name="timeout" type="int">1</param>
+      <param name="rangeOfAddress" type="int">2</param>
     </section>
     
   </section>

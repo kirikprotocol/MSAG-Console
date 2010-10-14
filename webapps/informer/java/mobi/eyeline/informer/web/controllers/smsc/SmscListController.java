@@ -73,48 +73,6 @@ public class SmscListController extends SmscController{
     return null;
   }
 
-//  public DataTableModel getSmscModel() {
-//
-//    final List<Smsc> smscs = getConfig().getSmscs();
-//
-//    final String def = getConfig().getDefaultSmsc();
-//
-//    return new DataTableModel() {
-//
-//      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-//
-//        List<RadioSmsc> result = new ArrayList<RadioSmsc>(count);
-//
-//        if (count <= 0) {
-//          return result;
-//        }
-//        if(sortOrder == null || sortOrder.getColumnId() == null || sortOrder.getColumnId().equals("name")) {
-//          Collections.sort(smscs, new Comparator<Smsc>() {
-//            public int compare(Smsc o1, Smsc o2) {
-//              return (o1.getName().compareTo(o2.getName())) *( sortOrder == null || sortOrder.isAsc() ? 1 : -1);
-//            }
-//          });
-//        }
-//
-//
-//        for (Iterator<Smsc> i = smscs.iterator(); i.hasNext() && count > 0;) {
-//          Smsc r = i.next();
-//          if (--startPos < 0) {
-//            result.add(new RadioSmsc(r, def.equals(r.getName())));
-//            count--;
-//          }
-//        }
-//
-//        return result;
-//      }
-//
-//      public int getRowsCount() {
-//        return smscs.size();
-//      }
-//
-//    };
-//  }
-//
   public static class RadioSmsc {
 
     private Smsc smsc;

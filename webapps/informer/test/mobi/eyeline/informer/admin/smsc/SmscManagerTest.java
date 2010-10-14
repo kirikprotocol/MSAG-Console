@@ -96,6 +96,8 @@ public class SmscManagerTest {
     assertEquals(smsc.getSystemType(), "sysType");
     assertEquals(smsc.getUssdServiceOp(), 131);
     assertEquals(smsc.getVlrUssdServiceOp(), 153);
+    assertEquals(smsc.getTimeout(), 1);
+    assertEquals(smsc.getRangeOfAddress(), 2);
 
     smsc.setHost("niagara1");
     smsc.setInterfaceVersion(3113);
@@ -105,6 +107,8 @@ public class SmscManagerTest {
     smsc.setUssdServiceOp(46);
     smsc.setVlrUssdServiceOp(634);
     smsc.setSystemId("sid1");
+    smsc.setTimeout(2);
+    smsc.setRangeOfAddress(3);
 
     smscManager.updateSmsc(smsc);
 
@@ -127,6 +131,8 @@ public class SmscManagerTest {
     smsc.setUssdServiceOp(46);
     smsc.setVlrUssdServiceOp(634);
     smsc.setSystemId("sid2");
+    smsc.setTimeout(2);
+    smsc.setRangeOfAddress(3);
 
     smscManager.addSmsc(smsc);
 
@@ -157,6 +163,8 @@ public class SmscManagerTest {
       smsc.setUssdServiceOp(46);
       smsc.setVlrUssdServiceOp(634);
       smsc.setSystemId("sid2");
+      smsc.setTimeout(2);
+      smsc.setRangeOfAddress(3);
 
       long beforeLenght = configFile.length();
       try{

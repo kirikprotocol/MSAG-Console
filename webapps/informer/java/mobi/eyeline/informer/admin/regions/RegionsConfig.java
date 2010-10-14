@@ -29,7 +29,7 @@ class RegionsConfig  implements ManagedConfigFile<RegionsSettings> {
       region.setAttribute("timezone", new StringBuilder(50).
           append(r.getTimeZone().getRawOffset()/1000).append(',').append(r.getTimeZone().getID()).toString());
       region.setAttribute("infosme_smsc", r.getSmsc());
-      region.setAttribute("max_per_second", Integer.toString(r.getMaxSmsPerSecond()));
+      region.setAttribute("bandwidth", Integer.toString(r.getMaxSmsPerSecond()));
       for(Address a : r.getMasks()) {
         Element mask = d.createElement("mask");
         mask.setAttribute("value", a.getSimpleAddress());
@@ -37,6 +37,11 @@ class RegionsConfig  implements ManagedConfigFile<RegionsSettings> {
       }
       rootElement.appendChild(region);
     }
+
+    Element defMax = d.createElement("region_default");
+    defMax.setAttribute("bandwidth", Integer.toString(conf.getDefaultMaxPerSecond()));
+    rootElement.appendChild(defMax);
+
     XmlUtils.storeConfig(newFile, d, System.getProperty("file.encoding"), "regions.dtd");
   }
 
@@ -48,7 +53,7 @@ class RegionsConfig  implements ManagedConfigFile<RegionsSettings> {
       Region r = new Region();
       Element region = (Element)regions.item(i);
       r.setName(region.getAttribute("name"));
-      r.setMaxSmsPerSecond(Integer.parseInt(region.getAttribute("max_per_second")));
+      r.setMaxSmsPerSecond(Integer.parseInt(region.getAttribute("bandwidth")));
       r.setSmsc(region.getAttribute("infosme_smsc"));
       String tz = region.getAttribute("timezone");
       tz = tz.substring(tz.indexOf(',')+1);
@@ -61,6 +66,9 @@ class RegionsConfig  implements ManagedConfigFile<RegionsSettings> {
       }
       result.add(r);
     }
-    return new RegionsSettings(result);
+    NodeList defs = d.getElementsByTagName("region_default");
+    Element def = (Element)defs.item(0);
+    int defaultMaxPerSecond = Integer.parseInt(def.getAttribute("bandwidth"));
+    return new RegionsSettings(result, defaultMaxPerSecond);
   }
 }

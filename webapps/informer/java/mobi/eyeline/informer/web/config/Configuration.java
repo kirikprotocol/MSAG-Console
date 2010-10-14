@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.config;
 
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.journal.Journal;
@@ -11,10 +12,7 @@ import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.UsersSettings;
 import mobi.eyeline.informer.util.Address;
 
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -178,7 +176,19 @@ public class Configuration {
     context.addRegion(region);
     journal.logAddRegion(region.getName(), user);
   }
-  
+
+  public int getDefaultMaxPerSecond() {
+    return context.getDefaultMaxPerSecond();
+  }
+
+  public void setDefaultMaxPerSecond(int defMaxPerSecond, String user) throws AdminException {
+    int old = context.getDefaultMaxPerSecond();
+    if(old != defMaxPerSecond) {
+      context.setDefaultMaxPerSecond(defMaxPerSecond);
+      journal.logSetDefaultSmsPerSecondRegion(old, defMaxPerSecond, user);
+    }
+  }
+
   public List<RetryPolicy> getRetryPolicies() throws AdminException {
     return context.getRetryPolicies();
   }
@@ -224,6 +234,32 @@ public class Configuration {
 
   public List<String> getInformerHosts() throws AdminException {
     return context.getInformerHosts();
+  }
+
+  public List<Daemon> getDaemons(final String user) {
+    List<Daemon> ds = context.getDaemons();
+    List<Daemon> result = new ArrayList<Daemon>(ds.size());
+
+    for(final Daemon d : ds) {
+      result.add(new Daemon() {
+        public String getName() {
+          return d.getName();
+        }
+        public void start() throws AdminException {
+          d.start();
+          journal.logDaemonrStart(getName(), user);
+        }
+        public void stop() throws AdminException {
+          d.stop();
+          journal.logDaemonStop(getName(), user);
+        }
+        public boolean isStarted() {
+          return d.isStarted();
+        }
+      });
+    }
+
+    return result;
   }
 
   private final Lock lock = new ReentrantLock();

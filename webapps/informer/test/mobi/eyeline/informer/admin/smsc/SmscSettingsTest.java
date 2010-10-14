@@ -28,6 +28,8 @@ public class SmscSettingsTest {
     smsc.setSystemType("sType");
     smsc.setUssdServiceOp(12);
     smsc.setVlrUssdServiceOp(562);
+    smsc.setTimeout(53);
+    smsc.setRangeOfAddress(67);
   }
   
   

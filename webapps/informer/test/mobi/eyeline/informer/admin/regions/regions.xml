@@ -3,14 +3,16 @@
 
 <regions>
 
-  <region id="0" name="МР Москва" timezone="10800,Europe/Moscow" infosme_smsc="SMSC2" max_per_second="200">
+  <region id="0" name="МР Москва" timezone="10800,Europe/Moscow" infosme_smsc="SMSC2" bandwidth="200">
     <mask value="+79139??????"/>
     <mask value="+79137??????"/>
   </region>
   
-  <region id="1" name="МР Сибирь" timezone="21600,Asia/Omsk" infosme_smsc="SMSC1" max_per_second="300">
+  <region id="1" name="МР Сибирь" timezone="21600,Asia/Omsk" infosme_smsc="SMSC1" bandwidth="300">
     <mask value="+79138??????"/>
     <mask value="+791377?????"/>
   </region>
+
+  <region_default bandwidth="10"/>
 
 </regions>    

@@ -5,9 +5,9 @@ import mobi.eyeline.informer.admin.AdminException;
 /**
  * @author Aleksandr Khalitov
  */
-class InformerDIffHelper extends DiffHelper{
+class InformerDiffHelper extends DiffHelper{
 
-  public InformerDIffHelper() {
+  public InformerDiffHelper() {
     super(Subject.INFORMER);
   }
 

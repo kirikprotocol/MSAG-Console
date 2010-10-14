@@ -26,6 +26,7 @@ import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.locks.Lock;
@@ -78,6 +79,8 @@ public class AdminContext {
 
       File servicesDir = new File(appBaseDir, "services");
 
+      File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
+
       switch (this.instType) {
         case SINGLE:
           serviceManager = ServiceManager.getServiceManagerForSingleInst(webConfig.getSingleDaemonHost(), webConfig.getSingleDaemonPort(), servicesDir);
@@ -94,8 +97,8 @@ public class AdminContext {
 
       File usersFile = new File(webConfig.getUsersFile());
       journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
-      informerManager = new InformerManagerImpl(new File(appBaseDir,"conf"+File.separatorChar+"config.xml"),
-          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem, serviceManager);
+      informerManager = new InformerManagerImpl(new File(confDir,"config.xml"),
+          new File(confDir, "backup"), fileSystem, serviceManager);
       usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
       InformerSettings is = informerManager.getConfigSettings();
       infosme = new InfosmeImpl(is.getHost(), is.getAdminPort());
@@ -108,13 +111,13 @@ public class AdminContext {
 
       blacklistManager = new BlackListManagerImpl(personalizationClientPool);
 
-      smscManager = new SmscManager(infosme, new File(appBaseDir,"conf"+File.separatorChar+"smsc.xml"),
-          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
-      regionsManager = new RegionsManager(infosme, new File(appBaseDir,"conf"+File.separatorChar+"regions.xml"),
-          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
+      smscManager = new SmscManager(infosme, new File(confDir, "smsc.xml"),
+          new File(confDir, "backup"), fileSystem);
+      regionsManager = new RegionsManager(infosme, new File(confDir, "regions.xml"),
+          new File(confDir, "backup"), fileSystem);
 
-      retryPolicyManager = new RetryPolicyManager(infosme, new File(appBaseDir,"conf"+File.separatorChar+"policies.xml"),
-          new File(appBaseDir,"conf"+File.separatorChar+"backup"), fileSystem);
+      retryPolicyManager = new RetryPolicyManager(infosme, new File(confDir, "policies.xml"),
+          new File(confDir, "backup"), fileSystem);
       
     }catch (AdminException e) {
       throw new InitException(e);
@@ -246,6 +249,14 @@ public class AdminContext {
     }
   }
 
+  public int getDefaultMaxPerSecond() {
+    return regionsManager.getDefaultMaxPerSecond();
+  }
+
+  public void setDefaultMaxPerSecond(int defMaxPerSecond) throws AdminException {
+    regionsManager.setDefaultMaxPerSecond(defMaxPerSecond);
+  }
+
   public void removeRegion(String regionId) throws AdminException{
     regionsManager.removeRegion(regionId);
   }
@@ -301,5 +312,10 @@ public class AdminContext {
 
   public List<String> getInformerHosts() throws AdminException {
     return informerManager.getInformerHosts();
+  }
+
+  public List<Daemon> getDaemons() {
+    //todo
+    return new LinkedList<Daemon>();
   }
 }

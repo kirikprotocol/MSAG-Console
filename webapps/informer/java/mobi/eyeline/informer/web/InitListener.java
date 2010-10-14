@@ -24,8 +24,8 @@ public class InitListener implements ServletContextListener {
 
   private WebContext context;
 
-  private void initLog4j(File confDir) {
-    PropertyConfigurator.configureAndWatch(new File(confDir,"log4j.properties").getAbsolutePath(), 60000L);
+  private void initLog4j(String file) {
+    PropertyConfigurator.configureAndWatch(file, 60000L);
   }
 
   public void contextInitialized(ServletContextEvent servletContextEvent) {
@@ -33,8 +33,9 @@ public class InitListener implements ServletContextListener {
 
       File webconfig = new File(System.getProperty("informer.config.webconfig"));
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
-
-      initLog4j(new File(appBaseDir, "conf"));
+      if(System.getProperty("informer.log4j.file") != null) {
+        initLog4j(System.getProperty("informer.log4j.file"));
+      }
 
       WebXml webXml;
       InputStream is = null;

@@ -48,9 +48,15 @@
     <converter-id>timeZoneConverter</converter-id>
     <converter-class>mobi.eyeline.informer.web.controllers.TimeZoneNameConverter</converter-class>
   </converter>
+
   <converter>
     <converter-id>timeZoneIdConverter</converter-id>
     <converter-class>mobi.eyeline.informer.web.controllers.TimeZoneIdConverter</converter-class>
+  </converter>
+
+  <converter>
+    <converter-id>daemonsConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.DaemonsConverter</converter-class>
   </converter>
 
 

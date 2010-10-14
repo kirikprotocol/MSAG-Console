@@ -32,7 +32,7 @@ public class Journal {
 
   private final RetryPolicyDiffHelper retryPolicy = new RetryPolicyDiffHelper(Subject.RETRY_POLICY);
 
-  private final InformerDIffHelper informer = new InformerDIffHelper();
+  private final InformerDiffHelper informer = new InformerDiffHelper();
 
   private final JournalDataSource ds;
 
@@ -168,6 +168,17 @@ public class Journal {
   }
 
   /**
+   * Добавляет в журнал запись об изменении макс. кол-ва смс по умолчанию
+   * @param oldValue старое значение
+   * @param newValue новое значение
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logSetDefaultSmsPerSecondRegion(int oldValue, int newValue, String user) throws AdminException{
+    this.regions.logSetDefault(this, oldValue, newValue, user);
+  }
+
+  /**
    * Добавляет в журнал запись о новом СМСЦ
    * @param smsc СМСЦ
    * @param user пользователь, от имени которого надо формировать записи
@@ -216,7 +227,7 @@ public class Journal {
     this.retryPolicy.logAddRetryPolicy(this,  rp, user);
   }
   public void logRemoveRetryPolicy( String policyId, String user) throws AdminException {
-    this.retryPolicy.logRemoveRetryPolicy(this,  policyId, user); 
+    this.retryPolicy.logRemoveRetryPolicy(this,  policyId, user);
   }
 
   /**
@@ -234,7 +245,7 @@ public class Journal {
    * @throws AdminException ошибка сохранения записи
    */
   public void logInformerStop(String user) throws AdminException {
-    informer.logInformerStop(this, user);            
+    informer.logInformerStop(this, user);
   }
 
   /**
@@ -245,5 +256,25 @@ public class Journal {
    */
   public void logInformerSwitch(String toHost, String user) throws AdminException {
     informer.logInformerSwitch(this, toHost, user);
+  }
+
+  /**
+   * Добавляет в журнал запись о старте демона
+   * @param name имя демона
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logDaemonrStart(String name, String user) throws AdminException {
+    addRecord(JournalRecord.Type.SERVICE_START, Subject.DAEMONS, user, "daemon_start", name);
+  }
+
+  /**
+   * Добавляет в журнал запись об остановке демона
+   * @param name имя демона
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logDaemonStop(String name, String user) throws AdminException {
+    addRecord(JournalRecord.Type.SERVICE_STOP, Subject.DAEMONS, user, "daemon_stop", name);
   }
 }

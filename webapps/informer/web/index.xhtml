@@ -14,52 +14,95 @@
   <ui:define name="content">
     <tr:form>
 
-      <h:panelGroup style="padding: 20px">
-        <eye:pageSubtitle value="#{msg['status.page.informer']}"/>
+      <eye:pageSubtitle value="#{msg['status.page.services']}"/>
 
-        <h:panelGrid columns="2" columnClasses="column600Width," style="padding-left:20px">
-          <h:panelGroup>
-            <table class="list">
+      <h:panelGroup>
+        <h:panelGroup>
+          <table class="list">
 
-              <tr>
-                <th>
-                  <h:outputText value="#{msg['status.page.online.host']}"/>
-                </th>
-                <th>
-                  <h:outputText value="#{msg['status.page.action']}"/>
-                </th>
-              </tr>
+            <tr>
+              <th width="2%">
+                <h:outputText value="&#160;"/>
+              </th>
+              <th width="30%">
+                <h:outputText value="#{msg['status.page.service.name']}"/>
+              </th>
+              <th width="30%">
+                <h:outputText value="#{msg['status.page.online.host']}"/>
+              </th>
+              <th>
+                <h:outputText value="#{msg['status.page.action']}"/>
+              </th>
+            </tr>
 
-              <tr>
-                <td width="center"><h:outputText value="#{informerStatus.onlineHost}" style="color:GREEN"/></td>
-                <td width="center">
-                  <h:panelGroup>
-                    <h:panelGroup rendered="#{!informerStatus.switchAllowed}">
-                      <h:commandLink value="#{msg['status.page.start']}" action="#{informerStatus.start}" rendered="#{informerStatus.onlineHost == null}"/>
-                      <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stop}" rendered="#{informerStatus.onlineHost != null}"/>
-                    </h:panelGroup>
-
-                    <h:panelGroup rendered="#{informerStatus.switchAllowed}">
-                      <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stop}" rendered="#{informerStatus.onlineHost != null}"/>
-                      <h:outputText value=" #{msg['status.page.or']} " rendered="#{informerStatus.onlineHost != null}"/>
-                      <h:commandLink value="#{msg['status.page.switch']}" action="#{informerStatus.switchHost}" rendered="#{informerStatus.onlineHost != null}"/>
-
-                      <h:commandLink value="#{msg['status.page.start_at']}" action="#{informerStatus.switchHost}" rendered="#{informerStatus.onlineHost == null}"/>
-                      <h:outputText value="  "/>
-
-                      <h:selectOneMenu value="#{informerStatus.switchTo}">
-                        <f:selectItems value="#{informerStatus.hosts}"/>
-                      </h:selectOneMenu>
-                    </h:panelGroup>
+            <tr class="row0">
+              <td width="center">
+                <h:graphicImage value="/images/ic_internal.gif" rendered="#{informerStatus.informerOnlineHost != null}"/>
+                <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{informerStatus.informerOnlineHost == null}"/>
+              </td>
+              <td width="center"><h:outputText value="#{msg['status.page.service.informer']}"/></td>
+              <td width="center"><h:outputText value="#{informerStatus.informerOnlineHost}" style="color:GREEN"/></td>
+              <td width="center">
+                <h:panelGroup>
+                  <h:panelGroup rendered="#{!informerStatus.informerSwitchAllowed}">
+                    <h:commandLink value="#{msg['status.page.start']}" action="#{informerStatus.startInformer}" rendered="#{informerStatus.informerOnlineHost == null}"/>
+                    <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stopInformer}" rendered="#{informerStatus.informerOnlineHost != null}"/>
                   </h:panelGroup>
-                </td>
-              </tr>
 
-            </table>
-          </h:panelGroup>
-          <h:outputText/>
-        </h:panelGrid>
+                  <h:panelGroup rendered="#{informerStatus.informerSwitchAllowed}">
+                    <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stopInformer}" rendered="#{informerStatus.informerOnlineHost != null}"/>
+                    <h:outputText value=" #{msg['status.page.or']} " rendered="#{informerStatus.informerOnlineHost != null}"/>
+                    <h:commandLink value="#{msg['status.page.switch']}" action="#{informerStatus.switchInformerHost}" rendered="#{informerStatus.informerOnlineHost != null}"/>
+
+                    <h:commandLink value="#{msg['status.page.start_at']}" action="#{informerStatus.switchInformerHost}" rendered="#{informerStatus.informerOnlineHost == null}"/>
+                    <h:outputText value="  "/>
+
+                    <h:selectOneMenu value="#{informerStatus.informerSwitchTo}">
+                      <f:selectItems value="#{informerStatus.informerHosts}"/>
+                    </h:selectOneMenu>
+                  </h:panelGroup>
+                </h:panelGroup>
+              </td>
+            </tr>
+
+          </table>
+        </h:panelGroup>
       </h:panelGroup>
+
+      <p/>
+
+      <eye:pageSubtitle value="#{msg['status.page.daemons']}"/>
+
+      <h:panelGroup>
+        <eye:dataTable value="#{informerStatus.daemons}" var="data">
+
+          <eye:row>
+
+            <eye:column name="connected" title="" sortable="false" width="2%">
+              <h:graphicImage value="/images/ic_internal.gif" rendered="#{data.started}"/>
+              <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{!data.started}"/>
+            </eye:column>
+
+            <eye:column name="name" title="#{msg['status.page.daemon.name']}" width="60%">
+              <h:outputText value="#{data.name}" converter="daemonsConverter"/>
+            </eye:column>
+
+            <eye:column name="action" title="#{msg['status.page.action']}">
+              <h:commandLink value="#{msg['status.page.stop']}" rendered="#{data.started}" action="#{informerStatus.stopDaemon}">
+                <f:param name="daemon" value="#{data.name}"/>
+              </h:commandLink>
+              <h:commandLink value="#{msg['status.page.start']}" rendered="#{!data.started}" action="#{informerStatus.startDaemon}">
+                <f:param name="daemon" value="#{data.name}"/>
+              </h:commandLink>
+            </eye:column>
+
+          </eye:row>
+
+        </eye:dataTable>
+        
+      </h:panelGroup>
+
+
     </tr:form>
   </ui:define>
 
