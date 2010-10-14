@@ -46,7 +46,7 @@ public:
 
   void process(void);
 };
-
+/*
 class TCIndLclReject : public TC_LRejectIndComposer {
 protected:
   TCLocalIndTask *  _ownTask;
@@ -60,7 +60,7 @@ public:
 
   void process(void);
 };
-
+*/
 /* ********************************************************************** *
  * Locally generated Transaction SubLayer indications:
  * ********************************************************************** */
@@ -108,19 +108,24 @@ private:
   static const size_t _MAX_TASKNAME_LEN = sizeof("%s[%Xh]") + sizeof("TCLocalIndTask") + sizeof(TDialogueId)*3;
   typedef smsc::core::buffers::FixedLengthString<_MAX_TASKNAME_LEN> NameString_t;
 
-  enum IndKind_e { indNone = 0, indLCancel, indLReject, indPAbort, indTNotice };
+  enum IndKind_e { indNone = 0, indTNotice, indPAbort, indLCancel/*, indLReject */};
 
   union {
     void *  _aligner;
+/*
     uint8_t _buf[eyeline::util::MaxSizeOf4_T<
                   TCIndLclCancel, TCIndLclReject, TIndLclPAbort, TIndLclNotice
+                  >::VALUE];
+*/
+    uint8_t _buf[eyeline::util::MaxSizeOf3_T<
+                    TCIndLclCancel, TIndLclPAbort, TIndLclNotice
                   >::VALUE];
   } _memObj;
 
   union {
     void *            _any;
     TCIndLclCancel *  _lCancel;
-    TCIndLclReject *  _lReject;
+//    TCIndLclReject *  _lReject;
     TIndLclPAbort *   _tPAbort;
     TIndLclNotice *   _tNotice;
   } _pInd;
@@ -160,7 +165,7 @@ public:
 
   TCIndLclCancel & initLCancel(void);
   //
-  TCIndLclReject & initLReject(void);
+  //TCIndLclReject & initLReject(void);
   //
   TIndLclPAbort &  initPAbort(void);
   //

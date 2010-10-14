@@ -71,11 +71,11 @@ public:
     TCLocalIndTask * pTask = allcInd();
     return pTask ? &(pTask->initLCancel()) : NULL;
   }
-  TCIndLclReject * allcLRejectInd(void)
+/*  TCIndLclReject * allcLRejectInd(void)
   {
     TCLocalIndTask * pTask = allcInd();
     return pTask ? &(pTask->initLReject()) : NULL;
-  }
+  } */
   TIndLclPAbort *  allcPAbortInd(void)
   {
     TCLocalIndTask * pTask = allcInd();

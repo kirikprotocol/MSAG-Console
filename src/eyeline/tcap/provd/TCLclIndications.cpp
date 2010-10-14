@@ -9,7 +9,7 @@ namespace tcap {
 namespace provd {
 
 void TCIndLclCancel::process(void) { _ownTask->process(); }
-void TCIndLclReject::process(void) { _ownTask->process(); }
+//void TCIndLclReject::process(void) { _ownTask->process(); }
 void TIndLclPAbort::process(void) { _ownTask->process(); }
 void TIndLclNotice::process(void) { _ownTask->process(); }
 
@@ -23,7 +23,7 @@ const char * TCLocalIndTask::nmKind(IndKind_e ind_kind)
   switch (ind_kind) {
   case indTNotice: return "TNotice_IND";
   case indPAbort:  return "TPAbort_IND";
-  case indLReject: return "TCLReject_IND";
+//  case indLReject: return "TCLReject_IND";
   case indLCancel: return "TCLCancel_IND";
   default:;
   }
@@ -35,7 +35,7 @@ TDialogueId TCLocalIndTask::getDlgId(void) const
   if (_pInd._any) {
     switch (_kind) {
     case indLCancel: return _pInd._lCancel->getDialogueId();
-    case indLReject: return _pInd._lReject->getDialogueId();
+//    case indLReject: return _pInd._lReject->getDialogueId();
     case indPAbort:  return _pInd._tPAbort->getDialogueId();
     case indTNotice:  return _pInd._tNotice->getDialogueId();
     default:;
@@ -49,7 +49,7 @@ void TCLocalIndTask::clear(void)
   if (_pInd._any) {
     switch (_kind) {
     case indLCancel: _pInd._lCancel->~TCIndLclCancel(); break;
-    case indLReject: _pInd._lReject->~TCIndLclReject(); break;
+//    case indLReject: _pInd._lReject->~TCIndLclReject(); break;
     case indPAbort:  _pInd._tPAbort->~TIndLclPAbort(); break;
     case indTNotice:  _pInd._tNotice->~TIndLclNotice(); break;
     default:;
@@ -68,6 +68,7 @@ TCIndLclCancel & TCLocalIndTask::initLCancel(void)
   return *_pInd._lCancel;
 }
 //
+/*
 TCIndLclReject & TCLocalIndTask::initLReject(void)
 {
   clear();
@@ -75,6 +76,7 @@ TCIndLclReject & TCLocalIndTask::initLReject(void)
   _kind = indLReject;
   return *_pInd._lReject;
 }
+*/
 //
 TIndLclPAbort & TCLocalIndTask::initPAbort(void)
 {
@@ -121,13 +123,13 @@ int TCLocalIndTask::Execute(void)
           _dlgReg->getTDlgFSM(_pInd._lCancel->getDialogueId());
       dlgFsm->updateDlgByIndication(*_pInd._lCancel);
     } break;
-
+/*
     case indLReject: {
       TDlgRefPtr_t dlgFsm = 
           _dlgReg->getTDlgFSM(_pInd._lReject->getDialogueId());
       dlgFsm->updateDlgByIndication(*_pInd._lReject);
     } break;
-
+*/
     default:;
     }
   } catch (const std::exception & exc) {
