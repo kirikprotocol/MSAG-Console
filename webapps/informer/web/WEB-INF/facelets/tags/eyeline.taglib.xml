@@ -14,6 +14,11 @@
   </tag>
 
   <tag>
+    <tag-name>message</tag-name>
+    <source>message.xhtml</source>
+  </tag>
+
+  <tag>
     <tag-name>validatePort</tag-name>
     <source>validatePort.xhtml</source>
   </tag>

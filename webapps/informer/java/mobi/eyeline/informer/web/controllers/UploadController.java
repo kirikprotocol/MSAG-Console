@@ -4,7 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import org.apache.log4j.Logger;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
-import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import java.util.HashMap;
 import java.util.Locale;
@@ -25,6 +24,15 @@ public abstract class UploadController extends InformerController{
 
   protected UploadThread thread;
 
+  private String error;
+
+  /**
+   * Возвращает текст ощибки
+   * @return текст ощибки
+   */
+  public String getError() {
+    return error;
+  }
 
   /**
    * Возвращает текущее значение прогресса обработки файла (для отображения шкалы)
@@ -96,6 +104,7 @@ public abstract class UploadController extends InformerController{
    * @return navifgation rule's action
    */
   public String next() {
+    error = null;
     state = 0;
     file = null;
     return _next();
@@ -133,15 +142,12 @@ public abstract class UploadController extends InformerController{
 
     private boolean stop = false;
 
-    private FacesContext context;
-
     private Map<String, String> requestParams;
 
     private UploadThread(UploadedFile file, String user, Locale locale, FacesContext context) {
       this.file = file;
       this.user = user;
       this.locale = locale;
-      this.context = context;
       this.requestParams = new HashMap<String, String>(context.getExternalContext().getRequestParameterMap());
     }
 
@@ -150,19 +156,13 @@ public abstract class UploadController extends InformerController{
       try{
         _process(file, user, requestParams);
       }catch (AdminException e){
-        addMessage(context, new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(locale), null), "upload_message");
+        error = e.getMessage(locale);
         logger.warn(e,e);
       }catch (IllegalArgumentException e){
-        addMessage(context, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-            ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer",
-                locale).getString("upload.illegal.file"), null),
-            "upload_message");
+        error = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("upload.illegal.file");
         logger.warn(e,e);
       } catch (Exception e){
-        addMessage(context, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-            ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer",
-                locale).getString("upload.error.text"), null),
-            "upload_message");
+        error = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("upload.error.text");
         logger.error(e,e);
       }finally {
         finished = true;

@@ -359,5 +359,16 @@
     <description>Проверка корректности номера телефона</description>
   </tag>
 
+  <tag>
+    <name>message</name>
+    <description>Вывод сообщения на экран</description>
+    <attribute>
+      <name>level</name>
+      <required>true</required>
+      <description>Уровень сообщения: информация, предупреждение или ошибка.
+      Значение: либо 'info', либо 'warn', либо 'error'</description>
+    </attribute>
+  </tag>
+
 
 </taglib>
