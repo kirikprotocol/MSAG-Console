@@ -591,3 +591,13 @@ B3126: Sep 06, 2010
     SMSC	Statistics calculation tweak for multipart service->map sms
     SMSC	ussnotify->ussnotifyconf->closeind fix for unexpected close in seq
     Emailsme	limit size of incoming emails, print ip of incoming connection
+
+B3127: Sep 28, 2010
+    SMSC	trafficMode instead of allowed on route
+    SMSC	MAPIO partial reconnect delay
+    SMSC	EYELINE_ICONV_ENCODING - top priority variable for internal encoding for iconv
+    Emailsme 	take maxemailsize from config
+
+B3128: Oct 14, 2010
+    SMSC	locker queue overflow fix for multiple messages containing SAR arrived together
+    email	 maxMessageSize fix
