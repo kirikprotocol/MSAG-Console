@@ -10,6 +10,9 @@ namespace eyeline {
 namespace tcap {
 namespace provd {
 
+//using eyeline::ros::RejectProblem;
+using eyeline::ros::ROSRejectPdu;
+using eyeline::ros::ROSPduPrimitiveAC;
 using smsc::core::synchronization::MutexGuard;
 //using smsc::core::synchronization::MutexTryGuard;
 
@@ -197,7 +200,7 @@ bool TDialogueFSM::verifyTCIndComponents(TComponentsList * comps,
         //reject this component
         TC_LRejectIndComposer indReject;
         indReject.setDialogueId(_trnUId.getIdLocal());
-        indReject.setProblem(RejectProblem::InvokeProblem_e,
+        indReject.setProblem(RejectProblem::rejInvoke,
                              RejectProblem::rji_duplicateInvocation);
         indReject.setInvokeId(rosComp->getInvokeId());
         /**/
@@ -217,7 +220,7 @@ bool TDialogueFSM::verifyTCIndComponents(TComponentsList * comps,
         TC_LRejectIndComposer indReject;
         indReject.setDialogueId(_trnUId.getIdLocal());
         indReject.setInvokeId(rosComp->getInvokeId());
-        indReject.setProblem(RejectProblem::RErrorProblem_e,
+        indReject.setProblem(RejectProblem::rejError,
                              RejectProblem::rje_unrecognizedInvocation);
         /**/
         _rejComps.push_back(indReject);
@@ -237,7 +240,7 @@ bool TDialogueFSM::verifyTCIndComponents(TComponentsList * comps,
         TC_LRejectIndComposer indReject;
         indReject.setDialogueId(_trnUId.getIdLocal());
         indReject.setInvokeId(rosComp->getInvokeId());
-        indReject.setProblem(ros::RejectProblem::RResultProblem_e,
+        indReject.setProblem(ros::RejectProblem::rejResult,
                              ros::RejectProblem::rjr_unrecognizedInvocation);
         /**/
         _rejComps.push_back(indReject);
@@ -246,9 +249,9 @@ bool TDialogueFSM::verifyTCIndComponents(TComponentsList * comps,
     } break;
 
     case ROSPduPrimitiveAC::rosReject: {
-      ROSRejectPdu * pdu = it->getReject();
+      ROSRejectPdu * pdu = it->reject().get();
       //check if local invocation was rejected by remote peer
-      if (pdu->getParam().getProblemKind() == RejectProblem::InvokeProblem_e)
+      if (pdu->getParam().getProblemKind() == RejectProblem::rejInvoke)
         pTmo = (invId < _lclInv.size()) ? &_lclInv[invId] : NULL;
     } break;
 
@@ -257,7 +260,7 @@ bool TDialogueFSM::verifyTCIndComponents(TComponentsList * comps,
       //reject this component
       TC_LRejectIndComposer indReject;
       indReject.setDialogueId(_trnUId.getIdLocal());
-      indReject.setProblem(ros::RejectProblem::GeneralProblem_e,
+      indReject.setProblem(ros::RejectProblem::rejGeneral,
                            ros::RejectProblem::rjg_unrecognizedPDU);
       /**/
       _rejComps.push_back(indReject);
