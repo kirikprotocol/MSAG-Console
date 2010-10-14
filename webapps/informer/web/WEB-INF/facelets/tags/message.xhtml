@@ -10,21 +10,31 @@
 
 <ui:composition>
 
-  <h:panelGrid columns="1" bgcolor="#dcdcdc" cellpadding="0" cellspacing="0" border="1" rendered="#{rendered != 'false'}">
+  <h:panelGroup rendered="#{rendered != false}">
 
-    <h:outputText value="Error" style="color:#dc143c;font-size:16px; font-weight:bolder;padding: 1px 1px 1px 4px;" rendered="#{level == 'error'}"/>
-    <h:outputText value="Warning" style="color:#ff8c00;font-size:16px; font-weight:bolder;padding: 1px 1px 1px 4px;" rendered="#{level == 'warn'}"/>
-    <h:outputText value="Information" style="color:#006400;font-size:16px; font-weight:bolder;padding: 1px 1px 1px 4px;" rendered="#{level == 'info'}"/>
-    <h:panelGroup>
-      <h:panelGrid columns="2" columnClasses="column20Width,">
-        <h:outputText value="&#160;"/>
-        <h:panelGroup>
-          <ui:insert/>
-        </h:panelGroup>
-      </h:panelGrid>
-    </h:panelGroup>
+    <table class="x73" cellpadding="0" cellspacing="0" border="0" summary="">
+      <tbody>
+      <tr>
+        <td>
+          <div class="xdj">
+            <div>
+              <h1 class="x72">
+                <h:outputText styleClass="x71" rendered="#{level == 'error'}" value="#{msg['message.error']}"/>
+                <h:outputText rendered="#{level == 'info'}" value="#{msg['message.info']}"/>
+                <h:outputText rendered="#{level == 'warn'}" value="#{msg['message.warn']}"/>
+              </h1>
+            </div>
+            <div class="xap">
+              <ui:insert/>
+            </div>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
 
-  </h:panelGrid>
+  </h:panelGroup>
+
 
 
 </ui:composition>
