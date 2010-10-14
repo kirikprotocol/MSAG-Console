@@ -2,7 +2,7 @@
  * BER Decoder: OBJECT-IDENTIFIER type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_OID
-#ident "@(#)$Id: "
+#ident "@(#)$Id$"
 #define __ASN1_BER_DECODER_OID
 
 #include "eyeline/asn1/ObjectID.hpp"

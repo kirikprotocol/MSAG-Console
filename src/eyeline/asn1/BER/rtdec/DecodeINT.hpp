@@ -2,7 +2,7 @@
  * BER Decoder: INTEGER type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_INTEGER
-#ident "@(#)$Id: "
+#ident "@(#)$Id$"
 #define __ASN1_BER_DECODER_INTEGER
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"

@@ -2,7 +2,7 @@
  * BER Decoder: BOOLEAN type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_BOOL
-#ident "@(#)$Id: "
+#ident "@(#)$Id$"
 #define __ASN1_BER_DECODER_BOOL
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"

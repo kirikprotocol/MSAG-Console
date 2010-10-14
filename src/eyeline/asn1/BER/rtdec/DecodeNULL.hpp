@@ -2,7 +2,7 @@
  * BER Decoder: NULL type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_NULL
-#ident "@(#)$Id: "
+#ident "@(#)$Id$"
 #define __ASN1_BER_DECODER_NULL
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
