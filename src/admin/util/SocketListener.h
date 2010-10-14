@@ -35,6 +35,7 @@ public:
   virtual ~SocketListener()
   {
     abort();
+      WaitFor(); // wait until the thread finishes
   }
 
   void init(const char * const hostName, unsigned portToListen)
