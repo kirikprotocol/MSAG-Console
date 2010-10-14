@@ -8,7 +8,7 @@
 
 
   <!-- PROGRESS BAR -->
-  
+
   <tag>
     <name>progressBar</name>
     <description>Шкала отображения динамики процесса</description>
@@ -366,12 +366,12 @@
       <name>level</name>
       <required>true</required>
       <description>Уровень сообщения: информация, предупреждение или ошибка.
-      Значение: либо 'info', либо 'warn', либо 'error'</description>
+        Значение: либо 'info', либо 'warn', либо 'error'</description>
     </attribute>
     <attribute>
       <name>rendered</name>
       <required>false</required>
-       <type>boolean</type>
+      <type>boolean</type>
       <description>Отрисовывать элемент или нет. По умолчанию: true</description>
     </attribute>
   </tag>
