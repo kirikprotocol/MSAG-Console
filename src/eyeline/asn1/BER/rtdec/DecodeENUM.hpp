@@ -2,7 +2,7 @@
  * BER Decoder: ENUMERATED type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_ENUM
-#ident "@(#)$Id: "
+#ident "@(#)$Id$"
 #define __ASN1_BER_DECODER_ENUM
 
 #include "eyeline/asn1/BER/rtdec/DecodeINT.hpp"
