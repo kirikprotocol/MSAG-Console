@@ -431,6 +431,7 @@ int StateMachine::Execute()
     eq.selectAndDequeue(t,&isStopping);
     if(isStopping)break;
     try{
+      smsc_log_debug(smsLog,"id=%lld, cmd=%d",t.msgId,t.command->cmdid);
       const char* op="unknown";
       hrtime_t opStart;
       if(perfLog->isInfoEnabled())
@@ -3262,7 +3263,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   //__require__(t.state==DELIVERING_STATE);
   if(t.state!=DELIVERING_STATE)
   {
-    debug2(smsLog, "DLVRSP: state of SMS isn't DELIVERING!!! Id=%lld;st=%d",t.msgId,t.command->get_resp()->get_status());
+    warn2(smsLog, "DLVRSP: state of SMS isn't DELIVERING!!! Id=%lld;st=%d",t.msgId,t.command->get_resp()->get_status());
     smsc->getScheduler()->InvalidSms(t.msgId);
     return t.state;
   }

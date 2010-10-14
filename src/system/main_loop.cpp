@@ -66,13 +66,64 @@ void Smsc::RejectSms(const SmscCommand& cmd,bool isLicenseLimit)
   }
 }
 
+void Smsc::enqueueEx(EventQueue::EnqueueVector& ev)
+{
+  eventqueue.enqueueEx(ev);
+  for(EventQueue::EnqueueVector::iterator it=ev.begin(),end=ev.end();it!=end;++it)
+  {
+    if(it->second.IsOk())
+    {
+      if(it->second->cmdid==SUBMIT)
+      {
+        SmscCommand resp=SmscCommand::makeSubmitSmResp
+        (
+          "",
+          it->second->dialogId,
+          Status::MSGQFUL,
+          it->second->get_sms()->getIntProperty(Tag::SMPP_DATA_SM)
+        );
+        it->second.getProxy()->putCommand(resp);
+      }
+    }
+  }
+  ev.clear();
+}
+
+struct SpeedTimer{
+  hrtime_t startTime,endTime;
+  bool enabled;
+  void start()
+  {
+    if(!enabled)
+    {
+      return;
+    }
+    startTime=gethrtime();
+  }
+  void end()
+  {
+    if(!enabled)
+    {
+      return;
+    }
+    endTime=gethrtime();
+  }
+  uint64_t getTime()
+  {
+    return (endTime-startTime)/1000;
+  }
+};
+
 void Smsc::mainLoop(int idx)
 {
   typedef std::vector<SmscCommand> CmdVector;
   CmdVector frame;
   SmeIndex smscSmeIdx=smeman.lookup("smscsme");
   Event e;
-  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.mainLoop");
+  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("mainloop");
+  smsc::logger::Logger *speedLog= smsc::logger::Logger::getInstance("ml.speeds");
+  SpeedTimer st;
+  st.enabled=speedLog->isDebugEnabled();
 #ifndef linux
   thr_setprio(thr_self(),127);
 #endif
@@ -102,14 +153,13 @@ void Smsc::mainLoop(int idx)
 
   while(!stopFlag)
   {
-    if(enqueueVector.size())
+    if(!enqueueVector.empty())
     {
-      hrtime_t eqStart=gethrtime();
-      eventqueue.enqueueEx(enqueueVector);
       int sz=(int)enqueueVector.size();
-      enqueueVector.clear();
-      hrtime_t eqEnd=gethrtime();
-      debug2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
+      st.start();
+      enqueueEx(enqueueVector);
+      st.end();
+      debug2(speedLog,"enqueue time=%lld, size=%d",st.getTime(),sz);
     }
 
     int maxScaled=smsWeight*maxSmsPerSecond*shapeTimeFrame;
@@ -129,10 +179,10 @@ void Smsc::mainLoop(int idx)
 
     do
     {
-      hrtime_t gfStart=gethrtime();
+      st.start();
       smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled/2);
-      hrtime_t gfEnd=gethrtime();
-      if(frame.size()>0)debug2(log,"getFrame time:%lld, size=%d",gfEnd-gfStart,frame.size());
+      st.end();
+      if(frame.size()>0)debug2(speedLog,"getFrame time:%lld, size=%d",st.getTime(),frame.size());
       now = time(NULL);
 
       if(idx==0)
@@ -151,7 +201,7 @@ void Smsc::mainLoop(int idx)
       Task task;
       if( now > last_tm )
       {
-        hrtime_t expStart=gethrtime();
+        st.start();
         while ( tasks.getExpired(&task) )
         {
           SMSId id = task.messageId;
@@ -177,8 +227,8 @@ void Smsc::mainLoop(int idx)
           }
         }
         last_tm = now;
-        hrtime_t expEnd=gethrtime();
-        debug2(log,"expiration processing time:%lld",expEnd-expStart);
+        st.end();
+        debug2(speedLog,"expiration processing time:%lld",st.getTime());
       }
     }while(!frame.size());
 
@@ -275,10 +325,10 @@ void Smsc::mainLoop(int idx)
       }else
       {
         try{
-          hrtime_t cmdStart=gethrtime();
+          st.start();
           processCommand((*i),enqueueVector,findTaskVector);
-          hrtime_t cmdEnd=gethrtime();
-          debug2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
+          st.end();
+          debug2(speedLog,"command %d processing time:%lld",(*i)->get_commandId(),st.getTime());
         }catch(...)
         {
           __warning2__("command processing failed:%d",(*i)->get_commandId());
@@ -289,7 +339,7 @@ void Smsc::mainLoop(int idx)
     if(findTaskVector.size())
     {
       int sz=(int)findTaskVector.size();
-      hrtime_t frStart=gethrtime();
+      st.start();
       tasks.findAndRemoveTaskEx(findTaskVector);
       SMSId id;
       for(FindTaskVector::iterator it=findTaskVector.begin();it!=findTaskVector.end();it++)
@@ -300,8 +350,8 @@ void Smsc::mainLoop(int idx)
         }
       }
       findTaskVector.clear();
-      hrtime_t frEnd=gethrtime();
-      debug2(log,"findAndRemoveTaskTime time:%lld, size=%d",frEnd-frStart,sz);
+      st.end();
+      debug2(log,"findAndRemoveTaskTime time:%lld, size=%d",st.getTime(),sz);
     }
 
     if(submitCount==0)
@@ -309,14 +359,13 @@ void Smsc::mainLoop(int idx)
       continue; //start cycle from start
     }
 
-    if(enqueueVector.size())
+    if(!enqueueVector.empty())
     {
-      hrtime_t eqStart=gethrtime();
-      eventqueue.enqueueEx(enqueueVector);
       int sz=(int)enqueueVector.size();
-      enqueueVector.clear();
-      hrtime_t eqEnd=gethrtime();
-      debug2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
+      st.start();
+      enqueueEx(enqueueVector);
+      st.end();
+      debug2(speedLog,"enqueue time=%lld, size=%d",st.getTime(),sz);
     }
 
     shuffle.clear();
@@ -336,36 +385,11 @@ void Smsc::mainLoop(int idx)
     }
 
 
-    // main "delay/reject" cycle
-
     int eqsize,equnsize;
-    //for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
     for(int j=0;j<frame.size();j++)
     {
       SmscCommand* i=&frame[shuffle[j]];
       eventqueue.getStats(eqsize,equnsize);
-      /*
-      while(equnsize+1>eventQueueLimit)
-      {
-        hrtime_t nslStart=gethrtime();
-        {
-          Task task;
-          while ( tasks.getExpired(&task) )
-          {
-            SMSId id = task.messageId;
-            __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
-              task.sequenceNumber,task.proxy_id);
-            generateAlert(id,task.sms,task.inDlgId);
-            //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
-          }
-        }
-        timestruc_t tv={0,1000000};
-        nanosleep(&tv,0);
-        eventqueue.getStats(eqsize,equnsize);
-        hrtime_t nslEnd=gethrtime();
-        debug2(log,"eqlimit(%d/%d) nanosleep block time:%lld",equnsize+1,eventQueueLimit,nslEnd-nslStart);
-      }
-       */
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
         incStatCounter();
@@ -391,12 +415,12 @@ void Smsc::mainLoop(int idx)
               continue;
             }
           }
-          hrtime_t cmdStart=gethrtime();
+          st.start();
           processCommand((*i),enqueueVector,findTaskVector);
           incTotalCounter(perSlot,(*i)->get_commandId()==FORWARD,fperSlot);
           sbmcnt++;
-          hrtime_t cmdEnd=gethrtime();
-          debug2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
+          st.end();
+          debug2(speedLog,"command %d processing time:%lld",(*i)->get_commandId(),st.getTime());
         }catch(...)
         {
           __warning2__("command processing failed:%d",(*i)->get_commandId());
@@ -521,21 +545,6 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
       //Task task;
       uint32_t dialogId = cmd->get_dialogId();
 
-      /*
-      hrtime_t tcStart=gethrtime();
-      if (!tasks.findAndRemoveTask(cmd.getProxy()->getUniqueId(),dialogId,&task))
-      {
-        __warning2__("task not found for delivery response. Sid=%s, did=%d",cmd.getProxy()->getSystemId(),dialogId);
-        return; //jump to begin of for
-      }
-      hrtime_t tcEnd=gethrtime();
-      info2(logML,"findAndRemove time=%lld",tcEnd-tcStart);
-      __trace2__("delivery response received. seqnum=%d,msgId=%lld,sms=%p",dialogId,task.messageId,task.sms);
-      cmd->get_resp()->set_sms(task.sms);
-      cmd->get_resp()->set_diverted(task.diverted);
-      cmd->set_priority(31);
-      id=task.messageId;
-      */
       ftv.push_back(FindTaskVector::value_type(cmd.getProxy()->getUniqueId(),dialogId,cmd));
       return;
     }
@@ -688,10 +697,6 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
       __warning2__("mainLoop: unprocessed command id:%d",cmd->get_commandId());
     };
   }
-  //hrtime_t eqStart=gethrtime();
-  //eventqueue.enqueue(id,cmd);
-  //hrtime_t eqEnd=gethrtime();
-  //info2(logML,"eventQueue.enqueue time=%lld",eqEnd-eqStart);
   ev.push_back(EventQueue::EnqueueVector::value_type(id,cmd));
 }
 

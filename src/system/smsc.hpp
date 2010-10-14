@@ -593,6 +593,7 @@ protected:
 
   AliasManager* aliaser;
 
+  void enqueueEx(EventQueue::EnqueueVector& ev);
   EventQueue eventqueue;
   smsc::store::MessageStore *store;
   Scheduler *scheduler;

@@ -51,7 +51,7 @@ class EventQueue
   public:
   uint64_t counter;
 
-  //   
+  //
   struct Locker
   {
     bool locked;
@@ -79,23 +79,27 @@ class EventQueue
     {
     }
 
-    void push_back(const CommandType& c)
+    bool push_back(const CommandType& c)
     {
       //cmds.push_back(c);
       for(int i=0;i<8;i++)
       {
+        if(i>=6 && c->cmdid==SUBMIT )
+        {
+          return false;
+        }
         if(!pool[i].IsOk())
         {
           pool[i]=c;
-          return;
+          return true;
         }
       }
-      __warning2__("LOCKER POOL OUT OF ITEMS! msgId=%lld",msgId);
+      return false;
     }
 
-    //    
-    //  true    - false   
-    //          
+    //
+    //  true    - false
+    //
     bool getNextCommand(CommandType& c,bool remove=true)
     {
       for(int i=0;i<8;i++)
@@ -277,7 +281,7 @@ public:
   }
 
   //     (    )
-  //       ,   
+  //       ,
   void enqueue(MsgIdType msgId, const CommandType& command)
   {
     static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("eventqueue");
@@ -323,7 +327,10 @@ public:
 
         hash.put(msgId,locker);
       }
-      locker->push_back(command);
+      if(!locker->push_back(command))
+      {
+        continue;
+      }
       if(!locker->locked && !locker->enqueued &&
          StateChecker::commandIsValid(locker->state,command))
       {
@@ -331,15 +338,16 @@ public:
         queue.Push(locker,command->get_priority());
         doSignal=true;
       }
+      command=CommandType();
     }
     if(doSignal)event.Signal();
   }
 
 
-  //    
-  //          
-  //          
-  //        
+  //
+  //
+  //
+  //
   void selectAndDequeue(Tuple& result,volatile bool* quitting)
   {
     for(;;)
@@ -363,8 +371,8 @@ public:
     }
   }
 
-  //  ,       
-  //    
+  //  ,
+  //
   void changeState(MsgIdType msgId,StateType state)
   {
   __synchronized__
@@ -374,7 +382,7 @@ public:
     locker->state = state;
     //locker->lastCommand=UNKNOWN;
 
-    //       
+    //
     locker->locked = false;
 
 
