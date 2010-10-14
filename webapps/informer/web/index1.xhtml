@@ -12,12 +12,21 @@
 
   <ui:define name="content">
 
-    <h:form>
-      <eye:updatableContent updatePeriod="2">
-        <eye:progressBar current="#{index1.current}" maximum="#{index1.maximum}"
-                         width="400" height="20" bgcolor="#6495ed" fontColor="black" percents="true"/>
-      </eye:updatableContent>
-    </h:form>
+    <eye:message level="error">
+      <h:panelGrid columns="1">
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+        <h:outputText value="Description"/>
+      </h:panelGrid>
+    </eye:message>
+
   </ui:define>
 
 </ui:composition>

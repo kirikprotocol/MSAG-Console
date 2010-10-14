@@ -49,7 +49,9 @@
 
       <eye:updatableContent updatePeriod="1" rendered="#{regionsUpload.state == 1}">
         
-        <tr:message id="upload_message"/>
+        <eye:message level="warn" rendered="#{regionsUpload.error != null}">
+          <h:outputText value="#{regionsUpload.error}"/>
+        </eye:message>
 
         <eye:buttons>
           <eye:button rendered="#{regionsUpload.finished}">

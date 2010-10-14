@@ -21,7 +21,7 @@ public class RegionsUploadController extends UploadController{
 
   private int current;
 
-  private int maximum;
+  private int maximum = Integer.MAX_VALUE;
 
   private Map<String, Region> regions = new HashMap<String, Region>();
 
@@ -45,7 +45,7 @@ public class RegionsUploadController extends UploadController{
     regions.clear();
     uploaded = 0;
     current = 0;
-    maximum = 0;
+    maximum = Integer.MAX_VALUE;
     return "REGION";
   }
 

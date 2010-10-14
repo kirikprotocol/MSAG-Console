@@ -368,6 +368,12 @@
       <description>Уровень сообщения: информация, предупреждение или ошибка.
       Значение: либо 'info', либо 'warn', либо 'error'</description>
     </attribute>
+    <attribute>
+      <name>rendered</name>
+      <required>false</required>
+       <type>boolean</type>
+      <description>Отрисовывать элемент или нет. По умолчанию: true</description>
+    </attribute>
   </tag>
 
 
