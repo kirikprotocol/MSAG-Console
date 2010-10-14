@@ -29,20 +29,20 @@ public:
     return get() ? get()->getKind() : ROSPduPrimitiveAC::rosCancel;
   }
 
-  Alternative_T<ROSInvokePdu, 0>      invoke()        { return alternative0(); }
-  ConstAlternative_T<ROSInvokePdu, 0> invoke() const  { return alternative0(); }
+  Alternative_T<ROSInvokePdu>      invoke()        { return alternative0(); }
+  ConstAlternative_T<ROSInvokePdu> invoke() const  { return alternative0(); }
 
-  Alternative_T<ROSResultPdu, 1>      result()        { return alternative1(); }
-  ConstAlternative_T<ROSResultPdu, 1> result() const  { return alternative1(); }
+  Alternative_T<ROSResultPdu>      result()        { return alternative1(); }
+  ConstAlternative_T<ROSResultPdu> result() const  { return alternative1(); }
 
-  Alternative_T<ROSErrorPdu, 2>       error()         { return alternative2(); }
-  ConstAlternative_T<ROSErrorPdu, 2>  error() const   { return alternative2(); }
+  Alternative_T<ROSErrorPdu>       error()         { return alternative2(); }
+  ConstAlternative_T<ROSErrorPdu>  error() const   { return alternative2(); }
 
-  Alternative_T<ROSRejectPdu, 3>      reject()        { return alternative3(); }
-  ConstAlternative_T<ROSRejectPdu, 3> reject() const  { return alternative3(); }
+  Alternative_T<ROSRejectPdu>      reject()        { return alternative3(); }
+  ConstAlternative_T<ROSRejectPdu> reject() const  { return alternative3(); }
 
-  Alternative_T<ROSResultNLPdu, 4>      resultNL()        { return alternative4(); }
-  ConstAlternative_T<ROSResultNLPdu, 4> resultNL() const  { return alternative4(); }
+  Alternative_T<ROSResultNLPdu>      resultNL()        { return alternative4(); }
+  ConstAlternative_T<ROSResultNLPdu> resultNL() const  { return alternative4(); }
 };
 
 } //ros

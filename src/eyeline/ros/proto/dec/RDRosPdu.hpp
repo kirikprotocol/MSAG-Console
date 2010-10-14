@@ -34,17 +34,17 @@ protected:
   class AltDecoder : public asn1::ber::ChoiceOfDecoders5_T<
                 RDInvokePdu, RDReturnResult, RDRErrorPdu, RDRejectPdu, RDReturnResult> {
   public:
-    Alternative_T<RDInvokePdu, 0>     invoke()        { return alternative0(); }
-    Alternative_T<RDReturnResult, 1>  returnResult()  { return alternative1(); }
-    Alternative_T<RDRErrorPdu, 2>     returnError()   { return alternative2(); }
-    Alternative_T<RDRejectPdu, 3>     reject()        { return alternative3(); }
-    Alternative_T<RDReturnResult, 4>  returnResultNL()  { return alternative4(); }
+    Alternative_T<RDInvokePdu>     invoke()        { return alternative0(); }
+    Alternative_T<RDReturnResult>  returnResult()  { return alternative1(); }
+    Alternative_T<RDRErrorPdu>     returnError()   { return alternative2(); }
+    Alternative_T<RDRejectPdu>     reject()        { return alternative3(); }
+    Alternative_T<RDReturnResult>  returnResultNL()  { return alternative4(); }
 
-    ConstAlternative_T<RDInvokePdu, 0>     invoke()        const { return alternative0(); }
-    ConstAlternative_T<RDReturnResult, 1>  returnResult()  const { return alternative1(); }
-    ConstAlternative_T<RDRErrorPdu, 2>     returnError()   const { return alternative2(); }
-    ConstAlternative_T<RDRejectPdu, 3>     reject()        const { return alternative3(); }
-    ConstAlternative_T<RDReturnResult, 4>  returnResultNL()  const { return alternative4(); }
+    ConstAlternative_T<RDInvokePdu>     invoke()        const { return alternative0(); }
+    ConstAlternative_T<RDReturnResult>  returnResult()  const { return alternative1(); }
+    ConstAlternative_T<RDRErrorPdu>     returnError()   const { return alternative2(); }
+    ConstAlternative_T<RDRejectPdu>     reject()        const { return alternative3(); }
+    ConstAlternative_T<RDReturnResult>  returnResultNL()  const { return alternative4(); }
   };
 
   /* -- */

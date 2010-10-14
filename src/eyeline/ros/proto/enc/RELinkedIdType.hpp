@@ -36,11 +36,11 @@ protected:
   class AltEncoder : public asn1::ber::ChoiceOfEncoders2_T<
                       asn1::ber::EncoderOfINTEGER, asn1::ber::EncoderOfNULL> {
   public:
-    Alternative_T<asn1::ber::EncoderOfINTEGER, 0> present() { return alternative0(); }
-    Alternative_T<asn1::ber::EncoderOfNULL, 1>     absent()  { return alternative1(); }
+    Alternative_T<asn1::ber::EncoderOfINTEGER>  present() { return alternative0(); }
+    Alternative_T<asn1::ber::EncoderOfNULL>     absent()  { return alternative1(); }
 
-    ConstAlternative_T<asn1::ber::EncoderOfINTEGER, 0> present() const { return alternative0(); }
-    ConstAlternative_T<asn1::ber::EncoderOfNULL, 1>     absent()  const { return alternative1(); }
+    ConstAlternative_T<asn1::ber::EncoderOfINTEGER> present() const { return alternative0(); }
+    ConstAlternative_T<asn1::ber::EncoderOfNULL>    absent()  const { return alternative1(); }
   };
 
   AltEncoder  _alt;

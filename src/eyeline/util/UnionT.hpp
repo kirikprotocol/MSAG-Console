@@ -20,12 +20,14 @@ protected:
   { }
 
 public:
-  UnionStorageAC() : _altIdx((uint16_t)-1)
+  static const uint16_t _notAnIdx = (uint16_t)-1;
+
+  UnionStorageAC() : _altIdx(_notAnIdx)
   { }
   virtual ~UnionStorageAC()
   { }
 
-  bool empty(void) const { return (_altIdx == (uint16_t)-1); }
+  bool empty(void) const { return (_altIdx == _notAnIdx); }
   //
   bool isIdx(uint16_t use_val) const { return (_altIdx == use_val); }
   //
@@ -42,15 +44,16 @@ public:
 
 //
 template <
-  class _TArg, uint16_t _altIdxArg
+  class _TArg
 > 
 class UnionAlternative_T {
 protected:
-  UnionStorageAC & _store;
+  UnionStorageAC &  _store;
+  const uint16_t    _altIdx;
 
 public:
-  UnionAlternative_T(UnionStorageAC & use_store)
-    : _store(use_store)
+  UnionAlternative_T(UnionStorageAC & use_store, uint16_t use_altIdx)
+    : _store(use_store), _altIdx(use_altIdx)
   { }
   ~UnionAlternative_T()
   { }
@@ -59,25 +62,25 @@ public:
   _TArg & init(void)
   {
     _store.clear();
-    _store.setIdx(_altIdxArg);
+    _store.setIdx(_altIdx);
     return *(new (_store.get())_TArg());
   }
   //
   _TArg * get(void)
   {
-    return static_cast<_TArg*>(_store.isIdx(_altIdxArg) ? _store.get() : 0);
+    return static_cast<_TArg*>(_store.isIdx(_altIdx) ? _store.get() : 0);
   }
   //
   const _TArg * get(void) const
   {
-    return static_cast<const _TArg*>(_store.isIdx(_altIdxArg) ? _store.get() : 0);
+    return static_cast<const _TArg*>(_store.isIdx(_altIdx) ? _store.get() : 0);
   }
   //
   void clear(void)
   {
-    if (_store.isIdx(_altIdxArg)) {
+    if (_store.isIdx(_altIdx)) {
       _store.clear();
-      //_store.setIdx((uint16_t)-1);
+      //_store.setIdx(_notAnIdx);
     }
   }
 };
@@ -85,15 +88,16 @@ public:
 
 //
 template <
-  class _TArg, uint16_t _altIdxArg
+  class _TArg
 > 
 class UnionConstAlternative_T {
 protected:
-  const UnionStorageAC & _store;
+  const UnionStorageAC &  _store;
+  const uint16_t          _altIdx;
 
 public:
-  UnionConstAlternative_T(const UnionStorageAC & use_store)
-    : _store(use_store)
+  UnionConstAlternative_T(const UnionStorageAC & use_store, uint16_t use_altIdx)
+    : _store(use_store), _altIdx(use_altIdx)
   { }
   ~UnionConstAlternative_T()
   { }
@@ -101,7 +105,7 @@ public:
   //
   const _TArg * get(void) const
   {
-    return static_cast<const _TArg*>(_store.isIdx(_altIdxArg) ? _store.get() : 0);
+    return static_cast<const _TArg*>(_store.isIdx(_altIdx) ? _store.get() : 0);
   }
 };
 
@@ -145,7 +149,7 @@ public:
     } else if (_altIdx == 1) {
       ((_TArg2*)_mem._buf)->~_TArg2();
     }
-    _altIdx = (uint16_t)(-1);
+    _altIdx = _notAnIdx;
   }
   virtual void * get(void) { return _mem._buf; }
   virtual const void * get(void) const { return _mem._buf; }
@@ -196,7 +200,7 @@ public:
     } else if (_altIdx == 2) {
       ((_TArg3*)_mem._buf)->~_TArg3();
     }
-    _altIdx = (uint16_t)(-1);
+    _altIdx = _notAnIdx;
   }
   virtual void * get(void) { return _mem._buf; }
   virtual const void * get(void) const { return _mem._buf; }
@@ -250,7 +254,7 @@ public:
     } else if (_altIdx == 3) {
       ((_TArg4*)_mem._buf)->~_TArg4();
     }
-    _altIdx = (uint16_t)(-1);
+    _altIdx = _notAnIdx;
   }
   virtual void * get(void) { return _mem._buf; }
   virtual const void * get(void) const { return _mem._buf; }
@@ -308,7 +312,7 @@ public:
     } else if (_altIdx == 4) {
       ((_TArg5*)_mem._buf)->~_TArg5();
     }
-    _altIdx = (uint16_t)(-1);
+    _altIdx = _notAnIdx;
   }
   virtual void * get(void) { return _mem._buf; }
   virtual const void * get(void) const { return _mem._buf; }

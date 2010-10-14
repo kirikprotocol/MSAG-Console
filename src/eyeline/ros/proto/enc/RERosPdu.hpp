@@ -37,17 +37,17 @@ protected:
   class AltEncoder : public asn1::ber::ChoiceOfEncoders5_T<
                 REInvokePdu, REReturnResult, RERErrorPdu, RERejectPdu, REReturnResult> {
   public:
-    Alternative_T<REInvokePdu, 0>     invoke()        { return alternative0(); }
-    Alternative_T<REReturnResult, 1>  returnResult()  { return alternative1(); }
-    Alternative_T<RERErrorPdu, 2>     returnError()   { return alternative2(); }
-    Alternative_T<RERejectPdu, 3>     reject()        { return alternative3(); }
-    Alternative_T<REReturnResult, 4>  returnResultNL()  { return alternative4(); }
+    Alternative_T<REInvokePdu>     invoke()        { return alternative0(); }
+    Alternative_T<REReturnResult>  returnResult()  { return alternative1(); }
+    Alternative_T<RERErrorPdu>     returnError()   { return alternative2(); }
+    Alternative_T<RERejectPdu>     reject()        { return alternative3(); }
+    Alternative_T<REReturnResult>  returnResultNL()  { return alternative4(); }
 
-    ConstAlternative_T<REInvokePdu, 0>     invoke()        const { return alternative0(); }
-    ConstAlternative_T<REReturnResult, 1>  returnResult()  const { return alternative1(); }
-    ConstAlternative_T<RERErrorPdu, 2>     returnError()   const { return alternative2(); }
-    ConstAlternative_T<RERejectPdu, 3>     reject()        const { return alternative3(); }
-    ConstAlternative_T<REReturnResult, 4>  returnResultNL()  const { return alternative4(); }
+    ConstAlternative_T<REInvokePdu>     invoke()        const { return alternative0(); }
+    ConstAlternative_T<REReturnResult>  returnResult()  const { return alternative1(); }
+    ConstAlternative_T<RERErrorPdu>     returnError()   const { return alternative2(); }
+    ConstAlternative_T<RERejectPdu>     reject()        const { return alternative3(); }
+    ConstAlternative_T<REReturnResult>  returnResultNL()  const { return alternative4(); }
   };
 
   AltEncoder  _alt;

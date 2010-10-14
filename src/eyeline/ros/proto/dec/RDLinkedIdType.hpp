@@ -34,11 +34,11 @@ protected:
   class AltDecoder : public asn1::ber::ChoiceOfDecoders2_T<
                       asn1::ber::DecoderOfINTEGER, asn1::ber::DecoderOfNULL> {
   public:
-    Alternative_T<asn1::ber::DecoderOfINTEGER, 0> present() { return alternative0(); }
-    Alternative_T<asn1::ber::DecoderOfNULL, 1>    absent()  { return alternative1(); }
+    Alternative_T<asn1::ber::DecoderOfINTEGER> present() { return alternative0(); }
+    Alternative_T<asn1::ber::DecoderOfNULL>    absent()  { return alternative1(); }
 
-    ConstAlternative_T<asn1::ber::DecoderOfINTEGER, 0>  present() const { return alternative0(); }
-    ConstAlternative_T<asn1::ber::DecoderOfNULL, 1>     absent()  const { return alternative1(); }
+    ConstAlternative_T<asn1::ber::DecoderOfINTEGER>  present() const { return alternative0(); }
+    ConstAlternative_T<asn1::ber::DecoderOfNULL>     absent()  const { return alternative1(); }
   };
 
   AltDecoder      _alt;
