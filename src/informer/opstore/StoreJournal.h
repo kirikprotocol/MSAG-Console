@@ -51,7 +51,7 @@ private:
     const CommonSettings&              cs_;
     uint32_t                           version_;
     FileGuard                          fg_;
-    regionid_type                      serial_; // it may not take values of 0 and -1
+    regionid_type                      serial_;
 };
 
 } // informer

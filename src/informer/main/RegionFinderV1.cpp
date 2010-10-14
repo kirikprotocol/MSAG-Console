@@ -15,7 +15,7 @@ regionid_type RegionFinderV1::findRegion( personid_type subscriber )
     sprintf(buf,"%llu",ulonglong(addr));
     regionid_type rid;
     if (!tree_.Find(buf,rid)) {
-        rid = regionid_type(-1);
+        rid = defaultRegionId;
     }
     smsc_log_debug(log_,"findRegion(.%u.%u.%llu) -> %u",ton,npi,ulonglong(addr),rid);
     return rid;
@@ -24,7 +24,8 @@ regionid_type RegionFinderV1::findRegion( personid_type subscriber )
 
 void RegionFinderV1::updateMasks( Region* regOld, const Region& regNew )
 {
-    if ( regNew.getRegionId() == regionid_type(-1) ) return;
+    // default region does not have masks
+    if ( regNew.getRegionId() == defaultRegionId ) return;
 
     if ( regOld ) {
         const std::vector< std::string >& oldMasks = regOld->getMasks();

@@ -13,7 +13,7 @@ namespace informer {
 
 RegionLoader::RegionLoader( const char* xmlfile,
                             const char* defaultSmscId,
-                            regionid_type regionId )
+                            regionid_type requestedRegionId )
 {
     try {
         initXerces();
@@ -26,8 +26,8 @@ RegionLoader::RegionLoader( const char* xmlfile,
 
         // default region
         DOMNodeList* regions;
-        if (regionId == regionid_type(-1) || regionId == regionid_type(-2)) {
-            regionid_type rid(-1);
+        if (requestedRegionId == defaultRegionId || requestedRegionId == anyRegionId ) {
+            const regionid_type rid(defaultRegionId);
             regions = root->getElementsByTagName(XmlStr("region_default"));
             if (regions->getLength() != 1) {
                 throw InfosmeException("default region is not found!");
@@ -46,10 +46,10 @@ RegionLoader::RegionLoader( const char* xmlfile,
 
         // other regions
         size_t count = 0;
-        if (regionId == regionid_type(-2) || regionId != regionid_type(-1) ) {
+        if (requestedRegionId == anyRegionId || requestedRegionId != defaultRegionId ) {
             regions = root->getElementsByTagName(XmlStr("region"));
             count = regions->getLength();
-            if ( regionId == regionid_type(-2) ) {
+            if ( requestedRegionId == anyRegionId ) {
                 regions_.reserve(regions_.size() + count);
             }
         }
@@ -62,10 +62,10 @@ RegionLoader::RegionLoader( const char* xmlfile,
             if (*endptr != '\0') {
                 throw InfosmeException("invalid id='%s'",id.c_str());
             }
-            if ( rid == regionid_type(-1) || rid == regionid_type(-2) ) {
+            if ( rid == defaultRegionId || rid == anyRegionId ) {
                 throw InfosmeException("invalid region id=%u",rid);
             }
-            if ( regionId != regionid_type(-2) && rid != regionId ) continue;
+            if ( requestedRegionId != anyRegionId && rid != requestedRegionId ) continue;
 
             // loading masks
             DOMNodeList* maskList = region->getElementsByTagName(XmlStr("mask"));

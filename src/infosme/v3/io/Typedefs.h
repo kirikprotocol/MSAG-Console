@@ -19,6 +19,10 @@ typedef  int32_t timediff_type; // simply converted from time_t
 typedef int64_t  usectime_type;
 typedef uint64_t personid_type;
 
+/// predefined region ids
+static const regionid_type defaultRegionId = regionid_type(0);
+static const regionid_type anyRegionId = regionid_type(-1);
+
 /// format message time as yyyymmddHHMMSS, buffer must be at least 15 bytes.
 char* formatMsgTime( char* buf, msgtime_type theTime );
 
