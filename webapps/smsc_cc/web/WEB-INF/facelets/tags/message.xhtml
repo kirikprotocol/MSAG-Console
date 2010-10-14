@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:tr="http://myfaces.apache.org/trinidad">
+
+
+<ui:composition>
+
+  <h:panelGroup rendered="#{rendered != false}">
+
+    <table class="x73" cellpadding="0" cellspacing="0" border="0" summary="">
+      <tbody>
+      <tr>
+        <td>
+          <div class="xdj">
+            <div>
+              <h1 class="x72">
+                <h:outputText styleClass="x71" rendered="#{level == 'error'}" value="#{msg['message.error']}"/>
+                <h:outputText rendered="#{level == 'info'}" value="#{msg['message.info']}"/>
+                <h:outputText rendered="#{level == 'warn'}" value="#{msg['message.warn']}"/>
+              </h1>
+            </div>
+            <div class="xap">
+              <ui:insert/>
+            </div>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+  </h:panelGroup>
+
+
+
+</ui:composition>
+
+</html>
