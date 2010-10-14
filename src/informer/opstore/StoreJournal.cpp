@@ -125,6 +125,12 @@ void StoreJournal::init( Reader& jr )
 }
 
 
+void StoreJournal::rollOver()
+{
+    smsc_log_debug(log_,"FIXME: rolling over store journal");
+}
+
+
 void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
     if (reader.isStopping()) return;

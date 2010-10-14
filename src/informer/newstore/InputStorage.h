@@ -58,6 +58,8 @@ public:
 
     virtual void postInit( std::vector<regionid_type>& regs );
 
+    virtual void rollOver();
+
 private:
     void dispatchMessages( MsgIter begin, MsgIter end, std::vector<regionid_type>& regs);
 

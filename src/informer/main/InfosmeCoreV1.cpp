@@ -49,12 +49,12 @@ public:
                                   uint64_t                 maxMsgId )
     {
         smsc_log_debug(core_.log_,"setting input record D=%u/R=%u",dlvId,regionId);
-        DeliveryPtr* ptr = core_.deliveries_.GetPtr(dlvId);
-        if (!ptr) {
+        DeliveryList::iterator* iter = core_.deliveryHash_.GetPtr(dlvId);
+        if (!iter) {
             smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);
             return;
         }
-        (*ptr)->setRecordAtInit( regionId, rec, maxMsgId );
+        (**iter)->setRecordAtInit( regionId, rec, maxMsgId );
     }
 
 
@@ -63,15 +63,14 @@ public:
         BindSignal bs;
         bs.bind = true;
         int dlvId;
-        DeliveryPtr* ptr;
+        DeliveryList::iterator iter;
         smsc_log_debug(core_.log_,"invoking postInit to bind filled regions");
-        for ( smsc::core::buffers::IntHash< DeliveryPtr >::Iterator i(core_.deliveries_);
-              i.Next(dlvId,ptr); ) {
+        for ( DeliveryHash::Iterator i(core_.deliveryHash_); i.Next(dlvId,iter); ) {
             if (core_.isStopping()) break;
             bs.regIds.clear();
-            (*ptr)->postInitInput(bs.regIds);
+            (*iter)->postInitInput(bs.regIds);
             if (!bs.regIds.empty()) {
-                bs.dlvId = (*ptr)->getDlvId();
+                bs.dlvId = (*iter)->getDlvId();
                 core_.bindDeliveryRegions(bs);
             }
         }
@@ -95,12 +94,12 @@ public:
         smsc_log_error(core_.log_,"load store record D=%u/R=%u/M=%llu state=%s serial=%u",
                        dlvId, regionId, ulonglong(msg.msgId),
                        msgStateToString(MsgState(msg.state)), serial);
-        DeliveryPtr* ptr = core_.deliveries_.GetPtr(dlvId);
-        if (!ptr) {
+        DeliveryList::iterator* iter = core_.deliveryHash_.GetPtr(dlvId);
+        if (!iter) {
             smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);
             return;
         }
-        (*ptr)->setRecordAtInit(regionId,msg,serial);
+        (**iter)->setRecordAtInit(regionId,msg,serial);
     }
 
     virtual void postInit()
@@ -109,20 +108,19 @@ public:
         bsEmpty.bind = false;
         bsFilled.bind = true;
         int dlvId;
-        DeliveryPtr* ptr;
+        DeliveryList::iterator iter;
         smsc_log_debug(core_.log_,"invoking postInit to bind/unbind regions");
-        for ( smsc::core::buffers::IntHash< DeliveryPtr >::Iterator i(core_.deliveries_);
-              i.Next(dlvId,ptr); ) {
+        for ( DeliveryHash::Iterator i(core_.deliveryHash_); i.Next(dlvId,iter); ) {
             if (core_.isStopping()) break;
             bsEmpty.regIds.clear();
             bsFilled.regIds.clear();
-            (*ptr)->postInitOperative(bsFilled.regIds,bsEmpty.regIds);
+            (*iter)->postInitOperative(bsFilled.regIds,bsEmpty.regIds);
             if (!bsEmpty.regIds.empty()) {
-                bsEmpty.dlvId = (*ptr)->getDlvId();
+                bsEmpty.dlvId = (*iter)->getDlvId();
                 core_.bindDeliveryRegions(bsEmpty);
             }
             if (!bsFilled.regIds.empty()) {
-                bsFilled.dlvId = (*ptr)->getDlvId();
+                bsFilled.dlvId = (*iter)->getDlvId();
                 core_.bindDeliveryRegions(bsFilled);
             }
         }
@@ -132,6 +130,83 @@ private:
     InfosmeCoreV1& core_;
 };
 
+
+class InfosmeCoreV1::InputJournalRoller : public smsc::core::threads::Thread
+{
+public:
+    InputJournalRoller( InfosmeCoreV1& core ) : core_(core) {}
+    ~InputJournalRoller() { WaitFor(); }
+    virtual int Execute()
+    {
+        smsc_log_debug(core_.log_,"input journal roller started");
+        DeliveryList::iterator& iter = core_.inputRollingIter_;
+        while (! core_.isStopping()) { // never ending loop
+            bool firstPass = true;
+            do {
+                DeliveryPtr ptr;
+                {
+                    smsc::core::synchronization::MutexGuard mg(core_.startMon_);
+                    if (core_.isStopping()) { break; }
+                    if (firstPass) {
+                        iter = core_.deliveryList_.begin();
+                        firstPass = false;
+                    }
+                    if (iter == core_.deliveryList_.end()) { break; }
+                    ptr = *iter;
+                    ++iter;
+                }
+                ptr->rollOverInput();
+            } while (true);
+            if (!core_.isStopping()) {
+                core_.inputJournal_->rollOver(); // change files
+            }
+        }
+        smsc_log_debug(core_.log_,"input journal roller stopped");
+        return 0;
+    }
+private:
+    InfosmeCoreV1& core_;
+};
+
+
+class InfosmeCoreV1::StoreJournalRoller : public smsc::core::threads::Thread
+{
+public:
+    StoreJournalRoller( InfosmeCoreV1& core ) : core_(core) {}
+    ~StoreJournalRoller() { WaitFor(); }
+    virtual int Execute()
+    {
+        smsc_log_debug(core_.log_,"store journal roller started");
+        DeliveryList::iterator& iter = core_.storeRollingIter_;
+        while (! core_.isStopping()) { // never ending loop
+            bool firstPass = true;
+            do {
+                DeliveryPtr ptr;
+                {
+                    smsc::core::synchronization::MutexGuard mg(core_.startMon_);
+                    if (core_.isStopping()) { break; }
+                    if (firstPass) {
+                        iter = core_.deliveryList_.begin();
+                        firstPass = false;
+                    }
+                    if (iter == core_.deliveryList_.end()) { break; }
+                    ptr = *iter;
+                    ++iter;
+                }
+                ptr->rollOverStore();
+            } while (true);
+            if (!core_.isStopping()) {
+                core_.storeJournal_->rollOver(); // change files
+            }
+        }
+        smsc_log_debug(core_.log_,"store journal roller stopped");
+        return 0;
+    }
+private:
+    InfosmeCoreV1& core_;
+};
+
+// ============================================================================
 
 void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
 {
@@ -172,7 +247,9 @@ log_(smsc::logger::Logger::getInstance("core")),
 stopping_(false),
 started_(false),
 storeJournal_(0),
-inputJournal_(0)
+inputJournal_(0),
+inputRoller_(0),
+storeRoller_(0)
 {
 }
 
@@ -195,7 +272,8 @@ InfosmeCoreV1::~InfosmeCoreV1()
         delete regsend;
     }
     regions_.Empty();
-    deliveries_.Empty();
+    deliveryHash_.Empty();
+    deliveryList_.clear();
 
     delete storeJournal_;
     delete inputJournal_;
@@ -280,6 +358,8 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     storeJournal_->init(sjr);
     InputJournalReader ijr(*this);
     inputJournal_->init(ijr);
+    inputRoller_ = new InputJournalRoller(*this);
+    storeRoller_ = new StoreJournalRoller(*this);
 }
 
 
@@ -301,6 +381,8 @@ void InfosmeCoreV1::stop()
             sender->stop();
         }
 
+        if (inputRoller_) { inputRoller_->WaitFor(); }
+        if (storeRoller_) { storeRoller_->WaitFor(); }
         while (started_) {
             startMon_.wait(100);
         }
@@ -314,6 +396,8 @@ void InfosmeCoreV1::start()
     if (started_) return;
     MutexGuard mg(startMon_);
     if (started_) return;
+    inputRoller_->Start();
+    storeRoller_->Start();
     Start();
 }
 
@@ -323,8 +407,9 @@ void InfosmeCoreV1::selfTest()
     smsc_log_debug(log_,"selfTest started");
     dlvid_type dlvId = 22;
     MutexGuard mg(startMon_);
-    DeliveryPtr* dlv = deliveries_.GetPtr(dlvId);
-    if (!dlv) return;
+    DeliveryList::iterator* ptr = deliveryHash_.GetPtr(dlvId);
+    if (!ptr) return;
+    DeliveryPtr dlv = **ptr;
     MessageList msgList;
     MessageLocker mlk;
     mlk.msg.subscriber = addressToSubscriber(1,1,79137654079ULL);
@@ -335,7 +420,7 @@ void InfosmeCoreV1::selfTest()
     mlk.msg.text.reset(new MessageText("the unbound message",0));
     mlk.msg.userData = "thesecondone";
     msgList.push_back(mlk);
-    (*dlv)->addNewMessages(msgList.begin(), msgList.end());
+    dlv->addNewMessages(msgList.begin(), msgList.end());
     smsc_log_debug(log_,"selfTest finished");
 }
 
@@ -412,7 +497,7 @@ void InfosmeCoreV1::reloadRegions( const std::string& defaultSmscId )
             ptr = &regions_.Insert(regionId,RegionPtr(r.release()));
         } else {
             smsc_log_debug(log_,"updating R=%u for S='%s'",regionId,smscId.c_str());
-            (*ptr)->replaceBy( *r.get() );
+            (*ptr)->swap( *r.get() );
         }
 
         RegionSender** rs = regSends_.GetPtr(regionId);
@@ -430,16 +515,21 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
                                     std::auto_ptr<DeliveryInfo>& dlvInfo )
 {
     RelockMutexGuard mg(startMon_);
-    DeliveryPtr* ptr = deliveries_.GetPtr(dlvId);
+    DeliveryList::iterator* ptr = deliveryHash_.GetPtr(dlvId);
     smsc_log_debug(log_,"%s delivery D=%u",
                    (ptr ? (dlvInfo.get() ? "update" : "delete") : "create"),
                    unsigned(dlvId));
     if (ptr) {
-        assert(ptr->get());
+        assert((*ptr)->get());
         if (!dlvInfo.get()) {
             // delete
+            DeliveryList::iterator iter;
             DeliveryPtr d;
-            if (deliveries_.Pop(dlvId,d)) {
+            if (deliveryHash_.Pop(dlvId,iter)) {
+                if ( inputRollingIter_ == iter ) ++inputRollingIter_;
+                if ( storeRollingIter_ == iter ) ++storeRollingIter_;
+                d = *iter;
+                deliveryList_.erase(iter);
                 mg.Unlock();
                 BindSignal bs;
                 bs.bind = false;
@@ -450,7 +540,7 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
             return;
         } else {
             // update
-            (*ptr)->updateDlvInfo(*dlvInfo.get());
+            (**ptr)->updateDlvInfo(*dlvInfo.get());
         }
     } else {
         // create
@@ -458,7 +548,9 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
             throw InfosmeException("delivery info not passed");
         }
         InputMessageSource* ims = new InputStorage(*this,dlvInfo->getDlvId(),*inputJournal_);
-        deliveries_.Insert(dlvId, DeliveryPtr(new Delivery(dlvInfo,*storeJournal_,ims)));
+        deliveryHash_.Insert(dlvId,
+                             deliveryList_.insert(deliveryList_.end(),
+                                                  DeliveryPtr(new Delivery(dlvInfo,*storeJournal_,ims))));
     }
     startMon_.notify();
 }
@@ -537,11 +629,12 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
     }
 
     // getting delivery
-    DeliveryPtr* dlv = deliveries_.GetPtr(bs.dlvId);
-    if (!dlv || !dlv->get()) {
+    DeliveryList::iterator* iter = deliveryHash_.GetPtr(bs.dlvId);
+    if (!iter) {
         smsc_log_warn(log_,"D=%u is not found",unsigned(bs.dlvId));
         return;
     }
+    assert((*iter)->get());
     for ( regIdVector::const_iterator i = bs.regIds.begin();
           i != bs.regIds.end(); ++i ) {
         RegionPtr* ptr = regions_.GetPtr(*i);
@@ -556,7 +649,7 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
             smsc_log_warn(log_,"RS=%u is not found",unsigned(*i));
             continue;
         }
-        RegionalStoragePtr rptr = (*dlv)->getRegionalStorage(*i,true);
+        RegionalStoragePtr rptr = (**iter)->getRegionalStorage(*i,true);
         if (!rptr.get()) {
             smsc_log_warn(log_,"D=%u cannot create R=%u",unsigned(bs.dlvId),unsigned(*i));
             continue;

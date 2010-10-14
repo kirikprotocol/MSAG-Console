@@ -89,6 +89,9 @@ public:
     /// invoked at init stage ONLY!
     /// @a filledRegs at return contains regions that have some messages to send.
     virtual void postInit( std::vector<regionid_type>& filledRegs ) = 0;
+
+    /// rolling over whole storage
+    virtual void rollOver() = 0;
 };
 
 } // informer

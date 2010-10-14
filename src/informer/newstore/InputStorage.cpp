@@ -117,6 +117,12 @@ void InputStorage::postInit( std::vector<regionid_type>& regs )
 }
 
 
+void InputStorage::rollOver()
+{
+    smsc_log_debug(log_,"FIXME: roll over input storage");
+}
+
+
 void InputStorage::dispatchMessages( MsgIter begin,
                                      MsgIter end,
                                      std::vector< regionid_type >& regs )

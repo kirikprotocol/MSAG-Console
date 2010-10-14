@@ -37,6 +37,8 @@ public:
                         const InputRegionRecord& rec,
                         uint64_t maxMsgId );
 
+    void rollOver();
+
 private:
     void readRecordsFrom( const std::string& jpath, Reader& jr );
 

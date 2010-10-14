@@ -66,6 +66,12 @@ void InputJournal::init( Reader& reader )
 }
     
 
+void InputJournal::rollOver()
+{
+    // smsc_log_debug(log_,"FIXME: roll over input journal");
+}
+
+
 void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
     if (reader.isStopping()) return;

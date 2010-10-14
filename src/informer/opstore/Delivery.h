@@ -61,6 +61,12 @@ public:
         cache_.postInit(filledRegs,emptyRegs);
     }
 
+    /// dump all regions to storage
+    void rollOverStore() { cache_.rollOver(); }
+
+    /// dump all input records to storage
+    void rollOverInput() { cache_.getInputSource().rollOver(); }
+
 private:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);

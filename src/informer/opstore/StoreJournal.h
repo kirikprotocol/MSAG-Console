@@ -42,7 +42,10 @@ public:
 
     void init( Reader& jr );
 
+    void rollOver();
+
 private:
+
     void readRecordsFrom( const std::string& path, Reader& reader );
 
 private:

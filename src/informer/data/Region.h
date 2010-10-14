@@ -33,9 +33,12 @@ public:
     const int getTimezone() const { return timezone_; }
     const std::vector<std::string>& getMasks() const { return masks_; }
 
-    /// NOTE: r.masks are changed
-    void replaceBy( Region& r ) {
-        // FIXME
+    void swap( Region& r ) {
+        std::swap(regionId_,r.regionId_);
+        name_.swap(r.name_);
+        smscId_.swap(r.smscId_);
+        std::swap(bw_,r.bw_);
+        std::swap(timezone_,r.timezone_);
         masks_.swap(r.masks_);
     }
 

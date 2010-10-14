@@ -29,6 +29,8 @@ class InfosmeCoreV1 : public InfosmeCore, public smsc::core::threads::Thread
 private:
     class InputJournalReader;
     class StoreJournalReader;
+    class InputJournalRoller;
+    class StoreJournalRoller;
 public:
     static void readSmscConfig( SmscConfig& cfg,
                                 const smsc::util::config::ConfigView& cv );
@@ -100,12 +102,21 @@ private:
     smsc::core::buffers::Hash< SmscSender* >      smscs_;        // owned
     smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned
-    smsc::core::buffers::IntHash< DeliveryPtr >   deliveries_;   // owned
+
+    typedef std::list<DeliveryPtr> DeliveryList;
+    typedef smsc::core::buffers::IntHash< DeliveryList::iterator > DeliveryHash;
+    DeliveryHash                                  deliveryHash_;
+    DeliveryList                                  deliveryList_;
+    DeliveryList::iterator                        inputRollingIter_;
+    DeliveryList::iterator                        storeRollingIter_;
+    
     StoreJournal*                                 storeJournal_; // owned
     InputJournal*                                 inputJournal_; // owned
     smsc::core::synchronization::Mutex            bindQueueLock_;
     smsc::core::buffers::CyclicQueue<BindSignal>  bindQueue_;
     RegionFinderV1                                rf_;
+    InputJournalRoller*                           inputRoller_;  // owned
+    StoreJournalRoller*                           storeRoller_;  // owned
 };
 
 } // informer
