@@ -105,7 +105,7 @@ public class JournalRecord {
   public enum Subject {
     SMSC("smsc"),
     RESCHEDULE("reschedule"),
-    CLOSED_GROUPS("closed_groups"),
+    CLOSED_GROUPS("closed_group"),
     USERS("user"),
     MAP_LIMIT("maplimit"),
     LOGGING("logging"),
