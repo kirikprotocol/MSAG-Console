@@ -18,8 +18,8 @@ ReturnError ::= SEQUENCE {
 
 void RERErrorPdu::construct(void)
 {
-  asn1::ber::EncoderOfPlainSequence_T<3>::setField(0, _invId);
-  asn1::ber::EncoderOfPlainSequence_T<3>::setField(1, _errCode);
+  setField(0, _invId);
+  setField(1, _errCode);
 }
 
 void RERErrorPdu::setValue(const ROSErrorPdu & use_val) /*throw(std::exception)*/

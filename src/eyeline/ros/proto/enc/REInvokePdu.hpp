@@ -28,12 +28,7 @@ Invoke ::= SEQUENCE {
   opcode      INTEGER,
   argument    ABSTRACT-SYNTAX.&Type({Operations}) OPTIONAL
 } */
-class REInvokePdu : public asn1::ber::EncoderOfPlainSequence_T<4> {
-private:
-  using asn1::ber::EncoderOfPlainSequence_T<4>::addField;
-  using asn1::ber::EncoderOfPlainSequence_T<4>::setField;
-  using asn1::ber::EncoderOfPlainSequence_T<4>::clearField;
-
+class REInvokePdu : public asn1::ber::EncoderOfSequence_T<4> {
 protected:
   REInvokeIdType  _invId;
   RELocalOpCode   _opCode;
@@ -46,14 +41,14 @@ protected:
 
 public:
   explicit REInvokePdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<4>(use_rule)
+    : asn1::ber::EncoderOfSequence_T<4>(use_rule)
     , _invId(use_rule), _opCode(use_rule)
   {
     construct();
   }
   REInvokePdu(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
               asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<4>(outer_tag, tag_env, use_rule)
+    : asn1::ber::EncoderOfSequence_T<4>(outer_tag, tag_env, use_rule)
     , _invId(use_rule), _opCode(use_rule)
   {
     construct();

@@ -20,8 +20,8 @@ Invoke ::= [1] SEQUENCE {
 
 void REInvokePdu::construct(void)
 {
-  asn1::ber::EncoderOfPlainSequence_T<4>::setField(0, _invId);
-  asn1::ber::EncoderOfPlainSequence_T<4>::setField(2, _opCode);
+  setField(0, _invId);
+  setField(2, _opCode);
 }
 
 

@@ -15,7 +15,7 @@ void REReturnResult::setValue(const ros::ROSPduWithArgument & use_val) /*throw(s
 
   if (use_val.hasArgument()) {
     _result.init(getTSRule()).setValue(use_val.getHeader()._opCode, use_val.getArg());
-    asn1::ber::EncoderOfPlainSequence_T<2>::setField(1, *_result.get());
+    setField(1, *_result.get());
   } else
     clearField(1);
 }

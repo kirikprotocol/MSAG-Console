@@ -21,12 +21,7 @@ Reject ::= SEQUENCE {
     invokeId	InvokeId,
     problem     ProblemType
 } */
-class RERejectPdu : public asn1::ber::EncoderOfPlainSequence_T<2> {
-private:
-  using asn1::ber::EncoderOfPlainSequence_T<2>::addField;
-  using asn1::ber::EncoderOfPlainSequence_T<2>::setField;
-  using asn1::ber::EncoderOfPlainSequence_T<2>::clearField;
-
+class RERejectPdu : public asn1::ber::EncoderOfSequence_T<2> {
 protected:
   REInvokeIdType  _invId;
   REProblemType   _problem;
@@ -35,14 +30,14 @@ protected:
 
 public:
   explicit RERejectPdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule)
+    : asn1::ber::EncoderOfSequence_T<2>(use_rule)
     , _invId(use_rule), _problem(use_rule)
   {
     construct();
   }
   RERejectPdu(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
               asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<2>(outer_tag, tag_env, use_rule)
+    : asn1::ber::EncoderOfSequence_T<2>(outer_tag, tag_env, use_rule)
     , _invId(use_rule), _problem(use_rule)
   {
     construct();

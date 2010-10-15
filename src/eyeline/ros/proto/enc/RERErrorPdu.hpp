@@ -26,7 +26,7 @@ ReturnError ::= SEQUENCE {
     errcode	    INTEGER,
     parameter	ABSTRACT-SYNTAX.&Type({Errors}) OPTIONAL
 } */
-class RERErrorPdu : public asn1::ber::EncoderOfPlainSequence_T<3> {
+class RERErrorPdu : public asn1::ber::EncoderOfSequence_T<3> {
 protected:
   REInvokeIdType  _invId;
   RELocalOpCode   _errCode;
@@ -37,14 +37,14 @@ protected:
 
 public:
   explicit RERErrorPdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<3>(use_rule)
+    : asn1::ber::EncoderOfSequence_T<3>(use_rule)
     , _invId(use_rule), _errCode(use_rule)
   {
     construct();
   }
   RERErrorPdu(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
               asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<3>(outer_tag, tag_env, use_rule)
+    : asn1::ber::EncoderOfSequence_T<3>(outer_tag, tag_env, use_rule)
     , _invId(use_rule), _errCode(use_rule)
   {
     construct();

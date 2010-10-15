@@ -17,8 +17,8 @@ Reject ::= SEQUENCE {
 } */
 void RERejectPdu::construct(void)
 {
-  asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _invId);
-  asn1::ber::EncoderOfPlainSequence_T<2>::setField(1, _problem);
+  setField(0, _invId);
+  setField(1, _problem);
 }
 
 void RERejectPdu::setValue(const ROSRejectPdu & use_val) /*throw(std::exception)*/

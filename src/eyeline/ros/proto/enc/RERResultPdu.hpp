@@ -27,30 +27,21 @@ ReturnResultType ::= SEQUENCE {
       result	ABSTRACT-SYNTAX.&Type({Operations})
     } OPTIONAL
 } */
-class REReturnResult : public asn1::ber::EncoderOfPlainSequence_T<2> {
-private:
-  using asn1::ber::EncoderOfPlainSequence_T<2>::addField;
-  using asn1::ber::EncoderOfPlainSequence_T<2>::setField;
-  using asn1::ber::EncoderOfPlainSequence_T<2>::clearField;
-
+class REReturnResult : public asn1::ber::EncoderOfSequence_T<2> {
 protected:
-  class REResultField : public asn1::ber::EncoderOfPlainSequence_T<2> {
-  private:
-    using asn1::ber::EncoderOfPlainSequence_T<2>::addField;
-    using asn1::ber::EncoderOfPlainSequence_T<2>::setField;
-    using asn1::ber::EncoderOfPlainSequence_T<2>::clearField;
-
+  /* -- */
+  class REResultField : public asn1::ber::EncoderOfSequence_T<2> {
   protected:
     RELocalOpCode   _opCode;
     REPduArgument   _resType;
 
   public:
     explicit REResultField(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-      : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule)
+      : asn1::ber::EncoderOfSequence_T<2>(use_rule)
       , _opCode(use_rule), _resType(use_rule)
     {
-      asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _opCode);
-      asn1::ber::EncoderOfPlainSequence_T<2>::setField(1, _resType);
+      asn1::ber::EncoderOfSequence_T<2>::setField(0, _opCode);
+      asn1::ber::EncoderOfSequence_T<2>::setField(1, _resType);
     }
     ~REResultField()
     { }
@@ -68,16 +59,16 @@ protected:
 
 public:
   explicit REReturnResult(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<2>(use_rule), _invId(use_rule)
+    : asn1::ber::EncoderOfSequence_T<2>(use_rule), _invId(use_rule)
   {
-    asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _invId);
+    asn1::ber::EncoderOfSequence_T<2>::setField(0, _invId);
   }
   REReturnResult(const asn1::ASTag & outer_tag, asn1::ASTagging::Environment_e tag_env,
                asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<2>(outer_tag, tag_env, use_rule)
+    : asn1::ber::EncoderOfSequence_T<2>(outer_tag, tag_env, use_rule)
     , _invId(use_rule)
   {
-    asn1::ber::EncoderOfPlainSequence_T<2>::setField(0, _invId);
+    asn1::ber::EncoderOfSequence_T<2>::setField(0, _invId);
   }
   //
   ~REReturnResult()
