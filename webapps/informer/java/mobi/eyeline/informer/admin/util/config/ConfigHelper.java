@@ -34,7 +34,7 @@ public class ConfigHelper {
   public static void saveXmlConfig(XmlConfig config, File toFile, File backupDir, FileSystem fileSystem) throws AdminException, XmlConfigException {
 
     if (backupDir != null) {
-      rollbackConfig(toFile, backupDir, fileSystem);
+      createBackup(toFile, backupDir, fileSystem);
     }
 
     File tmp = new File(toFile.getAbsolutePath() + ".tmp");
