@@ -5,85 +5,35 @@
 # include "eyeline/map/7_15_0/proto/common/NetworkResource.hpp"
 # include "eyeline/map/7_15_0/proto/ERR/ExtensibleSystemFailureParam.hpp"
 
+# include "eyeline/util/ChoiceOfT.hpp"
+
 namespace eyeline {
 namespace map {
 namespace err {
 
 /*
   SystemFailureParam ::= CHOICE {
-        networkResource NetworkResource,
-        -- networkResource must not be used in version 3
-        extensibleSystemFailureParam    ExtensibleSystemFailureParam
-        -- extensibleSystemFailureParam must not be used in version <3
+      networkResource NetworkResource,
+          -- networkResource must not be used in version 3
+      extensibleSystemFailureParam    ExtensibleSystemFailureParam
+          -- extensibleSystemFailureParam must not be used in version <3
   }
 */
-class SystemFailureParam {
+class SystemFailureParam :
+  public util::ChoiceOf2_T<common::NetworkResource, ExtensibleSystemFailureParam> {
+
 public:
-  enum Kind_e { KindNone, KindNetworkResource, KindExtensibleSystemFailureParam };
-
   SystemFailureParam()
-  : _kind(KindNone)
-  {
-    _choice.networkResource= NULL;
-  }
+    : util::ChoiceOf2_T<common::NetworkResource, ExtensibleSystemFailureParam>()
+  { }
+  ~SystemFailureParam()
+  { }
 
-  ~SystemFailureParam() {
-    clear();
-  }
+  Alternative_T<common::NetworkResource>        networkResource() { return alternative0(); }
+  Alternative_T<ExtensibleSystemFailureParam>   extensibleSystemFailureParam() { return alternative1(); }
 
-  common::NetworkResource& initNetworkResource() {
-    clear();
-    _kind= KindNetworkResource;
-    _choice.networkResource= new (_memAlloc.buf) common::NetworkResource();
-    return *_choice.networkResource;
-  }
-
-  ExtensibleSystemFailureParam& initExtensibleCallBarredParam() {
-    clear();
-    _kind= KindExtensibleSystemFailureParam;
-    _choice.extensibleSystemFailureParam= new (_memAlloc.buf) ExtensibleSystemFailureParam();
-    return *_choice.extensibleSystemFailureParam;
-  }
-
-  Kind_e getKind() const { return _kind; }
-
-  const common::NetworkResource* getNetworkResource() const {
-    return (_kind == KindNetworkResource) ? _choice.networkResource : NULL;
-  }
-  const ExtensibleSystemFailureParam* getExtensibleSystemFailureParam() const {
-    return (_kind == KindExtensibleSystemFailureParam) ? _choice.extensibleSystemFailureParam : NULL;
-  }
-
-  common::NetworkResource* getNetworkResource() {
-    return (_kind == KindNetworkResource) ? _choice.networkResource : NULL;
-  }
-  ExtensibleSystemFailureParam* getExtensibleSystemFailureParam() {
-    return (_kind == KindExtensibleSystemFailureParam) ? _choice.extensibleSystemFailureParam : NULL;
-  }
-
-protected:
-  void clear() {
-    if (_kind == KindNetworkResource)
-      _choice.networkResource->~NetworkResource();
-    else if(_kind == KindExtensibleSystemFailureParam)
-      _choice.extensibleSystemFailureParam->~ExtensibleSystemFailureParam();
-    _kind= KindNone;
-    _choice.networkResource= NULL;
-  }
-
-private:
-  union {
-    void * aligner;
-    uint8_t buf[util::MaxSizeOf2_T<common::NetworkResource,
-                                   ExtensibleSystemFailureParam>::VALUE];
-  } _memAlloc;
-
-  union {
-    common::NetworkResource* networkResource;
-    ExtensibleSystemFailureParam* extensibleSystemFailureParam;
-  } _choice;
-
-  Kind_e _kind;
+  ConstAlternative_T<common::NetworkResource>       networkResource() const { return alternative0(); }
+  ConstAlternative_T<ExtensibleSystemFailureParam>  extensibleSystemFailureParam() const { return alternative1(); }
 };
 
 }}}

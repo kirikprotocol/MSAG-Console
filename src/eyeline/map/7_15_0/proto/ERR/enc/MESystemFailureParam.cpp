@@ -1,4 +1,9 @@
-#include "MESystemFailureParam.hpp"
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
+#include "util/Exception.hpp"
+#include "eyeline/map/7_15_0/proto/ERR/enc/MESystemFailureParam.hpp"
 
 namespace eyeline {
 namespace map {
@@ -8,12 +13,10 @@ namespace enc {
 void
 MESystemFailureParam::setValue(const SystemFailureParam& value)
 {
-  switch (value.getKind()) {
-  case SystemFailureParam::KindNetworkResource:
-    setNetworkResource(*value.getNetworkResource());
+  switch (value.getChoiceIdx()) {
+  case 0: setNetworkResource(*value.networkResource().get());
     break;
-  case SystemFailureParam::KindExtensibleSystemFailureParam:
-    setExtensibleSystemFailureParam(*value.getExtensibleSystemFailureParam());
+  case 1: setExtensibleSystemFailureParam(*value.extensibleSystemFailureParam().get());
     break;
   default:
     throw smsc::util::Exception("enc::MESystemFailureParam::setValue() : invalid value");
@@ -21,20 +24,17 @@ MESystemFailureParam::setValue(const SystemFailureParam& value)
 }
 
 void
-MESystemFailureParam::setNetworkResource(const common::NetworkResource& val)
+MESystemFailureParam::setNetworkResource(const common::NetworkResource& use_val)
 {
-  cleanup();
-  _value.networkResource= new (_memAlloc.buf) common::enc::MENetworkResource(getTSRule());
-  _value.networkResource->setValue(val);
-  asn1::ber::EncoderOfChoice::setSelection(*_value.networkResource);
+  _altEnc.networkResource().init(getTSRule()).setValue(use_val);
+  setSelection(*_altEnc.networkResource().get());
 }
 
 void
-MESystemFailureParam::setExtensibleSystemFailureParam(const ExtensibleSystemFailureParam& value)
+MESystemFailureParam::setExtensibleSystemFailureParam(const ExtensibleSystemFailureParam& use_val)
 {
-  cleanup();
-  _value.any = new (_memAlloc.buf) MEExtensibleSystemFailureParam(value, getTSRule());
-  asn1::ber::EncoderOfChoice::setSelection(*_value.extensibleSystemFailureParam);
+  _altEnc.extensibleSystemFailureParam().init(getTSRule()).setValue(use_val);
+  setSelection(*_altEnc.extensibleSystemFailureParam().get());
 }
 
 }}}}
