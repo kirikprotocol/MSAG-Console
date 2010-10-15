@@ -26,7 +26,7 @@
                 <h:commandLink value="#{msg['archiveDaemon.page.start']}" action="#{archiveDaemon.start}" rendered="#{archiveDaemon.onlineHost==null}"/>
                 <h:commandLink value="#{msg['archiveDaemon.page.stop']}" action="#{archiveDaemon.stop}" rendered="#{archiveDaemon.onlineHost!=null}" />
                 <h:outputText value=" "/>
-                <h:commandLink value="#{msg['archiveDaemon.page.switch']}" action="#{archiveDaemon.switchHost}" rendered="#{archiveDaemon.showSwitchLink}"/>
+                <h:commandLink value="#{msg['archiveDaemon.page.switch']} " action="#{archiveDaemon.switchHost}" rendered="#{archiveDaemon.showSwitchLink}"/>
                 <h:selectOneMenu value="#{archiveDaemon.switchToHost}" rendered="#{not empty archiveDaemon.hostsItems}" >
                     <f:selectItems value="#{archiveDaemon.hostsItems}"/>
                 </h:selectOneMenu>
@@ -34,7 +34,8 @@
         </eye:button>
       </eye:buttons>
 
-      <eye:pageSubtitle value="#{msg['archiveDaemon.page.config']}"/>  
+      <p/>
+
       <tr:panelFormLayout>
           <tr:panelLabelAndMessage label="#{archiveDaemonBundle['interval']}">
                 <h:inputText  value="#{archiveDaemon.config.interval}">
@@ -109,8 +110,8 @@
               <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations.sources']}">
                     <tr:panelFormLayout inlineStyle="margin-left:15px;width:300px;">
                     <eye:dynamicTable value="#{archiveDaemon.locationSources}" >
-                        <eye:textColumn name="key"   allowEditAfterAdd="false"/>
-                        <eye:textColumn name="value" allowEditAfterAdd="true"/>
+                        <eye:textColumn name="key"   allowEditAfterAdd="false" width="50%"/>
+                        <eye:textColumn name="value" allowEditAfterAdd="true" width="50%"/>
                     </eye:dynamicTable>
                     </tr:panelFormLayout>
               </eye:collapsingGroup>
@@ -127,13 +128,15 @@
               <eye:collapsingGroup label="#{archiveDaemonBundle['indexatorSmeAddrChunkSizes']}">
                     <tr:panelFormLayout inlineStyle="margin-left:15px;width:300px;">
                     <eye:dynamicTable value="#{archiveDaemon.indexatorSmeAddrChunkSizes}" >
-                        <eye:textColumn name="key"   allowEditAfterAdd="false"/>
-                        <eye:textColumn name="value" allowEditAfterAdd="true"/>
+                        <eye:textColumn name="key"   allowEditAfterAdd="false" width="50%"/>
+                        <eye:textColumn name="value" allowEditAfterAdd="true" width="50%"/>
                     </eye:dynamicTable>
                     </tr:panelFormLayout>
               </eye:collapsingGroup>
                         
         </eye:collapsingGroup>
+
+      <p/>
 
       <eye:buttons>
         <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{archiveDaemon.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>

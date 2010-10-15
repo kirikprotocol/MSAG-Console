@@ -12,15 +12,6 @@
 
   <ui:param name="pageTitle" value="#{ aliasEdit.oldAliasSimpleAddr!=null ? msg['smsc.alias.edit.title'] : msg['smsc.alias.add.title']}"/>
 
-  <!--<c:choose>-->
-      <!--<c:when test="#{aliasEdit.oldAliasSimpleAddr!=null}">-->
-            <!--<ui:param name="pageTitle" value="#{msg['smsc.alias.edit.title']}"/>-->
-      <!--</c:when>-->
-      <!--<c:otherwise>-->
-            <!--<ui:param name="pageTitle" value="#{msg['smsc.alias.add.title']}"/>-->
-      <!--</c:otherwise>-->
-  <!--</c:choose>-->
-
 
   <ui:define name="content">
 
@@ -29,22 +20,17 @@
 
         <eye:buttons>
             <eye:button>
-              <tr:commandLink text="#{msg['submit.button']}" id="add1" action="#{aliasEdit.submit}"/>
+              <tr:commandLink text="#{msg['done.button']}" action="#{aliasEdit.submit}"/>
             </eye:button>
-            <eye:button rendered="#{aliasEdit.oldAliasSimpleAddr!=null}">
-              <tr:commandLink text="#{msg['reset.button']}" id="reset1" action="#{aliasEdit.reset}">
-                <f:param name="aliasToEdit" value="#{aliasEdit.oldAliasSimpleAddr}"/>
-              </tr:commandLink>
-            </eye:button>
-
-            <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="ALIASES"/>
+              <tr:commandLink text="#{msg['cancel.button']}" action="ALIASES"/>
             </eye:button>
+            <eye:space/>
         </eye:buttons>
 
 
-    <eye:pageSubtitle value="#{msg['smsc.alias.edit.data']}"/>
+    <p/>
+      
     <tr:panelFormLayout inlineStyle="width:300px;">
         <tr:panelLabelAndMessage label="#{msg['smsc.alias.column.alias']}">
             <h:inputText  value="#{aliasEdit.simpleAlias}">
@@ -61,21 +47,16 @@
         </tr:panelLabelAndMessage>
     </tr:panelFormLayout>
 
-    <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" id="add2" action="#{aliasEdit.submit}"/>
-        </eye:button>
-        <eye:button rendered="#{aliasEdit.oldAliasSimpleAddr!=null}">
-          <tr:commandLink text="#{msg['reset.button']}" id="reset2" action="#{aliasEdit.reset}">
-            <f:param name="aliasToEdit" value="#{aliasEdit.oldAliasSimpleAddr}"/>
-          </tr:commandLink>
-        </eye:button>
-
-        <eye:space/>
-        <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="ALIASES"/>
-        </eye:button>
-    </eye:buttons>
+      <eye:buttons>
+                  <eye:button>
+                    <tr:commandLink text="#{msg['done.button']}" action="#{aliasEdit.submit}"/>
+                  </eye:button>
+                  <eye:button>
+                    <tr:commandLink text="#{msg['cancel.button']}" action="ALIASES"/>
+                  </eye:button>
+                  <eye:space/>
+              </eye:buttons>
+    
 
     </h:form>
 

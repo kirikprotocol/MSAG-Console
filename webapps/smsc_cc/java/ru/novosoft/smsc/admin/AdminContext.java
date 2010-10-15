@@ -123,7 +123,7 @@ public class AdminContext {
     if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager))
       archiveDaemonManager = new ArchiveDaemonManagerImpl(serviceManager, fileSystem);
 
-    aliasManager = new AliasManagerImpl(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
+    aliasManager = new AliasManagerImpl(new File(smscManager.getSettings().getCommonSettings().getAliasStoreFile()), clusterController, fileSystem);
 
     rescheduleManager = new RescheduleManagerImpl(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 

@@ -15,11 +15,6 @@
 
     <tr:form rendered="#{!acls.outOfDate}">
 
-      <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['add.button']}" action="ACL_EDIT"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{acls.removeAcl}"/></eye:button>
-        <eye:space/>
-      </eye:buttons>
 
       <eye:dataTable value="#{acls.acls}" selectedRows="#{acls.selectedRows}" var="acl">
         <eye:row rowId="#{acl.id}">
@@ -41,6 +36,8 @@
         </eye:row>
 
       </eye:dataTable>
+
+      <p/>
 
       <eye:buttons>
         <eye:button><h:commandLink value="#{msg['add.button']}" action="ACL_EDIT"/></eye:button>

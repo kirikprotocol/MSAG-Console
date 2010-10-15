@@ -14,7 +14,7 @@
 
   <ui:define name="content">
 
-    <h:form >
+    <h:form>
 
       <eye:dataTableFilter bean="#{msc}" clearAction="clearFilter">
         <tr:panelFormLayout inlineStyle="width:300px;">
@@ -24,43 +24,38 @@
         </tr:panelFormLayout>
       </eye:dataTableFilter>
 
-      <eye:buttons>
-        <eye:button>
-          <h:commandLink value="#{msg['delete.button']}" id="delete1" actionListener="#{msc.removeSelected}"
-                         onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
-        </eye:button>
-        <eye:space/>
-      </eye:buttons>
 
       <eye:dataTable value="#{msc.commutatorsModel}" selectedRows="#{msc.selectedRows}" var="a">
 
         <eye:row rowId="#{a.simpleAddress}" opened="true">
-          <eye:column name="addr" title="#{msg['smsc.msc.column.addr']}" width="33%" sortable="true" defaultSortOrder="asc">
-            <h:outputText  value="#{a.simpleAddress}"/>
+          <eye:column name="addr" title="#{msg['smsc.msc.column.addr']}" width="100%" sortable="true" defaultSortOrder="asc">
+            <h:outputText value="#{a.simpleAddress}"/>
           </eye:column>
         </eye:row>
 
       </eye:dataTable>
 
+      <p/>
+
 
 
       <eye:buttons>
         <eye:button>
+          <tr:commandLink id="add2" actionListener="#{msc.addAddress}" >
+            <tr:image source="/images/but_add.gif" inlineStyle="margin-bottom: -5px"/>
+          </tr:commandLink>
+
+          <tr:inputText value="#{msc.newAddress}" required="false" simple="true" contentStyle="width: 150px; margin-bottom: 0px">
+            <eye:validatePhone/>
+          </tr:inputText>
+        </eye:button>
+        <eye:button>
           <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{msc.removeSelected}"
                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
         </eye:button>
+
         <eye:space/>
       </eye:buttons>
-
-      <eye:pageSubtitle value="#{msg['smsc.msc.add.address']}" />
-      <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >
-        <tr:inputText value="#{msc.newAddress}"  required="false" simple="true" contentStyle="width:150px;" >
-          <eye:validatePhone/>
-        </tr:inputText>
-        <tr:commandLink id="add2" actionListener="#{msc.addAddress}" >
-          <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"/>
-        </tr:commandLink>
-      </h:panelGrid>
 
 
     </h:form>

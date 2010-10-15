@@ -36,15 +36,6 @@
 
       </eye:dataTableFilter>
 
-      <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['add.button']}" action="#{subjects.add}"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{subjects.deleteSelected}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{subjects.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:space/>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{subjects.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
-
-      </eye:buttons>
-
       <eye:dataTable value="#{subjects.subjectsModel}" selectedRows="#{subjects.selectedRows}" var="s">
         <eye:row rowId="#{s.name}"  innerData="#{!empty s.masks or !empty s.children}">
           <eye:column name="name" title="#{msg['subjects.page.column.name']}" width="50%"

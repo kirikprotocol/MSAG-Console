@@ -14,20 +14,6 @@
 
     <tr:form id="closed_groups" rendered="#{!closed_groups.outOfDate}">
 
-      <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" id="add1" action="CLOSED_GROUP_EDIT"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" id="delete1" actionListener="#{closed_groups.removeSelected}"
-                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false">
-            <f:param name="delete" value=""/>
-          </tr:commandLink>
-        </eye:button>
-        <eye:space/>
-      </eye:buttons>
-
-
       <eye:dataTableFilter bean="#{closed_groups}" clearAction="clearFilter">
         <h:panelGrid columns="3">
           <tr:panelLabelAndMessage label="#{closedGroupsBundle.id}">
@@ -49,18 +35,22 @@
 
         <eye:row rowId="#{g.id}" innerData="#{!empty g.masks}" opened="true">
 
-          <eye:column name="id" title="#{closedGroupsBundle.id}" width="25%" sortable="true">
-            <h:outputText value="#{g.id}"/>
+          <eye:column name="id" title="#{closedGroupsBundle.id}" width="10%" sortable="true">
+            <h:commandLink value="#{g.id}" action="CLOSED_GROUP_EDIT">
+              <f:param name="closed_group" value="#{g.id}"/>
+            </h:commandLink>
           </eye:column>
 
-          <eye:column name="name" title="#{closedGroupsBundle.name}" width="25%" sortable="true">
+          <eye:column name="name" title="#{closedGroupsBundle.name}" width="25%%" sortable="true">
             <h:commandLink value="#{g.name}" action="CLOSED_GROUP_EDIT">
               <f:param name="closed_group" value="#{g.id}"/>
             </h:commandLink>
           </eye:column>
 
-          <eye:column name="description" title="#{closedGroupsBundle.description}" width="25%">
-            <h:outputText value="#{g.description}"/>
+          <eye:column name="description" title="#{closedGroupsBundle.description}" width="40%">
+            <h:commandLink value="#{g.description}" action="CLOSED_GROUP_EDIT">
+              <f:param name="closed_group" value="#{g.id}"/>
+            </h:commandLink>
           </eye:column>
 
 
@@ -79,8 +69,9 @@
 
         </eye:row>
 
-
       </eye:dataTable>
+
+      <p/>
 
       <eye:buttons>
         <eye:button>

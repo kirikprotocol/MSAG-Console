@@ -16,26 +16,6 @@
 
       <tr:inputHidden value="#{users.revision}" id="revision"/>
 
-      <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" id="add1" action="#{users.edit}"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" id="delete1" actionListener="#{users.removeSelected}"
-                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
-        </eye:button>
-        <eye:space/>
-        <eye:button>
-          <h:commandLink value="#{msg['submit.button']}" id="submit1" action="#{users.submit}"
-              onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="USERS" actionListener="#{users.reset}"
-              onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/>
-        </eye:button>
-      </eye:buttons>
-
-
       <p/>
       <eye:dataTableFilter bean="#{users}" clearAction="clearFilter">
 
