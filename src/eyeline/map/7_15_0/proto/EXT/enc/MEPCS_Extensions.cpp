@@ -1,4 +1,8 @@
-#include "MEPCS_Extensions.hpp"
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
+#include "eyeline/map/7_15_0/proto/EXT/enc/MEPCS_Extensions.hpp"
 
 namespace eyeline {
 namespace map {
@@ -10,7 +14,7 @@ MEPCS_Extensions::setValue(const PCS_Extensions& value)
 {
   clearFields(0);
   if (!value._unkExt._tsList.empty())
-    _eUnkExt.init().setValue(value._unkExt, *this, 0);
+    setExtensions(value._unkExt, 0);
 }
 
 }}}}

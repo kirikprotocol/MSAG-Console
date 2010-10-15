@@ -10,13 +10,13 @@ namespace map {
 namespace err {
 namespace enc {
 
-const asn1::ASTag MEExtensibleSystemFailureParam::_tag_additionalNetworkResource= asn1::ASTag(asn1::ASTag::tagContextSpecific, 0);
-const asn1::ASTag MEExtensibleSystemFailureParam::_tag_failureCauseParam= asn1::ASTag(asn1::ASTag::tagContextSpecific, 1);
+const asn1::ASTag MEExtensibleSystemFailureParam::_tag_additionalNetworkResource(asn1::ASTag::tagContextSpecific, 0);
+const asn1::ASTag MEExtensibleSystemFailureParam::_tag_failureCauseParam(asn1::ASTag::tagContextSpecific, 1);
 
 void
 MEExtensibleSystemFailureParam::setValue(const ExtensibleSystemFailureParam& value)
 {
-  //clear optionals first
+  //clear optionals and extensions
   clearFields();
 
   if (value.networkResource.get()) {
@@ -42,7 +42,7 @@ MEExtensibleSystemFailureParam::setValue(const ExtensibleSystemFailureParam& val
   }
 
   if ( !value._unkExt._tsList.empty() )
-    _eUnkExt.init().setValue(value._unkExt, *this, 4);
+    setExtensions(value._unkExt, 4);
 }
 
 }}}}

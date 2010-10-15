@@ -11,8 +11,7 @@
 #include "eyeline/map/7_15_0/proto/common/enc/MEAlertingPattern.hpp"
 #include "eyeline/map/7_15_0/proto/common/enc/MEISDN-AddressString.hpp"
 
-#include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
-#include "eyeline/asn1/BER/rtenc/EncodeUExt.hpp"
+#include "eyeline/asn1/BER/rtenc/EncodeSequenceExt.hpp"
 
 namespace eyeline {
 namespace map {
@@ -31,49 +30,30 @@ using eyeline::map::common::enc::MEAlertingPattern;
         msisdn              [0] ISDN-AddressString  OPTIONAL
         // ... unknwon extensions
 } */
-class MEUSSD_Arg : public asn1::ber::EncoderOfPlainSequence_T<5> {
-private:
-  using asn1::ber::EncoderOfPlainSequence_T<5>::addField;
-  using asn1::ber::EncoderOfPlainSequence_T<5>::setField;
-  using asn1::ber::EncoderOfPlainSequence_T<5>::clearField;
-
+class MEUSSD_Arg : public asn1::ber::EncoderOfExtensibleSequence_T<4> {
 protected:
   static const asn1::ASTag  _tag_f3;
-
-  typedef asn1::ber::EncoderOfUExtension_T<1> MEArgUExt;
-
-  //Tagged Field #3 Encoder
-  class FE3ISDN_AddressString : public MEISDN_AddressString {
-  public:
-    explicit FE3ISDN_AddressString(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-      : MEISDN_AddressString(_tag_f3, asn1::ASTagging::tagsIMPLICIT, use_rule)
-    { }
-    ~FE3ISDN_AddressString()
-    { }
-  };
 
   MEUSSD_DataCodingScheme _dcs;
   MEUSSD_String           _ussd;
   /* -- optionals -- */
   asn1::ber::EncoderProducer_T<MEAlertingPattern>     _eAlrtPtrn;
-  asn1::ber::EncoderProducer_T<FE3ISDN_AddressString> _eMsIsdn;
-  util::OptionalObj_T<MEArgUExt>                      _eUnkExt;
+  asn1::ber::EncoderProducer_T<MEISDN_AddressString>  _eMsIsdn;
 
   //inits mandatory fields encoders
   void construct(void);
 
 public:
-  //Constructor for asn1::ASTypeValue_T<>
   explicit MEUSSD_Arg(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<5>(use_rule)
+    : asn1::ber::EncoderOfExtensibleSequence_T<4>(use_rule)
     , _dcs(use_rule), _ussd(use_rule)
   {
     construct();
   }
-  MEUSSD_Arg(const USSD_Arg & use_val,
-            TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfPlainSequence_T<5>(TSGroupBER::getTSRule(use_rule))
-    , _dcs(TSGroupBER::getTSRule(use_rule)), _ussd(TSGroupBER::getTSRule(use_rule))
+  explicit MEUSSD_Arg(const USSD_Arg & use_val,
+            asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfExtensibleSequence_T<4>(use_rule)
+    , _dcs(use_rule), _ussd(use_rule)
   {
     construct();
     setValue(use_val);

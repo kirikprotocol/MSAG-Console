@@ -24,8 +24,8 @@ const asn1::ASTag  MEUSSD_Arg::_tag_f3(asn1::ASTag::tagContextSpecific, 0);
 //inits mandatory fields encoders
 void MEUSSD_Arg::construct(void)
 {
-  asn1::ber::EncoderOfPlainSequence_T<5>::setField(0, _dcs);
-  asn1::ber::EncoderOfPlainSequence_T<5>::setField(1, _ussd);
+  setField(0, _dcs);
+  setField(1, _ussd);
 }
 
 //
@@ -33,20 +33,19 @@ void MEUSSD_Arg::setValue(const USSD_Arg & use_val) /*throw(std::exception)*/
 {
   _dcs.setValue(use_val.ussd_DataCodingScheme);
   _ussd.setValue(use_val.ussd_String);
-  //clear optionals first
-  asn1::ber::EncoderOfPlainSequence_T<5>::clearFields(2);
+  //clear optionals and unknown extensions first
+  clearFields(2);
 
   if (use_val.alertingPattern.get()) {
     _eAlrtPtrn.init(getTSRule()).setValue(*use_val.alertingPattern.get());
-    asn1::ber::EncoderOfPlainSequence_T<5>::setField(2, *_eAlrtPtrn.get());
+    setField(2, *_eAlrtPtrn.get());
   }
   if (use_val.msisdn.get()) {
-    _eMsIsdn.init(getTSRule()).setValue(*use_val.msisdn.get());
-    asn1::ber::EncoderOfPlainSequence_T<5>::setField(3, *_eMsIsdn.get());
+    _eMsIsdn.init(_tag_f3, asn1::ASTagging::tagsIMPLICIT, getTSRule()).setValue(*use_val.msisdn.get());
+    setField(3, *_eMsIsdn.get());
   }
-  if (!use_val._unkExt._tsList.empty()) {
-    _eUnkExt.init().setValue(use_val._unkExt, *this, 4);
-  }
+  if (!use_val._unkExt._tsList.empty())
+    setExtensions(use_val._unkExt, 4);
 }
 
 }}}}

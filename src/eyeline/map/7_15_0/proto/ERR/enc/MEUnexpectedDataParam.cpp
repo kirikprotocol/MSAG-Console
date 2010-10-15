@@ -12,7 +12,7 @@ namespace enc {
 void
 MEUnexpectedDataParam::setValue(const DataMissingParam& value)
 {
-  //clear optionals first
+  //clear optionals and extensions
   clearFields();
 
   if (value.extensionContainer.get()) {
@@ -20,7 +20,7 @@ MEUnexpectedDataParam::setValue(const DataMissingParam& value)
     setField(0, *_eExtensionContainer.get());
   }
   if (!value._unkExt._tsList.empty())
-    _eUnkExt.init().setValue(value._unkExt, *this, 1);
+    setExtensions(value._unkExt, 1);
 }
 
 }}}}

@@ -19,8 +19,8 @@ namespace enc {
 //inits mandatory fields encoders
 void MEUSSD_Res::construct(void)
 {
-  asn1::ber::EncoderOfPlainSequence_T<3>::setField(0, _dcs);
-  asn1::ber::EncoderOfPlainSequence_T<3>::setField(1, _ussd);
+  setField(0, _dcs);
+  setField(1, _ussd);
 }
 
 //
@@ -29,12 +29,10 @@ void MEUSSD_Res::setValue(const USSD_Res & use_val) /*throw(std::exception)*/
   _dcs.setValue(use_val.ussd_DataCodingScheme);
   _ussd.setValue(use_val.ussd_String);
 
-  //clear optionals first
-  asn1::ber::EncoderOfPlainSequence_T<3>::clearFields(2);
-
-  if (!use_val._unkExt._tsList.empty()) {
-    _eUnkExt.init().setValue(use_val._unkExt, *this, 2);
-  }
+  //clear unknown extensions first
+  clearFields(2);
+  if (!use_val._unkExt._tsList.empty())
+    setExtensions(use_val._unkExt, 2);
 }
 
 }}}}

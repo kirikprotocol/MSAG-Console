@@ -9,12 +9,12 @@ namespace map {
 namespace err {
 namespace enc {
 
-const asn1::ASTag MEExtensibleCallBarredParam::_tag_unauthMsgOrig= asn1::ASTag(asn1::ASTag::tagContextSpecific, 1);
+const asn1::ASTag MEExtensibleCallBarredParam::_tag_unauthMsgOrig(asn1::ASTag::tagContextSpecific, 1);
 
 void
 MEExtensibleCallBarredParam::setValue(const ExtensibleCallBarredParam& value)
 {
-  //clear optionals first
+  //clear optionals and extensions first
   clearFields();
 
   if (value.callBarringCause.get()) {
@@ -33,7 +33,7 @@ MEExtensibleCallBarredParam::setValue(const ExtensibleCallBarredParam& value)
   }
   
   if ( !value._unkExt._tsList.empty() )
-    _eUnkExt.init().setValue(value._unkExt, *this, 3);
+    setExtensions(value._unkExt, 3);
 }
 
 }}}}

@@ -12,7 +12,7 @@ namespace enc {
 void
 MEDataMissingParam::setValue(const DataMissingParam& value)
 {
-  //clear optionals first
+  //clear optionals and extensions
   clearFields();
 
   if (value.extensionContainer.get()) {
@@ -20,7 +20,7 @@ MEDataMissingParam::setValue(const DataMissingParam& value)
     setField(0, *_extensionContainer.get());
   }
   if (!value._unkExt._tsList.empty())
-    _unkExt.init().setValue(value._unkExt, *this, 1);
+    setExtensions(value._unkExt, 1);
 }
 
 }}}}
