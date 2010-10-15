@@ -66,7 +66,7 @@ public class WebContext {
       this.authenticator = new AuthenticatorImpl(new Users() {
         public User getUser(String login) {
           try{
-            return adminContext.getUsersSettings().getUser(login);
+            return adminContext.getUser(login);
           }catch (Exception e){
             logger.error(e,e);
             return null;

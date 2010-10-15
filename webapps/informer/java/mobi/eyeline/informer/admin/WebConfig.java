@@ -164,19 +164,6 @@ public class WebConfig {
     }
   }
 
-  /**
-   * Возвращает файл с настройками пользователей
-   * @return файл с настройками пользователей
-   * @throws AdminException ошибка чтения конфига
-   */
-  public String getUsersFile() throws AdminException {
-    try {
-      XmlConfigSection system = webconfig.getSection("system");
-      return system.getString("users file");
-    } catch (XmlConfigException e) {
-      throw new WebConfigException("invalid_config", e);
-    }
-  }
 
   /**
    * Возвращает директория журнала

@@ -207,6 +207,11 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.users.UserListController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+  <managed-bean>
+      <managed-bean-name>userEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.UserEditController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
 
   <navigation-rule>
@@ -274,6 +279,11 @@
       <to-view-id>/users/index.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+    <navigation-case>
+      <from-outcome>USER_EDIT</from-outcome>
+      <to-view-id>/user/edit.xhtml</to-view-id>      
+    </navigation-case>
+
 
   </navigation-rule>
 

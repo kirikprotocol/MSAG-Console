@@ -6,7 +6,7 @@ import mobi.eyeline.informer.admin.journal.JournalFilter;
 import mobi.eyeline.informer.admin.journal.JournalRecord;
 import mobi.eyeline.informer.admin.journal.Subject;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.admin.users.UsersSettings;
+import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -24,7 +24,8 @@ import java.util.*;
 public class JournalController extends InformerController{
 
   private final Journal journal;
-  private final UsersSettings users;
+  
+
 
   private String filterByUser;
   private String filterBySubject;
@@ -37,7 +38,7 @@ public class JournalController extends InformerController{
 
   public JournalController() throws AdminException {
     this.journal = getConfig().getJournal();
-    this.users = getConfig().getUserSettings();
+
   }
 
   public void clearFilter() {
@@ -157,7 +158,7 @@ public class JournalController extends InformerController{
           row.setSubject(r.getSubject().getSubject(l));
           row.setDescription(r.getDescription(l));
 
-          User u = users.getUser(r.getUser());
+          User u = getConfig().getUser(r.getUser());
           row.setUserDetails(u != null ? u.getLastName() + " " + u.getFirstName()  : r.getUser());
           result.add(row);
         }

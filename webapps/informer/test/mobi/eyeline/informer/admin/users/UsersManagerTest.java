@@ -1,7 +1,11 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.infosme.Infosme;
+import mobi.eyeline.informer.admin.infosme.TestInfosme;
+import mobi.eyeline.informer.admin.regions.RegionsManager;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.TestUtils;
@@ -21,35 +25,37 @@ public class UsersManagerTest {
 
   private static File configFile, backupDir;
 
+  private static Infosme infosme;
   private static UsersManager usersManager;
 
   @BeforeClass
   public static void init() throws Exception {
     configFile = TestUtils.exportResourceToRandomFile(UsersManagerTest.class.getResourceAsStream("users.xml"), ".user");
     backupDir = TestUtils.createRandomDir(".users.backup");
-    usersManager = new UsersManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+  }
+
+  @Before
+  public void before() throws Exception {
+    infosme = new TestInfosme();
+    usersManager = new TestUsersManager(infosme, configFile, backupDir, FileSystem.getFSForSingleInst());
+    for(User u : usersManager.getUsers()) {
+      infosme.addUser(u.getLogin());
+    }
   }
 
   @Test
   public void loadSave() throws Exception{
-    UsersSettings us = usersManager.getUsersSettings();
-    Collection<User> old = us.getUsers();
-    UsersSettings newUs = new UsersSettings();
+    Collection<User> old = usersManager.getUsers();
     Collection<User> newU = new ArrayList<User>(old.size());
-    for(User u : old) {
-      newU.add(new User(u));
+    for(User u : usersManager.getUsers()) {
+      usersManager.updateUser(new User(u));
     }
-    newUs.setUsers(newU);
-    usersManager.updateSettings(newUs);
 
-    newUs = usersManager.getUsersSettings();
-    newU = newUs.getUsers();
-
-    assertTrue(newU.size() == old.size());
+    assertTrue(usersManager.getUsers().size() == old.size());
 
     for(User o : old) {
       boolean found = false;
-      for(User n : newU) {
+      for(User n : usersManager.getUsers()) {
         if(o.getLogin().equals(n.getLogin())) {
           UserTestUtils.compareUsers(o,n);
           found=true;

@@ -48,8 +48,7 @@ public class WebConfigTest {
   }
 
   @Test
-  public void testData() throws Exception{
-    assertEquals(config.getUsersFile(), "test/ru/novosoft/smsc/admin/users/users.xml");
+  public void testData() throws Exception{    
     Assert.assertEquals(config.getInstallationType(), InstallationType.HA);
     assertEquals(config.getHSDaemonHost(), "localhost");
     assertEquals(config.getSingleDaemonHost(), "localhost");

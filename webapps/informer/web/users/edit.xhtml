@@ -1,0 +1,74 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{ user.policyId!=null ? msg['retry_policy.edit.title'] : msg['retry_policy.add.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!retryPolicyEdit.initError}">
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{retryPolicyEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="RETRY_POLICIES" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <tr:inputHidden id="policyId" value="#{retryPolicyEdit.policyId}"/>
+
+      <h:panelGrid style="padding:10px" columns="1" columnClasses="column400Width">
+
+        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%">
+
+          <tr:panelLabelAndMessage label="#{retryPolicyBundle.name}" labelStyle="text-align:left">
+            <tr:inputText value="#{retryPolicyEdit.policy.policyId}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{retryPolicyBundle.defaultTime}" labelStyle="text-align:left">
+            <tr:inputText value="#{retryPolicyEdit.policy.defaultTime}" required="true" simple="true">
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+        </tr:panelFormLayout>
+
+
+        <eye:pageSubtitle value="#{msg['retry_policy.edit.errorPolicies']}"/>
+        <h:panelGrid columns="2" columnClasses="column300Width,columnTopLeftAlign">
+          <eye:dynamicTable value="#{retryPolicyEdit.dynamicModel}" >
+            <eye:textColumn name="errorCode" maxLength="10" allowEditAfterAdd="true"/>
+            <eye:textColumn name="time"      maxLength="10" allowEditAfterAdd="true"/>
+          </eye:dynamicTable>
+          <h:outputText/>
+        </h:panelGrid>
+
+        
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{retryPolicyEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="RETRY_POLICIES" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

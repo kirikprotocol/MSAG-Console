@@ -9,7 +9,7 @@ import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.smsc.Smsc;
-import mobi.eyeline.informer.admin.users.UsersSettings;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 
 import java.util.*;
@@ -28,7 +28,7 @@ public class Configuration {
 
   private final AdminContext context;
 
-  private UsersSettings usersSettings;
+
 
   private InformerSettings informerSettings;
 
@@ -36,24 +36,13 @@ public class Configuration {
     this.journal = context.getJournal();
     this.context = context;
     try{
-      this.usersSettings = context.getUsersSettings();
+
       this.informerSettings = context.getConfigSettings();
     }catch (AdminException e){
       throw new InitException(e);
     }
   }
 
-  public UsersSettings getUserSettings() throws AdminException {
-    return usersSettings.cloneSettings();
-  }
-
-  public void setUserSettings(UsersSettings newS, String user) throws AdminException {
-    Revision revision = buildNextRevision(user, ConfigType.USERS);
-    context.updateUserSettings(newS);
-    lastRevisions.put(ConfigType.USERS, revision);
-    journal.logChanges(usersSettings, newS, user);
-    usersSettings = context.getUsersSettings();
-  }
 
   public InformerSettings getConfigSettings() throws AdminException {
     return informerSettings.cloneSettings();
@@ -144,6 +133,36 @@ public class Configuration {
     context.addSmsc(smsc);
     journal.logAddSmsc(smsc.getName(), user);
   }
+
+
+  public void removeUser(String login, String user) throws AdminException {
+    User u = context.getUser(login);
+    if(u != null) {
+      context.removeUser(u.getLogin());
+      journal.logRemoveUser(u.getLogin(), user);
+    }
+  }
+
+  public User getUser(String login) {
+    return context.getUser(login);
+  }
+
+  public List<User> getUsers()  {
+    return context.getUsers();
+  }
+
+  public void updateUser(User u, String user) throws AdminException {
+    User oldUser = context.getUser(u.getLogin());
+    context.updateUser(u);
+    journal.logUpdateUser(oldUser, u, user);
+  }
+
+  public void addUser(User u, String user) throws AdminException {
+    context.addUser(u);
+    journal.logAddUser(u.getLogin(), user);
+  }
+
+
 
   public void removeRegion(String regionId, String user) throws AdminException {
     Region r = getRegion(regionId);

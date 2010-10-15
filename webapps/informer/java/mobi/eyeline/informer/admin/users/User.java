@@ -369,6 +369,7 @@ public class User implements Serializable{
     this.reportsLifetime = reportsLifetime;
   }
 
+
   public enum Status {
     ENABLED,
     DISABLED

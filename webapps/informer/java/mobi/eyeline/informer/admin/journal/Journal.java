@@ -6,7 +6,7 @@ import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.smsc.Smsc;
-import mobi.eyeline.informer.admin.users.UsersSettings;
+import mobi.eyeline.informer.admin.users.User;
 
 import java.io.File;
 import java.util.Arrays;
@@ -94,16 +94,6 @@ public class Journal {
         setSubject(subject).setUser(user).setDescription(description, args));
   }
 
-  /**
-   * Ищет различия между настройками пользователей и записывает их в журнал
-   * @param oldSettings старые настройки пользователей
-   * @param newSettings новые настройки пользователей
-   * @param user пользователь, от имени которого надо формировать записи
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
-   */
-  public void logChanges(UsersSettings oldSettings, UsersSettings newSettings, String user) throws AdminException {
-    users.logChanges(this, oldSettings, newSettings, user);
-  }
 
   /**
    * Ищет различия между настройками Informer и записывает их в журнал
@@ -277,4 +267,37 @@ public class Journal {
   public void logDaemonStop(String name, String user) throws AdminException {
     addRecord(JournalRecord.Type.SERVICE_STOP, Subject.DAEMONS, user, "daemon_stop", name);
   }
+
+
+  /**
+   * Добавляет в журнал запись о новом пользователе
+   * @param  login    login
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logAddUser(String login, String user) throws AdminException{
+    this.users.logAddUser(login, this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об удалении пользователя
+   * @param login  login
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logRemoveUser(String login, String user) throws AdminException{
+    this.users.logRemoveUser(login, this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об обновлении пользователя
+   * @param oldUser старый регион
+   * @param newUser новый регион
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logUpdateUser(User oldUser, User newUser, String user) throws AdminException{
+    this.users.logChanges(oldUser, newUser, this, user);
+  }
+
 }

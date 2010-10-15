@@ -38,7 +38,7 @@ public class UserListController extends InformerController {
 
   public DataTableModel getUsersModel() throws AdminException {
     final List<User> users = new ArrayList<User>();
-    for(User u : getConfig().getUserSettings().getUsers()) {
+    for(User u : getConfig().getUsers()) {
       if(loginPrefix!=null && u.getLogin().indexOf(loginPrefix)<0) {
         continue;
       }
@@ -121,8 +121,11 @@ public class UserListController extends InformerController {
 //          addError(e);
 //        }
 //      }
+    //todo
     return null;
   }
+
+
 
   public void setFirstNamePrefix(String firstNamePrefix) {
     if(firstNamePrefix==null || firstNamePrefix.trim().length()==0) firstNamePrefix=null;
@@ -181,6 +184,7 @@ public class UserListController extends InformerController {
   }
 
   public String editSelected() {
+    //todo
     return null;  
   }
 }

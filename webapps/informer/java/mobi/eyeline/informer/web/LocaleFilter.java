@@ -29,11 +29,7 @@ public class LocaleFilter implements Filter {
     Principal p = request.getUserPrincipal();
     User u = null;
     if(p != null) {
-      try {
-        u = WebContext.getInstance().getConfiguration().getUserSettings().getUser(p.getName());
-      } catch (AdminException e) {
-        logger.error(e,e);
-      }
+      u = WebContext.getInstance().getConfiguration().getUser(p.getName());
     }
 
     l = u != null && u.getLocale() != null ? u.getLocale() :

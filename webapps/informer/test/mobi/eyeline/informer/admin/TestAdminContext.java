@@ -27,7 +27,7 @@ import java.util.List;
 public class TestAdminContext extends AdminContext {
 
   private void prepareServices(WebConfig config, File confDir) throws IOException, AdminException {
-    TestUtils.exportResource(TestUsersManager.class.getResourceAsStream("users.xml"), new File(config.getUsersFile()), false);
+    TestUtils.exportResource(TestUsersManager.class.getResourceAsStream("users.xml"), new File(confDir,"users.xml"), false);
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
@@ -42,8 +42,8 @@ public class TestAdminContext extends AdminContext {
     servicesDir.mkdirs();
     try {
       prepareServices(webConfig, confDir);
-      File usersFile = new File(webConfig.getUsersFile());
-      usersManager = new TestUsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
+
+      usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
 
 
       if (webConfig.getInstallationType() == InstallationType.SINGLE)  {

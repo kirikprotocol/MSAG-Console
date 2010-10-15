@@ -22,7 +22,6 @@ import mobi.eyeline.informer.admin.smsc.SmscException;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UsersManager;
-import mobi.eyeline.informer.admin.users.UsersSettings;
 import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
@@ -100,11 +99,11 @@ public class AdminContext {
           fileSystem = FileSystem.getFSForHAInst();
       }
 
-      File usersFile = new File(webConfig.getUsersFile());
+
       journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
       informerManager = new InformerManagerImpl(new File(confDir,"config.xml"),
           new File(confDir, "backup"), fileSystem, serviceManager);
-      usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
+      usersManager = new UsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
       InformerSettings is = informerManager.getConfigSettings();
       infosme = new InfosmeImpl(is.getHost(), is.getAdminPort());
 
@@ -156,14 +155,17 @@ public class AdminContext {
     return instType;
   }
 
-  public UsersSettings getUsersSettings() throws AdminException {
-    return usersManager.getUsersSettings();
+  public User getUser(String login)  {
+    return usersManager.getUser(login);
   }
 
-  public void updateUserSettings(UsersSettings usersSettings) throws AdminException {
+  public List<User> getUsers()  {
+    return usersManager.getUsers();
+  }
+
+  public void updateUser(User u) throws AdminException {
     try{
       integrityLock.lock();
-      for(User u : usersSettings.getUsers()) {
         if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
           throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
         }
@@ -172,8 +174,37 @@ public class AdminContext {
             throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
           }
         }
-      }
-      usersManager.updateSettings(usersSettings);
+
+      usersManager.updateUser(u);
+    }
+    finally {
+      integrityLock.unlock();
+    }
+  }
+
+  public void addUser(User u) throws AdminException {
+    try{
+      integrityLock.lock();
+        if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
+          throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
+        }
+        for(String rId : u.getRegions()) {
+          if(null == regionsManager.getRegion(rId)) {
+            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
+          }
+        }
+
+      usersManager.addUser(u);
+    }
+    finally {
+      integrityLock.unlock();
+    }
+  }
+
+  public void removeUser(String login) throws AdminException {
+    try{
+      integrityLock.lock();
+      usersManager.removeUser(login);
     }
     finally {
       integrityLock.unlock();
@@ -280,7 +311,7 @@ public class AdminContext {
   public void removeRegion(String regionId) throws AdminException{
     try{
       integrityLock.lock();
-      for(User u : usersManager.getUsersSettings().getUsers()) {
+      for(User u : usersManager.getUsers()) {
         for(String s : u.getRegions()) {
           if(s.equals(regionId)) {
             throw new IntegrityException("fail.delete.region.to.user",regionId,u.getLogin());
@@ -332,7 +363,7 @@ public class AdminContext {
   public void removeRetryPolicy(String policyId) throws AdminException{
     try {
       integrityLock.lock();
-      for(User u : usersManager.getUsersSettings().getUsers()) {
+      for(User u : usersManager.getUsers()) {
         if(policyId.equals(u.getPolicyId())) {
           throw new IntegrityException("fail.delete.policy.to.user",policyId,u.getLogin());
         }

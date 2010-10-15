@@ -1,7 +1,9 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.infosme.Infosme;
 
 import java.io.File;
 
@@ -10,8 +12,8 @@ import java.io.File;
  */
 public class TestUsersManager extends UsersManager {
 
-  public TestUsersManager(File configFile, File backupDir, FileSystem fs) throws AdminException {
-    super(configFile, backupDir, fs);
+  public TestUsersManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException {
+    super(infosme,  config, backup, fileSystem);
   }
   
 }
