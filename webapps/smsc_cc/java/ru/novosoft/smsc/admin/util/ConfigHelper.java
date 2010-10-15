@@ -2,8 +2,8 @@ package ru.novosoft.smsc.admin.util;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,9 @@ public class ConfigHelper {
    * @param backupDir директория, в которую сохраняется бекап старого конфига или null, если бекап создавать не надо.
    * @param fileSystem экземпляр FileSystem
    * @throws AdminException если сохранить конфиг не удалось.
+   * @throws XmlConfigException ошибка записи в конфиг
    */
+  @SuppressWarnings({"EmptyCatchBlock"})
   public static void saveXmlConfig(XmlConfig config, File toFile, File backupDir, FileSystem fileSystem) throws AdminException, XmlConfigException {
 
     if (backupDir != null) {
@@ -54,11 +56,40 @@ public class ConfigHelper {
     fileSystem.rename(tmp, toFile);
   }
 
-  public static void createBackup(File file, File backupDir, FileSystem fileSystem) throws AdminException {
-    if (!fileSystem.exists(backupDir))
-        fileSystem.mkdirs(backupDir);
-      File backupFile = new File(backupDir, file.getName() + "." + sdf.format(new Date()));
-      if (fileSystem.exists(file))
-        fileSystem.copy(file, backupFile);
+  /**
+   * Создаёт бэкап файла
+   * @param file имя файла
+   * @param backupDir директория для бэкапа
+   * @param fileSystem файловая система
+   * @return файл бэкапа
+   * @throws AdminException ошибка при создании файла
+   */
+  public static File createBackup(File file, File backupDir, FileSystem fileSystem) throws AdminException {
+    if (!fileSystem.exists(backupDir)) {
+      fileSystem.mkdirs(backupDir);
+    }
+    File backupFile = new File(backupDir, file.getName() + "." + sdf.format(new Date()));
+    if (fileSystem.exists(file)) {
+      fileSystem.copy(file, backupFile);
+    }
+    return backupFile;
   }
+
+  /**
+   * Восстанавливает файл из бэкапа
+   * @param file имя файла
+   * @param configFile файл конфига
+   * @param fileSystem файловая система
+   * @throws AdminException ошибка при создании файла
+   * @return true - восстановление прошло успешно, false - иначе
+   */
+  public static boolean rollbackConfig(File file, File configFile, FileSystem fileSystem) throws AdminException {
+    if (fileSystem.exists(file)) {
+      fileSystem.copy(file, configFile);
+      return true;
+    }
+    return false;
+  }
+
+
 }
