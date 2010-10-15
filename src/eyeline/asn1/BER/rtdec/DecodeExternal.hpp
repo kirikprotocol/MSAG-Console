@@ -11,6 +11,7 @@
 #include "eyeline/asn1/BER/rtdec/DecodeObjDescr.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeSeq.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeEmbdEnc.hpp"
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 
 namespace eyeline {
@@ -26,33 +27,17 @@ namespace ber {
 //           data-value-descriptor  ObjectDescriptor OPTIONAL,
 //           encoding               EmbeddedEncoding
 //          }
-  
 class DecoderOfExternal : public DecoderOfSequence_T<4> {
 private:
   using DecoderOfSequence_T<4>::setField;
-
-  union {
-    void *    _aligner;
-    uint8_t   _buf[sizeof(DecoderOfEOID)];
-  }   _memDRef;
-
-  union {
-    void *    _aligner;
-    uint8_t   _buf[sizeof(DecoderOfINTEGER)];
-  }   _memIRef;
-
-  union {
-    void *    _aligner;
-    uint8_t   _buf[sizeof(DecoderOfObjDescriptor)];
-  }   _memDescr;
 
 protected:
   asn1::ASExternal *      _dVal;
   DecoderOfEmbdEncoding   _dvEnc;
   //Optional fields
-  DecoderOfEOID *           _decDRef;
-  DecoderOfINTEGER *        _decIRef;
-  DecoderOfObjDescriptor *  _decDescr;
+  DecoderProducer_T<DecoderOfEOID>          _decDRef;
+  DecoderProducer_T<DecoderOfINTEGER>       _decIRef;
+  DecoderProducer_T<DecoderOfObjDescriptor> _decDescr;
 
   //constructs decoder of SEQUENCE representing EXTERNAL
   void construct(void);
@@ -69,21 +54,20 @@ public:
   // constructor for untagged EXTERNAL
   explicit DecoderOfExternal(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfSequence_T<4>(asn1::_tagsEXTERNAL, use_rule)
-    , _dVal(0), _dvEnc(use_rule), _decDRef(0), _decIRef(0), _decDescr(0)
+    , _dVal(0), _dvEnc(use_rule)
   {
     construct();
-    _memDescr._aligner = _memDRef._aligner = _memIRef._aligner =  0;
   }
   // constructor for tagged EXTERNAL
   DecoderOfExternal(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfSequence_T<4>(ASTagging(use_tag, tag_env, asn1::_tagsEXTERNAL), use_rule)
-    , _dVal(0), _dvEnc(use_rule), _decDRef(0), _decIRef(0), _decDescr(0)
+    , _dVal(0), _dvEnc(use_rule)
   {
     construct();
-    _memDescr._aligner = _memDRef._aligner = _memIRef._aligner =  0;
   }
-  ~DecoderOfExternal();
+  ~DecoderOfExternal()
+  { }
 
   void setValue(asn1::ASExternal & use_val) { _dVal = &use_val; }
 };

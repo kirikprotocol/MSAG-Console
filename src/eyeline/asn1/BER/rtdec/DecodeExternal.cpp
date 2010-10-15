@@ -10,22 +10,20 @@ namespace ber {
 /* ************************************************************************* *
  * Class DecoderOfExternal implementation:
  * ************************************************************************* */
-DecoderOfExternal::~DecoderOfExternal()
-{
-  if (_decIRef)
-    _decIRef->~DecoderOfINTEGER();
-  if (_decDRef)
-    _decDRef->~DecoderOfEOID();
-  if (_decDescr)
-    _decDescr->~DecoderOfObjDescriptor();
-}
-
+//EXTERNAL type is represented by SEQUENCE with following definition
+//
+//[UNIVERSAL 8] IMPLICIT SEQUENCE {
+//           direct-reference       OBJECT IDENTIFIER OPTIONAL,
+//           indirect-reference     INTEGER OPTIONAL,
+//           data-value-descriptor  ObjectDescriptor OPTIONAL,
+//           encoding               EmbeddedEncoding
+//          }
 void DecoderOfExternal::construct(void)
 {
   DecoderOfSequence_T<4>::setField(0, asn1::_tagObjectID, EDAlternative::altOPTIONAL);
   DecoderOfSequence_T<4>::setField(1, asn1::_tagINTEGER, EDAlternative::altOPTIONAL);
   DecoderOfSequence_T<4>::setField(2, asn1::_tagObjDescriptor, EDAlternative::altOPTIONAL);
-  DecoderOfSequence_T<4>::setField(3, *_dvEnc.getTaggingOptions(), EDAlternative::altMANDATORY);
+  DecoderOfSequence_T<4>::setField(3, DecoderOfEmbdEncoding::_tagOptions, EDAlternative::altMANDATORY);
 }
 
 // ----------------------------------------
@@ -41,19 +39,16 @@ TypeDecoderAC *
     throw smsc::util::Exception("ber::DecoderOfExternal::prepareAlternative() : undefined UId");
 
   if (!unique_idx) {
-    _decDRef = new (_memDRef._buf) DecoderOfEOID(getTSRule());
-    _decDRef->setValue(_dVal->_asOid);
-    return _decDRef;
+    _decDRef.init(getTSRule()).setValue(_dVal->_asOid);
+    return _decDRef.get();
   }
   if (unique_idx == 1) {
-    _decIRef = new (_memIRef._buf) DecoderOfINTEGER(getTSRule());
-    _decIRef->setValue(_dVal->_prsCtxId);
-    return _decIRef;
+    _decIRef.init(getTSRule()).setValue(_dVal->_prsCtxId);
+    return _decIRef.get();
   }
   if (unique_idx == 2) {
-    _decDescr = new (_memDescr._buf) DecoderOfObjDescriptor(getTSRule());
-    _decDescr->setValue(_dVal->_descr);
-    return _decDescr;
+    _decDescr.init(getTSRule()).setValue(_dVal->_descr);
+    return _decDescr.get();
   }
   //if (unique_idx == 3)
   _dvEnc.setValue(_dVal->_enc);
