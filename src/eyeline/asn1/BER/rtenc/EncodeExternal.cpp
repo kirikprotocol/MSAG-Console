@@ -10,16 +10,6 @@ namespace ber {
 /* ************************************************************************* *
  * Class EncoderOfExternal implementation:
  * ************************************************************************* */
-EncoderOfExternal::~EncoderOfExternal()
-{
-  if (_encIRef)
-    _encIRef->~EncoderOfINTEGER();
-  if (_encDRef)
-    _encDRef->~EncoderOfEOID();
-  if (_encDescr)
-    _encDescr->~EncoderOfObjDescriptor();
-}
-
 //Constructs SEQUENCE representing EXTERNAL type, according to X.690 cl.8.18.1
 //Tagging environment is EXPLICIT. 
 //
@@ -32,52 +22,55 @@ EncoderOfExternal::~EncoderOfExternal()
 void EncoderOfExternal::setValue(const ASExternal & val_ext)
     /*throw(std::exception)*/
 {
+  clearFields();
+
   if (val_ext.hasASyntaxOID()) {
-    _encDRef = new (_memDRef.buf)EncoderOfEOID(val_ext._asOid);
-    addField(*_encDRef);
+    _encDRef.init(getTSRule()).setValue(val_ext._asOid);
+    setField(0, *_encDRef.get());
   }
   if (val_ext.hasPrsContextId()) {
-    _encIRef = new (_memIRef.buf)EncoderOfINTEGER(val_ext._prsCtxId);
-    addField(*_encIRef);
+    _encIRef.init(getTSRule()).setValue(val_ext._prsCtxId);
+    setField(1, *_encIRef.get());
   }
   if (!val_ext._descr.empty()) {
-    _encDescr = new (_memDescr.buf)
-                  EncoderOfObjDescriptor((TSLength)val_ext._descr.length(), val_ext._descr.c_str());
-    addField(*_encDescr);
+    _encDescr.init(getTSRule()).setValue((TSLength)val_ext._descr.length(), val_ext._descr.c_str());
+    setField(2, *_encDescr.get());
   }
   _encEnc.setValue(val_ext._enc);
-  addField(_encEnc);
+  setField(3, _encEnc);
 }
 
 //
 void EncoderOfExternal::setValue(int32_t prs_ctx, TypeEncoderAC & type_enc,
                                  const char * descr/* = NULL*/)
 {
-  _encIRef = new (_memIRef.buf)EncoderOfINTEGER(prs_ctx);
-  addField(*_encIRef);
+  clearFields();
+
+  _encIRef.init(getTSRule()).setValue(prs_ctx);
+  setField(1, *_encIRef.get());
 
   if (descr && descr[0]) {
-    _encDescr = new (_memDescr.buf)
-                    EncoderOfObjDescriptor((TSLength)strlen(descr), descr);
-    addField(*_encDescr);
+    _encDescr.init(getTSRule()).setValue((TSLength)strlen(descr), descr);
+    setField(2, *_encDescr.get());
   }
   _encEnc.setValue(type_enc);
-  addField(_encEnc);
+  setField(3, _encEnc);
 }
 
 void EncoderOfExternal::setValue(const EncodedOID & as_oid, TypeEncoderAC & type_enc,
                                  const char * descr/* = NULL*/)
 {
-  _encDRef = new (_memDRef.buf)EncoderOfEOID(as_oid);
-  addField(*_encDRef);
+  clearFields();
+
+  _encDRef.init(getTSRule()).setValue(as_oid);
+  setField(0, *_encDRef.get());
 
   if (descr && descr[0]) {
-    _encDescr = new (_memDescr.buf)
-                    EncoderOfObjDescriptor((TSLength)strlen(descr), descr);
-    addField(*_encDescr);
+    _encDescr.init(getTSRule()).setValue((TSLength)strlen(descr), descr);
+    setField(2, *_encDescr.get());
   }
   _encEnc.setValue(type_enc);
-  addField(_encEnc);
+  setField(3, _encEnc);
 }
 
 } //ber

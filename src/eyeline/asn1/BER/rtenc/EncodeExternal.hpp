@@ -11,6 +11,7 @@
 #include "eyeline/asn1/BER/rtenc/EncodeObjDescr.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeStruct.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeEmbdEnc.hpp"
+#include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -32,55 +33,35 @@ private:
   using EncoderOfPlainStructure_T<4>::addField;
   using EncoderOfPlainStructure_T<4>::setField;
 
-  union {
-    void *    aligner;
-    uint8_t   buf[sizeof(EncoderOfEOID)];
-  }   _memDRef;
-
-  union {
-    void *    aligner;
-    uint8_t   buf[sizeof(EncoderOfINTEGER)];
-  }   _memIRef;
-
-  union {
-    void *    aligner;
-    uint8_t   buf[sizeof(EncoderOfObjDescriptor)];
-  }   _memDescr;
-
 protected:
   EncoderOfEmbdEncoding     _encEnc;
   //optional fields
-  EncoderOfEOID *           _encDRef;
-  EncoderOfINTEGER *        _encIRef;
-  EncoderOfObjDescriptor *  _encDescr;
+  EncoderProducer_T<EncoderOfEOID>          _encDRef;
+  EncoderProducer_T<EncoderOfINTEGER>       _encIRef;
+  EncoderProducer_T<EncoderOfObjDescriptor> _encDescr;
 
   // constructor for encoder of tagged type referencing EXTERNAL
   EncoderOfExternal(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfPlainStructure_T<4>(eff_tags, use_rule)
-    , _encDRef(0), _encIRef(0), _encDescr(0)
-  {
-    _memDescr.aligner = _memDRef.aligner = _memIRef.aligner =  0;
-  }
+    , _encEnc(use_rule)
+  { }
 
 public:
   // constructor for encoder of EXTERNAL
   EncoderOfExternal(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfPlainStructure_T<4>(asn1::_tagsEXTERNAL, use_rule)
-    , _encDRef(0), _encIRef(0), _encDescr(0)
-  {
-    _memDescr.aligner = _memDRef.aligner = _memIRef.aligner =  0;
-  }
+    , _encEnc(use_rule)
+  { }
   // constructor for encoder of tagged EXTERNAL
   EncoderOfExternal(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfPlainStructure_T<4>(use_tag, tag_env, asn1::_tagsEXTERNAL, use_rule)
-    , _encDRef(0), _encIRef(0), _encDescr(0)
-  {
-    _memDescr.aligner = _memDRef.aligner = _memIRef.aligner =  0;
-  }
-
-  ~EncoderOfExternal();
+    , _encEnc(use_rule)
+  { }
+  //
+  ~EncoderOfExternal()
+  { }
 
   void setValue(const asn1::ASExternal & val_ext) /*throw(std::exception)*/;
   //
