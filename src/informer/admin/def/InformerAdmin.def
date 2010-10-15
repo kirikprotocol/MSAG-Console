@@ -10,6 +10,7 @@ enum byte ConfigId
   ciSmsc 1
   ciRegion 2
   ciRetry 3
+  ciUser 4
 end
 
 message ConfigOp 1
