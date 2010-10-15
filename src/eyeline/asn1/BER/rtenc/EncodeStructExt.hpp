@@ -41,7 +41,7 @@ protected:
   {
     uint16_t numOfExt = (uint16_t)use_val._tsList.size();
     if (numOfExt) {
-      if ((_NumFieldsTArg + numOfExt) < _NumFieldsTArg)
+      if ((_NumFieldsTArg + numOfExt) >= _fieldsStore._MAX_SIZE())
         throw smsc::util::Exception("asn1::ber::EncoderOfExtensibleStructure_T<%u>::setExtensions() - too much unknown extensions", _NumFieldsTArg);
   
       _fieldsStore.reserve(_NumFieldsTArg + numOfExt);
