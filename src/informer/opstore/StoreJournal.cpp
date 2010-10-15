@@ -8,6 +8,7 @@
 namespace {
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
+const unsigned defaultVersion = 1;
 }
 
 
@@ -17,16 +18,16 @@ namespace informer {
 StoreJournal::StoreJournal( const CommonSettings& cs ) :
 log_(smsc::logger::Logger::getInstance("storejnl")),
 cs_(cs),
-version_(1),
+version_(defaultVersion),
 serial_(1)
 {
 }
 
 
-void StoreJournal::journalMessage( dlvid_type     dlvId,
-                                   regionid_type  regionId,
-                                   const Message& msg,
-                                   regionid_type& serial )
+size_t StoreJournal::journalMessage( dlvid_type     dlvId,
+                                     regionid_type  regionId,
+                                     const Message& msg,
+                                     regionid_type& serial )
 {
     smsc::core::buffers::TmpBuf<unsigned char,200> buf;
     const bool equalSerials = (serial == serial_);
@@ -99,6 +100,7 @@ void StoreJournal::journalMessage( dlvid_type     dlvId,
     }
     fg_.write(buf.get(),buflen);
     serial = serial_;
+    return buflen;
 }
 
 
@@ -111,7 +113,7 @@ void StoreJournal::init( Reader& jr )
     fg_.create(jpath.c_str(),true,true);
     if ( 0 == fg_.seek(0,SEEK_END) ) {
         // new file
-        version_ = 1;
+        version_ = defaultVersion;
         do {
             ++serial_;
         } while (serial_==0 || serial_==MessageLocker::lockedSerial );
@@ -127,7 +129,31 @@ void StoreJournal::init( Reader& jr )
 
 void StoreJournal::rollOver()
 {
-    smsc_log_debug(log_,"FIXME: rolling over store journal");
+    std::string jpath = cs_.getStorePath() + "operative/.journal";
+    smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
+    if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
+        char ebuf[100];
+        throw InfosmeException("cannot rename '%s': %d, %s",
+                               jpath.c_str(), errno, STRERROR(errno,ebuf,sizeof(ebuf)));
+    }
+    FileGuard fg;
+    fg.create(jpath.c_str());
+    unsigned serial = serial_;
+    do {
+        ++serial;
+    } while (serial==0 || serial==MessageLocker::lockedSerial );
+    char buf[VERSIZE+4];
+    ToBuf tb(buf,VERSIZE+4);
+    tb.set32(defaultVersion);
+    tb.set32(serial);
+    fg.write(buf,VERSIZE+4);
+    {
+        smsc::core::synchronization::MutexGuard mg(lock_);
+        fg_.swap(fg);
+        serial_ = serial;
+        version_ = defaultVersion;
+    }
+    smsc_log_debug(log_,"file '%s' rolled",jpath.c_str());
 }
 
 

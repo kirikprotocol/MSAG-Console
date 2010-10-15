@@ -35,10 +35,11 @@ public:
     /// journal messages.
     /// @a serial: input -- the serial number of the journal file at previous write,
     ///            at exit -- the serial number of the journal file.
-    void journalMessage( dlvid_type     dlvId,
-                         regionid_type  regionId,
-                         const Message& msg,
-                         regionid_type& serial );
+    /// @return the number of bytes written
+    size_t journalMessage( dlvid_type     dlvId,
+                           regionid_type  regionId,
+                           const Message& msg,
+                           regionid_type& serial );
 
     void init( Reader& jr );
 

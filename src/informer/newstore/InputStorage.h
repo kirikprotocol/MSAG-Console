@@ -17,6 +17,9 @@ class InfosmeCore;
 /// persistent input storage.
 class InputStorage : public InputMessageSource
 {
+    typedef std::list< InputRegionRecord >  RecordList;
+    typedef smsc::core::buffers::IntHash< RecordList::iterator > RecordHash;
+
     class InputTransferTask : public TransferTask {
     public:
         InputTransferTask( TransferRequester& req,
@@ -54,11 +57,11 @@ public:
         return jnl_.getCS().getStorePath();
     }
 
-    virtual void setRecordAtInit(regionid_type regid, const InputRegionRecord& ro, msgid_type maxMsgId);
+    virtual void setRecordAtInit(const InputRegionRecord& ro, msgid_type maxMsgId);
 
     virtual void postInit( std::vector<regionid_type>& regs );
 
-    virtual void rollOver();
+    virtual size_t rollOver();
 
 private:
     void dispatchMessages( MsgIter begin, MsgIter end, std::vector<regionid_type>& regs);
@@ -66,9 +69,9 @@ private:
     /// invoked from transfertask
     void doTransfer( TransferRequester& req, unsigned count );
 
-    void getRecord(regionid_type regid, InputRegionRecord& ro);
-    void setRecord(regionid_type regid, InputRegionRecord& ro, msgid_type maxMsgId = 0);
-    void doSetRecord( InputRegionRecord& to, const InputRegionRecord& from );
+    void getRecord(InputRegionRecord& ro);
+    void setRecord(InputRegionRecord& ro, msgid_type maxMsgId = 0);
+    void doSetRecord( RecordList::iterator to, const InputRegionRecord& from );
     std::string makeFilePath(regionid_type regId,uint32_t fn) const;
 
 private:
@@ -76,7 +79,9 @@ private:
     InfosmeCore&          core_;
     smsc::core::synchronization::Mutex wlock_;
     smsc::core::synchronization::Mutex lock_;  // to add new regions
-    smsc::core::buffers::IntHash< InputRegionRecord >  regions_;
+    RecordList                                 recordList_;
+    RecordHash                                 recordHash_;
+    RecordList::iterator                       rollingIter_;
     InputJournal&                              jnl_;
     uint32_t                                   lastfn_;
     dlvid_type                                 dlvId_;

@@ -86,7 +86,8 @@ public:
                                  MsgIter      iter2 );
 
     /// rolling over the storage
-    void rollOver();
+    /// @return number of bytes written
+    size_t rollOver();
 
     /// invoked at init stage ONLY!
     void setRecordAtInit( Message& msg, regionid_type serial );

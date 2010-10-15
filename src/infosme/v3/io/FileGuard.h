@@ -26,6 +26,11 @@ public:
         return fd_ != -1;
     }
 
+    void swap( FileGuard& fg ) {
+        std::swap(fd_,fg.fd_);
+        std::swap(pos_,fg.pos_);
+    }
+
     void ropen( const char* fn );
 
     void create( const char* fn, bool mkdirs = false, bool truncate = false );

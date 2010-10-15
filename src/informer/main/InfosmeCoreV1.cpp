@@ -44,17 +44,16 @@ public:
     InputJournalReader( InfosmeCoreV1& core ) : core_(core) {}
     virtual bool isStopping() const { return core_.isStopping(); }
     virtual void setRecordAtInit( dlvid_type               dlvId,
-                                  regionid_type            regionId,
                                   const InputRegionRecord& rec,
                                   uint64_t                 maxMsgId )
     {
-        smsc_log_debug(core_.log_,"setting input record D=%u/R=%u",dlvId,regionId);
+        smsc_log_debug(core_.log_,"setting input record D=%u/R=%u",dlvId,rec.regionId);
         DeliveryList::iterator* iter = core_.deliveryHash_.GetPtr(dlvId);
         if (!iter) {
             smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);
             return;
         }
-        (**iter)->setRecordAtInit( regionId, rec, maxMsgId );
+        (**iter)->setRecordAtInit(rec, maxMsgId);
     }
 
 
@@ -134,14 +133,16 @@ private:
 class InfosmeCoreV1::InputJournalRoller : public smsc::core::threads::Thread
 {
 public:
-    InputJournalRoller( InfosmeCoreV1& core ) : core_(core) {}
+    InputJournalRoller( InfosmeCoreV1& core ) :
+    core_(core), log_(smsc::logger::Logger::getInstance("inroller")) {}
     ~InputJournalRoller() { WaitFor(); }
     virtual int Execute()
     {
-        smsc_log_debug(core_.log_,"input journal roller started");
+        smsc_log_debug(log_,"input journal roller started");
         DeliveryList::iterator& iter = core_.inputRollingIter_;
         while (! core_.isStopping()) { // never ending loop
             bool firstPass = true;
+            size_t written = 0;
             do {
                 DeliveryPtr ptr;
                 {
@@ -155,31 +156,37 @@ public:
                     ptr = *iter;
                     ++iter;
                 }
-                ptr->rollOverInput();
+                smsc_log_debug(log_,"going to roll D=%u",ptr->getDlvId());
+                written += ptr->rollOverInput();
             } while (true);
+            smsc_log_debug(log_,"input rolling pass done, written=%llu",ulonglong(written));
             if (!core_.isStopping()) {
                 core_.inputJournal_->rollOver(); // change files
             }
+            core_.wait(10000);
         }
-        smsc_log_debug(core_.log_,"input journal roller stopped");
+        smsc_log_debug(log_,"input journal roller stopped");
         return 0;
     }
 private:
-    InfosmeCoreV1& core_;
+    InfosmeCoreV1&        core_;
+    smsc::logger::Logger* log_;
 };
 
 
 class InfosmeCoreV1::StoreJournalRoller : public smsc::core::threads::Thread
 {
 public:
-    StoreJournalRoller( InfosmeCoreV1& core ) : core_(core) {}
+    StoreJournalRoller( InfosmeCoreV1& core ) :
+    core_(core), log_(smsc::logger::Logger::getInstance("oproller")) {}
     ~StoreJournalRoller() { WaitFor(); }
     virtual int Execute()
     {
-        smsc_log_debug(core_.log_,"store journal roller started");
+        smsc_log_debug(log_,"store journal roller started");
         DeliveryList::iterator& iter = core_.storeRollingIter_;
         while (! core_.isStopping()) { // never ending loop
             bool firstPass = true;
+            size_t written = 0;
             do {
                 DeliveryPtr ptr;
                 {
@@ -193,17 +200,21 @@ public:
                     ptr = *iter;
                     ++iter;
                 }
-                ptr->rollOverStore();
+                smsc_log_debug(log_,"going to roll D=%u",ptr->getDlvId());
+                written += ptr->rollOverStore();
             } while (true);
+            smsc_log_debug(log_,"store rolling pass done, written=%llu",ulonglong(written));
             if (!core_.isStopping()) {
                 core_.storeJournal_->rollOver(); // change files
             }
+            core_.wait(10000);
         }
-        smsc_log_debug(core_.log_,"store journal roller stopped");
+        smsc_log_debug(log_,"store journal roller stopped");
         return 0;
     }
 private:
     InfosmeCoreV1& core_;
+    smsc::logger::Logger* log_;
 };
 
 // ============================================================================
@@ -294,6 +305,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     // create smscs
     {
         const char* fname = "smsc.xml";
+        smsc_log_info(log_,"reading smscs config '%s'",fname);
         std::auto_ptr< Config > centerConfig( Config::createFromFile(fname));
         if (!centerConfig.get()) {
             throw InfosmeException("cannot create config from '%s'",fname);
@@ -305,7 +317,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
             throw ConfigException("default SMSC '%s' does not match any section",defConn.c_str());
         }
         for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
-            smsc_log_debug(log_,"processing S='%s'",i->c_str());
+            smsc_log_info(log_,"processing smsc S='%s'",i->c_str());
             std::auto_ptr< ConfigView > sect(ccv->getSubConfig(i->c_str()));
             SmscConfig smscConfig;
             readSmscConfig(smscConfig, *sect.get());
@@ -367,14 +379,15 @@ void InfosmeCoreV1::stop()
 {
     {
         if (stopping_) return;
-        MutexGuard mg(startMon_);
-        if (stopping_) return;
-        smsc_log_info(log_,"stop() received");
-        stopping_ = true;
-        startMon_.notifyAll();
+        {
+            MutexGuard mg(startMon_);
+            if (stopping_) return;
+            smsc_log_info(log_,"stop() received");
+            stopping_ = true;
+            startMon_.notifyAll();
+        }
 
         // stop all smscs
-
         char* smscId;
         SmscSender* sender;
         for (Hash< SmscSender* >::Iterator i(&smscs_); i.Next(smscId,sender);) {
@@ -383,6 +396,7 @@ void InfosmeCoreV1::stop()
 
         if (inputRoller_) { inputRoller_->WaitFor(); }
         if (storeRoller_) { storeRoller_->WaitFor(); }
+        MutexGuard mg(startMon_);
         while (started_) {
             startMon_.wait(100);
         }
@@ -551,6 +565,7 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
         deliveryHash_.Insert(dlvId,
                              deliveryList_.insert(deliveryList_.end(),
                                                   DeliveryPtr(new Delivery(dlvInfo,*storeJournal_,ims))));
+        // FIXME: should we move rolling pointer?
     }
     startMon_.notify();
 }

@@ -23,11 +23,10 @@ void Delivery::updateDlvInfo( const DeliveryInfo& info )
 }
 
 
-void Delivery::setRecordAtInit( regionid_type            regionId,
-                                const InputRegionRecord& rec,
+void Delivery::setRecordAtInit( const InputRegionRecord& rec,
                                 uint64_t                 maxMsgId )
 {
-    cache_.getInputSource().setRecordAtInit(regionId,rec,maxMsgId);
+    cache_.getInputSource().setRecordAtInit(rec,maxMsgId);
 }
 
 

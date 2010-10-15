@@ -34,6 +34,9 @@ public:
     virtual void stop() = 0;
     virtual bool isStopping() const = 0;
 
+    /// wait a number of milliseconds, will be waked up if core is stopping
+    virtual void wait( int msec ) = 0;
+
     /// get region finder
     virtual RegionFinder& getRegionFinder() = 0;
 

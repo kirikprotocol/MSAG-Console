@@ -23,7 +23,7 @@ public:
     void getRegionList( std::vector< regionid_type >& regIds );
 
     /// rolling over the whole storage.
-    void rollOver();
+    size_t rollOver();
 
     inline const DeliveryInfo& getDlvInfo() const { return dlvInfo_; }
 

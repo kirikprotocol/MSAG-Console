@@ -45,8 +45,7 @@ public:
     }
 
     // NOTE: this method is invoked at init ONLY!
-    void setRecordAtInit( regionid_type            regionId,
-                          const InputRegionRecord& rec,
+    void setRecordAtInit( const InputRegionRecord& rec,
                           uint64_t                 maxMsgId );
 
     // NOTE: this method is invoked at init ONLY!
@@ -62,10 +61,10 @@ public:
     }
 
     /// dump all regions to storage
-    void rollOverStore() { cache_.rollOver(); }
+    size_t rollOverStore() { return cache_.rollOver(); }
 
     /// dump all input records to storage
-    void rollOverInput() { cache_.getInputSource().rollOver(); }
+    size_t rollOverInput() { return cache_.getInputSource().rollOver(); }
 
 private:
     void ref() {

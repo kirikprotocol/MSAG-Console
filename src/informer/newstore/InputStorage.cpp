@@ -24,6 +24,7 @@ InputStorage::InputStorage( InfosmeCore& core,
                             InputJournal& jnl ) :
 log_(smsc::logger::Logger::getInstance("instore")),
 core_(core),
+rollingIter_(recordList_.end()),
 jnl_(jnl),
 lastfn_(0),
 dlvId_(dlvId),
@@ -60,7 +61,8 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
         smsc_log_debug(log_,"start transfer task R=%u/D=%u for %u msgs, mayDetach=%u",
                        unsigned(regId), unsigned(dlvId_), count, mayDetachRegion );
         InputRegionRecord ro;
-        getRecord(regId,ro);
+        ro.regionId = regId;
+        getRecord(ro);
         if (ro.rfn==0) { ro.rfn=1; ro.roff=0; }
         if (ro.rfn<ro.wfn || (ro.rfn==ro.wfn && ro.roff<ro.woff)) {
             // ok
@@ -84,23 +86,25 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
 }
 
 
-void InputStorage::setRecordAtInit( regionid_type regId,
-                                    const InputRegionRecord& ro,
+void InputStorage::setRecordAtInit( const InputRegionRecord& ro,
                                     uint64_t maxMsgId )
 {
-    InputRegionRecord* ptr = regions_.GetPtr(regId);
+    RecordList::iterator* ptr = recordHash_.GetPtr(ro.regionId);
     if (ptr) {
         doSetRecord(*ptr,ro);
     } else {
-        ptr = &regions_.Insert(regId,ro);
+        ptr = &recordHash_.Insert(ro.regionId,
+                                  recordList_.insert(recordList_.end(),ro));
+        // NOTE: we don't care about rollingIter here
     }
     if (maxMsgId>lastMsgId_) lastMsgId_ = maxMsgId;
-    if (ptr->wfn>lastfn_) lastfn_ = ptr->wfn;
+    InputRegionRecord& rec = **ptr;
+    if (rec.wfn > lastfn_) lastfn_ = rec.wfn;
     smsc_log_debug(log_,"set input record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u, msgs=%llu, lastfn=%u",
-                   unsigned(dlvId_), unsigned(regId),
-                   unsigned(ptr->rfn), unsigned(ptr->roff),
-                   unsigned(ptr->wfn), unsigned(ptr->woff),
-                   unsigned(ptr->count), ulonglong(lastMsgId_),
+                   unsigned(dlvId_), unsigned(rec.regionId),
+                   unsigned(rec.rfn), unsigned(rec.roff),
+                   unsigned(rec.wfn), unsigned(rec.woff),
+                   unsigned(rec.count), ulonglong(lastMsgId_),
                    unsigned(lastfn_) );
 }
 
@@ -108,18 +112,40 @@ void InputStorage::setRecordAtInit( regionid_type regId,
 void InputStorage::postInit( std::vector<regionid_type>& regs )
 {
     int regId;
-    InputRegionRecord* ro;
-    for ( smsc::core::buffers::IntHash< InputRegionRecord >::Iterator i(regions_);
-          i.Next(regId,ro); ) {
-        if ( ro->rfn == ro->wfn && ro->roff == ro->woff ) { continue; }
+    RecordList::iterator iter;
+    for ( RecordHash::Iterator i(recordHash_); i.Next(regId,iter); ) {
+        if ( iter->rfn == iter->wfn && iter->roff == iter->woff ) {
+            continue; 
+        }
         regs.push_back(regionid_type(regId));
     }
 }
 
 
-void InputStorage::rollOver()
+size_t InputStorage::rollOver()
 {
-    smsc_log_debug(log_,"FIXME: roll over input storage");
+    smsc_log_debug(log_,"rollover input storage for D=%u",dlvId_);
+    bool firstPass = true;
+    size_t written = 0;
+    do {
+        if ( core_.isStopping() ) break;
+        InputRegionRecord ro;
+        msgid_type maxMsgId;
+        {
+            smsc::core::synchronization::MutexGuard mg(lock_);
+            if (firstPass) {
+                rollingIter_ = recordList_.begin();
+                firstPass = false;
+            }
+            if ( rollingIter_ == recordList_.end() ) { break; }
+            ro = *rollingIter_;
+            ++rollingIter_;
+            maxMsgId = lastMsgId_;
+        }
+        written += jnl_.journalRecord(dlvId_,ro,maxMsgId);
+    } while ( false );
+    smsc_log_debug(log_,"roll over finished D=%u, written=%u",dlvId_,unsigned(written));
+    return written;
 }
 
 
@@ -159,7 +185,8 @@ void InputStorage::dispatchMessages( MsgIter begin,
         const regionid_type regId = *ir;
         smsc_log_debug(log_,"processing R=%u",unsigned(regId));
         InputRegionRecord ro;
-        getRecord(regId,ro);
+        ro.regionId = regId;
+        getRecord(ro);
         FileGuard fg;
         fg.create(makeFilePath(regId,ro.wfn).c_str());
         fg.seek(ro.woff);
@@ -204,7 +231,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
         }
         fg.close();
         // setting data back
-        setRecord(regId,ro,maxMsgId);
+        setRecord(ro,maxMsgId);
     }
 }
 
@@ -215,7 +242,8 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
     smsc_log_debug(log_,"transfer R=%u/D=%u started, count=%u", regId, dlvId_, count);
     try {
         InputRegionRecord ro;
-        getRecord(regId,ro);
+        ro.regionId = regId;
+        getRecord(ro);
         if (ro.rfn==0) { ro.rfn=1; ro.roff=0; }
         FileGuard fg;
         MessageList msglist;
@@ -322,7 +350,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                                 msglist,
                                 msglist.begin(),
                                 msglist.end() );
-            setRecord(regId,ro,0);
+            setRecord(ro,0);
         }
 
     } catch (std::exception& e) {
@@ -333,62 +361,62 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
 }
 
 
-void InputStorage::getRecord( regionid_type regId, InputRegionRecord& ro )
+void InputStorage::getRecord( InputRegionRecord& ro )
 {
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
-        InputRegionRecord* ptr = regions_.GetPtr(regId);
+        RecordList::iterator* ptr = recordHash_.GetPtr(ro.regionId);
         if (!ptr) {
             ro.clear();
-            regions_.Insert(regId,ro);
+            recordHash_.Insert(ro.regionId,recordList_.insert(recordList_.begin(),ro));
         } else {
-            ro = *ptr;
+            ro = **ptr;
         }
     }
     smsc_log_debug(log_,"got record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u",
-                   unsigned(dlvId_), unsigned(regId),
+                   unsigned(dlvId_), unsigned(ro.regionId),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
                    unsigned(ro.count) );
 }
 
 
-void InputStorage::setRecord( regionid_type regId, InputRegionRecord& ro, uint64_t maxMsgId )
+void InputStorage::setRecord( InputRegionRecord& ro, uint64_t maxMsgId )
 {
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
-        InputRegionRecord* ptr = regions_.GetPtr(regId);
+        RecordList::iterator* ptr = recordHash_.GetPtr(ro.regionId);
         assert(ptr);
         doSetRecord(*ptr,ro);
-        ro = *ptr;
+        ro = **ptr;
     }
     smsc_log_debug(log_,"set record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u",
-                   unsigned(dlvId_), unsigned(regId),
+                   unsigned(dlvId_), unsigned(ro.regionId),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
                    unsigned(ro.count) );
-    jnl_.journalRecord(dlvId_,regId,ro,maxMsgId);
+    jnl_.journalRecord(dlvId_,ro,maxMsgId);
 }
 
 
-void InputStorage::doSetRecord( InputRegionRecord& to, const InputRegionRecord& ro )
+void InputStorage::doSetRecord( RecordList::iterator to, const InputRegionRecord& ro )
 {
-    if (ro.rfn>to.rfn) {
-        to.rfn = ro.rfn;
-        to.roff = ro.roff;
-    } else if (ro.rfn==to.rfn && ro.roff>to.roff) {
-        to.roff = ro.roff;
+    if (ro.rfn>to->rfn) {
+        to->rfn = ro.rfn;
+        to->roff = ro.roff;
+    } else if (ro.rfn==to->rfn && ro.roff>to->roff) {
+        to->roff = ro.roff;
     }
 
-    if (ro.wfn>to.wfn) {
-        to.wfn = ro.wfn;
-        to.woff = ro.woff;
-    } else if (ro.wfn==to.wfn && ro.woff>to.woff) {
-        to.woff = ro.woff;
+    if (ro.wfn>to->wfn) {
+        to->wfn = ro.wfn;
+        to->woff = ro.woff;
+    } else if (ro.wfn==to->wfn && ro.woff>to->woff) {
+        to->woff = ro.woff;
     }
 
-    if (ro.count>to.count) {
-        to.count = ro.count;
+    if (ro.count>to->count) {
+        to->count = ro.count;
     }
 }
 

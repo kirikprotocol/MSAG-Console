@@ -67,8 +67,10 @@ void MessageCache::getRegionList( std::vector< regionid_type >& regIds )
 }
 
 
-void MessageCache::rollOver()
+size_t MessageCache::rollOver()
 {
+    size_t written = 0;
+    // FIXME: refactor to use list for rolling over
     std::vector<RegionalStoragePtr> ptrs;
     {
         MutexGuard mg(cacheLock_);
@@ -83,8 +85,9 @@ void MessageCache::rollOver()
     for ( std::vector< RegionalStoragePtr >::iterator i = ptrs.begin();
           i != ptrs.end();
           ++i ) {
-        (*i)->rollOver();
+        written += (*i)->rollOver();
     }
+    return written;
 }
 
 

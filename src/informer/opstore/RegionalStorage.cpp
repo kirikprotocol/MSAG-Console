@@ -331,7 +331,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
 }
 
 
-void RegionalStorage::rollOver()
+size_t RegionalStorage::rollOver()
 {
     RelockMutexGuard mg(cacheMon_);
     if ( storingIter_ != messageList_.end() ) {
@@ -340,17 +340,19 @@ void RegionalStorage::rollOver()
                                unsigned(dlvInfo_.getDlvId()));
     }
     storingIter_ = messageList_.begin();
+    size_t written = 0;
     while ( true ) {
         MsgIter iter = storingIter_;
         if ( iter == messageList_.end() ) break;
         {
             MsgLock ml(iter,this);
             mg.Unlock();
-            storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,iter->msg,ml.serial);
+            written += storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,iter->msg,ml.serial);
         }
         smsc_log_debug(log_,"FIXME: place the restriction on throughput here");
         mg.Lock();
     }
+    return written;
 }
 
 

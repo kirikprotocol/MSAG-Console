@@ -82,8 +82,7 @@ public:
     virtual const std::string& getStorePath() const = 0;
 
     /// NOTE: this method is invoked at init ONLY!
-    virtual void setRecordAtInit( regionid_type            regionId,
-                                  const InputRegionRecord& rec,
+    virtual void setRecordAtInit( const InputRegionRecord& rec,
                                   uint64_t                 maxMsgId ) = 0;
 
     /// invoked at init stage ONLY!
@@ -91,7 +90,7 @@ public:
     virtual void postInit( std::vector<regionid_type>& filledRegs ) = 0;
 
     /// rolling over whole storage
-    virtual void rollOver() = 0;
+    virtual size_t rollOver() = 0;
 };
 
 } // informer

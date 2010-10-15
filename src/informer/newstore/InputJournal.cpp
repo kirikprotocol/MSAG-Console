@@ -7,6 +7,7 @@
 namespace {
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
+const unsigned defaultVersion = 1;
 }
 
 namespace eyeline {
@@ -14,21 +15,21 @@ namespace informer {
 
 InputJournal::InputJournal( const CommonSettings& cs ) :
 cs_(cs),
-version_(1)
+log_(smsc::logger::Logger::getInstance("injnl")),
+version_(defaultVersion)
 {
 }
 
 
-void InputJournal::journalRecord( dlvid_type dlvId,
-                                  regionid_type regId,
-                                  const InputRegionRecord& rec,
-                                  uint64_t maxMsgId )
+size_t InputJournal::journalRecord( dlvid_type dlvId,
+                                    const InputRegionRecord& rec,
+                                    uint64_t maxMsgId )
 {
     char buf[100];
     ToBuf tb(buf,100);
     tb.skip(LENSIZE); // len
     tb.set32(dlvId);
-    tb.set32(regId);
+    tb.set32(rec.regionId);
     tb.set32(rec.rfn);
     tb.set32(rec.roff);
     tb.set32(rec.wfn);
@@ -42,7 +43,10 @@ void InputJournal::journalRecord( dlvid_type dlvId,
         smsc::core::synchronization::MutexGuard mg(lock_);
         jnl_.write(buf,pos);
     }
+    smsc_log_debug(log_,"written record D=%u/R=%u size=%u",
+                   dlvId,rec.regionId,unsigned(pos));
     jnl_.fsync();
+    return pos;
 }
 
 
@@ -56,26 +60,45 @@ void InputJournal::init( Reader& reader )
     jnl_.create(jpath.c_str(),true,true);
     if ( 0 == jnl_.seek(0,SEEK_END) ) {
         // new file
-        version_ = 1;
+        version_ = defaultVersion;
+        smsc_log_info(log_,"creating a new file '%s', version=%u",jpath.c_str(),version_);
         char verbuf[VERSIZE];
         ToBuf tb(verbuf,VERSIZE);
         tb.set32(version_);
         jnl_.write(verbuf,VERSIZE);
     }
     reader.postInit();
+    smsc_log_info(log_,"init done");
 }
     
 
 void InputJournal::rollOver()
 {
-    // smsc_log_debug(log_,"FIXME: roll over input journal");
+    std::string jpath = cs_.getStorePath() + "input/.journal";
+    smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
+    if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
+        char ebuf[100];
+        throw InfosmeException("cannot rename '%s': %d, %s",
+                               jpath.c_str(), errno, STRERROR(errno,ebuf,sizeof(ebuf)));
+    }
+    FileGuard fg;
+    fg.create(jpath.c_str());
+    char verbuf[VERSIZE];
+    ToBuf tb(verbuf,VERSIZE);
+    tb.set32(defaultVersion);
+    fg.write(verbuf,VERSIZE);
+    {
+        smsc::core::synchronization::MutexGuard mg(lock_);
+        jnl_.swap(fg);
+        version_ = defaultVersion;
+    }
+    smsc_log_debug(log_,"file '%s' rolled",jpath.c_str());
 }
 
 
 void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
     if (reader.isStopping()) return;
-    smsc::logger::Logger* log_ = smsc::logger::Logger::getInstance("injnl");
     FileGuard fg;
     try {
         fg.ropen(jpath.c_str());
@@ -127,16 +150,9 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
                 break;
             }
             fb.setLen(LENSIZE+reclen);
-            /*
-            const uint8_t version = fb.get8();
-            if (version!=1) {
-                throw InfosmeException("journal '%s' record at %llu has wrong version: %u",
-                                       jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)), version);
-            }
-             */
             const dlvid_type dlvId = fb.get32();
-            const regionid_type regId = fb.get32();
             InputRegionRecord rec;
+            rec.regionId = fb.get32();
             rec.rfn = fb.get32();
             rec.roff = fb.get32();
             rec.wfn = fb.get32();
@@ -147,7 +163,7 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
                 throw InfosmeException("journal '%s' record at %llu has extra data",
                                        jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)));
             }
-            reader.setRecordAtInit(dlvId,regId,rec,maxMsgId);
+            reader.setRecordAtInit(dlvId,rec,maxMsgId);
             ++total;
             ptr += reclen+LENSIZE;
         }

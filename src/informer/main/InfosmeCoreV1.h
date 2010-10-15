@@ -47,6 +47,12 @@ public:
     virtual void start();
     virtual void stop();
     virtual bool isStopping() const { return stopping_; }
+    virtual void wait( int msec ) {
+        if (msec<=0) return;
+        smsc::core::synchronization::MutexGuard mg(startMon_);
+        if (stopping_) return;
+        startMon_.wait(msec);
+    }
 
     virtual RegionFinder& getRegionFinder() { return rf_; }
 
