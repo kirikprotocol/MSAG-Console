@@ -27,12 +27,7 @@ namespace ber {
 //           encoding               EmbeddedEncoding
 //          }
 
-class EncoderOfExternal : public EncoderOfPlainStructure_T<4> {
-private:
-  //EXTERNAL has predefined structure, so hide this methods
-  using EncoderOfPlainStructure_T<4>::addField;
-  using EncoderOfPlainStructure_T<4>::setField;
-
+class EncoderOfExternal : public EncoderOfStructure_T<4> {
 protected:
   EncoderOfEmbdEncoding     _encEnc;
   //optional fields
@@ -43,20 +38,20 @@ protected:
   // constructor for encoder of tagged type referencing EXTERNAL
   EncoderOfExternal(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfPlainStructure_T<4>(eff_tags, use_rule)
+    : EncoderOfStructure_T<4>(eff_tags, use_rule)
     , _encEnc(use_rule)
   { }
 
 public:
   // constructor for encoder of EXTERNAL
   EncoderOfExternal(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfPlainStructure_T<4>(asn1::_tagsEXTERNAL, use_rule)
+    : EncoderOfStructure_T<4>(asn1::_tagsEXTERNAL, use_rule)
     , _encEnc(use_rule)
   { }
   // constructor for encoder of tagged EXTERNAL
   EncoderOfExternal(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfPlainStructure_T<4>(use_tag, tag_env, asn1::_tagsEXTERNAL, use_rule)
+    : EncoderOfStructure_T<4>(use_tag, tag_env, asn1::_tagsEXTERNAL, use_rule)
     , _encEnc(use_rule)
   { }
   //
