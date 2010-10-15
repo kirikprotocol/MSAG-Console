@@ -18,7 +18,6 @@
   </section>
 
   <section name="system">
-    <param name="users file" type="string">test/ru/novosoft/smsc/admin/users/users.xml</param>
     <param name="journal dir" type="string">journal</param>
   </section>
 
