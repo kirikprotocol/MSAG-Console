@@ -57,25 +57,78 @@ my $eoln="\x0d\x0a";
 {value=>'0',width=>10},                          #30 330
 );
 
-if(@ARGV<4)
+unless(@ARGV)
 {
-  print STDERR "usage: bill2cdr indir outdir tmpdir arcdir [nobilldir]\n";
+  print STDERR "usage: bill2cdr path/to/conf/file\n";
   exit;
 }
 
-my $indir=$ARGV[0];
-my $outdir=$ARGV[1];
-my $tmpdir=$ARGV[2];
-my $arcdir=$ARGV[3];
-my $nobilldir=$ARGV[4];
-for($indir,$outdir,$tmpdir,$arcdir,$nobilldir)
+
+my $indir;
+my $outdir;
+my $tmpdir;
+my $arcdir;
+my $nobilldir;
+my $inmandir;
+
+my %confDirs={
+  input=>\$indir,
+  output=>\$outdir,
+  temp=>\$tmpdir,
+  arc=>\$arcdir,
+  nobill=>\$nobilldir,
+  inman=>\$inmandir
+};
+
+my %inmanRoutes;
+
+{
+my $confFile=$ARGV[0];
+open(my $cf,$confFile) || die "Failed to open conf file '$confFile':$!";
+my $mode='none';
+while(<$cf>)
+{
+  s/[\x0d\x0a]//g;
+  s/^\s+//;
+  s/\s+$//;
+  next unless $_;
+  next if /^#/;
+  if(/^\[([\w\.]+)\]$/)
+  {
+    $mode=$1;
+    next;
+  }
+  if($mode eq 'dirs')
+  {
+    unless(/(\w+)\s*=\s*(.*)$/)
+    {
+      die "Unrecognized config line $_";
+    }
+    if(!exists($confDirs{$1}))
+    {
+      die "Unknown dir name:$1";
+    }
+    ${$confDirs{$1}}=$2;
+    next;
+  }
+  if($mode eq 'inman.mode.routes')
+  {
+    $inmanRoutes{$_}=1;
+    next;
+  }
+  die "Unknown section $mode";
+}
+}
+
+
+for($indir,$outdir,$tmpdir,$arcdir,$nobilldir,$inmandir)
 {
   if($_ && ! -d $_)
   {
     die "error: $_ doesn't exists\n";
   }
 }
-for($indir,$outdir,$tmpdir,$arcdir,$nobilldir)
+for($indir,$outdir,$tmpdir,$arcdir,$nobilldir,$inmandir)
 {
   next unless $_;
   $_.='/' unless $_=~m!/$!;
@@ -240,9 +293,11 @@ sub process{
   $out->{footer}=$footer.$eoln;
   my $csv=Text::CSV_XS->new({'binary'=>1});
   my $hdr=$csv->getline($in);
-  my $nbout=$nobilldir?DelayedFile->new('>'.$nobilldir.getFileName($inf)):undef;
-  $nbout->{header}=combine($csv,$hdr) if $nbout;
   die "Input file parsing failed" unless $hdr;
+  my $nbout=$nobilldir?DelayedFile->new('>'.$nobilldir.getFileName($inf)):undef;
+  my $inmanout=$inmandir?DelayedFile->new('>'.$inmandir.getFileName($inf)):undef;
+  $nbout->{header}=combine($csv,$hdr) if $nbout;
+  $inmanout->{header}=combine($csv,$hdr) if $inmanout;
   my $row;
   while($row=$csv->getline($in))
   {
@@ -250,6 +305,13 @@ sub process{
     my $infields={};
     $infields->{$hdr->[$_]}=$row->[$_]for(0..$#{$row});
     next if $infields->{STATUS}!=0;
+    
+    if($inmanout && $inmanRoutes{$infields->{ROUTE_ID}})
+    {
+      $inmanout->print(combine($csv,$row));
+      next;
+    }
+    
     my $outfields={};
     $infields->{MSG_ID}%=0x100000000;
     %$outfields=%$infields;
