@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.infosme.Category;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.InfosmeException;
 import mobi.eyeline.informer.admin.infosme.protogen.protocol.*;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,8 +15,6 @@ import java.util.List;
  */
 public class InfosmeImpl implements Infosme {
 
-  private static final Logger logger = Logger.getLogger(InfosmeImpl.class);
-
   private InfosmeClient client;
 
   public InfosmeImpl(String host, int port) {
@@ -27,12 +24,6 @@ public class InfosmeImpl implements Infosme {
   protected void checkResponse(int status) throws InfosmeException {
     if (status != 0) {
       throw new InfosmeException("interaction_error", status + "");
-    }
-  }
-  protected void checkResponse(ConfigOpResult result) throws InfosmeException {
-    if (result.getStatus() != 0) {
-      logger.error("Unexpected response: "+result.getStatus()+". Msg: "+(result.hasMsg() ? result.getMsg() : null));
-      throw new InfosmeException("interaction_error", result.getStatus() + "");
     }
   }
 
@@ -88,7 +79,6 @@ public class InfosmeImpl implements Infosme {
     configOp.setCfgId(ConfigId.ciRegion);
     configOp.setOp(ConfigOpId.coUpdate);
     configOp.setObjId(regionId);
-    ConfigOpResult r = client.send(configOp);
     checkResponse(client.send(configOp).getStatus());
   }
 
@@ -100,6 +90,39 @@ public class InfosmeImpl implements Infosme {
     configOp.setCfgId(ConfigId.ciRegion);
     configOp.setOp(ConfigOpId.coRemove);
     configOp.setObjId(regionId);
+    checkResponse(client.send(configOp).getStatus());
+  }
+
+  public void addUser(String userId) throws AdminException {
+    if(userId == null) {
+      throw new IllegalArgumentException("Id is null");
+    }
+    ConfigOp configOp = new ConfigOp();
+    configOp.setCfgId(ConfigId.ciUser);
+    configOp.setOp(ConfigOpId.coAdd);
+    configOp.setObjId(userId);
+    checkResponse(client.send(configOp).getStatus());
+  }
+
+  public void updateUser(String userId) throws AdminException {
+    if(userId == null) {
+      throw new IllegalArgumentException("Id is null");
+    }
+    ConfigOp configOp = new ConfigOp();
+    configOp.setCfgId(ConfigId.ciUser);
+    configOp.setOp(ConfigOpId.coUpdate);
+    configOp.setObjId(userId);
+    checkResponse(client.send(configOp).getStatus());
+  }
+
+  public void removeUser(String userId) throws AdminException {
+    if(userId == null) {
+      throw new IllegalArgumentException("Id is null");
+    }
+    ConfigOp configOp = new ConfigOp();
+    configOp.setCfgId(ConfigId.ciUser);
+    configOp.setOp(ConfigOpId.coRemove);
+    configOp.setObjId(userId);
     checkResponse(client.send(configOp).getStatus());
   }
 

@@ -17,11 +17,14 @@ public class TestInfosme implements Infosme{
 
   private TestCategoriesHelper categoriesHelper;
 
+  private TestUsersHelper usersHelper;
+
   public TestInfosme() {
     this.smscHelper = new TestSmscHelper();
     this.regionHelper = new TestRegionsHelper();
     this.retryHelper = new TestRetryPoliciesHelper();
     this.categoriesHelper = new TestCategoriesHelper();
+    this.usersHelper = new TestUsersHelper();
   }
 
   public void addSmsc(String smscId) throws AdminException {
@@ -64,6 +67,27 @@ public class TestInfosme implements Infosme{
       throw new IllegalArgumentException("Id is null");
     }
     regionHelper.remove(regionId);
+  }
+
+  public void addUser(String userId) throws AdminException {
+    if(userId == null) {
+      throw new IllegalArgumentException("Id is null");
+    }
+    usersHelper.add(userId);
+  }
+
+  public void updateUser(String userId) throws AdminException {
+    if(userId == null) {
+      throw new IllegalArgumentException("Id is null");
+    }
+    usersHelper.update(userId);
+  }
+
+  public void removeUser(String userId) throws AdminException {
+    if(userId == null) {
+      throw new IllegalArgumentException("Id is null");
+    }
+    usersHelper.remove(userId);
   }
 
   public void addRetryPolicy(String policyId) throws AdminException {

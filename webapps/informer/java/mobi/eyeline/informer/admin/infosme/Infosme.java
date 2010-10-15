@@ -22,6 +22,12 @@ public interface Infosme {
 
   public void removeRegion(String regionId) throws AdminException;
 
+  public void addUser(String userId) throws AdminException;
+
+  public void updateUser(String userId) throws AdminException;
+
+  public void removeUser(String userId) throws AdminException;
+
   public void addRetryPolicy(String regionId) throws AdminException;
 
   public void updateRetryPolicy(String regionIdI) throws AdminException;
