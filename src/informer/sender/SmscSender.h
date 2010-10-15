@@ -9,6 +9,14 @@
 #include "logger/Logger.h"
 #include "sme/SmppBase.hpp"
 #include "informer/opstore/RegionalStorage.h"
+#include "ResponseData.h"
+#include "core/buffers/CyclicQueue.hpp"
+
+namespace smsc {
+namespace sms {
+class IllFormedReceiptParser;
+}
+}
 
 namespace eyeline {
 namespace informer {
@@ -29,6 +37,8 @@ struct SmscConfig
 class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPduEventListener
 {
     friend class ScoredList< SmscSender >;
+    typedef smsc::core::buffers::CyclicQueue< ResponseData > DataQueue;
+
 public:
     SmscSender( InfosmeCore&            core,
                 const std::string&      smscId,
@@ -42,9 +52,9 @@ public:
     void stop();
 
     /// sending one message
-    /// @return number of chunks the message has been splitted or 0
-    unsigned send( RegionalStorage&    dlv,
-                   Message&            msg );
+    /// @return positive or 0: number of chunks sent;
+    ///         negative: SMPP error
+    int send( RegionalStorage& dlv, Message& msg );
 
     /// a method allows to wait until sender stops it work
     /// NOTE: post-requisite -- task is released!
@@ -58,6 +68,10 @@ public:
 private:
     virtual void handleEvent( smsc::sme::SmppHeader* pdu );
     virtual void handleError( int errorcode );
+    void handleReceipt( smsc::sme::SmppHeader* pdu );
+    void handleResponse( smsc::sme::SmppHeader* pdu );
+    bool queueData( const ResponseData& rd );
+    void processQueue( DataQueue& queue );
 
     /// sending messages
     virtual int Execute();
@@ -78,14 +92,19 @@ private:
 private:
     smsc::logger::Logger*                     log_;
     InfosmeCore*                              core_;
+    smsc::sms::IllFormedReceiptParser*        parser_;
     std::string                               smscId_;
     std::auto_ptr<smsc::sme::SmppSession>     session_;
-    smsc::core::synchronization::EventMonitor mon_;
+    smsc::core::synchronization::Mutex        reconfLock_;
     ScoredList< SmscSender >                  scoredList_; // not owned
     usectime_type                             currentTime_;
     bool                                      isStopping_;
     int                                       ussdPushOp_;
     int                                       ussdPushVlrOp_;
+
+    smsc::core::synchronization::EventMonitor queueMon_;
+    DataQueue*                                rQueue_;
+    DataQueue*                                wQueue_;
 };
 
 } // informer

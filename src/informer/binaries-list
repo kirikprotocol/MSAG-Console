@@ -9,8 +9,11 @@ informer/informer  informer \
  -ladmin-service \
  -ladmin-protocol \
  -ladmin-util \
+ -lsmpp \
+ -lsms \
  -lcore-network \
  -lcore-threads \
+ -lutil-recoder-recode_dll \
  -lutil-regexp \
  -lutil-xml \
  -lutil-config \
