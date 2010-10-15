@@ -42,6 +42,11 @@
       <var>retryPolicyBundle</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.users.User</base-name>
+      <var>userBundle</var>
+    </resource-bundle>
+
   </application>
 
   <converter>
@@ -190,12 +195,20 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.retry_policies.RetryPolicyListController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+
   <managed-bean>
       <managed-bean-name>retryPolicyEdit</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.retry_policies.RetryPolicyEditController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
   
+  <managed-bean>
+      <managed-bean-name>usersList</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.UserListController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -254,6 +267,12 @@
     <navigation-case>
       <from-outcome>RETRY_POLICY_EDIT</from-outcome>
       <to-view-id>/retry_policies/edit.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>USERS</from-outcome>
+      <to-view-id>/users/index.xhtml</to-view-id>
+      <redirect/>
     </navigation-case>
 
   </navigation-rule>

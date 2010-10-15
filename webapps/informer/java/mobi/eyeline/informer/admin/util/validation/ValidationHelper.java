@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -153,4 +154,9 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
+  public void checkNotContains(String argName, Collection collection, Object value) throws AdminException {
+    if(collection.contains(value)){
+      throw new ValidationException(paramNameBundle, argName);
+    }
+  }
 }

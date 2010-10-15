@@ -51,27 +51,8 @@ public class UsersManagerTest {
       boolean found = false;
       for(User n : newU) {
         if(o.getLogin().equals(n.getLogin())) {
-          assertEquals(o.getPhone(), n.getPhone());
-          assertEquals(o.getEmail(), n.getEmail());
-          assertEquals(o.getFirstName(), n.getFirstName());
-          assertEquals(o.getLastName(), n.getLastName());
-          assertEquals(o.getStatus(), n.getStatus());
-          assertEquals(o.getPassword(), n.getPassword());
-          assertEquals(o.getOrganization(), n.getOrganization());
-          assertEquals(o.getLocale(), n.getLocale());
-          assertEquals(o.getRoles().size(), n.getRoles().size());
-          for(String ro : o.getRoles()) {
-            boolean foundR = false;
-            for(String no : n.getRoles()) {
-              if(no.equals(ro)) {
-                foundR = true;
-                break;
-              }
-            }
-            assertTrue(foundR);
-          }
-
-          found = true;
+          UserTestUtils.compareUsers(o,n);
+          found=true;
           break;
         }
       }

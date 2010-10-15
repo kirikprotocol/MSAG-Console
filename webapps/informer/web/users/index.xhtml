@@ -1,0 +1,110 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.users']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smsc">
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}"
+                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
+              />
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['edit.button']}" action="#{usersList.editSelected}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <h:panelGroup style="padding:10px">
+
+        <eye:dataTableFilter bean="#{usersList}" clearAction="clearFilter">
+          <h:panelGrid columns="4" columnClasses="column200Width, column200Width, column200Width columnTopLeftAlign, columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
+              <h:outputText value="#{userBundle.login}" />
+              <h:inputText value="#{usersList.loginPrefix}" styleClass="column100Width"/>
+              <h:outputText value="#{userBundle.status}"/>
+              <h:selectOneMenu value="#{usersList.statusFilter}" styleClass="column100Width">
+                <f:selectItem itemLabel="" itemValue=""/>
+                <f:selectItems value="#{usersList.statusItems}"/>
+              </h:selectOneMenu>
+            </h:panelGrid>
+            <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
+              <h:outputText value="#{userBundle.firstName}"/>
+              <h:inputText value="#{usersList.firstNamePrefix}" styleClass="column100Width"/>
+              <h:outputText value="#{userBundle.lastName}"/>
+              <h:inputText value="#{usersList.lastNamePrefix}" styleClass="column100Width"/>
+            </h:panelGrid>
+            <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
+              <h:outputText value="#{userBundle.organization}"/>
+              <h:inputText value="#{usersList.organizationPrefix}" styleClass="column100Width"/>              
+            </h:panelGrid>
+
+          </h:panelGrid>
+
+        </eye:dataTableFilter>
+
+        <eye:dataTable value="#{usersList.usersModel}" selectedRows="#{usersList.selectedRows}" var="u">
+          <eye:row rowId="#{u.login}">
+
+            <eye:column name="login" title="#{userBundle.login}" sortable="true" width="20%" align="left">
+              <h:commandLink value="#{u.login}" action="USER_EDIT">
+                <f:param name="userId" value="#{u.login}"/>
+              </h:commandLink>
+            </eye:column>
+            <eye:column name="firstName" title="#{userBundle.firstName}" sortable="true" width="20%" align="left">
+              <h:outputText value="#{u.firstName}"/>
+            </eye:column>
+            <eye:column name="lastName" title="#{userBundle.lastName}" sortable="true" width="20%" align="left">
+              <h:outputText value="#{u.lastName}"/>
+            </eye:column>
+            <eye:column name="organization" title="#{userBundle.organization}" sortable="true" width="20%" align="left">
+              <h:outputText value="#{u.organization}"/>
+            </eye:column>
+            <eye:column name="status" title="#{userBundle.status}" sortable="true" width="20%" align="left">
+              <h:outputText value="#{u.status}"/>
+            </eye:column>
+          </eye:row>
+        </eye:dataTable>
+
+      </h:panelGroup>
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}"
+                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
+              />
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['edit.button']}" action="#{usersList.editSelected}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

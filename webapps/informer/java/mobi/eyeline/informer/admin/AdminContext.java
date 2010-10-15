@@ -20,6 +20,7 @@ import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.SmscException;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.admin.users.UsersSettings;
 import mobi.eyeline.informer.util.Address;
@@ -64,9 +65,13 @@ public class AdminContext {
   protected RegionsManager regionsManager;
 
   protected ServiceManager serviceManager;
-  
+
   protected RetryPolicyManager retryPolicyManager;
-  
+
+// user ->region->smsc
+//       |->retryPolicy 
+  final private Lock integrityLock = new ReentrantLock();
+
   protected AdminContext() {
   }
 
@@ -118,7 +123,7 @@ public class AdminContext {
 
       retryPolicyManager = new RetryPolicyManager(infosme, new File(confDir, "policies.xml"),
           new File(confDir, "backup"), fileSystem);
-      
+
     }catch (AdminException e) {
       throw new InitException(e);
     }catch (PersonalizationClientException e) {
@@ -156,7 +161,23 @@ public class AdminContext {
   }
 
   public void updateUserSettings(UsersSettings usersSettings) throws AdminException {
-    usersManager.updateSettings(usersSettings);
+    try{
+      integrityLock.lock();
+      for(User u : usersSettings.getUsers()) {
+        if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
+          throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
+        }
+        for(String rId : u.getRegions()) {
+          if(null == regionsManager.getRegion(rId)) {
+            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
+          }
+        }
+      }
+      usersManager.updateSettings(usersSettings);
+    }
+    finally {
+      integrityLock.unlock();
+    }
   }
 
   public InformerSettings getConfigSettings() throws AdminException {
@@ -187,7 +208,6 @@ public class AdminContext {
     return blacklistManager.contains(msisdn);
   }
 
-  final private Lock regionsSmscLock = new ReentrantLock();
 
   public void addSmsc(Smsc smsc) throws AdminException {
     smscManager.addSmsc(smsc);
@@ -207,13 +227,13 @@ public class AdminContext {
 
   public void removeSmsc(String smscName) throws AdminException {
     try{
-      regionsSmscLock.lock();
+      integrityLock.lock();
       if(!regionsManager.getRegionsBySmsc(smscName).isEmpty()) {
         throw new SmscException("smsc_used_in_regions", smscName);
       }
       smscManager.removeSmsc(smscName);
     }finally {
-      regionsSmscLock.unlock();
+      integrityLock.unlock();
     }
   }
 
@@ -227,25 +247,25 @@ public class AdminContext {
 
   public void addRegion(Region region) throws AdminException{
     try{
-      regionsSmscLock.lock();
+      integrityLock.lock();
       if(smscManager.getSmsc(region.getSmsc()) == null) {
         throw new RegionException("smsc_not_exist", region.getSmsc());
       }
       regionsManager.addRegion(region);
     }finally {
-      regionsSmscLock.unlock();
+      integrityLock.unlock();
     }
   }
 
   public void updateRegion(Region region) throws AdminException{
     try{
-      regionsSmscLock.lock();
+      integrityLock.lock();
       if(smscManager.getSmsc(region.getSmsc()) == null) {
         throw new RegionException("smsc_not_exist", region.getSmsc());
       }
       regionsManager.updateRegion(region);
     }finally {
-      regionsSmscLock.unlock();
+      integrityLock.unlock();
     }
   }
 
@@ -258,7 +278,20 @@ public class AdminContext {
   }
 
   public void removeRegion(String regionId) throws AdminException{
-    regionsManager.removeRegion(regionId);
+    try{
+      integrityLock.lock();
+      for(User u : usersManager.getUsersSettings().getUsers()) {
+        for(String s : u.getRegions()) {
+          if(s.equals(regionId)) {
+            throw new IntegrityException("fail.delete.region.to.user",regionId,u.getLogin());
+          }
+        }
+      }
+      regionsManager.removeRegion(regionId);
+    }
+    finally {
+      integrityLock.unlock();
+    }
   }
 
   public Region getRegion(String regionId){
@@ -287,11 +320,28 @@ public class AdminContext {
   }
 
   public void updateRetryPolicy( RetryPolicy rp) throws AdminException{
-    retryPolicyManager.updateRetryPolicy(rp);
+    try {
+      integrityLock.lock();
+      retryPolicyManager.updateRetryPolicy(rp);
+    }
+    finally {
+      integrityLock.unlock();
+    }
   }
 
   public void removeRetryPolicy(String policyId) throws AdminException{
-    retryPolicyManager.removeRetryPolicy(policyId);
+    try {
+      integrityLock.lock();
+      for(User u : usersManager.getUsersSettings().getUsers()) {
+        if(policyId.equals(u.getPolicyId())) {
+          throw new IntegrityException("fail.delete.policy.to.user",policyId,u.getLogin());
+        }
+      }
+      retryPolicyManager.removeRetryPolicy(policyId);
+    }
+    finally {
+      integrityLock.unlock();
+    }
   }
 
   public void startInformer() throws AdminException {

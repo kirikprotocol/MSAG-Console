@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
   <section name="USERS">
     <section name="a">
@@ -11,9 +10,24 @@
       <param name="email"     type="string">a@nowhere.com</param>
       <param name="organization"  type="string">eyeline inc.</param>
       <param name="locale"        type="string">en</param>
+      <param name="createCDR"     type="bool">false</param>
+      <param name="smsPerSec"     type="int">25</param>
+      <param name="sourceAddr"     type="int">+79130000001</param>
+      <param name="validHours"     type="int">2</param>
+      <param name="deliveryType"   type="string">SMS</param>
+      <param name="transactionMode" type="bool">false</param>
+      <param name="policyId"        type="string">default</param>
+      <param name="priority"        type="int">5</param>
+      <param name="deliveryLifetime"  type="int">1000</param>
+      <param name="directory"         type="string">homedir</param>
+      <param name="directoryPoolPeriod" type="int">1001</param>
+      <param name="reportsLifetime" type="int">1002</param>
       <section name="ROLES">
         <param name="informer-admin" type="bool">true</param>
         <param name="informer-user"  type="bool">true</param>
+      </section>
+      <section name="REGIONS">        
+        <param name="1"  type="bool">true</param>
       </section>
     </section>
     <section name="b">      
@@ -26,8 +40,28 @@
       <param name="locale"        type="string">en</param>
       <param name="organization"  type="string">eyeline inc.</param>
       <param name="locale"        type="string">en</param>
+      <param name="createCDR"     type="bool">true</param>
+      <param name="smsPerSec"     type="int">10</param>
+      <param name="sourceAddr"     type="int">+79130000000</param>
+      <param name="validHours"     type="int">3</param>
+      <param name="deliveryType"   type="string">USSD_PUSH</param>
+      <param name="transactionMode" type="bool">true</param>
+      <param name="policyId"        type="string">somepolicy</param>
+      <param name="priority"        type="int">1</param>
+      <param name="deliveryLifetime"  type="int">1001</param>
+      <param name="directory"         type="string">homedir</param>
+      <param name="directoryPoolPeriod" type="int">2001</param>
+      <param name="reportsLifetime" type="int">2002</param>
       <section name="ROLES">
         <param name="informer-user"  type="bool">true</param>
+      </section>
+      <section name="DELIVERY_DAYS">
+        <param name="4"  type="bool">true</param>
+        <param name="5"  type="bool">true</param>
+      </section>
+      <section name="REGIONS">
+        <param name="0"  type="bool">true</param>
+        <param name="1"  type="bool">true</param>
       </section>
     </section>
   </section>
