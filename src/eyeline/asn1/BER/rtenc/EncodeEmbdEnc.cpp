@@ -19,37 +19,29 @@ const ASTag EncoderOfEmbdEncoding::_tagBitAligned(ASTag::tagContextSpecific, 2);
 void EncoderOfEmbdEncoding::setValue(TypeEncoderAC & use_val)
   /*throw(std::exception)*/
 {
-  _altEnc._astype = new (_memAlt._buf) EncoderOfASType(_tagSingleASN1Type, ASTagging::tagsEXPLICIT, getTSRule());
-  _kind = asn1::EmbeddedEncoding::evASType;
-  _altEnc._astype->setValue(use_val);
-  setSelection(*_altEnc._astype);
+  _altEnc.astype().init(_tagSingleASN1Type, ASTagging::tagsEXPLICIT, getTSRule()).setValue(use_val);
+  setSelection(*_altEnc.astype().get());
 }
 
 void EncoderOfEmbdEncoding::setValue(const asn1::TransferSyntax & use_val)
   /*throw(std::exception)*/
 {
-  _altEnc._astype = new (_memAlt._buf) EncoderOfASType(_tagSingleASN1Type, ASTagging::tagsEXPLICIT, getTSRule());
-  _kind = asn1::EmbeddedEncoding::evASType;
-  _altEnc._astype->setValue(use_val);
-  setSelection(*_altEnc._astype);
+  _altEnc.astype().init(_tagSingleASN1Type, ASTagging::tagsEXPLICIT, getTSRule()).setValue(use_val);
+  setSelection(*_altEnc.astype().get());
 }
 
 void EncoderOfEmbdEncoding::setValue(const asn1::OCTSTR::ArrayType & use_val)
   /*throw(std::exception)*/
 {
-  _altEnc._octstr = new (_memAlt._buf) EncoderOfOCTSTR(_tagOctetAligned, ASTagging::tagsIMPLICIT, getTSRule());
-  _kind = asn1::EmbeddedEncoding::evOctAligned;
-  _altEnc._octstr->setValue(use_val);
-  setSelection(*_altEnc._octstr);
+  _altEnc.octstr().init(_tagOctetAligned, ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val);
+  setSelection(*_altEnc.octstr().get());
 }
 
 void EncoderOfEmbdEncoding::setValue(const asn1::BITSTR::ArrayType & use_val)
   /*throw(std::exception)*/
 {
-  _altEnc._bitstr = new (_memAlt._buf) EncoderOfBITSTR(_tagBitAligned, ASTagging::tagsIMPLICIT, getTSRule());
-  _kind = asn1::EmbeddedEncoding::evBitAligned;
-  _altEnc._bitstr->setValue(use_val);
-  setSelection(*_altEnc._bitstr);
+  _altEnc.bitstr().init(_tagBitAligned, ASTagging::tagsIMPLICIT, getTSRule()).setValue(use_val);
+  setSelection(*_altEnc.bitstr().get());
 }
 
 void EncoderOfEmbdEncoding::setValue(const asn1::EmbeddedEncoding & use_val)
@@ -57,16 +49,16 @@ void EncoderOfEmbdEncoding::setValue(const asn1::EmbeddedEncoding & use_val)
 {
   switch (use_val.getKind()) {
   case asn1::EmbeddedEncoding::evBitAligned: {
-    setValue(*use_val.getBITS());
+    setValue(*use_val.BITS().get());
     return;
   }
   case asn1::EmbeddedEncoding::evOctAligned: {
-    setValue(*use_val.getOCTS());
+    setValue(*use_val.OCTS().get());
     return;
   }
   default: //asn1::EmbeddedEncoding::evASType:
-    if (use_val.getTS())
-      setValue(*use_val.getTS());
+    if (use_val.TS().get())
+      setValue(*use_val.TS().get());
   } /*eosw*/
 }
 

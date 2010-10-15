@@ -11,6 +11,7 @@
 #include "eyeline/asn1/BER/rtdec/DecodeOCTSTR.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeASType.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeChoice.hpp"
+#include "eyeline/asn1/BER/rtdec/DecodersChoiceT.hpp"
 
 
 namespace eyeline {
@@ -25,37 +26,23 @@ namespace ber {
 //    octet-aligned     [1] IMPLICIT OCTET STRING,
 //    arbitrary         [2] IMPLICIT BIT STRING
 //  }
-
 class DecoderOfEmbdEncoding : public DecoderOfChoice_T<3> {
-public:
-  static const ASTag _tagSingleASN1Type;
-  static const ASTag _tagOctetAligned;
-  static const ASTag _tagBitAligned;
-
-private:
-  union {
-    void *  _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf3_T<DecoderOfASType, DecoderOfOCTSTR, DecoderOfBITSTR>::VALUE];
-  } _memAlt;
-
 protected:
-  asn1::EmbeddedEncoding * _dVal;
+  class AltDecoder : public asn1::ber::ChoiceOfDecoders3_T<
+                DecoderOfASType, DecoderOfOCTSTR, DecoderOfBITSTR> {
+  public:
+    Alternative_T<DecoderOfASType>  astype() { return alternative0(); }
+    Alternative_T<DecoderOfOCTSTR>  octstr() { return alternative1(); }
+    Alternative_T<DecoderOfBITSTR>  bitstr() { return alternative2(); }
+
+    ConstAlternative_T<DecoderOfASType> astype()  const { return alternative0(); }
+    ConstAlternative_T<DecoderOfOCTSTR> octstr()  const { return alternative1(); }
+    ConstAlternative_T<DecoderOfBITSTR> bitstr()  const { return alternative2(); }
+  };
+
+  AltDecoder  _altDec;
   /* -- */
-  union {
-    TypeDecoderAC *   _ptr;
-    DecoderOfASType * _astype;
-    DecoderOfOCTSTR * _octstr;
-    DecoderOfBITSTR * _bitstr;
-  } _altDec;
-
-
-  void cleanUp(void)
-  {
-    if (_altDec._ptr) {
-      _altDec._ptr->~TypeDecoderAC();
-      _altDec._ptr = NULL;
-    }
-  }
+  asn1::EmbeddedEncoding * _dVal;
   //Initializes ElementDecoder of this type;
   void construct(void);
 
@@ -66,6 +53,10 @@ protected:
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception)*/;
 
 public:
+  static const ASTag _tagSingleASN1Type;
+  static const ASTag _tagOctetAligned;
+  static const ASTag _tagBitAligned;
+
   class TaggingOptions : public asn1::ber::TaggingOptions {
   public:
     TaggingOptions() : asn1::ber::TaggingOptions()
@@ -81,23 +72,23 @@ public:
   explicit DecoderOfEmbdEncoding(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfChoice_T<3>(use_rule), _dVal(0)
   {
-    _memAlt._aligner = _altDec._ptr = 0;
     construct();
   }
-  DecoderOfEmbdEncoding(asn1::EmbeddedEncoding & use_val,
+  explicit DecoderOfEmbdEncoding(asn1::EmbeddedEncoding & use_val,
                         TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfChoice_T<3>(use_rule), _dVal(&use_val)
   {
-    _memAlt._aligner = _altDec._ptr = 0;
     construct();
   }
   //
   ~DecoderOfEmbdEncoding()
-  {
-    cleanUp();
-  }
+  { }
 
-  void setValue(asn1::EmbeddedEncoding & use_val) { _dVal = &use_val; }
+  void setValue(asn1::EmbeddedEncoding & use_val)
+  {
+    _dVal = &use_val; 
+    _chcDec.reset();
+  }
 };
 
 } //ber

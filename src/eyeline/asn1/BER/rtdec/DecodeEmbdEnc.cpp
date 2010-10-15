@@ -35,21 +35,13 @@ TypeDecoderAC *
   if (unique_idx > 2)
     throw smsc::util::Exception("ber::DecoderOfEmbdEncoding::prepareAlternative() : undefined UId");
 
-  cleanUp();
-  if (!unique_idx) {
-    _altDec._astype = new (_memAlt._buf) DecoderOfASType(_tagSingleASN1Type, ASTagging::tagsEXPLICIT, getTSRule());
-    _altDec._astype->setValue(_dVal->initTS());
-    return _altDec._astype;
-  }
-  if (unique_idx == 1) {
-    _altDec._octstr = new (_memAlt._buf) DecoderOfOCTSTR(_tagOctetAligned, ASTagging::tagsIMPLICIT, getTSRule());
-    _altDec._octstr->setValue(_dVal->initOCTS());
-    return _altDec._octstr;
-  }
-  //if (unique_idx == 2) {}
-  _altDec._bitstr = new (_memAlt._buf) DecoderOfBITSTR(_tagBitAligned, ASTagging::tagsIMPLICIT, getTSRule());
-  _altDec._bitstr->setValue(_dVal->initBITS());
-  return _altDec._bitstr;
+  if (!unique_idx)
+    _altDec.astype().init(_tagSingleASN1Type, ASTagging::tagsEXPLICIT, getTSRule()).setValue(_dVal->TS().init());
+  else if (unique_idx == 1)
+    _altDec.octstr().init(_tagOctetAligned, ASTagging::tagsIMPLICIT, getTSRule()).setValue(_dVal->OCTS().init());
+  else //if (unique_idx == 2) {}
+    _altDec.bitstr().init(_tagBitAligned, ASTagging::tagsIMPLICIT, getTSRule()).setValue(_dVal->BITS().init());
+  return _altDec.get();
 }
 
 } //ber

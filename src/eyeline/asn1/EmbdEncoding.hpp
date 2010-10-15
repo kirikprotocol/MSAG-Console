@@ -9,6 +9,8 @@
 #include "eyeline/asn1/BITSTR.hpp"
 #include "eyeline/asn1/OCTSTR.hpp"
 
+#include "eyeline/util/ChoiceOfT.hpp"
+
 namespace eyeline {
 namespace asn1 {
 
@@ -20,7 +22,7 @@ namespace asn1 {
 //    octet-aligned     [1] IMPLICIT OCTET STRING,
 //    arbitrary         [2] IMPLICIT BIT STRING
 //  }
-class EmbeddedEncoding {
+class EmbeddedEncoding  : public util::ChoiceOf3_T<TransferSyntax, OCTSTR, BITSTR> {
 public:
   enum Kind_e {
     evASType = 0,     //encoding of value of defined single ASN.1 type
@@ -28,80 +30,25 @@ public:
     evBitAligned = 2  //arbitrary bit aligned encoding
   };
 
-private:
-  union {
-    void *  _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf3_T<TransferSyntax, OCTSTR, BITSTR>::VALUE];
-  } _memEnc;
-
-protected:
-  Kind_e _kind;
-  union {
-    TransferSyntax * _ts;
-    OCTSTR         * _octs;
-    BITSTR         * _bits;
-  } _enc;
-
-public:
-  EmbeddedEncoding() : _kind(evASType)
-  {
-    _memEnc._aligner = _enc._ts = 0;
-  }
+  EmbeddedEncoding() : util::ChoiceOf3_T<TransferSyntax, OCTSTR, BITSTR>()
+  { }
   ~EmbeddedEncoding()
-  {
-    reset();
-  }
+  { }
 
-  Kind_e getKind(void) const { return _kind; }
+  Kind_e getKind(void) const { return static_cast<Kind_e>(getChoiceIdx()); }
 
-  bool isTS(void)   const { return (_kind == evASType); }
-  bool isOCTS(void) const { return (_kind == evOctAligned); }
-  bool isBITS(void) const { return (_kind == evBitAligned); }
+  bool isTS(void)   const { return (getKind() == evASType); }
+  bool isOCTS(void) const { return (getKind() == evOctAligned); }
+  bool isBITS(void) const { return (getKind() == evBitAligned); }
 
-  //
-  TransferSyntax * getTS(void) { return (_kind == evASType) ? _enc._ts : 0; }
-  //
-  OCTSTR::ArrayType * getOCTS(void) { return (_kind == evOctAligned) ? _enc._octs : 0; }
-  //
-  BITSTR::ArrayType * getBITS(void) { return (_kind == evBitAligned) ? _enc._bits : 0; }
 
-  //
-  const TransferSyntax * getTS(void) const { return (_kind == evASType) ? _enc._ts : 0; }
-  //
-  const OCTSTR::ArrayType * getOCTS(void) const { return (_kind == evOctAligned) ? _enc._octs : 0; }
-  //
-  const BITSTR::ArrayType * getBITS(void) const { return (_kind == evBitAligned) ? _enc._bits : 0; }
+  Alternative_T<TransferSyntax> TS()    { return alternative0(); }
+  Alternative_T<OCTSTR>         OCTS()  { return alternative1(); }
+  Alternative_T<BITSTR>         BITS()  { return alternative2(); }
 
-  void reset(void)
-  {
-    if (_enc._ts) {
-      if (_kind == evASType)
-        _enc._ts->~TransferSyntax();
-      else if (_kind == evOctAligned) {
-        _enc._octs->~OCTSTR();
-      } else // (_kind == evBitAligned)
-        _enc._bits->~BITSTR();
-      _enc._ts = 0;
-    }
-  }
-
-  TransferSyntax & initTS(void)
-  {
-    _kind = evASType;
-    return *(_enc._ts = new (_memEnc._buf) TransferSyntax());
-  }
-  //
-  OCTSTR::ArrayType & initOCTS(void)
-  {
-    _kind = evOctAligned;
-    return *(_enc._octs = new (_memEnc._buf) OCTSTR());
-  }
-  //
-  BITSTR::ArrayType & initBITS(void)
-  {
-    _kind = evBitAligned;
-    return *(_enc._bits = new (_memEnc._buf) BITSTR());
-  }
+  ConstAlternative_T<TransferSyntax> TS()   const { return alternative0(); }
+  ConstAlternative_T<OCTSTR>         OCTS() const { return alternative1(); }
+  ConstAlternative_T<BITSTR>         BITS() const { return alternative2(); }
 };
 
 } //asn1

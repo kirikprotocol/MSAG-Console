@@ -159,7 +159,7 @@ public:
   void reset(void)
   {
     _ident.identifyByFixed();
-    _enc.reset();
+    _enc.clear();
     _asOid.reset();
     _prsCtxId = 0;
     _descr.clear();
