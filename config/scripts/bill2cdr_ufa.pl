@@ -71,14 +71,14 @@ my $arcdir;
 my $nobilldir;
 my $inmandir;
 
-my %confDirs={
+my %confDirs=(
   input=>\$indir,
   output=>\$outdir,
   temp=>\$tmpdir,
   arc=>\$arcdir,
   nobill=>\$nobilldir,
   inman=>\$inmandir
-};
+);
 
 my %inmanRoutes;
 
