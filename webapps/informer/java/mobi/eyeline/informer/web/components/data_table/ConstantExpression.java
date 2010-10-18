@@ -36,7 +36,7 @@ class ConstantExpression extends ValueExpression {
 
   @Override
   public Class<?> getExpectedType() {
-    return Object.class;  //To change body of implemented methods use File | Settings | File Templates.
+    return Object.class;
   }
 
   @Override
@@ -51,7 +51,7 @@ class ConstantExpression extends ValueExpression {
 
   @Override
   public int hashCode() {
-    return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    return 0;
   }
 
   @Override

@@ -52,7 +52,7 @@ public class BlacklistUploadController extends UploadController{
     unrecognized = 0;
     uploaded = 0;
     current=0;
-    maximum=Integer.MAX_VALUE;;
+    maximum=Integer.MAX_VALUE;
     return "BLACKLIST";
   }
 

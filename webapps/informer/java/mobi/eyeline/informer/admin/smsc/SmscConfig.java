@@ -6,9 +6,7 @@ import mobi.eyeline.informer.util.config.XmlConfigSection;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 /**
@@ -48,7 +46,6 @@ class SmscConfig implements ManagedConfigFile<SmscSettings> {
     XmlConfig config = new XmlConfig();
     config.load(is);
     XmlConfigSection  smscConnectors = config.getSection("SMSCConnectors");
-    Collection<Smsc> smscs = new LinkedList<Smsc>();
     for(XmlConfigSection s : smscConnectors.sections()) {
       Smsc smsc = new Smsc(s.getName());
       smsc.load(s);

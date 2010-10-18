@@ -6,15 +6,6 @@ import java.util.StringTokenizer;
  * Copyright Eyeline.mobi
  * User: vmax
  * Date: 14.10.2010
- * Time: 13:39:22
- */
-
-import java.util.StringTokenizer;
-
-/**
- * Copyright Eyeline.mobi
- * User: vmax
- * Date: 14.10.2010
  * Time: 13:18:04
  */
 public class Time {

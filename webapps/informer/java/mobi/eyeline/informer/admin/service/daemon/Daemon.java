@@ -69,7 +69,7 @@ public class Daemon extends Proxy {
   /**
    * Запускает сервис с указанным Id
    * @param serviceId идентификатор сервиса
-   * @throws AdminException
+   * @throws AdminException ошибка выполнения команды
    */
   public void startService(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandStartService(serviceId));
@@ -83,7 +83,7 @@ public class Daemon extends Proxy {
    * @param args список аргументов
    * @param status статус
    * @param autostart надо ли автоматически запускать или нет
-   * @throws AdminException
+   * @throws AdminException ошибка выполнения команды
    */
   public void addService(String id, String args, String status, boolean autostart) throws AdminException {
     final Response r = runCommand(new CommandAddService(id, args, status, autostart));
@@ -94,7 +94,7 @@ public class Daemon extends Proxy {
   /**
    * Удаляет сервис с заданным идентификатором
    * @param serviceId идентификатор сервиса
-   * @throws AdminException
+   * @throws AdminException ошибка выполнения команды
    */
   public void removeService(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandRemoveService(serviceId));
@@ -105,7 +105,7 @@ public class Daemon extends Proxy {
   /**
    * Останавливает сервис с заданным идентификатором
    * @param serviceId идентификатор сервиса
-   * @throws AdminException
+   * @throws AdminException ошибка выполнения команды
    */
   public void shutdownService(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandShutdownService(serviceId));

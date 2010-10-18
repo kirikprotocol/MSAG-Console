@@ -75,6 +75,7 @@ public class RegionsUploadController extends UploadController{
     return r;
   }
 
+  @SuppressWarnings({"EmptyCatchBlock"})
   @Override
   protected void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception {
 

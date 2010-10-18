@@ -74,7 +74,7 @@ public class StringEncoderDecoder {
   public static String encodeHEX(String str) {
     if (str == null) return "";
     byte b[] = stringToBytes(str);
-    int c = 0;
+    int c;
     StringBuilder sb = new StringBuilder(b.length * 2);
     for (byte aB : b) {
       c = (((int) aB) >> 4) & 0xf;
@@ -112,17 +112,17 @@ public class StringEncoderDecoder {
     for (int i = 0; i < str.length();) {
       c = str.charAt(i);
       if (c >= '0' && c <= '9')
-        ci = ((int) (c - '0')) << 4;
+        ci = (c - '0') << 4;
       else if (c >= 'A' && c <= 'F')
-        ci = ((int) (c - 'A' + 10)) << 4;
+        ci = (c - 'A' + 10) << 4;
       else
         throw new RuntimeException("Invalid char '" + c + "' detected in HEX encoded string");
 
       c = str.charAt(i + 1);
       if (c >= '0' && c <= '9')
-        ci |= (int) (c - '0');
+        ci |= c - '0';
       else if (c >= 'A' && c <= 'F')
-        ci |= (int) (c - 'A' + 10);
+        ci |= c - 'A' + 10;
       else
         throw new RuntimeException("Invalid char '" + c + "' detected in HEX encoded string");
 

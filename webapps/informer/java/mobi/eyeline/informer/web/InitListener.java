@@ -28,6 +28,7 @@ public class InitListener implements ServletContextListener {
     PropertyConfigurator.configureAndWatch(file, 60000L);
   }
 
+  @SuppressWarnings({"EmptyCatchBlock"})
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
 

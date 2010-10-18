@@ -6,7 +6,6 @@ import mobi.eyeline.informer.admin.journal.JournalFilter;
 import mobi.eyeline.informer.admin.journal.JournalRecord;
 import mobi.eyeline.informer.admin.journal.Subject;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;

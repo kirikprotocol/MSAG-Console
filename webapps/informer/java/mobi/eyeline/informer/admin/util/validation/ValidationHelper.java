@@ -4,7 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**

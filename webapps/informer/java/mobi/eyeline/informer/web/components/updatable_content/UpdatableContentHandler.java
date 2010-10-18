@@ -20,8 +20,7 @@ public class UpdatableContentHandler extends ComponentHandler{
   }
 
   protected javax.faces.component.UIComponent createComponent(com.sun.facelets.FaceletContext ctx) {
-    UpdatableContent updatableContent = new UpdatableContent();
-    return updatableContent;
+    return new UpdatableContent();
   }
 
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
