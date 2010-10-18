@@ -85,6 +85,11 @@ protected:
     for (; start_idx < _elmArray->size(); ++start_idx)
       _elmArray->at(start_idx).clear();
   }
+  void reserveElements(uint16_t num_elems)
+  {
+    if (num_elems)
+      reserveElement(num_elems - 1);
+  }
 
   ElementsArray * getElementsStorage(void) const { return _elmArray; }
 
