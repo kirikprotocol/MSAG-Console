@@ -270,6 +270,7 @@ end
 message RequestMessagesState 43
   int32 deliveryId 1
   DeliveryMessageState states 2 array opt
+  string msisdnFilter 7 array opt
   Date startDate 4
   Date endDate 5
   ReqField fields 6 array
@@ -296,6 +297,7 @@ message MessageInfo
   Date date 3 opt
   string abonent 4 opt
   string text 5 opt
+  int32 index 8 opt
   int32 errorCode 6 opt
   string userData 7 opt
 end
