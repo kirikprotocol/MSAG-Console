@@ -132,6 +132,7 @@ message GetDeliveriesList 50
   string startDateTo 5 opt
   string endDateFrom 6 opt
   string endDateTo 7 opt
+  DeliveryFields resultFields 8 array
 end
 
 message GetDeliveriesListResp 51
