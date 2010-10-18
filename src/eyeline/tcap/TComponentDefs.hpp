@@ -17,7 +17,7 @@ namespace tcap {
 using eyeline::ros::InvokeId;
 using eyeline::ros::LocalOpCode;
 
-typedef std::list<const ros::ROSPdu *> TComponentsPtrList;
+typedef std::list<ros::ROSPdu *> TComponentsPtrList;
 typedef std::list<ros::ROSPdu> TComponentsList;
 
 }}

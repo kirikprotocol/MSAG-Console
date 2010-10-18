@@ -47,7 +47,7 @@ public:
   void setInSequenceDelivery(bool use_seq_dlvr = true) { _inSeqDelivery = use_seq_dlvr; }
   bool getInSequenceDelivery(void) const { return _inSeqDelivery; }
   //
-  void addUIValue(const ASExternal & use_ui) { _usrInfo.push_back(&use_ui); }
+  void addUIValue(ASExternal & use_ui) { _usrInfo.push_back(&use_ui); }
   const TDlgUserInfoPtrList & getUserInfo(void) const { return _usrInfo; }
 
 protected:
@@ -87,7 +87,7 @@ public:
   void setDestAddress(const SCCPAddress & use_adr) { _dstAdr = use_adr; }
   const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
   //
-  void addTComponent(const ROSPdu & use_comp) { _comps.push_back(&use_comp); }
+  void addTComponent(ROSPdu & use_comp) { _comps.push_back(&use_comp); }
   const TComponentsPtrList & getCompList(void) const { return _comps; }
 };
 
@@ -105,7 +105,7 @@ public:
   void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
   const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
   //
-  void addTComponent(const ROSPdu & use_comp) { _comps.push_back(&use_comp); }
+  void addTComponent(ROSPdu & use_comp) { _comps.push_back(&use_comp); }
   const TComponentsPtrList & getCompList(void) const { return _comps; }
 };
 
@@ -129,7 +129,7 @@ public:
   void setPrearrangedEnd(void) { _termination = endPREARRANGED; }
   DialogEnding_e getTermination() const { return _termination; }
   //
-  void addTComponent(const ROSPdu & use_comp) { _comps.push_back(&use_comp); }
+  void addTComponent(ROSPdu & use_comp) { _comps.push_back(&use_comp); }
   const TComponentsPtrList & getCompList(void) const { return _comps; }
 
 protected:
@@ -158,8 +158,8 @@ public:
   //NOTE: add more UserInfo values by addUIValue() calls next to this one!!!
   //NOTE: This method only for 1st response to T_Begin_Ind
   void abortAssociation(TDialogueAssociate::DiagnosticUser_e
-                          use_cause = TDialogueAssociate::dsu_null,
-                        const ASExternal * use_ext = NULL)
+                        use_cause = TDialogueAssociate::dsu_null,
+                        ASExternal * use_ext = NULL)
   {
     _kind = uabrtAssociation;
     _ascRejCause = use_cause;
@@ -169,7 +169,7 @@ public:
 
   //abort of established dialogue with optional UserInfo provided as reason
   //NOTE: add more UserInfo values by addUIValue() calls next to this one!!!
-  void abortDialogueUI(const ASExternal * use_ext = NULL)
+  void abortDialogueUI(ASExternal * use_ext = NULL)
   {
     _kind = uabrtDialogueUI;
     _usrInfo.clear();
@@ -177,7 +177,7 @@ public:
       addUIValue(*use_ext);
   }
   //abort of established dialogue with some externally defined DataValue provided as reason
-  void abortDialogueEXT(const ASExternal & use_ext)
+  void abortDialogueEXT(ASExternal & use_ext)
   {
     _kind = uabrtDialogueEXT;
     _usrInfo.clear();

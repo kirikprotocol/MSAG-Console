@@ -10,6 +10,7 @@
 #include "eyeline/tcap/proto/enc/TEApplicationContext.hpp"
 #include "eyeline/tcap/proto/enc/TEUserInformation.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeChoice.hpp"
+#include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -24,20 +25,8 @@ AARE-apdu ::= [APPLICATION 1] IMPLICIT SEQUENCE {
   result                    [2]  Associate-result,
   result-source-diagnostic  [3]  Associate-source-diagnostic,
   user-information          UserInformation OPTIONAL
-}
-*/
-class TEAPduAARE : public asn1::ber::EncoderOfPlainStructure_T<5> {
-private:
-  using asn1::ber::EncoderOfPlainStructure_T<5>::addField;
-  using asn1::ber::EncoderOfPlainStructure_T<5>::setField;
-
-  union {
-    void *  aligner;
-    uint8_t buf[sizeof(TEUserInformation)];
-  } _memUI;
-
-  TEUserInformation * _pUI; //OPTIONAL
-
+} */
+class TEAPduAARE : public asn1::ber::EncoderOfStructure_T<5> {
 protected:
   //AssociateResultField ::= [2] INTEGER {accepted(0), reject-permanent(1)}
   class TEResultField : public asn1::ber::EncoderOfINTEGER {
@@ -47,17 +36,13 @@ protected:
   public:
     static const asn1::ASTag _typeTag; //[2] EXPLICIT
 
-    TEResultField(TDialogueAssociate::Result_e use_val = TDialogueAssociate::dlg_reject_permanent,
-                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-      : asn1::ber::EncoderOfINTEGER(_typeTag, asn1::ASTagging::tagsEXPLICIT,
-                                    TSGroupBER::getTSRule(use_rule))
-    {
-      setValue(use_val);
-    }
+    explicit TEResultField(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+      : asn1::ber::EncoderOfINTEGER(_typeTag, asn1::ASTagging::tagsEXPLICIT, use_rule)
+    { }
     ~TEResultField()
     { }
-
-    void setValue(TDialogueAssociate::Result_e use_val)
+    //
+    void setValue(const TDialogueAssociate::Result_e & use_val)
     {
       asn1::ber::EncoderOfINTEGER::setValue(use_val);
     }
@@ -76,43 +61,27 @@ protected:
     static const asn1::ASTag _tagUser; //[1] EXPLICIT
     static const asn1::ASTag _tagPrvd;  //[2] EXPLICIT
 
-    union {
-      void *  aligner;
-      uint8_t buf[sizeof(asn1::ber::EncoderOfINTEGER)];
-    } _memSel;
-
-    asn1::ber::EncoderOfINTEGER * _pSel;
+    asn1::ber::EncoderProducer_T<asn1::ber::EncoderOfINTEGER> _altEnc;
 
   public:
     static const asn1::ASTag _typeTag; //[3] EXPLICIT
 
-    TEResultDiagnosticField(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-      : asn1::ber::EncoderOfChoice(_typeTag, asn1::ASTagging::tagsEXPLICIT,
-                                   TSGroupBER::getTSRule(use_rule))
-      , _pSel(0)
-    {
-      _memSel.aligner = 0;
-    }
+    explicit TEResultDiagnosticField(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+      : asn1::ber::EncoderOfChoice(_typeTag, asn1::ASTagging::tagsEXPLICIT, use_rule)
+    { }
     ~TEResultDiagnosticField()
+    { }
+
+    void setUserDiagnostic(const AssociateSourceDiagnostic::DiagnosticUser_e & use_cause)
     {
-      if (_pSel)
-        _pSel->~EncoderOfINTEGER();
+      _altEnc.init(_tagUser, asn1::ASTagging::tagsEXPLICIT, getTSRule()).setValue(use_cause);
+      asn1::ber::EncoderOfChoice::setSelection(*_altEnc.get());
     }
 
-    void setUserDiagnostic(AssociateSourceDiagnostic::DiagnosticUser_e use_cause)
+    void setPrvdDiagnostic(const AssociateSourceDiagnostic::DiagnosticProvider_e & use_cause)
     {
-      _pSel = new (_memSel.buf)
-          asn1::ber::EncoderOfINTEGER(use_cause, _tagUser, asn1::ASTagging::tagsEXPLICIT,
-                                      getTSRule());
-      asn1::ber::EncoderOfChoice::setSelection(*_pSel);
-    }
-
-    void setPrvdDiagnostic(AssociateSourceDiagnostic::DiagnosticProvider_e use_cause)
-    {
-      _pSel = new (_memSel.buf)
-          asn1::ber::EncoderOfINTEGER(use_cause, _tagPrvd, asn1::ASTagging::tagsEXPLICIT,
-                                      getTSRule());
-      asn1::ber::EncoderOfChoice::setSelection(*_pSel);
+      _altEnc.init(_tagPrvd, asn1::ASTagging::tagsEXPLICIT, getTSRule()).setValue(use_cause);
+      asn1::ber::EncoderOfChoice::setSelection(*_altEnc.get());
     }
   };
 
@@ -121,45 +90,33 @@ protected:
   TEApplicationContext      _appCtx;
   TEResultField             _ascResult;
   TEResultDiagnosticField   _ascDiagn;
+  // Optionals:
+  asn1::ber::EncoderProducer_T<TEUserInformation> _pUI;
 
-/* ----------------------------------------------- */
-  TEUserInformation * getUI(void)
-  {
-    if (!_pUI) {
-      _pUI = new (_memUI.buf)TEUserInformation(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfPlainStructure_T<5>::setField(4, *_pUI);
-    }
-    return _pUI;
-  }
-  void clearUI(void)
-  {
-    if (_pUI)
-      _pUI->~TEUserInformation();
-  }
+  /* ----------------------------------------------- */
+  TEUserInformation * getUI(void);
+  void construct(void);
 
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 1] IMPLICIT
 
-  TEAPduAARE(const asn1::EncodedOID * app_ctx = 0,
-                     TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfPlainStructure_T<5>(asn1::ASTagging(_typeTag, asn1::ASTagging::tagsIMPLICIT),
-                                        TSGroupBER::getTSRule(use_rule))
-    , _pUI(0), _protoVer(use_rule), _appCtx(use_rule)
-    , _ascResult(TDialogueAssociate::dlg_reject_permanent, use_rule)
-    , _ascDiagn(use_rule)
+  explicit TEAPduAARE(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfStructure_T<5>(asn1::ASTagging(_typeTag, asn1::ASTagging::tagsIMPLICIT), use_rule)
+    , _protoVer(use_rule), _appCtx(use_rule), _ascResult(use_rule), _ascDiagn(use_rule)
   {
-    _memUI.aligner = 0;
-    if (app_ctx)
-      _appCtx.setValue(*app_ctx);
-    asn1::ber::EncoderOfPlainStructure_T<5>::addField(_protoVer);
-    asn1::ber::EncoderOfPlainStructure_T<5>::addField(_appCtx);
-    asn1::ber::EncoderOfPlainStructure_T<5>::addField(_ascResult);
-    asn1::ber::EncoderOfPlainStructure_T<5>::addField(_ascDiagn);
+    construct();
   }
+  explicit TEAPduAARE(const asn1::EncodedOID & app_ctx,
+                     asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfStructure_T<5>(asn1::ASTagging(_typeTag, asn1::ASTagging::tagsIMPLICIT), use_rule)
+    , _protoVer(use_rule), _appCtx(use_rule), _ascResult(use_rule), _ascDiagn(use_rule)
+  {
+    construct();
+    _appCtx.setValue(app_ctx);
+  }
+  //
   ~TEAPduAARE()
-  {
-    clearUI();
-  }
+  { }
 
   void setAppContext(const asn1::EncodedOID & app_ctx) { _appCtx.setValue(app_ctx); }
 
@@ -189,16 +146,10 @@ public:
     _ascDiagn.setPrvdDiagnostic(use_cause);
   }
 
-  void addUIValue(const asn1::ASExternal & use_val) /* throw(std::exception)*/
-  {
-    getUI()->addValue(use_val);
-  }
-
   void addUIList(const tcap::TDlgUserInfoPtrList & ui_list)  /* throw(std::exception)*/
   {
-    getUI()->addValuesList(ui_list);
+    getUI()->setValue(ui_list);
   }
-
 };
 
 }}}}

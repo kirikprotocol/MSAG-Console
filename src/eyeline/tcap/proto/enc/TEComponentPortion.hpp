@@ -7,7 +7,7 @@
 
 #include "eyeline/tcap/TComponentDefs.hpp"
 #include "eyeline/tcap/proto/enc/TEComponent.hpp"
-#include "eyeline/asn1/BER/rtenc/EncodeSequenced.hpp"
+#include "eyeline/asn1/BER/rtenc/EncodeSeqOfLinked.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -21,23 +21,18 @@ namespace enc {
 static const uint16_t _TMsgDfltNumOfComponents = 3;
 
 class TEComponentPortion : public
-  asn1::ber::EncoderOfSequenced_T<ros::ROSPdu, TEComponent,
-                                  _TMsgDfltNumOfComponents> {
+  asn1::ber::EncoderOfSeqOfLinked_T<ros::ROSPdu, TEComponent, _TMsgDfltNumOfComponents> {
 public:
   static const asn1::ASTagging _typeTags;
 
-  explicit TEComponentPortion(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfSequenced_T<ros::ROSPdu, TEComponent,
-                                      _TMsgDfltNumOfComponents
-                                      >(_typeTags, TSGroupBER::getTSRule(use_rule))
+  explicit TEComponentPortion(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfSeqOfLinked_T<ros::ROSPdu, TEComponent,
+                                      _TMsgDfltNumOfComponents>(_typeTags, use_rule)
   { }
   ~TEComponentPortion()
   { }
-  //
-  //EncoderOfSequenced_T<> provides method
-  //void addValue(const ros::ROSPdu & use_val) /*throw(std::exception)*/;
 
-  void addValuesList(const tcap::TComponentsPtrList & comp_list) /*throw(std::exception)*/;
+  //void setValue(const tcap::TComponentsPtrList & comp_list) /*throw(std::exception)*/;
 };
 
 }}}}

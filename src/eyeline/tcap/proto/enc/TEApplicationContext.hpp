@@ -12,26 +12,26 @@ namespace tcap {
 namespace proto {
 namespace enc {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 /* ApplicationContext is defined in EXPLICIT tagging environment as follow:
   ApplicationContext ::= [1] OBJECT IDENTIFIER
 */
 class TEApplicationContext : public asn1::ber::EncoderOfEOID {
 public:
-  static const asn1::ASTagging _typeTags; //[1] EXPLICIT
+  static const asn1::ASTag _typeTag; //[1] EXPLICIT
 
-  TEApplicationContext(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfEOID(_typeTags, TSGroupBER::getTSRule(use_rule))
+  explicit TEApplicationContext(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfEOID(_typeTag, asn1::ASTagging::tagsEXPLICIT, use_rule)
   { }
-  TEApplicationContext(const asn1::EncodedOID & use_val,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfEOID(_typeTags, TSGroupBER::getTSRule(use_rule))
+  explicit TEApplicationContext(const asn1::EncodedOID & use_val,
+                  asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfEOID(_typeTag, asn1::ASTagging::tagsEXPLICIT, use_rule)
   {
     asn1::ber::EncoderOfEOID::setValue(use_val);
   }
   ~TEApplicationContext()
   { }
+
+  //void setValue(const asn1::EncodedOID & use_val) /*throw(std::exception)*/;
 };
 
 }}}}

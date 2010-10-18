@@ -13,8 +13,6 @@ namespace tcap {
 namespace proto {
 namespace enc {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 /* AbortCause is defined in IMPLICIT tagging environment as follow:
 P-AbortCause ::= [APPLICATION 10]  INTEGER(0..127)
 */
@@ -22,14 +20,20 @@ class TEPAbortCause : public asn1::ber::EncoderOfINTEGER {
 public:
   static const asn1::ASTagging _typeTags; //[APPLICATION 10] IMPLICIT
 
-  explicit TEPAbortCause(PAbort::Cause_t use_cause = tcap::PAbort::p_resourceLimitation,
-                       TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfINTEGER(_typeTags, TSGroupBER::getTSRule(use_rule))
+  explicit TEPAbortCause(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfINTEGER(_typeTags, use_rule)
+  { }
+  explicit TEPAbortCause(PAbort::Cause_t use_cause,
+                         asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfINTEGER(_typeTags, use_rule)
   {
     setValue(use_cause);
   }
   ~TEPAbortCause()
   { }
+
+  //Base class provides:
+  //void setValue(PAbort::Cause_t use_val) /*throw(std::exception)*/;
 };
 
 }}}}

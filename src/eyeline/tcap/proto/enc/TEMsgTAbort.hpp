@@ -28,63 +28,46 @@ Abort ::= [APPLICATION 7] SEQUENCE {
 -- which case it could be either an ABRT APDU or data in some user-defined
 -- abstract syntax or AARE APDU as a response to received TBegin.
 */
-class TETAbort : public asn1::ber::EncoderOfPlainStructure_T<2> {
-private:
-  using asn1::ber::EncoderOfPlainStructure_T<2>::addField;
-  using asn1::ber::EncoderOfPlainStructure_T<2>::setField;
-
-  union {
-    void * aligner;
-    uint64_t buf[eyeline::util::MultiplierOfSize_T<
-                    eyeline::util::MaxSizeOf2_T<
-                        TEPAbortCause, TEDialoguePortionStructured>::VALUE
-                    , uint64_t>::VALUE];
-  } _memCause;
-
+class TETAbort : public asn1::ber::EncoderOfStructure_T<2> {
 protected:
-  TEDestTransactionId           _trIdDst;
-  TEPAbortCause *               _causePrvd;
-  TEDialoguePortionStructured * _causeUser; //NOTE: only ABRT_APdu, AARE_APdu or ASExternal is allowed
+  class CauseEncoder : public asn1::ber::ChoiceOfEncoders2_T<
+                              TEPAbortCause, TEDialoguePortionStructured> {
+  public:
+    Alternative_T<TEPAbortCause>        pAbort()  { return alternative0(); }
+    ConstAlternative_T<TEPAbortCause>   pAbort()  const { return alternative0(); }
 
-  TEDialoguePortionStructured * getDlgPortion(void)
-  {
-    if (!_causeUser) {
-      _causeUser = new (_memCause.buf)TEDialoguePortionStructured(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfPlainStructure_T<2>::setField(1, *_causeUser);
-    }
-    return _causeUser;
-  }
+    //NOTE: only ABRT_APdu, AARE_APdu or ASExternal is allowed
+    Alternative_T<TEDialoguePortionStructured>      uAbort()  { return alternative1(); }
+    ConstAlternative_T<TEDialoguePortionStructured> uAbort()  const { return alternative1(); }
+  };
+
+/* ----------------------------------------------- */
+  TEDestTransactionId   _trIdDst;
+  CauseEncoder          _cause;
+
+/* ----------------------------------------------- */
+  TEDialoguePortionStructured * initDlgPortion(void);
 
 public:
   static const asn1::ASTagging _typeTags;
 
-  explicit TETAbort(uint32_t remote_tr_id, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfPlainStructure_T<2>(_typeTags, TSGroupBER::getTSRule(use_rule))
-    , _trIdDst(remote_tr_id, use_rule), _causePrvd(0), _causeUser(0)
+  explicit TETAbort(uint32_t remote_tr_id,
+                    asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfStructure_T<2>(_typeTags, use_rule)
+    , _trIdDst(remote_tr_id, use_rule)
   {
-    _memCause.aligner = 0;
-    asn1::ber::EncoderOfPlainStructure_T<2>::addField(_trIdDst);
+    asn1::ber::EncoderOfStructure_T<2>::setField(0, _trIdDst);
   }
   ~TETAbort()
-  {
-    if (_causePrvd)
-      _causePrvd->~TEPAbortCause();
-    else if (_causeUser)
-      _causeUser->~TEDialoguePortionStructured();
-  }
+  { }
 
-  TEPAbortCause * setPrvdAbort(PAbort::Cause_e use_cause = PAbort::p_resourceLimitation)
-  {
-    _causePrvd = new (_memCause.buf)TEPAbortCause(use_cause, TSGroupBER::getBERRule(getTSRule()));
-    asn1::ber::EncoderOfPlainStructure_T<2>::setField(1, *_causePrvd);
-    return _causePrvd;
-  }
+  TEPAbortCause * setPrvdAbort(PAbort::Cause_e use_cause = PAbort::p_resourceLimitation);
 
   //Indicates that TCUser aborts already established dialog with some
   //externally defined DataValue provided as reason.
   void setUserAbort(const asn1::ASExternal & use_ext)
   {
-    getDlgPortion()->setValue(use_ext);
+    initDlgPortion()->setValue(use_ext);
   }
 
   //Indicates that TCUser aborts already established dialog with optional
@@ -92,7 +75,7 @@ public:
   //Returns ABRT_APdu for addition of optional UsrInfo
   TEAPduABRT * setUserAbort(void)
   {
-    return getDlgPortion()->getPduABRT(TDialogueAssociate::abrtServiceUser);
+    return initDlgPortion()->initPduABRT(TDialogueAssociate::abrtServiceUser);
   }
 
   //Indicates that TCUser aborts establishing a dialog (response to TBegin).
@@ -102,7 +85,7 @@ public:
                              AssociateSourceDiagnostic::DiagnosticUser_e use_cause
                              = AssociateSourceDiagnostic::dsu_null)
   {
-    TEAPduAARE * pdu = getDlgPortion()->getPduAARE(app_ctx);
+    TEAPduAARE * pdu = initDlgPortion()->initPduAARE(app_ctx);
     pdu->rejectByUser(use_cause);
     return pdu;
   }

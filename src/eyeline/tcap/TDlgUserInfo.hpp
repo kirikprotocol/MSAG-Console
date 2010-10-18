@@ -13,7 +13,7 @@
 namespace eyeline {
 namespace tcap {
 
-typedef std::list<const asn1::ASExternal*> TDlgUserInfoPtrList;
+typedef std::list<asn1::ASExternal*> TDlgUserInfoPtrList;
 typedef std::list<asn1::ASExternal> TDlgUserInfoList;
 
 } //tcap

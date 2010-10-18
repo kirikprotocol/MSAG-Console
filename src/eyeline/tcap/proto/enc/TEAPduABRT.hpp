@@ -22,83 +22,63 @@ ABRT-apdu ::= [APPLICATION 4] IMPLICIT SEQUENCE {
   user-information  UserInformation OPTIONAL
 }
 */
-class TEAPduABRT : public asn1::ber::EncoderOfPlainStructure_T<2> {
-private:
-  using asn1::ber::EncoderOfPlainStructure_T<2>::addField;
-  using asn1::ber::EncoderOfPlainStructure_T<2>::setField;
-
-  union {
-    void *  aligner;
-    uint8_t buf[sizeof(TEUserInformation)];
-  } _memUI;
-
-  TEUserInformation * _pUI; //OPTIONAL
-
+class TEAPduABRT : public asn1::ber::EncoderOfStructure_T<2> {
 protected:
-  class AbortSource : public asn1::ber::EncoderOfINTEGER {
+  //abort-source field encoder
+  class FEAbortSource : public asn1::ber::EncoderOfINTEGER {
   private:
     using asn1::ber::EncoderOfINTEGER::setValue;
-
-  protected:
-    TDialogueAssociate::AbrtSource_e  _srcId;
 
   public:
     static const asn1::ASTagging _typeTags; //[0] IMPLICIT
 
-    AbortSource(TDialogueAssociate::AbrtSource_e abort_source = TDialogueAssociate::abrtServiceUser,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-      : asn1::ber::EncoderOfINTEGER(_typeTags, TSGroupBER::getTSRule(use_rule))
-      , _srcId(abort_source)
+    explicit FEAbortSource(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+      : asn1::ber::EncoderOfINTEGER(_typeTags, use_rule)
+    { }
+    ~FEAbortSource()
     { }
 
-    void setValue(TDialogueAssociate::AbrtSource_e abort_source) { _srcId = abort_source; }
+    void setValue(TDialogueAssociate::AbrtSource_e abort_source)
+    {
+      asn1::ber::EncoderOfINTEGER::setValue(abort_source);
+    }
   };
 
-  AbortSource       _abrtSrc;
+/* ----------------------------------------------- */
+  FEAbortSource       _abrtSrc;
+  // Optionals:
+  asn1::ber::EncoderProducer_T<TEUserInformation> _pUI;
 
-  TEUserInformation * getUI(void)
-  {
-    if (!_pUI) {
-      _pUI = new (_memUI.buf)TEUserInformation(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfPlainStructure_T<2>::setField(1, *_pUI);
-    }
-    return _pUI;
-  }
-  void clearUI(void)
-  {
-    if (_pUI)
-      _pUI->~TEUserInformation();
-  }
+/* ----------------------------------------------- */
+  TEUserInformation * getUI(void);
 
 public:
   static const asn1::ASTagging _typeTags; //[APPLICATION 4] IMPLICIT
 
-  TEAPduABRT(TDialogueAssociate::AbrtSource_e abort_source,
-              TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfPlainStructure_T<2>(_typeTags, TSGroupBER::getTSRule(use_rule))
-    , _pUI(0), _abrtSrc(abort_source)
+  explicit TEAPduABRT(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfStructure_T<2>(_typeTags, use_rule), _abrtSrc(use_rule)
   {
-    _memUI.aligner = 0;
-    asn1::ber::EncoderOfPlainStructure_T<2>::addField(_abrtSrc);
+    asn1::ber::EncoderOfStructure_T<2>::setField(0, _abrtSrc);
+  }
+
+  explicit TEAPduABRT(TDialogueAssociate::AbrtSource_e abort_source,
+                      asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfStructure_T<2>(_typeTags, use_rule), _abrtSrc(use_rule)
+  {
+    asn1::ber::EncoderOfStructure_T<2>::setField(0, _abrtSrc);
+    _abrtSrc.setValue(abort_source);
   }
   ~TEAPduABRT()
-  {
-    clearUI();
-  }
+  { }
 
   void setAbortSource(TDialogueAssociate::AbrtSource_e abort_source)
   {
     _abrtSrc.setValue(abort_source);
   }
 
-  void addUIValue(const asn1::ASExternal & use_val)
-  {
-    getUI()->addValue(use_val);
-  }
-
   void addUIList(const tcap::TDlgUserInfoPtrList & ui_list)
   {
-    getUI()->addValuesList(ui_list);
+    getUI()->setValue(ui_list);
   }
 };
 

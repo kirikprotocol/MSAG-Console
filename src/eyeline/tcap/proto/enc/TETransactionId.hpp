@@ -13,8 +13,6 @@ namespace tcap {
 namespace proto {
 namespace enc {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 class TransactionIdEncoder : public asn1::ber::EncoderOfOCTSTR {
 private:
   using asn1::ber::EncoderOfOCTSTR::setValue;
@@ -26,8 +24,8 @@ private:
 public:
   explicit TransactionIdEncoder(uint32_t trn_id_value,
                                 const asn1::ASTagging & type_tags,
-                                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : EncoderOfOCTSTR(type_tags, TSGroupBER::getTSRule(use_rule))
+                                asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : EncoderOfOCTSTR(type_tags, use_rule)
   {
     setValue(trn_id_value);
   }
@@ -50,7 +48,7 @@ public:
   static const asn1::ASTagging _typeTags; //[APPLICATION 8] IMPLICIT
 
   explicit TEOrigTransactionId(uint32_t trn_id_value,
-                             TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+                             asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
     : TransactionIdEncoder(trn_id_value, _typeTags, use_rule)
   { }
   ~TEOrigTransactionId()
@@ -65,7 +63,7 @@ public:
   static const asn1::ASTagging _typeTags;  //[APPLICATION 9] IMPLICIT
 
   explicit TEDestTransactionId(uint32_t trn_id_value,
-                             TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+                               asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
     : TransactionIdEncoder(trn_id_value, _typeTags, use_rule)
   { }
   ~TEDestTransactionId()

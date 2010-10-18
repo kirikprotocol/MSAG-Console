@@ -9,6 +9,8 @@
 #include "eyeline/tcap/proto/enc/TEDialoguePortion.hpp"
 #include "eyeline/tcap/proto/enc/TEComponentPortion.hpp"
 
+#include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"
+
 namespace eyeline {
 namespace tcap {
 namespace proto {
@@ -20,86 +22,48 @@ Begin ::= [APPLICATION 2] SEQUENCE {
   dialoguePortion  DialoguePortion OPTIONAL,
   components       ComponentPortion OPTIONAL
 } */
-class TETBegin : public asn1::ber::EncoderOfPlainStructure_T<3> {
-private:
-  using asn1::ber::EncoderOfPlainStructure_T<3>::addField;
-  using asn1::ber::EncoderOfPlainStructure_T<3>::setField;
-
-  union {
-    void * aligner;
-    uint64_t buf[eyeline::util::MultiplierOfSize_T<
-                    sizeof(TEDialoguePortionStructured), uint64_t>::VALUE];
-  } _memDlg;
-  union {
-    void * aligner;
-    uint64_t buf[eyeline::util::MultiplierOfSize_T<
-                    sizeof(TEComponentPortion), uint64_t>::VALUE];
-  } _memComp;
-
+class TETBegin : public asn1::ber::EncoderOfStructure_T<3> {
 protected:
   TEOrigTransactionId           _trIdSrc;
-  TEDialoguePortionStructured * _partDlg; //NOTE: only optional AARQ_APdu is allowed
-  TEComponentPortion *          _partComp; //NOTE: only Invokations are allowed
+  asn1::ber::EncoderProducer_T<TEDialoguePortionStructured> _partDlg;   //NOTE: only optional AARQ_APdu is allowed
+  asn1::ber::EncoderProducer_T<TEComponentPortion>          _partComp;  //NOTE: only Invocations are allowed
 
-  TEDialoguePortionStructured * getDlgPortion(void)
-  {
-    if (!_partDlg) {
-      _partDlg = new (_memDlg.buf)TEDialoguePortionStructured(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfPlainStructure_T<3>::setField(1, *_partDlg);
-    }
-    return _partDlg;
-  }
-
-  TEComponentPortion * getCompPortion(void)
-  {
-    if (!_partComp) {
-      _partComp = new (_memComp.buf)TEComponentPortion(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfPlainStructure_T<3>::setField(2, *_partComp);
-    }
-    return _partComp;
-  }
+  TEDialoguePortionStructured * initDlgPortion(void);
+  TEComponentPortion * initCompPortion(void);
 
 public:
   static const asn1::ASTagging _typeTags;
 
-  TETBegin(uint32_t local_tr_id, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfPlainStructure_T<3>(_typeTags, TSGroupBER::getTSRule(use_rule))
-    , _trIdSrc(local_tr_id, use_rule), _partDlg(NULL), _partComp(NULL)
+  explicit TETBegin(uint32_t local_tr_id,
+                    asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfStructure_T<3>(_typeTags, use_rule)
+    , _trIdSrc(local_tr_id, use_rule)
   {
-    _memDlg.aligner = _memComp.aligner = 0;
-    asn1::ber::EncoderOfPlainStructure_T<3>::addField(_trIdSrc);
+    asn1::ber::EncoderOfStructure_T<3>::setField(0, _trIdSrc);
   }
   ~TETBegin()
-  {
-    if (_partDlg)
-      _partDlg->~TEDialoguePortionStructured();
-    clearCompPortion();
-  }
+  { }
 
   //Creates and initializes AARQ_APdu (sets ApplicationContext)
   TEAPduAARQ * initDlgRequest(const asn1::EncodedOID & use_app_ctx)
   {
-    return getDlgPortion()->getPduAARQ(use_app_ctx);
+    return initDlgPortion()->initPduAARQ(use_app_ctx);
   }
 
   //Creates and appends new component (ROS Pdu) encoder
   void addComponent(const ros::ROSPdu & ros_pdu) /*throw(std::exception)*/
   {
-    getCompPortion()->addValue(ros_pdu);
+    initCompPortion()->addElementValue(ros_pdu);
   }
 
   void addComponents(const tcap::TComponentsPtrList & comp_list) /*throw(std::exception)*/
   {
-    getCompPortion()->addValuesList(comp_list);
+    initCompPortion()->setValue(comp_list);
   }
 
-  void clearCompPortion(void)
-  {
-    if (_partComp) {
-      _partComp->~TEComponentPortion();
-      _partComp = 0;
-    }
-  }
+  void clearDlgPortion(void);
+
+  void clearCompPortion(void);
 };
 
 }}}}

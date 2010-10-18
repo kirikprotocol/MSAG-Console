@@ -21,71 +21,46 @@ AARQ-apdu ::= [APPLICATION 0] IMPLICIT SEQUENCE {
   application-context-name  ApplicationContext,
   user-information          UserInformation OPTIONAL
 } */
-class TEAPduAARQ : public asn1::ber::EncoderOfPlainStructure_T<3> {
-private:
-  using asn1::ber::EncoderOfPlainStructure_T<3>::addField;
-  using asn1::ber::EncoderOfPlainStructure_T<3>::setField;
-
-  union {
-    void *  aligner;
-    uint8_t buf[sizeof(TEUserInformation)];
-  } _memUI;
-
-  TEUserInformation * _pUI; //OPTIONAL
-
+class TEAPduAARQ : public asn1::ber::EncoderOfStructure_T<3> {
 protected:
   /* ----------------------------------------------- */
   TEProtocolVersion     _protoVer;
   TEApplicationContext  _appCtx;
+  // Optionals:
+  asn1::ber::EncoderProducer_T<TEUserInformation> _pUI;
 
 /* ----------------------------------------------- */
-  TEUserInformation * getUI(void)
-  {
-    if (!_pUI) {
-      _pUI = new (_memUI.buf)TEUserInformation(TSGroupBER::getBERRule(getTSRule()));
-      asn1::ber::EncoderOfPlainStructure_T<3>::setField(2, *_pUI);
-    }
-    return _pUI;
-  }
-  void clearUI(void)
-  {
-    if (_pUI)
-      _pUI->~TEUserInformation();
-  }
+  void construct(void);
+  TEUserInformation * getUI(void);
 
 public:
   static const asn1::ASTagging _typeTags; //[APPLICATION 0] IMPLICIT
 
-  TEAPduAARQ(const asn1::EncodedOID * app_ctx = 0,
-              TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::EncoderOfPlainStructure_T<3>(_typeTags, TSGroupBER::getTSRule(use_rule))
-    , _pUI(0), _protoVer(use_rule), _appCtx(use_rule)
+  explicit TEAPduAARQ(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfStructure_T<3>(_typeTags, use_rule)
+    , _protoVer(use_rule), _appCtx(use_rule)
   {
-    _memUI.aligner = 0;
-    if (app_ctx)
-      _appCtx.setValue(*app_ctx);
-
-    asn1::ber::EncoderOfPlainStructure_T<3>::addField(_protoVer);
-    asn1::ber::EncoderOfPlainStructure_T<3>::addField(_appCtx);
+    construct();
+  }
+  explicit TEAPduAARQ(const asn1::EncodedOID & app_ctx,
+                      asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
+    : asn1::ber::EncoderOfStructure_T<3>(_typeTags, use_rule)
+    , _protoVer(use_rule), _appCtx(use_rule)
+  {
+    construct();
+    _appCtx.setValue(app_ctx);
   }
   ~TEAPduAARQ()
-  {
-    clearUI();
-  }
+  { }
 
   //
   void setAppContext(const asn1::EncodedOID & app_ctx)
   {
     _appCtx.setValue(app_ctx);
   }
-  //
-  void addUIValue(const asn1::ASExternal & val_ext) /*throw(std::exception)*/
-  {
-    getUI()->addValue(val_ext);
-  }
   void addUIList(const tcap::TDlgUserInfoPtrList & ui_list) /*throw(std::exception)*/
   {
-    getUI()->addValuesList(ui_list);
+    getUI()->setValue(ui_list);
   }
 };
 

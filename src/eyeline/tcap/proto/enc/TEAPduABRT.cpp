@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/enc/TEAPduABRT.hpp"
 
@@ -14,8 +14,18 @@ const asn1::ASTagging
                        4, asn1::ASTagging::tagsIMPLICIT);
 
 const asn1::ASTagging 
-  TEAPduABRT::AbortSource::_typeTags(asn1::ASTag::tagContextSpecific,
+  TEAPduABRT::FEAbortSource::_typeTags(asn1::ASTag::tagContextSpecific,
                                     0, asn1::ASTagging::tagsIMPLICIT);
+
+
+TEUserInformation * TEAPduABRT::getUI(void)
+{
+  if (!_pUI.get()) {
+    _pUI.init(getTSRule());
+    setField(1, *_pUI.get());
+  }
+  return _pUI.get();
+}
 
 }}}}
 
