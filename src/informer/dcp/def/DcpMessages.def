@@ -148,9 +148,10 @@ end
 
 message GetDeliveriesListNext 52
   int32 reqId 1
+  int32 count 2
 end
 
-message DeliveryListInfo 54
+message DeliveryListInfo
   property innerMessage=true
   int32 deliveryId 1
   string userId 2 opt
@@ -165,6 +166,20 @@ end
 message GetDeliveriesListNextResp 53
   bool moreDeliveries 1
   DeliveryListInfo info 2 array
+end
+
+message CountDeliveries 54
+  string userIdFilter 1 array opt
+  string nameFilter 2 array opt
+  DeliveryStatus statusFilter 3 array opt
+  string startDateFrom 4 opt
+  string startDateTo 5 opt
+  string endDateFrom 6 opt
+  string endDateTo 7 opt
+end
+
+message CountDeliveriesResp 55
+  int32 result 1
 end
 
 message DropDelivery 33
