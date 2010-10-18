@@ -103,9 +103,11 @@ public class AdminContext {
       journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
       informerManager = new InformerManagerImpl(new File(confDir,"config.xml"),
           new File(confDir, "backup"), fileSystem, serviceManager);
-      usersManager = new UsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
+
       InformerSettings is = informerManager.getConfigSettings();
       infosme = new InfosmeImpl(is.getHost(), is.getAdminPort());
+
+      usersManager = new UsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
 
       Properties pers = new Properties();
       pers.setProperty("personalization.host",is.getPersHost());
@@ -166,14 +168,14 @@ public class AdminContext {
   public void updateUser(User u) throws AdminException {
     try{
       integrityLock.lock();
-        if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
-          throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
+      if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
+        throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
+      }
+      for(String rId : u.getRegions()) {
+        if(null == regionsManager.getRegion(rId)) {
+          throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
         }
-        for(String rId : u.getRegions()) {
-          if(null == regionsManager.getRegion(rId)) {
-            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
-          }
-        }
+      }
 
       usersManager.updateUser(u);
     }
@@ -185,15 +187,16 @@ public class AdminContext {
   public void addUser(User u) throws AdminException {
     try{
       integrityLock.lock();
-        if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
-          throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
-        }
+      if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
+        throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
+      }
+      if(u.getRegions()!=null) {
         for(String rId : u.getRegions()) {
           if(null == regionsManager.getRegion(rId)) {
             throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
           }
         }
-
+      }
       usersManager.addUser(u);
     }
     finally {

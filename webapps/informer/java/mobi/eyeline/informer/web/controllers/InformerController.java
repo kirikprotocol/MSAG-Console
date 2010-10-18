@@ -83,6 +83,17 @@ public abstract class InformerController implements Serializable {
     addMessage(severity, message);
   }
 
+  protected String getLocalizedString(String bundleKey) {
+    return ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey);
+  }
+
+  protected String getLocalizedString(String bundleKey, Object... args) {
+    return MessageFormat.format(
+            ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey),
+            args
+           );
+
+  }
   /**
    * Добавляет на страницу информацию об ошибке
    * @param e ошибка

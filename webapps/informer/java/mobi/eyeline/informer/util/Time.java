@@ -14,11 +14,20 @@ public class Time {
   int sec;
 
   public Time(String s) {
+    initFromString(s);
+  }
+
+  private void initFromString(String s) {
     StringTokenizer st = new StringTokenizer(s,":");
-    if(st.countTokens()!=3) throw new IllegalArgumentException("Invalid time string:'"+s+"'" );
+    if(st.countTokens()<2) throw new IllegalArgumentException("Invalid time string:'"+s+"'" );
     hour = Integer.parseInt(st.nextToken(),10);
     min  = Integer.parseInt(st.nextToken(),10);
-    sec  = Integer.parseInt(st.nextToken(),10);
+    if(st.countTokens()==3)  {
+      sec  = Integer.parseInt(st.nextToken(),10);
+    }
+    else {
+      sec=0;
+    }
     if(!validate()) {
       throw new IllegalArgumentException("Invalid time string:'"+s+"'");
     }
@@ -56,6 +65,9 @@ public class Time {
     return sec;
   }
 
+  public void setTimeString(String s) {
+    initFromString(s);
+  }
 
   public String getTimeString() {
     StringBuilder sb = new StringBuilder(8);

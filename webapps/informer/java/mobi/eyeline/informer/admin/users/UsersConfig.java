@@ -48,7 +48,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     u.setEmail(section.getString("email"));
     u.setOrganization(section.getString("organization"));
     u.setCreateCDR(section.getBool("createCDR",false));
-    String lang = section.getString("locale");
+    String lang = section.getString("locale","en");
     if(lang!=null) {
         u.setLocale(new Locale(lang));
     }
@@ -83,9 +83,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     return u;
   }
 
-  private Set<String> loadUserRegions(XmlConfigSection section) throws XmlConfigException {
-    TreeSet<String> result = new TreeSet<String>();
+  private List<String> loadUserRegions(XmlConfigSection section) throws XmlConfigException {
     if(section.containsSection("REGIONS")) {
+      List<String> result = new ArrayList<String>();
       XmlConfigSection regions = section.getSection("REGIONS");
       Collection<XmlConfigParam> params = regions.params();
       for(XmlConfigParam p : params) {
@@ -93,24 +93,26 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
           result.add(p.getName());
         }
       }
+      return result.isEmpty() ? null : result;
     }
-    return result;
+    return null;
   }
 
 
-  private Set<Integer> loadDeliveryDays(XmlConfigSection section) throws XmlConfigException {
+  private List<Integer> loadDeliveryDays(XmlConfigSection section) throws XmlConfigException {
+    List<Integer> result = new ArrayList<Integer>();
     if(section.containsSection("DELIVERY_DAYS")) {
       XmlConfigSection daysSection = section.getSection("DELIVERY_DAYS");      
       Collection<XmlConfigParam> params = daysSection.params();
-      TreeSet<Integer> result = new TreeSet<Integer>();
+
       for(XmlConfigParam p : params) {
         if(p.getBool()) {
           result.add(Integer.valueOf(p.getName()));
         }
       }
-      return result;
+
     }
-    return null;
+    return result;
   }
 
   private Set<String> loadUserRoles(XmlConfigSection section) throws XmlConfigException {
@@ -174,7 +176,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
 
     userSection.addSection(createUserRolesSection(user));
 
-    if(user.getDeliveryDays()!=null && !user.getDeliveryDays().isEmpty()) {
+    if(!user.getDeliveryDays().isEmpty()) {
       userSection.addSection(createDeliveryDaysSection(user));
     }
     if(user.getRegions()!=null && !user.getRegions().isEmpty()) {
@@ -204,17 +206,17 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
   }
 
   private XmlConfigSection createRegionsSection(User user) {
-    XmlConfigSection deliveryDaysSection = new XmlConfigSection("REGIONS");
-    Set<String> regions = user.getRegions();
+    XmlConfigSection regionsSection = new XmlConfigSection("REGIONS");
+    List<String> regions = user.getRegions();
     for(String region : regions) {
-      deliveryDaysSection.setBool(region,true);
+      regionsSection.setBool(region,true);
     }
-    return deliveryDaysSection;
+    return regionsSection;
   }
 
   private XmlConfigSection createDeliveryDaysSection(User user) {
     XmlConfigSection deliveryDaysSection = new XmlConfigSection("DELIVERY_DAYS");
-    Set<Integer> days = user.getDeliveryDays();
+    List<Integer> days = user.getDeliveryDays();
     for(Integer day : days) {
       deliveryDaysSection.setBool(day.toString(),true);
     }

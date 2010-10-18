@@ -43,7 +43,6 @@ public class TestAdminContext extends AdminContext {
     try {
       prepareServices(webConfig, confDir);
 
-      usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
 
 
       if (webConfig.getInstallationType() == InstallationType.SINGLE)  {
@@ -56,6 +55,8 @@ public class TestAdminContext extends AdminContext {
       informerManager = new TestInformerManager(new File(confDir, "config.xml"),
           new File(confDir, "backup"), fileSystem, serviceManager);
       infosme = new TestInfosme();
+      usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
+      
       blacklistManager = new TestBlacklistManager();
       smscManager = new TestSmscManager(infosme, new File(confDir, "smsc.xml"),
           new File(confDir, "backup"), fileSystem);

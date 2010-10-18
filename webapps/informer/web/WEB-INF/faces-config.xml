@@ -212,7 +212,11 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.users.UserEditController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
-
+  <managed-bean>
+      <managed-bean-name>userGroupEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.UserGroupEditController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <navigation-rule>
     <navigation-case>
@@ -281,9 +285,12 @@
     </navigation-case>
     <navigation-case>
       <from-outcome>USER_EDIT</from-outcome>
-      <to-view-id>/user/edit.xhtml</to-view-id>      
+      <to-view-id>/users/edit.xhtml</to-view-id>
     </navigation-case>
-
+    <navigation-case>
+      <from-outcome>USER_EDIT_GROUP</from-outcome>
+      <to-view-id>/users/editGroup.xhtml</to-view-id>
+    </navigation-case>
 
   </navigation-rule>
 

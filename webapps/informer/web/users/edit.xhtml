@@ -8,58 +8,222 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{ user.policyId!=null ? msg['retry_policy.edit.title'] : msg['retry_policy.add.title']}"/>
+  <ui:param name="pageTitle" value="#{ userEdit.userId!=null ? msg['user.edit.title'] : msg['user.add.title']}"/>
 
   <ui:define name="content">
 
-    <tr:form rendered="#{!retryPolicyEdit.initError}">
+    <tr:form rendered="#{!userEdit.initError}">
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{retryPolicyEdit.save}"/>
+          <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="RETRY_POLICIES" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" action="USERS" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
-      <tr:inputHidden id="policyId" value="#{retryPolicyEdit.policyId}"/>
+      <tr:inputHidden id="userId" value="#{userEdit.userId}"/>
 
-      <h:panelGrid style="padding:10px" columns="1" columnClasses="column400Width">
+      <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
 
-        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%">
+        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
 
-          <tr:panelLabelAndMessage label="#{retryPolicyBundle.name}" labelStyle="text-align:left">
-            <tr:inputText value="#{retryPolicyEdit.policy.policyId}" required="true" simple="true"/>
+          <tr:panelLabelAndMessage label="#{userBundle.login}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:outputText value="#{userEdit.userToEdit.login}" rendered="#{userEdit.userId!=null}"/>
+            <tr:inputText value="#{userEdit.userToEdit.login}" rendered="#{userEdit.userId==null}" simple="true">
+              <tr:validateLength minimum="1"/>
+            </tr:inputText>
           </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{retryPolicyBundle.defaultTime}" labelStyle="text-align:left">
-            <tr:inputText value="#{retryPolicyEdit.policy.defaultTime}" required="true" simple="true">
+          <tr:panelLabelAndMessage label="#{msg['user.edit.password']}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText secret="true" value="#{userEdit.userToEdit.password}" simple="true">
+              <tr:validateLength minimum="6" maximum="15"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{msg['user.edit.passwordConfirm']}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText secret="true" value="#{userEdit.passwordConfirm}"  simple="true">
+              <tr:validateLength minimum="6" maximum="15"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+
+          <tr:panelLabelAndMessage label="#{msg['user.edit.isAdmin']}" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{userEdit.admin}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.status}" labelStyle="text-align:left">
+            <h:selectOneMenu value="#{userEdit.userToEdit.status}" style="align:left;" >
+              <f:selectItems value="#{userEdit.statuses}"/>
+            </h:selectOneMenu>
+          </tr:panelLabelAndMessage>
+
+          <p/>
+
+          <tr:panelLabelAndMessage label="#{userBundle.firstName}" labelStyle="text-align:left">
+            <tr:inputText value="#{userEdit.userToEdit.firstName}" simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.lastName}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userEdit.userToEdit.lastName}" simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.organization}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userEdit.userToEdit.organization}" simple="true" required="true" >
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.phone}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userEdit.userToEdit.phone}" simple="true" required="true">
+              <eye:validatePhone/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.email}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userEdit.userToEdit.email}" simple="true" required="true">
+              <eye:validateEmail/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <p/>
+
+
+          <tr:panelLabelAndMessage label="#{userBundle.createCDR}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.createCDR}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.smsPerSec}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userEdit.userToEdit.smsPerSec}" simple="true">
               <eye:validatePositive/>
             </tr:inputText>
           </tr:panelLabelAndMessage>
+
+
         </tr:panelFormLayout>
+      </h:panelGrid>
 
+      <eye:collapsingGroup label="#{msg['user.edit.defaults']}" opened="true">
+        <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+          <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+            <tr:panelLabelAndMessage label="#{userBundle.sourceAddr}" labelStyle="text-align:left" inlineStyle="align:left;">
+              <tr:inputText value="#{userEdit.sourceAddr}" simple="true" required="true"/>
+            </tr:panelLabelAndMessage>
+          </tr:panelFormLayout>
+          <eye:collapsingGroup label="#{msg['user.edit.period']}" opened="true">
+            <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+              <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+                <tr:panelLabelAndMessage label="#{userBundle.deliveryDays}" labelStyle="text-align:left">
+                  <tr:selectManyCheckbox value="#{userEdit.userToEdit.deliveryDays}" simple="true">
+                    <f:selectItems value="#{userEdit.daysItems}"/>
+                  </tr:selectManyCheckbox>
+                </tr:panelLabelAndMessage>
 
-        <eye:pageSubtitle value="#{msg['retry_policy.edit.errorPolicies']}"/>
-        <h:panelGrid columns="2" columnClasses="column300Width,columnTopLeftAlign">
-          <eye:dynamicTable value="#{retryPolicyEdit.dynamicModel}" >
-            <eye:textColumn name="errorCode" maxLength="10" allowEditAfterAdd="true"/>
-            <eye:textColumn name="time"      maxLength="10" allowEditAfterAdd="true"/>
-          </eye:dynamicTable>
-          <h:outputText/>
+                <tr:panelLabelAndMessage label="#{userBundle.deliveryStartTime}" labelStyle="text-align:left">
+                  <tr:inputText value="#{userEdit.deliveryStartTime}" simple="true"/>
+                </tr:panelLabelAndMessage>
+                <tr:panelLabelAndMessage label="#{userBundle.deliveryEndTime}" labelStyle="text-align:left">
+                  <tr:inputText value="#{userEdit.deliveryEndTime}" simple="true"/>
+                </tr:panelLabelAndMessage>
+              </tr:panelFormLayout>
+            </h:panelGrid>
+          </eye:collapsingGroup>
+
+          <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+            <tr:panelLabelAndMessage label="#{userBundle.validHours}" labelStyle="text-align:left">
+              <tr:inputText value="#{userEdit.userToEdit.validHours}" simple="true" required="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.deliveryType}" labelStyle="text-align:left">
+              <h:selectOneMenu value="#{userEdit.userToEdit.deliveryType}" style="align:left;" required="true">
+                <f:selectItems value="#{userEdit.deliveryTypes}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{userBundle.transactionMode}" labelStyle="text-align:left">
+              <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.transactionMode}" simple="true"/>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.policyId}" labelStyle="text-align:left">
+              <h:selectOneMenu value="#{userEdit.userToEdit.policyId}" style="align:left;" required="true">
+                <f:selectItems value="#{userEdit.policies}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.priority}" labelStyle="text-align:left">
+              <tr:inputText value="#{userEdit.userToEdit.priority}" simple="true" required="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.smsNotification}" labelStyle="text-align:left">
+              <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" simple="true"/>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{userBundle.emailNotification}" labelStyle="text-align:left">
+              <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.emailNotification}" simple="true"/>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.createArchive}" labelStyle="text-align:left">
+              <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.createArchive}" simple="true"/>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.deliveryLifetime}" labelStyle="text-align:left">
+              <tr:inputText value="#{userEdit.userToEdit.deliveryLifetime}" simple="true" required="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+            
+          </tr:panelFormLayout>
         </h:panelGrid>
 
-        
+      </eye:collapsingGroup>
+
+
+      <eye:collapsingGroup label="#{userBundle.regions}" opened="true">
+      <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+              <tr:selectManyCheckbox value="#{userEdit.userToEdit.regions}" simple="true">
+                <f:selectItems value="#{userEdit.regionsList}"/>
+              </tr:selectManyCheckbox>
+        </tr:panelFormLayout>
       </h:panelGrid>
+      </eye:collapsingGroup>
+
+      <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+
+        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+
+          <tr:panelLabelAndMessage label="#{userBundle.directory}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userEdit.userToEdit.directory}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.directoryPoolPeriod}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userEdit.userToEdit.directoryPoolPeriod}" simple="true" required="true" >
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.createReports}" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.createReports}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{userBundle.reportsLifetime}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userEdit.userToEdit.reportsLifetime}" simple="true" required="true">
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+      </h:panelGrid>
+
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{retryPolicyEdit.save}"/>
+          <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="RETRY_POLICIES" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" action="USERS" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

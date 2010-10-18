@@ -1,13 +1,17 @@
 package mobi.eyeline.informer.web.controllers.users;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel;
-import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableRow;
+import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
-import java.util.Set;
-import java.util.TreeSet;
+import javax.faces.application.FacesMessage;
+import javax.faces.model.SelectItem;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Copyright Eyeline.mobi
@@ -15,15 +19,14 @@ import java.util.TreeSet;
  * Date: 12.10.2010
  * Time: 15:26:51
  */
-public class UserEditController extends InformerController {
+public class UserEditController extends UserController {
 
   private String userId;
   private User userToEdit;
   private static final String USER_ID_PARAMETER = "userId";
   private boolean initError;
-  private DynamicTableModel regionsModel = new DynamicTableModel();
-  private static final String INFORMER_ADMIN_ROLE = "informer-admin";
-  private static final String INFORMER_USER_ROLE = "informer-user";
+  private String passwordConfirm;
+
 
   public UserEditController() {
     super();
@@ -32,6 +35,12 @@ public class UserEditController extends InformerController {
     }
     catch (AdminException e){
       initError = true;
+    }
+  }
+
+  public void setSelectedRows(List<String> rows) throws AdminException {
+    if(rows.size()==1) {
+      setUserId(rows.get(0));
     }
   }
 
@@ -46,18 +55,9 @@ public class UserEditController extends InformerController {
     }
     else {
       userToEdit = getConfig().getUser(userId);
-    }
-    initRegionsModel();
+    }    
     this.userId = userId;
-  }
-
-  void initRegionsModel() {
-    regionsModel = new DynamicTableModel();
-    for(String region : userToEdit.getRegions()) {
-      DynamicTableRow row = new DynamicTableRow();
-      row.setValue("region",region);
-      regionsModel.addRow(row);
-    }
+    passwordConfirm = userToEdit.getPassword();
   }
 
 
@@ -70,15 +70,18 @@ public class UserEditController extends InformerController {
   }
 
   public String save() {
-
     try {
-      Set<String> regions = new TreeSet<String>();
-      for(DynamicTableRow row : regionsModel.getRows()) {
-        String regionId= (String) row.getValue("region");
-        //todo check region exists
-        regions.add(regionId);
+      if(!passwordConfirm.equals(userToEdit.getPassword())) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN,"user.edit.passwdConfirmMissmatch");
+        return null;
       }
-      userToEdit.setRegions(regions);
+
+      if(userId==null) {
+        getConfig().addUser(userToEdit,getUserName());
+      }
+      else {
+        getConfig().updateUser(userToEdit,getUserName());
+      }
     }
     catch (AdminException e) {
       addError(e);
@@ -92,27 +95,63 @@ public class UserEditController extends InformerController {
     return userToEdit;
   }
 
-  public DynamicTableModel getRegionsModel() {
-    return regionsModel;
-  }
-
-  public void setRegionsModel(DynamicTableModel regionsModel) {
-    this.regionsModel = regionsModel;
-  }
 
   public boolean isAdmin() {
-    return userToEdit.hasRole(INFORMER_ADMIN_ROLE);
+    return userToEdit.hasRole(User.INFORMER_ADMIN_ROLE);
   }
 
   public void setAdmin(boolean inRole) {
-    if(inRole && !userToEdit.hasRole(INFORMER_ADMIN_ROLE)) {
-      userToEdit.getRoles().add(INFORMER_ADMIN_ROLE);
+    if(inRole && !userToEdit.hasRole(User.INFORMER_ADMIN_ROLE)) {
+      userToEdit.getRoles().add(User.INFORMER_ADMIN_ROLE);
       return;
     }
-    if(!inRole && userToEdit.hasRole(INFORMER_ADMIN_ROLE)) {
-      userToEdit.getRoles().remove(INFORMER_ADMIN_ROLE);
+    if(!inRole && userToEdit.hasRole(User.INFORMER_ADMIN_ROLE)) {
+      userToEdit.getRoles().remove(User.INFORMER_ADMIN_ROLE);
     }
   }
+
+
+
+  public String getPasswordConfirm() {
+    return passwordConfirm;
+  }
+
+  public void setPasswordConfirm(String passwordConfirm) {
+    this.passwordConfirm = passwordConfirm;
+  }
+
+
+
+  public void setSourceAddr(String sourceAddr) throws AdminException {
+    userToEdit.setSourceAddr(new Address(sourceAddr));
+  }
+
+  public String getSourceAddr() {
+    return userToEdit.getSourceAddr()==null ? null : userToEdit.getSourceAddr().getSimpleAddress();
+  }
+
+
+
+  public void setDeliveryEndTime(String t) {
+    if(t==null || t.trim().length()==0) userToEdit.setDeliveryEndTime(null);
+    else userToEdit.setDeliveryEndTime(new Time(t));
+  }
+  public void setDeliveryStartTime(String t) {
+    if(t==null || t.trim().length()==0) userToEdit.setDeliveryStartTime(null);
+    else userToEdit.setDeliveryStartTime(new Time(t));
+  }
+
+  public String getDeliveryEndTime() {
+    if(userToEdit.getDeliveryEndTime()==null) return null;
+    return userToEdit.getDeliveryEndTime().getTimeString();
+  }
+
+  public String getDeliveryStartTime() {
+    if(userToEdit.getDeliveryStartTime()==null) return null;
+    return userToEdit.getDeliveryStartTime().getTimeString();
+  }
+
+  
 
 
 }

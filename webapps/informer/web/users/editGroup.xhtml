@@ -1,0 +1,165 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['user.groupEdit.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{userGroupEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="USERS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      
+
+      <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+
+        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+
+
+          <tr:panelLabelAndMessage label="#{msg['user.edit.isAdmin']}" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{userGroupEdit.admin}" />
+          </tr:panelLabelAndMessage>
+
+          <p/>
+
+          <tr:panelLabelAndMessage label="#{userBundle.organization}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userGroupEdit.organization}">
+              <tr:validateLength minimum="1"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+
+          <p/>
+
+          <tr:panelLabelAndMessage label="#{userBundle.smsPerSec}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{userGroupEdit.smsPerSec}" >
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+
+        </tr:panelFormLayout>
+      </h:panelGrid>
+
+      <eye:collapsingGroup label="#{msg['user.edit.defaults']}" opened="true">
+        <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+          <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+            <tr:panelLabelAndMessage label="#{userBundle.sourceAddr}" labelStyle="text-align:left" inlineStyle="align:left;">
+              <tr:inputText value="#{userGroupEdit.sourceAddr}" />
+            </tr:panelLabelAndMessage>
+          </tr:panelFormLayout>
+          <eye:collapsingGroup label="#{msg['user.edit.period']}" opened="true">
+            <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+              <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+                <tr:panelLabelAndMessage label="#{userBundle.deliveryDays}" labelStyle="text-align:left">
+                  <tr:selectManyCheckbox value="#{userGroupEdit.deliveryDays}" >
+                    <f:selectItems value="#{userGroupEdit.daysItems}"/>
+                  </tr:selectManyCheckbox>
+                </tr:panelLabelAndMessage>
+
+                <tr:panelLabelAndMessage label="#{userBundle.deliveryStartTime}" labelStyle="text-align:left">
+                  <tr:inputText value="#{userGroupEdit.deliveryStartTime}"/>
+                </tr:panelLabelAndMessage>
+                <tr:panelLabelAndMessage label="#{userBundle.deliveryEndTime}" labelStyle="text-align:left">
+                  <tr:inputText value="#{userGroupEdit.deliveryEndTime}"/>
+                </tr:panelLabelAndMessage>
+              </tr:panelFormLayout>
+            </h:panelGrid>
+          </eye:collapsingGroup>
+
+          <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+            <tr:panelLabelAndMessage label="#{userBundle.validHours}" labelStyle="text-align:left">
+              <tr:inputText value="#{userGroupEdit.validHours}">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.deliveryType}" labelStyle="text-align:left">
+              <h:selectOneMenu value="#{userGroupEdit.deliveryType}" style="align:left;margin-left:8px;">
+                <f:selectItems value="#{userGroupEdit.deliveryTypes}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{userBundle.transactionMode}" labelStyle="text-align:left">
+              <tr:selectBooleanCheckbox value="#{userGroupEdit.transactionMode}" />
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.policyId}" labelStyle="text-align:left">
+              <h:selectOneMenu value="#{userGroupEdit.policyId}" style="align:left;margin-left:8px;">
+                <f:selectItems value="#{userGroupEdit.policies}"/>
+              </h:selectOneMenu>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.priority}" labelStyle="text-align:left">
+              <tr:inputText value="#{userGroupEdit.priority}">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.smsNotification}" labelStyle="text-align:left">
+              <tr:selectBooleanCheckbox value="#{userGroupEdit.smsNotification}" />
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{userBundle.emailNotification}" labelStyle="text-align:left">
+              <tr:selectBooleanCheckbox value="#{userGroupEdit.emailNotification}" />
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.createArchive}" labelStyle="text-align:left">
+              <tr:selectBooleanCheckbox value="#{userGroupEdit.createArchive}" />
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{userBundle.deliveryLifetime}" labelStyle="text-align:left">
+              <tr:inputText value="#{userGroupEdit.deliveryLifetime}">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+            
+          </tr:panelFormLayout>
+        </h:panelGrid>
+
+      </eye:collapsingGroup>
+
+
+      <eye:collapsingGroup label="#{userBundle.regions}" opened="true">
+      <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+              <tr:selectManyCheckbox value="#{userGroupEdit.regions}" >
+                <f:selectItems value="#{userGroupEdit.regionsList}"/>
+              </tr:selectManyCheckbox>
+        </tr:panelFormLayout>
+      </h:panelGrid>
+      </eye:collapsingGroup>
+
+
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{userGroupEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="USERS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

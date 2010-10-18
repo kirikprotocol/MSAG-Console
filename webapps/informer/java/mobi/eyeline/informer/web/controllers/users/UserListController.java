@@ -6,6 +6,7 @@ import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
+import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import java.util.*;
 
@@ -113,15 +114,14 @@ public class UserListController extends InformerController {
 
 
   public String removeSelected() throws AdminException {
-//      for(String id : selectedRows) {
-//        try {
-//
-//        }
-//        catch (AdminException e) {
-//          addError(e);
-//        }
-//      }
-    //todo
+    for(String id : selectedRows) {
+      try {
+        getConfig().removeUser(id,getUserName());
+      }
+      catch (AdminException e) {
+        addError(e);
+      }
+    }
     return null;
   }
 
@@ -184,8 +184,13 @@ public class UserListController extends InformerController {
   }
 
   public String editSelected() {
-    //todo
-    return null;  
+    if(selectedRows!=null) {
+      if(selectedRows.size()>=1) {
+        getSession(true).setAttribute("userIds",selectedRows);
+        return "USER_EDIT_GROUP";
+      }
+    }
+    return null;
   }
 }
 

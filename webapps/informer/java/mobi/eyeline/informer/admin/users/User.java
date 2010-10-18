@@ -7,10 +7,7 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Настройки пользователя
@@ -36,11 +33,11 @@ public class User implements Serializable{
   private Address sourceAddr;
   private Time   deliveryStartTime;
   private Time   deliveryEndTime;
-  private Set<Integer> deliveryDays = new TreeSet<Integer>();
+  private List<Integer> deliveryDays = new ArrayList<Integer>();
   private int validHours;
   private DeliveryType deliveryType;
   private boolean transactionMode;
-  private Set<String> regions = new TreeSet<String>();
+  private List<String> regions = new ArrayList<String>();
   private int priority;
   private boolean emailNotification;
   private boolean smsNotification;
@@ -53,6 +50,8 @@ public class User implements Serializable{
   private int reportsLifetime;
 
   private final ValidationHelper vh = new ValidationHelper(User.class);
+  public static final String INFORMER_ADMIN_ROLE = "informer-admin";
+  public static final String INFORMER_USER_ROLE = "informer-user";
 
   public User() {
   }
@@ -72,13 +71,13 @@ public class User implements Serializable{
     this.createCDR = user.createCDR;
     this.sourceAddr = new Address(user.sourceAddr);
     this.deliveryStartTime = user.deliveryStartTime == null ? null : new Time(user.getDeliveryStartTime());
-    this.deliveryEndTime   = user.deliveryEndTime == null ? null : new Time(user.getDeliveryStartTime());
-    this.deliveryDays = user.getDeliveryDays() == null ? null : new TreeSet<Integer>(user.getDeliveryDays());
+    this.deliveryEndTime   = user.deliveryEndTime == null ? null : new Time(user.getDeliveryEndTime());
+    this.deliveryDays = new ArrayList<Integer>(user.getDeliveryDays());
     this.validHours = user.validHours;
     this.deliveryType = user.deliveryType;
     this.transactionMode=user.transactionMode;
     this.policyId = user.policyId;
-    this.regions = user.getRegions() == null ? null : new TreeSet<String>(user.getRegions());
+    this.regions = user.getRegions() == null ? null : new ArrayList<String>(user.getRegions());
     this.priority = user.priority;
     this.emailNotification = user.smsNotification;
     this.smsNotification = user.smsNotification;
@@ -179,7 +178,7 @@ public class User implements Serializable{
   }
 
   public void setLocale(Locale locale) {
-      this.locale = locale;
+    this.locale = locale;
   }
 
   public Locale getLocale() {
@@ -228,7 +227,7 @@ public class User implements Serializable{
     this.deliveryEndTime = deliveryEndTime;
   }
 
-  public Set<Integer> getDeliveryDays() {
+  public List<Integer> getDeliveryDays() {
     return deliveryDays;
   }
 
@@ -241,8 +240,8 @@ public class User implements Serializable{
     this.validHours = validHours;
   }
 
-  public void setDeliveryDays(Set<Integer> deliveryDays) throws AdminException {
-    Set<Integer> deliveryDaysOut = new TreeSet<Integer>();
+  public void setDeliveryDays(List<Integer> deliveryDays) throws AdminException {    
+    List<Integer> deliveryDaysOut = new ArrayList<Integer>();
     if(deliveryDays!=null) {
       for(Integer day : deliveryDays) {
         vh.checkNotContains("deliveryDays",deliveryDaysOut,day);
@@ -279,17 +278,20 @@ public class User implements Serializable{
     this.policyId = policyId;
   }
 
-  public Set<String> getRegions() {
-
+  public List<String> getRegions() {
     return regions;
   }
 
-  public void setRegions(Set<String> regions) throws AdminException {
-    vh.checkNotNull("regions",regions);
-    for(String r : regions) {
-      vh.checkNotEmpty("regions",r);
+  public void setRegions(List<String> regions) throws AdminException {    
+    List<String> regionsIds = new ArrayList<String>();
+    if(regions!=null) {
+      for(String r : regions) {
+        vh.checkNotContains("regions",regionsIds,r);
+        vh.checkNotEmpty("regions",r);
+        regionsIds.add(r);
+      }
     }
-    this.regions = regions;
+    this.regions = regionsIds;
   }
 
   public int getPriority() {

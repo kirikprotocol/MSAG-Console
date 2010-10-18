@@ -61,8 +61,7 @@
 
         <eye:dataTable value="#{usersList.usersModel}" selectedRows="#{usersList.selectedRows}" var="u">
           <eye:row rowId="#{u.login}">
-
-            <eye:column name="login" title="#{userBundle.login}" sortable="true" width="20%" align="left">
+            <eye:column name="login" title="#{userBundle.login}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
               <h:commandLink value="#{u.login}" action="USER_EDIT">
                 <f:param name="userId" value="#{u.login}"/>
               </h:commandLink>

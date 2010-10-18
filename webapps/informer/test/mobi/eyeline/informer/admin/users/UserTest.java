@@ -201,12 +201,12 @@ public class UserTest {
   public void testDeliveryDays() throws AdminException{
 
     User o = new User();
-    Set<Integer> set = new HashSet<Integer>();
+    List<Integer> set = new ArrayList<Integer>();
     set.add(0);
     set.add(3);
     set.add(6);
     o.setDeliveryDays(set);
-    Set ret = o.getDeliveryDays();
+    List ret = o.getDeliveryDays();
     assertTrue(ret.size()==3);
     assertTrue(ret.contains(0));
     assertTrue(ret.contains(3));
@@ -267,7 +267,7 @@ public class UserTest {
   @Test
   public void testRegion() throws AdminException {
     User o = new User();
-    Set<String> regions = new TreeSet<String>();
+    List<String> regions = new ArrayList<String>();
     regions.add("fio");
     regions.add("fuo");
     regions.add("foe");
