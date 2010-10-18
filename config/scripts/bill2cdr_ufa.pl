@@ -346,10 +346,7 @@ sub process{
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
     $outfields->{OTHER_ADDR}=conv_addr($infields->{DST_ADDR});
     $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
-    unless(outrow($out,$outfields))
-    {
-      $nbout->print(combine($csv,$row)) if $nbout;
-    }
+    my $billed=outrow($out,$outfields);
     if($infields->{RECORD_TYPE}==1) # diverted sms
     {
       $outfields->{RECORD_TYPE}=20;
@@ -359,15 +356,9 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      unless(outrow($out,$outfields))
-      {
-        $nbout->print(combine($csv,$row)) if $nbout;
-      }
+      $billed||=outrow($out,$outfields);
       $outfields->{RECORD_TYPE}=30;
-      unless(outrow($out,$outfields))
-      {
-        $nbout->print(combine($csv,$row)) if $nbout;
-      }
+      $billed||=outrow($out,$outfields);
     }else
     {
       $outfields->{RECORD_TYPE}=20;
@@ -385,10 +376,13 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      unless(outrow($out,$outfields))
+      $billed||=outrow($out,$outfields);
       {
-        $nbout->print(combine($csv,$row)) if $nbout;
       }
+    }
+    if(!$billed && $nbout)
+    {
+      $nbout->print(combine($csv,$row));
     }
   }
 }
