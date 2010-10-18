@@ -1,5 +1,8 @@
 package mobi.eyeline.informer.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class StringEncoderDecoder {
 
   public static String encode(String str) {
@@ -228,5 +231,57 @@ public class StringEncoderDecoder {
         outBuffer.append(aChar);
     }
     return outBuffer.toString();
+  }
+
+  public static String csvEscape(Object obj) {
+    if(obj==null) return "";
+    String s = obj.toString();
+    if(s.indexOf(",") != -1 || s.indexOf("\"") != -1) {
+      s=s.replace("\"","\"\"");
+      s="\""+s+"\"";
+    }
+    return s;
+  }
+
+  public static List<String> csvDecode(String line) {
+    List<String> out = csvSplit(line);
+    for (int i = 0; i < out.size(); i++) {
+      String s = out.get(i);
+      if(s.startsWith("\"") && s.endsWith("\""))
+        s=s.substring(1,s.length()-1);
+      s=s.replace("\"\"","\"");
+      out.set(i,s);
+    }
+    return out;
+  }
+
+  public static List<String> csvSplit(String line) {
+    List<String> out = new ArrayList<String>();
+    int start=0;
+    boolean inQuot=false;
+    for(int i=0;i<line.length();i++) {
+      char c = line.charAt(i);
+      if(c=='\"') {
+        inQuot=!inQuot;
+      }
+      else {
+        if(!inQuot && c==',') {
+          out.add(line.substring(start,i));
+          start=i+1;
+        }
+      }
+    }
+    out.add(line.substring(start,line.length()));
+    return out;
+  }
+
+  public static String toCSVString(Object[] args) {
+    StringBuilder sb = new StringBuilder();
+    String sep = "";
+    for(Object s : args) {
+      sb.append(sep).append(csvEscape(s));
+      sep = ",";
+    }
+    return sb.toString();
   }
 }

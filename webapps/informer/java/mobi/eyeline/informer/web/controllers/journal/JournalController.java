@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.journal.JournalFilter;
 import mobi.eyeline.informer.admin.journal.JournalRecord;
 import mobi.eyeline.informer.admin.journal.Subject;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -184,13 +185,10 @@ public class JournalController extends InformerController{
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     Locale locale =  getLocale();
     for(JournalRecord r : records) {
-      writer.println(new StringBuilder().
-          append(r.getUser() == null ? "":r.getUser().replace(",","\\,")).append(',').
-          append(sdf.format(new Date(r.getTime()))).append(',').
-          append(r.getSubject() == null ? "" : r.getSubject().getSubject(locale).replace(",","\\,")).append(',').
-          append(r.getType() == null ? "" : r.getType().toString().replace(",","\\,")).append(',').
-          append((tmp = r.getDescription(locale)) == null ? "" : tmp.replace(",","\\,")).
-          toString());
+      writer.println(StringEncoderDecoder.toCSVString(
+          new Object[]{r.getUser(), sdf.format(new Date(r.getTime())),
+              r.getSubject() == null ? "" : r.getSubject().getSubject(locale),
+              r.getType(), r.getDescription(locale)}));
     }
   }
 
