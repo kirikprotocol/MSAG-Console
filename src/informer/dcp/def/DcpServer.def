@@ -1,0 +1,37 @@
+include DcpMessages.def
+
+protocol DcpServer
+
+  OkResponse outmsg
+  FailResponse outmsg
+  UserAuth inmsg
+  GetUserStats inmsg
+  GetUserStatsResp outmsg
+  
+  CreateDelivery inmsg
+  CreateDeliveryResp outmsg
+  ModifyDelivery inmsg
+  DropDelivery inmsg
+  ChangeDeliveryState inmsg
+  AddDeliveryMessages inmsg
+  AddDeliveryMessagesResp outmsg
+  DropDeliverymessages inmsg
+  GetDeliveryGlossary inmsg
+  GetDeliveryGlossaryResp outmsg
+  ModifyDeliveryGlossary inmsg
+  GetDeliveryState inmsg
+  GetDeliveryStateResp outmsg
+  GetDeliveryInfo inmsg
+  GetDeliveryInfoResp outmsg
+  GetDeliveriesList inmsg
+  GetDeliveriesListResp outmsg
+  GetDeliveriesListNext inmsg
+  GetDeliveriesListNextResp outmsg
+
+  RequestMessagesState inmsg
+  RequestMessagesStateResp outmsg
+  GetNextMessagesPack inmsg
+  GetNextMessagesPackResp outmsg
+  CancelRequest inmsg
+
+end
