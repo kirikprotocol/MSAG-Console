@@ -238,9 +238,11 @@ end
 
 message DeliveryStatistics
   property innerMessage=true
-  int64 totalMessages 1
+  int64 newMessages 1
+  int64 processMessage 4
   int64 deliveredMessages 2
   int64 failedMessage 3
+  int64 expiredMessages 5
 end
 
 message GetDeliveryStateResp 42
