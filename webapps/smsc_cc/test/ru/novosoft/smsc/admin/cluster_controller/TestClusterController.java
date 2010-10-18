@@ -51,19 +51,6 @@ public class TestClusterController extends TestClusterControllerStub {
     aliasLastUpdateTime = System.currentTimeMillis();
   }
 
-
-  // MSC ===============================================================================================================
-
-  public void registerMsc(Address mscAddress) throws AdminException {
-    TestMscManager.helpAddMsc(mscsFile, mscAddress);
-    mscLastUpdateTime = System.currentTimeMillis();
-  }
-
-  public void unregisterMsc(Address mscAddress) throws AdminException {
-    TestMscManager.helpRemoveMsc(mscsFile, mscAddress);
-    mscLastUpdateTime = System.currentTimeMillis();
-  }
-
   // ACCESS CONTROL LIST ===============================================================================================
 
   public List<CCAclInfo> getAcls() throws AdminException {

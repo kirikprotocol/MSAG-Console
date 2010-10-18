@@ -8,10 +8,9 @@ import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Artem Snopkov
@@ -19,21 +18,39 @@ import java.util.Map;
 public class MscManagerImpl implements MscManager {
 
   private final ClusterController cc;
-  private final File aliasesFile;
+  private final File mscsFile;
   private final FileSystem fs;
+  private Set<Address> mscs;
+  private final Lock mscsLock = new ReentrantLock();
 
-  public MscManagerImpl(File aliasesFile, ClusterController cc, FileSystem fs) {
+  public MscManagerImpl(File mscsFile, ClusterController cc, FileSystem fs) {
     this.cc = cc;
-    this.aliasesFile = aliasesFile;
+    this.mscsFile = mscsFile;
     this.fs = fs;
   }
 
   public Collection<Address> mscs() throws AdminException {
+    try {
+      mscsLock.lock();
+      return new ArrayList<Address>(getMscs());
+    } finally {
+      mscsLock.unlock();
+    }
+  }
+
+  private Collection<Address> getMscs() throws AdminException {
+    if (mscs == null)
+      mscs = new HashSet<Address>(load());
+
+    return mscs;
+  }
+
+  private Collection<Address> load() throws AdminException {
     BufferedReader is = null;
     try {
       if (cc.isOnline())
         cc.lockMsc(false);
-      is = new BufferedReader(new InputStreamReader(fs.getInputStream(aliasesFile)));
+      is = new BufferedReader(new InputStreamReader(fs.getInputStream(mscsFile)));
 
       Collection<Address> result = new ArrayList<Address>();
       String line;
@@ -55,17 +72,73 @@ public class MscManagerImpl implements MscManager {
     }
   }
 
+  private void save() throws AdminException {
+    Collection<Address> mscsList = getMscs();
+    BufferedWriter os = null;
+    try {
+      if (cc.isOnline())
+        cc.lockMsc(true);
+
+      os = new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(mscsFile)));
+
+      for (Address msc : mscsList) {
+        os.write(msc.getSimpleAddress());
+        os.write(Character.LINE_SEPARATOR);
+      }
+
+    } catch (IOException e) {
+      throw new MscException("msc_file_write_error", e);
+    } finally {
+      if (os != null)
+        try {
+          os.close();
+        } catch (IOException ignored) {
+        }
+      if (cc.isOnline())
+        cc.unlockMsc();
+    }
+  }
+
   public void addMsc(Address msc) throws AdminException {
     if (msc == null)
       throw new IllegalArgumentException("mscAddress");
 
-    cc.registerMsc(new Address(msc));
+    try {
+      mscsLock.lock();
+
+      getMscs();
+
+      mscs.add(msc);
+
+      save();
+
+      if (cc.isOnline())
+        cc.registerMsc(new Address(msc));
+
+    } finally {
+      mscsLock.unlock();
+    }
   }
 
   public void removeMsc(Address msc) throws AdminException {
     if (msc == null)
       throw new IllegalArgumentException("mscAddress");
-    cc.unregisterMsc(new Address(msc));
+
+    try {
+      mscsLock.lock();
+
+      getMscs();
+
+      mscs.remove(msc);
+
+      save();
+
+      if (cc.isOnline())
+        cc.unregisterMsc(new Address(msc));
+
+    } finally {
+      mscsLock.unlock();
+    }
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {

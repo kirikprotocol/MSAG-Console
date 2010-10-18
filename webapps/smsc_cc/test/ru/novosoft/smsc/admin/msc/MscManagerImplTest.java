@@ -26,12 +26,12 @@ public class MscManagerImplTest {
   private static File configFile;
 
   @Before
-  public void beforeClass() throws IOException, AdminException {
+  public void before() throws IOException, AdminException {
     configFile = TestUtils.exportResourceToRandomFile(MscManagerImplTest.class.getResourceAsStream("msc.bin"), ".msc");
   }
 
   @After
-  public void afterClass() {
+  public void after() {
     if (configFile != null)
       configFile.delete();
   }
@@ -54,9 +54,31 @@ public class MscManagerImplTest {
     List<Address> mscs = new ArrayList<Address>(m.mscs());
     assertNotNull(mscs);
     assertEquals(3, mscs.size());
-    assertEquals(new Address("79139495113"), mscs.get(0));
-    assertEquals(new Address("6785"), mscs.get(1));
-    assertEquals(new Address("34242"), mscs.get(2));
+    assertTrue(mscs.contains(new Address("79139495113")));
+    assertTrue(mscs.contains(new Address("6785")));
+    assertTrue(mscs.contains(new Address("34242")));
+  }
+
+  @Test
+  public void addMscTest() throws AdminException {
+    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    m.addMsc(new Address("12345"));
+
+    MscManager m1 = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    List<Address> mscs = new ArrayList<Address>(m1.mscs());
+    assertEquals(4, mscs.size());
+    assertTrue(mscs.contains(new Address("12345")));
+  }
+
+  @Test
+  public void removeMscTest() throws AdminException {
+    MscManager m = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    m.removeMsc(new Address("34242"));
+
+    MscManager m1 = new MscManagerImpl(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
+    List<Address> mscs = new ArrayList<Address>(m1.mscs());
+    assertEquals(2, mscs.size());
+    assertFalse(mscs.contains(new Address("34242")));
   }
 
   @Test

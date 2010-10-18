@@ -79,8 +79,13 @@ public class OperativeStoreProviderTest {
 
     assertEquals(23, msgs.size());
 
-    int i = 0;
+    int i;
     for (Message msg : msgs) {
+      for (i = 0; i < ids.length; i++) {
+        if (ids[i] == msg.getId())
+          break;
+      }
+      assertTrue(i < ids.length);
       assertEquals(ids[i], msg.getId());
       assertEquals(oa[i], msg.getOriginatingAddress().getNormalizedAddress());
       assertEquals(da[i], msg.getDealiasedDestinationAddress().getNormalizedAddress());
@@ -88,8 +93,6 @@ public class OperativeStoreProviderTest {
       assertEquals(dstSmeId[i], msg.getDstSmeId());
       assertEquals(routeId[i], msg.getRouteId());
       msg.getOriginalText(); // Проверяем, что текст корректно десериализуется
-      System.out.println(msg.getDestinationDescriptor());
-      i++;
     }
   }
 
