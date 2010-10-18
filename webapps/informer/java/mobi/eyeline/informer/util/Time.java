@@ -22,7 +22,7 @@ public class Time {
     if(st.countTokens()<2) throw new IllegalArgumentException("Invalid time string:'"+s+"'" );
     hour = Integer.parseInt(st.nextToken(),10);
     min  = Integer.parseInt(st.nextToken(),10);
-    if(st.countTokens()==3)  {
+    if(st.hasMoreTokens())  {
       sec  = Integer.parseInt(st.nextToken(),10);
     }
     else {

@@ -240,7 +240,7 @@ public class User implements Serializable{
     this.validHours = validHours;
   }
 
-  public void setDeliveryDays(List<Integer> deliveryDays) throws AdminException {    
+  public void setDeliveryDays(List<Integer> deliveryDays) throws AdminException {
     List<Integer> deliveryDaysOut = new ArrayList<Integer>();
     if(deliveryDays!=null) {
       for(Integer day : deliveryDays) {
@@ -282,15 +282,18 @@ public class User implements Serializable{
     return regions;
   }
 
-  public void setRegions(List<String> regions) throws AdminException {    
-    List<String> regionsIds = new ArrayList<String>();
-    if(regions!=null) {
-      for(String r : regions) {
-        vh.checkNotContains("regions",regionsIds,r);
-        vh.checkNotEmpty("regions",r);
-        regionsIds.add(r);
-      }
+  public void setRegions(List<String> regions) throws AdminException {
+    if(regions==null) {
+      this.regions = null;
+      return;
     }
+    List<String> regionsIds = new ArrayList<String>();
+    for(String r : regions) {
+      vh.checkNotContains("regions",regionsIds,r);
+      vh.checkNotEmpty("regions",r);
+      regionsIds.add(r);
+    }
+
     this.regions = regionsIds;
   }
 

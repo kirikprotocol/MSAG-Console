@@ -171,12 +171,13 @@ public class AdminContext {
       if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
         throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
       }
-      for(String rId : u.getRegions()) {
-        if(null == regionsManager.getRegion(rId)) {
-          throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
+      if(u.getRegions()!=null) {
+        for(String rId : u.getRegions()) {
+          if(null == regionsManager.getRegion(rId)) {
+            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
+          }
         }
       }
-
       usersManager.updateUser(u);
     }
     finally {

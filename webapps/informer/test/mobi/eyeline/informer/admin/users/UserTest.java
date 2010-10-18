@@ -273,11 +273,10 @@ public class UserTest {
     regions.add("foe");
     o.setRegions(regions);
     assertEquals(o.getRegions(),regions);
-    try {
-      o.setRegions(null);
-      assertTrue(false);
-    }
-    catch (AdminException e){}
+
+    o.setRegions(null);
+    assertTrue(o.getRegions()==null);
+       
     try {
       regions.add("");
       o.setRegions(regions);
