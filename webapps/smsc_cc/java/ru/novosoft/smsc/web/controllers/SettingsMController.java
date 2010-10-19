@@ -183,7 +183,7 @@ public class SettingsMController<T> extends SmscController {
    *
    * @return true, если пользователь произвел ккакие-то изменения в конфиге
    */
-  protected boolean isSettingsChanged() {
+  public boolean isSettingsChanged() {
     return getSessionAttr(revisionAttr) != null;
   }
 
