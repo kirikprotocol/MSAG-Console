@@ -41,11 +41,11 @@ public:
     }
   }
 
-  typedef int16_t TagType;
-  typedef int16_t LengthType;
+  typedef int8_t TagType;
+  typedef int32_t LengthType;
   enum{tagTypeSize=sizeof(TagType)};
-  enum{lengthTypeSize=sizeof(LengthType)};
-  static const TagType endOfMessage_tag=(TagType)0xffff;
+  enum{lengthTypeSize=3};
+  static const TagType endOfMessage_tag=(TagType)0xff;
 
 protected:
   int8_t htonX(int8_t val)
@@ -63,20 +63,35 @@ protected:
 public:
   void writeTag(TagType tag)
   {
-    resize(2);
+    resize(tagTypeSize);
     TagType netvalue=htonX(tag);
-    memcpy(buf+pos,&netvalue,2);
-    pos+=2;
+    memcpy(buf+pos,&netvalue,tagTypeSize);
+    pos+=tagTypeSize;
   }
+  /*
+  static int getLengthSize(LengthType length)
+  {
+    return 3;
+  }
+  */
   void writeLength(LengthType length)
   {
-    resize(2);
-    LengthType netvalue=htonX(length);
+    if(length>0xffffff)
+    {
+      throw eyeline::protogen::framework::FieldTooLong();
+    }
+    resize(3);
+    uint8_t high=(length>>16);
+    memcpy(buf+pos,&high,1);
+    pos++;
+    length&=0xffff;
+    int16_t netvalue=htonX((int16_t)length);
     memcpy(buf+pos,&netvalue,2);
     pos+=2;
   }
   void writeByte(int8_t value)
   {
+    resize(1);
     memcpy(buf+pos,&value,1);
     pos+=1;
   }
@@ -181,7 +196,7 @@ public:
   static LengthType fieldSize(const std::vector<std::string>& value)
   {
     LengthType rv=0;
-    for(std::vector<std::string>::const_iterator it=value.begin(),end=value.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=value.begin(),end=value.end();it!=end;++it)
     {
       rv+=lengthTypeSize+fieldSize(*it);
     }
@@ -207,14 +222,22 @@ public:
 
   LengthType readLength()
   {
-    if(pos+lengthTypeSize>dataSize)
+    if(pos+3>dataSize)
     {
       throw ReadBeyonEof();
     }
-    LengthType rv;
-    memcpy(&rv,buf+pos,lengthTypeSize);
-    pos+=lengthTypeSize;
-    return htonX(rv);
+    LengthType rv=0;
+    uint8_t high;
+    memcpy(&high,buf+pos,1);
+    pos++;
+    rv=high;
+    rv<<=16;
+    int16_t low;
+    memcpy(&low,buf+pos,2);
+    low=htonX(low);
+    rv|=low;
+    pos+=2;
+    return rv;
   }
   TagType readTag()
   {
@@ -385,7 +408,8 @@ public:
   {
     char buffer[32];
     std::string rv;
-    for(size_t i=0;i<pos;i++)
+    size_t sz=ownedBuffer?pos:dataSize;
+    for(size_t i=0;i<sz;i++)
     {
       sprintf(buffer,"%02x ",(unsigned int)(unsigned char)buf[i]);
       rv+=buffer;
