@@ -1,1 +1,1 @@
--I$(SMSC_SRCDIR) -I$(SMSC_SRCDIR)/mtsmsme/processor/asn1rt -I$(SMSC_SRCDIR)/mtsmsme/codec/tcap -I$(SMSC_SRCDIR)/mtsmsme/codec/ros
+-I$(SS7HD)/src -I$(SMSC_SRCDIR) -I$(SMSC_SRCDIR)/mtsmsme/processor/asn1rt -I$(SMSC_SRCDIR)/mtsmsme/codec/tcap -I$(SMSC_SRCDIR)/mtsmsme/codec/ros
