@@ -41,13 +41,6 @@ public:
 
     virtual const CommonSettings& getCommonSettings() const { return cs_; }
 
-    /// configuration
-    /// NOTE: do not keep a ref on cfg!
-    virtual void init( const smsc::util::config::ConfigView& cfg );
-
-    /// notify to stop, invoked from main
-    virtual void start();
-    virtual void stop();
     virtual bool isStopping() const { return stopping_; }
     virtual void wait( int msec ) {
         if (msec<=0) return;
@@ -59,8 +52,6 @@ public:
     virtual const UserInfo* getUserInfo( const char* login );
 
     virtual RegionFinder& getRegionFinder() { return rf_; }
-
-    virtual void selfTest();
 
     /// bind regions to delivery
     /// @param bind - true if bind, false if unbind.
@@ -78,6 +69,16 @@ public:
     virtual void receiveResponse( const DlvRegMsgId& drmId, int smppStatus, bool retry );
 
     // --------------------
+
+    /// configuration
+    /// NOTE: do not keep a ref on cfg!
+    void init( const smsc::util::config::ConfigView& cfg );
+
+    /// notify to stop, invoked from main
+    void start();
+    void stop();
+
+    void selfTest();
 
     // smsc has just been stopped
     // virtual void notifySmscFinished( const std::string& smscId );

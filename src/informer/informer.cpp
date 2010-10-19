@@ -169,7 +169,7 @@ int main( int argc, char** argv )
                       "------------------------------------------------------------------------");
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
 
-        std::auto_ptr< eyeline::informer::InfosmeCore > core;
+        std::auto_ptr< eyeline::informer::InfosmeCoreV1 > core;
         std::auto_ptr< eyeline::informer::InfosmeComponent > admin;
         std::auto_ptr< smsc::admin::service::ServiceSocketListener> adml;
 
