@@ -40,6 +40,8 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
     typedef smsc::core::buffers::CyclicQueue< ResponseData > DataQueue;
     typedef std::list< ReceiptData > ReceiptList;
 
+    class SmscJournal;
+
 public:
     SmscSender( InfosmeCore&            core,
                 const std::string&      smscId,
@@ -108,11 +110,13 @@ private:
     smsc::core::buffers::CyclicQueue< ResponseTimer > respWaitQueue_;
     smsc::core::buffers::CyclicQueue< ReceiptTimer >  rcptWaitQueue_;
 
-    // when process receipt/response
-    smsc::core::synchronization::Mutex                 receiptLock_;
+    // when process receipt/response.
+    // monitor is used by journal also.
+    smsc::core::synchronization::EventMonitor          receiptMon_;
     ReceiptList                                        receiptList_;
     ReceiptList::iterator                              rollingIter_;
     smsc::core::buffers::Hash< ReceiptList::iterator > receiptHash_;
+    SmscJournal*                                       journal_;
 
     smsc::core::synchronization::EventMonitor          queueMon_;
     DataQueue*                                         rQueue_;

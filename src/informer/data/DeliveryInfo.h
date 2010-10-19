@@ -22,7 +22,7 @@ public:
     DeliveryInfo( const CommonSettings& cs,
                   dlvid_type dlvId ) :
     cs_(cs), dlvId_(dlvId),
-    from_(0x3010000000000000ULL + 100), // FIXME
+    from_(0x4010000000000000ULL + 10000), // FIXME: .0.1.10000
     isReplaceIfPresent_(true), isFlash_(false), useDataSm_(false),
     transactionMode_(0),
     deliveryMode_(DLVMODE_SMS),

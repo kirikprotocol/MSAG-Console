@@ -2,6 +2,8 @@
 #include "SmscSender.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/Typedefs.h"
+#include "informer/io/FileGuard.h"
+#include "informer/io/IOConverter.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/CommonSettings.h"
 #include "smpp/smpp_structures.h"
@@ -11,6 +13,196 @@
 
 namespace eyeline {
 namespace informer {
+
+
+class SmscSender::SmscJournal : protected smsc::core::threads::Thread
+{
+    static const unsigned LENSIZE = 2;
+public:
+    SmscJournal( SmscSender& sender ) :
+    sender_(sender),
+    isStopping_(true)
+    {}
+
+    ~SmscJournal() {
+        stop();
+        fg_.close();
+    }
+
+    void init()
+    {
+        std::string jpath(makePath());
+        readRecordsFrom(jpath+".old");
+        readRecordsFrom(jpath);
+        fg_.create(jpath.c_str(),true,true);
+        fg_.seek(0,SEEK_END);
+    }
+
+    void start() {
+        if (!isStopping_) return;
+        isStopping_ = false;
+        Start();
+    }
+
+    void stop() {
+        if (isStopping_) return;
+        isStopping_ = true;
+        {
+            smsc::core::synchronization::MutexGuard mg(sender_.receiptMon_);
+            sender_.receiptMon_.notifyAll();
+        }
+        WaitFor();
+    }
+
+
+    void journalReceiptData( const ReceiptData& rd )
+    {
+        assert(rd.responded == true);
+        char buf[100];
+        ToBuf tb(buf,sizeof(buf));
+        tb.skip(LENSIZE);
+        tb.set32(rd.drmId.dlvId);
+        tb.set32(rd.drmId.regId);
+        tb.set64(rd.drmId.msgId);
+        tb.setCString(rd.rcptId.msgId);
+        const size_t pos = tb.getPos();
+        tb.setPos(0);
+        tb.set16(uint16_t(pos-LENSIZE));
+        smsc::core::synchronization::MutexGuard mg(lock_);
+        fg_.write(buf,pos);
+    }
+
+protected:
+
+    void rollOver()
+    {
+        const std::string jpath(makePath());
+        smsc_log_info(sender_.log_,"rolling over '%s'",jpath.c_str());
+        if (-1 == rename(jpath.c_str(),(jpath+".old").c_str())) {
+            char ebuf[100];
+            throw InfosmeException("cannot rename '%s': %d, %s",
+                                   jpath.c_str(), errno, STRERROR(errno,ebuf,sizeof(ebuf)));
+        }
+        FileGuard fg;
+        fg.create(jpath.c_str());
+        {
+            smsc::core::synchronization::MutexGuard mg(lock_);
+            fg_.swap(fg);
+        }
+        smsc_log_debug(sender_.log_,"file '%s' rolled",jpath.c_str());
+    }
+
+
+    std::string makePath() const {
+        return sender_.core_.getCommonSettings().getStorePath() + "smsc/.rcptmap" + sender_.smscId_;
+    }
+
+
+    void readRecordsFrom( const std::string& jpath )
+    {
+        FileGuard fg;
+        try {
+            fg.ropen(jpath.c_str());
+        } catch ( std::exception& e ) {
+            smsc_log_warn(sender_.log_,"cannot read '%s': %s", jpath.c_str(), e.what());
+            return;
+        }
+        smsc::core::buffers::TmpBuf<char,8192> buf;
+        unsigned total = 0;
+        do {
+            
+            char* ptr = buf.get();
+            size_t wasread = fg.read(buf.GetCurPtr(),buf.getSize()-buf.GetPos());
+            if (wasread==0) {
+                // EOF
+                if (ptr<buf.GetCurPtr()) {
+                    const size_t pos = fg.getPos() - (buf.GetCurPtr()-ptr);
+                    throw InfosmeException("journal '%s' has garbage-tail at %llu",
+                                           jpath.c_str(), ulonglong(pos));
+                }
+                break;
+            }
+
+            buf.SetPos(buf.GetPos()+wasread);
+            while (ptr < buf.GetCurPtr()) {
+                if (ptr+LENSIZE > buf.GetCurPtr()) {
+                    break; // need length
+                }
+                FromBuf fb(ptr,LENSIZE);
+                uint16_t reclen = fb.get16();
+                if (reclen>100) {
+                    throw InfosmeException("journal '%s' record at %llu has invalid len: %u",
+                                           jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)),reclen);
+                }
+                if (ptr+LENSIZE+reclen > buf.GetCurPtr()) {
+                    break; // read more
+                }
+                fb.setLen(LENSIZE+reclen);
+                ReceiptData rd;
+                rd.drmId.dlvId = fb.get32();
+                rd.drmId.regId = fb.get32();
+                rd.drmId.msgId = fb.get64();
+                rd.responded = true;
+                rd.status = smsc::system::Status::OK;
+                rd.retry = false;
+                rd.rcptId.setMsgId(fb.getCString());
+                if ( !sender_.receiptHash_.GetPtr(rd.rcptId.msgId)) {
+                    ++total;
+                    sender_.receiptHash_.Insert(rd.rcptId.msgId,
+                                                sender_.receiptList_.insert(sender_.receiptList_.end(),rd));
+                }
+            }
+
+        } while (true);
+        smsc_log_info(sender_.log_,"journal '%s' has been read, %u records",jpath.c_str(),total);
+    }
+
+
+    virtual int Execute()
+    {
+        smsc_log_debug(sender_.log_,"S='%s' journal roller started", sender_.smscId_.c_str());
+        while ( !isStopping_ ) {
+            bool firstPass = true;
+            ReceiptList& rl = sender_.receiptList_;
+            ReceiptList::iterator& iter = sender_.rollingIter_;
+            do {
+                ReceiptData rd;
+                if (isStopping_) { break; }
+                {
+                    smsc::core::synchronization::MutexGuard mg(sender_.receiptMon_);
+                    if (firstPass) {
+                        iter = rl.begin();
+                        firstPass = false;
+                    }
+                    if (iter == rl.end()) { break; }
+                    if (!iter->responded) {
+                        ++iter;
+                        continue;
+                    }
+                    rd = *iter;
+                    ++iter;
+                }
+                if (isStopping_) { break; }
+                journalReceiptData(rd);
+                smsc_log_debug(sender_.log_,"FIXME: S='%s' place limit on throughput",sender_.smscId_.c_str());
+            } while (true);
+            smsc_log_debug(sender_.log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
+            if (!isStopping_) { rollOver(); }
+            smsc::core::synchronization::MutexGuard mg(sender_.receiptMon_);
+            sender_.receiptMon_.wait(10000);
+        }
+        return 0;
+    }
+
+private:
+    SmscSender& sender_;
+    bool        isStopping_;
+    smsc::core::synchronization::Mutex lock_;
+    FileGuard   fg_;
+};
+
+
+// =========================================================================
 
 SmscSender::SmscSender( InfosmeCore& core,
                         const std::string& smscId,
@@ -24,12 +216,14 @@ scoredList_(*this,2*maxScoreIncrement,
             smsc::logger::Logger::getInstance("reglist")),
 isStopping_(true),
 ussdPushOp_(cfg.ussdPushOp),
-ussdPushVlrOp_(cfg.ussdPushVlrOp)
+ussdPushVlrOp_(cfg.ussdPushVlrOp),
+journal_(new SmscJournal(*this))
 {
     session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();
     rQueue_ = new DataQueue();
     wQueue_ = new DataQueue();
+    journal_->init();
 }
 
 
@@ -45,6 +239,9 @@ SmscSender::~SmscSender()
     if (wQueue_) {
         assert(wQueue_->Count() == 0);
         delete wQueue_;
+    }
+    if (journal_) {
+        delete journal_;
     }
 }
 
@@ -126,6 +323,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                 sprintf(buf,"%0*.*llu",len,len,ulonglong(addr));
                 oa.setValue(len,buf);
                 addr = subscriberToAddress(msg.subscriber,len,da.type,da.plan);
+                sprintf(buf,"%0*.*llu",len,len,ulonglong(addr));
                 da.setValue(len,buf);
             }
 
@@ -217,10 +415,14 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                 nchunks = 1;
             }
 
+            smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
+                           smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
+                           ulonglong(msg.msgId),
+                           info.useDataSm() ? "data_sm" : "submit_sm",
+                           seqNum,
+                           oa.type, oa.plan, oa.length, oa.length, oa.value,
+                           da.type, da.plan, da.length, da.length, da.value );
             if (info.useDataSm()) {
-                smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu seq=%u data_sm",
-                               smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
-                               ulonglong(msg.msgId), seqNum );
                 msgtime_type validityDate = msg.timeLeft + msg.lastTime;
                 validityDate = ((validityDate <= now) ? 0 : (validityDate-now));
                 sms.setIntProperty( smsc::sms::Tag::SMPP_QOS_TIME_TO_LIVE, validityDate );
@@ -230,9 +432,6 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                 fillDataSmFromSms(&dataSm,&sms);
                 session_->getAsyncTransmitter()->sendPdu(&(dataSm.get_header()));
             } else {
-                smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu seq=%u submit_sm",
-                               smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
-                               ulonglong(msg.msgId), seqNum );
                 PduSubmitSm submitSm;
                 submitSm.get_header().set_sequenceNumber(seqNum);
                 submitSm.get_header().set_commandId(smsc::smpp::SmppCommandSet::SUBMIT_SM);
@@ -288,20 +487,6 @@ void SmscSender::updateConfig( const SmscConfig& config )
     ussdPushOp_ = config.ussdPushOp;
     ussdPushVlrOp_ = config.ussdPushVlrOp;
 }
-
-
-/*
-void SmscSender::waitUntilReleased()
-{
-    if (isReleased) return;
-    stop();
-    while (true) {
-        MutexGuard mg(mon_);
-        if (isReleased) break;
-        mon_.wait(100);
-    }
-}
- */
 
 
 void SmscSender::detachRegionSender( RegionSender& rs )
@@ -525,7 +710,6 @@ void SmscSender::processQueue( DataQueue& queue )
                 smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u D=%u/R=%u/M=%llu has no msgId, finalize?",
                               smscId_.c_str(), rd.seqNum,
                               drmId.dlvId, drmId.regId, ulonglong(drmId.msgId));
-                // FIXME: should we finalize?
                 core_.receiveResponse( drmId, rd.status, rd.retry );
                 continue;
             }
@@ -537,7 +721,7 @@ void SmscSender::processQueue( DataQueue& queue )
                 // receipt found in cache, so
                 // message is finalized as it has both receipt and response
                 {
-                    smsc::core::synchronization::MutexGuard mg(receiptLock_);
+                    smsc::core::synchronization::MutexGuard mg(receiptMon_);
                     rcptList.splice(rcptList.begin(),receiptList_,iter);
                 }
 
@@ -557,14 +741,15 @@ void SmscSender::processQueue( DataQueue& queue )
 
             // receipt hash has no mapping, adding one
             iter = rcptList.insert(rcptList.begin(),ReceiptData());
-            iter->responded = true;
-            iter->rcptId = rd.rcptId;
             iter->drmId = drmId;
+            iter->rcptId = rd.rcptId;
+            iter->status = rd.status;
+            iter->responded = true;
             iter->retry = rd.retry;
             receiptHash_.Insert(rd.rcptId.msgId,iter);
-            journalReceiptData(*iter);
+            journal_->journalReceiptData(*iter);
             {
-                smsc::core::synchronization::MutexGuard mg(receiptLock_);
+                smsc::core::synchronization::MutexGuard mg(receiptMon_);
                 receiptList_.splice(receiptList_.begin(),rcptList,iter);
             }
 
@@ -590,7 +775,7 @@ void SmscSender::processQueue( DataQueue& queue )
                         // if receipt is in bad state -- finalize
                         receiptHash_.Delete(rd.rcptId.msgId);
                         {
-                            MutexGuard mg(receiptLock_);
+                            smsc::core::synchronization::MutexGuard mg(receiptMon_);
                             if (rollingIter_ == iter) { ++rollingIter_; }
                             rcptList.splice(rcptList.begin(),receiptList_,iter);
                         }
@@ -618,7 +803,7 @@ void SmscSender::processQueue( DataQueue& queue )
             receiptHash_.Insert(rd.rcptId.msgId,iter);
             // NOTE: we do not journal this entry as it has not been responded
             {
-                MutexGuard mg(receiptLock_);
+                smsc::core::synchronization::MutexGuard mg(receiptMon_);
                 receiptList_.splice(receiptList_.begin(),rcptList,iter);
             }
 
@@ -645,6 +830,7 @@ void SmscSender::stop()
         isStopping_ = true;
         queueMon_.notifyAll();
     }
+    journal_->stop();
     WaitFor();
 }
 
@@ -652,9 +838,19 @@ void SmscSender::stop()
 int SmscSender::Execute()
 {
     while ( !isStopping_ ) {
-        connectLoop();
+        try {
+            connectLoop();
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"exc in connectLoop: %s", e.what());
+        }
         if (isStopping_) break;
-        sendLoop();
+        journal_->start();
+        try {
+            sendLoop();
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"exc in sendLoop: %s", e.what());
+        }
+        journal_->stop();
     }
     return 0;
 }
@@ -780,9 +976,6 @@ void SmscSender::processWaitingEvents()
 void SmscSender::journalReceiptData( const ReceiptData& rd )
 {
     assert(rd.responded);
-    char buf[100];
-    sprintf(buf,"%u,%u,%llu,%s",rd.drmId.dlvId,rd.drmId.regId,rd.drmId.msgId,rd.rcptId.msgId);
-    smsc_log_error(log_,"FIXME: journal receipt data %s",buf);
 }
 
 }
