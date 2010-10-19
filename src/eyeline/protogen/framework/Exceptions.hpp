@@ -76,6 +76,15 @@ public:
   }
 };
 
+class FieldTooLong:public BaseException{
+public:
+  FieldTooLong()
+  {
+    msg+="Total field size exceeded maximum length";
+  }
+};
+
+
 class NetworkErrorException:public BaseException{
 public:
   NetworkErrorException()
