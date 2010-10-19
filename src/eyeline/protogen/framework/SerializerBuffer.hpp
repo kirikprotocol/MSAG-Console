@@ -190,7 +190,7 @@ public:
   }
   static LengthType fieldSize(const std::string& value)
   {
-    return (LengthType)value.length()*2;
+    return (LengthType)(lengthTypeSize+value.length()*2);
   }
 
   static LengthType fieldSize(const std::vector<std::string>& value)
@@ -198,7 +198,7 @@ public:
     LengthType rv=0;
     for(std::vector<std::string>::const_iterator it=value.begin(),end=value.end();it!=end;++it)
     {
-      rv+=lengthTypeSize+fieldSize(*it);
+      rv+=fieldSize(*it);
     }
     return rv;
   }
