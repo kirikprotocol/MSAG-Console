@@ -214,7 +214,7 @@ void cmd_config(Console&, const std::vector<std::string> &args)
 /* ------------------------------------------------------------------- */
 //> mark_csi [csi_id_str]
 static const char hlp_switch_csi[] = "USAGE: %smark_csi [csi_id_str]\n"
-                                  "       csi_id_str s one of:\n       %s\n";
+                                  "       csi_id_str is one of:\n       %s\n";
 void utl_switch_csi(const std::vector<std::string> &args, bool is_mark)
 {
   if (args.size() < 2) {
@@ -244,7 +244,7 @@ void cmd_unmark_csi(Console&, const std::vector<std::string> &args)
 /* ------------------------------------------------------------------- */
 //> mark_flag [flag_id_str]
 static const char hlp_switch_flag[] = "USAGE: %smark_flag [flag_id_str]\n"
-                                  "       flag_id_str s one of:\n       %s\n";
+                                  "       flag_id_str is one of:\n       %s\n";
 
 void utl_switch_flag(const std::vector<std::string> &args, bool is_mark)
 {
