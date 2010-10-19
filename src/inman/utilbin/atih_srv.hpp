@@ -17,6 +17,7 @@
 namespace smsc  {
 namespace inman {
 
+using smsc::inman::comp::atih::RequestedSubscription;
 using smsc::inman::comp::atih::ATSIRes;
 using smsc::inman::comp::atih::ATSIArg;
 
@@ -40,7 +41,7 @@ public:
 
     bool isActive(void);
     //sets subscriber identity: IMSI or MSISDN addr
-    bool interrogate(const std::string &subcr_addr, bool imsi = false);
+    bool interrogate(const RequestedSubscription & req_cfg, const std::string &subcr_addr, bool imsi = false);
     void cancel(void);
 
 protected:
@@ -79,6 +80,9 @@ public:
     bool start();
     void stop(bool do_wait = false);
 
+    RequestedSubscription & getRequestCfg(void) { return _reqCfg; }
+    const RequestedSubscription & getRequestCfg(void) const { return _reqCfg; }
+    
     //sets subscriber identity: IMSI or MSISDN addr
     bool requestCSI(const std::string &subcr_addr, bool imsi = true);
 
@@ -104,6 +108,7 @@ private:
     ServiceATIH_CFG _cfg;
     IntrgtrMAP      workers;
     IntrgtrLIST     pool;
+    RequestedSubscription _reqCfg;
 };
 
 

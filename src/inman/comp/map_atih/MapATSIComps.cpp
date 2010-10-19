@@ -37,27 +37,36 @@ namespace atih {
 void ATSIArg::setSCFaddress(const char * addr) throw(CustomException)
 {
     if (!scfAdr.fromText(addr))
-        throw CustomException(-1, "inalid scfAdr", addr);
+        throw CustomException(-1, "ATSIArg: inalid scfAdr", addr);
 }
 //sets subscriber identity: IMSI or MSISDN addr
 void ATSIArg::setSubscriberId(const char *addr, bool imsi/* = true*/) throw(CustomException)
 {
     if (!subscrAdr.fromText(addr))
-        throw CustomException(-1, "inalid subscriberID", addr);
+        throw CustomException(-1, "ATSIArg: inalid subscriberID", addr);
     if ((subscrImsi = imsi)) {
         if (((subscrAdr.length + 1)/2) > MAPConst::MAX_IMSI_AddressLength)
-            throw CustomException("IMSI length is too long: %u", subscrAdr.length);
+            throw CustomException("ATSIArg: IMSI length is too long: %u", subscrAdr.length);
     }
 }
 
 void ATSIArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
+    if (!getFlagsValue())
+      throw CustomException(-2, "ATSIArg: Requested subscription isn't set");
+
     asn_enc_rval_t                          erc;
     AnyTimeSubscriptionInterrogationArg_t   cmd;
-    RequestedCAMEL_SubscriptionInfo_t	    reqCSI = askCSI;
+    RequestedCAMEL_SubscriptionInfo_t	    reqCSI;
+    AdditionalRequestedCAMEL_SubscriptionInfo_t reqXCSI;
+    SS_ForBS_Code_t                         reqSS;
+    BasicServiceCode_t                      bsCode;
+    unsigned char                           ssCode_buf[1];
+    unsigned char                           bsCode_buf[1];
     unsigned char                           imsi_buf[MAPConst::MAX_IMSI_AddressLength];
     unsigned char                           isdn_buf[sizeof(TONNPI_ADDRESS_OCTS)];
     unsigned char                           isdn_buf2[sizeof(TONNPI_ADDRESS_OCTS)];
+    NULL_t                                  present = 1;
 
     memset(&cmd, 0, sizeof(cmd)); //clear asn_ctx & optionals
     cmd.subscriberIdentity.present = subscrImsi ? SubscriberIdentity_PR_imsi
@@ -71,7 +80,39 @@ void ATSIArg::encode(std::vector<unsigned char>& buf) const throw(CustomExceptio
         cmd.subscriberIdentity.choice.msisdn.buf = isdn_buf;
         cmd.subscriberIdentity.choice.msisdn.size = packMAPAddress2OCTS(subscrAdr, isdn_buf);
     }
-    cmd.requestedSubscriptionInfo.requestedCAMEL_SubscriptionInfo = &reqCSI;
+    if (getFlags().odb)
+      cmd.requestedSubscriptionInfo.odb = &present;
+    if (getFlags().vlr)
+      cmd.requestedSubscriptionInfo.supportedVLR_CAMEL_Phases = &present;
+    if (getFlags().sgsn)
+      cmd.requestedSubscriptionInfo.supportedSGSN_CAMEL_Phases = &present;
+
+    if (getFlags().csi) {
+      reqCSI = getRequestedCSI();
+      cmd.requestedSubscriptionInfo.requestedCAMEL_SubscriptionInfo = &reqCSI;
+    }
+    if (getFlags().xcsi) {
+      reqXCSI = getRequestedXCSI();
+      cmd.requestedSubscriptionInfo.additionalRequestedCAMEL_SubscriptionInfo = &reqXCSI;
+    }
+    if (getFlags().ss) {
+      memset(&reqSS, 0, sizeof(reqSS)); //clear asn_ctx & optionals
+
+      ssCode_buf[0] = getRequestedSSInfo().ssCode;
+      reqSS.ss_Code.buf = ssCode_buf;
+      reqSS.ss_Code.size = 1;
+
+      if (getRequestedSSInfo().bsCodeKind != BasicServiceCode_PR_NOTHING) {
+        memset(&bsCode, 0, sizeof(bsCode)); //clear asn_ctx & optionals
+
+        bsCode.present = getRequestedSSInfo().bsCodeKind;
+        bsCode_buf[0] = getRequestedSSInfo().bsCode.bearer;
+        bsCode.choice.bearerService.buf = bsCode_buf;
+        bsCode.choice.bearerService.size = 1;
+
+        reqSS.basicService = &bsCode;
+      }
+    }
 
     cmd.gsmSCF_Address.buf = isdn_buf2;
     cmd.gsmSCF_Address.size = packMAPAddress2OCTS(scfAdr, isdn_buf2);
@@ -95,7 +136,7 @@ static bool parse_O_CSI(CAMEL_SubscriptionInfo_t *cs, GsmSCFinfo *scf_inf) throw
         scf_inf->serviceKey = (uint32_t)root_elem->serviceKey;
            
         if (!OCTET_STRING_2_Address(&(root_elem->gsmSCF_Address), scf_inf->scfAddress))
-            throw CustomException(-11, "O_CSI: bad gsmSCF_Adr", NULL);
+            throw CustomException(-11, "ATSIRes::O_CSI: bad gsmSCF_Adr", NULL);
 
         for (int i = 1; i < cs->o_CSI->o_BcsmCamelTDPDataList.list.count; i++) {
             O_BcsmCamelTDPData_t *elem = cs->o_CSI->o_BcsmCamelTDPDataList.list.array[i];
@@ -104,7 +145,7 @@ static bool parse_O_CSI(CAMEL_SubscriptionInfo_t *cs, GsmSCFinfo *scf_inf) throw
                           elem->gsmSCF_Address.buf, root_elem->gsmSCF_Address.size)) {
                 std::string msg;
                 format(msg, "element: %u, trigger: %u", i, elem->o_BcsmTriggerDetectionPoint);
-                throw CustomException(-12, "O_CSI: different gsmSCF_Adr", msg.c_str());
+                throw CustomException(-12, "ATSIRes::O_CSI: different gsmSCF_Adr", msg.c_str());
             }
         }
         return true;

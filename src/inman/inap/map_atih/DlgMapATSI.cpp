@@ -59,15 +59,17 @@ void MapATSIDlg::endMapDlg(void)
 /* ------------------------------------------------------------------------ *
  * ATSIcontractor interface
  * ------------------------------------------------------------------------ */
-void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
-                    bool imsi/* = false*/, uint16_t timeout/* = 0*/) throw(CustomException)
+void MapATSIDlg::subsciptionInterrogation(const RequestedSubscription & req_cfg,
+                                  const char * subcr_adr, bool imsi/* = false*/,
+                                  uint16_t timeout/* = 0*/)
+    throw(CustomException)
 {
     MutexGuard  grd(_sync);
 
     if (!atsiHdl.get() || !session)
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                     "MapATSI", "invalid initialization");
-    
+
     TonNpiAddress   tnAdr;
     if (!tnAdr.fromText(subcr_adr))
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
@@ -86,17 +88,24 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
              (unsigned)atsiId.tcInstId, (unsigned)atsiId.dlgId);
 
 
-    ATSIArg     arg;
+    ATSIArg     arg(req_cfg, logger);
     arg.setSCFaddress(session->getOwnAdr());
     if (!imsi)
         arg.setSubscriberId(tnAdr);
     else
         arg.setSubscriberId(subcr_adr, imsi);
-    arg.setRequestedCSI(RequestedCAMEL_SubscriptionInfo_o_CSI);
 
     dialog->sendInvoke(MAPATIH_OpCode::anyTimeSubscriptionInterrogation, &arg); //throws
     dialog->beginDialog(); //throws
     _atsiState.s.ctrInited = MapATSIDlg::operInited;
+
+}
+
+void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
+                    bool imsi/* = false*/, uint16_t timeout/* = 0*/) throw(CustomException)
+{
+    RequestedSubscription   reqCfg(RequestedCAMEL_SubscriptionInfo_o_CSI);
+    subsciptionInterrogation(reqCfg, subcr_adr, imsi, timeout);
 }
 
 /* ------------------------------------------------------------------------ *

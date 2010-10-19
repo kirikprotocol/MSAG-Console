@@ -15,6 +15,7 @@ using smsc::inman::inap::Dialog;
 using smsc::inman::inap::TCDialogUserITF;
 
 #include "inman/comp/map_atih/MapATSIComps.hpp"
+using smsc::inman::comp::atih::RequestedSubscription;
 using smsc::inman::comp::atih::ATSIArg;
 using smsc::inman::comp::atih::ATSIRes;
 using smsc::util::RCHash;
@@ -58,6 +59,11 @@ public:
 
     enum MapOperState { operInited = 1, operFailed = 2, operDone = 3 };
 
+    //requests specified subscription information
+    void subsciptionInterrogation(const RequestedSubscription & req_cfg,
+                                  const char * subcr_adr, bool imsi = false,
+                                  uint16_t timeout = 0) throw(CustomException);
+    //requests O_CSI information
     void subsciptionInterrogation(const char * subcr_adr, bool imsi = false,
                                 uint16_t timeout = 0) throw(CustomException);
 

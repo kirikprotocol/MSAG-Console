@@ -25,6 +25,7 @@ ServiceATIH::ServiceATIH(const ServiceATIH_CFG & in_cfg, Logger * uselog/* = NUL
     if (!logger)
         logger = Logger::getInstance("smsc.inman.ATIH");
     disp->Init(_cfg.mapCfg.ss7);
+    _reqCfg.setRequestedCSI(RequestedCAMEL_SubscriptionInfo_o_CSI);
 }
 
 ServiceATIH::~ServiceATIH()
@@ -120,7 +121,7 @@ bool ServiceATIH::requestCSI(const std::string &subcr_addr, bool imsi/* = true*/
     if (it == workers.end()) {
         if (mapSess && (mapSess->bindStatus() >= SSNBinding::ssnPartiallyBound)) {
             ATIInterrogator * worker = newWorker();
-            if (worker->interrogate(subcr_addr, imsi)) {
+            if (worker->interrogate(_reqCfg, subcr_addr, imsi)) {
                 workers.insert(IntrgtrMAP::value_type(subcr_addr, worker));
                 return true;
             }
@@ -212,7 +213,8 @@ bool ATIInterrogator::isActive(void)
 }
 
 //sets subscriber identity: IMSI or MSISDN addr
-bool ATIInterrogator::interrogate(const std::string &subcr_addr, bool imsi/* = false*/)
+bool ATIInterrogator::interrogate(const RequestedSubscription & req_cfg,
+                                  const std::string &subcr_addr, bool imsi/* = false*/)
 {
     MutexGuard  grd(_sync);
     scfInfo.serviceKey = 0;
@@ -220,7 +222,7 @@ bool ATIInterrogator::interrogate(const std::string &subcr_addr, bool imsi/* = f
     try {
         mapDlg = new MapATSIDlg(tcSesssion, this);
         smsc_log_debug(logger, "Intrgtr[%s]: requesting subscription ..", subcr_addr.c_str());
-        mapDlg->subsciptionInterrogation(subcr_addr.c_str(), imsi);
+        mapDlg->subsciptionInterrogation(req_cfg, subcr_addr.c_str(), imsi);
         _active = true;
         subcrAddr = subcr_addr;
     } catch (const std::exception & exc) {
@@ -249,7 +251,7 @@ void ATIInterrogator::cancel(void)
 void ATIInterrogator::onATSIResult(ATSIRes* arg)
 {
     MutexGuard  grd(_sync);
-    if (!arg->getSCFinfo(RequestedCAMEL_SubscriptionInfo_o_CSI, &scfInfo))
+    if (arg && !arg->getSCFinfo(RequestedCAMEL_SubscriptionInfo_o_CSI, &scfInfo))
         scfInfo.scfAddress.clear();
 }
  //dialog finalization/error handling:
