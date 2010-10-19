@@ -2,6 +2,7 @@
 #include "RegionalStorage.h"
 #include "informer/io/UnlockMutexGuard.h"
 #include "informer/io/RelockMutexGuard.h"
+#include "informer/data/CommonSettings.h"
 #include "StoreJournal.h"
 
 namespace eyeline {
@@ -190,9 +191,11 @@ void RegionalStorage::messageSent( msgid_type msgId,
 
 void RegionalStorage::retryMessage( msgid_type   msgId,
                                     msgtime_type currentTime,
-                                    msgtime_type retryDelay,  // in how many seconds try again
+                                    // msgtime_type retryDelay,  // in how many seconds try again
                                     int          smppState )
 {
+    msgtime_type retryDelay = dlvInfo_.getCommonSettings().getRetryTime(dlvInfo_.getRetryPolicyName(),smppState);
+
     RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
@@ -207,9 +210,9 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
     Message& m = iter->msg;
     // fixing time left according
     m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
-    if ( m.timeLeft > int(dlvInfo_.getMinRetryTime()) ) {
+    if ( m.timeLeft > timediff_type(dlvInfo_.getMinRetryTime()) ) {
         // there is enough validity time to try the next time
-        if ( m.timeLeft < int(retryDelay) ) retryDelay = m.timeLeft;
+        if ( m.timeLeft < timediff_type(retryDelay) ) retryDelay = m.timeLeft;
         m.timeLeft -= retryDelay;
         retryDelay += currentTime;
         resendQueue_.insert( std::make_pair(retryDelay,iter) );

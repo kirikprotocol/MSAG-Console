@@ -569,9 +569,8 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
         }
         InputMessageSource* ims = new InputStorage(*this,dlvInfo->getDlvId(),*inputJournal_);
         deliveryHash_.Insert(dlvId,
-                             deliveryList_.insert(deliveryList_.end(),
+                             deliveryList_.insert(deliveryList_.begin(),
                                                   DeliveryPtr(new Delivery(dlvInfo,*storeJournal_,ims))));
-        // FIXME: should we move rolling pointer?
     }
     startMon_.notify();
 }
@@ -611,10 +610,53 @@ void InfosmeCoreV1::incOutgoing( unsigned nchunks )
 }
 
 
-void InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId, int smppStatus, bool retry )
+void InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId, int status, bool retry )
 {
-    smsc_log_error(log_,"FIXME: response received D=%u/R=%u/M=%llu status=%u retry=%d",
-                   drmId.dlvId, drmId.regId, drmId.msgId, smppStatus, retry );
+    smsc_log_debug(log_,"rcpt/resp received D=%u/R=%u/M=%llu status=%u retry=%d",
+                   drmId.dlvId, drmId.regId, drmId.msgId, status, retry );
+    try {
+        DeliveryPtr dlv;
+        {
+            smsc::core::synchronization::MutexGuard mg(startMon_);
+            DeliveryList::iterator* piter = deliveryHash_.GetPtr(drmId.dlvId);
+            if (!piter) {
+                smsc_log_warn(log_,"D=%u/R=%u/M=%llu rcpt/resp: delivery not found",
+                              drmId.dlvId, drmId.regId, drmId.msgId );
+                return;
+            }
+            dlv = **piter;
+        }
+
+        const DeliveryInfo& info = dlv->getDlvInfo();
+
+        RegionalStoragePtr reg = dlv->getRegionalStorage(drmId.regId);
+        if (!reg.get()) {
+            smsc_log_warn(log_,"D=%u/R=%u/M=%llu rcpt/resp: region is not found",
+                          drmId.dlvId, drmId.regId, drmId.msgId );
+            return;
+        }
+    
+        const msgtime_type now(currentTimeMicro() / tuPerSec);
+
+        if (retry && info.wantRetry(status) ) {
+            // retry is needed
+            // const timediff_type retryDelay = 
+            // commonSettings_.getRetryTime(info.retryPolicy(),status);
+            reg->retryMessage( drmId.msgId,
+                               msgtime_type(currentTimeMicro()/tuPerSec),
+                               // retryDelay,
+                               status );
+
+        } else {
+            const bool ok = (status == smsc::system::Status::OK);
+            reg->finalizeMessage(drmId.msgId, now,
+                                 ok ? MSGSTATE_DELIVERED : MSGSTATE_FAILED,
+                                 status );
+        }
+    } catch ( std::exception& e ) {
+        smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp/recv processing failed: %s",
+                      drmId.dlvId, drmId.regId, drmId.msgId, e.what() );
+    }
 }
 
 

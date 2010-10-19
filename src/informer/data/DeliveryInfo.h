@@ -3,6 +3,7 @@
 
 #include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
+#include "system/status.h"
 
 namespace eyeline {
 namespace informer {
@@ -30,7 +31,10 @@ public:
         if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
     }
 
+    const CommonSettings& getCommonSettings() const { return cs_; }
+
     dlvid_type getDlvId() const { return dlvId_; }
+
     unsigned getPriority() const { return 1; }
 
     bool isActive() const {
@@ -38,6 +42,23 @@ public:
     }
 
     personid_type getFrom() const { return from_; } 
+
+    bool wantRetry( int status ) const {
+        switch (status) {
+        case smsc::system::Status::OK:
+            return false;
+        case smsc::system::Status::MSGQFUL:
+        case smsc::system::Status::THROTTLED:
+        case smsc::system::Status::LICENSELIMITREJECT:
+            return true;
+        default:
+            break;
+        }
+        if ( retryPolicyName_.empty() ) return false;
+        return !smsc::system::Status::isErrorPermanent(status);
+    }
+
+    const char* getRetryPolicyName() const { return retryPolicyName_.c_str(); }
 
     /// minimal number of input messages per region when request for new
     /// input messages should be issued.
@@ -82,6 +103,7 @@ private:
     std::string     svcType_;
     int             transactionMode_;
     DeliveryMode    deliveryMode_;
+    std::string     retryPolicyName_;
     DlvState        state_;
 };
 

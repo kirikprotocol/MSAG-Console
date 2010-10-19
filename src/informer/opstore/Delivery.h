@@ -23,6 +23,8 @@ public:
 
     inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 
+    const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
+
     bool isActive() const {
         return dlvInfo_->isActive();
     }

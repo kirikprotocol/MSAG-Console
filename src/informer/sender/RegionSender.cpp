@@ -127,7 +127,7 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
         nchunks = -smsc::system::Status::UNKNOWNERR;
     }
     smsc_log_debug(log_,"FIXME: message could not be sent, analyse rc=%d",-nchunks);
-    ptr.retryMessage(msg_.msgId, msgtime_type(currentTime_/tuPerSec), 60, -nchunks );
+    ptr.retryMessage(msg_.msgId, msgtime_type(currentTime_/tuPerSec), -nchunks );
     return -maxScoreIncrement;
 }
 

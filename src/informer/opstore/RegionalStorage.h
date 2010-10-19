@@ -63,10 +63,11 @@ public:
 
     /// change message state when temporal failure received.
     /// message is removed from the cache.
-    /// @param retryDelay - how many seconds to wait until the next retry.
+    // @param retryDelay - how many seconds to wait until the next retry
+    //   (deprecated), it is now calculated from smppState.
     void retryMessage( msgid_type msgId,
                        msgtime_type currentTime,
-                       msgtime_type retryDelay,
+                       // timediff_type retryDelay,
                        int smppState );
 
     /// finalize message. message is removed from cache.

@@ -2,6 +2,7 @@
 #define _INFORMER_COMMONSETTINGS_H
 
 #include <string>
+#include "informer/io/Typedefs.h"
 
 namespace eyeline {
 namespace informer {
@@ -39,6 +40,10 @@ public:
     unsigned getProtocolId() const { return protocolId_; }
 
     unsigned getMaxMessageChunkSize() const { return 160; /* FIXME */ }
+
+    msgtime_type getRetryTime( const char* policyName, int status ) const {
+        return 3600; // FIXME
+    }
 
 private:
     std::string path_;
