@@ -54,8 +54,8 @@ message DeliveryInfo
   string activePeriodEnd 7
   string activePeriodStart 8
   string activeWeekDays 9 array
-  string validityDate 10
-  string validityPeriod 11
+  string validityDate 10 opt
+  string validityPeriod 11 opt
 
   bool flash 12
   bool secret 13
@@ -67,7 +67,7 @@ message DeliveryInfo
   string owner 18
 
   bool retryOnFail 19
-  string retryPolicy 20
+  string retryPolicy 20 opt
 
   bool replaceMessage 21
   string svcType 22

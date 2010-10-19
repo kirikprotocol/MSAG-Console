@@ -1,6 +1,6 @@
 include DcpMessages.def
 
-protocol DcpServer
+protocol DcpServerProto
 
   OkResponse outmsg
   FailResponse outmsg
