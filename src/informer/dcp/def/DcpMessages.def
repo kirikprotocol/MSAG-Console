@@ -70,7 +70,7 @@ message DeliveryInfo
   string retryPolicy 20 opt
 
   bool replaceMessage 21
-  string svcType 22
+  string svcType 22 opt
 end
 
 enum byte MessageType
