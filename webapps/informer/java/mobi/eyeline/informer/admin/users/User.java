@@ -274,7 +274,7 @@ public class User implements Serializable{
   }
 
   public void setPolicyId(String policyId) throws AdminException {
-    vh.checkNotEmpty("policyId",policyId);
+    if(policyId!=null && policyId.trim().length()==0) policyId=null;
     this.policyId = policyId;
   }
 

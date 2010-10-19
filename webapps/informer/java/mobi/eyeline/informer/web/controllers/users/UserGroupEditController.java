@@ -208,6 +208,7 @@ public class UserGroupEditController extends UserController {
   }
 
   public void setPolicyId(String policyId) {
+    if(policyId!=null && policyId.trim().length()==0) policyId=null;
     this.policyId = policyId;
   }
 

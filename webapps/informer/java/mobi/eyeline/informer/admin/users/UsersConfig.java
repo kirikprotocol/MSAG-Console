@@ -67,7 +67,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     u.setDeliveryDays(loadDeliveryDays(section));
     u.setDeliveryType(User.DeliveryType.valueOf(section.getString("deliveryType")));
     u.setTransactionMode(section.getBool("transactionMode",false));
-    u.setPolicyId(section.getString("policyId"));
+    u.setPolicyId(section.getString("policyId",null));
     u.setRegions(loadUserRegions(section));
     u.setPriority(section.getInt("priority"));
     u.setEmailNotification(section.getBool("emailNotification",false));
@@ -166,7 +166,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     if(user.isTransactionMode())  {
       userSection.setBool("transactionMode",true);
     }
-    userSection.setString("policyId",user.getPolicyId());
+    if(user.getPolicyId()!=null) {
+      userSection.setString("policyId",user.getPolicyId());
+    }
     if(user.getDeliveryStartTime()!=null) {
       userSection.setString("deliveryStartTime",user.getDeliveryStartTime().getTimeString());
     }

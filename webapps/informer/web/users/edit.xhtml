@@ -12,7 +12,7 @@
 
   <ui:define name="content">
 
-    <tr:form rendered="#{!userEdit.initError}">
+    <tr:form id="userForm" rendered="#{!userEdit.initError}">
 
       <eye:buttons>
         <eye:button>
@@ -182,11 +182,16 @@
 
       <eye:collapsingGroup label="#{userBundle.regions}" opened="true">
       <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+
         <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
-              <tr:selectManyCheckbox value="#{userEdit.userToEdit.regions}" simple="true">
+              <tr:commandLink onclick="return toggleAll('userForm','regionsSelectMany');">
+                <tr:image source="/images/ico16_checked_sa.gif" inlineStyle="margin-left:4px;"/>
+              </tr:commandLink>
+              <tr:selectManyCheckbox id="regionsSelectMany" value="#{userEdit.userToEdit.regions}" simple="true" >
                 <f:selectItems value="#{userEdit.regionsList}"/>
               </tr:selectManyCheckbox>
         </tr:panelFormLayout>
+        
       </h:panelGrid>
       </eye:collapsingGroup>
 

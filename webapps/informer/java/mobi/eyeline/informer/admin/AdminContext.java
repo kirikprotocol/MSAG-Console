@@ -317,8 +317,8 @@ public class AdminContext {
       integrityLock.lock();
       for(User u : usersManager.getUsers()) {
         for(String s : u.getRegions()) {
-          if(s.equals(regionId)) {
-            throw new IntegrityException("fail.delete.region.to.user",regionId,u.getLogin());
+          if(s.equals(regionId)) {            
+            throw new IntegrityException("fail.delete.region.to.user",regionsManager.getRegion(regionId).getName(),u.getLogin());
           }
         }
       }

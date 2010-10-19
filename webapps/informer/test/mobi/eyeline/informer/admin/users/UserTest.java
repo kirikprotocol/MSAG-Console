@@ -252,16 +252,8 @@ public class UserTest {
     User o = new User();
     o.setPolicyId("blablabla");
     assertEquals(o.getPolicyId(),"blablabla");
-    try {
-      o.setPolicyId("");
-      assertTrue(false);
-    }
-    catch (AdminException e){}
-    try {
-      o.setPolicyId(null);
-      assertTrue(false);
-    }
-    catch (AdminException e){}
+    o.setPolicyId(null);
+    assertTrue(o.getPolicyId()==null);
   }
 
   @Test
