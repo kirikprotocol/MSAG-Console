@@ -10,6 +10,9 @@ namespace informer {
 class MessageGlossary;
 class MessageTextPtr;
 
+static const unsigned MAX_ALLOWED_MESSAGE_LENGTH = 254;
+static const unsigned MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
+
 /// message text.
 class MessageText
 {

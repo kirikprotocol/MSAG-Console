@@ -1,5 +1,6 @@
 #include "RegionSender.h"
 #include "SmscSender.h"
+#include "system/status.h"
 
 namespace {
 using namespace eyeline::informer;
@@ -99,9 +100,10 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredObjType& ptr )
 
 int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
 {
+    int nchunks;
     try {
 
-        const int nchunks = conn_->send(ptr, msg_);
+        nchunks = conn_->send(ptr, msg_);
         if ( nchunks > 0 ) {
             // message has been put into output queue
             smsc_log_debug(log_,"R=%u/D=%u/M=%llu sent nchunks=%d",
@@ -122,9 +124,10 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
                       unsigned(getRegionId()),
                       unsigned(ptr.getDlvId()),
                       ulonglong(msg_.msgId), e.what());
+        nchunks = -smsc::system::Status::UNKNOWNERR;
     }
-    smsc_log_debug(log_,"FIXME: message could not be sent, mark it as failed?");
-    ptr.retryMessage(msg_.msgId, msgtime_type(currentTime_/tuPerSec), 60, 8 );
+    smsc_log_debug(log_,"FIXME: message could not be sent, analyse rc=%d",-nchunks);
+    ptr.retryMessage(msg_.msgId, msgtime_type(currentTime_/tuPerSec), 60, -nchunks );
     return -maxScoreIncrement;
 }
 

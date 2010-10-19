@@ -3,6 +3,7 @@
 #include "informer/io/InfosmeException.h"
 #include "informer/io/Typedefs.h"
 #include "informer/data/InfosmeCore.h"
+#include "informer/data/CommonSettings.h"
 #include "smpp/smpp_structures.h"
 #include "system/status.h"
 #include "sms/sms.h"
@@ -15,8 +16,10 @@ SmscSender::SmscSender( InfosmeCore& core,
                         const std::string& smscId,
                         const SmscConfig& cfg ) :
 log_(smsc::logger::Logger::getInstance("smscsend")),
-core_(&core),
-smscId_(smscId), session_(0),
+core_(core),
+parser_(0),
+smscId_(smscId),
+session_(0),
 scoredList_(*this,2*maxScoreIncrement,
             smsc::logger::Logger::getInstance("reglist")),
 isStopping_(true),
@@ -24,6 +27,9 @@ ussdPushOp_(cfg.ussdPushOp),
 ussdPushVlrOp_(cfg.ussdPushVlrOp)
 {
     session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
+    parser_ = new smsc::sms::IllFormedReceiptParser();
+    rQueue_ = new DataQueue();
+    wQueue_ = new DataQueue();
 }
 
 
@@ -31,17 +37,31 @@ SmscSender::~SmscSender()
 {
     stop();
     if (session_.get()) session_->close();
+    if (parser_) delete parser_;
+    if (rQueue_) {
+        assert(rQueue_->Count() == 0);
+        delete rQueue_;
+    }
+    if (wQueue_) {
+        assert(wQueue_->Count() == 0);
+        delete wQueue_;
+    }
 }
 
 
 int SmscSender::send( RegionalStorage& ptr, Message& msg )
 {
-    smsc_log_error(log_,"FIXME: send(R=%u/D=%u/M=%llu)",
+    const DeliveryInfo& info = ptr.getDlvInfo();
+
+    smsc_log_error(log_,"send(R=%u/D=%u/M=%llu)",
                    unsigned(ptr.getRegionId()),
-                   unsigned(ptr.getDlvId()),
+                   unsigned(info.getDlvId()),
                    ulonglong(msg.msgId));
+    char whatbuf[150];
     const char* what = "";
-    int res = smsc::system::Status::SYSERR;
+    int res = smsc::system::Status::OK;
+    int seqNum;
+    int nchunks = 0;
     do {
 
         if (isStopping_) {
@@ -56,12 +76,206 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
             break;
         }
 
-        int seqNum = session_->getNextSeq();
+        const CommonSettings& cs = core_.getCommonSettings();
 
-        smsc_log_error(log_,"FIXME: complete sending");
+        // check the number of seqnums
+        if ( unsigned(seqnumHash_.Count()) > cs.getUnrespondedMessagesMax() ) {
+            what = "too many unresp msgs";
+            // FIXME: which error code to select?
+            // res = smsc::system::Status::MSGQFUL;
+            res = smsc::system::Status::THROTTLED;
+            break;
+        }
+
+        const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
+        if ( msg.lastTime + msg.timeLeft < now ) {
+            what = "msg is already expired";
+            res = smsc::system::Status::EXPIRED;
+            break;
+        }
+
+        // receive and register the seqnum
+        do {
+            seqNum = session_->getNextSeq();
+        } while (seqNum == 0);
+        DlvRegMsgId* drm = seqnumHash_.GetPtr(seqNum);
+        if (!drm) {
+            drm = &seqnumHash_.Insert(seqNum,DlvRegMsgId());
+        }
+        drm->dlvId = info.getDlvId();
+        drm->regId = ptr.getRegionId();
+        drm->msgId = msg.msgId;
+
+        {
+            ResponseTimer rt;
+            rt.endTime = now + cs.getResponseWaitTime();
+            rt.seqNum = seqNum;
+            respWaitQueue_.Push(rt);
+        }
+
+        // prepare the sms
+        try {
+
+            // convert subscribers to addresses
+            smsc::sms::Address oa, da;
+            {
+                uint8_t len;
+                uint64_t addr;
+                char buf[20];
+                addr = subscriberToAddress(info.getFrom(),len,oa.type,oa.plan);
+                sprintf(buf,"%0*.*llu",len,len,ulonglong(addr));
+                oa.setValue(len,buf);
+                addr = subscriberToAddress(msg.subscriber,len,da.type,da.plan);
+                da.setValue(len,buf);
+            }
+
+            smsc::sms::SMS sms;
+            sms.setOriginatingAddress(oa);
+            sms.setDestinationAddress(da);
+            sms.setArchivationRequested(false);
+            sms.setDeliveryReport(1);
+            sms.setValidTime(msg.lastTime + msg.timeLeft);
+            sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
+                                info.isReplaceIfPresent() ? 1 : 0 );
+            sms.setEServiceType( (info.isReplaceIfPresent() && !info.getSvcType().empty()) ?
+                                 info.getSvcType().c_str() : cs.getSvcType() );
+            sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID, cs.getProtocolId());
+            sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS, info.getTransactionMode() ? 2 : 0);
+            sms.setIntProperty(smsc::sms::Tag::SMPP_PRIORITY, 0);
+            sms.setIntProperty(smsc::sms::Tag::SMPP_REGISTRED_DELIVERY, 1);
+            if (info.isFlash()) {
+                sms.setIntProperty(smsc::sms::Tag::SMPP_DEST_ADDR_SUBUNIT,1);
+            }
+
+            const char* out = msg.text->getText();
+            size_t outLen = strlen(msg.text->getText());
+            std::auto_ptr<char> msgBuf;
+            if (smsc::util::hasHighBit(out,outLen)) {
+                size_t msgLen = outLen*2;
+                msgBuf.reset(new char[msgLen]);
+                // FIXME: replace with conversion from UTF8.
+                // FIXME: move conversion into glossary loading.
+                // FIXME: it will require to glossary char* -> std::string modification
+                ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf.get(), msgLen,
+                                       CONV_ENCODING_CP1251);
+                sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+                out = msgBuf.get();
+                outLen = msgLen;
+            } else {
+                sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
+            }
+
+            try {
+                if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm()) {
+                    sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+                    sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, (unsigned)outLen);
+                } else if ( info.getDeliveryMode() != DLVMODE_SMS ) {
+                    // ussdpush or ussdpushvlr
+                    if (outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
+                        smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
+                        outLen = MAX_ALLOWED_MESSAGE_LENGTH;
+                    }
+                    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+                    sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
+                } else {
+                    if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
+                        outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+                    }
+                    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, out, (unsigned)outLen);
+                }
+            } catch ( std::exception& e ) {
+                what = "wrong message body";
+                res = smsc::system::Status::SYSERR;
+                break;
+            }
+
+            if ( info.getDeliveryMode() != DLVMODE_SMS ) {
+                // ussdpush
+                const int ussdop = ( info.getDeliveryMode() == DLVMODE_USSDPUSH ?
+                                     ussdPushOp_ : ussdPushVlrOp_ );
+                if (ussdop == -1) {
+                    smsc_log_warn(log_,"S='%s': ussd not supported, R=%u/D=%u/M=%llu",
+                                  smscId_.c_str(), ptr.getRegionId(), info.getDlvId(), ulonglong(msg.msgId));
+                    res = smsc::system::Status::SYSERR;
+                    break;
+                }
+                
+                try {
+                    sms.setIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP,ussdop);
+                } catch ( std::exception& e ) {
+                    smsc_log_error(log_,"S='%s': ussdpush: cannot set ussd op %u",ussdop);
+                    res = smsc::system::Status::SYSERR;
+                    break;
+                }
+            } // ussdpush
+
+            const unsigned chunkLen = cs.getMaxMessageChunkSize();
+            if (chunkLen>0 && outLen > chunkLen) {
+                // SMS will be splitted into nchunks chunks (estimation)
+                nchunks = unsigned(outLen-1) / chunkLen + 1;
+            } else {
+                nchunks = 1;
+            }
+
+            if (info.useDataSm()) {
+                smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu seq=%u data_sm",
+                               smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
+                               ulonglong(msg.msgId), seqNum );
+                msgtime_type validityDate = msg.timeLeft + msg.lastTime;
+                validityDate = ((validityDate <= now) ? 0 : (validityDate-now));
+                sms.setIntProperty( smsc::sms::Tag::SMPP_QOS_TIME_TO_LIVE, validityDate );
+                PduDataSm dataSm;
+                dataSm.get_header().set_sequenceNumber(seqNum);
+                dataSm.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM);
+                fillDataSmFromSms(&dataSm,&sms);
+                session_->getAsyncTransmitter()->sendPdu(&(dataSm.get_header()));
+            } else {
+                smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu seq=%u submit_sm",
+                               smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
+                               ulonglong(msg.msgId), seqNum );
+                PduSubmitSm submitSm;
+                submitSm.get_header().set_sequenceNumber(seqNum);
+                submitSm.get_header().set_commandId(smsc::smpp::SmppCommandSet::SUBMIT_SM);
+                fillSmppPduFromSms(&submitSm, &sms);
+                session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
+            }
+            core_.incOutgoing(nchunks);
+            break;
+
+        } catch ( std::exception& e ) {
+            snprintf(whatbuf,sizeof(whatbuf),"exc: %s",e.what());
+            what = whatbuf;
+            res = smsc::system::Status::SYSERR;
+        }
 
     } while ( false );
 
+    if (res==smsc::system::Status::OK && nchunks>0) {
+        if (log_->isDebugEnabled()) {
+            uint8_t len, ton, npi;
+            uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
+            smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu A=.%u.%u.%0*.*llu seq=%u sent",
+                           smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
+                           ulonglong(msg.msgId),
+                           ton,npi,len,len,ulonglong(addr), seqNum);
+        }
+        return nchunks;
+    }
+
+    if (seqNum!=0) {
+        seqnumHash_.Delete(seqNum);
+    }
+
+    uint8_t len, ton, npi;
+    uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
+    smsc_log_error(log_,"S='%s' R=%u/D=%u/M=%llu A=.%u.%u.%0*.*llu failed(%d): %s",
+                   smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
+                   ulonglong(msg.msgId),
+                   ton,npi,len,len,ulonglong(addr), res, what);
+
+    if (res==smsc::system::Status::OK) {
+        return 0;
+    }
     return -res;
 }
 
@@ -146,9 +360,7 @@ void SmscSender::handleError( int errorCode )
 
 void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
 {
-    smsc_log_warn(log_,"FIXME: receipt");
     assert(pdu);
-    bool needResponse = true;
     smsc::sms::SMS sms;
     switch (pdu->get_commandId()) {
     case smsc::smpp::SmppCommandSet::DELIVERY_SM:
@@ -166,53 +378,57 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
         ((sms.getIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS) & 0x3c) == 0x4) :
         false;
     
-    if ( isReceipt ) {
-        ResponseData rd;
-        uint8_t msgState;
-        int err;
-        const char* msgid = parser_->parseSms(sms,rd.msgid,msgState,err);
-        if (msgid && *msgid != '\0') {
-            // msgid is ok
-            rd.receipt = true;
-            rd.retry = false;
-
-            bool delivered = false;
-            switch (msgState) {
-            case smsc::smpp::SmppMessageState::DELIVERED:
-                delivered = true;
-                break;
-            case smsc::smpp::SmppMessageState::EXPIRED:
-            case smsc::smpp::SmppMessageState::DELETED:
-                rd.retry = true;
-                break;
-            case smsc::smpp::SmppMessageState::ENROUTE:
-            case smsc::smpp::SmppMessageState::UNKNOWN:
-            case smsc::smpp::SmppMessageState::ACCEPTED:
-            case smsc::smpp::SmppMessageState::REJECTED:
-            case smsc::smpp::SmppMessageState::UNDELIVERABLE:
-                // what to do?
-                break;
-            default:
-                smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u invalid receipt state=%d",
-                              smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
-                break;
-            } // switch msgState
-
-            rd.seqNum = 0;
-            rd.status = pdu->get_commandStatus();
-            if ( rd.status == smsc::system::Status::OK && !delivered ) {
-                smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
-                              smscId_.c_str(), msgid, pdu->get_sequenceNumber());
-                rd.status = smsc::system::Status::UNKNOWNERR;
-            }
-            if (msgid != rd.msgid) {
-                rd.setMsgId(msgid);
-            }
-            needResponse = queueData(rd);
-        }
+    if ( !isReceipt ) {
+        return; 
     }
+
+    uint8_t msgState;
+    int err;
+    ResponseData rd;
+    const char* msgid = parser_->parseSms(sms,rd.rcptId.msgId,msgState,err);
+        
+    if ( !msgid || *msgid == '\0') {
+        // broken msgid
+        return;
+    }
+
+    // msgid is ok
+    rd.seqNum = 0;    // receipt
+    rd.status = pdu->get_commandStatus();
+
+    bool delivered = false;
+    bool retry = false;
+    switch (msgState) {
+    case smsc::smpp::SmppMessageState::DELIVERED:
+        delivered = true;
+        break;
+    case smsc::smpp::SmppMessageState::EXPIRED:
+    case smsc::smpp::SmppMessageState::DELETED:
+        retry = true;
+        break;
+    case smsc::smpp::SmppMessageState::ENROUTE:
+    case smsc::smpp::SmppMessageState::UNKNOWN:
+    case smsc::smpp::SmppMessageState::ACCEPTED:
+    case smsc::smpp::SmppMessageState::REJECTED:
+    case smsc::smpp::SmppMessageState::UNDELIVERABLE:
+        // permanent failure
+        break;
+    default:
+        smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u invalid receipt state=%d",
+                      smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
+        break;
+    } // switch msgState
     
-    if (needResponse) {
+    if ( rd.status == smsc::system::Status::OK && !delivered ) {
+        smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
+                      smscId_.c_str(), msgid, pdu->get_sequenceNumber());
+        rd.status = smsc::system::Status::UNKNOWNERR;
+    }
+
+    rd.rcptId.setMsgId(msgid);
+    rd.retry = retry;
+
+    if (queueData(rd)) {
         switch (pdu->get_commandId()) {
         case smsc::smpp::SmppCommandSet::DELIVERY_SM: {
             PduDeliverySmResp smResp;
@@ -241,8 +457,11 @@ void SmscSender::handleResponse( smsc::sme::SmppHeader* pdu )
 {
     assert(pdu);
     ResponseData rd;
-    rd.receipt = rd.retry = false;
     rd.seqNum = pdu->get_sequenceNumber();
+    if (!rd.seqNum) {
+        smsc_log_error(log_,"S='%s': logic error resp w/ seq=0",smscId_.c_str());
+        return;
+    }
     rd.status = pdu->get_commandStatus();
     bool accepted = ( rd.status == smsc::system::Status::OK );
     const char* msgid = reinterpret_cast<smsc::sme::PduXSmResp*>(pdu)->get_messageId();
@@ -251,13 +470,19 @@ void SmscSender::handleResponse( smsc::sme::SmppHeader* pdu )
         if (!msgid || *msgid == '\0') {
             accepted = false;
             passedid = "";
+            if (rd.status == smsc::system::Status::OK) {
+                smsc_log_debug(log_,"S='%s' resp seq=%u empty msgid, replace status -> %d",
+                               smscId_.c_str(), rd.seqNum, smsc::system::Status::RX_T_APPN);
+                rd.status = smsc::system::Status::RX_T_APPN;
+            }
         }
-        rd.setMsgId(passedid);
+        rd.rcptId.setMsgId(passedid);
     }
     if (!accepted) {
         smsc_log_info(log_,"S='%s' sms msgid='%s' seq=%u wasn't accepted, errcode=%d",
-                      smscId_.c_str(), msgid, rd.seqNum, rd.status );
+                      smscId_.c_str(), rd.rcptId.msgId, rd.seqNum, rd.status );
     }
+    rd.retry = rd.wantRetry(rd.status);
     queueData(rd);
 }
 
@@ -265,6 +490,10 @@ void SmscSender::handleResponse( smsc::sme::SmppHeader* pdu )
 bool SmscSender::queueData( const ResponseData& rd )
 {
     if (isStopping_) return false;
+    smsc_log_debug(log_,"S='%s' %s pending seq=%u status=%d msgid='%s'",
+                   smscId_.c_str(),
+                   rd.seqNum ? "response" : "receipt",
+                   rd.seqNum, rd.status, rd.rcptId.msgId );
     MutexGuard mg(queueMon_);
     wQueue_->Push(rd);
     queueMon_.notify();
@@ -275,10 +504,127 @@ bool SmscSender::queueData( const ResponseData& rd )
 void SmscSender::processQueue( DataQueue& queue )
 {
     ResponseData rd;
+    // FIXME: preprocess queue to match resp+rcpt
+
     while ( queue.Pop(rd) ) {
-        smsc_log_debug(log_,"FIXME: S='%s' processing RD(seq=%u,status=%d,msgid='%s',rcpt=%d,retry=%d)",
-                       smscId_.c_str(),rd.seqNum,rd.status,rd.msgid,rd.receipt,rd.retry);
-    }
+
+        smsc_log_debug(log_,"FIXME: S='%s' processing RD(seq=%u,status=%d,msgid='%s',retry=%d)",
+                       smscId_.c_str(),rd.seqNum,rd.status,rd.rcptId.msgId,rd.retry);
+
+        if ( rd.seqNum ) {
+            // it is a response
+
+            DlvRegMsgId drmId;
+            if ( !seqnumHash_.Pop(rd.seqNum,drmId) ) {
+                smsc_log_warn(log_,"S='%s' resp seq=%u has no drm mapping", smscId_.c_str(), rd.seqNum);
+                continue;
+            }
+            // FIXME: notify on seqnumHash_.Count() change
+
+            if ( *rd.rcptId.msgId == '\0' ) {
+                smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u D=%u/R=%u/M=%llu has no msgId, finalize?",
+                              smscId_.c_str(), rd.seqNum,
+                              drmId.dlvId, drmId.regId, ulonglong(drmId.msgId));
+                // FIXME: should we finalize?
+                core_.receiveResponse( drmId, rd.status, rd.retry );
+                continue;
+            }
+
+            // get receipt from receipt cache
+            ReceiptList rcptList;
+            ReceiptList::iterator iter;
+            if ( receiptHash_.Pop(rd.rcptId.msgId,iter) ) {
+                // receipt found in cache, so
+                // message is finalized as it has both receipt and response
+                {
+                    smsc::core::synchronization::MutexGuard mg(receiptLock_);
+                    rcptList.splice(rcptList.begin(),receiptList_,iter);
+                }
+
+                // finalize message, ignoring resp status
+                smsc_log_info(log_,"FIXME: S='%s' D=%u/R=%u/M=%llu ignoring resp status=%d,retry=%d, using status=%d,retry=%d",
+                              drmId.dlvId, drmId.regId, ulonglong(drmId.msgId),
+                              rd.status, rd.retry, iter->status, iter->retry );
+                core_.receiveResponse( drmId, iter->status, iter->retry );
+                continue;
+
+            }
+
+            if ( rd.status != smsc::system::Status::OK ) {
+                core_.receiveResponse( drmId, rd.status, rd.retry );
+                continue;
+            }
+
+            // receipt hash has no mapping, adding one
+            iter = rcptList.insert(rcptList.begin(),ReceiptData());
+            iter->responded = true;
+            iter->rcptId = rd.rcptId;
+            iter->drmId = drmId;
+            iter->retry = rd.retry;
+            receiptHash_.Insert(rd.rcptId.msgId,iter);
+            journalReceiptData(*iter);
+            {
+                smsc::core::synchronization::MutexGuard mg(receiptLock_);
+                receiptList_.splice(receiptList_.begin(),rcptList,iter);
+            }
+
+            // adding receipt wait timer
+            ReceiptTimer rt;
+            const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
+            rt.endTime = now + core_.getCommonSettings().getReceiptWaitTime();
+            rt.rcptId = rd.rcptId;
+            rcptWaitQueue_.Push(rt);
+                
+        } else {
+            // receipt
+
+            ReceiptList rcptList;
+            ReceiptList::iterator* piter = receiptHash_.GetPtr(rd.rcptId.msgId);
+            if (piter) {
+                ReceiptList::iterator iter = *piter;
+                if (iter->responded) {
+                    // we have already received a response
+                    if ( rd.retry ||
+                         rd.status == smsc::system::Status::OK ||
+                         smsc::system::Status::isErrorPermanent(rd.status) ) {
+                        // if receipt is in bad state -- finalize
+                        receiptHash_.Delete(rd.rcptId.msgId);
+                        {
+                            MutexGuard mg(receiptLock_);
+                            if (rollingIter_ == iter) { ++rollingIter_; }
+                            rcptList.splice(rcptList.begin(),receiptList_,iter);
+                        }
+                        core_.receiveResponse(iter->drmId, rd.status, rd.retry);
+                    } else {
+                        smsc_log_warn(log_,"FIXME: S='%s' strange receipt for D=%u/R=%u/M=%llu status=%d,msgid='%s',retry=%d",
+                                      iter->drmId.dlvId, iter->drmId.regId, iter->drmId.msgId,
+                                      rd.status,rd.rcptId.msgId,rd.retry);
+                        iter->status = rd.status;
+                    }
+                } else {
+                    // still not responded, modify receipt status
+                    iter->status = rd.status;
+                    iter->retry = rd.retry;
+                }
+                continue;
+            }
+
+            // iter is not found, so it is not responded
+            ReceiptList::iterator iter = rcptList.insert(rcptList.begin(),ReceiptData());
+            iter->responded = false;
+            iter->status = rd.status;
+            iter->rcptId = rd.rcptId;
+            iter->retry = rd.retry;
+            receiptHash_.Insert(rd.rcptId.msgId,iter);
+            // NOTE: we do not journal this entry as it has not been responded
+            {
+                MutexGuard mg(receiptLock_);
+                receiptList_.splice(receiptList_.begin(),rcptList,iter);
+            }
+
+        } // if receipt
+
+    } // while pop rd
 }
 
 
@@ -312,25 +658,6 @@ int SmscSender::Execute()
     }
     return 0;
 }
-
-
-/*
-void SmscSender::onThreadPoolStartTask()
-{
-    isStopping_ = false;
-    isReleased = false;
-}
- */
-
-
-/*
-void SmscSender::onRelease()
-{
-    MutexGuard mg(mon_);
-    isReleased = true;
-    mon_.notify();
-}
- */
 
 
 void SmscSender::connectLoop()
@@ -404,8 +731,9 @@ void SmscSender::sendLoop()
         nextWakeTime = currentTime_ + scoredList_.processOnce(0, sleepTime);
         processWaitingEvents();
     }
-    // FIXME: process waiting data from queue
     if (session_.get() && !session_->isClosed()) session_->close();
+    if (rQueue_->Count() > 0) processQueue(*rQueue_);
+    if (wQueue_->Count() > 0) processQueue(*wQueue_);
 }
 
 
@@ -446,6 +774,15 @@ void SmscSender::processWaitingEvents()
 {
     smsc_log_error(log_,"FIXME: S='%s'@%p process waiting events at %llu",
                    smscId_.c_str(), this, currentTime_);
+}
+
+
+void SmscSender::journalReceiptData( const ReceiptData& rd )
+{
+    assert(rd.responded);
+    char buf[100];
+    sprintf(buf,"%u,%u,%llu,%s",rd.drmId.dlvId,rd.drmId.regId,rd.drmId.msgId,rd.rcptId.msgId);
+    smsc_log_error(log_,"FIXME: journal receipt data %s",buf);
 }
 
 }

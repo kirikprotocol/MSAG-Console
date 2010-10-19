@@ -34,17 +34,18 @@ static const unsigned tuPerSec = 1000000U;
 static const unsigned maxScoreIncrement = 10000U;
 static const unsigned flipTimePeriod = 1000*tuPerSec;
 
-inline uint64_t subscriberToAddress( personid_type subsc, uint8_t& ton, uint8_t& npi )
+inline uint64_t subscriberToAddress( personid_type subsc, uint8_t& len, uint8_t& ton, uint8_t& npi )
 {
-    register uint8_t tonnpi = uint8_t(subsc >> 56);
-    ton = tonnpi >> 4;
-    npi = tonnpi & 0xf;
-    return uint64_t(subsc & 0xffffffffffffffULL);
+    register uint16_t lentonnpi = uint16_t(subsc >> 52);
+    len = uint8_t(lentonnpi >> 8) + 1;   // 1..16 by construction
+    ton = uint8_t(lentonnpi >> 4) & 0xf; // 0..15 by construction
+    npi = uint8_t(lentonnpi & 0xf);      // 0..15 by construction
+    return uint64_t(subsc & 0xfffffffffffffULL);
 }
 
-inline personid_type addressToSubscriber( uint8_t ton, uint8_t npi, uint64_t value )
+inline personid_type addressToSubscriber( uint8_t len, uint8_t ton, uint8_t npi, uint64_t value )
 {
-    return ( uint64_t((ton & 0xf << 4) | (npi & 0xf)) << 56 ) | (value & 0xffffffffffffffULL);
+    return ( uint64_t( (uint16_t((len-1) & 0xf) << 8) | ((ton & 0xf) << 4) | (npi & 0xf)) << 52 ) | (value & 0xfffffffffffffULL);
 }
 
 typedef enum {

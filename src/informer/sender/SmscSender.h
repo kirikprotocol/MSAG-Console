@@ -38,6 +38,7 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
 {
     friend class ScoredList< SmscSender >;
     typedef smsc::core::buffers::CyclicQueue< ResponseData > DataQueue;
+    typedef std::list< ReceiptData > ReceiptList;
 
 public:
     SmscSender( InfosmeCore&            core,
@@ -88,10 +89,11 @@ private:
     int processScoredObj( unsigned unused, ScoredObjType& regionSender );
     void scoredObjToString( std::string& s, ScoredObjType& regionSender );
     void processWaitingEvents();
+    void journalReceiptData( const ReceiptData& rd );
 
 private:
     smsc::logger::Logger*                     log_;
-    InfosmeCore*                              core_;
+    InfosmeCore&                              core_;
     smsc::sms::IllFormedReceiptParser*        parser_;
     std::string                               smscId_;
     std::auto_ptr<smsc::sme::SmppSession>     session_;
@@ -102,9 +104,19 @@ private:
     int                                       ussdPushOp_;
     int                                       ussdPushVlrOp_;
 
-    smsc::core::synchronization::EventMonitor queueMon_;
-    DataQueue*                                rQueue_;
-    DataQueue*                                wQueue_;
+    smsc::core::buffers::IntHash< DlvRegMsgId >       seqnumHash_;
+    smsc::core::buffers::CyclicQueue< ResponseTimer > respWaitQueue_;
+    smsc::core::buffers::CyclicQueue< ReceiptTimer >  rcptWaitQueue_;
+
+    // when process receipt/response
+    smsc::core::synchronization::Mutex                 receiptLock_;
+    ReceiptList                                        receiptList_;
+    ReceiptList::iterator                              rollingIter_;
+    smsc::core::buffers::Hash< ReceiptList::iterator > receiptHash_;
+
+    smsc::core::synchronization::EventMonitor          queueMon_;
+    DataQueue*                                         rQueue_;
+    DataQueue*                                         wQueue_;
 };
 
 } // informer

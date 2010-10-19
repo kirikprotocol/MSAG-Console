@@ -17,13 +17,17 @@ class ConfigView;
 namespace eyeline {
 namespace informer {
 
+class CommonSettings;
 class RegionFinder;
 class TransferTask;
+class UserInfo;
 
 class InfosmeCore
 {
 public:
     virtual ~InfosmeCore() {}
+
+    virtual const CommonSettings& getCommonSettings() const = 0;
 
     /// init the core, should be invoked before start()
     /// NOTE: do not keep a ref on cfg!
@@ -37,6 +41,9 @@ public:
     /// wait a number of milliseconds, will be waked up if core is stopping
     virtual void wait( int msec ) = 0;
 
+    /// get user info (a stub for now)
+    virtual const UserInfo* getUserInfo( const char* login ) = 0;
+
     /// get region finder
     virtual RegionFinder& getRegionFinder() = 0;
 
@@ -48,6 +55,10 @@ public:
                                   bool bind ) = 0;
 
     virtual void startTransfer( TransferTask* ) = 0;
+
+    virtual void incIncoming() = 0;
+    virtual void incOutgoing( unsigned nchunks ) = 0;
+    virtual void receiveResponse( const DlvRegMsgId& drmId, int smppStatus, bool retry ) = 0;
 };
 
 } // informer

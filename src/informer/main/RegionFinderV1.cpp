@@ -9,15 +9,15 @@ log_(smsc::logger::Logger::getInstance("regfinder")) {}
 
 regionid_type RegionFinderV1::findRegion( personid_type subscriber )
 {
-    uint8_t ton, npi;
-    uint64_t addr = subscriberToAddress(subscriber,ton,npi);
+    uint8_t len, ton, npi;
+    uint64_t addr = subscriberToAddress(subscriber,len,ton,npi);
     char buf[30];
-    sprintf(buf,"%llu",ulonglong(addr));
+    sprintf(buf,"%0*.*llu",len,len,ulonglong(addr));
     regionid_type rid;
     if (!tree_.Find(buf,rid)) {
         rid = defaultRegionId;
     }
-    smsc_log_debug(log_,"findRegion(.%u.%u.%llu) -> %u",ton,npi,ulonglong(addr),rid);
+    smsc_log_debug(log_,"findRegion(.%u.%u.%0*.*llu) -> %u",ton,npi,len,len,ulonglong(addr),rid);
     return rid;
 }
 

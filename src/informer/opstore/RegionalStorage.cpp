@@ -344,9 +344,12 @@ size_t RegionalStorage::rollOver()
     while ( true ) {
         MsgIter iter = storingIter_;
         if ( iter == messageList_.end() ) break;
+        ++storingIter_;
         {
             MsgLock ml(iter,this);
             mg.Unlock();
+            smsc_log_debug(log_,"rolling R=%u/D=%u/M=%u",
+                           regionId_,dlvInfo_.getDlvId(),ulonglong(iter->msg.msgId));
             written += storeJournal_.journalMessage(dlvInfo_.getDlvId(),regionId_,iter->msg,ml.serial);
         }
         smsc_log_debug(log_,"FIXME: place the restriction on throughput here");

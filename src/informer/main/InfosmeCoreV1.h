@@ -39,6 +39,8 @@ public:
 
     virtual ~InfosmeCoreV1();
 
+    virtual const CommonSettings& getCommonSettings() const { return cs_; }
+
     /// configuration
     /// NOTE: do not keep a ref on cfg!
     virtual void init( const smsc::util::config::ConfigView& cfg );
@@ -54,6 +56,8 @@ public:
         startMon_.wait(msec);
     }
 
+    virtual const UserInfo* getUserInfo( const char* login );
+
     virtual RegionFinder& getRegionFinder() { return rf_; }
 
     virtual void selfTest();
@@ -65,6 +69,13 @@ public:
                                   bool bind );
 
     virtual void startTransfer( TransferTask* task );
+
+    /// license traffic control
+    virtual void incIncoming();
+    virtual void incOutgoing( unsigned nchunks );
+
+    /// final state response/receipt has been received
+    virtual void receiveResponse( const DlvRegMsgId& drmId, int smppStatus, bool retry );
 
     // --------------------
 

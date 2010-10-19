@@ -416,6 +416,12 @@ void InfosmeCoreV1::start()
 }
 
 
+const UserInfo* InfosmeCoreV1::getUserInfo( const char* login )
+{
+    return 0;
+}
+
+
 void InfosmeCoreV1::selfTest()
 {
     smsc_log_debug(log_,"selfTest started");
@@ -426,11 +432,11 @@ void InfosmeCoreV1::selfTest()
     DeliveryPtr dlv = **ptr;
     MessageList msgList;
     MessageLocker mlk;
-    mlk.msg.subscriber = addressToSubscriber(1,1,79137654079ULL);
+    mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
     mlk.msg.text.reset(new MessageText(0,1));
     mlk.msg.userData = "myfirstmsg";
     msgList.push_back(mlk);
-    mlk.msg.subscriber = addressToSubscriber(1,1,79537699490ULL);
+    mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
     mlk.msg.text.reset(new MessageText("the unbound message",0));
     mlk.msg.userData = "thesecondone";
     msgList.push_back(mlk);
@@ -590,6 +596,25 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
 void InfosmeCoreV1::startTransfer( TransferTask* task )
 {
     ttp_.startTask(task);
+}
+
+
+void InfosmeCoreV1::incIncoming()
+{
+    smsc_log_error(log_,"FIXME: incoming limits not impl");
+}
+
+
+void InfosmeCoreV1::incOutgoing( unsigned nchunks )
+{
+    smsc_log_error(log_,"FIXME: outgoing limits not impl, nchunks=%u",nchunks);
+}
+
+
+void InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId, int smppStatus, bool retry )
+{
+    smsc_log_error(log_,"FIXME: response received D=%u/R=%u/M=%llu status=%u retry=%d",
+                   drmId.dlvId, drmId.regId, drmId.msgId, smppStatus, retry );
 }
 
 

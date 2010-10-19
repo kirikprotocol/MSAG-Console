@@ -164,11 +164,11 @@ void InputStorage::dispatchMessages( MsgIter begin,
         i->msg.state = MSGSTATE_INPUT;
         i->serial = regId;
         if (log_->isDebugEnabled()) {
-            uint8_t ton, npi;
-            uint64_t addr = subscriberToAddress(i->msg.subscriber,ton,npi);
-            smsc_log_debug(log_,"adding D=%u/M=%llu for .%u.%u.%llu -> R=%u",
+            uint8_t len, ton, npi;
+            uint64_t addr = subscriberToAddress(i->msg.subscriber,len,ton,npi);
+            smsc_log_debug(log_,"adding D=%u/M=%llu for .%u.%u.%0*.*llu -> R=%u",
                            unsigned(dlvId_), ulonglong(i->msg.msgId),
-                           ton,npi,ulonglong(addr),unsigned(regId));
+                           ton,npi,len,len,ulonglong(addr),unsigned(regId));
         }
         if ( std::find(regs.begin(),regs.end(),regId) == regs.end() ) {
             regs.push_back(regId);
