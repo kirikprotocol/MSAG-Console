@@ -136,7 +136,12 @@ public class RescheduleEditController extends RescheduleController {
 
       Reschedule toAdd = new Reschedule(newReschedule, statuses);
       if (oldReschedule != null && oldReschedule.length() != 0) {
-        reschedules.remove(oldReschedule);
+        for (Iterator<Reschedule> iter = reschedules.iterator(); iter.hasNext();) {
+          if (iter.next().getIntervals().equals(oldReschedule)) {
+            iter.remove();
+            break;
+          }
+        }
       }
       reschedules.add(toAdd);
 

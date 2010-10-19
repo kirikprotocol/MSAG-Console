@@ -23,7 +23,7 @@ public class RescheduleListController extends RescheduleController {
   private Collection<Reschedule> reschedules;
 
   public RescheduleListController() {
-    super(true);
+    super(false);
 
     RescheduleSettings s = getSettings();
     defaultReschedule = s.getDefaultReschedule();
@@ -56,7 +56,7 @@ public class RescheduleListController extends RescheduleController {
       RescheduleSettings settings = getSettings();
       settings.setReschedules(reschedules);
       setSettings(settings);
-      checkChanges();
+//      checkChanges();
     } catch (AdminException ex) {
       addError(ex);
     }

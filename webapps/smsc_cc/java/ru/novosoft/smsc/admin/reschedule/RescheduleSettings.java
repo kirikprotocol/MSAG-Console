@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.util.ValidationHelper;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
