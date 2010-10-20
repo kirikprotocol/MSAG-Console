@@ -5,7 +5,8 @@
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
@@ -16,10 +17,11 @@
     <tr:form rendered="#{!providers.initError}">
 
       <h:inputHidden value="#{providers.revision}"/>
+      <eye:message level="warn" rendered="#{providers.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{providers.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{providers.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{providers}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{providers}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
@@ -53,8 +55,8 @@
       </h:panelGrid>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{providers.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{providers.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{providers}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{providers}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 

@@ -65,7 +65,6 @@ public class CategoryController extends SettingsMController<CategorySettings> {
       s.addCategory(newCategory);
       setSettings(s);
       resetCategories();
-      checkChanges();
       newCategory = null;
     } catch (AdminException e) {
       addError(e);

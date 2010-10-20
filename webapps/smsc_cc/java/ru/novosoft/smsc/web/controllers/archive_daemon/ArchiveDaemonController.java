@@ -36,7 +36,7 @@ public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSe
 
   @Override
   protected void init() throws AdminException {
-    super.init();    //To change body of overridden methods use File | Settings | File Templates.
+    super.init();
     config=getSettings();
     switchToHost = WebContext.getInstance().getArchiveDaemonManager().getDaemonOnlineHost();
     locationSources = buildModel(config.getLocationsSources().entrySet());
@@ -53,7 +53,6 @@ public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSe
       initError = true;
       return;
     }
-    checkChanges();
   }
 
   public boolean isInitError() {

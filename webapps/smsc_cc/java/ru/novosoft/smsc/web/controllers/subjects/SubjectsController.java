@@ -45,7 +45,7 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
     super.init();    //To change body of overridden methods use File | Settings | File Templates.
     settings = getSettings();
     clearFilter();
-    selectedRows = new ArrayList();
+    selectedRows = new ArrayList<String>();
   }
 
   public String clearFilter() {
@@ -212,7 +212,6 @@ public class SubjectsController extends SettingsMController<RouteSubjectSettings
     catch (AdminException e) {
       addError(e);
     }
-    checkChanges();
     return null;
   }
  

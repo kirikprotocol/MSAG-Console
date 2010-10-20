@@ -22,7 +22,6 @@ public class UsersListController extends UsersController {
   private String filterByLogin;
 
   public UsersListController() {
-    super(true);
   }
 
   public void clearFilter() {
@@ -45,7 +44,6 @@ public class UsersListController extends UsersController {
       try {
         settings.setUsers(users.values());
         setSettings(settings);
-        checkChanges();
       } catch (AdminException e1) {
         addError(e1);
       }

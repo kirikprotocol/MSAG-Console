@@ -12,11 +12,11 @@ public class UsersController extends SettingsMController<UsersSettings> {
 
   private boolean initFailed;
 
-  public UsersController(boolean checkChanges) {
+  public UsersController() {
     super(WebContext.getInstance().getUserManager());
 
     try {
-      init(checkChanges);
+      init();
     } catch (AdminException e) {
       addError(e);
       initFailed = true;

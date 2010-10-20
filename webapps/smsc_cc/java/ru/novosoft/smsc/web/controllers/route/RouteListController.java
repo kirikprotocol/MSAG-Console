@@ -147,7 +147,6 @@ public class RouteListController extends RouteController {
       try {
         s.setRoutes(routes);
         setSettings(s);
-        checkChanges();
       } catch (AdminException e) {
         addError(e);
       }

@@ -36,24 +36,10 @@ public class SettingsMController<T> extends SmscController {
   }
 
   protected void init() throws AdminException {
-    init(true);
-  }
-
-  protected void checkChanges() {
-    if (isSettingsChanged() && !submitHintAdded) {
-      submitHintAdded = true;
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.submit.hint");
-    }
-  }
-
-  protected void init(boolean checkChanges) throws AdminException {
     resetRevision();
 
     for(Iterator it = FacesContext.getCurrentInstance().getMessages(); it.hasNext() ;it.remove())
       it.next();
-
-    if (checkChanges)
-      checkChanges();
 
     if (mngr instanceof SmscConfiguration) {
       try {

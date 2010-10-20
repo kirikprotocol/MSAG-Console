@@ -220,7 +220,6 @@ public class RouteEditController extends RouteController {
       try {
         route.addSource(new Source(sourceSubjectToAdd));
         save();
-        checkChanges();
       } catch (AdminException e) {
         addError(e);
       }
@@ -281,7 +280,6 @@ public class RouteEditController extends RouteController {
       try {
         route.addDestination(new Destination(destinationSubjectToAdd, destinationSmeToAdd));
         save();
-        checkChanges();
       } catch (AdminException e) {
         addError(e);
       }
@@ -294,7 +292,6 @@ public class RouteEditController extends RouteController {
     if (destinationSubject2remove != null)
       route.removeDestination(destinationSubject2remove);
     save();
-    checkChanges();
     return null;
   }
 

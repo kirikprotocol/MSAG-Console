@@ -4,7 +4,8 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
@@ -15,6 +16,7 @@
     <tr:form id="users_list">
 
       <tr:inputHidden value="#{users.revision}" id="revision"/>
+      <eye:message level="warn" rendered="#{users.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <p/>
       <eye:dataTableFilter bean="#{users}" clearAction="clearFilter">
@@ -65,14 +67,8 @@
                           onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
-        <eye:button>
-          <h:commandLink value="#{msg['submit.button']}" id="submit2" action="#{users.submit}"
-              onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="USERS" actionListener="#{users.reset}"
-              onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/>
-        </eye:button>
+        <eye:button><smsc:submitButton bean="#{users}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{users}" action="reset"/></eye:button>
       </eye:buttons>
 
 

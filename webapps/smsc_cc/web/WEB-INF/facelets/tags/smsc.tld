@@ -1,0 +1,34 @@
+<taglib>
+  <tlib-version>1.0</tlib-version>
+  <jsp-version>1.2</jsp-version>
+  <short-name>eye</short-name>
+  <uri>http://taglib.smsc.mobi</uri>
+  <description>
+  </description>
+
+  <tag>
+    <name>submitButton</name>
+    <description>Кнопка submit</description>
+    <attribute>
+      <name>bean</name>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>action</name>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>resetButton</name>
+    <description>Кнопка reset</description>
+    <attribute>
+      <name>bean</name>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>action</name>
+      <required>true</required>
+    </attribute>
+  </tag>
+</taglib>

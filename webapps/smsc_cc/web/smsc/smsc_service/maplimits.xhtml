@@ -5,6 +5,7 @@
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi"
       xmlns:c="http://java.sun.com/jstl/core">
 
 <ui:composition template="/templates/main.xhtml">
@@ -16,16 +17,13 @@
     <tr:form rendered="#{!mapLimits.initFailed}">
 
       <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" id="saveAll1" action="#{mapLimits.save}"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="#{mapLimits.reset}"/>
-        </eye:button>
+        <eye:button><smsc:submitButton bean="#{mapLimits}" action="save"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{mapLimits}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
       <tr:inputHidden id="revision" value="#{mapLimits.revision}"/>
+      <eye:message level="warn" rendered="#{mapLimits.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <h:panelGrid columns="1" style="padding:20px;">
 
@@ -116,12 +114,8 @@
 
 
       <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" id="saveAll2" action="#{mapLimits.save}"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="#{mapLimits.reset}"/>
-        </eye:button>
+        <eye:button><smsc:submitButton bean="#{mapLimits}" action="save"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{mapLimits}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 

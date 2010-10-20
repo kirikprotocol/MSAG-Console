@@ -5,7 +5,8 @@
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
@@ -16,10 +17,11 @@
     <tr:form rendered="#{!archiveDaemon.initError}">
 
       <h:inputHidden value="#{archiveDaemon.revision}"/>
+      <eye:message level="warn" rendered="#{archiveDaemon.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{archiveDaemon.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{archiveDaemon.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{archiveDaemon}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{archiveDaemon}" action="reset"/></eye:button>
         <eye:space/>
         <eye:button>
             <h:panelGroup>
@@ -139,9 +141,9 @@
       <p/>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{archiveDaemon.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{archiveDaemon.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
-        <eye:space/>  
+        <eye:button><smsc:submitButton bean="#{archiveDaemon}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{archiveDaemon}" action="reset"/></eye:button>
+        <eye:space/>
       </eye:buttons>
 
     </tr:form>

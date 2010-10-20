@@ -35,7 +35,7 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
     super(WebContext.getInstance().getRouteSubjectManager());
     try {
       setOldName(getRequestParameter("oldName"));
-      super.init(false);
+      super.init();
       initData();
     } catch (AdminException e) {
       addError(e);
@@ -70,7 +70,6 @@ public class SubjectEditController extends SettingsMController<RouteSubjectSetti
 
 
   protected void initData() throws AdminException {
-    checkChanges();
     settings = getSettings();
     subjMap = buildSubjectsMap();
     masksModel=new DynamicTableModel();

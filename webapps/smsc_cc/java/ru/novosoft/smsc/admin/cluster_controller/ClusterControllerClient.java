@@ -95,6 +95,9 @@ final class ClusterControllerClient extends ClientConnection {
       }
     }
     try {
+      if (log.isDebugEnabled())
+        log.debug("Sending request: " + request);
+      System.out.println("OUT: " + os);
       send(request);
       if (log.isDebugEnabled())
         log.debug("Request sent: " + request);

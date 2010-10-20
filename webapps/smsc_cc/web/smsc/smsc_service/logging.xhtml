@@ -5,6 +5,7 @@
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi"
       xmlns:c="http://java.sun.com/jstl/core">
 
 <ui:composition template="/templates/main.xhtml">
@@ -19,16 +20,13 @@
 
 
       <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" id="saveAll1" action="#{logging.save}"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="#{logging.reset}"/>
-        </eye:button>
+        <eye:button><smsc:submitButton bean="#{logging}" action="save"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{logging}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
       <tr:inputHidden id="revision" value="#{logging.revision}"/>
+      <eye:message level="warn" rendered="#{logging.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <h:panelGrid columns="1" style="padding:20px;">
 
@@ -43,12 +41,8 @@
 
 
       <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" id="saveAll2" action="#{logging.save}"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="#{logging.reset}"/>
-        </eye:button>
+        <eye:button><smsc:submitButton bean="#{logging}" action="save"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{logging}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 

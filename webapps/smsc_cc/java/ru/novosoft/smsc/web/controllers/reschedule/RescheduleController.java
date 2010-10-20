@@ -13,11 +13,11 @@ public class RescheduleController extends SettingsMController<RescheduleSettings
 
   private boolean initFailed;
 
-  protected RescheduleController(boolean checkChanges) {
+  protected RescheduleController() {
     super(WebContext.getInstance().getRescheduleManager());
 
     try {
-      init(checkChanges);
+      init();
     } catch (AdminException e) {
       initFailed = true;
       addError(e);

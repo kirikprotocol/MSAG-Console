@@ -64,7 +64,6 @@ public class ProviderController extends SettingsMController<ProviderSettings> {
       s.addProvider(newProvider);
       setSettings(s);
       resetProviders();
-      checkChanges();
       newProvider = null;
     } catch (AdminException e) {
       addError(e);

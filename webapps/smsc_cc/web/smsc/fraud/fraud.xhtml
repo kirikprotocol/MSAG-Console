@@ -5,6 +5,7 @@
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi"
       xmlns:jstl="http://java.sun.com/jstl/core">
 
 
@@ -16,6 +17,7 @@
 
     <h:form rendered="#{!fraud.initError}">
       <tr:inputHidden value="#{fraud.revision}"/>
+      <eye:message level="warn" rendered="#{fraud.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <p/>
 
@@ -53,7 +55,7 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink id="add2" actionListener="#{fraud.addLine}">
+          <tr:commandLink actionListener="#{fraud.addLine}">
             <tr:image source="/images/but_add.gif" inlineStyle="margin-bottom: -5px"/>
           </tr:commandLink>
           <tr:inputText value="#{fraud.newAddr}" required="false" simple="true" contentStyle="width: 150px; margin-bottom: 0px">
@@ -69,29 +71,13 @@
 
         <eye:space/>
 
-        <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false " action="#{fraud.save}"/>
-        </eye:button>
+        <eye:button><smsc:submitButton bean="#{fraud}" action="save"/></eye:button>
 
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false " action="#{fraud.reset}"/>
-        </eye:button>
+        <eye:button><smsc:resetButton bean="#{fraud}" action="reset"/></eye:button>
 
       </eye:buttons>
 
 
-      <!--
-            <eye:buttons>
-              <eye:button><h:commandLink value="myButton" actionListener="#{index1.myButton}" /></eye:button>
-              <eye:button><h:commandLink value="myButton1" actionListener="#{index1.myButton}"/></eye:button>
-
-              <eye:space/>
-
-              <eye:button><h:commandLink value="myButton2" actionListener="#{index1.myButton}"/></eye:button>
-              <eye:button><h:commandLink value="myButton3" actionListener="#{index1.myButton}"/></eye:button>
-
-            </eye:buttons>
-      -->
     </h:form>
 
   </ui:define>

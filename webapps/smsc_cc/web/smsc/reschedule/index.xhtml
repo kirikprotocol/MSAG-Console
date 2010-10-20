@@ -4,7 +4,8 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi">
 
 <ui:composition template="/templates/main.xhtml">
 
@@ -69,14 +70,8 @@
           </tr:commandLink>
         </eye:button>
         <eye:space/>
-        <eye:button>
-          <h:commandLink value="#{msg['submit.button']}" id="submit2" action="#{reschedule.submit}"
-              onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="#{reschedule.reset}" immediate="true"
-              onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/>
-        </eye:button>
+        <eye:button><smsc:submitButton bean="#{reschedule}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{reschedule}" action="reset"/></eye:button>
       </eye:buttons>
 
     </tr:form>

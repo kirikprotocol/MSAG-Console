@@ -6,6 +6,7 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:c="http://java.sun.com/jstl/core"
       xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi"
       xmlns:fn="http://java.sun.com/jsp/jstl/functions"
     >
 
@@ -18,6 +19,7 @@
     <tr:form rendered="#{!routes.initFailed}">
 
       <h:inputHidden value="#{routes.revision}"/>
+      <eye:message level="warn" rendered="#{routes.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <eye:dataTableFilter bean="#{routes}" clearAction="clearFilter">
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
@@ -89,8 +91,8 @@
         <eye:button><h:commandLink value="#{msg['add.button']}" action="ROUTE_EDIT" immediate="true"/></eye:button>
         <eye:button><h:commandLink value="#{msg['delete.button']}" action="#{routes.removeRoutes}" onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/></eye:button>
         <eye:space/>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{routes.submit}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{routes.reset}" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{routes}" action="submit"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{routes}" action="reset"/></eye:button>
       </eye:buttons>
 
     </tr:form>

@@ -6,6 +6,7 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:c="http://java.sun.com/jstl/core"
       xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi"
       xmlns:fn="http://java.sun.com/jsp/jstl/functions"
     >
 
@@ -18,10 +19,11 @@
     <tr:form rendered="#{!subjects.initError}">
 
       <h:inputHidden value="#{timezones.revision}"/>
+      <eye:message level="warn" rendered="#{timezones.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{timezones.save}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{timezones.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{timezones}" action="save"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{timezones}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
@@ -42,8 +44,8 @@
       <p/>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['submit.button']}" action="#{timezones.save}" onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['reset.button']}" action="#{timezones.reset}" immediate="true" onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/></eye:button>
+        <eye:button><smsc:submitButton bean="#{timezones}" action="save"/></eye:button>
+        <eye:button><smsc:resetButton bean="#{timezones}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 

@@ -38,7 +38,7 @@ public class FraudController extends SettingsMController<FraudSettings> {
       addError(e);
     }
     frSettings = getSettings();
-    addresses= new ArrayList(frSettings.getWhiteList());
+    addresses= new ArrayList<Address>(frSettings.getWhiteList());
   }
 
 

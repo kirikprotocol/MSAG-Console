@@ -23,8 +23,6 @@ public class RescheduleListController extends RescheduleController {
   private Collection<Reschedule> reschedules;
 
   public RescheduleListController() {
-    super(false);
-
     RescheduleSettings s = getSettings();
     defaultReschedule = s.getDefaultReschedule();
     reschedules = s.getReschedules();

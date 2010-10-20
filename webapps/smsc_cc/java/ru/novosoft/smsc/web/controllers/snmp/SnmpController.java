@@ -106,7 +106,6 @@ public class SnmpController extends SettingsMController<SnmpSettings> {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "snmp.object.exists");
       }
     }
-    checkChanges();
     return null;
   }
 
@@ -115,7 +114,6 @@ public class SnmpController extends SettingsMController<SnmpSettings> {
     String objToRemove = getRequestParameter("objToRemove");
     snmpSettings.getSnmpObjects().remove(objToRemove);
     setSettings(snmpSettings);
-    checkChanges();
     return null;
   }
 

@@ -44,7 +44,7 @@ public class SnmpEditController  extends SettingsMController<SnmpSettings> {
 
   @Override
   protected void init() throws AdminException {
-    super.init(false);    //To change body of overridden methods use File | Settings | File Templates.
+    super.init();
     settings = getSettings();
     initObject();
   }
