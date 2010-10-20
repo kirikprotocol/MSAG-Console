@@ -6,6 +6,7 @@
 #include "informer/io/IOConverter.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/CommonSettings.h"
+#include "informer/data/DeliveryInfo.h"
 #include "smpp/smpp_structures.h"
 #include "system/status.h"
 #include "sms/sms.h"
@@ -94,7 +95,7 @@ protected:
 
 
     std::string makePath() const {
-        return sender_.core_.getCommonSettings().getStorePath() + "smsc/.rcptmap" + sender_.smscId_;
+        return sender_.core_.getCommonSettings().getStorePath() + "journals/smsc" + sender_.smscId_ + ".journal";
     }
 
 
@@ -250,9 +251,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
 {
     const DeliveryInfo& info = ptr.getDlvInfo();
 
-    smsc_log_error(log_,"send(R=%u/D=%u/M=%llu)",
-                   unsigned(ptr.getRegionId()),
+    smsc_log_error(log_,"send(D=%u/R=%u/M=%llu)",
                    unsigned(info.getDlvId()),
+                   unsigned(ptr.getRegionId()),
                    ulonglong(msg.msgId));
     char whatbuf[150];
     const char* what = "";
@@ -392,8 +393,11 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                 const int ussdop = ( info.getDeliveryMode() == DLVMODE_USSDPUSH ?
                                      ussdPushOp_ : ussdPushVlrOp_ );
                 if (ussdop == -1) {
-                    smsc_log_warn(log_,"S='%s': ussd not supported, R=%u/D=%u/M=%llu",
-                                  smscId_.c_str(), ptr.getRegionId(), info.getDlvId(), ulonglong(msg.msgId));
+                    smsc_log_warn(log_,"S='%s': ussd not supported, D=%u/R=%u/M=%llu",
+                                  smscId_.c_str(),
+                                  info.getDlvId(),
+                                  ptr.getRegionId(),
+                                  ulonglong(msg.msgId));
                     res = smsc::system::Status::SYSERR;
                     break;
                 }
@@ -415,8 +419,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                 nchunks = 1;
             }
 
-            smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
-                           smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
+            smsc_log_debug(log_,"S='%s' D=%u/R=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
+                           smscId_.c_str(),
+                           info.getDlvId(),
+                           ptr.getRegionId(),
                            ulonglong(msg.msgId),
                            info.useDataSm() ? "data_sm" : "submit_sm",
                            seqNum,
@@ -453,8 +459,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
         if (log_->isDebugEnabled()) {
             uint8_t len, ton, npi;
             uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
-            smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu A=.%u.%u.%0*.*llu seq=%u sent",
-                           smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
+            smsc_log_debug(log_,"S='%s' D=%u/R=%u/M=%llu A=.%u.%u.%0*.*llu seq=%u sent",
+                           smscId_.c_str(),
+                           info.getDlvId(),
+                           ptr.getRegionId(),
                            ulonglong(msg.msgId),
                            ton,npi,len,len,ulonglong(addr), seqNum);
         }
@@ -467,8 +475,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
 
     uint8_t len, ton, npi;
     uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
-    smsc_log_error(log_,"S='%s' R=%u/D=%u/M=%llu A=.%u.%u.%0*.*llu failed(%d): %s",
-                   smscId_.c_str(), ptr.getRegionId(), info.getDlvId(),
+    smsc_log_error(log_,"S='%s' D=%u/R=%u/M=%llu A=.%u.%u.%0*.*llu failed(%d): %s",
+                   smscId_.c_str(),
+                   info.getDlvId(),
+                   ptr.getRegionId(),
                    ulonglong(msg.msgId),
                    ton,npi,len,len,ulonglong(addr), res, what);
 

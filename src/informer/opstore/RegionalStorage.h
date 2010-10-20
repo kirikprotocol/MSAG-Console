@@ -6,7 +6,6 @@
 #include "core/buffers/IntHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Condition.hpp"
-#include "informer/data/DeliveryInfo.h"
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/data/InputMessageSource.h"
 #include "logger/Logger.h"
@@ -15,6 +14,8 @@ namespace eyeline {
 namespace informer {
 
 class StoreJournal;
+class Delivery;
+class DeliveryInfo;
 
 /// Working storage for messages for one Delivery/Region
 class RegionalStorage : public TransferRequester
@@ -36,15 +37,13 @@ private:
 
 public:
 
-    RegionalStorage( DeliveryInfo&       dlvInfo,
-                     regionid_type       regionId,
-                     StoreJournal&       storeLog,
-                     InputMessageSource& source );
+    RegionalStorage( Delivery&           dlv,
+                     regionid_type       regionId );
 
     virtual ~RegionalStorage();
-    dlvid_type getDlvId() const { return dlvInfo_.getDlvId(); }
+    dlvid_type getDlvId() const;
     virtual regionid_type getRegionId() const { return regionId_; }
-    inline const DeliveryInfo& getDlvInfo() const { return dlvInfo_; }
+    const DeliveryInfo& getDlvInfo() const;
 
     /// get the message with given messageid.
     /// this method accesses active messages only.
@@ -133,9 +132,7 @@ private:
     ResendQueue                       resendQueue_;
     NewQueue                          newQueue_;
 
-    DeliveryInfo&                     dlvInfo_;
-    StoreJournal&                     storeJournal_;
-    InputMessageSource&               messageSource_;
+    Delivery&                         dlv_;
     TransferTask*                     transferTask_;  // owned
     regionid_type                     regionId_;
 

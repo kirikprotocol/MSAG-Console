@@ -12,7 +12,7 @@ const unsigned defaultVersion = 1;
 
 inline std::string makePath( const std::string& storePath )
 {
-    return storePath + "operative/journal";
+    return storePath + "journals/operative.journal";
 }
 
 }

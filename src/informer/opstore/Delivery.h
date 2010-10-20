@@ -4,8 +4,8 @@
 #include <memory>
 #include "core/synchronization/Mutex.hpp"
 #include "informer/io/EmbedRefPtr.h"
-#include "informer/opstore/MessageCache.h"
 #include "informer/data/DeliveryInfo.h"
+#include "RegionalStorage.h"
 
 namespace eyeline {
 namespace informer {
@@ -16,10 +16,13 @@ class InfosmeCore;
 class Delivery
 {
     friend class EmbedRefPtr< Delivery >;
+    friend class RegionalStorage;
 public:
     Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
               StoreJournal&               journal,
               InputMessageSource*         source );
+
+    ~Delivery();
 
     inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 
@@ -28,23 +31,29 @@ public:
     bool isActive() const {
         return dlvInfo_->isActive();
     }
+
     unsigned getPriority() const { return dlvInfo_->getPriority(); }
 
     /// get regional storage
-    RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false) {
-        return cache_.getRegionalStorage(regId,create);
-    }
+    RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false);
 
-    void getRegionList( std::vector<regionid_type>& regIds ) {
-        cache_.getRegionList(regIds);
-    }
+    void getRegionList( std::vector<regionid_type>& regIds );
 
     void updateDlvInfo( const DeliveryInfo& info );
-    // void createRegionalStorage( regionid_type regId );
 
     void addNewMessages( MsgIter begin, MsgIter end ) {
-        cache_.addNewMessages(begin,end);
+        source_->addNewMessages(begin,end);
     }
+
+    /// dump all regions to storage
+    size_t rollOverStore();
+
+    /// dump all input records to storage
+    size_t rollOverInput() {
+        return source_->rollOver();
+    }
+
+    // --- initialization part
 
     // NOTE: this method is invoked at init ONLY!
     void setRecordAtInit( const InputRegionRecord& rec,
@@ -56,17 +65,13 @@ public:
                           regionid_type            serial );
 
     // post process regions and collect empty ones
-    void postInitInput( std::vector<regionid_type>& filledRegs );
-    void postInitOperative( std::vector<regionid_type>& filledRegs,
-                            std::vector<regionid_type>& emptyRegs ) {
-        cache_.postInit(filledRegs,emptyRegs);
+    void postInitInput( std::vector<regionid_type>& filledRegs ) {
+        source_->postInit(filledRegs);
     }
 
-    /// dump all regions to storage
-    size_t rollOverStore() { return cache_.rollOver(); }
+    void postInitOperative( std::vector<regionid_type>& filledRegs,
+                            std::vector<regionid_type>& emptyRegs );
 
-    /// dump all input records to storage
-    size_t rollOverInput() { return cache_.getInputSource().rollOver(); }
 
 private:
     void ref() {
@@ -83,8 +88,14 @@ private:
     }
 
 public:
-    std::auto_ptr<DeliveryInfo> dlvInfo_;
-    MessageCache                cache_;
+    std::auto_ptr<DeliveryInfo>                        dlvInfo_;
+    smsc::logger::Logger*                              log_;
+
+    smsc::core::synchronization::Mutex                 cacheLock_;
+    smsc::core::buffers::IntHash< RegionalStoragePtr > storages_;
+    StoreJournal&                                      storeJournal_;
+    InputMessageSource*                                source_;       // owned
+
     smsc::core::synchronization::Mutex lock_;
     unsigned                           ref_;
 };

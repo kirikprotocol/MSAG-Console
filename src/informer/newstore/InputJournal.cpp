@@ -11,7 +11,7 @@ const unsigned defaultVersion = 1;
 
 inline std::string makePath( const std::string& storePath )
 {
-    return storePath + "input/journal";
+    return storePath + "journals/input.journal";
 }
 
 }
