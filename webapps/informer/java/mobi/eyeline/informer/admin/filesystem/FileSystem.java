@@ -92,4 +92,31 @@ public abstract class FileSystem {
    */
   public abstract boolean exists(File file) throws AdminException;
 
+  /**
+   * Возвращает список имён файлов в данной директории
+   * @param file директория
+   * @return список имён файлов
+   */
+  public String[] list(File file) {
+    return file.list();
+  }
+
+  /**
+   * Возвращает список файлов в данной директории
+   * @param file директория
+   * @return список файлов
+   */
+  public File[] listFiles(File file) {
+    return file.listFiles();
+  }
+
+  /**
+   * Является ли данный File директорией
+   * @param file File
+   * @return true - да, false - нет
+   */
+  public boolean isDirectory(File file){
+    return file.isDirectory();
+  }
+
 }
