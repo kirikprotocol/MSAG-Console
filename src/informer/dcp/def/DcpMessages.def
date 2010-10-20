@@ -48,10 +48,15 @@ message DeliveryInfo
   int32 priority 4
   bool transactionMode 4
 
-  string startDate 5
+// DD:MM:YY hh:mm:ss
+  string startDate 5 
+// DD:MM:YY hh:mm:ss
   string endDate 6
+// hh:mm
   string activePeriodEnd 7
+// hh:mm
   string activePeriodStart 8
+// mon, tue, sun ...
   string activeWeekDays 9 array
   string validityDate 10 opt
   string validityPeriod 11 opt
@@ -179,26 +184,16 @@ message DropDelivery 33
   int32 deliveryId 1
 end
 
-message Date
-  property innerMessage=true
-  int16 year 1
-  byte month 2
-  byte day 3
-  byte hour 4
-  byte minute 5
-end
-
 
 message DeliveryState
   property innerMessage=true
   DeliveryStatus status 1
-  Date date 2 opt
+  string date 2 opt
 end
 
 message ChangeDeliveryState 34
   int32 deliveryId 1
   DeliveryState state 2
-  Date date 3 opt
 end
 
 message AddDeliveryMessages 35
@@ -273,8 +268,10 @@ message RequestMessagesState 43
   int32 deliveryId 1
   DeliveryMessageState states 2 array opt
   string msisdnFilter 7 array opt
-  Date startDate 4
-  Date endDate 5
+  // DD:MM:YY hh:mm:ss
+  string startDate 4
+  // DD:MM:YY hh:mm:ss
+  string endDate 5
   ReqField fields 6 array
 end
 
@@ -297,7 +294,7 @@ message MessageInfo
   property innerMessage=true
   int64 id 1
   MessageState state 2 opt
-  Date date 3 opt
+  string date 3 opt
   string abonent 4 opt
   string text 5 opt
   int32 index 8 opt
