@@ -92,14 +92,14 @@ public class BlacklistUploadController extends UploadController{
         }
         uploaded+=s;
       }
+      if(!isStoped()) {
+        current = maximum;
+      }
     }finally {
       if(reader != null) {
         try{
           reader.close();
         }catch (IOException e){}
-      }
-      if(!isStoped()) {
-        current = maximum;
       }
     }
   }

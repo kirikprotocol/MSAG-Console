@@ -198,7 +198,6 @@ end
 message ChangeDeliveryState 34
   int32 deliveryId 1
   DeliveryState state 2
-  Date date 3 opt
 end
 
 message AddDeliveryMessages 35

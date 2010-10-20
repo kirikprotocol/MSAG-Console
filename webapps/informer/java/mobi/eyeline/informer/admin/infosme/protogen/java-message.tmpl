@@ -179,10 +179,10 @@ $if message.haveparent$
 $-if$
 $foreach field$
     if($var field.name$Flag) {
-      writer.writeShort((short)$var field.tag$); // tag id
+      writer.writeTag($var field.tag$); // tag id
 $if field.array$
       int pos=writer.getLength();
-      writer.writeShort((short)0);
+      writer.writeLength(0);
       for($expand basetype field.type$ v:$var field.name$)
       {
 $select field.type$
@@ -215,7 +215,7 @@ $case string$
 $-select$
 $-select$
       }
-      writer.replaceShort(pos,(short)(writer.getLength()-pos-2));
+      writer.replaceLength(pos,(writer.getLength()-pos-writer.getLengthSize()));
 $else$
 $select field.type$
 $case bool$
@@ -233,9 +233,9 @@ $case string$
 $case nested$
       {
         int pos=writer.getLength();
-	writer.writeShort((short)0);
+        writer.writeLength(0);
         $var field.name$.encode(writer);
-        writer.replaceShort(pos,(short)(writer.getLength()-pos-2));
+        writer.replaceLength(pos,(writer.getLength()-pos-writer.getLength()));
       }
 $case enum$
 $select field.valuetype$
@@ -254,7 +254,7 @@ $-select$
 $-if$
     } $if field.mandatory$ else throw new MissingMandatoryFieldException("$var field.name$");$-if$
 $-foreach$
-    writer.writeShort((short)0xFFFF); // end message tag
+    writer.writeTag(0xFFFF); // end message tag
   }
 
   public void decode(BufferReader reader) throws IOException {
@@ -262,35 +262,35 @@ $if message.haveparent$
     super.decode(reader);
 $-if$
     while( true ) {
-      int tag = reader.readShort();
-      if( tag == (short)0xFFFF ) break;
+      int tag = reader.readTag();
+      if( tag == 0xFFFF ) break;
       switch( tag ) {
 $foreach field$
         case $var field.tag$: {
 $if field.array$
 $select field.type$
 $case byte$
-          int sz=reader.readShort();
+          int sz=reader.readLength();
           $var field.name$ = new byte[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=(byte)reader.read();
 $case int16$
-          int sz=reader.readShort()/2;
+          int sz=reader.readLength()/2;
           $var field.name$ = new short[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=reader.readShort();
 $case int32$
-          int sz=reader.readShort()/4;
+          int sz=reader.readLength()/4;
           $var field.name$ = new int[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=reader.readInt();
 $case int64$
-          int sz=reader.readShort()/8;
+          int sz=reader.readLength()/8;
           $var field.name$ = new long[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=reader.readLong();
 $case bool$
-          int sz=reader.readShort();
+          int sz=reader.readLength();
           $var field.name$ = new boolean[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=reader.read()==1;
 $case string$
-          int sz=reader.readShort();
+          int sz=reader.readLength();
           java.util.ArrayList<String> arr=new java.util.ArrayList<String>();
           int startOff=reader.getOffset();
           while(reader.getOffset()<startOff+sz) {
@@ -299,7 +299,7 @@ $case string$
           $var field.name$=new String[arr.size()];
           arr.toArray($var field.name$);
 $case nested$
-          int sz=reader.readShort();
+          int sz=reader.readLength();
           java.util.ArrayList<$var field.typename$> arr=new java.util.ArrayList<$var field.typename$>();
           int startOff=reader.getOffset();
           while(reader.getOffset()<startOff+sz) {
@@ -312,23 +312,23 @@ $case nested$
 $case enum$
 $select field.valuetype$
 $case byte$
-          int sz=reader.readShort();
+          int sz=reader.readLength();
           $var field.name$ = new $var field.typename$[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=$var field.typename$.valueOf((byte)reader.read());
 $case int16$
-          int sz=reader.readShort()/2;
+          int sz=reader.readLength()/2;
           $var field.name$ = new $var field.typename$[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=$var field.typename$.valueOf(reader.readShort());
 $case int32$
-          int sz=reader.readShort()/4;
+          int sz=reader.readLength()/4;
           $var field.name$ = new $var field.typename$[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=$var field.typename$.valueOf(reader.readInt());
 $case int64$
-          int sz=reader.readShort()/8;
+          int sz=reader.readLength()/8;
           $var field.name$ = new $var field.typename$[sz];
           for(int i=0;i<sz;i++)$var field.name$[i]=$var field.typename$.valueOf(reader.readLong());
 $case string$
-          int sz=reader.readShort();
+          int sz=reader.readLength();
           java.util.ArrayList<String> arr=new java.util.ArrayList<String>();
           int startOff=reader.getOffset();
           while(reader.getOffset()<startOff+sz) {
@@ -357,7 +357,7 @@ $case bool$
           $var field.name$ = reader.readBoolLV();
 $case nested$
           $var field.name$ = new $var field.typename$();
-          int sz=reader.readShort();
+          int sz=reader.readLength();
           $var field.name$.decode(reader);
 $case enum$
 $select field.valuetype$

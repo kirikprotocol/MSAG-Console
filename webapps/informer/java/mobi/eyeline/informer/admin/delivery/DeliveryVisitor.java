@@ -1,20 +1,22 @@
 package mobi.eyeline.informer.admin.delivery;
 
+import mobi.eyeline.informer.admin.AdminException;
+
 import java.util.List;
 
 /**
  * Извлечение информации по DCP частями
  * @author Aleksandr Khalitov
  */
-public abstract class DeliveryDataSource<T> {
+public abstract class DeliveryVisitor<T> {
 
-  protected final int pieceSize;
+  private final int pieceSize;
 
   protected DcpConnection dcpConnection;
 
   protected int reqId;
 
-  protected DeliveryDataSource(int pieceSize, int reqId, DcpConnection dcpConnection) {
+  protected DeliveryVisitor(int pieceSize, int reqId, DcpConnection dcpConnection) {
     this.pieceSize = pieceSize;
     this.dcpConnection = dcpConnection;
     this.reqId = reqId;
@@ -25,7 +27,8 @@ public abstract class DeliveryDataSource<T> {
   }
 
 
-  public void visit() {
+  public void visit() throws AdminException{
+//    LinkedList<>
 
 
 
@@ -35,7 +38,5 @@ public abstract class DeliveryDataSource<T> {
 
 
 
-  protected List<T> load() {
-    return null;
-  }
+  protected abstract List<T> load(int pieseSize) throws AdminException;
 }

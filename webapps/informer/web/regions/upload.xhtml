@@ -21,6 +21,9 @@
           <eye:button>
             <tr:commandLink text="#{msg['submit.button']}" action="#{regionsUpload.upload}"/>
           </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['cancel.button']}" action="REGION" immediate="true"/>
+          </eye:button>
           <eye:space/>
         </eye:buttons>
 
@@ -39,6 +42,9 @@
         <eye:buttons>
           <eye:button>
             <tr:commandLink text="#{msg['submit.button']}" action="#{regionsUpload.upload}"/>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['cancel.button']}" action="REGION" immediate="true"/>
           </eye:button>
           <eye:space/>
         </eye:buttons>

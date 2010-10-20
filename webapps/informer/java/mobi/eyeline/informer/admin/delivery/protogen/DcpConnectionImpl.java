@@ -1,10 +1,9 @@
 package mobi.eyeline.informer.admin.delivery.protogen;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DcpConnection;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
-import mobi.eyeline.informer.admin.delivery.MessageFilter;
+import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.DeliveryState;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import org.apache.log4j.Logger;
 
@@ -85,17 +84,12 @@ public class DcpConnectionImpl implements DcpConnection {
     return resp.getResult();
   }
 
-//  todo me
-// todo enabled зачем?
-//  public void changeDeliveryState (int deliveryId, DeliveryState ) throws AdminException {
-//    ChangeDeliveryState req = new ChangeDeliveryState();
-//    req.setDeliveryId(deliveryId);
-//    req.setState();
-//    GetUserStats req = new GetUserStats();
-//    req.setUserId(userId);
-//    GetUserStatsResp resp = client.send(req);
-//    return new UserStats(resp.getCurrentConnectionsCount(), resp.getCurrentDeliveriesCount());
-//  }
+
+  public void changeDeliveryState (int deliveryId, DeliveryState state) throws AdminException {
+    ChangeDeliveryState req = new ChangeDeliveryState();
+    req.setDeliveryId(deliveryId);
+    req.setState(DcpConverter.convert(state));
+  }
 
   public void dropMessages(long[] messageIds) throws AdminException {
     DropDeliverymessages req = new DropDeliverymessages();
@@ -119,13 +113,13 @@ public class DcpConnectionImpl implements DcpConnection {
     client.send(req);
   }
 
-  // todo
-//  public void getDeliveryState(int deliveryId) throws AdminException {
-//    GetDeliveryState req = new GetDeliveryState();
-//    req.setDeliveryId(deliveryId);
-//    GetDeliveryStateResp resp = client.send(req);
-//    resp.getStats()
-//  }
+
+  public DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
+    GetDeliveryState req = new GetDeliveryState();
+    req.setDeliveryId(deliveryId);
+    GetDeliveryStateResp resp = client.send(req);
+    return DcpConverter.convert(resp.getStats(), resp.getState());
+  }
 
 
   public Delivery getDelivery(int deliveryId) throws AdminException {
@@ -192,12 +186,12 @@ public class DcpConnectionImpl implements DcpConnection {
       if(filter.getDeliveryId() != null) {
         req.setDeliveryId(filter.getDeliveryId());
       }
-//      if(filter.getEndDate() != null) {
-//        req.setEndDate(DcpConverter.convert(filter.getEndDate()));
-//      }
-//      if(filter.getStartDate() != null) {
-//        req.setStartDate(DcpConverter.convert(filter.getStartDate()));
-//      }
+      if(filter.getEndDate() != null) {
+        req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
+      }
+      if(filter.getStartDate() != null) {
+        req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
+      }
       if(filter.getFields() != null && filter.getFields().length > 0) {
         req.setFields(DcpConverter.convert(filter.getFields()));
       }
@@ -211,20 +205,15 @@ public class DcpConnectionImpl implements DcpConnection {
     return client.send(req).getReqId();
   }
 
-    public boolean getNextMessageStates(int reqId, Collection<mobi.eyeline.informer.admin.delivery.DeliveryInfo> deliveries) throws AdminException {
-    GetDeliveriesListNext req = new GetDeliveriesListNext();
+  public boolean getNextMessageStates(int reqId, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException {
+    GetNextMessagesPack req = new GetNextMessagesPack();
     req.setReqId(reqId);
-    GetDeliveriesListNextResp resp = client.send(req);
+    GetNextMessagesPackResp resp = client.send(req);
     if(resp.getInfo() != null) {
-      for(DeliveryListInfo di : resp.getInfo()) {
-        deliveries.add(DcpConverter.convert(di));
+      for(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
+        messages.add(DcpConverter.convert(mi));
       }
     }
-    return resp.getMoreDeliveries();
+    return resp.getMoreMessages();
   }
-
-
-//  public GetNextMessagesPackResp send(GetNextMessagesPack req) throws AdminException {
-//    return client.send(req);
-//  }
 }
