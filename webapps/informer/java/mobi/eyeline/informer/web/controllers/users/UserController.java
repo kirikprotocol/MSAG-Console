@@ -48,6 +48,7 @@ public class UserController extends InformerController {
   public List<SelectItem> getPolicies() throws AdminException {
     List<SelectItem> ret = new ArrayList<SelectItem>();
     List<RetryPolicy> policies = getConfig().getRetryPolicies();
+    ret.add(new SelectItem(""));
     for(RetryPolicy p : policies) {
       ret.add(new SelectItem(p.getPolicyId()));
     }

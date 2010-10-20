@@ -58,4 +58,5 @@ public class InformerViewHandler extends FaceletViewHandler {
       return super.calculateLocale(context);
     }
   }
+  
 }

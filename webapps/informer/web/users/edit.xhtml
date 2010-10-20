@@ -59,6 +59,12 @@
             </h:selectOneMenu>
           </tr:panelLabelAndMessage>
 
+          <tr:panelLabelAndMessage label="#{userBundle.locale}" labelStyle="text-align:left">
+            <h:selectOneMenu value="#{userEdit.userLocale}" style="align:left;" required="true" >
+              <f:selectItems value="#{userEdit.locales}"/>
+            </h:selectOneMenu>
+          </tr:panelLabelAndMessage>
+
           <p/>
 
           <tr:panelLabelAndMessage label="#{userBundle.firstName}" labelStyle="text-align:left">
@@ -146,7 +152,7 @@
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{userBundle.policyId}" labelStyle="text-align:left">
-              <h:selectOneMenu value="#{userEdit.userToEdit.policyId}" style="align:left;" required="true">
+              <h:selectOneMenu value="#{userEdit.userToEdit.policyId}" style="align:left;" >
                 <f:selectItems value="#{userEdit.policies}"/>
               </h:selectOneMenu>
             </tr:panelLabelAndMessage>

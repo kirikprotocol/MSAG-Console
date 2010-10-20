@@ -168,8 +168,10 @@ public class AdminContext {
   public void updateUser(User u) throws AdminException {
     try{
       integrityLock.lock();
-      if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
-        throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
+      if(u.getPolicyId()!=null) {
+        if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
+          throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
+        }
       }
       if(u.getRegions()!=null) {
         for(String rId : u.getRegions()) {
@@ -317,7 +319,7 @@ public class AdminContext {
       integrityLock.lock();
       for(User u : usersManager.getUsers()) {
         for(String s : u.getRegions()) {
-          if(s.equals(regionId)) {            
+          if(s.equals(regionId)) {
             throw new IntegrityException("fail.delete.region.to.user",regionsManager.getRegion(regionId).getName(),u.getLogin());
           }
         }

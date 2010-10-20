@@ -12,6 +12,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Copyright Eyeline.mobi
@@ -26,6 +27,7 @@ public class UserEditController extends UserController {
   private static final String USER_ID_PARAMETER = "userId";
   private boolean initError;
   private String passwordConfirm;
+
 
 
   public UserEditController() {
@@ -151,7 +153,22 @@ public class UserEditController extends UserController {
     return userToEdit.getDeliveryStartTime().getTimeString();
   }
 
-  
+  public List<SelectItem> getLocales() {
+    List<SelectItem> ret = new ArrayList<SelectItem>();
+    Locale loc = new Locale("en");
+    ret.add(new SelectItem(loc.getLanguage()));
+    loc = new Locale("ru");
+    ret.add(new SelectItem(loc.getLanguage()));
+    return ret;
+  }
 
 
+  public String getUserLocale() {
+    Locale loc = userToEdit.getLocale();
+    return loc==null ? null : loc.getLanguage();
+  }
+
+  public  void setUserLocale(String l) {
+    userToEdit.setLocale(new Locale(l));
+  }
 }
