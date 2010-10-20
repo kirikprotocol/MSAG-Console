@@ -1,6 +1,11 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatProvider;
+import mobi.eyeline.informer.admin.delivery.TestDeliveryStatProvider;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
+
+
 import mobi.eyeline.informer.admin.delivery.TestDeliveryManager;
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.informer.TestInformerManager;
@@ -19,6 +24,8 @@ import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,17 +43,26 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestRetryPolicyManager.class.getResourceAsStream("policies.xml"), new File(confDir, "policies.xml"), false);
   }
 
+  private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
+    URL u = TestDeliveryStatProvider.class.getResource("");
+    File srcStatDir = new File(u.toURI());
+    srcStatDir = new File(srcStatDir,"stat");
+    TestUtils.copyDirectory(srcStatDir,dstStatDir,fileSystem);
+  }
+
+
   public TestAdminContext(File appBaseDir, WebConfig webConfig) throws InitException {
     fileSystem = new TestFileSystem();
     File servicesDir = new File(appBaseDir, "services");
     File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
+    File statDir = new File(appBaseDir, "stat");
     servicesDir.mkdirs();
     confDir.mkdirs();
+    statDir.mkdirs();
     try {
       prepareServices(confDir);
-
-
-
+      prepareStat(statDir,fileSystem);
+      
       if (webConfig.getInstallationType() == InstallationType.SINGLE)  {
         serviceManager = new TestServiceManagerSingle(servicesDir);
       }else {
@@ -79,13 +95,18 @@ public class TestAdminContext extends AdminContext {
       for(RetryPolicy rp : retryPolicyManager.getRetryPolicies()) {
         infosme.addRetryPolicy(rp.getPolicyId());
       }
+      deliveryStatProvider = new DeliveryStatProvider(statDir, fileSystem);
 
     } catch (IOException e) {
       throw new InitException(e);
     }catch (AdminException e) {
       throw new InitException(e);
     }
+    catch (URISyntaxException e) {
+      throw new InitException(e);
+    }
   }
+
 
   private static final List<Daemon> testDaemons = new ArrayList<Daemon>(3) {{
     for(int i =0; i<3; i++) {

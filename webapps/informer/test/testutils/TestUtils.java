@@ -1,6 +1,8 @@
 package testutils;
 
 import junit.framework.AssertionFailedError;
+import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.filesystem.*;
 
 import java.io.*;
 
@@ -74,5 +76,23 @@ public class TestUtils {
       }
     }
     return folder.delete();
+  }
+
+
+  public static void copyDirectory(File sourceLocation, File targetLocation, FileSystem fileSystem) throws IOException, AdminException {
+
+    if (sourceLocation.isDirectory()) {
+      if (!fileSystem.exists(targetLocation)) {
+        fileSystem.mkdirs(targetLocation);
+      }
+      String[] children = fileSystem.list(sourceLocation);
+      for (int i=0; i<children.length; i++) {
+        copyDirectory(new File(sourceLocation, children[i]),
+            new File(targetLocation, children[i]), fileSystem);
+      }
+    }
+    else {
+      fileSystem.copy(sourceLocation,targetLocation);
+    }
   }
 }

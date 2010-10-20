@@ -5,6 +5,7 @@ import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientExc
 import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
 import mobi.eyeline.informer.admin.delivery.DeliveryManager;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatProvider;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
@@ -70,6 +71,8 @@ public class AdminContext {
 
   protected DeliveryManager deliveryManager;
 
+  protected DeliveryStatProvider deliveryStatProvider;
+
 // delivery ->user ->region->smsc
 //       |->retryPolicy 
   final private Lock integrityLock = new ReentrantLock();
@@ -129,6 +132,8 @@ public class AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       deliveryManager = new DeliveryManager(is.getHost(), is.getDeliveriesPort());
+
+      deliveryStatProvider = new DeliveryStatProvider(new File(is.getStatDir()), fileSystem); 
 
     }catch (AdminException e) {
       throw new InitException(e);

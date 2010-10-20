@@ -24,6 +24,8 @@ public class InformerSettings {
 
   private int persPort;
 
+  private String statDir;
+
   void load(XmlConfig config) throws XmlConfigException{
     XmlConfigSection s = config.getSection("informer");
     host = s.getString("host", null);
@@ -32,6 +34,8 @@ public class InformerSettings {
     s = config.getSection("pvss");
     persHost = s.getString("host");
     persPort = s.getInt("port");
+    s = config.getSection("stat");
+    statDir =  s.getString("directory",null);
   }
 
   void save(XmlConfig config) throws XmlConfigException{
@@ -42,6 +46,8 @@ public class InformerSettings {
     s = config.getOrCreateSection("pvss");
     s.setString("host", persHost);
     s.setInt("port", persPort);
+    s = config.getOrCreateSection("stat");
+    s.setString("directory",statDir);
   }
 
   public String getHost() {
@@ -90,6 +96,14 @@ public class InformerSettings {
     this.persPort = persPort;
   }
 
+  public String getStatDir() {
+    return statDir;
+  }
+
+  public void setStatDir(String statDir) {
+    this.statDir = statDir;
+  }
+
   /**
    * Копирует настройки
    * @return копия настроек
@@ -101,6 +115,7 @@ public class InformerSettings {
     cs.host = host;
     cs.persHost = persHost;
     cs.persPort = persPort;
+    cs.statDir = statDir;
     return cs;
   }
 }
