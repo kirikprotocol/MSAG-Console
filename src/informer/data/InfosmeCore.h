@@ -55,7 +55,21 @@ public:
     virtual void incOutgoing( unsigned nchunks ) = 0;
 
     /// final receipt/response has been received
-    virtual void receiveResponse( const DlvRegMsgId& drmId, int smppStatus, bool retry ) = 0;
+    virtual void receiveReceipt( const DlvRegMsgId& drmId, int smppStatus, bool retry ) = 0;
+
+    /// response (non-final) has been received
+    virtual bool receiveResponse( const DlvRegMsgId& drmId ) = 0;
+
+    /// create/update smsc
+    virtual void addSmsc( const char* smscId ) = 0;
+    virtual void updateSmsc( const char* smscId ) = 0;
+    virtual void deleteSmsc( const char* smscId ) = 0;
+    virtual void updateDefaultSmsc() = 0;
+
+    /// reload regions
+    virtual void addRegion( regionid_type regionId ) = 0;
+    virtual void updateRegion( regionid_type regionId ) = 0;
+    virtual void deleteRegion( regionid_type regionId ) = 0;
 };
 
 } // informer

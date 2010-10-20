@@ -34,6 +34,7 @@ namespace informer {
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
 
+/*
 void DeliveryInfo::incrementStats( const DeliveryStats& stats, DeliveryStats* result )
 {
     MutexGuard mg(lock_);
@@ -89,6 +90,7 @@ void DeliveryInfo::getStats( DeliveryStats& stats ) const
     MutexGuard mg(lock_);
     stats = stats_;
 }
+ */
 
 
 void DeliveryInfo::read()
