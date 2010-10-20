@@ -34,6 +34,6 @@ protocol DcpServerProto
   RequestMessagesStateResp outmsg
   GetNextMessagesPack inmsg
   GetNextMessagesPackResp outmsg
-  CancelRequest inmsg
+//  CancelRequest inmsg
 
 end
