@@ -75,7 +75,7 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredObjType& ptr )
     static const unsigned sleepTimeNotReady = unsigned(1*tuPerSec);
     static const unsigned sleepTimeException = unsigned(5*tuPerSec);
     try {
-        if ( ptr.getDlvInfo().isActive() ) {
+        if ( ptr.getDlvInfo().getState() == DLVSTATE_ACTIVE ) {
             // delivery is active
             if ( ptr.getNextMessage(msgtime_type(currentTime_/tuPerSec),msg_) ) {
                 smsc_log_debug(log_,"D=%u/R=%u/M=%llu is ready to be sent",

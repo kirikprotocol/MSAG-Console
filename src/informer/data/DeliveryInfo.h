@@ -50,8 +50,8 @@ public:
 
     unsigned getPriority() const { return 1; }
 
-    bool isActive() const {
-        return (state_ == DLVSTATE_ACTIVE);
+    DlvState getState() const {
+        return state_;
     }
 
     personid_type getFrom() const { return from_; } 

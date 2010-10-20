@@ -28,12 +28,6 @@ public:
 
     const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
 
-    bool isActive() const {
-        return dlvInfo_->isActive();
-    }
-
-    unsigned getPriority() const { return dlvInfo_->getPriority(); }
-
     /// get regional storage
     RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false);
 
