@@ -1,0 +1,12 @@
+This binary file is a journal of the smsc receipted_message_id to DRM mapping.
+The name of the file is smscSMSC.journal, where SMSC is the actual SMSC id.
+
+The format of the file:
+    records one by one
+
+The format of the record:
+    uint16  length of the record in octets not including this field
+    uint32  delivery id
+    uint32  region id
+    uint64  message id
+    cstring receipted_message_id

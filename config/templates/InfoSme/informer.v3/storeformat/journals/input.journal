@@ -1,0 +1,17 @@
+This binary file is a journal of current pointers in input storages of
+deliveries.
+
+The format of the file:
+    uint32  version
+    records one by one
+
+The format of the record (version 1):
+    uint16  length of the record in octets not including this field
+    uint32  delivery id
+    uint32  region id
+    uint32  reading pointer file number
+    uint32  reading pointer file position
+    uint32  writing pointer file number
+    uint32  writing pointer file position
+    uint32  total number of messages written to this delivery+region
+    uint64  the last message id / total number of messages in the delivery

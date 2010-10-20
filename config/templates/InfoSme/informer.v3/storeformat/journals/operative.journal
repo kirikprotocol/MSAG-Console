@@ -1,0 +1,24 @@
+This binary file is a journal of the operative storage.
+Actually it is an operative storage itself.
+
+The format of the file:
+    uint32  version
+    uint32  serial number of the file
+    records one by one
+
+The format of the record (version 1):
+    uint16  length of the record in octets not including this field
+    uint32  delivery id
+    uint32  region id
+    uint64  message id
+    uint8   state (see main README), optionally ORed with 0x80 (embed_text_flag)
+ the rest of the record only if state is not final:
+    uint32  last time (seconds since epoch)
+    uint32  time left (seconds)
+ the rest of the record only if the message was not seen in this file yet:
+    uint64  subscriber (see main README)
+    cstring userdata
+ if embed_text_flag (see state field above):
+    cstring message text
+ else:
+    uint32  message text id in glossary

@@ -1,0 +1,14 @@
+This optional text file contains message text glossary for the delivery.
+
+The format of the file: one line per glossary item
+(no spaces between fields):
+ID,REPLID,TEXT
+where
+  ID     - the id of the text (>0);
+  REPLID - the id of the text which is replaced by this one or 0;
+  TEXT   - escaped UTF8 text. The following symbols are escaped:
+           '\' (backslash), '\n' (linefeed), '"' (quote).
+
+Example:
+1,0,my \"f\" msg\nsee\\later
+2,0,the second text

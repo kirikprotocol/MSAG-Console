@@ -1,0 +1,49 @@
+Here the storage structure of informer v3 will be presented.
+All READMEs in subdirectories are not presented in actual installation.
+
+This directory is the root directory of informer storage, i.e.
+the one designated in "storePath" parameter of main config.
+
+The description of the formats of various files is enclosed into them.
+
+All integer fields in binary files is written in big endian order.
+
+The abbreviations 'DRM' is a delivery/region/message id tuple, uniquely
+identifying the message.
+
+Attention: as agreed with Artem region id 0 is reserved for the undefined region.
+
+Message state values mentioned in the formats:
+    MSGSTATE_INPUT = 0,
+    MSGSTATE_PROCESS = 1,
+    MSGSTATE_SENT = 2,
+    MSGSTATE_RETRY = 3,   
+    MSGSTATE_DELIVERED = 4, // final
+    MSGSTATE_EXPIRED = 5,   // final
+    MSGSTATE_FAILED = 6     // final
+
+
+Subscriber format (encoded into uint64) mentioned in the formats:
+bits   value
+60-63  the length of value field minus one [1..16]
+56-59  the type of number [0..15]
+52-55  the numbering plan [0..15]
+ 0-51  the value part of the number
+
+for example:
+ (0xa110000000000000 + 79137654079) => .1.1.79137654079
+ (0x2010000000000000 + 100)         => .0.1.100
+Note that length is encoded as actual length minus one.
+
+
+The delivery data files are located in subdirectory
+deliveries/VVVVVVVVVV/NN
+where NN -- the delivery id, VVVVVVVVVV -- is the delivery volume
+number, which is calculated as int(NN/100)*100, left-padded with 0.
+
+The region input data files for the delivery are named as
+deliveries/VVVVVVVVVV/NN/RR/FN.data
+
+where RR -- the region id [0..], FN -- file number [1..]
+Example:
+deliveries/0000000000/22/0/1.data
