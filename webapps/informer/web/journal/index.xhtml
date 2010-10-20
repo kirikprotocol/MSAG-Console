@@ -16,7 +16,7 @@
       <h:inputHidden value="#{journal.init}"/>
 
       <eye:dataTableFilter bean="#{journal}" clearAction="clearFilter" applyAction="query">
-        <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">
+        <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
           <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
             <h:outputText value="#{msg['journal.page.user']}"/>
             <h:inputText value="#{journal.filterByUser}"/>
