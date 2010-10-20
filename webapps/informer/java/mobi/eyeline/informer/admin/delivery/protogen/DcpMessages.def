@@ -1,0 +1,312 @@
+include Types.def
+
+//
+// general responses
+//
+
+message OkResponse 1
+end
+
+message FailResponse 2
+  int32 status 1
+  string statusMessage 2
+end
+
+//
+//users management
+//
+
+message UserAuth 11
+  string userId 1
+  string password 2
+end
+
+message GetUserStats 12
+  string userId 1 opt
+end
+
+message GetUserStatsResp 13
+  int16 currentConnectionsCount 1
+  int16 currentDeliveriesCount 2
+end
+
+
+//
+//delivery management
+//
+
+enum byte DeliveryMode
+  SMS 1
+  USSD_PUSH 2
+  USSD_PUSH_VLR 3
+end
+
+message DeliveryInfo
+  property innerMessage=true
+  string name 1
+  string userId 2 opt
+  int32 priority 4
+  bool transactionMode 5
+
+  string startDate 6
+  string endDate 7
+  string activePeriodEnd 8
+  string activePeriodStart 9
+  string activeWeekDays 10 array
+  string validityDate 11 opt
+  string validityPeriod 12 opt
+
+  bool flash 13
+  bool secret 14
+  bool secretFlash 15
+  bool secretMessage 16
+  bool useDataSm 17
+  DeliveryMode deliveryMode 18
+                                                                                                                                  
+  string owner 19
+
+  bool retryOnFail 20
+  string retryPolicy 21 opt
+
+  bool replaceMessage 22
+  string svcType 23 opt
+end
+
+enum byte MessageType
+  TextMessage 1
+  GlossaryMessage 2
+end
+
+message DeliveryMessage
+  property innerMessage=true
+  string abonent 1
+  MessageType msgType 2 
+  string text 3 opt
+  int32 index 4 opt
+end
+
+
+message CreateDelivery 30
+  DeliveryInfo info 1
+end
+
+message CreateDeliveryResp 31
+  int32 deliveryId 1
+end
+
+message ModifyDelivery 32
+  int32 deliveryId 1
+  DeliveryInfo info 2
+end
+
+message GetDeliveryInfo 48
+  int32 deliveryId 1
+end
+
+message GetDeliveryInfoResp 49
+  DeliveryInfo info 1
+end
+
+enum byte DeliveryStatus
+  Planned 1
+  Active 2
+  Paused 3
+  Cancelled 4
+  Finished 5
+end
+
+enum byte DeliveryFields
+  UserId 1
+  Name 2
+  Status 3
+  StartDate 4
+  EndDate 5
+  ActivityPeriod 6
+end
+
+message GetDeliveriesList 50
+  string userIdFilter 1 array opt
+  string nameFilter 2 array opt
+  DeliveryStatus statusFilter 3 array opt
+  string startDateFrom 4 opt
+  string startDateTo 5 opt
+  string endDateFrom 6 opt
+  string endDateTo 7 opt
+  DeliveryFields resultFields 8 array
+end
+
+message GetDeliveriesListResp 51
+  int32 reqId 1
+end
+
+message GetDeliveriesListNext 52
+  int32 reqId 1
+  int32 count 2
+end
+
+message DeliveryListInfo
+  property innerMessage=true
+  int32 deliveryId 1
+  string userId 2 opt
+  string name 3 opt
+  DeliveryStatus status 4 opt
+  string startDate 5 opt
+  string endDate 6 opt
+  string activityPeriodStart 7 opt
+  string activityPeriodEnd 8 opt
+end
+
+message GetDeliveriesListNextResp 53
+  bool moreDeliveries 1
+  DeliveryListInfo info 2 array
+end
+
+message CountDeliveries 54
+  string userIdFilter 1 array opt
+  string nameFilter 2 array opt
+  DeliveryStatus statusFilter 3 array opt
+  string startDateFrom 4 opt
+  string startDateTo 5 opt
+  string endDateFrom 6 opt
+  string endDateTo 7 opt
+end
+
+message CountDeliveriesResp 55
+  int32 result 1
+end
+
+message DropDelivery 33
+  int32 deliveryId 1
+end
+
+message Date
+  property innerMessage=true
+  int16 year 1
+  byte month 2
+  byte day 3
+  byte hour 4
+  byte minute 5
+end
+
+
+message DeliveryState
+  property innerMessage=true
+  DeliveryStatus status 1
+  Date date 2 opt
+end
+
+message ChangeDeliveryState 34
+  int32 deliveryId 1
+  DeliveryState state 2
+  Date date 3 opt
+end
+
+message AddDeliveryMessages 35
+  int32 deliveryId 1
+  DeliveryMessage messages 2 array
+end
+
+message AddDeliveryMessagesResp 36
+  int64 messageIds 1 array
+end
+
+message DropDeliverymessages 37
+  int64 messageIds 1 array
+end
+
+message GetDeliveryGlossary 38
+  int32 deliveryId 1
+end
+
+message DeliveryGlossary
+  property innerMessage=true
+  string messages 1 array
+end
+
+message GetDeliveryGlossaryResp 39
+  DeliveryGlossary glossary 1
+end
+
+message ModifyDeliveryGlossary 40
+  int32 deliveryId 1
+  DeliveryGlossary glossary 2
+end
+
+message GetDeliveryState 41
+  int32 deliveryId 1
+end
+
+message DeliveryStatistics
+  property innerMessage=true
+  int64 newMessages 1
+  int64 processMessage 4
+  int64 deliveredMessages 2
+  int64 failedMessage 3
+  int64 expiredMessages 5
+end
+
+message GetDeliveryStateResp 42
+  DeliveryState state 2
+  DeliveryStatistics stats 3
+end
+
+
+enum byte ReqField
+  State 1
+  Date 2
+  Abonent 3
+  Text 4
+  ErrorCode 5
+  UserData 6
+end
+
+enum byte DeliveryMessageState
+  New 1
+  Process 2
+  Sent 3
+  Delivered 3
+  Failed 4
+  Expired 5
+end
+
+message RequestMessagesState 43
+  int32 deliveryId 1
+  DeliveryMessageState states 2 array opt
+  string msisdnFilter 7 array opt
+  Date startDate 4
+  Date endDate 5
+  ReqField fields 6 array
+end
+
+message RequestMessagesStateResp 44
+  int32 reqId 1
+end
+
+message GetNextMessagesPack 45
+  int32 reqId 1
+  int32 count 2
+end
+
+enum byte MessageState
+  Delivered 1
+  Failed 2
+  Expired 3 
+end
+
+message MessageInfo
+  property innerMessage=true
+  int64 id 1
+  MessageState state 2 opt
+  Date date 3 opt
+  string abonent 4 opt
+  string text 5 opt
+  int32 index 8 opt
+  int32 errorCode 6 opt
+  string userData 7 opt
+end
+
+message GetNextMessagesPackResp 46
+  bool moreMessages 1
+  MessageInfo info 2 array
+end
+

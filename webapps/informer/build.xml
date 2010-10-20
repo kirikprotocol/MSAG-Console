@@ -20,6 +20,13 @@
     </protogen>
   </target>
 
+  <target name="gen_delivery_protocol">
+    <protogen language="java" msgPackage="mobi.eyeline.informer.admin.delivery.protogen.protocol" defFile="java/mobi/eyeline/informer/admin/delivery/protogen/DcpClient.def" outDir="java"
+              tempDir="java/mobi/eyeline/informer/admin/delivery/protogen/tmp">
+      <cgp name="search.path" value="java/mobi/eyeline/informer/admin/delivery/protogen/"/>
+    </protogen>
+  </target>
+
   <target name="mode">
     <echo file="java/mobi/eyeline/informer/web/Mode.java">
 package mobi.eyeline.informer.web;${line.separator}${line.separator}
@@ -29,7 +36,7 @@ public class Mode {${line.separator}
     </echo>
   </target>
    
-  <target name="prebuild" depends="gen_admin_protocol, mode"/>
+  <target name="prebuild" depends="gen_admin_protocol, gen_delivery_protocol, mode"/>
 
   <target name="compile.sources" depends="prebuild">
     <delete dir="${informer.source.classes}" failonerror="false"/>

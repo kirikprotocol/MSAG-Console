@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
+import mobi.eyeline.informer.admin.delivery.TestDeliveryManager;
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.informer.TestInformerManager;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
@@ -22,11 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Artem Snopkov
+ * Тестовый AdminContext
+ * @author Aleksandr Khalitov
  */
 public class TestAdminContext extends AdminContext {
 
-  private void prepareServices(WebConfig config, File confDir) throws IOException, AdminException {
+  private void prepareServices(File confDir) throws IOException, AdminException {
     TestUtils.exportResource(TestUsersManager.class.getResourceAsStream("users.xml"), new File(confDir,"users.xml"), false);
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
@@ -39,9 +41,9 @@ public class TestAdminContext extends AdminContext {
     File servicesDir = new File(appBaseDir, "services");
     File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
     servicesDir.mkdirs();
-    servicesDir.mkdirs();
+    confDir.mkdirs();
     try {
-      prepareServices(webConfig, confDir);
+      prepareServices(confDir);
 
 
 
@@ -69,12 +71,15 @@ public class TestAdminContext extends AdminContext {
         infosme.addRegion(s.getRegionId());
       }
 
+      deliveryManager = new TestDeliveryManager();
+
       retryPolicyManager = new TestRetryPolicyManager(infosme, new File(confDir, "policies.xml"),
           new File(confDir, "backup"), fileSystem);
 
       for(RetryPolicy rp : retryPolicyManager.getRetryPolicies()) {
         infosme.addRetryPolicy(rp.getPolicyId());
       }
+
     } catch (IOException e) {
       throw new InitException(e);
     }catch (AdminException e) {

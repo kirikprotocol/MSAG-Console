@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * Администрирование Informer
  * @author Aleksandr Khalitov
  */
 public class InfosmeImpl implements Infosme {
