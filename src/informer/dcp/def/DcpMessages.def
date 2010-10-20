@@ -45,7 +45,7 @@ message DeliveryInfo
   property innerMessage=true
   string name 1
   string userId 2 opt
-  int32 priority 4
+  int32 priority 3
   bool transactionMode 4
 
 // DD:MM:YY hh:mm:ss
