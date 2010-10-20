@@ -230,7 +230,7 @@ inline bool smsCanBeTransliterated(SMS* sms)
   }
   unsigned short* ucsbody=(unsigned short*)body;
   len/=2;
-  for(int i=0;i<len;i++)
+  for(unsigned i=0;i<len;i++)
   {
     uint16_t chr;
     memcpy(&chr,ucsbody+i,2);
