@@ -4,6 +4,8 @@
 #include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
 #include "system/status.h"
+#include "DeliveryStats.h"
+#include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -27,11 +29,22 @@ public:
     isReplaceIfPresent_(true), isFlash_(false), useDataSm_(false),
     transactionMode_(0),
     deliveryMode_(DLVMODE_SMS),
-    state_(DLVSTATE_PAUSED) {
+    state_(DLVSTATE_PAUSED)
+    {
+        stats_.clear();
         if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
     }
 
     const CommonSettings& getCommonSettings() const { return cs_; }
+
+    /// this method is invoked from regional storage.
+    void incrementStats( const DeliveryStats& stats, DeliveryStats* result = 0 );
+
+    /// this method is invoked to update stats from activity.log
+    void updateStats( const DeliveryStats& stats );
+
+    /// get stats unsync
+    void getStats( DeliveryStats& stats ) const;
 
     dlvid_type getDlvId() const { return dlvId_; }
 
@@ -105,6 +118,9 @@ private:
     DeliveryMode    deliveryMode_;
     std::string     retryPolicyName_;
     DlvState        state_;
+
+    mutable smsc::core::synchronization::Mutex lock_;
+    DeliveryStats   stats_;
 };
 
 } // informer

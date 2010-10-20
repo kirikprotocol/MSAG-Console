@@ -33,6 +33,64 @@ namespace informer {
 
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
+
+void DeliveryInfo::incrementStats( const DeliveryStats& stats, DeliveryStats* result )
+{
+    MutexGuard mg(lock_);
+    if ( stats.firstMessageSent ) {
+        if ( !stats_.firstMessageSent ) {
+            stats_.firstMessageSent = stats.firstMessageSent;
+        }
+        if ( stats_.lastMessageSent < stats.firstMessageSent ) {
+            stats_.lastMessageSent = stats.firstMessageSent;
+        }
+    }
+    stats_.totalMessages += stats.totalMessages;
+    stats_.sentMessages += stats.sentMessages;
+    stats_.dlvdMessages += stats.dlvdMessages;
+    stats_.failedMessages += stats.failedMessages;
+    stats_.expiredMessages += stats.expiredMessages;
+    if (result) { *result = stats_; }
+}
+
+
+void DeliveryInfo::updateStats( const DeliveryStats& stats )
+{
+    MutexGuard mg(lock_);
+    // find out the minimum first message sent time
+    if ( stats.firstMessageSent ) {
+        if ( stats_.firstMessageSent > stats.firstMessageSent ) {
+            stats_.firstMessageSent = stats.firstMessageSent;
+        }
+    }
+    if ( stats_.lastMessageSent < stats.lastMessageSent ) {
+        stats_.lastMessageSent = stats.lastMessageSent;
+    }
+    if ( stats_.totalMessages < stats.totalMessages ) {
+        stats_.totalMessages = stats.totalMessages;
+    }
+    if ( stats_.sentMessages < stats.sentMessages ) {
+        stats_.sentMessages = stats.sentMessages;
+    }
+    if ( stats_.dlvdMessages < stats.dlvdMessages ) {
+        stats_.dlvdMessages = stats.dlvdMessages;
+    }
+    if ( stats_.failedMessages < stats.failedMessages ) {
+        stats_.failedMessages = stats.failedMessages;
+    }
+    if ( stats_.expiredMessages < stats.expiredMessages ) {
+        stats_.expiredMessages = stats.expiredMessages;
+    }
+}
+
+
+void DeliveryInfo::getStats( DeliveryStats& stats ) const
+{
+    MutexGuard mg(lock_);
+    stats = stats_;
+}
+
+
 void DeliveryInfo::read()
 {
     smsc::core::buffers::TmpBuf<char,200> buf;

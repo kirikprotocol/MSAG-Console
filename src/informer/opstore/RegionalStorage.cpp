@@ -51,7 +51,7 @@ public:
 
 
 
-RegionalStorage::RegionalStorage( const DeliveryInfo&  dlvInfo,
+RegionalStorage::RegionalStorage( DeliveryInfo&        dlvInfo,
                                   regionid_type        regionId,
                                   StoreJournal&        storeJournal,
                                   InputMessageSource&  messageSource ) :

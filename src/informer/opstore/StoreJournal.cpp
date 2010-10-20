@@ -9,6 +9,12 @@ namespace {
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
 const unsigned defaultVersion = 1;
+
+inline std::string makePath( const std::string& storePath )
+{
+    return storePath + "operative/journal";
+}
+
 }
 
 
@@ -106,7 +112,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
 
 void StoreJournal::init( Reader& jr )
 {
-    std::string jpath = cs_.getStorePath() + "operative/.journal";
+    std::string jpath = makePath(cs_.getStorePath());
     readRecordsFrom(jpath+".old",jr);
     readRecordsFrom(jpath,jr);
     if (jr.isStopping()) return;
@@ -129,7 +135,7 @@ void StoreJournal::init( Reader& jr )
 
 void StoreJournal::rollOver()
 {
-    std::string jpath = cs_.getStorePath() + "operative/.journal";
+    std::string jpath = makePath(cs_.getStorePath());
     smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
         char ebuf[100];

@@ -36,7 +36,7 @@ private:
 
 public:
 
-    RegionalStorage( const DeliveryInfo& dlvInfo,
+    RegionalStorage( DeliveryInfo&       dlvInfo,
                      regionid_type       regionId,
                      StoreJournal&       storeLog,
                      InputMessageSource& source );
@@ -133,7 +133,7 @@ private:
     ResendQueue                       resendQueue_;
     NewQueue                          newQueue_;
 
-    const DeliveryInfo&               dlvInfo_;
+    DeliveryInfo&                     dlvInfo_;
     StoreJournal&                     storeJournal_;
     InputMessageSource&               messageSource_;
     TransferTask*                     transferTask_;  // owned

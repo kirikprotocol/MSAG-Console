@@ -8,6 +8,12 @@ namespace {
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
 const unsigned defaultVersion = 1;
+
+inline std::string makePath( const std::string& storePath )
+{
+    return storePath + "input/journal";
+}
+
 }
 
 namespace eyeline {
@@ -52,7 +58,7 @@ size_t InputJournal::journalRecord( dlvid_type dlvId,
 
 void InputJournal::init( Reader& reader )
 {
-    std::string jpath = cs_.getStorePath() + "input/.journal";
+    std::string jpath = makePath(cs_.getStorePath());
     readRecordsFrom(jpath+".old",reader);
     readRecordsFrom(jpath,reader);
     // reopen journal
@@ -74,7 +80,7 @@ void InputJournal::init( Reader& reader )
 
 void InputJournal::rollOver()
 {
-    std::string jpath = cs_.getStorePath() + "input/.journal";
+    std::string jpath = makePath(cs_.getStorePath());
     smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
         char ebuf[100];

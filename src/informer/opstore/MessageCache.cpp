@@ -14,7 +14,7 @@ void getlog() {
 namespace eyeline {
 namespace informer {
 
-MessageCache::MessageCache( const DeliveryInfo& dlvInfo,
+MessageCache::MessageCache( DeliveryInfo&       dlvInfo,
                             StoreJournal&       storeJournal,
                             InputMessageSource* source ) :
 dlvInfo_(dlvInfo),

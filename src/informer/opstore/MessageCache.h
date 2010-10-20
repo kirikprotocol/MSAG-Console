@@ -11,7 +11,7 @@ namespace informer {
 class MessageCache
 {
 public:
-    MessageCache( const DeliveryInfo& dlvInfo,
+    MessageCache( DeliveryInfo&       dlvInfo,
                   StoreJournal&       storeJournal,
                   InputMessageSource* source );
 
@@ -42,7 +42,7 @@ private:
     smsc::core::synchronization::Mutex                 cacheLock_;
     smsc::core::buffers::IntHash< RegionalStoragePtr > storages_;
 
-    const DeliveryInfo&                                dlvInfo_;
+    DeliveryInfo&                                      dlvInfo_;
     StoreJournal&                                      storeJournal_;
     InputMessageSource*                                source_; // owned
 };
