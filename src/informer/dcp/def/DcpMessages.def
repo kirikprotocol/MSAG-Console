@@ -45,7 +45,6 @@ message DeliveryInfo
   property innerMessage=true
   string name 1
   string userId 2 opt
-  bool enabled 3
   int32 priority 4
   bool transactionMode 4
 
@@ -80,8 +79,9 @@ end
 
 message DeliveryMessage
   property innerMessage=true
-  MessageType msgType 1 
-  string text 2 opt
+  string abonent 1
+  MessageType msgType 2 
+  string text 3 opt
   int32 index 4 opt
 end
 
@@ -91,7 +91,7 @@ message CreateDelivery 30
 end
 
 message CreateDeliveryResp 31
-  int32 deliveryId 1 opt
+  int32 deliveryId 1
 end
 
 message ModifyDelivery 32
@@ -198,7 +198,7 @@ end
 message ChangeDeliveryState 34
   int32 deliveryId 1
   DeliveryState state 2
-  string date 3 opt
+  Date date 3 opt
 end
 
 message AddDeliveryMessages 35
@@ -284,6 +284,7 @@ end
 
 message GetNextMessagesPack 45
   int32 reqId 1
+  int32 count 2
 end
 
 enum byte MessageState
@@ -309,6 +310,3 @@ message GetNextMessagesPackResp 46
   MessageInfo info 2 array
 end
 
-message CancelRequest 47
-  int32 reqId 1
-end
