@@ -2,6 +2,8 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 
+import java.util.Collection;
+
 /**
  * Коннект к DCP, упрвление рассылками 
  * @author Aleksandr Khalitov
@@ -74,5 +76,57 @@ public interface DcpConnection {
    * @throws AdminException ошибка выполнения команды
    */
   public Delivery getDelivery(int deliveryId) throws AdminException;
+
+  /**
+   * Меняет состояние рассылки
+   * @param deliveryId идентификатор рассылки
+   * @param state новое состояние
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void changeDeliveryState (int deliveryId, DeliveryState state) throws AdminException;
+
+  /**
+   * Возвращает статистику по рассылке
+   * @param deliveryId идентификатор рассылки
+   * @return статистика по рассылке
+   * @throws AdminException ошибка выполнения команды
+   */
+  public DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException;
+
+  /**
+   * Возвращает идентификатор запроса для извлечения рассылок, удовлетворяющие фильтру
+   * @param deliveryFilter фильтр
+   * @return идентификатор запроса
+   * @throws AdminException ошибка выполнения команды
+   */
+  public int getDeliviries(DeliveryFilter deliveryFilter) throws AdminException;
+
+  /**
+   * Возвращает следующую часть рассылок по идентификатору запроса
+   * @param reqId идентификатор запроса
+   * @param pieceSize максимальное кол-во извлекаемых рассылок
+   * @param deliveries куда следуют сложить рассылки
+   * @return есть ли ещё рассылки
+   * @throws AdminException ошибка выполнения команды
+   */
+  public boolean getNextDeliviries(int reqId, int pieceSize, Collection<DeliveryInfo> deliveries) throws AdminException;
+
+  /**
+   * Возвращает идентифкатор запроса для извлечения информации о сообщениях рассылки
+   * @param filter фильтр
+   * @return идентифкатор запроса
+   * @throws AdminException ошибка выполнения команды
+   */
+  public int getMessagesStates(MessageFilter filter) throws AdminException;
+
+  /**
+   * Возвращает следующую часть сообщений по идентификатору запроса
+   * @param reqId идентификатор запроса
+   * @param pieceSize максимальное кол-во извлекаемых сообщений
+   * @param messages куда следуют сложить сообщения
+   * @return есть ли ещё сообщения
+   * @throws AdminException ошибка выполнения команды
+   */
+  public boolean getNextMessageStates(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException;
 
 }

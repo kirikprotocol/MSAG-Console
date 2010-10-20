@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
+import mobi.eyeline.informer.admin.AdminException;
+
 /**
  * @author Aleksandr Khalitov
  */
@@ -15,74 +17,122 @@ public class DeliveryManager {
     this.connectionFactory = factory;
   }
 
+  /**
+   * Создание рассылки
+   * @param delivery рассылка
+   * @throws mobi.eyeline.informer.admin.AdminException ошибка выполнения команды
+   */
+  public void createDelivery(Delivery delivery) throws AdminException {
 
-  //  public CreateDeliveryResp send(CreateDelivery req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public CountDeliveriesResp send(CountDeliveries req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public FailResponse send(UserAuth req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public GetUserStatsResp send(GetUserStats req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public FailResponse send(ModifyDelivery req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public FailResponse send(DropDelivery req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public FailResponse send(ChangeDeliveryState req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public FailResponse send(DropDeliverymessages req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public GetDeliveryGlossaryResp send(GetDeliveryGlossary req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public FailResponse send(ModifyDeliveryGlossary req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public GetDeliveryStateResp send(GetDeliveryState req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public GetDeliveryInfoResp send(GetDeliveryInfo req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public GetDeliveriesListResp send(GetDeliveriesList req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public GetDeliveriesListNextResp send(GetDeliveriesListNext req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public RequestMessagesStateResp send(RequestMessagesState req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public GetNextMessagesPackResp send(GetNextMessagesPack req) throws AdminException {
-//    return client.send(req);
-//  }
-//
-//  public FailResponse send(CancelRequest req) throws AdminException {
-//    return client.send(req);
-//  }  
+  }
 
+  /**
+   * Модификация рассылки
+   * @param delivery рассылка
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void modifyDelivery(Delivery delivery) throws AdminException {
+
+  }
+
+  /**
+   * Удаление рассылки
+   * @param deliveryId идентификатор рассылки
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void dropDelivery(int deliveryId) throws AdminException {
+
+  }
+
+  /**
+   * Подсчёт кол-ва рассылок
+   * @param deliveryFilter фильтр
+   * @throws AdminException ошибка выполнения команды
+   * @return кол-во рассылок
+   */
+  public int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
+    return 0;
+  }
+
+  /**
+   * Удаляет сообщения из рассылки
+   * @param messageIds идентификаторы сообщений
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void dropMessages(long ... messageIds) throws AdminException {
+
+  }
+
+  /**
+   * Возвращает глоссарий по рассылке
+   * @param deliveryId идентикатор рассылки
+   * @return глоссарий
+   * @throws AdminException ошибка выполнения команды
+   */
+  public String[] getDeliveryGlossary(int deliveryId) throws AdminException {
+    return null;
+  }
+
+  /**
+   * Добавляет глоссарий к рассылке
+   * @param deliveryId идентикатор рассылки
+   * @param messages глоссарий
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void modifyDeliveryGlossary(int deliveryId, String[] messages) throws AdminException {
+
+  }
+
+  /**
+   * Возвращает рассылку по идентификатору
+   * @param deliveryId идентификатор рассылки
+   * @return рассылка
+   * @throws AdminException ошибка выполнения команды
+   */
+  public Delivery getDelivery(int deliveryId) throws AdminException {
+    return null;
+  }
+
+  /**
+   * Меняет состояние рассылки
+   * @param deliveryId идентификатор рассылки
+   * @param state новое состояние
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void changeDeliveryState (int deliveryId, DeliveryState state) throws AdminException {
+
+  }
+
+  /**
+   * Возвращает статистику по рассылке
+   * @param deliveryId идентификатор рассылки
+   * @return статистика по рассылке
+   * @throws AdminException ошибка выполнения команды
+   */
+  public DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
+    return null;
+  }
+
+  /**
+   * Возвращает рассылки, удовлетворяющие фильтру
+   * @param deliveryFilter фильтр
+   * @return рассылки
+   * @throws AdminException ошибка выполнения команды
+   */
+  public DeliveryDataSource<DeliveryInfo> getDeliviries(DeliveryFilter deliveryFilter) throws AdminException {
+    return null;
+  }
+
+
+
+  /**
+   * Возвращает информацию о сообщениях рассылки
+   * @param filter фильтр
+   * @return информация о сообщениях рассылки
+   * @throws AdminException ошибка выполнения команды
+   */
+  public DeliveryDataSource<MessageInfo> getMessagesStates(MessageFilter filter) throws AdminException {
+    return null;
+  }
 
 }

@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
-import org.apache.log4j.Logger;
 
 import java.util.Collection;
 
@@ -13,8 +12,6 @@ import java.util.Collection;
  * @author Aleksandr Khalitov
  */
 public class DcpConnectionImpl implements DcpConnection {
-
-  private static final Logger logger = Logger.getLogger(DcpConnectionImpl.class);
 
   private DcpClient client;
 
@@ -168,9 +165,10 @@ public class DcpConnectionImpl implements DcpConnection {
     return client.send(req).getReqId();
   }
 
-  public boolean getNextDeliviries(int reqId, Collection<mobi.eyeline.informer.admin.delivery.DeliveryInfo> deliveries) throws AdminException {
+  public boolean getNextDeliviries(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.DeliveryInfo> deliveries) throws AdminException {
     GetDeliveriesListNext req = new GetDeliveriesListNext();
     req.setReqId(reqId);
+    req.setCount(pieceSize);
     GetDeliveriesListNextResp resp = client.send(req);
     if(resp.getInfo() != null) {
       for(DeliveryListInfo di : resp.getInfo()) {
@@ -187,10 +185,10 @@ public class DcpConnectionImpl implements DcpConnection {
         req.setDeliveryId(filter.getDeliveryId());
       }
       if(filter.getEndDate() != null) {
-        req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
+        req.setEndDate(DcpConverter.convert(filter.getEndDate()));
       }
       if(filter.getStartDate() != null) {
-        req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
+        req.setStartDate(DcpConverter.convert(filter.getStartDate()));
       }
       if(filter.getFields() != null && filter.getFields().length > 0) {
         req.setFields(DcpConverter.convert(filter.getFields()));
@@ -205,9 +203,10 @@ public class DcpConnectionImpl implements DcpConnection {
     return client.send(req).getReqId();
   }
 
-  public boolean getNextMessageStates(int reqId, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException {
+  public boolean getNextMessageStates(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException {
     GetNextMessagesPack req = new GetNextMessagesPack();
     req.setReqId(reqId);
+    req.setCount(pieceSize);
     GetNextMessagesPackResp resp = client.send(req);
     if(resp.getInfo() != null) {
       for(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {

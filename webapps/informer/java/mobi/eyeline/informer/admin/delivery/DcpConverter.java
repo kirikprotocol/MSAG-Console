@@ -30,9 +30,6 @@ public class DcpConverter {   //todo
     return null;
   }
 
-  public static mobi.eyeline.informer.admin.delivery.protogen.protocol.Date convertDate(Date date) {
-    return null;
-  }
 
   public static String convert(Date date) {
     return null;
