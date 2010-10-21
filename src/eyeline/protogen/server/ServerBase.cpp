@@ -59,6 +59,7 @@ ServerBase::~ServerBase()
 
 void ServerBase::readPackets()
 {
+  smsc_log_info(log,"Starting reader thread(%d)",rdmp.getSize());
   net::Multiplexer::SockArray rd,err;
   int hIdx=0;
   int cnt=0;
@@ -76,6 +77,12 @@ void ServerBase::readPackets()
             char buf[64];
             clnt->GetPeer(buf);
             ProtocolSocketBase* ps=onConnect(clnt,lastId++);
+            if(ps==0)
+            {
+              smsc_log_info(log,"Declined connect from %s",buf);
+              delete clnt;
+              continue;
+            }
             smsc_log_info(log,"Accepted connect from %s, new connId=%d",buf,ps->getConnId());
             sync::MutexGuard mg(clntsMon);
             clnts.insert(SocketsMap::value_type(ps->getConnId(),ps));
@@ -139,6 +146,7 @@ void ServerBase::readPackets()
 
 void ServerBase::writePackets()
 {
+  smsc_log_info(log,"Starting writer thread");
   net::Multiplexer::SockArray wr,err;
   net::Multiplexer outMp;
   int cnt=0;
@@ -237,8 +245,21 @@ void ServerBase::writePackets()
   }
 }
 
+void ServerBase::closeConnId(int connId)
+{
+  sync::MutexGuard mg(clntsMon);
+  SocketsMap::iterator it=clnts.find(connId);
+  if(it==clnts.end())
+  {
+    return;
+  }
+  it->second->getSocket()->Close();
+}
+
+
 void ServerBase::handleCommands(int idx)
 {
+  smsc_log_info(log,"Starting handler[%d] thread",idx);
   sync::MutexGuard mg(handlers[idx].mon);
   while(!isStopping)
   {

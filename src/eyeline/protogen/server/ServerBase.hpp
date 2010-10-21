@@ -7,7 +7,6 @@
 #include "core/network/Multiplexer.hpp"
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-#include "util/64bitcompat.h"
 #include "ProtocolSocketBase.hpp"
 #include "logger/Logger.h"
 #include "eyeline/protogen/framework/SerializerBuffer.hpp"
@@ -30,6 +29,7 @@ public:
     lastId=0;
     log=smsc::logger::Logger::getInstance(logName);
     outSeqId=0;
+    isStopping=false;
   }
   ~ServerBase();
   void Init(const char* host,int port,int hndCnt);
@@ -38,11 +38,11 @@ public:
   template <class CommandType,class ProtocolType>
   void enqueueCommand(int connId,CommandType& cmd,ProtocolType& proto,bool fillSeq=true)
   {
-    ::protogen::framework::SerializerBuffer sb(128);
+    ::eyeline::protogen::framework::SerializerBuffer sb(128);
     sync::MutexGuard mg(outQueueMon);
     if(fillSeq)
     {
-      cmd.setSeqNum(outSeqId++);
+      cmd.messageSetSeqNum(outSeqId++);
     }
     proto.encodeMessage(cmd,&sb);
     ProtocolSocketBase::Packet p(sb.detachBuffer(),sb.getDataWritten(),connId);
@@ -55,6 +55,8 @@ protected:
   virtual ProtocolSocketBase* onConnect(net::Socket* clnt,int connId)=0;
   virtual void onHandleCommand(ProtocolSocketBase::Packet& pkt)=0;
   virtual void onDisconnect(ProtocolSocketBase* sck)=0;
+
+  void closeConnId(int connId);
 
   void readPackets();
   void writePackets();

@@ -100,6 +100,11 @@ public:
     sync::MutexGuard mg(seqMtx);
     return seqNum++;
   }
+  
+  bool isConnected()const
+  {
+    return connected;
+  }
 
 protected:
 

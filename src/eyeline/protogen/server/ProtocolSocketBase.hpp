@@ -26,9 +26,10 @@ public:
     Packet(const char* argData,size_t argDataSize,int argConnId):
       data(argData),dataSize(argDataSize),connId(argConnId)
     {
-  
+
     }
-  
+
+
     std::string getDump()
     {
       char buf[32];

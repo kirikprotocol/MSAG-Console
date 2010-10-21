@@ -19,6 +19,7 @@ ClientBase::ClientBase(const char* logName)
   stopReq=false;
   reader.disp=this;
   writer.disp=this;
+  seqNum=0;
 }
 
 ClientBase::~ClientBase()
@@ -131,6 +132,7 @@ void ClientBase::WriteLoop()
     }
     Buffer buf;
     outQueue.Pop(buf);
+    smsc_log_debug(log,"sending %d bytes packet",(int)buf.dataSize);
     if(sck.WriteAll(buf.data,(int)buf.dataSize)!=(int)buf.dataSize)
     {
       smsc_log_warn(log,"Failed to send command");
