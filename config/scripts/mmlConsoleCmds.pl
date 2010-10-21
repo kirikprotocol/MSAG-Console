@@ -50,7 +50,7 @@ sub getline
   my $l=readline($_[0]);
   die "Read failed:$!" unless defined($l);
   $l=~s/[\r\n]//g;
-  die "Error response:$l\n" unless $l=~/^EXECUTED: ErrorCode=0;/;
+  die "Error response:$l\n" unless $l=~/^EXECUTED: ErrorCode=0[;,]/;
   print "<$l\n";
 }
 
@@ -61,8 +61,6 @@ sub putline
   if($hide)
   {
     $l=~s/pass='.*?'/pass='********'/;
-  }else
-  {
-    print ">$l\n";
   }
+  print ">$l\n";
 }
