@@ -5,6 +5,8 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.CSVTokenizer;
 
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -14,11 +16,16 @@ import java.util.*;
 public class DeliveryStatProvider {
   File baseDir;
   FileSystem fileSys;
-
+  SimpleDateFormat subDirNameFormat;
 
   public DeliveryStatProvider(File directory,FileSystem fileSys) {
+    this(directory,fileSys,"yyyyMMdd");
+  }
+
+  DeliveryStatProvider(File directory,FileSystem fileSys,String subDirNamePattern) {
     baseDir = directory;
     this.fileSys = fileSys;
+    this.subDirNameFormat= new SimpleDateFormat(subDirNamePattern);
   }
 
   /**
@@ -29,7 +36,7 @@ public class DeliveryStatProvider {
    * @param visitor визитор, обрабатывающий найденные записи
    * @throws AdminException если произошла ошибка при обращении к стораджу статистики
    */
-  void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
+  void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException, ParseException {
     try {
       String minSubDirName = null;
       String maxSubDirName = null;
@@ -39,20 +46,12 @@ public class DeliveryStatProvider {
         if(filter.getFromDate()!=null) {
           cFrom  = Calendar.getInstance();
           cFrom.setTime(filter.getFromDate());
-          minSubDirName = new StringBuilder().append("p")
-              .append(formatInt(cFrom.get(Calendar.YEAR), 4))
-              .append(formatInt(cFrom.get(Calendar.MONTH) + 1, 2))
-              .append(formatInt(cFrom.get(Calendar.DAY_OF_MONTH), 2))
-              .toString();
+          minSubDirName = subDirNameFormat.format(cFrom.getTime());
         }
         if(filter.getTillDate()!=null) {
           cTo  = Calendar.getInstance();
           cTo.setTime(filter.getTillDate());
-          maxSubDirName = new StringBuilder().append("p")
-              .append(formatInt(cTo.get(Calendar.YEAR), 4))
-              .append(formatInt(cTo.get(Calendar.MONTH) + 1, 2))
-              .append(formatInt(cTo.get(Calendar.DAY_OF_MONTH), 2))
-              .toString();
+          maxSubDirName = subDirNameFormat.format(cTo.getTime());
         }
       }
 
@@ -114,14 +113,16 @@ public class DeliveryStatProvider {
     List<FileProcessor> fileProcessors;
     int filesCount;
 
-    public SubDirProcessor(String subdirName, int fromHour,int fromMin,int toHour,int toMin) throws AdminException {
+    public SubDirProcessor(String subdirName, int fromHour,int fromMin,int toHour,int toMin) throws AdminException, ParseException {
       this.subDirName = subdirName;
       subDir = new File(baseDir,subdirName);
       filesCount=0;
       fileProcessors = new ArrayList<FileProcessor>();
-      year  = Integer.parseInt(subDirName.substring(1,5));
-      month = Integer.parseInt(subDirName.substring(5,7));
-      day   = Integer.parseInt(subDirName.substring(7,9));
+      Calendar c = Calendar.getInstance();
+      c.setTime(subDirNameFormat.parse(subDirName));
+      year  = c.get(Calendar.YEAR);
+      month = c.get(Calendar.MONTH+1);
+      day   = c.get(Calendar.DAY_OF_MONTH);
       for(int hour = fromHour; hour<=toHour; hour++) {
         String fName = formatInt(hour,2)+".csv";
         File f = new File(subDir,fName);

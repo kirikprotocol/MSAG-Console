@@ -17,7 +17,7 @@ public class TestDeliveryStatProvider extends DeliveryStatProvider{
 
 
   public TestDeliveryStatProvider(File directory,FileSystem fileSys) {
-        super(directory,fileSys);
+        super(directory,fileSys,"'p'yyyyMMdd");
   }
 
 }

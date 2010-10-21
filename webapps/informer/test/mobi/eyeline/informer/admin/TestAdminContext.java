@@ -24,6 +24,8 @@ import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,9 +48,28 @@ public class TestAdminContext extends AdminContext {
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
     if(!fileSystem.exists(dstStatDir)) {
       URL u = TestDeliveryStatProvider.class.getResource("");
-      File srcStatDir = new File(u.toURI());
-      srcStatDir = new File(srcStatDir,"stat");
-      TestUtils.copyDirectory(srcStatDir,dstStatDir,fileSystem);
+      URI uri = u.toURI();
+
+      if("jar".equals(uri.getScheme())) {
+        String jarPath = uri.getSchemeSpecificPart();
+        String jarFileURI   = jarPath.substring(0,jarPath.indexOf("!/"));
+        String jarEntryPathURI = jarPath.substring(jarPath.indexOf("!/")+2)+"stat";
+        InputStream is = null;
+        try {
+          is = fileSystem.getInputStream(new File(new URI(jarFileURI)));
+          TestUtils.extractDirFromJar(is,jarEntryPathURI,dstStatDir,fileSystem);
+        }
+        finally {
+          if(is!=null) is.close();
+        }
+
+      }
+      else {
+        File srcStatDir = new File(uri);
+        srcStatDir = new File(srcStatDir,"stat");
+        TestUtils.copyDirectory(srcStatDir,dstStatDir,fileSystem);
+      }
+
     }
   }
 
@@ -96,7 +117,7 @@ public class TestAdminContext extends AdminContext {
       for(RetryPolicy rp : retryPolicyManager.getRetryPolicies()) {
         infosme.addRetryPolicy(rp.getPolicyId());
       }
-      deliveryStatProvider = new DeliveryStatProvider(statDir, fileSystem);
+      deliveryStatProvider = new TestDeliveryStatProvider(statDir, fileSystem);
 
     } catch (IOException e) {
       throw new InitException(e);

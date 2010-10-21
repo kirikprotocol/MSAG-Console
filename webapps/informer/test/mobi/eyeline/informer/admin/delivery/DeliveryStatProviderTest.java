@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -34,7 +35,7 @@ public class DeliveryStatProviderTest {
   }
 
   @Test
-  public void providerTest() throws AdminException, IOException {
+  public void providerTest() throws AdminException, IOException, ParseException {
      final List<DeliveryStatRecord> records = new ArrayList<DeliveryStatRecord>();
 
 

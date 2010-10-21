@@ -2,9 +2,14 @@ package testutils;
 
 import junit.framework.AssertionFailedError;
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.*;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 
 /**
  * @author Artem Snopkov
@@ -94,5 +99,43 @@ public class TestUtils {
     else {
       fileSystem.copy(sourceLocation,targetLocation);
     }
+  }
+
+  public static void extractDirFromJar(InputStream is, String jarInternalPathURI, File dstStatDir, FileSystem fileSys) throws AdminException, IOException, URISyntaxException {
+
+    JarInputStream jis = new JarInputStream(is);
+    JarEntry je;
+    while (( je = jis.getNextJarEntry())!=null) {
+      String name = je.getName();
+      if(!je.isDirectory() && name.startsWith(jarInternalPathURI)) {
+        String relPath = name.substring(jarInternalPathURI.length());
+        File dstFile = new File(dstStatDir,relPath.replace('/',File.separatorChar));
+        extractFile(jis,dstFile,fileSys);
+      }
+
+    }
+
+  }
+
+  private static void extractFile(JarInputStream jis, File dstFile, FileSystem fileSys) throws IOException, AdminException {
+      String parentDir = dstFile.getParent();
+      if(parentDir!=null) {
+        File d = new File(parentDir);
+        if(!fileSys.exists(d)) fileSys.mkdirs(d);
+      }
+      OutputStream os = null;
+      try {
+        os = fileSys.getOutputStream(dstFile,false);
+        byte[] b = new byte[1024];
+        int len;
+        while ((len = jis.read(b, 0, b.length)) != -1) {
+          os.write(b, 0, len);
+        }
+        jis.closeEntry();
+        os.close();
+      }
+      finally {
+        os.close();
+      }
   }
 }
