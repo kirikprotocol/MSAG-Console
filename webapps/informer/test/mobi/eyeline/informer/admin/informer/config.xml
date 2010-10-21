@@ -11,4 +11,8 @@
     <param name="port" type="string">25403</param>
   </section>
 
+  <section name="stat">
+    <param name="directory" type="string">/home/me/projects/smsc/webapps/informer/.informerbase/stat</param>
+  </section>
+
 </config>
