@@ -15,6 +15,8 @@ static char const ident[] = "$Id$";
 #include <string>
 #include <vector>
 
+using smsc::mtsmsme::processor::RequestProcessor;
+using smsc::mtsmsme::processor::RequestProcessorFactory;
 using smsc::mtsmsme::processor::SccpProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
@@ -190,28 +192,40 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
     virtual int  update(Address& imsi, Address& msisdn, Address& mgt) {return 1;}
     virtual bool lookup(Address& msisdn, Address& imsi, Address& msc) {return false;}
 };
-class SccpChan: public SccpProcessor, public Thread {
+class SccpChan: public Thread {
   private:
     int st;
     RequestProcessorConfig& cfg;
+    RequestProcessor* requestProcessor;
     TCO mtsms;
     EmptyRequestSender fakesender;
     EmptySubscriberRegistrator fakeHLR;
     Logger* logger;
   public:
     SccpChan(RequestProcessorConfig& _cfg, Logger* _logger): logger(_logger),
-      cfg(_cfg), fakesender(),mtsms(1000),fakeHLR(&mtsms),SccpProcessor(&mtsms,&fakeHLR)
+      cfg(_cfg), fakesender(),mtsms(1000),fakeHLR(&mtsms)
     {
-      configure(cfg.user,cfg.ssn,cfg.msc,cfg.vlr,cfg.hlr);
+      //configure(cfg.user,cfg.ssn,cfg.msc,cfg.vlr,cfg.hlr);
+      ////
+      RequestProcessorFactory* factory = 0;
+          factory = RequestProcessorFactory::getInstance();
+          if (!factory)
+            throw Exception("RequestProcessorFactory is undefined");
+
+          requestProcessor = factory->createRequestProcessor(&mtsms, &fakeHLR);
+          if (!requestProcessor)
+            throw Exception("RequestProcessor is undefined");
+      ////
+          requestProcessor->configure(cfg.user,cfg.ssn,cfg.msc,cfg.vlr,cfg.hlr);
     }
-    void Stopping() {st = 0; Stop(); }
+    void Stopping() {st = 0; requestProcessor->Stop(); }
     virtual int Execute()
     {
       st = 1;
       int result;
       while (st)
       {
-        result = Run();
+        result = requestProcessor->Run();
         smsc_log_error(logger,"SccpListener exit with code: %d, sleep and restarting...", result);
         sleep(10);
       }
