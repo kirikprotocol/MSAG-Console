@@ -507,8 +507,6 @@ void SmscSender::detachRegionSender( RegionSender& rs )
         MutexGuard mg(reconfLock_);
         scoredList_.remove(ScoredList<SmscSender>::isEqual(&rs));
     }
-    // MutexGuard mg(queueMon_);
-    // queueMon_.notify();
 }
 
 
@@ -519,8 +517,7 @@ void SmscSender::attachRegionSender( RegionSender& rs )
         MutexGuard mg(reconfLock_);
         scoredList_.add(&rs);
     }
-    MutexGuard mg(queueMon_);
-    queueMon_.notify();
+    wakeUp();
 }
 
 
@@ -855,6 +852,15 @@ void SmscSender::stop()
 }
 
 
+void SmscSender::wakeUp()
+{
+    smsc_log_debug(log_,"awakening");
+    MutexGuard mg(queueMon_);
+    awaken_ = true;
+    queueMon_.notify();
+}
+
+
 int SmscSender::Execute()
 {
     while ( !isStopping_ ) {
@@ -912,7 +918,7 @@ void SmscSender::sendLoop()
 
         // sleeping until next wake time
         currentTime_ = currentTimeMicro();
-        int waitTime = int((nextWakeTime - currentTime_)/1000U); // in msec
+        int waitTime = int((nextWakeTime - currentTime_ + 1000)/1000U); // in msec
 
         if (rQueue_->Count() == 0) {
 
@@ -921,6 +927,10 @@ void SmscSender::sendLoop()
             if (wQueue_->Count()>0) {
                 // taking wqueue
                 std::swap(rQueue_,wQueue_);
+            } else if (awaken_) {
+                awaken_ = false;
+                waitTime = 0;
+                nextWakeTime = currentTime_;
             } else if (waitTime > 0) {
 
                 if (waitTime < 10) waitTime = 10;

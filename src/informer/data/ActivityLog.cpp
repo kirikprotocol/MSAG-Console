@@ -38,10 +38,11 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     char cstate;
     switch (msg.state) {
     case MSGSTATE_INPUT:     cstate = 'N'; break;
+    case MSGSTATE_PROCESS:   cstate = 'P'; break;
     case MSGSTATE_DELIVERED: cstate = 'D'; break;
     case MSGSTATE_FAILED:    cstate = 'F'; break;
     case MSGSTATE_EXPIRED:   cstate = 'E'; break;
-    default: throw InfosmeException("unknown state %u",msg.state);
+    default: throw InfosmeException("actlog unknown state %u",msg.state);
     }
 
     uint8_t ton, npi, len;
@@ -66,36 +67,35 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     {
         MutexGuard mg(lock_);
         if ( !fg_.isOpened() || (createTime_ + period_) < currentTime ) {
-            char buf[100];
+            char fnbuf[100];
             const int oldmin = now.tm_min;
             now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
-            sprintf(makeDeliveryPath(info_.getDlvId(),buf),
+            sprintf(makeDeliveryPath(info_.getDlvId(),fnbuf),
                     "activity/%04u.%02u.%02u/%02u:%02u.log",
                     now.tm_year+1900, now.tm_mon+1, now.tm_mday,
                     now.tm_hour, now.tm_min );
-            fg_.create((info_.getCS().getStorePath()+buf).c_str(),
+            fg_.create((info_.getCS().getStorePath()+fnbuf).c_str(),
                        true );
             createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
             fg_.seek(0, SEEK_END);
             if (fg_.getPos() == 0) {
-                const char* header = "#1 TIME,STATE,REGID,MSGID,SUBSCRIBER,TTL,SMPP,FS,LS,TOTAL,SENT,DLVD,FAILD,EXPRD,USERDATA,TEXT\n";
+                const char* header = "#1 TIME,STATE,REGID,MSGID,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT\n";
                 fg_.write(header,strlen(header));
                 char headbuf[200];
+                int headlen;
                 {
                     MutexGuard lmg(statLock_);
-                    const int len = 
-                        sprintf(headbuf,
-                                "# TOTAL,PROC,SENT,RTRY,DLVD,FAIL,EXPR\n"
-                                "# %u,%u,%u,%u,%u,%u,%u\n",
-                                stats_.totalMessages, stats_.procMessages,
-                                stats_.sentMessages, stats_.retryMessages,
-                                stats_.dlvdMessages, stats_.failedMessages,
-                                stats_.expiredMessages );
-                    if (len<0) {
+                    headlen = sprintf(headbuf,
+                                      "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPRD=%u\n",
+                                      stats_.totalMessages, stats_.procMessages,
+                                      stats_.sentMessages, stats_.retryMessages,
+                                      stats_.dlvdMessages, stats_.failedMessages,
+                                      stats_.expiredMessages );
+                    if (headlen<0) {
                         throw InfosmeException("cannot sprintf header");
                     }
                 }
-                fg_.write(headbuf,size_t(len));
+                fg_.write(headbuf,size_t(headlen));
             }
         }
         fg_.write(buf.get(),buf.GetPos());

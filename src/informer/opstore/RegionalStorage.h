@@ -139,51 +139,6 @@ private:
     smsc::core::synchronization::Condition conds_[CONDITION_COUNT];
 };
 
-
-/*
-class RegionalStoragePtr
-{
-public:
-    RegionalStoragePtr( RegionalStorage* ptr = 0 ) : ptr_(ptr) {
-        if (ptr_) { ptr_->usage(true); }
-    }
-    RegionalStoragePtr( const RegionalStoragePtr& p ) : ptr_(p.ptr_) {
-        if (p.ptr_) { p.ptr_->usage(true); }
-    }
-    RegionalStoragePtr& operator = ( const RegionalStoragePtr& p ) {
-        if ( &p != this ) {
-            if (ptr_) { ptr_->usage(false); }
-            ptr_ = p.ptr_;
-            if (ptr_) { ptr_->usage(true); }
-        }
-        return *this;
-    }
-    ~RegionalStoragePtr() {
-        if (ptr_) { ptr_->usage(false); }
-    }
-
-    RegionalStorage* get() {
-        return ptr_;
-    }
-    RegionalStorage* operator-> () {
-        return ptr_;
-    }
-    const RegionalStorage* operator-> () const {
-        return ptr_;
-    }
-    void reset( RegionalStorage* p ) {
-        if ( p != ptr_ ) {
-            if (p) { p->usage(true); }
-            if (ptr_) { ptr_->usage(false); }
-            ptr_ = p;
-        }
-    }
-
-private:
-    RegionalStorage* ptr_;
-};
- */
-
 typedef EmbedRefPtr< RegionalStorage > RegionalStoragePtr;
 
 }

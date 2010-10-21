@@ -20,6 +20,7 @@ ref_(0)
     sprintf(buf,"dl.%u",dlvInfo_->getDlvId());
     log_ = smsc::logger::Logger::getInstance(buf);
     smsc_log_info(log_,"ctor D=%u",dlvInfo_->getDlvId());
+    source_->init(activityLog_);
 }
 
 

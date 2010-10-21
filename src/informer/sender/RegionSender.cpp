@@ -54,6 +54,8 @@ void RegionSender::addDelivery( RegionalStorage& ptr )
 {
     smsc_log_debug(log_,"add delivery D=%u",ptr.getDlvId());
     taskList_.add(&ptr);
+    // FIXME: reset speed control
+    conn_->wakeUp();
 }
 
 

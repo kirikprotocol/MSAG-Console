@@ -57,6 +57,8 @@ public:
 
     void start();
     void stop();
+    /// sent when something is changing
+    void wakeUp();
 
     /// sending one message
     /// @return positive or 0: number of chunks sent;
@@ -125,6 +127,7 @@ private:
     smsc::core::synchronization::EventMonitor          queueMon_;
     DataQueue*                                         rQueue_;
     DataQueue*                                         wQueue_;
+    bool                                               awaken_;
 };
 
 } // informer

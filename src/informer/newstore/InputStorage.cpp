@@ -49,6 +49,12 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     std::vector< regionid_type > regs;
     regs.reserve(32);
     dispatchMessages(begin, end, regs);
+    msgtime_type currentTime( currentTimeMicro() / tuPerSec );
+    // FIXME: we need to bind to glossary before
+    for ( MsgIter i = begin; i != end; ++i ) {
+        glossary_.bindMessage(i->msg.text);
+        activityLog_->addRecord( currentTime, i->serial, i->msg, 0);
+    }
     core_.deliveryRegions( getDlvId(), regs, true );
 }
 
