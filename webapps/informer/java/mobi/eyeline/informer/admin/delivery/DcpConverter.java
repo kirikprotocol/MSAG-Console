@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.admin.delivery;
 
+import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMessage;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.ReqField;
 
 import java.util.Date;
@@ -18,7 +19,10 @@ public class DcpConverter {   //todo
     return null;
   }
 
-  public static mobi.eyeline.informer.admin.delivery.MessageInfo convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo di) {
+  public static MessageInfo convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo di) {
+    return null;
+  }
+  public static DeliveryMessage[] convert(Message ... di) {
     return null;
   }
 

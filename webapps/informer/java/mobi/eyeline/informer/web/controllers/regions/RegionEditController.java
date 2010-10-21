@@ -11,10 +11,7 @@ import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -29,8 +26,6 @@ public class RegionEditController extends RegionsController{
   private Region region;
 
   private DynamicTableModel dynamicModel = new DynamicTableModel();
-
-  private List<SelectItem> smscs = new LinkedList<SelectItem>();
 
   private List<SelectItem> timeZones = new LinkedList<SelectItem>();
 
@@ -55,10 +50,15 @@ public class RegionEditController extends RegionsController{
     tZones.add(TimeZone.getTimeZone("Asia/Anadyr"));
   }
 
+  private Collection<Smsc> ss;
+
   public RegionEditController() {
     super();
 
     id = getRequestParameter(REGION_ID_PARAMETER);
+
+
+    ss = getConfig().getSmscs();
 
     if(id != null && id.length() > 0) {
       try{
@@ -68,11 +68,15 @@ public class RegionEditController extends RegionsController{
       }
     }else {
       region = new Region();
+      if(!ss.isEmpty()) {
+        try {
+          region.setSmsc(ss.iterator().next().getName());
+        } catch (AdminException e) {
+          addError(e);
+        }
+      }
     }
 
-    for(Smsc s : getConfig().getSmscs()) {
-      smscs.add(new SelectItem(s.getName(), s.getName()));
-    }
 
     Locale l = getLocale();
     for(TimeZone t : tZones) {
@@ -86,6 +90,13 @@ public class RegionEditController extends RegionsController{
       logger.warn("REGION is not found with id="+id);
       id = null;
       region = new Region();
+      if(!ss.isEmpty()) {
+        try {
+          region.setSmsc(ss.iterator().next().getName());
+        } catch (AdminException e) {
+          addError(e);
+        }
+      }
     }else {
       dynamicModel = new DynamicTableModel();
       for(Address a : region.getMasks()) {
@@ -145,6 +156,10 @@ public class RegionEditController extends RegionsController{
   }
 
   public List<SelectItem> getSmscs() {
+    List<SelectItem> smscs = new ArrayList<SelectItem>(ss.size());
+    for(Smsc s : ss) {
+      smscs.add(new SelectItem(s.getName(), s.getName()));
+    }
     return smscs;
   }
 

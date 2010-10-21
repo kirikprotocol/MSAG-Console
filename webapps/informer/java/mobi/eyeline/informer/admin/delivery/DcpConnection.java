@@ -24,6 +24,15 @@ public interface DcpConnection {
    */
   public int createDelivery(Delivery delivery) throws AdminException;
 
+
+  /**
+   * Добавляет сообщения в рассылку
+   * @param deliveryId идентификатор рассылки
+   * @param messages сообщения
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException;
+
   /**
    * Модификация рассылки
    * @param delivery рассылка
@@ -51,7 +60,7 @@ public interface DcpConnection {
    * @param messageIds идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public void dropMessages(long ... messageIds) throws AdminException;
+  public void dropMessages(long[] messageIds) throws AdminException;
 
   /**
    * Возвращает глоссарий по рассылке

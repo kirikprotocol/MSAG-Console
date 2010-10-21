@@ -30,7 +30,7 @@ public abstract class DeliveryDataSource<T> {
     List<T> list = new ArrayList<T>(pieceSize);
     do{
       list.clear();
-      exit =  load(pieceSize, reqId, list);
+      exit =  load(dcpConnection, pieceSize, reqId, list);
       for(T t : list) {
         if(!visitor.visit(t)) {
           exit = true;
@@ -40,7 +40,7 @@ public abstract class DeliveryDataSource<T> {
     }while(exit);
   }
 
-  protected abstract boolean load(int pieseSize, int reqId, Collection<T> result) throws AdminException;
+  protected abstract boolean load(DcpConnection connection, int pieseSize, int reqId, Collection<T> result) throws AdminException;
 
 
   /**

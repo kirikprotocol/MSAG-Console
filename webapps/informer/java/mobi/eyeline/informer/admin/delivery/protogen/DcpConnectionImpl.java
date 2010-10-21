@@ -5,19 +5,43 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import org.apache.log4j.Logger;
 
 import java.util.Collection;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Aleksandr Khalitov
  */
 public class DcpConnectionImpl implements DcpConnection {
 
+  private static final Logger logger = Logger.getLogger(DcpConnectionImpl.class);
+
   private DcpClient client;
 
-  public DcpConnectionImpl(String host, int port, String login, String password) throws AdminException{
+  private final Lock lock;
+
+  public DcpConnectionImpl(String host, int port, final String login, String password) throws AdminException{
     this.client = new DcpClient(host, port);
     connect(login, password);
+
+    lock = new ReentrantLock() {
+      @Override
+      public void lock() {
+        super.lock();
+        if(logger.isDebugEnabled()) {
+          logger.debug("Dcp Connection locked: login="+login);
+        }
+      }
+      @Override
+      public void unlock() {
+        super.unlock();
+        if(logger.isDebugEnabled()) {
+          logger.debug("Dcp Connection unlocked: login="+login);
+        }
+      }
+    };
   }
 
 
@@ -32,24 +56,53 @@ public class DcpConnectionImpl implements DcpConnection {
     return client.isConnected();
   }
 
+
   public int createDelivery(Delivery delivery) throws AdminException{
     CreateDelivery req = new CreateDelivery();
     req.setInfo(DcpConverter.convert(delivery));
-    CreateDeliveryResp resp = client.send(req);
+    CreateDeliveryResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
     return resp.getDeliveryId();
+  }
+
+  public void addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException {
+    AddDeliveryMessages req = new AddDeliveryMessages();
+    req.setDeliveryId(deliveryId);
+    req.setMessages(DcpConverter.convert(messages));
+    try{
+      lock.lock();
+      client.send(req);
+    }finally {
+      lock.unlock();
+    }
   }
 
   public void modifyDelivery(Delivery delivery) throws AdminException {
     ModifyDelivery req = new ModifyDelivery();
     req.setDeliveryId(delivery.getId());
     req.setInfo(DcpConverter.convert(delivery));
-    client.send(req);
+    try{
+      lock.lock();
+      client.send(req);
+    }finally {
+      lock.unlock();
+    }
   }
 
   public void dropDelivery(int deliveryId) throws AdminException {
     DropDelivery req = new DropDelivery();
     req.setDeliveryId(deliveryId);
-    client.send(req);
+    try{
+      lock.lock();
+      client.send(req);
+    }finally {
+      lock.unlock();
+    }
   }
 
   public int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
@@ -77,7 +130,13 @@ public class DcpConnectionImpl implements DcpConnection {
         req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
       }
     }
-    CountDeliveriesResp resp = client.send(req);
+    CountDeliveriesResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
     return resp.getResult();
   }
 
@@ -86,18 +145,35 @@ public class DcpConnectionImpl implements DcpConnection {
     ChangeDeliveryState req = new ChangeDeliveryState();
     req.setDeliveryId(deliveryId);
     req.setState(DcpConverter.convert(state));
+    try{
+      lock.lock();
+      client.send(req);
+    }finally {
+      lock.unlock();
+    }
   }
 
   public void dropMessages(long[] messageIds) throws AdminException {
     DropDeliverymessages req = new DropDeliverymessages();
     req.setMessageIds(messageIds);
-    client.send(req);
+    try{
+      lock.lock();
+      client.send(req);
+    }finally {
+      lock.unlock();
+    }
   }
 
   public String[] getDeliveryGlossary(int deliveryId) throws AdminException {
     GetDeliveryGlossary req = new GetDeliveryGlossary();
     req.setDeliveryId(deliveryId);
-    GetDeliveryGlossaryResp resp = client.send(req);
+    GetDeliveryGlossaryResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
     return resp.getGlossary().getMessages();
   }
 
@@ -107,14 +183,25 @@ public class DcpConnectionImpl implements DcpConnection {
     DeliveryGlossary glossary = new DeliveryGlossary();
     glossary.setMessages(messages);
     req.setGlossary(glossary);
-    client.send(req);
+    try{
+      lock.lock();
+      client.send(req);
+    }finally {
+      lock.unlock();
+    }
   }
 
 
   public DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
     GetDeliveryState req = new GetDeliveryState();
     req.setDeliveryId(deliveryId);
-    GetDeliveryStateResp resp = client.send(req);
+    GetDeliveryStateResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
     return DcpConverter.convert(resp.getStats(), resp.getState());
   }
 
@@ -122,7 +209,13 @@ public class DcpConnectionImpl implements DcpConnection {
   public Delivery getDelivery(int deliveryId) throws AdminException {
     GetDeliveryInfo req = new GetDeliveryInfo();
     req.setDeliveryId(deliveryId);
-    GetDeliveryInfoResp resp = client.send(req);
+    GetDeliveryInfoResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
     return DcpConverter.convert(resp.getInfo());
   }
 
@@ -162,14 +255,27 @@ public class DcpConnectionImpl implements DcpConnection {
     if(deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length>0) {
       req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
     }
-    return client.send(req).getReqId();
+    GetDeliveriesListResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
+    return resp.getReqId();
   }
 
   public boolean getNextDeliviries(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.DeliveryInfo> deliveries) throws AdminException {
     GetDeliveriesListNext req = new GetDeliveriesListNext();
     req.setReqId(reqId);
     req.setCount(pieceSize);
-    GetDeliveriesListNextResp resp = client.send(req);
+    GetDeliveriesListNextResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
     if(resp.getInfo() != null) {
       for(DeliveryListInfo di : resp.getInfo()) {
         deliveries.add(DcpConverter.convert(di));
@@ -200,14 +306,27 @@ public class DcpConnectionImpl implements DcpConnection {
         req.setStates(DcpConverter.convert(filter.getStates()));
       }
     }
-    return client.send(req).getReqId();
+    RequestMessagesStateResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
+    return resp.getReqId();
   }
 
   public boolean getNextMessageStates(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException {
     GetNextMessagesPack req = new GetNextMessagesPack();
     req.setReqId(reqId);
     req.setCount(pieceSize);
-    GetNextMessagesPackResp resp = client.send(req);
+    GetNextMessagesPackResp resp;
+    try{
+      lock.lock();
+      resp = client.send(req);
+    }finally {
+      lock.unlock();
+    }
     if(resp.getInfo() != null) {
       for(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
         messages.add(DcpConverter.convert(mi));

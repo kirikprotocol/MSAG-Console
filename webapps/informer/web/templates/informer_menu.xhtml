@@ -14,7 +14,7 @@
     function createjsDOMenu() {
     menuBar = new jsDOMenuBar();
     <ui:repeat value="#{topMenu.menuBarItems}" var="barItem">
-      menu_0=new jsDOMenu("<tr:outputText escape="false" value="#{barItem.width}"/>");
+      menu_0=new jsDOMenu("<tr:outputText escape="false" value="#{msg[barItem.width]}"/>");
       <ui:repeat value="#{barItem.items}" var="menuItem">
         menu_0.addMenuItem(new menuItem("<tr:outputText escape="false" value="#{msg[menuItem.name]}"/>", "", "<tr:outputText
           value="#{facesContext.externalContext.requestContextPath}#{menuItem.url}"/>"));

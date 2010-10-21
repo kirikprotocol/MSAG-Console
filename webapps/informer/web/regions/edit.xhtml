@@ -50,7 +50,6 @@
 
           <tr:panelLabelAndMessage label="#{regionBundle.smsc}" labelStyle="text-align:left">
             <h:selectOneMenu id="smsc" value="#{regionEdit.region.smsc}" required="true" onchange="this.form.submit();">
-              <f:selectItem itemLabel=""/>
               <f:selectItems value="#{regionEdit.smscs}"/>
             </h:selectOneMenu>
             <tr:outputText value="&#160;"/>

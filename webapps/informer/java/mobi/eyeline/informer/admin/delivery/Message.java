@@ -15,6 +15,7 @@ public class Message {
   private MessageType msgType;
   private String text;
   private int index;
+  private String msisdn;
 
   public static Message newGlossaryMessage(int index) {
     return null;
@@ -34,6 +35,15 @@ public class Message {
 
   void setId(String id) {
     this.id = id;
+  }
+
+  public String getMsisdn() {
+    return msisdn;
+  }
+
+  public void setMsisdn(String msisdn) throws  AdminException{
+    vh.checkNotEmpty("msisdn", msisdn);
+    this.msisdn = msisdn;
   }
 
   public MessageType getMsgType() {
