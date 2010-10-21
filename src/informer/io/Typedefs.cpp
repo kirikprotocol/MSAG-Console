@@ -7,16 +7,21 @@
 namespace eyeline {
 namespace informer {
 
-char* formatMsgTime( char* buf, msgtime_type tmp )
+int formatMsgTime( char* buf, msgtime_type tmp, struct tm* tmb )
 {
-    struct tm tx = {0};
+    struct tm tx;
+    if (!tmb) tmb = &tx;
     const time_t t(tmp);
-    if ( !gmtime_r(&t,&tx) ) {
+    if ( !gmtime_r(&t,tmb) ) {
         throw InfosmeException("formatMsgTime: cannot gmtime_r");
     }
-    sprintf(buf,"%02u-%02u-%02u+%02u:%02u:%02u",
-            tx.tm_year%100, tx.tm_mon+1, tx.tm_mday, tx.tm_hour, tx.tm_min, tx.tm_sec );
-    return buf;
+    const int off = sprintf(buf,"%04u%02u%02u%02u%02u%02u",
+                            tmb->tm_year+1900, tmb->tm_mon+1, tmb->tm_mday,
+                            tmb->tm_hour, tmb->tm_min, tmb->tm_sec );
+    if (off<0) {
+        throw InfosmeException("formatMsgTime: cannot sprintf");
+    }
+    return off;
 }
 
 

@@ -5,7 +5,9 @@
 #include "core/synchronization/Mutex.hpp"
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/data/DeliveryInfo.h"
+#include "informer/data/DeliveryStats.h"
 #include "RegionalStorage.h"
+#include "informer/data/ActivityLog.h"
 
 namespace eyeline {
 namespace informer {
@@ -17,6 +19,7 @@ class Delivery
 {
     friend class EmbedRefPtr< Delivery >;
     friend class RegionalStorage;
+
 public:
     Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
               StoreJournal&               journal,
@@ -82,16 +85,18 @@ private:
     }
 
 public:
-    std::auto_ptr<DeliveryInfo>                        dlvInfo_;
     smsc::logger::Logger*                              log_;
+    std::auto_ptr<DeliveryInfo>                        dlvInfo_;
 
     smsc::core::synchronization::Mutex                 cacheLock_;
     smsc::core::buffers::IntHash< RegionalStoragePtr > storages_;
+
     StoreJournal&                                      storeJournal_;
+    ActivityLog                                        activityLog_;
     InputMessageSource*                                source_;       // owned
 
-    smsc::core::synchronization::Mutex lock_;
-    unsigned                           ref_;
+    smsc::core::synchronization::Mutex                 lock_;
+    unsigned                                           ref_;
 };
 
 typedef EmbedRefPtr< Delivery >  DeliveryPtr;

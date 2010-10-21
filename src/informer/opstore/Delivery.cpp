@@ -1,5 +1,6 @@
 #include <cassert>
 #include "Delivery.h"
+#include "informer/data/CommonSettings.h"
 
 namespace eyeline {
 namespace informer {
@@ -7,11 +8,14 @@ namespace informer {
 Delivery::Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
                     StoreJournal&               journal,
                     InputMessageSource*         source ) :
+log_(0),
 dlvInfo_(dlvInfo),
 storeJournal_(journal),
+activityLog_(*dlvInfo_.get()),
 source_(source),
 ref_(0)
 {
+    /// FIXME: read stats from activity log
     char buf[20];
     sprintf(buf,"dl.%u",dlvInfo_->getDlvId());
     log_ = smsc::logger::Logger::getInstance(buf);

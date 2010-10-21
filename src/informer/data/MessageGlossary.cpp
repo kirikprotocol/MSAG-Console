@@ -2,24 +2,27 @@
 #include "MessageGlossary.h"
 #include "MessageText.h"
 #include "informer/io/TextEscaper.h"
-#include "InputMessageSource.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/InfosmeException.h"
 
 namespace eyeline {
 namespace informer {
 
-MessageGlossary::MessageGlossary( InputMessageSource& ims ) :
+MessageGlossary::MessageGlossary() :
 log_(smsc::logger::Logger::getInstance("glossary")),
 negTxtId_(0), posTxtId_(0)
+{}
+
+
+void MessageGlossary::init( const std::string& storePath,
+                            dlvid_type         dlvId )
 {
-    smsc_log_warn(log_,"reading glossary at start");
+    smsc_log_warn(log_,"reading glossary at init");
     smsc::core::buffers::TmpBuf<char,8192> buf;
-    const dlvid_type dlvId = ims.getDlvId();
     strcat(makeDeliveryPath(dlvId,buf.get()),"glossary");
     FileGuard fg;
     try {
-        fg.ropen((ims.getStorePath()+buf.get()).c_str());
+        fg.ropen((storePath+buf.get()).c_str());
     } catch ( InfosmeException& e ) {
         smsc_log_info(log_,"D=%u has no glossary",dlvId);
         return;
@@ -34,7 +37,7 @@ negTxtId_(0), posTxtId_(0)
             if (ptr<buf.GetCurPtr()) {
                 const size_t trunc = fg.getPos() - (buf.GetCurPtr()-ptr);
                 fg.close();
-                readGlossaryFailed(ims,trunc,"glossary record is not terminated");
+                readGlossaryFailed(storePath,dlvId,trunc,"glossary record is not terminated");
             }
             break;
         }
@@ -53,7 +56,7 @@ negTxtId_(0), posTxtId_(0)
             if (!shift) {
                 const size_t trunc = fg.getPos() - (buf.GetCurPtr()-ptr);
                 fg.close();
-                readGlossaryFailed(ims,trunc,"glossary record is broken");
+                readGlossaryFailed(storePath,dlvId,trunc,"glossary record is broken");
                 break;
             }
             // scanning text
@@ -78,7 +81,7 @@ negTxtId_(0), posTxtId_(0)
     } while (true);
     fg.close();
     try {
-        doRegisterMessages(ims,texts);
+        doRegisterMessages(storePath,dlvId,texts);
         // reset refs
         for ( TextList::iterator i = texts.begin(); i != texts.end(); ++i ) {
             (*i)->ref_ = 1;
@@ -186,17 +189,17 @@ void MessageGlossary::bindMessage( MessageTextPtr& p )
 }
 
 
-void MessageGlossary::registerMessages( InputMessageSource& ims,
+void MessageGlossary::registerMessages( const std::string&  storePath,
+                                        dlvid_type          dlvId,
                                         TextList&           texts )
 {
     smsc::core::synchronization::MutexGuard mg(lock_);
-    doRegisterMessages(ims,texts);
+    doRegisterMessages(storePath,dlvId,texts);
     // inserting texts into glossary file
-    const dlvid_type dlvId = ims.getDlvId();
     smsc::core::buffers::TmpBuf<char,200> buf;
     strcat(makeDeliveryPath(dlvId,buf.get()),"glossary");
     FileGuard fg;
-    fg.create((ims.getStorePath()+buf.get()).c_str(),true);
+    fg.create((storePath+buf.get()).c_str(),true);
     for ( TextList::iterator i = texts.begin(); i != texts.end(); ++i ) {
         int newpos = sprintf(buf.get(),"%u,%u,",(*i)->id_,(*i)->ref_);
         (*i)->ref_ = 1;
@@ -214,11 +217,11 @@ void MessageGlossary::registerMessages( InputMessageSource& ims,
 }
 
 
-void MessageGlossary::doRegisterMessages( InputMessageSource& ims,
+void MessageGlossary::doRegisterMessages( const std::string&    storePath,
+                                          dlvid_type            dlvId,
                                           TextList&             texts )
 {
     // adding all messages to the hash and list
-    const dlvid_type dlvId = ims.getDlvId();
     for ( TextList::iterator i = texts.begin(); i != texts.end(); ++i ) {
         int32_t txtId = (*i)->id_;
         int32_t replId = (*i)->ref_;
@@ -306,16 +309,16 @@ void MessageGlossary::registerFailed( TextList& texts, TextList::iterator upto )
 }
 
 
-void MessageGlossary::readGlossaryFailed( InputMessageSource& ims,
-                                          size_t trunc,
-                                          const char* msg ) 
+void MessageGlossary::readGlossaryFailed( const std::string& storePath,
+                                          dlvid_type         dlvId,
+                                          size_t             trunc,
+                                          const char*        msg )
 {
-    const dlvid_type dlvId = ims.getDlvId();
     smsc_log_warn(log_,"D=%u %s at %llu, to be truncated",dlvId,msg,ulonglong(trunc));
     char buf[100];
     strcat(makeDeliveryPath(dlvId,buf),"glossary");
     FileGuard fg;
-    fg.create((ims.getStorePath()+buf).c_str());
+    fg.create((storePath+buf).c_str());
     fg.truncate(trunc);
 }
 

@@ -55,18 +55,15 @@ public:
     /// @return true if the message is received.
     bool getNextMessage( msgtime_type currentTime, Message& msg );
 
-    /// change message state when receipt has come.
+    /// change message state when non-transaction response has come.
     /// message is left in the cache.
     void messageSent( msgid_type msgId,
                       msgtime_type currentTime );
 
     /// change message state when temporal failure received.
     /// message is removed from the cache.
-    // @param retryDelay - how many seconds to wait until the next retry
-    //   (deprecated), it is now calculated from smppState.
     void retryMessage( msgid_type msgId,
                        msgtime_type currentTime,
-                       // timediff_type retryDelay,
                        int smppState );
 
     /// finalize message. message is removed from cache.

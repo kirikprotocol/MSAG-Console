@@ -34,7 +34,7 @@ public:
         if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
     }
 
-    const CommonSettings& getCommonSettings() const { return cs_; }
+    const CommonSettings& getCS() const { return cs_; }
 
     // this method is invoked from regional storage.
     // void incrementStats( const DeliveryStats& stats, DeliveryStats* result = 0 );

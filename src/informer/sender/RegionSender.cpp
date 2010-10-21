@@ -112,7 +112,8 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
                            unsigned(ptr.getDlvId()),
                            unsigned(getRegionId()),
                            ulonglong(msg_.msgId), nchunks);
-            ptr.messageSent(msg_.msgId, msgtime_type(currentTime_/tuPerSec));
+            // message is considered to be sent only on response
+            // ptr.messageSent(msg_.msgId, msgtime_type(currentTime_/tuPerSec));
             return maxScoreIncrement / nchunks / ptr.getDlvInfo().getPriority();
         } else {
             smsc_log_warn(log_,"D=%u/R=%u/M=%llu send failed nchunks=%d",

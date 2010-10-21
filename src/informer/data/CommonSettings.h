@@ -28,6 +28,8 @@ public:
         return path_;
     }
 
+    msgtime_type getActivityLogPeriod() const { return 60; }
+
     // maximum number of unresponded messages per SMSC
     inline unsigned getUnrespondedMessagesMax() const { return unrespondedMessagesMax_; }
 

@@ -11,6 +11,7 @@ namespace informer {
 class TransferTask;
 class MessageGlossary;
 struct InputRegionRecord;
+class ActivityLog;
 
 /// a class requesting transfer of input messages
 /// from instore into opstore.
@@ -64,6 +65,8 @@ class InputMessageSource
 public:
     virtual ~InputMessageSource() {}
 
+    virtual void init( ActivityLog& actlog ) = 0;
+
     /// add new messages, the list of messages is modified
     /// and will contain msgids.
     virtual void addNewMessages( MsgIter begin, MsgIter end ) = 0;
@@ -78,8 +81,8 @@ public:
 
     virtual MessageGlossary& getGlossary() = 0;
 
-    virtual dlvid_type getDlvId() const = 0;
-    virtual const std::string& getStorePath() const = 0;
+    // virtual dlvid_type getDlvId() const = 0;
+    // virtual const std::string& getStorePath() const = 0;
 
     /// NOTE: this method is invoked at init ONLY!
     virtual void setRecordAtInit( const InputRegionRecord& rec,

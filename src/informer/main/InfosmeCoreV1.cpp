@@ -567,7 +567,7 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
         if (!dlvInfo.get()) {
             throw InfosmeException("delivery info not passed");
         }
-        InputMessageSource* ims = new InputStorage(*this,dlvInfo->getDlvId(),*inputJournal_);
+        InputMessageSource* ims = new InputStorage(*this,*inputJournal_);
         deliveryHash_.Insert(dlvId,
                              deliveryList_.insert(deliveryList_.begin(),
                                                   DeliveryPtr(new Delivery(dlvInfo,*storeJournal_,ims))));
@@ -610,7 +610,7 @@ void InfosmeCoreV1::incOutgoing( unsigned nchunks )
 }
 
 
-void InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId, int status, bool retry )
+void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId, int status, bool retry )
 {
     smsc_log_debug(log_,"rcpt/resp received D=%u/R=%u/M=%llu status=%u retry=%d",
                    drmId.dlvId, drmId.regId, drmId.msgId, status, retry );
@@ -639,12 +639,8 @@ void InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId, int status, bool 
         const msgtime_type now(currentTimeMicro() / tuPerSec);
 
         if (retry && info.wantRetry(status) ) {
-            // retry is needed
-            // const timediff_type retryDelay = 
-            // commonSettings_.getRetryTime(info.retryPolicy(),status);
             reg->retryMessage( drmId.msgId,
                                msgtime_type(currentTimeMicro()/tuPerSec),
-                               // retryDelay,
                                status );
 
         } else {
@@ -657,6 +653,85 @@ void InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId, int status, bool 
         smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp/recv processing failed: %s",
                       drmId.dlvId, drmId.regId, drmId.msgId, e.what() );
     }
+}
+
+
+bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId )
+{
+    smsc_log_debug(log_,"good resp received D=%u/R=%u/M=%llu",
+                   drmId.dlvId, drmId.regId, drmId.msgId);
+    try {
+        DeliveryPtr dlv;
+        {
+            smsc::core::synchronization::MutexGuard mg(startMon_);
+            DeliveryList::iterator* piter = deliveryHash_.GetPtr(drmId.dlvId);
+            if (!piter) {
+                smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp: delivery not found",
+                              drmId.dlvId, drmId.regId, drmId.msgId );
+                return false;
+            }
+            dlv = **piter;
+        }
+
+        RegionalStoragePtr reg = dlv->getRegionalStorage(drmId.regId);
+        if (!reg.get()) {
+            smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp: region is not found",
+                          drmId.dlvId, drmId.regId, drmId.msgId );
+            return false;
+        }
+    
+        const msgtime_type now(currentTimeMicro() / tuPerSec);
+
+        reg->messageSent(drmId.msgId,now);
+        return true;
+
+    } catch ( std::exception& e ) {
+        smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp processing failed: %s",
+                      drmId.dlvId, drmId.regId, drmId.msgId, e.what() );
+    }
+    return false;
+}
+
+
+void InfosmeCoreV1::addSmsc( const char* smscId )
+{
+    throw InfosmeException("FIXME: not impl yet");
+}
+
+
+void InfosmeCoreV1::updateSmsc( const char* smscId )
+{
+    throw InfosmeException("FIXME: not impl yet");
+}
+
+
+void InfosmeCoreV1::deleteSmsc( const char* smscId )
+{
+    throw InfosmeException("FIXME: not impl yet");
+}
+
+
+void InfosmeCoreV1::updateDefaultSmsc()
+{
+    throw InfosmeException("FIXME: not impl yet");
+}
+
+
+void InfosmeCoreV1::addRegion( regionid_type regionId )
+{
+    throw InfosmeException("FIXME: not impl yet");
+}
+
+
+void InfosmeCoreV1::updateRegion( regionid_type regionId )
+{
+    throw InfosmeException("FIXME: not impl yet");
+}
+
+
+void InfosmeCoreV1::deleteRegion( regionid_type regionId )
+{
+    throw InfosmeException("FIXME: not impl yet");
 }
 
 

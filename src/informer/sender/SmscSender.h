@@ -42,6 +42,10 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
 
     class SmscJournal;
 
+    struct DRMTrans : public DlvRegMsgId {
+        bool        trans;
+    };
+
 public:
     SmscSender( InfosmeCore&            core,
                 const std::string&      smscId,
@@ -106,7 +110,7 @@ private:
     int                                       ussdPushOp_;
     int                                       ussdPushVlrOp_;
 
-    smsc::core::buffers::IntHash< DlvRegMsgId >       seqnumHash_;
+    smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;
     smsc::core::buffers::CyclicQueue< ResponseTimer > respWaitQueue_;
     smsc::core::buffers::CyclicQueue< ReceiptTimer >  rcptWaitQueue_;
 

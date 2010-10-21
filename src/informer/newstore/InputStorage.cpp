@@ -20,24 +20,27 @@ namespace eyeline {
 namespace informer {
 
 InputStorage::InputStorage( InfosmeCore& core,
-                            dlvid_type   dlvId,
                             InputJournal& jnl ) :
 log_(smsc::logger::Logger::getInstance("instore")),
 core_(core),
 rollingIter_(recordList_.end()),
 jnl_(jnl),
 lastfn_(0),
-dlvId_(dlvId),
-lastMsgId_(0),
-glossary_(*this)
+activityLog_(0),
+lastMsgId_(0)
 {
-    smsc_log_debug(log_,"ctor for D=%u", unsigned(dlvId_));
 }
 
 
 InputStorage::~InputStorage()
 {
-    smsc_log_debug(log_,"dtor for D=%u", unsigned(dlvId_));
+}
+
+
+void InputStorage::init( ActivityLog& actLog )
+{
+    activityLog_ = &actLog;
+    glossary_.init( jnl_.getCS().getStorePath(), getDlvId());
 }
 
 
@@ -46,7 +49,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     std::vector< regionid_type > regs;
     regs.reserve(32);
     dispatchMessages(begin, end, regs);
-    core_.deliveryRegions( dlvId_, regs, true );
+    core_.deliveryRegions( getDlvId(), regs, true );
 }
 
 
@@ -59,7 +62,7 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
     const regionid_type regId = requester.getRegionId();
     try {
         smsc_log_debug(log_,"start transfer task R=%u/D=%u for %u msgs, mayDetach=%u",
-                       unsigned(regId), unsigned(dlvId_), count, mayDetachRegion );
+                       unsigned(regId), unsigned(getDlvId()), count, mayDetachRegion );
         InputRegionRecord ro;
         ro.regionId = regId;
         getRecord(ro);
@@ -71,7 +74,7 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
         } else {
             // no data
             smsc_log_debug(log_,"R=%u/D=%u data is not ready: RP=%u/%u, WP=%u/%u",
-                           regId, dlvId_,
+                           regId, getDlvId(),
                            ro.rfn, ro.roff, ro.wfn, ro.woff );
         }
     } catch ( std::exception& e ) {
@@ -80,7 +83,7 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
     if (!task && mayDetachRegion) {
         std::vector<regionid_type> regs;
         regs.push_back(regId);
-        core_.deliveryRegions(dlvId_,regs,false);
+        core_.deliveryRegions(getDlvId(),regs,false);
     }
     return task;
 }
@@ -101,7 +104,7 @@ void InputStorage::setRecordAtInit( const InputRegionRecord& ro,
     InputRegionRecord& rec = **ptr;
     if (rec.wfn > lastfn_) lastfn_ = rec.wfn;
     smsc_log_debug(log_,"set input record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u, msgs=%llu, lastfn=%u",
-                   unsigned(dlvId_), unsigned(rec.regionId),
+                   unsigned(getDlvId()), unsigned(rec.regionId),
                    unsigned(rec.rfn), unsigned(rec.roff),
                    unsigned(rec.wfn), unsigned(rec.woff),
                    unsigned(rec.count), ulonglong(lastMsgId_),
@@ -124,7 +127,7 @@ void InputStorage::postInit( std::vector<regionid_type>& regs )
 
 size_t InputStorage::rollOver()
 {
-    smsc_log_debug(log_,"rollover input storage for D=%u",dlvId_);
+    smsc_log_debug(log_,"rollover input storage for D=%u",getDlvId());
     bool firstPass = true;
     size_t written = 0;
     do {
@@ -142,9 +145,9 @@ size_t InputStorage::rollOver()
             ++rollingIter_;
             maxMsgId = lastMsgId_;
         }
-        written += jnl_.journalRecord(dlvId_,ro,maxMsgId);
+        written += jnl_.journalRecord(getDlvId(),ro,maxMsgId);
     } while ( false );
-    smsc_log_debug(log_,"roll over finished D=%u, written=%u",dlvId_,unsigned(written));
+    smsc_log_debug(log_,"roll over finished D=%u, written=%u",getDlvId(),unsigned(written));
     return written;
 }
 
@@ -167,7 +170,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
             uint8_t len, ton, npi;
             uint64_t addr = subscriberToAddress(i->msg.subscriber,len,ton,npi);
             smsc_log_debug(log_,"adding D=%u/M=%llu for .%u.%u.%0*.*llu -> R=%u",
-                           unsigned(dlvId_), ulonglong(i->msg.msgId),
+                           unsigned(getDlvId()), ulonglong(i->msg.msgId),
                            ton,npi,len,len,ulonglong(addr),unsigned(regId));
         }
         if ( std::find(regs.begin(),regs.end(),regId) == regs.end() ) {
@@ -176,7 +179,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
         ++count;
     }
     smsc_log_debug(log_,"D=%u add %u new messages, regions: [%s]",
-                   unsigned(dlvId_),count,
+                   unsigned(getDlvId()),count,
                    formatRegionList(regs.begin(),regs.end()).c_str());
     // writing regions
     smsc::core::buffers::TmpBuf<unsigned char,200> msgbuf;
@@ -199,7 +202,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
                 ro.woff = 0;
                 std::string fname = makeFilePath(regId,ro.wfn);
                 smsc_log_debug(log_,"D=%u/R=%u new file: '%s'",
-                               unsigned(dlvId_), unsigned(regId), fname.c_str() );
+                               unsigned(getDlvId()), unsigned(regId), fname.c_str() );
                 fg.create(fname.c_str(),true,true);
                 // fg.seek(ro.woff);
             }
@@ -239,7 +242,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
 void InputStorage::doTransfer( TransferRequester& req, unsigned count )
 {
     const regionid_type regId = req.getRegionId();
-    smsc_log_debug(log_,"transfer R=%u/D=%u started, count=%u", regId, dlvId_, count);
+    smsc_log_debug(log_,"transfer R=%u/D=%u started, count=%u", regId, getDlvId(), count);
     try {
         InputRegionRecord ro;
         ro.regionId = regId;
@@ -255,12 +258,12 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                 if ( ro.rfn<ro.wfn || (ro.rfn==ro.wfn && ro.roff<ro.woff)) {
                     // ok
                 } else {
-                    smsc_log_debug(log_,"R=%u/D=%u no more files to read", regId, dlvId_);
+                    smsc_log_debug(log_,"R=%u/D=%u no more files to read", regId, getDlvId());
                     break;
                 }
                 const std::string fname = makeFilePath(regId,ro.rfn);
                 smsc_log_debug(log_,"R=%u/D=%u trying to open new file '%s'",
-                               regId, dlvId_, fname.c_str());
+                               regId, getDlvId(), fname.c_str());
                 fg.ropen(fname.c_str());
                 fg.seek(ro.roff);
             }
@@ -271,14 +274,14 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                 fg.close();
                 if (ptr<buf.GetCurPtr()) {
                     smsc_log_warn(log_,"R=%u/D=%u RP=%u/%u: last record garbled, will wait here",
-                                  regId, dlvId_, ro.rfn, ro.roff );
+                                  regId, getDlvId(), ro.rfn, ro.roff );
                     if (ro.rfn<ro.wfn) {
-                        throw InfosmeException("R=%u/D=%u garbled intermediate file", regId, dlvId_ );
+                        throw InfosmeException("R=%u/D=%u garbled intermediate file", regId, getDlvId() );
                     }
                     break;
                 }
                 smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u: EOF",
-                               regId, dlvId_, ro.rfn, ro.roff );
+                               regId, getDlvId(), ro.rfn, ro.roff );
                 if (ro.rfn<ro.wfn) {
                     ++ro.rfn;
                     ro.roff=0;
@@ -288,7 +291,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
             
             buf.SetPos(buf.GetPos()+wasread);
             smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u read/inbuf=%u/%u bytes",
-                           regId, dlvId_, ro.rfn, ro.roff, wasread, buf.GetPos() );
+                           regId, getDlvId(), ro.rfn, ro.roff, wasread, buf.GetPos() );
             while (ptr < buf.GetCurPtr()) {
                 
                 if (ptr+LENSIZE > buf.GetCurPtr()) {
@@ -299,7 +302,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                 const uint16_t reclen = fb.get16();
                 if (reclen>10000) {
                     throw InfosmeException("FIXME: R=%u/D=%u RP=%u/%u is corrupted: reclen=%u is too big",
-                                           regId, dlvId_, ro.rfn, unsigned(fg.getPos()-(buf.GetCurPtr()-ptr)), reclen);
+                                           regId, getDlvId(), ro.rfn, unsigned(fg.getPos()-(buf.GetCurPtr()-ptr)), reclen);
                 }
                 if ( ptr+LENSIZE+reclen > buf.GetCurPtr() ) {
                     // read more
@@ -314,7 +317,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                 mlk.msg.fromBuf(version,fb);
                 if ( fb.getPos() != reclen+LENSIZE ) {
                     throw InfosmeException("FIXME: R=%u/D=%u RP=%u/%u has extra data",
-                                           regId, dlvId_, ro.rfn, ro.roff );
+                                           regId, getDlvId(), ro.rfn, ro.roff );
                 }
                 glossary_.bindMessage(mlk.msg.text);
                 ptr += reclen+LENSIZE;
@@ -355,9 +358,9 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
 
     } catch (std::exception& e) {
         smsc_log_error(log_,"transfer failed R=%u/D=%u: %s",
-                       regId, dlvId_, e.what());
+                       regId, getDlvId(), e.what());
     }
-    smsc_log_debug(log_,"transfer task R=%u/D=%u finished", regId, dlvId_);
+    smsc_log_debug(log_,"transfer task R=%u/D=%u finished", regId, getDlvId());
 }
 
 
@@ -374,7 +377,7 @@ void InputStorage::getRecord( InputRegionRecord& ro )
         }
     }
     smsc_log_debug(log_,"got record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u",
-                   unsigned(dlvId_), unsigned(ro.regionId),
+                   unsigned(getDlvId()), unsigned(ro.regionId),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
                    unsigned(ro.count) );
@@ -391,11 +394,11 @@ void InputStorage::setRecord( InputRegionRecord& ro, uint64_t maxMsgId )
         ro = **ptr;
     }
     smsc_log_debug(log_,"set record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u",
-                   unsigned(dlvId_), unsigned(ro.regionId),
+                   unsigned(getDlvId()), unsigned(ro.regionId),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
                    unsigned(ro.count) );
-    jnl_.journalRecord(dlvId_,ro,maxMsgId);
+    jnl_.journalRecord(getDlvId(),ro,maxMsgId);
 }
 
 
@@ -425,9 +428,9 @@ std::string InputStorage::makeFilePath( regionid_type regId, uint32_t fn ) const
 {
     if (fn==0) return "";
     char buf[70];
-    sprintf(makeDeliveryPath(dlvId_,buf),"new/%u/%u.data",unsigned(regId),unsigned(fn));
+    sprintf(makeDeliveryPath(getDlvId(),buf),"new/%u/%u.data",unsigned(regId),unsigned(fn));
     smsc_log_debug(log_,"filepath for D=%u/R=%u/F=%u is %s",
-                   unsigned(dlvId_),unsigned(regId),unsigned(fn),buf);
+                   unsigned(getDlvId()),unsigned(regId),unsigned(fn),buf);
     return jnl_.getCS().getStorePath() + buf;
 }
 

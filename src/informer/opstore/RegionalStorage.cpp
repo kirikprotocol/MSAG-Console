@@ -169,13 +169,15 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     Message& m = iter->msg;
     m.lastTime = currentTime;
     m.timeLeft = info.getMessageValidityTime();
-    m.state = MSGSTATE_PROCESS;
+    const uint8_t prevState = m.state;
+    m.state = MSGSTATE_TAKEN;
     msg = m;
     smsc_log_debug(log_,"taking message D=%u/R=%u/M=%llu from %s",
                    unsigned(info.getDlvId()),
                    unsigned(regionId_),
                    ulonglong(m.msgId),from);
     dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
+    dlv_.activityLog_.incStats(m.state,1,prevState);
     return true;
 }
 
@@ -197,18 +199,19 @@ void RegionalStorage::messageSent( msgid_type msgId,
     mg.Unlock();
     Message& m = (*ptr)->msg;
     m.lastTime = currentTime;
+    const uint8_t prevState = m.state;
     m.state = MSGSTATE_SENT;
     dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
+    dlv_.activityLog_.incStats(m.state,1,prevState);
 }
 
 
 void RegionalStorage::retryMessage( msgid_type   msgId,
                                     msgtime_type currentTime,
-                                    // msgtime_type retryDelay,  // in how many seconds try again
                                     int          smppState )
 {
     const DeliveryInfo& info = dlv_.getDlvInfo();
-    msgtime_type retryDelay = info.getCommonSettings().getRetryTime(info.getRetryPolicyName(),smppState);
+    msgtime_type retryDelay = info.getCS().getRetryTime(info.getRetryPolicyName(),smppState);
 
     RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
@@ -219,7 +222,7 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
                                     unsigned(regionId_),
                                     ulonglong(msgId));
     }
-    MessageList tokill;
+    MessageList tokill; // must be prior the msglock!
     MsgLock ml(iter,this);
     Message& m = iter->msg;
     // fixing time left according
@@ -232,6 +235,7 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
         resendQueue_.insert( std::make_pair(retryDelay,iter) );
         mg.Unlock();
         m.lastTime = retryDelay;
+        const uint8_t prevState = m.state;
         m.state = MSGSTATE_RETRY;
         char fmtime[20];
         smsc_log_debug(log_,"put message D=%u/R=%u/M=%llu into retry at %s",
@@ -240,18 +244,21 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
                        ulonglong(msgId),
                        formatMsgTime(fmtime,retryDelay) );
         dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
+        dlv_.activityLog_.incStats(m.state,1,prevState);
     } else {
         // not enough time to retry
         // moving element to a not-valid part of the list
         tokill.splice(tokill.begin(),messageList_,iter);
         mg.Unlock();
         m.lastTime = currentTime;
+        const uint8_t prevState = m.state;
         m.state = MSGSTATE_EXPIRED;
         smsc_log_debug(log_,"message D=%u/R=%u/M=%llu is expired, smpp=%u",
                        unsigned(info.getDlvId()),
                        unsigned(regionId_),
                        unsigned(msgId), smppState );
         dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
+        dlv_.activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
         // destroy(m);
     }
 }
@@ -277,11 +284,14 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
     mg.Unlock();
     Message& m = iter->msg;
     m.lastTime = currentTime;
+    m.timeLeft = 0;
+    const uint8_t prevState = m.state;
     m.state = state;
     smsc_log_debug(log_,"message D=%u/R=%u/M=%llu is finalized, state=%u, smpp=%u",
                    unsigned(info.getDlvId()),
                    unsigned(regionId_),
                    ulonglong(msgId),state,smppState);
+    dlv_.activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
     dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
     // destroy(m);
 }
@@ -315,12 +325,13 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         Message& m = i->msg;
         // m.lastTime = currentTime;
-        m.state = MSGSTATE_INPUT;
+        m.state = MSGSTATE_PROCESS;
         smsc_log_debug(log_,"new input msg D=%u/R=%u/M=%llu",
                        unsigned(info.getDlvId()),
                        unsigned(regionId_),
                        unsigned(m.msgId));
         regionid_type serial = 0;
+        dlv_.activityLog_.addRecord(currentTime,regionId_,m,0);
         dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,serial);
         i->serial = serial;
     }
@@ -329,6 +340,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
         newQueue_.Push(i);
     }
     messageList_.splice( messageList_.begin(), listFrom, iter1, iter2 );
+    /*
     if ( log_->isDebugEnabled() ) {
         std::string s;
         s.reserve(300);
@@ -348,6 +360,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                        unsigned(regionId_),
                        s.c_str());
     }
+     */
 }
 
 
@@ -369,10 +382,6 @@ size_t RegionalStorage::rollOver()
         {
             MsgLock ml(iter,this);
             mg.Unlock();
-            // smsc_log_debug(log_,"rolling D=%u/R=%u/M=%llu",
-            // regionId_,
-            // info.getDlvId(),
-            // ulonglong(iter->msg.msgId));
             written += dlv_.storeJournal_.journalMessage(info.getDlvId(),
                                                          regionId_,iter->msg,ml.serial);
         }

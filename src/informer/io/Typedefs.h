@@ -24,7 +24,8 @@ static const regionid_type defaultRegionId = regionid_type(0);
 static const regionid_type anyRegionId = regionid_type(-1);
 
 /// format message time as yyyymmddHHMMSS, buffer must be at least 15 bytes.
-char* formatMsgTime( char* buf, msgtime_type theTime );
+/// return number of bytes printed (not including trailing \0)
+int formatMsgTime( char* buf, msgtime_type theTime, struct tm* tmb = 0 );
 
 /// get current microtime
 usectime_type currentTimeMicro();
@@ -49,25 +50,26 @@ inline personid_type addressToSubscriber( uint8_t len, uint8_t ton, uint8_t npi,
 }
 
 typedef enum {
-    MSGSTATE_INPUT = 0,
-    MSGSTATE_PROCESS = 1,
-    MSGSTATE_SENT = 2,
-    MSGSTATE_RETRY = 3,     // non-final
-    MSGSTATE_DELIVERED = 4,
+    MSGSTATE_INPUT = 1,
+    MSGSTATE_PROCESS = 2,
+    MSGSTATE_TAKEN = 3,     // actually it is technological state (not seen externally)
+    MSGSTATE_SENT = 4,
+    MSGSTATE_RETRY = 5,     // non-final
+    MSGSTATE_DELIVERED = 6,
     MSGSTATE_FINAL = MSGSTATE_DELIVERED,
-    MSGSTATE_EXPIRED = 5,
-    MSGSTATE_FAILED = 6,
-    MSGSTATE_MAX = 6
+    MSGSTATE_EXPIRED = 7,
+    MSGSTATE_FAILED = 8,
+    MSGSTATE_MAX = MSGSTATE_FAILED
 } MsgState;
 const char* msgStateToString( MsgState state );
 
 typedef enum {
-    DLVSTATE_PAUSED = 0,
-    DLVSTATE_PLANNED = 1,
-    DLVSTATE_ACTIVE = 2,
-    DLVSTATE_FINISHED = 3,
-    DLVSTATE_CANCELLED = 4,
-    DLVSTATE_MAX = 4
+    DLVSTATE_PAUSED = 1,
+    DLVSTATE_PLANNED = 2,
+    DLVSTATE_ACTIVE = 3,
+    DLVSTATE_FINISHED = 4,
+    DLVSTATE_CANCELLED = 5,
+    DLVSTATE_MAX = DLVSTATE_CANCELLED
 } DlvState;
 
 const char* dlvStateToString( DlvState state );

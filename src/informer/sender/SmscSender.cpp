@@ -95,7 +95,7 @@ protected:
 
 
     std::string makePath() const {
-        return sender_.core_.getCommonSettings().getStorePath() + "journals/smsc" + sender_.smscId_ + ".journal";
+        return sender_.core_.getCS().getStorePath() + "journals/smsc" + sender_.smscId_ + ".journal";
     }
 
 
@@ -274,7 +274,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
             break;
         }
 
-        const CommonSettings& cs = core_.getCommonSettings();
+        const CommonSettings& cs = core_.getCS();
 
         // check the number of seqnums
         if ( unsigned(seqnumHash_.Count()) > cs.getUnrespondedMessagesMax() ) {
@@ -296,13 +296,14 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
         do {
             seqNum = session_->getNextSeq();
         } while (seqNum == 0);
-        DlvRegMsgId* drm = seqnumHash_.GetPtr(seqNum);
+        DRMTrans* drm = seqnumHash_.GetPtr(seqNum);
         if (!drm) {
-            drm = &seqnumHash_.Insert(seqNum,DlvRegMsgId());
+            drm = &seqnumHash_.Insert(seqNum,DRMTrans());
         }
         drm->dlvId = info.getDlvId();
         drm->regId = ptr.getRegionId();
         drm->msgId = msg.msgId;
+        drm->trans = info.getTransactionMode();
 
         {
             ResponseTimer rt;
@@ -709,18 +710,23 @@ void SmscSender::processQueue( DataQueue& queue )
         if ( rd.seqNum ) {
             // it is a response
 
-            DlvRegMsgId drmId;
-            if ( !seqnumHash_.Pop(rd.seqNum,drmId) ) {
+            DRMTrans drm;
+            if ( !seqnumHash_.Pop(rd.seqNum,drm) ) {
                 smsc_log_warn(log_,"S='%s' resp seq=%u has no drm mapping", smscId_.c_str(), rd.seqNum);
                 continue;
             }
             // FIXME: notify on seqnumHash_.Count() change
 
-            if ( *rd.rcptId.msgId == '\0' ) {
+            if (drm.trans) {
+                smsc_log_info(log_,"S='%s' resp seq=%u D=%u/R=%u/M=%llu ends transaction",
+                              smscId_.c_str(), rd.seqNum,
+                              drm.dlvId, drm.regId, ulonglong(drm.msgId));
+                core_.receiveReceipt( drm, rd.status, rd.retry );
+            } else if ( *rd.rcptId.msgId == '\0' ) {
                 smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u D=%u/R=%u/M=%llu has no msgId, finalize?",
                               smscId_.c_str(), rd.seqNum,
-                              drmId.dlvId, drmId.regId, ulonglong(drmId.msgId));
-                core_.receiveResponse( drmId, rd.status, rd.retry );
+                              drm.dlvId, drm.regId, ulonglong(drm.msgId));
+                core_.receiveReceipt( drm, rd.status, rd.retry );
                 continue;
             }
 
@@ -737,21 +743,25 @@ void SmscSender::processQueue( DataQueue& queue )
 
                 // finalize message, ignoring resp status
                 smsc_log_info(log_,"FIXME: S='%s' D=%u/R=%u/M=%llu ignoring resp status=%d,retry=%d, using status=%d,retry=%d",
-                              drmId.dlvId, drmId.regId, ulonglong(drmId.msgId),
+                              drm.dlvId, drm.regId, ulonglong(drm.msgId),
                               rd.status, rd.retry, iter->status, iter->retry );
-                core_.receiveResponse( drmId, iter->status, iter->retry );
+                core_.receiveReceipt( drm, iter->status, iter->retry );
                 continue;
 
             }
 
             if ( rd.status != smsc::system::Status::OK ) {
-                core_.receiveResponse( drmId, rd.status, rd.retry );
+                core_.receiveReceipt( drm, rd.status, rd.retry );
+                continue;
+            }
+
+            if ( !core_.receiveResponse( drm ) ) {
                 continue;
             }
 
             // receipt hash has no mapping, adding one
             iter = rcptList.insert(rcptList.begin(),ReceiptData());
-            iter->drmId = drmId;
+            iter->drmId = drm;
             iter->rcptId = rd.rcptId;
             iter->status = rd.status;
             iter->responded = true;
@@ -766,10 +776,10 @@ void SmscSender::processQueue( DataQueue& queue )
             // adding receipt wait timer
             ReceiptTimer rt;
             const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
-            rt.endTime = now + core_.getCommonSettings().getReceiptWaitTime();
+            rt.endTime = now + core_.getCS().getReceiptWaitTime();
             rt.rcptId = rd.rcptId;
             rcptWaitQueue_.Push(rt);
-                
+
         } else {
             // receipt
 
@@ -789,7 +799,7 @@ void SmscSender::processQueue( DataQueue& queue )
                             if (rollingIter_ == iter) { ++rollingIter_; }
                             rcptList.splice(rcptList.begin(),receiptList_,iter);
                         }
-                        core_.receiveResponse(iter->drmId, rd.status, rd.retry);
+                        core_.receiveReceipt(iter->drmId, rd.status, rd.retry );
                     } else {
                         smsc_log_warn(log_,"FIXME: S='%s' strange receipt for D=%u/R=%u/M=%llu status=%d,msgid='%s',retry=%d",
                                       iter->drmId.dlvId, iter->drmId.regId, iter->drmId.msgId,

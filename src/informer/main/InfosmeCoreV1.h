@@ -39,7 +39,7 @@ public:
 
     virtual ~InfosmeCoreV1();
 
-    virtual const CommonSettings& getCommonSettings() const { return cs_; }
+    virtual const CommonSettings& getCS() const { return cs_; }
 
     virtual bool isStopping() const { return stopping_; }
     virtual void wait( int msec ) {
@@ -66,7 +66,19 @@ public:
     virtual void incOutgoing( unsigned nchunks );
 
     /// final state response/receipt has been received
-    virtual void receiveResponse( const DlvRegMsgId& drmId, int smppStatus, bool retry );
+    virtual void receiveReceipt( const DlvRegMsgId& drmId,
+                                 int smppStatus,
+                                 bool retry );
+    virtual bool receiveResponse( const DlvRegMsgId& drmId );
+
+    virtual void addSmsc( const char* smscId );
+    virtual void updateSmsc( const char* smscId );
+    virtual void deleteSmsc( const char* smscId );
+    virtual void updateDefaultSmsc();
+
+    virtual void addRegion( regionid_type regionId );
+    virtual void updateRegion( regionid_type regionId );
+    virtual void deleteRegion( regionid_type regionId );
 
     // --------------------
 

@@ -27,7 +27,7 @@ class InfosmeCore
 public:
     virtual ~InfosmeCore() {}
 
-    virtual const CommonSettings& getCommonSettings() const = 0;
+    virtual const CommonSettings& getCS() const = 0;
 
     /// check if stopping
     virtual bool isStopping() const = 0;
@@ -55,7 +55,7 @@ public:
     virtual void incOutgoing( unsigned nchunks ) = 0;
 
     /// final receipt/response has been received
-    virtual void receiveReceipt( const DlvRegMsgId& drmId, int smppStatus, bool retry ) = 0;
+    virtual void receiveReceipt( const DlvRegMsgId& drmId, int  smppStatus, bool retry ) = 0;
 
     /// response (non-final) has been received
     virtual bool receiveResponse( const DlvRegMsgId& drmId ) = 0;

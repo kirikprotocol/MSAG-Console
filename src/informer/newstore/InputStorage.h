@@ -4,6 +4,7 @@
 #include "informer/data/InputMessageSource.h"
 #include "informer/data/MessageGlossary.h"
 #include "informer/data/CommonSettings.h"
+#include "informer/data/ActivityLog.h"
 #include "InputJournal.h"
 #include "logger/Logger.h"
 #include "core/buffers/IntHash.hpp"
@@ -36,11 +37,12 @@ class InputStorage : public InputMessageSource
     };
 
 public:
-    InputStorage( InfosmeCore& core,
-                  dlvid_type   dlvId,
+    InputStorage( InfosmeCore&  core,
                   InputJournal& journal );
 
     virtual ~InputStorage();
+
+    virtual void init( ActivityLog& actLog );
 
     virtual void addNewMessages( MsgIter begin, MsgIter end );
 
@@ -50,12 +52,14 @@ public:
 
     virtual MessageGlossary& getGlossary() { return glossary_; }
 
+    /*
     virtual dlvid_type getDlvId() const {
         return dlvId_;
     }
     virtual const std::string& getStorePath() const {
         return jnl_.getCS().getStorePath();
     }
+     */
 
     virtual void setRecordAtInit(const InputRegionRecord& ro, msgid_type maxMsgId);
 
@@ -74,17 +78,19 @@ private:
     void doSetRecord( RecordList::iterator to, const InputRegionRecord& from );
     std::string makeFilePath(regionid_type regId,uint32_t fn) const;
 
+    inline dlvid_type getDlvId() const { return activityLog_->getDlvId(); }
+
 private:
-    smsc::logger::Logger* log_;
-    InfosmeCore&          core_;
-    smsc::core::synchronization::Mutex wlock_;
-    smsc::core::synchronization::Mutex lock_;  // to add new regions
+    smsc::logger::Logger*                      log_;
+    InfosmeCore&                               core_;
+    smsc::core::synchronization::Mutex         wlock_;
+    smsc::core::synchronization::Mutex         lock_;  // to add new regions
     RecordList                                 recordList_;
     RecordHash                                 recordHash_;
     RecordList::iterator                       rollingIter_;
     InputJournal&                              jnl_;
     uint32_t                                   lastfn_;
-    dlvid_type                                 dlvId_;
+    ActivityLog*                               activityLog_; // not owned
     msgid_type                                 lastMsgId_;
     MessageGlossary                            glossary_;
 };
