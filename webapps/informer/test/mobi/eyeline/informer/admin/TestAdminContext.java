@@ -44,10 +44,12 @@ public class TestAdminContext extends AdminContext {
   }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
-    URL u = TestDeliveryStatProvider.class.getResource("");
-    File srcStatDir = new File(u.toURI());
-    srcStatDir = new File(srcStatDir,"stat");
-    TestUtils.copyDirectory(srcStatDir,dstStatDir,fileSystem);
+    if(!fileSystem.exists(dstStatDir)) {
+      URL u = TestDeliveryStatProvider.class.getResource("");
+      File srcStatDir = new File(u.toURI());
+      srcStatDir = new File(srcStatDir,"stat");
+      TestUtils.copyDirectory(srcStatDir,dstStatDir,fileSystem);
+    }
   }
 
 

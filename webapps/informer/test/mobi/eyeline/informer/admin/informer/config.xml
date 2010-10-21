@@ -12,7 +12,7 @@
   </section>
 
   <section name="stat">
-    <param name="directory" type="string">/home/me/projects/smsc/webapps/informer/.informerbase/stat</param>
+    <param name="directory" type="string">stat</param>
   </section>
 
 </config>
