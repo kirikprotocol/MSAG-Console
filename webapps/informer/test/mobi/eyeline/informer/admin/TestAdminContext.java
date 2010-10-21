@@ -59,8 +59,7 @@ public class TestAdminContext extends AdminContext {
     File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
     File statDir = new File(appBaseDir, "stat");
     servicesDir.mkdirs();
-    confDir.mkdirs();
-    statDir.mkdirs();
+    confDir.mkdirs();    
     try {
       prepareServices(confDir);
       prepareStat(statDir,fileSystem);
