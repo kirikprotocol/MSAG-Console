@@ -38,7 +38,8 @@ void UpdateLocationReq::setParameters(const string& imsi, const string& msc, con
 	_vlr.size = (int)packNumString2BCD91(_vlr.buf, vlr.c_str(), (unsigned)vlr.length());
 	arg.vlr_Number = _vlr;
 
-	vlrcap.supportedCamelPhases = &phases;
+	//vlrcap.supportedCamelPhases = &phases;
+	vlrcap.supportedCamelPhases = 0;
 	vlrcap.extensionContainer = 0;
 	vlrcap.solsaSupportIndicator = 0;
 	vlrcap.istSupportIndicator = 0;
