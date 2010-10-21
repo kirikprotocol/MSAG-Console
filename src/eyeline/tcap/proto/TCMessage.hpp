@@ -12,6 +12,8 @@
 #include "eyeline/tcap/proto/TMsgContinue.hpp"
 #include "eyeline/tcap/proto/TMsgAbort.hpp"
 
+#include "eyeline/util/ChoiceOfT.hpp"
+
 namespace eyeline {
 namespace tcap {
 namespace proto {
@@ -26,135 +28,56 @@ TCMessage ::= CHOICE {
   continue          Continue,
   abort             Abort
 } */
-class TCMessage {
+class TCMessage : public util::ChoiceOf5_T<TMsgUnidir,
+                    TMsgBegin, TMsgEnd, TMsgContinue, TMsgAbort> {
 public:
   enum TMKind_e {
-    t_none = 0
+    t_none = -1
     //uniDialogue-a messages:
-    , t_unidir = 1    //[APPLICATION 1]
+    , t_unidir = 0
     //dialogue-as messages:
-    , t_begin = 2     //[APPLICATION 2]
-    , t_end = 4       //[APPLICATION 4]
-    , t_continue = 5  //[APPLICATION 5]
-    , t_abort = 7     //[APPLICATION 7]
+    , t_begin = 1
+    , t_end = 2
+    , t_continue = 3
+    , t_abort = 4
   };
 
-private:
-  union {
-    void *  _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf5_T<TMsgUnidir,
-                    TMsgBegin, TMsgEnd, TMsgContinue, TMsgAbort>::VALUE];
-  } _memMsg;
-
-protected:
-  TMKind_e  _kind;
-  union {
-    void *          _any;
-    TMsgUnidir *    _unidir;
-    TMsgBegin *     _begin;
-    TMsgEnd *       _end;
-    TMsgContinue *  _cont;
-    TMsgAbort *     _abort;
-  }         _msg;
-
-public:
-  explicit TCMessage() : _kind(t_none)
-  {
-    _msg._any = NULL;
-  }
+  TCMessage()
+  { }
   ~TCMessage()
-  {
-    clear();
-  }
+  { }
 
-  TMKind_e getKind(void) const { return _kind; }
+  TMKind_e getKind(void) const { return static_cast<TMKind_e>(getChoiceIdx()); }
 
-  bool empty(void) const { return _kind == t_none; }
+  Alternative_T<TMsgUnidir>   unidir()  { return alternative0(); }
+  Alternative_T<TMsgBegin>    begin()   { return alternative1(); }
+  Alternative_T<TMsgEnd>      end()     { return alternative2(); }
+  Alternative_T<TMsgContinue> cont()    { return alternative3(); }
+  Alternative_T<TMsgAbort>    abort()   { return alternative4(); }
 
-  void clear(void)
-  {
-    if (_msg._any) {
-      switch (_kind) {
-      case t_unidir:
-        _msg._unidir->~TMsgUnidir(); break;
-      case t_begin:
-        _msg._begin->~TMsgBegin(); break;
-      case t_end:
-        _msg._end->~TMsgEnd(); break;
-      case t_continue:
-        _msg._cont->~TMsgContinue(); break;
-      case t_abort:
-        _msg._abort->~TMsgAbort(); break;
-      default:;
-      } //eosw
-      _msg._any = NULL;
-      _kind = t_none;
-    }
-  }
+  ConstAlternative_T<TMsgUnidir>   unidir() const { return alternative0(); }
+  ConstAlternative_T<TMsgBegin>    begin()  const { return alternative1(); }
+  ConstAlternative_T<TMsgEnd>      end()    const { return alternative2(); }
+  ConstAlternative_T<TMsgContinue> cont()   const { return alternative3(); }
+  ConstAlternative_T<TMsgAbort>    abort()  const { return alternative4(); }
 
   //Verifies that dialogue portion contains allowed PDU
   bool verifyPdu(void) const
   {
-    if (_msg._any) {
-      switch (_kind) {
-      case t_unidir:
-        _msg._unidir->verifyPdu(); break;
-      case t_begin:
-        _msg._begin->verifyPdu(); break;
-      case t_end:
-        _msg._end->verifyPdu(); break;
-      case t_continue:
-        _msg._cont->verifyPdu(); break;
-      case t_abort:
-        _msg._abort->verifyPdu(); break;
-      default:;
-      } //eosw
-    }
+    switch (getKind()) {
+    case t_unidir:
+      unidir().get()->verifyPdu(); break;
+    case t_begin:
+      begin().get()->verifyPdu(); break;
+    case t_end:
+      end().get()->verifyPdu(); break;
+    case t_continue:
+      cont().get()->verifyPdu(); break;
+    case t_abort:
+      abort().get()->verifyPdu(); break;
+    default:;
+    } //eosw
     return true;
-  }
-
-  TMsgUnidir *    getUnidir(void)   { return _kind == t_unidir ? _msg._unidir : 0; }
-  TMsgBegin *     getBegin(void)    { return _kind == t_begin ? _msg._begin : 0; }
-  TMsgEnd *       getEnd(void)      { return _kind == t_end ? _msg._end : 0; }
-  TMsgContinue *  getContinue(void) { return _kind == t_continue ? _msg._cont : 0; }
-  TMsgAbort *     getAbort(void)    { return _kind == t_abort ? _msg._abort : 0; }
-
-  const TMsgUnidir *    getUnidir(void)   const { return _kind == t_unidir ? _msg._unidir : 0; }
-  const TMsgBegin *     getBegin(void)    const { return _kind == t_begin ? _msg._begin : 0; }
-  const TMsgEnd *       getEnd(void)      const { return _kind == t_end ? _msg._end : 0; }
-  const TMsgContinue *  getContinue(void) const { return _kind == t_continue ? _msg._cont : 0; }
-  const TMsgAbort *     getAbort(void)    const { return _kind == t_abort ? _msg._abort : 0; }
-
-
-  TMsgUnidir &    initUnidir(void)
-  {
-    clear();
-    _msg._unidir = new (_memMsg._buf) TMsgUnidir();
-    return *_msg._unidir;
-  }
-  TMsgBegin &     initBegin(void)
-  {
-    clear();
-    _msg._begin = new (_memMsg._buf) TMsgBegin();
-    return *_msg._begin;
-  }
-  TMsgEnd &       initEnd(void)
-  {
-    clear();
-    _msg._end = new (_memMsg._buf) TMsgEnd();
-    return *_msg._end;
-  }
-  TMsgContinue &  initContinue(void)
-  {
-    clear();
-    _msg._cont = new (_memMsg._buf) TMsgContinue();
-    return *_msg._cont;
-  }
-  TMsgAbort &     initAbort(void)
-  {
-    clear();
-    _msg._abort = new (_memMsg._buf) TMsgAbort();
-    return *_msg._abort;
   }
 };
 

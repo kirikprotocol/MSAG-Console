@@ -12,8 +12,6 @@ namespace tcap {
 namespace proto {
 namespace dec {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 typedef eyeline::ros::proto::dec::RDRosPdu TDComponent;
 
 }}}}

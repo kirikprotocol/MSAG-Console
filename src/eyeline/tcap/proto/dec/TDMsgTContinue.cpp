@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDMsgTContinue.hpp"
 
@@ -24,10 +24,10 @@ Continue ::= [APPLICATION 5] SEQUENCE {
 } */
 void TDMsgTContinue::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<4>::setField(0, TDOrigTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<4>::setField(0, TDDestTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<4>::setField(2, TDDialoguePortion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<4>::setField(3, TDComponentPortion::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(0, TDOrigTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(0, TDDestTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(2, TDDialoguePortion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(3, TDComponentPortion::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
 }
 
 // ----------------------------------------
@@ -51,8 +51,8 @@ asn1::ber::TypeDecoderAC *
     return &_dstTrId;
   }
   if (unique_idx == 2) {
-    cleanUp();
-    return _dlgPart = new (_memDlg._buf) TDDialoguePortion(_dVal->_dlgPart, getVALRule());
+    _dlgPart.init(getTSRule()).setValue(_dVal->_dlgPart);
+    return _dlgPart.get();
   }
   //if (unique_idx == 3) {}
   _compPart.setValue(_dVal->_compPart);

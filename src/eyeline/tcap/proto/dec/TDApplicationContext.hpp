@@ -13,8 +13,6 @@ namespace tcap {
 namespace proto {
 namespace dec {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 /* ApplicationContext is defined in EXPLICIT tagging environment as follow:
   ApplicationContext ::= [1] OBJECT IDENTIFIER
 */
@@ -22,14 +20,12 @@ class TDApplicationContext : public asn1::ber::DecoderOfEOID {
 public:
   static const asn1::ASTag _typeTag; //[1] EXPLICIT
 
-  explicit TDApplicationContext(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfEOID(_typeTag, asn1::ASTagging::tagsEXPLICIT,
-                               TSGroupBER::getTSRule(use_rule))
+  explicit TDApplicationContext(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfEOID(_typeTag, asn1::ASTagging::tagsEXPLICIT, use_rule)
   { }
-  TDApplicationContext(asn1::EncodedOID & use_val,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfEOID(_typeTag, asn1::ASTagging::tagsEXPLICIT,
-                               TSGroupBER::getTSRule(use_rule))
+  explicit TDApplicationContext(asn1::EncodedOID & use_val,
+                  asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfEOID(_typeTag, asn1::ASTagging::tagsEXPLICIT, use_rule)
   {
     asn1::ber::DecoderOfEOID::setValue(use_val);
   }

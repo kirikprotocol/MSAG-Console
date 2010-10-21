@@ -14,14 +14,12 @@
 #include "eyeline/asn1/BER/rtdec/DecodeEOID.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeObjDescr.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeEmbdEnc.hpp"
-
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace proto {
 namespace dec {
-
-using eyeline::asn1::ber::TSGroupBER;
 
 /* According to Q.773, DialoguePortion is defined as follow:
 
@@ -44,74 +42,47 @@ DialoguePortion ::= [APPLICATION 11] EXPLICIT [UNIVERSAL 8] IMPLICIT SEQUENCE {
         dRef-unidialogue-as       TCPduAUDT,
         other                     EmbeddedEncoding
     }
-}
-*/
-class TDDialoguePortion : public asn1::ber::DecoderOfSequence_T<4,2> {
-private:
-  using asn1::ber::DecoderOfSequence_T<4,2>::setField;
-
-  union {
-    void *    _aligner;
-    uint8_t   _buf[sizeof(asn1::ber::DecoderOfEOID)];
-  }   _memDRef;
-
-  union {
-    void *    _aligner;
-    uint8_t   _buf[sizeof(asn1::ber::DecoderOfINTEGER)];
-  }   _memIRef;
-
-  union {
-    void *    _aligner;
-    uint8_t   _buf[sizeof(asn1::ber::DecoderOfObjDescriptor)];
-  }   _memDescr;
-
-  union {
-    void *    _aligner;
-    uint8_t   _buf[eyeline::util::MaxSizeOf3_T<TDAPduAUDT, TDStrDialoguePdu,
-                                        asn1::ber::DecoderOfEmbdEncoding>::VALUE];
-  } _memEnc;
-
+} */
+class TDDialoguePortion : public asn1::ber::DecoderOfSequence_T<4> {
 protected:
   static const asn1::ASTagging _typeTags; //complete tagging
 
-  proto::TCDlgPortion *    _dVal;
+  typedef asn1::ber::DecoderOfEmbdEncoding TDEmbdEncoding;
+
+  //Decoder of Field #3 'encoding' 
+  class F3Decoder : public 
+    asn1::ber::ChoiceOfDecoders3_T<TDStrDialoguePdu, TDAPduAUDT, TDEmbdEncoding> {
+  public:
+    //Associated TransferSyntax id
+    enum TSKind_e { tsNone = -1, tsDLG = 0, tsUNI = 1, tsEMBD = 2 };
+
+    F3Decoder()
+      : asn1::ber::ChoiceOfDecoders3_T<TDStrDialoguePdu, TDAPduAUDT, TDEmbdEncoding>()
+    { }
+    ~F3Decoder()
+    { }
+
+    TSKind_e getKind(void) const { return static_cast<TSKind_e>(getChoiceIdx()); }
+
+    Alternative_T<TDStrDialoguePdu> dlg() { return alternative0(); }
+    Alternative_T<TDAPduAUDT>       uni() { return alternative1(); }
+    Alternative_T<TDEmbdEncoding>   embd() { return alternative2(); }
+
+    ConstAlternative_T<TDStrDialoguePdu> dlg() const { return alternative0(); }
+    ConstAlternative_T<TDAPduAUDT>       uni() const { return alternative1(); }
+    ConstAlternative_T<TDEmbdEncoding>   embd() const { return alternative2(); }
+  };
+  /* ----------------------------------------------- */
+
+  proto::TCDlgPortion *   _dVal;
   /* -- */
-  asn1::ber::DecoderOfEOID *           _decDRef;
-  asn1::ber::DecoderOfINTEGER *        _decIRef;
-  asn1::ber::DecoderOfObjDescriptor *  _decDescr;
+  F3Decoder               _decAS;
+  asn1::ber::DecoderProducer_T<asn1::ber::DecoderOfEOID>           _decDRef;
+  asn1::ber::DecoderProducer_T<asn1::ber::DecoderOfINTEGER>        _decIRef;
+  asn1::ber::DecoderProducer_T<asn1::ber::DecoderOfObjDescriptor>  _decDescr;
+  /* ----------------------------------------------- */
 
-  proto::TCDlgPortion::ASKind_e _decKind;
-  union {
-    TDAPduAUDT *            _uni;
-    TDStrDialoguePdu *      _dlg;
-    asn1::ber::DecoderOfEmbdEncoding * _embd;
-  } _decEnc;
-
-  //Cleans allocated decoder of 'encoding' field
-  void cleanEnc(void);
-  //Cleans all allocated optional objects
-  void cleanAll(void);
-  //
-  void initEncDLG(proto::TCStrDialoguePdu & use_val)
-  {
-    cleanEnc();
-    _decEnc._dlg = new (_memEnc._buf) TDStrDialoguePdu(use_val, getVALRule());
-    _decKind = proto::TCDlgPortion::asDLG;
-  }
-  //
-  void initEncUNI(proto::TCPduAUDT & use_val)
-  {
-    cleanEnc();
-    _decEnc._uni = new (_memEnc._buf) TDAPduAUDT(use_val, getVALRule());
-    _decKind = proto::TCDlgPortion::asUNI;
-  }
-  //
-  void initEncEXT(asn1::EmbeddedEncoding & use_val)
-  {
-    cleanEnc();
-    _decEnc._embd = new (_memEnc._buf) asn1::ber::DecoderOfEmbdEncoding(use_val, getTSRule());
-    _decKind = proto::TCDlgPortion::asEXT;
-  }
+  void clearAll(void);
 
   //Initializes ElementDecoder of this type
   void construct(void);
@@ -128,36 +99,26 @@ protected:
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 11] EXPLICIT
   
-  explicit TDDialoguePortion(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<4,2>(_typeTags, TSGroupBER::getTSRule(use_rule))
-    , _dVal(0), _decDRef(0), _decIRef(0), _decDescr(0)
-    , _decKind(proto::TCDlgPortion::asNone)
+  explicit TDDialoguePortion(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<4>(_typeTags, use_rule), _dVal(0)
   {
     construct();
-    _decEnc._uni = NULL;
-    _memEnc._aligner = _memDescr._aligner = _memDRef._aligner = _memIRef._aligner =  0;
   }
-  TDDialoguePortion(proto::TCDlgPortion & use_val,
-                      TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<4,2>(_typeTags, TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _decDRef(0), _decIRef(0), _decDescr(0)
-    , _decKind(proto::TCDlgPortion::asNone)
+  explicit TDDialoguePortion(proto::TCDlgPortion & use_val,
+                             asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<4>(_typeTags, use_rule), _dVal(&use_val)
   {
     construct();
-    _decEnc._uni = NULL;
-    _memEnc._aligner = _memDescr._aligner = _memDRef._aligner = _memIRef._aligner =  0;
-    _dVal->initEXT();
+    _dVal->ext().init().push_front(asn1::ASExternal());
   }
   //
   ~TDDialoguePortion()
-  {
-    cleanAll();
-  }
+  { }
 
   void setValue(proto::TCDlgPortion & use_val)
   {
     _dVal = &use_val;
-    _dVal->initEXT().push_front(asn1::ASExternal());
+    _dVal->ext().init().push_front(asn1::ASExternal());
     _seqDec.reset();
   }
 };

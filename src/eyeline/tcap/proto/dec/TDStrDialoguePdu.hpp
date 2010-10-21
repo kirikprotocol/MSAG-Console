@@ -10,6 +10,7 @@
 #include "eyeline/tcap/proto/dec/TDAPduABRT.hpp"
 
 #include "eyeline/asn1/BER/rtdec/DecodeChoice.hpp"
+#include "eyeline/asn1/BER/rtdec/DecodersChoiceT.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -27,30 +28,32 @@ DialoguePDU ::= CHOICE {
   dialogueAbort     ABRT-apdu
 } */
 class TDStrDialoguePdu : public asn1::ber::DecoderOfChoice_T<3> {
-private:
+protected:
   using asn1::ber::DecoderOfChoice_T<3>::setAlternative;
 
-  union {
-    void *    _aligner;
-    uint8_t   _buf[eyeline::util::MaxSizeOf3_T<TDAPduAARQ, TDAPduAARE, TDAPduABRT>::VALUE];
-  } _memPdu;
+  class AltDecoder : public 
+    asn1::ber::ChoiceOfDecoders3_T<TDAPduAARQ, TDAPduAARE, TDAPduABRT> {
+  public:
+    AltDecoder()
+      : asn1::ber::ChoiceOfDecoders3_T<TDAPduAARQ, TDAPduAARE, TDAPduABRT>()
+    { }
+    ~AltDecoder()
+    { }
 
-protected:
+    TCDlgPduAC::PduKind_e getKind(void) const { return static_cast<TCDlgPduAC::PduKind_e>(getChoiceIdx()); }
+
+    Alternative_T<TDAPduAARQ> aarq() { return alternative0(); }
+    Alternative_T<TDAPduAARE> aare() { return alternative1(); }
+    Alternative_T<TDAPduABRT> abrt() { return alternative2(); }
+
+    ConstAlternative_T<TDAPduAARQ> aarq() const { return alternative0(); }
+    ConstAlternative_T<TDAPduAARE> aare() const { return alternative1(); }
+    ConstAlternative_T<TDAPduABRT> abrt() const { return alternative2(); }
+  };
+  /* ----------------------------------------------- */
   proto::TCStrDialoguePdu * _dVal;
-  union {
-    asn1::ber::TypeDecoderAC * _any;
-    TDAPduAARQ *  _aarq;
-    TDAPduAARE *  _aare;
-    TDAPduABRT *  _abrt;
-  } _pDec;
-
-  void cleanUp(void)
-  {
-    if (_pDec._any) {
-      _pDec._any->~TypeDecoderAC();
-      _pDec._any = NULL;
-    }
-  }
+  AltDecoder                _pDec;
+  /* ----------------------------------------------- */
   //Initializes ElementDecoder of this type
   void construct(void);
 
@@ -63,28 +66,20 @@ protected:
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 11] EXPLICIT
 
-  explicit TDStrDialoguePdu(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfChoice_T<3>(TSGroupBER::getTSRule(use_rule))
-    , _dVal(0)
+  explicit TDStrDialoguePdu(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<3>(use_rule), _dVal(0)
   {
     construct();
-    _memPdu._aligner = 0;
-    _pDec._any = NULL;
   }
-  TDStrDialoguePdu(proto::TCStrDialoguePdu & use_val,
-                      TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfChoice_T<3>(TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val)
+  explicit TDStrDialoguePdu(proto::TCStrDialoguePdu & use_val,
+                            asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<3>(use_rule), _dVal(&use_val)
   {
     construct();
-    _memPdu._aligner = 0;
-    _pDec._any = NULL;
   }
   //
   ~TDStrDialoguePdu()
-  {
-    cleanUp();
-  }
+  { }
 
   void setValue(proto::TCStrDialoguePdu & use_val)
   {

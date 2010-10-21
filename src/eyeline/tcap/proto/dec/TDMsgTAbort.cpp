@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDMsgTAbort.hpp"
 
@@ -11,14 +11,6 @@ namespace dec {
 /* ************************************************************ *
  * Class TDAbortReason implementation
  * ************************************************************ */
-void TDAbortReason::cleanUp(void)
-{
-  if (_altDec._ptr) {
-    _altDec._ptr->~TypeDecoderAC();
-    _altDec._ptr = NULL;
-    _altKind = proto::TAbortReason::causeNone;
-  }
-}
 
 /* Abort is defined in IMPLICIT tagging environment as follow:
 AbortReason ::= CHOICE {
@@ -27,8 +19,8 @@ AbortReason ::= CHOICE {
 } */
 void TDAbortReason::construct(void)
 {
-  asn1::ber::DecoderOfChoice_T<2>::setAlternative(0, TDPAbortCause::_typeTag);
-  asn1::ber::DecoderOfChoice_T<2>::setAlternative(1, TDDialoguePortion::_typeTag);
+  setAlternative(0, TDPAbortCause::_typeTag);
+  setAlternative(1, TDDialoguePortion::_typeTag);
 }
 // ----------------------------------------
 // -- DecoderOfChoiceAC interface methods
@@ -42,18 +34,17 @@ asn1::ber::TypeDecoderAC *
   if (unique_idx > 1)
     throw smsc::util::Exception("tcap::proto::dec::TDAbortReason::prepareAlternative() : undefined UId");
 
-  cleanUp();
   if (!unique_idx)
-    return _altDec._pCause = new (_memAlt._buf) TDPAbortCause(_dVal->initPrvd(), getVALRule());
-  //if (unique_idx == 1)
-  return _altDec._uCause = new (_memAlt._buf) TDDialoguePortion(_dVal->initUser(), getVALRule());
+    _altDec.pCause().init(getTSRule()).setValue(_dVal->prvd().init());
+  else   //if (unique_idx == 1)
+    _altDec.uCause().init(getTSRule()).setValue(_dVal->user().init());
+  return _altDec.get();
 }
 
 /* ************************************************************ *
  * Class TDMsgTAbort implementation
  * ************************************************************ */
-const asn1::ASTag
-  TDMsgTAbort::_typeTag(asn1::ASTag::tagApplication, 7);
+const asn1::ASTag TDMsgTAbort::_typeTag(asn1::ASTag::tagApplication, 7);
 
 /* Abort is defined in IMPLICIT tagging environment as follow:
 Abort ::= [APPLICATION 7] SEQUENCE {
@@ -62,8 +53,8 @@ Abort ::= [APPLICATION 7] SEQUENCE {
 } */
 void TDMsgTAbort::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<2>::setField(0, TDDestTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<2>::setField(1, TDAbortReason::_tagOptions, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, TDDestTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(1, TDAbortReason::_tagOptions, asn1::ber::EDAlternative::altOPTIONAL);
 }
 
 // ----------------------------------------
@@ -83,8 +74,8 @@ asn1::ber::TypeDecoderAC *
     return &_dstTrId;
   }
   //if (unique_idx == 1) {}
-  cleanUp();
-  return _reason = new (_memReason._buf) TDAbortReason(_dVal->_reason, getVALRule());
+  _reason.init(getTSRule()).setValue(_dVal->_reason);
+  return _reason.get();
 }
 
 }}}}

@@ -144,7 +144,7 @@ public:
   void init(proto::TMsgAbort & use_msg)
   {
     _dstTrId = use_msg._dstTrId;
-    _cause = *use_msg._reason.getPrvd();
+    _cause = *use_msg._reason.prvd().get();
   }
   //
   uint32_t getDestTrId(void) const { return _dstTrId; }

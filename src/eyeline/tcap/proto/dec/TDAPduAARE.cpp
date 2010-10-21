@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDAPduAARE.hpp"
 
@@ -9,13 +9,6 @@ namespace eyeline {
 namespace tcap {
 namespace proto {
 namespace dec {
-
-const asn1::ASTag
-  TDAPduAARE::_typeTag(asn1::ASTag::tagApplication, 1);
-
-const asn1::ASTag
-  TDAPduAARE::TDResultField::_typeTag(asn1::ASTag::tagContextSpecific, 2);
-
 
 /* ************************************************************ *
  * Class TDAPduAARE::TDResultDiagnosticField implementation
@@ -60,6 +53,8 @@ void TDAPduAARE::TDResultDiagnosticField::markDecodedAlternative(uint16_t unique
 /* ************************************************************ *
  * Class TDAPduAARE implementation
  * ************************************************************ */
+const asn1::ASTag TDAPduAARE::_typeTag(asn1::ASTag::tagApplication, 1);
+const asn1::ASTag TDAPduAARE::_f2Tag(asn1::ASTag::tagContextSpecific, 2);
 
 /* AARE APdu is defined in EXPLICIT tagging environment as following:
 
@@ -73,16 +68,11 @@ AARE-apdu ::= [APPLICATION 1] IMPLICIT SEQUENCE {
 //Initializes ElementDecoder of this type
 void TDAPduAARE::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<5>::setField(0, TDProtocolVersion::_typeTag,
-                                              asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<5>::setField(1, TDApplicationContext::_typeTag,
-                                              asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<5>::setField(2, TDResultField::_typeTag,
-                                              asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<5>::setField(3, TDResultDiagnosticField::_typeTag,
-                                              asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<5>::setField(4, TDUserInformation::_typeTag,
-                                              asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, TDProtocolVersion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(1, TDApplicationContext::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(2, _f2Tag, asn1::ASTagging::tagsEXPLICIT, asn1::ber::EDAlternative::altMANDATORY);
+  setField(3, TDResultDiagnosticField::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(4, TDUserInformation::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
 }
 
 // ----------------------------------------
@@ -116,8 +106,8 @@ asn1::ber::TypeDecoderAC *
     return &_ascDiagn;
   }
   //if (unique_idx == 4) {}
-  getUI()->setValue(_dVal->_usrInfo);
-  return _pUI;
+  _pUI.init(getTSRule()).setValue(_dVal->_usrInfo);
+  return _pUI.get();
 }
 
 }}}}

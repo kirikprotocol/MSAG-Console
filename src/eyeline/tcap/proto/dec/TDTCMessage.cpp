@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDTCMessage.hpp"
 
@@ -24,11 +24,11 @@ TCMessage ::= CHOICE {
 } */
 void TDTCMessage::construct(void)
 {
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(0, TDMsgTUnidir::_typeTag);
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(1, TDMsgTBegin::_typeTag);
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(2, TDMsgTEnd::_typeTag);
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(3, TDMsgTContinue::_typeTag);
-  asn1::ber::DecoderOfChoice_T<5>::setAlternative(4, TDMsgTAbort::_typeTag);
+  setAlternative(0, TDMsgTUnidir::_typeTag);
+  setAlternative(1, TDMsgTBegin::_typeTag);
+  setAlternative(2, TDMsgTEnd::_typeTag);
+  setAlternative(3, TDMsgTContinue::_typeTag);
+  setAlternative(4, TDMsgTAbort::_typeTag);
 }
 
 // ----------------------------------------
@@ -43,17 +43,18 @@ asn1::ber::TypeDecoderAC *
   if (unique_idx > 4)
     throw smsc::util::Exception("tcap::proto::dec::TDTCMessage::prepareAlternative() : undefined UId");
 
-  cleanUp();
   if (!unique_idx)
-    return _pDec._unidir = new (_memMsg._buf) TDMsgTUnidir(_dVal->initUnidir(), getVALRule());
-  if (unique_idx == 1)
-    return _pDec._begin = new (_memMsg._buf) TDMsgTBegin(_dVal->initBegin(), getVALRule());
-  if (unique_idx == 2)
-    return _pDec._end = new (_memMsg._buf) TDMsgTEnd(_dVal->initEnd(), getVALRule());
-  if (unique_idx == 3)
-    return _pDec._cont = new (_memMsg._buf) TDMsgTContinue(_dVal->initContinue(), getVALRule());
-  //if (unique_idx == 4)
-  return _pDec._abort = new (_memMsg._buf) TDMsgTAbort(_dVal->initAbort(), getVALRule());
+    _pDec.unidir().init(getTSRule()).setValue(_dVal->unidir().init());
+  else if (unique_idx == 1)
+    _pDec.begin().init(getTSRule()).setValue(_dVal->begin().init());
+  else if (unique_idx == 2)
+    _pDec.end().init(getTSRule()).setValue(_dVal->end().init());
+  else if (unique_idx == 3)
+    _pDec.cont().init(getTSRule()).setValue(_dVal->cont().init());
+  else //if (unique_idx == 4)
+    _pDec.abort().init(getTSRule()).setValue(_dVal->abort().init());
+
+  return _pDec.get();
 }
 
 }}}}

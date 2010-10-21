@@ -24,87 +24,29 @@ AbortReason ::= CHOICE {
 -- by previously received TR_Begin_Req), or by the TC-User in which case it
 -- could be either an ABRT APDU or data in some user-defined abstract syntax.
 */
-class TAbortReason {
+class TAbortReason : public util::ChoiceOf2_T<PAbort::Cause_t, TCDlgPortion> {
 public:
-  enum Kind_e { causeNone = 0, causePrvd, causeUser };
-
-private:
-  union {
-    void * _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf2_T<PAbort::Cause_t, TCDlgPortion>::VALUE];
-  } _memAlt;
-
-protected:
-  Kind_e  _kind;
-  union {
-    PAbort::Cause_t * _prvd;
-    TCDlgPortion   *  _user;
-  }       _cause;
-
-public:
-  explicit TAbortReason() : _kind(causeNone)
-  {
-    _memAlt._aligner = _cause._prvd = NULL;
-  }
+  TAbortReason() : util::ChoiceOf2_T<PAbort::Cause_t, TCDlgPortion>()
+  { }
   ~TAbortReason()
-  {
-    clear();
-  }
+  { }
 
-  Kind_e getKind(void) const { return _kind; }
+  bool isProviderCause(void) const { return getChoiceIdx() == 0; }
+  bool isUserCause(void)     const { return getChoiceIdx() == 1; }
 
-  bool empty(void) const { return _kind != causeNone; }
+  Alternative_T<PAbort::Cause_t>  prvd() { return alternative0(); }
+  Alternative_T<TCDlgPortion>     user() { return alternative1(); }
 
-  PAbort::Cause_t & initPrvd(void)
-  {
-    clear();
-    _kind = causePrvd;
-    _cause._prvd = _memAlt._buf;
-    return *_cause._prvd;
-  }
-  TCDlgPortion & initUser(void)
-  {
-    clear();
-    _kind = causeUser;
-    _cause._user = new (_memAlt._buf) TCDlgPortion();
-    return *_cause._user;
-  }
-
-  void clear(void)
-  {
-    if (_cause._user) {
-      if (_kind == causeUser)
-        _cause._user->~TCDlgPortion();
-      _cause._prvd = NULL;
-      _kind = causeNone;
-    }
-  }
-
-  PAbort::Cause_t * getPrvd(void)
-  {
-    return (_kind == causePrvd) ? _cause._prvd : 0;
-  }
-  TCDlgPortion * getUser(void)
-  {
-    return (_kind == causeUser) ? _cause._user : 0;
-  }
-
-  const PAbort::Cause_t * getPrvd(void) const
-  {
-    return (_kind == causePrvd) ? _cause._prvd : 0;
-  }
-  const TCDlgPortion * getUser(void) const
-  {
-    return (_kind == causeUser) ? _cause._user : 0;
-  }
+  ConstAlternative_T<PAbort::Cause_t>  prvd() const { return alternative0(); }
+  ConstAlternative_T<TCDlgPortion>     user() const { return alternative1(); }
 
   //Verifies that u-abortCause contains allowed Structured Dialogue PDU or EXTERNAL
   bool verifyPdu(void) const
   {
-    return (getUser()
-            && (getUser()->empty()
-                || ((getUser()->getKind() != TCDlgPortion::asUNI) 
-                    && !getUser()->getDLG()->getAARQ())
+    return (user().get()
+            && (user().get()->empty()
+                || (!user().get()->isUniDialoguePdu() 
+                    && !user().get()->dlg().get()->aarq().get())
                 )
             );
   }
@@ -112,34 +54,38 @@ public:
   //Returns AARE_APdu, in case of abort of dialogue association request
   const TCPduAARE * getAARE(void) const
   {
-    return (getUser() && getUser()->getDLG()) ? getUser()->getDLG()->getAARE() : 0;
+    return (user().get() && user().get()->dlg().get()) ?
+                user().get()->dlg().get()->aare().get() : 0;
   }
   //Returns ABRT_APdu, in case of abort of already established dialogue
   const TCPduABRT * getABRT(void) const
   {
-    return (getUser() && getUser()->getDLG()) ? getUser()->getDLG()->getABRT() : 0;
+    return (user().get() && user().get()->dlg().get()) ?
+                user().get()->dlg().get()->abrt().get() : 0;
   }
   //Returns user defined data, in case of abort of already established dialogue
   const TDlgUserInfoList * getEXT(void) const
   {
-    return (getUser() && getUser()->getEXT()) ? getUser()->getEXT() : 0;
+    return (user().get() && user().get()->ext().get()) ? user().get()->ext().get() : 0;
   }
 
 
   //Returns AARE_APdu, in case of abort of dialogue association request
   TCPduAARE * getAARE(void)
   {
-    return (getUser() && getUser()->getDLG()) ? getUser()->getDLG()->getAARE() : 0;
+    return (user().get() && user().get()->dlg().get()) ? 
+                user().get()->dlg().get()->aare().get() : 0;
   }
   //Returns ABRT_APdu, in case of abort of already established dialogue
   TCPduABRT * getABRT(void)
   {
-    return (getUser() && getUser()->getDLG()) ? getUser()->getDLG()->getABRT() : 0;
+    return (user().get() && user().get()->dlg().get()) ?
+                user().get()->dlg().get()->abrt().get() : 0;
   }
   //Returns user defined data, in case of abort of already established dialogue
   TDlgUserInfoList * getEXT(void)
   {
-    return (getUser() && getUser()->getEXT()) ? getUser()->getEXT() : 0;
+    return (user().get() && user().get()->ext().get()) ? user().get()->ext().get() : 0;
   }
 
 };
@@ -158,8 +104,8 @@ struct TMsgAbort {
   ~TMsgAbort()
   { }
 
-  bool isByProvider(void) const { return _reason.getKind() == TAbortReason::causePrvd; }
-  bool isByUser(void) const { return _reason.getKind() == TAbortReason::causeUser; }
+  bool isByProvider(void) const { return _reason.isProviderCause(); }
+  bool isByUser(void)     const { return _reason.isUserCause(); }
 
   //Verifies that u-abortCause contains allowed Structured Dialogue PDU or EXTERNAL
   bool verifyPdu(void) const

@@ -28,26 +28,29 @@ AbortReason ::= CHOICE {
 -- abstract syntax or AARE APDU as a response to received TBegin.
 */
 class TDAbortReason : public asn1::ber::DecoderOfChoice_T<2> {
-private:
+protected:
   using asn1::ber::DecoderOfChoice_T<2>::setAlternative;
 
-  union {
-    void * _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf2_T<TDPAbortCause, TDDialoguePortion>::VALUE];
-  } _memAlt;
+  class AltDecoder : public 
+    asn1::ber::ChoiceOfDecoders2_T<TDPAbortCause, TDDialoguePortion> {
+  public:
+    AltDecoder()
+      : asn1::ber::ChoiceOfDecoders2_T<TDPAbortCause, TDDialoguePortion>()
+    { }
+    ~AltDecoder()
+    { }
+    Alternative_T<TDPAbortCause>      pCause() { return alternative0(); }
+    Alternative_T<TDDialoguePortion>  uCause() { return alternative1(); }
 
-protected:
+    ConstAlternative_T<TDPAbortCause>     pCause() const { return alternative0(); }
+    ConstAlternative_T<TDDialoguePortion> uCause() const { return alternative1(); }
+  };
+
+
+/* ----------------------------------------------- */
   proto::TAbortReason * _dVal;
-  /* -- */
-  proto::TAbortReason::Kind_e _altKind;
-  union {
-    asn1::ber::TypeDecoderAC * _ptr;
-    TDPAbortCause *           _pCause;
-    TDDialoguePortion *       _uCause;
-  } _altDec;
-
-  //
-  void cleanUp(void);
+  AltDecoder            _altDec;
+/* ----------------------------------------------- */
   //Initializes ElementDecoder of this type;
   void construct(void);
 
@@ -69,26 +72,20 @@ public:
 
   static const TaggingOptions _tagOptions;
 
-  explicit TDAbortReason(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfChoice_T<2>(TSGroupBER::getTSRule(use_rule))
-    , _dVal(0), _altKind(proto::TAbortReason::causeNone)
+  explicit TDAbortReason(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<2>(use_rule), _dVal(0)
   {
-    _memAlt._aligner = _altDec._ptr = 0;
     construct();
   }
-  TDAbortReason(proto::TAbortReason & use_val,
-                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfChoice_T<2>(TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _altKind(proto::TAbortReason::causeNone)
+  explicit TDAbortReason(proto::TAbortReason & use_val,
+                         asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<2>(use_rule), _dVal(&use_val)
   {
-    _memAlt._aligner = _altDec._ptr = 0;
     construct();
   }
   //
   ~TDAbortReason()
-  {
-    cleanUp();
-  }
+  { }
 
   void setValue(proto::TAbortReason & use_val)
   {
@@ -103,27 +100,12 @@ Abort ::= [APPLICATION 7] SEQUENCE {
   reason  AbortReason OPTIONAL
 } */
 class TDMsgTAbort : public asn1::ber::DecoderOfSequence_T<2> {
-private:
-  using asn1::ber::DecoderOfSequence_T<2>::setField;
-
-  union {
-    void *  _aligner;
-    uint8_t _buf[sizeof(TDAbortReason)];
-  } _memReason;
-
 protected:
   proto::TMsgAbort *  _dVal;
   /* -- */
   TDDestTransactionId _dstTrId;
-  TDAbortReason *     _reason; //optional
-
-  void cleanUp(void)
-  {
-    if (_reason) {
-      _reason->~TDAbortReason();
-      _reason = NULL;
-    }
-  }
+   //Optionals:
+  asn1::ber::DecoderProducer_T<TDAbortReason> _reason;
 
   //Initializes ElementDecoder of this type;
   void construct(void);
@@ -133,34 +115,26 @@ protected:
   // ----------------------------------------
   //If necessary, allocates optional element and initializes associated TypeDecoderAC
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
-  //Performs actions upon successfull optional element decoding
-  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ { return; }
 
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 7] IMPLICIT
 
-  explicit TDMsgTAbort(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<2>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _dVal(0), _dstTrId(use_rule), _reason(0)
+  explicit TDMsgTAbort(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<2>(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    , _dVal(0), _dstTrId(use_rule)
   {
-    _memReason._aligner = 0;
     construct();
   }
-  TDMsgTAbort(proto::TMsgAbort & use_val,
-          TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<2>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _dstTrId(use_rule), _reason(0)
+  explicit TDMsgTAbort(proto::TMsgAbort & use_val,
+                       asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<2>(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    , _dVal(&use_val), _dstTrId(use_rule)
   {
-    _memReason._aligner = 0;
     construct();
   }
   //
   ~TDMsgTAbort()
-  {
-    cleanUp();
-  }
+  { }
 
   void setValue(proto::TMsgAbort & use_val)
   {

@@ -14,25 +14,21 @@ namespace tcap {
 namespace proto {
 namespace dec {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 /* UserInformation is defined in EXPLICIT tagging environment as follow:
   UserInformation ::= [30] IMPLICIT SEQUENCE OF EXTERNAL
 */
-
 class TDUserInformation : public 
   asn1::ber::DecoderOfSeqOfLinked_T<asn1::ASExternal, asn1::ber::DecoderOfExternal> {
 public:
   static const asn1::ASTag _typeTag; //[30] IMPLICIT
 
-  explicit TDUserInformation(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSeqOfLinked_T<asn1::ASExternal, asn1::ber::DecoderOfExternal>(
-            _typeTag, asn1::ASTagging::tagsIMPLICIT, TSGroupBER::getTSRule(use_rule))
+  explicit TDUserInformation(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSeqOfLinked_T<asn1::ASExternal, asn1::ber::DecoderOfExternal>
+      (_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
   { }
   ~TDUserInformation()
   { }
 };
-
 
 }}}}
 

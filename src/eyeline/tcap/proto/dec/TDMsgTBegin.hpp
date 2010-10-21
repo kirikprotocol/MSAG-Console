@@ -25,29 +25,16 @@ Begin ::= [APPLICATION 2] SEQUENCE {
 --       dialogue AARQ-APdu
 */
 class TDMsgTBegin : public asn1::ber::DecoderOfSequence_T<3> {
-private:
-  using asn1::ber::DecoderOfSequence_T<3>::setField;
-
-  union {
-    void *  _aligner;
-    uint8_t _buf[sizeof(TDDialoguePortion)];
-  } _memDlg;
-
 protected:
+/* ----------------------------------------------- */
   proto::TMsgBegin *  _dVal;
   /* -- */
   TDOrigTransactionId _orgTrId;
   TDComponentPortion  _compPart;
-  TDDialoguePortion * _dlgPart; //optional
+  //Ooptionals:
+  asn1::ber::DecoderProducer_T<TDDialoguePortion> _dlgPart;
 
-  void cleanUp(void)
-  {
-    if (_dlgPart) {
-      _dlgPart->~TDDialoguePortion();
-      _dlgPart = NULL;
-    }
-  }
-
+/* ----------------------------------------------- */
   //Initializes ElementDecoder of this type;
   void construct(void);
 
@@ -56,34 +43,26 @@ protected:
   // ----------------------------------------
   //If necessary, allocates optional element and initializes associated TypeDecoderAC
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
-  //Performs actions upon successfull optional element decoding
-  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ { return; }
 
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 2] IMPLICIT
 
-  explicit TDMsgTBegin(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _dVal(0), _orgTrId(use_rule), _compPart(use_rule), _dlgPart(0)
+  explicit TDMsgTBegin(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    , _dVal(0), _orgTrId(use_rule), _compPart(use_rule)
   {
-    _memDlg._aligner = 0;
     construct();
   }
-  TDMsgTBegin(proto::TMsgBegin & use_val,
-          TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val), _orgTrId(use_rule), _compPart(use_rule), _dlgPart(0)
+  explicit TDMsgTBegin(proto::TMsgBegin & use_val,
+          asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    , _dVal(&use_val), _orgTrId(use_rule), _compPart(use_rule)
   {
-    _memDlg._aligner = 0;
     construct();
   }
   //
   ~TDMsgTBegin()
-  {
-    cleanUp();
-  }
+  { }
 
   void setValue(proto::TMsgBegin & use_val)
   {

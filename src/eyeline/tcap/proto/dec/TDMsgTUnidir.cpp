@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDMsgTUnidir.hpp"
 
@@ -22,8 +22,8 @@ Unidirectional ::= [APPLICATION 1] SEQUENCE {
 } */
 void TDMsgTUnidir::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<2>::setField(0, TDDialoguePortion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<2>::setField(1, TDComponentPortion::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(0, TDDialoguePortion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(1, TDComponentPortion::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
 }
 
 // ----------------------------------------
@@ -39,8 +39,8 @@ asn1::ber::TypeDecoderAC *
     throw smsc::util::Exception("tcap::proto::dec::TDMsgTUnidir::prepareAlternative() : undefined UId");
 
   if (!unique_idx) {
-    cleanUp();
-    return _dlgPart = new (_memDlg._buf) TDDialoguePortion(_dVal->_dlgPart, getVALRule());
+    _dlgPart.init(getTSRule()).setValue(_dVal->_dlgPart);
+    return _dlgPart.get();
   }
   //if (unique_idx == 1) {}
   _compPart.setValue(_dVal->_compPart);

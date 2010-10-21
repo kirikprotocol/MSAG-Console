@@ -6,10 +6,13 @@
 #define __EYELINE_TCAP_PROTO_DEC_AARQ_APDU_HPP
 
 #include "eyeline/tcap/proto/TCStrDialogue.hpp"
+
 #include "eyeline/tcap/proto/dec/TDProtocolVersion.hpp"
 #include "eyeline/tcap/proto/dec/TDApplicationContext.hpp"
 #include "eyeline/tcap/proto/dec/TDUserInformation.hpp"
+
 #include "eyeline/asn1/BER/rtdec/DecodeSeq.hpp"
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -24,34 +27,14 @@ AARQ-apdu ::= [APPLICATION 0] IMPLICIT SEQUENCE {
   user-information          UserInformation OPTIONAL
 } */
 class TDAPduAARQ : public asn1::ber::DecoderOfSequence_T<3> {
-private:
-  using asn1::ber::DecoderOfSequence_T<3>::setField;
-
-  union {
-    void *  _aligner;
-    uint8_t _buf[sizeof(TDUserInformation)];
-  } _memUI;
-
-  TDUserInformation * _pUI; //OPTIONAL
-
 protected:
   proto::TCPduAARQ *    _dVal;
   /* ----------------------------------------------- */
   TDProtocolVersion     _protoVer;
   TDApplicationContext  _appCtx;
+  //Optionals:
+  asn1::ber::DecoderProducer_T<TDUserInformation> _pUI;
   /* ----------------------------------------------- */
-
-  TDUserInformation * getUI(void)
-  {
-    if (!_pUI)
-      _pUI = new (_memUI._buf)TDUserInformation(getVALRule());
-    return _pUI;
-  }
-  void clearUI(void)
-  {
-    if (_pUI)
-      _pUI->~TDUserInformation();
-  }
 
   //Initializes ElementDecoder of this type
   void construct(void);
@@ -67,28 +50,22 @@ protected:
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 0] IMPLICIT
 
-  explicit TDAPduAARQ(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
-                                         TSGroupBER::getTSRule(use_rule))
-    , _pUI(0), _dVal(0), _protoVer(use_rule), _appCtx(use_rule)
+  explicit TDAPduAARQ(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    , _dVal(0), _protoVer(use_rule), _appCtx(use_rule)
   {
-    _memUI._aligner = 0;
     construct();
   }
-  TDAPduAARQ(proto::TCPduAARQ & use_val,
-            TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
-                                         TSGroupBER::getTSRule(use_rule))
-    , _pUI(0), _dVal(&use_val), _protoVer(use_rule), _appCtx(use_rule)
+  explicit TDAPduAARQ(proto::TCPduAARQ & use_val,
+                      asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<3>(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    , _dVal(&use_val), _protoVer(use_rule), _appCtx(use_rule)
   {
-    _memUI._aligner = 0;
     construct();
   }
   //
   ~TDAPduAARQ()
-  {
-    clearUI();
-  }
+  { }
 
   void setValue(proto::TCPduAARQ & use_val)
   {

@@ -22,7 +22,7 @@ using eyeline::sccp::SCCPAddress;
 class TDlgIndicationPrimitive {
 public:
   enum IKind_e {
-    indTRNone = 0, indTRBegin, indTRCont, indTREnd, indTRUAbort, indTRPAbort, indTRNotice
+    indTRNone = -1, indTRBegin, indTRCont, indTREnd, indTRUAbort, indTRPAbort, indTRNotice
   };
 
 protected:

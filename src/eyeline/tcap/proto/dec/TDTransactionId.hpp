@@ -13,10 +13,6 @@ namespace tcap {
 namespace proto {
 namespace dec {
 
-using eyeline::asn1::ber::TSGroupBER;
-
-
-
 class TransactionIdDecoder : public asn1::ber::DecoderOfOCTSTR_T<uint8_t> {
 private:
   using asn1::ber::DecoderOfOCTSTR_T<uint8_t>::setValue;
@@ -28,8 +24,8 @@ private:
 
 public:
   TransactionIdDecoder(const asn1::ASTag & use_tag, asn1::ASTagging::Environment_e tag_env,
-                        TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfOCTSTR_T<uint8_t>(use_tag, tag_env, TSGroupBER::getTSRule(use_rule))
+                        asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfOCTSTR_T<uint8_t>(use_tag, tag_env, use_rule)
     , _dVal(0)
   {
     asn1::ber::DecoderOfOCTSTR_T<uint8_t>::setValue(_octs, 4);
@@ -51,11 +47,11 @@ class TDOrigTransactionId : public TransactionIdDecoder {
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 8] IMPLICIT
 
-  explicit TDOrigTransactionId(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+  explicit TDOrigTransactionId(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
     : TransactionIdDecoder(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
   { }
-  TDOrigTransactionId(uint32_t & use_val,
-                      TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+  explicit TDOrigTransactionId(uint32_t & use_val,
+                      asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
     : TransactionIdDecoder(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
   {
     setValue(use_val);
@@ -71,11 +67,11 @@ class TDDestTransactionId : public TransactionIdDecoder {
 public:
   static const asn1::ASTag _typeTag;  //[APPLICATION 9] IMPLICIT
 
-  explicit TDDestTransactionId(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+  explicit TDDestTransactionId(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
     : TransactionIdDecoder(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
   { }
-  TDDestTransactionId(uint32_t & use_val,
-                      TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+  explicit TDDestTransactionId(uint32_t & use_val,
+                      asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
     : TransactionIdDecoder(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
   {
     setValue(use_val);

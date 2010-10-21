@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDAPduABRT.hpp"
 
@@ -11,13 +11,8 @@ namespace dec {
 /* ************************************************************ *
  * Class TDAPduABRT implementation
  * ************************************************************ */
-const asn1::ASTag
-  TDAPduABRT::_typeTag(asn1::ASTag::tagApplication, 4);
-
-const asn1::ASTag
-  TDAPduABRT::_fldTagAbrtSrc(asn1::ASTag::tagContextSpecific, 0);
-
-
+const asn1::ASTag TDAPduABRT::_typeTag(asn1::ASTag::tagApplication, 4);
+const asn1::ASTag TDAPduABRT::_fldTagAbrtSrc(asn1::ASTag::tagContextSpecific, 0);
 
 /* ABRT APdu is defined in EXPLICIT tagging environment as following:
 
@@ -27,10 +22,8 @@ ABRT-apdu ::= [APPLICATION 4] IMPLICIT SEQUENCE {
 } */
 void TDAPduABRT::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<2>::setField(0, _fldTagAbrtSrc,
-              asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<2>::setField(1, TDUserInformation::_typeTag,
-                                              asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, _fldTagAbrtSrc, asn1::ASTagging::tagsIMPLICIT, asn1::ber::EDAlternative::altMANDATORY);
+  setField(1, TDUserInformation::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
 }
 
 // ----------------------------------------
@@ -50,8 +43,8 @@ asn1::ber::TypeDecoderAC *
     return &_abrtSrc;
   }
   //if (unique_idx == 1) {}
-  getUI()->setValue(_dVal->_usrInfo);
-  return _pUI;
+  _pUI.init(getTSRule()).setValue(_dVal->_usrInfo);
+  return _pUI.get();
 }
 
 }}}}

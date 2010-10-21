@@ -37,16 +37,16 @@ struct TMsgContinue {
   //Verifies that dialoguePortion contains allowed Structured Dialogue PDU
   bool verifyPdu(void) const
   {
-    return (_dlgPart.empty() || (_dlgPart.getDLG() && _dlgPart.getDLG()->getAARE()));
+    return (_dlgPart.empty() || (_dlgPart.dlg().get() && _dlgPart.dlg().get()->aare().get()));
   }
   const TCPduAARE * getAARE(void) const
   {
-    return _dlgPart.getDLG()  ? _dlgPart.getDLG()->getAARE() : NULL;
+    return _dlgPart.dlg().get()  ? _dlgPart.dlg().get()->aare().get() : NULL;
   }
 
   TCPduAARE * getAARE(void)
   {
-    return _dlgPart.getDLG()  ? _dlgPart.getDLG()->getAARE() : NULL;
+    return _dlgPart.dlg().get()  ? _dlgPart.dlg().get()->aare().get() : NULL;
   }
 };
 

@@ -6,11 +6,14 @@
 #define __EYELINE_TCAP_PROTO_DNC_AARE_APDU_HPP
 
 #include "eyeline/tcap/proto/TCStrDialogue.hpp"
+
 #include "eyeline/tcap/proto/dec/TDProtocolVersion.hpp"
 #include "eyeline/tcap/proto/dec/TDApplicationContext.hpp"
 #include "eyeline/tcap/proto/dec/TDUserInformation.hpp"
+
 #include "eyeline/asn1/BER/rtdec/DecodeChoice.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeSeq.hpp"
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -28,29 +31,8 @@ AARE-apdu ::= [APPLICATION 1] IMPLICIT SEQUENCE {
 }
 */
 class TDAPduAARE : public asn1::ber::DecoderOfSequence_T<5> {
-private:
-  using asn1::ber::DecoderOfSequence_T<5>::setField;
-
-  union {
-    void *  _aligner;
-    uint8_t _buf[sizeof(TDUserInformation)];
-  } _memUI;
-
-  TDUserInformation * _pUI; //OPTIONAL
-
 protected:
-  //AssociateResultField ::= [2] INTEGER {accepted(0), reject-permanent(1)}
-  class TDResultField : public asn1::ber::DecoderOfINTEGER {
-  public:
-    static const asn1::ASTag _typeTag; //[2] EXPLICIT
-
-    explicit TDResultField(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-      : asn1::ber::DecoderOfINTEGER(_typeTag, asn1::ASTagging::tagsEXPLICIT,
-                                    TSGroupBER::getTSRule(use_rule))
-    { }
-    ~TDResultField()
-    { }
-  };
+  static const asn1::ASTag _f2Tag; //[2] EXPLICIT
 
   //ResultSourceDiagnosticField ::= [3] CHOICE {
   //  dialogue-service-user [1]  INTEGER { null(0), no-reason-given(1),
@@ -82,10 +64,9 @@ protected:
   public:
     static const asn1::ASTag _typeTag; //[3] EXPLICIT
 
-    explicit TDResultDiagnosticField(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-      : asn1::ber::DecoderOfChoice_T<2>(_typeTag, asn1::ASTagging::tagsEXPLICIT,
-                                   TSGroupBER::getTSRule(use_rule))
-      , _pDec(TSGroupBER::getTSRule(use_rule)), _dVal(0)
+    explicit TDResultDiagnosticField(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+      : asn1::ber::DecoderOfChoice_T<2>(_typeTag, asn1::ASTagging::tagsEXPLICIT, use_rule)
+      , _pDec(use_rule), _dVal(0)
     {
       asn1::ber::DecoderOfChoice_T<2>::setAlternative(0, _tagUser, asn1::ASTagging::tagsEXPLICIT);
       asn1::ber::DecoderOfChoice_T<2>::setAlternative(1, _tagPrvd, asn1::ASTagging::tagsEXPLICIT);
@@ -101,25 +82,16 @@ protected:
   };
 
   /* ----------------------------------------------- */
-  proto::TCPduAARE *        _dVal;
-  TDProtocolVersion         _protoVer;
-  TDApplicationContext      _appCtx;
-  TDResultField             _ascResult;
-  TDResultDiagnosticField   _ascDiagn;
+  proto::TCPduAARE *            _dVal;
+  /* -- */
+  TDProtocolVersion             _protoVer;
+  TDApplicationContext          _appCtx;
+  asn1::ber::DecoderOfINTEGER   _ascResult;
+  TDResultDiagnosticField       _ascDiagn;
+  //Optionals:
+  asn1::ber::DecoderProducer_T<TDUserInformation> _pUI;
 
 /* ----------------------------------------------- */
-  TDUserInformation * getUI(void)
-  {
-    if (!_pUI)
-      _pUI = new (_memUI._buf)TDUserInformation(getVALRule());
-    return _pUI;
-  }
-  void clearUI(void)
-  {
-    if (_pUI)
-      _pUI->~TDUserInformation();
-  }
-
   //Initializes ElementDecoder of this type
   void construct(void);
 
@@ -128,36 +100,28 @@ protected:
   // ----------------------------------------
   //If necessary, allocates optional element and initializes associated TypeDecoderAC
   virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
-  //Performs actions upon successfull optional element decoding
-  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ { return; }
 
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 1] IMPLICIT
 
-  explicit TDAPduAARE(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<5>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _pUI(0), _dVal(0), _protoVer(use_rule), _appCtx(use_rule)
+  explicit TDAPduAARE(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<5>(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    , _dVal(0), _protoVer(use_rule), _appCtx(use_rule)
     , _ascResult(use_rule), _ascDiagn(use_rule)
   {
-    _memUI._aligner = 0;
     construct();
   }
-  TDAPduAARE(proto::TCPduAARE & use_val,
-            TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfSequence_T<5>(_typeTag, asn1::ASTagging::tagsIMPLICIT,
-                                        TSGroupBER::getTSRule(use_rule))
-    , _pUI(0), _dVal(&use_val), _protoVer(use_rule), _appCtx(use_rule)
+  explicit TDAPduAARE(proto::TCPduAARE & use_val,
+                      asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSequence_T<5>(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    , _dVal(&use_val), _protoVer(use_rule), _appCtx(use_rule)
     , _ascResult(use_rule), _ascDiagn(use_rule)
   {
-    _memUI._aligner = 0;
     construct();
   }
 //
   ~TDAPduAARE()
-  {
-    clearUI();
-  }
+  { }
 
   void setValue(proto::TCPduAARE & use_val)
   {

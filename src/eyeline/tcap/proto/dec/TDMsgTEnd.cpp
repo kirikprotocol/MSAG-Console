@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDMsgTEnd.hpp"
 
@@ -23,9 +23,9 @@ End ::= [APPLICATION 4] SEQUENCE {
 } */
 void TDMsgTEnd::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<3>::setField(0, TDDestTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<3>::setField(1, TDDialoguePortion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<3>::setField(2, TDComponentPortion::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(0, TDDestTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(1, TDDialoguePortion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(2, TDComponentPortion::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
 }
 
 // ----------------------------------------
@@ -45,8 +45,8 @@ asn1::ber::TypeDecoderAC *
     return &_dstTrId;
   }
   if (unique_idx == 1) {
-    cleanUp();
-    return _dlgPart = new (_memDlg._buf) TDDialoguePortion(_dVal->_dlgPart, getVALRule());
+    _dlgPart.init(getTSRule()).setValue(_dVal->_dlgPart);
+    return _dlgPart.get();
   }
   //if (unique_idx == 2) {}
   _compPart.setValue(_dVal->_compPart);

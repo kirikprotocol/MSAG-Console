@@ -6,9 +6,9 @@
 #define __EYELINE_TCAP_PROTO_DEC_COMPONENT_PORTION_HPP
 
 #include "eyeline/tcap//TComponentDefs.hpp"
+
 #include "eyeline/tcap/proto/dec/TDComponent.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeSeqOfLinked.hpp"
-
 
 namespace eyeline {
 namespace tcap {
@@ -23,9 +23,9 @@ class TDComponentPortion : public asn1::ber::DecoderOfSeqOfLinked_T<ros::ROSPdu,
 public:
   static const asn1::ASTag _typeTag; //[APPLICATION 12] IMPLICIT
 
-  explicit TDComponentPortion(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : asn1::ber::DecoderOfSeqOfLinked_T<ros::ROSPdu, TDComponent>(
-            _typeTag, asn1::ASTagging::tagsIMPLICIT, TSGroupBER::getTSRule(use_rule))
+  explicit TDComponentPortion(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfSeqOfLinked_T<ros::ROSPdu, TDComponent>
+      (_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
   { }
   ~TDComponentPortion()
   { }

@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDUserInformation.hpp"
 
@@ -9,8 +9,7 @@ namespace tcap {
 namespace proto {
 namespace dec {
 
-const asn1::ASTag
-  TDUserInformation::_typeTag(asn1::ASTag::tagContextSpecific, 30);
+const asn1::ASTag TDUserInformation::_typeTag(asn1::ASTag::tagContextSpecific, 30);
 
 }}}}
 

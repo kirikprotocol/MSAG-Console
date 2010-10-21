@@ -11,6 +11,8 @@
 #include "eyeline/tcap/proto/TCAssociateDiagnostic.hpp"
 #include "eyeline/tcap/proto/ProtocolVersion.hpp"
 
+#include "eyeline/util/ChoiceOfT.hpp"
+
 namespace eyeline {
 namespace tcap {
 namespace proto {
@@ -20,7 +22,7 @@ extern const asn1::EncodedOID _ac_tcap_strDialogue_as;
 //Base class for Structured Dialogue PDUs
 class TCDlgPduAC {
 public:
-  enum PduKind_e { pduNone = -1, pduAARQ = 0, pduAARE = 1, pduABRT = 4 };
+  enum PduKind_e { pduNone = -1, pduAARQ = 0, pduAARE = 1, pduABRT = 2 };
 
 protected:
   PduKind_e _kind;
@@ -28,7 +30,7 @@ protected:
 public:
   tcap::TDlgUserInfoList  _usrInfo;    //optional
 
-  TCDlgPduAC(PduKind_e use_pdu = pduNone)
+  explicit TCDlgPduAC(PduKind_e use_pdu = pduNone)
     : _kind(use_pdu)
   { }
   virtual ~TCDlgPduAC()
@@ -45,10 +47,10 @@ public:
   ProtocolVersion   _protoVer;
   asn1::EncodedOID  _acId;
 
-  explicit TCPduAARQ()
+  TCPduAARQ()
     : TCDlgPduAC(TCDlgPduAC::pduAARQ), _protoVer(_dfltProtocolVersion)
   { }
-  TCPduAARQ(const asn1::EncodedOID & use_ctx)
+  explicit TCPduAARQ(const asn1::EncodedOID & use_ctx)
     : TCDlgPduAC(TCDlgPduAC::pduAARQ), _protoVer(_dfltProtocolVersion)
     , _acId(use_ctx)
   { }
@@ -69,7 +71,8 @@ public:
   TCPduAARE() : TCDlgPduAC(TCDlgPduAC::pduAARE)
     , _protoVer(_dfltProtocolVersion), _result(TDialogueAssociate::dlg_accepted)
   { }
-  TCPduAARE(const asn1::EncodedOID & use_ctx) : TCDlgPduAC(TCDlgPduAC::pduAARE)
+  explicit TCPduAARE(const asn1::EncodedOID & use_ctx)
+    : TCDlgPduAC(TCDlgPduAC::pduAARE)
     , _protoVer(_dfltProtocolVersion), _acId(use_ctx)
     , _result(TDialogueAssociate::dlg_accepted)
   { }
@@ -116,71 +119,27 @@ public:
 };
 
 
-class TCStrDialoguePdu {
-private:
-  union {
-    void * _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf3_T<TCPduAARQ, TCPduAARE, TCPduABRT>::VALUE];
-  } _memPdu;
-
-protected:
-  union {
-    TCDlgPduAC * _any;
-    TCPduAARQ *  _aarq;
-    TCPduAARE *  _aare;
-    TCPduABRT *  _abrt;
-  } _pdu;
-
-  void cleanUp(void)
-  {
-    if (_pdu._any) {
-      _pdu._any->~TCDlgPduAC();
-      _pdu._any = 0;
-    }
-  }
+class TCStrDialoguePdu : public
+  util::ChoiceOfBased3_T<TCDlgPduAC, TCPduAARQ, TCPduAARE, TCPduABRT> {
 public:
-  TCStrDialoguePdu()
-  {
-    _pdu._any = 0;
-  }
+  TCStrDialoguePdu() : util::ChoiceOfBased3_T
+    <TCDlgPduAC, TCPduAARQ, TCPduAARE, TCPduABRT>()
+  { }
   ~TCStrDialoguePdu()
-  {
-    cleanUp();
-  }
+  { }
 
   TCDlgPduAC::PduKind_e getKind(void) const
   {
-    return _pdu._any ? _pdu._any->getKind() : TCDlgPduAC::pduNone;
+    return static_cast<TCDlgPduAC::PduKind_e>(getChoiceIdx());
   }
 
-  const TCDlgPduAC * get(void) const { return _pdu._any; }
+  Alternative_T<TCPduAARQ> aarq(void) { return alternative0(); }
+  Alternative_T<TCPduAARE> aare(void) { return alternative1(); }
+  Alternative_T<TCPduABRT> abrt(void) { return alternative2(); }
 
-  TCPduAARQ * getAARQ(void) { return _pdu._aarq; }
-  TCPduAARE * getAARE(void) { return _pdu._aare; }
-  TCPduABRT * getABRT(void) { return _pdu._abrt; }
-
-  const TCPduAARQ * getAARQ(void) const { return _pdu._aarq; }
-  const TCPduAARE * getAARE(void) const { return _pdu._aare; }
-  const TCPduABRT * getABRT(void) const { return _pdu._abrt; }
-
-  TCPduAARQ & initAARQ(void)
-  {
-    cleanUp();
-    _pdu._aarq = new (_memPdu._buf)TCPduAARQ();
-    return *_pdu._aarq;
-  }
-  TCPduAARE & initAARE(void)
-  {
-    cleanUp();
-    _pdu._aare = new (_memPdu._buf)TCPduAARE();
-    return *_pdu._aare;
-  }
-  TCPduABRT & initABRT(void)
-  {
-    cleanUp();
-    _pdu._abrt = new (_memPdu._buf)TCPduABRT();
-    return *_pdu._abrt;
-  }
+  ConstAlternative_T<TCPduAARQ> aarq(void) const { return alternative0(); }
+  ConstAlternative_T<TCPduAARE> aare(void) const { return alternative1(); }
+  ConstAlternative_T<TCPduABRT> abrt(void) const { return alternative2(); }
 };
 
 } //proto

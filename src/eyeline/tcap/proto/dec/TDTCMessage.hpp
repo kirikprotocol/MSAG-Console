@@ -6,6 +6,7 @@
 #define __EYELINE_TCAP_PROTO_DEC_TCAP_MSG_HPP
 
 #include "eyeline/tcap/proto/TCMessage.hpp"
+
 #include "eyeline/tcap/proto/dec/TDMsgTUnidir.hpp"
 #include "eyeline/tcap/proto/dec/TDMsgTBegin.hpp"
 #include "eyeline/tcap/proto/dec/TDMsgTEnd.hpp"
@@ -19,8 +20,6 @@ namespace tcap {
 namespace proto {
 namespace dec {
 
-using eyeline::asn1::ber::TSGroupBER;
-
 /* According to Q.773, TCMessage is defined in IMPLICIT tagging
    environment as follow:
 
@@ -32,33 +31,39 @@ TCMessage ::= CHOICE {
   abort             Abort
 } */
 class TDTCMessage : public asn1::ber::DecoderOfChoice_T<5> {
-private:
+protected:
   using asn1::ber::DecoderOfChoice_T<5>::setAlternative;
 
-  union {
-    void *    _aligner;
-    uint8_t   _buf[eyeline::util::MaxSizeOf5_T<TDMsgTUnidir, TDMsgTBegin,
-                              TDMsgTEnd, TDMsgTContinue, TDMsgTAbort>::VALUE];
-  } _memMsg;
+  class AltDecoder : public 
+    asn1::ber::ChoiceOfDecoders5_T<TDMsgTUnidir, TDMsgTBegin,
+                              TDMsgTEnd, TDMsgTContinue, TDMsgTAbort> {
+  public:
+    AltDecoder()
+      : asn1::ber::ChoiceOfDecoders5_T<TDMsgTUnidir, TDMsgTBegin,
+                              TDMsgTEnd, TDMsgTContinue, TDMsgTAbort>()
+    { }
+    ~AltDecoder()
+    { }
 
-protected:
-  proto::TCMessage * _dVal;
-  union {
-    asn1::ber::TypeDecoderAC * _any;
-    TDMsgTUnidir *    _unidir;
-    TDMsgTBegin *     _begin;
-    TDMsgTEnd *       _end;
-    TDMsgTContinue *  _cont;
-    TDMsgTAbort *     _abort;
-  } _pDec;
+    TCDlgPduAC::PduKind_e getKind(void) const { return static_cast<TCDlgPduAC::PduKind_e>(getChoiceIdx()); }
 
-  void cleanUp(void)
-  {
-    if (_pDec._any) {
-      _pDec._any->~TypeDecoderAC();
-      _pDec._any = NULL;
-    }
-  }
+    Alternative_T<TDMsgTUnidir>   unidir()  { return alternative0(); }
+    Alternative_T<TDMsgTBegin>    begin()   { return alternative1(); }
+    Alternative_T<TDMsgTEnd>      end()     { return alternative2(); }
+    Alternative_T<TDMsgTContinue> cont()    { return alternative3(); }
+    Alternative_T<TDMsgTAbort>    abort()   { return alternative4(); }
+
+    ConstAlternative_T<TDMsgTUnidir>   unidir() const { return alternative0(); }
+    ConstAlternative_T<TDMsgTBegin>    begin()  const { return alternative1(); }
+    ConstAlternative_T<TDMsgTEnd>      end()    const { return alternative2(); }
+    ConstAlternative_T<TDMsgTContinue> cont()   const { return alternative3(); }
+    ConstAlternative_T<TDMsgTAbort>    abort()  const { return alternative4(); }
+  };
+  /* ----------------------------------------------- */
+
+  proto::TCMessage *  _dVal;
+  AltDecoder          _pDec;
+  /* ----------------------------------------------- */
   //Initializes ElementDecoder of this type
   void construct(void);
 
@@ -83,28 +88,20 @@ public:
 
   static const TaggingOptions _tagOptions;
 
-  explicit TDTCMessage(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfChoice_T<5>(TSGroupBER::getTSRule(use_rule))
-    , _dVal(0)
+  explicit TDTCMessage(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<5>(use_rule), _dVal(0)
   {
     construct();
-    _memMsg._aligner = 0;
-    _pDec._any = NULL;
   }
-  TDTCMessage(proto::TCMessage & use_val,
-              TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER)
-    : asn1::ber::DecoderOfChoice_T<5>(TSGroupBER::getTSRule(use_rule))
-    , _dVal(&use_val)
+  explicit TDTCMessage(proto::TCMessage & use_val,
+                       asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleBER)
+    : asn1::ber::DecoderOfChoice_T<5>(use_rule), _dVal(&use_val)
   {
     construct();
-    _memMsg._aligner = 0;
-    _pDec._any = NULL;
   }
   //
   ~TDTCMessage()
-  {
-    cleanUp();
-  }
+  { }
 
   void setValue(proto::TCMessage & use_val)
   {

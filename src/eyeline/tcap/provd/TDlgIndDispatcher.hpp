@@ -10,6 +10,8 @@
 //#include "eyeline/tcap/provd/TDlgIndComposers.hpp"
 #include "eyeline/tcap/provd/TDlgIndProcessor.hpp"
 
+#include "eyeline/util/ChoiceOfT.hpp"
+
 namespace eyeline {
 namespace tcap {
 namespace provd {
@@ -171,28 +173,22 @@ public:
 //  TCAP dialogue indications from received SCCP message and dispatching the
 //  former to appropriate TCAP dialogue handler.
 class TDlgIndicationDispatcher : SCSPIndHandlerIface {
-private:
-  union {
-    void *  _aligner;
-    uint8_t _buf[eyeline::util::MaxSizeOf6_T<
-                                    TBeginIndDispatcher, TContIndDispatcher,
-                                    TEndIndDispatcher, TUAbortIndDispatcher,
-                                    TPAbortIndDispatcher, TNoticeIndDispatcher
-                                  >::VALUE];
-  } _objMem;
-
 protected:
-  TDlgIndicationPrimitive::IKind_e  _kind;
-  union { //NOTE: this union provides correct pointer translation 
-          //only in case of SINLE inheritance from TDlgIndicationDispatcherAC
-    TDlgIndicationDispatcherAC * pAc;
-    TBeginIndDispatcher *  tBegin;
-    TContIndDispatcher *   tCont;
-    TEndIndDispatcher *    tEnd;
-    TPAbortIndDispatcher * tPAbrt;
-    TUAbortIndDispatcher * tUAbrt;
-    TNoticeIndDispatcher * tNotice;
-  }                 _dsp;
+  class AltDispatcher : public util::ChoiceOfBased6_T<
+    TDlgIndicationDispatcherAC,
+    TBeginIndDispatcher, TContIndDispatcher,
+    TEndIndDispatcher, TUAbortIndDispatcher,
+    TPAbortIndDispatcher, TNoticeIndDispatcher> {
+  public:
+    Alternative_T<TBeginIndDispatcher>  tBegin()  { return alternative0(); }
+    Alternative_T<TContIndDispatcher>   tCont()   { return alternative1(); }
+    Alternative_T<TEndIndDispatcher>    tEnd()    { return alternative2(); }
+    Alternative_T<TUAbortIndDispatcher> tUAbrt()  { return alternative3(); }
+    Alternative_T<TPAbortIndDispatcher> tPAbrt()  { return alternative4(); }
+    Alternative_T<TNoticeIndDispatcher> tNotice() { return alternative5(); }
+  };
+
+  AltDispatcher     _dsp;
   SCSPMessageInfo   _msgSCSP;
   proto::TCMessage  _msgTC; //has references to _msgSCSP.msgData
 
@@ -203,10 +199,8 @@ protected:
   virtual bool processSCSPInd(const SCSPNoticeInd & scsp_ind) /*throw(std::exception)*/;
 
 public:
-  explicit TDlgIndicationDispatcher() : _kind(TDlgIndicationPrimitive::indTRNone)
-  {
-    _objMem._aligner = _dsp.pAc = 0;
-  }
+  TDlgIndicationDispatcher()
+  { }
   //
   ~TDlgIndicationDispatcher()
   {
@@ -215,16 +209,15 @@ public:
 
   void clear(void)
   {
-    if (_dsp.pAc) {
-      _dsp.pAc->~TDlgIndicationDispatcherAC();
-      _dsp.pAc = 0;
-      _kind = TDlgIndicationPrimitive::indTRNone;
-    }
+    _dsp.clear();
     _msgTC.clear();
     _msgSCSP.clear();
   }
 
-  TDlgIndicationPrimitive::IKind_e indKind(void) const { return _kind; }
+  TDlgIndicationPrimitive::IKind_e indKind(void) const
+  {
+    return static_cast<TDlgIndicationPrimitive::IKind_e>(_dsp.getChoiceIdx());
+  }
 
   SCSPMessageInfo * getSCSPMessage(void) { return &_msgSCSP; }
 
@@ -238,7 +231,7 @@ public:
   // ------------------------------------------------------------
   bool dispatchTInd(TDlgIndProcessorIface * use_hdl) /*throw(std::exception)*/
   {
-    return _dsp.pAc ? _dsp.pAc->dispatchTInd(use_hdl, _msgSCSP.connectNum) : false;
+    return _dsp.get() ? _dsp.get()->dispatchTInd(use_hdl, _msgSCSP.connectNum) : false;
   }
 };
 

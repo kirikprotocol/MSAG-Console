@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDMsgTBegin.hpp"
 
@@ -12,8 +12,7 @@ namespace dec {
 /* ************************************************************ *
  * Class TDMsgTBegin implementation
  * ************************************************************ */
-const asn1::ASTag
-  TDMsgTBegin::_typeTag(asn1::ASTag::tagApplication, 2);
+const asn1::ASTag TDMsgTBegin::_typeTag(asn1::ASTag::tagApplication, 2);
 
 /* Begin message is defined in IMPLICIT tagging environment as follow:
 Begin ::= [APPLICATION 2] SEQUENCE {
@@ -23,9 +22,9 @@ Begin ::= [APPLICATION 2] SEQUENCE {
 } */
 void TDMsgTBegin::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<3>::setField(0, TDOrigTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<3>::setField(1, TDDialoguePortion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<3>::setField(2, TDComponentPortion::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(0, TDOrigTransactionId::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(1, TDDialoguePortion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(2, TDComponentPortion::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
 }
 
 // ----------------------------------------
@@ -45,8 +44,8 @@ asn1::ber::TypeDecoderAC *
     return &_orgTrId;
   }
   if (unique_idx == 1) {
-    cleanUp();
-    return _dlgPart = new (_memDlg._buf) TDDialoguePortion(_dVal->_dlgPart, getVALRule());
+    _dlgPart.init(getTSRule()).setValue(_dVal->_dlgPart);
+    return _dlgPart.get();
   }
   //if (unique_idx == 2) {}
   _compPart.setValue(_dVal->_compPart);

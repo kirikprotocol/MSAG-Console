@@ -25,7 +25,7 @@ struct TMsgUnidir {
   TCDlgPortion    _dlgPart; //Optional
   TComponentsList _compPart;
 
-  explicit TMsgUnidir()
+  TMsgUnidir()
   { }
   ~TMsgUnidir()
   { }
@@ -33,8 +33,19 @@ struct TMsgUnidir {
   //Verifies that u-abortCause contains allowed Structured Dialogue PDU or EXTERNAL
   bool verifyPdu(void) const
   {
-    return _dlgPart.empty() || _dlgPart.getUNI();
+    return _dlgPart.empty() || _dlgPart.uni().get();
   }
+
+  const TCPduAUDT * getAARE(void) const
+  {
+    return _dlgPart.uni().get()  ? _dlgPart.uni().get() : NULL;
+  }
+
+  TCPduAUDT * getAARE(void)
+  {
+    return _dlgPart.uni().get()  ? _dlgPart.uni().get() : NULL;
+  }
+
 };
 
 } //proto

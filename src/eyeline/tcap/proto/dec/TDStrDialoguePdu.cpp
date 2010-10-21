@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDStrDialoguePdu.hpp"
 
@@ -22,9 +22,9 @@ DialoguePDU ::= CHOICE {
 } */
 void TDStrDialoguePdu::construct(void)
 {
-  asn1::ber::DecoderOfChoice_T<3>::setAlternative(0, TDAPduAARQ::_typeTag);
-  asn1::ber::DecoderOfChoice_T<3>::setAlternative(1, TDAPduAARE::_typeTag);
-  asn1::ber::DecoderOfChoice_T<3>::setAlternative(2, TDAPduABRT::_typeTag);
+  setAlternative(0, TDAPduAARQ::_typeTag);
+  setAlternative(1, TDAPduAARE::_typeTag);
+  setAlternative(2, TDAPduABRT::_typeTag);
 }
 
 // ----------------------------------------
@@ -39,21 +39,13 @@ asn1::ber::TypeDecoderAC *
   if (unique_idx > 2)
     throw smsc::util::Exception("tcap::proto::dec::TDStrDialoguePdu::prepareAlternative() : undefined UId");
 
-  cleanUp();
-  if (!unique_idx) {
-    _pDec._aarq = new (_memPdu._buf) TDAPduAARQ(getVALRule());
-    _pDec._aarq->setValue(_dVal->initAARQ());
-    return _pDec._aarq;
-  }
-  if (unique_idx == 1) {
-    _pDec._aare = new (_memPdu._buf) TDAPduAARE(getVALRule());
-    _pDec._aare->setValue(_dVal->initAARE());
-    return _pDec._aare;
-  }
-  //if (unique_idx == 2)
-  _pDec._abrt = new (_memPdu._buf) TDAPduABRT(getVALRule());
-  _pDec._abrt->setValue(_dVal->initABRT());
-  return _pDec._abrt;
+  if (!unique_idx)
+    _pDec.aarq().init(getTSRule()).setValue(_dVal->aarq().init());
+  else if (unique_idx == 1)
+    _pDec.aare().init(getTSRule()).setValue(_dVal->aare().init());
+  else //if (unique_idx == 2)
+    _pDec.abrt().init(getTSRule()).setValue(_dVal->abrt().init());
+  return _pDec.get();
 }
 
 }}}}

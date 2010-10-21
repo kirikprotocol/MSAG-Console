@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDDialoguePortion.hpp"
 
@@ -19,35 +19,12 @@ const asn1::ASTagging
   TDDialoguePortion::_typeTags(_typeTag, asn1::ASTagging::tagsEXPLICIT, asn1::_tagsEXTERNAL);
 
 
-void TDDialoguePortion::cleanEnc(void)
+void TDDialoguePortion::clearAll(void)
 {
-  if (_decEnc._uni) {
-    if (_decKind == proto::TCDlgPortion::asUNI)
-      _decEnc._uni->~TDAPduAUDT();
-    else if (_decKind == proto::TCDlgPortion::asDLG)
-      _decEnc._dlg->~TDStrDialoguePdu();
-    else
-      _decEnc._embd->~DecoderOfEmbdEncoding();
-    _decEnc._uni = NULL;
-    _decKind = proto::TCDlgPortion::asNone;
-  }
-}
-
-void TDDialoguePortion::cleanAll(void)
-{
-  cleanEnc();
-  if (_decDRef) {
-    _decDRef->~DecoderOfEOID();
-    _decDRef = NULL;
-  }
-  if (_decIRef) {
-    _decIRef->~DecoderOfINTEGER();
-    _decIRef = NULL;
-  }
-  if (_decDescr) {
-    _decDescr->~DecoderOfObjDescriptor();
-    _decDescr = NULL;
-  }
+  _decAS.clear();
+  _decDRef.clear();
+  _decIRef.clear();
+  _decDescr.clear();
 }
 
 /*
@@ -63,17 +40,18 @@ DialoguePortion ::= [APPLICATION 11] EXPLICIT [UNIVERSAL 8] IMPLICIT SEQUENCE {
 } */
 void TDDialoguePortion::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<4, 2>::setField(0, asn1::_tagObjectID, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<4, 2>::setField(1, asn1::_tagINTEGER, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<4, 2>::setField(2, asn1::_tagObjDescriptor, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<4, 2>::setField(3, asn1::ber::DecoderOfEmbdEncoding::_tagOptions,
-                                                              asn1::ber::EDAlternative::altMANDATORY);
+  setField(0, asn1::_tagObjectID, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(1, asn1::_tagINTEGER, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(2, asn1::_tagObjDescriptor, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(3, asn1::ber::DecoderOfEmbdEncoding::_tagOptions, asn1::ber::EDAlternative::altMANDATORY);
 }
 
 // ----------------------------------------
 // -- DecoderOfStructAC interface methods
 // ----------------------------------------
-//If necessary, allocates optional element and initializes associated TypeDecoderAC
+//NOTE: input encoding is decoded first to intermediate ASExternal value,
+//      if contained encoding belongs to one of defined TCAP AbstractSyntaxes
+//      then decoded value is reinitialized accordingly.
 asn1::ber::TypeDecoderAC *
   TDDialoguePortion::prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */
 {
@@ -83,48 +61,45 @@ asn1::ber::TypeDecoderAC *
     throw smsc::util::Exception("ber::TDDialoguePortion::prepareAlternative() : undefined UId");
 
   if (!unique_idx) {
-    _decDRef = new (_memDRef._buf) asn1::ber::DecoderOfEOID(getTSRule());
-    _decDRef->setValue(_dVal->getEXT()->front()._asOid);
-    return _decDRef;
+    _decDRef.init(getTSRule()).setValue(_dVal->ext().get()->front()._asOid);
+    return _decDRef.get();
   }
   if (unique_idx == 1) {
-    _decIRef = new (_memIRef._buf) asn1::ber::DecoderOfINTEGER(getTSRule());
-    _decIRef->setValue(_dVal->getEXT()->front()._prsCtxId);
-    return _decIRef;
+    _decIRef.init(getTSRule()).setValue(_dVal->ext().get()->front()._prsCtxId);
+    return _decIRef.get();
   }
   if (unique_idx == 2) {
-    _decDescr = new (_memDescr._buf) asn1::ber::DecoderOfObjDescriptor(getTSRule());
-    _decDescr->setValue(_dVal->getEXT()->front()._descr);
-    return _decDescr;
+    _decDescr.init(getTSRule()).setValue(_dVal->ext().get()->front()._descr);
+    return _decDescr.get();
   }
   //if (unique_idx == 3)
   //determine necessary structure for encoding field
-  if (_dVal->getEXT()->front().hasASyntaxOID()
-      && !_dVal->getEXT()->front().hasPrsContextId()) {
-    if (_dVal->getEXT()->front()._asOid == _ac_tcap_strDialogue_as) {
-      //structured dialogue PDU is expected
-      initEncDLG(_dVal->initDLG());
-      return _decEnc._dlg;
+  if (_dVal->ext().get()->front().hasASyntaxOID()
+      && !_dVal->ext().get()->front().hasPrsContextId()) {
+    if (_dVal->ext().get()->front()._asOid == _ac_tcap_strDialogue_as) {
+      //structured dialogue PDU is expected, reinit _dVal
+      _decAS.dlg().init(getTSRule()).setValue(_dVal->dlg().init());
+      return _decAS.get();
     }
-    if (_dVal->getEXT()->front()._asOid == _ac_tcap_uniDialogue_as) {
-      //Unidialogue PDU is expected
-      initEncUNI(_dVal->initUNI());
-      return _decEnc._uni;
+    if (_dVal->ext().get()->front()._asOid == _ac_tcap_uniDialogue_as) {
+      //Unidialogue PDU is expected, reinit _dVal
+      _decAS.uni().init(getTSRule()).setValue(_dVal->uni().init());
+      return _decAS.get();
     }
-  }
+  } 
   //keep going with ASExternal
-  initEncEXT(_dVal->getEXT()->front()._enc);
-  return _decEnc._embd;
+  _decAS.embd().init(getTSRule()).setValue(_dVal->ext().get()->front()._enc);
+  return _decAS.get();
 }
 
 //Performs actions upon successfull optional element decoding
 void TDDialoguePortion::markDecodedOptional(uint16_t unique_idx) /*throw() */
 {
-  //NOTE: _dVal->getEXT() may be NULL only for unique_idx == 3
+  //NOTE: _dVal->ext().get() may be NULL only for unique_idx == 3
   if (!unique_idx)
-    _dVal->getEXT()->front().setASyntaxOID();
+    _dVal->ext().get()->front().setASyntaxOID();
   if (unique_idx == 1)
-    _dVal->getEXT()->front().setPrsContext();
+    _dVal->ext().get()->front().setPrsContext();
 }
 
 } //dec

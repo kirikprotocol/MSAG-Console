@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/provd/TDlgIndDispatcher.hpp"
 #include "eyeline/tcap/provd/SCSPIndDispatcher.hpp"
@@ -33,25 +33,20 @@ bool TDlgIndicationDispatcher::processSCSPInd(const SCSPUnitdataInd & scsp_ind)
   //create associated indication dispatcher
   switch (_msgTC.getKind()) {
   case proto::TCMessage::t_begin: {
-    _dsp.tBegin = new (_objMem._buf) TBeginIndDispatcher();
-    return _dsp.tBegin->processSCSPInd(scsp_ind, *_msgTC.getBegin());
+    return _dsp.tBegin().init().processSCSPInd(scsp_ind, *_msgTC.begin().get());
   }
   case proto::TCMessage::t_end: {
-    _dsp.tEnd = new (_objMem._buf) TEndIndDispatcher();
-    return _dsp.tEnd->processSCSPInd(scsp_ind, *_msgTC.getEnd());
+    return _dsp.tEnd().init().processSCSPInd(scsp_ind, *_msgTC.end().get());
   }
   case proto::TCMessage::t_continue: {
-    _dsp.tCont = new (_objMem._buf) TContIndDispatcher();
-    return _dsp.tCont->processSCSPInd(scsp_ind, *_msgTC.getContinue());
+    return _dsp.tCont().init().processSCSPInd(scsp_ind, *_msgTC.cont().get());
   }
   case proto::TCMessage::t_abort: {
-    if (_msgTC.getAbort()->isByProvider()) {
-      _dsp.tPAbrt = new (_objMem._buf) TPAbortIndDispatcher();
-      return _dsp.tPAbrt->processSCSPInd(scsp_ind, *_msgTC.getAbort());
+    if (_msgTC.abort().get()->isByProvider()) {
+      return _dsp.tPAbrt().init().processSCSPInd(scsp_ind, *_msgTC.abort().get());
     }
     //NOTE: user requested abort may have no reason specified!!!
-    _dsp.tUAbrt = new (_objMem._buf) TUAbortIndDispatcher();
-    return _dsp.tUAbrt->processSCSPInd(scsp_ind, *_msgTC.getAbort());
+    return _dsp.tUAbrt().init().processSCSPInd(scsp_ind, *_msgTC.abort().get());
   }
   //case proto::TCMessage::t_unidirection:
   //TODO: log something meaningfull
@@ -64,9 +59,7 @@ bool TDlgIndicationDispatcher::processSCSPInd(const SCSPNoticeInd & scsp_ind)
   /*throw(std::exception)*/
 {
   _msgTC.clear();
-  _dsp.tNotice = new (_objMem._buf) TNoticeIndDispatcher();
-  _dsp.tNotice->processSCSPInd(scsp_ind);
-  return true;
+  return _dsp.tNotice().init().processSCSPInd(scsp_ind);
 }
 
 

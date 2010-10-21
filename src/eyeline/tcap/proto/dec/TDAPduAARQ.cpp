@@ -1,9 +1,8 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "eyeline/tcap/proto/dec/TDAPduAARQ.hpp"
-
 
 namespace eyeline {
 namespace tcap {
@@ -23,9 +22,9 @@ AARQ-apdu ::= [APPLICATION 0] IMPLICIT SEQUENCE {
 } */
 void TDAPduAARQ::construct(void)
 {
-  asn1::ber::DecoderOfSequence_T<3>::setField(0, TDProtocolVersion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
-  asn1::ber::DecoderOfSequence_T<3>::setField(1, TDApplicationContext::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
-  asn1::ber::DecoderOfSequence_T<3>::setField(2, TDUserInformation::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(0, TDProtocolVersion::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
+  setField(1, TDApplicationContext::_typeTag, asn1::ber::EDAlternative::altMANDATORY);
+  setField(2, TDUserInformation::_typeTag, asn1::ber::EDAlternative::altOPTIONAL);
 }
 
 // ----------------------------------------
@@ -51,8 +50,8 @@ asn1::ber::TypeDecoderAC *
     return &_appCtx;
   }
   //if (unique_idx == 2) {}
-  getUI()->setValue(_dVal->_usrInfo);
-  return _pUI;
+  _pUI.init(getTSRule()).setValue(_dVal->_usrInfo);
+  return _pUI.get();
 }
 
 }}}}
