@@ -102,7 +102,10 @@ public class WebContext {
   public WebContext(String user) {
     aclManager = new WAclManager(adminContext.getAclManager(), journal, user);
     aliasManager = new WAliasManager(adminContext.getAliasManager(), user, journal);
-    archiveDaemonManager = new WArchiveDaemonManager(adminContext.getArchiveDaemonManager(), journal, user);
+    if (adminContext.getArchiveDaemonManager() != null)
+      archiveDaemonManager = new WArchiveDaemonManager(adminContext.getArchiveDaemonManager(), journal, user);
+    else
+      archiveDaemonManager = null;
     categoryManager = new WCategoryManager(adminContext.getCategoryManager(), journal, user);
     closedGroupManager = new WClosedGroupManager(adminContext.getClosedGroupManager(), user, journal);
     fraudManager = new WFraudManager(adminContext.getFraudManager(), journal, user);

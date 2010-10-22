@@ -34,6 +34,10 @@ public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSe
     return dm;
   }
 
+  public boolean isArchiveDaemonDeployed() {
+    return WebContext.getInstance().getArchiveDaemonManager() != null;
+  }
+
   @Override
   protected void init() throws AdminException {
     super.init();
