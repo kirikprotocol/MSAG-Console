@@ -35,12 +35,14 @@ public class SettingsMController<T> extends SmscController {
   }
 
   protected void init() throws AdminException {
+    if (mngr == null)
+      return;
     resetRevision();
 
     for (Iterator it = FacesContext.getCurrentInstance().getMessages(); it.hasNext(); it.remove())
       it.next();
 
-    if (mngr != null && mngr instanceof SmscConfiguration) {
+    if (mngr instanceof SmscConfiguration) {
       try {
         Map<Integer, SmscConfigurationStatus> statuses = ((SmscConfiguration) mngr).getStatusForSmscs();
         if (statuses.containsValue(SmscConfigurationStatus.OUT_OF_DATE)) {

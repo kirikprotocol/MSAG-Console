@@ -52,19 +52,23 @@
       </h:panelGroup>
 
 
-      <h:panelGrid columns="3" columnClasses="columnTopLeftAlign,columnTopLeftAlign,columnTopLeftAlign" style="width:600px;" >
+      <h:panelGrid columns="2" columnClasses="column500TopLeft, columnTopLeftAlign" >
 
-        <h:panelGroup style="width:200px;">
+        <h:panelGroup >
           <eye:pageSubtitle value="#{msg['subjects.page.column.masks']}" />
+
+          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign" >
           <eye:dynamicTable value="#{subjectEdit.masksModel}">
             <eye:textColumn name="mask" allowEditAfterAdd="true"/>
           </eye:dynamicTable>
+            <h:outputText value=""/>
+          </h:panelGrid>
         </h:panelGroup>
 
-        <h:panelGroup style="width:200px;">
+        <h:panelGroup >
           <eye:pageSubtitle value="#{msg['subjects.page.column.subjects']}" />
 
-          <h:panelGrid style="align:left;" columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign" width="200px;">
+          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign" >
             <c:forEach items="#{subjectEdit.subj.children}" var="child">
               <h:commandLink  value="#{child}" action="SUBJECT_EDIT" immediate="true">
                     <f:param name="oldName" value="#{child}"/>
@@ -79,7 +83,7 @@
             </c:forEach>
 
 
-            <h:selectOneMenu value="#{subjectEdit.childToAdd}"  required="false"
+            <h:selectOneMenu styleClass="selectW" value="#{subjectEdit.childToAdd}"  required="false"
                              rendered="#{not empty subjectEdit.allowedChildren}">
                  <f:selectItems value="#{subjectEdit.allowedChildren}"/>
             </h:selectOneMenu>

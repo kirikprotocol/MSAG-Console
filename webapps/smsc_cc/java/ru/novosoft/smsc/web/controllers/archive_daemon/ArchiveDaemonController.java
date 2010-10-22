@@ -49,6 +49,11 @@ public class ArchiveDaemonController extends SettingsMController<ArchiveDaemonSe
 
   public ArchiveDaemonController() {
     super(WebContext.getInstance().getArchiveDaemonManager());
+    if (WebContext.getInstance().getArchiveDaemonManager() == null) {
+      initError = true;
+      return;
+    }
+    
     try {
       init();
 
