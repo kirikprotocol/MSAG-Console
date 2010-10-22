@@ -89,7 +89,6 @@ public class FraudController extends SettingsMController<FraudSettings> {
       try {
         frSettings.setWhiteList(addresses);
         setSettings(frSettings);
-        viewChanges();
       } catch (AdminException e1) {
         addError(e1);
       }
@@ -118,10 +117,6 @@ public class FraudController extends SettingsMController<FraudSettings> {
       addError(e);
     }
     return "FRAUD";
-  }
-
-  public void viewChanges() {
-    addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.users.submit.hint");
   }
 
   public boolean isEnableCheck() {
@@ -172,7 +167,6 @@ public class FraudController extends SettingsMController<FraudSettings> {
       addresses.add(addr);
       frSettings.setWhiteList(addresses);
       setSettings(frSettings);
-      viewChanges();
     }
     catch (Exception ex) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.fraud.invalid.address",newAddr);
