@@ -578,6 +578,9 @@ void AmericaTestFixture::slow_smpp_sender(void)
 void AmericaTestFixture::sms_status_report_receiving(void)
 {
   smsc_log_debug(logger, "======== AmericaTestFixture::sms_status_report_receiving ========\n");
+  using smsc::mtsmsme::processor::TCO;
+  using smsc::sms::Address;
+
   /* delivery report decoding */
   /*0x09, 0x00, 0x03, 0x0e, 0x19,*/
   uint8_t cdlen = 0x0b;/*,*/
