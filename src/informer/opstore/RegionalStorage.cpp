@@ -4,7 +4,7 @@
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/MessageGlossary.h"
-#include "Delivery.h"
+#include "DeliveryImpl.h"
 #include "StoreJournal.h"
 
 namespace eyeline {
@@ -53,7 +53,7 @@ public:
 
 
 
-RegionalStorage::RegionalStorage( Delivery&            dlv,
+RegionalStorage::RegionalStorage( DeliveryImpl&        dlv,
                                   regionid_type        regionId ) :
 log_(dlv.log_),
 storingIter_(messageList_.end()),

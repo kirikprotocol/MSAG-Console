@@ -5,14 +5,7 @@
 #include <vector>
 
 #include "informer/io/Typedefs.h"
-
-namespace smsc {
-namespace util {
-namespace config {
-class ConfigView;
-}
-}
-}
+#include "Delivery.h"
 
 namespace eyeline {
 namespace informer {
@@ -56,7 +49,6 @@ public:
 
     /// final receipt/response has been received
     virtual void receiveReceipt( const DlvRegMsgId& drmId, int  smppStatus, bool retry ) = 0;
-
     /// response (non-final) has been received
     virtual bool receiveResponse( const DlvRegMsgId& drmId ) = 0;
 
@@ -70,6 +62,8 @@ public:
     virtual void addRegion( regionid_type regionId ) = 0;
     virtual void updateRegion( regionid_type regionId ) = 0;
     virtual void deleteRegion( regionid_type regionId ) = 0;
+
+    virtual DeliveryPtr getDelivery( dlvid_type dlvId ) = 0;
 };
 
 } // informer

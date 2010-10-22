@@ -5,7 +5,7 @@
 #include <vector>
 #include "informer/data/CommonSettings.h"
 #include "informer/data/InfosmeCore.h"
-#include "informer/opstore/Delivery.h"
+#include "informer/opstore/DeliveryImpl.h"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/synchronization/EventMonitor.hpp"
@@ -13,6 +13,14 @@
 #include "core/threads/ThreadPool.hpp"
 #include "logger/Logger.h"
 #include "RegionFinderV1.h"
+
+namespace smsc {
+namespace util {
+namespace config {
+class ConfigView;
+}
+}
+}
 
 namespace eyeline {
 namespace informer {
@@ -80,6 +88,8 @@ public:
     virtual void updateRegion( regionid_type regionId );
     virtual void deleteRegion( regionid_type regionId );
 
+    virtual DeliveryPtr getDelivery( dlvid_type dlvId );
+
     // --------------------
 
     /// configuration
@@ -133,7 +143,7 @@ private:
     smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned
 
-    typedef std::list<DeliveryPtr> DeliveryList;
+    typedef std::list<DeliveryImplPtr> DeliveryList;
     typedef smsc::core::buffers::IntHash< DeliveryList::iterator > DeliveryHash;
     DeliveryHash                                  deliveryHash_;
     DeliveryList                                  deliveryList_;

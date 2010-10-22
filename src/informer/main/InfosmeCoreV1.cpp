@@ -145,7 +145,7 @@ public:
             bool firstPass = true;
             size_t written = 0;
             do {
-                DeliveryPtr ptr;
+                DeliveryImplPtr ptr;
                 {
                     smsc::core::synchronization::MutexGuard mg(core_.startMon_);
                     if (core_.isStopping()) { break; }
@@ -189,7 +189,7 @@ public:
             bool firstPass = true;
             size_t written = 0;
             do {
-                DeliveryPtr ptr;
+                DeliveryImplPtr ptr;
                 {
                     smsc::core::synchronization::MutexGuard mg(core_.startMon_);
                     if (core_.isStopping()) { break; }
@@ -430,7 +430,7 @@ void InfosmeCoreV1::selfTest()
     MutexGuard mg(startMon_);
     DeliveryList::iterator* ptr = deliveryHash_.GetPtr(dlvId);
     if (!ptr) return;
-    DeliveryPtr dlv = **ptr;
+    DeliveryImplPtr dlv = **ptr;
     MessageList msgList;
     MessageLocker mlk;
     mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
@@ -545,7 +545,7 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
         if (!dlvInfo.get()) {
             // delete
             DeliveryList::iterator iter;
-            DeliveryPtr d;
+            DeliveryImplPtr d;
             if (deliveryHash_.Pop(dlvId,iter)) {
                 if ( inputRollingIter_ == iter ) ++inputRollingIter_;
                 if ( storeRollingIter_ == iter ) ++storeRollingIter_;
@@ -569,9 +569,9 @@ void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
             throw InfosmeException("delivery info not passed");
         }
         InputMessageSource* ims = new InputStorage(*this,*inputJournal_);
+        DeliveryImplPtr ptr = DeliveryImplPtr(new DeliveryImpl(dlvInfo,*storeJournal_,ims));
         deliveryHash_.Insert(dlvId,
-                             deliveryList_.insert(deliveryList_.begin(),
-                                                  DeliveryPtr(new Delivery(dlvInfo,*storeJournal_,ims))));
+                             deliveryList_.insert(deliveryList_.begin(),ptr));
     }
     startMon_.notify();
 }
@@ -617,7 +617,7 @@ void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId, int status, bool r
                    drmId.regId, drmId.dlvId,
                    drmId.msgId, status, retry );
     try {
-        DeliveryPtr dlv;
+        DeliveryImplPtr dlv;
         {
             smsc::core::synchronization::MutexGuard mg(startMon_);
             DeliveryList::iterator* piter = deliveryHash_.GetPtr(drmId.dlvId);
@@ -667,7 +667,7 @@ bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId )
                    drmId.dlvId,
                    drmId.msgId);
     try {
-        DeliveryPtr dlv;
+        DeliveryImplPtr dlv;
         {
             smsc::core::synchronization::MutexGuard mg(startMon_);
             DeliveryList::iterator* piter = deliveryHash_.GetPtr(drmId.dlvId);
@@ -744,6 +744,17 @@ void InfosmeCoreV1::updateRegion( regionid_type regionId )
 void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 {
     throw InfosmeException("FIXME: not impl yet");
+}
+
+
+DeliveryPtr InfosmeCoreV1::getDelivery( dlvid_type dlvId )
+{
+    smsc::core::synchronization::MutexGuard mg(startMon_);
+    DeliveryList::iterator* piter = deliveryHash_.GetPtr(dlvId);
+    if (!piter) {
+        return DeliveryPtr();
+    }
+    return DeliveryPtr(**piter);
 }
 
 

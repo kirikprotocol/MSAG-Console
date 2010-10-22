@@ -1,45 +1,27 @@
 #include <cassert>
-#include "Delivery.h"
-#include "informer/data/CommonSettings.h"
+#include "DeliveryImpl.h"
 
 namespace eyeline {
 namespace informer {
 
-Delivery::Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
-                    StoreJournal&               journal,
-                    InputMessageSource*         source ) :
-log_(0),
-dlvInfo_(dlvInfo),
-storeJournal_(journal),
-activityLog_(*dlvInfo_.get()),
-source_(source),
-ref_(0)
+DeliveryImpl::DeliveryImpl( std::auto_ptr<DeliveryInfo> dlvInfo,
+                            StoreJournal&               journal,
+                            InputMessageSource*         source ) :
+Delivery(dlvInfo,source),
+storeJournal_(journal)
 {
-    /// FIXME: read stats from activity log
-    char buf[20];
-    sprintf(buf,"dl.%u",dlvInfo_->getDlvId());
-    log_ = smsc::logger::Logger::getInstance(buf);
-    smsc_log_info(log_,"ctor D=%u",dlvInfo_->getDlvId());
-    try {
-        source_->init(activityLog_);
-    } catch ( std::exception& e ) {
-        smsc_log_error(log_,"D=%u inputstorage init failed: %s",
-                       dlvInfo_->getDlvId(), e.what());
-        delete source_;
-        throw;
-    }
+    smsc_log_info(log_,"ctor D=%u done",dlvInfo_->getDlvId());
 }
 
 
-Delivery::~Delivery()
+DeliveryImpl::~DeliveryImpl()
 {
     smsc_log_info(log_,"dtor D=%u",dlvInfo_->getDlvId());
     storages_.Empty();
-    delete source_;
 }
 
 
-RegionalStoragePtr Delivery::getRegionalStorage( regionid_type regId, bool create )
+RegionalStoragePtr DeliveryImpl::getRegionalStorage( regionid_type regId, bool create )
 {
     MutexGuard mg(cacheLock_);
     RegionalStoragePtr* ptr = storages_.GetPtr(regId);
@@ -55,7 +37,7 @@ RegionalStoragePtr Delivery::getRegionalStorage( regionid_type regId, bool creat
 }
 
 
-void Delivery::getRegionList( std::vector< regionid_type >& regIds )
+void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds )
 {
     MutexGuard mg(cacheLock_);
     regIds.reserve(storages_.Count());
@@ -68,16 +50,7 @@ void Delivery::getRegionList( std::vector< regionid_type >& regIds )
 }
 
 
-void Delivery::updateDlvInfo( const DeliveryInfo& info )
-{
-    assert( dlvInfo_.get() );
-    assert(dlvInfo_->getDlvId() == info.getDlvId());
-    // FIXME: update dlvinfo
-    //*dlvInfo_.get() = info;
-}
-
-
-size_t Delivery::rollOverStore()
+size_t DeliveryImpl::rollOverStore()
 {
     size_t written = 0;
     // FIXME: refactor to use list for rolling over
@@ -103,16 +76,16 @@ size_t Delivery::rollOverStore()
 }
 
 
-void Delivery::setRecordAtInit( const InputRegionRecord& rec,
-                                uint64_t                 maxMsgId )
+void DeliveryImpl::setRecordAtInit( const InputRegionRecord& rec,
+                                    uint64_t                 maxMsgId )
 {
     source_->setRecordAtInit(rec,maxMsgId);
 }
 
 
-void Delivery::setRecordAtInit( regionid_type            regionId,
-                                Message&                 msg,
-                                regionid_type            serial )
+void DeliveryImpl::setRecordAtInit( regionid_type            regionId,
+                                    Message&                 msg,
+                                    regionid_type            serial )
 {
     RegionalStoragePtr* ptr = storages_.GetPtr(regionId);
     if (!ptr) {
@@ -124,8 +97,8 @@ void Delivery::setRecordAtInit( regionid_type            regionId,
 }
 
 
-void Delivery::postInitOperative( std::vector<regionid_type>& filledRegs,
-                                  std::vector<regionid_type>& emptyRegs )
+void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
+                                      std::vector<regionid_type>& emptyRegs )
 {
     int regId;
     RegionalStoragePtr* ptr;

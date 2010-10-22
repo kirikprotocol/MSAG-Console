@@ -14,7 +14,7 @@ namespace eyeline {
 namespace informer {
 
 class StoreJournal;
-class Delivery;
+class DeliveryImpl;
 class DeliveryInfo;
 
 /// Working storage for messages for one Delivery/Region
@@ -37,7 +37,7 @@ private:
 
 public:
 
-    RegionalStorage( Delivery&           dlv,
+    RegionalStorage( DeliveryImpl&       dlv,
                      regionid_type       regionId );
 
     virtual ~RegionalStorage();
@@ -131,7 +131,7 @@ private:
     ResendQueue                       resendQueue_;
     NewQueue                          newQueue_;
 
-    Delivery&                         dlv_;
+    DeliveryImpl&                     dlv_;
     TransferTask*                     transferTask_;  // owned
     regionid_type                     regionId_;
 
