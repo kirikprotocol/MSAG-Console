@@ -17,6 +17,7 @@ class AmericaTestFixture : public CppUnit::TestFixture {
   CPPUNIT_TEST (sendRoutingInfo_res_decoding);
   /*CPPUNIT_TEST (dialogue_limit_check);*/
   CPPUNIT_TEST (slow_smpp_sender);
+  CPPUNIT_TEST(sms_status_report_receiving);
   CPPUNIT_TEST_SUITE_END ();
 public:
   class SccpSenderImpl;
@@ -33,6 +34,7 @@ protected:
   void sendRoutingInfo_res_decoding(void);
   void dialogue_limit_check(void);
   void slow_smpp_sender(void);
+  void sms_status_report_receiving(void);
 private:
   Logger* logger;
 };
