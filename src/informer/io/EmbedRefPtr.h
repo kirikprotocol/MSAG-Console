@@ -8,9 +8,14 @@ template <class T> class EmbedRefPtr
 {
 public:
     EmbedRefPtr( T* x = 0 ) : x_(x) { if (x_) x_->ref(); }
-    EmbedRefPtr( const EmbedRefPtr& p ) : x_(p.x_) { if (x_) x_->ref(); }
-    EmbedRefPtr& operator = ( const EmbedRefPtr& p ) {
-        reset(p.x_);
+    // NOTE: class U must be T or descendant of T
+    template <class U> EmbedRefPtr( const EmbedRefPtr<U>& p ) : x_(p.x_) { if (x_) x_->ref(); }
+    template <class U> EmbedRefPtr& operator = ( const EmbedRefPtr<U>& p ) {
+        if (x_ != p.x_) {
+            if (x_) x_->unref();
+            x_ = p.x_;
+            if (x_) x_->ref();
+        }
         return *this;
     }
     ~EmbedRefPtr() {
@@ -21,15 +26,6 @@ public:
     inline T* get() { return x_; }
     inline const T* operator -> () const { return x_; }
     inline T* operator -> () { return x_; }
-
-private:
-    inline void reset( T* x ) {
-        if (x_ != x) {
-            if (x_) x_->unref();
-            x_ = x;
-            if (x_) x_->ref();
-        }
-    }
 
 private:
     T* x_;

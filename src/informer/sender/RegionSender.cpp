@@ -86,23 +86,23 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredObjType& ptr )
         if ( ptr.getDlvInfo().getState() == DLVSTATE_ACTIVE ) {
             // delivery is active
             if ( ptr.getNextMessage(msgtime_type(currentTime_/tuPerSec),msg_) ) {
-                smsc_log_debug(log_,"D=%u/R=%u/M=%llu is ready to be sent",
-                               unsigned(ptr.getDlvId()),
+                smsc_log_debug(log_,"R=%u/D=%u/M=%llu is ready to be sent",
                                unsigned(getRegionId()),
+                               unsigned(ptr.getDlvId()),
                                ulonglong(msg_.msgId));
                 return 0;
             } else {
-                smsc_log_debug(log_,"D=%u/R=%u: is not ready, will sleep %llu usec",
-                               unsigned(ptr.getDlvId()),
+                smsc_log_debug(log_,"R=%u/D=%u: is not ready, will sleep %llu usec",
                                unsigned(getRegionId()),
+                               unsigned(ptr.getDlvId()),
                                ulonglong(sleepTimeNotReady));
                 return sleepTimeNotReady; // wait one second
             }
         }
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"D=%u/R=%u exc in isReady: %s",
-                      unsigned(ptr.getDlvId()),
-                      unsigned(getRegionId()));
+        smsc_log_warn(log_,"R=%u/D=%u exc in isReady: %s",
+                      unsigned(getRegionId()),
+                      unsigned(ptr.getDlvId()));
     }
     return sleepTimeException;  // wait 5 seconds
 }
@@ -116,24 +116,24 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
         nchunks = conn_->send(ptr, msg_);
         if ( nchunks > 0 ) {
             // message has been put into output queue
-            smsc_log_debug(log_,"D=%u/R=%u/M=%llu sent nchunks=%d",
-                           unsigned(ptr.getDlvId()),
+            smsc_log_debug(log_,"R=%u/D=%u/M=%llu sent nchunks=%d",
                            unsigned(getRegionId()),
+                           unsigned(ptr.getDlvId()),
                            ulonglong(msg_.msgId), nchunks);
             // message is considered to be sent only on response
             // ptr.messageSent(msg_.msgId, msgtime_type(currentTime_/tuPerSec));
             return maxScoreIncrement / nchunks / ptr.getDlvInfo().getPriority();
         } else {
-            smsc_log_warn(log_,"D=%u/R=%u/M=%llu send failed nchunks=%d",
-                          unsigned(ptr.getDlvId()),
+            smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed nchunks=%d",
                           unsigned(getRegionId()),
+                          unsigned(ptr.getDlvId()),
                           ulonglong(msg_.msgId), nchunks);
         }
 
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"D=%u/R=%u/M=%llu send failed, exc: %s",
-                      unsigned(ptr.getDlvId()),
+        smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed, exc: %s",
                       unsigned(getRegionId()),
+                      unsigned(ptr.getDlvId()),
                       ulonglong(msg_.msgId), e.what());
         nchunks = -smsc::system::Status::UNKNOWNERR;
     }

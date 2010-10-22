@@ -20,7 +20,14 @@ ref_(0)
     sprintf(buf,"dl.%u",dlvInfo_->getDlvId());
     log_ = smsc::logger::Logger::getInstance(buf);
     smsc_log_info(log_,"ctor D=%u",dlvInfo_->getDlvId());
-    source_->init(activityLog_);
+    try {
+        source_->init(activityLog_);
+    } catch ( std::exception& e ) {
+        smsc_log_error(log_,"D=%u inputstorage init failed: %s",
+                       dlvInfo_->getDlvId(), e.what());
+        delete source_;
+        throw;
+    }
 }
 
 
@@ -131,6 +138,14 @@ void Delivery::postInitOperative( std::vector<regionid_type>& filledRegs,
             storages_.Delete(regId);
         }
     }
+    DeliveryStats ds;
+    activityLog_.getStats(ds);
+    smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u retry=%u dlvd=%u fail=%u expd=%u",
+                  dlvInfo_->getDlvId(),
+                  ds.totalMessages, ds.procMessages,
+                  ds.sentMessages, ds.retryMessages,
+                  ds.dlvdMessages, ds.failedMessages,
+                  ds.expiredMessages );
 }
 
 }

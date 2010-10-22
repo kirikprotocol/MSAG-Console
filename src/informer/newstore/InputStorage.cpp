@@ -40,7 +40,12 @@ InputStorage::~InputStorage()
 void InputStorage::init( ActivityLog& actLog )
 {
     activityLog_ = &actLog;
-    glossary_.init( jnl_.getCS().getStorePath(), getDlvId());
+    try {
+        glossary_.init( jnl_.getCS().getStorePath(), getDlvId());
+    } catch ( std::exception& e ) {
+        smsc_log_error(log_,"D=%u glossary init failed: %s",getDlvId(),e.what());
+        throw;
+    }
 }
 
 
@@ -109,8 +114,9 @@ void InputStorage::setRecordAtInit( const InputRegionRecord& ro,
     if (maxMsgId>lastMsgId_) lastMsgId_ = maxMsgId;
     InputRegionRecord& rec = **ptr;
     if (rec.wfn > lastfn_) lastfn_ = rec.wfn;
-    smsc_log_debug(log_,"set input record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u, msgs=%llu, lastfn=%u",
-                   unsigned(getDlvId()), unsigned(rec.regionId),
+    smsc_log_debug(log_,"set input record for R=%u/D=%u: RP=%u/%u, WP=%u/%u, count=%u, msgs=%llu, lastfn=%u",
+                   unsigned(rec.regionId),
+                   unsigned(getDlvId()),
                    unsigned(rec.rfn), unsigned(rec.roff),
                    unsigned(rec.wfn), unsigned(rec.woff),
                    unsigned(rec.count), ulonglong(lastMsgId_),
@@ -207,8 +213,10 @@ void InputStorage::dispatchMessages( MsgIter begin,
                 ro.wfn = ++lastfn_;
                 ro.woff = 0;
                 std::string fname = makeFilePath(regId,ro.wfn);
-                smsc_log_debug(log_,"D=%u/R=%u new file: '%s'",
-                               unsigned(getDlvId()), unsigned(regId), fname.c_str() );
+                smsc_log_debug(log_,"R=%u/D=%u new file: '%s'",
+                               unsigned(regId),
+                               unsigned(getDlvId()),
+                               fname.c_str() );
                 fg.create(fname.c_str(),true,true);
                 // fg.seek(ro.woff);
             }
@@ -382,8 +390,9 @@ void InputStorage::getRecord( InputRegionRecord& ro )
             ro = **ptr;
         }
     }
-    smsc_log_debug(log_,"got record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u",
-                   unsigned(getDlvId()), unsigned(ro.regionId),
+    smsc_log_debug(log_,"got record for R=%u/D=%u: RP=%u/%u, WP=%u/%u, count=%u",
+                   unsigned(ro.regionId),
+                   unsigned(getDlvId()),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
                    unsigned(ro.count) );
@@ -399,8 +408,9 @@ void InputStorage::setRecord( InputRegionRecord& ro, uint64_t maxMsgId )
         doSetRecord(*ptr,ro);
         ro = **ptr;
     }
-    smsc_log_debug(log_,"set record for D=%u/R=%u: RP=%u/%u, WP=%u/%u, count=%u",
-                   unsigned(getDlvId()), unsigned(ro.regionId),
+    smsc_log_debug(log_,"set record for R=%u/D=%u: RP=%u/%u, WP=%u/%u, count=%u",
+                   unsigned(ro.regionId),
+                   unsigned(getDlvId()),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
                    unsigned(ro.count) );
@@ -435,8 +445,10 @@ std::string InputStorage::makeFilePath( regionid_type regId, uint32_t fn ) const
     if (fn==0) return "";
     char buf[70];
     sprintf(makeDeliveryPath(getDlvId(),buf),"new/%u/%u.data",unsigned(regId),unsigned(fn));
-    smsc_log_debug(log_,"filepath for D=%u/R=%u/F=%u is %s",
-                   unsigned(getDlvId()),unsigned(regId),unsigned(fn),buf);
+    smsc_log_debug(log_,"filepath for R=%u/D=%u/F=%u is %s",
+                   unsigned(regId),
+                   unsigned(getDlvId()),
+                   unsigned(fn),buf);
     return jnl_.getCS().getStorePath() + buf;
 }
 

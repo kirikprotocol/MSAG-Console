@@ -49,8 +49,10 @@ size_t InputJournal::journalRecord( dlvid_type dlvId,
         smsc::core::synchronization::MutexGuard mg(lock_);
         jnl_.write(buf,pos);
     }
-    smsc_log_debug(log_,"written record D=%u/R=%u size=%u",
-                   dlvId,rec.regionId,unsigned(pos));
+    smsc_log_debug(log_,"written record R=%u/D=%u size=%u",
+                   rec.regionId,
+                   dlvId,
+                   unsigned(pos));
     jnl_.fsync();
     return pos;
 }

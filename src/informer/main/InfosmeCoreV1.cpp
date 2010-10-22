@@ -47,7 +47,7 @@ public:
                                   const InputRegionRecord& rec,
                                   uint64_t                 maxMsgId )
     {
-        smsc_log_debug(core_.log_,"setting input record D=%u/R=%u",dlvId,rec.regionId);
+        smsc_log_debug(core_.log_,"setting input record R=%u/D=%u",rec.regionId,dlvId);
         DeliveryList::iterator* iter = core_.deliveryHash_.GetPtr(dlvId);
         if (!iter) {
             smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);
@@ -90,8 +90,9 @@ public:
                                   Message&      msg,
                                   regionid_type serial )
     {
-        smsc_log_error(core_.log_,"load store record D=%u/R=%u/M=%llu state=%s serial=%u",
-                       dlvId, regionId, ulonglong(msg.msgId),
+        smsc_log_debug(core_.log_,"load store record R=%u/D=%u/M=%llu state=%s serial=%u",
+                       regionId, dlvId,
+                       ulonglong(msg.msgId),
                        msgStateToString(MsgState(msg.state)), serial);
         DeliveryList::iterator* iter = core_.deliveryHash_.GetPtr(dlvId);
         if (!iter) {
@@ -612,16 +613,17 @@ void InfosmeCoreV1::incOutgoing( unsigned nchunks )
 
 void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId, int status, bool retry )
 {
-    smsc_log_debug(log_,"rcpt/resp received D=%u/R=%u/M=%llu status=%u retry=%d",
-                   drmId.dlvId, drmId.regId, drmId.msgId, status, retry );
+    smsc_log_debug(log_,"rcpt/resp received R=%u/D=%u/M=%llu status=%u retry=%d",
+                   drmId.regId, drmId.dlvId,
+                   drmId.msgId, status, retry );
     try {
         DeliveryPtr dlv;
         {
             smsc::core::synchronization::MutexGuard mg(startMon_);
             DeliveryList::iterator* piter = deliveryHash_.GetPtr(drmId.dlvId);
             if (!piter) {
-                smsc_log_warn(log_,"D=%u/R=%u/M=%llu rcpt/resp: delivery not found",
-                              drmId.dlvId, drmId.regId, drmId.msgId );
+                smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt/resp: delivery not found",
+                              drmId.regId, drmId.dlvId, drmId.msgId );
                 return;
             }
             dlv = **piter;
@@ -631,8 +633,8 @@ void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId, int status, bool r
 
         RegionalStoragePtr reg = dlv->getRegionalStorage(drmId.regId);
         if (!reg.get()) {
-            smsc_log_warn(log_,"D=%u/R=%u/M=%llu rcpt/resp: region is not found",
-                          drmId.dlvId, drmId.regId, drmId.msgId );
+            smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt/resp: region is not found",
+                          drmId.regId, drmId.dlvId, drmId.msgId );
             return;
         }
     
@@ -650,24 +652,30 @@ void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId, int status, bool r
                                  status );
         }
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp/recv processing failed: %s",
-                      drmId.dlvId, drmId.regId, drmId.msgId, e.what() );
+        smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp/recv processing failed: %s",
+                      drmId.regId,
+                      drmId.dlvId,
+                      drmId.msgId, e.what() );
     }
 }
 
 
 bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId )
 {
-    smsc_log_debug(log_,"good resp received D=%u/R=%u/M=%llu",
-                   drmId.dlvId, drmId.regId, drmId.msgId);
+    smsc_log_debug(log_,"good resp received R=%u/D=%u/M=%llu",
+                   drmId.regId,
+                   drmId.dlvId,
+                   drmId.msgId);
     try {
         DeliveryPtr dlv;
         {
             smsc::core::synchronization::MutexGuard mg(startMon_);
             DeliveryList::iterator* piter = deliveryHash_.GetPtr(drmId.dlvId);
             if (!piter) {
-                smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp: delivery not found",
-                              drmId.dlvId, drmId.regId, drmId.msgId );
+                smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp: delivery not found",
+                              drmId.regId,
+                              drmId.dlvId,
+                              drmId.msgId );
                 return false;
             }
             dlv = **piter;
@@ -675,8 +683,10 @@ bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId )
 
         RegionalStoragePtr reg = dlv->getRegionalStorage(drmId.regId);
         if (!reg.get()) {
-            smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp: region is not found",
-                          drmId.dlvId, drmId.regId, drmId.msgId );
+            smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp: region is not found",
+                          drmId.regId,
+                          drmId.dlvId,
+                          drmId.msgId );
             return false;
         }
     
@@ -686,8 +696,10 @@ bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId )
         return true;
 
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"D=%u/R=%u/M=%llu resp processing failed: %s",
-                      drmId.dlvId, drmId.regId, drmId.msgId, e.what() );
+        smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp processing failed: %s",
+                      drmId.regId,
+                      drmId.dlvId,
+                      drmId.msgId, e.what() );
     }
     return false;
 }

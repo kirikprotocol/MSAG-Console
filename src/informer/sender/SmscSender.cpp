@@ -238,6 +238,15 @@ journal_(new SmscJournal(*this))
     rQueue_ = new DataQueue();
     wQueue_ = new DataQueue();
     journal_->init();
+    // restore receipt wait queue
+    const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
+    ReceiptTimer rt;
+    rt.endTime = now + core_.getCS().getReceiptWaitTime();
+    for ( ReceiptList::iterator i = receiptList_.begin();
+          i != receiptList_.end(); ++i ) {
+        rt.rcptId = i->rcptId;
+        rcptWaitQueue_.Push(rt);
+    }
 }
 
 
@@ -264,10 +273,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
 {
     const DeliveryInfo& info = ptr.getDlvInfo();
 
-    smsc_log_error(log_,"send(D=%u/R=%u/M=%llu)",
-                   unsigned(info.getDlvId()),
-                   unsigned(ptr.getRegionId()),
-                   ulonglong(msg.msgId));
+    smsc_log_info(log_,"send(R=%u/D=%u/M=%llu)",
+                  unsigned(ptr.getRegionId()),
+                  unsigned(info.getDlvId()),
+                  ulonglong(msg.msgId));
     char whatbuf[150];
     const char* what = "";
     int res = smsc::system::Status::OK;
@@ -407,10 +416,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                 const int ussdop = ( info.getDeliveryMode() == DLVMODE_USSDPUSH ?
                                      ussdPushOp_ : ussdPushVlrOp_ );
                 if (ussdop == -1) {
-                    smsc_log_warn(log_,"S='%s': ussd not supported, D=%u/R=%u/M=%llu",
+                    smsc_log_warn(log_,"S='%s': ussd not supported, R=%u/D=%u/M=%llu",
                                   smscId_.c_str(),
-                                  info.getDlvId(),
                                   ptr.getRegionId(),
+                                  info.getDlvId(),
                                   ulonglong(msg.msgId));
                     res = smsc::system::Status::SYSERR;
                     break;
@@ -433,10 +442,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                 nchunks = 1;
             }
 
-            smsc_log_debug(log_,"S='%s' D=%u/R=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
+            smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
                            smscId_.c_str(),
-                           info.getDlvId(),
                            ptr.getRegionId(),
+                           info.getDlvId(),
                            ulonglong(msg.msgId),
                            info.useDataSm() ? "data_sm" : "submit_sm",
                            seqNum,
@@ -473,10 +482,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
         if (log_->isDebugEnabled()) {
             uint8_t len, ton, npi;
             uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
-            smsc_log_debug(log_,"S='%s' D=%u/R=%u/M=%llu A=.%u.%u.%0*.*llu seq=%u sent",
+            smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu A=.%u.%u.%0*.*llu seq=%u sent",
                            smscId_.c_str(),
-                           info.getDlvId(),
                            ptr.getRegionId(),
+                           info.getDlvId(),
                            ulonglong(msg.msgId),
                            ton,npi,len,len,ulonglong(addr), seqNum);
         }
@@ -489,10 +498,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
 
     uint8_t len, ton, npi;
     uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
-    smsc_log_error(log_,"S='%s' D=%u/R=%u/M=%llu A=.%u.%u.%0*.*llu failed(%d): %s",
+    smsc_log_error(log_,"S='%s' R=%u/D=%u/M=%llu A=.%u.%u.%0*.*llu failed(%d): %s",
                    smscId_.c_str(),
-                   info.getDlvId(),
                    ptr.getRegionId(),
+                   info.getDlvId(),
                    ulonglong(msg.msgId),
                    ton,npi,len,len,ulonglong(addr), res, what);
 
@@ -728,14 +737,18 @@ void SmscSender::processQueue( DataQueue& queue )
             // FIXME: notify on seqnumHash_.Count() change
 
             if (drm.trans) {
-                smsc_log_info(log_,"S='%s' resp seq=%u D=%u/R=%u/M=%llu ends transaction",
+                smsc_log_info(log_,"S='%s' resp seq=%u R=%u/D=%u/M=%llu ends transaction",
                               smscId_.c_str(), rd.seqNum,
-                              drm.dlvId, drm.regId, ulonglong(drm.msgId));
+                              drm.regId,
+                              drm.dlvId,
+                              ulonglong(drm.msgId));
                 core_.receiveReceipt( drm, rd.status, rd.retry );
             } else if ( *rd.rcptId.msgId == '\0' ) {
-                smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u D=%u/R=%u/M=%llu has no msgId, finalize?",
+                smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u R=%u/D=%u/M=%llu has no msgId, finalize?",
                               smscId_.c_str(), rd.seqNum,
-                              drm.dlvId, drm.regId, ulonglong(drm.msgId));
+                              drm.regId,
+                              drm.dlvId,
+                              ulonglong(drm.msgId));
                 core_.receiveReceipt( drm, rd.status, rd.retry );
                 continue;
             }
@@ -752,8 +765,10 @@ void SmscSender::processQueue( DataQueue& queue )
                 }
 
                 // finalize message, ignoring resp status
-                smsc_log_info(log_,"FIXME: S='%s' D=%u/R=%u/M=%llu ignoring resp status=%d,retry=%d, using status=%d,retry=%d",
-                              drm.dlvId, drm.regId, ulonglong(drm.msgId),
+                smsc_log_info(log_,"FIXME: S='%s' R=%u/D=%u/M=%llu ignoring resp status=%d,retry=%d, using status=%d,retry=%d",
+                              drm.regId,
+                              drm.dlvId,
+                              ulonglong(drm.msgId),
                               rd.status, rd.retry, iter->status, iter->retry );
                 core_.receiveReceipt( drm, iter->status, iter->retry );
                 continue;
@@ -811,8 +826,10 @@ void SmscSender::processQueue( DataQueue& queue )
                         }
                         core_.receiveReceipt(iter->drmId, rd.status, rd.retry );
                     } else {
-                        smsc_log_warn(log_,"FIXME: S='%s' strange receipt for D=%u/R=%u/M=%llu status=%d,msgid='%s',retry=%d",
-                                      iter->drmId.dlvId, iter->drmId.regId, iter->drmId.msgId,
+                        smsc_log_warn(log_,"FIXME: S='%s' strange receipt for R=%u/D=%u/M=%llu status=%d,msgid='%s',retry=%d",
+                                      iter->drmId.regId,
+                                      iter->drmId.dlvId,
+                                      iter->drmId.msgId,
                                       rd.status,rd.rcptId.msgId,rd.retry);
                         iter->status = rd.status;
                     }

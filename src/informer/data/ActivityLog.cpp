@@ -73,15 +73,7 @@ createTime_(0)
     } catch (std::exception& e) {
         smsc_log_debug(log_,"D=%u actlog: %s", info_.getDlvId(), e.what());
     }
-    if (statsLoaded) {
-        smsc_log_info(log_,"D=%u statistics follows", info_.getDlvId());
-        int shift;
-        smsc_log_info(log_,::statsFormat,
-                      stats_.totalMessages, stats_.procMessages,
-                      stats_.sentMessages, stats_.retryMessages,
-                      stats_.dlvdMessages, stats_.failedMessages,
-                      stats_.expiredMessages, &shift );
-    } else {
+    if (!statsLoaded) {
         smsc_log_warn(log_,"D=%u statistics is not found", info_.getDlvId());
     }
 }
@@ -179,6 +171,8 @@ bool ActivityLog::readStatistics( const std::string& filename,
     } while (true);
     if (statLineHasBeenRead) {
         stats_ = ds;
+        // they will be supplied later
+        stats_.sentMessages = stats_.procMessages = stats_.retryMessages = 0;
     }
     return statLineHasBeenRead;
 }

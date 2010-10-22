@@ -89,7 +89,9 @@ public:
     /// invoked at init stage ONLY!
     void setRecordAtInit( Message& msg, regionid_type serial );
 
-    /// invoked after opstore is loaded
+    /// invoked after opstore is loaded.
+    /// messages accumulated in messageHash_ will be partly moved according to their state
+    /// into newQueue and resendQueue.
     bool postInit();
 
 private:
