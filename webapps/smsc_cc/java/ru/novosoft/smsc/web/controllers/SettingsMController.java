@@ -8,9 +8,7 @@ import ru.novosoft.smsc.web.config.SettingsManager;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -22,26 +20,27 @@ public class SettingsMController<T> extends SmscController {
 
   private static Lock submitLock = new ReentrantLock();
 
-  private final String settingsAttr;
-  private final String revisionAttr;
-  private boolean submitHintAdded;
+  private String settingsAttr;
+  private String revisionAttr;
 
   private Long revision = 0L;
-  private final SettingsManager<T> mngr;
+  private SettingsManager<T> mngr;
 
   protected SettingsMController(SettingsManager<T> mngr) {
-    this.mngr = mngr;
-    this.settingsAttr = mngr.getClass().getCanonicalName() + "_settings";
-    this.revisionAttr = mngr.getClass().getCanonicalName() + "_viewStartTime";
+    if (mngr != null) {
+      this.mngr = mngr;
+      this.settingsAttr = mngr.getClass().getCanonicalName() + "_settings";
+      this.revisionAttr = mngr.getClass().getCanonicalName() + "_viewStartTime";
+    }
   }
 
   protected void init() throws AdminException {
     resetRevision();
 
-    for(Iterator it = FacesContext.getCurrentInstance().getMessages(); it.hasNext() ;it.remove())
+    for (Iterator it = FacesContext.getCurrentInstance().getMessages(); it.hasNext(); it.remove())
       it.next();
 
-    if (mngr instanceof SmscConfiguration) {
+    if (mngr != null && mngr instanceof SmscConfiguration) {
       try {
         Map<Integer, SmscConfigurationStatus> statuses = ((SmscConfiguration) mngr).getStatusForSmscs();
         if (statuses.containsValue(SmscConfigurationStatus.OUT_OF_DATE)) {
