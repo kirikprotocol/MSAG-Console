@@ -635,5 +635,11 @@ void AmericaTestFixture::sms_status_report_receiving(void)
     0x82, 0x00
   };
   vector<unsigned char> expected(expected_data,expected_data + sizeof(expected_data) / sizeof(unsigned char) );
+  smsc_log_debug(logger,"expected data[%d]={%s}",
+                           sizeof(expected_data),
+                           dump((uint16_t)sizeof(expected_data),expected_data).c_str());
+    smsc_log_debug(logger,"  actual data[%d]={%s}",
+                           res.size(),
+                           dump((uint16_t)res.size(),&res[0]).c_str());
     CPPUNIT_ASSERT( expected == res);
 }
