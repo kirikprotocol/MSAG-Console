@@ -59,7 +59,7 @@ class DcpClient extends ClientConnection {
       log.debug("PDU received: tag=" + tag + ", seqNum=" + seqNum);
 
     ResponseListener l;
-    synchronized(listeners) {
+    synchronized (listeners) {
       l = listeners.get(seqNum);
     }
     if (l != null) {
@@ -74,7 +74,7 @@ class DcpClient extends ClientConnection {
   protected void handle(PDU pdu) {
   }
 
-  protected <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
+  <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
     ResponseListener l = new ResponseListener(response);
     int seq = request.assignSeqNum();
     if (response != null) {
@@ -92,9 +92,9 @@ class DcpClient extends ClientConnection {
         if (resp != null) {
           if (log.isDebugEnabled())
             log.debug("Response received: " + response);
-          if(resp.getTag() == DcpClientTag.FailResponse.getValue()) {
-            FailResponse failResponse = (FailResponse)resp;
-            log.error("Interaction error: "+failResponse.getStatus()+", "+failResponse.getStatusMessage());
+          if (resp.getTag() == DcpClientTag.FailResponse.getValue()) {
+            FailResponse failResponse = (FailResponse) resp;
+            log.error("Interaction error: " + failResponse.getStatus() + ", " + failResponse.getStatusMessage());
             throw new DeliveryException("interaction_error", failResponse.getStatus() + "");
           }
           return (T) resp;
@@ -122,71 +122,75 @@ class DcpClient extends ClientConnection {
   }
 
 
-  protected AddDeliveryMessagesResp send(AddDeliveryMessages req) throws AdminException{
+  AddDeliveryMessagesResp send(AddDeliveryMessages req) throws AdminException {
     return sendPdu(req, new AddDeliveryMessagesResp());
   }
 
-  protected CreateDeliveryResp send(CreateDelivery req) throws AdminException{
+  CreateDeliveryResp send(CreateDelivery req) throws AdminException {
     return sendPdu(req, new CreateDeliveryResp());
   }
 
-  protected CountDeliveriesResp send(CountDeliveries req) throws AdminException{
+  CountDeliveriesResp send(CountDeliveries req) throws AdminException {
     return sendPdu(req, new CountDeliveriesResp());
   }
 
-  protected void send(UserAuth req) throws AdminException{
+  CountMessagesResp send(CountMessages req) throws AdminException {
+    return sendPdu(req, new CountMessagesResp());
+  }
+
+  void send(UserAuth req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  protected GetUserStatsResp send(GetUserStats req) throws AdminException{
+  protected GetUserStatsResp send(GetUserStats req) throws AdminException {
     return sendPdu(req, new GetUserStatsResp());
   }
 
-  protected void send(ModifyDelivery req) throws AdminException{
+  void send(ModifyDelivery req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  protected void send(DropDelivery req) throws AdminException{
+  void send(DropDelivery req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  protected void send(ChangeDeliveryState req) throws AdminException{
+  void send(ChangeDeliveryState req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  protected void send(DropDeliverymessages req) throws AdminException{
+  void send(DropDeliverymessages req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  protected GetDeliveryGlossaryResp send(GetDeliveryGlossary req) throws AdminException{
+  GetDeliveryGlossaryResp send(GetDeliveryGlossary req) throws AdminException {
     return sendPdu(req, new GetDeliveryGlossaryResp());
   }
 
-  protected void send(ModifyDeliveryGlossary req) throws AdminException{
+  void send(ModifyDeliveryGlossary req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  protected GetDeliveryStateResp send(GetDeliveryState req) throws AdminException{
+  GetDeliveryStateResp send(GetDeliveryState req) throws AdminException {
     return sendPdu(req, new GetDeliveryStateResp());
   }
 
-  protected GetDeliveryInfoResp send(GetDeliveryInfo req) throws AdminException{
+  GetDeliveryInfoResp send(GetDeliveryInfo req) throws AdminException {
     return sendPdu(req, new GetDeliveryInfoResp());
   }
 
-  protected GetDeliveriesListResp send(GetDeliveriesList req) throws AdminException{
+  GetDeliveriesListResp send(GetDeliveriesList req) throws AdminException {
     return sendPdu(req, new GetDeliveriesListResp());
   }
 
-  protected GetDeliveriesListNextResp send(GetDeliveriesListNext req) throws AdminException{
+  GetDeliveriesListNextResp send(GetDeliveriesListNext req) throws AdminException {
     return sendPdu(req, new GetDeliveriesListNextResp());
   }
 
-  protected RequestMessagesStateResp send(RequestMessagesState req) throws AdminException{
+  RequestMessagesStateResp send(RequestMessagesState req) throws AdminException {
     return sendPdu(req, new RequestMessagesStateResp());
   }
 
-  protected GetNextMessagesPackResp send(GetNextMessagesPack req) throws AdminException{
+  GetNextMessagesPackResp send(GetNextMessagesPack req) throws AdminException {
     return sendPdu(req, new GetNextMessagesPackResp());
   }
 
@@ -195,7 +199,7 @@ class DcpClient extends ClientConnection {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 
     private PDU response;
-    private PDU responseEx;
+    private final PDU responseEx;
 
     ResponseListener(PDU responseEx) {
       this.responseEx = responseEx;
@@ -211,14 +215,14 @@ class DcpClient extends ClientConnection {
     }
 
     PDU receive(BufferReader buffer, int tag) throws IOException {
-      if(tag == DcpClientTag.FailResponse.getValue()) {
+      if (tag == DcpClientTag.FailResponse.getValue()) {
         FailResponse failResponse = new FailResponse();
         failResponse.decode(buffer);
         response = failResponse;
-      }else if (getExpectedResponseTag() != tag) {
+      } else if (getExpectedResponseTag() != tag) {
         log.error("Unexpected tag: " + tag);
         throw new IOException("Unexpected tag: " + tag);
-      }else {
+      } else {
         responseEx.decode(buffer);
         response = responseEx;
       }

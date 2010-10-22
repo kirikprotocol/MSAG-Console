@@ -1,14 +1,16 @@
 package mobi.eyeline.informer.admin.delivery;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
  * Информация о состоянии рассылки
+ *
  * @author Aleksandr Khalitov
  */
 public class MessageInfo {
 
-  private int id;
+  private long id;
   private MessageState state;
   private Date date;
   private String abonent;
@@ -17,11 +19,11 @@ public class MessageInfo {
   private Integer errorCode;
   private String userData;
 
-  public int getId() {
+  public long getId() {
     return id;
   }
 
-  void setId(int id) {
+  void setId(long id) {
     this.id = id;
   }
 
@@ -79,5 +81,31 @@ public class MessageInfo {
 
   void setUserData(String userData) {
     this.userData = userData;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    MessageInfo that = (MessageInfo) o;
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+
+    if (id != that.id) return false;
+    if (abonent != null ? !abonent.equals(that.abonent) : that.abonent != null) return false;
+    if (date != null ? !dateFormat.format(date).equals(that.date == null ? null : dateFormat.format(that.date)) : that.date != null) return false;
+    if (errorCode != null ? !errorCode.equals(that.errorCode) : that.errorCode != null) return false;
+    if (index != null ? !index.equals(that.index) : that.index != null) return false;
+    if (state != that.state) return false;
+    if (text != null ? !text.equals(that.text) : that.text != null) return false;
+    if (userData != null ? !userData.equals(that.userData) : that.userData != null) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return 0;
   }
 }

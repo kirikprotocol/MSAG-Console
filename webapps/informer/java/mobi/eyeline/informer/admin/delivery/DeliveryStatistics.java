@@ -2,21 +2,22 @@ package mobi.eyeline.informer.admin.delivery;
 
 /**
  * Статистика по рассылке
+ *
  * @author Aleksandr Khalitov
  */
 public class DeliveryStatistics {
 
   private DeliveryState deliveryState;
 
-  private int newMessages;
+  private long newMessages;
 
-  private int processMessage;
+  private long processMessage;
 
-  private int deliveredMessages;
+  private long deliveredMessages;
 
-  private int failedMessage;
+  private long failedMessage;
 
-  private int expiredMessages;
+  private long expiredMessages;
 
   public DeliveryState getDeliveryState() {
     return deliveryState == null ? null : deliveryState.cloneState();
@@ -26,43 +27,43 @@ public class DeliveryStatistics {
     this.deliveryState = deliveryState;
   }
 
-  public int getNewMessages() {
+  public long getNewMessages() {
     return newMessages;
   }
 
-  void setNewMessages(int newMessages) {
+  void setNewMessages(long newMessages) {
     this.newMessages = newMessages;
   }
 
-  public int getProcessMessage() {
+  public long getProcessMessage() {
     return processMessage;
   }
 
-  void setProcessMessage(int processMessage) {
+  void setProcessMessage(long processMessage) {
     this.processMessage = processMessage;
   }
 
-  public int getDeliveredMessages() {
+  public long getDeliveredMessages() {
     return deliveredMessages;
   }
 
-  void setDeliveredMessages(int deliveredMessages) {
+  void setDeliveredMessages(long deliveredMessages) {
     this.deliveredMessages = deliveredMessages;
   }
 
-  public int getFailedMessage() {
+  public long getFailedMessage() {
     return failedMessage;
   }
 
-  void setFailedMessage(int failedMessage) {
+  void setFailedMessage(long failedMessage) {
     this.failedMessage = failedMessage;
   }
 
-  public int getExpiredMessages() {
+  public long getExpiredMessages() {
     return expiredMessages;
   }
 
-  void setExpiredMessages(int expiredMessages) {
+  void setExpiredMessages(long expiredMessages) {
     this.expiredMessages = expiredMessages;
   }
 }

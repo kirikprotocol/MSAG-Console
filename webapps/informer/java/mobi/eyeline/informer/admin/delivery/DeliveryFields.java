@@ -2,15 +2,15 @@ package mobi.eyeline.informer.admin.delivery;
 
 /**
  * Поля рассылки
+ *
  * @author Aleksandr Khalitov
  */
 public enum DeliveryFields {
-  USER_ID,
-  NAME,
-  STATUS,
-  STARDATE,
-  ENDDATE,
-  ACTIVITY_PERIOD;
-  
+  UserId,
+  Name,
+  Status,
+  StartDate,
+  EndDate,
+  ActivityPeriod;
   public static DeliveryFields[] ALL = DeliveryFields.values();
 }

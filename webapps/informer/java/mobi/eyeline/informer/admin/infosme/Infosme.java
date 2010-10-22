@@ -6,6 +6,7 @@ import java.util.List;
 
 
 /**
+ * Администрирование Informer
  * @author Aleksandr Khalitov
  */
 public interface Infosme {

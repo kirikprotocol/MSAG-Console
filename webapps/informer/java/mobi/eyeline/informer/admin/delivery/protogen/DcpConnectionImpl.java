@@ -22,7 +22,7 @@ public class DcpConnectionImpl implements DcpConnection {
 
   private final Lock lock;
 
-  public DcpConnectionImpl(String host, int port, final String login, String password) throws AdminException{
+  public DcpConnectionImpl(String host, int port, final String login, String password) throws AdminException {
     this.client = new DcpClient(host, port);
     connect(login, password);
 
@@ -30,15 +30,16 @@ public class DcpConnectionImpl implements DcpConnection {
       @Override
       public void lock() {
         super.lock();
-        if(logger.isDebugEnabled()) {
-          logger.debug("Dcp Connection locked: login="+login);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Dcp Connection locked: login=" + login);
         }
       }
+
       @Override
       public void unlock() {
         super.unlock();
-        if(logger.isDebugEnabled()) {
-          logger.debug("Dcp Connection unlocked: login="+login);
+        if (logger.isDebugEnabled()) {
+          logger.debug("Dcp Connection unlocked: login=" + login);
         }
       }
     };
@@ -56,40 +57,46 @@ public class DcpConnectionImpl implements DcpConnection {
     return client.isConnected();
   }
 
+  public void close() {
+    client.shutdown();
+  }
 
-  public int createDelivery(Delivery delivery) throws AdminException{
+
+  public int createDelivery(Delivery delivery) throws AdminException {
     CreateDelivery req = new CreateDelivery();
     req.setInfo(DcpConverter.convert(delivery));
     CreateDeliveryResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
     return resp.getDeliveryId();
   }
 
-  public void addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException {
+  public long[] addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException {
     AddDeliveryMessages req = new AddDeliveryMessages();
     req.setDeliveryId(deliveryId);
     req.setMessages(DcpConverter.convert(messages));
-    try{
+    AddDeliveryMessagesResp resp;
+    try {
       lock.lock();
-      client.send(req);
-    }finally {
+      resp = client.send(req);
+    } finally {
       lock.unlock();
     }
+    return resp.getMessageIds();
   }
 
   public void modifyDelivery(Delivery delivery) throws AdminException {
     ModifyDelivery req = new ModifyDelivery();
     req.setDeliveryId(delivery.getId());
     req.setInfo(DcpConverter.convert(delivery));
-    try{
+    try {
       lock.lock();
       client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
   }
@@ -97,58 +104,58 @@ public class DcpConnectionImpl implements DcpConnection {
   public void dropDelivery(int deliveryId) throws AdminException {
     DropDelivery req = new DropDelivery();
     req.setDeliveryId(deliveryId);
-    try{
+    try {
       lock.lock();
       client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
   }
 
   public int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
     CountDeliveries req = new CountDeliveries();
-    if(deliveryFilter != null) {
-      if(deliveryFilter.getEndDateFrom() != null) {
-        req.setEndDateFrom(DcpConverter.convert(deliveryFilter.getEndDateFrom()));
+    if (deliveryFilter != null) {
+      if (deliveryFilter.getEndDateFrom() != null) {
+        req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
       }
-      if(deliveryFilter.getEndDateTo() != null) {
-        req.setEndDateTo(DcpConverter.convert(deliveryFilter.getEndDateTo()));
+      if (deliveryFilter.getEndDateTo() != null) {
+        req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
       }
-      if(deliveryFilter.getStartDateFrom() != null) {
-        req.setStartDateFrom(DcpConverter.convert(deliveryFilter.getStartDateFrom()));
+      if (deliveryFilter.getStartDateFrom() != null) {
+        req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
       }
-      if(deliveryFilter.getStartDateTo() != null) {
-        req.setStartDateTo(DcpConverter.convert(deliveryFilter.getStartDateTo()));
+      if (deliveryFilter.getStartDateTo() != null) {
+        req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
       }
-      if(deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length>0) {
+      if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
         req.setNameFilter(deliveryFilter.getNameFilter());
       }
-      if(deliveryFilter.getUserIdFilter() != null && deliveryFilter.getUserIdFilter().length>0) {
+      if (deliveryFilter.getUserIdFilter() != null && deliveryFilter.getUserIdFilter().length > 0) {
         req.setUserIdFilter(deliveryFilter.getUserIdFilter());
       }
-      if(deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length>0) {
+      if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
         req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
       }
     }
     CountDeliveriesResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
     return resp.getResult();
   }
 
 
-  public void changeDeliveryState (int deliveryId, DeliveryState state) throws AdminException {
+  public void changeDeliveryState(int deliveryId, DeliveryState state) throws AdminException {
     ChangeDeliveryState req = new ChangeDeliveryState();
     req.setDeliveryId(deliveryId);
     req.setState(DcpConverter.convert(state));
-    try{
+    try {
       lock.lock();
       client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
   }
@@ -156,10 +163,10 @@ public class DcpConnectionImpl implements DcpConnection {
   public void dropMessages(long[] messageIds) throws AdminException {
     DropDeliverymessages req = new DropDeliverymessages();
     req.setMessageIds(messageIds);
-    try{
+    try {
       lock.lock();
       client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
   }
@@ -168,25 +175,25 @@ public class DcpConnectionImpl implements DcpConnection {
     GetDeliveryGlossary req = new GetDeliveryGlossary();
     req.setDeliveryId(deliveryId);
     GetDeliveryGlossaryResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
     return resp.getGlossary().getMessages();
   }
 
-  public void modifyDeliveryGlossary(int deliveryId, String [] messages) throws AdminException {
+  public void modifyDeliveryGlossary(int deliveryId, String[] messages) throws AdminException {
     ModifyDeliveryGlossary req = new ModifyDeliveryGlossary();
     req.setDeliveryId(deliveryId);
     DeliveryGlossary glossary = new DeliveryGlossary();
     glossary.setMessages(messages);
     req.setGlossary(glossary);
-    try{
+    try {
       lock.lock();
       client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
   }
@@ -196,10 +203,10 @@ public class DcpConnectionImpl implements DcpConnection {
     GetDeliveryState req = new GetDeliveryState();
     req.setDeliveryId(deliveryId);
     GetDeliveryStateResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
     return DcpConverter.convert(resp.getStats(), resp.getState());
@@ -210,56 +217,56 @@ public class DcpConnectionImpl implements DcpConnection {
     GetDeliveryInfo req = new GetDeliveryInfo();
     req.setDeliveryId(deliveryId);
     GetDeliveryInfoResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
-    return DcpConverter.convert(resp.getInfo());
+    return DcpConverter.convert(deliveryId, resp.getInfo());
   }
 
 
-  public int getDeliviries(DeliveryFilter deliveryFilter) throws AdminException{
+  public int getDeliviries(DeliveryFilter deliveryFilter) throws AdminException {
     GetDeliveriesList req = new GetDeliveriesList();
-    if(deliveryFilter.getEndDateFrom() != null) {
-      req.setEndDateFrom(DcpConverter.convert(deliveryFilter.getEndDateFrom()));
+    if (deliveryFilter.getEndDateFrom() != null) {
+      req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
     }
-    if(deliveryFilter.getStartDateFrom() != null) {
-      req.setStartDateFrom(DcpConverter.convert(deliveryFilter.getStartDateFrom()));
+    if (deliveryFilter.getStartDateFrom() != null) {
+      req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
     }
-    if(deliveryFilter.getEndDateTo() != null) {
-      req.setEndDateTo(DcpConverter.convert(deliveryFilter.getEndDateTo()));
+    if (deliveryFilter.getEndDateTo() != null) {
+      req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
     }
-    if(deliveryFilter.getStartDateTo() != null) {
-      req.setStartDateTo(DcpConverter.convert(deliveryFilter.getStartDateTo()));
+    if (deliveryFilter.getStartDateTo() != null) {
+      req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
     }
-    if(deliveryFilter.getEndDateFrom() != null) {
-      req.setEndDateFrom(DcpConverter.convert(deliveryFilter.getEndDateFrom()));
+    if (deliveryFilter.getEndDateFrom() != null) {
+      req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
     }
-    if(deliveryFilter.getEndDateTo() != null) {
-      req.setEndDateTo(DcpConverter.convert(deliveryFilter.getEndDateTo()));
+    if (deliveryFilter.getEndDateTo() != null) {
+      req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
     }
-    if(deliveryFilter.getStartDateFrom() != null) {
-      req.setStartDateFrom(DcpConverter.convert(deliveryFilter.getStartDateFrom()));
+    if (deliveryFilter.getStartDateFrom() != null) {
+      req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
     }
-    if(deliveryFilter.getStartDateTo() != null) {
-      req.setStartDateTo(DcpConverter.convert(deliveryFilter.getStartDateTo()));
+    if (deliveryFilter.getStartDateTo() != null) {
+      req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
     }
-    if(deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length>0) {
+    if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
       req.setNameFilter(deliveryFilter.getNameFilter());
     }
-    if(deliveryFilter.getUserIdFilter() != null && deliveryFilter.getUserIdFilter().length>0) {
+    if (deliveryFilter.getUserIdFilter() != null && deliveryFilter.getUserIdFilter().length > 0) {
       req.setUserIdFilter(deliveryFilter.getUserIdFilter());
     }
-    if(deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length>0) {
+    if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
       req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
     }
     GetDeliveriesListResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
     return resp.getReqId();
@@ -270,14 +277,14 @@ public class DcpConnectionImpl implements DcpConnection {
     req.setReqId(reqId);
     req.setCount(pieceSize);
     GetDeliveriesListNextResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
-    if(resp.getInfo() != null) {
-      for(DeliveryListInfo di : resp.getInfo()) {
+    if (resp.getInfo() != null) {
+      for (DeliveryListInfo di : resp.getInfo()) {
         deliveries.add(DcpConverter.convert(di));
       }
     }
@@ -286,31 +293,28 @@ public class DcpConnectionImpl implements DcpConnection {
 
   public int getMessagesStates(MessageFilter filter) throws AdminException {
     RequestMessagesState req = new RequestMessagesState();
-    if(filter != null) {
-      if(filter.getDeliveryId() != null) {
+    if (filter != null) {
+      if (filter.getDeliveryId() != null) {
         req.setDeliveryId(filter.getDeliveryId());
       }
-      if(filter.getEndDate() != null) {
-        req.setEndDate(DcpConverter.convert(filter.getEndDate()));
-      }
-      if(filter.getStartDate() != null) {
-        req.setStartDate(DcpConverter.convert(filter.getStartDate()));
-      }
-      if(filter.getFields() != null && filter.getFields().length > 0) {
+      req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
+      req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
+
+      if (filter.getFields() != null && filter.getFields().length > 0) {
         req.setFields(DcpConverter.convert(filter.getFields()));
       }
-      if(filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
+      if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
         req.setMsisdnFilter(filter.getMsisdnFilter());
       }
-      if(filter.getStates() != null && filter.getStates().length > 0) {
+      if (filter.getStates() != null && filter.getStates().length > 0) {
         req.setStates(DcpConverter.convert(filter.getStates()));
       }
     }
     RequestMessagesStateResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
     return resp.getReqId();
@@ -321,17 +325,44 @@ public class DcpConnectionImpl implements DcpConnection {
     req.setReqId(reqId);
     req.setCount(pieceSize);
     GetNextMessagesPackResp resp;
-    try{
+    try {
       lock.lock();
       resp = client.send(req);
-    }finally {
+    } finally {
       lock.unlock();
     }
-    if(resp.getInfo() != null) {
-      for(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
+    if (resp.getInfo() != null) {
+      for (mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
         messages.add(DcpConverter.convert(mi));
       }
     }
     return resp.getMoreMessages();
+  }
+
+
+  public int countMessages(MessageFilter filter) throws AdminException {
+    CountMessages req = new CountMessages();
+    if (filter != null) {
+      if (filter.getDeliveryId() != null) {
+        req.setDeliveryId(filter.getDeliveryId());
+      }
+      req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
+      req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
+
+      if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
+        req.setMsisdnFilter(filter.getMsisdnFilter());
+      }
+      if (filter.getStates() != null && filter.getStates().length > 0) {
+        req.setStates(DcpConverter.convert(filter.getStates()));
+      }
+    }
+    CountMessagesResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return resp.getCount();
   }
 }

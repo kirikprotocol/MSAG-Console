@@ -33,5 +33,10 @@ protocol DcpClient
   RequestMessagesStateResp inmsg
   GetNextMessagesPack outmsg
   GetNextMessagesPackResp inmsg
+
+  CountMessages outmsg
+  CountMessagesResp inmsg
+
+
 end
 

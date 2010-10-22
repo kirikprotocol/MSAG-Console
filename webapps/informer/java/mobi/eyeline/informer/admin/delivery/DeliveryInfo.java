@@ -4,6 +4,7 @@ import java.util.Date;
 
 /**
  * Краткая информация о рассылке
+ *
  * @author Aleksandr Khalitov
  */
 public class DeliveryInfo {

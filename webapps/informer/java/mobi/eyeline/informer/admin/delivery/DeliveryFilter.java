@@ -1,12 +1,12 @@
 package mobi.eyeline.informer.admin.delivery;
 
-import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 
 import java.util.Date;
 
 /**
  * Фильтр извлечения рассылок
+ *
  * @author Aleksandr Khalitov
  */
 public class DeliveryFilter {
@@ -50,7 +50,7 @@ public class DeliveryFilter {
     return startDateFrom;
   }
 
-  public void setStartDateFrom(Date startDateFrom){
+  public void setStartDateFrom(Date startDateFrom) {
     this.startDateFrom = startDateFrom;
   }
 
@@ -58,7 +58,7 @@ public class DeliveryFilter {
     return startDateTo;
   }
 
-  public void setStartDateTo(Date startDateTo){
+  public void setStartDateTo(Date startDateTo) {
     this.startDateTo = startDateTo;
   }
 
@@ -66,7 +66,7 @@ public class DeliveryFilter {
     return endDateFrom;
   }
 
-  public void setEndDateFrom(Date endDateFrom){
+  public void setEndDateFrom(Date endDateFrom) {
     this.endDateFrom = endDateFrom;
   }
 
@@ -82,8 +82,7 @@ public class DeliveryFilter {
     return resultFields;
   }
 
-  public void setResultFields(DeliveryFields[] resultFields) throws AdminException{
-    vh.checkNotNull("resultFields", resultFields);
+  public void setResultFields(DeliveryFields[] resultFields){
     this.resultFields = resultFields;
   }
 }

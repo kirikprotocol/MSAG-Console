@@ -5,19 +5,27 @@ import mobi.eyeline.informer.admin.AdminException;
 import java.util.Collection;
 
 /**
- * Коннект к DCP, упрвление рассылками 
+ * Коннект к DCP, упрвление рассылками
+ *
  * @author Aleksandr Khalitov
  */
 public interface DcpConnection {
 
   /**
    * Соединение установлено
+   *
    * @return true - да, false - нет
    */
   public boolean isConnected();
 
   /**
+   * Закрывает соединение
+   */
+  public void close();
+
+  /**
    * Создание рассылки
+   *
    * @param delivery рассылка
    * @return идентификатор рассылки
    * @throws AdminException ошибка выполнения команды
@@ -27,14 +35,17 @@ public interface DcpConnection {
 
   /**
    * Добавляет сообщения в рассылку
+   *
    * @param deliveryId идентификатор рассылки
-   * @param messages сообщения
+   * @param messages   сообщения
    * @throws AdminException ошибка выполнения команды
+   * @return идентификаторы сообщений
    */
-  public void addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException;
+  public long[] addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException;
 
   /**
    * Модификация рассылки
+   *
    * @param delivery рассылка
    * @throws AdminException ошибка выполнения команды
    */
@@ -42,6 +53,7 @@ public interface DcpConnection {
 
   /**
    * Удаление рассылки
+   *
    * @param deliveryId идентификатор рассылки
    * @throws AdminException ошибка выполнения команды
    */
@@ -49,14 +61,16 @@ public interface DcpConnection {
 
   /**
    * Подсчёт кол-ва рассылок
+   *
    * @param deliveryFilter фильтр
-   * @throws AdminException ошибка выполнения команды
    * @return кол-во рассылок
+   * @throws AdminException ошибка выполнения команды
    */
   public int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException;
 
   /**
    * Удаляет сообщения из рассылки
+   *
    * @param messageIds идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
@@ -64,6 +78,7 @@ public interface DcpConnection {
 
   /**
    * Возвращает глоссарий по рассылке
+   *
    * @param deliveryId идентикатор рассылки
    * @return глоссарий
    * @throws AdminException ошибка выполнения команды
@@ -72,14 +87,16 @@ public interface DcpConnection {
 
   /**
    * Добавляет глоссарий к рассылке
+   *
    * @param deliveryId идентикатор рассылки
-   * @param messages глоссарий
+   * @param messages   глоссарий
    * @throws AdminException ошибка выполнения команды
    */
   public void modifyDeliveryGlossary(int deliveryId, String[] messages) throws AdminException;
 
   /**
    * Возвращает рассылку по идентификатору
+   *
    * @param deliveryId идентификатор рассылки
    * @return рассылка
    * @throws AdminException ошибка выполнения команды
@@ -88,14 +105,16 @@ public interface DcpConnection {
 
   /**
    * Меняет состояние рассылки
+   *
    * @param deliveryId идентификатор рассылки
-   * @param state новое состояние
+   * @param state      новое состояние
    * @throws AdminException ошибка выполнения команды
    */
-  public void changeDeliveryState (int deliveryId, DeliveryState state) throws AdminException;
+  public void changeDeliveryState(int deliveryId, DeliveryState state) throws AdminException;
 
   /**
    * Возвращает статистику по рассылке
+   *
    * @param deliveryId идентификатор рассылки
    * @return статистика по рассылке
    * @throws AdminException ошибка выполнения команды
@@ -104,6 +123,7 @@ public interface DcpConnection {
 
   /**
    * Возвращает идентификатор запроса для извлечения рассылок, удовлетворяющие фильтру
+   *
    * @param deliveryFilter фильтр
    * @return идентификатор запроса
    * @throws AdminException ошибка выполнения команды
@@ -112,8 +132,9 @@ public interface DcpConnection {
 
   /**
    * Возвращает следующую часть рассылок по идентификатору запроса
-   * @param reqId идентификатор запроса
-   * @param pieceSize максимальное кол-во извлекаемых рассылок
+   *
+   * @param reqId      идентификатор запроса
+   * @param pieceSize  максимальное кол-во извлекаемых рассылок
    * @param deliveries куда следуют сложить рассылки
    * @return есть ли ещё рассылки
    * @throws AdminException ошибка выполнения команды
@@ -122,6 +143,7 @@ public interface DcpConnection {
 
   /**
    * Возвращает идентифкатор запроса для извлечения информации о сообщениях рассылки
+   *
    * @param filter фильтр
    * @return идентифкатор запроса
    * @throws AdminException ошибка выполнения команды
@@ -130,12 +152,23 @@ public interface DcpConnection {
 
   /**
    * Возвращает следующую часть сообщений по идентификатору запроса
-   * @param reqId идентификатор запроса
+   *
+   * @param reqId     идентификатор запроса
    * @param pieceSize максимальное кол-во извлекаемых сообщений
-   * @param messages куда следуют сложить сообщения
+   * @param messages  куда следуют сложить сообщения
    * @return есть ли ещё сообщения
    * @throws AdminException ошибка выполнения команды
    */
   public boolean getNextMessageStates(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException;
+
+
+  /**
+   * Подсчёт кол-ва сообщений
+   *
+   * @param messageFilter фильтр
+   * @return кол-во сообщений
+   * @throws AdminException ошибка выполнения команды
+   */
+  public int countMessages(MessageFilter messageFilter) throws AdminException;
 
 }

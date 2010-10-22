@@ -133,7 +133,7 @@ public class AdminContext {
 
       deliveryManager = new DeliveryManager(is.getHost(), is.getDeliveriesPort());
 
-      deliveryStatProvider = new DeliveryStatProvider(new File(is.getStatDir()), fileSystem); 
+      deliveryStatProvider = new DeliveryStatProvider(new File(is.getStatDir()), fileSystem);
 
     }catch (AdminException e) {
       throw new InitException(e);
@@ -150,9 +150,16 @@ public class AdminContext {
       }catch (Exception e){}
     }
     if(infosme != null) {
-      infosme.shutdown();
+      try{
+        infosme.shutdown();
+      }catch (Exception e){}
     }
+    if(deliveryManager != null) {
+      try{
+        deliveryManager.shutdown();
+      }catch (Exception e){}
 
+    }
   }
 
   public Journal getJournal() {

@@ -8,36 +8,36 @@ import java.util.List;
 
 /**
  * Извлечение информации по DCP частями
+ *
  * @author Aleksandr Khalitov
  */
 public abstract class DeliveryDataSource<T> {
 
   private final int pieceSize;
 
-  protected DcpConnection dcpConnection;
+  private final DcpConnection dcpConnection;
 
   private final int reqId;
 
-  protected DeliveryDataSource(int pieceSize, int reqId, DcpConnection dcpConnection) {
+  DeliveryDataSource(int pieceSize, int reqId, DcpConnection dcpConnection) {
     this.pieceSize = pieceSize;
     this.dcpConnection = dcpConnection;
     this.reqId = reqId;
   }
 
 
-  public void visit(Visitor<T> visitor) throws AdminException{
+  public void visit(Visitor<T> visitor) throws AdminException {
     boolean exit;
     List<T> list = new ArrayList<T>(pieceSize);
-    do{
+    do {
       list.clear();
-      exit =  load(dcpConnection, pieceSize, reqId, list);
-      for(T t : list) {
-        if(!visitor.visit(t)) {
-          exit = true;
-          break;
+      exit = load(dcpConnection, pieceSize, reqId, list);
+      for (T t : list) {
+        if (!visitor.visit(t)) {
+          return;
         }
       }
-    }while(exit);
+    } while (!exit);
   }
 
   protected abstract boolean load(DcpConnection connection, int pieseSize, int reqId, Collection<T> result) throws AdminException;
@@ -45,6 +45,7 @@ public abstract class DeliveryDataSource<T> {
 
   /**
    * Визитер
+   *
    * @param <T> тип извлекаемых данных
    */
   public static interface Visitor<T> {
