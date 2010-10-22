@@ -39,9 +39,6 @@ public class SettingsMController<T> extends SmscController {
       return;
     resetRevision();
 
-    for (Iterator it = FacesContext.getCurrentInstance().getMessages(); it.hasNext(); it.remove())
-      it.next();
-
     if (mngr instanceof SmscConfiguration) {
       try {
         Map<Integer, SmscConfigurationStatus> statuses = ((SmscConfiguration) mngr).getStatusForSmscs();
