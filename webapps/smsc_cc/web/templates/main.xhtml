@@ -12,13 +12,13 @@
   <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/properties_list.css"/>
   <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/main_menu.css"/>
   <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_list.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/navbar.css"/>
   <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/messages.css"/>
   <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/message.css"/>
   <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/page_menu.css"/>
 
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/sme_menu.css"/>
   <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/header.css"/>
+  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/navbar.css"/>
+  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/data_table_filter.css"/>
 
 
   <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_group.css"/>
@@ -27,26 +27,11 @@
   <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/ajax.js"></script>
   <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table.js"></script>
   <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table_filter.js"></script>
+  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menubar.js"></script>
 
-  <script type="text/javascript">
+  <tr:document title="#{msg['smsc.title']}" >
 
-    function submitFormOnEnter(e) {
-      if (!e)
-        e = window.event;
-      var keyCode = e.keyCode; // For IE
-      if (!keyCode)
-        keyCode = e.which; // For Firefox
-      if (keyCode == 13) // On Enter
-        opForm.submit();
-
-      return true;
-    }
-  </script>
-
-
-  <tr:document onload="initjsDOMenu()" title="#{msg['smsc.title']}">
-
-    <table height="100%" cellspacing="0" cellpadding="0" class="main_table">
+    <table height="100%" cellspacing="0" cellpadding="0" >
       <tr>
 
         <td width="30" background="#{facesContext.externalContext.requestContextPath}/images/smsc_03.jpg" rowspan="3"></td>
@@ -55,7 +40,7 @@
           <!-- "SMS Service Center" header -->
           <table cellspacing="0" cellpadding="0" border="0">
             <tr>
-              <td width="236px"><img src="#{facesContext.externalContext.requestContextPath}/images/smsc_04.jpg" WIDTH="236px" HEIGHT="45px" alt=""/></td>
+              <td width="236"><img src="#{facesContext.externalContext.requestContextPath}/images/smsc_04.jpg" WIDTH="236" HEIGHT="45" alt=""/></td>
               <td bgcolor="#161E49"><span
                   style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&#160;#{applicationScope['smsc-version']}</span>
               </td>
@@ -99,7 +84,7 @@
 
       <tr height="100%">
 
-        <td style="position:relative;">
+        <td >
 
           <table cellspacing="0" cellpadding="0" height="100%">
             <tr>
@@ -128,6 +113,6 @@
       </tr>
     </table>
   </tr:document>
-
-
+  <!--</body>-->
+  <!--</html>-->
 </f:view>

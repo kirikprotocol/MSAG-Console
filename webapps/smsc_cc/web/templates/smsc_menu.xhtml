@@ -3,43 +3,72 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:eye="http://taglib.eyeline.mobi"
       xmlns:ui="http://java.sun.com/jsf/facelets">
 
 <ui:composition>
 
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menu/jsdomenu.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menu/jsdomenubar.js"></script>
-
-  <SCRIPT type="text/javascript">
-    function createjsDOMenu() {
-    menuBar = new jsDOMenuBar();
-    <ui:repeat value="#{topMenu.menuBarItems}" var="barItem">
-      menu_0=new jsDOMenu("<tr:outputText escape="false" value="#{barItem.width}"/>");
-      <ui:repeat value="#{barItem.items}" var="menuItem">
-        menu_0.addMenuItem(new menuItem("<tr:outputText escape="false" value="#{msg[menuItem.name]}"/>", "", "<tr:outputText
-          value="#{facesContext.externalContext.requestContextPath}#{menuItem.url}"/>"));
-      </ui:repeat>
-      menuBar.addMenuBarItem(new menuBarItem("<tr:outputText escape="false" value="#{msg[barItem.name]}"/>", menu_0));
-    </ui:repeat>
-    }
-  </SCRIPT>
-
   <h:form>
     <table width="100%" id="MAIN_MENU_TABLE" border="0" cellspacing="0" cellpadding="0" class="main_menu">
       <tr>
-        <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_14.jpg" style="white-space:nowrap;">
-          &#160;
+        <td width="26">&#160;</td>
+        <td width="1%">
+          <eye:menubar label="#{msg['smsc.smsc']}">
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.status']}" action="INDEX"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.config']}" action="SMSC_CONFIG"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.map_limit']}" action="MAP_LIMIT"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.logging']}" action="LOGGING"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.closed_groups']}" action="CLOSED_GROUPS"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.reschedule']}" action="RESCHEDULE"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.users']}" action="USERS"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.journal']}" action="JOURNAL"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.timezones']}" action="TIMEZONES"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.fraud']}" action="FRAUD"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.smsc.msc']}" action="MSC"/></eye:menubaritem>
+          </eye:menubar>
         </td>
-        <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_14.jpg" width="100%">&#160;</td>
-        <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_14.jpg" style="white-space:nowrap">
-          <h:commandLink id="MENU0_LOGOUT" style="text-decoration: none;color: #F2E275;cursor: pointer;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                         rendered="#{logout.userName != null}" value="#{msg['smsc.logout']} &quot;#{logout.userName}&quot;"
-                         action="#{logout.logout}"/>
+        <td width="1%">
+          <eye:menubar label="#{msg['smsc.statistic']}">
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.statistic.archiveDaemon']}" action="ARCHIVEDAEMON"/></eye:menubaritem>
+          </eye:menubar>
         </td>
-
-        <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_14.jpg" width="52"></td>
+        <td width="1%">
+          <eye:menubar label="#{msg['smsc.routes']}">
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.routes.alias']}" action="ALIASES"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.routes.subjects']}" action="SUBJECTS"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.routes.routes']}" action="ROUTES"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.routes.categories']}" action="CATEGORIES"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.routes.providers']}" action="PROVIDERS"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.routes.acls']}" action="ACLS"/></eye:menubaritem>
+          </eye:menubar>
+        </td>
+        <td width="1%">
+          <eye:menubar label="#{msg['smsc.services']}">
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.services.services']}" action="SERVICES"/></eye:menubaritem>
+          </eye:menubar>
+        </td>
+        <td width="1%">
+          <eye:menubar label="#{msg['smsc.snmp']}">
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.snmp.config']}" action="SNMP"/></eye:menubaritem>
+          </eye:menubar>
+        </td>
+        <td width="1%">
+          <eye:menubar label="#{msg['smsc.profile']}">
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.profile.default']}" action="DEFAULT_PROFILE"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.profile.lookup']}" action="PROFILE_LOOKUP"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.profile.groups']}" action="PROFILE_GROUPS"/></eye:menubaritem>
+          </eye:menubar>
+        </td>
+        <td width="100%">&#160;</td>
+        <td style="white-space:nowrap">
+          <div>
+          <h:commandLink id="MENU0_LOGOUT" rendered="#{logout.userName != null}" value="#{msg['smsc.logout']} &quot;#{logout.userName}&quot;" action="#{logout.logout}"/>
+          </div>
+        </td>
+        <td width="52">&#160;</td>
       </tr>
     </table>
   </h:form>
 </ui:composition>
 </html>
+

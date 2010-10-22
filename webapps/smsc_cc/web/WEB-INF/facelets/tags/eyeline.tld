@@ -326,4 +326,31 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>menubar</name>
+    <description>Элемент с выпадающим меню</description>
+    <attribute>
+      <name>label</name>
+      <required>true</required>
+      <description>Заголовок</description>
+    </attribute>
+    <attribute>
+      <name>rendered</name>
+      <required>false</required>
+      <type>boolean</type>
+      <description>Отрисовывать элемент или нет. По умолчанию: true</description>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>menubaritem</name>
+    <description>Элемент menubar</description>
+    <attribute>
+      <name>rendered</name>
+      <required>false</required>
+      <type>boolean</type>
+      <description>Отрисовывать элемент или нет. По умолчанию: true</description>
+    </attribute>
+  </tag>
+
 </taglib>

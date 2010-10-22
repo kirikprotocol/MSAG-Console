@@ -149,6 +149,12 @@
       <renderer-type>dataTableRow</renderer-type>
       <renderer-class>ru.novosoft.smsc.web.components.data_table.RowRenderer</renderer-class>
     </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>menuBar</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.menubar.MenuBarRenderer</renderer-class>
+    </renderer>
   </render-kit>
 
 
@@ -214,12 +220,6 @@
     <managed-bean-name>logout</managed-bean-name>
     <managed-bean-class>ru.novosoft.smsc.web.controllers.LogoutController</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
-  </managed-bean>
-
-  <managed-bean>
-    <managed-bean-name>topMenu</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.TopMenu</managed-bean-class>
-    <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
@@ -516,7 +516,7 @@
     </navigation-case>
     <navigation-case>
       <from-outcome>TIMEZONES</from-outcome>
-      <to-view-id>/smsc/timezones/edit.faces</to-view-id>
+      <to-view-id>/smsc/timezones/index.faces</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
@@ -527,6 +527,11 @@
     <navigation-case>
       <from-outcome>ROUTE_EDIT</from-outcome>
       <to-view-id>/smsc/route/edit.faces</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>JOURNAL</from-outcome>
+      <to-view-id>/smsc/journal/index.faces</to-view-id>
+      <redirect/>
     </navigation-case>
 
   </navigation-rule>

@@ -1,0 +1,26 @@
+table.data_table_filter {
+/*position: relative;*/
+  height: 30px;
+  white-space: nowrap;
+}
+
+table.data_table_filter td {
+  padding-left: 4px;
+  padding-right: 4px;
+  white-space: nowrap;
+}
+
+table.data_table_filter a,
+table.data_table_filter a:hover,
+table.data_table_filter a:visited {
+  border: none;
+  cursor: pointer;
+  color: #161E49;
+  text-decoration: none; /*behavior : url(/scripts/click_submit.htc);*/
+  white-space: nowrap;
+}
+
+table.data_table_filter a.xi {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: x-small;
+}

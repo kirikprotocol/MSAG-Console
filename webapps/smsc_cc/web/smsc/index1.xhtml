@@ -14,22 +14,43 @@
 
   <ui:define name="content">
 
-    <eye:message level="warn">
-      <h:panelGrid columns="1">
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-      </h:panelGrid>
-    </eye:message>
-
     <h:form>
+    
+
+    <eye:buttons>
+      <eye:button>
+        <eye:menubar label="My first menu bar">
+          <eye:menubaritem><h:commandLink value="INDEX" action="INDEX"/></eye:menubaritem>
+          <eye:menubaritem><h:commandLink value="ROUTES" action="ROUTES"/></eye:menubaritem>
+        </eye:menubar>
+        <!--<div id="mymenu">mymenu</div>-->
+        <!--<div id="mymenucontent">-->
+          <!--<SCRIPT type="text/javascript">var menu = new MenuBar('mymenu', 'mymenucontent');</SCRIPT>-->
+          <!--<div id="mymenuitem0" class="menuitem"><h:commandLink value="INDEX" action="INDEX"/></div>-->
+          <!--<SCRIPT type="text/javascript">menu.addMenuItem(new MenuItem('mymenuitem0'));</SCRIPT>-->
+          <!--<div id="mymenuitem1" class="menuitem"><h:commandLink value="ROUTES" action="ROUTES"/></div>-->
+          <!--<SCRIPT type="text/javascript">menu.addMenuItem(new MenuItem('mymenuitem1'));</SCRIPT>-->
+        <!--</div>-->
+        
+      </eye:button>
+      <eye:space/>
+    </eye:buttons>
+
+    <!--<eye:message level="warn">-->
+    <!--<h:panelGrid columns="1">-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--<h:outputText value="Description"/>-->
+    <!--</h:panelGrid>-->
+    <!--</eye:message>-->
+
 
       <!--<eye:collapsingGroup label="#{index1.label}" opened="#{index1.opened}" rendered="true">-->
       <!--<f:facet name="header">-->
@@ -47,68 +68,66 @@
       <eye:dataTableFilter bean="#{index1}" applyAction="query" clearAction="clear">
 
 
-
-
-        <!--<h:panelGroup>-->
-        <eye:dynamicTable value="#{index1.model}" rendered="true" >
+        <h:panelGroup>
+        <eye:dynamicTable value="#{index1.model}" rendered="true">
           <eye:textColumn name="column1" maxLength="20" allowEditAfterAdd="false"/>
-          <eye:textColumn name="column2" maxLength="20" />
+          <eye:textColumn name="column2" maxLength="20"/>
           <eye:selectColumn name="column3" values="#{index1.column3Values}" allowEditAfterAdd="false"
                             uniqueValues="true"/>
           <eye:selectColumn name="column4" values="#{index1.column4Values}" allowEditAfterAdd="false"/>
 
         </eye:dynamicTable>
-        <!--</h:panelGroup>-->
-        <!--<h:panelGrid columns="2">-->
-        <!--<h:outputLabel for="date" value="date"/><t:inputDate id="date" value="#{index1.date}"/>-->
-        <!--<h:outputLabel for="select" value="limit"/>-->
-        <!--<h:selectOneMenu id="select" value="#{index1.selectOne}" >-->
-        <!--<f:selectItem itemLabel="" itemValue=""/>-->
-        <!--<f:selectItem itemLabel="1" itemValue="1"/>-->
-        <!--<f:selectItem itemLabel="2" itemValue="2"/>-->
-        <!--<f:selectItem itemLabel="3" itemValue="3"/>-->
-        <!--</h:selectOneMenu>-->
-        <!--</h:panelGrid>-->
+        </h:panelGroup>
+        <h:panelGrid columns="2">
+        <h:outputLabel for="date" value="date"/><t:inputDate id="date" value="#{index1.date}"/>
+        <h:outputLabel for="select" value="limit"/>
+        <h:selectOneMenu id="select" value="#{index1.selectOne}" >
+        <f:selectItem itemLabel="" itemValue=""/>      
+        <f:selectItem itemLabel="1" itemValue="1"/>
+        <f:selectItem itemLabel="2" itemValue="2"/>
+        <f:selectItem itemLabel="3" itemValue="3"/>
+        </h:selectOneMenu>
+        </h:panelGrid>
       </eye:dataTableFilter>
 
-      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" rendered="#{index1.init}">
+      <!--<eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" rendered="#{index1.init}">-->
 
-        <eye:row rowId="#{row.id}" innerData="#{row.innerData != null}" innerRows="#{row.innerRows}">
+        <!--<eye:row rowId="#{row.id}" innerData="#{row.innerData != null}" innerRows="#{row.innerRows}">-->
 
-          <eye:column name="column1" title="column1" width="50%" sortable="true">
-            <h:outputText value="#{row.data.column1}"/>
-            <f:facet name="inner">
-              <h:outputText value="#{row.column1}" style="color:GREEN"/>
-            </f:facet>
-          </eye:column>
+          <!--<eye:column name="column1" title="column1" width="50%" sortable="true">-->
+            <!--<h:outputText value="#{row.data.column1}"/>-->
+            <!--<f:facet name="inner">-->
+              <!--<h:outputText value="#{row.column1}" style="color:GREEN"/>-->
+            <!--</f:facet>-->
+          <!--</eye:column>-->
 
-          <eye:column name="column2" title="column2" width="50%" sortable="false" align="center">
-            <h:graphicImage value="/images/ic_offline.gif" alt=""/>
-            <f:facet name="inner">
-              <h:outputText value="#{row.column2}"/>
-            </f:facet>
-          </eye:column>
+          <!--<eye:column name="column2" title="column2" width="50%" sortable="false" align="center">-->
+            <!--<h:graphicImage value="/images/ic_offline.gif" alt=""/>-->
+            <!--<f:facet name="inner">-->
+              <!--<h:outputText value="#{row.column2}"/>-->
+            <!--</f:facet>-->
+          <!--</eye:column>-->
 
-          <f:facet name="innerData">
-            <h:panelGroup>
-              <h:outputText value="Hello world "/><h:commandLink value="#{row.innerData}"
-                                                                 actionListener="#{index1.edit}"/>
-            </h:panelGroup>
-          </f:facet>
-        </eye:row>
+          <!--<f:facet name="innerData">-->
+            <!--<h:panelGroup>-->
+              <!--<h:outputText value="Hello world "/><h:commandLink value="#{row.innerData}"-->
+                                                                 <!--actionListener="#{index1.edit}"/>-->
+            <!--</h:panelGroup>-->
+          <!--</f:facet>-->
+        <!--</eye:row>-->
 
-      </eye:dataTable>
+      <!--</eye:dataTable>-->
 
-      <eye:buttons>
-        <eye:button><h:commandLink value="myButton" actionListener="#{index1.myButton}" /></eye:button>
-        <eye:button><h:commandLink value="myButton1" actionListener="#{index1.myButton}"/></eye:button>
+      <!--<eye:buttons>-->
+        <!--<eye:button><h:commandLink value="myButton" actionListener="#{index1.myButton}"/></eye:button>-->
+        <!--<eye:button><h:commandLink value="myButton1" actionListener="#{index1.myButton}"/></eye:button>-->
 
-        <eye:space/>
+        <!--<eye:space/>-->
 
-        <eye:button><h:commandLink value="myButton2" actionListener="#{index1.myButton}"/></eye:button>
-        <eye:button><h:commandLink value="myButton3" actionListener="#{index1.myButton}"/></eye:button>
+        <!--<eye:button><h:commandLink value="myButton2" actionListener="#{index1.myButton}"/></eye:button>-->
+        <!--<eye:button><h:commandLink value="myButton3" actionListener="#{index1.myButton}"/></eye:button>-->
 
-      </eye:buttons>
+      <!--</eye:buttons>-->
     </h:form>
 
   </ui:define>

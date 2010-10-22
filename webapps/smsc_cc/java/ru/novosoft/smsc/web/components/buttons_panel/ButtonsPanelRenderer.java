@@ -17,15 +17,9 @@ public class ButtonsPanelRenderer extends Renderer {
 
     if (component instanceof ButtonsPannel) {
       button = 0;
-      w.append("\n<div class=\"page_menu\">");
-      w.append("\n<table class=\"page_menu_background\" cellspacing=\"0px\" cellpadding=\"0px\">");
-      w.append("\n<tr>");
-      w.append("\n<td background=\"" + contextPath + "/images/smsc_21.jpg\">&nbsp;</td>");
-      w.append("\n</tr>");
-      w.append("\n</table>");
       w.append("\n<table class=\"page_menu\" cellpadding=\"0px\" cellspacing=\"0px\">");
       w.append("\n<tr>");
-      w.append("\n<td width=\"37px\">&nbsp;</td>");
+      w.append("\n<td background=\"" + contextPath + "/images/smsc_21.jpg\" width=\"37px\">&nbsp;</td>");
     } else if (component instanceof Space) {
       w.append("<td>&nbsp;</td>");
       button = 0;
