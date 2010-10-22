@@ -53,7 +53,10 @@ std::string RegionSender::toString() const
 void RegionSender::addDelivery( RegionalStorage& ptr )
 {
     smsc_log_debug(log_,"add delivery D=%u",ptr.getDlvId());
-    taskList_.add(&ptr);
+    {
+        MutexGuard mg(lock_);
+        taskList_.add(&ptr);
+    }
     // FIXME: reset speed control
     conn_->wakeUp();
 }
@@ -62,7 +65,10 @@ void RegionSender::addDelivery( RegionalStorage& ptr )
 void RegionSender::removeDelivery( dlvid_type dlvId )
 {
     smsc_log_debug(log_,"remove delivery D=%u",dlvId);
-    taskList_.remove(EqualById(dlvId));
+    {
+        MutexGuard mg(lock_);
+        taskList_.remove(EqualById(dlvId));
+    }
     if (log_->isDebugEnabled()) {
         std::string dumpstring;
         dumpstring.reserve(200);

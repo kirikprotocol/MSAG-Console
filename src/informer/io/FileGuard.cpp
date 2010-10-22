@@ -71,7 +71,7 @@ size_t FileGuard::seek( size_t pos, int whence )
 }
 
 
-void FileGuard::write( const void* buf, unsigned buflen, bool atomic )
+void FileGuard::write( const void* buf, size_t buflen, bool atomic )
 {
     if (fd_==-1) {
         throw InfosmeException("write failed: file is not opened");
@@ -85,19 +85,19 @@ void FileGuard::write( const void* buf, unsigned buflen, bool atomic )
         buflen -= written;
         pos_ += written;
         if (atomic && buflen>0) {
-            throw InfosmeException("write was not atomic: %d, buflen=%u written=%u",
-                                   fd_,buflen+written,written);
+            throw InfosmeException("write was not atomic: %d, buflen=%llu written=%u",
+                                   fd_,ulonglong(buflen+written),written);
         }
     }
 }
 
 
-unsigned FileGuard::read( void* buf, unsigned buflen )
+size_t FileGuard::read( void* buf, size_t buflen )
 {
     if (fd_==-1) {
         throw InfosmeException("read failed: file is not opened");
     }
-    unsigned wasread = 0;
+    size_t wasread = 0;
     while (buflen>0) {
         ssize_t readlen = ::read(fd_,buf,buflen);
         if (readlen==0) break; // EOF

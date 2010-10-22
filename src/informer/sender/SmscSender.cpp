@@ -135,6 +135,7 @@ protected:
                     throw InfosmeException("journal '%s' record at %llu has invalid len: %u",
                                            jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)),reclen);
                 }
+                smsc_log_debug(sender_.log_,"reclen=%u, bufsize=%u",reclen,unsigned(buf.GetPos()));
                 if (ptr+LENSIZE+reclen > buf.GetCurPtr()) {
                     break; // read more
                 }
@@ -152,6 +153,18 @@ protected:
                     sender_.receiptHash_.Insert(rd.rcptId.msgId,
                                                 sender_.receiptList_.insert(sender_.receiptList_.end(),rd));
                 }
+                ptr += reclen+LENSIZE;
+            } // where there is full record in buf
+            if (ptr>buf.get()) {
+                char* o = buf.get();
+                const char* i = ptr;
+                const char* e = buf.GetCurPtr();
+                for ( ; i < e; ) {
+                    *o++ = *i++;
+                }
+                buf.SetPos(o-buf.get());
+            } else if ( buf.GetPos() >= buf.getSize() ) {
+                buf.reserve(buf.getSize()+buf.getSize()/2+100);
             }
 
         } while (true);

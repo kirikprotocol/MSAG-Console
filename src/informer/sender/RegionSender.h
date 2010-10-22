@@ -5,6 +5,7 @@
 #include "informer/opstore/RegionalStorage.h"
 #include "ScoredList.h"
 #include "SpeedControl.h"
+#include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -52,6 +53,7 @@ public:
         // MutexGuard mg(lock_);
         static const unsigned sleepTime = unsigned(1*tuPerSec);
         currentTime_ = currentTime;
+        MutexGuard mg(lock_);
         return taskList_.processOnce(0,sleepTime);
     }
 
@@ -75,9 +77,12 @@ private:
 
 private:
     smsc::logger::Logger*              log_;
+
+    smsc::core::synchronization::Mutex lock_;
     SmscSender*                        conn_;     // not owned
     RegionPtr                          region_;   // shared ownership
     ScoredList< RegionSender >         taskList_; // not owned
+
     // smsc::core::synchronization::Mutex lock_;
     SpeedControl<tuPerSec,uint64_t>    speedControl_;
     // RegionalStoragePtr                 ptr_;

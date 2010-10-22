@@ -31,7 +31,7 @@ void MessageGlossary::init( const std::string& storePath,
     TextList texts;
     do {
         char* ptr = buf.get();
-        size_t wasread = fg.read( buf.GetCurPtr(), buf.getSize() - buf.GetPos() );
+        const size_t wasread = fg.read( buf.GetCurPtr(), buf.getSize() - buf.GetPos() );
         if (wasread == 0) {
             // EOF
             if (ptr<buf.GetCurPtr()) {

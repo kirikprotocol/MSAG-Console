@@ -44,7 +44,7 @@ public:
     void write( const void* buf, size_t buflen, bool atomic = false );
 
     /// read buffer
-    /// @return number of bytes read
+    /// @return number of bytes read which may be less than buflen in case of EOF
     size_t read( void* buf, size_t buflen );
 
     void fsync() {

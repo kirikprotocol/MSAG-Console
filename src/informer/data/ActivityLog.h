@@ -4,6 +4,7 @@
 #include "informer/data/Message.h"
 #include "informer/io/FileGuard.h"
 #include "DeliveryStats.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -27,6 +28,15 @@ public:
 
     /// increment stats, optionally decrementing fromState
     void incStats( uint8_t state, int value = 1, uint8_t fromState = 0 );
+
+    void getStats( DeliveryStats& ds ) {
+        MutexGuard mg(statLock_);
+        ds = stats_;
+    }
+
+private:
+    bool readStatistics( const std::string& filename,
+                         smsc::core::buffers::TmpBuf<char, 8192 >& buf );
 
 private:
     smsc::core::synchronization::Mutex lock_;
