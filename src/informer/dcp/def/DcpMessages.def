@@ -258,7 +258,6 @@ end
 enum byte DeliveryMessageState
   New 1
   Process 2
-  Sent 3
   Delivered 3
   Failed 4
   Expired 5
@@ -284,16 +283,11 @@ message GetNextMessagesPack 45
   int32 count 2
 end
 
-enum byte MessageState
-  Delivered 1
-  Failed 2
-  Expired 3 
-end
 
 message MessageInfo
   property innerMessage=true
   int64 id 1
-  MessageState state 2 opt
+  DeliveryMessageState state 2 opt
   string date 3 opt
   string abonent 4 opt
   string text 5 opt
@@ -307,3 +301,16 @@ message GetNextMessagesPackResp 46
   MessageInfo info 2 array
 end
 
+message CountMessages 43
+  int32 deliveryId 1
+  DeliveryMessageState states 2 array opt
+  string msisdnFilter 7 array opt
+  // DD:MM:YY hh:mm:ss
+  string startDate 4
+  // DD:MM:YY hh:mm:ss
+  string endDate 5
+end
+
+message CountMessagesResp 44
+  int32 count 1
+end
