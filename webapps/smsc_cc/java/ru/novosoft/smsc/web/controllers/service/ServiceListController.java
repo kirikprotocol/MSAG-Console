@@ -168,7 +168,7 @@ public class ServiceListController extends ServiceController {
     }
 
     public boolean isConnectedViaLoadBalancer() {
-      return connectStatuses.getConnectType() == SmeConnectType.VIA_LOAD_BALANCER;
+      return connectStatuses != null && connectStatuses.getConnectType() == SmeConnectType.VIA_LOAD_BALANCER;
     }
 
     public String getLoadBalancerStatus() {
