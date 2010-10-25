@@ -48,7 +48,7 @@ bool MtForward::isMMS()
 }
 uint8_t MtForward::get_TP_MTI()
 {
-  MT_ForwardSM_Arg_t& msg = *structure;
+  MT_ForwardSM_Arg_t& msg = *((MT_ForwardSM_Arg_t*)structure);
   return msg.sm_RP_UI.buf[0];
 }
 /* Dump the data into the specified stdio stream */
