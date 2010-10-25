@@ -125,9 +125,6 @@ public class DeliveryManager {
       }
       throw new DeliveryException("internal_error");
     }
-    DeliveryState state = new DeliveryState();
-    state.setStatus(DeliveryStatus.Active);
-    conn.changeDeliveryState(id, state);
     if (logger.isDebugEnabled()) {
       logger.debug("Delivery is proccessed: " + id);
     }

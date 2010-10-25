@@ -162,7 +162,9 @@ public class TestDeliveryManagerTest {
         return ms.removeFirst();
       }
     });
+    
     assertNotNull(d.getId());
+    manager.activateDelivery("","",d.getId());
 
 
     final Delivery d1 = manager.getDelivery("","",d.getId());

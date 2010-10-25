@@ -12,12 +12,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class DeliveryTest {
 
-  /*
-
-private boolean replaceMessage;
-private String svcType;
-*/
-
   @Test
   public void testUserId() {
     Delivery d = new Delivery();
