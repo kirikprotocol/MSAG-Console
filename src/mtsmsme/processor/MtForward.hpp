@@ -16,6 +16,7 @@ class MtForward
     string toString();
     void* potroha();
     bool isMMS();
+    uint8_t get_TP_MTI();
     void MtForward::decode(void *buf, int buflen);
     ~MtForward();
   private:

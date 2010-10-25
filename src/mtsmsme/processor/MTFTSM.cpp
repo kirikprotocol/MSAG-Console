@@ -140,7 +140,7 @@ void MTFTSM::BEGIN(Message& msg)
     mtbuf = msg.getComponent();
     MtForward mtf(logger);
     mtf.decode((void *)&mtbuf[0],(int)mtbuf.size());
-
+    smsc_log_debug(logger,"TP-MTI=%02X",mtf.get_TP_MTI());
 
     //req =  new MTR(this);
     req.invokeId = msg.getInvokeId();

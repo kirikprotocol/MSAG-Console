@@ -46,8 +46,11 @@ bool MtForward::isMMS()
   if(structure) res = (((MT_ForwardSM_Arg_t*)structure)->moreMessagesToSend != 0);
   return res;
 }
-
-
+uint8_t MtForward::get_TP_MTI()
+{
+  MT_ForwardSM_Arg_t& msg = *structure;
+  return msg.sm_RP_UI.buf[0];
+}
 /* Dump the data into the specified stdio stream */
 extern "C" static int toStream(const void *buffer, size_t size, void *app_key) {
   std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
