@@ -140,7 +140,18 @@ void MTFTSM::BEGIN(Message& msg)
     mtbuf = msg.getComponent();
     MtForward mtf(logger);
     mtf.decode((void *)&mtbuf[0],(int)mtbuf.size());
-    smsc_log_debug(logger,"TP-MTI=%02X",mtf.get_TP_MTI());
+    if ((mtf.get_TP_MTI() & 0x03) != 0) // NOT SMS-DELIVER
+    {
+      smsc_log_debug(logger,"it is NOT SMS-DELIVER TP-MTI=%02X",mtf.get_TP_MTI());
+      EndMsg end;
+      end.setTrId(rtrid);
+      end.setDialog(appcntx);
+      end.setComponent(0, req.invokeId);// any not OK result, FYI 1025 = 'no route' :)
+      std::vector<unsigned char> rsp;
+      tco->encoder.encode_mt_resp(end, rsp);
+      tco->SCCPsend(raddrlen, &raddr[0], laddrlen, laddr,(uint16_t) rsp.size(), &rsp[0]);
+      tco->TSMStopped(ltrid);
+    }
 
     //req =  new MTR(this);
     req.invokeId = msg.getInvokeId();
