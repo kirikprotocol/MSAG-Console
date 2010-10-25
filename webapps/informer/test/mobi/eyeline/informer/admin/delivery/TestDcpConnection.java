@@ -54,7 +54,7 @@ public class TestDcpConnection implements DcpConnection{
 
   public synchronized int createDelivery(Delivery delivery) throws AdminException {
     int id = dIdCounter++;
-    deliveries.put(id, new DeliveryWStatus(delivery));
+    deliveries.put(id, new DeliveryWStatus(delivery, id));
     return id;
   }
 
@@ -82,7 +82,7 @@ public class TestDcpConnection implements DcpConnection{
     if(delivery.getId() == null || !deliveries.containsKey(delivery.getId())) {
       throw new DeliveryException("interaction_error","");
     }
-    deliveries.put(delivery.getId(), new DeliveryWStatus(delivery));
+    deliveries.put(delivery.getId(), new DeliveryWStatus(delivery, delivery.getId()));
   }
 
   public synchronized void dropDelivery(int deliveryId) throws AdminException {
@@ -443,8 +443,9 @@ public class TestDcpConnection implements DcpConnection{
   private static class DeliveryWStatus extends Delivery {
     private DeliveryStatus status = DeliveryStatus.Planned;
     private Delivery delivery;
-    private DeliveryWStatus(Delivery delivery) {
+    private DeliveryWStatus(Delivery delivery, int id) {
       this.delivery = delivery.cloneDelivery();
+      this.delivery.setId(id);
     }
     @Override
     public Integer getId() {

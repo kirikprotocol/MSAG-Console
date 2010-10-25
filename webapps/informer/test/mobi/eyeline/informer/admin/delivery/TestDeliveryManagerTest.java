@@ -130,7 +130,6 @@ public class TestDeliveryManagerTest {
     d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
     d.setDeliveryMode(DeliveryMode.SMS);
     d.setEndDate(new Date(System.currentTimeMillis() + 1000000));
-    d.setId(0);
     d.setName("Test delivery");
     d.setOwner("me");
     d.setPriority(15);
