@@ -20,6 +20,7 @@ struct FromBuf
     void setPos( size_t newpos );
     void setLen( size_t newlen );
     inline size_t getPos() const { return pos; }
+    inline size_t getLen() const { return buflen; }
 private:
     FromBuf();
 private:

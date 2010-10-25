@@ -3,6 +3,7 @@
 #include "informer/io/InfosmeException.h"
 #include "informer/io/Typedefs.h"
 #include "informer/io/FileGuard.h"
+#include "informer/io/FileReader.h"
 #include "informer/io/IOConverter.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/CommonSettings.h"
@@ -16,10 +17,56 @@ namespace eyeline {
 namespace informer {
 
 
+
+
 class SmscSender::SmscJournal : protected smsc::core::threads::Thread
 {
     static const unsigned LENSIZE = 2;
 public:
+
+    class SJReader : public FileReader::RecordReader
+    {
+    public:
+        SJReader( SmscSender& sender ) : sender_(sender), unique_(0) {}
+
+        virtual bool isStopping() {
+            return sender_.isStopping_;
+        }
+
+        virtual size_t recordLengthSize() const {
+            return LENSIZE;
+        }
+
+        virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
+            size_t rl(fb.get16());
+            if (rl>100) {
+                throw InfosmeException("record at %llu has invalid len: %u",
+                                       ulonglong(filePos), unsigned(rl));
+            }
+            return rl;
+        }
+
+        virtual void readRecordData( size_t filePos, FromBuf& fb ) {
+            ReceiptData rd;
+            rd.drmId.dlvId = fb.get32();
+            rd.drmId.regId = fb.get32();
+            rd.drmId.msgId = fb.get64();
+            rd.responded = true;
+            rd.status = smsc::system::Status::OK;
+            rd.retry = false;
+            rd.rcptId.setMsgId(fb.getCString());
+            if ( !sender_.receiptHash_.GetPtr(rd.rcptId.msgId)) {
+                ++unique_;
+                sender_.receiptHash_.Insert(rd.rcptId.msgId,
+                                            sender_.receiptList_.insert(sender_.receiptList_.end(),rd));
+            }
+        }
+    public:
+        SmscSender& sender_;
+        size_t      unique_; // number of unique records
+    };
+
+
     SmscJournal( SmscSender& sender ) :
     sender_(sender),
     isStopping_(true)
@@ -108,67 +155,19 @@ protected:
             smsc_log_warn(sender_.log_,"cannot read '%s': %s", jpath.c_str(), e.what());
             return;
         }
+        SJReader sjreader(sender_);
         smsc::core::buffers::TmpBuf<char,8192> buf;
-        unsigned total = 0;
-        do {
-            
-            char* ptr = buf.get();
-            size_t wasread = fg.read(buf.GetCurPtr(),buf.getSize()-buf.GetPos());
-            if (wasread==0) {
-                // EOF
-                if (ptr<buf.GetCurPtr()) {
-                    const size_t pos = fg.getPos() - (buf.GetCurPtr()-ptr);
-                    throw InfosmeException("journal '%s' has garbage-tail at %llu",
-                                           jpath.c_str(), ulonglong(pos));
-                }
-                break;
-            }
-
-            buf.SetPos(buf.GetPos()+wasread);
-            while (ptr < buf.GetCurPtr()) {
-                if (ptr+LENSIZE > buf.GetCurPtr()) {
-                    break; // need length
-                }
-                FromBuf fb(ptr,LENSIZE);
-                uint16_t reclen = fb.get16();
-                if (reclen>100) {
-                    throw InfosmeException("journal '%s' record at %llu has invalid len: %u",
-                                           jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)),reclen);
-                }
-                smsc_log_debug(sender_.log_,"reclen=%u, bufsize=%u",reclen,unsigned(buf.GetPos()));
-                if (ptr+LENSIZE+reclen > buf.GetCurPtr()) {
-                    break; // read more
-                }
-                fb.setLen(LENSIZE+reclen);
-                ReceiptData rd;
-                rd.drmId.dlvId = fb.get32();
-                rd.drmId.regId = fb.get32();
-                rd.drmId.msgId = fb.get64();
-                rd.responded = true;
-                rd.status = smsc::system::Status::OK;
-                rd.retry = false;
-                rd.rcptId.setMsgId(fb.getCString());
-                if ( !sender_.receiptHash_.GetPtr(rd.rcptId.msgId)) {
-                    ++total;
-                    sender_.receiptHash_.Insert(rd.rcptId.msgId,
-                                                sender_.receiptList_.insert(sender_.receiptList_.end(),rd));
-                }
-                ptr += reclen+LENSIZE;
-            } // where there is full record in buf
-            if (ptr>buf.get()) {
-                char* o = buf.get();
-                const char* i = ptr;
-                const char* e = buf.GetCurPtr();
-                for ( ; i < e; ) {
-                    *o++ = *i++;
-                }
-                buf.SetPos(o-buf.get());
-            } else if ( buf.GetPos() >= buf.getSize() ) {
-                buf.reserve(buf.getSize()+buf.getSize()/2+100);
-            }
-
-        } while (true);
-        smsc_log_info(sender_.log_,"journal '%s' has been read, %u records",jpath.c_str(),total);
+        FileReader fileReader(fg);
+        try {
+            const size_t total = fileReader.readRecords(buf,sjreader);
+            smsc_log_info(sender_.log_,"journal '%s' has been read, %u/%u total/unique records",jpath.c_str(),
+                          unsigned(total), unsigned(sjreader.unique_) );
+        } catch ( FileGarbageException& e ) {
+            smsc_log_warn(sender_.log_,"file '%s': %s", jpath.c_str(), e.what());
+            // FIXME: should we trunk the file?
+        } catch ( std::exception& e ) {
+            smsc_log_error(sender_.log_,"file '%s': %s", jpath.c_str(), e.what());
+        }
     }
 
 

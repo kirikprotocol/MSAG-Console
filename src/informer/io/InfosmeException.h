@@ -23,6 +23,8 @@ public:
     {
         SMSC_UTIL_EX_FILL(fmt);
     }
+protected:
+    InfosmeException();
 };
 
 }

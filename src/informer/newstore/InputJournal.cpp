@@ -3,8 +3,12 @@
 #include "informer/io/IOConverter.h"
 #include "logger/Logger.h"
 #include "core/buffers/TmpBuf.hpp"
+#include "informer/io/FileReader.h"
 
 namespace {
+
+using namespace eyeline::informer;
+
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
 const unsigned defaultVersion = 1;
@@ -13,6 +17,41 @@ inline std::string makePath( const std::string& storePath )
 {
     return storePath + "journals/input.journal";
 }
+
+class IJReader : public FileReader::RecordReader
+{
+public:
+    IJReader( InputJournal::Reader& reader, uint32_t version ) : reader_(reader), version_(version) {}
+
+    virtual bool isStopping() { return reader_.isStopping(); }
+    /// return the size of record length in octets.
+    virtual size_t recordLengthSize() const { return LENSIZE; }
+    /// read record length from fb and checks its validity.
+    virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
+        const size_t rl(fb.get16());
+        if ( rl > 100 ) {
+            throw InfosmeException("record at %llu has invalid len: %u",
+                                   ulonglong(filePos), unsigned(rl));
+        }
+        return rl;
+    }
+    /// read the record data (w/o length)
+    virtual void readRecordData( size_t filePos, FromBuf& fb ) {
+        const dlvid_type dlvId = fb.get32();
+        InputRegionRecord rec;
+        rec.regionId = fb.get32();
+        rec.rfn = fb.get32();
+        rec.roff = fb.get32();
+        rec.wfn = fb.get32();
+        rec.woff = fb.get32();
+        rec.count = fb.get32();
+        const uint64_t maxMsgId = fb.get64();
+        reader_.setRecordAtInit(dlvId,rec,maxMsgId);
+    }
+private:
+    InputJournal::Reader& reader_;
+    uint32_t              version_;
+};
 
 }
 
@@ -126,70 +165,18 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 
     // reading old journal
     smsc::core::buffers::TmpBuf<char,8192> buf;
-    unsigned total = 0;
-    do {
-        char* ptr = buf.get();
-        size_t wasread = fg.read(buf.GetCurPtr(), buf.getSize()-buf.GetPos());
-        if (wasread == 0) {
-            // EOF
-            if (ptr<buf.GetCurPtr()) {
-                const size_t pos = fg.getPos() - (buf.GetCurPtr()-ptr);
-                throw InfosmeException("journal '%s' is not terminated at %llu",
-                                       jpath.c_str(),ulonglong(pos));
-            }
-            break;
-        }
-            
-        buf.SetPos(buf.GetPos()+wasread);
-        while ( ptr < buf.GetCurPtr() ) {
-            if (reader.isStopping()) return;
-            if ( ptr+LENSIZE > buf.GetCurPtr()) {
-                // too few items
-                break;
-            }
-            FromBuf fb(ptr,LENSIZE);
-            uint16_t reclen = fb.get16();
-            if (reclen>100) {
-                throw InfosmeException("journal '%s' record at %llu has invalid len: %u",
-                                       jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)), reclen );
-            }
-            if (ptr+LENSIZE+reclen > buf.GetCurPtr()) {
-                // read more
-                break;
-            }
-            fb.setLen(LENSIZE+reclen);
-            const dlvid_type dlvId = fb.get32();
-            InputRegionRecord rec;
-            rec.regionId = fb.get32();
-            rec.rfn = fb.get32();
-            rec.roff = fb.get32();
-            rec.wfn = fb.get32();
-            rec.woff = fb.get32();
-            rec.count = fb.get32();
-            const uint64_t maxMsgId = fb.get64();
-            if (fb.getPos() != unsigned(reclen+LENSIZE)) {
-                throw InfosmeException("journal '%s' record at %llu has extra data",
-                                       jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)));
-            }
-            reader.setRecordAtInit(dlvId,rec,maxMsgId);
-            ++total;
-            ptr += reclen+LENSIZE;
-        }
-        if (ptr>buf.get()) {
-            // shifting buffer back
-            char* o = buf.get();
-            const char* i = ptr;
-            const char* e = buf.GetCurPtr();
-            for ( ; i < e ; ) {
-                *o++ = *i++;
-            }
-            buf.SetPos(o-buf.get());
-        } else if ( buf.GetPos() >= buf.getSize() ) {
-            // resize needed
-            buf.reserve(buf.getSize()+buf.getSize()/2+100);
-        }
-    } while (true);
-    smsc_log_info(log_,"journal '%s' has been read, %u records",jpath.c_str(),total);
+    FileReader fileReader(fg);
+    IJReader ijreader(reader,version_);
+    try {
+        const size_t total = fileReader.readRecords(buf,ijreader);
+        smsc_log_info(log_,"journal '%s' has been read, %u records",jpath.c_str(),unsigned(total));
+    } catch ( FileGarbageException& e ) {
+        smsc_log_warn(log_,"file '%s': %s", jpath.c_str(), e.what());
+        throw;
+    } catch ( std::exception& e ) {
+        smsc_log_warn(log_,"file '%s': %s", jpath.c_str(), e.what());
+        throw;
+    }
 }
 
 }

@@ -4,16 +4,95 @@
 #include "core/buffers/TmpBuf.hpp"
 #include "informer/io/HexDump.h"
 #include "informer/io/IOConverter.h"
+#include "informer/io/FileReader.h"
 
 namespace {
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
 const unsigned defaultVersion = 1;
 
+using namespace eyeline::informer;
+
 inline std::string makePath( const std::string& storePath )
 {
     return storePath + "journals/operative.journal";
 }
+
+class SJReader : public FileReader::RecordReader
+{
+public:
+    SJReader( StoreJournal::Reader& reader, smsc::logger::Logger* thelog ) :
+    reader_(reader), log_(thelog), version_(0), serial_(0) {}
+
+    void readHeader( FileGuard& fg, const std::string& jpath )
+    {
+        fg.ropen(jpath.c_str());
+        char buf[VERSIZE+4];
+        fg.read(buf,VERSIZE+4);
+        FromBuf fb(buf,VERSIZE+4);
+        uint32_t v = fb.get32();
+        if (v != 1) {
+            throw InfosmeException("file '%s': version %u is not supported",jpath.c_str(),v);
+        }
+        regionid_type s = fb.get32();
+        if (s == 0 || serial_ == MessageLocker::lockedSerial) {
+            throw InfosmeException("file '%s': invalid serial number %u", s);
+        }
+        version_ = v;
+        serial_ = s;
+        smsc_log_debug(log_,"file '%s': header is ok, version=%u serial=%u",jpath.c_str(),version_,serial_);
+    }
+
+    /// check if reader is stopping
+    virtual bool isStopping() {
+        return reader_.isStopping();
+    }
+    /// return the size of record length in octets.
+    virtual size_t recordLengthSize() const {
+        return LENSIZE;
+    }
+    /// read record length from fb and checks its validity.
+    virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
+        size_t rl(fb.get16());
+        if ( rl > 10000 ) {
+            throw InfosmeException("record at %llu has invalid len: %u",
+                                   ulonglong(filePos), unsigned(rl));
+        }
+        return rl;
+    }
+    /// read the record data (w/o length)
+    virtual void readRecordData( size_t filePos, FromBuf& fb ) {
+        const dlvid_type dlvId = fb.get32();
+        const regionid_type regId = fb.get32();
+        Message msg;
+        msg.msgId = fb.get64();
+        uint8_t readstate = fb.get8();
+        msg.state = readstate & 0x7f;
+        do {
+            if (fb.getPos() == fb.getLen()) break;
+            msg.lastTime = fb.get32();
+            msg.timeLeft = fb.get32();
+            if (fb.getPos() == fb.getLen()) break;
+            msg.subscriber = fb.get64();
+            msg.userData = fb.getCString();
+            if (readstate & 0x80) {
+                msg.text.reset( new MessageText(fb.getCString(),0) );
+            } else {
+                msg.text.reset( new MessageText(0,fb.get32()));
+            }
+        } while (false);
+        
+        if (fb.getPos() != fb.getLen()) {
+            throw InfosmeException("record at %llu has extra data", ulonglong(filePos));
+        }
+        reader_.setRecordAtInit(dlvId,regId,msg,serial_);
+    }
+public:
+    StoreJournal::Reader& reader_;
+    smsc::logger::Logger* log_;
+    uint32_t              version_;
+    uint32_t              serial_;
+};
 
 }
 
@@ -167,104 +246,28 @@ void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
     if (reader.isStopping()) return;
     FileGuard fg;
+    SJReader sjreader(reader,log_);
     try {
-        fg.ropen(jpath.c_str());
-        char buf[VERSIZE+4];
-        fg.read(buf,VERSIZE+4);
-        FromBuf fb(buf,VERSIZE+4);
-        uint32_t v = fb.get32();
-        if (v != 1) {
-            throw InfosmeException("file '%s': version %u is not supported",jpath.c_str(),v);
-        }
-        regionid_type s = fb.get32();
-        if (s == 0 || serial_ == MessageLocker::lockedSerial) {
-            throw InfosmeException("file '%s': invalid serial number %u", s);
-        }
-        version_ = v;
-        serial_ = s;
-        smsc_log_debug(log_,"file '%s': header is ok, version=%u serial=%u",jpath.c_str(),version_,serial_);
+        sjreader.readHeader(fg, jpath);
     } catch (std::exception& e) {
         smsc_log_warn(log_,"cannot read '%s': %s",jpath.c_str(),e.what());
         return;
     }
-
     smsc::core::buffers::TmpBuf<char,8192> buf;
-    unsigned total = 0;
-    do {
-        char* ptr = buf.get();
-        size_t wasread = fg.read(buf.GetCurPtr(),buf.getSize()-buf.GetPos());
-        if (wasread == 0) {
-            // EOF
-            if (ptr < buf.GetCurPtr()) {
-                const size_t pos = fg.getPos() - (buf.GetCurPtr()-ptr);
-                throw InfosmeException("journal '%s' is not terminated at %llu",
-                                       jpath.c_str(), ulonglong(pos));
-            }
-            break;
-        }
-        
-        buf.SetPos(buf.GetPos()+wasread);
-        while (ptr < buf.GetCurPtr()) {
-            if (reader.isStopping()) return;
-            if (ptr+LENSIZE > buf.GetCurPtr()) {
-                // too few items
-                break;
-            }
-            FromBuf fb(ptr,LENSIZE);
-            uint16_t reclen = fb.get16();
-            if (reclen>10000) {
-                throw InfosmeException("journal '%s' record at %llu has invalid len: %u",
-                                       jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)),reclen);
-            }
-            if (ptr+LENSIZE+reclen > buf.GetCurPtr()) {
-                // read more
-                break;
-            }
-            fb.setLen(LENSIZE+reclen);
-            const dlvid_type dlvId = fb.get32();
-            const regionid_type regId = fb.get32();
-            Message msg;
-            msg.msgId = fb.get64();
-            uint8_t readstate = fb.get8();
-            msg.state = readstate & 0x7f;
-            do {
-                if (fb.getPos() == unsigned(reclen+LENSIZE)) break;
-                msg.lastTime = fb.get32();
-                msg.timeLeft = fb.get32();
-                if (fb.getPos() == unsigned(reclen+LENSIZE)) break;
-                msg.subscriber = fb.get64();
-                msg.userData = fb.getCString();
-                if (readstate & 0x80) {
-                    msg.text.reset( new MessageText(fb.getCString(),0) );
-                } else {
-                    msg.text.reset( new MessageText(0,fb.get32()));
-                }
-            } while (false);
-            
-            if (fb.getPos() != unsigned(reclen+LENSIZE)) {
-                throw InfosmeException("journal '%s' record at %llu has extra data",
-                                       jpath.c_str(), ulonglong(fg.getPos()-(buf.GetCurPtr()-ptr)));
-            }
-            reader.setRecordAtInit(dlvId,regId,msg,serial_);
-
-            ++total;
-            ptr += reclen+LENSIZE;
-        } // while more record in read chunk
-        if (ptr>buf.get()) {
-            // shifting buffer back
-            char* o = buf.get();
-            const char* i = ptr;
-            const char* e = buf.GetCurPtr();
-            for ( ; i < e ; ) {
-                *o++ = *i++;
-            }
-            buf.SetPos(o-buf.get());
-        } else if ( buf.GetPos() >= buf.getSize() ) {
-            // resize needed
-            buf.reserve(buf.getSize()+buf.getSize()/2+100);
-        }
-    } while (true);
-    smsc_log_info(log_,"journal '%s' has been read, %u records",jpath.c_str(),total);
+    FileReader fileReader(fg);
+    try {
+        const size_t total = fileReader.readRecords(buf,sjreader);
+        smsc_log_info(log_,"journal '%s' has been read, %u records",jpath.c_str(),unsigned(total));
+        version_ = sjreader.version_;
+        serial_ = sjreader.serial_;
+    } catch ( FileGarbageException& e ) {
+        smsc_log_warn(log_,"file '%s': %s", jpath.c_str(), e.what());
+        // FIXME: should we trunk the file?
+        throw;
+    } catch ( std::exception& e ) {
+        smsc_log_error(log_,"file '%s': %s", jpath.c_str(), e.what());
+        throw;
+    }
 }
 
 

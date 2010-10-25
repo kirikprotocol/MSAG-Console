@@ -6,13 +6,56 @@
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/Region.h"
 #include "informer/io/FileGuard.h"
+#include "informer/io/FileReader.h"
 #include "informer/io/IOConverter.h"
 #include "informer/io/HexDump.h"
 #include "core/buffers/TmpBuf.hpp"
 
 namespace {
+using namespace eyeline::informer;
+
 const unsigned LENSIZE = 2;
 const uint16_t defaultVersion = 1;
+
+class IReader : public FileReader::RecordReader
+{
+public:
+    IReader( InfosmeCore& core, 
+             MessageList& ml,
+             InputRegionRecord& iro ) : core_(core), msglist_(ml), ro_(iro) {}
+
+    virtual bool isStopping() {
+        return core_.isStopping();
+    }
+
+    /// return the size of record length in octets.
+    virtual size_t recordLengthSize() const { return LENSIZE; }
+
+    /// read record length from fb and checks its validity.
+    virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
+        const size_t rl(fb.get16());
+        if (rl>10000) {
+            throw InfosmeException("reclen=%u is too big",unsigned(rl));
+        }
+        return rl;
+    }
+
+    /// read the record data (w/o length)
+    virtual void readRecordData( size_t filePos, FromBuf& fb ) {
+        msglist_.push_back(MessageLocker());
+        MessageLocker& mlk = msglist_.back();
+        mlk.serial = 0;
+        const uint16_t version = fb.get16();
+        mlk.msg.fromBuf(version,fb);
+        // glossary_.bindMessage(mlk.msg.text);
+        ro_.roff += fb.getLen();
+    }
+private:
+    InfosmeCore&       core_;
+    MessageList&       msglist_;
+    InputRegionRecord& ro_;
+};
+
 }
 
 
@@ -282,79 +325,26 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                 fg.seek(ro.roff);
             }
 
-            char* ptr = buf.get();
-            size_t wasread = fg.read(buf.GetCurPtr(),buf.getSize()-buf.GetPos());
-            if (wasread == 0) {
-                fg.close();
-                if (ptr<buf.GetCurPtr()) {
-                    smsc_log_warn(log_,"R=%u/D=%u RP=%u/%u: last record garbled, will wait here",
-                                  regId, getDlvId(), ro.rfn, ro.roff );
-                    if (ro.rfn<ro.wfn) {
-                        throw InfosmeException("R=%u/D=%u garbled intermediate file", regId, getDlvId() );
-                    }
-                    break;
-                }
-                smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u: EOF",
-                               regId, getDlvId(), ro.rfn, ro.roff );
+            try {
+                FileReader fileReader(fg);
+                IReader recordReader(core_,msglist,ro);
+                fileReader.readRecords(buf,recordReader,count);
                 if (ro.rfn<ro.wfn) {
                     ++ro.rfn;
                     ro.roff=0;
                 }
-                continue;
-            }
-            
-            buf.SetPos(buf.GetPos()+wasread);
-            smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u read/inbuf=%u/%u bytes",
-                           regId, getDlvId(), ro.rfn, ro.roff, wasread, buf.GetPos() );
-            while (ptr < buf.GetCurPtr()) {
-                
-                if (ptr+LENSIZE > buf.GetCurPtr()) {
-                    // too few items
-                    break;
+            } catch ( FileGarbageException& e ) {
+                if (ro.rfn < ro.wfn) {
+                    smsc_log_error(log_,"R=%u/D=%u RP=%u/%u: garbled intermediate file: %s",
+                                   regId, getDlvId(), ro.rfn, ro.roff, e.what());
+                    throw;
                 }
-                FromBuf fb(ptr,LENSIZE);
-                const uint16_t reclen = fb.get16();
-                if (reclen>10000) {
-                    throw InfosmeException("FIXME: R=%u/D=%u RP=%u/%u is corrupted: reclen=%u is too big",
-                                           regId, getDlvId(), ro.rfn, unsigned(fg.getPos()-(buf.GetCurPtr()-ptr)), reclen);
-                }
-                if ( ptr+LENSIZE+reclen > buf.GetCurPtr() ) {
-                    // read more
-                    break;
-                }
-                smsc_log_debug(log_,"record len is %u", reclen);
-                fb.setLen(LENSIZE+reclen);
-                msglist.push_back(MessageLocker());
-                MessageLocker& mlk = msglist.back();
-                mlk.serial = 0;
-                const uint16_t version = fb.get16();
-                mlk.msg.fromBuf(version,fb);
-                if ( fb.getPos() != reclen+LENSIZE ) {
-                    throw InfosmeException("FIXME: R=%u/D=%u RP=%u/%u has extra data",
-                                           regId, getDlvId(), ro.rfn, ro.roff );
-                }
-                glossary_.bindMessage(mlk.msg.text);
-                ptr += reclen+LENSIZE;
-                ro.roff += reclen+LENSIZE;
-                --count;
-                if (count==0) break;
-
-            } // while reading the chunk
-            
-            if (count == 0) break; // done
-
-            if (ptr>buf.get()) {
-                // shifting buffer back
-                char* o = buf.get();
-                const char* i = ptr;
-                const char* e = buf.GetCurPtr();
-                for ( ; i < e ; ) {
-                    *o++ = *i++;
-                }
-                buf.SetPos(o-buf.get());
-            } else if ( buf.GetPos() >= buf.getSize() ) {
-                // resize needed
-                buf.reserve(buf.getSize()+buf.getSize()/2+100);
+                smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u: last record garbled, wait until write finish",
+                               regId, getDlvId(), ro.rfn, ro.roff );
+                break;
+            } catch ( std::exception& e ) {
+                smsc_log_error(log_,"R=%u/D=%u RP=%u/%u: %s",
+                               regId, getDlvId(), ro.rfn, ro.roff, e.what());
             }
 
         } // while we need more messages
@@ -362,6 +352,10 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
         // we have read things
         if ( ! msglist.empty() ) {
             // write back record
+            for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
+                glossary_.bindMessage( i->msg.text );
+            }
+
             const msgtime_type currentTime = currentTimeMicro() / tuPerSec;
             req.addNewMessages( currentTime,
                                 msglist,
