@@ -311,7 +311,7 @@ public class DeliveryManager {
    * @return рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public DeliveryDataSource<DeliveryInfo> getDeliviries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize) throws AdminException {
+  public DeliveryDataSource<DeliveryInfo> getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize) throws AdminException {
     if (deliveryFilter == null || deliveryFilter.getResultFields() == null || deliveryFilter.getResultFields().length == 0) {
       throw new DeliveryException("resultFields");
     }

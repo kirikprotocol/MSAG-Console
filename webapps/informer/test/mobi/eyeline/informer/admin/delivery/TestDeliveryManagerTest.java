@@ -88,7 +88,7 @@ public class TestDeliveryManagerTest {
     filter.setUserIdFilter(new String[]{"user1"});
     filter.setResultFields(new DeliveryFields[]{DeliveryFields.Name});
 
-    DeliveryDataSource<DeliveryInfo> ds = manager.getDeliviries("","",filter, 10);
+    DeliveryDataSource<DeliveryInfo> ds = manager.getDeliveries("","",filter, 10);
     {
       final boolean[] nonEmpty = new boolean[]{false};
       ds.visit(new DeliveryDataSource.Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
