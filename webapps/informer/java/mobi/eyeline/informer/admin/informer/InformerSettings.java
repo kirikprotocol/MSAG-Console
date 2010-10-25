@@ -100,7 +100,8 @@ public class InformerSettings {
     return statDir;
   }
 
-  public void setStatDir(String statDir) {
+  public void setStatDir(String statDir) throws AdminException{
+    vh.checkNotEmpty("statDir", statDir);
     this.statDir = statDir;
   }
 
