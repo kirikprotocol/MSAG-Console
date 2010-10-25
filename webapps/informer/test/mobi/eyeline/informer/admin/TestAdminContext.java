@@ -1,12 +1,8 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatProvider;
-import mobi.eyeline.informer.admin.delivery.TestDeliveryStatProvider;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-
-
-import mobi.eyeline.informer.admin.delivery.TestDeliveryManager;
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.informer.TestInformerManager;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
@@ -20,6 +16,8 @@ import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
+import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Address;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -28,8 +26,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Тестовый AdminContext
@@ -73,6 +72,61 @@ public class TestAdminContext extends AdminContext {
     }
   }
 
+  private void createDeliveries() throws AdminException{
+
+    User u = null;
+    {
+      for (User user : usersManager.getUsers()) {
+        if (user.hasRole("informer-admin")) {
+          u = user;
+          break;
+        }
+      }
+    }
+    if(u == null) {
+      throw new IllegalArgumentException("User with 'admin' role is not found");
+    }
+
+    for(int i=1;i<=3;i++) {
+      Delivery d = new Delivery();
+      d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 1000000*i));
+      d.setActivePeriodStart(new Date(System.currentTimeMillis() - 1000000*i));
+      d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
+      d.setDeliveryMode(DeliveryMode.SMS);
+      d.setEndDate(new Date(System.currentTimeMillis() + 1000000*i));
+      d.setName("Test delivery"+i);
+      d.setOwner(u.getLogin());
+      d.setPriority(15+i);
+      d.setStartDate(new Date(System.currentTimeMillis() - 1000000*i));
+      d.setSvcType("svc1");
+      d.setUserId(u.getLogin());
+      d.setValidityDate(new Date());
+
+      deliveryManager.createDelivery(u.getLogin(),u.getPassword(), d, new MessageDataSource() {
+        private LinkedList<Message> ms = new LinkedList<Message>() {
+          {
+            Random r = new Random();
+            for(int k=0;k<100;k++) {
+              Message m1 = Message.newTextMessage("text"+r.nextInt(10000));
+              m1.setAbonent(new Address("+7913"+r.nextInt(10000)));
+              add(m1);
+            }
+          }
+        };
+
+        public Message next() throws AdminException {
+          if(ms.isEmpty()) {
+            return null;
+          }
+          return ms.removeFirst();
+        }
+      });
+
+      assertNotNull(d.getId());
+      deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),d.getId());
+    }
+  }
+
 
   public TestAdminContext(File appBaseDir, WebConfig webConfig) throws InitException {
     fileSystem = new TestFileSystem();
@@ -80,11 +134,11 @@ public class TestAdminContext extends AdminContext {
     File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
     File statDir = new File(appBaseDir, "stat");
     servicesDir.mkdirs();
-    confDir.mkdirs();    
+    confDir.mkdirs();
     try {
       prepareServices(confDir);
       prepareStat(statDir,fileSystem);
-      
+
       if (webConfig.getInstallationType() == InstallationType.SINGLE)  {
         serviceManager = new TestServiceManagerSingle(servicesDir);
       }else {
@@ -96,7 +150,7 @@ public class TestAdminContext extends AdminContext {
           new File(confDir, "backup"), fileSystem, serviceManager);
       infosme = new TestInfosme();
       usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
-      
+
       blacklistManager = new TestBlacklistManager();
       smscManager = new TestSmscManager(infosme, new File(confDir, "smsc.xml"),
           new File(confDir, "backup"), fileSystem);
@@ -110,6 +164,7 @@ public class TestAdminContext extends AdminContext {
       }
 
       deliveryManager = new TestDeliveryManager();
+      createDeliveries();
 
       retryPolicyManager = new TestRetryPolicyManager(infosme, new File(confDir, "policies.xml"),
           new File(confDir, "backup"), fileSystem);
