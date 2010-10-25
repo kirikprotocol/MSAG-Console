@@ -192,7 +192,4 @@ outer:  for(AggregatedDeliveryStatRecord otherchild : other.getDetails()) {
     return isParent;
   }
 
-  enum AggregationType {
-    HOUR,DAY,WEEK,MONTH
-  }
 }

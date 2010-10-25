@@ -25,8 +25,7 @@ public class DeliveryStatController extends InformerController implements Delive
   private User user;
   private boolean initError=false;
   private DeliveryStatFilter filter;
-  private AggregatedDeliveryStatRecord.AggregationType aggregation;
-  private Object users;
+  private AggregationType aggregation;  
   private boolean initdata;
   private List<AggregatedDeliveryStatRecord> records;
   private AggregatedDeliveryStatRecord lastRecord=null;
@@ -34,7 +33,7 @@ public class DeliveryStatController extends InformerController implements Delive
 
   public DeliveryStatController() {
     super();
-    aggregation= AggregatedDeliveryStatRecord.AggregationType.HOUR;
+    aggregation= AggregationType.HOUR;
     filter = new DeliveryStatFilter();
     initUser();
     initdata=false;
@@ -91,17 +90,17 @@ public class DeliveryStatController extends InformerController implements Delive
     this.filter = filter;
   }
 
-  public AggregatedDeliveryStatRecord.AggregationType getAggregation() {
+  public AggregationType getAggregation() {
     return aggregation;
   }
 
-  public void setAggregation(AggregatedDeliveryStatRecord.AggregationType aggregation) {
+  public void setAggregation(AggregationType aggregation) {
     this.aggregation = aggregation;
   }
 
   public List<SelectItem> getAggregations() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    for(AggregatedDeliveryStatRecord.AggregationType a : AggregatedDeliveryStatRecord.AggregationType.values()) {
+    for(AggregationType a : AggregationType.values()) {
       ret.add(new SelectItem(a));
     }
     return ret;
