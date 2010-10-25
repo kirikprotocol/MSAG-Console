@@ -24,7 +24,7 @@ import java.util.*;
 public class JournalController extends InformerController{
 
   private final Journal journal;
-  
+
 
 
   private String filterByUser;
@@ -120,12 +120,17 @@ public class JournalController extends InformerController{
   }
 
   public DataTableModel getRecords() {
-    try{
-      loadRecord();
-    }catch (AdminException e){
-      addError(e);
+    if(!init) {
       records = Collections.emptyList();
+    }else {
+      try{
+        loadRecord();
+      }catch (AdminException e){
+        addError(e);
+        records = Collections.emptyList();
+      }
     }
+    
     return new DataTableModel() {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {

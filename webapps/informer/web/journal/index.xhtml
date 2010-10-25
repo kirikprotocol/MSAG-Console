@@ -21,7 +21,7 @@
             <h:outputText value="#{msg['journal.page.user']}"/>
             <h:inputText value="#{journal.filterByUser}"/>
             <h:outputText value="#{msg['journal.page.from_date']}"/>
-            <t:inputDate value="#{journal.filterByStartDate}" popupCalendar="true" type="full"/>
+            <t:inputDate value="#{journal.filterByStartDate}" popupCalendar="true" type="both" autocomplete="true"/>
           </h:panelGrid>
           <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
             <h:outputText value="#{msg['journal.page.subject']}"/>
@@ -29,7 +29,7 @@
               <f:selectItems value="#{journal.uniqueSubjectNamesFromJournal}"/>
             </h:selectOneMenu>
             <h:outputText value="#{msg['journal.page.till_date']}"/>
-            <t:inputDate value="#{journal.filterByEndDate}" type="full" popupCalendar="true"/>
+            <t:inputDate value="#{journal.filterByEndDate}" type="both" popupCalendar="true" autocomplete="true"/>
           </h:panelGrid>
         </h:panelGrid>
       </eye:dataTableFilter>
