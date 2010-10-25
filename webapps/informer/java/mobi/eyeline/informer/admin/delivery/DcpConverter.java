@@ -327,7 +327,7 @@ public class DcpConverter {
     return result;
   }
 
-  public static mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields convert(mobi.eyeline.informer.admin.delivery.DeliveryFields fields) {
+  private static mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields convert(mobi.eyeline.informer.admin.delivery.DeliveryFields fields) {
     if (fields == null) {
       return null;
     }
@@ -345,7 +345,7 @@ public class DcpConverter {
     return result;
   }
 
-  public static ReqField convert(MessageFields fields) {
+  private static ReqField convert(MessageFields fields) {
     if (fields == null) {
       return null;
     }

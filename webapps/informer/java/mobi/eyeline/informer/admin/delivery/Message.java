@@ -29,7 +29,7 @@ public class Message {
     return new Message(MessageType.TextMessage, null, text);
   }
 
-  protected Message(MessageType mType, Integer index, String text) {
+  private Message(MessageType mType, Integer index, String text) {
     this.msgType = mType;
     this.index = index;
     this.text = text;

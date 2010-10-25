@@ -38,8 +38,8 @@ public interface DcpConnection {
    *
    * @param deliveryId идентификатор рассылки
    * @param messages   сообщения
-   * @throws AdminException ошибка выполнения команды
    * @return идентификаторы сообщений
+   * @throws AdminException ошибка выполнения команды
    */
   public long[] addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException;
 

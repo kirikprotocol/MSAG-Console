@@ -302,18 +302,20 @@ public class Delivery {
     if (secretMessage != delivery.secretMessage) return false;
     if (transactionMode != delivery.transactionMode) return false;
     if (useDataSm != delivery.useDataSm) return false;
-    if (activePeriodEnd != null ? !timeFormat.format(activePeriodEnd).equals(delivery.activePeriodEnd == null ? null :timeFormat.format(delivery.activePeriodEnd)) : delivery.activePeriodEnd != null)
+    if (activePeriodEnd != null ? !timeFormat.format(activePeriodEnd).equals(delivery.activePeriodEnd == null ? null : timeFormat.format(delivery.activePeriodEnd)) : delivery.activePeriodEnd != null)
       return false;
     if (activePeriodStart != null ? !dateFormat.format(activePeriodStart).equals(delivery.activePeriodStart == null ? null : dateFormat.format(delivery.activePeriodStart)) : delivery.activePeriodStart != null)
       return false;
     if (!Arrays.equals(activeWeekDays, delivery.activeWeekDays)) return false;
     if (deliveryMode != delivery.deliveryMode) return false;
-    if (endDate != null ? !dateFormat.format(endDate).equals(delivery.endDate == null ? null : dateFormat.format(delivery.endDate)) : delivery.endDate != null) return false;
+    if (endDate != null ? !dateFormat.format(endDate).equals(delivery.endDate == null ? null : dateFormat.format(delivery.endDate)) : delivery.endDate != null)
+      return false;
     if (id != null ? !id.equals(delivery.id) : delivery.id != null) return false;
     if (name != null ? !name.equals(delivery.name) : delivery.name != null) return false;
     if (owner != null ? !owner.equals(delivery.owner) : delivery.owner != null) return false;
     if (retryPolicy != null ? !retryPolicy.equals(delivery.retryPolicy) : delivery.retryPolicy != null) return false;
-    if (startDate != null ? !dateFormat.format(startDate).equals(delivery.startDate == null ? null : dateFormat.format(delivery.startDate)) : delivery.startDate != null) return false;
+    if (startDate != null ? !dateFormat.format(startDate).equals(delivery.startDate == null ? null : dateFormat.format(delivery.startDate)) : delivery.startDate != null)
+      return false;
     if (svcType != null ? !svcType.equals(delivery.svcType) : delivery.svcType != null) return false;
     if (userId != null ? !userId.equals(delivery.userId) : delivery.userId != null) return false;
     if (validityDate != null ? !dateFormat.format(validityDate).equals(delivery.validityDate == null ? null : dateFormat.format(delivery.validityDate)) : delivery.validityDate != null)
@@ -331,36 +333,36 @@ public class Delivery {
 
   public Delivery cloneDelivery() {
     Delivery d = new Delivery();
-    d.id=id;
+    d.id = id;
 
-    d.name=name;
-    d.userId=userId;
-    d.priority=priority;
-    d.transactionMode=transactionMode;
+    d.name = name;
+    d.userId = userId;
+    d.priority = priority;
+    d.transactionMode = transactionMode;
 
-    d.startDate=startDate == null ? null : new Date(startDate.getTime());
-    d.endDate=endDate == null ? null : new Date(endDate.getTime());
-    d.activePeriodEnd=activePeriodEnd == null ? null : new Date(activePeriodEnd.getTime());
-    d.activePeriodStart=activePeriodStart == null ? null : new Date(activePeriodStart.getTime());
-    d.activeWeekDays=new Day[activeWeekDays.length];
+    d.startDate = startDate == null ? null : new Date(startDate.getTime());
+    d.endDate = endDate == null ? null : new Date(endDate.getTime());
+    d.activePeriodEnd = activePeriodEnd == null ? null : new Date(activePeriodEnd.getTime());
+    d.activePeriodStart = activePeriodStart == null ? null : new Date(activePeriodStart.getTime());
+    d.activeWeekDays = new Day[activeWeekDays.length];
     System.arraycopy(activeWeekDays, 0, d.activeWeekDays, 0, activeWeekDays.length);
-    d.validityDate=validityDate == null ? null : new Date(validityDate.getTime());
-    d.validityPeriod=validityPeriod;
+    d.validityDate = validityDate == null ? null : new Date(validityDate.getTime());
+    d.validityPeriod = validityPeriod;
 
-    d.flash=flash;
-    d.secret=secret;
-    d.secretFlash=secretFlash;
-    d.secretMessage=secretMessage;
-    d.useDataSm=useDataSm;
-    d.deliveryMode=deliveryMode;
+    d.flash = flash;
+    d.secret = secret;
+    d.secretFlash = secretFlash;
+    d.secretMessage = secretMessage;
+    d.useDataSm = useDataSm;
+    d.deliveryMode = deliveryMode;
 
-    d.owner=owner;
+    d.owner = owner;
 
-    d.retryOnFail=retryOnFail;
-    d.retryPolicy=retryPolicy;
+    d.retryOnFail = retryOnFail;
+    d.retryPolicy = retryPolicy;
 
-    d.replaceMessage=replaceMessage;
-    d.svcType=svcType;
+    d.replaceMessage = replaceMessage;
+    d.svcType = svcType;
     return d;
   }
 }

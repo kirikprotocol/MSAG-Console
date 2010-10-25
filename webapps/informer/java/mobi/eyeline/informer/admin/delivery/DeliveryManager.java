@@ -41,14 +41,15 @@ public class DeliveryManager {
    * @param password     пароль
    * @param delivery     рассылка
    * @param msDataSource сообщения
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка выполнения команды
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка выполнения команды
    */
   public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource) throws AdminException {
     createDelivery(login, password, delivery, msDataSource, null);
   }
 
 
-  private void addMessages(int id, MessageDataSource msDataSource, DcpConnection conn) throws AdminException{
+  private void addMessages(int id, MessageDataSource msDataSource, DcpConnection conn) throws AdminException {
     Message m;
     int count = 0;
     List<Message> messages = new ArrayList<Message>(1000);
@@ -57,8 +58,8 @@ public class DeliveryManager {
       count++;
       if (count == 1000) {
         long[] ids = conn.addDeliveryMessages(id, messages.toArray(new Message[messages.size()]));
-        int i=0;
-        for(Message _m : messages) {
+        int i = 0;
+        for (Message _m : messages) {
           _m.setId(ids[i]);
           i++;
         }
@@ -68,8 +69,8 @@ public class DeliveryManager {
     }
     if (!messages.isEmpty()) {
       long[] ids = conn.addDeliveryMessages(id, messages.toArray(new Message[messages.size()]));
-      int i=0;
-      for(Message _m : messages) {
+      int i = 0;
+      for (Message _m : messages) {
         _m.setId(ids[i]);
         i++;
       }
@@ -84,7 +85,8 @@ public class DeliveryManager {
    * @param delivery     рассылка
    * @param msDataSource сообщения
    * @param glossary     глоссарий
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка выполнения команды
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка выполнения команды
    */
   public void createDelivery(final String login, final String password, final Delivery delivery, final MessageDataSource msDataSource, final String[] glossary) throws AdminException {
     if (logger.isDebugEnabled()) {
@@ -96,10 +98,10 @@ public class DeliveryManager {
     if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
       throw new DeliveryException("replace_illegal");
     }
-    if(delivery.getValidityDate() == null && delivery.getValidityPeriod() == null) {
+    if (delivery.getValidityDate() == null && delivery.getValidityPeriod() == null) {
       throw new DeliveryException("validation_illegal");
     }
-    if((delivery.getActivePeriodStart() == null && delivery.getActivePeriodEnd() != null) ||
+    if ((delivery.getActivePeriodStart() == null && delivery.getActivePeriodEnd() != null) ||
         (delivery.getActivePeriodStart() != null && delivery.getActivePeriodEnd() == null)) {
       throw new DeliveryException("active_period_illegal");
     }
@@ -109,9 +111,9 @@ public class DeliveryManager {
     if (glossary != null) {
       conn.modifyDeliveryGlossary(id, glossary);
     }
-    try{
+    try {
       addMessages(id, msDataSource, conn);
-    }catch (Exception e){
+    } catch (Exception e) {
       logger.error(e, e);
       try {
         logger.warn("Try drop delivery: " + id);
@@ -310,7 +312,7 @@ public class DeliveryManager {
    * @throws AdminException ошибка выполнения команды
    */
   public DeliveryDataSource<DeliveryInfo> getDeliviries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize) throws AdminException {
-    if(deliveryFilter == null || deliveryFilter.getResultFields() == null || deliveryFilter.getResultFields().length == 0) {
+    if (deliveryFilter == null || deliveryFilter.getResultFields() == null || deliveryFilter.getResultFields().length == 0) {
       throw new DeliveryException("resultFields");
     }
     DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
@@ -333,10 +335,10 @@ public class DeliveryManager {
    * @throws AdminException ошибка выполнения команды
    */
   public DeliveryDataSource<MessageInfo> getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize) throws AdminException {
-    if(filter == null || filter.getFields() == null || filter.getFields().length == 0) {
+    if (filter == null || filter.getFields() == null || filter.getFields().length == 0) {
       throw new DeliveryException("resultFields");
     }
-    if(filter.getStartDate() == null || filter.getEndDate() == null) {
+    if (filter.getStartDate() == null || filter.getEndDate() == null) {
       throw new DeliveryException("date_start_end_empty");
     }
     DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
@@ -351,8 +353,8 @@ public class DeliveryManager {
   /**
    * Подсчёт кол-ва сообщений
    *
-   * @param login          логин
-   * @param password       пароль
+   * @param login         логин
+   * @param password      пароль
    * @param messageFilter фильтр
    * @return кол-во сообщений
    * @throws AdminException ошибка выполнения команды
@@ -369,10 +371,11 @@ public class DeliveryManager {
    * Завершение работы менеджера
    */
   public void shutdown() {
-    if(connectionFactory != null) {
-      try{
+    if (connectionFactory != null) {
+      try {
         connectionFactory.shutdown();
-      }catch (Exception e){}
+      } catch (Exception ignored) {
+      }
     }
 
   }

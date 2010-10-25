@@ -49,9 +49,9 @@ public class MessageFilter {
     return startDate;
   }
 
-  public void setStartDate(Date startDate) throws AdminException{
+  public void setStartDate(Date startDate) throws AdminException {
     vh.checkNotNull("startDate", startDate);
-    if(endDate != null) {
+    if (endDate != null) {
       vh.checkGreaterThan("startDate", endDate, startDate);
     }
     this.startDate = startDate;
@@ -61,9 +61,9 @@ public class MessageFilter {
     return endDate;
   }
 
-  public void setEndDate(Date endDate) throws AdminException{
+  public void setEndDate(Date endDate) throws AdminException {
     vh.checkNotNull("endDate", endDate);
-    if(startDate != null) {
+    if (startDate != null) {
       vh.checkGreaterThan("endDate", endDate, startDate);
     }
     this.endDate = endDate;

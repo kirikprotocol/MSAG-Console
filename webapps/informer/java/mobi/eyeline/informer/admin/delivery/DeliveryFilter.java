@@ -82,7 +82,7 @@ public class DeliveryFilter {
     return resultFields;
   }
 
-  public void setResultFields(DeliveryFields[] resultFields){
+  public void setResultFields(DeliveryFields[] resultFields) {
     this.resultFields = resultFields;
   }
 }

@@ -94,7 +94,8 @@ public class MessageInfo {
 
     if (id != that.id) return false;
     if (abonent != null ? !abonent.equals(that.abonent) : that.abonent != null) return false;
-    if (date != null ? !dateFormat.format(date).equals(that.date == null ? null : dateFormat.format(that.date)) : that.date != null) return false;
+    if (date != null ? !dateFormat.format(date).equals(that.date == null ? null : dateFormat.format(that.date)) : that.date != null)
+      return false;
     if (errorCode != null ? !errorCode.equals(that.errorCode) : that.errorCode != null) return false;
     if (index != null ? !index.equals(that.index) : that.index != null) return false;
     if (state != that.state) return false;

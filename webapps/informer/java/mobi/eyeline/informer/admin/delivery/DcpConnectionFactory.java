@@ -37,10 +37,11 @@ class DcpConnectionFactory {
   }
 
   synchronized void shutdown() {
-    for(DcpConnection conn : pool.values()) {
-      try{
+    for (DcpConnection conn : pool.values()) {
+      try {
         conn.close();
-      }catch (Exception e){}
+      } catch (Exception ignored) {
+      }
     }
   }
 

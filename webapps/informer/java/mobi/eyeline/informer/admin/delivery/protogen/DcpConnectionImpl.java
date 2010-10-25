@@ -18,7 +18,7 @@ public class DcpConnectionImpl implements DcpConnection {
 
   private static final Logger logger = Logger.getLogger(DcpConnectionImpl.class);
 
-  private DcpClient client;
+  private final DcpClient client;
 
   private final Lock lock;
 

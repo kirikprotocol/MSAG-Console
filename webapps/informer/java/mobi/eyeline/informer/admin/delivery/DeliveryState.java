@@ -49,7 +49,8 @@ public class DeliveryState {
     DeliveryState state = (DeliveryState) o;
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
-    if (date != null ? !dateFormat.format(date).equals(state.date == null ? null : dateFormat.format(state.date)) : state.date != null) return false;
+    if (date != null ? !dateFormat.format(date).equals(state.date == null ? null : dateFormat.format(state.date)) : state.date != null)
+      return false;
     if (status != state.status) return false;
 
     return true;
