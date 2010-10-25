@@ -146,7 +146,7 @@ void MTFTSM::BEGIN(Message& msg)
       EndMsg end;
       end.setTrId(rtrid);
       end.setDialog(appcntx);
-      end.setComponent(0, req.invokeId);// any not OK result, FYI 1025 = 'no route' :)
+      end.setComponent(0, msg.getInvokeId());// any not OK result, FYI 1025 = 'no route' :)
       std::vector<unsigned char> rsp;
       tco->encoder.encode_mt_resp(end, rsp);
       tco->SCCPsend(raddrlen, &raddr[0], laddrlen, laddr,(uint16_t) rsp.size(), &rsp[0]);
