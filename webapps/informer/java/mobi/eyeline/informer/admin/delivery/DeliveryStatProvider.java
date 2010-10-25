@@ -36,7 +36,7 @@ public class DeliveryStatProvider {
    * @param visitor визитор, обрабатывающий найденные записи
    * @throws AdminException если произошла ошибка при обращении к стораджу статистики
    */
-  void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException, ParseException {
+  public void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     try {
       String minSubDirName = null;
       String maxSubDirName = null;
@@ -113,23 +113,29 @@ public class DeliveryStatProvider {
     List<FileProcessor> fileProcessors;
     int filesCount;
 
-    public SubDirProcessor(String subdirName, int fromHour,int fromMin,int toHour,int toMin) throws AdminException, ParseException {
-      this.subDirName = subdirName;
-      subDir = new File(baseDir,subdirName);
-      filesCount=0;
-      fileProcessors = new ArrayList<FileProcessor>();
-      Calendar c = Calendar.getInstance();
-      c.setTime(subDirNameFormat.parse(subDirName));
-      year  = c.get(Calendar.YEAR);
-      month = c.get(Calendar.MONTH+1);
-      day   = c.get(Calendar.DAY_OF_MONTH);
-      for(int hour = fromHour; hour<=toHour; hour++) {
-        String fName = formatInt(hour,2)+".csv";
-        File f = new File(subDir,fName);
-        if(fileSys.exists(f)) {
-          fileProcessors.add(new FileProcessor(f,year,month,day,hour,hour==fromHour ? fromMin:0, hour==toHour ? toMin : 59));
-          filesCount++;
+    public SubDirProcessor(String subdirName, int fromHour,int fromMin,int toHour,int toMin) throws AdminException {
+      try {
+        this.subDirName = subdirName;
+        subDir = new File(baseDir,subdirName);
+        filesCount=0;
+        fileProcessors = new ArrayList<FileProcessor>();
+        Calendar c = Calendar.getInstance();
+        c.clear();
+        c.setTime(subDirNameFormat.parse(subDirName));
+        year  = c.get(Calendar.YEAR);
+        month = c.get(Calendar.MONTH)+1;
+        day   = c.get(Calendar.DATE);
+        for(int hour = fromHour; hour<=toHour; hour++) {
+          String fName = formatInt(hour,2)+".csv";
+          File f = new File(subDir,fName);
+          if(fileSys.exists(f)) {
+            fileProcessors.add(new FileProcessor(f,year,month,day,hour,hour==fromHour ? fromMin:0, hour==toHour ? toMin : 59));
+            filesCount++;
+          }
         }
+      }
+      catch (ParseException e) {
+        throw new DeliveryStatException("error.parsing.subdir.name",e,subDirName);
       }
     }
 
@@ -192,7 +198,7 @@ public class DeliveryStatProvider {
             int delivered = Integer.parseInt(tokenizer.nextToken());
             int failed = Integer.parseInt(tokenizer.nextToken());
 
-            DeliveryStatRecord rec = new DeliveryStatRecord(year,month,day,hour,minute,taskId,delivered,failed);
+            DeliveryStatRecord rec = new DeliveryStatRecord(user, year,month,day,hour,minute,taskId,delivered,failed);
             if(!visitor.visit(rec,totalFilesCount,currentFile)) {
               return false;
             }

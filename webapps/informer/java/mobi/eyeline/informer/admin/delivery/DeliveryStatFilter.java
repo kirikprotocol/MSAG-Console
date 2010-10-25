@@ -53,6 +53,7 @@ public class DeliveryStatFilter {
     return user;
   }
   public void setUser(String user) {
+    if(user!=null && user.trim().length()==0) user=null;
     this.user = user;
   }
 

@@ -13,8 +13,10 @@ public class DeliveryStatRecord {
   private int taskId;
   private int delivered;
   private int failed;
+  private String user;
 
-  public DeliveryStatRecord(int year, int month, int day, int hour, int minute, int taskId, int delivered, int failed) {
+  public DeliveryStatRecord(String user, int year, int month, int day, int hour, int minute, int taskId, int delivered, int failed) {
+    this.user=user;
     this.year = year;
     this.month = month;
     this.day = day;
@@ -87,5 +89,13 @@ public class DeliveryStatRecord {
    */
   public int getFailed() {
     return failed;
+  }
+
+  public String getUser() {
+    return user;
+  }
+
+  public void setUser(String user) {
+    this.user = user;
   }
 }

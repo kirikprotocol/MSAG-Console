@@ -4,8 +4,7 @@ import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
-import mobi.eyeline.informer.admin.delivery.DeliveryManager;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatProvider;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
@@ -27,6 +26,7 @@ import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -416,6 +416,10 @@ public class AdminContext {
 
   public List<String> getInformerHosts() throws AdminException {
     return informerManager.getInformerHosts();
+  }
+
+  public DeliveryStatProvider getDeliveryStatProvider() {
+    return deliveryStatProvider;
   }
 
   public List<Daemon> getDaemons() {

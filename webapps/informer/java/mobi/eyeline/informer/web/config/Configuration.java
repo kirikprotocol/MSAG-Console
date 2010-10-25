@@ -4,6 +4,8 @@ import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatProvider;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
@@ -279,6 +281,10 @@ public class Configuration {
     }
 
     return result;
+  }
+
+  public DeliveryStatProvider getDeliveryStatProvider() {
+    return context.getDeliveryStatProvider();
   }
 
   private final Lock lock = new ReentrantLock();

@@ -217,6 +217,11 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.users.UserGroupEditController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+  <managed-bean>
+      <managed-bean-name>statsCommon</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryStatController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <navigation-rule>
     <navigation-case>
@@ -290,6 +295,12 @@
     <navigation-case>
       <from-outcome>USER_EDIT_GROUP</from-outcome>
       <to-view-id>/users/editGroup.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>STATS_COMMON</from-outcome>
+      <to-view-id>/stats/common.xhtml</to-view-id>
+      <redirect/>
     </navigation-case>
 
   </navigation-rule>
