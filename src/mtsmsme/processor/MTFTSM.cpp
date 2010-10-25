@@ -151,6 +151,7 @@ void MTFTSM::BEGIN(Message& msg)
       tco->encoder.encode_mt_resp(end, rsp);
       tco->SCCPsend(raddrlen, &raddr[0], laddrlen, laddr,(uint16_t) rsp.size(), &rsp[0]);
       tco->TSMStopped(ltrid);
+      return;
     }
 
     //req =  new MTR(this);
