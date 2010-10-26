@@ -20,6 +20,13 @@ public:
 
     virtual ~DeliveryImpl();
 
+    /// init state, invoked from core init to get the last state of the delivery.
+    msgtime_type initState();
+
+    /// set delivery state.
+    /// NOTE: must be invoked from core, with proper preparation.
+    void setState( DlvState state, msgtime_type planTime );
+
     /// get regional storage
     RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false);
 
@@ -54,8 +61,9 @@ public:
 
 
 private:
+    typedef smsc::core::buffers::IntHash< RegionalStoragePtr > StoreHash;
     smsc::core::synchronization::Mutex                 cacheLock_;
-    smsc::core::buffers::IntHash< RegionalStoragePtr > storages_;
+    StoreHash                                          storages_;
 
     StoreJournal&                                      storeJournal_;
 };

@@ -357,7 +357,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
                 std::auto_ptr<DeliveryInfo> info(new DeliveryInfo(cs_,dlvId));
                 try {
                     info->read();
-                    updateDelivery(dlvId,info);
+                    addDelivery(info);
                 } catch (std::exception& e) {
                     smsc_log_warn(log_,"cannot read dlvInfo D=%u: %s",dlvId,e.what());
                     continue;
@@ -532,51 +532,6 @@ void InfosmeCoreV1::reloadRegions( const std::string& defaultSmscId )
 }
 
 
-void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
-                                    std::auto_ptr<DeliveryInfo>& dlvInfo )
-{
-    RelockMutexGuard mg(startMon_);
-    DeliveryList::iterator* ptr = deliveryHash_.GetPtr(dlvId);
-    smsc_log_debug(log_,"%s delivery D=%u",
-                   (ptr ? (dlvInfo.get() ? "update" : "delete") : "create"),
-                   unsigned(dlvId));
-    if (ptr) {
-        assert((*ptr)->get());
-        if (!dlvInfo.get()) {
-            // delete
-            DeliveryList::iterator iter;
-            DeliveryImplPtr d;
-            if (deliveryHash_.Pop(dlvId,iter)) {
-                if ( inputRollingIter_ == iter ) ++inputRollingIter_;
-                if ( storeRollingIter_ == iter ) ++storeRollingIter_;
-                d = *iter;
-                deliveryList_.erase(iter);
-                mg.Unlock();
-                BindSignal bs;
-                bs.bind = false;
-                bs.dlvId = dlvId;
-                d->getRegionList(bs.regIds);
-                bindDeliveryRegions(bs);
-            };
-            return;
-        } else {
-            // update
-            (**ptr)->updateDlvInfo(*dlvInfo.get());
-        }
-    } else {
-        // create
-        if (!dlvInfo.get()) {
-            throw InfosmeException("delivery info not passed");
-        }
-        InputMessageSource* ims = new InputStorage(*this,*inputJournal_);
-        DeliveryImplPtr ptr = DeliveryImplPtr(new DeliveryImpl(dlvInfo,*storeJournal_,ims));
-        deliveryHash_.Insert(dlvId,
-                             deliveryList_.insert(deliveryList_.begin(),ptr));
-    }
-    startMon_.notify();
-}
-
-
 void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
                                      std::vector<regionid_type>& regIds,
                                      bool bind )
@@ -747,6 +702,7 @@ void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 }
 
 
+/*
 DeliveryPtr InfosmeCoreV1::getDelivery( dlvid_type dlvId )
 {
     smsc::core::synchronization::MutexGuard mg(startMon_);
@@ -755,6 +711,103 @@ DeliveryPtr InfosmeCoreV1::getDelivery( dlvid_type dlvId )
         return DeliveryPtr();
     }
     return DeliveryPtr(**piter);
+}
+ */
+
+
+void InfosmeCoreV1::addDelivery( std::auto_ptr<DeliveryInfo> info )
+{
+    if (!info.get()) {
+        throw InfosmeException("delivery info is NULL");
+    }
+    const dlvid_type dlvId = info->getDlvId();
+    MutexGuard mg(startMon_);
+    DeliveryList::iterator* ptr = deliveryHash_.GetPtr(dlvId);
+    if (ptr) {
+        throw InfosmeException("D=%u already exists",dlvId);
+    }
+    InputMessageSource* ims = new InputStorage(*this,*inputJournal_);
+    DeliveryImplPtr dlv = DeliveryImplPtr(new DeliveryImpl(info,*storeJournal_,ims));
+    deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
+    startMon_.notify();
+}
+
+
+void InfosmeCoreV1::updateDelivery( std::auto_ptr<DeliveryInfo> info )
+{
+    if (!info.get()) {
+        throw InfosmeException("delivery info is NULL");
+    }
+    MutexGuard mg(startMon_);
+    DeliveryList::iterator* ptr = deliveryHash_.GetPtr(info->getDlvId());
+    if (!ptr) {
+        throw InfosmeException("delivery %u is not found",info->getDlvId());
+    }
+    DeliveryPtr dlv = **ptr;
+    // FIXME: we have to stop activity on this delivery for a while
+    dlv->updateDlvInfo(*info.get());
+    startMon_.notify();
+}
+
+
+void InfosmeCoreV1::deleteDelivery( dlvid_type dlvId )
+{
+    DeliveryImplPtr d;
+    {
+        MutexGuard mg(startMon_);
+        DeliveryList::iterator iter;
+        if (!deliveryHash_.Pop(dlvId,iter) ) {
+            throw InfosmeException("delivery %u is not found",dlvId);
+        }
+        if (inputRollingIter_ == iter) ++inputRollingIter_;
+        if (storeRollingIter_ == iter) ++storeRollingIter_;
+        d = *iter;
+        deliveryList_.erase(iter);
+    }
+    BindSignal bs;
+    bs.bind = false;
+    bs.dlvId = dlvId;
+    d->getRegionList(bs.regIds);
+    bindDeliveryRegions(bs);
+}
+
+
+void InfosmeCoreV1::setDeliveryState( dlvid_type   dlvId,
+                                      DlvState     newState,
+                                      msgtime_type planTime )
+{
+    DeliveryImplPtr ptr;
+    {
+        MutexGuard mg(startMon_);
+        DeliveryList::iterator* iter = deliveryHash_.GetPtr(dlvId);
+        if (!iter) {
+            throw InfosmeException("delivery %u is not found",dlvId);
+        }
+        ptr = **iter;
+    }
+    const DlvState oldState = ptr->getDlvInfo().getState();
+    if (oldState == DLVSTATE_CANCELLED) {
+        throw InfosmeException("delivery %u is cancelled",dlvId);
+    }
+    
+    if (newState == DLVSTATE_PLANNED) {
+        if (!planTime) {
+            throw InfosmeException("plan time is not supplied");
+        }
+    }
+
+    ptr->setState(newState,planTime);
+
+    BindSignal bs;
+    bs.dlvId = dlvId;
+    bs.bind = (newState == DLVSTATE_ACTIVE ? true : false);
+    ptr->getRegionList(bs.regIds);
+    bindDeliveryRegions(bs);
+
+    if (newState == DLVSTATE_PLANNED) {
+        MutexGuard mg(startMon_);
+        deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
+    }
 }
 
 
@@ -766,6 +819,8 @@ int InfosmeCoreV1::Execute()
     }
     smsc_log_info(log_,"starting main loop");
     while ( !stopping_ ) {
+
+        // FIXME: process wakeup queue
 
         // processing signals
         BindSignal bs;

@@ -170,7 +170,7 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
     try {
         const size_t total = fileReader.readRecords(buf,ijreader);
         smsc_log_info(log_,"journal '%s' has been read, %u records",jpath.c_str(),unsigned(total));
-    } catch ( FileGarbageException& e ) {
+    } catch ( FileDataException& e ) {
         smsc_log_warn(log_,"file '%s': %s", jpath.c_str(), e.what());
         throw;
     } catch ( std::exception& e ) {

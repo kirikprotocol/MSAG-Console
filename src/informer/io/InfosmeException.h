@@ -24,7 +24,38 @@ public:
         SMSC_UTIL_EX_FILL(fmt);
     }
 protected:
-    InfosmeException();
+    InfosmeException() {}
+};
+
+
+class ErrnoException : public InfosmeException
+{
+public:
+    ErrnoException( int err, const char* fmt, ...)
+    {
+        SMSC_UTIL_EX_FILL(fmt);
+        char ebuf[100];
+        message += ": ";
+        message += STRERROR(err,ebuf,sizeof(ebuf));
+    }
+};
+
+
+class FileDataException : public InfosmeException
+{
+public:
+    FileDataException( size_t pos, const char* fmt, ... ) :
+    pos_(pos)
+    {
+        SMSC_UTIL_EX_FILL(fmt);
+        char ebuf[30];
+        sprintf(ebuf," at %llu",static_cast<unsigned long long>(pos));
+        message += ebuf;
+    }
+    inline size_t getPos() const { return pos_; }
+
+private:
+    size_t pos_;
 };
 
 }

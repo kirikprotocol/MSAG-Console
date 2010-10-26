@@ -45,9 +45,9 @@ public:
     virtual regionid_type getRegionId() const { return regionId_; }
     const DeliveryInfo& getDlvInfo() const;
 
-    /// get the message with given messageid.
-    /// this method accesses active messages only.
-    bool getMessage( msgid_type msgId, Message& msg );
+    // get the message with given messageid.
+    // this method accesses active messages only.
+    // bool getMessage( msgid_type msgId, Message& msg );
 
     /// get the next message.
     /// this method accesses new/resent messages only.
@@ -75,6 +75,9 @@ public:
 
     /// invoked when upload task has finished.
     virtual void transferFinished( TransferTask* );
+
+    /// notify transfer thread that it should be stopped.
+    void stopTransfer( bool finalizeAll = false );
 
     /// add new messages to processing.
     virtual void addNewMessages( msgtime_type currentTime,

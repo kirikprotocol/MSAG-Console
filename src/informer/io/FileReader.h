@@ -10,16 +10,6 @@
 namespace eyeline {
 namespace informer {
 
-class FileGarbageException : public InfosmeException
-{
-public:
-    FileGarbageException( size_t pos ) :
-    InfosmeException("file has garbage at %llu",ulonglong(pos)), pos_(pos) {}
-    inline size_t getPos() const { return pos_; }
-private:
-    size_t pos_;
-};
-
 class FileGuard;
 
 class FileReader

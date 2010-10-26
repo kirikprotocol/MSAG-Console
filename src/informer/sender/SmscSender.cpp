@@ -162,7 +162,7 @@ protected:
             const size_t total = fileReader.readRecords(buf,sjreader);
             smsc_log_info(sender_.log_,"journal '%s' has been read, %u/%u total/unique records",jpath.c_str(),
                           unsigned(total), unsigned(sjreader.unique_) );
-        } catch ( FileGarbageException& e ) {
+        } catch ( FileDataException& e ) {
             smsc_log_warn(sender_.log_,"file '%s': %s", jpath.c_str(), e.what());
             // FIXME: should we trunk the file?
         } catch ( std::exception& e ) {

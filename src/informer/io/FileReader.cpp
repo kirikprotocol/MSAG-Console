@@ -17,7 +17,7 @@ size_t FileReader::readRecords( Buf& buf, RecordReader& reader, size_t count )
         if ( !wasread ) {
             // EOF
             if (ptr < buf.GetCurPtr()) {
-                throw FileGarbageException(fg_.getPos()-buf.GetPos());
+                throw FileDataException(fg_.getPos()-buf.GetPos(),"file is garbled");
             }
             break;
         }

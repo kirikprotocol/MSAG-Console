@@ -1,8 +1,37 @@
 #include <ctime>
 #include <sys/types.h> // for damn sunos
+#include <cstdlib>
 #include "Typedefs.h"
 #include "InfosmeException.h"
 #include "util/TimeSource.h"
+#include "core/synchronization/Mutex.hpp"
+
+namespace {
+using namespace eyeline::informer;
+
+int locoffset = -100000;
+smsc::core::synchronization::Mutex offsetLock_;
+int localOffset()
+{
+    if (locoffset == -100000 ) {
+        smsc::core::synchronization::MutexGuard mg(offsetLock_);
+        if (locoffset == -100000) {
+            // calculation of local offset for use with gmtime/mktime pair.
+            const time_t curTime(currentTimeMicro()/tuPerSec);
+            struct tm now;
+            if (!gmtime_r(&curTime,&now)) {
+                abort();
+            }
+            now.tm_isdst = 0;
+            const msgtime_type res(mktime(&now));
+            locoffset = curTime - res;
+        }
+    }
+    return locoffset;
+}
+
+}
+
 
 namespace eyeline {
 namespace informer {
@@ -22,6 +51,46 @@ int formatMsgTime( char* buf, msgtime_type tmp, struct tm* tmb )
         throw InfosmeException("formatMsgTime: cannot sprintf");
     }
     return off;
+}
+
+
+msgtime_type scanfMsgTime( ulonglong tmbuf )
+{
+    if (tmbuf==0) return 0;
+    struct tm tmst;
+    ulonglong tmp1 = tmbuf;
+    ulonglong tmp2 = tmp1 / 100;
+    tmst.tm_sec = int(tmp1 - tmp2*100);
+    if (tmst.tm_sec < 0 || tmst.tm_sec > 59) {
+        throw InfosmeException("invalid sec in time buf %llu",tmbuf);
+    }
+    tmp1 /= 10000;
+    tmst.tm_min = int(tmp2 - tmp1*100);
+    if (tmst.tm_min < 0 || tmst.tm_min > 59) {
+        throw InfosmeException("invalid min in time buf %llu",tmbuf);
+    }
+    tmp2 /= 10000;
+    tmst.tm_hour = int(tmp1 - tmp2*100);
+    if (tmst.tm_hour < 0 || tmst.tm_hour > 23) {
+        throw InfosmeException("invalid hour in time buf %llu",tmbuf);
+    }
+    tmp1 /= 10000;
+    tmst.tm_mday = int(tmp2 - tmp1*100);
+    if (tmst.tm_mday < 1 || tmst.tm_mday > 31) {
+        throw InfosmeException("invalid mday in time buf %llu",tmbuf);
+    }
+    tmp2 /= 10000;
+    tmst.tm_mon = int(tmp1 - tmp2*100) - 1;
+    if (tmst.tm_mon < 0 || tmst.tm_mon > 11) {
+        throw InfosmeException("invalid mon in time buf %llu",tmbuf);
+    }
+    tmp1 /= 10000;
+    tmst.tm_year = int(tmp2 - tmp1*100) - 1900;
+    if (tmst.tm_year < 100 || tmst.tm_year > 200) {
+        throw InfosmeException("invalid year in time buf %llu",tmbuf);
+    }
+    tmst.tm_isdst = 0;
+    return msgtime_type(mktime(&tmst) + localOffset());
 }
 
 
@@ -51,7 +120,7 @@ const char* msgStateToString( MsgState state )
 const char* dlvStateToString( DlvState state )
 {
     switch (state) {
-    case DLVSTATE_PAUSED    : return "PAUSED";
+    case DLVSTATE_PAUSED    : return "STOPPED";
     case DLVSTATE_PLANNED   : return "PLANNED";
     case DLVSTATE_ACTIVE    : return "ACTIVE";
     case DLVSTATE_FINISHED  : return "FINISHED";

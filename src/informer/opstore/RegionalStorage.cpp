@@ -89,6 +89,7 @@ const DeliveryInfo& RegionalStorage::getDlvInfo() const
 }
 
 
+/*
 bool RegionalStorage::getMessage( msgid_type msgId, Message& msg )
 {
     MutexGuard mg(cacheMon_);
@@ -103,6 +104,7 @@ bool RegionalStorage::getMessage( msgid_type msgId, Message& msg )
     msg = (*ptr)->msg;
     return true;
 }
+ */
 
 
 bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
@@ -111,6 +113,9 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     RelockMutexGuard mg(cacheMon_);
     const char* from;
     const DeliveryInfo& info = dlv_.getDlvInfo();
+
+    if ( info.getState() != DLVSTATE_ACTIVE ) return false;
+
     do { // fake loop
 
         /// check if we need to request new messages
@@ -185,7 +190,6 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
 void RegionalStorage::messageSent( msgid_type msgId,
                                    msgtime_type currentTime )
-    // const char* receipt )
 {
     RelockMutexGuard mg(cacheMon_);
     MsgIter* ptr = messageHash_.GetPtr(msgId);
@@ -260,7 +264,6 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
                        unsigned(msgId), smppState );
         dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
         dlv_.activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
-        // destroy(m);
     }
 }
 
@@ -311,6 +314,19 @@ void RegionalStorage::transferFinished( TransferTask* task )
     }
     cacheMon_.notify();
     smsc_log_debug(log_,"transfer has been finished");
+}
+
+
+void RegionalStorage::stopTransfer( bool finalizeAll )
+{
+    MutexGuard mg(cacheMon_);
+    if ( transferTask_ ) {
+        // FIXME: should we wait until it stop?
+        transferTask_->stop();
+    }
+    if ( finalizeAll ) {
+        // FIXME: make all messages fail
+    }
 }
 
 

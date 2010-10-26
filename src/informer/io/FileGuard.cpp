@@ -57,13 +57,12 @@ void FileGuard::create( const char* fn, bool mkdirs, bool truncate )
 }
 
 
-size_t FileGuard::seek( size_t pos, int whence )
+size_t FileGuard::seek( off_t pos, int whence )
 {
     if (fd_!=-1) {
-        off_t res = lseek(fd_,off_t(pos),whence);
+        off_t res = lseek(fd_,pos,whence);
         if (res==off_t(-1)) {
-            char ebuf[100];
-            throw InfosmeException("seek(%llu,%d) failed: %d, %d, %s",ulonglong(pos),whence,fd_,errno,STRERROR(errno,ebuf,sizeof(ebuf)));
+            throw ErrnoException(errno,"seek(%lld,%d)",static_cast<long long>(pos),whence);
         }
         pos_ = res;
     }

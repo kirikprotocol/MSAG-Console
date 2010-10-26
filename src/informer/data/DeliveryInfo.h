@@ -52,6 +52,10 @@ public:
         return state_;
     }
 
+    void setState( DlvState state ) {
+        state_ = state;
+    }
+
     personid_type getFrom() const { return from_; } 
 
     bool wantRetry( int status ) const {

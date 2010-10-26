@@ -23,6 +23,17 @@ public:
         memset(this,0,sizeof(*this));
     }
 
+    bool operator != ( const DeliveryStats& ds ) const {
+        return 
+            ( totalMessages   != ds.totalMessages   ) ||
+            ( procMessages    != ds.procMessages    ) ||
+            ( sentMessages    != ds.sentMessages    ) ||
+            ( retryMessages   != ds.retryMessages   ) ||
+            ( dlvdMessages    != ds.dlvdMessages    ) ||
+            ( failedMessages  != ds.failedMessages  ) ||
+            ( expiredMessages != ds.expiredMessages );
+    }
+
     void incStat( uint8_t state, int value ) {
         if (!value) return;
         switch (MsgState(state)) {

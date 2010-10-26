@@ -27,6 +27,9 @@ static const regionid_type anyRegionId = regionid_type(-1);
 /// return number of bytes printed (not including trailing \0)
 int formatMsgTime( char* buf, msgtime_type theTime, struct tm* tmb = 0 );
 
+/// scanf message time converted by formatMsgTime
+msgtime_type scanfMsgTime( ulonglong tmbuf );
+
 /// get current microtime
 usectime_type currentTimeMicro();
 

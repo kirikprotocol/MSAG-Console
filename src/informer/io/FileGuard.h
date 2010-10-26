@@ -35,7 +35,7 @@ public:
 
     void create( const char* fn, bool mkdirs = false, bool truncate = false );
 
-    size_t seek( size_t pos, int whence = SEEK_SET );
+    size_t seek( off_t pos, int whence = SEEK_SET );
 
     inline size_t getPos() const { return pos_; }
 

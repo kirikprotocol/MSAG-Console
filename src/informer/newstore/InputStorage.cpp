@@ -333,7 +333,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                     ++ro.rfn;
                     ro.roff=0;
                 }
-            } catch ( FileGarbageException& e ) {
+            } catch ( FileDataException& e ) {
                 if (ro.rfn < ro.wfn) {
                     smsc_log_error(log_,"R=%u/D=%u RP=%u/%u: garbled intermediate file: %s",
                                    regId, getDlvId(), ro.rfn, ro.roff, e.what());

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 #include "informer/data/CommonSettings.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/opstore/DeliveryImpl.h"
@@ -88,7 +89,14 @@ public:
     virtual void updateRegion( regionid_type regionId );
     virtual void deleteRegion( regionid_type regionId );
 
-    virtual DeliveryPtr getDelivery( dlvid_type dlvId );
+    // virtual DeliveryPtr getDelivery( dlvid_type dlvId );
+
+    virtual void addDelivery( std::auto_ptr<DeliveryInfo> info );
+    virtual void updateDelivery( std::auto_ptr<DeliveryInfo> info );
+    virtual void deleteDelivery( dlvid_type dlvId );
+    virtual void setDeliveryState( dlvid_type   dlvId,
+                                   DlvState     newState,
+                                   msgtime_type atTime = 0 );
 
     // --------------------
 
@@ -113,12 +121,6 @@ public:
 
     /// reload all regions
     void reloadRegions( const std::string& defaultSmscId );
-
-    /// update delivery
-    /// 1. create delivery: new dlvId, valid dlvInfo;
-    /// 2. update delivery: old dlvId, valid dlvInfo;
-    /// 3. delete delivery: old dlvId, dlvInfo=0.
-    void updateDelivery( dlvid_type dlvId, std::auto_ptr<DeliveryInfo>& dlvInfo );
 
 protected:
     /// enter main loop, exit via 'stop()'
@@ -145,8 +147,11 @@ private:
 
     typedef std::list<DeliveryImplPtr> DeliveryList;
     typedef smsc::core::buffers::IntHash< DeliveryList::iterator > DeliveryHash;
+    typedef std::multimap< msgtime_type, dlvid_type >       DeliveryWakeQueue;
+
     DeliveryHash                                  deliveryHash_;
     DeliveryList                                  deliveryList_;
+    DeliveryWakeQueue                             deliveryWakeQueue_;
     DeliveryList::iterator                        inputRollingIter_;
     DeliveryList::iterator                        storeRollingIter_;
     
