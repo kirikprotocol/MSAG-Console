@@ -71,30 +71,21 @@ public class TestAdminContext extends AdminContext {
 
   private void createDeliveries() throws AdminException{
 
-    User u = null;
-    {
-      for (User user : usersManager.getUsers()) {
-        if (user.hasRole("informer-admin")) {
-          u = user;
-          break;
-        }
-      }
-    }
-    if(u == null) {
-      throw new IllegalArgumentException("User with 'admin' role is not found");
-    }
+    List<User> users = usersManager.getUsers();
 
-    for(int i=1;i<=3;i++) {
+
+    for(int i=1;i<=5;i++) {
+      User u = users.get((i-1)%users.size());
       Delivery d = new Delivery();
-      d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 7*86400000*i));
-      d.setActivePeriodStart(new Date(System.currentTimeMillis() - 7*86400000*i));
+      d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 7*86400000L*i));
+      d.setActivePeriodStart(new Date(System.currentTimeMillis() - 7*86400000L*i));
       d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
       d.setDeliveryMode(DeliveryMode.SMS);
-      d.setEndDate(new Date(System.currentTimeMillis() + 7*86400000*i));
+      d.setEndDate(new Date(System.currentTimeMillis() + 7*86400000L*i));
       d.setName("Test delivery"+i);
       d.setOwner(u.getLogin());
       d.setPriority(15+i);
-      d.setStartDate(new Date(System.currentTimeMillis() - 7*86400000*i));
+      d.setStartDate(new Date(System.currentTimeMillis() - 7*86400000L*i));
       d.setSvcType("svc1");
       d.setValidityDate(new Date());
 
