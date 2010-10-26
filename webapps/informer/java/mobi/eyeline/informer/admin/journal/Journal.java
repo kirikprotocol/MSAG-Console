@@ -4,7 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 
@@ -29,8 +28,6 @@ public class Journal {
   private final SmscDiffHelper smsc = new SmscDiffHelper();
 
   private final RegionsDiffHelper regions = new RegionsDiffHelper();
-
-  private final RetryPolicyDiffHelper retryPolicy = new RetryPolicyDiffHelper(Subject.RETRY_POLICY);
 
   private final InformerDiffHelper informer = new InformerDiffHelper();
 
@@ -210,15 +207,6 @@ public class Journal {
     this.smsc.logSetDefault(oldSmsc, newSmsc, this, user);
   }
 
-  public void logUpdateRetryPolicy(RetryPolicy rpOld, RetryPolicy rp, String user) throws AdminException {
-    this.retryPolicy.logUpdateRetryPolicy(this, rpOld, rp, user);
-  }
-  public void logAddRetryPolicy( RetryPolicy rp, String user) throws AdminException {
-    this.retryPolicy.logAddRetryPolicy(this,  rp, user);
-  }
-  public void logRemoveRetryPolicy( String policyId, String user) throws AdminException {
-    this.retryPolicy.logRemoveRetryPolicy(this,  policyId, user);
-  }
 
   /**
    * Добавляет в журнал запись о старте Informer

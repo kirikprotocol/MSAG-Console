@@ -4,12 +4,10 @@ import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatProvider;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -210,28 +208,56 @@ public class Configuration {
     }
   }
 
-  public List<RetryPolicy> getRetryPolicies() throws AdminException {
-    return context.getRetryPolicies();
+  public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
+    return context.countMessages(login, password, messageFilter);
   }
 
-  public RetryPolicy getRetryPolicy(String policyId) throws AdminException {
-    return context.getRetryPolicy(policyId);
+  public String[] getDeliveryGlossary(String login, String password, int deliveryId) throws AdminException {
+    return context.getDeliveryGlossary(login, password, deliveryId);
   }
 
-  public void updateRetryPolicy(RetryPolicy rp, String user) throws AdminException {
-    RetryPolicy rpOld = context.getRetryPolicy(rp.getPolicyId());
-    context.updateRetryPolicy(rp);
-    journal.logUpdateRetryPolicy(rpOld,rp,user);
+  public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
+    return context.getDelivery(login, password, deliveryId);
   }
 
-  public void addRetryPolicy(RetryPolicy rp, String user) throws AdminException {
-    context.addRetryPolicy(rp);
-    journal.logAddRetryPolicy(rp,user);
+  public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
+    context.cancelDelivery(login, password, deliveryId);
   }
 
-  public void removeRetryPolicy(String policyId, String user) throws AdminException {
-    context.removeRetryPolicy(policyId);
-    journal.logRemoveRetryPolicy(policyId,user);
+  public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
+    context.pauseDelivery(login, password, deliveryId);
+  }
+
+  public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
+    context.activateDelivery(login, password, deliveryId);
+  }
+
+  public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
+    return context.getDeliveryStats(login, password, deliveryId);
+  }
+
+  public DeliveryDataSource<DeliveryInfo> getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize) throws AdminException {
+    return context.getDeliveries(login, password, deliveryFilter, _pieceSize);
+  }
+
+  public DeliveryDataSource<MessageInfo> getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize) throws AdminException {
+    return context.getMessagesStates(login, password, filter, _pieceSize);
+  }
+
+  public int countDeliveries(String login, String password, DeliveryFilter deliveryFilter) throws AdminException {
+    return context.countDeliveries(login, password, deliveryFilter);
+  }
+
+  public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
+    context.dropDelivery(login, password, deliveryId);
+  }
+
+  public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
+    context.modifyDelivery(login, password, delivery);
+  }
+
+  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource, String[] glossary) throws AdminException {
+    context.createDelivery(login, password, delivery, msDataSource, glossary);
   }
 
   public void startInformer(String user) throws AdminException {

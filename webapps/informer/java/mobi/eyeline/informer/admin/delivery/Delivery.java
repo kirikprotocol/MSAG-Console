@@ -21,7 +21,6 @@ public class Delivery {
   private Integer id;
 
   private String name;
-  private String userId;
   private int priority;
   private boolean transactionMode;
 
@@ -63,14 +62,6 @@ public class Delivery {
   public void setName(String name) throws AdminException {
     vh.checkNotEmpty("name", name);
     this.name = name;
-  }
-
-  public String getUserId() {
-    return userId;
-  }
-
-  public void setUserId(String userId) {
-    this.userId = userId;
   }
 
   public int getPriority() {
@@ -318,7 +309,6 @@ public class Delivery {
     if (startDate != null ? !dateFormat.format(startDate).equals(delivery.startDate == null ? null : dateFormat.format(delivery.startDate)) : delivery.startDate != null)
       return false;
     if (svcType != null ? !svcType.equals(delivery.svcType) : delivery.svcType != null) return false;
-    if (userId != null ? !userId.equals(delivery.userId) : delivery.userId != null) return false;
     if (validityDate != null ? !dateFormat.format(validityDate).equals(delivery.validityDate == null ? null : dateFormat.format(delivery.validityDate)) : delivery.validityDate != null)
       return false;
     if (validityPeriod != null ? !validityPeriod.equals(delivery.validityPeriod) : delivery.validityPeriod != null)
@@ -332,7 +322,6 @@ public class Delivery {
     d.id = id;
 
     d.name = name;
-    d.userId = userId;
     d.priority = priority;
     d.transactionMode = transactionMode;
 

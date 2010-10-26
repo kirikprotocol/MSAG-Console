@@ -9,8 +9,6 @@ import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
-import mobi.eyeline.informer.admin.retry_policies.TestRetryPolicyManager;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
 import mobi.eyeline.informer.admin.smsc.Smsc;
@@ -41,8 +39,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
-    TestUtils.exportResource(TestRetryPolicyManager.class.getResourceAsStream("policies.xml"), new File(confDir, "policies.xml"), false);
-  }
+     }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
     if(!fileSystem.exists(dstStatDir)) {
@@ -99,7 +96,6 @@ public class TestAdminContext extends AdminContext {
       d.setPriority(15+i);
       d.setStartDate(new Date(System.currentTimeMillis() - 1000000*i));
       d.setSvcType("svc1");
-      d.setUserId(u.getLogin());
       d.setValidityDate(new Date());
 
       deliveryManager.createDelivery(u.getLogin(),u.getPassword(), d, new MessageDataSource() {
@@ -120,7 +116,7 @@ public class TestAdminContext extends AdminContext {
           }
           return ms.removeFirst();
         }
-      });
+      }, null);
 
       assertNotNull(d.getId());
       deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),d.getId());
@@ -166,12 +162,6 @@ public class TestAdminContext extends AdminContext {
       deliveryManager = new TestDeliveryManager();
       createDeliveries();
 
-      retryPolicyManager = new TestRetryPolicyManager(infosme, new File(confDir, "policies.xml"),
-          new File(confDir, "backup"), fileSystem);
-
-      for(RetryPolicy rp : retryPolicyManager.getRetryPolicies()) {
-        infosme.addRetryPolicy(rp.getPolicyId());
-      }
       deliveryStatProvider = new TestDeliveryStatProvider(statDir, fileSystem);
 
     } catch (IOException e) {

@@ -129,7 +129,7 @@ public class TestDcpConnection implements DcpConnection{
     if(filter.getUserIdFilter() != null) {
       boolean accept = false;
       for(String s : filter.getUserIdFilter()) {
-        if((delivery.getUserId() == null && s.equals(delivery.getOwner()) || (delivery.getUserId() != null && s.equals(delivery.getUserId())))) {
+        if(s.equals(delivery.getOwner())) {
           accept = true;
           break;
         }
@@ -314,7 +314,7 @@ public class TestDcpConnection implements DcpConnection{
       info.setName(d.getName());
       info.setStartDate(d.getStartDate());
       info.setStatus(d.status);
-      info.setUserId(d.getUserId() == null ? d.getOwner() : d.getUserId());
+      info.setUserId(d.getOwner());
       deliveries.add(info);
     }
     return result.size() < pieceSize;
@@ -462,14 +462,6 @@ public class TestDcpConnection implements DcpConnection{
     @Override
     public void setName(String name) throws AdminException {
       delivery.setName(name);
-    }
-    @Override
-    public String getUserId() {
-      return delivery.getUserId();
-    }
-    @Override
-    public void setUserId(String userId) {
-      delivery.setUserId(userId);
     }
     @Override
     public int getPriority() {

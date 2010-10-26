@@ -13,14 +13,6 @@ import static org.junit.Assert.assertTrue;
 public class DeliveryTest {
 
   @Test
-  public void testUserId() {
-    Delivery d = new Delivery();
-    d.setUserId("name1");
-    d.setUserId(null);
-    d.setUserId("");
-  }
-
-  @Test
   public void testName() throws AdminException {
     Delivery d = new Delivery();
     try{

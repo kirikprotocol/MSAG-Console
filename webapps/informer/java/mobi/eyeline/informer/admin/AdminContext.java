@@ -13,10 +13,7 @@ import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.regions.RegionException;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicyManager;
 import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.SmscException;
@@ -26,7 +23,6 @@ import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -66,8 +62,6 @@ public class AdminContext {
   protected RegionsManager regionsManager;
 
   protected ServiceManager serviceManager;
-
-  protected RetryPolicyManager retryPolicyManager;
 
   protected DeliveryManager deliveryManager;
 
@@ -128,9 +122,6 @@ public class AdminContext {
       regionsManager = new RegionsManager(infosme, new File(confDir, "regions.xml"),
           new File(confDir, "backup"), fileSystem);
 
-      retryPolicyManager = new RetryPolicyManager(infosme, new File(confDir, "policies.xml"),
-          new File(confDir, "backup"), fileSystem);
-
       deliveryManager = new DeliveryManager(is.getHost(), is.getDeliveriesPort());
 
       deliveryStatProvider = new DeliveryStatProvider(new File(is.getStatDir()), fileSystem);
@@ -185,11 +176,6 @@ public class AdminContext {
   public void updateUser(User u) throws AdminException {
     try{
       integrityLock.lock();
-      if(u.getPolicyId()!=null) {
-        if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
-          throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
-        }
-      }
       if(u.getRegions()!=null) {
         for(String rId : u.getRegions()) {
           if(null == regionsManager.getRegion(rId)) {
@@ -207,9 +193,6 @@ public class AdminContext {
   public void addUser(User u) throws AdminException {
     try{
       integrityLock.lock();
-      if(null == retryPolicyManager.getRetryPolicy(u.getPolicyId())) {
-        throw new IntegrityException("user.policy.not.exists",u.getLogin(),u.getPolicyId());
-      }
       if(u.getRegions()!=null) {
         for(String rId : u.getRegions()) {
           if(null == regionsManager.getRegion(rId)) {
@@ -227,6 +210,20 @@ public class AdminContext {
   public void removeUser(String login) throws AdminException {
     try{
       integrityLock.lock();
+      User user = usersManager.getUser(login);
+      DeliveryFilter filter = new DeliveryFilter();
+      filter.setUserIdFilter(new String[]{login});
+      final boolean[] notExist = new boolean[]{true};
+      DeliveryDataSource<DeliveryInfo> infos = deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1);
+      infos.visit(new DeliveryDataSource.Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
+        public boolean visit(DeliveryInfo value) throws AdminException {
+          notExist[0] = false;
+          return false;
+        }
+      });
+      if(!notExist[0]) {
+        throw new IntegrityException("fail.delete.user.by.delivery", login);       
+      }
       usersManager.removeUser(login);
     }
     finally {
@@ -303,7 +300,7 @@ public class AdminContext {
     try{
       integrityLock.lock();
       if(smscManager.getSmsc(region.getSmsc()) == null) {
-        throw new RegionException("smsc_not_exist", region.getSmsc());
+        throw new IntegrityException("smsc_not_exist", region.getSmsc());
       }
       regionsManager.addRegion(region);
     }finally {
@@ -315,7 +312,7 @@ public class AdminContext {
     try{
       integrityLock.lock();
       if(smscManager.getSmsc(region.getSmsc()) == null) {
-        throw new RegionException("smsc_not_exist", region.getSmsc());
+        throw new IntegrityException("smsc_not_exist", region.getSmsc());
       }
       regionsManager.updateRegion(region);
     }finally {
@@ -361,43 +358,6 @@ public class AdminContext {
   }
 
 
-  public RetryPolicy getRetryPolicy(String policyId) throws AdminException{
-    return retryPolicyManager.getRetryPolicy(policyId);
-  }
-
-  public List<RetryPolicy> getRetryPolicies() throws AdminException{
-    return retryPolicyManager.getRetryPolicies();
-  }
-
-  public void addRetryPolicy(RetryPolicy rp) throws AdminException{
-    retryPolicyManager.addRetryPolicy(rp);
-  }
-
-  public void updateRetryPolicy( RetryPolicy rp) throws AdminException{
-    try {
-      integrityLock.lock();
-      retryPolicyManager.updateRetryPolicy(rp);
-    }
-    finally {
-      integrityLock.unlock();
-    }
-  }
-
-  public void removeRetryPolicy(String policyId) throws AdminException{
-    try {
-      integrityLock.lock();
-      for(User u : usersManager.getUsers()) {
-        if(policyId.equals(u.getPolicyId())) {
-          throw new IntegrityException("fail.delete.policy.to.user",policyId,u.getLogin());
-        }
-      }
-      retryPolicyManager.removeRetryPolicy(policyId);
-    }
-    finally {
-      integrityLock.unlock();
-    }
-  }
-
   public void startInformer() throws AdminException {
     informerManager.startInformer();
   }
@@ -425,5 +385,73 @@ public class AdminContext {
   public List<Daemon> getDaemons() {
     //todo
     return new LinkedList<Daemon>();
+  }
+
+  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource, String[] glossary) throws AdminException {
+    try{
+      integrityLock.lock();
+      if(usersManager.getUser(delivery.getOwner()) == null) {
+        throw new IntegrityException("user_not_exist", delivery.getOwner());
+      }
+      deliveryManager.createDelivery(login, password, delivery, msDataSource, glossary);
+    }finally {
+      integrityLock.unlock();
+    }
+  }
+
+  public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
+    try{
+      integrityLock.lock();
+      if(usersManager.getUser(delivery.getOwner()) == null) {
+        throw new IntegrityException("user_not_exist", delivery.getOwner());
+      }
+      deliveryManager.modifyDelivery(login, password, delivery);
+    }finally {
+      integrityLock.unlock();
+    }
+  }
+
+  public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
+    deliveryManager.dropDelivery(login, password, deliveryId);
+  }
+
+  public int countDeliveries(String login, String password, DeliveryFilter deliveryFilter) throws AdminException {
+    return deliveryManager.countDeliveries(login, password, deliveryFilter);
+  }
+
+  public String[] getDeliveryGlossary(String login, String password, int deliveryId) throws AdminException {
+    return deliveryManager.getDeliveryGlossary(login, password, deliveryId);
+  }
+
+  public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
+    return deliveryManager.getDelivery(login, password, deliveryId);
+  }
+
+  public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
+    deliveryManager.cancelDelivery(login, password, deliveryId);
+  }
+
+  public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
+    deliveryManager.pauseDelivery(login, password, deliveryId);
+  }
+
+  public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
+    deliveryManager.activateDelivery(login, password, deliveryId);
+  }
+
+  public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
+    return deliveryManager.getDeliveryStats(login, password, deliveryId);
+  }
+
+  public DeliveryDataSource<DeliveryInfo> getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize) throws AdminException {
+    return deliveryManager.getDeliveries(login, password, deliveryFilter, _pieceSize);
+  }
+
+  public DeliveryDataSource<MessageInfo> getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize) throws AdminException {
+    return deliveryManager.getMessagesStates(login, password, filter, _pieceSize);
+  }
+
+  public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
+    return deliveryManager.countMessages(login, password, messageFilter);
   }
 }

@@ -85,7 +85,7 @@ public class TestDeliveryManagerTest {
     DeliveryFilter filter = new DeliveryFilter();
     filter.setNameFilter(new String[]{"Test delivery", "Dsadsaasd"});
     filter.setStatusFilter(statuses);
-    filter.setUserIdFilter(new String[]{"user1"});
+    filter.setUserIdFilter(new String[]{"me"});
     filter.setResultFields(new DeliveryFields[]{DeliveryFields.Name});
 
     DeliveryDataSource<DeliveryInfo> ds = manager.getDeliveries("","",filter, 10);
@@ -138,7 +138,6 @@ public class TestDeliveryManagerTest {
     d.setRetryPolicy("policy1");
     d.setStartDate(new Date());
     d.setSvcType("svc1");
-    d.setUserId("user1");
     d.setValidityDate(new Date());
     d.setValidityPeriod("1:00:00");
 
@@ -160,7 +159,7 @@ public class TestDeliveryManagerTest {
         }
         return ms.removeFirst();
       }
-    });
+    }, null);
     
     assertNotNull(d.getId());
     manager.activateDelivery("","",d.getId());

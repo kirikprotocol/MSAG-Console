@@ -16,7 +16,6 @@ public enum Subject {
   BLACKLIST("subject.blacklist"),
   SMSC("subject.smsc"),
   REGIONS("subject.regions"),  
-  RETRY_POLICY("subject.retry_policy"),
   DAEMONS("subject.daemons"),
   INFORMER("subject.informer");
 

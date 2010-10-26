@@ -1,8 +1,6 @@
 package mobi.eyeline.informer.web.controllers.users;
 
-import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -45,15 +43,6 @@ public class UserController extends InformerController {
     return ret;
   }
 
-  public List<SelectItem> getPolicies() throws AdminException {
-    List<SelectItem> ret = new ArrayList<SelectItem>();
-    List<RetryPolicy> policies = getConfig().getRetryPolicies();
-    ret.add(new SelectItem(""));
-    for(RetryPolicy p : policies) {
-      ret.add(new SelectItem(p.getPolicyId()));
-    }
-    return ret;
-  }
 
   public List<SelectItem> getRegionsList() {
     List<SelectItem> regions = new ArrayList<SelectItem>();

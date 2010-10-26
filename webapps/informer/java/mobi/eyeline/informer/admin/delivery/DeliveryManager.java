@@ -34,20 +34,6 @@ public class DeliveryManager {
     return conn;
   }
 
-  /**
-   * Создание рассылки
-   *
-   * @param login        логин
-   * @param password     пароль
-   * @param delivery     рассылка
-   * @param msDataSource сообщения
-   * @throws mobi.eyeline.informer.admin.AdminException
-   *          ошибка выполнения команды
-   */
-  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource) throws AdminException {
-    createDelivery(login, password, delivery, msDataSource, null);
-  }
-
 
   private void addMessages(int id, MessageDataSource msDataSource, DcpConnection conn) throws AdminException {
     Message m;

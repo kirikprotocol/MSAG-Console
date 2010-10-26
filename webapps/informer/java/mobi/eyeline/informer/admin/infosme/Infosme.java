@@ -29,12 +29,6 @@ public interface Infosme {
 
   public void removeUser(String userId) throws AdminException;
 
-  public void addRetryPolicy(String regionId) throws AdminException;
-
-  public void updateRetryPolicy(String regionIdI) throws AdminException;
-
-  public void removeRetryPolicy(String regionId) throws AdminException;
-
   public void setDefaultSmsc(String smscId) throws AdminException;
 
   public void setCategories(List<Category> categories) throws AdminException;
