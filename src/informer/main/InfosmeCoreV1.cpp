@@ -70,6 +70,7 @@ public:
             (*iter)->postInitInput(bs.regIds);
             if (!bs.regIds.empty()) {
                 bs.dlvId = (*iter)->getDlvId();
+                // we may not lock here
                 core_.bindDeliveryRegions(bs);
             }
         }
@@ -117,10 +118,12 @@ public:
             (*iter)->postInitOperative(bsFilled.regIds,bsEmpty.regIds);
             if (!bsEmpty.regIds.empty()) {
                 bsEmpty.dlvId = (*iter)->getDlvId();
+                // we may not lock here
                 core_.bindDeliveryRegions(bsEmpty);
             }
             if (!bsFilled.regIds.empty()) {
                 bsFilled.dlvId = (*iter)->getDlvId();
+                // we may not lock here
                 core_.bindDeliveryRegions(bsFilled);
             }
         }
@@ -543,8 +546,9 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
     bs.dlvId = dlvId;
     bs.regIds.swap(regIds);
     bs.bind = bind;
-    smsc::core::synchronization::MutexGuard mg(bindQueueLock_);
+    smsc::core::synchronization::MutexGuard mg(startMon_);
     bindQueue_.Push(bs);
+    startMon_.notify();
 }
 
 
@@ -752,7 +756,9 @@ void InfosmeCoreV1::updateDelivery( std::auto_ptr<DeliveryInfo> info )
 
 void InfosmeCoreV1::deleteDelivery( dlvid_type dlvId )
 {
-    DeliveryImplPtr d;
+    BindSignal bs;
+    bs.bind = false;
+    bs.dlvId = dlvId;
     {
         MutexGuard mg(startMon_);
         DeliveryList::iterator iter;
@@ -761,14 +767,10 @@ void InfosmeCoreV1::deleteDelivery( dlvid_type dlvId )
         }
         if (inputRollingIter_ == iter) ++inputRollingIter_;
         if (storeRollingIter_ == iter) ++storeRollingIter_;
-        d = *iter;
+        (*iter)->getRegionList(bs.regIds);
         deliveryList_.erase(iter);
+        bindDeliveryRegions(bs);
     }
-    BindSignal bs;
-    bs.bind = false;
-    bs.dlvId = dlvId;
-    d->getRegionList(bs.regIds);
-    bindDeliveryRegions(bs);
 }
 
 
@@ -801,12 +803,13 @@ void InfosmeCoreV1::setDeliveryState( dlvid_type   dlvId,
     BindSignal bs;
     bs.dlvId = dlvId;
     bs.bind = (newState == DLVSTATE_ACTIVE ? true : false);
+    MutexGuard mg(startMon_);
     ptr->getRegionList(bs.regIds);
     bindDeliveryRegions(bs);
 
     if (newState == DLVSTATE_PLANNED) {
-        MutexGuard mg(startMon_);
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
+        startMon_.notify();
     }
 }
 
@@ -818,22 +821,48 @@ int InfosmeCoreV1::Execute()
         started_ = true;
     }
     smsc_log_info(log_,"starting main loop");
+    std::vector< dlvid_type > wakeList;
     while ( !stopping_ ) {
 
-        // FIXME: process wakeup queue
-
-        // processing signals
-        BindSignal bs;
-        while (true) {
-            {
-                smsc::core::synchronization::MutexGuard bmg(bindQueueLock_);
-                if (!bindQueue_.Pop(bs)) break;
+        // wake up all deliveries in wakeList
+        if (!wakeList.empty()) {
+            for ( std::vector<dlvid_type>::const_iterator i = wakeList.begin();
+                  i != wakeList.end(); ++i ) {
+                try {
+                    setDeliveryState(*i,DLVSTATE_ACTIVE,0);
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"cant wake D=%u: %s",*i,e.what());
+                }
             }
-            bindDeliveryRegions(bs);
+            wakeList.clear();
         }
-        MutexGuard mg(startMon_);
-        if (stopping_) break;
-        startMon_.wait(1000);
+
+        {
+            // processing signals
+            MutexGuard mg(startMon_);
+            BindSignal bs;
+            while (bindQueue_.Pop(bs)) {
+                bindDeliveryRegions(bs);
+                if (stopping_) break;
+            }
+
+            if (stopping_) break;
+
+            const msgtime_type now(currentTimeMicro()/tuPerSec);
+            DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
+            for ( DeliveryWakeQueue::iterator i = deliveryWakeQueue_.begin(); i != uptoNow; ++i ) {
+                wakeList.push_back(i->second);
+            }
+            deliveryWakeQueue_.erase(deliveryWakeQueue_.begin(), uptoNow);
+            int waitTime = 1000;
+            if (wakeList.empty()) {
+                if ( !deliveryWakeQueue_.empty() ) {
+                    waitTime = (deliveryWakeQueue_.begin()->first - now)*1000;
+                    if (waitTime > 10000) waitTime = 10000;
+                }
+                if (waitTime>0) startMon_.wait(waitTime);
+            }
+        }
     }
     smsc_log_info(log_,"finishing main loop");
     MutexGuard mg(startMon_);
@@ -848,7 +877,7 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
     smsc_log_debug(log_,"%sbinding D=%u with [%s]",
                    bs.bind ? "" : "un", unsigned(bs.dlvId),
                    formatRegionList(bs.regIds.begin(),bs.regIds.end()).c_str());
-    MutexGuard mg(startMon_);
+    // MutexGuard mg(startMon_);
     if (!bs.bind) {
         // unbind from senders
         for (regIdVector::const_iterator i = bs.regIds.begin();

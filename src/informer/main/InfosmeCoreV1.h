@@ -132,6 +132,7 @@ protected:
         bool bind;
     };
 
+    // must be locked
     void bindDeliveryRegions( const BindSignal& bs );
 
 private:
@@ -157,7 +158,7 @@ private:
     
     StoreJournal*                                 storeJournal_; // owned
     InputJournal*                                 inputJournal_; // owned
-    smsc::core::synchronization::Mutex            bindQueueLock_;
+    // smsc::core::synchronization::Mutex            bindQueueLock_;
     smsc::core::buffers::CyclicQueue<BindSignal>  bindQueue_;
     RegionFinderV1                                rf_;
     InputJournalRoller*                           inputRoller_;  // owned
