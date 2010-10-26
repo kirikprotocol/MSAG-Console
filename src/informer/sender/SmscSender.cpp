@@ -224,15 +224,13 @@ log_(smsc::logger::Logger::getInstance("smscsend")),
 core_(core),
 parser_(0),
 smscId_(smscId),
-session_(0),
+smscConfig_(cfg),
 scoredList_(*this,2*maxScoreIncrement,
             smsc::logger::Logger::getInstance("reglist")),
 isStopping_(true),
-ussdPushOp_(cfg.ussdPushOp),
-ussdPushVlrOp_(cfg.ussdPushVlrOp),
 journal_(new SmscJournal(*this))
 {
-    session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
+    // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();
     rQueue_ = new DataQueue();
     wQueue_ = new DataQueue();
@@ -413,7 +411,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
             if ( info.getDeliveryMode() != DLVMODE_SMS ) {
                 // ussdpush
                 const int ussdop = ( info.getDeliveryMode() == DLVMODE_USSDPUSH ?
-                                     ussdPushOp_ : ussdPushVlrOp_ );
+                                     smscConfig_.ussdPushOp : smscConfig_.ussdPushVlrOp );
                 if (ussdop == -1) {
                     smsc_log_warn(log_,"S='%s': ussd not supported, R=%u/D=%u/M=%llu",
                                   smscId_.c_str(),
@@ -515,19 +513,18 @@ void SmscSender::updateConfig( const SmscConfig& config )
 {
     stop();
     MutexGuard mg(reconfLock_);
-    session_.reset(new smsc::sme::SmppSession(config.smeConfig,this));
-    ussdPushOp_ = config.ussdPushOp;
-    ussdPushVlrOp_ = config.ussdPushVlrOp;
+    smscConfig_ = config;
+    session_.reset(new smsc::sme::SmppSession(smscConfig_.smeConfig,this));
+    // ussdPushOp_ = config.ussdPushOp;
+    // ussdPushVlrOp_ = config.ussdPushVlrOp;
 }
 
 
 void SmscSender::detachRegionSender( RegionSender& rs )
 {
     smsc_log_debug(log_,"S='%s' detaching regsend R=%u",smscId_.c_str(),unsigned(rs.getRegionId()));
-    {
-        MutexGuard mg(reconfLock_);
-        scoredList_.remove(ScoredList<SmscSender>::isEqual(&rs));
-    }
+    MutexGuard mg(reconfLock_);
+    scoredList_.remove(ScoredList<SmscSender>::isEqual(&rs));
 }
 
 
@@ -862,9 +859,15 @@ void SmscSender::processQueue( DataQueue& queue )
 void SmscSender::start()
 {
     if (!isStopping_) return;
-    MutexGuard mg(queueMon_);
-    if (!isStopping_) return;
-    isStopping_ = false;
+    {
+        MutexGuard mg(queueMon_);
+        if (!isStopping_) return;
+        isStopping_ = false;
+    }
+    {
+        MutexGuard rmg(reconfLock_);
+        session_.reset(new smsc::sme::SmppSession(smscConfig_.smeConfig,this));
+    }
     Start();
 }
 

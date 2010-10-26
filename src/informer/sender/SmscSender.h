@@ -104,13 +104,12 @@ private:
     InfosmeCore&                              core_;
     smsc::sms::IllFormedReceiptParser*        parser_;
     std::string                               smscId_;
+    SmscConfig                                smscConfig_;
     std::auto_ptr<smsc::sme::SmppSession>     session_;
     smsc::core::synchronization::Mutex        reconfLock_;
     ScoredList< SmscSender >                  scoredList_; // not owned
     usectime_type                             currentTime_;
     bool                                      isStopping_;
-    int                                       ussdPushOp_;
-    int                                       ussdPushVlrOp_;
 
     smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;
     smsc::core::buffers::CyclicQueue< ResponseTimer > respWaitQueue_;
