@@ -3,7 +3,6 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -290,45 +289,36 @@ public class Delivery {
 
     Delivery delivery = (Delivery) o;
 
-    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-
     if (flash != delivery.flash) return false;
     if (priority != delivery.priority) return false;
     if (replaceMessage != delivery.replaceMessage) return false;
     if (retryOnFail != delivery.retryOnFail) return false;
     if (secret != delivery.secret) return false;
     if (secretFlash != delivery.secretFlash) return false;
-    if (secretMessage != delivery.secretMessage) return false;
     if (transactionMode != delivery.transactionMode) return false;
     if (useDataSm != delivery.useDataSm) return false;
-    if (activePeriodEnd != null ? !timeFormat.format(activePeriodEnd).equals(delivery.activePeriodEnd == null ? null : timeFormat.format(delivery.activePeriodEnd)) : delivery.activePeriodEnd != null)
+    if (activePeriodEnd != null ? !activePeriodEnd.equals(delivery.activePeriodEnd) : delivery.activePeriodEnd != null)
       return false;
-    if (activePeriodStart != null ? !dateFormat.format(activePeriodStart).equals(delivery.activePeriodStart == null ? null : dateFormat.format(delivery.activePeriodStart)) : delivery.activePeriodStart != null)
+    if (activePeriodStart != null ? !activePeriodStart.equals(delivery.activePeriodStart) : delivery.activePeriodStart != null)
       return false;
     if (!Arrays.equals(activeWeekDays, delivery.activeWeekDays)) return false;
     if (deliveryMode != delivery.deliveryMode) return false;
-    if (endDate != null ? !dateFormat.format(endDate).equals(delivery.endDate == null ? null : dateFormat.format(delivery.endDate)) : delivery.endDate != null)
-      return false;
+    if (endDate != null ? !endDate.equals(delivery.endDate) : delivery.endDate != null) return false;
     if (id != null ? !id.equals(delivery.id) : delivery.id != null) return false;
     if (name != null ? !name.equals(delivery.name) : delivery.name != null) return false;
     if (owner != null ? !owner.equals(delivery.owner) : delivery.owner != null) return false;
     if (retryPolicy != null ? !retryPolicy.equals(delivery.retryPolicy) : delivery.retryPolicy != null) return false;
-    if (startDate != null ? !dateFormat.format(startDate).equals(delivery.startDate == null ? null : dateFormat.format(delivery.startDate)) : delivery.startDate != null)
+    if (secretMessage != null ? !secretMessage.equals(delivery.secretMessage) : delivery.secretMessage != null)
       return false;
+    if (startDate != null ? !startDate.equals(delivery.startDate) : delivery.startDate != null) return false;
     if (svcType != null ? !svcType.equals(delivery.svcType) : delivery.svcType != null) return false;
     if (userId != null ? !userId.equals(delivery.userId) : delivery.userId != null) return false;
-    if (validityDate != null ? !dateFormat.format(validityDate).equals(delivery.validityDate == null ? null : dateFormat.format(delivery.validityDate)) : delivery.validityDate != null)
+    if (validityDate != null ? !validityDate.equals(delivery.validityDate) : delivery.validityDate != null)
       return false;
     if (validityPeriod != null ? !validityPeriod.equals(delivery.validityPeriod) : delivery.validityPeriod != null)
       return false;
 
     return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 0;
   }
 
   public Delivery cloneDelivery() {
