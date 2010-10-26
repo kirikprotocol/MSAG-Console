@@ -54,7 +54,7 @@ public abstract class DeliveryStatController extends InformerController {
   }
 
   public void clearFilter() {
-    filter.setUser(null);
+    initUser();
     filter.setFromDate(null);
     filter.setTillDate(null);
     filter.setTaskId(null);
