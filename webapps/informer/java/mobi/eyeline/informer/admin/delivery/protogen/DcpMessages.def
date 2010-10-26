@@ -62,9 +62,9 @@ message DeliveryInfo
   string validityPeriod 11 opt
 
   bool flash 12
-  bool secret 13
-  bool secretFlash 14
-  bool secretMessage 15
+  //bool secret 13
+  //bool secretFlash 14
+  //bool secretMessage 15
   bool useDataSm 16
   DeliveryMode deliveryMode 17
                                                                                                                                   
@@ -75,6 +75,8 @@ message DeliveryInfo
 
   bool replaceMessage 21
   string svcType 22 opt
+  
+  string userData 23 opt
 end
 
 enum byte MessageType
@@ -127,6 +129,7 @@ enum byte DeliveryFields
   StartDate 4
   EndDate 5
   ActivityPeriod 6
+  UserData 7
 end
 
 message GetDeliveriesList 50
@@ -159,6 +162,7 @@ message DeliveryListInfo
   string endDate 6 opt
   string activityPeriodStart 7 opt
   string activityPeriodEnd 8 opt
+  string userData 9 opt
 end
 
 message GetDeliveriesListNextResp 53

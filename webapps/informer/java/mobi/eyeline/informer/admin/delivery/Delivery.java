@@ -36,7 +36,7 @@ public class Delivery {
   private boolean flash;
   private boolean secret;
   private boolean secretFlash;
-  private boolean secretMessage;
+  private String secretMessage;
   private boolean useDataSm;
   private DeliveryMode deliveryMode;
 
@@ -181,11 +181,11 @@ public class Delivery {
     this.secretFlash = secretFlash;
   }
 
-  public boolean isSecretMessage() {
+  public String getSecretMessage() {
     return secretMessage;
   }
 
-  public void setSecretMessage(boolean secretMessage) {
+  public void setSecretMessage(String secretMessage) {
     this.secretMessage = secretMessage;
   }
 

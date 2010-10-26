@@ -8,6 +8,8 @@ import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryStatus;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Конвертор сущностей рассылки
@@ -102,9 +104,18 @@ public class DcpConverter {
     delivery.setReplaceMessage(di.getReplaceMessage());
     delivery.setRetryOnFail(di.getRetryOnFail());
     delivery.setRetryPolicy(di.getRetryPolicy());
-    delivery.setSecret(di.getSecret());
-    delivery.setSecretFlash(di.getSecretFlash());
-    delivery.setSecretMessage(di.getSecretMessage());
+    String userData = di.getUserData();
+    if(userData != null) {
+      Map<String, String> uD = convertUserData(userData);
+      String t = uD.get("secret");
+      delivery.setSecret(t != null && Boolean.valueOf(t));
+      t = uD.get("secretFlash");
+      delivery.setSecretFlash(t != null && Boolean.valueOf(t));
+      t = uD.get("secretMessage");
+      if(t != null) {
+        delivery.setSecretMessage(t);
+      }
+    }
     delivery.setStartDate(convertDate(di.getStartDate()));
     if (di.hasSvcType()) {
       delivery.setSvcType(di.getSvcType());
@@ -257,9 +268,13 @@ public class DcpConverter {
     delivery.setReplaceMessage(di.isReplaceMessage());
     delivery.setRetryOnFail(di.isRetryOnFail());
     delivery.setRetryPolicy(di.getRetryPolicy());
-    delivery.setSecret(di.isSecret());
-    delivery.setSecretFlash(di.isSecretFlash());
-    delivery.setSecretMessage(di.isSecretMessage());
+    Map<String, Object> userData = new HashMap<String, Object>(3);
+    userData.put("secret", di.isSecret());
+    userData.put("secretFlash", di.isSecretFlash());
+    if(di.getSecretMessage() != null) {
+      userData.put("secretMessage", di.getSecretMessage());
+    }
+    delivery.setUserData(convertUserData(userData));
     delivery.setStartDate(convertDate(di.getStartDate()));
     if (di.getSvcType() != null) {
       delivery.setSvcType(di.getSvcType());
@@ -391,5 +406,30 @@ public class DcpConverter {
     result.setFailedMessage(stats.getFailedMessage());
     result.setProcessMessage(stats.getProcessMessage());
     return result;
+  }
+
+
+  private static String convertUserData(Map<String, Object> m) {
+    if(m == null || m.isEmpty()) {
+      return null;
+    }
+    StringBuilder sb = new StringBuilder();
+    for(Map.Entry<String, Object> e : m.entrySet()) {
+      sb.append(';').append(e.getKey()).append('=').append(e.getValue());
+    }
+    return sb.substring(1);
+  }
+
+  private static Map<String, String> convertUserData(String s) {
+    if(s == null || (s = s.trim()).length() == 0) {
+      return null;
+    }
+    String[] entries = s.split(";");
+    Map<String, String> r = new HashMap<String, String>(entries.length);
+    for(String e : entries) {
+      String[] kv = e.split("=");
+      r.put(kv[0], kv[1]);
+    }
+    return r;
   }
 }

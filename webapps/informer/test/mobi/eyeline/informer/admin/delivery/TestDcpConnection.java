@@ -568,11 +568,11 @@ public class TestDcpConnection implements DcpConnection{
       delivery.setSecretFlash(secretFlash);
     }
     @Override
-    public boolean isSecretMessage() {
-      return delivery.isSecretMessage();
+    public String getSecretMessage() {
+      return delivery.getSecretMessage();
     }
     @Override
-    public void setSecretMessage(boolean secretMessage) {
+    public void setSecretMessage(String secretMessage) {
       delivery.setSecretMessage(secretMessage);
     }
     @Override
