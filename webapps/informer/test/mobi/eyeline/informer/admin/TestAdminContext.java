@@ -86,15 +86,15 @@ public class TestAdminContext extends AdminContext {
 
     for(int i=1;i<=3;i++) {
       Delivery d = new Delivery();
-      d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 1000000*i));
-      d.setActivePeriodStart(new Date(System.currentTimeMillis() - 1000000*i));
+      d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 7*86400000*i));
+      d.setActivePeriodStart(new Date(System.currentTimeMillis() - 7*86400000*i));
       d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
       d.setDeliveryMode(DeliveryMode.SMS);
-      d.setEndDate(new Date(System.currentTimeMillis() + 1000000*i));
+      d.setEndDate(new Date(System.currentTimeMillis() + 7*86400000*i));
       d.setName("Test delivery"+i);
       d.setOwner(u.getLogin());
       d.setPriority(15+i);
-      d.setStartDate(new Date(System.currentTimeMillis() - 1000000*i));
+      d.setStartDate(new Date(System.currentTimeMillis() - 7*86400000*i));
       d.setSvcType("svc1");
       d.setValidityDate(new Date());
 

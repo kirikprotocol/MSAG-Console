@@ -16,7 +16,7 @@ import java.util.*;
 public class DeliveryStatProvider {
   File baseDir;
   FileSystem fileSys;
-  SimpleDateFormat subDirNameFormat;
+  String subDirNameFormat;
 
   public DeliveryStatProvider(File directory,FileSystem fileSys) {
     this(directory,fileSys,"yyyyMMdd");
@@ -25,7 +25,7 @@ public class DeliveryStatProvider {
   DeliveryStatProvider(File directory,FileSystem fileSys,String subDirNamePattern) {
     baseDir = directory;
     this.fileSys = fileSys;
-    this.subDirNameFormat= new SimpleDateFormat(subDirNamePattern);
+    this.subDirNameFormat= subDirNamePattern;
   }
 
   /**
@@ -38,6 +38,7 @@ public class DeliveryStatProvider {
    */
   public void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     try {
+      SimpleDateFormat fmt = new SimpleDateFormat(subDirNameFormat);
       String minSubDirName = null;
       String maxSubDirName = null;
       Calendar cFrom = null;
@@ -46,12 +47,12 @@ public class DeliveryStatProvider {
         if(filter.getFromDate()!=null) {
           cFrom  = Calendar.getInstance();
           cFrom.setTime(filter.getFromDate());
-          minSubDirName = subDirNameFormat.format(cFrom.getTime());
+          minSubDirName = fmt.format(cFrom.getTime());
         }
         if(filter.getTillDate()!=null) {
           cTo  = Calendar.getInstance();
           cTo.setTime(filter.getTillDate());
-          maxSubDirName = subDirNameFormat.format(cTo.getTime());
+          maxSubDirName = fmt.format(cTo.getTime());
         }
       }
 
@@ -80,7 +81,7 @@ public class DeliveryStatProvider {
             toMin    = cTo.get(Calendar.MINUTE);
           }
         }
-        SubDirProcessor sdProcessor = new SubDirProcessor(subDirName,fromHour,fromMin,toHour,toMin);
+        SubDirProcessor sdProcessor = new SubDirProcessor(subDirName,fmt,fromHour,fromMin,toHour,toMin);
         subDirProcessors.add(sdProcessor);
         totalFilesCount+=sdProcessor.getFilesCount();
       }
@@ -113,7 +114,7 @@ public class DeliveryStatProvider {
     List<FileProcessor> fileProcessors;
     int filesCount;
 
-    public SubDirProcessor(String subdirName, int fromHour,int fromMin,int toHour,int toMin) throws AdminException {
+    public SubDirProcessor(String subdirName,SimpleDateFormat fmt, int fromHour,int fromMin,int toHour,int toMin) throws AdminException {
       try {
         this.subDirName = subdirName;
         subDir = new File(baseDir,subdirName);
@@ -121,7 +122,7 @@ public class DeliveryStatProvider {
         fileProcessors = new ArrayList<FileProcessor>();
         Calendar c = Calendar.getInstance();
         c.clear();
-        c.setTime(subDirNameFormat.parse(subDirName));
+        c.setTime(fmt.parse(subDirName));
         year  = c.get(Calendar.YEAR);
         month = c.get(Calendar.MONTH)+1;
         day   = c.get(Calendar.DATE);

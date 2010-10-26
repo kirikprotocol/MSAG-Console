@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.delivery.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -15,21 +14,23 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
+
 /**
  * Copyright Eyeline.mobi
  * User: vmax
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public class DeliveryStatController extends InformerController implements DeliveryStatVisitor {
+public abstract class DeliveryStatController extends InformerController {
   private User user;
   private boolean initError=false;
   private DeliveryStatFilter filter;
-  private AggregationType aggregation;  
+  private AggregationType aggregation;
   private boolean initdata;
-  private List<AggregatedDeliveryStatRecord> records;
-  private AggregatedDeliveryStatRecord lastRecord=null;
-  private boolean expandDetails=true;
+  private TreeMap<Date, AggregatedStatRecord> recordsMap;
+  private List<AggregatedStatRecord> records;
+
+
 
   public DeliveryStatController() {
     super();
@@ -37,7 +38,8 @@ public class DeliveryStatController extends InformerController implements Delive
     filter = new DeliveryStatFilter();
     initUser();
     initdata=false;
-    records = new ArrayList<AggregatedDeliveryStatRecord>();
+    records = new ArrayList<AggregatedStatRecord>();
+    recordsMap = new TreeMap<Date, AggregatedStatRecord>();
   }
 
   private void initUser() {
@@ -72,6 +74,10 @@ public class DeliveryStatController extends InformerController implements Delive
 
   public void setUser(User user) {
     this.user = user;
+  }
+
+  public User getUser() {
+    return user;
   }
 
   public boolean isInitError() {
@@ -110,13 +116,22 @@ public class DeliveryStatController extends InformerController implements Delive
     return user.hasRole(User.INFORMER_ADMIN_ROLE);
   }
 
-  public boolean isExpandDetails() {
-    return expandDetails;
+  protected void clearRecords() {
+      recordsMap.clear();
+      records.clear();
   }
 
-  public void setExpandDetails(boolean expandDetails) {
-    this.expandDetails = expandDetails;
+  protected void loadFinished() {
+      records.addAll(recordsMap.values());
   }
+
+  protected AggregatedStatRecord getRecord(Date time) {
+     return recordsMap.get(time);
+  }
+  protected void putRecord(AggregatedStatRecord newRecord) {
+     recordsMap.put(newRecord.getStartCalendar().getTime(),newRecord);
+  }
+
 
   public List<SelectItem> getUsers() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
@@ -128,50 +143,29 @@ public class DeliveryStatController extends InformerController implements Delive
   }
 
 
-  private void loadRecords() throws AdminException {
-    records.clear();
-    getConfig().getDeliveryStatProvider().accept(filter,this);
-  }
 
-
-  public boolean visit(DeliveryStatRecord rec, int total, int current) {
-    AggregatedDeliveryStatRecord newRecord = new AggregatedDeliveryStatRecord(rec,aggregation,true);
-    if(records.size()==0) {
-      records.add(newRecord);
-    }
-    else {
-      AggregatedDeliveryStatRecord lastRecord = records.get(records.size()-1);
-      if(!lastRecord.add(newRecord)) {
-        records.add(newRecord);
-      }
-    }
-    return true;
-  }
+  protected abstract void loadRecords() ;
 
 
   public DataTableModel getRecords() {
-    try{
-      loadRecords();
-    }catch (AdminException e){
-      addError(e);
-      records = Collections.emptyList();
-    }
+    loadRecords();
     return new DataTableModel() {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         // Сортируем записи
-        if (sortOrder != null) {
-          Collections.sort(records, new AggregatedRecordsComparator(sortOrder));
+        if (sortOrder != null && !records.isEmpty()) {
+          Collections.sort(records, records.get(0).getRecordsComparator(sortOrder));
         }
 
-        List<AggregatedDeliveryStatRecord> result = new LinkedList<AggregatedDeliveryStatRecord>();
-        for (Iterator<AggregatedDeliveryStatRecord> i = records.iterator(); i.hasNext() && count > 0;) {
-          AggregatedDeliveryStatRecord r = i.next();
+        List<AggregatedStatRecord> result = new LinkedList<AggregatedStatRecord>();
+        for (Iterator<AggregatedStatRecord> i = records.iterator(); i.hasNext() && count > 0;) {
+          AggregatedStatRecord r = i.next();
           if (--startPos < 0) {
             result.add(r);
-            if(r.getDetails()!=null && sortOrder!=null) {
-              Collections.sort(r.getDetails(), new AggregatedRecordsComparator(sortOrder));
+            List<AggregatedStatRecord> innerRecords = r.getInnerRows();
+            if(innerRecords!=null && !innerRecords.isEmpty() && sortOrder!=null) {
+              Collections.sort(r.getInnerRows(), innerRecords.get(0).getRecordsComparator(sortOrder));
             }
             count--;
           }
@@ -187,47 +181,12 @@ public class DeliveryStatController extends InformerController implements Delive
 
   @Override
   protected void _download(PrintWriter writer) throws IOException {
-    try{
-      loadRecords();
-    }
-    catch (AdminException e){
-      addError(e);
-      records = Collections.emptyList();
-    }    
-    for(AggregatedDeliveryStatRecord r : records) {
-      writer.println(StringEncoderDecoder.toCSVString(
-          new Object[]{r.getPeriodString(),"",r.getDelivered(),r.getFailed()}));
-      if(r.isParent() && expandDetails && r.getDetails()!=null) {
-        for(AggregatedDeliveryStatRecord d : r.getDetails()) {
-            writer.println(StringEncoderDecoder.toCSVString(
-            new Object[]{"",d.getPeriodString(),d.getDelivered(),d.getFailed()}));
-        }
-      }
-    }        
-  }
 
-  class AggregatedRecordsComparator implements  Comparator<AggregatedDeliveryStatRecord> {
-    private DataTableSortOrder sortOrder;
-
-    AggregatedRecordsComparator(DataTableSortOrder sortOrder) {
-      this.sortOrder = sortOrder;
-    }
-
-    public int compare(AggregatedDeliveryStatRecord o1, AggregatedDeliveryStatRecord o2) {
-      final int mul = sortOrder.isAsc() ? 1 : -1;
-      if (sortOrder.getColumnId().equals("period")) {
-        return mul*o1.getStartCalendar().compareTo(o2.getStartCalendar());
-      }
-      else if (sortOrder.getColumnId().equals("delivered")) {
-        Locale l = getLocale();
-        return o1.getDelivered() >= o2.getDelivered() ? mul : -mul;
-      }
-      else if (sortOrder.getColumnId().equals("failed")) {
-        return o1.getFailed() >= o2.getFailed() ? mul : -mul;
-      }
-      return 0;
+    loadRecords();
+    for(AggregatedStatRecord r : records) {
+      r.printWithChildrenToCSV(writer);
     }
   }
+
+
 }
-
-
