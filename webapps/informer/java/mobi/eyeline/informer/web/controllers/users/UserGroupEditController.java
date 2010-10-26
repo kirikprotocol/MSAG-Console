@@ -1,19 +1,15 @@
 package mobi.eyeline.informer.web.controllers.users;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
-import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.config.Configuration;
-import mobi.eyeline.informer.web.controllers.InformerController;
 
-import javax.faces.context.FacesContext;
-import javax.faces.model.SelectItem;
+import javax.faces.application.FacesMessage;
 import javax.servlet.http.HttpSession;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -59,6 +55,10 @@ public class UserGroupEditController extends UserController {
 
 
   public String save() {
+    if(policyId != null && !RETRY_POLICY_PATTERN.matcher(policyId).matches()) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN,"retry_policy_incorrect");
+      return null;
+    }
     Configuration config = getConfig();
     try {
       List<User> users = new ArrayList<User>();
@@ -98,7 +98,7 @@ public class UserGroupEditController extends UserController {
 
         users.add(u);
       }
-        
+
       for(User u : users) {
         config.updateUser(u,getUserName());
       }

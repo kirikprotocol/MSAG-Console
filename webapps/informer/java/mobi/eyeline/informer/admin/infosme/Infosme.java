@@ -2,8 +2,6 @@ package mobi.eyeline.informer.admin.infosme;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.util.List;
-
 
 /**
  * Администрирование Informer
@@ -30,10 +28,6 @@ public interface Infosme {
   public void removeUser(String userId) throws AdminException;
 
   public void setDefaultSmsc(String smscId) throws AdminException;
-
-  public void setCategories(List<Category> categories) throws AdminException;
-
-  public List<Category> getCategories() throws AdminException;
 
   public boolean isOnline() throws AdminException;
 

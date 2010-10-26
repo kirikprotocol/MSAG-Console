@@ -80,7 +80,7 @@ public class DeliveryManager {
     }
     if (delivery.isRetryOnFail() && (delivery.getRetryPolicy() == null || delivery.getRetryPolicy().length() == 0)) {
       throw new DeliveryException("retry_illegal");
-    }
+    }                               //todo
     if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
       throw new DeliveryException("replace_illegal");
     }

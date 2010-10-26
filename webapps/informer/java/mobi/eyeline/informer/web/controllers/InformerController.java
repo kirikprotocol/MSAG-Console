@@ -17,12 +17,19 @@ import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 
 /**
  * Базовый контроллер
  * @author Aleksandr Khalitov
  */
 public abstract class InformerController implements Serializable {
+
+
+  private static final String LAST = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}|:\\*))";
+  private static final String MEDIUM = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}))";
+  public static final Pattern RETRY_POLICY_PATTERN =Pattern.compile("(" + LAST + "|" +  MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
+
 
   /**
    * Возвращает Configuration
@@ -207,4 +214,11 @@ public abstract class InformerController implements Serializable {
   protected void _uploaded(BufferedReader reader) throws IOException{
   }
 
+  /**
+   * Паттерн для политик передостаки
+   * @return паттерн
+   */
+  public Pattern getRetryPoliciesPattern() {
+    return RETRY_POLICY_PATTERN;
+  }
 }

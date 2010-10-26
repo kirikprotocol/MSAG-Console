@@ -99,9 +99,7 @@
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{userBundle.policyId}" labelStyle="text-align:left">
-              <h:selectOneMenu value="#{userGroupEdit.policyId}" style="align:left;margin-left:8px;">
-                <f:selectItems value="#{userGroupEdit.policies}"/>
-              </h:selectOneMenu>
+              <tr:inputText value="#{userGroupEdit.policyId}" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{userBundle.priority}" labelStyle="text-align:left">

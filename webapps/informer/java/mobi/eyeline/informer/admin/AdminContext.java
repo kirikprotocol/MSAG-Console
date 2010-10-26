@@ -68,7 +68,7 @@ public class AdminContext {
   protected DeliveryStatProvider deliveryStatProvider;
 
 // delivery ->user ->region->smsc
-//       |->retryPolicy 
+
   final private Lock integrityLock = new ReentrantLock();
 
   protected AdminContext() {

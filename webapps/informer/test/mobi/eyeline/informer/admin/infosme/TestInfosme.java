@@ -2,8 +2,6 @@ package mobi.eyeline.informer.admin.infosme;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.util.List;
-
 /**
  * @author Aleksandr Khalitov
  */
@@ -13,17 +11,11 @@ public class TestInfosme implements Infosme{
 
   private TestRegionsHelper regionHelper;
 
-  private TestRetryPoliciesHelper retryHelper;
-
-  private TestCategoriesHelper categoriesHelper;
-
   private TestUsersHelper usersHelper;
 
   public TestInfosme() {
     this.smscHelper = new TestSmscHelper();
     this.regionHelper = new TestRegionsHelper();
-    this.retryHelper = new TestRetryPoliciesHelper();
-    this.categoriesHelper = new TestCategoriesHelper();
     this.usersHelper = new TestUsersHelper();
   }
 
@@ -90,43 +82,12 @@ public class TestInfosme implements Infosme{
     usersHelper.remove(userId);
   }
 
-  public void addRetryPolicy(String policyId) throws AdminException {
-    if(policyId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
-    retryHelper.add(policyId);
-  }
-
-  public void updateRetryPolicy(String policyId) throws AdminException {
-    if(policyId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
-    retryHelper.update(policyId);
-  }
-
-  public void removeRetryPolicy(String policyId) throws AdminException {
-    if(policyId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
-    retryHelper.remove(policyId);
-  }
 
   public void setDefaultSmsc(String smscId) throws AdminException {
     if(smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     smscHelper.setDefaultSmsc(smscId);
-  }
-
-  public void setCategories(List<Category> categories) throws AdminException {
-    if(categories == null) {
-      throw new IllegalArgumentException("Categories is null");
-    }
-    categoriesHelper.setCategories(categories);  
-  }
-
-  public List<Category> getCategories() throws AdminException {
-    return categoriesHelper.getCategories();
   }
 
   private boolean online = true;

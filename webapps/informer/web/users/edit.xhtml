@@ -152,9 +152,7 @@
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{userBundle.policyId}" labelStyle="text-align:left">
-              <h:selectOneMenu value="#{userEdit.userToEdit.policyId}" style="align:left;" >
-                <f:selectItems value="#{userEdit.policies}"/>
-              </h:selectOneMenu>
+              <tr:inputText value="#{userEdit.userToEdit.policyId}" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{userBundle.priority}" labelStyle="text-align:left">

@@ -1,12 +1,9 @@
 package mobi.eyeline.informer.web.controllers.users;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.retry_policies.RetryPolicy;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
-import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
@@ -75,6 +72,10 @@ public class UserEditController extends UserController {
     try {
       if(!passwordConfirm.equals(userToEdit.getPassword())) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN,"user.edit.passwdConfirmMissmatch");
+        return null;
+      }
+      if(userToEdit.getPolicyId() != null && !RETRY_POLICY_PATTERN.matcher(userToEdit.getPolicyId()).matches()) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN,"retry_policy_incorrect");
         return null;
       }
 
