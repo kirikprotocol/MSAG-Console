@@ -190,6 +190,13 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
     const char* opt=sms->getBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS,&len);
     optional.set_unknownFields(opt,len);
   }
+
+  if(sms->hasBinProperty(Tag::SMPP_CALLBACK_NUM))
+  {
+    unsigned len;
+    const char* val=sms->getBinProperty(Tag::SMPP_CALLBACK_NUM,&len);
+    optional.set_callbackNum(val,len);
+  }
 }
 
 inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
@@ -447,6 +454,10 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
   if(optional.has_unknownFields())
   {
     sms->setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS,optional.get_unknownFields(),optional.size_unknownFields());
+  }
+  if(optional.has_callbackNum())
+  {
+    sms->setBinProperty(Tag::SMPP_CALLBACK_NUM,optional.get_callbackNum(),optional.size_callbackNum());
   }
 //  if ( optional.has_protocol_id() )
 //    sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,(uint32_t)optional.get_protocol_id());

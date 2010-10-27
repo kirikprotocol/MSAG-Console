@@ -14,6 +14,7 @@ const int USSD_PSSD_IND   = 0;
 const int USSD_PSSR_IND   = 1;
 const int USSD_USSR_REQ   = 2;
 const int USSD_USSN_REQ   = 3;
+const int USSD_REDIRECT   = 15;
 const int USSD_PSSD_RESP  = 16;
 const int USSD_PSSR_RESP  = 17;
 const int USSD_USSR_CONF  = 18;
