@@ -5,6 +5,8 @@ import mobi.eyeline.informer.admin.delivery.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
 
+import java.util.Locale;
+
 /**
  * Copyright Eyeline.mobi
  * User: vmax
@@ -39,20 +41,15 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
   }
 
 
-
-  protected void loadRecords()  {
-    clearRecords();
-    try {
-      getConfig().getDeliveryStatProvider().accept(filter,this);
-    }
-    catch (AdminException e) {
-      addError(e);
-    }
-    loadFinished();
+  @Override
+  public void loadRecords(final Locale locale) throws AdminException {
+     getConfig().getDeliveryStatProvider().accept(filter,this);
   }
 
 
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
+
+    setCurrentAndTotal(current,total);
     AggregatedStatRecord newRecord = new AggregatedCommonStatRecord(rec,getAggregation(),true);
     AggregatedStatRecord oldRecord = getRecord(newRecord.getStartCalendar().getTime());
     if(oldRecord==null) {

@@ -19,7 +19,7 @@ public class AggregatedCommonStatRecord extends AggregatedStatRecord {
   private int failed;
 
   public AggregatedCommonStatRecord(DeliveryStatRecord dsr, AggregationType type, boolean isParent) {
-    super(dsr.getYear(),dsr.getMonth(),dsr.getDay(),dsr.getHour(),dsr.getMinute(),type,isParent);
+    super(dsr.getDate(),type,isParent);
     this.delivered = dsr.getDelivered();
     this.failed = dsr.getFailed();
     if(getChildAggregationType()!=null) {

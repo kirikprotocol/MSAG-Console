@@ -15,11 +15,11 @@
   <ui:define name="content">
 
     <tr:form id="smsc" rendered="#{!statsCommon.initError}">
-      <tr:inputHidden value="#{statsCommon.initdata}"/>
+
 
       <h:panelGroup style="padding:10px">
 
-        <eye:dataTableFilter bean="#{statsCommon}" clearAction="clearFilter" applyAction="query">
+        <eye:dataTableFilter bean="#{statsCommon}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
             <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
               <h:outputText value="#{msg['stat.page.from_date']}"/>
@@ -41,36 +41,58 @@
         </eye:dataTableFilter>
 
 
-          <eye:dataTable value="#{statsCommon.records}" var="row"  >
-            <eye:row innerRows="#{row.innerRows}">
-              <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
-                <h:outputText value="#{row.data.periodString}"/>
-                <f:facet name="inner">
-                  <h:outputText value="#{row.periodString}" style="color:GREEN"/>
-                </f:facet>
-              </eye:column>
-              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.delivered}"/>
-                <f:facet name="inner">
-                  <h:outputText value="#{row.delivered}" style="color:GREEN"/>
-                </f:facet>
-              </eye:column>
-              <eye:column name="failed" title="#{msg['stat.page.failed']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.failed}"/>
-                <f:facet name="inner">
-                  <h:outputText value="#{row.failed}" style="color:GREEN"/>
-                </f:facet>
-              </eye:column>
-            </eye:row>
-          </eye:dataTable>
-        
+        <eye:updatableContent updatePeriod="1" rendered="#{statsCommon.state == 1}">
+            <tr:message id="upload_message"/>
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{statsCommon.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+
+            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+              <h:outputText value="#{msg['processing.label']}  #{statsCommon.current}"/>
+              <eye:progressBar current="#{statsCommon.current}" maximum="#{statsCommon.total}" width="500" height="20" />
+            </h:panelGrid>
+
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{statsCommon.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>        
+        </eye:updatableContent>
+
+        <eye:dataTable value="#{statsCommon.records}" var="row" rendered="#{statsCommon.state == 2}">
+          <eye:row innerRows="#{row.innerRows}">
+            <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+              <h:outputText value="#{row.data.periodString}"/>
+              <f:facet name="inner">
+                <h:outputText value="#{row.periodString}" style="color:GREEN"/>
+              </f:facet>
+            </eye:column>
+            <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
+              <h:outputText value="#{row.data.delivered}"/>
+              <f:facet name="inner">
+                <h:outputText value="#{row.delivered}" style="color:GREEN"/>
+              </f:facet>
+            </eye:column>
+            <eye:column name="failed" title="#{msg['stat.page.failed']}" sortable="true" width="10%" align="center">
+              <h:outputText value="#{row.data.failed}"/>
+              <f:facet name="inner">
+                <h:outputText value="#{row.failed}" style="color:GREEN"/>
+              </f:facet>
+            </eye:column>
+          </eye:row>
+        </eye:dataTable>
+
 
       </h:panelGroup>
 
       <eye:buttons>
         <eye:space/>
-        <eye:button>          
-          <h:commandLink value="#{msg['download.button']}">
+        <eye:button>
+          <h:commandLink value="#{msg['download.button']}" rendered="#{statsCommon.state == 2}">
             <tr:fileDownloadActionListener method="#{statsCommon.download}" contentType="application/csv" filename="commonStat.csv"/>
           </h:commandLink>
         </eye:button>

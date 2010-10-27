@@ -95,7 +95,7 @@ public class TestAdminContext extends AdminContext {
             Random r = new Random();
             for(int k=0;k<100;k++) {
               Message m1 = Message.newTextMessage("text"+r.nextInt(10000));
-              m1.setAbonent(new Address("+7913"+r.nextInt(10000)));
+              m1.setAbonent(new Address("+7913"+k));
               add(m1);
             }
           }

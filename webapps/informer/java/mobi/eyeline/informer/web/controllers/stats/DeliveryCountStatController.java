@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 
 /**
@@ -40,11 +41,8 @@ public class DeliveryCountStatController  extends DeliveryStatController impleme
   }
 
 
-
-  protected void loadRecords()  {
-    clearRecords();
-    try {
-      //todo load records
+  @Override
+  public void loadRecords(final Locale locale) throws AdminException{
       DeliveryFilter f = new DeliveryFilter();
       String filterUser = filter.getUser();
       if(filterUser!=null) {
@@ -55,12 +53,6 @@ public class DeliveryCountStatController  extends DeliveryStatController impleme
       f.setResultFields(new DeliveryFields[]{DeliveryFields.StartDate});
 
       getConfig().getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);
-    }
-    catch (AdminException e) {
-      addError(e);
-    }
-
-    loadFinished();
   }
 
   public boolean visit(DeliveryInfo di) throws AdminException {
@@ -74,8 +66,8 @@ public class DeliveryCountStatController  extends DeliveryStatController impleme
     else {
       oldRecord.add(newRecord);
     }
+    setCurrent(getCurrent()+1);
     return true;
-
-
   }
+  
 }

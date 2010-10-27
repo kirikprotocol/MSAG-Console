@@ -8,6 +8,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
+import mobi.eyeline.informer.web.controllers.LongOperationController;
 
 import javax.faces.model.SelectItem;
 import java.io.IOException;
@@ -21,12 +22,12 @@ import java.util.*;
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public abstract class DeliveryStatController extends InformerController {
+public abstract class DeliveryStatController extends LongOperationController {
   private User user;
   private boolean initError=false;
   private DeliveryStatFilter filter;
   private AggregationType aggregation;
-  private boolean initdata;
+
   private TreeMap<Date, AggregatedStatRecord> recordsMap;
   private List<AggregatedStatRecord> records;
 
@@ -37,7 +38,6 @@ public abstract class DeliveryStatController extends InformerController {
     aggregation= AggregationType.HOUR;
     filter = new DeliveryStatFilter();
     initUser();
-    initdata=false;
     records = new ArrayList<AggregatedStatRecord>();
     recordsMap = new TreeMap<Date, AggregatedStatRecord>();
   }
@@ -60,17 +60,6 @@ public abstract class DeliveryStatController extends InformerController {
     filter.setTaskId(null);
   }
 
-  public void query() {
-    initdata = true;
-  }
-
-  public boolean isInitdata() {
-    return initdata;
-  }
-
-  public void setInitdata(boolean initdata) {
-    this.initdata = initdata;
-  }
 
   public void setUser(User user) {
     this.user = user;
@@ -142,13 +131,26 @@ public abstract class DeliveryStatController extends InformerController {
     return ret;
   }
 
+  abstract void loadRecords(final Locale locale) throws AdminException, InterruptedException;
 
-
-  protected abstract void loadRecords() ;
+  @Override
+  public void execute(final Locale locale) throws Exception {
+    clearRecords();
+    try {
+      loadRecords(locale);
+    }
+    catch (Exception e) {
+      clearRecords();
+      throw e;
+    }
+    finally {
+      loadFinished();
+    }
+  }
 
 
   public DataTableModel getRecords() {
-    loadRecords();
+    //loadRecords();
     return new DataTableModel() {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
@@ -181,8 +183,7 @@ public abstract class DeliveryStatController extends InformerController {
 
   @Override
   protected void _download(PrintWriter writer) throws IOException {
-
-    loadRecords();
+    //loadRecords();
     for(AggregatedStatRecord r : records) {
       r.printWithChildrenToCSV(writer);
     }

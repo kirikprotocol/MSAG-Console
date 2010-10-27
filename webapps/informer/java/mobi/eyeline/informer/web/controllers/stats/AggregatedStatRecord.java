@@ -23,23 +23,25 @@ abstract class AggregatedStatRecord implements DataTableRow {
   private boolean isParent;
   private AggregationType childAggreagtionType;
 
-  public AggregatedStatRecord(int year,int month,int day,int hour, int minute, AggregationType type, boolean isParent) {
-    startCalendar = Calendar.getInstance();
-    startCalendar.clear();
-    startCalendar.set(year,month-1,day,hour,minute);
-    init(type, isParent);
+
+  public AggregatedStatRecord(Calendar periodStart,  AggregationType type, boolean isParent) {    
+    init(periodStart, type, isParent);
   }
 
-  public AggregatedStatRecord(Calendar periodStart,  AggregationType type, boolean isParent) {
+  public AggregatedStatRecord(Date date, AggregationType type, boolean isParent) {
+    Calendar c = Calendar.getInstance();
+    c.setTime(date);
+    init(c,type, isParent);
+  }
+
+
+  private void init(Calendar periodStart, AggregationType type, boolean isParent) {
+
     startCalendar = (Calendar) periodStart.clone();
     startCalendar.set(Calendar.MILLISECOND,0);
     startCalendar.set(Calendar.SECOND,0);
     startCalendar.set(Calendar.MINUTE,0);
-    init(type, isParent);
-  }
 
-
-  private void init(AggregationType type, boolean isParent) {
     this.type = type;
     this.isParent =isParent;
     childAggreagtionType = null;

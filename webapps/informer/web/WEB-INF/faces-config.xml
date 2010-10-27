@@ -204,15 +204,22 @@
   <managed-bean>
       <managed-bean-name>statsCommon</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryCommonStatController</managed-bean-class>
-      <managed-bean-scope>request</managed-bean-scope>
+      <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
 
   <managed-bean>
       <managed-bean-name>statsDeliveryCount</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryCountStatController</managed-bean-class>
-      <managed-bean-scope>request</managed-bean-scope>
+      <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>statsMessagesByRec</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByRecStatsController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
 
 
   <navigation-rule>
@@ -288,6 +295,12 @@
     <navigation-case>
       <from-outcome>STATS_DELIVERIES_COUNTS</from-outcome>
       <to-view-id>/stats/deliveryCount.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>STATS_MESSAGES_BY_RECIPIENTS</from-outcome>
+      <to-view-id>/stats/messagesByRecs.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
