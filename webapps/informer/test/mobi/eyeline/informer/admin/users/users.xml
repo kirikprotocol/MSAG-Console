@@ -16,7 +16,7 @@
       <param name="validHours"     type="int">2</param>
       <param name="deliveryType"   type="string">SMS</param>
       <param name="transactionMode" type="bool">false</param>
-      <param name="policyId"        type="string">default</param>
+      <param name="policyId"        type="string">1h</param>
       <param name="priority"        type="int">5</param>
       <param name="deliveryLifetime"  type="int">1000</param>
       <param name="directory"         type="string">homedir</param>
@@ -46,7 +46,7 @@
       <param name="validHours"     type="int">3</param>
       <param name="deliveryType"   type="string">USSD_PUSH</param>
       <param name="transactionMode" type="bool">true</param>
-      <param name="policyId"        type="string">somepolicy</param>
+      <param name="policyId"        type="string">1m</param>
       <param name="priority"        type="int">1</param>
       <param name="deliveryLifetime"  type="int">1001</param>
       <param name="directory"         type="string">homedir</param>

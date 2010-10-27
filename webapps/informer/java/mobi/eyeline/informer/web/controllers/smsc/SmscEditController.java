@@ -115,11 +115,15 @@ public class SmscEditController extends SmscController{
     s.setDefaultValidityPeriod(smsc.defaultValidityPeriod);
     s.setMaxValidityPeriod(smsc.maxValidityPeriod);
     s.setMinValidityPeriod(smsc.minValidityPeriod);
-    for(Integer i : parseFromCSV(smsc.immedErrors)) {
-      s.addImmediateError(i);
+    if(smsc.immedErrors != null && (smsc.immedErrors = smsc.immedErrors.trim()).length() != 0) {
+      for(Integer i : parseFromCSV(smsc.immedErrors)) {
+        s.addImmediateError(i);
+      }
     }
-    for(Integer i : parseFromCSV(smsc.permErrors)) {
-      s.addPermanentError(i);
+    if(smsc.permErrors != null && (smsc.permErrors = smsc.permErrors.trim()).length() != 0) {
+      for(Integer i : parseFromCSV(smsc.permErrors)) {
+        s.addPermanentError(i);
+      }
     }
     return s;
   }
