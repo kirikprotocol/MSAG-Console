@@ -1946,7 +1946,13 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &destAddr, GetUSSDAddr(), &destRef, 0/*&origRef*/, 0/*&specificInfo*/ ), __func__);
     }else
     {
-      mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
+      if( dialog->s_imsi.length() > 0 )
+      {
+        mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
+      } else
+      {
+        mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
+      }
       checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, &specificInfo ), __func__);
     }
   }
@@ -2057,6 +2063,37 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           }
           SendStatusToSmsc(dialogid_smsc,0,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
           DropMapDialog(dialog.get());
+          return;
+        }
+
+        if(dlg_found && serviceOp==USSD_REDIRECT)
+        {
+          unsigned len;
+          const char* val=cmd->get_sms()->getBinProperty(Tag::SMPP_CALLBACK_NUM,&len);
+          if(len<4 || *val!=1)
+          {
+            SendStatusToSmsc(dialogid_smsc,Status::INVOPTPARAMVAL,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+            return;
+          }
+          SendStatusToSmsc(dialogid_smsc,Status::OK,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+
+          Address redirectAddr(len-3,val[1],val[2],val+3);///from SMPP_CALLBACK_NUM
+          SMS sms=*cmd->get_sms();
+          sms.setOriginatingAddress(sms.getDestinationAddress());
+          sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
+          dialog->subsystem=".5.0.ussd:";
+          dialog->subsystem+redirectAddr.value;
+          sms.setDestinationAddress(dialog->subsystem.c_str());
+          MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
+          int rinst=dialog->instanceId;
+          if(dialog->lastUssdMessage)
+          {
+            rinst=0xff;
+          }
+          uint32_t dialogid_smsc=(rinst<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
+          SmscCommand cmd = SmscCommand::makeSumbmitSm(
+            *dialog->sms.get(),dialogid_smsc);
+          proxy->putIncomingCommand(cmd);
           return;
         }
 
