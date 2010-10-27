@@ -1,4 +1,4 @@
-#include "MDDataMissingParam.hpp"
+#include "MDUnexpectedDataParam.hpp"
 
 #ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
@@ -9,22 +9,17 @@ namespace map {
 namespace err {
 namespace dec {
 
-/*
-DataMissingParam ::= SEQUENCE {
-  extensionContainer      ExtensionContainer      OPTIONAL,
-  ...
-}
-*/
 void
-MDDataMissingParam::construct()
+MDUnexpectedDataParam::construct()
 {
   asn1::ber::DecoderOfSequence_T<2,1>::setField(0, asn1::_tagSEQOF,
                                                 asn1::ber::EDAlternative::altOPTIONAL);
   asn1::ber::DecoderOfSequence_T<2,1>::setUnkExtension(1);
+
 }
 
 asn1::ber::TypeDecoderAC*
-MDDataMissingParam::prepareAlternative(uint16_t unique_idx)
+MDUnexpectedDataParam::prepareAlternative(uint16_t unique_idx)
 {
   if (!_value) //assertion!!!
     throw smsc::util::Exception("MDDataMissingParam::prepareAlternative : value isn't set!");

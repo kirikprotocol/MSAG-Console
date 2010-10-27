@@ -1,4 +1,4 @@
-#include "MDCallBarringCause.hpp"
+#include "MDAbsentSubscriberReason.hpp"
 
 #ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
@@ -10,7 +10,8 @@ namespace err {
 namespace dec {
 
 void
-MDCallBarringCause::setValue(CallBarringCause & value) {
+MDAbsentSubscriberReason::setValue(AbsentSubscriberReason & value)
+{
   asn1::ber::DecoderOfINTEGER::setValue(value.value);
 }
 

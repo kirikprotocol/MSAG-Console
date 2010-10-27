@@ -51,7 +51,6 @@ public:
 protected:
   void construct();
   virtual asn1::ber::TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
-  virtual void markDecodedOptional(uint16_t unique_idx) {}
 
 private:
   static const asn1::ASTag _tag_additionalNetworkResource;
