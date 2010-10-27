@@ -71,6 +71,7 @@ RollingFileAppender::RollingFileAppender(const char * const _name, const Propert
     if(properties.Exists("directIO"))
     {
       directIO=strcasecmp(properties["directIO"],"true")==0;
+      printf("direct io=%s!\n",directIO?"true":"false");
     }
 
     if (properties.Exists("maxindex"))

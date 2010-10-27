@@ -14,7 +14,9 @@
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 
+#ifdef USE_MAP
 #include "system/mapio/MapIoTask.h"
+#endif
 
 #include "snmp/smestattable/SmeStatTableSubAgent.hpp"
 #include "snmp/smeerrtable/smeErrTable_subagent.hpp"
@@ -569,8 +571,10 @@ using smsc::snmp::SnmpAgent;
     uint64_t perf[smsc::system::performance::performanceCounters];
     ((smsc::system::Smsc*)smscptr)->getPerfData(perf);
 
-    int mapDlgStat[6];
+    int mapDlgStat[6]={0,};
+#ifdef USE_MAP
     MapDialogContainer::getInstance()->getDlgStats(mapDlgStat);
+#endif
 
     const int perfBase=6;
 
