@@ -513,6 +513,7 @@ public:
   }
   bool Find(const char* key,T& data)const
   {
+    if(!root)return false;
     if(FindRec(root,key,data))return true;
     Node* ptr=root->maskNode;
     key++;
