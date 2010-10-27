@@ -11,7 +11,7 @@ import java.util.List;
  *
  * @author Aleksandr Khalitov
  */
-public abstract class DeliveryDataSource<T> {
+abstract class DeliveryDataSource<T> {
 
   private final int pieceSize;
 
@@ -26,7 +26,7 @@ public abstract class DeliveryDataSource<T> {
   }
 
 
-  public void visit(Visitor<T> visitor) throws AdminException {
+  void visit(Visitor<T> visitor) throws AdminException {
     boolean exit;
     List<T> list = new ArrayList<T>(pieceSize);
     do {
@@ -43,14 +43,4 @@ public abstract class DeliveryDataSource<T> {
   protected abstract boolean load(DcpConnection connection, int pieseSize, int reqId, Collection<T> result) throws AdminException;
 
 
-  /**
-   * Визитер
-   *
-   * @param <T> тип извлекаемых данных
-   */
-  public static interface Visitor<T> {
-
-    public boolean visit(T value) throws AdminException;
-
-  }
 }

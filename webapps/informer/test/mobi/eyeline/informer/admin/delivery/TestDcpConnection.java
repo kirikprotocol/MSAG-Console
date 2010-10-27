@@ -660,11 +660,6 @@ public class TestDcpConnection implements DcpConnection{
     }
 
     @Override
-    public MessageType getMsgType() {
-      return message.getMsgType();
-    }
-
-    @Override
     public String getText() {
       return message.getText();
     }

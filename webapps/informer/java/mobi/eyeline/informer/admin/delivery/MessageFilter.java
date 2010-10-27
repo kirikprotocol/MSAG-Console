@@ -25,7 +25,8 @@ public class MessageFilter {
     return deliveryId;
   }
 
-  public void setDeliveryId(Integer deliveryId) {
+  public void setDeliveryId(Integer deliveryId) throws AdminException{
+    vh.checkNotNull("deliveryId", deliveryId);
     this.deliveryId = deliveryId;
   }
 

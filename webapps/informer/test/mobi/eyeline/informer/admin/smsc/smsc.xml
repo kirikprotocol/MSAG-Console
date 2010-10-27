@@ -15,6 +15,23 @@
       <param name="ussdPushVlrTag" type="int">153</param>
       <param name="timeout" type="int">1</param>
       <param name="rangeOfAddress" type="int">2</param>
+
+      <param name="defaultValidityPeriod" type="int">1</param>
+      <param name="maxValidityPeriod" type="int">5</param>
+      <param name="minValidityPeriod" type="int">1</param>
+
+      <section name="retryPolicies">
+
+        <param name="immediate" type="string">1001,1029</param>
+        <param name="permanent" type="string">1035,1036</param>
+
+        <section name="temporary">
+          <param name="1m" type="string">1001,1029</param>
+          <param name="1m,1h:*" type="string">1011,1129</param>
+        </section>
+
+      </section>
+
     </section>
 
     <section name="SMSC1">
@@ -28,6 +45,22 @@
       <param name="ussdPushVlrTag" type="int">153</param>
       <param name="timeout" type="int">1</param>
       <param name="rangeOfAddress" type="int">2</param>
+
+      <param name="defaultValidityPeriod" type="int">1</param>
+      <param name="maxValidityPeriod" type="int">5</param>
+      <param name="minValidityPeriod" type="int">1</param>
+
+      <section name="retryPolicies">
+
+        <param name="immediate" type="string">1001,1029</param>
+        <param name="permanent" type="string">1035,1036</param>
+
+        <section name="temporary">
+          <param name="1m" type="string">1001,1029</param>
+          <param name="1m,1h:*" type="string">1011,1129</param>
+        </section>
+
+      </section>
     </section>
 
     <section name="SMSC2">
@@ -41,8 +74,24 @@
       <param name="ussdPushVlrTag" type="int">153</param>
       <param name="timeout" type="int">1</param>
       <param name="rangeOfAddress" type="int">2</param>
+
+      <param name="defaultValidityPeriod" type="int">1</param>
+      <param name="maxValidityPeriod" type="int">5</param>
+      <param name="minValidityPeriod" type="int">1</param>
+
+      <section name="retryPolicies">
+
+        <param name="immediate" type="string">1001,1029</param>
+        <param name="permanent" type="string">1035,1036</param>
+
+        <section name="temporary">
+          <param name="1m" type="string">1001,1029</param>
+          <param name="1m,1h:*" type="string">1011,1129</param>
+        </section>
+
+      </section>
     </section>
-    
+
   </section>
 
 

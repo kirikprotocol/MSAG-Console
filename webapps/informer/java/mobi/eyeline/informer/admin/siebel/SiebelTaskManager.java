@@ -495,9 +495,9 @@ public class SiebelTaskManager implements Runnable {
     String taskName = buildTaskName(waveId);
     DeliveryFilter filter = new DeliveryFilter();
     filter.setNameFilter(new String[]{taskName});
-    DeliveryDataSource<DeliveryInfo> ds = deliveryManager.getDeliveries(u.getLogin(), u.getPassword(), filter, 1);
     final DeliveryInfo[] infos = new DeliveryInfo[1];
-    ds.visit(new DeliveryDataSource.Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
+    deliveryManager.getDeliveries(u.getLogin(), u.getPassword(), filter, 1,
+        new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
         infos[1] = value;
         return false;

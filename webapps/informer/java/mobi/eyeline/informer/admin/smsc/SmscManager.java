@@ -9,6 +9,7 @@ import mobi.eyeline.informer.admin.util.config.SettingsReader;
 import mobi.eyeline.informer.admin.util.config.SettingsWriter;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,7 +22,6 @@ public class SmscManager extends BaseManager<SmscSettings>{
 
   public SmscManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException{
     super(infosme,  config, backup, fileSystem,new SmscConfig());
-
   }
 
   /**
@@ -30,7 +30,8 @@ public class SmscManager extends BaseManager<SmscSettings>{
    * @throws AdminException ошибка сохранения
    */
   public void addSmsc(final Smsc smsc) throws AdminException{
-     updateSettings(new SettingsWriter<SmscSettings>() {
+    checkErrors(smsc);
+    updateSettings(new SettingsWriter<SmscSettings>() {
       public void changeSettings(SmscSettings settings) throws AdminException{
         settings.addSmsc(smsc);
       }
@@ -46,6 +47,7 @@ public class SmscManager extends BaseManager<SmscSettings>{
    * @throws AdminException ошибка сохранения
    */
   public void updateSmsc(final Smsc smsc) throws AdminException{
+    checkErrors(smsc);
     updateSettings(new SettingsWriter<SmscSettings>() {
       public void changeSettings(SmscSettings settings) throws AdminException{
         settings.updateSmsc(smsc);
@@ -54,6 +56,31 @@ public class SmscManager extends BaseManager<SmscSettings>{
         infosme.updateSmsc(smsc.getName());
       }
     });
+  }
+
+  private static void checkErrors(Smsc smsc) throws AdminException {
+    Collection<Collection<Integer>> tempErrors = smsc.getTemporaryErrors().values();
+    for(Integer a : smsc.getImmediateErrors()) {
+      for(Integer b : smsc.getPermanentErrors()) {
+        if(a.equals(b)) {
+          throw new SmscException("error_codes_intersection", Integer.toString(a));
+        }
+        for(Collection<Integer> cc1 : tempErrors) {
+          for(Integer c1 : cc1) {
+            if(a.equals(c1) || b.equals(c1)) {
+              throw new SmscException("error_codes_intersection", Integer.toString(c1));
+            }
+            for(Collection<Integer> cc2 : tempErrors) {
+              for(Integer c2 : cc2) {
+                if(c1.equals(c2) && c1 != c2) {
+                  throw new SmscException("error_codes_intersection", Integer.toString(c1));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -69,7 +96,7 @@ public class SmscManager extends BaseManager<SmscSettings>{
         }
         return result;
       }
-    });            
+    });
   }
 
   /**

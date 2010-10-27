@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers.users;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
@@ -55,7 +56,7 @@ public class UserGroupEditController extends UserController {
 
 
   public String save() {
-    if(policyId != null && !RETRY_POLICY_PATTERN.matcher(policyId).matches()) {
+    if(policyId != null && !Smsc.RETRY_POLICY_PATTERN.matcher(policyId).matches()) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN,"retry_policy_incorrect");
       return null;
     }

@@ -35,11 +35,14 @@ public class DeliveryManager {
   }
 
 
-  private void addMessages(int id, MessageDataSource msDataSource, DcpConnection conn) throws AdminException {
+  private void addMessages(int id, MessageDataSource msDataSource, DcpConnection conn, String[] glossary) throws AdminException {
     Message m;
     int count = 0;
     List<Message> messages = new ArrayList<Message>(1000);
     while ((m = msDataSource.next()) != null) {
+      if(m.getIndex() != null  && (glossary == null || glossary.length <= m.getIndex())) {
+        throw new DeliveryException("illegal_glossary_index", Integer.toString(m.getIndex()));  
+      }
       messages.add(m);
       count++;
       if (count == 1000) {
@@ -78,9 +81,6 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Create delivery: " + delivery.getName());
     }
-    if (delivery.isRetryOnFail() && (delivery.getRetryPolicy() == null || delivery.getRetryPolicy().length() == 0)) {
-      throw new DeliveryException("retry_illegal");
-    }                               //todo
     if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
       throw new DeliveryException("replace_illegal");
     }
@@ -98,7 +98,7 @@ public class DeliveryManager {
       conn.modifyDeliveryGlossary(id, glossary);
     }
     try {
-      addMessages(id, msDataSource, conn);
+      addMessages(id, msDataSource, conn, glossary);
     } catch (Exception e) {
       logger.error(e, e);
       try {
@@ -294,20 +294,20 @@ public class DeliveryManager {
    * @param password       пароль
    * @param deliveryFilter фильтр
    * @param _pieceSize     сколько рассылок извлекать за одну транзакцию
-   * @return рассылки
+   * @param visitor визитер извлечения рассылок
    * @throws AdminException ошибка выполнения команды
    */
-  public DeliveryDataSource<DeliveryInfo> getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize) throws AdminException {
+  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
     if (deliveryFilter == null || deliveryFilter.getResultFields() == null || deliveryFilter.getResultFields().length == 0) {
       throw new DeliveryException("resultFields");
     }
     DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
     int _reqId = conn.getDeliviries(deliveryFilter);
-    return new DeliveryDataSource<DeliveryInfo>(_pieceSize, _reqId, conn) {
+    new DeliveryDataSource<DeliveryInfo>(_pieceSize, _reqId, conn) {
       protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<DeliveryInfo> result) throws AdminException {
         return connection.getNextDeliviries(reqId, pieceSize, result);
       }
-    };
+    }.visit(visitor);
   }
 
   /**
@@ -317,10 +317,10 @@ public class DeliveryManager {
    * @param password   пароль
    * @param filter     фильтр
    * @param _pieceSize сколько рассылок извлекать за одну транзакцию
-   * @return информация о сообщениях рассылки
+   * @param visitor визитер извлечения сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public DeliveryDataSource<MessageInfo> getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize) throws AdminException {
+  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
     if (filter == null || filter.getFields() == null || filter.getFields().length == 0) {
       throw new DeliveryException("resultFields");
     }
@@ -329,11 +329,11 @@ public class DeliveryManager {
     }
     DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
     int _reqId = conn.getMessagesStates(filter);
-    return new DeliveryDataSource<MessageInfo>(_pieceSize, _reqId, conn) {
+    new DeliveryDataSource<MessageInfo>(_pieceSize, _reqId, conn) {
       protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<MessageInfo> result) throws AdminException {
         return connection.getNextMessageStates(reqId, pieceSize, result);
       }
-    };
+    }.visit(visitor);
   }
 
   /**

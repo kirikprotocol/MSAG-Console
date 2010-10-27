@@ -110,21 +110,13 @@ public class DcpConverterTest {
   public void convertMessage() throws AdminException {
     Message m = new Message();
     m.setId(34L);
-    m.setMsgType(MessageType.GlossaryMessage);
     m.setAbonent(new Address("2313123"));
     m.setText("sdaasdass sdadas sadgdxvxc");
     DeliveryMessage dm = DcpConverter.convert(m);
     assertEquals(dm.getAbonent(), m.getAbonent().getSimpleAddress());
-    assertEquals(DcpConverter.convert(dm.getMsgType()), m.getMsgType());
     assertEquals(dm.getText(), m.getText());
   }
 
-  @Test
-  public void testConvertMessageType() throws AdminException{
-    for(MessageType t : MessageType.values()) {
-      assertEquals(t, DcpConverter.convert(DcpConverter.convert(t)));
-    }
-  }
 
   @Test
   public void testConvertDeliveryInfo() throws AdminException {

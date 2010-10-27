@@ -13,13 +13,7 @@ import java.io.IOException;
  */
 public class UpdatableContentRenderer extends Renderer {
 
-//  @Override
-//  public boolean getRendersChildren() {
-//    return true;
-//  }
-
   protected void encodeAjaxPart(FacesContext context, ResponseWriter w, UIComponent component) throws IOException {
-//    w.append("dsasda");
     try{
       if(context instanceof AjaxFacesContext) {
       }

@@ -64,11 +64,9 @@ public class TestDeliveryManagerTest {
     messageFilter.setFields(new MessageFields[]{MessageFields.State});
     messageFilter.setDeliveryId(d.getId());
     messageFilter.setStates(states);
-
-    DeliveryDataSource<MessageInfo> ms = manager.getMessagesStates("","", messageFilter, 10);
     {
       final boolean[] nonEmpty = new boolean[]{false};
-      ms.visit(new DeliveryDataSource.Visitor<MessageInfo>() {
+      manager.getMessagesStates("","", messageFilter, 10, new Visitor<MessageInfo>() {
         public boolean visit(MessageInfo value) throws AdminException {
           nonEmpty[0] = true;
           assertTrue(value.getAbonent().equals("+79139489906") || value.getAbonent().equals("+79139489907"));
@@ -88,10 +86,9 @@ public class TestDeliveryManagerTest {
     filter.setUserIdFilter(new String[]{"me"});
     filter.setResultFields(new DeliveryFields[]{DeliveryFields.Name});
 
-    DeliveryDataSource<DeliveryInfo> ds = manager.getDeliveries("","",filter, 10);
     {
       final boolean[] nonEmpty = new boolean[]{false};
-      ds.visit(new DeliveryDataSource.Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
+      manager.getDeliveries("","",filter, 10, new Visitor<DeliveryInfo>() {
         public boolean visit(DeliveryInfo value) throws AdminException {
           nonEmpty[0] = true;
           assertEquals(value.getDeliveryId(), d1.getId().intValue());

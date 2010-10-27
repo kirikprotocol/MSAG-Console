@@ -163,4 +163,9 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
     }
   }
+
+  public void checkSizeGreaterThan(String argName, Collection collection, int size) throws AdminException {
+    if (collection == null || collection.size() <= size)
+      throw new ValidationException(paramNameBundle, argName);
+  }
 }

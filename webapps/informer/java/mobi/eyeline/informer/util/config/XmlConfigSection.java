@@ -443,7 +443,7 @@ public class XmlConfigSection {
    * @return string list
    * @throws XmlConfigException if param does not exists or has incorrect format
    */
-  public List getStringList(String paramName, String delimiter) throws XmlConfigException {
+  public List<String> getStringList(String paramName, String delimiter) throws XmlConfigException {
     return _getParam(paramName).getStringList(delimiter);
   }
 

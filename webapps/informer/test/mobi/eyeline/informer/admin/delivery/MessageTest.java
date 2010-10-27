@@ -17,11 +17,9 @@ public class MessageTest {
   public void testCreate() {
     Message m = Message.newGlossaryMessage(1);
     assertEquals(new Integer(1), m.getIndex());
-    assertEquals(MessageType.GlossaryMessage, m.getMsgType());
 
     m = Message.newTextMessage("t");
     assertEquals("t", m.getText());
-    assertEquals(MessageType.TextMessage, m.getMsgType());
   }
 
   @Test

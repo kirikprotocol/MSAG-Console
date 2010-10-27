@@ -14,33 +14,25 @@ public class Message {
   private static final ValidationHelper vh = new ValidationHelper(Message.class);
 
   private Long id;
-
-  private MessageType msgType;
   private String text;
   private Integer index;
   private Address abonent;
 
 
   public static Message newGlossaryMessage(int index) {
-    return new Message(MessageType.GlossaryMessage, index, null);
+    return new Message(index, null);
   }
 
   public static Message newTextMessage(String text) {
-    return new Message(MessageType.TextMessage, null, text);
+    return new Message(null, text);
   }
 
-  private Message(MessageType mType, Integer index, String text) {
-    this.msgType = mType;
+  private Message(Integer index, String text) {
     this.index = index;
     this.text = text;
   }
 
   protected Message() {
-  }
-
-
-  void setMsgType(MessageType msgType) {
-    this.msgType = msgType;
   }
 
   void setText(String text) {
@@ -68,10 +60,6 @@ public class Message {
     this.abonent = abonent;
   }
 
-  public MessageType getMsgType() {
-    return msgType;
-  }
-
 
   public String getText() {
     return text;
@@ -82,7 +70,7 @@ public class Message {
   }
 
   public Message cloneMessage() {
-    Message m = new Message(msgType, index, text);
+    Message m = new Message(index, text);
     m.id = id;
     m.abonent = abonent;
     return m;
@@ -97,7 +85,6 @@ public class Message {
 
     if (id != null ? !id.equals(message.id) : message.id != null) return false;
     if (index != null ? !index.equals(message.index) : message.index != null) return false;
-    if (msgType != message.msgType) return false;
     if (abonent != null ? !abonent.equals(message.abonent) : message.abonent != null) return false;
     if (text != null ? !text.equals(message.text) : message.text != null) return false;
 

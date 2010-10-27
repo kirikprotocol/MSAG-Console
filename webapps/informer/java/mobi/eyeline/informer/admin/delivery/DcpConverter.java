@@ -190,23 +190,22 @@ public class DcpConverter {
     } else {
       result.setText(m.getText());
     }
-    result.setMsgType(convert(m.getMsgType()));
     return result;
   }
-
-  public static mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType convert(MessageType mType) {
-    if (mType == null) {
-      return null;
-    }
-    return mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType.valueOf(mType.toString());
-  }
-
-  public static MessageType convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType mType) {
-    if (mType == null) {
-      return null;
-    }
-    return MessageType.valueOf(mType.toString());
-  }
+//
+//  public static mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType convert(MessageType mType) {
+//    if (mType == null) {
+//      return null;
+//    }
+//    return mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType.valueOf(mType.toString());
+//  }
+//
+//  public static MessageType convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType mType) {
+//    if (mType == null) {
+//      return null;
+////    }
+//    return MessageType.valueOf(mType.toString());
+//  }
 
   public static DeliveryMessage[] convert(Message[] dm) {
     if (dm == null) {
