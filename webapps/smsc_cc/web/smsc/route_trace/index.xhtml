@@ -1,0 +1,62 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:smsc="http://taglib.smsc.mobi"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+    >
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['route.trace.page.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form rendered="#{!routeTrace.initFailed}">
+
+      <eye:pageSubtitle value="#{msg['route.trace.page.trace.params']}"/>
+
+      <tr:panelFormLayout inlineStyle="padding:10px">
+        <tr:panelLabelAndMessage label="#{msg['route.trace.page.source']}">
+          <tr:inputText value="#{routeTrace.sourceAddress}" simple="true" required="true"/>
+        </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{msg['route.trace.page.destination']}">
+          <tr:inputText value="#{routeTrace.destinationAddress}" simple="true" required="true"/>
+        </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{msg['route.trace.page.sourceSme']}">
+          <h:selectOneMenu value="#{routeTrace.sourceSmeId}">
+            <f:selectItems value="#{routeTrace.smes}"/>
+          </h:selectOneMenu>
+        </tr:panelLabelAndMessage>
+      </tr:panelFormLayout>
+
+      <p/>
+
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink action="#{routeTrace.traceRoute}" value="#{msg['route.trace.page.traceRoute']}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <p/>
+
+      <h:panelGrid columns="1" columnClasses="columnTopLeftAlign" rendered="#{routeTrace.trace != null}">
+        <h:outputText value="#{msg['route.trace.page.routeFound']} : #{routeTrace.trace.routeName}" style="color:GREEN;" rendered="#{routeTrace.trace.routeName != null}"/>
+        <h:outputText value="#{msg['route.trace.page.routeNotFound']}" style="color:RED" rendered="#{routeTrace.trace.routeName == null}"/>
+        <eye:pageSubtitle value="#{msg['route.trace.page.trace']}"/>
+        <h:inputTextarea value="#{routeTrace.traceLog}" readonly="true"/>
+      </h:panelGrid>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

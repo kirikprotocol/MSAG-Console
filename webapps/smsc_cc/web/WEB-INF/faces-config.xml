@@ -373,6 +373,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>routeTrace</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.route_trace.RouteTraceController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -531,6 +537,11 @@
     <navigation-case>
       <from-outcome>JOURNAL</from-outcome>
       <to-view-id>/smsc/journal/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>ROUTE_TRACE</from-outcome>
+      <to-view-id>/smsc/route_trace/index.faces</to-view-id>
       <redirect/>
     </navigation-case>
 
