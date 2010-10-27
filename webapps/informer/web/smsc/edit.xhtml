@@ -13,7 +13,7 @@
   <ui:define name="content">
 
     <tr:form>
-      
+
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['done.button']}" action="#{smscEdit.save}"/>
@@ -86,7 +86,42 @@
             </tr:inputText>
           </tr:panelLabelAndMessage>
 
-        </tr:panelFormLayout>
+          <tr:panelLabelAndMessage label="#{smscBundle.defaultValidityPeriod}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.defaultValidityPeriod}" required="true" simple="true">
+              <tr:validateLongRange minimum="0"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.minValidityPeriod}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.minValidityPeriod}" required="true" simple="true">
+              <tr:validateLongRange minimum="0"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.maxValidityPeriod}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.maxValidityPeriod}" required="true" simple="true">
+              <tr:validateLongRange minimum="0"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.immediateErrors}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.immedErrors}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{smscBundle.permanentErrors}" labelStyle="text-align:left">
+            <tr:inputText value="#{smscEdit.smsc.permErrors}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+
+        </tr:panelFormLayout >
+
+        <h:panelGrid columns="2" style="padding-top:5px; padding-bottom:5px; width:40%" columnClasses="columnTopLeftAlign, columnTopLeftAlign">
+          <tr:outputLabel value="#{smscBundle.temporaryErrors}"/>
+          <eye:dynamicTable value="#{smscEdit.tempErrors}">
+            <eye:textColumn name="interval" allowEditAfterAdd="true"/>
+            <eye:textColumn name="errors" allowEditAfterAdd="true"/>
+          </eye:dynamicTable>
+        </h:panelGrid>
 
       </h:panelGrid>
 

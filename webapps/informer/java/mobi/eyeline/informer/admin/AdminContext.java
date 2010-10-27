@@ -214,8 +214,7 @@ public class AdminContext {
       DeliveryFilter filter = new DeliveryFilter();
       filter.setUserIdFilter(new String[]{login});
       final boolean[] notExist = new boolean[]{true};
-      DeliveryDataSource<DeliveryInfo> infos = deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1);
-      infos.visit(new DeliveryDataSource.Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
+      deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
         public boolean visit(DeliveryInfo value) throws AdminException {
           notExist[0] = false;
           return false;
@@ -443,12 +442,12 @@ public class AdminContext {
     return deliveryManager.getDeliveryStats(login, password, deliveryId);
   }
 
-  public DeliveryDataSource<DeliveryInfo> getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize) throws AdminException {
-    return deliveryManager.getDeliveries(login, password, deliveryFilter, _pieceSize);
+  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
+    deliveryManager.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
   }
 
-  public DeliveryDataSource<MessageInfo> getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize) throws AdminException {
-    return deliveryManager.getMessagesStates(login, password, filter, _pieceSize);
+  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
+    deliveryManager.getMessagesStates(login, password, filter, _pieceSize, visitor);
   }
 
   public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {

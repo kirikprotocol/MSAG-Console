@@ -236,12 +236,12 @@ public class Configuration {
     return context.getDeliveryStats(login, password, deliveryId);
   }
 
-  public DeliveryDataSource<DeliveryInfo> getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize) throws AdminException {
-    return context.getDeliveries(login, password, deliveryFilter, _pieceSize);
+  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
+    context.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
   }
 
-  public DeliveryDataSource<MessageInfo> getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize) throws AdminException {
-    return context.getMessagesStates(login, password, filter, _pieceSize);
+  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
+    context.getMessagesStates(login, password, filter, _pieceSize, visitor);
   }
 
   public int countDeliveries(String login, String password, DeliveryFilter deliveryFilter) throws AdminException {

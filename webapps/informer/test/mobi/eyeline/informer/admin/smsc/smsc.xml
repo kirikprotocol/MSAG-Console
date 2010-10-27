@@ -22,7 +22,7 @@
 
       <section name="retryPolicies">
 
-        <param name="immediate" type="string">1001,1029</param>
+        <param name="immediate" type="string">1021,1329</param>
         <param name="permanent" type="string">1035,1036</param>
 
         <section name="temporary">
@@ -52,11 +52,11 @@
 
       <section name="retryPolicies">
 
-        <param name="immediate" type="string">1001,1029</param>
+        <param name="immediate" type="string">1001,1329</param>
         <param name="permanent" type="string">1035,1036</param>
 
         <section name="temporary">
-          <param name="1m" type="string">1001,1029</param>
+          <param name="1m" type="string">1021,1029</param>
           <param name="1m,1h:*" type="string">1011,1129</param>
         </section>
 
@@ -81,11 +81,11 @@
 
       <section name="retryPolicies">
 
-        <param name="immediate" type="string">1001,1029</param>
+        <param name="immediate" type="string">1001,1329</param>
         <param name="permanent" type="string">1035,1036</param>
 
         <section name="temporary">
-          <param name="1m" type="string">1001,1029</param>
+          <param name="1m" type="string">1021,1029</param>
           <param name="1m,1h:*" type="string">1011,1129</param>
         </section>
 

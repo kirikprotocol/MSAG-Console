@@ -12,7 +12,7 @@ import java.util.Calendar;
  * Date: 25.10.2010
  * Time: 15:20:49
  */
-public class DeliveryCountStatController  extends DeliveryStatController implements DeliveryDataSource.Visitor<DeliveryInfo> {
+public class DeliveryCountStatController  extends DeliveryStatController implements Visitor<DeliveryInfo> {
 
   private DeliveryStatFilter filter;
 
@@ -54,8 +54,7 @@ public class DeliveryCountStatController  extends DeliveryStatController impleme
       f.setStartDateTo(filter.getTillDate());
       f.setResultFields(new DeliveryFields[]{DeliveryFields.StartDate});
 
-      DeliveryDataSource<DeliveryInfo> ds = getConfig().getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000);
-      ds.visit(this);
+      getConfig().getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);
     }
     catch (AdminException e) {
       addError(e);

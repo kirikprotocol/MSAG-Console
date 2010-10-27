@@ -69,7 +69,7 @@ public class TestAdminContext extends AdminContext {
     }
   }
 
-  private void createDeliveries() throws AdminException{
+  private void createDeliveries() throws AdminException {
 
     List<User> users = usersManager.getUsers();
 

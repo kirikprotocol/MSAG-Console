@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers;
 
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.web.LocaleFilter;
 import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.config.Configuration;
@@ -24,12 +25,6 @@ import java.util.regex.Pattern;
  * @author Aleksandr Khalitov
  */
 public abstract class InformerController implements Serializable {
-
-
-  private static final String LAST = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}|:\\*))";
-  private static final String MEDIUM = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}))";
-  public static final Pattern RETRY_POLICY_PATTERN =Pattern.compile("(" + LAST + "|" +  MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
-
 
   /**
    * Возвращает Configuration
@@ -219,6 +214,6 @@ public abstract class InformerController implements Serializable {
    * @return паттерн
    */
   public Pattern getRetryPoliciesPattern() {
-    return RETRY_POLICY_PATTERN;
+    return Smsc.RETRY_POLICY_PATTERN;
   }
 }

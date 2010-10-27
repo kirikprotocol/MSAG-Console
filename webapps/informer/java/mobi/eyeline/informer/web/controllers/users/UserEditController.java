@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers.users;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
@@ -74,7 +75,7 @@ public class UserEditController extends UserController {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN,"user.edit.passwdConfirmMissmatch");
         return null;
       }
-      if(userToEdit.getPolicyId() != null && !RETRY_POLICY_PATTERN.matcher(userToEdit.getPolicyId()).matches()) {
+      if(userToEdit.getPolicyId() != null && !Smsc.RETRY_POLICY_PATTERN.matcher(userToEdit.getPolicyId()).matches()) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN,"retry_policy_incorrect");
         return null;
       }

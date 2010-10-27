@@ -2,8 +2,16 @@ package mobi.eyeline.informer.web.controllers.smsc;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.smsc.Smsc;
+import mobi.eyeline.informer.admin.smsc.SmscException;
+import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel;
+import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableRow;
 import mobi.eyeline.informer.web.config.Configuration;
 import org.apache.log4j.Logger;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Aleksandr Khalitov
@@ -15,6 +23,8 @@ public class SmscEditController extends SmscController{
   private String oldName;
 
   private SmscInfo smsc = new SmscInfo();
+
+  private DynamicTableModel tempErrors = new DynamicTableModel();
 
   public SmscEditController() {
     super();
@@ -34,10 +44,38 @@ public class SmscEditController extends SmscController{
     Smsc s = getConfig().getSmsc(oldName);
     if(s != null) {
       convert(smsc, s);
+      tempErrors = new DynamicTableModel();
+      for(Map.Entry<String, Collection<Integer>> e : s.getTemporaryErrors().entrySet()) {
+        DynamicTableRow row = new DynamicTableRow();
+        row.setValue("interval", e.getKey());
+        row.setValue("errors", convertToCSV(e.getValue()));
+        tempErrors.addRow(row);
+      }
     }else {
       logger.warn("SMSC is not found with name="+oldName);
       oldName = null;
     }
+  }
+
+  private static String convertToCSV(Collection<Integer> c) {
+    StringBuilder errors = new StringBuilder();
+    for(Integer i : c){
+      errors.append(',').append(i);
+    }
+    return errors.length()>0 ? errors.substring(1) : "";
+  }
+
+  private static Set<Integer> parseFromCSV(String s) throws AdminException{
+    String[] cs = s.split(",");
+    Set<Integer> result = new HashSet<Integer>(cs.length);
+    for(String c : cs) {
+      try{
+        result.add(Integer.parseInt(c.trim()));
+      }catch (NumberFormatException e) {
+        throw new SmscException("illegal_code", c);
+      }
+    }
+    return result;
   }
 
   private static Smsc convert(SmscInfo smsc, Smsc s) throws AdminException{
@@ -53,6 +91,11 @@ public class SmscEditController extends SmscController{
     smsc.vlrUssdServiceOp = s.getVlrUssdServiceOp();
     smsc.timeout = s.getTimeout();
     smsc.rangeOfAddress = s.getRangeOfAddress();
+    smsc.immedErrors = convertToCSV(s.getImmediateErrors());
+    smsc.permErrors = convertToCSV(s.getPermanentErrors());
+    smsc.defaultValidityPeriod = s.getDefaultValidityPeriod();
+    smsc.maxValidityPeriod = s.getMaxValidityPeriod();
+    smsc.minValidityPeriod = s.getMinValidityPeriod();
     return s;
   }
 
@@ -69,6 +112,15 @@ public class SmscEditController extends SmscController{
     s.setVlrUssdServiceOp(smsc.vlrUssdServiceOp);
     s.setTimeout(smsc.timeout);
     s.setRangeOfAddress(smsc.rangeOfAddress);
+    s.setDefaultValidityPeriod(smsc.defaultValidityPeriod);
+    s.setMaxValidityPeriod(smsc.maxValidityPeriod);
+    s.setMinValidityPeriod(smsc.minValidityPeriod);
+    for(Integer i : parseFromCSV(smsc.immedErrors)) {
+      s.addImmediateError(i);
+    }
+    for(Integer i : parseFromCSV(smsc.permErrors)) {
+      s.addPermanentError(i);
+    }
     return s;
   }
 
@@ -80,10 +132,23 @@ public class SmscEditController extends SmscController{
       config.lock();
       Smsc s = convert(smsc);
 
+      for(DynamicTableRow r : tempErrors.getRows()) {
+        String interval = (String) r.getValue("interval");
+        String errors = (String)r.getValue("errors");
+        if(interval == null || (interval = interval.trim()).length() == 0
+            || !Smsc.RETRY_POLICY_PATTERN.matcher(interval).matches()) {
+          throw new SmscException("illegal_intervals", interval);
+        }
+        if(errors == null || (errors = errors.trim()).length() == 0) {
+          throw new SmscException("illegal_code", "");
+        }
+        s.addTempError(interval, parseFromCSV(errors));
+      }
+
       if(oldName != null && oldName.length() > 0) {
 
         if(!oldName.equals(smsc.name)) {
-          
+
           config.addSmsc(s, user);
           if(config.getDefaultSmsc().equals(oldName)) {
             config.setDefaultSmsc(smsc.name, user);
@@ -119,6 +184,14 @@ public class SmscEditController extends SmscController{
     return smsc;
   }
 
+  public DynamicTableModel getTempErrors() {
+    return tempErrors;
+  }
+
+  public void setTempErrors(DynamicTableModel tempErrors) {
+    this.tempErrors = tempErrors;
+  }
+
   public static class SmscInfo {
 
     private String name;
@@ -142,6 +215,56 @@ public class SmscEditController extends SmscController{
     private int timeout;
 
     private int rangeOfAddress;
+
+    private String immedErrors;
+
+    private String permErrors;
+
+    private int defaultValidityPeriod;
+
+    private int minValidityPeriod;
+
+    private int maxValidityPeriod;
+
+    public int getDefaultValidityPeriod() {
+      return defaultValidityPeriod;
+    }
+
+    public void setDefaultValidityPeriod(int defaultValidityPeriod) {
+      this.defaultValidityPeriod = defaultValidityPeriod;
+    }
+
+    public int getMinValidityPeriod() {
+      return minValidityPeriod;
+    }
+
+    public void setMinValidityPeriod(int minValidityPeriod) {
+      this.minValidityPeriod = minValidityPeriod;
+    }
+
+    public int getMaxValidityPeriod() {
+      return maxValidityPeriod;
+    }
+
+    public void setMaxValidityPeriod(int maxValidityPeriod) {
+      this.maxValidityPeriod = maxValidityPeriod;
+    }
+
+    public String getImmedErrors() {
+      return immedErrors;
+    }
+
+    public void setImmedErrors(String immedErrors) {
+      this.immedErrors = immedErrors;
+    }
+
+    public String getPermErrors() {
+      return permErrors;
+    }
+
+    public void setPermErrors(String permErrors) {
+      this.permErrors = permErrors;
+    }
 
     public int getTimeout() {
       return timeout;
