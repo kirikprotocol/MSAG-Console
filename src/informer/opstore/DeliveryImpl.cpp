@@ -35,16 +35,23 @@ msgtime_type DeliveryImpl::initState()
         MutexGuard mg(cacheLock_);
         try {
             sprintf(makeDeliveryPath(dlvId,buf),"status");
-            fg.ropen(buf);
+            fg.ropen((dlvInfo_->getCS().getStorePath()+buf).c_str());
         } catch ( InfosmeException& e ) {
-            smsc_log_debug(log_,"D=%u cannot open status file",dlvId);
+            smsc_log_debug(log_,"D=%u cannot open status file: %s", dlvId, e.what());
             break;
         }
 
         try {
-            fg.seek(-sizeof(buf),SEEK_END);
+            struct stat st;
+            const size_t pos = fg.getStat(st).st_size > sizeof(buf) ?
+                st.st_size - sizeof(buf) : 0;
+            if (fg.seek(pos) != pos) {
+                smsc_log_debug(log_,"D=%u cannot seek status file to %u",dlvId,unsigned(pos));
+                break;
+            }
         } catch ( ErrnoException& e ) {
-            smsc_log_debug(log_,"D=%u cannot seek -%u backward from EOF",dlvId,unsigned(sizeof(buf)));
+            smsc_log_debug(log_,"D=%u cannot seek status file: %s",dlvId,e.what());
+            break;
         }
 
         size_t wasread = fg.read(buf,sizeof(buf));
@@ -60,13 +67,13 @@ msgtime_type DeliveryImpl::initState()
             break;
         }
 
-        if (size_t(ptr - buf) != wasread) {
+        if (size_t(ptr - buf)+1 != wasread) {
             smsc_log_warn(log_,"D=%u status file is not terminated",dlvId);
             break;
         }
 
         *ptr = '\0';
-        wasread = ptr-buf-1;
+        --wasread;
         assert(wasread);
         ptr = reinterpret_cast<char*>(const_cast<void*>(memrchr(buf,'\n',wasread)));
         if (!ptr) { ptr = buf; }

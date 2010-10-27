@@ -39,6 +39,9 @@ public:
 
     inline size_t getPos() const { return pos_; }
 
+    /// get stat
+    const struct stat& getStat( struct stat& st ) const;
+
     /// write buffer
     /// @a atomic - true: generate exception if write was not atomic
     void write( const void* buf, size_t buflen, bool atomic = false );
