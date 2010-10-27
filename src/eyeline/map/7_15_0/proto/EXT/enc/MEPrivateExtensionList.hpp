@@ -42,8 +42,6 @@ public:
   {
     setMaxElements(_maxNumOfPrivateExtensions);
   }
-
-  //void setValue(const PrivateExtensionList& private_ext_list);
 };
 
 }}}}

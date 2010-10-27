@@ -1,4 +1,5 @@
 #ifndef __EYELINE_MAP_7F0_PROTO_EXT_DEC_MDPRIVATEEXTENSIONLIST_HPP__
+# ident "@(#)$Id$"
 # define __EYELINE_MAP_7F0_PROTO_EXT_DEC_MDPRIVATEEXTENSIONLIST_HPP__
 
 # include "eyeline/asn1/BER/rtdec/DecodeSeqOfLinked.hpp"

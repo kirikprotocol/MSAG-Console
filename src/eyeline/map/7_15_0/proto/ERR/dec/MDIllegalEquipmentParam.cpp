@@ -1,4 +1,4 @@
-#include "MDUnexpectedDataParam.hpp"
+#include "MDIllegalEquipmentParam.hpp"
 
 #ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
@@ -10,7 +10,7 @@ namespace err {
 namespace dec {
 
 void
-MDUnexpectedDataParam::construct()
+MDIllegalEquipmentParam::construct()
 {
   asn1::ber::DecoderOfSequence_T<2,1>::setField(0, asn1::_tagSEQOF,
                                                 asn1::ber::EDAlternative::altOPTIONAL);
@@ -19,12 +19,12 @@ MDUnexpectedDataParam::construct()
 }
 
 asn1::ber::TypeDecoderAC*
-MDUnexpectedDataParam::prepareAlternative(uint16_t unique_idx)
+MDIllegalEquipmentParam::prepareAlternative(uint16_t unique_idx)
 {
   if (!_value) //assertion!!!
-    throw smsc::util::Exception("MDUnexpectedDataParam::prepareAlternative : value isn't set!");
+    throw smsc::util::Exception("MDIllegalEquipmentParam::prepareAlternative : value isn't set!");
   if (unique_idx > 2)
-    throw smsc::util::Exception("MDUnexpectedDataParam::prepareAlternative() : undefined UId");
+    throw smsc::util::Exception("MDIllegalEquipmentParam::prepareAlternative() : undefined UId");
 
   if (unique_idx == 0) {
     _dExtContainer.init(getTSRule()).setValue(_value->extensionContainer.init());

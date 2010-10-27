@@ -1,4 +1,5 @@
 #ifndef __EYELINE_MAP_7F0_PROTO_EXT_DEC_MDPRIVATEEXTENSION_HPP__
+# ident "@(#)$Id$"
 # define __EYELINE_MAP_7F0_PROTO_EXT_DEC_MDPRIVATEEXTENSION_HPP__
 
 # include "eyeline/asn1/BER/rtdec/DecodeSeq.hpp"
@@ -43,7 +44,6 @@ public:
 protected:
   void construct(void);
   virtual asn1::ber::TypeDecoderAC* prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
-  virtual void markDecodedOptional(uint16_t unique_idx) {}
 
 private:
   PrivateExtension* _value;

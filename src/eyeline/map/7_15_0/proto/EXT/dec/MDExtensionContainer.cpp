@@ -1,5 +1,9 @@
 #include "MDExtensionContainer.hpp"
 
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif
+
 namespace eyeline {
 namespace map {
 namespace ext {

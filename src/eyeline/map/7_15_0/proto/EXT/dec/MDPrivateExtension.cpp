@@ -1,6 +1,10 @@
 #include "MDPrivateExtension.hpp"
 #include "eyeline/asn1/ASNTags.hpp"
 
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif
+
 namespace eyeline {
 namespace map {
 namespace ext {

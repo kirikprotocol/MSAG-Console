@@ -20,9 +20,9 @@ asn1::ber::TypeDecoderAC*
 MDSystemFailureParam::prepareAlternative(uint16_t unique_idx)
 {
   if (!_value) //assertion!!!
-    throw smsc::util::Exception("MDCallBarredParam::prepareAlternative: value isn't set!");
+    throw smsc::util::Exception("MDSystemFailureParam::prepareAlternative: value isn't set!");
   if (unique_idx > 1) //assertion!!!
-    throw smsc::util::Exception("MDCallBarredParam::prepareAlternative: undefined UId");
+    throw smsc::util::Exception("MDSystemFailureParam::prepareAlternative: undefined UId");
 
   if (unique_idx == 0)
     _altDec.networkResource().init(getTSRule()).setValue(_value->networkResource().init()); // ????? init(asn1::_tagENUM,asn1::ASTagging::tagsIMPLICIT,getTSRule())
