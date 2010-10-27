@@ -305,7 +305,7 @@ message GetNextMessagesPackResp 46
   MessageInfo info 2 array
 end
 
-message CountMessages 43
+message CountMessages 56
   int32 deliveryId 1
   DeliveryMessageState states 2 array opt
   string msisdnFilter 7 array opt
@@ -315,6 +315,6 @@ message CountMessages 43
   string endDate 5
 end
 
-message CountMessagesResp 44
+message CountMessagesResp 57
   int32 count 1
 end
