@@ -329,6 +329,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                 FileReader fileReader(fg);
                 IReader recordReader(core_,msglist,ro);
                 fileReader.readRecords(buf,recordReader,count);
+                fg.close();
                 if (ro.rfn<ro.wfn) {
                     ++ro.rfn;
                     ro.roff=0;

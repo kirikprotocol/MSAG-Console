@@ -422,6 +422,13 @@ void InfosmeCoreV1::start()
     inputRoller_->Start();
     storeRoller_->Start();
     Start();
+    // start all smsc
+    char* smscId;
+    SmscSender* ptr;
+    for ( smsc::core::buffers::Hash<SmscSender*>::Iterator i(&smscs_);
+          i.Next(smscId,ptr);) {
+        ptr->start();
+    }
 }
 
 
@@ -448,6 +455,7 @@ void InfosmeCoreV1::selfTest()
         mlk.msg.userData = "thesecondone";
         msgList.push_back(mlk);
         dlv->addNewMessages(msgList.begin(), msgList.end());
+        setDeliveryState(dlvId,DLVSTATE_ACTIVE,0);
     }
     smsc_log_debug(log_,"selfTest finished");
 }
@@ -480,7 +488,7 @@ void InfosmeCoreV1::updateSmsc( const std::string& smscId,
                 delete p;
             }
         }
-        if (ptr && *ptr) {
+        if (ptr && *ptr && started_) {
             (*ptr)->start();
         }
     } else {
