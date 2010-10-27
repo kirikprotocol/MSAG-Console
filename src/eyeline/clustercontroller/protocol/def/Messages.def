@@ -63,6 +63,15 @@ message ApplySnmpResp 1007
   MultiResponse resp 1
 end
 
+message CheckRoutes 9
+  string fileName 1
+end
+
+message CheckRoutesResp 1009
+  Response resp 1
+  string result 2 array opt
+end
+
 message TraceRoute 8
   string dst 1
   string src 2
@@ -266,9 +275,9 @@ end
 message SmeConnectStatus
   property innerMessage=true
   SmeStatusType status 1
-  SmeBindMode bindMode 2
-  string peerIn 3
-  string peerOut 4
+  SmeBindMode bindMode 2 opt
+  string peerIn 3 opt
+  string peerOut 4 opt
   byte nodeIdx 5
 end
 
