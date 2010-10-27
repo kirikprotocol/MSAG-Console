@@ -18,7 +18,7 @@ storeJournal_(journal)
 
 DeliveryImpl::~DeliveryImpl()
 {
-    smsc_log_info(log_,"dtor D=%u",dlvInfo_->getDlvId());
+    smsc_log_info(log_,"dtor impl D=%u",dlvInfo_->getDlvId());
     storages_.Empty();
 }
 
@@ -27,10 +27,12 @@ msgtime_type DeliveryImpl::initState()
 {
     FileGuard fg;
     char buf[200];
-    DlvState state = DLVSTATE_PAUSED;
+    DlvState state = dlvInfo_->getState();
     msgtime_type planTime = 0;
     const dlvid_type dlvId = dlvInfo_->getDlvId();
+    bool hasBeenRead = false;
     do {
+        MutexGuard mg(cacheLock_);
         try {
             sprintf(makeDeliveryPath(dlvId,buf),"status");
             fg.ropen(buf);
@@ -117,10 +119,16 @@ msgtime_type DeliveryImpl::initState()
                           ads.failedMessages, ds.failedMessages,
                           ads.expiredMessages, ds.expiredMessages );
         }
+        hasBeenRead = true;
         
     } while (false);
 
-    dlvInfo_->setState(state);
+    if (!hasBeenRead && state != DLVSTATE_PAUSED) {
+        if (dlvInfo_->getState() == state) { dlvInfo_->setState(DLVSTATE_PAUSED); }
+        setState(state,planTime);
+    } else {
+        dlvInfo_->setState(state);
+    }
     return planTime;
 }
 

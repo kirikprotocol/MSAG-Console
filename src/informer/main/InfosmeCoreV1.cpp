@@ -308,6 +308,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
 
     // create smscs
     {
+        smsc_log_debug(log_,"--- loading smsc ---");
         const char* fname = "smsc.xml";
         smsc_log_info(log_,"reading smscs config '%s'",fname);
         std::auto_ptr< Config > centerConfig( Config::createFromFile(fname));
@@ -329,11 +330,13 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
         }
 
         // create regions
+        smsc_log_debug(log_,"--- loading regions ---");
         reloadRegions( defConn.str() );
     }
 
     {
         // loading deliveries
+        smsc_log_debug(log_,"--- loading deliveries ---");
         smsc::core::buffers::TmpBuf<char,200> buf;
         const std::string& path = cs_.getStorePath();
         buf.setSize(path.size()+50);
@@ -360,22 +363,24 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
                 std::auto_ptr<DeliveryInfo> info(new DeliveryInfo(cs_,dlvId));
                 try {
                     info->read();
-                    addDelivery(info);
                 } catch (std::exception& e) {
-                    smsc_log_warn(log_,"cannot read dlvInfo D=%u: %s",dlvId,e.what());
+                    smsc_log_error(log_,"cannot read dlvInfo D=%u: %s",dlvId,e.what());
                     continue;
                 }
+                addDelivery(info);
             }
         }
     }
 
     // reading journals and binding deliveries and regions
+    smsc_log_debug(log_,"--- reading journals ---");
     StoreJournalReader sjr(*this);
     storeJournal_->init(sjr);
     InputJournalReader ijr(*this);
     inputJournal_->init(ijr);
     inputRoller_ = new InputJournalRoller(*this);
     storeRoller_ = new StoreJournalRoller(*this);
+    smsc_log_debug(log_,"--- init done ---");
 }
 
 
@@ -430,21 +435,20 @@ void InfosmeCoreV1::selfTest()
 {
     smsc_log_debug(log_,"selfTest started");
     dlvid_type dlvId = 22;
-    MutexGuard mg(startMon_);
-    DeliveryList::iterator* ptr = deliveryHash_.GetPtr(dlvId);
-    if (!ptr) return;
-    DeliveryImplPtr dlv = **ptr;
-    MessageList msgList;
-    MessageLocker mlk;
-    mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
-    mlk.msg.text.reset(new MessageText(0,1));
-    mlk.msg.userData = "myfirstmsg";
-    msgList.push_back(mlk);
-    mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
-    mlk.msg.text.reset(new MessageText("the unbound message",0));
-    mlk.msg.userData = "thesecondone";
-    msgList.push_back(mlk);
-    dlv->addNewMessages(msgList.begin(), msgList.end());
+    DeliveryImplPtr dlv;
+    if (getDelivery(dlvId,dlv)) {
+        MessageList msgList;
+        MessageLocker mlk;
+        mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
+        mlk.msg.text.reset(new MessageText(0,1));
+        mlk.msg.userData = "myfirstmsg";
+        msgList.push_back(mlk);
+        mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
+        mlk.msg.text.reset(new MessageText("the unbound message",0));
+        mlk.msg.userData = "thesecondone";
+        msgList.push_back(mlk);
+        dlv->addNewMessages(msgList.begin(), msgList.end());
+    }
     smsc_log_debug(log_,"selfTest finished");
 }
 
@@ -731,8 +735,16 @@ void InfosmeCoreV1::addDelivery( std::auto_ptr<DeliveryInfo> info )
         throw InfosmeException("D=%u already exists",dlvId);
     }
     InputMessageSource* ims = new InputStorage(*this,*inputJournal_);
-    DeliveryImplPtr dlv = DeliveryImplPtr(new DeliveryImpl(info,*storeJournal_,ims));
+    DeliveryImplPtr dlv(new DeliveryImpl(info,*storeJournal_,ims));
     deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
+    try {
+        const msgtime_type planTime = dlv->initState();
+        if (planTime) {
+            deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
+        }
+    } catch ( std::exception& e ) {
+        smsc_log_warn(log_,"D=%u could not init state: %s", dlvId, e.what());
+    }
     startMon_.notify();
 }
 
@@ -803,8 +815,8 @@ void InfosmeCoreV1::setDeliveryState( dlvid_type   dlvId,
     BindSignal bs;
     bs.dlvId = dlvId;
     bs.bind = (newState == DLVSTATE_ACTIVE ? true : false);
-    MutexGuard mg(startMon_);
     ptr->getRegionList(bs.regIds);
+    MutexGuard mg(startMon_);
     bindDeliveryRegions(bs);
 
     if (newState == DLVSTATE_PLANNED) {

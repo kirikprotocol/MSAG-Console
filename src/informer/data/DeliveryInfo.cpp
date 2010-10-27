@@ -103,6 +103,7 @@ void DeliveryInfo::read()
     // char* end = 
     makeDeliveryPath(dlvId_,buf.get()+path.size());
     smsc_log_debug(log_,"FIXME: reading D=%u info '%s'",dlvId_,buf.get());
+    /*
     // reading state
     std::vector< std::string > files;
     files.reserve(2);
@@ -114,19 +115,8 @@ void DeliveryInfo::read()
         throw InfosmeException("D=%u has wrong number of state files: %u",dlvId_,unsigned(files.size()));
         // smsc_log_warn(log_,"wrong number of state files in D=%u: %u",dlvId_,unsigned(files.size()));
         // unlink all states
-        /*
-        for ( DlvState st = DLVSTATE_PAUSED; st <= DLVSTATE_MAX; st = DlvState(int(st)+1) ) {
-            strcpy(end,dlvStateToString(st));
-            unlink(buf.get()); // dont care about rc
-        }
-        *end = '\0';
-        state_ = DLVSTATE_PAUSED;
-        strcpy(end,dlvStateToString(state_));
-        FileGuard fg;
-        fg.create(buf.get());
-        fg.close();
-         */
     }
+     */
 }
 
 }

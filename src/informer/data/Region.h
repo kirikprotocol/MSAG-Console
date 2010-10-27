@@ -20,11 +20,9 @@ public:
             const char*   smscId,
             unsigned      bw,
             int           timezone,
-            std::vector<std::string>* masks = 0 ) :
-   regionId_(regionId), name_(name), smscId_(smscId), bw_(bw),
-   timezone_(timezone), ref_(0) {
-       if (masks) { masks->swap(masks_); }
-   }
+            std::vector<std::string>* masks = 0 );
+
+    ~Region();
 
     regionid_type getRegionId() const { return regionId_; }
     unsigned      getBandwidth() const { return bw_; }

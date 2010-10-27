@@ -36,10 +36,12 @@ public:
 private:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);
+        smsc_log_debug(log_,"D=%u ref=%u +1",dlvInfo_->getDlvId(),ref_);
         ++ref_;
     }
     void unref() {
         smsc::core::synchronization::MutexGuard mg(lock_);
+        smsc_log_debug(log_,"D=%u ref=%u -1",dlvInfo_->getDlvId(),ref_);
         if (ref_<=1) {
             delete this;
         } else {

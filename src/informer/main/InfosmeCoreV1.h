@@ -89,8 +89,6 @@ public:
     virtual void updateRegion( regionid_type regionId );
     virtual void deleteRegion( regionid_type regionId );
 
-    // virtual DeliveryPtr getDelivery( dlvid_type dlvId );
-
     virtual void addDelivery( std::auto_ptr<DeliveryInfo> info );
     virtual void updateDelivery( std::auto_ptr<DeliveryInfo> info );
     virtual void deleteDelivery( dlvid_type dlvId );
@@ -134,6 +132,15 @@ protected:
 
     // must be locked
     void bindDeliveryRegions( const BindSignal& bs );
+
+    inline bool getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr )
+    {
+        MutexGuard mg(startMon_);
+        DeliveryList::iterator* iter = deliveryHash_.GetPtr(dlvId);
+        if (!iter) return false;
+        ptr = **iter;
+        return true;
+    }
 
 private:
     smsc::logger::Logger*                      log_;
