@@ -112,16 +112,17 @@
             <tr:inputText value="#{smscEdit.smsc.permErrors}" simple="true"/>
           </tr:panelLabelAndMessage>
 
-
         </tr:panelFormLayout >
 
-        <h:panelGrid columns="2" style="padding-top:5px; padding-bottom:5px; width:40%" columnClasses="columnTopLeftAlign, columnTopLeftAlign">
-          <tr:outputLabel value="#{smscBundle.temporaryErrors}"/>
-          <eye:dynamicTable value="#{smscEdit.tempErrors}">
-            <eye:textColumn name="interval" allowEditAfterAdd="true"/>
-            <eye:textColumn name="errors" allowEditAfterAdd="true"/>
-          </eye:dynamicTable>
-        </h:panelGrid>
+        <h:panelGroup>
+          <eye:pageSubtitle value="#{smscBundle.temporaryErrors}"/>
+          <h:panelGrid columns="1" style="padding-bottom:5px; width:40%" columnClasses="columnTopLeftAlign">
+            <eye:dynamicTable value="#{smscEdit.tempErrors}">
+              <eye:textColumn name="interval" allowEditAfterAdd="true"/>
+              <eye:textColumn name="errors" allowEditAfterAdd="true"/>
+            </eye:dynamicTable>
+          </h:panelGrid>
+        </h:panelGroup>
 
       </h:panelGrid>
 
