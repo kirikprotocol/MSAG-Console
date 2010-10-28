@@ -283,6 +283,19 @@ void DeliveryImpl::setRecordAtInit( regionid_type            regionId,
 }
 
 
+void DeliveryImpl::setNextResendAtInit( regionid_type       regionId,
+                                        msgtime_type        nextResend )
+{
+    RegionalStoragePtr* ptr = storages_.GetPtr(regionId);
+    if (!ptr) {
+        ptr = &storages_.Insert(regionId,
+                                RegionalStoragePtr(new RegionalStorage(*this,
+                                                                       regionId)));
+    }
+    (*ptr)->setNextResendAtInit(nextResend);
+}
+
+
 void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
                                       std::vector<regionid_type>& emptyRegs )
 {

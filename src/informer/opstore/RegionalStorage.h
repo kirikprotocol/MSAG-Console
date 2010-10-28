@@ -91,7 +91,7 @@ public:
 
     /// invoked at init stage ONLY!
     void setRecordAtInit( Message& msg, regionid_type serial );
-    void setNextResend( msgtime_type nextResend ) {
+    void setNextResendAtInit( msgtime_type nextResend ) {
         nextResendFile_ = nextResend;
     }
 

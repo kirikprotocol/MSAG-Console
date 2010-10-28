@@ -9,6 +9,7 @@
 namespace {
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
+const uint8_t  NEXTRESENDID = 16;
 const unsigned defaultVersion = 1;
 
 using namespace eyeline::informer;
@@ -65,9 +66,17 @@ public:
         const dlvid_type dlvId = fb.get32();
         const regionid_type regId = fb.get32();
         Message msg;
-        msg.msgId = fb.get64();
         uint8_t readstate = fb.get8();
+        if (readstate == NEXTRESENDID) {
+            const msgtime_type nextResend = fb.get32();
+            if (fb.getPos() != fb.getLen()) {
+                throw InfosmeException("next resend record at %llu has extra data", ulonglong(filePos));
+            }
+            reader_.setNextResendAtInit(dlvId,regId,nextResend);
+            return;
+        }
         msg.state = readstate & 0x7f;
+        msg.msgId = fb.get64();
         do {
             if (fb.getPos() == fb.getLen()) break;
             msg.lastTime = fb.get32();
@@ -125,12 +134,12 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         tb.skip(LENSIZE);
         tb.set32(dlvId);
         tb.set32(regionId);
-        tb.set64(msg.msgId);
         if (msg.isTextUnique()) {
             tb.set8(msg.state | 0x80); // text will be embedded
         } else {
             tb.set8(msg.state & 0x7f);
         }
+        tb.set64(msg.msgId);
         if (msg.state >= uint8_t(MSGSTATE_FINAL)) {
             // final
             break;
@@ -185,6 +194,34 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
     }
     fg_.write(buf.get(),buflen);
     serial = serial_;
+    return buflen;
+}
+
+
+size_t StoreJournal::journalNextResend( dlvid_type dlvId,
+                                        regionid_type regionId,
+                                        msgtime_type nextResend )
+{
+    char buf[100];
+    ToBuf tb(buf,sizeof(buf));
+    tb.skip(LENSIZE);
+    tb.set32(dlvId);
+    tb.set32(regionId);
+    tb.set8(NEXTRESENDID);
+    tb.set32(nextResend);
+    const size_t buflen = tb.getPos();
+    tb.setPos(0);
+    tb.set16(buflen-LENSIZE);
+    smsc::core::synchronization::MutexGuard mg(lock_);
+    if (log_->isDebugEnabled()) {
+        HexDump hd;
+        HexDump::string_type dump;
+        dump.reserve(buflen*5);
+        hd.hexdump(dump,buf,buflen);
+        hd.strdump(dump,buf,buflen);
+        smsc_log_debug(log_,"buffer to save(%u): %s",buflen,hd.c_str(dump));
+    }
+    fg_.write(buf,buflen);
     return buflen;
 }
 

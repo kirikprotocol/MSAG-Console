@@ -50,6 +50,8 @@ public:
     void setRecordAtInit( regionid_type            regionId,
                           Message&                 msg,
                           regionid_type            serial );
+    void setNextResendAtInit( regionid_type        regionId,
+                              msgtime_type         nextResend );
 
     // post process regions and collect empty ones
     void postInitInput( std::vector<regionid_type>& filledRegs ) {

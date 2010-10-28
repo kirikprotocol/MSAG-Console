@@ -103,6 +103,24 @@ public:
         (**iter)->setRecordAtInit(regionId,msg,serial);
     }
 
+
+    virtual void setNextResendAtInit( dlvid_type    dlvId,
+                                      regionid_type regId,
+                                      msgtime_type  nextResend )
+    {
+        char buf[20];
+        smsc_log_debug(core_.log_,"load next resend record R=%u/D=%u resend=%s",
+                       regId, dlvId,
+                       formatMsgTime(buf,nextResend) ? buf : "");
+        DeliveryList::iterator* iter = core_.deliveryHash_.GetPtr(dlvId);
+        if (!iter) {
+            smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);
+            return;
+        }
+        (**iter)->setNextResendAtInit(regId,nextResend);
+    }
+
+
     virtual void postInit()
     {
         BindSignal bsEmpty, bsFilled;
