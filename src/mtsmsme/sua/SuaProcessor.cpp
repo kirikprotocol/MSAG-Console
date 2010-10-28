@@ -47,8 +47,9 @@ void SuaProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr, A
   coordinator->setAdresses(msc,vlr,hlr);
   registrator->configure(msc,vlr);
 }
-void SccpProcessor::configure(int user_id, int ssn,char* cpmgr, char* instlist,
-                              Address& msc, Address& vlr, Address& hlr)
+void SccpProcessor::configure(int user_id, int ssn,
+                              Address& msc, Address& vlr, Address& hlr,
+                              char* cpmgr, char* instlist)
 {
   configure(user_id,ssn,msc,vlr,hlr);
 }

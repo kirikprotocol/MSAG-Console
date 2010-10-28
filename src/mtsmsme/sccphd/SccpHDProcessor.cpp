@@ -38,14 +38,16 @@ static EINSS7INSTANCE_T SCCP_INSTANCE = 1;
 static UCHAR_T SSN = 191;
 static UCHAR_T NODEID = 0;
 
-void SccpHDProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr, Address& hlr)
+void SccpHDProcessor::configure(int user_id, int ssn,
+                                Address& msc, Address& vlr, Address& hlr)
 {
   USER = user_id; SSN = ssn;
   coordinator->setAdresses(msc,vlr,hlr);
   registrator->configure(msc,vlr);
 }
-void SccpHDProcessor::configure(int user_id, int ssn,char* cpmgr, char* instlist,
-    Address& msc, Address& vlr, Address& hlr)
+void SccpHDProcessor::configure(int user_id, int ssn,
+                                Address& msc, Address& vlr, Address& hlr,
+                                char* cpmgr, char* instlist)
 {
   configure(user_id,ssn,msc,vlr,hlr);
 }
