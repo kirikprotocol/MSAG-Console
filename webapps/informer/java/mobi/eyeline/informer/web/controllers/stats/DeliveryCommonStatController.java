@@ -23,30 +23,31 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
   }
 
   public Integer getDeliveryId() {
+    Delivery d = getDelivery();
+    return delivery!=null  ? delivery.getId() : null;
+  }
+
+  public String getDeliveryName() {
+    Delivery d = getDelivery();
+    return d==null ? null : d.getName();
+  }
+
+  public Delivery getDelivery() {
     String s = getRequestParameter("delivery");
     if(s!=null) {
       try {
         int deliveryId = Integer.parseInt(s);
         delivery = getConfig().getDelivery(getUser().getLogin(),getUser().getPassword(),deliveryId);
+        filter.setTaskId(deliveryId);
       }
       catch (AdminException e) {
         addError(e);
       }
     }
-    return delivery!=null  ? delivery.getId() : null;
-
+    return delivery;
   }
 
-  public void setDeliveryId(Integer id) {
-     if(id!=null) {
-      try {
-        delivery = getConfig().getDelivery(getUser().getLogin(),getUser().getPassword(),id);
-      }
-      catch (AdminException e) {
-        addError(e);
-      }
-    }
-  }
+
 
 
   public void clearFilter() {
@@ -74,15 +75,6 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
 
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
     
-//    Object l =new Object();
-//    synchronized (l){
-//      try {
-//        l.wait(1000);
-//      }
-//      catch (InterruptedException e) {
-//        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//      }
-//    }
 
 
     setCurrentAndTotal(current,total);
@@ -96,7 +88,6 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
     }
     return true;
   }
-
 
 
 

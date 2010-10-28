@@ -90,10 +90,10 @@
               </eye:column>
             </eye:row>
           </eye:dataTable>
-          <eye:buttons>
+          <eye:buttons rendered="#{statsMessagesByRec.state == 2}">
             <eye:space/>
-            <eye:button>
-              <h:commandLink value="#{msg['download.button']}" rendered="#{statsMessagesByRec.state == 2}">
+            <eye:button >
+              <h:commandLink value="#{msg['download.button']}" >
                 <tr:fileDownloadActionListener method="#{statsMessagesByRec.download}" contentType="application/csv" filename="statByRecipients.csv"/>
               </h:commandLink>
             </eye:button>

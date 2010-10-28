@@ -27,9 +27,7 @@
             </h:panelGrid>
             <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
               <h:outputText value="#{msg['stat.page.deliveryName']}"/>
-              <t:inputText id="Name" value="#{statsDeliveries.nameFilter}">
-                <eye:validatePhone/>
-              </t:inputText>
+              <t:inputText id="Name" value="#{statsDeliveries.nameFilter}"/>                
               <h:outputText value="#{msg['stat.page.user']}" rendered="#{statsCommon.admin}"/>
             <h:selectOneMenu value="#{statsCommon.filter.user}" rendered="#{statsCommon.admin}" required="false">
               <f:selectItems value="#{statsCommon.users}"/>
@@ -101,10 +99,10 @@
               </eye:column>
             </eye:row>
           </eye:dataTable>
-          <eye:buttons >
+          <eye:buttons rendered="#{statsDeliveries.state == 2}">
             <eye:space/>
-            <eye:button>
-              <h:commandLink value="#{msg['download.button']}" rendered="#{statsDeliveries.state == 2}">
+            <eye:button >
+              <h:commandLink value="#{msg['download.button']}" >
                 <tr:fileDownloadActionListener method="#{statsDeliveries.download}" contentType="application/csv" filename="deliveriesStat.csv"/>
               </h:commandLink>
             </eye:button>

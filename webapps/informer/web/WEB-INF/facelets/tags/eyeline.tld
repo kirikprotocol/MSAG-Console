@@ -204,6 +204,12 @@
   <tag>
     <name>buttons</name>
     <description>Строка с кнопками</description>
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, означающий отображать или нет таблицу</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
   </tag>
 
   <tag>

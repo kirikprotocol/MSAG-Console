@@ -328,6 +328,18 @@
     </navigation-case>
 
     <navigation-case>
+      <from-outcome>STATS_DELIVERIES</from-outcome>
+      <to-view-id>/stats/deliveries.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>STATS_DELIVERY_COMMON</from-outcome>
+      <to-view-id>/stats/deliveryCommon.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
       <from-outcome>DELIVERIES</from-outcome>
       <to-view-id>/deliveries/index.xhtml</to-view-id>
       <redirect/>
@@ -339,11 +351,7 @@
       <redirect/>
     </navigation-case>
 
-    <navigation-case>
-      <from-outcome>STATS_DELIVERIES</from-outcome>
-      <to-view-id>/stats/deliveries.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
+
 
   </navigation-rule>
 
