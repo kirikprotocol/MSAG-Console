@@ -99,7 +99,7 @@
             <eye:space/>
             <eye:button rendered="#{statsDeliveryCommon.state == 2}">
               <h:commandLink value="#{msg['download.button']}" >
-                <tr:fileDownloadActionListener method="#{statsDeliveryCommon.download}" contentType="application/csv" filename="commonStat.csv"/>
+                <tr:fileDownloadActionListener method="#{statsDeliveryCommon.download}" contentType="application/csv" filename="deliveryCommonStat.csv"/>
               </h:commandLink>
             </eye:button>
           </eye:buttons>
