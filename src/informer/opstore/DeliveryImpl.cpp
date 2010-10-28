@@ -191,7 +191,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     int buflen = sprintf(buf,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u\n",
                          dlvStateToString(newState)[0],
                          msgTimeToYmd(now),
-                         planTime,
+                         planTime-now,
                          ds.totalMessages,
                          ds.procMessages,
                          ds.sentMessages,

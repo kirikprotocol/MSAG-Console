@@ -369,14 +369,23 @@ void RegionalStorage::stopTransfer( bool finalizeAll )
 size_t RegionalStorage::rollOver()
 {
     const DeliveryInfo& info = dlv_.getDlvInfo();
+    const dlvid_type dlvId = info.getDlvId();
     RelockMutexGuard mg(cacheMon_);
     if ( storingIter_ != messageList_.end() ) {
         throw InfosmeException("logic error: rolling in R=%u/D=%u is already in progress",
-                               unsigned(regionId_),
-                               unsigned(info.getDlvId()));
+                               unsigned(regionId_), dlvId);
+    }
+    size_t written = 0;
+    if ( nextResendFile_ ) {
+        msgtime_type nrf;
+        do {
+            nrf = nextResendFile_;
+            mg.Unlock();
+            written += dlv_.storeJournal_.journalNextResend(dlvId,regionId_,nrf);
+            mg.Lock();
+        } while (nrf != nextResendFile_);
     }
     storingIter_ = messageList_.begin();
-    size_t written = 0;
     while ( true ) {
         MsgIter iter = storingIter_;
         if ( iter == messageList_.end() ) break;

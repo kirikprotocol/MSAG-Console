@@ -15,7 +15,8 @@ public:
     responseWaitTime_(65),
     receiptWaitTime_(600),
     svcType_("ESME"),
-    protocolId_(1)   // FIXME
+    protocolId_(1), // FIXME
+    incStatBank_(0)
     {}
 
     void init( const std::string& path ) {
@@ -68,6 +69,14 @@ public:
         return 60;
     }
 
+    /// incremental statistics bank index
+    inline unsigned getStatBank() const { return incStatBank_; }
+
+    /// flip statistics bank, no locking here
+    void flipStatBank() {
+        incStatBank_ = 1 - incStatBank_;
+    }
+
 private:
     std::string path_;
     unsigned unrespondedMessagesMax_;
@@ -75,6 +84,7 @@ private:
     unsigned receiptWaitTime_;
     std::string svcType_;
     unsigned protocolId_;
+    unsigned incStatBank_;
 };
 
 } // informer
