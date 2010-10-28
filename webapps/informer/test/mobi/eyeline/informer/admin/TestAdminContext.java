@@ -74,7 +74,7 @@ public class TestAdminContext extends AdminContext {
     List<User> users = usersManager.getUsers();
 
 
-    for(int i=1;i<=5;i++) {
+    for(int i=1;i<=1000;i++) {
       User u = users.get((i-1)%users.size());
       Delivery d = new Delivery();
       d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 7*86400000L*i));
@@ -84,7 +84,7 @@ public class TestAdminContext extends AdminContext {
       d.setEndDate(new Date(System.currentTimeMillis() + 7*86400000L*i));
       d.setName("Test delivery"+i);
       d.setOwner(u.getLogin());
-      d.setPriority(15+i);
+      d.setPriority(i%100 + 1);
       d.setStartDate(new Date(System.currentTimeMillis() - 7*86400000L*i));
       d.setSvcType("svc1");
       d.setValidityDate(new Date());

@@ -20,7 +20,7 @@ public class DeliveryFilter {
   private Date startDateTo;
   private Date endDateFrom;
   private Date endDateTo;
-  private DeliveryFields[] resultFields;
+  private DeliveryFields[] resultFields = DeliveryFields.ALL;
 
   public String[] getUserIdFilter() {
     return userIdFilter;

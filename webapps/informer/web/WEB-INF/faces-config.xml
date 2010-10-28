@@ -42,6 +42,11 @@
       <var>userBundle</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.delivery.Delivery</base-name>
+      <var>deliveryBundle</var>
+    </resource-bundle>
+
   </application>
 
   <converter>
@@ -57,6 +62,12 @@
   <converter>
     <converter-id>daemonsConverter</converter-id>
     <converter-class>mobi.eyeline.informer.web.controllers.DaemonsConverter</converter-class>
+  </converter>
+
+
+  <converter>
+    <converter-id>deliveryStatusConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryStatusConverter</converter-class>
   </converter>
 
 
@@ -219,8 +230,12 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByRecStatsController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
-
-
+  
+  <managed-bean>
+      <managed-bean-name>deliveries</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryListController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <navigation-rule>
     <navigation-case>
@@ -295,12 +310,6 @@
     <navigation-case>
       <from-outcome>STATS_DELIVERIES_COUNTS</from-outcome>
       <to-view-id>/stats/deliveryCount.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-
-    <navigation-case>
-      <from-outcome>STATS_MESSAGES_BY_RECIPIENTS</from-outcome>
-      <to-view-id>/stats/messagesByRecs.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
