@@ -66,14 +66,13 @@ public class DataTableRenderer extends Renderer {
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     DataTable t = (DataTable) component;
 
+    ajax = false;
     if (context instanceof AjaxFacesContext) {
       AjaxFacesContext ctx = (AjaxFacesContext) context;
       if (ctx.getAjaxComponentId().equals(t.getId())) {
         ajax = true;
         ctx.setSkipContent(false);
       }
-    } else {
-      ajax = false;
     }
 
     Writer w = context.getResponseWriter();

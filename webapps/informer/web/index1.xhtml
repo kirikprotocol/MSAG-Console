@@ -30,14 +30,21 @@
     <h:form>
 
       <eye:updatableContent updatePeriod="1" enabled="#{index1.continueUpdate}">
-
+<!---->
         <h:outputText value="#{index1.current}" rendered="#{index1.continueUpdate}"/>
 
         <eye:dataTable value="#{index1.model}" var="i" rendered="#{!index1.continueUpdate}">
-          <eye:row>
+          <eye:row innerData="true">
             <eye:column name="mycolumn" title="MyColumn" sortable="true" defaultSortOrder="asc">
               <h:outputText value="#{i}"/>
             </eye:column>
+
+
+          <f:facet name="innerData">
+            <h:panelGroup>
+              <h:outputText value="asdfffd"/>
+            </h:panelGroup>
+          </f:facet>
           </eye:row>
         </eye:dataTable>
 
