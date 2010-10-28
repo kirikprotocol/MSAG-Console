@@ -212,6 +212,14 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.users.UserGroupEditController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+
+
+  <managed-bean>
+      <managed-bean-name>deliviries</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryListController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
   <managed-bean>
       <managed-bean-name>statsCommon</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryCommonStatController</managed-bean-class>
@@ -311,6 +319,12 @@
     <navigation-case>
       <from-outcome>DELIVERIES</from-outcome>
       <to-view-id>/deliveries/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>DELIVERY_EDIT</from-outcome>
+      <to-view-id>/deliveries/edit.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
