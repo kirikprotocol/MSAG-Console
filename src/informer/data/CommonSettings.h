@@ -69,6 +69,10 @@ public:
         return 60;
     }
 
+    msgtime_type getStatDumpPeriod() const {
+        return 60;
+    }
+
     /// incremental statistics bank index
     inline unsigned getStatBankIndex() const { return incStatBank_; }
 

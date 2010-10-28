@@ -398,8 +398,9 @@ size_t RegionalStorage::rollOver()
             written += dlv_.storeJournal_.journalMessage(info.getDlvId(),
                                                          regionId_,iter->msg,ml.serial);
         }
-        // smsc_log_debug(log_,"FIXME: place the restriction on throughput here");
         mg.Lock();
+        // FIXME: calculate delay based on throughput restriction
+        cacheMon_.wait(30); 
     }
     return written;
 }

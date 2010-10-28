@@ -237,6 +237,83 @@ private:
     smsc::logger::Logger* log_;
 };
 
+
+class InfosmeCoreV1::StatsDumper : public smsc::core::threads::Thread
+{
+public:
+    StatsDumper( InfosmeCoreV1& core ) :
+    core_(core), log_(smsc::logger::Logger::getInstance("statdump")) {}
+    ~StatsDumper() { WaitFor(); }
+
+    virtual int Execute() 
+    {
+        smsc_log_debug(log_,"stats dumper started");
+
+        const msgtime_type delta = core_.cs_.getStatDumpPeriod();
+        assert( ( delta > 3600 && delta % 3600 == 0 ) ||
+                ( delta < 3600 && 3600 % delta == 0 && delta % 60 == 0 ) );
+        typedef ulonglong msectime_type;
+        const msectime_type msecDelta = delta * 1000;
+        msectime_type nextTime;
+        {
+            // get this time
+            ulonglong tmpnow = msgTimeToYmd(msgtime_type(currentTimeMicro()/tuPerSec));
+            // strip seconds and minutes, get absolute time
+            msgtime_type now = ymdToMsgTime(tmpnow / 10000 * 10000);
+            nextTime = msectime_type(now)*1000;
+            msectime_type msecNow = msectime_type(currentTimeMicro()/1000);
+            while ( nextTime < msecNow ) {
+                nextTime += msecDelta;
+            }
+        }
+        while ( ! core_.isStopping() ) {
+            {
+                MutexGuard mg(core_.startMon_);
+                msectime_type now = msectime_type(currentTimeMicro() / 1000);
+                if ( now < nextTime ) {
+                    core_.startMon_.wait(int(nextTime-now));
+                    continue;
+                }
+                core_.cs_.flipStatBank();
+            }
+            nextTime += msecDelta;
+            DeliveryList::iterator& iter = core_.statDumpIter_;
+            bool firstPass = true;
+            do {
+                DeliveryStats ds;
+                dlvid_type dlvId;
+                {
+                    smsc::core::synchronization::MutexGuard mg(core_.startMon_);
+                    if (core_.isStopping()) { break; }
+                    if (firstPass) {
+                        iter = core_.deliveryList_.begin();
+                        firstPass = false;
+                    }
+                    if (iter == core_.deliveryList_.end()) { break; }
+                    dlvId = (*iter)->getDlvId();
+                    (*iter)->popIncrementalStats(ds);
+                    ++iter;
+                }
+                smsc_log_debug(log_,"stats of D=%u: %d,%d,%d,%d,%d,%d,%d",
+                               dlvId, 
+                               ds.totalMessages,
+                               ds.procMessages,
+                               ds.sentMessages,
+                               ds.retryMessages,
+                               ds.dlvdMessages,
+                               ds.failedMessages,
+                               ds.expiredMessages );
+            } while (true);
+        }
+        smsc_log_debug(log_,"stats dumper finished");
+        return 0;
+    }
+private:
+    InfosmeCoreV1&        core_;
+    smsc::logger::Logger* log_;
+};
+
+
 // ============================================================================
 
 void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
@@ -280,7 +357,8 @@ started_(false),
 storeJournal_(0),
 inputJournal_(0),
 inputRoller_(0),
-storeRoller_(0)
+storeRoller_(0),
+statsDumper_(0)
 {
 }
 
@@ -396,6 +474,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     inputJournal_->init(ijr);
     inputRoller_ = new InputJournalRoller(*this);
     storeRoller_ = new StoreJournalRoller(*this);
+    statsDumper_ = new StatsDumper(*this);
     smsc_log_debug(log_,"--- init done ---");
 }
 
@@ -423,6 +502,7 @@ void InfosmeCoreV1::stop()
 
         if (inputRoller_) { inputRoller_->WaitFor(); }
         if (storeRoller_) { storeRoller_->WaitFor(); }
+        if (statsDumper_) { statsDumper_->WaitFor(); }
         MutexGuard mg(startMon_);
         while (started_) {
             startMon_.wait(100);
@@ -439,6 +519,7 @@ void InfosmeCoreV1::start()
     if (started_) return;
     inputRoller_->Start();
     storeRoller_->Start();
+    statsDumper_->Start();
     Start();
     // start all smsc
     char* smscId;
@@ -811,6 +892,7 @@ void InfosmeCoreV1::deleteDelivery( dlvid_type dlvId )
         }
         if (inputRollingIter_ == iter) ++inputRollingIter_;
         if (storeRollingIter_ == iter) ++storeRollingIter_;
+        if (statDumpIter_ == iter)     ++statDumpIter_;
         (*iter)->getRegionList(bs.regIds);
         deliveryList_.erase(iter);
         bindDeliveryRegions(bs);

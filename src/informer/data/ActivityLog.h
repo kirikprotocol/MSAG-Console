@@ -47,7 +47,7 @@ private:
     smsc::core::synchronization::Mutex statLock_;
     const DeliveryInfo&                info_;
     DeliveryStats                      stats_;
-    DeliveryStats[2]                   incstats_;
+    DeliveryStats                      incstats_[2];
     FileGuard                          fg_;
     msgtime_type                       createTime_;
     msgtime_type                       period_;

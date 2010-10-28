@@ -33,6 +33,11 @@ public:
         source_->addNewMessages(begin,end);
     }
 
+    inline void getStats( DeliveryStats& ds ) { return activityLog_.getStats(ds); }
+    inline void popIncrementalStats( DeliveryStats& ds ) {
+        return activityLog_.popIncrementalStats(ds);
+    }
+
 private:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);

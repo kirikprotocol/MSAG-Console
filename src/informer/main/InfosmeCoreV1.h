@@ -40,6 +40,8 @@ private:
     class StoreJournalReader;
     class InputJournalRoller;
     class StoreJournalRoller;
+    class StatsDumper;
+
 public:
     static void readSmscConfig( SmscConfig& cfg,
                                 const smsc::util::config::ConfigView& cv );
@@ -164,6 +166,7 @@ private:
     DeliveryWakeQueue                             deliveryWakeQueue_;
     DeliveryList::iterator                        inputRollingIter_;
     DeliveryList::iterator                        storeRollingIter_;
+    DeliveryList::iterator                        statDumpIter_;
     
     StoreJournal*                                 storeJournal_; // owned
     InputJournal*                                 inputJournal_; // owned
@@ -172,6 +175,7 @@ private:
     RegionFinderV1                                rf_;
     InputJournalRoller*                           inputRoller_;  // owned
     StoreJournalRoller*                           storeRoller_;  // owned
+    StatsDumper*                                  statsDumper_;  // owned
 };
 
 } // informer

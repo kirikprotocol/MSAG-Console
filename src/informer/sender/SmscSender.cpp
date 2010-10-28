@@ -228,8 +228,27 @@ smscConfig_(cfg),
 scoredList_(*this,2*maxScoreIncrement,
             smsc::logger::Logger::getInstance("reglist")),
 isStopping_(true),
-journal_(new SmscJournal(*this))
+journal_(0)
 {
+    { // check smsc id
+        for ( const char* p = smscId_.c_str(); *p != '\0'; ++p ) {
+            register const char c = *p;
+            if ( c >= '-' && c <= '9' && c != '/' ) {
+                // ok
+            } else if ( c >= '@' && c <= 'Z' ) {
+                // ok
+            } else if ( c == '_' ) {
+                // ok
+            } else if ( c >= 'a' && c <= 'z' ) {
+            } else {
+                smsc_log_error(log_,"SMSC id '%s' contains forbidden character '%c'",
+                               smscId_.c_str(), c );
+                abort();
+            }
+        }
+    }
+
+    journal_ = new SmscJournal(*this);
     // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();
     rQueue_ = new DataQueue();
