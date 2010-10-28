@@ -215,7 +215,7 @@
 
 
   <managed-bean>
-      <managed-bean-name>deliviries</managed-bean-name>
+      <managed-bean-name>deliveries</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryListController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
