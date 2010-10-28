@@ -29,11 +29,15 @@ protocol DcpServerProto
   GetDeliveriesListNextResp outmsg
   CountDeliveries inmsg
   CountDeliveriesResp outmsg
+  GetDeliveryHistory inmsg
+  GetDeliveryHistoryResp outmsg
 
   RequestMessagesState inmsg
   RequestMessagesStateResp outmsg
   GetNextMessagesPack inmsg
   GetNextMessagesPackResp outmsg
+  CountMessages inmsg
+  CountMessagesResp outmsg
 //  CancelRequest inmsg
 
 end
