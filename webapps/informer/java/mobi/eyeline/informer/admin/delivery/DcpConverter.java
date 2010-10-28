@@ -398,8 +398,8 @@ public class DcpConverter {
     result.setDeliveredMessages(stats.getDeliveredMessages());
     result.setExpiredMessages(stats.getExpiredMessages());
     result.setNewMessages(stats.getNewMessages());
-    result.setFailedMessage(stats.getFailedMessage());
-    result.setProcessMessage(stats.getProcessMessage());
+    result.setFailedMessages(stats.getFailedMessage());
+    result.setProcessMessages(stats.getProcessMessage());
     return result;
   }
 

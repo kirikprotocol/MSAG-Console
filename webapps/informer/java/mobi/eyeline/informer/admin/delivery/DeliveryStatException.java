@@ -16,7 +16,7 @@ public class DeliveryStatException extends AdminException {
     super(key, cause, args);
   }
 
-  protected DeliveryStatException(String key, String... args) {
+  public DeliveryStatException(String key, String... args) {
     super(key, args);
   }
 }

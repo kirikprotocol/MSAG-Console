@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatException;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
@@ -48,6 +49,17 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
 
 
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
+    
+//    Object l =new Object();
+//    synchronized (l){
+//      try {
+//        l.wait(1000);
+//      }
+//      catch (InterruptedException e) {
+//        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+//      }
+//    }
+
 
     setCurrentAndTotal(current,total);
     AggregatedStatRecord newRecord = new AggregatedCommonStatRecord(rec,getAggregation(),true);

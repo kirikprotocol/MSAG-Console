@@ -11,11 +11,11 @@ public class DeliveryStatistics {
 
   private long newMessages;
 
-  private long processMessage;
+  private long processMessages;
 
   private long deliveredMessages;
 
-  private long failedMessage;
+  private long failedMessages;
 
   private long expiredMessages;
 
@@ -35,12 +35,12 @@ public class DeliveryStatistics {
     this.newMessages = newMessages;
   }
 
-  public long getProcessMessage() {
-    return processMessage;
+  public long getProcessMessages() {
+    return processMessages;
   }
 
-  void setProcessMessage(long processMessage) {
-    this.processMessage = processMessage;
+  void setProcessMessages(long processMessages) {
+    this.processMessages = processMessages;
   }
 
   public long getDeliveredMessages() {
@@ -51,12 +51,12 @@ public class DeliveryStatistics {
     this.deliveredMessages = deliveredMessages;
   }
 
-  public long getFailedMessage() {
-    return failedMessage;
+  public long getFailedMessages() {
+    return failedMessages;
   }
 
-  void setFailedMessage(long failedMessage) {
-    this.failedMessage = failedMessage;
+  void setFailedMessages(long failedMessages) {
+    this.failedMessages = failedMessages;
   }
 
   public long getExpiredMessages() {

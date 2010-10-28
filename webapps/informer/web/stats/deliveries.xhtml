@@ -1,0 +1,127 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.stats.messages.deliveries']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+
+      <h:panelGroup>
+
+        <eye:dataTableFilter bean="#{statsDeliveries}" clearAction="clearFilter" applyAction="start">
+          <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
+              <h:outputText value="#{msg['stat.page.from_date']}"/>
+              <t:inputDate value="#{statsDeliveries.filter.fromDate}" popupCalendar="true" type="both" />
+              <h:outputText value="#{msg['stat.page.till_date']}"/>
+              <t:inputDate value="#{statsDeliveries.filter.tillDate}"  popupCalendar="true" type="both"/>
+            </h:panelGrid>
+            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
+              <h:outputText value="#{msg['stat.page.deliveryName']}"/>
+              <t:inputText id="Name" value="#{statsDeliveries.nameFilter}">
+                <eye:validatePhone/>
+              </t:inputText>
+              <h:outputText value="#{msg['stat.page.user']}" rendered="#{statsCommon.admin}"/>
+            <h:selectOneMenu value="#{statsCommon.filter.user}" rendered="#{statsCommon.admin}" required="false">
+              <f:selectItems value="#{statsCommon.users}"/>
+            </h:selectOneMenu>
+            </h:panelGrid>
+
+          </h:panelGrid>
+        </eye:dataTableFilter>
+
+
+        <eye:updatableContent updatePeriod="1" enabled="#{statsDeliveries.state == 1}" >
+          <eye:message level="error" rendered="#{statsDeliveries.state == 3}">
+            <p/>
+            <h:outputText value="#{statsCommon.error}"/>
+            <p/>
+          </eye:message>
+
+          <h:panelGroup rendered="#{statsDeliveries.state == 1}">
+            <tr:message id="upload_message"/>
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{statsDeliveries.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+
+            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+              <h:outputText value="#{msg['processing.label']}"/>
+              <eye:progressBar current="#{statsDeliveries.current}" maximum="#{statsDeliveries.total}" width="500" height="20" />
+            </h:panelGrid>
+
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{statsDeliveries.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+
+          </h:panelGroup>
+
+          <eye:dataTable value="#{statsDeliveries.records}" var="row" rendered="#{statsDeliveries.state == 2}" >
+
+            <eye:row>
+              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+                <h:outputText value="#{row.info.userId}"/>
+              </eye:column>
+              <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
+                <h:commandLink value="#{row.info.name}" action="DELIVERY_EDIT">
+                  <f:param name="delivery" value="#{row.info.deliveryId}"/>
+                </h:commandLink>
+              </eye:column>
+              <eye:column name="status" title="#{msg['stat.page.state']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.deliveryState.status}"/>
+              </eye:column>
+              <eye:column name="new" title="#{msg['stat.page.newMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.newMessages}"/>
+              </eye:column>
+              <eye:column name="process" title="#{msg['stat.page.processMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.processMessages}"/>
+              </eye:column>
+              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.deliveredMessages}"/>
+              </eye:column>
+              <eye:column name="failed" title="#{msg['stat.page.failed']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.failedMessages}"/>
+              </eye:column>
+              <eye:column name="expired" title="#{msg['stat.page.expiredMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.expiredMessages}"/>
+              </eye:column>
+            </eye:row>
+          </eye:dataTable>
+          <eye:buttons >
+            <eye:space/>
+            <eye:button>
+              <h:commandLink value="#{msg['download.button']}" rendered="#{statsDeliveries.state == 2}">
+                <tr:fileDownloadActionListener method="#{statsDeliveries.download}" contentType="application/csv" filename="deliveriesStat.csv"/>
+              </h:commandLink>
+            </eye:button>
+          </eye:buttons>
+
+        </eye:updatableContent>
+
+      </h:panelGroup>
+
+
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

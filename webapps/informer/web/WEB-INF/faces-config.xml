@@ -239,6 +239,12 @@
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+      <managed-bean-name>statsDeliveries</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveriesStatsController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
 
   <navigation-rule>
     <navigation-case>
@@ -325,6 +331,12 @@
     <navigation-case>
       <from-outcome>DELIVERY_EDIT</from-outcome>
       <to-view-id>/deliveries/edit.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>STATS_DELIVERIES</from-outcome>
+      <to-view-id>/stats/deliveries.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 

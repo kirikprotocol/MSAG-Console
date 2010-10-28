@@ -105,9 +105,9 @@ public class TestDeliveryManagerTest {
     System.out.println("Delivered: "+st.getDeliveredMessages());
     System.out.println("Expired: "+st.getExpiredMessages());
     System.out.println("New: "+st.getNewMessages());
-    System.out.println("Failed: "+st.getFailedMessage());
-    System.out.println("Processed: "+st.getProcessMessage());
-    assertEquals(st.getDeliveredMessages()+st.getExpiredMessages()+st.getNewMessages()+st.getFailedMessage()+st.getProcessMessage(), 2);
+    System.out.println("Failed: "+st.getFailedMessages());
+    System.out.println("Processed: "+st.getProcessMessages());
+    assertEquals(st.getDeliveredMessages()+st.getExpiredMessages()+st.getNewMessages()+st.getFailedMessages()+st.getProcessMessages(), 2);
     DeliveryStatus current = st.getDeliveryState().getStatus();
     boolean success = false;
     for(DeliveryStatus s : statuses) {

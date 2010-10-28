@@ -177,8 +177,8 @@ public class DcpConverterTest {
     ds.setStatus(mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryStatus.Active);
 
     DeliveryStatistics s = DcpConverter.convert(stats, ds);
-    assertEquals(s.getFailedMessage(), stats.getFailedMessage());
-    assertEquals(s.getProcessMessage(), stats.getProcessMessage());
+    assertEquals(s.getFailedMessages(), stats.getFailedMessage());
+    assertEquals(s.getProcessMessages(), stats.getProcessMessage());
     assertEquals(s.getDeliveredMessages(), stats.getDeliveredMessages());
     assertEquals(s.getExpiredMessages(), stats.getExpiredMessages());
     assertEquals(s.getNewMessages(), stats.getNewMessages());

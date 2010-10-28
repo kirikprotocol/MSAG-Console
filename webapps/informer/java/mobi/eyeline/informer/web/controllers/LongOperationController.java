@@ -15,15 +15,31 @@ public abstract class LongOperationController extends InformerController {
   protected static final Logger logger = Logger.getLogger(LongOperationController.class);
 
   private int state=0;
-  private Throwable error=null;
+  private AdminException error=null;
   private Thread thread;
   int current=0;
   int total=0;
   private Locale locale;
+  private Throwable fatalError;
+
+  public Throwable getFatalError() {
+    return fatalError;
+  }
 
 
-  public Throwable getError() {
-    return error;
+
+  public String getError() throws Throwable {
+    if(fatalError!=null) {
+      Throwable t = fatalError;
+      fatalError = null;
+      throw fatalError;
+    }
+    if(error!=null) {
+      AdminException ex = error;
+      error = null;
+      return ex.getMessage(getLocale());
+    }
+    return null;
   }
 
   public int getCurrent(){
@@ -79,10 +95,14 @@ public abstract class LongOperationController extends InformerController {
         execute(locale);
         state = 2;
       }
-      catch (Exception e){
+      catch (AdminException e){
         e.printStackTrace();
         error = e;
-        state = 0;
+        state=3;
+      }
+      catch (Throwable e) {
+        fatalError = e;
+        state=3;
       }
     }
   }

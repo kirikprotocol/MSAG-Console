@@ -14,7 +14,7 @@
 
     <tr:form>
 
-      
+
       <h:panelGroup>
 
         <eye:dataTableFilter bean="#{statsMessagesByRec}" clearAction="clearFilter" applyAction="start">
@@ -32,33 +32,40 @@
               </t:inputText>
             </h:panelGrid>
           </h:panelGrid>
-        </eye:dataTableFilter>                
+        </eye:dataTableFilter>
 
 
-      <eye:updatableContent updatePeriod="1" rendered="#{statsMessagesByRec.state == 1}" >
+        <eye:updatableContent updatePeriod="1" enabled="#{statsMessagesByRec.state == 1}" >
 
-        <tr:message id="upload_message"/>
-        <eye:buttons>
-          <eye:button>
-            <tr:commandLink text="#{msg['stop.button']}" action="#{statsMessagesByRec.cancel}"/>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
+          <eye:message level="error" rendered="#{statsMessagesByRec.state == 3}">
+            <p/>
+            <h:outputText value="#{statsCommon.error}"/>
+            <p/>
+          </eye:message>
 
-        <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-          <h:outputText value="#{msg['processing.label']}"/>
-          <eye:progressBar current="#{statsMessagesByRec.current}" maximum="#{statsMessagesByRec.total}" width="500" height="20" />
-        </h:panelGrid>
+          <h:panelGroup rendered="#{statsMessagesByRec.state == 1}">
+            <tr:message id="upload_message"/>
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{statsMessagesByRec.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
 
-        <eye:buttons>
-          <eye:button>
-            <tr:commandLink text="#{msg['stop.button']}" action="#{statsMessagesByRec.cancel}"/>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
-      </eye:updatableContent>
+            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+              <h:outputText value="#{msg['processing.label']}"/>
+              <eye:progressBar current="#{statsMessagesByRec.current}" maximum="#{statsMessagesByRec.total}" width="500" height="20" />
+            </h:panelGrid>
 
-      <eye:dataTable value="#{statsMessagesByRec.records}" var="row" rendered="#{statsMessagesByRec.state == 2}" >
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{statsMessagesByRec.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+          </h:panelGroup>
+
+          <eye:dataTable value="#{statsMessagesByRec.records}" var="row" rendered="#{statsMessagesByRec.state == 2}" >
 
             <eye:row>
               <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
@@ -82,18 +89,19 @@
                 <h:outputText value="#{row.errorString}"/>
               </eye:column>
             </eye:row>
-          </eye:dataTable>  
-
+          </eye:dataTable>
+          <eye:buttons>
+            <eye:space/>
+            <eye:button>
+              <h:commandLink value="#{msg['download.button']}" rendered="#{statsMessagesByRec.state == 2}">
+                <tr:fileDownloadActionListener method="#{statsMessagesByRec.download}" contentType="application/csv" filename="statByRecipients.csv"/>
+              </h:commandLink>
+            </eye:button>
+          </eye:buttons>
+        </eye:updatableContent>
 
       </h:panelGroup>
-      <eye:buttons>
-        <eye:space/>
-        <eye:button>
-          <h:commandLink value="#{msg['download.button']}" rendered="#{statsMessagesByRec.state == 2}">
-            <tr:fileDownloadActionListener method="#{statsMessagesByRec.download}" contentType="application/csv" filename="statByRecipients.csv"/>
-          </h:commandLink>
-        </eye:button>
-      </eye:buttons>
+
 
 
 

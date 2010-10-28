@@ -278,7 +278,7 @@ public class TestDcpConnection implements DcpConnection{
     }
     stats.setDeliveryState(state);
     stats.setDeliveredMessages(delivered);
-    stats.setFailedMessage(failed);
+    stats.setFailedMessages(failed);
     stats.setNewMessages(newD);
     return stats;
   }
