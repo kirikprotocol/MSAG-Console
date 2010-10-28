@@ -230,12 +230,7 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByRecStatsController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
-  
-  <managed-bean>
-      <managed-bean-name>deliveries</managed-bean-name>
-      <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryListController</managed-bean-class>
-      <managed-bean-scope>request</managed-bean-scope>
-  </managed-bean>
+
 
   <navigation-rule>
     <navigation-case>
@@ -310,6 +305,12 @@
     <navigation-case>
       <from-outcome>STATS_DELIVERIES_COUNTS</from-outcome>
       <to-view-id>/stats/deliveryCount.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>DELIVERIES</from-outcome>
+      <to-view-id>/deliveries/index.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
