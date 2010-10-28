@@ -108,10 +108,8 @@ public:
                                       regionid_type regId,
                                       msgtime_type  nextResend )
     {
-        char buf[20];
-        smsc_log_debug(core_.log_,"load next resend record R=%u/D=%u resend=%s",
-                       regId, dlvId,
-                       formatMsgTime(buf,nextResend) ? buf : "");
+        smsc_log_debug(core_.log_,"load next resend record R=%u/D=%u resend=%llu",
+                       regId, dlvId, msgTimeToYmd(nextResend));
         DeliveryList::iterator* iter = core_.deliveryHash_.GetPtr(dlvId);
         if (!iter) {
             smsc_log_info(core_.log_,"delivery D=%u is not found, ok",dlvId);

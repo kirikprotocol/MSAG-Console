@@ -23,12 +23,17 @@ typedef uint64_t personid_type;
 static const regionid_type defaultRegionId = regionid_type(0);
 static const regionid_type anyRegionId = regionid_type(-1);
 
-/// format message time as yyyymmddHHMMSS, buffer must be at least 15 bytes.
-/// return number of bytes printed (not including trailing \0)
-int formatMsgTime( char* buf, msgtime_type theTime, struct tm* tmb = 0 );
+/// convert message time into YMDHMS representation.
+/// @param tmb is used as working struct (if supplied).
+/// @return a long decimal number in form yyyymmddHHMMSS.
+/// NOTE: special value 0 is returned as 0.
+ulonglong msgTimeToYmd( msgtime_type theTime, struct tm* tmb = 0 );
 
-/// scanf message time converted by formatMsgTime
-msgtime_type scanfMsgTime( ulonglong tmbuf );
+/// convert YMDHMS time into message time (reverse of msgTimeToYmd).
+/// @param tmb is used as working struct (if supplied), it will be filled
+/// as if gmtime_r(resulte) is invoked.
+/// NOTE: special value 0 is returned as 0.
+msgtime_type ymdToMsgTime( ulonglong ymdTime, struct tm* tmb = 0 );
 
 /// get current microtime
 usectime_type currentTimeMicro();

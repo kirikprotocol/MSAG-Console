@@ -190,8 +190,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                              uint8_t fromState )
 {
     struct tm now;
-    char timebuf[20];
-    formatMsgTime(timebuf,currentTime,&now);
+    const ulonglong ymdTime = msgTimeToYmd(currentTime,&now);
 
     char cstate;
     switch (msg.state) {
@@ -211,8 +210,8 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     else { sprintf(caddr,".%u.%u.%0*.*llu",ton,npi,len,len,addr); }
 
     smsc::core::buffers::TmpBuf<char,1024> buf;
-    const int off = sprintf(buf.get(), "%s,%c,%u,%llu,%s,%d,%d,\"%s\",\"",
-                            timebuf, cstate, regId, msg.msgId, caddr,
+    const int off = sprintf(buf.get(), "%llu,%c,%u,%llu,%s,%d,%d,\"%s\",\"",
+                            ymdTime, cstate, regId, msg.msgId, caddr,
                             msg.timeLeft, smppStatus,
                             msg.userData.c_str());
     if ( off < 0 ) {

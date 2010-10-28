@@ -83,11 +83,11 @@ msgtime_type DeliveryImpl::initState()
         char cstate;
         DeliveryStats ds;
         ds.clear();
-        ulonglong tmbuf;
+        ulonglong ymdTime;
         unsigned offset;
         int shift = 0;
         sscanf(ptr,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u%n",
-               &cstate,&tmbuf,
+               &cstate,&ymdTime,
                &offset,
                &ds.totalMessages, &ds.procMessages, &ds.sentMessages,
                &ds.retryMessages, &ds.dlvdMessages, &ds.failedMessages,
@@ -100,7 +100,7 @@ msgtime_type DeliveryImpl::initState()
         switch (cstate) {
         case 'P' : {
             state = DLVSTATE_PLANNED;
-            planTime = scanfMsgTime(tmbuf) + offset;
+            planTime = ymdToMsgTime(ymdTime) + offset;
             break;
         }
         case 'S' : state = DLVSTATE_PAUSED; break;
@@ -155,9 +155,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     const msgtime_type now( currentTimeMicro() / tuPerSec );
     if (newState == DLVSTATE_PLANNED) {
         if (planTime < now) {
-            char buf[20];
-            formatMsgTime(buf,planTime);
-            throw InfosmeException("D=%u cannot plan delivery into past %s",dlvId,buf);
+            throw InfosmeException("D=%u cannot plan delivery into past %llu",
+                                   dlvId,msgTimeToYmd(planTime));
         }
         planTime -= now;
     } else {
@@ -189,11 +188,9 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     fg.seek(0,SEEK_END);
     DeliveryStats ds;
     activityLog_.getStats(ds);
-    char tmbuf[20];
-    formatMsgTime(tmbuf,now);
-    int buflen = sprintf(buf,"%c,%s,%u,%u,%u,%u,%u,%u,%u,%u\n",
+    int buflen = sprintf(buf,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u\n",
                          dlvStateToString(newState)[0],
-                         tmbuf,
+                         msgTimeToYmd(now),
                          planTime,
                          ds.totalMessages,
                          ds.procMessages,

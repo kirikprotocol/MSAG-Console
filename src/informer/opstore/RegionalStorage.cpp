@@ -271,12 +271,11 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
         m.lastTime = retryDelay;
         const uint8_t prevState = m.state;
         m.state = MSGSTATE_RETRY;
-        char fmtime[20];
-        smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %s",
+        smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %llu",
                        unsigned(regionId_),
                        unsigned(info.getDlvId()),
                        ulonglong(msgId),
-                       formatMsgTime(fmtime,retryDelay) );
+                       msgTimeToYmd(retryDelay) );
         dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
         dlv_.activityLog_.incStats(m.state,1,prevState);
     } else {

@@ -1,6 +1,7 @@
 #include <ctime>
 #include <sys/types.h> // for damn sunos
 #include <cstdlib>
+#include <cassert>
 #include "Typedefs.h"
 #include "InfosmeException.h"
 #include "util/TimeSource.h"
@@ -25,6 +26,7 @@ int localOffset()
             now.tm_isdst = 0;
             const msgtime_type res(mktime(&now));
             locoffset = curTime - res;
+            assert(locoffset % 3600 == 0);
         }
     }
     return locoffset;
@@ -36,61 +38,66 @@ int localOffset()
 namespace eyeline {
 namespace informer {
 
-int formatMsgTime( char* buf, msgtime_type tmp, struct tm* tmb )
+ulonglong msgTimeToYmd( msgtime_type tmp, struct tm* tmb )
 {
     struct tm tx;
     if (!tmb) tmb = &tx;
+    if (!tmp) {
+        // FIXME: memset(tmb,0,sizeof(*tmb));
+        return 0;
+    }
     const time_t t(tmp);
     if ( !gmtime_r(&t,tmb) ) {
         throw InfosmeException("formatMsgTime: cannot gmtime_r");
     }
-    const int off = sprintf(buf,"%04u%02u%02u%02u%02u%02u",
-                            tmb->tm_year+1900, tmb->tm_mon+1, tmb->tm_mday,
-                            tmb->tm_hour, tmb->tm_min, tmb->tm_sec );
-    if (off<0) {
-        throw InfosmeException("formatMsgTime: cannot sprintf");
-    }
-    return off;
+    return ( ( ( ( ulonglong(tmb->tm_year+1900)*100 +
+                   tmb->tm_mon + 1 ) * 100 +
+                 tmb->tm_mday ) * 100 +
+               tmb->tm_hour ) * 100 +
+             tmb->tm_min ) * 100 + tmb->tm_sec;
 }
 
 
-msgtime_type scanfMsgTime( ulonglong tmbuf )
+msgtime_type ymdToMsgTime( ulonglong tmp, struct tm* tmb )
 {
-    if (tmbuf==0) return 0;
-    struct tm tmst;
-    ulonglong tmp1 = tmbuf;
+    struct tm tx;
+    if (!tmb) tmb = &tx;
+    if (!tmp) {
+        return 0;
+    }
+    ulonglong tmp1 = tmp;
     ulonglong tmp2 = tmp1 / 100;
-    tmst.tm_sec = int(tmp1 - tmp2*100);
-    if (tmst.tm_sec < 0 || tmst.tm_sec > 59) {
-        throw InfosmeException("invalid sec in time buf %llu",tmbuf);
+    tmb->tm_sec = int(tmp1 - tmp2*100);
+    if (tmb->tm_sec < 0 || tmb->tm_sec > 59) {
+        throw InfosmeException("invalid sec in time buf %llu",tmp);
     }
     tmp1 /= 10000;
-    tmst.tm_min = int(tmp2 - tmp1*100);
-    if (tmst.tm_min < 0 || tmst.tm_min > 59) {
-        throw InfosmeException("invalid min in time buf %llu",tmbuf);
+    tmb->tm_min = int(tmp2 - tmp1*100);
+    if (tmb->tm_min < 0 || tmb->tm_min > 59) {
+        throw InfosmeException("invalid min in time buf %llu",tmp);
     }
     tmp2 /= 10000;
-    tmst.tm_hour = int(tmp1 - tmp2*100);
-    if (tmst.tm_hour < 0 || tmst.tm_hour > 23) {
-        throw InfosmeException("invalid hour in time buf %llu",tmbuf);
+    tmb->tm_hour = int(tmp1 - tmp2*100);
+    if (tmb->tm_hour < 0 || tmb->tm_hour > 23) {
+        throw InfosmeException("invalid hour in time buf %llu",tmp);
     }
     tmp1 /= 10000;
-    tmst.tm_mday = int(tmp2 - tmp1*100);
-    if (tmst.tm_mday < 1 || tmst.tm_mday > 31) {
-        throw InfosmeException("invalid mday in time buf %llu",tmbuf);
+    tmb->tm_mday = int(tmp2 - tmp1*100);
+    if (tmb->tm_mday < 1 || tmb->tm_mday > 31) {
+        throw InfosmeException("invalid mday in time buf %llu",tmp);
     }
     tmp2 /= 10000;
-    tmst.tm_mon = int(tmp1 - tmp2*100) - 1;
-    if (tmst.tm_mon < 0 || tmst.tm_mon > 11) {
-        throw InfosmeException("invalid mon in time buf %llu",tmbuf);
+    tmb->tm_mon = int(tmp1 - tmp2*100) - 1;
+    if (tmb->tm_mon < 0 || tmb->tm_mon > 11) {
+        throw InfosmeException("invalid mon in time buf %llu",tmp);
     }
     tmp1 /= 10000;
-    tmst.tm_year = int(tmp2 - tmp1*100) - 1900;
-    if (tmst.tm_year < 100 || tmst.tm_year > 200) {
-        throw InfosmeException("invalid year in time buf %llu",tmbuf);
+    tmb->tm_year = int(tmp2 - tmp1*100) - 1900;
+    if (tmb->tm_year < 100 || tmb->tm_year > 200) {
+        throw InfosmeException("invalid year in time buf %llu",tmp);
     }
-    tmst.tm_isdst = 0;
-    return msgtime_type(mktime(&tmst) + localOffset());
+    tmb->tm_isdst = 0;
+    return msgtime_type(mktime(tmb)+localOffset());
 }
 
 
