@@ -46,8 +46,24 @@ public:
         MessageLocker& mlk = msglist_.back();
         mlk.serial = 0;
         const uint16_t version = fb.get16();
-        mlk.msg.fromBuf(version,fb);
-        // glossary_.bindMessage(mlk.msg.text);
+        if (version!=1) {
+            throw InfosmeException("unsupported version %u at %llu",
+                                   version,ulonglong(filePos));
+        }
+        Message& msg = mlk.msg;
+        msg.subscriber = fb.get64();
+        msg.msgId = fb.get64();
+        msg.lastTime = fb.get32();
+        msg.timeLeft = fb.get32();
+        msg.userData = fb.getCString();
+        msg.state = fb.get8();
+        if (msg.state & 0x80) {
+            msg.state &= 0x7f;
+            msg.text.reset(new MessageText(fb.getCString(),0));
+        } else {
+            // FIXME: optimize if textptr already has glossary!
+            msg.text.reset(new MessageText(0,fb.get32()));
+        }
         ro_.roff += fb.getLen();
     }
 private:
@@ -264,16 +280,30 @@ void InputStorage::dispatchMessages( MsgIter begin,
                 // fg.seek(ro.woff);
             }
             // writing to a file
-            if (i->msg.isTextUnique()) {
-                msgbuf.setSize(90+strlen(i->msg.text->getText()));
+            Message& msg = i->msg;
+            if (msg.isTextUnique()) {
+                msgbuf.setSize(90+strlen(msg.text->getText()));
             }
-            i->msg.lastTime = ro.wfn;
-            i->msg.timeLeft = ro.woff;
-            maxMsgId = i->msg.msgId;
+            msg.lastTime = ro.wfn;
+            msg.timeLeft = ro.woff;
+            maxMsgId = msg.msgId;
             ToBuf tb(msgbuf.get(),msgbuf.getSize());
             tb.skip(LENSIZE);
             tb.set16(::defaultVersion);
-            i->msg.toBuf(::defaultVersion,tb);
+            // i->msg.toBuf(::defaultVersion,tb);
+            tb.set64(msg.subscriber);
+            tb.set64(msg.msgId);
+            tb.set32(msg.lastTime);
+            tb.set32(msg.timeLeft);
+            tb.setCString(msg.userData.c_str());
+            if (msg.isTextUnique()) {
+                tb.set8(msg.state | 0x80);
+                tb.setCString(msg.text->getText());
+            } else {
+                tb.set8(msg.state & 0x7f);
+                tb.set32(msg.text->getTextId());
+            }
+
             const size_t buflen = tb.getPos();
             tb.setPos(0);
             tb.set16(buflen-LENSIZE);

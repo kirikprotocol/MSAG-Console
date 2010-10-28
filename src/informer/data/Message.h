@@ -35,12 +35,12 @@ struct Message
     smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // (constant)
     uint8_t          state;
 
-    /// conversion (for I/O)
-    ToBuf& toBuf( uint16_t version, ToBuf& tb ) const;
+    // conversion (for I/O)
+    // ToBuf& toBuf( uint16_t version, ToBuf& tb ) const;
 
-    /// read message from buf
-    /// NOTE: make sure to invoke MessageGlossary:bind(text);
-    FromBuf& fromBuf( uint16_t version, FromBuf& fb );
+    // read message from buf
+    // NOTE: make sure to invoke MessageGlossary:bind(text);
+    // FromBuf& fromBuf( uint16_t version, FromBuf& fb );
 
     inline bool isTextUnique() const {
         return (text->getTextId() <= 0);

@@ -60,7 +60,9 @@ storingIter_(messageList_.end()),
 dlv_(dlv),
 transferTask_(0),
 regionId_(regionId),
-ref_(0)
+ref_(0),
+newOrResend_(0),
+nextResendFile_(0)
 {
     smsc_log_debug(log_,"ctor R=%u/D=%u", unsigned(regionId),unsigned(getDlvId()));
 }
@@ -113,32 +115,34 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     RelockMutexGuard mg(cacheMon_);
     const char* from;
     const DeliveryInfo& info = dlv_.getDlvInfo();
+    const CommonSettings& cs = info.getCS();
+    const dlvid_type dlvId = info.getDlvId();
 
     if ( info.getState() != DLVSTATE_ACTIVE ) return false;
 
+    bool uploadNextResend = false;
     do { // fake loop
 
         /// check if we need to request new messages
         if ( !transferTask_ &&
-             unsigned(newQueue_.Count()) <= info.getMinInputQueueSize() &&
-             resendQueue_.size() <= info.getMaxResendQueueSize() ) {
-            // ++uploadTasks_;
+             unsigned(newQueue_.Count()) <= cs.getMinInputQueueSize() ) {
             const unsigned newQueueSize = unsigned(newQueue_.Count());
-            const unsigned resendQueueSize = unsigned(resendQueue_.size());
-            // mg.Unlock();
+            // const bool retries = hasRetries();
             try {
-                smsc_log_debug(log_,"R=%u/D=%u wants to request input transfer as it has new/resend=%u/%u",
+                smsc_log_debug(log_,"R=%u/D=%u wants to request input transfer as it has new=%u",
                                unsigned(regionId_),
-                               unsigned(info.getDlvId()),
-                               newQueueSize, resendQueueSize);
+                               dlvId,
+                               newQueueSize);
                 // mg.Lock();
                 transferTask_ = dlv_.source_->startTransferTask(*this,
-                                                                info.getUploadCount(),
-                                                                resendQueue_.empty() && newQueue_.Count()==0);
+                                                                cs.getInputUploadCount(),
+                                                                newQueue_.Count()==0 &&
+                                                                resendQueue_.empty() &&
+                                                                nextResendFile_==0);
             } catch (std::exception& e ) {
                 smsc_log_warn(log_,"exception requesting input msgs in R=%u/D=%u: %s",
                               unsigned(regionId_),
-                              unsigned(info.getDlvId()),
+                              dlvId,
                               e.what());
                 // mg.Lock();
                 // if (uploadTasks_>0) --uploadTasks_;
@@ -146,14 +150,32 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
         }
 
         if ( !resendQueue_.empty() ) {
-            ResendQueue::iterator v = resendQueue_.begin();
-            if ( v->first <= currentTime ) {
-                // get from the resendQueue
-                iter = v->second;
-                from = "resendQueue";
-                messageHash_.Insert(iter->msg.msgId,iter);
-                resendQueue_.erase(resendQueue_.begin());
-                break;
+            if (++newOrResend_ > 3 ) {
+                newOrResend_ = 0;
+                ResendQueue::iterator v = resendQueue_.begin();
+                if ( nextResendFile_ && v->first >= nextResendFile_ ) {
+                    // we cannot take from resend queue until we load from file
+                    uploadNextResend = true;
+                } else {
+                    if (nextResendFile_ && 
+                        v->first + cs.getMinTimeToUploadResendFile() > nextResendFile_) {
+                        uploadNextResend = true;
+                    }
+                    if ( v->first <= currentTime ) {
+                        // get from the resendQueue
+                        iter = v->second;
+                        from = "resendQueue";
+                        messageHash_.Insert(iter->msg.msgId,iter);
+                        resendQueue_.erase(resendQueue_.begin());
+                        break;
+                    }
+                }
+            }
+        } else {
+            // resend queue is empty
+            if (nextResendFile_ &&
+                currentTime + cs.getMinTimeToUploadResendFile() > nextResendFile_) {
+                uploadNextResend = true;
             }
         }
 
@@ -169,6 +191,10 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
     } while ( false );
 
+    if (uploadNextResend) {
+        smsc_log_debug(log_,"FIXME: start upload next resend task here");
+    }
+
     MsgLock ml(iter,this);
     mg.Unlock();
 
@@ -180,9 +206,9 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     msg = m;
     smsc_log_debug(log_,"taking message R=%u/D=%u/M=%llu from %s",
                    unsigned(regionId_),
-                   unsigned(info.getDlvId()),
+                   dlvId,
                    ulonglong(m.msgId),from);
-    dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
+    dlv_.storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
     dlv_.activityLog_.incStats(m.state,1,prevState);
     return true;
 }
@@ -238,6 +264,9 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
         m.timeLeft -= retryDelay;
         retryDelay += currentTime;
         resendQueue_.insert( std::make_pair(retryDelay,iter) );
+        // FIXME: check if resendQueue become very big and it have
+        // messages in the next+1 chunk, then start flush task.
+
         mg.Unlock();
         m.lastTime = retryDelay;
         const uint8_t prevState = m.state;

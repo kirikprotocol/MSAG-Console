@@ -47,6 +47,27 @@ public:
         return 3600; // FIXME
     }
 
+    /// a number of messages (low mark) when input upload should start.
+    unsigned getMinInputQueueSize() const {
+        return 10;
+    }
+
+    /// how many messages to upload from input storage in one chunk.
+    unsigned getInputUploadCount() const {
+        return 100;
+    }
+
+    /// return a length of period (second) to split resend messages into.
+    /// must state: assert(3600%ret==0), assert(ret%60==0).
+    msgtime_type getResendUploadPeriod() const {
+        return 600;
+    }
+
+    /// upload next resend file if less than this time remains.
+    msgtime_type getMinTimeToUploadResendFile() const {
+        return 60;
+    }
+
 private:
     std::string path_;
     unsigned unrespondedMessagesMax_;

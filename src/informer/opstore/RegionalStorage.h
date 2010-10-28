@@ -91,6 +91,9 @@ public:
 
     /// invoked at init stage ONLY!
     void setRecordAtInit( Message& msg, regionid_type serial );
+    void setNextResend( msgtime_type nextResend ) {
+        nextResendFile_ = nextResend;
+    }
 
     /// invoked after opstore is loaded.
     /// messages accumulated in messageHash_ will be partly moved according to their state
@@ -140,6 +143,10 @@ private:
 
     smsc::core::synchronization::Mutex refLock_;
     unsigned                           ref_;
+    unsigned                           newOrResend_; // if <3 then new, otherwise resend
+
+    /// the next resend file starting time or 0 (if there is no files).
+    msgtime_type                       nextResendFile_;
 
     smsc::core::synchronization::Condition conds_[CONDITION_COUNT];
 };
