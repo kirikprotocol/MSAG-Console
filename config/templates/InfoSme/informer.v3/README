@@ -9,14 +9,14 @@ where VERSION is an int32 [1..] of the file format version
 and FIELDNAMExx are field names.
 
 Each line of the file version=1 contains the following fields:
-STATE,MSGID,SUBSCRIBER,LASTTIME,TTL,SMPP,USERDATA,TEXT
+TIME,STATE,MSGID,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT
 where they are:
 STATE - one-letter state: 'N' -- new, 'D' -- delivered,
      'E' -- expired, 'F' -- failed;
 MSGID - uint64 [1..]: unique (per-task) message id;
 SUBSCRIBER - subscriber number, valid forms are:
   .1.1.NUMBER, +NUMBER, NUMBER.
-LASTTIME - uint32: absolute time(2) in seconds of the message state change;
+TIME - integer datetime in seconds since Epoch, format: YYYYMMDDHHMMSS
 TTL - int32: number of seconds until message expiration;
 SMPP - int32: smpp error code or 0;
 USERDATA - ASCII-string: up to 23 bytes, should not contain
@@ -25,5 +25,12 @@ TEXT - UTF8-string with the following chars escaped:
   linefeed -> \n, backslash -> \\, quote -> "".
 
 Example:
-#1 STATE,MSGID,SUBSCRIBER,LASTTIME,TTL,SMPP,USERDATA,TEXT
-D,556,+79131234567,1285303430,600,0,"msg0x778","Weather forecast:\n""rain"""
+#1 TIME,STATE,MSGID,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT
+20100924120555,D,556,+79131234567,600,0,"msg0x778","Weather forecast:\n""rain"""
+
+
+2. common layout of store:
+operative/.journal
+input/.journal
+deliveries/0000000000/NN/glossary
+deliveries/0000000000/NN/RR/FF.data

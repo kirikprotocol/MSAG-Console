@@ -10,8 +10,18 @@ The format of the record (version 1):
     uint16  length of the record in octets not including this field
     uint32  delivery id
     uint32  region id
+    uint8   typeofrecord
+
+Typeofrecord may be one of:
+    state (see main README), optionally ORed with 0x80 (embed_text_flag)
+    0x10  indicating the nextResendFile record
+    other values are reserved.
+
+In case of nextResendFile record:
+    uint32  the time of next resend file start
+
+In case of message record:
     uint64  message id
-    uint8   state (see main README), optionally ORed with 0x80 (embed_text_flag)
  the rest of the record only if state is not final:
     uint32  last time (seconds since epoch)
     uint32  time left (seconds)
@@ -22,3 +32,18 @@ The format of the record (version 1):
     cstring message text
  else:
     uint32  message text id in glossary
+
+
+Example (message record):
+  00 32                             record length = 50
+  00 00 00 16                       delivery id = 22
+  00 00 00 00                       region id = 0 (default region)
+  02                                state (SENT), using glossary
+  00 00 00 00 00 00 00 01           message id = 1
+  4c c9 28 7e                       last time, seconds GMT
+  00 00 0e 10                       time left, seconds
+  00 00                             retry count = 0
+  a1 10 00 12 6c f8 c5 3f           subscriber = .1.1.79137654079
+  6d 79 66 69 72 73 74 6d 73 67 00  userdata = "myfirstmsg"
+  00 00 00 01                       glossary text id = 1
+

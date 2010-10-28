@@ -42,8 +42,8 @@ where NN -- the delivery id, VVVVVVVVVV -- is the delivery volume
 number, which is calculated as int(NN/100)*100, left-padded with 0.
 
 The region input data files for the delivery are named as
-deliveries/VVVVVVVVVV/NN/RR/FN.data
+deliveries/VVVVVVVVVV/NN/new/RR/FN.data
 
 where RR -- the region id [0..], FN -- file number [1..]
 Example:
-deliveries/0000000000/22/0/1.data
+deliveries/0000000000/22/new/0/1.data
