@@ -8,6 +8,7 @@ class UserInfo
 {
 public:
     const char* getPassword() const { return "password"; }
+    const char* getUserId() const { return "user"; }
 };
 
 } // informer

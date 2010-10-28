@@ -23,6 +23,17 @@ public:
         memset(this,0,sizeof(*this));
     }
 
+    bool isEmpty() const {
+        return 
+            totalMessages == 0 &&
+            procMessages == 0 &&
+            sentMessages == 0 &&
+            retryMessages == 0 &&
+            dlvdMessages == 0 &&
+            failedMessages == 0 &&
+            expiredMessages == 0;
+    }
+
     bool operator != ( const DeliveryStats& ds ) const {
         return 
             ( totalMessages   != ds.totalMessages   ) ||

@@ -2,16 +2,17 @@
 #include "InfosmeCoreV1.h"
 #include "RegionLoader.h"
 #include "informer/data/InputMessageSource.h"
+#include "informer/data/UserInfo.h"
+#include "informer/io/DirListing.h"
 #include "informer/io/InfosmeException.h"
+#include "informer/io/RelockMutexGuard.h"
+#include "informer/newstore/InputJournal.h"
 #include "informer/newstore/InputStorage.h"
 #include "informer/opstore/StoreJournal.h"
-#include "informer/newstore/InputJournal.h"
 #include "informer/sender/RegionSender.h"
 #include "informer/sender/SmscSender.h"
 #include "util/config/ConfString.h"
 #include "util/config/ConfigView.h"
-#include "informer/io/DirListing.h"
-#include "informer/io/RelockMutexGuard.h"
 
 using namespace smsc::util::config;
 
@@ -266,7 +267,7 @@ public:
                 nextTime += msecDelta;
             }
         }
-        while ( ! core_.isStopping() ) {
+        while (!core_.isStopping()) {
             {
                 MutexGuard mg(core_.startMon_);
                 msectime_type now = msectime_type(currentTimeMicro() / 1000);
@@ -274,40 +275,67 @@ public:
                     core_.startMon_.wait(int(nextTime-now));
                     continue;
                 }
-                core_.cs_.flipStatBank();
+                // core_.cs_.flipStatBank();
             }
+            dumpStats( msgtime_type(nextTime / 1000) );
             nextTime += msecDelta;
-            DeliveryList::iterator& iter = core_.statDumpIter_;
-            bool firstPass = true;
-            do {
-                DeliveryStats ds;
-                dlvid_type dlvId;
-                {
-                    smsc::core::synchronization::MutexGuard mg(core_.startMon_);
-                    if (core_.isStopping()) { break; }
-                    if (firstPass) {
-                        iter = core_.deliveryList_.begin();
-                        firstPass = false;
-                    }
-                    if (iter == core_.deliveryList_.end()) { break; }
-                    dlvId = (*iter)->getDlvId();
-                    (*iter)->popIncrementalStats(ds);
-                    ++iter;
-                }
-                smsc_log_debug(log_,"stats of D=%u: %d,%d,%d,%d,%d,%d,%d",
-                               dlvId, 
-                               ds.totalMessages,
-                               ds.procMessages,
-                               ds.sentMessages,
-                               ds.retryMessages,
-                               ds.dlvdMessages,
-                               ds.failedMessages,
-                               ds.expiredMessages );
-            } while (true);
         }
         smsc_log_debug(log_,"stats dumper finished");
         return 0;
     }
+
+
+    void dumpStats( msgtime_type currentTime )
+    {
+        core_.cs_.flipStatBank();
+        FileGuard fg;
+        char buf[200];
+        char* bufpos;
+        {
+            struct tm now;
+            const ulonglong ymd = msgTimeToYmd(currentTime,&now);
+            sprintf(buf,"status.log/%04u.%02u.%02u/%02u.log",
+                    now.tm_year+1900, now.tm_mon+1,
+                    now.tm_mday, now.tm_hour);
+            fg.create((core_.cs_.getStorePath()+buf).c_str(),true);
+            fg.seek(0,SEEK_END);
+            bufpos = buf + sprintf(buf,"%llu,",ymd);
+        }
+
+        DeliveryList::iterator& iter = core_.statDumpIter_;
+        bool firstPass = true;
+        do {
+            DeliveryStats   ds;
+            dlvid_type dlvId;
+            const UserInfo* userInfo;
+            {
+                smsc::core::synchronization::MutexGuard mg(core_.startMon_);
+                if (firstPass) {
+                    iter = core_.deliveryList_.begin();
+                    firstPass = false;
+                }
+                if (iter == core_.deliveryList_.end()) { break; }
+                const DeliveryInfo& info = (*iter)->getDlvInfo();
+                dlvId = info.getDlvId();
+                userInfo = info.getUserInfo();
+                (*iter)->popIncrementalStats(ds);
+                ++iter;
+            }
+            if ( ds.isEmpty() ) continue;
+            char* p = bufpos + sprintf(bufpos,"%u,%s,%d,%d,%d,%d,%d,%d,%d\n",
+                                       dlvId, 
+                                       userInfo ? userInfo->getUserId() : "",
+                                       int32_t(ds.totalMessages),
+                                       int32_t(ds.procMessages),
+                                       int32_t(ds.sentMessages),
+                                       int32_t(ds.retryMessages),
+                                       int32_t(ds.dlvdMessages),
+                                       int32_t(ds.failedMessages),
+                                       int32_t(ds.expiredMessages) );
+            fg.write(buf,p-buf);
+        } while (true);
+    }
+
 private:
     InfosmeCoreV1&        core_;
     smsc::logger::Logger* log_;
@@ -368,6 +396,11 @@ InfosmeCoreV1::~InfosmeCoreV1()
     smsc_log_info(log_,"dtor started, FIXME: cleanup");
     stop();
 
+    // dump statistics one more time
+    if (statsDumper_) {
+        statsDumper_->dumpStats( msgtime_type(currentTimeMicro() / tuPerSec) );
+    }
+
     char* smscId;
     SmscSender* sender;
     for ( Hash< SmscSender* >::Iterator i(&smscs_); i.Next(smscId,sender); ) {
@@ -384,8 +417,11 @@ InfosmeCoreV1::~InfosmeCoreV1()
     deliveryHash_.Empty();
     deliveryList_.clear();
 
+    delete storeRoller_;
+    delete inputRoller_;
     delete storeJournal_;
     delete inputJournal_;
+    delete statsDumper_;
     smsc_log_info(log_,"dtor finished");
 }
 
@@ -503,6 +539,7 @@ void InfosmeCoreV1::stop()
         if (inputRoller_) { inputRoller_->WaitFor(); }
         if (storeRoller_) { storeRoller_->WaitFor(); }
         if (statsDumper_) { statsDumper_->WaitFor(); }
+
         MutexGuard mg(startMon_);
         while (started_) {
             startMon_.wait(100);

@@ -11,6 +11,7 @@ namespace eyeline {
 namespace informer {
 
 class CommonSettings;
+class UserInfo;
 
 typedef enum {
     DLVMODE_SMS = 0,
@@ -29,7 +30,8 @@ public:
     isReplaceIfPresent_(true), isFlash_(false), useDataSm_(false),
     transactionMode_(0),
     deliveryMode_(DLVMODE_SMS),
-    state_(DLVSTATE_PAUSED)
+    state_(DLVSTATE_PAUSED),
+    userInfo_(0)
     {
         if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
     }
@@ -51,6 +53,10 @@ public:
     DlvState getState() const {
         return state_;
     }
+
+    void setUserInfo( UserInfo& userInfo ) { userInfo_ = &userInfo; }
+
+    const UserInfo* getUserInfo() const { return userInfo_; }
 
     void setState( DlvState state ) {
         state_ = state;
@@ -120,6 +126,7 @@ private:
     DeliveryMode    deliveryMode_;
     std::string     retryPolicyName_;
     DlvState        state_;
+    UserInfo*       userInfo_;
 
     mutable smsc::core::synchronization::Mutex lock_;
 };

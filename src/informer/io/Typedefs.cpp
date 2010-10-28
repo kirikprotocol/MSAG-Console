@@ -66,35 +66,34 @@ msgtime_type ymdToMsgTime( ulonglong tmp, struct tm* tmb )
         return 0;
     }
     ulonglong tmp1 = tmp;
-    ulonglong tmp2 = tmp1 / 100;
-    tmb->tm_sec = int(tmp1 - tmp2*100);
+    tmb->tm_sec = int(tmp1 % 100);
     if (tmb->tm_sec < 0 || tmb->tm_sec > 59) {
-        throw InfosmeException("invalid sec in time buf %llu",tmp);
+        throw InfosmeException("invalid sec %d in time buf %llu",tmb->tm_sec,tmp);
     }
-    tmp1 /= 10000;
-    tmb->tm_min = int(tmp2 - tmp1*100);
+    tmp1 /= 100;
+    tmb->tm_min = int(tmp1 % 100);
     if (tmb->tm_min < 0 || tmb->tm_min > 59) {
-        throw InfosmeException("invalid min in time buf %llu",tmp);
+        throw InfosmeException("invalid min %d in time buf %llu",tmb->tm_min,tmp);
     }
-    tmp2 /= 10000;
-    tmb->tm_hour = int(tmp1 - tmp2*100);
+    tmp1 /= 100;
+    tmb->tm_hour = int(tmp1 % 100);
     if (tmb->tm_hour < 0 || tmb->tm_hour > 23) {
-        throw InfosmeException("invalid hour in time buf %llu",tmp);
+        throw InfosmeException("invalid hour %d in time buf %llu",tmb->tm_hour,tmp);
     }
-    tmp1 /= 10000;
-    tmb->tm_mday = int(tmp2 - tmp1*100);
+    tmp1 /= 100;
+    tmb->tm_mday = int(tmp1 % 100);
     if (tmb->tm_mday < 1 || tmb->tm_mday > 31) {
-        throw InfosmeException("invalid mday in time buf %llu",tmp);
+        throw InfosmeException("invalid mday %d in time buf %llu",tmb->tm_mday,tmp);
     }
-    tmp2 /= 10000;
-    tmb->tm_mon = int(tmp1 - tmp2*100) - 1;
+    tmp1 /= 100;
+    tmb->tm_mon = int(tmp1 % 100) - 1;
     if (tmb->tm_mon < 0 || tmb->tm_mon > 11) {
-        throw InfosmeException("invalid mon in time buf %llu",tmp);
+        throw InfosmeException("invalid mon %d in time buf %llu",tmb->tm_mon,tmp);
     }
-    tmp1 /= 10000;
-    tmb->tm_year = int(tmp2 - tmp1*100) - 1900;
+    tmp1 /= 100;
+    tmb->tm_year = int(tmp1) - 1900;
     if (tmb->tm_year < 100 || tmb->tm_year > 200) {
-        throw InfosmeException("invalid year in time buf %llu",tmp);
+        throw InfosmeException("invalid year %d in time buf %llu",tmb->tm_year,tmp);
     }
     tmb->tm_isdst = 0;
     return msgtime_type(mktime(tmb)+localOffset());
