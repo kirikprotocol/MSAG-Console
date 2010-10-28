@@ -6,7 +6,6 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.config.Configuration;
-import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.model.SelectItem;
 import java.util.*;
@@ -14,7 +13,7 @@ import java.util.*;
 /**
  * @author Aleksandr Khalitov
  */
-public class DeliveryListController extends InformerController {
+public class DeliveryListController extends DeliveryController {
 
   private String namePrefix;
 
@@ -22,11 +21,15 @@ public class DeliveryListController extends InformerController {
 
   private String status;
 
-  private List<DeliveryInfo> deliveries = new LinkedList<DeliveryInfo>();
-
   private Configuration config;
 
   private boolean init = false;
+
+
+  private List<String> selected;
+
+  private final static int MEMORY_LIMIT = 100;
+
 
   public DeliveryListController() {
     config = getConfig();
@@ -85,11 +88,6 @@ public class DeliveryListController extends InformerController {
   }
 
 
-
-  private List<String> selected;
-
-
-
   @SuppressWarnings({"unchecked"})
   public void setSelected(List selected) {
     if(selected != null) {
@@ -140,14 +138,14 @@ public class DeliveryListController extends InformerController {
     return null;
   }
 
-  private final static int MEMORY_LIMIT = 100;
-
   private int getDeliveryInfos(final Comparator<DeliveryInfo> comparator, final DeliveryInfo infimum, final int count, final List<DeliveryInfo> result) {
     try{
       User u = config.getUser(getUserName());
       DeliveryFilter filter = new DeliveryFilter();
       if(userFilter != null && (userFilter = userFilter.trim()).length() != 0) {
         filter.setUserIdFilter(new String[]{userFilter});
+      }else if(!isUserInAdminRole()) {
+        filter.setUserIdFilter(new String[]{u.getLogin()});
       }
       filter.setResultFields(new DeliveryFields[]{DeliveryFields.Name, DeliveryFields.UserId, DeliveryFields.Status,
           DeliveryFields.StartDate, DeliveryFields.EndDate});

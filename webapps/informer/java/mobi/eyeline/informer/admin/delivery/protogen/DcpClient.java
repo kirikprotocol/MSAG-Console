@@ -194,6 +194,9 @@ class DcpClient extends ClientConnection {
     return sendPdu(req, new GetNextMessagesPackResp());
   }
 
+  GetDeliveryHistoryResp send(GetDeliveryHistory req) throws AdminException {
+    return sendPdu(req, new GetDeliveryHistoryResp());
+  }
 
   private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);

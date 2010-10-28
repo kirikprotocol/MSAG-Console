@@ -36,10 +36,10 @@
                 <f:selectItems value="#{deliveries.uniqueStatuses}"/>
               </h:selectOneMenu>
             </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
-              <h:outputText value="#{deliveryBundle.owner}"/>
-              <h:inputText value="#{deliveries.userFilter}"/>
-            </h:panelGrid>
+              <h:panelGrid columns="2" columnClasses="column50Width, column400Width" rendered="#{deliveries.userInAdminRole}">
+                <h:outputText value="#{deliveryBundle.owner}"/>
+                <h:inputText value="#{deliveries.userFilter}"/>
+              </h:panelGrid>
           </h:panelGrid>
         </eye:dataTableFilter>
       </h:panelGroup>
@@ -48,7 +48,7 @@
         <eye:row rowId="#{d.deliveryId}">
           <eye:column name="name" title="#{deliveryBundle.name}" sortable="true" width="20%">
             <h:commandLink value="#{d.name}" action="DELIVERY_EDIT">
-              <f:param name="delivery" value="#{d.deliveryId}"/>
+              <f:param name="#{deliveries.deliveryParam}" value="#{d.deliveryId}"/>
             </h:commandLink>
           </eye:column>
           <eye:column name="userId" title="#{deliveryBundle.owner}" sortable="true" width="20%">

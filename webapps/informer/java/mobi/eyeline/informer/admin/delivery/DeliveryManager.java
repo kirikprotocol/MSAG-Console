@@ -35,13 +35,13 @@ public class DeliveryManager {
   }
 
 
-  private void addMessages(int id, MessageDataSource msDataSource, DcpConnection conn, String[] glossary) throws AdminException {
+  private void addMessages(int id, MessageDataSource msDataSource, DcpConnection conn, Delivery delivery) throws AdminException {
     Message m;
     int count = 0;
     List<Message> messages = new ArrayList<Message>(1000);
     while ((m = msDataSource.next()) != null) {
-      if(m.getIndex() != null  && (glossary == null || glossary.length <= m.getIndex())) {
-        throw new DeliveryException("illegal_glossary_index", Integer.toString(m.getIndex()));  
+      if(m.getText() == null  && (delivery.getSingleText() == null)) {
+        throw new DeliveryException("single_text_is_empty");
       }
       messages.add(m);
       count++;
@@ -66,6 +66,30 @@ public class DeliveryManager {
     }
   }
 
+  private static void validateDelivery(final Delivery delivery) throws AdminException {
+    if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
+      throw new DeliveryException("replace_illegal");
+    }
+    if (delivery.getValidityDate() == null && delivery.getValidityPeriod() == null) {
+      throw new DeliveryException("validation_illegal");
+    }
+    if ((delivery.getActivePeriodStart() == null || delivery.getActivePeriodEnd() == null)) {
+      throw new DeliveryException("active_period_illegal");
+    }
+    if(delivery.getSourceAddress() == null) {
+      throw new DeliveryException("source_address_empty");
+    }
+    if(delivery.getStartDate() == null || delivery.getEndDate() == null) {
+      throw new DeliveryException("dates_empty");
+    }
+    if(delivery.getOwner() == null) {
+      throw new DeliveryException("owner_empty");
+    }
+    if(delivery.getName() == null) {
+      throw new DeliveryException("name_empty");
+    }
+  }
+
   /**
    * Создание рассылки
    *
@@ -73,32 +97,19 @@ public class DeliveryManager {
    * @param password     пароль
    * @param delivery     рассылка
    * @param msDataSource сообщения
-   * @param glossary     глоссарий
    * @throws mobi.eyeline.informer.admin.AdminException
    *          ошибка выполнения команды
    */
-  public void createDelivery(final String login, final String password, final Delivery delivery, final MessageDataSource msDataSource, final String[] glossary) throws AdminException {
+  public void createDelivery(final String login, final String password, final Delivery delivery, final MessageDataSource msDataSource) throws AdminException {
     if (logger.isDebugEnabled()) {
       logger.debug("Create delivery: " + delivery.getName());
     }
-    if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
-      throw new DeliveryException("replace_illegal");
-    }
-    if (delivery.getValidityDate() == null && delivery.getValidityPeriod() == null) {
-      throw new DeliveryException("validation_illegal");
-    }
-    if ((delivery.getActivePeriodStart() == null && delivery.getActivePeriodEnd() != null) ||
-        (delivery.getActivePeriodStart() != null && delivery.getActivePeriodEnd() == null)) {
-      throw new DeliveryException("active_period_illegal");
-    }
+    validateDelivery(delivery);
     final DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
     final int id = conn.createDelivery(delivery);
     delivery.setId(id);
-    if (glossary != null) {
-      conn.modifyDeliveryGlossary(id, glossary);
-    }
     try {
-      addMessages(id, msDataSource, conn, glossary);
+      addMessages(id, msDataSource, conn, delivery);
     } catch (Exception e) {
       logger.error(e, e);
       try {
@@ -130,6 +141,7 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Modify delivery: " + delivery.getName());
     }
+    validateDelivery(delivery);
     DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
     conn.modifyDelivery(delivery);
   }
@@ -181,23 +193,6 @@ public class DeliveryManager {
     }
     DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
     conn.dropMessages(messageIds);
-  }
-
-  /**
-   * Возвращает глоссарий по рассылке
-   *
-   * @param login      логин
-   * @param password   пароль
-   * @param deliveryId идентикатор рассылки
-   * @return глоссарий
-   * @throws AdminException ошибка выполнения команды
-   */
-  public String[] getDeliveryGlossary(String login, String password, int deliveryId) throws AdminException {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Get deliveries glossary for: " + deliveryId);
-    }
-    DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
-    return conn.getDeliveryGlossary(deliveryId);
   }
 
   /**

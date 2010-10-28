@@ -77,24 +77,6 @@ public interface DcpConnection {
   public void dropMessages(long[] messageIds) throws AdminException;
 
   /**
-   * Возвращает глоссарий по рассылке
-   *
-   * @param deliveryId идентикатор рассылки
-   * @return глоссарий
-   * @throws AdminException ошибка выполнения команды
-   */
-  public String[] getDeliveryGlossary(int deliveryId) throws AdminException;
-
-  /**
-   * Добавляет глоссарий к рассылке
-   *
-   * @param deliveryId идентикатор рассылки
-   * @param messages   глоссарий
-   * @throws AdminException ошибка выполнения команды
-   */
-  public void modifyDeliveryGlossary(int deliveryId, String[] messages) throws AdminException;
-
-  /**
    * Возвращает рассылку по идентификатору
    *
    * @param deliveryId идентификатор рассылки
@@ -170,5 +152,13 @@ public interface DcpConnection {
    * @throws AdminException ошибка выполнения команды
    */
   public int countMessages(MessageFilter messageFilter) throws AdminException;
+
+  /**
+   * Возвращает история статусов рассылки
+   * @param deliveryId идентификатор рассылки
+   * @return история статусов рассылки
+   * @throws AdminException ошибка выполнения команды
+   */
+  public DeliveryHistory getDeliveryHistory(int deliveryId) throws AdminException;
 
 }

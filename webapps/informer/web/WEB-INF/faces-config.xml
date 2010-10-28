@@ -71,6 +71,12 @@
   </converter>
 
 
+  <converter>
+    <converter-id>deliveryTypeConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryTypeConverter</converter-class>
+  </converter>
+
+
   <render-kit>
     <renderer>
       <component-family>Eyeline</component-family>
@@ -220,6 +226,13 @@
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+
+  <managed-bean>
+      <managed-bean-name>deliveryEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryEditController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
   <managed-bean>
       <managed-bean-name>statsCommon</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryCommonStatController</managed-bean-class>
@@ -348,7 +361,6 @@
     <navigation-case>
       <from-outcome>DELIVERY_EDIT</from-outcome>
       <to-view-id>/deliveries/edit.xhtml</to-view-id>
-      <redirect/>
     </navigation-case>
 
 

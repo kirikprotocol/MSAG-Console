@@ -15,8 +15,8 @@ public class MessageTest {
 
   @Test
   public void testCreate() {
-    Message m = Message.newGlossaryMessage(1);
-    assertEquals(new Integer(1), m.getIndex());
+    Message m = Message.newGlossaryMessage();
+    assertEquals(null, m.getText());
 
     m = Message.newTextMessage("t");
     assertEquals("t", m.getText());

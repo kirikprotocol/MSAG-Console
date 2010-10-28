@@ -44,7 +44,8 @@ public class DcpConverterTest {
 
   @Test
   public void testConvertDelivery() throws AdminException {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
+    d.setSourceAddress(new Address("+791394"));
     d.setActivePeriodEnd(new Date());
     d.setActivePeriodStart(new Date(0));
     d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
@@ -61,7 +62,7 @@ public class DcpConverterTest {
     d.setSvcType("svc1");
     d.setValidityDate(new Date());
     d.setValidityPeriod("1:00:00");
-    assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d)));
+    assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d), null, null));
   }
 
 

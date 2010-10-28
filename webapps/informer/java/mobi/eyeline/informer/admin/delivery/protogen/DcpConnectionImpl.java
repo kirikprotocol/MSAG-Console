@@ -5,9 +5,11 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -72,6 +74,19 @@ public class DcpConnectionImpl implements DcpConnection {
     } finally {
       lock.unlock();
     }
+    if(delivery.getSingleText() != null) {
+      ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
+      reqG.setDeliveryId(resp.getDeliveryId());
+      DeliveryGlossary glossary = new DeliveryGlossary();
+      glossary.setMessages(new String[]{delivery.getSingleText()});
+      reqG.setGlossary(glossary);
+      try {
+        lock.lock();
+        client.send(reqG);
+      } finally {
+        lock.unlock();
+      }
+    }
     return resp.getDeliveryId();
   }
 
@@ -98,6 +113,19 @@ public class DcpConnectionImpl implements DcpConnection {
       client.send(req);
     } finally {
       lock.unlock();
+    }
+    if(delivery.getSingleText() != null) {
+      ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
+      reqG.setDeliveryId(delivery.getId());
+      DeliveryGlossary glossary = new DeliveryGlossary();
+      glossary.setMessages(new String[]{delivery.getSingleText()});
+      reqG.setGlossary(glossary);
+      try {
+        lock.lock();
+        client.send(reqG);
+      } finally {
+        lock.unlock();
+      }
     }
   }
 
@@ -171,34 +199,6 @@ public class DcpConnectionImpl implements DcpConnection {
     }
   }
 
-  public String[] getDeliveryGlossary(int deliveryId) throws AdminException {
-    GetDeliveryGlossary req = new GetDeliveryGlossary();
-    req.setDeliveryId(deliveryId);
-    GetDeliveryGlossaryResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
-    return resp.getGlossary().getMessages();
-  }
-
-  public void modifyDeliveryGlossary(int deliveryId, String[] messages) throws AdminException {
-    ModifyDeliveryGlossary req = new ModifyDeliveryGlossary();
-    req.setDeliveryId(deliveryId);
-    DeliveryGlossary glossary = new DeliveryGlossary();
-    glossary.setMessages(messages);
-    req.setGlossary(glossary);
-    try {
-      lock.lock();
-      client.send(req);
-    } finally {
-      lock.unlock();
-    }
-  }
-
-
   public DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
     GetDeliveryState req = new GetDeliveryState();
     req.setDeliveryId(deliveryId);
@@ -223,7 +223,25 @@ public class DcpConnectionImpl implements DcpConnection {
     } finally {
       lock.unlock();
     }
-    return DcpConverter.convert(deliveryId, resp.getInfo());
+    if(!resp.hasInfo()) {
+      return null;
+    }
+    DeliveryInfo info = resp.getInfo();
+    Map<String, String> userData = DcpConverter.convertUserData(info.getUserData());
+    if(!userData.containsKey("singleText")) {
+      return DcpConverter.convert(deliveryId, info, userData, null);
+    } else{
+      GetDeliveryGlossary reqG = new GetDeliveryGlossary();
+      GetDeliveryGlossaryResp respG;
+      reqG.setDeliveryId(deliveryId);
+      try {
+        lock.lock();
+        respG = client.send(reqG);
+      } finally {
+        lock.unlock();
+      }
+      return DcpConverter.convert(deliveryId, info, userData, respG.getGlossary().getMessages());
+    }
   }
 
 
@@ -364,5 +382,19 @@ public class DcpConnectionImpl implements DcpConnection {
       lock.unlock();
     }
     return resp.getCount();
+  }
+
+
+  public DeliveryHistory getDeliveryHistory(int deliveryId) throws AdminException {
+    GetDeliveryHistory req = new GetDeliveryHistory();
+    req.setDeliveryId(deliveryId);
+    GetDeliveryHistoryResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return DcpConverter.convert(deliveryId, resp.getHistory());
   }
 }

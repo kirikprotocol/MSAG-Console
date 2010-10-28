@@ -1,10 +1,12 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.util.Address;
 import org.junit.Test;
 
 import java.util.Date;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -13,8 +15,19 @@ import static org.junit.Assert.assertTrue;
 public class DeliveryTest {
 
   @Test
+  public void testSourceAddress() throws AdminException {
+    Delivery d = Delivery.newCommonDelivery();
+    try{
+      d.setSourceAddress(null);
+      assertTrue(false);
+    }catch (AdminException e){}
+    d.setSourceAddress(new Address("+791394"));
+    assertEquals("+791394", d.getSourceAddress().getSimpleAddress());
+  }
+
+  @Test
   public void testName() throws AdminException {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     try{
       d.setName(null);
       assertTrue(false);
@@ -28,7 +41,7 @@ public class DeliveryTest {
 
   @Test
   public void testPriority() throws AdminException {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     try{
       d.setPriority(0);
       assertTrue(false);
@@ -43,7 +56,7 @@ public class DeliveryTest {
 
   @Test
   public void testStartDate() throws AdminException {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     try{
       d.setStartDate(null);
       assertTrue(false);
@@ -54,7 +67,7 @@ public class DeliveryTest {
 
   @Test
   public void testEndDate() throws AdminException {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     try{
       d.setEndDate(null);
       assertTrue(false);
@@ -65,7 +78,7 @@ public class DeliveryTest {
 
   @Test
   public void testStartEndDate() throws AdminException {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     d.setEndDate(new Date(100));
     try{
       d.setStartDate(new Date());
@@ -75,7 +88,7 @@ public class DeliveryTest {
     d.setStartDate(new Date(99));
 
 
-    d = new Delivery();
+    d = Delivery.newCommonDelivery();
     d.setStartDate(new Date(100));
     try{
       d.setEndDate(new Date(99));
@@ -87,7 +100,7 @@ public class DeliveryTest {
 
   @Test
   public void testActivePeriod() throws AdminException {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     try{
       d.setActivePeriodStart(null);
       assertTrue(false);
@@ -104,7 +117,7 @@ public class DeliveryTest {
 
   @Test
   public void testActiveDays() throws AdminException {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     try{
       d.setActiveWeekDays(null);
       assertTrue(false);
@@ -120,7 +133,7 @@ public class DeliveryTest {
 
   @Test
   public void testValidity() {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     d.setValidityDate(null);
     d.setValidityDate(new Date());
     d.setValidityPeriod(null);
@@ -131,7 +144,7 @@ public class DeliveryTest {
 
   @Test
   public void testDeliveryMode() throws AdminException{
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     try{
       d.setDeliveryMode(null);
       assertTrue(false);
@@ -141,7 +154,7 @@ public class DeliveryTest {
 
   @Test
   public void testOwner() throws AdminException{
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     try{
       d.setOwner(null);
       assertTrue(false);
@@ -157,7 +170,7 @@ public class DeliveryTest {
 
   @Test
   public void testRetry() {
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     d.setRetryOnFail(false);  
     d.setRetryPolicy("");
     d.setRetryPolicy(null);

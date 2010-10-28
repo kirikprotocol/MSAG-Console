@@ -386,13 +386,13 @@ public class AdminContext {
     return new LinkedList<Daemon>();
   }
 
-  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource, String[] glossary) throws AdminException {
+  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource) throws AdminException {
     try{
       integrityLock.lock();
       if(usersManager.getUser(delivery.getOwner()) == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
       }
-      deliveryManager.createDelivery(login, password, delivery, msDataSource, glossary);
+      deliveryManager.createDelivery(login, password, delivery, msDataSource);
     }finally {
       integrityLock.unlock();
     }
@@ -416,10 +416,6 @@ public class AdminContext {
 
   public int countDeliveries(String login, String password, DeliveryFilter deliveryFilter) throws AdminException {
     return deliveryManager.countDeliveries(login, password, deliveryFilter);
-  }
-
-  public String[] getDeliveryGlossary(String login, String password, int deliveryId) throws AdminException {
-    return deliveryManager.getDeliveryGlossary(login, password, deliveryId);
   }
 
   public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {

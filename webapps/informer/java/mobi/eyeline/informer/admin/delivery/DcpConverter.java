@@ -4,12 +4,11 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryStatus;
+import mobi.eyeline.informer.util.Address;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Конвертор сущностей рассылки
@@ -86,11 +85,16 @@ public class DcpConverter {
     return mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMode.valueOf(mode.toString());
   }
 
-  public static Delivery convert(int id, mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo di) throws AdminException {
+  public static Delivery convert(int id, mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo di, Map<String, String> uD, String[] glossary) throws AdminException {
     if (di == null) {
       return null;
     }
-    Delivery delivery = new Delivery();
+    Delivery delivery;
+    if(glossary == null) {
+      delivery = Delivery.newCommonDelivery();
+    }else {
+      delivery = Delivery.newSingleTextDelivery(glossary[0]);
+    }
     delivery.setId(id);
     delivery.setActivePeriodEnd(convertTime(di.getActivePeriodEnd()));
     delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart()));
@@ -104,9 +108,8 @@ public class DcpConverter {
     delivery.setReplaceMessage(di.getReplaceMessage());
     delivery.setRetryOnFail(di.getRetryOnFail());
     delivery.setRetryPolicy(di.getRetryPolicy());
-    String userData = di.getUserData();
-    if(userData != null) {
-      Map<String, String> uD = convertUserData(userData);
+    delivery.setSourceAddress(new Address(di.getSourceAddress()));
+    if(uD != null) {
       String t = uD.get("secret");
       delivery.setSecret(t != null && Boolean.valueOf(t));
       t = uD.get("secretFlash");
@@ -114,6 +117,18 @@ public class DcpConverter {
       t = uD.get("secretMessage");
       if(t != null) {
         delivery.setSecretMessage(t);
+      }
+      t = uD.get("smsNotification");
+      if(t != null) {
+        delivery.setSmsNotificationAddress(new Address(t));
+      }
+      t = uD.get("emailNotification");
+      if(t != null) {
+        delivery.setEmailNotificationAddress(t);
+      }
+      t = uD.get("singleMessage");
+      if(t != null) {
+        delivery.setEmailNotificationAddress(t);
       }
     }
     delivery.setStartDate(convertDate(di.getStartDate()));
@@ -185,27 +200,13 @@ public class DcpConverter {
   public static DeliveryMessage convert(Message m) {
     DeliveryMessage result = new DeliveryMessage();
     result.setAbonent(m.getAbonent().getSimpleAddress());
-    if (m.getIndex() != null) {
-      result.setIndex(m.getIndex());
+    if (m.getText() == null) {
+      result.setIndex(0);
     } else {
       result.setText(m.getText());
     }
     return result;
   }
-//
-//  public static mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType convert(MessageType mType) {
-//    if (mType == null) {
-//      return null;
-//    }
-//    return mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType.valueOf(mType.toString());
-//  }
-//
-//  public static MessageType convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageType mType) {
-//    if (mType == null) {
-//      return null;
-////    }
-//    return MessageType.valueOf(mType.toString());
-//  }
 
   public static DeliveryMessage[] convert(Message[] dm) {
     if (dm == null) {
@@ -265,11 +266,22 @@ public class DcpConverter {
     delivery.setReplaceMessage(di.isReplaceMessage());
     delivery.setRetryOnFail(di.isRetryOnFail());
     delivery.setRetryPolicy(di.getRetryPolicy());
+    delivery.setSourceAddress(di.getSourceAddress().getSimpleAddress());
+//    delivery,set
     Map<String, Object> userData = new HashMap<String, Object>(3);
     userData.put("secret", di.isSecret());
     userData.put("secretFlash", di.isSecretFlash());
     if(di.getSecretMessage() != null) {
       userData.put("secretMessage", di.getSecretMessage());
+    }
+    if(di.getSmsNotificationAddress() != null) {
+      userData.put("smsNotification", di.getSmsNotificationAddress());
+    }
+    if(di.getEmailNotificationAddress() != null) {
+      userData.put("emailNotification", di.getEmailNotificationAddress());
+    }
+    if(di.getSingleText() != null) {
+      userData.put("singleText", true);
     }
     delivery.setUserData(convertUserData(userData));
     delivery.setStartDate(convertDate(di.getStartDate()));
@@ -415,7 +427,7 @@ public class DcpConverter {
     return sb.substring(1);
   }
 
-  private static Map<String, String> convertUserData(String s) {
+  public static Map<String, String> convertUserData(String s) {
     if(s == null || (s = s.trim()).length() == 0) {
       return null;
     }
@@ -426,5 +438,16 @@ public class DcpConverter {
       r.put(kv[0], kv[1]);
     }
     return r;
+  }
+
+  public static DeliveryHistory convert(int deliveryId, DeliveryHistoryItem[] history) throws AdminException {
+    if(history == null) {
+      return null;
+    }
+    List<DeliveryHistory.HistoryItem> items = new ArrayList<DeliveryHistory.HistoryItem>(history.length);
+    for(DeliveryHistoryItem i : history) {
+      items.add(new DeliveryHistory.HistoryItem(convertDate(i.getDate()), convert(i.getStatus())));
+    }
+    return new DeliveryHistory(deliveryId, items);
   }
 }

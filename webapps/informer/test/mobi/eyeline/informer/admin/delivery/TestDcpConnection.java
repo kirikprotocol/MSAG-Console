@@ -26,7 +26,7 @@ public class TestDcpConnection implements DcpConnection{
 
   private Map<Integer, List<MessageWState>> messages = new HashMap<Integer, List<MessageWState>>();
 
-  private Map<Integer, String[]> glossaries = new HashMap<Integer, String[]>();
+  private Map<Integer, DeliveryHistory> histories = new HashMap<Integer, DeliveryHistory>();
 
   private Map<Integer, DeliveryRequest> deliveryReqs = new HashMap<Integer, DeliveryRequest>();
 
@@ -55,6 +55,8 @@ public class TestDcpConnection implements DcpConnection{
   public synchronized int createDelivery(Delivery delivery) throws AdminException {
     int id = dIdCounter++;
     deliveries.put(id, new DeliveryWStatus(delivery, id));
+    histories.put(id, new DeliveryHistory(id,
+        new LinkedList<DeliveryHistory.HistoryItem>(){{add(new DeliveryHistory.HistoryItem(new Date(), DeliveryStatus.Planned));}}));
     return id;
   }
 
@@ -188,6 +190,10 @@ public class TestDcpConnection implements DcpConnection{
     return count;
   }
 
+  public DeliveryHistory getDeliveryHistory(int deliveryId) throws AdminException {
+    return histories.get(deliveryId);
+  }
+
   public synchronized void dropMessages(long[] messageIds) throws AdminException {
     Set<Long> ids = new HashSet<Long>();
     for(long m : messageIds) {
@@ -204,25 +210,6 @@ public class TestDcpConnection implements DcpConnection{
     }
   }
 
-  public synchronized String[] getDeliveryGlossary(int deliveryId) throws AdminException {
-    if(!deliveries.containsKey(deliveryId)) {
-      throw new DeliveryException("interaction_error","");
-    }
-    String[] g = glossaries.get(deliveryId);
-    if(g == null) {
-      return null;
-    }
-    String[] result = new String[g.length];
-    System.arraycopy(g, 0,result, 0, g.length);
-    return result;
-  }
-
-  public synchronized void modifyDeliveryGlossary(int deliveryId, String[] messages) throws AdminException {
-    String[] g = new String[messages.length];
-    System.arraycopy(messages, 0, g, 0, messages.length);
-    glossaries.put(deliveryId, g);
-  }
-
   public Delivery getDelivery(int deliveryId) throws AdminException {
     DeliveryWStatus d =  deliveries.get(deliveryId);
     return d == null ? null : d.delivery.cloneDelivery();
@@ -232,7 +219,8 @@ public class TestDcpConnection implements DcpConnection{
     if(!deliveries.containsKey(deliveryId)) {
       throw new DeliveryException("interaction_error","");
     }
-    DeliveryStatus status = state.getStatus();
+    final DeliveryStatus status = state.getStatus();
+    final DeliveryHistory oldHistory = histories.get(deliveryId);
     DeliveryWStatus delivery = deliveries.get(deliveryId);
     DeliveryStatus current = delivery.status;
     switch (status) {
@@ -256,6 +244,9 @@ public class TestDcpConnection implements DcpConnection{
         }
     }
     delivery.status = status;
+    histories.put(deliveryId, new DeliveryHistory(deliveryId, new LinkedList<DeliveryHistory.HistoryItem>(){{
+      addAll(oldHistory.getHistoryItems());
+      add(new DeliveryHistory.HistoryItem(new Date(), status));}}));
   }
 
   public synchronized DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
@@ -353,7 +344,9 @@ public class TestDcpConnection implements DcpConnection{
       info.setAbonent(d.getAbonent().getSimpleAddress());
       info.setDate(d.date);
       info.setErrorCode(d.errorCode);
-      info.setIndex(d.getIndex());
+      if(d.getText() == null) {
+      info.setIndex(0);
+      }
       info.setState(d.state);
       info.setId(d.getId());
       info.setUserData("");
@@ -389,7 +382,12 @@ public class TestDcpConnection implements DcpConnection{
           if(logger.isDebugEnabled()) {
             logger.debug("Delivery is finished: "+d.getName());
           }
+          final DeliveryHistory oldHistory = histories.get(d.getId());
           d.status = DeliveryStatus.Finished;
+          histories.put(d.getId(), new DeliveryHistory(d.getId(), new LinkedList<DeliveryHistory.HistoryItem>(){{
+            addAll(oldHistory.getHistoryItems());
+            add(new DeliveryHistory.HistoryItem(new Date(), DeliveryStatus.Finished));
+          }}));
         }
       }
     }
@@ -444,9 +442,46 @@ public class TestDcpConnection implements DcpConnection{
     private DeliveryStatus status = DeliveryStatus.Planned;
     private Delivery delivery;
     private DeliveryWStatus(Delivery delivery, int id) {
+      super(delivery.getSingleText());
       this.delivery = delivery.cloneDelivery();
       this.delivery.setId(id);
     }
+
+    @Override
+    public Address getSourceAddress() {
+      return delivery.getSourceAddress();
+    }
+
+    @Override
+    public void setSourceAddress(Address sourceAddress) throws AdminException {
+      delivery.setSourceAddress(sourceAddress);
+    }
+
+    @Override
+    public String getEmailNotificationAddress() {
+      return delivery.getEmailNotificationAddress();
+    }
+
+    @Override
+    public void setEmailNotificationAddress(String emailNotificationAddress) {
+      delivery.setEmailNotificationAddress(emailNotificationAddress);
+    }
+
+    @Override
+    public Address getSmsNotificationAddress() {
+      return delivery.getSmsNotificationAddress();
+    }
+
+    @Override
+    public void setSmsNotificationAddress(Address smsNotificationAddress) {
+      delivery.setSmsNotificationAddress(smsNotificationAddress);
+    }
+
+    @Override
+    public String getSingleText() {
+      return delivery.getSingleText();
+    }
+
     @Override
     public Integer getId() {
       return delivery.getId();
@@ -662,11 +697,6 @@ public class TestDcpConnection implements DcpConnection{
     @Override
     public String getText() {
       return message.getText();
-    }
-
-    @Override
-    public Integer getIndex() {
-      return message.getIndex();
     }
   }
 

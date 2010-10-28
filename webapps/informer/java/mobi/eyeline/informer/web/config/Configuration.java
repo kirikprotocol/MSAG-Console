@@ -212,10 +212,6 @@ public class Configuration {
     return context.countMessages(login, password, messageFilter);
   }
 
-  public String[] getDeliveryGlossary(String login, String password, int deliveryId) throws AdminException {
-    return context.getDeliveryGlossary(login, password, deliveryId);
-  }
-
   public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
     return context.getDelivery(login, password, deliveryId);
   }
@@ -256,8 +252,8 @@ public class Configuration {
     context.modifyDelivery(login, password, delivery);
   }
 
-  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource, String[] glossary) throws AdminException {
-    context.createDelivery(login, password, delivery, msDataSource, glossary);
+  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource) throws AdminException {
+    context.createDelivery(login, password, delivery, msDataSource);
   }
 
   public void startInformer(String user) throws AdminException {

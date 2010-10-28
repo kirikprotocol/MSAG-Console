@@ -1,0 +1,118 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['delivery.edit']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{deliveryEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <tr:inputHidden id="delivery" value="#{deliveryEdit.id}"/>
+
+      <h:panelGrid style="padding:10px" columns="1">
+
+        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.name}" labelStyle="text-align:left">
+            <tr:inputText readOnly="true" value="#{deliveryEdit.delivery.name}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.owner}" labelStyle="text-align:left">
+            <tr:inputText readOnly="true"  value="#{deliveryEdit.delivery.owner}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.activePeriodStart}" labelStyle="text-align:left">
+            <t:inputDate value="#{deliveryEdit.delivery.activePeriodStart}" required="true" type="time"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.activePeriodEnd}" labelStyle="text-align:left">
+            <t:inputDate value="#{deliveryEdit.delivery.activePeriodEnd}" required="true" type="time"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.startDate}" labelStyle="text-align:left">
+            <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.startDate}" required="true" type="full"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.endDate}" labelStyle="text-align:left">
+            <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.endDate}" required="true" type="full"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.validityPeriod}" labelStyle="text-align:left">
+            <tr:inputText value="#{deliveryEdit.delivery.validityPeriod}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.retryOnFail}" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.retryOnFail}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.retryPolicy}" labelStyle="text-align:left">
+            <tr:inputText value="#{deliveryEdit.delivery.retryPolicy}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.transactionMode}" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.flash}" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.priority}" labelStyle="text-align:left">
+            <tr:inputText value="#{deliveryEdit.delivery.priority}" simple="true" required="true">
+              <tr:validateLongRange minimum="1" maximum="1000"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.deliveryMode}" labelStyle="text-align:left">
+            <h:selectOneMenu value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter">
+              <f:selectItems value="#{deliveryEdit.uniqueDeliveryModes}"/>
+            </h:selectOneMenu>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.smsNotificationAddress}" labelStyle="text-align:left">
+            <tr:inputText value="#{deliveryEdit.smsNotificationAddress}" simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.emailNotificationAddress}" labelStyle="text-align:left">
+            <tr:inputText value="#{deliveryEdit.delivery.emailNotificationAddress}" simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{deliveryEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

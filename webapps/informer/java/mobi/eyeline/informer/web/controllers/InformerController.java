@@ -147,6 +147,14 @@ public abstract class InformerController implements Serializable {
   }
 
   /**
+   * Имеет ли залогинненый пользователь роль 'Администратор'
+   * @return true - да, false - нет
+   */
+  public boolean isUserInAdminRole() {
+    return FacesContext.getCurrentInstance().getExternalContext().isUserInRole("informer-admin");
+  }
+
+  /**
    * Возвращает имя залогиненного пользвателя
    * @return имяx залогиненный пользователь
    */

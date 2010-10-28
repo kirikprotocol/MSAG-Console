@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
+import mobi.eyeline.informer.util.Address;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -46,6 +47,56 @@ public class Delivery {
 
   private boolean replaceMessage;
   private String svcType;
+
+  private String emailNotificationAddress;
+
+  private Address smsNotificationAddress;
+
+  private Address sourceAddress;
+
+  private final String singleText;
+
+  public static Delivery newSingleTextDelivery(String text) {
+    return new Delivery(text);
+  }
+
+  public static Delivery newCommonDelivery() {
+    return new Delivery(null);
+  }
+
+
+  Delivery(String singleText) {
+    this.singleText = singleText;
+  }
+
+  public Address getSourceAddress() {
+    return sourceAddress;
+  }
+
+  public void setSourceAddress(Address sourceAddress) throws AdminException{
+    vh.checkNotNull("sourceAddress", sourceAddress);
+    this.sourceAddress = sourceAddress;
+  }
+
+  public String getEmailNotificationAddress() {
+    return emailNotificationAddress;
+  }
+
+  public void setEmailNotificationAddress(String emailNotificationAddress) {
+    this.emailNotificationAddress = emailNotificationAddress;
+  }
+
+  public Address getSmsNotificationAddress() {
+    return smsNotificationAddress;
+  }
+
+  public void setSmsNotificationAddress(Address smsNotificationAddress) {
+    this.smsNotificationAddress = smsNotificationAddress;
+  }
+
+  public String getSingleText() {
+    return singleText;
+  }
 
   public Integer getId() {
     return id;
@@ -274,6 +325,7 @@ public class Delivery {
     }
   }
 
+  @SuppressWarnings({"RedundantIfStatement"})
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -313,12 +365,22 @@ public class Delivery {
       return false;
     if (validityPeriod != null ? !validityPeriod.equals(delivery.validityPeriod) : delivery.validityPeriod != null)
       return false;
+    if (smsNotificationAddress != null ? !smsNotificationAddress.getSimpleAddress().equals(delivery.smsNotificationAddress.getSimpleAddress()) : delivery.smsNotificationAddress != null)
+      return false;
+    if (emailNotificationAddress != null ? !emailNotificationAddress.equals(delivery.emailNotificationAddress) : delivery.emailNotificationAddress != null)
+      return false;
+    if (singleText != null ? !singleText.equals(delivery.singleText) : delivery.singleText != null)
+      return false;
+
+    if (sourceAddress != null ? !sourceAddress.getSimpleAddress().equals(delivery.sourceAddress.getSimpleAddress()) : delivery.sourceAddress != null)
+      return false;
+
 
     return true;
   }
 
   public Delivery cloneDelivery() {
-    Delivery d = new Delivery();
+    Delivery d = new Delivery(singleText);
     d.id = id;
 
     d.name = name;
@@ -348,6 +410,10 @@ public class Delivery {
 
     d.replaceMessage = replaceMessage;
     d.svcType = svcType;
+
+    d.emailNotificationAddress = emailNotificationAddress;
+    d.smsNotificationAddress = smsNotificationAddress == null ? null : new Address(smsNotificationAddress.getSimpleAddress());
+    d.sourceAddress = sourceAddress == null ? null : new Address(sourceAddress.getSimpleAddress());
     return d;
   }
 }

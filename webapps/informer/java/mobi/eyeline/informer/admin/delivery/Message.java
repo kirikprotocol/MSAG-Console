@@ -15,20 +15,17 @@ public class Message {
 
   private Long id;
   private String text;
-  private Integer index;
   private Address abonent;
 
-
-  public static Message newGlossaryMessage(int index) {
-    return new Message(index, null);
+  public static Message newGlossaryMessage() {
+    return new Message(null);
   }
 
   public static Message newTextMessage(String text) {
-    return new Message(null, text);
+    return new Message(text);
   }
 
-  private Message(Integer index, String text) {
-    this.index = index;
+  private Message(String text) {
     this.text = text;
   }
 
@@ -37,10 +34,6 @@ public class Message {
 
   void setText(String text) {
     this.text = text;
-  }
-
-  void setIndex(Integer index) {
-    this.index = index;
   }
 
   public Long getId() {
@@ -65,12 +58,8 @@ public class Message {
     return text;
   }
 
-  public Integer getIndex() {
-    return index;
-  }
-
   public Message cloneMessage() {
-    Message m = new Message(index, text);
+    Message m = new Message(text);
     m.id = id;
     m.abonent = abonent;
     return m;
@@ -84,7 +73,6 @@ public class Message {
     Message message = (Message) o;
 
     if (id != null ? !id.equals(message.id) : message.id != null) return false;
-    if (index != null ? !index.equals(message.index) : message.index != null) return false;
     if (abonent != null ? !abonent.equals(message.abonent) : message.abonent != null) return false;
     if (text != null ? !text.equals(message.text) : message.text != null) return false;
 

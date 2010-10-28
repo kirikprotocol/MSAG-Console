@@ -121,7 +121,7 @@ public class TestDeliveryManagerTest {
   }
 
   private Delivery _createDelivery() throws AdminException{
-    Delivery d = new Delivery();
+    Delivery d = Delivery.newCommonDelivery();
     d.setActivePeriodEnd(new Date());
     d.setActivePeriodStart(new Date(0));
     d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
@@ -137,6 +137,7 @@ public class TestDeliveryManagerTest {
     d.setSvcType("svc1");
     d.setValidityDate(new Date());
     d.setValidityPeriod("1:00:00");
+    d.setSourceAddress(new Address("+79123942341"));
 
     manager.createDelivery("","", d, new MessageDataSource() {
       private LinkedList<Message> ms = new LinkedList<Message>() {
@@ -156,7 +157,7 @@ public class TestDeliveryManagerTest {
         }
         return ms.removeFirst();
       }
-    }, null);
+    });
     
     assertNotNull(d.getId());
     manager.activateDelivery("","",d.getId());

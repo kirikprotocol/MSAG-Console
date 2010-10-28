@@ -76,7 +76,8 @@ public class TestAdminContext extends AdminContext {
 
     for(int i=1;i<=1000;i++) {
       User u = users.get((i-1)%users.size());
-      Delivery d = new Delivery();
+      Delivery d = Delivery.newCommonDelivery();
+      d.setSourceAddress(new Address("+7901111"+i));
       d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 7*86400000L*i));
       d.setActivePeriodStart(new Date(System.currentTimeMillis() - 7*86400000L*i));
       d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
@@ -107,7 +108,7 @@ public class TestAdminContext extends AdminContext {
           }
           return ms.removeFirst();
         }
-      }, null);
+      });
 
       assertNotNull(d.getId());
       deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),d.getId());
