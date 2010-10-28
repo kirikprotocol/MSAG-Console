@@ -5,7 +5,7 @@
  *
  */
 
-function UpdateContent(contentId) {
+function UpdateContent(contentId, updatePeriod) {
 
   var bodyElement = document.getElementById(contentId);
 
@@ -83,20 +83,25 @@ function UpdateContent(contentId) {
     return args;
   };
 
+  var checkUpdate = function() {
+    var enabledEl = document.getElementById("enabled" + contentId);
+    if (enabledEl != null && enabledEl.getAttribute("enabledVal") == "true")
+      window.setTimeout(callUpdate, updatePeriod * 1000)
+  };
 
   /**
    * Обновляет содержимое
    */
-  this.update = function() {
-
+  var callUpdate = function () {
     var onResponse = function(text) {
       bodyElement.innerHTML = text;
+      checkUpdate();
     };
 
     var params = 'eyelineComponentUpdate=' + contentId + '&' + prepareFormParameters();
     new EXmlHttpRequest(requestUrl, params, onResponse).send();
   };
 
-
+  checkUpdate();
 
 }

@@ -50,6 +50,9 @@ public class DataTableHandler extends ComponentHandler {
 
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
 
+    if (!c.isRendered())
+      return;
+
     DataTable t = (DataTable) c;
 
     DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);

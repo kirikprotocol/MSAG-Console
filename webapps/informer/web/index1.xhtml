@@ -1,3 +1,4 @@
+
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -12,20 +13,27 @@
 
   <ui:define name="content">
 
-    <eye:message level="error" rendered="true">
-      <h:panelGrid columns="1">
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-        <h:outputText value="Description"/>
-      </h:panelGrid>
-    </eye:message>
+    <!--<eye:message level="error" rendered="true">-->
+      <!--<h:panelGrid columns="1">-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+        <!--<h:outputText value="Description"/>-->
+      <!--</h:panelGrid>-->
+    <!--</eye:message>-->
+
+    <h:form>
+
+    <eye:updatableContent updatePeriod="1" enabled="#{index1.continueUpdate}" >
+      <h:outputText value="#{index1.current}"/>
+    </eye:updatableContent>
+    </h:form>
 
   </ui:define>
 

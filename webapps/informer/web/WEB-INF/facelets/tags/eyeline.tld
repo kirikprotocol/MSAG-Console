@@ -79,6 +79,12 @@
       <required>true</required>
     </attribute>
 
+    <attribute>
+      <name>enabled</name>
+      <description>Вкл/выкл обновления</description>
+      <type>boolean</type>
+    </attribute>
+
   </tag>
 
   <!-- COLLAPSING GROUP -->

@@ -13,10 +13,12 @@ import javax.faces.component.UIComponent;
 public class UpdatableContentHandler extends ComponentHandler{
 
   private final TagAttribute updatePeriod;
+  private final TagAttribute enabled;
 
   public UpdatableContentHandler(ComponentConfig config) {
     super(config);
     updatePeriod = getRequiredAttribute("updatePeriod");
+    enabled = getAttribute("enabled");
   }
 
   protected javax.faces.component.UIComponent createComponent(com.sun.facelets.FaceletContext ctx) {
@@ -27,6 +29,9 @@ public class UpdatableContentHandler extends ComponentHandler{
     UpdatableContent updatableContent = (UpdatableContent)c;
     updatableContent.setUpdatePeriod(updatePeriod.getInt(ctx));
 
+    if (enabled != null)
+      updatableContent.setEnabled(enabled.getBoolean(ctx));
+    
     nextHandler.apply(ctx, c);
   }
 }

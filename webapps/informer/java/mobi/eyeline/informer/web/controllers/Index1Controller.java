@@ -5,14 +5,19 @@ package mobi.eyeline.informer.web.controllers;
  */
 public class Index1Controller {
 
-  private int current=0;
+  private static int current=0;
 
   public int getMaximum() {
     return 100;
   }
 
+  public boolean isContinueUpdate() {
+    return current < 10;
+  }
+
+
   public int getCurrent() {
-    if(current < 100) {
+    if(current < 1000) {
       current++;
     }
     return current;

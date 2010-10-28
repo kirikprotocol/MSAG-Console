@@ -40,6 +40,11 @@ public class UpdatableContentRenderer extends Renderer {
   }
 
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
+    UpdatableContent pb = (UpdatableContent)component;
+    ResponseWriter w = context.getResponseWriter();
+
+    w.append("\n <div id=\"enabled").append(pb.getId()).append("\" enabledVal=\"").append(pb.isEnabled() + "\"/>");
+
     if(context instanceof AjaxFacesContext) {
       AjaxFacesContext ctx = (AjaxFacesContext) context;
       if (ctx.getAjaxComponentId().equals(component.getId())) {
@@ -47,19 +52,11 @@ public class UpdatableContentRenderer extends Renderer {
         return;
       }
     }
-    UpdatableContent pb = (UpdatableContent)component;
-    ResponseWriter w = context.getResponseWriter();
+
     w.append("\n</div>");
 
     w.append("\n<script language=\"javascript\" type=\"text/javascript\">");
-
-    w.append("\nvar updateContent" + pb.getId() + "=new UpdateContent('" + pb.getId() + "');");
-
-    w.append("\nfunction autoUpdate" + pb.getId() + "(){");
-    w.append("\n  updateContent" + pb.getId() + ".update();");
-    w.append("\n  window.setTimeout(autoUpdate" + pb.getId() + "," + pb.getUpdatePeriod()*1000 + ");");
-    w.append("\n};");
-    w.append("\n  window.setTimeout(autoUpdate" + pb.getId() + "," + pb.getUpdatePeriod()*1000 + ");");
+    w.append("\n  new UpdateContent('" + pb.getId() + "'," + pb.getUpdatePeriod() + ");");
     w.append("\n</script>");
 
   }
