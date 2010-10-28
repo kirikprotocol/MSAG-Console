@@ -13,7 +13,7 @@ import java.util.*;
  * Date: 22.10.2010
  * Time: 16:22:41
  */
-abstract class AggregatedStatRecord implements DataTableRow {
+public abstract class AggregatedStatRecord implements DataTableRow {
 
   private AggregationType type;
   private Calendar startCalendar;
@@ -101,9 +101,9 @@ abstract class AggregatedStatRecord implements DataTableRow {
   }
 
 
-  abstract void add(AggregatedStatRecord other);
+  public abstract void add(AggregatedStatRecord other);
 
-  abstract  Comparator getRecordsComparator(final DataTableSortOrder sortOrder);
+  public abstract  Comparator getRecordsComparator(final DataTableSortOrder sortOrder);
   
 
   protected void addChildren(AggregatedStatRecord other) {

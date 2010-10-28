@@ -29,7 +29,7 @@ public class AggregatedCountStatRecord extends AggregatedStatRecord {
 
 
 
-  void add(AggregatedStatRecord r) {
+  public void add(AggregatedStatRecord r) {
     AggregatedCountStatRecord other = (AggregatedCountStatRecord) r;
     this.counter += other.counter;
     addChildren(r);

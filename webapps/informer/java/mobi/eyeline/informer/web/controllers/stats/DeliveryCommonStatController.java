@@ -1,10 +1,7 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatException;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.delivery.*;
 
 import java.util.Locale;
 
@@ -17,6 +14,7 @@ import java.util.Locale;
 public class DeliveryCommonStatController extends DeliveryStatController implements DeliveryStatVisitor {
 
   private DeliveryStatFilter filter;
+  private Delivery delivery= null;
 
 
   public DeliveryCommonStatController() {
@@ -24,12 +22,38 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
     filter = new DeliveryStatFilter();
   }
 
+  public Integer getDeliveryId() {
+    String s = getRequestParameter("delivery");
+    if(s!=null) {
+      try {
+        int deliveryId = Integer.parseInt(s);
+        delivery = getConfig().getDelivery(getUser().getLogin(),getUser().getPassword(),deliveryId);
+      }
+      catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return delivery!=null  ? delivery.getId() : null;
+
+  }
+
+  public void setDeliveryId(Integer id) {
+     if(id!=null) {
+      try {
+        delivery = getConfig().getDelivery(getUser().getLogin(),getUser().getPassword(),id);
+      }
+      catch (AdminException e) {
+        addError(e);
+      }
+    }
+  }
+
 
   public void clearFilter() {
     filter.setUser(null);
     filter.setFromDate(null);
     filter.setTillDate(null);
-    filter.setTaskId(null);
+    filter.setTaskId(getDeliveryId());
   }
 
 

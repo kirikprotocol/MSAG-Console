@@ -30,7 +30,7 @@ public class AggregatedCommonStatRecord extends AggregatedStatRecord {
 
 
 
-  void add(AggregatedStatRecord r) {
+  public void add(AggregatedStatRecord r) {
     AggregatedCommonStatRecord other = (AggregatedCommonStatRecord) r;
     this.delivered += other.delivered;
     this.failed += other.failed;

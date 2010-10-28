@@ -245,6 +245,11 @@
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+      <managed-bean-name>statsDeliveryCommon</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryCommonStatController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
 
   <navigation-rule>
     <navigation-case>
