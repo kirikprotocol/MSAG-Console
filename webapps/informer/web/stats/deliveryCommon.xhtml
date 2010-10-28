@@ -15,8 +15,8 @@
 
   <ui:define name="content">
     
-    <tr:form id="smsc" rendered="#{!statsDeliveryCommon.initError and statsDeliveryCommon.deliveryId!=null}">
-      <h:inputHidden value="#{statsDeliveryCommon.deliveryId}"/>
+    <tr:form id="smsc" rendered="#{!statsDeliveryCommon.initError and statsDeliveryCommon.delivery!=null}">
+      
 
       <h:panelGroup style="padding:10px">
 
@@ -32,10 +32,6 @@
               <h:outputText value="#{msg['stat.page.aggregation']}"/>
               <h:selectOneMenu value="#{statsDeliveryCommon.aggregation}" >
                 <f:selectItems value="#{statsDeliveryCommon.aggregations}"/>
-              </h:selectOneMenu>
-              <h:outputText value="#{msg['stat.page.user']}" rendered="#{statsDeliveryCommon.admin}"/>
-              <h:selectOneMenu value="#{statsDeliveryCommon.filter.user}" rendered="#{statsDeliveryCommon.admin}" required="false">
-                <f:selectItems value="#{statsDeliveryCommon.users}"/>
               </h:selectOneMenu>
             </h:panelGrid>
           </h:panelGrid>

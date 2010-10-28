@@ -86,13 +86,24 @@ public abstract class LongOperationController extends InformerController {
         config = getConfig();
         thread = new LongOperationThread();
         error=null;
-        state=1;
+        fatalError=null;
         current=0;
         total=1;
         cancelled=false;
+        state=1;
         thread.start();
       }
       return null;
+  }
+
+  public synchronized void reset() {
+    cancel();
+    error=null;
+    fatalError=null;
+    current=0;
+    total=1;
+    cancelled=false;
+    state=0;
   }
 
   private class LongOperationThread extends Thread {

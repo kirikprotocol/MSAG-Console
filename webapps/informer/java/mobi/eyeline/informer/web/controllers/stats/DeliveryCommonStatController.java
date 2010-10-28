@@ -38,6 +38,9 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
     if(s!=null) {
       try {
         int deliveryId = Integer.parseInt(s);
+        if(delivery!=null && delivery.getId()!=deliveryId) {
+          reset();
+        }
         delivery = getConfig().getDelivery(getUser().getLogin(),getUser().getPassword(),deliveryId);
         filter.setTaskId(deliveryId);
       }

@@ -187,5 +187,9 @@ public abstract class DeliveryStatController extends LongOperationController {
     }
   }
 
-
+  @Override
+  public void reset() {
+    super.reset();    //To change body of overridden methods use File | Settings | File Templates.
+    clearRecords();
+  }
 }
