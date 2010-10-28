@@ -15,7 +15,7 @@ function UpdateContent(contentId, updatePeriod) {
    */
   var getClosestForm = function(elementId) {
     var cand = bodyElement.parentNode;
-    while(cand != null){
+    while (cand != null) {
       for (var k = 0; k < document.forms.length; k++) {
         var form = document.forms[k];
         if (form == cand)
@@ -55,7 +55,7 @@ function UpdateContent(contentId, updatePeriod) {
             value = "true";
           else if (el.tagName == "SELECT") {
 
-            for (var op=0; op < el.options.length; op++) {
+            for (var op = 0; op < el.options.length; op++) {
               if (el.options[op].getAttribute("selected") != null) {
                 value = el.options[op].value;
                 break;
@@ -95,6 +95,13 @@ function UpdateContent(contentId, updatePeriod) {
   var callUpdate = function () {
     var onResponse = function(text) {
       bodyElement.innerHTML = text;
+
+      var scripts = bodyElement.getElementsByTagName("script");
+      if (scripts) {
+        for (var i = 0; i < scripts.length; i++) {
+          eval(scripts[i].text);
+        }
+      }
       checkUpdate();
     };
 

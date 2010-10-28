@@ -59,6 +59,7 @@
 
         </eye:dataTableFilter>
 
+        
         <eye:dataTable value="#{usersList.usersModel}" selectedRows="#{usersList.selectedRows}" var="u">
           <eye:row rowId="#{u.login}">
             <eye:column name="login" title="#{userBundle.login}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
@@ -80,6 +81,7 @@
             </eye:column>
           </eye:row>
         </eye:dataTable>
+
 
       </h:panelGroup>
       <eye:buttons>

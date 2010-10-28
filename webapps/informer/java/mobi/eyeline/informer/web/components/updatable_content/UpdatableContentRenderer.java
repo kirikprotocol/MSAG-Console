@@ -43,7 +43,7 @@ public class UpdatableContentRenderer extends Renderer {
     UpdatableContent pb = (UpdatableContent)component;
     ResponseWriter w = context.getResponseWriter();
 
-    w.append("\n <div id=\"enabled").append(pb.getId()).append("\" enabledVal=\"").append(pb.isEnabled() + "\"/>");
+    w.append("\n <div id=\"enabled").append(pb.getId()).append("\" enabledVal=\"").append(pb.isEnabled() + "\"></div>");
 
     if(context instanceof AjaxFacesContext) {
       AjaxFacesContext ctx = (AjaxFacesContext) context;
