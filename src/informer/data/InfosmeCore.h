@@ -12,7 +12,8 @@ namespace informer {
 
 class CommonSettings;
 class RegionFinder;
-class TransferTask;
+class InputTransferTask;
+class ResendTransferTask;
 class UserInfo;
 
 class InfosmeCore
@@ -41,7 +42,8 @@ public:
                                   bool bind ) = 0;
 
     /// start a task transferring messages from inputstore into opstore.
-    virtual void startTransfer( TransferTask* ) = 0;
+    virtual void startInputTransfer( InputTransferTask* ) = 0;
+    virtual void startResendTransfer( ResendTransferTask* ) = 0;
 
     /// traffic limitation by license
     virtual void incIncoming() = 0;

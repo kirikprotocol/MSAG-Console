@@ -58,7 +58,8 @@ RegionalStorage::RegionalStorage( DeliveryImpl&        dlv,
 log_(dlv.log_),
 storingIter_(messageList_.end()),
 dlv_(dlv),
-transferTask_(0),
+inputTransferTask_(0),
+resendTransferTask_(0),
 regionId_(regionId),
 ref_(0),
 newOrResend_(0),
@@ -72,8 +73,12 @@ RegionalStorage::~RegionalStorage()
 {
     smsc_log_debug(log_,"dtor R=%u/D=%u",unsigned(regionId_),unsigned(getDlvId()));
     MutexGuard mg(cacheMon_);
-    if (transferTask_) { transferTask_->stop(); }
-    while (transferTask_) {
+    if (inputTransferTask_) { inputTransferTask_->stop(); }
+    if (resendTransferTask_) { resendTransferTask_->stop(); }
+    while (inputTransferTask_) {
+        cacheMon_.wait(100);
+    }
+    while (resendTransferTask_) {
         cacheMon_.wait(100);
     }
 }
@@ -124,7 +129,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     do { // fake loop
 
         /// check if we need to request new messages
-        if ( !transferTask_ &&
+        if ( !inputTransferTask_ &&
              unsigned(newQueue_.Count()) <= cs.getMinInputQueueSize() ) {
             const unsigned newQueueSize = unsigned(newQueue_.Count());
             // const bool retries = hasRetries();
@@ -134,11 +139,11 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
                                dlvId,
                                newQueueSize);
                 // mg.Lock();
-                transferTask_ = dlv_.source_->startTransferTask(*this,
-                                                                cs.getInputUploadCount(),
-                                                                newQueue_.Count()==0 &&
-                                                                resendQueue_.empty() &&
-                                                                nextResendFile_==0);
+                inputTransferTask_ = dlv_.source_->startInputTransfer(*this,
+                                                                      cs.getInputUploadCount(),
+                                                                      newQueue_.Count()==0 &&
+                                                                      resendQueue_.empty() &&
+                                                                      nextResendFile_==0);
             } catch (std::exception& e ) {
                 smsc_log_warn(log_,"exception requesting input msgs in R=%u/D=%u: %s",
                               unsigned(regionId_),
@@ -191,7 +196,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
     } while ( false );
 
-    if (uploadNextResend) {
+    if (uploadNextResend && !resendTransferTask_) {
         smsc_log_debug(log_,"FIXME: start upload next resend task here");
     }
 
@@ -253,6 +258,21 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
                                     unsigned(info.getDlvId()),
                                     ulonglong(msgId));
     }
+    if (retryDelay <= 0) {
+        // immediate retry
+        Message& m = iter->msg;
+        // putting the message to the new queue
+        assert( m.state == MSGSTATE_PROCESS || m.state == MSGSTATE_TAKEN );
+        m.state = MSGSTATE_PROCESS;
+        newQueue_.PushFront(iter);
+        mg.Unlock();
+        smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into immediate retry",
+                       unsigned(regionId_),
+                       unsigned(info.getDlvId()),
+                       ulonglong(msgId));
+        return;
+    }
+
     MessageList tokill; // must be prior the msglock!
     MsgLock ml(iter,this);
     Message& m = iter->msg;
@@ -329,83 +349,16 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
 }
 
 
-void RegionalStorage::transferFinished( TransferTask* task )
-{
-    MutexGuard mg(cacheMon_);
-    if ( task == transferTask_ ) {
-        transferTask_ = 0;
-    } else {
-        task = 0;
-    }
-    if (task) {
-        delete task;
-    }
-    cacheMon_.notify();
-    smsc_log_debug(log_,"transfer has been finished");
-}
-
-
 void RegionalStorage::stopTransfer( bool finalizeAll )
 {
     MutexGuard mg(cacheMon_);
-    if ( transferTask_ ) {
+    if ( inputTransferTask_ ) {
         // FIXME: should we wait until it stop?
-        transferTask_->stop();
+        inputTransferTask_->stop();
     }
     if ( finalizeAll ) {
         // FIXME: make all messages fail
     }
-}
-
-
-void RegionalStorage::addNewMessages( msgtime_type currentTime,
-                                      MessageList& listFrom,
-                                      MsgIter      iter1,
-                                      MsgIter      iter2 )
-{
-    const DeliveryInfo& info = dlv_.getDlvInfo();
-    smsc_log_debug(log_,"adding new messages to storage R=%u/D=%u",
-                   unsigned(regionId_),
-                   unsigned(info.getDlvId()));
-    for ( MsgIter i = iter1; i != iter2; ++i ) {
-        Message& m = i->msg;
-        // m.lastTime = currentTime;
-        m.state = MSGSTATE_PROCESS;
-        smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
-                       unsigned(regionId_),
-                       unsigned(info.getDlvId()),
-                       unsigned(m.msgId));
-        regionid_type serial = 0;
-        dlv_.activityLog_.addRecord(currentTime,regionId_,m,0);
-        dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,serial);
-        i->serial = serial;
-    }
-    MutexGuard mg(cacheMon_);
-    for ( MsgIter i = iter1; i != iter2; ++i ) {
-        newQueue_.Push(i);
-    }
-    messageList_.splice( messageList_.begin(), listFrom, iter1, iter2 );
-    /*
-    if ( log_->isDebugEnabled() ) {
-        std::string s;
-        s.reserve(300);
-        unsigned count = 0;
-        for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
-            if ( i == storingIter_ ) {
-                s.append(" s");
-            }
-            char buf[10];
-            sprintf(buf," %u",unsigned(i->msg.msgId));
-            s.append(buf);
-            ++count;
-        }
-        smsc_log_debug(log_,"messages (%u) in R=%u/D=%u: %s",
-                       count,
-                       unsigned(regionId_),
-                       unsigned(info.getDlvId()),
-                       s.c_str());
-    }
-     */
 }
 
 
@@ -516,15 +469,95 @@ bool RegionalStorage::postInit()
 }
 
 
-/*
-void RegionalStorage::destroy( Message& msg )
+void RegionalStorage::transferFinished( InputTransferTask* task )
 {
-    smsc_log_debug(log_,"dtor message R=%u/D=%u/M=%llu",
-                   unsigned(regionId_),
-                   unsigned(dlvInfo_.getDlvId()),
-                   ulonglong(msg.msgId));
+    MutexGuard mg(cacheMon_);
+    if ( task == inputTransferTask_ ) {
+        inputTransferTask_ = 0;
+    } else {
+        task = 0;
+    }
+    if (task) {
+        delete task;
+    }
+    cacheMon_.notify();
+    smsc_log_debug(log_,"input transfer has been finished");
 }
- */
+
+
+void RegionalStorage::transferFinished( ResendTransferTask* task )
+{
+    MutexGuard mg(cacheMon_);
+    if ( task == resendTransferTask_ ) {
+        resendTransferTask_ = 0;
+    } else {
+        task = 0;
+    }
+    if (task) {
+        delete task;
+    }
+    cacheMon_.notify();
+    smsc_log_debug(log_,"resend transfer has been finished");
+}
+
+
+void RegionalStorage::addNewMessages( msgtime_type currentTime,
+                                      MessageList& listFrom,
+                                      MsgIter      iter1,
+                                      MsgIter      iter2 )
+{
+    const DeliveryInfo& info = dlv_.getDlvInfo();
+    smsc_log_debug(log_,"adding new messages to storage R=%u/D=%u",
+                   unsigned(regionId_),
+                   unsigned(info.getDlvId()));
+    for ( MsgIter i = iter1; i != iter2; ++i ) {
+        Message& m = i->msg;
+        // m.lastTime = currentTime;
+        m.state = MSGSTATE_PROCESS;
+        smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
+                       unsigned(regionId_),
+                       unsigned(info.getDlvId()),
+                       unsigned(m.msgId));
+        regionid_type serial = 0;
+        dlv_.activityLog_.addRecord(currentTime,regionId_,m,0);
+        dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,serial);
+        i->serial = serial;
+    }
+    MutexGuard mg(cacheMon_);
+    for ( MsgIter i = iter1; i != iter2; ++i ) {
+        newQueue_.Push(i);
+    }
+    messageList_.splice( messageList_.begin(), listFrom, iter1, iter2 );
+    /*
+    if ( log_->isDebugEnabled() ) {
+        std::string s;
+        s.reserve(300);
+        unsigned count = 0;
+        for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
+            if ( i == storingIter_ ) {
+                s.append(" s");
+            }
+            char buf[10];
+            sprintf(buf," %u",unsigned(i->msg.msgId));
+            s.append(buf);
+            ++count;
+        }
+        smsc_log_debug(log_,"messages (%u) in R=%u/D=%u: %s",
+                       count,
+                       unsigned(regionId_),
+                       unsigned(info.getDlvId()),
+                       s.c_str());
+    }
+     */
+}
+
+
+void RegionalStorage::resendIO( bool isInputDirection )
+{
+    smsc_log_debug(log_,"FIXME: R=%u/D=%u resend IO dir=%s",
+                   regionId_, dlv_.getDlvInfo().getDlvId(),
+                   isInputDirection ? "in" : "out");
+}
 
 }
 }

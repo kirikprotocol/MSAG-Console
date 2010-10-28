@@ -8,7 +8,8 @@
 namespace eyeline {
 namespace informer {
 
-class TransferTask;
+class InputTransferTask;
+class ResendTransferTask;
 class MessageGlossary;
 struct InputRegionRecord;
 class ActivityLog;
@@ -25,22 +26,26 @@ public:
     virtual regionid_type getRegionId() const = 0;
 
     /// notify that current upload is finished
-    virtual void transferFinished( TransferTask* task ) = 0;
+    virtual void transferFinished( InputTransferTask* task ) = 0;
+    virtual void transferFinished( ResendTransferTask* task ) = 0;
 
     /// add new messages
     virtual void addNewMessages( msgtime_type currentTime,
                                  MessageList& listFrom,
                                  MsgIter iter1,
                                  MsgIter iter2 ) = 0;
+
+    /// resend file input/output
+    virtual void resendIO( bool isInputDirection ) = 0;
 };
 
 
-class TransferTask : public smsc::core::threads::ThreadedTask
+class InputTransferTask : public smsc::core::threads::ThreadedTask
 {
 public:
-    virtual ~TransferTask() {}
+    virtual ~InputTransferTask() {}
 protected:
-    TransferTask( TransferRequester& req, unsigned count ) :
+    InputTransferTask( TransferRequester& req, unsigned count ) :
     smsc::core::threads::ThreadedTask(false),
     requester_(req), count_(count) {}
 
@@ -51,11 +56,45 @@ protected:
     }
 
 private:
-    TransferTask( const TransferTask& );
+    InputTransferTask( const InputTransferTask& );
 
 protected:
     TransferRequester& requester_;
     unsigned count_;
+};
+
+
+class ResendTransferTask : public smsc::core::threads::ThreadedTask
+{
+public:
+    virtual ~ResendTransferTask() {}
+protected:
+    ResendTransferTask( TransferRequester& req, bool isInputDir ) :
+    smsc::core::threads::ThreadedTask(false),
+    requester_(req), isInputDir_(isInputDir) {}
+
+    virtual void onRelease() {
+        smsc::core::threads::ThreadedTask::onRelease();
+        TransferRequester* r = &requester_;
+        if (r) r->transferFinished(this);
+    }
+
+    // the direction of task (true -- load from disk, false -- flush to disk).
+    // inline bool isInput() const { return isInputDir_; }
+
+    virtual const char* taskName() { return "resendIO"; }
+
+    virtual int Execute() {
+        requester_.resendIO(isInputDir_);
+        return 0;
+    }
+
+private:
+    ResendTransferTask( const ResendTransferTask& );
+
+protected:
+    TransferRequester& requester_;
+    bool               isInputDir_;
 };
 
 
@@ -75,9 +114,11 @@ public:
     // This method should create a ThreadedTask which will upload messages,
     // or if the task is already running, simply return.
     // NOTE: throws exception if the task cannot be created/found.
-    virtual TransferTask* startTransferTask( TransferRequester& requester,
-                                             unsigned           count,
-                                             bool mayDetachRegion ) = 0;
+    virtual InputTransferTask* startInputTransfer( TransferRequester& requester,
+                                                   unsigned           count,
+                                                   bool mayDetachRegion ) = 0;
+
+    virtual void startResendTransfer( ResendTransferTask* task ) = 0;
 
     virtual MessageGlossary& getGlossary() = 0;
 

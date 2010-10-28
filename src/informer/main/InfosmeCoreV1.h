@@ -68,7 +68,8 @@ public:
                                   std::vector<regionid_type>& regIds,
                                   bool bind );
 
-    virtual void startTransfer( TransferTask* task );
+    virtual void startInputTransfer( InputTransferTask* task );
+    virtual void startResendTransfer( ResendTransferTask* task );
 
     /// license traffic control
     virtual void incIncoming();
@@ -148,7 +149,8 @@ private:
     smsc::core::synchronization::EventMonitor  startMon_;
     bool                                       stopping_;
     bool                                       started_;
-    smsc::core::threads::ThreadPool            ttp_;        // transfer task pool
+    smsc::core::threads::ThreadPool            itp_;        // input transfer pool
+    smsc::core::threads::ThreadPool            rtp_;        // resend transfer pool
     smsc::core::buffers::Hash< SmscSender* >      smscs_;        // owned
     smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned

@@ -409,6 +409,8 @@ void InfosmeCoreV1::stop()
             if (stopping_) return;
             smsc_log_info(log_,"stop() received");
             stopping_ = true;
+            itp_.stopNotify();
+            rtp_.stopNotify();
             startMon_.notifyAll();
         }
 
@@ -580,9 +582,15 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
 }
 
 
-void InfosmeCoreV1::startTransfer( TransferTask* task )
+void InfosmeCoreV1::startInputTransfer( InputTransferTask* task )
 {
-    ttp_.startTask(task);
+    itp_.startTask(task);
+}
+
+
+void InfosmeCoreV1::startResendTransfer( ResendTransferTask* task )
+{
+    rtp_.startTask(task);
 }
 
 

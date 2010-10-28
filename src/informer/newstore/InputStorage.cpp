@@ -123,11 +123,11 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
 }
 
 
-TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
-                                               unsigned           count,
-                                               bool               mayDetachRegion )
+InputTransferTask* InputStorage::startInputTransfer( TransferRequester& requester,
+                                                     unsigned           count,
+                                                     bool               mayDetachRegion )
 {
-    TransferTask* task = 0;
+    InputTransferTask* task = 0;
     if (count==0) return task;
     const regionid_type regId = requester.getRegionId();
     try {
@@ -139,8 +139,8 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
         if (ro.rfn==0) { ro.rfn=1; ro.roff=0; }
         if (ro.rfn<ro.wfn || (ro.rfn==ro.wfn && ro.roff<ro.woff)) {
             // ok
-            task = new InputTransferTask(requester,count,*this);
-            core_.startTransfer(task);
+            task = new InputTransferTaskImpl(requester,count,*this);
+            core_.startInputTransfer(task);
         } else {
             // no data
             smsc_log_debug(log_,"R=%u/D=%u data is not ready: RP=%u/%u, WP=%u/%u",
@@ -156,6 +156,12 @@ TransferTask* InputStorage::startTransferTask( TransferRequester& requester,
         core_.deliveryRegions(getDlvId(),regs,false);
     }
     return task;
+}
+
+
+void InputStorage::startResendTransfer( ResendTransferTask* task )
+{
+    core_.startResendTransfer(task);
 }
 
 

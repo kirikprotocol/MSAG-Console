@@ -21,12 +21,12 @@ class InputStorage : public InputMessageSource
     typedef std::list< InputRegionRecord >  RecordList;
     typedef smsc::core::buffers::IntHash< RecordList::iterator > RecordHash;
 
-    class InputTransferTask : public TransferTask {
+    class InputTransferTaskImpl : public InputTransferTask {
     public:
-        InputTransferTask( TransferRequester& req,
-                           unsigned count,
-                           InputStorage& store ) :
-        TransferTask(req,count), store_(store) {}
+        InputTransferTaskImpl( TransferRequester& req,
+                               unsigned count,
+                               InputStorage& store ) :
+        InputTransferTask(req,count), store_(store) {}
         virtual const char* taskName() { return "transtask"; }
         virtual int Execute() {
             store_.doTransfer(requester_,count_);
@@ -46,9 +46,10 @@ public:
 
     virtual void addNewMessages( MsgIter begin, MsgIter end );
 
-    virtual TransferTask* startTransferTask( TransferRequester& requester,
-                                             unsigned           count,
-                                             bool               mayDetachRegion );
+    virtual InputTransferTask* startInputTransfer( TransferRequester& requester,
+                                                   unsigned           count,
+                                                   bool               mayDetachRegion );
+    virtual void startResendTransfer( ResendTransferTask* task );
 
     virtual MessageGlossary& getGlossary() { return glossary_; }
 

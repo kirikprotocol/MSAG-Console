@@ -18,7 +18,7 @@ class DeliveryImpl;
 class DeliveryInfo;
 
 /// Working storage for messages for one Delivery/Region
-class RegionalStorage : public TransferRequester
+class RegionalStorage : protected TransferRequester
 {
 private:
     friend class EmbedRefPtr<RegionalStorage>;
@@ -73,17 +73,8 @@ public:
                           int          smppState );
 
 
-    /// invoked when upload task has finished.
-    virtual void transferFinished( TransferTask* );
-
     /// notify transfer thread that it should be stopped.
     void stopTransfer( bool finalizeAll = false );
-
-    /// add new messages to processing.
-    virtual void addNewMessages( msgtime_type currentTime,
-                                 MessageList& listFrom,
-                                 MsgIter      iter1,
-                                 MsgIter      iter2 );
 
     /// rolling over the storage
     /// @return number of bytes written
@@ -99,6 +90,21 @@ public:
     /// messages accumulated in messageHash_ will be partly moved according to their state
     /// into newQueue and resendQueue.
     bool postInit();
+
+protected:
+    /// invoked when upload task has finished.
+    virtual void transferFinished( InputTransferTask* );
+
+    /// invoked when upload task has finished.
+    virtual void transferFinished( ResendTransferTask* );
+
+    /// add new messages to processing.
+    virtual void addNewMessages( msgtime_type currentTime,
+                                 MessageList& listFrom,
+                                 MsgIter      iter1,
+                                 MsgIter      iter2 );
+
+    virtual void resendIO( bool isInputDirection );
 
 private:
     // message cleanup
@@ -138,7 +144,8 @@ private:
     NewQueue                          newQueue_;
 
     DeliveryImpl&                     dlv_;
-    TransferTask*                     transferTask_;  // owned
+    InputTransferTask*                inputTransferTask_;  // owned
+    ResendTransferTask*               resendTransferTask_;  // owned
     regionid_type                     regionId_;
 
     smsc::core::synchronization::Mutex refLock_;
