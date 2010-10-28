@@ -9,23 +9,21 @@
 namespace eyeline {
 namespace informer {
 
-class ToBuf;
-class FromBuf;
-
-// 8+8+4+4+16+24+1 = 16+24+24+1 = 40+25 = 65 => 72
+// 8+8+4+4+8+24+2+1 = 16+16+24+3 = 32+27 = 59 + (4bytes/locker) => 64 bytes
 struct Message
 {
     static const size_t USERDATA_LENGTH = 24;
 
     Message() {}
     Message( const Message& m ) :
-    subscriber(m.subscriber),
-    msgId(m.msgId),
-    lastTime(m.lastTime),
-    timeLeft(m.timeLeft),
-    text(m.text),
-    userData(m.userData),
-    state(m.state) {}
+    subscriber(m.subscriber),    // 8
+    msgId(m.msgId),              // 8
+    lastTime(m.lastTime),        // 4
+    timeLeft(m.timeLeft),        // 4
+    text(m.text),                // 8
+    userData(m.userData),        // 24
+    retryCount(m.retryCount),    // 2
+    state(m.state) {}            // 1
 
     personid_type    subscriber; // not changed (constant)
     msgid_type       msgId;      // unique message id (constant)
@@ -33,14 +31,8 @@ struct Message
     timediff_type    timeLeft;   // ttl / filepos (for new messages)
     MessageTextPtr   text;       // message text
     smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // (constant)
+    uint16_t         retryCount;
     uint8_t          state;
-
-    // conversion (for I/O)
-    // ToBuf& toBuf( uint16_t version, ToBuf& tb ) const;
-
-    // read message from buf
-    // NOTE: make sure to invoke MessageGlossary:bind(text);
-    // FromBuf& fromBuf( uint16_t version, FromBuf& fb );
 
     inline bool isTextUnique() const {
         return (text->getTextId() <= 0);

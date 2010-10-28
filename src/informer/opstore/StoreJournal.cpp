@@ -81,6 +81,7 @@ public:
             if (fb.getPos() == fb.getLen()) break;
             msg.lastTime = fb.get32();
             msg.timeLeft = fb.get32();
+            msg.retryCount = fb.get16();
             if (fb.getPos() == fb.getLen()) break;
             msg.subscriber = fb.get64();
             msg.userData = fb.getCString();
@@ -147,6 +148,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         // non-final
         tb.set32(msg.lastTime);
         tb.set32(msg.timeLeft);
+        tb.set16(msg.retryCount);
         if (equalSerials) {
             // we have already written the message to this file
             break;

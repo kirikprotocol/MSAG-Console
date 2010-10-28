@@ -194,10 +194,15 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     const ulonglong ymdTime = msgTimeToYmd(currentTime,&now);
 
     char cstate;
+    char cretry[30];
+    cretry[0] = '\0';
     switch (msg.state) {
     case MSGSTATE_INPUT:     cstate = 'N'; break;
     case MSGSTATE_PROCESS:   cstate = 'P'; break;
-    case MSGSTATE_RETRY:     cstate = 'R'; break;
+    case MSGSTATE_RETRY:
+        cstate = 'R';
+        sprintf(cretry,"%u,%u,",unsigned(msg.lastTime-currentTime), msg.retryCount);
+        break;
     case MSGSTATE_DELIVERED: cstate = 'D'; break;
     case MSGSTATE_FAILED:    cstate = 'F'; break;
     case MSGSTATE_EXPIRED:   cstate = 'E'; break;
@@ -212,19 +217,14 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     else { sprintf(caddr,".%u.%u.%0*.*llu",ton,npi,len,len,addr); }
 
     smsc::core::buffers::TmpBuf<char,1024> buf;
-    const int off = sprintf(buf.get(), "%llu,%c,%u,%llu,%s,%d,%d,%s,",
-                            ymdTime, cstate, regId, msg.msgId, caddr,
+    const int off = sprintf(buf.get(), "%llu,%c,%u,%llu,%s%s,%d,%d,%s,",
+                            ymdTime, cstate, regId, msg.msgId, cretry, caddr,
                             msg.timeLeft, smppStatus,
                             msg.userData.c_str());
     if ( off < 0 ) {
         throw InfosmeException("cannot printf to activity.log: %d",off);
     }
     buf.SetPos(off);
-    if (msg.state == MSGSTATE_RETRY) {
-        char cretry[20];
-        const int roff = sprintf(cretry,"%u,",unsigned(msg.lastTime-currentTime));
-        buf.Append(cretry,roff);
-    }
     escapeText(buf, msg.text->getText(), strlen(msg.text->getText()));
     buf.Append("\n",1);
 

@@ -205,7 +205,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
     Message& m = iter->msg;
     m.lastTime = currentTime;
-    m.timeLeft = info.getMessageValidityTime();
+    // m.timeLeft = info.getMessageValidityTime();
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_TAKEN;
     msg = m;
@@ -276,7 +276,11 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
     MessageList tokill; // must be prior the msglock!
     MsgLock ml(iter,this);
     Message& m = iter->msg;
-    // fixing time left according
+
+    // FIXME: incrementing retry count, should we check here?
+    ++m.retryCount;
+
+    // fixing time left.
     m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
     if ( m.timeLeft > timediff_type(info.getMinRetryTime()) ) {
         // there is enough validity time to try the next time
@@ -417,9 +421,10 @@ void RegionalStorage::setRecordAtInit( Message& msg, regionid_type serial )
         // non-final msg found
         Message& m = (*iter)->msg;
         assert(m.msgId==msg.msgId);
-        m.state = msg.state;
         m.lastTime = msg.lastTime;
         m.timeLeft = msg.timeLeft;
+        m.retryCount = msg.retryCount;
+        m.state = msg.state;
         (*iter)->serial = serial;
     }
 }
@@ -428,7 +433,7 @@ void RegionalStorage::setRecordAtInit( Message& msg, regionid_type serial )
 bool RegionalStorage::postInit()
 {
     int sent = 0;
-    int retry = 0;
+    // int retry = 0;
     int process = 0;
     for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
         Message& m = i->msg;
@@ -454,7 +459,7 @@ bool RegionalStorage::postInit()
         case MSGSTATE_RETRY:
             messageHash_.Delete(m.msgId);
             resendQueue_.insert( std::make_pair(m.lastTime,i) );
-            ++retry;
+            // ++retry;
             break;
         default:
             throw InfosmeException("logic error: final state D=%u/M=%llu in opstore",
@@ -462,7 +467,7 @@ bool RegionalStorage::postInit()
         }
     }
     // syncing stats
-    dlv_.activityLog_.incStats(MSGSTATE_RETRY,retry);
+    // dlv_.activityLog_.incStats(MSGSTATE_RETRY,retry); taking from actlog
     dlv_.activityLog_.incStats(MSGSTATE_SENT,sent);
     dlv_.activityLog_.incStats(MSGSTATE_PROCESS,process);
     return !messageList_.empty();
@@ -512,8 +517,10 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                    unsigned(info.getDlvId()));
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         Message& m = i->msg;
-        // m.lastTime = currentTime;
+        m.lastTime = currentTime;
+        m.timeLeft = info.getMessageValidityTime();
         m.state = MSGSTATE_PROCESS;
+        m.retryCount = 0;
         smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
                        unsigned(regionId_),
                        unsigned(info.getDlvId()),
