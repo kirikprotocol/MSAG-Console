@@ -113,7 +113,7 @@ const char* msgStateToString( MsgState state )
     switch (state) {
     case MSGSTATE_INPUT     : return "inpt";
     case MSGSTATE_PROCESS   : return "proc";
-    case MSGSTATE_TAKEN     : return "takn";
+    // case MSGSTATE_TAKEN     : return "takn";
     case MSGSTATE_SENT      : return "sent";
     case MSGSTATE_DELIVERED : return "dlvd";
     case MSGSTATE_EXPIRED   : return "xprd";

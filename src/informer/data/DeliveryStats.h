@@ -12,7 +12,7 @@ struct DeliveryStats
 {
 public:
     uint32_t     totalMessages;
-    uint32_t     procMessages;    // a number of messages in opstore proc+taken
+    uint32_t     procMessages;    // a number of messages in opstore proc
     uint32_t     sentMessages;    // a number of messages in sent state
     uint32_t     retryMessages;   // the length of resend queue
     uint32_t     dlvdMessages;
@@ -38,7 +38,7 @@ public:
         if (!value) return;
         switch (MsgState(state)) {
         case MSGSTATE_PROCESS  : procMessages += value;  break;
-        case MSGSTATE_TAKEN    : procMessages += value;  break;
+        // case MSGSTATE_TAKEN    : procMessages += value;  break;
         case MSGSTATE_SENT     : sentMessages += value;  break;
         case MSGSTATE_RETRY    : retryMessages += value; break;
         case MSGSTATE_INPUT    : if (value>0) { totalMessages += value; } break;

@@ -207,14 +207,16 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     m.lastTime = currentTime;
     // m.timeLeft = info.getMessageValidityTime();
     const uint8_t prevState = m.state;
-    m.state = MSGSTATE_TAKEN;
+    m.state = MSGSTATE_PROCESS;
     msg = m;
     smsc_log_debug(log_,"taking message R=%u/D=%u/M=%llu from %s",
                    unsigned(regionId_),
                    dlvId,
                    ulonglong(m.msgId),from);
-    dlv_.storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
-    dlv_.activityLog_.incStats(m.state,1,prevState);
+    if (prevState != m.state) {
+        dlv_.storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
+        dlv_.activityLog_.incStats(m.state,1,prevState);
+    }
     return true;
 }
 
@@ -262,8 +264,8 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
         // immediate retry
         Message& m = iter->msg;
         // putting the message to the new queue
-        assert( m.state == MSGSTATE_PROCESS || m.state == MSGSTATE_TAKEN );
-        m.state = MSGSTATE_PROCESS;
+        assert( m.state == MSGSTATE_PROCESS );
+        // m.state = MSGSTATE_PROCESS;
         newQueue_.PushFront(iter);
         mg.Unlock();
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into immediate retry",
@@ -453,10 +455,7 @@ bool RegionalStorage::postInit()
             throw InfosmeException("logic error: input msg D=%u/M=%llu in opstore",
                                    getDlvId(),m.msgId);
         case MSGSTATE_PROCESS:
-        case MSGSTATE_TAKEN:
             // need to be moved to newQueue
-            // NOTE: taken messages are moved into new queue also.
-            m.state = MSGSTATE_PROCESS;
             messageHash_.Delete( m.msgId );
             newQueue_.Push(i);
             ++process;

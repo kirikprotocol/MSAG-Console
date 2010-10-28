@@ -60,13 +60,12 @@ inline personid_type addressToSubscriber( uint8_t len, uint8_t ton, uint8_t npi,
 typedef enum {
     MSGSTATE_INPUT = 1,
     MSGSTATE_PROCESS = 2,
-    MSGSTATE_TAKEN = 3,     // actually it is technological state (not seen externally)
-    MSGSTATE_SENT = 4,
-    MSGSTATE_RETRY = 5,     // non-final
-    MSGSTATE_DELIVERED = 6,
+    MSGSTATE_SENT = 3,
+    MSGSTATE_RETRY = 4,     // non-final
+    MSGSTATE_DELIVERED = 5,
     MSGSTATE_FINAL = MSGSTATE_DELIVERED,
-    MSGSTATE_EXPIRED = 7,
-    MSGSTATE_FAILED = 8,
+    MSGSTATE_EXPIRED = 6,
+    MSGSTATE_FAILED = 7,
     MSGSTATE_MAX = MSGSTATE_FAILED
 } MsgState;
 const char* msgStateToString( MsgState state );
