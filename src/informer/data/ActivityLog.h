@@ -29,10 +29,14 @@ public:
     /// increment stats, optionally decrementing fromState
     void incStats( uint8_t state, int value = 1, uint8_t fromState = 0 );
 
-    void getStats( DeliveryStats& ds ) {
+    void getStats( DeliveryStats& ds )
+    {
         MutexGuard mg(statLock_);
         ds = stats_;
     }
+
+    /// the method pops released incremental stats and then clear it.
+    void popIncrementalStats( DeliveryStats& ds );
 
 private:
     bool readStatistics( const std::string& filename,
@@ -43,6 +47,7 @@ private:
     smsc::core::synchronization::Mutex statLock_;
     const DeliveryInfo&                info_;
     DeliveryStats                      stats_;
+    DeliveryStats[2]                   incstats_;
     FileGuard                          fg_;
     msgtime_type                       createTime_;
     msgtime_type                       period_;

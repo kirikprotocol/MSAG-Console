@@ -21,6 +21,8 @@ createTime_(0)
         log_ = smsc::logger::Logger::getInstance("actlog");
     }
     stats_.clear();
+    incstats_[0].clear();
+    incstats_[1].clear();
     period_ = info.getCS().getActivityLogPeriod() / 60 * 60;
     if (period_ > 3600) period_ = 3600;
     const int nslices = 3600 / period_;
@@ -173,7 +175,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
     if (statLineHasBeenRead) {
         stats_ = ds;
         // they will be supplied later
-        stats_.sentMessages = stats_.procMessages = stats_.retryMessages = 0;
+        stats_.sentMessages = stats_.procMessages = 0;
     }
     return statLineHasBeenRead;
 }
@@ -275,8 +277,19 @@ void ActivityLog::incStats( uint8_t state, int value, uint8_t fromState )
     MutexGuard mg(statLock_);
     stats_.incStat(state,value);
     if (fromState) {stats_.incStat(fromState,-value);}
+    const unsigned idx = info_.getCS().getStatBankIndex();
+    incstats_[idx].incStat(state,value);
+    if (fromState) {incstats_[idx].incStat(fromState,-value);}
 }
 
+
+void ActivityLog::popIncrementalStats( DeliveryStats& ds )
+{
+    MutexGuard mg(statLock_);
+    const unsigned idx = 1 - info_.getCS().getStatBankIndex();
+    ds = incstats_[idx];
+    incstats_[idx].clear();
+}
 
 }
 }

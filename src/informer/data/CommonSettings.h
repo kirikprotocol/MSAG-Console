@@ -70,7 +70,7 @@ public:
     }
 
     /// incremental statistics bank index
-    inline unsigned getStatBank() const { return incStatBank_; }
+    inline unsigned getStatBankIndex() const { return incStatBank_; }
 
     /// flip statistics bank, no locking here
     void flipStatBank() {
