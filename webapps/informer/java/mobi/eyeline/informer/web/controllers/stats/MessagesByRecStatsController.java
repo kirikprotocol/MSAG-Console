@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.LongOperationController;
 
 import javax.faces.model.SelectItem;
@@ -89,7 +90,7 @@ public class MessagesByRecStatsController extends LongOperationController {
 
 
   @Override
-  public void execute(final Locale locale) throws InterruptedException, AdminException {
+  public void execute(final Configuration config, final Locale locale) throws InterruptedException, AdminException {
     records.clear();
 
     DeliveryFilter deliveryFilter = new DeliveryFilter();
@@ -99,11 +100,11 @@ public class MessagesByRecStatsController extends LongOperationController {
       deliveryFilter.setUserIdFilter(new String[]{allowedUser});
     }
 
-    setCurrentAndTotal(0,getConfig().countDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter));
+    setCurrentAndTotal(0,config.countDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter));
 
     deliveryFilter.setResultFields(new DeliveryFields[]{DeliveryFields.Name,DeliveryFields.UserId,DeliveryFields.StartDate,DeliveryFields.EndDate});
 
-    getConfig().getDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter,1000,
+    config.getDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter,1000,
         new Visitor<DeliveryInfo>() {
           public boolean visit(DeliveryInfo deliveryInfo ) throws AdminException {
             final int deliveryId = deliveryInfo.getDeliveryId();
@@ -118,7 +119,7 @@ public class MessagesByRecStatsController extends LongOperationController {
             messageFilter.setMsisdnFilter(new String[]{msisdn});
             messageFilter.setFields(new MessageFields[]{MessageFields.Date,MessageFields.State,MessageFields.Text, MessageFields.ErrorCode});
 
-            getConfig().getMessagesStates(getUser().getLogin(),getUser().getPassword(),messageFilter,1000,
+            config.getMessagesStates(getUser().getLogin(),getUser().getPassword(),messageFilter,1000,
                 new Visitor<MessageInfo>() {
                   public boolean visit(MessageInfo messageInfo) throws AdminException {
                     String errString=null;
@@ -133,12 +134,12 @@ public class MessagesByRecStatsController extends LongOperationController {
                     }
                     MessagesByRecStatRecord rec = new MessagesByRecStatRecord(deliveryId,userId,name,messageInfo.getText(),messageInfo.getDate(),messageInfo.getState(),errString);
                     records.add(rec);
-                    return true;
+                    return !isCancelled();
                   }
                 }
             );
             setCurrent(getCurrent()+1);
-            return true;
+            return !isCancelled();
           }
         }
     );

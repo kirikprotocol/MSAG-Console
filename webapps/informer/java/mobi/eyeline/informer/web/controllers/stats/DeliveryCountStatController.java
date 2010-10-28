@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.web.config.Configuration;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -42,7 +43,7 @@ public class DeliveryCountStatController  extends DeliveryStatController impleme
 
 
   @Override
-  public void loadRecords(final Locale locale) throws AdminException{
+  public void loadRecords(Configuration config, final Locale locale) throws AdminException{
       DeliveryFilter f = new DeliveryFilter();
       String filterUser = filter.getUser();
       if(filterUser!=null) {
@@ -52,7 +53,7 @@ public class DeliveryCountStatController  extends DeliveryStatController impleme
       f.setStartDateTo(filter.getTillDate());
       f.setResultFields(new DeliveryFields[]{DeliveryFields.StartDate});
 
-      getConfig().getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);
+      config.getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);
   }
 
   public boolean visit(DeliveryInfo di) throws AdminException {
@@ -67,7 +68,7 @@ public class DeliveryCountStatController  extends DeliveryStatController impleme
       oldRecord.add(newRecord);
     }
     setCurrent(getCurrent()+1);
-    return true;
+    return !isCancelled();
   }
   
 }

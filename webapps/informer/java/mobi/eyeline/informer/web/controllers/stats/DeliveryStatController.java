@@ -2,12 +2,10 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.controllers.InformerController;
+import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.LongOperationController;
 
 import javax.faces.model.SelectItem;
@@ -131,13 +129,13 @@ public abstract class DeliveryStatController extends LongOperationController {
     return ret;
   }
 
-  abstract void loadRecords(final Locale locale) throws AdminException, InterruptedException;
+  abstract void loadRecords(Configuration config, final Locale locale) throws AdminException, InterruptedException;
 
   @Override
-  public void execute(final Locale locale) throws Exception {
+  public void execute(Configuration config, final Locale locale) throws Exception {
     clearRecords();
     try {
-      loadRecords(locale);
+      loadRecords(config,locale);
     }
     catch (Exception e) {
       clearRecords();

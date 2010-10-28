@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.LongOperationController;
 
 import javax.faces.model.SelectItem;
@@ -94,7 +95,7 @@ public class DeliveriesStatsController extends LongOperationController {
 
 
   @Override
-  public void execute(final Locale locale) throws InterruptedException, AdminException {
+  public void execute(final Configuration config, final Locale locale) throws InterruptedException, AdminException {
     records.clear();
 
     DeliveryFilter deliveryFilter = new DeliveryFilter();
@@ -108,20 +109,20 @@ public class DeliveriesStatsController extends LongOperationController {
     }
 
 
-    setCurrentAndTotal(0,getConfig().countDeliveries(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryFilter));
+    setCurrentAndTotal(0,config.countDeliveries(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryFilter));
 
     deliveryFilter.setResultFields(new DeliveryFields[]{DeliveryFields.Name,DeliveryFields.UserId});
 
-    getConfig().getDeliveries(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryFilter,1000,
+    config.getDeliveries(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryFilter,1000,
         new Visitor<DeliveryInfo>() {
         public boolean visit(DeliveryInfo deliveryInfo ) throws AdminException {
             final int deliveryId = deliveryInfo.getDeliveryId();
 
-            DeliveryStatistics stat = getConfig().getDeliveryStats(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryId);
+            DeliveryStatistics stat = config.getDeliveryStats(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryId);
             records.add(new DeliveriesStatRecord(deliveryInfo,stat));
 
             setCurrent(getCurrent()+1);
-            return true;
+            return !isCancelled();
           }
         }
     );

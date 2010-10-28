@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.web.config.Configuration;
 import org.apache.log4j.Logger;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
@@ -20,7 +21,9 @@ public abstract class LongOperationController extends InformerController {
   int current=0;
   int total=0;
   private Locale locale;
+  private Configuration config;
   private Throwable fatalError;
+  private boolean cancelled=false;
 
   public Throwable getFatalError() {
     return fatalError;
@@ -32,7 +35,7 @@ public abstract class LongOperationController extends InformerController {
     if(fatalError!=null) {
       Throwable t = fatalError;
       fatalError = null;
-      throw fatalError;
+      throw t;
     }
     if(error!=null) {
       AdminException ex = error;
@@ -59,10 +62,11 @@ public abstract class LongOperationController extends InformerController {
     this.total = total;
   }
   
-  public abstract void execute(final Locale locale) throws Exception ;
+  public abstract void execute(Configuration config, final Locale locale) throws Exception ;
 
-  public String cancel() {
-    if(thread!=null) {      
+  public synchronized String cancel() {
+    if(thread!=null) {
+       cancelled=true;
        thread.interrupt();
     }
     return null;
@@ -72,14 +76,22 @@ public abstract class LongOperationController extends InformerController {
     return state;
   }
 
-  public String start(){
-      locale = getLocale();
-      thread = new LongOperationThread();
-      error=null;
-      state=1;
-      current=0;
-      total=1;
-      thread.start();
+  public boolean isCancelled() {
+    return cancelled;
+  }
+
+  public synchronized String start(){
+      if(thread==null) {
+        locale = getLocale();
+        config = getConfig();
+        thread = new LongOperationThread();
+        error=null;
+        state=1;
+        current=0;
+        total=1;
+        cancelled=false;
+        thread.start();
+      }
       return null;
   }
 
@@ -92,17 +104,32 @@ public abstract class LongOperationController extends InformerController {
     @Override
     public void run() {
       try{
-        execute(locale);
+        execute(config,locale);
+        if(cancelled) {
+          throw new InterruptedException();
+        }
         state = 2;
       }
+      catch(InterruptedException e) {
+        e.printStackTrace();
+        state=0;
+      }
       catch (AdminException e){
+        logger.error("AdminException in execute thread",e);
         e.printStackTrace();
         error = e;
         state=3;
       }
       catch (Throwable e) {
+        logger.error("Throwable in execute thread",e);
+        e.printStackTrace();
         fatalError = e;
         state=3;
+      }
+      finally {
+        synchronized (this) {
+          thread=null;
+        }
       }
     }
   }

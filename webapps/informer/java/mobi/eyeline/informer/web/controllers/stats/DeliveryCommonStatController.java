@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.web.config.Configuration;
 
 import java.util.Locale;
 
@@ -68,14 +69,12 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
 
 
   @Override
-  public void loadRecords(final Locale locale) throws AdminException {
-     getConfig().getDeliveryStatProvider().accept(filter,this);
+  public void loadRecords(Configuration config, final Locale locale) throws AdminException {
+     config.getDeliveryStatProvider().accept(filter,this);
   }
 
 
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
-    
-
 
     setCurrentAndTotal(current,total);
     AggregatedStatRecord newRecord = new AggregatedCommonStatRecord(rec,getAggregation(),true);
@@ -86,7 +85,7 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
     else {
       oldRecord.add(newRecord);
     }
-    return true;
+    return !isCancelled();
   }
 
 

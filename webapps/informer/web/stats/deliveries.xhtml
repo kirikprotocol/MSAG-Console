@@ -41,7 +41,7 @@
         <eye:updatableContent updatePeriod="1" enabled="#{statsDeliveries.state == 1}" >
           <eye:message level="error" rendered="#{statsDeliveries.state == 3}">
             <p/>
-            <h:outputText value="#{statsCommon.error}"/>
+            <h:outputText value="#{statsDeliveries.error}"/>
             <p/>
           </eye:message>
 
