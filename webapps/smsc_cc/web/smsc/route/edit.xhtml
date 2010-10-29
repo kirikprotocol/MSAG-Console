@@ -32,8 +32,8 @@
         <h:panelGroup> <!-- ROUTE INFO -->
           <eye:pageSubtitle value="#{msg['route.edit.page.route.info']}"/>
           <tr:panelFormLayout inlineStyle="padding:10px">
-            <tr:inputText id="route" value="#{r.name}" label="#{route['name']}"/>
-            <tr:inputText value="#{r.notes}" label="#{route['notes']}"/>
+            <tr:inputText id="route" value="#{r.name}" label="#{route['name']}" inlineStyle="width:100%"/>
+            <tr:inputText value="#{r.notes}" label="#{route['notes']}" rows="2"/>
             <tr:inputText value="#{r.priority}" label="#{route['priority']}"/>
             <tr:inputText value="#{r.serviceId}" label="#{route['serviceId']}"/>
             <tr:panelLabelAndMessage label="#{route['deliveryMode']}">

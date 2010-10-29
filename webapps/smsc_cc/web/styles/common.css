@@ -42,11 +42,6 @@ input {
   z-index: 10;
 }
 
-textarea {
-  height: 80px;
-  width: 100%;
-}
-
 form {
   display: inline;
 }
