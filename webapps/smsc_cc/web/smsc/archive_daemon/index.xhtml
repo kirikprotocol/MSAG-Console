@@ -47,7 +47,7 @@
       </tr:panelFormLayout>
 
 
-      <eye:collapsingGroup label="#{msg['archiveDaemon.page.smsView']}">
+      <eye:collapsingGroup label="#{msg['archiveDaemon.page.smsView']}" opened="true">
           <tr:panelFormLayout inlineStyle="margin-left:15px;">
               <tr:panelLabelAndMessage label="#{archiveDaemonBundle['viewHost']}">
                     <h:inputText  value="#{archiveDaemon.config.viewHost}"/>
@@ -65,7 +65,7 @@
           </tr:panelFormLayout>
       </eye:collapsingGroup>
 
-      <eye:collapsingGroup label="#{msg['archiveDaemon.page.smsQueries']}">
+      <eye:collapsingGroup label="#{msg['archiveDaemon.page.smsQueries']}" opened="true">
             <tr:panelFormLayout inlineStyle="margin-left:15px;">
                 <tr:panelLabelAndMessage label="#{archiveDaemonBundle['queriesMax']}">
                       <h:inputText  value="#{archiveDaemon.config.queriesMax}">
@@ -80,7 +80,7 @@
             </tr:panelFormLayout>
       </eye:collapsingGroup>
 
-        <eye:collapsingGroup label="#{msg['archiveDaemon.page.transactions']}">
+        <eye:collapsingGroup label="#{msg['archiveDaemon.page.transactions']}" opened="true">
               <tr:panelFormLayout inlineStyle="margin-left:15px;">
                   <tr:panelLabelAndMessage label="#{archiveDaemonBundle['transactionsMaxSmsCount']}">
                         <h:inputText  value="#{archiveDaemon.config.transactionsMaxSmsCount}">
@@ -96,7 +96,7 @@
         </eye:collapsingGroup>
 
 
-        <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations']}">
+        <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations']}" opened="true">
               <tr:panelFormLayout inlineStyle="margin-left:15px;">
                   <tr:panelLabelAndMessage label="#{archiveDaemonBundle['locationsBaseDestination']}">
                     <h:inputText  value="#{archiveDaemon.config.locationsBaseDestination}">
@@ -109,7 +109,7 @@
                     </h:inputText>
                   </tr:panelLabelAndMessage>
               </tr:panelFormLayout>
-              <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations.sources']}">
+              <eye:collapsingGroup label="#{msg['archiveDaemon.page.locations.sources']}" opened="true">
                     <tr:panelFormLayout inlineStyle="margin-left:15px;width:300px;">
                     <eye:dynamicTable value="#{archiveDaemon.locationSources}" >
                         <eye:textColumn name="key"   allowEditAfterAdd="false" width="50%"/>
@@ -119,7 +119,7 @@
               </eye:collapsingGroup>
         </eye:collapsingGroup>
 
-        <eye:collapsingGroup label="#{msg['archiveDaemon.page.indexator']}">
+        <eye:collapsingGroup label="#{msg['archiveDaemon.page.indexator']}" opened="true">
               <tr:panelFormLayout inlineStyle="margin-left:15px;">
                   <tr:panelLabelAndMessage label="#{archiveDaemonBundle['indexatorMaxFlushSpeed']}">
                     <h:inputText  value="#{archiveDaemon.config.indexatorMaxFlushSpeed}">
@@ -127,7 +127,7 @@
                     </h:inputText>
                   </tr:panelLabelAndMessage>
               </tr:panelFormLayout>
-              <eye:collapsingGroup label="#{archiveDaemonBundle['indexatorSmeAddrChunkSizes']}">
+              <eye:collapsingGroup label="#{archiveDaemonBundle['indexatorSmeAddrChunkSizes']}" opened="true">
                     <tr:panelFormLayout inlineStyle="margin-left:15px;width:300px;">
                     <eye:dynamicTable value="#{archiveDaemon.indexatorSmeAddrChunkSizes}" >
                         <eye:textColumn name="key"   allowEditAfterAdd="false" width="50%"/>

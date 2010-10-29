@@ -11,14 +11,12 @@
 <ui:composition>
 
   <div class="data_table_filter">
-  <table class="data_table_filter" width="100%">
+  <table class="data_table_filter" width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td align="left" width="10%">
         <h:outputText styleClass="filter" value="#{msg['filter.by']}"/>
       </td>
-      <td align="left" width="80%">
-        &nbsp;
-      </td>
+      <td align="left" width="80%">&#160;</td>
       <td width="10%" align="right">
         <h:commandLink styleClass="filter_button" value="#{msg['apply.button']}" action="#{bean[applyAction]}" rendered="#{bean != null and applyAction != null}"/>
         <h:commandLink styleClass="filter_button" id="data_table_filter" value="#{msg['apply.button']}" onclick="new DataTableFilter('data_table_filter').clickApply()" rendered="#{bean == null or applyAction == null}"/>
@@ -28,7 +26,6 @@
     </tr>
   </table>
 
-  <hr/>
   <ui:insert/>
   </div>
   <p/>

@@ -30,6 +30,7 @@ table.data_table_filter td {
   padding-left: 4px;
   padding-right: 4px;
   white-space: nowrap;
+  border-bottom: 1px solid #161E49;
 }
 
 table.data_table_filter a,

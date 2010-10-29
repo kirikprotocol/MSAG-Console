@@ -27,16 +27,18 @@
 
       <h:panelGrid columns="1">
 
-        <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign" rowClasses="listTableHeader">
+        <h:panelGrid columns="3" columnClasses="column20Width, column200WidthTopLeft, columnTopLeftAlign" rowClasses="listTableHeader">
           <h:outputText value="Id"/>
           <h:outputText value="#{msg['providers.page.provider']}"/>
+          <h:outputText value="&#160;"/>
         </h:panelGrid>
 
         <c:set var="row" value="0"/>
         <c:forEach items="#{providers.ids}" var="id">
-          <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign" rowClasses="listTableRow#{row%2}">
+          <h:panelGrid columns="3" columnClasses="column20Width, column200WidthTopLeft, columnTopLeftAlign" rowClasses="listTableRow#{row%2}">
             <h:outputText value="#{id}"/>
-            <tr:inputText value="#{providers.providers[id]}" columns="50" simple="true"/>
+            <h:inputText value="#{providers.providers[id]}" style="width:100%"/>
+            <h:outputText value="&#160;"/>
           </h:panelGrid>
           <c:set var="row" value="#{row+1}"/>
         </c:forEach>
@@ -46,12 +48,12 @@
       <p/>
 
       <eye:pageSubtitle value="#{msg['providers.page.add']}"/>
-      <h:panelGrid columns="3" columnClasses="column20Width, column0WidthLeft, columnTopLeftAlign" rowClasses="listTableRow0">
-        <h:inputHidden/>
-        <tr:inputText value="#{providers.newProvider}" columns="50" simple="true"/>
-        <tr:commandLink action="#{providers.addProvider}">
-          <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"/>
-        </tr:commandLink>
+      <h:panelGrid columns="3" columnClasses="column20Width, column200WidthTopLeft, columnTopLeftAlign" rowClasses="listTableRow0">
+        <h:outputText value="&#160;"/>
+        <h:inputText value="#{providers.newProvider}" style="width:100%"/>
+        <h:commandLink action="#{providers.addProvider}">
+          <tr:image source="/images/but_add.gif" inlineStyle=" position: relative;"/>
+        </h:commandLink>
       </h:panelGrid>
 
       <eye:buttons>

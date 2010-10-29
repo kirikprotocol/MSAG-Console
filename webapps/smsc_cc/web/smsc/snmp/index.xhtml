@@ -40,7 +40,7 @@
 
       <eye:pageSubtitle value="#{msg['smsc.snmp.snmpObjects']}"/>
 
-      <h:panelGrid styleClass="list" columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="row1">
+      <h:panelGrid columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="listTableRow1">
 
         <h:commandLink value="#{msg['snmp.default.object']}" action="#{snmp.editObject}">
           <f:param name="objName" value=""/>
@@ -51,7 +51,7 @@
       <c:set var="n" value="0"/>
 
       <c:forEach var="item" items="#{snmp.snmpObjectNames}">
-        <h:panelGrid styleClass="list" columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="row#{n}">
+        <h:panelGrid columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="listTableRow#{n}">
           <h:commandLink value="#{item}" action="#{snmp.editObject}">
             <f:param name="objName" value="#{item}"/>
           </h:commandLink>
@@ -63,7 +63,7 @@
         <c:set var="n" value="#{1-n}"/>
       </c:forEach>
 
-      <h:panelGrid styleClass="list" columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="row#{n}">
+      <h:panelGrid columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="listTableRow#{n}">
         <h:inputText value="#{snmp.newObjectName}" required="false" style="width: 100%"/>
 
         <tr:commandLink id="addSnmpObj" action="#{snmp.addObject}">
