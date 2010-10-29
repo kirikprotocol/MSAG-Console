@@ -60,7 +60,10 @@ public:
         startMon_.wait(msec);
     }
 
+    virtual void addUser( const char* user );
+    virtual void deleteUser( const char* login );
     virtual UserInfoPtr getUserInfo( const char* login );
+    virtual void updateUserInfo( const char* login );
 
     virtual RegionFinder& getRegionFinder() { return rf_; }
 

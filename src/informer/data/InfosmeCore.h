@@ -30,10 +30,10 @@ public:
     virtual void wait( int msec ) = 0;
 
     /// get user info (a stub for now)
-    // virtual void addUser( UserInfo* user ) = 0;
-    // virtual void deleteUser( const char* login ) = 0;
+    virtual void addUser( const char* user ) = 0;
+    virtual void deleteUser( const char* login ) = 0;
     virtual UserInfoPtr getUserInfo( const char* login ) = 0;
-    // virtual void updateUserInfo( const char* login ) = 0;
+    virtual void updateUserInfo( const char* login ) = 0;
 
     /// get region finder
     virtual RegionFinder& getRegionFinder() = 0;

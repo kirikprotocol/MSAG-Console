@@ -578,12 +578,30 @@ void InfosmeCoreV1::start()
 }
 
 
+void InfosmeCoreV1::addUser( const char* user )
+{
+    throw InfosmeException("FIXME: not impl");
+}
+
+
+void InfosmeCoreV1::deleteUser( const char* user )
+{
+    throw InfosmeException("FIXME: not impl");
+}
+
+
 UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 {
     MutexGuard mg(startMon_);
     UserInfoPtr* ptr = users_.GetPtr(login);
     if (!ptr) return UserInfoPtr();
     return *ptr;
+}
+
+
+void InfosmeCoreV1::updateUserInfo( const char* user )
+{
+    throw InfosmeException("FIXME: not impl");
 }
 
 
