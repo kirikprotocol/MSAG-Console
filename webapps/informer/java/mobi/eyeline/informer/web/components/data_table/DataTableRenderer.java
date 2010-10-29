@@ -155,7 +155,10 @@ public class DataTableRenderer extends Renderer {
       if (t.getPageSize() * numberOfPages == m.getRowsCount())
         numberOfPages--;
 
-      for (int i = 0; i <= numberOfPages; i++)
+      int firstPageNumber = Math.max(t.getCurrentPage() - 5, 0);
+      int lastPageNumber = Math.min(t.getCurrentPage() + 5, numberOfPages);
+
+      for (int i = firstPageNumber; i <= lastPageNumber; i++)
         w.append("<td class=\"" + (i == t.getCurrentPage() ? "current" : "page") + "\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + i + ")\">" + (i + 1) + "</a></td>");
 
       if (t.getCurrentPage() < numberOfPages)
