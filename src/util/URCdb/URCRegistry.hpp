@@ -27,17 +27,20 @@ typedef const char * (*FPRCDescriptor)(uint32_t ret_code);
 extern const char * DFLTRCDescriptor(uint32_t ret_code);
 
 class URCSpaceITF {
-public:
-    virtual RCSpaceIdx   Idx(void) const  = 0;
-    virtual const char * Ident(void) const = 0;
+protected:
+  virtual ~URCSpaceITF();
 
-    virtual RCHash mkhash(uint32_t ret_code) const = 0;
-    virtual bool ownhash(RCHash rc_hash) const = 0;
-    virtual uint32_t /*ret_code*/ unhash(RCHash rc_hash) const = 0;
-    virtual const char * code2Txt(uint32_t ret_code) const = 0;
-    virtual const char * hash2Txt(RCHash rc_hash) const = 0;
-    virtual std::string explainCode(uint32_t ret_code) const = 0;
-    virtual std::string explainHash(RCHash rc_hash) const = 0;
+public:
+  virtual RCSpaceIdx   Idx(void) const  = 0;
+  virtual const char * Ident(void) const = 0;
+
+  virtual RCHash mkhash(uint32_t ret_code) const = 0;
+  virtual bool ownhash(RCHash rc_hash) const = 0;
+  virtual uint32_t /*ret_code*/ unhash(RCHash rc_hash) const = 0;
+  virtual const char * code2Txt(uint32_t ret_code) const = 0;
+  virtual const char * hash2Txt(RCHash rc_hash) const = 0;
+  virtual std::string explainCode(uint32_t ret_code) const = 0;
+  virtual std::string explainHash(RCHash rc_hash) const = 0;
 };
 
 class URCRegistry { //singleton
@@ -130,7 +133,7 @@ protected:
         }
 
         //public destructor for std::map (std::pair)
-        ~URCSpace()
+        virtual ~URCSpace()
         { }
     };
 
