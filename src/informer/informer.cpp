@@ -3,8 +3,8 @@
 #include <memory>
 #include <signal.h>
 
-#include "admin/service/ComponentManager.h"
-#include "admin/service/ServiceSocketListener.h"
+// #include "admin/service/ComponentManager.h"
+// #include "admin/service/ServiceSocketListener.h"
 #include "license/check/license.hpp"
 #include "logger/Logger.h"
 #include "system/smscsignalhandlers.h"
@@ -170,8 +170,8 @@ int main( int argc, char** argv )
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
 
         std::auto_ptr< eyeline::informer::InfosmeCoreV1 > core;
-        std::auto_ptr< eyeline::informer::InfosmeComponent > admin;
-        std::auto_ptr< smsc::admin::service::ServiceSocketListener> adml;
+        // std::auto_ptr< eyeline::informer::admin::AdminServer > admin;
+        // std::auto_ptr< smsc::admin::service::ServiceSocketListener> adml;
 
         atexit( atExitHandler );
 
@@ -206,18 +206,25 @@ int main( int argc, char** argv )
             // for tcp-check-daemon.
 
             core.reset( new eyeline::informer::InfosmeCoreV1 );
-            admin.reset( new eyeline::informer::InfosmeComponent(*core.get()) );
-            adml.reset( new smsc::admin::service::ServiceSocketListener() );
+            // admin.reset( new eyeline::informer::admin::AdminServer() );
+            // admin->assignCore( core.get() );
+            // InfosmeComponent(*core.get()) );
+            // adml.reset( new smsc::admin::service::ServiceSocketListener() );
 
+            /*
             {
                 /// admin listener configuration
                 smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme.Admin");
                 adml->init(smsc::util::config::ConfString(cv.getString("host")).c_str(),
                            cv.getInt("port"));
+                admin->Init(smsc::util::config::ConfString(cv.getString("host")).c_str(),
+                            cv.getInt("port"),
+                            cv.getInt("dcpHandlers") );
             }
+             */
 
-            smsc::admin::service::ComponentManager::registerComponent(admin.get());
-            adml->Start();
+            // smsc::admin::service::ComponentManager::registerComponent(admin.get());
+            // adml->Start();
             // a guarantee that adml is started
             {
                 smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme");
@@ -239,7 +246,7 @@ int main( int argc, char** argv )
                 MutexGuard mg(startMon);
                 startMon.wait(1000);
             }
-            adml->shutdown();
+            // adml->shutdown();
             core->stop();
 
         } catch ( std::exception& e ) {

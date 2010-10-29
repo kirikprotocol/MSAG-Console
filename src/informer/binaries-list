@@ -5,10 +5,10 @@ informer/informer  informer \
  -linformer-opstore \
  -linformer-data \
  -linformer-io \
+ -linformer-admin \
+ -linformer-admin-messages \
+ -leyeline-protogen-server \
  -llicense-check \
- -ladmin-service \
- -ladmin-protocol \
- -ladmin-util \
  -lsmpp \
  -lsms \
  -lcore-network \

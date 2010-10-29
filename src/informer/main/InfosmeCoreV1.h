@@ -26,6 +26,10 @@ class ConfigView;
 namespace eyeline {
 namespace informer {
 
+namespace admin {
+class AdminServer;
+}
+
 class SmscSender;
 class RegionSender;
 class SmscConfig;
@@ -180,6 +184,8 @@ private:
     InputJournalRoller*                           inputRoller_;  // owned
     StoreJournalRoller*                           storeRoller_;  // owned
     StatsDumper*                                  statsDumper_;  // owned
+
+    admin::AdminServer*                           adminServer_;
 };
 
 } // informer

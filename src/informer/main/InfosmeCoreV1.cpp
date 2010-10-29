@@ -13,6 +13,7 @@
 #include "informer/sender/SmscSender.h"
 #include "util/config/ConfString.h"
 #include "util/config/ConfigView.h"
+#include "informer/admin/AdminServer.hpp"
 
 using namespace smsc::util::config;
 
@@ -389,7 +390,8 @@ storeJournal_(0),
 inputJournal_(0),
 inputRoller_(0),
 storeRoller_(0),
-statsDumper_(0)
+statsDumper_(0),
+adminServer_(0)
 {
 }
 
@@ -398,6 +400,8 @@ InfosmeCoreV1::~InfosmeCoreV1()
 {
     smsc_log_info(log_,"dtor started, FIXME: cleanup");
     stop();
+
+    delete adminServer_;
 
     // dump statistics one more time
     if (statsDumper_) {
@@ -434,6 +438,15 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     smsc_log_info(log_,"initing InfosmeCore");
 
     cs_.init("store/");
+
+    // create admin server
+    if (!adminServer_) {
+        adminServer_ = new admin::AdminServer();
+        adminServer_->assignCore(this);
+        adminServer_->Init(smsc::util::config::ConfString(cfg.getString("host")).c_str(),
+                           cfg.getInt("port"),
+                           cfg.getInt("dcpHandlers") );
+    }
 
     // create journals
     if (!inputJournal_) inputJournal_ = new InputJournal(cs_);
@@ -538,6 +551,7 @@ void InfosmeCoreV1::stop()
             rtp_.stopNotify();
             startMon_.notifyAll();
         }
+        if (adminServer_) adminServer_->Stop();
 
         // stop all smscs
         char* smscId;
