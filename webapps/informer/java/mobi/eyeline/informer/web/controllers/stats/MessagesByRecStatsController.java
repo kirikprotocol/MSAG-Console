@@ -50,6 +50,8 @@ public class MessagesByRecStatsController extends LongOperationController {
   }
 
   public void clearFilter() {
+    reset();
+    records.clear();
     initUser();
     setFromDate(null);
     setTillDate(null);

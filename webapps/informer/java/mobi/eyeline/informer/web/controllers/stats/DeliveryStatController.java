@@ -52,6 +52,8 @@ public abstract class DeliveryStatController extends LongOperationController {
   }
 
   public void clearFilter() {
+    reset();
+    clearRecords();
     initUser();
     filter.setFromDate(null);
     filter.setTillDate(null);

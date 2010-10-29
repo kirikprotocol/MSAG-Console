@@ -55,6 +55,8 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
 
 
   public void clearFilter() {
+    reset();
+    clearRecords();
     filter.setUser(null);
     filter.setFromDate(null);
     filter.setTillDate(null);

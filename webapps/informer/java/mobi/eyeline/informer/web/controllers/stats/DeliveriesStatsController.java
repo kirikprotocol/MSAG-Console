@@ -50,6 +50,8 @@ public class DeliveriesStatsController extends LongOperationController {
     return filter;
   }
   public void clearFilter() {
+    reset();
+    records.clear();
     initUser();
     filter.setFromDate(null);
     filter.setTillDate(null);
