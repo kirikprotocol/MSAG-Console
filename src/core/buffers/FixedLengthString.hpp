@@ -13,6 +13,7 @@ namespace buffers{
 
 template <size_t N>
 struct FixedLengthString{
+    static const size_t npos = N;
   char str[N];
   FixedLengthString()
   {

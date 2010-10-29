@@ -67,6 +67,15 @@ public:
     head++;
     count++;
   }
+  void PushFront(const T& item)
+  {
+    if(count==size)Realloc(size*2);
+    if(tail==data)tail=end;
+    --tail;
+    *tail=item;
+    ++count;
+  }
+
   T& Front()
   {
     if(count==0)throw std::runtime_error("CQ: attempt to use Front() on empty queue");
