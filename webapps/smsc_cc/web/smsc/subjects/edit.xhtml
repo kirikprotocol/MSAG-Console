@@ -13,7 +13,6 @@
   <ui:param name="pageTitle" value="#{ subjectEdit.oldName!=null ? msg['subject.edit.edit.title'] : msg['subject.edit.add.title']}"/>
 
 
-
   <ui:define name="content">
 
     <h:form rendered="#{!subjectEdit.initError}">
@@ -33,64 +32,68 @@
 
       <p/>
 
-      <h:panelGroup style="width:200px;">
-        <tr:panelFormLayout>
-          <tr:panelLabelAndMessage label="#{msg['subjects.page.column.name']}">
-            <h:inputText  value="#{subjectEdit.subj.name}">
-              <tr:validateLength minimum="1"/>
-            </h:inputText>
-          </tr:panelLabelAndMessage>
-          <tr:panelLabelAndMessage label="#{msg['subjects.page.column.notes']}">
-            <h:inputText  value="#{subjectEdit.subj.notes}"/>
-          </tr:panelLabelAndMessage>
-          <tr:panelLabelAndMessage label="#{msg['subjects.page.column.defaultSme']}">
-            <h:selectOneMenu value="#{subjectEdit.subj.defaultSmeId}">
-              <f:selectItems value="#{subjectEdit.smeIds}"/>
-            </h:selectOneMenu>
-          </tr:panelLabelAndMessage>
-        </tr:panelFormLayout>
-      </h:panelGroup>
+      <eye:pageSubtitle value="#{msg['subject.edit.info']}"/>
+
+      <h:panelGrid columns="3" columnClasses="column0Width, column300WidthLeft, columnTopLeftAlign">
+
+        <h:outputText value="#{msg['subjects.page.column.name']}"/>
+        <h:inputText value="#{subjectEdit.subj.name}"  style="width:100%">
+          <tr:validateLength minimum="1"/>
+        </h:inputText>
+        <h:outputText value=""/>
+
+        <h:outputText value="#{msg['subjects.page.column.notes']}"/>
+        <h:inputTextarea value="#{subjectEdit.subj.notes}" rows="2" style="width:100%"/>
+        <h:outputText value=""/>
+
+        <h:outputText value="#{msg['subjects.page.column.defaultSme']}"/>
+        <h:selectOneMenu value="#{subjectEdit.subj.defaultSmeId}" style="width:100%">
+          <f:selectItems value="#{subjectEdit.smeIds}"/>
+        </h:selectOneMenu>
+        <h:outputText value=""/>
+
+      </h:panelGrid>
 
 
-      <h:panelGrid columns="2" columnClasses="column500TopLeft, columnTopLeftAlign" >
+      <h:panelGrid columns="2" columnClasses="column500TopLeft, columnTopLeftAlign">
 
-        <h:panelGroup >
-          <eye:pageSubtitle value="#{msg['subjects.page.column.masks']}" />
+        <h:panelGroup>
+          <eye:pageSubtitle value="#{msg['subjects.page.column.masks']}"/>
 
-          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign" >
-          <eye:dynamicTable value="#{subjectEdit.masksModel}">
-            <eye:textColumn name="mask" allowEditAfterAdd="true"/>
-          </eye:dynamicTable>
+          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign">
+            <eye:dynamicTable value="#{subjectEdit.masksModel}">
+              <eye:textColumn name="mask" allowEditAfterAdd="true"/>
+            </eye:dynamicTable>
             <h:outputText value=""/>
           </h:panelGrid>
         </h:panelGroup>
 
-        <h:panelGroup >
-          <eye:pageSubtitle value="#{msg['subjects.page.column.subjects']}" />
+        <h:panelGroup>
+          <eye:pageSubtitle value="#{msg['subject.edit.inner.subjects']}"/>
 
-          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign" >
+          <h:panelGrid columns="2" columnClasses="column300WidthTopLeft, columnTopLeftAlign">
             <c:forEach items="#{subjectEdit.subj.children}" var="child">
-              <h:commandLink  value="#{child}" action="SUBJECT_EDIT" immediate="true">
-                    <f:param name="oldName" value="#{child}"/>
+              <h:commandLink value="#{child}" action="SUBJECT_EDIT" immediate="true">
+                <f:param name="oldName" value="#{child}"/>
               </h:commandLink>
 
 
-              <h:commandLink action="#{subjectEdit.removeChild}" >
-                <tr:image source="/images/but_del.gif" />
+              <h:commandLink action="#{subjectEdit.removeChild}">
+                <tr:image source="/images/but_del.gif"/>
                 <f:param name="oldName" value="#{subjectEdit.oldName}"/>
                 <f:param name="childToRemove" value="#{child}"/>
               </h:commandLink>
             </c:forEach>
 
 
-            <h:selectOneMenu styleClass="selectW" value="#{subjectEdit.childToAdd}"  required="false"
+            <h:selectOneMenu styleClass="selectW" value="#{subjectEdit.childToAdd}" required="false"
                              rendered="#{not empty subjectEdit.allowedChildren}">
-                 <f:selectItems value="#{subjectEdit.allowedChildren}"/>
+              <f:selectItems value="#{subjectEdit.allowedChildren}"/>
             </h:selectOneMenu>
-            <h:commandLink  action="#{subjectEdit.addChild}"
-                             rendered="#{not empty subjectEdit.allowedChildren}">
+            <h:commandLink action="#{subjectEdit.addChild}"
+                           rendered="#{not empty subjectEdit.allowedChildren}">
               <f:param name="oldName" value="#{subjectEdit.oldName}"/>
-              <tr:image source="/images/but_add.gif" />
+              <tr:image source="/images/but_add.gif"/>
             </h:commandLink>
           </h:panelGrid>
 
