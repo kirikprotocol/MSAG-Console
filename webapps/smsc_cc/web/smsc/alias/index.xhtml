@@ -16,38 +16,45 @@
 
     <h:form rendered="#{!aliases.initError}">
 
-    <eye:dataTableFilter bean="#{aliases}" clearAction="clearFilter">        
+      <eye:dataTableFilter bean="#{aliases}" clearAction="clearFilter">
 
-        <eye:pageSubtitle value="#{msg['smsc.alias.subtitle.aliases']}"/>
-        <tr:panelFormLayout inlineStyle="width:300px;">
-        <eye:dynamicTable value="#{aliases.aliasesFilter}">
-            <eye:textColumn name="alias"   allowEditAfterAdd="true"/>
-        </eye:dynamicTable>
-        </tr:panelFormLayout>
+        <h:panelGrid columns="5" columnClasses="column300WidthTopLeft, column20Width, column300WidthTopRight, column20Width, columnLeft">
 
-        <eye:pageSubtitle value="#{msg['smsc.alias.subtitle.addresses']}"/>
-        <tr:panelFormLayout inlineStyle="width:300px;">
-        <eye:dynamicTable value="#{aliases.adressesFilter}" >
-            <eye:textColumn name="address"  allowEditAfterAdd="true"/>
-        </eye:dynamicTable>
-        </tr:panelFormLayout>
+          <h:panelGrid columns="2" columnClasses="column0Width, columnTopLeftAlign">
+            <h:outputText value="#{msg['smsc.alias.subtitle.aliases']}"/>
+            <eye:dynamicTable value="#{aliases.aliasesFilter}">
+              <eye:textColumn name="alias" allowEditAfterAdd="true"/>
+            </eye:dynamicTable>
+          </h:panelGrid>
 
-        <eye:pageSubtitle value="#{msg['smsc.alias.subtitle.options']}"/>
-        <tr:panelFormLayout inlineStyle="width:300px;">
-        <tr:panelLabelAndMessage label="#{msg['smsc.alias.select.hide']}">
-            <h:selectOneMenu value="#{aliases.hideFilter}" style="width:100px;" >
-                <f:selectItems value="#{aliases.hideOptions}"/>
+          <h:outputText value=""/>
+
+          <h:panelGrid columns="2" columnClasses="column0Width, columnTopLeftAlign">
+            <h:outputText value="#{msg['smsc.alias.subtitle.addresses']} "/>
+            <eye:dynamicTable value="#{aliases.adressesFilter}">
+              <eye:textColumn name="address" allowEditAfterAdd="true"/>
+            </eye:dynamicTable>
+          </h:panelGrid>
+
+          <h:outputText value=""/>
+
+          <h:panelGrid columns="2" columnClasses="column0Width, columnTopLeftAlign">
+            <h:outputText value="#{msg['smsc.alias.select.hide']} "/>
+            <h:selectOneMenu value="#{aliases.hideFilter}" style="width:100px;">
+              <f:selectItems value="#{aliases.hideOptions}"/>
             </h:selectOneMenu>
-        </tr:panelLabelAndMessage>
-        </tr:panelFormLayout>
-    </eye:dataTableFilter>
+          </h:panelGrid>
 
-    <eye:dataTable value="#{aliases.aliasesModel}" selectedRows="#{aliases.selectedRows}" var="a">
+        </h:panelGrid>
+
+      </eye:dataTableFilter>
+
+      <eye:dataTable value="#{aliases.aliasesModel}" selectedRows="#{aliases.selectedRows}" var="a">
 
         <eye:row rowId="#{a.alias.simpleAddress}" opened="true">
 
           <eye:column name="alias" title="#{msg['smsc.alias.column.alias']}" width="33%" sortable="true" defaultSortOrder="asc">
-            <h:commandLink  value="#{a.alias.simpleAddress}" action="#{aliases.edit}">
+            <h:commandLink value="#{a.alias.simpleAddress}" action="#{aliases.edit}">
               <f:param name="aliasToEdit" value="#{a.alias.simpleAddress}"/>
             </h:commandLink>
           </eye:column>
@@ -65,14 +72,14 @@
       <p/>
 
       <eye:buttons>
-                <eye:button>
-                  <h:commandLink value="#{msg['add.button']}" id="add2" action="ALIAS_EDIT"/>
-                </eye:button>
-                <eye:button>
-                  <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{aliases.removeSelected}"
-                                  onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
-                </eye:button>
-                <eye:space/>
+        <eye:button>
+          <h:commandLink value="#{msg['add.button']}" id="add2" action="ALIAS_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <h:commandLink value="#{msg['delete.button']}" id="delete2" actionListener="#{aliases.removeSelected}"
+                         onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+        </eye:button>
+        <eye:space/>
       </eye:buttons>
 
     </h:form>

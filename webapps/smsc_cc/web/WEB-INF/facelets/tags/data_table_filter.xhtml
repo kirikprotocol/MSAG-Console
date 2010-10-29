@@ -14,16 +14,16 @@
   <table class="data_table_filter" width="100%">
     <tr>
       <td align="left" width="10%">
-        <h:outputText value="#{msg['filter.by']}"/>
+        <h:outputText styleClass="filter" value="#{msg['filter.by']}"/>
       </td>
       <td align="left" width="80%">
         &nbsp;
       </td>
       <td width="10%" align="right">
-        <tr:commandLink text="#{msg['apply.button']}" action="#{bean[applyAction]}" rendered="#{bean != null and applyAction != null}"/>
-        <h:commandLink id="data_table_filter" value="#{msg['apply.button']}" onclick="new DataTableFilter('data_table_filter').clickApply()" rendered="#{bean == null or applyAction == null}"/>
+        <h:commandLink styleClass="filter_button" value="#{msg['apply.button']}" action="#{bean[applyAction]}" rendered="#{bean != null and applyAction != null}"/>
+        <h:commandLink styleClass="filter_button" id="data_table_filter" value="#{msg['apply.button']}" onclick="new DataTableFilter('data_table_filter').clickApply()" rendered="#{bean == null or applyAction == null}"/>
         <h:outputText value=" | " rendered="#{bean != null and clearAction != null}"/>
-        <tr:commandLink text="#{msg['clear.button']}" action="#{bean[clearAction]}" rendered="#{bean != null and clearAction != null}"/>
+        <h:commandLink styleClass="filter_button" value="#{msg['clear.button']}" action="#{bean[clearAction]}" rendered="#{bean != null and clearAction != null}"/>
       </td>
     </tr>
   </table>

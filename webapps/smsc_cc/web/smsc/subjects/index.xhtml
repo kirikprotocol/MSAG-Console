@@ -20,34 +20,42 @@
 
       <h:inputHidden value="#{subjects.revision}"/>
       <eye:message level="warn" rendered="#{subjects.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
-      
+
 
       <eye:dataTableFilter bean="#{subjects}" clearAction="clearFilter">
 
-        <eye:pageSubtitle value="#{msg['subjects.subtitle.maskFilter']}"/>
-        <tr:panelFormLayout inlineStyle="width:300px;">
-          <eye:dynamicTable value="#{subjects.masksFilter}">
-            <eye:textColumn name="mask"   allowEditAfterAdd="true"/>
-          </eye:dynamicTable>
-        </tr:panelFormLayout>
+        <h:panelGrid columns="4" columnClasses="column300WidthLeft, column20Width, column300WidthTopRight, columnTopLeftAlign">
 
-        <eye:pageSubtitle value="#{msg['subjects.subtitle.nameFilter']}"/>
-        <tr:panelFormLayout inlineStyle="width:300px;">
-          <h:inputText value="#{subjects.namesFilter}" />
-        </tr:panelFormLayout>
+          <h:panelGrid columns="2" columnClasses="column0Width, columnTopLeftAlign">
+            <h:outputText value="#{msg['subjects.subtitle.nameFilter']} "/>
+            <h:inputText styleClass="txtW" value="#{subjects.namesFilter}"/>
+          </h:panelGrid>
+
+          <h:outputText value=""/>
+
+          <h:panelGrid columns="2" columnClasses="column0Width, columnTopLeftAlign">
+            <h:outputText value="#{msg['subjects.subtitle.maskFilter']} "/>
+            <eye:dynamicTable value="#{subjects.masksFilter}">
+              <eye:textColumn name="mask" allowEditAfterAdd="true"/>
+            </eye:dynamicTable>
+          </h:panelGrid>
+
+          <h:outputText value=""/>
+
+        </h:panelGrid>
 
       </eye:dataTableFilter>
 
       <eye:dataTable value="#{subjects.subjectsModel}" selectedRows="#{subjects.selectedRows}" var="s">
-        <eye:row rowId="#{s.name}"  innerData="#{!empty s.masks or !empty s.children}">
+        <eye:row rowId="#{s.name}" innerData="#{!empty s.masks or !empty s.children}">
           <eye:column name="name" title="#{msg['subjects.page.column.name']}" width="50%"
                       sortable="true" defaultSortOrder="asc">
-            <h:commandLink  value="#{s.name}" action="SUBJECT_EDIT" immediate="true">
+            <h:commandLink value="#{s.name}" action="SUBJECT_EDIT" immediate="true">
               <f:param name="oldName" value="#{s.name}"/>
             </h:commandLink>
           </eye:column>
           <eye:column name="defaultSme" title="#{msg['subjects.page.column.defaultSme']}" width="48%" sortable="true">
-            <h:commandLink  value="#{s.defaultSmeId}" action="SERVICE_EDIT" immediate="true">
+            <h:commandLink value="#{s.defaultSmeId}" action="SERVICE_EDIT" immediate="true">
               <f:param name="smeId" value="#{s.defaultSmeId}"/>
             </h:commandLink>
           </eye:column>
@@ -56,25 +64,25 @@
           <f:facet name="innerData">
             <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign" style="width:350px;">
 
-                <h:dataTable value="#{s.masks}" var="mask" columnClasses="columnTopLeftAlign" style="margin-left:50px; width:150px;">
-                  <h:column>
-                    <f:facet name="header">
-                      <h:outputText value="#{msg['subjects.page.column.masks']}" />
-                    </f:facet>
-                    <tr:outputText value="#{mask.simpleAddress}"/>
-                  </h:column>
-                </h:dataTable>
+              <h:dataTable value="#{s.masks}" var="mask" columnClasses="columnTopLeftAlign" style="margin-left:50px; width:150px;">
+                <h:column>
+                  <f:facet name="header">
+                    <h:outputText value="#{msg['subjects.page.column.masks']}"/>
+                  </f:facet>
+                  <tr:outputText value="#{mask.simpleAddress}"/>
+                </h:column>
+              </h:dataTable>
 
-                <h:dataTable value="#{s.children}" var="child" columnClasses="columnTopLeftAlign" style="width:150px;;">
-                  <h:column>
-                    <f:facet name="header">
-                      <h:outputText value="#{msg['subjects.page.column.subjects']}" />
-                    </f:facet>
-                    <h:commandLink  value="#{child}" action="SUBJECT_EDIT" immediate="true">
-                        <f:param name="oldName" value="#{child}"/>
-                    </h:commandLink>
-                  </h:column>
-                </h:dataTable>
+              <h:dataTable value="#{s.children}" var="child" columnClasses="columnTopLeftAlign" style="width:150px;;">
+                <h:column>
+                  <f:facet name="header">
+                    <h:outputText value="#{msg['subjects.page.column.subjects']}"/>
+                  </f:facet>
+                  <h:commandLink value="#{child}" action="SUBJECT_EDIT" immediate="true">
+                    <f:param name="oldName" value="#{child}"/>
+                  </h:commandLink>
+                </h:column>
+              </h:dataTable>
 
 
             </h:panelGrid>

@@ -133,6 +133,10 @@ div.query_result {
  vertical-align:top;
 }
 
+.columnLeft {
+  text-align:left;
+}
+
 .columnTopLeftAlign {
  vertical-align:top;
  text-align:left;
@@ -160,10 +164,21 @@ div.query_result {
   text-align:left;
 }
 
+.column300WidthLeft {
+  width:300px;
+  text-align:left;
+}
+
 .column300WidthTopLeft {
   width:300px;
   vertical-align:top;
   text-align:left;
+}
+
+.column300WidthTopRight {
+  width:300px;
+  vertical-align:top;
+  text-align:right;
 }
 
 .column400Width {
@@ -186,6 +201,7 @@ div.query_result {
 }
 .column0Width {
   width:0px;
+  white-space: nowrap;
 }
 .column0WidthLeft {
   width:0px;

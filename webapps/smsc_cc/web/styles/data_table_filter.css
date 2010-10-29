@@ -12,6 +12,20 @@ table.data_table_filter {
   white-space: nowrap;
 }
 
+table.data_table_filter span.filter {
+  color: #308380;
+  margin-left: 0;
+  margin-bottom: 4px;
+  font-size: small;
+  font-weight: bold;
+}
+
+table.data_table_filter a.filter_button {
+  margin-left: 0;
+  margin-bottom: 4px;
+  font-size: small;
+}
+
 table.data_table_filter td {
   padding-left: 4px;
   padding-right: 4px;
