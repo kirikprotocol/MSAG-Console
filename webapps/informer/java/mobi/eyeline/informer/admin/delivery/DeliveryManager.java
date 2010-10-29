@@ -1,11 +1,12 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.io.File;
+import java.util.*;
 
 /**
  * Управление рассылкой и статистикой сообщений
@@ -16,41 +17,71 @@ public class DeliveryManager {
 
   private static final Logger logger = Logger.getLogger(DeliveryManager.class);
 
-  private final DcpConnectionFactory connectionFactory;
+  private final Map<User, DcpConnection> pool = new HashMap<User, DcpConnection>();
 
-  public DeliveryManager(String host, int port) {
-    this.connectionFactory = new DcpConnectionFactory(host, port);
+  private String host;
+
+  private int port;
+
+  private final DeliveryStatProvider statsProvider;
+
+
+  public DeliveryManager(String host, int port, File statsDirectory, FileSystem fileSys) {
+    this.host = host;
+    this.port = port;
+    this.statsProvider = new DeliveryStatProvider(statsDirectory, fileSys);
   }
 
-  protected DeliveryManager(DcpConnectionFactory factory) {
-    this.connectionFactory = factory;
+  protected DeliveryManager(DeliveryStatProvider statsProvider) {
+    this.statsProvider = statsProvider;
   }
 
-  private DcpConnection getDeliveryConnection(String login, String password) throws AdminException {
-    DcpConnection conn = connectionFactory.getDeliveryConnection(login, password);
-    if (!conn.isConnected()) {
+  protected DcpConnection createConnection(String host, int port, String login, String password) throws AdminException {
+    return new DcpConnection(host, port, login, password);
+  }
+
+  private synchronized DcpConnection getDeliveryConnection(String login, String password) throws AdminException {
+    User u = new User(login, password);
+    DcpConnection connection = pool.get(u);
+    if (connection == null) {
+      connection = createConnection(host, port, login, password);
+      pool.put(u, connection);
+    }
+    if (!connection.isConnected()) {
       throw new DeliveryException("connection_lost");
     }
-    return conn;
+    return connection;
   }
 
-  public void addMessages(String login, String password, MessageDataSource msDataSource, int deliveryId) throws AdminException {
+  public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
     DcpConnection conn = getDeliveryConnection(login, password);
     Delivery d = conn.getDelivery(deliveryId);
     if(d == null) {
       throw new DeliveryException("delivery_not_found");
     }
+    if(d.getType() == Delivery.Type.SingleText) {
+      throw new DeliveryException("illegal_delivery_type");
+    }
     addMessages(msDataSource, conn, d);
   }
-  
-  private void addMessages(MessageDataSource msDataSource, DcpConnection conn, Delivery delivery) throws AdminException {
+
+  public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+    DcpConnection conn = getDeliveryConnection(login, password);
+    Delivery d = conn.getDelivery(deliveryId);
+    if(d == null) {
+      throw new DeliveryException("delivery_not_found");
+    }
+    if(d.getType() == Delivery.Type.Common) {
+      throw new DeliveryException("illegal_delivery_type");
+    }
+    return addSingleTextMessages(msDataSource, conn, d);
+  }
+
+  private void addMessages(DataSource<Message> msDataSource, DcpConnection conn, Delivery delivery) throws AdminException {
     Message m;
     int count = 0;
     List<Message> messages = new ArrayList<Message>(1000);
     while ((m = msDataSource.next()) != null) {
-      if(m.getText() == null  && (delivery.getSingleText() == null)) {
-        throw new DeliveryException("single_text_is_empty");
-      }
       messages.add(m);
       count++;
       if (count == 1000) {
@@ -72,6 +103,32 @@ public class DeliveryManager {
         i++;
       }
     }
+  }
+
+  private List<Long> addSingleTextMessages(DataSource<Address> dataSource, DcpConnection conn, Delivery delivery) throws AdminException {
+    Address a;
+    int count = 0;
+    List<Address> addresses = new ArrayList<Address>(1000);
+    List<Long> results = new LinkedList<Long>();
+    while ((a = dataSource.next()) != null) {
+      addresses.add(a);
+      count++;
+      if (count == 1000) {
+        long[] ids = conn.addDeliveryMessages(delivery.getId(), addresses);
+        for(long id : ids) {
+          results.add(id);
+        }
+        addresses.clear();
+        count = 0;
+      }
+    }
+    if (!addresses.isEmpty()) {
+      long[] ids = conn.addDeliveryMessages(delivery.getId(), addresses);
+      for(long id : ids) {
+        results.add(id);
+      }
+    }
+    return results;
   }
 
   private static void validateDelivery(final Delivery delivery) throws AdminException {
@@ -108,7 +165,10 @@ public class DeliveryManager {
    * @throws mobi.eyeline.informer.admin.AdminException
    *          ошибка выполнения команды
    */
-  public void createDelivery(final String login, final String password, final Delivery delivery, final MessageDataSource msDataSource) throws AdminException {
+  public void createDelivery(final String login, final String password, final Delivery delivery, final DataSource<Message> msDataSource) throws AdminException {
+    if(delivery.getType() == Delivery.Type.SingleText) {
+      throw new DeliveryException("illegal_delivery_type");
+    }
     if (logger.isDebugEnabled()) {
       logger.debug("Create delivery: " + delivery.getName());
     }
@@ -135,6 +195,50 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Delivery is proccessed: " + id);
     }
+  }
+  /**
+   * Создание рассылки
+   *
+   * @param login        логин
+   * @param password     пароль
+   * @param delivery     рассылка
+   * @param dataSource адресаты рассылки
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка выполнения команды
+   * @return идентификаторы сообщений
+   */
+  public List<Long> createSingleTextDelivery(final String login, final String password, final Delivery delivery, final DataSource<Address> dataSource) throws AdminException {
+    if(delivery.getType() == Delivery.Type.Common) {
+      throw new DeliveryException("illegal_delivery_type");
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Create delivery: " + delivery.getName());
+    }
+    validateDelivery(delivery);
+    final DcpConnection conn = getDeliveryConnection(login, password);
+    final int id = conn.createDelivery(delivery);
+    delivery.setId(id);
+    List<Long> res;
+    try {
+      res = addSingleTextMessages(dataSource, conn, delivery);
+    } catch (Exception e) {
+      logger.error(e, e);
+      try {
+        logger.warn("Try drop delivery: " + id);
+        conn.dropDelivery(id);
+        logger.warn("Delivery is removed: " + id);
+      } catch (Exception ex) {
+        logger.error(ex, ex);
+      }
+      if (logger.isDebugEnabled()) {
+        logger.debug("Delivery's processing failed: " + id);
+      }
+      throw new DeliveryException("internal_error");
+    }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Delivery is proccessed: " + id);
+    }
+    return res;
   }
 
   /**
@@ -323,7 +427,7 @@ public class DeliveryManager {
    * @param visitor визитер извлечения сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
+  public void getMessages(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
     if (filter == null || filter.getFields() == null || filter.getFields().length == 0) {
       throw new DeliveryException("resultFields");
     }
@@ -331,10 +435,11 @@ public class DeliveryManager {
       throw new DeliveryException("date_start_end_empty");
     }
     DcpConnection conn = getDeliveryConnection(login, password);
-    int _reqId = conn.getMessagesStates(filter);
+    int _reqId = conn.getMessages(filter);
+    final Delivery d = conn.getDelivery(filter.getDeliveryId());
     new DeliveryDataSource<MessageInfo>(_pieceSize, _reqId, conn) {
       protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<MessageInfo> result) throws AdminException {
-        return connection.getNextMessageStates(reqId, pieceSize, result);
+        return connection.getNextMessages(reqId, pieceSize, d, result);
       }
     }.visit(visitor);
   }
@@ -364,22 +469,59 @@ public class DeliveryManager {
    * @return история изменения статусов рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public DeliveryHistory getDeliveryHistory(String login, String password, int deliveryId) throws AdminException {
+  public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
     DcpConnection conn = getDeliveryConnection(login, password);
     return conn.getDeliveryHistory(deliveryId);
+  }
+
+  /**
+   * Поочередно передает в visitor все записи статистики, удовлетворяющие условиям, накладываемыми в filter.
+   * Процесс продолжается до тех пор, пока метод visit в visitor возвращает true, либо записи не закончатся.
+   * Если filter == null, то провайдер перебирает все записи.
+   * @param filter фильтр, описывающий ограничения на записи
+   * @param visitor визитор, обрабатывающий найденные записи
+   * @throws AdminException если произошла ошибка при обращении к стораджу статистики
+   */
+  public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
+    statsProvider.accept(filter, visitor);
   }
 
   /**
    * Завершение работы менеджера
    */
   public void shutdown() {
-    if (connectionFactory != null) {
+    for (DcpConnection conn : pool.values()) {
       try {
-        connectionFactory.shutdown();
+        conn.close();
       } catch (Exception ignored) {
       }
     }
+  }
 
+  private static class User {
+    private final String login;
+    private final String password;
+
+    private User(String login, String password) {
+      this.login = login;
+      this.password = password;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      User user = (User) o;
+      return !(login != null ? !login.equals(user.login) : user.login != null) &&
+          !(password != null ? !password.equals(user.password) : user.password != null);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = login != null ? login.hashCode() : 0;
+      result = 31 * result + (password != null ? password.hashCode() : 0);
+      return result;
+    }
   }
 
 }

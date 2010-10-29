@@ -15,7 +15,6 @@ public class MessageInfo {
   private Date date;
   private String abonent;
   private String text;
-  private Integer index;
   private Integer errorCode;
   private String userData;
 
@@ -59,14 +58,6 @@ public class MessageInfo {
     this.text = text;
   }
 
-  public Integer getIndex() {
-    return index;
-  }
-
-  void setIndex(Integer index) {
-    this.index = index;
-  }
-
   public Integer getErrorCode() {
     return errorCode;
   }
@@ -97,16 +88,10 @@ public class MessageInfo {
     if (date != null ? !dateFormat.format(date).equals(that.date == null ? null : dateFormat.format(that.date)) : that.date != null)
       return false;
     if (errorCode != null ? !errorCode.equals(that.errorCode) : that.errorCode != null) return false;
-    if (index != null ? !index.equals(that.index) : that.index != null) return false;
     if (state != that.state) return false;
     if (text != null ? !text.equals(that.text) : that.text != null) return false;
     if (userData != null ? !userData.equals(that.userData) : that.userData != null) return false;
 
     return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 0;
   }
 }

@@ -14,7 +14,7 @@ import java.util.*;
  * Интерфейс, обеспечивающий досуп к статистике
  * @author Artem Snopkov
  */
-public class DeliveryStatProvider {
+class DeliveryStatProvider {
 
   Logger log = Logger.getLogger(this.getClass());
 
@@ -23,7 +23,7 @@ public class DeliveryStatProvider {
   private String subDirNameFormat;
   private String filePathFormat;
 
-  public DeliveryStatProvider(File directory,FileSystem fileSys) {
+  DeliveryStatProvider(File directory,FileSystem fileSys) {
     this(directory,fileSys,"yyyyMMdd");
   }
 
@@ -42,7 +42,7 @@ public class DeliveryStatProvider {
    * @param visitor визитор, обрабатывающий найденные записи
    * @throws AdminException если произошла ошибка при обращении к стораджу статистики
    */
-  public void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
+  void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     try {
       int minMinute=0;
       int maxMinute=59;
@@ -75,7 +75,7 @@ public class DeliveryStatProvider {
       }
     }
     catch (IOException e) {
-      throw new DeliveryStatException("filesys.ioexception",e);
+      throw new DeliveryException("filesys.ioexception");
     }
   }
 
@@ -133,7 +133,7 @@ public class DeliveryStatProvider {
 
 
 
-  public boolean process(File file, DeliveryStatFilter filter, DeliveryStatVisitor visitor, int currentFile, int totalFilesCount, int fromMin, int toMin) throws AdminException, IOException, ParseException {
+  boolean process(File file, DeliveryStatFilter filter, DeliveryStatVisitor visitor, int currentFile, int totalFilesCount, int fromMin, int toMin) throws AdminException, IOException, ParseException {
     InputStream is=null;
     try {
 

@@ -90,12 +90,12 @@ public class TestAdminContext extends AdminContext {
       d.setSvcType("svc1");
       d.setValidityDate(new Date());
 
-      deliveryManager.createDelivery(u.getLogin(),u.getPassword(), d, new MessageDataSource() {
+      deliveryManager.createDelivery(u.getLogin(),u.getPassword(), d, new DataSource() {
         private LinkedList<Message> ms = new LinkedList<Message>() {
           {
             Random r = new Random();
             for(int k=0;k<100;k++) {
-              Message m1 = Message.newTextMessage("text"+r.nextInt(10000));
+              Message m1 = Message.newMessage("text"+r.nextInt(10000));
               m1.setAbonent(new Address("+7913"+k));
               add(m1);
             }
@@ -151,10 +151,8 @@ public class TestAdminContext extends AdminContext {
         infosme.addRegion(s.getRegionId());
       }
 
-      deliveryManager = new TestDeliveryManager();
+      deliveryManager = new TestDeliveryManager(new TestDeliveryStatProvider(statDir, fileSystem));
       createDeliveries();
-
-      deliveryStatProvider = new TestDeliveryStatProvider(statDir, fileSystem);
 
     } catch (IOException e) {
       throw new InitException(e);

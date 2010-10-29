@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Aleksandr Khalitov
  */
-class DcpClient extends ClientConnection {
+public class DcpClient extends ClientConnection {
 
   private static final Logger log = Logger.getLogger(DcpClient.class);
 
@@ -122,79 +122,79 @@ class DcpClient extends ClientConnection {
   }
 
 
-  AddDeliveryMessagesResp send(AddDeliveryMessages req) throws AdminException {
+  public AddDeliveryMessagesResp send(AddDeliveryMessages req) throws AdminException {
     return sendPdu(req, new AddDeliveryMessagesResp());
   }
 
-  CreateDeliveryResp send(CreateDelivery req) throws AdminException {
+  public CreateDeliveryResp send(CreateDelivery req) throws AdminException {
     return sendPdu(req, new CreateDeliveryResp());
   }
 
-  CountDeliveriesResp send(CountDeliveries req) throws AdminException {
+  public CountDeliveriesResp send(CountDeliveries req) throws AdminException {
     return sendPdu(req, new CountDeliveriesResp());
   }
 
-  CountMessagesResp send(CountMessages req) throws AdminException {
+  public CountMessagesResp send(CountMessages req) throws AdminException {
     return sendPdu(req, new CountMessagesResp());
   }
 
-  void send(UserAuth req) throws AdminException {
+  public void send(UserAuth req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  protected GetUserStatsResp send(GetUserStats req) throws AdminException {
+  public GetUserStatsResp send(GetUserStats req) throws AdminException {
     return sendPdu(req, new GetUserStatsResp());
   }
 
-  void send(ModifyDelivery req) throws AdminException {
+  public void send(ModifyDelivery req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  void send(DropDelivery req) throws AdminException {
+  public void send(DropDelivery req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  void send(ChangeDeliveryState req) throws AdminException {
+  public void send(ChangeDeliveryState req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  void send(DropDeliverymessages req) throws AdminException {
+  public void send(DropDeliverymessages req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  GetDeliveryGlossaryResp send(GetDeliveryGlossary req) throws AdminException {
+  public GetDeliveryGlossaryResp send(GetDeliveryGlossary req) throws AdminException {
     return sendPdu(req, new GetDeliveryGlossaryResp());
   }
 
-  void send(ModifyDeliveryGlossary req) throws AdminException {
+  public void send(ModifyDeliveryGlossary req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 
-  GetDeliveryStateResp send(GetDeliveryState req) throws AdminException {
+  public GetDeliveryStateResp send(GetDeliveryState req) throws AdminException {
     return sendPdu(req, new GetDeliveryStateResp());
   }
 
-  GetDeliveryInfoResp send(GetDeliveryInfo req) throws AdminException {
+  public GetDeliveryInfoResp send(GetDeliveryInfo req) throws AdminException {
     return sendPdu(req, new GetDeliveryInfoResp());
   }
 
-  GetDeliveriesListResp send(GetDeliveriesList req) throws AdminException {
+  public GetDeliveriesListResp send(GetDeliveriesList req) throws AdminException {
     return sendPdu(req, new GetDeliveriesListResp());
   }
 
-  GetDeliveriesListNextResp send(GetDeliveriesListNext req) throws AdminException {
+  public GetDeliveriesListNextResp send(GetDeliveriesListNext req) throws AdminException {
     return sendPdu(req, new GetDeliveriesListNextResp());
   }
 
-  RequestMessagesStateResp send(RequestMessagesState req) throws AdminException {
+  public RequestMessagesStateResp send(RequestMessagesState req) throws AdminException {
     return sendPdu(req, new RequestMessagesStateResp());
   }
 
-  GetNextMessagesPackResp send(GetNextMessagesPack req) throws AdminException {
+  public GetNextMessagesPackResp send(GetNextMessagesPack req) throws AdminException {
     return sendPdu(req, new GetNextMessagesPackResp());
   }
 
-  GetDeliveryHistoryResp send(GetDeliveryHistory req) throws AdminException {
+  public GetDeliveryHistoryResp send(GetDeliveryHistory req) throws AdminException {
     return sendPdu(req, new GetDeliveryHistoryResp());
   }
 

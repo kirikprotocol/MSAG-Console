@@ -15,10 +15,10 @@ public class MessageTest {
 
   @Test
   public void testCreate() {
-    Message m = Message.newGlossaryMessage();
+    Message m = Message.newMessage(null);
     assertEquals(null, m.getText());
 
-    m = Message.newTextMessage("t");
+    m = Message.newMessage("t");
     assertEquals("t", m.getText());
   }
 

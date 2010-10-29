@@ -1,27 +1,77 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
+import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import mobi.eyeline.informer.util.Address;
+import org.apache.log4j.Logger;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Коннект к DCP, упрвление рассылками
  *
  * @author Aleksandr Khalitov
  */
-public interface DcpConnection {
+public class DcpConnection {
 
+  private static final Logger logger = Logger.getLogger(DcpConnection.class);
+
+  private DcpClient client;
+
+  private Lock lock;
+
+  public DcpConnection(String host, int port, final String login, String password) throws AdminException {
+    this.client = new DcpClient(host, port);
+    connect(login, password);
+
+    lock = new ReentrantLock() {
+      @Override
+      public void lock() {
+        super.lock();
+        if (logger.isDebugEnabled()) {
+          logger.debug("Dcp Connection locked: login=" + login);
+        }
+      }
+
+      @Override
+      public void unlock() {
+        super.unlock();
+        if (logger.isDebugEnabled()) {
+          logger.debug("Dcp Connection unlocked: login=" + login);
+        }
+      }
+    };
+  }
+
+  protected DcpConnection() {
+  }
+
+  private void connect(String login, String password) throws AdminException {
+    UserAuth auth = new UserAuth();
+    auth.setUserId(login);
+    auth.setPassword(password);
+    client.send(auth);
+  }
   /**
    * Соединение установлено
    *
    * @return true - да, false - нет
    */
-  public boolean isConnected();
+  public boolean isConnected() {
+    return client.isConnected();
+  }
 
   /**
    * Закрывает соединение
    */
-  public void close();
+  public void close() {
+    client.shutdown();
+  }
 
   /**
    * Создание рассылки
@@ -30,7 +80,31 @@ public interface DcpConnection {
    * @return идентификатор рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public int createDelivery(Delivery delivery) throws AdminException;
+  public int createDelivery(Delivery delivery) throws AdminException {
+    CreateDelivery req = new CreateDelivery();
+    req.setInfo(DcpConverter.convert(delivery));
+    CreateDeliveryResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    if(delivery.getSingleText() != null) {
+      ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
+      reqG.setDeliveryId(resp.getDeliveryId());
+      DeliveryGlossary glossary = new DeliveryGlossary();
+      glossary.setMessages(new String[]{delivery.getSingleText()});
+      reqG.setGlossary(glossary);
+      try {
+        lock.lock();
+        client.send(reqG);
+      } finally {
+        lock.unlock();
+      }
+    }
+    return resp.getDeliveryId();
+  }
 
 
   /**
@@ -41,7 +115,42 @@ public interface DcpConnection {
    * @return идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public long[] addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException;
+  public long[] addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException {
+    AddDeliveryMessages req = new AddDeliveryMessages();
+    req.setDeliveryId(deliveryId);
+    req.setMessages(DcpConverter.convert(messages));
+    AddDeliveryMessagesResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return resp.getMessageIds();
+  }
+
+
+  /**
+   * Добавляет сообщения в рассылку
+   *
+   * @param deliveryId идентификатор рассылки
+   * @param addresses   сообщения
+   * @return идентификаторы сообщений
+   * @throws AdminException ошибка выполнения команды
+   */
+  public long[] addDeliveryMessages(int deliveryId, List<Address> addresses) throws AdminException {
+    AddDeliveryMessages req = new AddDeliveryMessages();
+    req.setDeliveryId(deliveryId);
+    req.setMessages(DcpConverter.convert(addresses));
+    AddDeliveryMessagesResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return resp.getMessageIds();
+  }
 
   /**
    * Модификация рассылки
@@ -49,7 +158,30 @@ public interface DcpConnection {
    * @param delivery рассылка
    * @throws AdminException ошибка выполнения команды
    */
-  public void modifyDelivery(Delivery delivery) throws AdminException;
+  public void modifyDelivery(Delivery delivery) throws AdminException {
+    ModifyDelivery req = new ModifyDelivery();
+    req.setDeliveryId(delivery.getId());
+    req.setInfo(DcpConverter.convert(delivery));
+    try {
+      lock.lock();
+      client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    if(delivery.getType() == Delivery.Type.SingleText) {
+      ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
+      reqG.setDeliveryId(delivery.getId());
+      DeliveryGlossary glossary = new DeliveryGlossary();
+      glossary.setMessages(new String[]{delivery.getSingleText()});
+      reqG.setGlossary(glossary);
+      try {
+        lock.lock();
+        client.send(reqG);
+      } finally {
+        lock.unlock();
+      }
+    }
+  }
 
   /**
    * Удаление рассылки
@@ -57,7 +189,16 @@ public interface DcpConnection {
    * @param deliveryId идентификатор рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public void dropDelivery(int deliveryId) throws AdminException;
+  public void dropDelivery(int deliveryId) throws AdminException {
+    DropDelivery req = new DropDelivery();
+    req.setDeliveryId(deliveryId);
+    try {
+      lock.lock();
+      client.send(req);
+    } finally {
+      lock.unlock();
+    }
+  }
 
   /**
    * Подсчёт кол-ва рассылок
@@ -66,7 +207,40 @@ public interface DcpConnection {
    * @return кол-во рассылок
    * @throws AdminException ошибка выполнения команды
    */
-  public int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException;
+  public int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
+    CountDeliveries req = new CountDeliveries();
+    if (deliveryFilter != null) {
+      if (deliveryFilter.getEndDateFrom() != null) {
+        req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+      }
+      if (deliveryFilter.getEndDateTo() != null) {
+        req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+      }
+      if (deliveryFilter.getStartDateFrom() != null) {
+        req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+      }
+      if (deliveryFilter.getStartDateTo() != null) {
+        req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+      }
+      if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
+        req.setNameFilter(deliveryFilter.getNameFilter());
+      }
+      if (deliveryFilter.getUserIdFilter() != null && deliveryFilter.getUserIdFilter().length > 0) {
+        req.setUserIdFilter(deliveryFilter.getUserIdFilter());
+      }
+      if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
+        req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
+      }
+    }
+    CountDeliveriesResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return resp.getResult();
+  }
 
   /**
    * Удаляет сообщения из рассылки
@@ -74,7 +248,16 @@ public interface DcpConnection {
    * @param messageIds идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public void dropMessages(long[] messageIds) throws AdminException;
+  public void dropMessages(long[] messageIds) throws AdminException {
+    DropDeliverymessages req = new DropDeliverymessages();
+    req.setMessageIds(messageIds);
+    try {
+      lock.lock();
+      client.send(req);
+    } finally {
+      lock.unlock();
+    }
+  }
 
   /**
    * Возвращает рассылку по идентификатору
@@ -83,7 +266,36 @@ public interface DcpConnection {
    * @return рассылка
    * @throws AdminException ошибка выполнения команды
    */
-  public Delivery getDelivery(int deliveryId) throws AdminException;
+  public Delivery getDelivery(int deliveryId) throws AdminException {
+    GetDeliveryInfo req = new GetDeliveryInfo();
+    req.setDeliveryId(deliveryId);
+    GetDeliveryInfoResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    if(!resp.hasInfo()) {
+      return null;
+    }
+    mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo info = resp.getInfo();
+    Map<String, String> userData = DcpConverter.convertUserData(info.getUserData());
+    if(!userData.containsKey("singleText")) {
+      return DcpConverter.convert(deliveryId, info, userData, null);
+    } else{
+      GetDeliveryGlossary reqG = new GetDeliveryGlossary();
+      GetDeliveryGlossaryResp respG;
+      reqG.setDeliveryId(deliveryId);
+      try {
+        lock.lock();
+        respG = client.send(reqG);
+      } finally {
+        lock.unlock();
+      }
+      return DcpConverter.convert(deliveryId, info, userData, respG.getGlossary().getMessages());
+    }
+  }
 
   /**
    * Меняет состояние рассылки
@@ -92,7 +304,17 @@ public interface DcpConnection {
    * @param state      новое состояние
    * @throws AdminException ошибка выполнения команды
    */
-  public void changeDeliveryState(int deliveryId, DeliveryState state) throws AdminException;
+  public void changeDeliveryState(int deliveryId, DeliveryState state) throws AdminException {
+    ChangeDeliveryState req = new ChangeDeliveryState();
+    req.setDeliveryId(deliveryId);
+    req.setState(DcpConverter.convert(state));
+    try {
+      lock.lock();
+      client.send(req);
+    } finally {
+      lock.unlock();
+    }
+  }
 
   /**
    * Возвращает статистику по рассылке
@@ -101,7 +323,18 @@ public interface DcpConnection {
    * @return статистика по рассылке
    * @throws AdminException ошибка выполнения команды
    */
-  public DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException;
+  public DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
+    GetDeliveryState req = new GetDeliveryState();
+    req.setDeliveryId(deliveryId);
+    GetDeliveryStateResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return DcpConverter.convert(resp.getStats(), resp.getState());
+  }
 
   /**
    * Возвращает идентификатор запроса для извлечения рассылок, удовлетворяющие фильтру
@@ -110,7 +343,50 @@ public interface DcpConnection {
    * @return идентификатор запроса
    * @throws AdminException ошибка выполнения команды
    */
-  public int getDeliviries(DeliveryFilter deliveryFilter) throws AdminException;
+  public int getDeliviries(DeliveryFilter deliveryFilter) throws AdminException {
+    GetDeliveriesList req = new GetDeliveriesList();
+    if (deliveryFilter.getEndDateFrom() != null) {
+      req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+    }
+    if (deliveryFilter.getStartDateFrom() != null) {
+      req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+    }
+    if (deliveryFilter.getEndDateTo() != null) {
+      req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+    }
+    if (deliveryFilter.getStartDateTo() != null) {
+      req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+    }
+    if (deliveryFilter.getEndDateFrom() != null) {
+      req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+    }
+    if (deliveryFilter.getEndDateTo() != null) {
+      req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+    }
+    if (deliveryFilter.getStartDateFrom() != null) {
+      req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+    }
+    if (deliveryFilter.getStartDateTo() != null) {
+      req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+    }
+    if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
+      req.setNameFilter(deliveryFilter.getNameFilter());
+    }
+    if (deliveryFilter.getUserIdFilter() != null && deliveryFilter.getUserIdFilter().length > 0) {
+      req.setUserIdFilter(deliveryFilter.getUserIdFilter());
+    }
+    if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
+      req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
+    }
+    GetDeliveriesListResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return resp.getReqId();
+  }
 
   /**
    * Возвращает следующую часть рассылок по идентификатору запроса
@@ -121,7 +397,24 @@ public interface DcpConnection {
    * @return есть ли ещё рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextDeliviries(int reqId, int pieceSize, Collection<DeliveryInfo> deliveries) throws AdminException;
+  public boolean getNextDeliviries(int reqId, int pieceSize, Collection<DeliveryInfo> deliveries) throws AdminException {
+    GetDeliveriesListNext req = new GetDeliveriesListNext();
+    req.setReqId(reqId);
+    req.setCount(pieceSize);
+    GetDeliveriesListNextResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    if (resp.getInfo() != null) {
+      for (DeliveryListInfo di : resp.getInfo()) {
+        deliveries.add(DcpConverter.convert(di));
+      }
+    }
+    return resp.getMoreDeliveries();
+  }
 
   /**
    * Возвращает идентифкатор запроса для извлечения информации о сообщениях рассылки
@@ -130,28 +423,98 @@ public interface DcpConnection {
    * @return идентифкатор запроса
    * @throws AdminException ошибка выполнения команды
    */
-  public int getMessagesStates(MessageFilter filter) throws AdminException;
+  public int getMessages(MessageFilter filter) throws AdminException {
+    RequestMessagesState req = new RequestMessagesState();
+    if (filter != null) {
+      if (filter.getDeliveryId() != null) {
+        req.setDeliveryId(filter.getDeliveryId());
+      }
+      req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
+      req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
+
+      if (filter.getFields() != null && filter.getFields().length > 0) {
+        req.setFields(DcpConverter.convert(filter.getFields()));
+      }
+      if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
+        req.setMsisdnFilter(filter.getMsisdnFilter());
+      }
+      if (filter.getStates() != null && filter.getStates().length > 0) {
+        req.setStates(DcpConverter.convert(filter.getStates()));
+      }
+    }
+    RequestMessagesStateResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return resp.getReqId();
+  }
 
   /**
    * Возвращает следующую часть сообщений по идентификатору запроса
    *
    * @param reqId     идентификатор запроса
    * @param pieceSize максимальное кол-во извлекаемых сообщений
+   * @param delivery  рассылка
    * @param messages  куда следуют сложить сообщения
    * @return есть ли ещё сообщения
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextMessageStates(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException;
+  public boolean getNextMessages(int reqId, int pieceSize, Delivery delivery, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException {
+    GetNextMessagesPack req = new GetNextMessagesPack();
+    req.setReqId(reqId);
+    req.setCount(pieceSize);
+    GetNextMessagesPackResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    if (resp.getInfo() != null) {
+      for (mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
+          messages.add(DcpConverter.convert(mi,
+              delivery.getType() == Delivery.Type.SingleText ? delivery.getSingleText() : null));
+      }
+    }
+    return resp.getMoreMessages();
+  }
 
 
   /**
    * Подсчёт кол-ва сообщений
    *
-   * @param messageFilter фильтр
+   * @param filter фильтр
    * @return кол-во сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public int countMessages(MessageFilter messageFilter) throws AdminException;
+  public int countMessages(MessageFilter filter) throws AdminException {
+    CountMessages req = new CountMessages();
+    if (filter != null) {
+      if (filter.getDeliveryId() != null) {
+        req.setDeliveryId(filter.getDeliveryId());
+      }
+      req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
+      req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
+
+      if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
+        req.setMsisdnFilter(filter.getMsisdnFilter());
+      }
+      if (filter.getStates() != null && filter.getStates().length > 0) {
+        req.setStates(DcpConverter.convert(filter.getStates()));
+      }
+    }
+    CountMessagesResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return resp.getCount();
+  }
 
   /**
    * Возвращает история статусов рассылки
@@ -159,6 +522,17 @@ public interface DcpConnection {
    * @return история статусов рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public DeliveryHistory getDeliveryHistory(int deliveryId) throws AdminException;
+  public DeliveryStatusHistory getDeliveryHistory(int deliveryId) throws AdminException {
+    GetDeliveryHistory req = new GetDeliveryHistory();
+    req.setDeliveryId(deliveryId);
+    GetDeliveryHistoryResp resp;
+    try {
+      lock.lock();
+      resp = client.send(req);
+    } finally {
+      lock.unlock();
+    }
+    return DcpConverter.convert(deliveryId, resp.getHistory());
+  }
 
 }

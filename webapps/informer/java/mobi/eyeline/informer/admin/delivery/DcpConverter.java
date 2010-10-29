@@ -26,7 +26,7 @@ public class DcpConverter {
     try {
       return format.parse(time);
     } catch (ParseException e) {
-      throw new DcpConverterException("unparsable_date", time);
+      throw new DeliveryException("unparsable_date", time);
     }
   }
 
@@ -40,7 +40,7 @@ public class DcpConverter {
     try {
       return format.parse(date);
     } catch (ParseException e) {
-      throw new DcpConverterException("unparsable_date", date);
+      throw new DeliveryException("unparsable_date", date);
     }
   }
 
@@ -93,7 +93,8 @@ public class DcpConverter {
     if(glossary == null) {
       delivery = Delivery.newCommonDelivery();
     }else {
-      delivery = Delivery.newSingleTextDelivery(glossary[0]);
+      delivery = Delivery.newSingleTextDelivery();
+      delivery.setSingleText(glossary[0]);
     }
     delivery.setId(id);
     delivery.setActivePeriodEnd(convertTime(di.getActivePeriodEnd()));
@@ -123,10 +124,6 @@ public class DcpConverter {
         delivery.setSmsNotificationAddress(new Address(t));
       }
       t = uD.get("emailNotification");
-      if(t != null) {
-        delivery.setEmailNotificationAddress(t);
-      }
-      t = uD.get("singleMessage");
       if(t != null) {
         delivery.setEmailNotificationAddress(t);
       }
@@ -167,7 +164,7 @@ public class DcpConverter {
     return result;
   }
 
-  public static MessageInfo convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi) throws AdminException {
+  public static MessageInfo convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi, String text) throws AdminException {
     if (mi == null) {
       return null;
     }
@@ -182,14 +179,13 @@ public class DcpConverter {
     if (mi.hasErrorCode()) {
       result.setErrorCode(mi.getErrorCode());
     }
-    if (mi.hasIndex()) {
-      result.setIndex(mi.getIndex());
-    }
     if (mi.hasState()) {
       result.setState(convert(mi.getState()));
     }
-    if (mi.hasText()) {
+    if(text == null && mi.hasText()) {
       result.setText(mi.getText());
+    }else {
+      result.setText(text);
     }
     if (mi.hasUserData()) {
       result.setUserData(mi.getUserData());
@@ -200,11 +196,8 @@ public class DcpConverter {
   public static DeliveryMessage convert(Message m) {
     DeliveryMessage result = new DeliveryMessage();
     result.setAbonent(m.getAbonent().getSimpleAddress());
-    if (m.getText() == null) {
-      result.setIndex(0);
-    } else {
-      result.setText(m.getText());
-    }
+    result.setText(m.getText());
+    result.setMsgType(MessageType.TextMessage);
     return result;
   }
 
@@ -215,6 +208,20 @@ public class DcpConverter {
     DeliveryMessage[] result = new DeliveryMessage[dm.length];
     for (int i = 0; i < dm.length; i++) {
       result[i] = convert(dm[i]);
+    }
+    return result;
+  }
+
+  public static DeliveryMessage[] convert(List<Address> addresses) {
+    if (addresses == null) {
+      return null;
+    }
+    DeliveryMessage[] result = new DeliveryMessage[addresses.size()];
+    for (int i = 0; i < addresses.size(); i++) {
+      result[i] = new DeliveryMessage();
+      result[i].setIndex(0);
+      result[i].setAbonent(addresses.get(i).getSimpleAddress());
+      result[i].setMsgType(MessageType.GlossaryMessage);
     }
     return result;
   }
@@ -280,7 +287,7 @@ public class DcpConverter {
     if(di.getEmailNotificationAddress() != null) {
       userData.put("emailNotification", di.getEmailNotificationAddress());
     }
-    if(di.getSingleText() != null) {
+    if(di.getType() == Delivery.Type.SingleText) {
       userData.put("singleText", true);
     }
     delivery.setUserData(convertUserData(userData));
@@ -440,14 +447,14 @@ public class DcpConverter {
     return r;
   }
 
-  public static DeliveryHistory convert(int deliveryId, DeliveryHistoryItem[] history) throws AdminException {
+  public static DeliveryStatusHistory convert(int deliveryId, DeliveryHistoryItem[] history) throws AdminException {
     if(history == null) {
       return null;
     }
-    List<DeliveryHistory.HistoryItem> items = new ArrayList<DeliveryHistory.HistoryItem>(history.length);
+    List<DeliveryStatusHistory.Item> items = new ArrayList<DeliveryStatusHistory.Item>(history.length);
     for(DeliveryHistoryItem i : history) {
-      items.add(new DeliveryHistory.HistoryItem(convertDate(i.getDate()), convert(i.getStatus())));
+      items.add(new DeliveryStatusHistory.Item(convertDate(i.getDate()), convert(i.getStatus())));
     }
-    return new DeliveryHistory(deliveryId, items);
+    return new DeliveryStatusHistory(deliveryId, items);
   }
 }

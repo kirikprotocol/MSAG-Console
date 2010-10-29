@@ -19,6 +19,8 @@ public class Delivery {
 
   private static final ValidationHelper vh = new ValidationHelper(Delivery.class);
 
+  public static enum Type {SingleText, Common}
+
   private Integer id;
 
   private String name;
@@ -54,19 +56,25 @@ public class Delivery {
 
   private Address sourceAddress;
 
-  private final String singleText;
+  private  String singleText;
 
-  public static Delivery newSingleTextDelivery(String text) {
-    return new Delivery(text);
+  private final Type type;
+
+  public static Delivery newSingleTextDelivery() {
+    return new Delivery(Type.SingleText);
   }
 
   public static Delivery newCommonDelivery() {
-    return new Delivery(null);
+    return new Delivery(Type.Common);
   }
 
 
-  Delivery(String singleText) {
-    this.singleText = singleText;
+  Delivery(Type type) {
+    this.type = type;
+  }
+
+  public Type getType() {
+    return type;
   }
 
   public Address getSourceAddress() {
@@ -96,6 +104,14 @@ public class Delivery {
 
   public String getSingleText() {
     return singleText;
+  }
+
+  public void setSingleText(String singleText) throws AdminException{
+    if(type == Type.Common) {
+      throw new DeliveryException("illegal_delivery_type");
+    }
+    vh.checkNotEmpty("singleText", singleText);
+    this.singleText = singleText;
   }
 
   public Integer getId() {
@@ -138,9 +154,6 @@ public class Delivery {
 
   public void setStartDate(Date startDate) throws AdminException {
     vh.checkNotNull("startDate", startDate);
-    if (endDate != null) {
-      vh.checkGreaterThan("startDate", endDate, startDate);
-    }
     this.startDate = startDate;
   }
 
@@ -150,9 +163,6 @@ public class Delivery {
 
   public void setEndDate(Date endDate) throws AdminException {
     vh.checkNotNull("endDate", endDate);
-    if (startDate != null) {
-      vh.checkGreaterThan("endDate", endDate, startDate);
-    }
     this.endDate = endDate;
   }
 
@@ -371,6 +381,9 @@ public class Delivery {
       return false;
     if (singleText != null ? !singleText.equals(delivery.singleText) : delivery.singleText != null)
       return false;
+    if(type != delivery.type) {
+      return false;
+    }
 
     if (sourceAddress != null ? !sourceAddress.getSimpleAddress().equals(delivery.sourceAddress.getSimpleAddress()) : delivery.sourceAddress != null)
       return false;
@@ -380,7 +393,7 @@ public class Delivery {
   }
 
   public Delivery cloneDelivery() {
-    Delivery d = new Delivery(singleText);
+    Delivery d = new Delivery(type);
     d.id = id;
 
     d.name = name;
@@ -414,6 +427,7 @@ public class Delivery {
     d.emailNotificationAddress = emailNotificationAddress;
     d.smsNotificationAddress = smsNotificationAddress == null ? null : new Address(smsNotificationAddress.getSimpleAddress());
     d.sourceAddress = sourceAddress == null ? null : new Address(sourceAddress.getSimpleAddress());
+    d.singleText = singleText;
     return d;
   }
 }

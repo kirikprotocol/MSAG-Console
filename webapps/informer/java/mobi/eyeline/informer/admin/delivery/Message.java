@@ -17,11 +17,7 @@ public class Message {
   private String text;
   private Address abonent;
 
-  public static Message newGlossaryMessage() {
-    return new Message(null);
-  }
-
-  public static Message newTextMessage(String text) {
+  public static Message newMessage(String text) {
     return new Message(text);
   }
 

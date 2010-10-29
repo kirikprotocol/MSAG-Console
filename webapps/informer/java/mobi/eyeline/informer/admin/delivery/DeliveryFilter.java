@@ -1,7 +1,5 @@
 package mobi.eyeline.informer.admin.delivery;
 
-import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
-
 import java.util.Date;
 
 /**
@@ -11,7 +9,6 @@ import java.util.Date;
  */
 public class DeliveryFilter {
 
-  private static final ValidationHelper vh = new ValidationHelper(DeliveryFilter.class);
 
   private String[] userIdFilter;
   private String[] nameFilter;

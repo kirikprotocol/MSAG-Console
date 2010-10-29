@@ -75,29 +75,6 @@ public class DeliveryTest {
     d.setEndDate(new Date());
   }
 
-
-  @Test
-  public void testStartEndDate() throws AdminException {
-    Delivery d = Delivery.newCommonDelivery();
-    d.setEndDate(new Date(100));
-    try{
-      d.setStartDate(new Date());
-      assertTrue(false);
-    }catch (AdminException e){}
-
-    d.setStartDate(new Date(99));
-
-
-    d = Delivery.newCommonDelivery();
-    d.setStartDate(new Date(100));
-    try{
-      d.setEndDate(new Date(99));
-      assertTrue(false);
-    }catch (AdminException e){}
-
-    d.setEndDate(new Date(101));
-  }
-
   @Test
   public void testActivePeriod() throws AdminException {
     Delivery d = Delivery.newCommonDelivery();

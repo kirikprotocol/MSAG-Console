@@ -114,11 +114,7 @@ public class MessagesByRecStatsController extends LongOperationController {
             final String name = deliveryInfo.getName();
             final String userId = deliveryInfo.getUserId();
 
-            MessageFilter messageFilter = new MessageFilter();
-
-            messageFilter.setDeliveryId(deliveryId);
-            messageFilter.setStartDate(fromDate==null ? deliveryInfo.getStartDate() : fromDate);
-            messageFilter.setEndDate(tillDate==null ? deliveryInfo.getEndDate() : tillDate);
+            MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate==null ? deliveryInfo.getStartDate() : fromDate, tillDate==null ? deliveryInfo.getEndDate() : tillDate);
             messageFilter.setMsisdnFilter(new String[]{msisdn});
             messageFilter.setFields(new MessageFields[]{MessageFields.Date,MessageFields.State,MessageFields.Text, MessageFields.ErrorCode});
 

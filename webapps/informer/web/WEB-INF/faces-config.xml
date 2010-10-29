@@ -77,6 +77,12 @@
   </converter>
 
 
+  <converter>
+    <converter-id>weekDaysConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.WeekDaysConverter</converter-class>
+  </converter>
+
+
   <render-kit>
     <renderer>
       <component-family>Eyeline</component-family>

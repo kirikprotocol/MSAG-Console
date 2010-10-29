@@ -19,7 +19,16 @@ public class MessageFilter {
   private String[] msisdnFilter;
   private Date startDate;
   private Date endDate;
-  private MessageFields[] fields;
+  private MessageFields[] fields = MessageFields.ALL;
+
+  public MessageFilter(Integer deliveryId, Date startDate, Date endDate) {
+    if(deliveryId == null || startDate == null || endDate == null) {
+      throw new IllegalArgumentException("Some argumnets are null");
+    }
+    this.deliveryId = deliveryId;
+    this.startDate = startDate;
+    this.endDate = endDate;
+  }
 
   public Integer getDeliveryId() {
     return deliveryId;
@@ -52,9 +61,6 @@ public class MessageFilter {
 
   public void setStartDate(Date startDate) throws AdminException {
     vh.checkNotNull("startDate", startDate);
-    if (endDate != null) {
-      vh.checkGreaterThan("startDate", endDate, startDate);
-    }
     this.startDate = startDate;
   }
 
@@ -64,9 +70,6 @@ public class MessageFilter {
 
   public void setEndDate(Date endDate) throws AdminException {
     vh.checkNotNull("endDate", endDate);
-    if (startDate != null) {
-      vh.checkGreaterThan("endDate", endDate, startDate);
-    }
     this.endDate = endDate;
   }
 

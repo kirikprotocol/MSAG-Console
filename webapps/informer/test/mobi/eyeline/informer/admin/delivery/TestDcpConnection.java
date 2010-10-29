@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Aleksandr Khalitov
  */
-public class TestDcpConnection implements DcpConnection{
+public class TestDcpConnection extends DcpConnection{
 
   private static final Logger logger = Logger.getLogger(TestDcpConnection.class);
 
@@ -26,7 +26,7 @@ public class TestDcpConnection implements DcpConnection{
 
   private Map<Integer, List<MessageWState>> messages = new HashMap<Integer, List<MessageWState>>();
 
-  private Map<Integer, DeliveryHistory> histories = new HashMap<Integer, DeliveryHistory>();
+  private Map<Integer, DeliveryStatusHistory> histories = new HashMap<Integer, DeliveryStatusHistory>();
 
   private Map<Integer, DeliveryRequest> deliveryReqs = new HashMap<Integer, DeliveryRequest>();
 
@@ -55,8 +55,8 @@ public class TestDcpConnection implements DcpConnection{
   public synchronized int createDelivery(Delivery delivery) throws AdminException {
     int id = dIdCounter++;
     deliveries.put(id, new DeliveryWStatus(delivery, id));
-    histories.put(id, new DeliveryHistory(id,
-        new LinkedList<DeliveryHistory.HistoryItem>(){{add(new DeliveryHistory.HistoryItem(new Date(), DeliveryStatus.Planned));}}));
+    histories.put(id, new DeliveryStatusHistory(id,
+        new LinkedList<DeliveryStatusHistory.Item>(){{add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Planned));}}));
     return id;
   }
 
@@ -73,6 +73,28 @@ public class TestDcpConnection implements DcpConnection{
     int i = 0;
     for(Message m : messages) {
       ids[i] = mIdCounter++;
+      m.setId(ids[i]);
+      ms.add(new MessageWState(m));
+      i++;
+    }
+    return ids;
+  }
+
+  public synchronized long[] addDeliveryMessages(int deliveryId, List<Address> addresses) throws AdminException {
+    if(!deliveries.containsKey(deliveryId)) {
+      throw new DeliveryException("interaction_error","");
+    }
+    List<MessageWState> ms = this.messages.get(deliveryId);
+    if(ms == null) {
+      ms = new LinkedList<MessageWState>();
+      this.messages.put(deliveryId, ms);
+    }
+    long[] ids = new long[addresses.size()];
+    int i = 0;
+    for(Address a : addresses) {
+      ids[i] = mIdCounter++;
+      Message m = Message.newMessage(null);
+      m.setAbonent(a);
       m.setId(ids[i]);
       ms.add(new MessageWState(m));
       i++;
@@ -190,7 +212,7 @@ public class TestDcpConnection implements DcpConnection{
     return count;
   }
 
-  public DeliveryHistory getDeliveryHistory(int deliveryId) throws AdminException {
+  public DeliveryStatusHistory getDeliveryHistory(int deliveryId) throws AdminException {
     return histories.get(deliveryId);
   }
 
@@ -220,7 +242,7 @@ public class TestDcpConnection implements DcpConnection{
       throw new DeliveryException("interaction_error","");
     }
     final DeliveryStatus status = state.getStatus();
-    final DeliveryHistory oldHistory = histories.get(deliveryId);
+    final DeliveryStatusHistory oldHistory = histories.get(deliveryId);
     DeliveryWStatus delivery = deliveries.get(deliveryId);
     DeliveryStatus current = delivery.status;
     if(current == status) {
@@ -247,9 +269,9 @@ public class TestDcpConnection implements DcpConnection{
 //        }
 //    }
     delivery.status = status;
-    histories.put(deliveryId, new DeliveryHistory(deliveryId, new LinkedList<DeliveryHistory.HistoryItem>(){{
+    histories.put(deliveryId, new DeliveryStatusHistory(deliveryId, new LinkedList<DeliveryStatusHistory.Item>(){{
       addAll(oldHistory.getHistoryItems());
-      add(new DeliveryHistory.HistoryItem(new Date(), status));}}));
+      add(new DeliveryStatusHistory.Item(new Date(), status));}}));
   }
 
   public synchronized DeliveryStatistics getDeliveryState(int deliveryId) throws AdminException {
@@ -314,13 +336,13 @@ public class TestDcpConnection implements DcpConnection{
     return result.size() < pieceSize;
   }
 
-  public synchronized int getMessagesStates(MessageFilter filter) throws AdminException {
+  public synchronized int getMessages(MessageFilter filter) throws AdminException {
     int r = reqIds++;
     messReqs.put(r, new MessageRequest(filter));
     return r;
   }
 
-  public synchronized boolean getNextMessageStates(int reqId, int pieceSize, Collection<MessageInfo> messages) throws AdminException {
+  public synchronized boolean getNextMessages(int reqId, int pieceSize, Delivery delivery, Collection<MessageInfo> messages) throws AdminException {
     if(!messReqs.containsKey(reqId) || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
     }
@@ -347,8 +369,10 @@ public class TestDcpConnection implements DcpConnection{
       info.setAbonent(d.getAbonent().getSimpleAddress());
       info.setDate(d.date);
       info.setErrorCode(d.errorCode);
-      if(d.getText() == null) {
-      info.setIndex(0);
+      if(delivery.getType() == Delivery.Type.SingleText) {
+        info.setText(delivery.getSingleText());
+      }else {
+        info.setText(d.getText());
       }
       info.setState(d.state);
       info.setId(d.getId());
@@ -385,11 +409,11 @@ public class TestDcpConnection implements DcpConnection{
           if(logger.isDebugEnabled()) {
             logger.debug("Delivery is finished: "+d.getName());
           }
-          final DeliveryHistory oldHistory = histories.get(d.getId());
+          final DeliveryStatusHistory oldHistory = histories.get(d.getId());
           d.status = DeliveryStatus.Finished;
-          histories.put(d.getId(), new DeliveryHistory(d.getId(), new LinkedList<DeliveryHistory.HistoryItem>(){{
+          histories.put(d.getId(), new DeliveryStatusHistory(d.getId(), new LinkedList<DeliveryStatusHistory.Item>(){{
             addAll(oldHistory.getHistoryItems());
-            add(new DeliveryHistory.HistoryItem(new Date(), DeliveryStatus.Finished));
+            add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Finished));
           }}));
         }
       }
@@ -431,12 +455,9 @@ public class TestDcpConnection implements DcpConnection{
     private int position = 0;
     private MessageFilter filter;
     private MessageRequest(MessageFilter filter) throws AdminException {
-      this.filter = new MessageFilter();
-      this.filter.setDeliveryId(filter.getDeliveryId());
-      this.filter.setEndDate(filter.getEndDate());
+      this.filter = new MessageFilter(filter.getDeliveryId(), filter.getStartDate(), filter.getEndDate());
       this.filter.setFields(filter.getFields());
       this.filter.setStates(filter.getStates());
-      this.filter.setStartDate(filter.getStartDate());
       this.filter.setMsisdnFilter(filter.getMsisdnFilter());
     }
   }
@@ -445,9 +466,14 @@ public class TestDcpConnection implements DcpConnection{
     private DeliveryStatus status = DeliveryStatus.Planned;
     private Delivery delivery;
     private DeliveryWStatus(Delivery delivery, int id) {
-      super(delivery.getSingleText());
+      super(delivery.getType());
       this.delivery = delivery.cloneDelivery();
       this.delivery.setId(id);
+    }
+
+    @Override
+    public Type getType() {
+      return delivery.getType();
     }
 
     @Override
@@ -486,177 +512,225 @@ public class TestDcpConnection implements DcpConnection{
     }
 
     @Override
+    public void setSingleText(String singleText) throws AdminException {
+      delivery.setSingleText(singleText);
+    }
+
+    @Override
     public Integer getId() {
       return delivery.getId();
     }
+
     @Override
     public void setId(int id) {
       delivery.setId(id);
     }
+
     @Override
     public String getName() {
       return delivery.getName();
     }
+
     @Override
     public void setName(String name) throws AdminException {
       delivery.setName(name);
     }
+
     @Override
     public int getPriority() {
       return delivery.getPriority();
     }
+
     @Override
     public void setPriority(int priority) throws AdminException {
       delivery.setPriority(priority);
     }
+
     @Override
     public boolean isTransactionMode() {
       return delivery.isTransactionMode();
     }
+
     @Override
     public void setTransactionMode(boolean transactionMode) {
       delivery.setTransactionMode(transactionMode);
     }
+
     @Override
     public Date getStartDate() {
       return delivery.getStartDate();
     }
+
     @Override
     public void setStartDate(Date startDate) throws AdminException {
       delivery.setStartDate(startDate);
     }
+
     @Override
     public Date getEndDate() {
       return delivery.getEndDate();
     }
+
     @Override
     public void setEndDate(Date endDate) throws AdminException {
       delivery.setEndDate(endDate);
     }
+
     @Override
     public Date getActivePeriodEnd() {
       return delivery.getActivePeriodEnd();
     }
+
     @Override
     public void setActivePeriodEnd(Date activePeriodEnd) throws AdminException {
       delivery.setActivePeriodEnd(activePeriodEnd);
     }
+
     @Override
     public Date getActivePeriodStart() {
       return delivery.getActivePeriodStart();
     }
+
     @Override
     public void setActivePeriodStart(Date activePeriodStart) throws AdminException {
       delivery.setActivePeriodStart(activePeriodStart);
     }
+
     @Override
     public Day[] getActiveWeekDays() {
       return delivery.getActiveWeekDays();
     }
+
     @Override
     public void setActiveWeekDays(Day[] days) throws AdminException {
       delivery.setActiveWeekDays(days);
     }
+
     @Override
     public Date getValidityDate() {
       return delivery.getValidityDate();
     }
+
     @Override
     public void setValidityDate(Date validityDate) {
       delivery.setValidityDate(validityDate);
     }
+
     @Override
     public String getValidityPeriod() {
       return delivery.getValidityPeriod();
     }
+
     @Override
     public void setValidityPeriod(String validityPeriod) {
       delivery.setValidityPeriod(validityPeriod);
     }
+
     @Override
     public boolean isFlash() {
       return delivery.isFlash();
     }
+
     @Override
     public void setFlash(boolean flash) {
       delivery.setFlash(flash);
     }
+
     @Override
     public boolean isSecret() {
       return delivery.isSecret();
     }
+
     @Override
     public void setSecret(boolean secret) {
       delivery.setSecret(secret);
     }
+
     @Override
     public boolean isSecretFlash() {
       return delivery.isSecretFlash();
     }
+
     @Override
     public void setSecretFlash(boolean secretFlash) {
       delivery.setSecretFlash(secretFlash);
     }
+
     @Override
     public String getSecretMessage() {
       return delivery.getSecretMessage();
     }
+
     @Override
     public void setSecretMessage(String secretMessage) {
       delivery.setSecretMessage(secretMessage);
     }
+
     @Override
     public boolean isUseDataSm() {
       return delivery.isUseDataSm();
     }
+
     @Override
     public void setUseDataSm(boolean useDataSm) {
       delivery.setUseDataSm(useDataSm);
     }
+
     @Override
     public DeliveryMode getDeliveryMode() {
       return delivery.getDeliveryMode();
     }
+
     @Override
     public void setDeliveryMode(DeliveryMode deliveryMode) throws AdminException {
       delivery.setDeliveryMode(deliveryMode);
     }
+
     @Override
     public String getOwner() {
       return delivery.getOwner();
     }
+
     @Override
     public void setOwner(String owner) throws AdminException {
       delivery.setOwner(owner);
     }
+
     @Override
     public boolean isRetryOnFail() {
       return delivery.isRetryOnFail();
     }
+
     @Override
     public void setRetryOnFail(boolean retryOnFail) {
       delivery.setRetryOnFail(retryOnFail);
     }
+
     @Override
     public String getRetryPolicy() {
       return delivery.getRetryPolicy();
     }
+
     @Override
     public void setRetryPolicy(String retryPolicy) {
       delivery.setRetryPolicy(retryPolicy);
     }
+
     @Override
     public boolean isReplaceMessage() {
       return delivery.isReplaceMessage();
     }
+
     @Override
     public void setReplaceMessage(boolean replaceMessage) {
       delivery.setReplaceMessage(replaceMessage);
     }
+
     @Override
     public String getSvcType() {
       return delivery.getSvcType();
     }
+
     @Override
     public void setSvcType(String svcType) {
       delivery.setSvcType(svcType);

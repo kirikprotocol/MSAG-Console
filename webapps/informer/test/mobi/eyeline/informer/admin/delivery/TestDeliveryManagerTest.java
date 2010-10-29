@@ -21,7 +21,7 @@ public class TestDeliveryManagerTest {
 
   @BeforeClass
   public static void init() {
-    manager = new TestDeliveryManager();
+    manager = new TestDeliveryManager(null);
   }
 
   @AfterClass
@@ -58,15 +58,12 @@ public class TestDeliveryManagerTest {
 
   private void checkGetMessages(final Delivery d, MessageState[] states) throws AdminException{
 
-    MessageFilter messageFilter = new MessageFilter();
-    messageFilter.setStartDate(d.getStartDate());
-    messageFilter.setEndDate(d.getEndDate());
+    MessageFilter messageFilter = new MessageFilter(d.getId(), d.getStartDate(),d.getEndDate());
     messageFilter.setFields(new MessageFields[]{MessageFields.State});
-    messageFilter.setDeliveryId(d.getId());
     messageFilter.setStates(states);
     {
       final boolean[] nonEmpty = new boolean[]{false};
-      manager.getMessagesStates("","", messageFilter, 10, new Visitor<MessageInfo>() {
+      manager.getMessages("","", messageFilter, 10, new Visitor<MessageInfo>() {
         public boolean visit(MessageInfo value) throws AdminException {
           nonEmpty[0] = true;
           assertTrue(value.getAbonent().equals("+79139489906") || value.getAbonent().equals("+79139489907"));
@@ -139,13 +136,13 @@ public class TestDeliveryManagerTest {
     d.setValidityPeriod("1:00:00");
     d.setSourceAddress(new Address("+79123942341"));
 
-    manager.createDelivery("","", d, new MessageDataSource() {
+    manager.createDelivery("","", d, new DataSource() {
       private LinkedList<Message> ms = new LinkedList<Message>() {
         {
-          Message m1 = Message.newTextMessage("text1");
+          Message m1 = Message.newMessage("text1");
           m1.setAbonent(new Address("+79139489906"));
           add(m1);
-          Message m2 = Message.newTextMessage("text2");
+          Message m2 = Message.newMessage("text2");
           m2.setAbonent(new Address("+79139489907"));
           add(m2);
         }

@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class DeliveryEditController extends DeliveryController{
 
   private String smsNotificationAddress;
 
+//  private List<Delivery.Day> days = new ArrayList<Delivery.Day>(7);
 
   public DeliveryEditController() {
     super();
@@ -48,6 +50,7 @@ public class DeliveryEditController extends DeliveryController{
     }
     smsNotificationAddress = delivery.getSmsNotificationAddress() == null ? null :
         delivery.getSmsNotificationAddress().getSimpleAddress();
+//    days.addAll(Arrays.asList(delivery.getActiveWeekDays()));
   }
 
   public List<SelectItem> getUniqueDeliveryModes() {
@@ -58,6 +61,23 @@ public class DeliveryEditController extends DeliveryController{
     return sIs;
   }
 
+//  public List<Delivery.Day> getDays() {
+//    return days;
+//  }
+//
+//  public void setDays(List<Delivery.Day> days) {
+//    this.days = days;
+//  }
+
+  public List<SelectItem> getAllDays() {
+    List<SelectItem> result = new ArrayList<SelectItem>(7);
+    int i=1;
+    for(Delivery.Day d : Delivery.Day.values()) {
+      result.add(new SelectItem(d, getLocalizedString("weekday."+i%7)));
+      i++;
+    }
+    return result;
+  }
 
   public String save() {
 //    if(dynamicModel.getRowCount() == 0) {

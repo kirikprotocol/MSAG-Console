@@ -63,6 +63,7 @@ public class DeliveryListController extends DeliveryController {
     userFilter = null;
     status = null;
     namePrefix = null;
+    init = false;
   }
 
   public void query() {
@@ -185,6 +186,7 @@ public class DeliveryListController extends DeliveryController {
   }
 
   public DataTableModel getDeliviries() {
+
     return new DataTableModel() {
 
       private int count = 0;
@@ -192,35 +194,44 @@ public class DeliveryListController extends DeliveryController {
         if(!init) {
           return Collections.emptyList();
         }
-        LinkedList<DeliveryInfo> result = new LinkedList<DeliveryInfo>();
+        LinkedList<DeliveryInfo> list = new LinkedList<DeliveryInfo>();
         int r = startPos/MEMORY_LIMIT;
         int os = startPos%MEMORY_LIMIT;
         DeliveryInfo last = null;
         for (int i=1;i<=r;i++){
-          result.clear();
-          int c = getDeliveryInfos(getComparator(sortOrder), last, MEMORY_LIMIT, result);
+          list.clear();
+          int c = getDeliveryInfos(getComparator(sortOrder), last, MEMORY_LIMIT, list);
           if(this.count == 0) {
             this.count = c;
           }
-          if(result.isEmpty()) {
+          if(list.isEmpty()) {
             return Collections.emptyList();
           }
-          last = result.getLast();
+          last = list.getLast();
         }
-        result.clear();
-        int c = getDeliveryInfos(getComparator(sortOrder), last, os+count, result);
-        if(result.isEmpty()) {
+        list.clear();
+        int c = getDeliveryInfos(getComparator(sortOrder), last, os+count, list);
+        if(list.isEmpty()) {
           return Collections.emptyList();
         }
         if(this.count == 0) {
           this.count = c;
         }
         if(os != 0) {
-        result.subList(0, os).clear();
+          list.subList(0, os).clear();
+        }
+        List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
+
+        User u = config.getUser(getUserName());
+        for(DeliveryInfo di : list) {
+          try{
+            rows.add(new DeliveryRow(di, config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), di.getDeliveryId())));
+          }catch (AdminException e){
+            addError(e);
+          }
         }
 
-
-        return result;
+        return rows;
       }
 
       public int getRowsCount() {
@@ -262,6 +273,62 @@ public class DeliveryListController extends DeliveryController {
           return o1.getEndDate().compareTo(o2.getEndDate())*(sortOrder.isAsc() ? 1 : -1);
         }
       };
+    }
+  }
+
+
+  public class DeliveryRow {
+
+    private DeliveryInfo deliveryInfo;
+
+    private DeliveryStatusHistory history;
+
+    public DeliveryRow(DeliveryInfo deliveryInfo, DeliveryStatusHistory history) {
+      this.deliveryInfo = deliveryInfo;
+      this.history = history;
+    }
+
+    public Date getEndDate() {
+      if(history == null) {
+        return null;
+      }
+      List<DeliveryStatusHistory.Item> items = history.getHistoryItems();
+      if(!items.isEmpty()) {
+        DeliveryStatusHistory.Item i = items.get(items.size()-1);
+        DeliveryStatus st = i.getStatus();
+        if(st == DeliveryStatus.Finished || st == DeliveryStatus.Cancelled) {
+          return i.getDate();
+        }
+      }
+      return null;
+    }
+
+    public Date getStartDate() {
+      if(history == null) {
+        return null;
+      }
+      for(DeliveryStatusHistory.Item i : history.getHistoryItems() ) {
+        if(i.getStatus() == DeliveryStatus.Active) {
+          return i.getDate();
+        }
+      }
+      return null;
+    }
+
+    public DeliveryStatus getStatus() {
+      return deliveryInfo.getStatus();
+    }
+
+    public String getUserId() {
+      return deliveryInfo.getUserId();
+    }
+
+    public String getName() {
+      return deliveryInfo.getName();
+    }
+
+    public int getDeliveryId() {
+      return deliveryInfo.getDeliveryId();
     }
   }
 

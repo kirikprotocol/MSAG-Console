@@ -65,8 +65,6 @@ public class AdminContext {
 
   protected DeliveryManager deliveryManager;
 
-  protected DeliveryStatProvider deliveryStatProvider;
-
 // delivery ->user ->region->smsc
 
   final private Lock integrityLock = new ReentrantLock();
@@ -122,9 +120,7 @@ public class AdminContext {
       regionsManager = new RegionsManager(infosme, new File(confDir, "regions.xml"),
           new File(confDir, "backup"), fileSystem);
 
-      deliveryManager = new DeliveryManager(is.getHost(), is.getDeliveriesPort());
-
-      deliveryStatProvider = new DeliveryStatProvider(new File(is.getStatDir()), fileSystem);
+      deliveryManager = new DeliveryManager(is.getHost(), is.getDeliveriesPort(), new File(is.getStatDir()), fileSystem);
 
     }catch (AdminException e) {
       throw new InitException(e);
@@ -377,8 +373,8 @@ public class AdminContext {
     return informerManager.getInformerHosts();
   }
 
-  public DeliveryStatProvider getDeliveryStatProvider() {
-    return deliveryStatProvider;
+  public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
+    deliveryManager.statistics(filter, visitor);
   }
 
   public List<Daemon> getDaemons() {
@@ -386,7 +382,7 @@ public class AdminContext {
     return new LinkedList<Daemon>();
   }
 
-  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource) throws AdminException {
+  public void createDelivery(String login, String password, Delivery delivery, DataSource msDataSource) throws AdminException {
     try{
       integrityLock.lock();
       if(usersManager.getUser(delivery.getOwner()) == null) {
@@ -443,10 +439,14 @@ public class AdminContext {
   }
 
   public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
-    deliveryManager.getMessagesStates(login, password, filter, _pieceSize, visitor);
+    deliveryManager.getMessages(login, password, filter, _pieceSize, visitor);
   }
 
   public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
     return deliveryManager.countMessages(login, password, messageFilter);
+  }
+
+  public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliverId) throws AdminException {
+    return deliveryManager.getDeliveryStatusHistory(login, password, deliverId);
   }
 }

@@ -252,7 +252,7 @@ public class Configuration {
     context.modifyDelivery(login, password, delivery);
   }
 
-  public void createDelivery(String login, String password, Delivery delivery, MessageDataSource msDataSource) throws AdminException {
+  public void createDelivery(String login, String password, Delivery delivery, DataSource msDataSource) throws AdminException {
     context.createDelivery(login, password, delivery, msDataSource);
   }
 
@@ -305,8 +305,12 @@ public class Configuration {
     return result;
   }
 
-  public DeliveryStatProvider getDeliveryStatProvider() {
-    return context.getDeliveryStatProvider();
+  public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException{
+    context.statistics(filter, visitor);
+  }
+
+  public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
+    return context.getDeliveryStatusHistory(login, password, deliveryId);
   }
 
   private final Lock lock = new ReentrantLock();

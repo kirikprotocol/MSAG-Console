@@ -7,13 +7,13 @@ import java.util.List;
  * История изменения статуса рассылки
  * @author Aleksandr Khalitov
  */
-public class DeliveryHistory {
+public class DeliveryStatusHistory {
 
-  private final List<HistoryItem> items;
+  private final List<Item> items;
 
   private final int deliveryId;
 
-  DeliveryHistory(int deliveryId, List<HistoryItem> items) {
+  DeliveryStatusHistory(int deliveryId, List<Item> items) {
     this.deliveryId = deliveryId;
     this.items = items;
   }
@@ -22,16 +22,16 @@ public class DeliveryHistory {
     return deliveryId;
   }
 
-  public List<HistoryItem> getHistoryItems() {
+  public List<Item> getHistoryItems() {
     return items;
   }
 
-  public static class HistoryItem {
+  public static class Item {
 
     private Date date;
     private DeliveryStatus status;
 
-    HistoryItem(Date date, DeliveryStatus status) {
+    Item(Date date, DeliveryStatus status) {
       this.date = date;
       this.status = status;
     }

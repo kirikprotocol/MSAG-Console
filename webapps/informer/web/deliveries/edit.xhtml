@@ -46,6 +46,12 @@
             <t:inputDate value="#{deliveryEdit.delivery.activePeriodEnd}" required="true" type="time"/>
           </tr:panelLabelAndMessage>
 
+          <tr:panelLabelAndMessage label="#{deliveryBundle.activeWeekDays}" labelStyle="text-align:left">
+            <h:selectManyCheckbox value="#{deliveryEdit.delivery.activeWeekDays}" required="true" requiredMessage="#{deliveryBundle.activeWeekDays}" converter="weekDaysConverter">
+              <f:selectItems value="#{deliveryEdit.allDays}"/>
+            </h:selectManyCheckbox>
+          </tr:panelLabelAndMessage>
+
           <tr:panelLabelAndMessage label="#{deliveryBundle.startDate}" labelStyle="text-align:left">
             <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.startDate}" required="true" type="full"/>
           </tr:panelLabelAndMessage>
@@ -87,11 +93,23 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.smsNotificationAddress}" labelStyle="text-align:left">
-            <tr:inputText value="#{deliveryEdit.smsNotificationAddress}" simple="true" required="true"/>
+            <tr:inputText value="#{deliveryEdit.smsNotificationAddress}" simple="true"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.emailNotificationAddress}" labelStyle="text-align:left">
-            <tr:inputText value="#{deliveryEdit.delivery.emailNotificationAddress}" simple="true" required="true"/>
+            <tr:inputText value="#{deliveryEdit.delivery.emailNotificationAddress}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left" rendered="#{deliveryEdit.delivery.singleText != null}">
+            <tr:inputText value="#{deliveryEdit.delivery.singleText}"  simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.secret}" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.secret}"  simple="true" onchange="document.getElementById('secret').disabled = !this.checked"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.secretMessage}" labelStyle="text-align:left">
+            <tr:inputText id="secret" disabled="#{!deliveryEdit.delivery.secret}" value="#{deliveryEdit.delivery.secretMessage}"  simple="true"/>
           </tr:panelLabelAndMessage>
 
         </tr:panelFormLayout>

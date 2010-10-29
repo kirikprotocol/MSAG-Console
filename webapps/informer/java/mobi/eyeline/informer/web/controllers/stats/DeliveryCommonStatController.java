@@ -1,7 +1,10 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatFilter;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import java.util.Locale;
@@ -79,7 +82,7 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
     if(delivery!=null && filterCopy.getFromDate()==null) {
       filterCopy.setFromDate(delivery.getStartDate());
     }
-    config.getDeliveryStatProvider().accept(filterCopy,this);
+    config.statistics(filterCopy,this);
   }
 
 
