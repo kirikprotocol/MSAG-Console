@@ -53,14 +53,16 @@
         </eye:row>
       </eye:dataTable>
 
-      <eye:buttons>
-        <eye:space/>
-        <eye:button>
-          <h:commandLink value="#{msg['download.button']}">
-            <tr:fileDownloadActionListener method="#{journal.download}" contentType="application/csv" filename="journal.csv"/>
-          </h:commandLink>
-        </eye:button>
-      </eye:buttons>
+      <h:panelGroup style="#{journal.init ? '' : 'display:none'}">
+        <eye:buttons>
+          <eye:space/>
+          <eye:button>
+            <h:commandLink value="#{msg['download.button']}">
+              <tr:fileDownloadActionListener method="#{journal.download}" contentType="application/csv" filename="journal.csv"/>
+            </h:commandLink>
+          </eye:button>
+        </eye:buttons>
+      </h:panelGroup>
     </h:form>
   </ui:define>
 

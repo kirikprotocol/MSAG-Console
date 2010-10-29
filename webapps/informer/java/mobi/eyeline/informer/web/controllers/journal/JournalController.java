@@ -46,6 +46,7 @@ public class JournalController extends InformerController{
     filterBySubject = null;
     filterByStartDate = null;
     filterByEndDate = null;
+    init = false;
   }
 
   public void query() {
