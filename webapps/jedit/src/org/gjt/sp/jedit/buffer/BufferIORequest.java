@@ -457,7 +457,7 @@ public abstract class BufferIORequest extends WorkRequest
     _out.flush();
     encoding = "UTF-8";
    }
-   encoding = "windows-1251";
+   encoding = "UTF-8";
    out = new BufferedWriter(
     new OutputStreamWriter(_out,encoding),
     IOBUFSIZE);
