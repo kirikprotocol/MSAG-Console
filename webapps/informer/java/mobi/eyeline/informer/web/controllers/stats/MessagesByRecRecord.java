@@ -14,7 +14,7 @@ import java.util.Date;
  * Date: 26.10.2010
  * Time: 15:47:35
  */
-public class MessagesByRecStatRecord {
+public class MessagesByRecRecord {
 
   private  Integer deliveryId;
   private  String  userId;
@@ -24,7 +24,7 @@ public class MessagesByRecStatRecord {
   private  MessageState state;
   private  String errorString;
 
-  public MessagesByRecStatRecord(Integer deliveryId, String userId, String name, String text, Date deliveryDate, MessageState state, String errorString) {
+  public MessagesByRecRecord(Integer deliveryId, String userId, String name, String text, Date deliveryDate, MessageState state, String errorString) {
     this.deliveryId = deliveryId;
     this.userId = userId;
     this.name = name;

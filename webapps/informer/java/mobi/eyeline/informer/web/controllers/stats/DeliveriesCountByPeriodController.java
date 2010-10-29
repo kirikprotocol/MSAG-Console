@@ -14,12 +14,12 @@ import java.util.Locale;
  * Date: 25.10.2010
  * Time: 15:20:49
  */
-public class DeliveryCountStatController  extends DeliveryStatController implements Visitor<DeliveryInfo> {
+public class DeliveriesCountByPeriodController extends DeliveryStatController implements Visitor<DeliveryInfo> {
 
   private DeliveryStatFilter filter;
 
 
-  public DeliveryCountStatController() {
+  public DeliveriesCountByPeriodController() {
     super();
     filter = new DeliveryStatFilter();
   }
@@ -61,8 +61,8 @@ public class DeliveryCountStatController  extends DeliveryStatController impleme
   public boolean visit(DeliveryInfo di) throws AdminException {
     Calendar c = Calendar.getInstance();
     c.setTime(di.getStartDate());
-    AggregatedStatRecord newRecord = new AggregatedCountStatRecord(c,getAggregation(),1,true);
-    AggregatedStatRecord oldRecord = getRecord(newRecord.getStartCalendar().getTime());
+    AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c,getAggregation(),1,true);
+    AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
     if(oldRecord==null) {
       putRecord(newRecord);
     }

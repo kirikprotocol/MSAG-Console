@@ -20,10 +20,10 @@ import java.util.*;
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public class MessagesByRecStatsController extends LongOperationController {
+public class MessagesByRecController extends LongOperationController {
   private User user;
   private boolean initError=false;
-  private List<MessagesByRecStatRecord> records;
+  private List<MessagesByRecRecord> records;
 
 
   private Date fromDate;
@@ -31,9 +31,9 @@ public class MessagesByRecStatsController extends LongOperationController {
   private String msisdn;
   private String allowedUser;
 
-  public MessagesByRecStatsController() {
+  public MessagesByRecController() {
     super();
-    records = new ArrayList<MessagesByRecStatRecord>();
+    records = new ArrayList<MessagesByRecRecord>();
     initUser();
   }
 
@@ -131,7 +131,7 @@ public class MessagesByRecStatsController extends LongOperationController {
                         errString = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("informer.errcode.unknown");
                       }
                     }
-                    MessagesByRecStatRecord rec = new MessagesByRecStatRecord(deliveryId,userId,name,messageInfo.getText(),messageInfo.getDate(),messageInfo.getState(),errString);
+                    MessagesByRecRecord rec = new MessagesByRecRecord(deliveryId,userId,name,messageInfo.getText(),messageInfo.getDate(),messageInfo.getState(),errString);
                     records.add(rec);
                     return !isCancelled();
                   }
@@ -154,9 +154,9 @@ public class MessagesByRecStatsController extends LongOperationController {
 
         // Сортируем записи
         if (sortOrder != null && !records.isEmpty()) {
-          Collections.sort(records, new Comparator<MessagesByRecStatRecord>() {
+          Collections.sort(records, new Comparator<MessagesByRecRecord>() {
 
-            public int compare(MessagesByRecStatRecord o1, MessagesByRecStatRecord o2) {
+            public int compare(MessagesByRecRecord o1, MessagesByRecRecord o2) {
 
               final int mul = sortOrder.isAsc() ? 1 : -1;
               if (sortOrder.getColumnId().equals("name")) {
@@ -184,9 +184,9 @@ public class MessagesByRecStatsController extends LongOperationController {
           });
         }
 
-        List<MessagesByRecStatRecord> result = new LinkedList<MessagesByRecStatRecord>();
-        for (Iterator<MessagesByRecStatRecord> i = records.iterator(); i.hasNext() && count > 0;) {
-          MessagesByRecStatRecord r = i.next();
+        List<MessagesByRecRecord> result = new LinkedList<MessagesByRecRecord>();
+        for (Iterator<MessagesByRecRecord> i = records.iterator(); i.hasNext() && count > 0;) {
+          MessagesByRecRecord r = i.next();
           if (--startPos < 0) {
             result.add(r);
             count--;
@@ -204,7 +204,7 @@ public class MessagesByRecStatsController extends LongOperationController {
   @Override
   protected void _download(PrintWriter writer) throws IOException {
 
-    for(MessagesByRecStatRecord r : records) {
+    for(MessagesByRecRecord r : records) {
       r.printCSV(writer);
     }
   }

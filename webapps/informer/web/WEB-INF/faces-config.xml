@@ -240,33 +240,33 @@
   </managed-bean>
 
   <managed-bean>
-      <managed-bean-name>statsCommon</managed-bean-name>
-      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryCommonStatController</managed-bean-class>
+      <managed-bean-name>messagesByPeriod</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByPeriodController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
 
   <managed-bean>
-      <managed-bean-name>statsDeliveryCount</managed-bean-name>
-      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryCountStatController</managed-bean-class>
+      <managed-bean-name>deliveriesCountByPeriod</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveriesCountByPeriodController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
       <managed-bean-name>statsMessagesByRec</managed-bean-name>
-      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByRecStatsController</managed-bean-class>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByRecController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
-      <managed-bean-name>statsDeliveries</managed-bean-name>
-      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveriesStatsController</managed-bean-class>
+      <managed-bean-name>messagesByDeliveries</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByDeliveriesController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
-      <managed-bean-name>statsDeliveryCommon</managed-bean-name>
-      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.DeliveryCommonStatController</managed-bean-class>
+      <managed-bean-name>deliveryMessagesByPeriod</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByPeriodController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
@@ -335,26 +335,26 @@
     </navigation-case>
 
     <navigation-case>
-      <from-outcome>STATS_COMMON</from-outcome>
-      <to-view-id>/stats/common.xhtml</to-view-id>
+      <from-outcome>STATS_MESSAGES_BY_PERIOD</from-outcome>
+      <to-view-id>/stats/messagesByPeriod.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
     <navigation-case>
-      <from-outcome>STATS_DELIVERIES_COUNTS</from-outcome>
-      <to-view-id>/stats/deliveryCount.xhtml</to-view-id>
+      <from-outcome>STATS_DELIVERIES_COUNTS_BY_PERIOD</from-outcome>
+      <to-view-id>/stats/deliveriesCountByPeriod.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
     <navigation-case>
-      <from-outcome>STATS_DELIVERIES</from-outcome>
-      <to-view-id>/stats/deliveries.xhtml</to-view-id>
+      <from-outcome>STATS_MESSAGES_BY_DELIVERIES</from-outcome>
+      <to-view-id>/stats/messagesByDeliveries.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
     <navigation-case>
-      <from-outcome>STATS_DELIVERY_COMMON</from-outcome>
-      <to-view-id>/stats/deliveryCommon.xhtml</to-view-id>
+      <from-outcome>STATS_DELIVERY_MESSAGES_BY_PERIOD</from-outcome>
+      <to-view-id>/stats/deliveryMessagesByPeriod.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 

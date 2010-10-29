@@ -13,24 +13,24 @@ import java.util.Comparator;
  * Date: 22.10.2010
  * Time: 16:22:41
  */
-public class AggregatedCountStatRecord extends AggregatedStatRecord {
+public class DeliveriesCountByPeriodRecord extends TimeAggregatedStatRecord {
 
   private int counter;
 
 
-  public AggregatedCountStatRecord(Calendar periodStart, AggregationType type, int counter, boolean isParent) {
+  public DeliveriesCountByPeriodRecord(Calendar periodStart, TimeAggregationType type, int counter, boolean isParent) {
     super(periodStart,type,isParent);
     this.counter = counter;
     if(getChildAggregationType()!=null) {
-      AggregatedCountStatRecord child = new AggregatedCountStatRecord(periodStart,getChildAggregationType(),counter,false);
+      DeliveriesCountByPeriodRecord child = new DeliveriesCountByPeriodRecord(periodStart,getChildAggregationType(),counter,false);
       addChild(child);
     }
   }
 
 
 
-  public void add(AggregatedStatRecord r) {
-    AggregatedCountStatRecord other = (AggregatedCountStatRecord) r;
+  public void add(AggregatedRecord r) {
+    DeliveriesCountByPeriodRecord other = (DeliveriesCountByPeriodRecord) r;
     this.counter += other.counter;
     addChildren(r);
   }
@@ -51,8 +51,8 @@ public class AggregatedCountStatRecord extends AggregatedStatRecord {
 
   public Comparator getRecordsComparator(final DataTableSortOrder sortOrder) {
 
-    return new Comparator<AggregatedCountStatRecord>() {
-      public int compare(AggregatedCountStatRecord o1, AggregatedCountStatRecord o2) {
+    return new Comparator<DeliveriesCountByPeriodRecord>() {
+      public int compare(DeliveriesCountByPeriodRecord o1, DeliveriesCountByPeriodRecord o2) {
         final int mul = sortOrder.isAsc() ? 1 : -1;
         if (sortOrder.getColumnId().equals("period")) {
           return mul*o1.getStartCalendar().compareTo(o2.getStartCalendar());

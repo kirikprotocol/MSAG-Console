@@ -15,69 +15,69 @@
 
   <ui:define name="content">
 
-    <tr:form id="smsc" rendered="#{!statsCommon.initError}">
+    <tr:form id="smsc" rendered="#{!messagesByPeriod.initError}">
 
 
       <h:panelGroup style="padding:10px">
 
-        <eye:dataTableFilter bean="#{statsCommon}" clearAction="clearFilter" applyAction="start">
+        <eye:dataTableFilter bean="#{messagesByPeriod}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
             <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
               <h:outputText value="#{msg['stat.page.from_date']}"/>
-              <t:inputDate value="#{statsCommon.filter.fromDate}" popupCalendar="true" type="both" />
+              <t:inputDate value="#{messagesByPeriod.filter.fromDate}" popupCalendar="true" type="both" />
               <h:outputText value="#{msg['stat.page.till_date']}"/>
-              <t:inputDate value="#{statsCommon.filter.tillDate}"  popupCalendar="true" type="both"/>
+              <t:inputDate value="#{messagesByPeriod.filter.tillDate}"  popupCalendar="true" type="both"/>
             </h:panelGrid>
             <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
               <h:outputText value="#{msg['stat.page.aggregation']}"/>
-              <h:selectOneMenu value="#{statsCommon.aggregation}" >
-                <f:selectItems value="#{statsCommon.aggregations}"/>
+              <h:selectOneMenu value="#{messagesByPeriod.aggregation}" >
+                <f:selectItems value="#{messagesByPeriod.aggregations}"/>
               </h:selectOneMenu>
-              <h:outputText value="#{msg['stat.page.user']}" rendered="#{statsCommon.admin}"/>
-              <h:selectOneMenu value="#{statsCommon.filter.user}" rendered="#{statsCommon.admin}" required="false">
-                <f:selectItems value="#{statsCommon.users}"/>
+              <h:outputText value="#{msg['stat.page.user']}" rendered="#{messagesByPeriod.admin}"/>
+              <h:selectOneMenu value="#{messagesByPeriod.filter.user}" rendered="#{messagesByPeriod.admin}" required="false">
+                <f:selectItems value="#{messagesByPeriod.users}"/>
               </h:selectOneMenu>
             </h:panelGrid>
           </h:panelGrid>
         </eye:dataTableFilter>
 
 
-        <eye:updatableContent updatePeriod="1"  enabled="#{statsCommon.state == 1}">
+        <eye:updatableContent updatePeriod="1"  enabled="#{messagesByPeriod.state == 1}">
 
 
 
-          <eye:message level="error" rendered="#{statsCommon.state == 3}">
+          <eye:message level="error" rendered="#{messagesByPeriod.state == 3}">
             <p/>
-            <h:outputText value="#{statsCommon.error}"/>
+            <h:outputText value="#{messagesByPeriod.error}"/>
             <p/>
           </eye:message>
 
 
 
 
-          <h:panelGroup rendered="#{statsCommon.state == 1}">
+          <h:panelGroup rendered="#{messagesByPeriod.state == 1}">
             <tr:message id="upload_message"/>
             <eye:buttons>
               <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{statsCommon.cancel}"/>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{messagesByPeriod.cancel}"/>
               </eye:button>
               <eye:space/>
             </eye:buttons>
 
             <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-              <h:outputText value="#{msg['processing.label']}  #{statsCommon.current}"/>
-              <eye:progressBar current="#{statsCommon.current}" maximum="#{statsCommon.total}" width="500" height="20" />
+              <h:outputText value="#{msg['processing.label']}  #{messagesByPeriod.current}"/>
+              <eye:progressBar current="#{messagesByPeriod.current}" maximum="#{messagesByPeriod.total}" width="500" height="20" />
             </h:panelGrid>
 
             <eye:buttons>
               <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{statsCommon.cancel}"/>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{messagesByPeriod.cancel}"/>
               </eye:button>
               <eye:space/>
             </eye:buttons>
           </h:panelGroup>
 
-          <eye:dataTable value="#{statsCommon.records}" var="row" rendered="#{statsCommon.state == 2}">
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{messagesByPeriod.state == 2}">
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText value="#{row.data.periodString}"/>
@@ -99,11 +99,11 @@
               </eye:column>
             </eye:row>
           </eye:dataTable>
-          <eye:buttons rendered="#{statsCommon.state == 2}">
+          <eye:buttons rendered="#{messagesByPeriod.state == 2}">
             <eye:space/>
             <eye:button>
               <h:commandLink value="#{msg['download.button']}" >
-                <tr:fileDownloadActionListener method="#{statsCommon.download}" contentType="application/csv" filename="commonStat.csv"/>
+                <tr:fileDownloadActionListener method="#{messagesByPeriod.download}" contentType="application/csv" filename="commonStat.csv"/>
               </h:commandLink>
             </eye:button>
           </eye:buttons>

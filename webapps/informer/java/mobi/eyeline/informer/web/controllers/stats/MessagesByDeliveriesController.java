@@ -20,17 +20,17 @@ import java.util.*;
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public class DeliveriesStatsController extends LongOperationController {
+public class MessagesByDeliveriesController extends LongOperationController {
   private User currentUser;
   private boolean initError=false;
-  private List<DeliveriesStatRecord> records;
+  private List<MessagesByDeliveriesRecord> records;
   private DeliveryStatFilter filter;
 
   private String nameFilter;
 
-  public DeliveriesStatsController() {
+  public MessagesByDeliveriesController() {
     super();
-    records = new ArrayList<DeliveriesStatRecord>();
+    records = new ArrayList<MessagesByDeliveriesRecord>();
     filter=new DeliveryStatFilter();
     initUser();
   }
@@ -121,7 +121,7 @@ public class DeliveriesStatsController extends LongOperationController {
             final int deliveryId = deliveryInfo.getDeliveryId();
 
             DeliveryStatistics stat = config.getDeliveryStats(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryId);
-            records.add(new DeliveriesStatRecord(deliveryInfo,stat));
+            records.add(new MessagesByDeliveriesRecord(deliveryInfo,stat));
 
             setCurrent(getCurrent()+1);
             return !isCancelled();
@@ -138,9 +138,9 @@ public class DeliveriesStatsController extends LongOperationController {
 
         // Сортируем записи
         if (sortOrder != null && !records.isEmpty()) {
-          Collections.sort(records, new Comparator<DeliveriesStatRecord>() {
+          Collections.sort(records, new Comparator<MessagesByDeliveriesRecord>() {
 
-            public int compare(DeliveriesStatRecord o1, DeliveriesStatRecord o2) {
+            public int compare(MessagesByDeliveriesRecord o1, MessagesByDeliveriesRecord o2) {
 
               final int mul = sortOrder.isAsc() ? 1 : -1;
               if (sortOrder.getColumnId().equals("name")) {
@@ -174,9 +174,9 @@ public class DeliveriesStatsController extends LongOperationController {
           });
         }
 
-        List<DeliveriesStatRecord> result = new LinkedList<DeliveriesStatRecord>();
-        for (Iterator<DeliveriesStatRecord> i = records.iterator(); i.hasNext() && count > 0;) {
-          DeliveriesStatRecord r = i.next();
+        List<MessagesByDeliveriesRecord> result = new LinkedList<MessagesByDeliveriesRecord>();
+        for (Iterator<MessagesByDeliveriesRecord> i = records.iterator(); i.hasNext() && count > 0;) {
+          MessagesByDeliveriesRecord r = i.next();
           if (--startPos < 0) {
             result.add(r);
             count--;
@@ -194,7 +194,7 @@ public class DeliveriesStatsController extends LongOperationController {
   @Override
   protected void _download(PrintWriter writer) throws IOException {
 
-    for(DeliveriesStatRecord r : records) {
+    for(MessagesByDeliveriesRecord r : records) {
       r.printCSV(writer);
     }
   }

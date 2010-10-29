@@ -12,12 +12,12 @@ import java.io.PrintWriter;
  * Date: 28.10.2010
  * Time: 11:58:56
  */
-public class DeliveriesStatRecord {
+public class MessagesByDeliveriesRecord {
 
   private DeliveryInfo info;
   private DeliveryStatistics stat;
 
-  public DeliveriesStatRecord(DeliveryInfo info, DeliveryStatistics stat) {
+  public MessagesByDeliveriesRecord(DeliveryInfo info, DeliveryStatistics stat) {
     this.info = info;
     this.stat = stat;
   }

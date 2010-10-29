@@ -24,20 +24,20 @@ public abstract class DeliveryStatController extends LongOperationController {
   private User user;
   private boolean initError=false;
   private DeliveryStatFilter filter;
-  private AggregationType aggregation;
+  private TimeAggregationType aggregation;
 
-  private TreeMap<Date, AggregatedStatRecord> recordsMap;
-  private List<AggregatedStatRecord> records;
+  private TreeMap<Object, AggregatedRecord> recordsMap;
+  private List<AggregatedRecord> records;
 
 
 
   public DeliveryStatController() {
     super();
-    aggregation= AggregationType.HOUR;
+    aggregation= TimeAggregationType.HOUR;
     filter = new DeliveryStatFilter();
     initUser();
-    records = new ArrayList<AggregatedStatRecord>();
-    recordsMap = new TreeMap<Date, AggregatedStatRecord>();
+    records = new ArrayList<AggregatedRecord>();
+    recordsMap = new TreeMap<Object, AggregatedRecord>();
   }
 
   private void initUser() {
@@ -85,17 +85,17 @@ public abstract class DeliveryStatController extends LongOperationController {
     this.filter = filter;
   }
 
-  public AggregationType getAggregation() {
+  public TimeAggregationType getAggregation() {
     return aggregation;
   }
 
-  public void setAggregation(AggregationType aggregation) {
+  public void setAggregation(TimeAggregationType aggregation) {
     this.aggregation = aggregation;
   }
 
   public List<SelectItem> getAggregations() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    for(AggregationType a : AggregationType.values()) {
+    for(TimeAggregationType a : TimeAggregationType.values()) {
       ret.add(new SelectItem(a));
     }
     return ret;
@@ -114,11 +114,11 @@ public abstract class DeliveryStatController extends LongOperationController {
       records.addAll(recordsMap.values());
   }
 
-  protected AggregatedStatRecord getRecord(Date time) {
-     return recordsMap.get(time);
+  protected AggregatedRecord getRecord(Object key) {
+     return recordsMap.get(key);
   }
-  protected void putRecord(AggregatedStatRecord newRecord) {
-     recordsMap.put(newRecord.getStartCalendar().getTime(),newRecord);
+  protected void putRecord(AggregatedRecord newRecord) {
+     recordsMap.put(newRecord.getAggregationKey(),newRecord);
   }
 
 
@@ -160,12 +160,12 @@ public abstract class DeliveryStatController extends LongOperationController {
           Collections.sort(records, records.get(0).getRecordsComparator(sortOrder));
         }
 
-        List<AggregatedStatRecord> result = new LinkedList<AggregatedStatRecord>();
-        for (Iterator<AggregatedStatRecord> i = records.iterator(); i.hasNext() && count > 0;) {
-          AggregatedStatRecord r = i.next();
+        List<AggregatedRecord> result = new LinkedList<AggregatedRecord>();
+        for (Iterator<AggregatedRecord> i = records.iterator(); i.hasNext() && count > 0;) {
+          AggregatedRecord r = i.next();
           if (--startPos < 0) {
             result.add(r);
-            List<AggregatedStatRecord> innerRecords = r.getInnerRows();
+            List<AggregatedRecord> innerRecords = r.getInnerRows();
             if(innerRecords!=null && !innerRecords.isEmpty() && sortOrder!=null) {
               Collections.sort(r.getInnerRows(), innerRecords.get(0).getRecordsComparator(sortOrder));
             }
@@ -184,7 +184,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   @Override
   protected void _download(PrintWriter writer) throws IOException {
     //loadRecords();
-    for(AggregatedStatRecord r : records) {
+    for(AggregatedRecord r : records) {
       r.printWithChildrenToCSV(writer);
     }
   }

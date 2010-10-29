@@ -15,13 +15,23 @@ import java.util.Locale;
  * Date: 22.10.2010
  * Time: 14:05:42
  */
-public class DeliveryCommonStatController extends DeliveryStatController implements DeliveryStatVisitor {
+public class MessagesByPeriodController extends DeliveryStatController implements DeliveryStatVisitor {
 
   private DeliveryStatFilter filter;
   private Delivery delivery= null;
 
+  public boolean isDetaliseBySMS() {
+    return detaliseBySMS;
+  }
 
-  public DeliveryCommonStatController() {
+  public void setDetaliseBySMS(boolean detaliseBySMS) {
+    this.detaliseBySMS = detaliseBySMS;
+  }
+
+  boolean detaliseBySMS=false;
+
+
+  public MessagesByPeriodController() {
     super();
     filter = new DeliveryStatFilter();
   }
@@ -64,6 +74,7 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
     filter.setFromDate(null);
     filter.setTillDate(null);
     filter.setTaskId(getDeliveryId());
+    detaliseBySMS = false;
   }
 
 
@@ -78,19 +89,24 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
 
   @Override
   public void loadRecords(Configuration config, final Locale locale) throws AdminException {
-     DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
+    DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
     if(delivery!=null && filterCopy.getFromDate()==null) {
       filterCopy.setFromDate(delivery.getStartDate());
     }
-    config.statistics(filterCopy,this);
+    if(detaliseBySMS) {
+      //todo bySMS detailed stat
+    }
+    else {
+      config.statistics(filterCopy,this);
+    }
   }
 
 
   public boolean visit(DeliveryStatRecord rec, int total, int current) {
 
     setCurrentAndTotal(current,total);
-    AggregatedStatRecord newRecord = new AggregatedCommonStatRecord(rec,getAggregation(),true);
-    AggregatedStatRecord oldRecord = getRecord(newRecord.getStartCalendar().getTime());
+    AggregatedRecord newRecord = new MessagesByPeriodRecord(rec,getAggregation(),true);
+    AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
     if(oldRecord==null) {
       putRecord(newRecord);
     }
@@ -103,5 +119,4 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
 
 
 }
-
 
