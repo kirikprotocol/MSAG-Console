@@ -16,7 +16,7 @@ namespace net=smsc::core::network;
 
 class AdminServer:public eyeline::protogen::ServerBase,public AdminCommandsHandler{
 public:
-  AdminServer()
+  AdminServer():ServerBase("admin")
   {
     log=smsc::logger::Logger::getInstance("admin");
   }
