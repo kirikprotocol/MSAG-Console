@@ -223,26 +223,29 @@ public class TestDcpConnection implements DcpConnection{
     final DeliveryHistory oldHistory = histories.get(deliveryId);
     DeliveryWStatus delivery = deliveries.get(deliveryId);
     DeliveryStatus current = delivery.status;
-    switch (status) {
-      case Active:
-        if(current != DeliveryStatus.Planned && current != DeliveryStatus.Paused) {
-          throw new DeliveryException("interaction_error","");
-        }
-        break;
-      case Planned:
-        throw new DeliveryException("interaction_error","");
-      case Cancelled:
-        if(current != DeliveryStatus.Active && current != DeliveryStatus.Paused) {
-          throw new DeliveryException("interaction_error","");
-        }
-        break;
-      case Finished:
-        throw new DeliveryException("interaction_error","");
-      case Paused:
-        if(current != DeliveryStatus.Active) {
-          throw new DeliveryException("interaction_error","");
-        }
+    if(current == status) {
+      return;
     }
+//    switch (status) {
+//      case Active:
+//        if(current != DeliveryStatus.Planned && current != DeliveryStatus.Paused) {
+//          throw new DeliveryException("interaction_error","");
+//        }
+//        break;
+//      case Planned:
+//        throw new DeliveryException("interaction_error","");
+//      case Cancelled:
+//        if(current != DeliveryStatus.Active && current != DeliveryStatus.Paused) {
+//          throw new DeliveryException("interaction_error","");
+//        }
+//        break;
+//      case Finished:
+//        throw new DeliveryException("interaction_error","");
+//      case Paused:
+//        if(current != DeliveryStatus.Active) {
+//          throw new DeliveryException("interaction_error","");
+//        }
+//    }
     delivery.status = status;
     histories.put(deliveryId, new DeliveryHistory(deliveryId, new LinkedList<DeliveryHistory.HistoryItem>(){{
       addAll(oldHistory.getHistoryItems());
