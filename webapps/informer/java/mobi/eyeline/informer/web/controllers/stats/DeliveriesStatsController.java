@@ -167,6 +167,7 @@ public class DeliveriesStatsController extends LongOperationController {
               else if (sortOrder.getColumnId().equals("expired")) {
                 return o1.getStat().getExpiredMessages() >= o2.getStat().getExpiredMessages() ? mul : -mul;
               }
+              
               //todo dates
               return 0;
             }

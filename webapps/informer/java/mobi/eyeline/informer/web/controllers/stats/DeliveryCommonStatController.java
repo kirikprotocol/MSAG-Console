@@ -75,7 +75,11 @@ public class DeliveryCommonStatController extends DeliveryStatController impleme
 
   @Override
   public void loadRecords(Configuration config, final Locale locale) throws AdminException {
-     config.getDeliveryStatProvider().accept(filter,this);
+     DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
+    if(delivery!=null && filterCopy.getFromDate()==null) {
+      filterCopy.setFromDate(delivery.getStartDate());
+    }
+    config.getDeliveryStatProvider().accept(filterCopy,this);
   }
 
 

@@ -23,6 +23,13 @@ public class DeliveryStatFilter {
     this.taskId = taskId;
   }
 
+  public DeliveryStatFilter(DeliveryStatFilter other) {
+    this.fromDate = other.fromDate==null ? null: (Date) other.fromDate.clone();
+    this.tillDate = other.tillDate==null ? null: (Date) other.tillDate.clone();
+    this.user = other.user;
+    this.taskId = other.taskId;
+  }
+
   /**
    * Возвращает нижнее ограничение на дату записи с точностью до минуты или null, если ограничение отсутствует.
    * @return нижнее ограничение на дату записи с точностью до минуты или null, если ограничение отсутствует.
