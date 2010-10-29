@@ -22,8 +22,9 @@ public:
     } InvokeResponse;
 
     Invoke(uint8_t tId = 0, uint8_t tOpCode = 0, InvokeResponse resp = Invoke::respNone)
-        : TcapEntity(tId, TcapEntity::tceInvoke, tOpCode), _linkedTo(NULL)
-        , _timeout(0), _status(Invoke::resWait), _respType(resp)
+        : TcapEntity(tId, TcapEntity::tceInvoke, tOpCode)
+        , _status(Invoke::resWait), _linkedTo(NULL)
+        , _timeout(0), _respType(resp)
     {}
 
     ~Invoke()
