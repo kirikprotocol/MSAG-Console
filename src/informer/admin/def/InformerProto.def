@@ -3,6 +3,8 @@ include InformerAdmin.def
 protocol InformerAdminProto
   ConfigOp inmsg
   ConfigOpResult outmsg
+  SetDefaultSmsc inmsg
+  SetDefaultSmscResp outmsg
   LoggerGetCategories inmsg
   LoggerGetCategoriesResp outmsg
   LoggerSetCategories inmsg
