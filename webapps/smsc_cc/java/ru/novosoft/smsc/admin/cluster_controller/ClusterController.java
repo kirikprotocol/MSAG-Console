@@ -876,7 +876,7 @@ public class ClusterController {
 
     checkResponse(resp.getResp());
 
-    return new CCRouteTrace(resp.getFound() ? resp.getRouteId() : null, resp.getTrace());
+    return new CCRouteTrace(resp.getFound() ? resp.getRouteId() : null, resp.hasTrace() ? resp.getTrace() : null, resp.hasAliasInfo() ? resp.getAliasInfo() : null);
   }
 
   // TIMEZONES ===============================================================================================

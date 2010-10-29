@@ -45,9 +45,17 @@
 
       <p/>
 
-      <h:panelGrid columns="1" columnClasses="columnTopLeftAlign" rendered="#{routeTrace.trace != null}">
-        <h:outputText value="#{msg['route.trace.page.routeFound']} : #{routeTrace.trace.routeName}" style="color:GREEN;" rendered="#{routeTrace.trace.routeName != null}"/>
-        <h:outputText value="#{msg['route.trace.page.routeNotFound']}" style="color:RED" rendered="#{routeTrace.trace.routeName == null}"/>
+      <h:panelGrid columns="1" columnClasses="columnTopLeftAlign" rendered="#{routeTrace.showTrace}">
+        <h:panelGroup >
+          <h:outputText value="#{msg['route.trace.page.routeFound']} : " style="color:GREEN;" rendered="#{routeTrace.routeFound}"/>
+          <h:commandLink action="ROUTE_EDIT" value="#{routeTrace.trace.routeName}" immediate="true" rendered="#{routeTrace.routeFound}">
+            <f:param name="route" value="#{routeTrace.trace.routeName}"/>
+            <f:param name="showTrace" value="true"/>
+            <f:param name="routeFound" value="true"/>
+          </h:commandLink>
+          <h:outputText value="#{msg['route.trace.page.routeNotFound']}" style="color:RED" rendered="#{!routeTrace.routeFound}"/>
+        </h:panelGroup>
+
         <eye:pageSubtitle value="#{msg['route.trace.page.trace']}"/>
         <h:inputTextarea value="#{routeTrace.traceLog}" readonly="true"/>
       </h:panelGrid>

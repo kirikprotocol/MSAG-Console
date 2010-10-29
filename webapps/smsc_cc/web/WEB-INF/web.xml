@@ -212,6 +212,7 @@
       <url-pattern>/smsc/profile/*</url-pattern>
       <url-pattern>/smsc/timezones/*</url-pattern>
       <url-pattern>/smsc/route/*</url-pattern>
+      <url-pattern>/smsc/route_trace/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>smsc_service</role-name>

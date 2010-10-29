@@ -21,6 +21,8 @@ public class RouteTraceController extends SettingsMController<RouteSubjectSettin
   private String sourceSmeId;
   private RouteTrace trace;
   private boolean initFailed;
+  private boolean showTrace;
+  private boolean routeFound;
 
   public RouteTraceController() {
     super(WebContext.getInstance().getRouteSubjectManager());
@@ -31,6 +33,9 @@ public class RouteTraceController extends SettingsMController<RouteSubjectSettin
       addError(e);
       initFailed = true;
     }
+
+    showTrace = getRequestParameter("showTrace") != null;
+    routeFound = getRequestParameter("routeFound") != null;
   }
 
   public boolean isInitFailed() {
@@ -71,6 +76,14 @@ public class RouteTraceController extends SettingsMController<RouteSubjectSettin
     this.sourceSmeId = sourceSmeId;
   }
 
+  public boolean isShowTrace() {
+    return showTrace;
+  }
+
+  public boolean isRouteFound() {
+    return routeFound;
+  }
+
   public RouteTrace getTrace() {
     return trace;
   }
@@ -88,12 +101,17 @@ public class RouteTraceController extends SettingsMController<RouteSubjectSettin
   }
 
   public String getTraceLog() {
-    if (trace == null || trace.getTrace() == null)
+    if (trace == null)
       return null;
 
     StringBuilder sb = new StringBuilder();
-    for (String s : trace.getTrace()) 
-      sb.append(s).append("\n");
+    if (trace.getAliasInfo() != null)
+      sb.append(trace.getAliasInfo()).append("\n\n");
+
+    if (trace.getTrace() != null) {
+      for (String s : trace.getTrace())
+        sb.append(s).append("\n");
+    }
 
     return sb.toString();
   }
@@ -102,9 +120,12 @@ public class RouteTraceController extends SettingsMController<RouteSubjectSettin
     RouteSubjectSettings settings = getSettings();
     try {
       trace = settings.traceRoute(sourceAddress, destinationAddress, sourceSmeId);
+      showTrace = true;
+      routeFound = trace != null && trace.getRouteName() != null;
     } catch (AdminException e) {
       addError(e);
     }
+
     return null;
   }
 }

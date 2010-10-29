@@ -7,10 +7,12 @@ package ru.novosoft.smsc.admin.route;
 public class RouteTrace {
   private final String routeName;
   private final String[] trace;
+  private final String aliasInfo;
 
-  RouteTrace(String routeName, String[] trace) {
+  RouteTrace(String routeName, String[] trace, String aliasInfo) {
     this.routeName = routeName;
     this.trace = trace;
+    this.aliasInfo = aliasInfo;
   }
 
   /**
@@ -27,5 +29,13 @@ public class RouteTrace {
    */
   public String[] getTrace() {
     return trace;
+  }
+
+  /**
+   * Возвращает информацию о найденных алиасах
+   * @return информацию о найденных алиасах
+   */
+  public String getAliasInfo() {
+    return aliasInfo;
   }
 }

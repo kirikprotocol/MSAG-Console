@@ -1,3 +1,11 @@
+div.data_table_filter {
+  background-color: #F2EEDA;
+	border-top: 1px solid #F8F6EE;
+	border-left: 1px solid #F8F6EE;
+	border-bottom: 1px solid #E4E0CE;
+	border-right: 1px solid #E4E0CE;
+}
+
 table.data_table_filter {
 /*position: relative;*/
   height: 30px;

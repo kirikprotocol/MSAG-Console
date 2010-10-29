@@ -108,7 +108,7 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager {
       }
 
       CCRouteTrace trace = cc.traceRoute(routesTracingConfig.getName(), source, destination, sourceSmeId);
-      return new RouteTrace(trace.getRouteId(), trace.getTrace());
+      return new RouteTrace(trace.getRouteId(), trace.getTrace(), trace.getAliasInfo());
 
     } finally {
       cfgFileManager.getFileSystem().delete(routesTracingConfig);
