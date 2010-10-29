@@ -230,21 +230,12 @@ scoredList_(*this,2*maxScoreIncrement,
 isStopping_(true),
 journal_(0)
 {
-    { // check smsc id
-        for ( const char* p = smscId_.c_str(); *p != '\0'; ++p ) {
-            register const char c = *p;
-            if ( c >= '-' && c <= '9' && c != '/' ) {
-                // ok
-            } else if ( c >= '@' && c <= 'Z' ) {
-                // ok
-            } else if ( c == '_' ) {
-                // ok
-            } else if ( c >= 'a' && c <= 'z' ) {
-            } else {
-                smsc_log_error(log_,"SMSC id '%s' contains forbidden character '%c'",
-                               smscId_.c_str(), c );
-                abort();
-            }
+    {
+        char c;
+        if ( ! isGoodAsciiName(smscId_.c_str(),&c) ) {
+            smsc_log_error(log_,"SMSC id '%s' contains forbidden character '%c'",
+                           smscId_.c_str(), c );
+            abort();
         }
     }
 

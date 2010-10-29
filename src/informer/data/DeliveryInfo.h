@@ -12,6 +12,7 @@ namespace informer {
 
 class CommonSettings;
 class UserInfo;
+class InfosmeCore;
 
 typedef enum {
     DLVMODE_SMS = 0,
@@ -24,14 +25,15 @@ class DeliveryInfo
 {
 public:
     DeliveryInfo( const CommonSettings& cs,
-                  dlvid_type dlvId ) :
+                  dlvid_type            dlvId,
+                  UserInfo*             userInfo = 0 ) :
     cs_(cs), dlvId_(dlvId),
     from_(0x4010000000000000ULL + 10000), // FIXME: .0.1.10000
     isReplaceIfPresent_(true), isFlash_(false), useDataSm_(false),
     transactionMode_(0),
     deliveryMode_(DLVMODE_SMS),
     state_(DLVSTATE_PAUSED),
-    userInfo_(0)
+    userInfo_(userInfo)
     {
         if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
     }
@@ -53,8 +55,6 @@ public:
     DlvState getState() const {
         return state_;
     }
-
-    void setUserInfo( UserInfo& userInfo ) { userInfo_ = &userInfo; }
 
     const UserInfo* getUserInfo() const { return userInfo_; }
 
@@ -111,7 +111,7 @@ public:
     DeliveryMode getDeliveryMode() const { return deliveryMode_; }
 
     /// read delivery info
-    void read();
+    void read( InfosmeCore& core );
 
 private:
     static smsc::logger::Logger* log_;

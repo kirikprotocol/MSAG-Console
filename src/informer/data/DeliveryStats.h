@@ -34,6 +34,10 @@ public:
             expiredMessages == 0;
     }
 
+    bool isFinished() const {
+        return totalMessages == dlvdMessages + failedMessages + expiredMessages;
+    }
+
     bool operator != ( const DeliveryStats& ds ) const {
         return 
             ( totalMessages   != ds.totalMessages   ) ||

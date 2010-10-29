@@ -6,6 +6,8 @@
 #include "DeliveryInfo.h"
 #include "CommonSettings.h"
 #include "core/buffers/TmpBuf.hpp"
+#include "UserInfo.h"
+#include "InfosmeCore.h"
 
 namespace {
 
@@ -93,7 +95,7 @@ void DeliveryInfo::getStats( DeliveryStats& stats ) const
  */
 
 
-void DeliveryInfo::read()
+void DeliveryInfo::read( InfosmeCore& core )
 {
     smsc::core::buffers::TmpBuf<char,200> buf;
     const std::string& path = cs_.getStorePath();
@@ -103,6 +105,14 @@ void DeliveryInfo::read()
     // char* end = 
     makeDeliveryPath(dlvId_,buf.get()+path.size());
     smsc_log_debug(log_,"FIXME: reading D=%u info '%s'",dlvId_,buf.get());
+
+    const char* userId = "bukind";
+    UserInfoPtr user( core.getUserInfo( userId ) );
+    if (!user.get()) {
+        throw InfosmeException("U='%s' is not found",userId);
+    }
+    userInfo_ = user.get();
+
     /*
     // reading state
     std::vector< std::string > files;

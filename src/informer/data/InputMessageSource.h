@@ -13,6 +13,7 @@ class ResendTransferTask;
 class MessageGlossary;
 struct InputRegionRecord;
 class ActivityLog;
+class InfosmeCore;
 
 /// a class requesting transfer of input messages
 /// from instore into opstore.
@@ -104,6 +105,8 @@ class InputMessageSource
 public:
     virtual ~InputMessageSource() {}
 
+    /// bind storage with activity log, it is needed to be able to
+    /// make records about new messages.
     virtual void init( ActivityLog& actlog ) = 0;
 
     /// add new messages, the list of messages is modified
@@ -116,11 +119,13 @@ public:
     // NOTE: throws exception if the task cannot be created/found.
     virtual InputTransferTask* startInputTransfer( TransferRequester& requester,
                                                    unsigned           count,
-                                                   bool mayDetachRegion ) = 0;
+                                                   bool               mayDetachRegion ) = 0;
 
     virtual void startResendTransfer( ResendTransferTask* task ) = 0;
 
     virtual MessageGlossary& getGlossary() = 0;
+
+    virtual InfosmeCore& getCore() = 0;
 
     // virtual dlvid_type getDlvId() const = 0;
     // virtual const std::string& getStorePath() const = 0;

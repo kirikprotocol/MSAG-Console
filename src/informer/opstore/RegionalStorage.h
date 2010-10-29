@@ -45,6 +45,9 @@ public:
     virtual regionid_type getRegionId() const { return regionId_; }
     const DeliveryInfo& getDlvInfo() const;
 
+    /// return true if there is no messages in new and resend
+    bool isFinished();
+
     // get the message with given messageid.
     // this method accesses active messages only.
     // bool getMessage( msgid_type msgId, Message& msg );

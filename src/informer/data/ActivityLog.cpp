@@ -33,9 +33,9 @@ createTime_(0)
     try {
         DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
         std::vector< std::string > dirs;
-        char fnbuf[100];
+        char fnbuf[150];
         makeDeliveryPath(info.getDlvId(),fnbuf);
-        const std::string actpath = info.getCS().getStorePath() + fnbuf + "activity/";
+        const std::string actpath = info.getCS().getStorePath() + fnbuf + "activity_log/";
         dl.list( actpath.c_str(), dirs );
         std::sort( dirs.begin(), dirs.end() );
         std::vector< std::string > subdirs;
@@ -195,15 +195,13 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     struct tm now;
     const ulonglong ymdTime = msgTimeToYmd(currentTime,&now);
 
+    unsigned planTime = 0;
     char cstate;
-    char cretry[30];
-    cretry[0] = '\0';
     switch (msg.state) {
     case MSGSTATE_INPUT:     cstate = 'N'; break;
     case MSGSTATE_PROCESS:   cstate = 'P'; break;
     case MSGSTATE_RETRY:
-        cstate = 'R';
-        sprintf(cretry,"%u,%u,",unsigned(msg.lastTime-currentTime), msg.retryCount);
+        planTime = unsigned(msg.lastTime - currentTime);
         break;
     case MSGSTATE_DELIVERED: cstate = 'D'; break;
     case MSGSTATE_FAILED:    cstate = 'F'; break;
@@ -219,8 +217,10 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     else { sprintf(caddr,".%u.%u.%0*.*llu",ton,npi,len,len,addr); }
 
     smsc::core::buffers::TmpBuf<char,1024> buf;
-    const int off = sprintf(buf.get(), "%llu,%c,%u,%llu,%s%s,%d,%d,%s,",
-                            ymdTime, cstate, regId, msg.msgId, cretry, caddr,
+    const int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,\"",
+                            unsigned(ymdTime % 100), cstate, regId,
+                            msg.msgId, planTime, msg.retryCount,
+                            caddr,
                             msg.timeLeft, smppStatus,
                             msg.userData.c_str());
     if ( off < 0 ) {
@@ -228,7 +228,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     }
     buf.SetPos(off);
     escapeText(buf, msg.text->getText(), strlen(msg.text->getText()));
-    buf.Append("\n",1);
+    buf.Append("\"\n",2);
 
     {
         MutexGuard mg(lock_);
@@ -237,7 +237,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             const int oldmin = now.tm_min;
             now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
             sprintf(makeDeliveryPath(info_.getDlvId(),fnbuf),
-                    "activity/%04u.%02u.%02u/%02u/%02u.log",
+                    "activity_log/%04u.%02u.%02u/%02u/%02u.log",
                     now.tm_year+1900, now.tm_mon+1, now.tm_mday,
                     now.tm_hour, now.tm_min );
             fg_.create((info_.getCS().getStorePath()+fnbuf).c_str(),
@@ -245,8 +245,8 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
             fg_.seek(0, SEEK_END);
             if (fg_.getPos() == 0) {
-                const char* header = "#1 TIME,STATE,REGID,MSGID,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT\n";
-                fg_.write(header,strlen(header));
+                // const char* header = "#1 TIME,STATE,REGID,MSGID,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT\n";
+                // fg_.write(header,strlen(header));
                 char headbuf[200];
                 int headlen;
                 {

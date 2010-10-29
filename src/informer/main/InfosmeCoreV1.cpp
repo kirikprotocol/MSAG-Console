@@ -294,20 +294,24 @@ public:
         {
             struct tm now;
             const ulonglong ymd = msgTimeToYmd(currentTime,&now);
-            sprintf(buf,"status.log/%04u.%02u.%02u/%02u.log",
+            sprintf(buf,"statistics/%04u.%02u.%02u/%02u.log",
                     now.tm_year+1900, now.tm_mon+1,
                     now.tm_mday, now.tm_hour);
             fg.create((core_.cs_.getStorePath()+buf).c_str(),true);
             fg.seek(0,SEEK_END);
-            bufpos = buf + sprintf(buf,"%llu,",ymd);
+            if (fg.getPos() == 0) {
+                const char header[] = "# MINSEC,DLVID,USER,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD\n";
+                fg.write(header,strlen(header));
+            }
+            bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
         }
 
         DeliveryList::iterator& iter = core_.statDumpIter_;
         bool firstPass = true;
         do {
             DeliveryStats   ds;
-            dlvid_type dlvId;
-            const UserInfo* userInfo;
+            dlvid_type      dlvId;
+            userid_type     userId;
             {
                 smsc::core::synchronization::MutexGuard mg(core_.startMon_);
                 if (firstPass) {
@@ -317,14 +321,13 @@ public:
                 if (iter == core_.deliveryList_.end()) { break; }
                 const DeliveryInfo& info = (*iter)->getDlvInfo();
                 dlvId = info.getDlvId();
-                userInfo = info.getUserInfo();
+                userId = info.getUserInfo()->getUserId();
                 (*iter)->popIncrementalStats(ds);
                 ++iter;
             }
             if ( ds.isEmpty() ) continue;
             char* p = bufpos + sprintf(bufpos,"%u,%s,%d,%d,%d,%d,%d,%d,%d\n",
-                                       dlvId, 
-                                       userInfo ? userInfo->getUserId() : "",
+                                       dlvId, userId.c_str(),
                                        int32_t(ds.totalMessages),
                                        int32_t(ds.procMessages),
                                        int32_t(ds.sentMessages),
@@ -436,6 +439,12 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     if (!inputJournal_) inputJournal_ = new InputJournal(cs_);
     if (!storeJournal_) storeJournal_ = new StoreJournal(cs_);
 
+    // FIXME: load users
+    {
+        UserInfo* ui = new UserInfo("bukind","pwd");
+        users_.Insert(ui->getUserId(),UserInfoPtr(ui));
+    }
+
     // create smscs
     {
         smsc_log_debug(log_,"--- loading smsc ---");
@@ -467,6 +476,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     {
         // loading deliveries
         smsc_log_debug(log_,"--- loading deliveries ---");
+
         smsc::core::buffers::TmpBuf<char,200> buf;
         const std::string& path = cs_.getStorePath();
         buf.setSize(path.size()+50);
@@ -492,12 +502,12 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
                 const dlvid_type dlvId = strtoul(idlv->c_str(),0,10);
                 std::auto_ptr<DeliveryInfo> info(new DeliveryInfo(cs_,dlvId));
                 try {
-                    info->read();
+                    info->read( *this );
+                    addDelivery(info);
                 } catch (std::exception& e) {
-                    smsc_log_error(log_,"cannot read dlvInfo D=%u: %s",dlvId,e.what());
+                    smsc_log_error(log_,"cannot read/add dlvInfo D=%u: %s",dlvId,e.what());
                     continue;
                 }
-                addDelivery(info);
             }
         }
     }
@@ -568,9 +578,12 @@ void InfosmeCoreV1::start()
 }
 
 
-const UserInfo* InfosmeCoreV1::getUserInfo( const char* login )
+UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 {
-    return 0;
+    MutexGuard mg(startMon_);
+    UserInfoPtr* ptr = users_.GetPtr(login);
+    if (!ptr) return UserInfoPtr();
+    return *ptr;
 }
 
 
@@ -836,7 +849,7 @@ void InfosmeCoreV1::deleteSmsc( const char* smscId )
 }
 
 
-void InfosmeCoreV1::updateDefaultSmsc()
+void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 {
     throw InfosmeException("FIXME: not impl yet");
 }

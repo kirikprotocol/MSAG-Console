@@ -53,14 +53,7 @@ public:
 
     virtual MessageGlossary& getGlossary() { return glossary_; }
 
-    /*
-    virtual dlvid_type getDlvId() const {
-        return dlvId_;
-    }
-    virtual const std::string& getStorePath() const {
-        return jnl_.getCS().getStorePath();
-    }
-     */
+    virtual InfosmeCore& getCore() { return core_; }
 
     virtual void setRecordAtInit(const InputRegionRecord& ro, msgid_type maxMsgId);
 

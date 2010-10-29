@@ -107,6 +107,9 @@ template <typename RegIter> std::string formatRegionList( RegIter begin, RegIter
 /// @return pointer to trailing \0.
 char* makeDeliveryPath( dlvid_type dlvId, char* buf );
 
+/// check if name contains only good ascii characters
+bool isGoodAsciiName( const char* str, char* badchar = 0 );
+
 } // informer
 } // smsc
 

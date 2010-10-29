@@ -60,7 +60,7 @@ public:
         startMon_.wait(msec);
     }
 
-    virtual const UserInfo* getUserInfo( const char* login );
+    virtual UserInfoPtr getUserInfo( const char* login );
 
     virtual RegionFinder& getRegionFinder() { return rf_; }
 
@@ -86,7 +86,7 @@ public:
     virtual void addSmsc( const char* smscId );
     virtual void updateSmsc( const char* smscId );
     virtual void deleteSmsc( const char* smscId );
-    virtual void updateDefaultSmsc();
+    virtual void updateDefaultSmsc( const char* smscId );
 
     virtual void addRegion( regionid_type regionId );
     virtual void updateRegion( regionid_type regionId );
@@ -153,6 +153,7 @@ private:
     bool                                       started_;
     smsc::core::threads::ThreadPool            itp_;        // input transfer pool
     smsc::core::threads::ThreadPool            rtp_;        // resend transfer pool
+    smsc::core::buffers::Hash< UserInfoPtr >      users_;        // owned
     smsc::core::buffers::Hash< SmscSender* >      smscs_;        // owned
     smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned

@@ -62,6 +62,9 @@ public:
                             std::vector<regionid_type>& emptyRegs );
 
 
+    /// check if all regional storages is empty, and no messages in retries.
+    void checkFinalize();
+
 private:
     typedef smsc::core::buffers::IntHash< RegionalStoragePtr > StoreHash;
     smsc::core::synchronization::Mutex                 cacheLock_;

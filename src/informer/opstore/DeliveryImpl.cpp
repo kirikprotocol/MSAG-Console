@@ -1,6 +1,7 @@
 #include <cassert>
 #include "DeliveryImpl.h"
 #include "informer/data/CommonSettings.h"
+#include "informer/data/InfosmeCore.h"
 
 namespace eyeline {
 namespace informer {
@@ -34,7 +35,7 @@ msgtime_type DeliveryImpl::initState()
     do {
         MutexGuard mg(cacheLock_);
         try {
-            sprintf(makeDeliveryPath(dlvId,buf),"status");
+            sprintf(makeDeliveryPath(dlvId,buf),"status.log");
             fg.ropen((dlvInfo_->getCS().getStorePath()+buf).c_str());
         } catch ( InfosmeException& e ) {
             smsc_log_debug(log_,"D=%u cannot open status file: %s", dlvId, e.what());
@@ -182,15 +183,19 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     }
     // write status line into status file
     char buf[200];
-    sprintf(makeDeliveryPath(dlvId,buf),"status");
+    sprintf(makeDeliveryPath(dlvId,buf),"status.log");
     FileGuard fg;
     fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),true);
     fg.seek(0,SEEK_END);
+    if (fg.getPos()==0) {
+        const char* header = "# TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD\n";
+        fg.write(header,strlen(header));
+    }
     DeliveryStats ds;
     activityLog_.getStats(ds);
-    int buflen = sprintf(buf,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u\n",
-                         dlvStateToString(newState)[0],
+    int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u\n",
                          msgTimeToYmd(now),
+                         dlvStateToString(newState)[0],
                          planTime-now,
                          ds.totalMessages,
                          ds.procMessages,
@@ -315,6 +320,39 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
                   ds.sentMessages, ds.retryMessages,
                   ds.dlvdMessages, ds.failedMessages,
                   ds.expiredMessages );
+}
+
+
+void DeliveryImpl::checkFinalize()
+{
+    const dlvid_type dlvId = dlvInfo_->getDlvId();
+    smsc_log_debug(log_,"D=%u check finalize invoked",dlvId);
+    DeliveryStats ds;
+    bool finalize = true;
+    {
+        MutexGuard mg(cacheLock_);
+        int regId;
+        RegionalStoragePtr* ptr;
+        for ( StoreHash::Iterator i(storages_); i.Next(regId,ptr); ) {
+            if (! (*ptr)->isFinished()) {
+                finalize = false;
+                smsc_log_debug(log_,"R=%u/D=%u is still active",regId,dlvId);
+                break;
+            }
+        }
+        activityLog_.getStats(ds);
+    }
+    if (finalize) {
+        if (ds.isFinished()) {
+            smsc_log_debug(log_,"D=%u all messages are final, confirmed by stats", dlvId);
+            getCore().setDeliveryState(dlvId,DLVSTATE_FINISHED,0);
+        } else {
+            smsc_log_warn(log_,"D=%u all messages are final, discrep by stats: %u/%u/%u/%u",
+                          dlvId,
+                          ds.totalMessages, ds.dlvdMessages,
+                          ds.failedMessages, ds.expiredMessages );
+        }
+    }
 }
 
 }

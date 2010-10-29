@@ -38,6 +38,9 @@ public:
         return activityLog_.popIncrementalStats(ds);
     }
 
+protected:
+    InfosmeCore& getCore() { return source_->getCore(); }
+
 private:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);

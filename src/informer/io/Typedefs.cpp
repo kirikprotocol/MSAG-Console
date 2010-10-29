@@ -146,5 +146,28 @@ char* makeDeliveryPath( dlvid_type dlvId, char* buf )
     return buf + rv;
 }
 
+
+bool isGoodAsciiName( const char* str, char* badchar )
+{
+    assert(str);
+    for ( const char* p = str; *p != '\0'; ++p ) {
+        register const char c = *p;
+        if ( c >= '-' && c <= '9' && c != '/' ) {
+            // ok
+        } else if ( c >= '@' && c <= 'Z' ) {
+            // ok
+        } else if ( c == '_' ) {
+            // ok
+        } else if ( c >= 'a' && c <= 'z' ) {
+            // ok
+        } else {
+            if (badchar) *badchar = c;
+            return false;
+        }
+    }
+    return true;
+}
+
+
 }
 }
