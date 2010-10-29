@@ -19,46 +19,55 @@
       <tr:inputHidden value="#{snmp.revision}" id="revision"/>
       <eye:message level="warn" rendered="#{snmp.settingsChanged}"><h:outputText value="#{msg['smsc.submit.hint']}"/></eye:message>
 
+      <p/>
       <eye:buttons>
         <eye:button><smsc:submitButton bean="#{snmp}" action="save"/></eye:button>
         <eye:button><smsc:resetButton bean="#{snmp}" action="reset"/></eye:button>
         <eye:space/>
       </eye:buttons>
 
-      <eye:pageSubtitle value="#{msg['smsc.snmp.subtitle.settings']}"/>
+      <p/>
+
+      <eye:pageSubtitle value="#{msg['smsc.snmp.settings']}"/>
 
       <tr:panelLabelAndMessage label="#{snmpSettingsBundle['counterInterval']}" labelStyle="width:130px; align:left; text-align:left;">
-        <tr:inputText value="#{snmp.counterInterval}"  required="true" simple="true" contentStyle="width:70px; margin-left:5px;" >
+        <tr:inputText value="#{snmp.counterInterval}" required="true" simple="true" contentStyle="width:70px; margin-left:5px;">
           <eye:validatePositive/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
-      <c:set var="n" value="0"/>
+      <p/>
 
-      <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >
+      <eye:pageSubtitle value="#{msg['smsc.snmp.snmpObjects']}"/>
+
+      <h:panelGrid styleClass="list" columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="row1">
 
         <h:commandLink value="#{msg['snmp.default.object']}" action="#{snmp.editObject}">
           <f:param name="objName" value=""/>
         </h:commandLink>
-        <h:outputText/>
+        <h:outputText value="&#160;"/>
+      </h:panelGrid>
 
-        <c:forEach var="item" items="#{snmp.snmpObjectNames}">
+      <c:set var="n" value="0"/>
+
+      <c:forEach var="item" items="#{snmp.snmpObjectNames}">
+        <h:panelGrid styleClass="list" columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="row#{n}">
           <h:commandLink value="#{item}" action="#{snmp.editObject}">
             <f:param name="objName" value="#{item}"/>
           </h:commandLink>
           <tr:commandLink action="#{snmp.removeObject}" rendered="true">
-            <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
+            <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; "/>
             <f:param name="objToRemove" value="#{item}"/>
           </tr:commandLink>
-        </c:forEach>
+        </h:panelGrid>
+        <c:set var="n" value="#{1-n}"/>
+      </c:forEach>
 
-      </h:panelGrid>
+      <h:panelGrid styleClass="list" columns="2" columnClasses="column200WidthTopLeft,columnTopLeftAlign" rowClasses="row#{n}">
+        <h:inputText value="#{snmp.newObjectName}" required="false" style="width: 100%"/>
 
-      <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >
-        <tr:inputText value="#{snmp.newObjectName}"  required="false" simple="true" contentStyle="width:150px;" >
-        </tr:inputText>
-        <tr:commandLink id="addSnmpObj" action="#{snmp.addObject}" >
-          <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"  />
+        <tr:commandLink id="addSnmpObj" action="#{snmp.addObject}">
+          <tr:image source="/images/but_add.gif" inlineStyle="margin-left:10px; position:relative; "/>
         </tr:commandLink>
       </h:panelGrid>
 

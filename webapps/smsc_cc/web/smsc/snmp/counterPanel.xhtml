@@ -14,12 +14,14 @@
   <eye:collapsingGroup label="#{counterLabel}" rendered="#{snmpObjField!=null}">
     <f:facet name="header">
       <h:panelGroup>
+        <h:panelGrid columns="2" columnClasses="column0Width, column0WidthRight">
         <h:outputText value="#{counterLabel}"/>
         <tr:commandLink action="#{snmpObj.removeCounter}" rendered="#{snmpObj.objName!=null and snmpObj.objName!=''}">
-          <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:5px;"/>
+          <tr:image source="/images/but_del.gif" inlineStyle="margin-left:10px; position:relative; top:1px;"/>
           <f:param name="objName" value="#{snmpObj.objName}"/>
           <f:param name="counterToRemove" value="#{counterName}"/>
         </tr:commandLink>
+        </h:panelGrid>
       </h:panelGroup>
     </f:facet>
     <h:panelGrid columns="2" style="width:300px;" columnClasses="column0WidthRight,column100Width">

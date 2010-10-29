@@ -10,7 +10,7 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{msg['smsc.snmp.edit.title']}"/>
+  <ui:param name="pageTitle" value="#{snmpObj.objTitle}"/>
 
   <ui:define name="content">
 
@@ -29,7 +29,7 @@
         <eye:space/>
       </eye:buttons>
 
-      <eye:pageSubtitle value="#{snmpObj.objTitle}"/>
+      <p/>
 
       <tr:panelFormLayout inlineStyle="margin-left:15px;">
         <tr:panelLabelAndMessage label="#{msg['snmp.object.enabled']}" inlineStyle="text-align:left">
@@ -39,7 +39,7 @@
 
 
 
-      <eye:collapsingGroup label="#{msg['snmp.counters.label']}">
+      <eye:collapsingGroup label="#{msg['snmp.counters.label']}" opened="true">
         <tr:panelFormLayout inlineStyle="margin-left:15px;">
 
           <ui:include src="counterPanel.xhtml">
@@ -121,7 +121,7 @@
       </eye:collapsingGroup>
 
 
-      <eye:collapsingGroup label="#{msg['snmp.severities.label']}">
+      <eye:collapsingGroup label="#{msg['snmp.severities.label']}" opened="true">
         <tr:panelFormLayout inlineStyle="margin-left:15px;">
           <ui:include src="severityPanel.xhtml">
             <ui:param name="label" value="#{msg['snmp.object.severityRegister']}"/>
@@ -161,7 +161,8 @@
 
       </eye:collapsingGroup>
 
-
+      <p/>
+      
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['done.button']}" action="#{snmpObj.done}">
@@ -169,7 +170,7 @@
           </tr:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="SNMP" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" action="#{snmpObj.cancel}" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
