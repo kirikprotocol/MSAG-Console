@@ -165,7 +165,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
     // now compare
     size_t buflen = tb.getPos();
     tb.setPos(0);
-    tb.set16(buflen-LENSIZE);
+    tb.set16(uint16_t(buflen-LENSIZE));
     smsc::core::synchronization::MutexGuard mg(lock_);
     if (msg.state < uint8_t(MSGSTATE_FINAL) &&
         equalSerials && serial != serial_ ) {
@@ -184,7 +184,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         }
         buflen = tb.getPos();
         tb.setPos(0);
-        tb.set16(buflen-LENSIZE);
+        tb.set16(uint16_t(buflen-LENSIZE));
     }
     if (log_->isDebugEnabled()) {
         HexDump hd;
@@ -213,7 +213,7 @@ size_t StoreJournal::journalNextResend( dlvid_type dlvId,
     tb.set32(nextResend);
     const size_t buflen = tb.getPos();
     tb.setPos(0);
-    tb.set16(buflen-LENSIZE);
+    tb.set16(uint16_t(buflen-LENSIZE));
     smsc::core::synchronization::MutexGuard mg(lock_);
     if (log_->isDebugEnabled()) {
         HexDump hd;

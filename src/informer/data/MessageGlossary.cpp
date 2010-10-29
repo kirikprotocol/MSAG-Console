@@ -42,7 +42,6 @@ void MessageGlossary::init( const std::string& storePath,
             break;
         }
         buf.SetPos(buf.GetPos()+wasread);
-        std::auto_ptr< MessageText > mt;
         while ( ptr < buf.GetCurPtr() ) {
             char* end = const_cast<char*>
                 (reinterpret_cast<const char*>

@@ -1,7 +1,7 @@
 #ifndef _INFORMER_MESSAGETEXT_H
 #define _INFORMER_MESSAGETEXT_H
 
-#include <cstring>
+#include <string.h>
 #include "util/int.h"
 
 namespace eyeline {
@@ -30,9 +30,9 @@ public:
 private:
 
     inline static char* copyText( const char* text ) {
-        const size_t textlen = strlen(text)+1;
+        const size_t textlen( ::strlen(text) + 1 );
         char* ret = new char[textlen];
-        memcpy(ret,text,textlen);
+        ::memcpy(ret,text,textlen);
         return ret;
     }
 

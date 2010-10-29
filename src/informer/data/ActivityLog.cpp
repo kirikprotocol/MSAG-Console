@@ -1,3 +1,4 @@
+#include <ctime>
 #include "ActivityLog.h"
 #include "DeliveryInfo.h"
 #include "CommonSettings.h"
@@ -41,20 +42,20 @@ createTime_(0)
         std::vector< std::string > subdirs;
         subdirs.reserve(24);
         smsc::core::buffers::TmpBuf<char,8192> buf;
-        for ( std::vector<std::string>::const_reverse_iterator i = dirs.rbegin();
+        for ( std::vector<std::string>::reverse_iterator i = dirs.rbegin();
               i != dirs.rend(); ++i ) {
             subdirs.clear();
             const std::string daypath = actpath + *i;
             dl.list( daypath.c_str(), subdirs );
             std::sort( subdirs.begin(), subdirs.end() );
-            for ( std::vector<std::string>::const_reverse_iterator j = subdirs.rbegin();
+            for ( std::vector<std::string>::reverse_iterator j = subdirs.rbegin();
                   j != subdirs.rend(); ++j ) {
                 std::vector< std::string > logfiles;
                 logfiles.reserve(60);
                 const std::string hourpath = daypath + "/" + *j;
                 makeDirListing( NoDotsNameFilter(), S_IFREG ).list( hourpath.c_str(), logfiles );
                 std::sort(logfiles.begin(), logfiles.end());
-                for ( std::vector< std::string >::const_reverse_iterator k = logfiles.rbegin();
+                for ( std::vector< std::string >::reverse_iterator k = logfiles.rbegin();
                       k != logfiles.rend(); ++k ) {
                     
                     const std::string filename = hourpath + "/" + *k;
@@ -192,7 +193,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                              int smppStatus,
                              uint8_t fromState )
 {
-    struct tm now;
+    struct ::tm now;
     const ulonglong ymdTime = msgTimeToYmd(currentTime,&now);
 
     unsigned planTime = 0;

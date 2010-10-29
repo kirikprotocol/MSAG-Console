@@ -3,6 +3,21 @@
 #include "informer/data/CommonSettings.h"
 #include "informer/data/InfosmeCore.h"
 
+#ifdef sun
+namespace {
+void* memrchr(const void* s, int c, size_t n)
+{
+    if (!n) return 0;
+    for ( register const char* x = reinterpret_cast<const char*>(s)+n; x != s; ) {
+        if (*--x == c) {
+            return const_cast<char*>(x);
+        }
+    }
+    return 0;
+}
+}
+#endif
+
 namespace eyeline {
 namespace informer {
 
@@ -62,7 +77,7 @@ msgtime_type DeliveryImpl::initState()
             break;
         }
 
-        char* ptr = reinterpret_cast<char*>(const_cast<void*>(memrchr(buf,'\n',wasread)));
+        char* ptr = reinterpret_cast<char*>(const_cast<void*>(::memrchr(buf,'\n',wasread)));
         if (!ptr) {
             smsc_log_warn(log_,"D=%u status record is not terminated",dlvId);
             break;
@@ -76,7 +91,7 @@ msgtime_type DeliveryImpl::initState()
         *ptr = '\0';
         --wasread;
         assert(wasread);
-        ptr = reinterpret_cast<char*>(const_cast<void*>(memrchr(buf,'\n',wasread)));
+        ptr = reinterpret_cast<char*>(const_cast<void*>(::memrchr(buf,'\n',wasread)));
         if (!ptr) { ptr = buf; }
         else { ++ptr; }
 
@@ -153,7 +168,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         smsc_log_warn(log_,"D=%u is cancelled",dlvId);
         return;
     }
-    const msgtime_type now( currentTimeMicro() / tuPerSec );
+    const msgtime_type now(msgtime_type(currentTimeMicro()/tuPerSec));
     if (newState == DLVSTATE_PLANNED) {
         if (planTime < now) {
             throw InfosmeException("D=%u cannot plan delivery into past %llu",

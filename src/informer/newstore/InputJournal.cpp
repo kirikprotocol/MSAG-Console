@@ -83,7 +83,7 @@ size_t InputJournal::journalRecord( dlvid_type dlvId,
     tb.set64(maxMsgId);
     const size_t pos = tb.getPos();
     tb.setPos(0);
-    tb.set16(pos-LENSIZE);
+    tb.set16(uint16_t(pos-LENSIZE));
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
         jnl_.write(buf,pos);

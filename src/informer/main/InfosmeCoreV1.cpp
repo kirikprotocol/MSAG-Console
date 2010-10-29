@@ -499,7 +499,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
                   idlv != dlvs.end();
                   ++idlv ) {
                 // get dlvid
-                const dlvid_type dlvId = strtoul(idlv->c_str(),0,10);
+                const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
                 std::auto_ptr<DeliveryInfo> info(new DeliveryInfo(cs_,dlvId));
                 try {
                     info->read( *this );
@@ -782,7 +782,7 @@ void InfosmeCoreV1::receiveReceipt( const DlvRegMsgId& drmId, int status, bool r
             return;
         }
     
-        const msgtime_type now(currentTimeMicro() / tuPerSec);
+        const msgtime_type now(msgtime_type(currentTimeMicro()/tuPerSec));
 
         if (retry && info.wantRetry(status) ) {
             reg->retryMessage( drmId.msgId,
@@ -834,7 +834,7 @@ bool InfosmeCoreV1::receiveResponse( const DlvRegMsgId& drmId )
             return false;
         }
     
-        const msgtime_type now(currentTimeMicro() / tuPerSec);
+        const msgtime_type now(msgtime_type(currentTimeMicro()/tuPerSec));
 
         reg->messageSent(drmId.msgId,now);
         return true;
@@ -1042,7 +1042,7 @@ int InfosmeCoreV1::Execute()
 
             if (stopping_) break;
 
-            const msgtime_type now(currentTimeMicro()/tuPerSec);
+            const msgtime_type now(msgtime_type(currentTimeMicro()/tuPerSec));
             DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
             for ( DeliveryWakeQueue::iterator i = deliveryWakeQueue_.begin(); i != uptoNow; ++i ) {
                 wakeList.push_back(i->second);

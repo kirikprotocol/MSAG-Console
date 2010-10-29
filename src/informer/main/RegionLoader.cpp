@@ -41,7 +41,7 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             DOMElement* region = static_cast<DOMElement*>(regions->item(0));
             const XmlStr sbandwidth = region->getAttribute(XmlStr("max_per_second"));
             char* endptr;
-            const unsigned bandwidth = strtoul(sbandwidth.c_str(),&endptr,10);
+            const unsigned bandwidth(unsigned(strtoul(sbandwidth.c_str(),&endptr,10)));
             if (*endptr != '\0') {
                 throw InfosmeException("invalid max_per_second='%s' for region id=%u",
                                        sbandwidth.c_str(),rid);
@@ -64,7 +64,7 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             DOMElement* region = static_cast<DOMElement*>(regions->item(i));
             const XmlStr id = region->getAttribute(XmlStr("id"));
             char* endptr;
-            regionid_type rid = strtoul(id.c_str(),&endptr,10);
+            regionid_type rid(regionid_type(strtoul(id.c_str(),&endptr,10)));
             if (*endptr != '\0') {
                 throw InfosmeException("invalid id='%s'",id.c_str());
             }
@@ -91,7 +91,7 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             const XmlStr name = region->getAttribute(XmlStr("name"));
             const XmlStr smscId = region->getAttribute(XmlStr("infosme_smsc"));
             const XmlStr sbandwidth = region->getAttribute(XmlStr("max_per_second"));
-            const unsigned bandwidth = strtoul(sbandwidth.c_str(),&endptr,10);
+            const unsigned bandwidth(unsigned(strtoul(sbandwidth.c_str(),&endptr,10)));
             if (*endptr != '\0') {
                 throw InfosmeException("invalid max_per_second='%s' for region id=%u",
                                        sbandwidth.c_str(),rid);

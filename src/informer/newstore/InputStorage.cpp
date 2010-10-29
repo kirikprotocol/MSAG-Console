@@ -113,7 +113,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     std::vector< regionid_type > regs;
     regs.reserve(32);
     dispatchMessages(begin, end, regs);
-    msgtime_type currentTime( currentTimeMicro() / tuPerSec );
+    msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
     // FIXME: we need to bind to glossary before
     for ( MsgIter i = begin; i != end; ++i ) {
         glossary_.bindMessage(i->msg.text);
@@ -312,7 +312,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
 
             const size_t buflen = tb.getPos();
             tb.setPos(0);
-            tb.set16(buflen-LENSIZE);
+            tb.set16(uint16_t(buflen-LENSIZE));
             if (log_->isDebugEnabled()) {
                 HexDump hd;
                 HexDump::string_type dump;
@@ -322,7 +322,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
                 smsc_log_debug(log_,"record(%u): %s",buflen,hd.c_str(dump));
             }
             fg.write(msgbuf.get(),buflen);
-            ro.woff += buflen;
+            ro.woff += unsigned(buflen);
             ++ro.count;
         }
         fg.close();
@@ -393,7 +393,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                 glossary_.bindMessage( i->msg.text );
             }
 
-            const msgtime_type currentTime = currentTimeMicro() / tuPerSec;
+            const msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
             req.addNewMessages( currentTime,
                                 msglist,
                                 msglist.begin(),

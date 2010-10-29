@@ -19,13 +19,13 @@ int localOffset()
         if (locoffset == -100000) {
             // calculation of local offset for use with gmtime/mktime pair.
             const time_t curTime(currentTimeMicro()/tuPerSec);
-            struct tm now;
+            ::tm now;
             if (!gmtime_r(&curTime,&now)) {
-                abort();
+                std::abort();
             }
             now.tm_isdst = 0;
-            const msgtime_type res(mktime(&now));
-            locoffset = curTime - res;
+            const int res(int(mktime(&now)));
+            locoffset = int(curTime) - res;
             assert(locoffset % 3600 == 0);
         }
     }
@@ -38,9 +38,9 @@ int localOffset()
 namespace eyeline {
 namespace informer {
 
-ulonglong msgTimeToYmd( msgtime_type tmp, struct tm* tmb )
+ulonglong msgTimeToYmd( msgtime_type tmp, std::tm* tmb )
 {
-    struct tm tx;
+    std::tm tx;
     if (!tmb) tmb = &tx;
     if (!tmp) {
         // FIXME: memset(tmb,0,sizeof(*tmb));
@@ -58,9 +58,9 @@ ulonglong msgTimeToYmd( msgtime_type tmp, struct tm* tmb )
 }
 
 
-msgtime_type ymdToMsgTime( ulonglong tmp, struct tm* tmb )
+msgtime_type ymdToMsgTime( ulonglong tmp, std::tm* tmb )
 {
-    struct tm tx;
+    std::tm tx;
     if (!tmb) tmb = &tx;
     if (!tmp) {
         return 0;
