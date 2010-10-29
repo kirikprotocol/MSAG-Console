@@ -34,7 +34,6 @@ public class MessagesByRecStatsController extends LongOperationController {
   public MessagesByRecStatsController() {
     super();
     records = new ArrayList<MessagesByRecStatRecord>();
-
     initUser();
   }
 
@@ -55,6 +54,8 @@ public class MessagesByRecStatsController extends LongOperationController {
     initUser();
     setFromDate(null);
     setTillDate(null);
+    msisdn = null;
+
   }
 
   public void setUser(User user) {
