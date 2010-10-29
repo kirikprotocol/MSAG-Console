@@ -386,7 +386,7 @@ public class TestClusterControllerStub extends ClusterController {
   }
 
   public CCRouteTrace traceRoute(String fileName, Address source, Address destination, String sourceSmeId) throws AdminException {
-    return new CCRouteTrace(null, new String[0]);
+    return new CCRouteTrace(null, new String[0], null);
   }
 
   // TIMEZONES =========================================================================================================
