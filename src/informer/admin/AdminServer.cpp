@@ -47,7 +47,9 @@ void AdminServer::handle(const messages::ConfigOp& cmd)
       }break;
       case messages::ConfigId::ciUser:
       {
-
+        //case messages::ConfigOpId::coAdd:core->addUser(cmd.getObjName().c_str());break;
+        //case messages::ConfigOpId::coRemove:core->deleteUser(cmd.getObjName().c_str());break;
+        //case messages::ConfigOpId::coUpdate:core->updateUser(cmd.getObjName().c_str());break;
       }break;
     }
     resp.setStatus(0);
@@ -64,7 +66,7 @@ void AdminServer::handle(const messages::SetDefaultSmsc& cmd)
   messages::SetDefaultSmscResp resp;
   resp.messageSetSeqNum(cmd.messageGetSeqNum());
   try{
-    core->updateDefaultSmsc();
+    core->updateDefaultSmsc(cmd.getId().c_str());
     resp.setStatus(0);
   }catch(std::exception& e)
   {
