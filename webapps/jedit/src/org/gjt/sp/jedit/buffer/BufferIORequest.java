@@ -83,7 +83,6 @@ public abstract class BufferIORequest extends WorkRequest
  //{{{ BufferIORequest constructor
  /**
   * Creates a new buffer I/O request.
-  * @param type The request type
   * @param view The view
   * @param buffer The buffer
   * @param session The VFS session
@@ -226,7 +225,7 @@ public abstract class BufferIORequest extends WorkRequest
     in.reset();
    }
   }
-  encoding = "windows-1251";    
+  encoding = "UTF-8";    
   return new InputStreamReader(in,encoding);
  } //}}}
 
