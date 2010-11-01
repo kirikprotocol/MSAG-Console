@@ -2081,6 +2081,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           SMS sms=*cmd->get_sms();
           sms.setOriginatingAddress(sms.getDestinationAddress());
           sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
+          Descriptor desc;
+          desc.setImsi((uint8_t)dialog->s_imsi.length(),dialog->s_imsi.c_str());
+          desc.setMsc((uint8_t)dialog->s_msc.length(),dialog->s_msc.c_str());
+          sms.setOriginatingDescriptor(desc);
           dialog->subsystem=".5.0.ussd:";
           dialog->subsystem+=redirectAddr.value;
           __map_trace2__("ussd redirect: %s->%s",sms.getOriginatingAddress().toString().c_str(),dialog->subsystem.c_str());
