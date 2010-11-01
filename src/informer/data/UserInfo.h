@@ -17,15 +17,30 @@ typedef enum
 } UserRole;
 
 
+// number of deliveries by user
+struct UserDlvStats
+{
+    uint32_t paused;
+    uint32_t planned;
+    uint32_t active;
+    uint32_t finished;
+    uint32_t cancelled;
+};
+
+
 class UserInfo
 {
     friend class EmbedRefPtr< UserInfo >;
 public:
     UserInfo( const char* id, const char* pwd );
+    ~UserInfo();
     const char* getUserId() const { return userId_.c_str(); }
     const char* getPassword() const { return password_.c_str(); }
     bool hasRole( UserRole role ) const;
     void addRole( UserRole role );
+
+    /// get current stats
+    void getStats( UserDlvStats& stats );
 
 private:
     void ref();
