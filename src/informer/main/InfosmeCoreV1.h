@@ -4,16 +4,18 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include "informer/data/CommonSettings.h"
-#include "informer/data/InfosmeCore.h"
-#include "informer/opstore/DeliveryImpl.h"
+#include "BindSignal.h"
+#include "RegionFinderV1.h"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
+#include "core/buffers/FastMTQueue.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
+#include "informer/data/CommonSettings.h"
+#include "informer/data/DeliveryActivator.h"
+#include "informer/data/InfosmeCore.h"
 #include "logger/Logger.h"
-#include "RegionFinderV1.h"
 
 namespace smsc {
 namespace util {
@@ -33,18 +35,13 @@ class AdminServer;
 class SmscSender;
 class RegionSender;
 class SmscConfig;
-class StoreJournal;
-class InputJournal;
-class InputMessageSource;
+class DeliveryMgr;
 
-class InfosmeCoreV1 : public InfosmeCore, public smsc::core::threads::Thread
+class InfosmeCoreV1 : public InfosmeCore,
+public DeliveryActivator,
+public smsc::core::threads::Thread
 {
 private:
-    class InputJournalReader;
-    class StoreJournalReader;
-    class InputJournalRoller;
-    class StoreJournalRoller;
-    class StatsDumper;
 
 public:
     static void readSmscConfig( SmscConfig& cfg,
@@ -54,41 +51,21 @@ public:
 
     virtual ~InfosmeCoreV1();
 
-    virtual const CommonSettings& getCS() const { return cs_; }
+    /// configuration
+    /// NOTE: do not keep a ref on cfg!
+    void init( const smsc::util::config::ConfigView& cfg );
+    void start();
+    void stop();
 
+    // --- infosmecore iface
+
+    virtual const CommonSettings& getCS() const { return cs_; }
     virtual bool isStopping() const { return stopping_; }
-    virtual void wait( int msec ) {
-        if (msec<=0) return;
-        smsc::core::synchronization::MutexGuard mg(startMon_);
-        if (stopping_) return;
-        startMon_.wait(msec);
-    }
 
     virtual void addUser( const char* user );
     virtual void deleteUser( const char* login );
     virtual UserInfoPtr getUserInfo( const char* login );
     virtual void updateUserInfo( const char* login );
-
-    virtual RegionFinder& getRegionFinder() { return rf_; }
-
-    /// bind regions to delivery
-    /// @param bind - true if bind, false if unbind.
-    virtual void deliveryRegions( dlvid_type dlvId,
-                                  std::vector<regionid_type>& regIds,
-                                  bool bind );
-
-    virtual void startInputTransfer( InputTransferTask* task );
-    virtual void startResendTransfer( ResendTransferTask* task );
-
-    /// license traffic control
-    virtual void incIncoming();
-    virtual void incOutgoing( unsigned nchunks );
-
-    /// final state response/receipt has been received
-    virtual void receiveReceipt( const DlvRegMsgId& drmId,
-                                 int smppStatus,
-                                 bool retry );
-    virtual bool receiveResponse( const DlvRegMsgId& drmId );
 
     virtual void addSmsc( const char* smscId );
     virtual void updateSmsc( const char* smscId );
@@ -106,15 +83,36 @@ public:
                                    DlvState     newState,
                                    msgtime_type atTime = 0 );
 
-    // --------------------
+    // --- end of infosme core iface
 
-    /// configuration
-    /// NOTE: do not keep a ref on cfg!
-    void init( const smsc::util::config::ConfigView& cfg );
+    // --- delivery activator iface
 
-    /// notify to stop, invoked from main
-    void start();
-    void stop();
+    // bool isStopping() above
+
+    virtual RegionFinder& getRegionFinder() { return rf_; }
+
+    /// bind regions to delivery
+    /// @param bind - true if bind, false if unbind.
+    virtual void deliveryRegions( dlvid_type dlvId,
+                                  std::vector<regionid_type>& regIds,
+                                  bool bind );
+
+    virtual void startInputTransfer( InputTransferTask* task ) {
+        itp_.startTask(task);
+    }
+    virtual void startResendTransfer( ResendTransferTask* task ) {
+        rtp_.startTask(task);
+    }
+
+    // setDeliveryState above
+
+    virtual void logStateChange( ulonglong   ymd,
+                                 dlvid_type  dlvId,
+                                 const char* userId,
+                                 DlvState    newState,
+                                 unsigned    planTime );
+
+    // --- end of delivery activator iface
 
     void selfTest();
 
@@ -130,27 +128,11 @@ public:
     /// reload all regions
     void reloadRegions( const std::string& defaultSmscId );
 
+    void bindDeliveryRegions( const BindSignal& bs );
+
 protected:
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
-
-    struct BindSignal {
-        dlvid_type dlvId;
-        std::vector<regionid_type> regIds;
-        bool bind;
-    };
-
-    // must be locked
-    void bindDeliveryRegions( const BindSignal& bs );
-
-    inline bool getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr )
-    {
-        MutexGuard mg(startMon_);
-        DeliveryList::iterator* iter = deliveryHash_.GetPtr(dlvId);
-        if (!iter) return false;
-        ptr = **iter;
-        return true;
-    }
 
 private:
     smsc::logger::Logger*                      log_;
@@ -165,27 +147,17 @@ private:
     smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
     smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned
 
-    typedef std::list<DeliveryImplPtr> DeliveryList;
-    typedef smsc::core::buffers::IntHash< DeliveryList::iterator > DeliveryHash;
-    typedef std::multimap< msgtime_type, dlvid_type >       DeliveryWakeQueue;
+    smsc::core::buffers::FastMTQueue<BindSignal>  bindQueue_;
 
-    DeliveryHash                                  deliveryHash_;
-    DeliveryList                                  deliveryList_;
-    DeliveryWakeQueue                             deliveryWakeQueue_;
-    DeliveryList::iterator                        inputRollingIter_;
-    DeliveryList::iterator                        storeRollingIter_;
-    DeliveryList::iterator                        statDumpIter_;
-    
-    StoreJournal*                                 storeJournal_; // owned
-    InputJournal*                                 inputJournal_; // owned
-    // smsc::core::synchronization::Mutex            bindQueueLock_;
-    smsc::core::buffers::CyclicQueue<BindSignal>  bindQueue_;
     RegionFinderV1                                rf_;
-    InputJournalRoller*                           inputRoller_;  // owned
-    StoreJournalRoller*                           storeRoller_;  // owned
-    StatsDumper*                                  statsDumper_;  // owned
 
+    DeliveryMgr*                                  dlvMgr_;       // owned
     admin::AdminServer*                           adminServer_;
+
+    smsc::core::synchronization::Mutex            logStateLock_;
+    ulonglong                                     logStateTime_;
+    FileGuard                                     logStateCur_;
+    FileGuard                                     logStateOld_;
 };
 
 } // informer

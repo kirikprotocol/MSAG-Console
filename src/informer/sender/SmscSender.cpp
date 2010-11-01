@@ -1,17 +1,17 @@
+#include "ReceiptProcessor.h"
 #include "RegionSender.h"
 #include "SmscSender.h"
-#include "informer/io/InfosmeException.h"
-#include "informer/io/Typedefs.h"
+#include "informer/data/CommonSettings.h"
+#include "informer/data/DeliveryInfo.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/FileReader.h"
 #include "informer/io/IOConverter.h"
-#include "informer/data/InfosmeCore.h"
-#include "informer/data/CommonSettings.h"
-#include "informer/data/DeliveryInfo.h"
+#include "informer/io/InfosmeException.h"
+#include "informer/io/Typedefs.h"
 #include "smpp/smpp_structures.h"
-#include "system/status.h"
-#include "sms/sms.h"
 #include "sms/IllFormedReceiptParser.h"
+#include "sms/sms.h"
+#include "system/status.h"
 
 namespace eyeline {
 namespace informer {
@@ -142,7 +142,7 @@ protected:
 
 
     std::string makePath() const {
-        return sender_.core_.getCS().getStorePath() + "journals/smsc" + sender_.smscId_ + ".journal";
+        return sender_.rproc_.getCS().getStorePath() + "journals/smsc" + sender_.smscId_ + ".journal";
     }
 
 
@@ -217,11 +217,11 @@ private:
 
 // =========================================================================
 
-SmscSender::SmscSender( InfosmeCore& core,
+SmscSender::SmscSender( ReceiptProcessor&  core,
                         const std::string& smscId,
-                        const SmscConfig& cfg ) :
+                        const SmscConfig&  cfg ) :
 log_(smsc::logger::Logger::getInstance("smscsend")),
-core_(core),
+rproc_(core),
 parser_(0),
 smscId_(smscId),
 smscConfig_(cfg),
@@ -248,7 +248,7 @@ journal_(0)
     // restore receipt wait queue
     const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
     ReceiptTimer rt;
-    rt.endTime = now + core_.getCS().getReceiptWaitTime();
+    rt.endTime = now + rproc_.getCS().getReceiptWaitTime();
     for ( ReceiptList::iterator i = receiptList_.begin();
           i != receiptList_.end(); ++i ) {
         rt.rcptId = i->rcptId;
@@ -303,7 +303,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
             break;
         }
 
-        const CommonSettings& cs = core_.getCS();
+        const CommonSettings& cs = rproc_.getCS();
 
         // check the number of seqnums
         if ( unsigned(seqnumHash_.Count()) > cs.getUnrespondedMessagesMax() ) {
@@ -474,7 +474,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                 fillSmppPduFromSms(&submitSm, &sms);
                 session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
             }
-            core_.incOutgoing(nchunks);
+            rproc_.incOutgoing(nchunks);
             break;
 
         } catch ( std::exception& e ) {
@@ -748,14 +748,14 @@ void SmscSender::processQueue( DataQueue& queue )
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId));
-                core_.receiveReceipt( drm, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, rd.status, rd.retry );
             } else if ( *rd.rcptId.msgId == '\0' ) {
                 smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u R=%u/D=%u/M=%llu has no msgId, finalize?",
                               smscId_.c_str(), rd.seqNum,
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId));
-                core_.receiveReceipt( drm, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, rd.status, rd.retry );
                 continue;
             }
 
@@ -767,6 +767,7 @@ void SmscSender::processQueue( DataQueue& queue )
                 // message is finalized as it has both receipt and response
                 {
                     smsc::core::synchronization::MutexGuard mg(receiptMon_);
+                    if (iter == rollingIter_) { ++rollingIter_; }
                     rcptList.splice(rcptList.begin(),receiptList_,iter);
                 }
 
@@ -776,17 +777,17 @@ void SmscSender::processQueue( DataQueue& queue )
                               drm.dlvId,
                               ulonglong(drm.msgId),
                               rd.status, rd.retry, iter->status, iter->retry );
-                core_.receiveReceipt( drm, iter->status, iter->retry );
+                rproc_.receiveReceipt( drm, iter->status, iter->retry );
                 continue;
 
             }
 
             if ( rd.status != smsc::system::Status::OK ) {
-                core_.receiveReceipt( drm, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, rd.status, rd.retry );
                 continue;
             }
 
-            if ( !core_.receiveResponse( drm ) ) {
+            if ( !rproc_.receiveResponse( drm ) ) {
                 continue;
             }
 
@@ -807,7 +808,7 @@ void SmscSender::processQueue( DataQueue& queue )
             // adding receipt wait timer
             ReceiptTimer rt;
             const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
-            rt.endTime = now + core_.getCS().getReceiptWaitTime();
+            rt.endTime = now + rproc_.getCS().getReceiptWaitTime();
             rt.rcptId = rd.rcptId;
             rcptWaitQueue_.Push(rt);
 
@@ -830,7 +831,7 @@ void SmscSender::processQueue( DataQueue& queue )
                             if (rollingIter_ == iter) { ++rollingIter_; }
                             rcptList.splice(rcptList.begin(),receiptList_,iter);
                         }
-                        core_.receiveReceipt(iter->drmId, rd.status, rd.retry );
+                        rproc_.receiveReceipt(iter->drmId, rd.status, rd.retry );
                     } else {
                         smsc_log_warn(log_,"FIXME: S='%s' strange receipt for R=%u/D=%u/M=%llu status=%d,msgid='%s',retry=%d",
                                       iter->drmId.regId,

@@ -43,6 +43,8 @@ static const unsigned tuPerSec = 1000000U;
 static const unsigned maxScoreIncrement = 10000U;
 static const unsigned flipTimePeriod = 1000*tuPerSec;
 
+inline msgtime_type currentTimeSeconds() { return msgtime_type(currentTimeMicro()/tuPerSec); }
+
 inline uint64_t subscriberToAddress( personid_type subsc, uint8_t& len, uint8_t& ton, uint8_t& npi )
 {
     register uint16_t lentonnpi = uint16_t(subsc >> 52);

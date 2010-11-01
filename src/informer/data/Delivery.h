@@ -38,9 +38,6 @@ public:
         return activityLog_.popIncrementalStats(ds);
     }
 
-protected:
-    InfosmeCore& getCore() { return source_->getCore(); }
-
 private:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);
@@ -48,13 +45,15 @@ private:
         ++ref_;
     }
     void unref() {
-        smsc::core::synchronization::MutexGuard mg(lock_);
-        smsc_log_debug(log_,"D=%u ref=%u -1",dlvInfo_->getDlvId(),ref_);
-        if (ref_<=1) {
-            delete this;
-        } else {
-            --ref_;
+        {
+            smsc::core::synchronization::MutexGuard mg(lock_);
+            smsc_log_debug(log_,"D=%u ref=%u -1",dlvInfo_->getDlvId(),ref_);
+            if (ref_>1) {
+                --ref_;
+                return;
+            }
         }
+        delete this;
     }
 
 protected:

@@ -121,12 +121,14 @@ private:
         ++ref_;
     }
     void unref() {
-        smsc::core::synchronization::MutexGuard mg(refLock_);
-        if (ref_<=1) {
-            delete this;
-        } else {
-            --ref_;
+        {
+            smsc::core::synchronization::MutexGuard mg(refLock_);
+            if (ref_>1) {
+                --ref_;
+                return;
+            }
         }
+        delete this;
     }
 
 private:

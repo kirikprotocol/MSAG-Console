@@ -2,15 +2,15 @@
 #define _INFORMER_SMSCSENDER_H
 
 #include <memory>
+#include "ResponseData.h"
 #include "ScoredList.h"
+#include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "informer/io/Typedefs.h"
+#include "informer/opstore/RegionalStorage.h"
 #include "logger/Logger.h"
 #include "sme/SmppBase.hpp"
-#include "informer/opstore/RegionalStorage.h"
-#include "ResponseData.h"
-#include "core/buffers/CyclicQueue.hpp"
 
 namespace smsc {
 namespace sms {
@@ -21,7 +21,7 @@ class IllFormedReceiptParser;
 namespace eyeline {
 namespace informer {
 
-class InfosmeCore;
+class ReceiptProcessor;
 class RegionSender;
 class Message;
 
@@ -47,7 +47,7 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
     };
 
 public:
-    SmscSender( InfosmeCore&            core,
+    SmscSender( ReceiptProcessor&       rproc,
                 const std::string&      smscId,
                 const SmscConfig&       config );
 
@@ -101,7 +101,7 @@ private:
 
 private:
     smsc::logger::Logger*                     log_;
-    InfosmeCore&                              core_;
+    ReceiptProcessor&                         rproc_;
     smsc::sms::IllFormedReceiptParser*        parser_;
     std::string                               smscId_;
     SmscConfig                                smscConfig_;

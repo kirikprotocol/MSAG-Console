@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "InputStorage.h"
 #include "informer/data/CommonSettings.h"
-#include "informer/data/InfosmeCore.h"
+#include "informer/data/DeliveryActivator.h"
 #include "informer/data/Region.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/FileReader.h"
@@ -20,7 +20,7 @@ const uint16_t defaultVersion = 1;
 class IReader : public FileReader::RecordReader
 {
 public:
-    IReader( InfosmeCore& core, 
+    IReader( DeliveryActivator& core, 
              MessageList& ml,
              InputRegionRecord& iro ) : core_(core), msglist_(ml), ro_(iro) {}
 
@@ -67,7 +67,7 @@ public:
         ro_.roff += fb.getLen();
     }
 private:
-    InfosmeCore&       core_;
+    DeliveryActivator& core_;
     MessageList&       msglist_;
     InputRegionRecord& ro_;
 };
@@ -78,8 +78,8 @@ private:
 namespace eyeline {
 namespace informer {
 
-InputStorage::InputStorage( InfosmeCore& core,
-                            InputJournal& jnl ) :
+InputStorage::InputStorage( DeliveryActivator& core,
+                            InputJournal&      jnl ) :
 log_(smsc::logger::Logger::getInstance("instore")),
 core_(core),
 rollingIter_(recordList_.end()),
@@ -123,6 +123,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
 }
 
 
+/*
 InputTransferTask* InputStorage::startInputTransfer( TransferRequester& requester,
                                                      unsigned           count,
                                                      bool               mayDetachRegion )
@@ -163,6 +164,7 @@ void InputStorage::startResendTransfer( ResendTransferTask* task )
 {
     core_.startResendTransfer(task);
 }
+ */
 
 
 void InputStorage::setRecordAtInit( const InputRegionRecord& ro,

@@ -46,12 +46,14 @@ private:
         ++ref_;
     }
     void unref() {
-        smsc::core::synchronization::MutexGuard mg(lock_);
-        if (ref_<=1) {
-            delete this;
-        } else {
-            --ref_;
+        {
+            smsc::core::synchronization::MutexGuard mg(lock_);
+            if (ref_>1) {
+                --ref_;
+                return;
+            }
         }
+        delete this;
     }
 
     Region( const Region& );

@@ -3,6 +3,7 @@
 #include "informer/io/UnlockMutexGuard.h"
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/data/CommonSettings.h"
+#include "informer/data/DeliveryActivator.h"
 #include "informer/data/MessageGlossary.h"
 #include "DeliveryImpl.h"
 #include "StoreJournal.h"
@@ -28,12 +29,14 @@ public:
         serial = iter->serial; // get the previous serial
         iter->serial = MessageLocker::lockedSerial;
         MessageList& l = rs_->messageList_;
+        // move storing iter to the first unlocked message
+        while ( rs_->storingIter_ != l.end() &&
+                rs_->storingIter_->serial == MessageLocker::lockedSerial ) {
+            ++rs_->storingIter_;
+        }
         if (iter != l.begin()) {
             // moving iter before begin
             l.splice(l.begin(),l,iter);
-        } else if (iter == rs_->storingIter_) {
-            // simply move storingiter forward
-            ++rs_->storingIter_;
         }
     }
 
@@ -55,7 +58,7 @@ public:
 
 RegionalStorage::RegionalStorage( DeliveryImpl&        dlv,
                                   regionid_type        regionId ) :
-log_(dlv.log_),
+log_(smsc::logger::Logger::getInstance("regstore")),
 storingIter_(messageList_.end()),
 dlv_(dlv),
 inputTransferTask_(0),
@@ -65,22 +68,27 @@ ref_(0),
 newOrResend_(0),
 nextResendFile_(0)
 {
-    smsc_log_debug(log_,"ctor R=%u/D=%u", unsigned(regionId),unsigned(getDlvId()));
+    smsc_log_debug(log_,"ctor @%p R=%u/D=%u",
+                   this, unsigned(regionId),unsigned(getDlvId()));
 }
 
 
 RegionalStorage::~RegionalStorage()
 {
     smsc_log_debug(log_,"dtor R=%u/D=%u",unsigned(regionId_),unsigned(getDlvId()));
-    MutexGuard mg(cacheMon_);
-    if (inputTransferTask_) { inputTransferTask_->stop(); }
-    if (resendTransferTask_) { resendTransferTask_->stop(); }
-    while (inputTransferTask_) {
-        cacheMon_.wait(100);
+    {
+        MutexGuard mg(cacheMon_);
+        if (inputTransferTask_) { inputTransferTask_->stop(); }
+        if (resendTransferTask_) { resendTransferTask_->stop(); }
+        while (inputTransferTask_) {
+            cacheMon_.wait(100);
+        }
+        while (resendTransferTask_) {
+            cacheMon_.wait(100);
+        }
     }
-    while (resendTransferTask_) {
-        cacheMon_.wait(100);
-    }
+    smsc_log_debug(log_,"dtor @%p R=%u/D=%u done, list=%p",
+                   this, unsigned(regionId_),unsigned(getDlvId()),&messageList_);
 }
 
 
@@ -138,26 +146,33 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
         /// check if we need to request new messages
         if ( !inputTransferTask_ &&
              unsigned(newQueue_.Count()) <= cs.getMinInputQueueSize() ) {
-            const unsigned newQueueSize = unsigned(newQueue_.Count());
-            // const bool retries = hasRetries();
+
+            const bool mayDetachRegion = ( newQueue_.Count()==0 &&
+                                           resendQueue_.empty() &&
+                                           nextResendFile_==0 );
             try {
                 smsc_log_debug(log_,"R=%u/D=%u wants to request input transfer as it has new=%u",
                                unsigned(regionId_),
                                dlvId,
-                               newQueueSize);
-                // mg.Lock();
-                inputTransferTask_ = dlv_.source_->startInputTransfer(*this,
-                                                                      cs.getInputUploadCount(),
-                                                                      newQueue_.Count()==0 &&
-                                                                      resendQueue_.empty() &&
-                                                                      nextResendFile_==0);
+                               newQueue_.Count());
+                InputTransferTask* task = 
+                    dlv_.source_->createInputTransferTask(*this,
+                                                          cs.getInputUploadCount());
+                if (task) {
+                    dlv_.source_->getDlvActivator().startInputTransfer(task);
+                }
+                inputTransferTask_ = task;
             } catch (std::exception& e ) {
                 smsc_log_warn(log_,"exception requesting input msgs in R=%u/D=%u: %s",
                               unsigned(regionId_),
                               dlvId,
                               e.what());
-                // mg.Lock();
-                // if (uploadTasks_>0) --uploadTasks_;
+            }
+            if ( !inputTransferTask_ && mayDetachRegion ) {
+                // detach from reg senders
+                std::vector< regionid_type > regs;
+                regs.push_back(regionId_);
+                dlv_.source_->getDlvActivator().deliveryRegions(dlvId,regs,false);
             }
         }
 
@@ -408,6 +423,11 @@ size_t RegionalStorage::rollOver()
             mg.Unlock();
             written += dlv_.storeJournal_.journalMessage(info.getDlvId(),
                                                          regionId_,iter->msg,ml.serial);
+        }
+        if ( dlv_.source_->getDlvActivator().isStopping() ) {
+            mg.Lock();
+            storingIter_ = messageList_.end();
+            break;
         }
         mg.Lock();
         // FIXME: calculate delay based on throughput restriction

@@ -46,6 +46,12 @@ ref_(0), roles_(0)
 }
 
 
+UserInfo::~UserInfo()
+{
+    smsc_log_debug(log_,"U='%s' dtor",userId_.c_str());
+}
+
+
 void UserInfo::ref()
 {
     smsc::core::synchronization::MutexGuard mg(lock_);
@@ -56,13 +62,15 @@ void UserInfo::ref()
 
 void UserInfo::unref()
 {
-    smsc::core::synchronization::MutexGuard mg(lock_);
-    smsc_log_debug(log_,"U='%s' ref=%u -1",userId_.c_str(),ref_);
-    if (ref_<=1) {
-        delete this;
-    } else {
-        --ref_;
+    {
+        smsc::core::synchronization::MutexGuard mg(lock_);
+        smsc_log_debug(log_,"U='%s' ref=%u -1",userId_.c_str(),ref_);
+        if (ref_>1) {
+            --ref_;
+            return;
+        }
     }
+    delete this;
 }
 
 

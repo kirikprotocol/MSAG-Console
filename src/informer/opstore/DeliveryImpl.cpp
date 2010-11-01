@@ -1,7 +1,8 @@
 #include <cassert>
 #include "DeliveryImpl.h"
 #include "informer/data/CommonSettings.h"
-#include "informer/data/InfosmeCore.h"
+#include "informer/data/DeliveryActivator.h"
+#include "informer/data/UserInfo.h"
 
 #ifdef sun
 namespace {
@@ -36,6 +37,7 @@ DeliveryImpl::~DeliveryImpl()
 {
     smsc_log_info(log_,"dtor impl D=%u",dlvInfo_->getDlvId());
     storages_.Empty();
+    smsc_log_info(log_,"dtor done");
 }
 
 
@@ -147,10 +149,12 @@ msgtime_type DeliveryImpl::initState()
     } while (false);
 
     if (!hasBeenRead && state != DLVSTATE_PAUSED) {
-        if (dlvInfo_->getState() == state) { dlvInfo_->setState(DLVSTATE_PAUSED); }
+        if (dlvInfo_->getState() == state) {
+            dlvInfo_->setState(DLVSTATE_PAUSED,0); 
+        }
         setState(state,planTime);
     } else {
-        dlvInfo_->setState(state);
+        dlvInfo_->setState(state,planTime);
     }
     return planTime;
 }
@@ -158,69 +162,78 @@ msgtime_type DeliveryImpl::initState()
 
 void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 {
-    MutexGuard mg(cacheLock_);
-    const DlvState oldState = dlvInfo_->getState();
     const dlvid_type dlvId = dlvInfo_->getDlvId();
-    smsc_log_debug(log_,"D=%u changing state: %s into %s",dlvId,
-                   dlvStateToString(oldState), dlvStateToString(newState));
-    if (oldState == newState) return;
-    if (oldState == DLVSTATE_CANCELLED) {
-        smsc_log_warn(log_,"D=%u is cancelled",dlvId);
-        return;
-    }
-    const msgtime_type now(msgtime_type(currentTimeMicro()/tuPerSec));
-    if (newState == DLVSTATE_PLANNED) {
-        if (planTime < now) {
-            throw InfosmeException("D=%u cannot plan delivery into past %llu",
-                                   dlvId,msgTimeToYmd(planTime));
+    msgtime_type now;
+    ulonglong ymd;
+    {
+        MutexGuard mg(cacheLock_);
+        const DlvState oldState = dlvInfo_->getState();
+        smsc_log_debug(log_,"D=%u changing state: %s into %s",dlvId,
+                       dlvStateToString(oldState), dlvStateToString(newState));
+        if (oldState == newState) return;
+        if (oldState == DLVSTATE_CANCELLED) {
+            smsc_log_warn(log_,"D=%u is cancelled",dlvId);
+            return;
         }
-        planTime -= now;
-    } else {
-        planTime = now;
-    }
-    dlvInfo_->setState(newState);
-    int regId;
-    RegionalStoragePtr regPtr;
-    switch (newState) {
-    case DLVSTATE_PLANNED: 
-    case DLVSTATE_PAUSED:
-    case DLVSTATE_FINISHED:
-    case DLVSTATE_CANCELLED:
-        for ( StoreHash::Iterator i(storages_); i.Next(regId,regPtr); ) {
-            regPtr->stopTransfer(newState == DLVSTATE_CANCELLED);
+        now = msgtime_type(currentTimeMicro()/tuPerSec);
+        if (newState == DLVSTATE_PLANNED) {
+            if (planTime < now) {
+                throw InfosmeException("D=%u cannot plan delivery into past %llu",
+                                       dlvId,msgTimeToYmd(planTime));
+            }
+            planTime -= now;
+        } else {
+            planTime = now;
         }
-        break;
-    case DLVSTATE_ACTIVE:
-        // FIXME: activate, do nothing here?
-        break;
-    default:
-        throw InfosmeException("unknown state %d",newState);
+        dlvInfo_->setState(newState,planTime);
+        int regId;
+        RegionalStoragePtr regPtr;
+        switch (newState) {
+        case DLVSTATE_PLANNED: 
+        case DLVSTATE_PAUSED:
+        case DLVSTATE_FINISHED:
+        case DLVSTATE_CANCELLED:
+            for ( StoreHash::Iterator i(storages_); i.Next(regId,regPtr); ) {
+                regPtr->stopTransfer(newState == DLVSTATE_CANCELLED);
+            }
+            break;
+        case DLVSTATE_ACTIVE:
+            // FIXME: activate, do nothing here?
+            break;
+        default:
+            throw InfosmeException("unknown state %d",newState);
+        }
+        // write status line into status file
+        char buf[200];
+        sprintf(makeDeliveryPath(dlvId,buf),"status.log");
+        FileGuard fg;
+        fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),true);
+        fg.seek(0,SEEK_END);
+        if (fg.getPos()==0) {
+            const char* header = "# TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD\n";
+            fg.write(header,strlen(header));
+        }
+        DeliveryStats ds;
+        activityLog_.getStats(ds);
+        ymd = msgTimeToYmd(now);
+        int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u\n",
+                             ymd,
+                             dlvStateToString(newState)[0],
+                             planTime-now,
+                             ds.totalMessages,
+                             ds.procMessages,
+                             ds.sentMessages,
+                             ds.retryMessages,
+                             ds.dlvdMessages,
+                             ds.failedMessages,
+                             ds.expiredMessages );
+        assert(buflen>0);
+        fg.write(buf,buflen);
     }
-    // write status line into status file
-    char buf[200];
-    sprintf(makeDeliveryPath(dlvId,buf),"status.log");
-    FileGuard fg;
-    fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),true);
-    fg.seek(0,SEEK_END);
-    if (fg.getPos()==0) {
-        const char* header = "# TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD\n";
-        fg.write(header,strlen(header));
-    }
-    DeliveryStats ds;
-    activityLog_.getStats(ds);
-    int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u\n",
-                         msgTimeToYmd(now),
-                         dlvStateToString(newState)[0],
-                         planTime-now,
-                         ds.totalMessages,
-                         ds.procMessages,
-                         ds.sentMessages,
-                         ds.retryMessages,
-                         ds.dlvdMessages,
-                         ds.failedMessages,
-                         ds.expiredMessages );
-    assert(buflen>0);
-    fg.write(buf,buflen);
+    source_->getDlvActivator().logStateChange( ymd,
+                                               dlvId,
+                                               dlvInfo_->getUserInfo()->getUserId(),
+                                               newState,planTime);
 }
 
 
@@ -273,6 +286,7 @@ size_t DeliveryImpl::rollOverStore()
           i != ptrs.end();
           ++i ) {
         written += (*i)->rollOver();
+        if (source_->getDlvActivator().isStopping()) { break; }
     }
     smsc_log_debug(log_,"D=%u rolling store done, written=%u",dlvInfo_->getDlvId(),written);
     return written;
@@ -360,7 +374,7 @@ void DeliveryImpl::checkFinalize()
     if (finalize) {
         if (ds.isFinished()) {
             smsc_log_debug(log_,"D=%u all messages are final, confirmed by stats", dlvId);
-            getCore().setDeliveryState(dlvId,DLVSTATE_FINISHED,0);
+            source_->getDlvActivator().setDeliveryState(dlvId,DLVSTATE_FINISHED,0);
         } else {
             smsc_log_warn(log_,"D=%u all messages are final, discrep by stats: %u/%u/%u/%u",
                           dlvId,

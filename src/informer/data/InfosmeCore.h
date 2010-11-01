@@ -26,36 +26,11 @@ public:
     /// check if stopping
     virtual bool isStopping() const = 0;
 
-    /// wait a number of milliseconds, will be waked up if core is stopping
-    virtual void wait( int msec ) = 0;
-
     /// get user info (a stub for now)
     virtual void addUser( const char* user ) = 0;
     virtual void deleteUser( const char* login ) = 0;
     virtual UserInfoPtr getUserInfo( const char* login ) = 0;
     virtual void updateUserInfo( const char* login ) = 0;
-
-    /// get region finder
-    virtual RegionFinder& getRegionFinder() = 0;
-
-    /// NOTE: vector regs will be emptied!
-    /// @param bind: bind dlv and regs if true, unbind otherwise.
-    virtual void deliveryRegions( dlvid_type dlvId,
-                                  std::vector<regionid_type>& regs,
-                                  bool bind ) = 0;
-
-    /// start a task transferring messages from inputstore into opstore.
-    virtual void startInputTransfer( InputTransferTask* ) = 0;
-    virtual void startResendTransfer( ResendTransferTask* ) = 0;
-
-    /// traffic limitation by license
-    virtual void incIncoming() = 0;
-    virtual void incOutgoing( unsigned nchunks ) = 0;
-
-    /// final receipt/response has been received
-    virtual void receiveReceipt( const DlvRegMsgId& drmId, int  smppStatus, bool retry ) = 0;
-    /// response (non-final) has been received
-    virtual bool receiveResponse( const DlvRegMsgId& drmId ) = 0;
 
     /// create/update smsc
     virtual void addSmsc( const char* smscId ) = 0;
@@ -75,6 +50,7 @@ public:
     virtual void setDeliveryState( dlvid_type   dlvId,
                                    DlvState     newState,
                                    msgtime_type atTime = 0 ) = 0;
+
 };
 
 } // informer

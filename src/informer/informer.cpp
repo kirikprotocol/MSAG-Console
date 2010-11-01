@@ -35,6 +35,7 @@ extern "C" void appSignalHandler(int sig)
         if (isStarted) {
             smsc::core::synchronization::MutexGuard mg(startMon);
             if (isStarted) {
+                smsc_log_error(mainlog,"set flag to leave main loop");
                 isStarted = false;
                 startMon.notifyAll();
             }
@@ -246,6 +247,8 @@ int main( int argc, char** argv )
                 MutexGuard mg(startMon);
                 startMon.wait(1000);
             }
+            smsc_log_error(mainlog,"leaving main loop, stopping core");
+
             // adml->shutdown();
             core->stop();
 

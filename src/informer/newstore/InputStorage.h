@@ -37,23 +37,23 @@ class InputStorage : public InputMessageSource
     };
 
 public:
-    InputStorage( InfosmeCore&  core,
-                  InputJournal& journal );
+    InputStorage( DeliveryActivator&  core,
+                  InputJournal&       journal );
 
     virtual ~InputStorage();
 
     virtual void init( ActivityLog& actLog );
 
+    virtual DeliveryActivator& getDlvActivator() { return core_; }
+
     virtual void addNewMessages( MsgIter begin, MsgIter end );
 
-    virtual InputTransferTask* startInputTransfer( TransferRequester& requester,
-                                                   unsigned           count,
-                                                   bool               mayDetachRegion );
-    virtual void startResendTransfer( ResendTransferTask* task );
+    virtual InputTransferTask* createInputTransferTask( TransferRequester& requester,
+                                                        unsigned           count ) {
+        return new InputTransferTaskImpl(requester,count,*this);
+    }
 
     virtual MessageGlossary& getGlossary() { return glossary_; }
-
-    virtual InfosmeCore& getCore() { return core_; }
 
     virtual void setRecordAtInit(const InputRegionRecord& ro, msgid_type maxMsgId);
 
@@ -76,7 +76,7 @@ private:
 
 private:
     smsc::logger::Logger*                      log_;
-    InfosmeCore&                               core_;
+    DeliveryActivator&                         core_;
     smsc::core::synchronization::Mutex         wlock_;
     smsc::core::synchronization::Mutex         lock_;  // to add new regions
     RecordList                                 recordList_;

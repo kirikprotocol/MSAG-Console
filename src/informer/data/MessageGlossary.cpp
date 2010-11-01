@@ -11,13 +11,16 @@ namespace informer {
 MessageGlossary::MessageGlossary() :
 log_(smsc::logger::Logger::getInstance("glossary")),
 negTxtId_(0), posTxtId_(0)
-{}
+{
+    smsc_log_debug(log_,"ctor");
+}
 
 
 void MessageGlossary::init( const std::string& storePath,
                             dlvid_type         dlvId )
 {
     smsc_log_warn(log_,"reading glossary at init");
+    smsc::core::synchronization::MutexGuard mg(lock_);
     smsc::core::buffers::TmpBuf<char,8192> buf;
     strcat(makeDeliveryPath(dlvId,buf.get()),"glossary.txt");
     FileGuard fg;
@@ -108,6 +111,7 @@ MessageGlossary::~MessageGlossary()
     }
     list_.clear();
     posTxtId_ = negTxtId_ = 0;
+    smsc_log_debug(log_,"dtor done, list_=%p",&list_);
 }
 
 

@@ -52,14 +52,16 @@ public:
 
     unsigned getPriority() const { return 1; }
 
-    DlvState getState() const {
+    DlvState getState( msgtime_type* planTime = 0 ) const {
+        if (planTime) *planTime = planTime_;
         return state_;
     }
 
     const UserInfo* getUserInfo() const { return userInfo_; }
 
-    void setState( DlvState state ) {
+    void setState( DlvState state, msgtime_type planTime ) {
         state_ = state;
+        planTime_ = planTime;
     }
 
     personid_type getFrom() const { return from_; } 
@@ -126,6 +128,7 @@ private:
     DeliveryMode    deliveryMode_;
     std::string     retryPolicyName_;
     DlvState        state_;
+    msgtime_type    planTime_;
     UserInfo*       userInfo_;
 
     mutable smsc::core::synchronization::Mutex lock_;

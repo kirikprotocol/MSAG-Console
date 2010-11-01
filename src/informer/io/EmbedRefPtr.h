@@ -29,11 +29,7 @@ public:
     }
     EmbedRefPtr& operator = ( const EmbedRefPtr& p ) {
         smsc_log_debug(erplog_,"copy@%p x=%p -> x=%p",this,x_,p.x_);
-        if (x_ != p.x_) {
-            if (x_) x_->unref();
-            x_ = p.x_;
-            if (x_) x_->ref();
-        }
+        reset(p.x_);
         return *this;
     }
 
@@ -47,11 +43,7 @@ public:
     template <class U>
     EmbedRefPtr< T >& operator = ( const EmbedRefPtr< U >& p ) {
         smsc_log_debug(erplog_,"copy@%p x=%p -> x=%p",this,x_,p.get());
-        if (x_ != p.get()) {
-            if (x_) x_->unref();
-            x_ = const_cast<U*>(p.get());
-            if (x_) x_->ref();
-        }
+        reset( static_cast<T*>(const_cast<U*>(p.get())) );
         return *this;
     }
     ~EmbedRefPtr() {
@@ -63,6 +55,13 @@ public:
     inline T* get() { return x_; }
     inline const T* operator -> () const { return x_; }
     inline T* operator -> () { return x_; }
+    inline void reset( T* x ) {
+        if (x != x_) {
+            if (x_) x_->unref();
+            x_ = x;
+            if (x_) x_->ref();
+        }
+    }
 
 protected:
     T* x_;

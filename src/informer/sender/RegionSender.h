@@ -83,9 +83,7 @@ private:
     RegionPtr                          region_;   // shared ownership
     ScoredList< RegionSender >         taskList_; // not owned
 
-    // smsc::core::synchronization::Mutex lock_;
     SpeedControl<tuPerSec,uint64_t>    speedControl_;
-    // RegionalStoragePtr                 ptr_;
     Message                            msg_;    // a cache
     usectime_type                      currentTime_;
 };

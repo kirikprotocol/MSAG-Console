@@ -13,7 +13,7 @@ class ResendTransferTask;
 class MessageGlossary;
 struct InputRegionRecord;
 class ActivityLog;
-class InfosmeCore;
+class DeliveryActivator;
 
 /// a class requesting transfer of input messages
 /// from instore into opstore.
@@ -109,26 +109,19 @@ public:
     /// make records about new messages.
     virtual void init( ActivityLog& actlog ) = 0;
 
+    virtual DeliveryActivator& getDlvActivator() = 0;
+
     /// add new messages, the list of messages is modified
     /// and will contain msgids.
     virtual void addNewMessages( MsgIter begin, MsgIter end ) = 0;
 
     // request 'count' messages to be uploaded for 'requester'.
-    // This method should create a ThreadedTask which will upload messages,
-    // or if the task is already running, simply return.
+    // This method should create a ThreadedTask which will upload messages.
     // NOTE: throws exception if the task cannot be created/found.
-    virtual InputTransferTask* startInputTransfer( TransferRequester& requester,
-                                                   unsigned           count,
-                                                   bool               mayDetachRegion ) = 0;
-
-    virtual void startResendTransfer( ResendTransferTask* task ) = 0;
+    virtual InputTransferTask* createInputTransferTask( TransferRequester& requester,
+                                                        unsigned           count ) = 0;
 
     virtual MessageGlossary& getGlossary() = 0;
-
-    virtual InfosmeCore& getCore() = 0;
-
-    // virtual dlvid_type getDlvId() const = 0;
-    // virtual const std::string& getStorePath() const = 0;
 
     /// NOTE: this method is invoked at init ONLY!
     virtual void setRecordAtInit( const InputRegionRecord& rec,
