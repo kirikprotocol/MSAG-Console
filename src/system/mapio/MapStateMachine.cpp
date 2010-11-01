@@ -2082,7 +2082,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           sms.setOriginatingAddress(sms.getDestinationAddress());
           sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
           dialog->subsystem=".5.0.ussd:";
-          dialog->subsystem+redirectAddr.value;
+          dialog->subsystem+=redirectAddr.value;
+          __map_trace2__("ussd redirect: %s->%s",sms.getOriginatingAddress().toString().c_str(),dialog->subsystem.c_str());
           sms.setDestinationAddress(dialog->subsystem.c_str());
           MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
           int rinst=dialog->instanceId;
@@ -2090,6 +2091,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           {
             rinst=0xff;
           }
+          dialog->state = MAPST_WaitSubmitCmdConf;
           uint32_t dialogid_smsc=(rinst<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
           SmscCommand cmd = SmscCommand::makeSumbmitSm(
             sms,dialogid_smsc);
