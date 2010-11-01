@@ -17,7 +17,8 @@ public enum Subject {
   SMSC("subject.smsc"),
   REGIONS("subject.regions"),  
   DAEMONS("subject.daemons"),
-  INFORMER("subject.informer");
+  INFORMER("subject.informer"),
+  DELIVERIES("subject.deliveries");
 
   private static Map<String, Subject> map = new HashMap<String, Subject>(values().length) {      {
       for(Subject s : Subject.values()) {

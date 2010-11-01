@@ -61,7 +61,9 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.validityPeriod}" labelStyle="text-align:left">
-            <tr:inputText value="#{deliveryEdit.delivery.validityPeriod}" required="true" simple="true"/>
+            <tr:inputText value="#{deliveryEdit.delivery.validityPeriod}" required="true" simple="true">
+              <tr:validateLongRange minimum="0"/>
+            </tr:inputText>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.retryOnFail}" labelStyle="text-align:left">
@@ -73,11 +75,12 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.transactionMode}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
+            <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"
+                onchange="if(document.getElementById('dMode').value != 'SMS') { this.checked = true; }"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.flash}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true"/>
+            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true" onchange=""/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.priority}" labelStyle="text-align:left">
@@ -87,7 +90,8 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.deliveryMode}" labelStyle="text-align:left">
-            <h:selectOneMenu value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter">
+            <h:selectOneMenu id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter"
+                onchange="if(this.value != 'SMS') {document.getElementById('trMode').checked = true;}">
               <f:selectItems value="#{deliveryEdit.uniqueDeliveryModes}"/>
             </h:selectOneMenu>
           </tr:panelLabelAndMessage>
@@ -105,7 +109,7 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.secret}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.secret}"  simple="true" onchange="document.getElementById('secret').disabled = !this.checked"/>
+            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.secret}"  simple="true" onchange="var e = document.getElementById('secret'); e.disabled = !this.checked; if(!this.checked) {e.value = ''}"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.secretMessage}" labelStyle="text-align:left">

@@ -39,7 +39,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
-     }
+  }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
     if(!fileSystem.exists(dstStatDir)) {
@@ -76,7 +76,7 @@ public class TestAdminContext extends AdminContext {
 
     for(int i=1;i<=1000;i++) {
       User u = users.get((i-1)%users.size());
-      Delivery d = Delivery.newCommonDelivery();
+      Delivery d = (i%2 == 1) ? Delivery.newCommonDelivery() : Delivery.newSingleTextDelivery();
       d.setSourceAddress(new Address("+7901111"+i));
       d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 7*86400000L*i));
       d.setActivePeriodStart(new Date(System.currentTimeMillis() - 7*86400000L*i));
@@ -88,27 +88,46 @@ public class TestAdminContext extends AdminContext {
       d.setPriority(i%100 + 1);
       d.setStartDate(new Date(System.currentTimeMillis() - 7*86400000L*i));
       d.setSvcType("svc1");
-      d.setValidityDate(new Date());
-
-      deliveryManager.createDelivery(u.getLogin(),u.getPassword(), d, new DataSource() {
-        private LinkedList<Message> ms = new LinkedList<Message>() {
-          {
-            Random r = new Random();
-            for(int k=0;k<100;k++) {
-              Message m1 = Message.newMessage("text"+r.nextInt(10000));
-              m1.setAbonent(new Address("+7913"+k));
-              add(m1);
+      d.setValidityPeriod("1");
+      if(d.getType() == Delivery.Type.Common) {
+        deliveryManager.createDelivery(u.getLogin(),u.getPassword(), d, new DataSource<Message>() {
+          private LinkedList<Message> ms = new LinkedList<Message>() {
+            {
+              Random r = new Random();
+              for(int k=0;k<100;k++) {
+                Message m1 = Message.newMessage("text"+r.nextInt(10000));
+                m1.setAbonent(new Address("+7913"+k));
+                add(m1);
+              }
             }
-          }
-        };
+          };
 
-        public Message next() throws AdminException {
-          if(ms.isEmpty()) {
-            return null;
+          public Message next() throws AdminException {
+            if(ms.isEmpty()) {
+              return null;
+            }
+            return ms.removeFirst();
           }
-          return ms.removeFirst();
-        }
-      });
+        });
+      }else {
+        d.setSingleText("single text");
+        deliveryManager.createSingleTextDelivery(u.getLogin(),u.getPassword(), d, new DataSource<Address>() {
+          private LinkedList<Address> as = new LinkedList<Address>() {
+            {
+              for(int k=0;k<100;k++) {
+                add(new Address("+7913"+k));
+              }
+            }
+          };
+
+          public Address next() throws AdminException {
+            if(as.isEmpty()) {
+              return null;
+            }
+            return as.removeFirst();
+          }
+        });
+      }
 
       assertNotNull(d.getId());
       deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),d.getId());

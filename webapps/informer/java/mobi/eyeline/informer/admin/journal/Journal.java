@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.journal;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.regions.Region;
@@ -30,6 +31,8 @@ public class Journal {
   private final RegionsDiffHelper regions = new RegionsDiffHelper();
 
   private final InformerDiffHelper informer = new InformerDiffHelper();
+
+  private final DeliveriesDiffHelper deliveries = new DeliveriesDiffHelper();
 
   private final JournalDataSource ds;
 
@@ -288,4 +291,16 @@ public class Journal {
     this.users.logChanges(oldUser, newUser, this, user);
   }
 
+
+  public void logDeliveryPaused(String user, int id) throws AdminException {
+    deliveries.logDeliveryPaused(this, user, id);
+  }
+
+  public void logDeliveryActivated(String user, int id) throws AdminException {
+    deliveries.logDeliveryActivated(this, user, id);
+  }
+
+  public void logDeliveriesChanges(String user, Delivery oldDelivery, Delivery newDelivery) throws AdminException {
+    deliveries.logChanges(this, user, oldDelivery, newDelivery);
+  }
 }

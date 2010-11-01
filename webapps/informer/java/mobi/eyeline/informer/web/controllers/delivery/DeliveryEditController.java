@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
@@ -80,46 +81,45 @@ public class DeliveryEditController extends DeliveryController{
   }
 
   public String save() {
-//    if(dynamicModel.getRowCount() == 0) {
-//      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.masks.empty");
-//      return null;
-//    }
-//    Configuration config = getConfig();
-//    String user = getUserName();
-//
-//    List<Address> newMasks = new LinkedList<Address>();
-//    for(DynamicTableRow row : dynamicModel.getRows()) {
-//      String mask = (String) row.getValue("mask");
-//      if(!Address.validate(mask)) {
-//        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "validation.msisdn");
-//        return null;
-//      }
-//      newMasks.add(new Address(mask));
-//    }
-//
-//    try{
-//      delivery.clearMasks();
-//      for(Address a : newMasks) {
-//        delivery.addMask(a);
-//      }
-//    }catch (AdminException e) {
-//      addError(e);
-//      return  null;
-//    }
-//
-//    try{
-//      if(delivery.getDeliveryId() != null) {
-//        config.updateDelivery(delivery, user);
-//      }else {
-//        config.addDelivery(delivery, user);
-//      }
-//
-//      return "REGION";
-//    }catch (AdminException e){
-//      addError(e);
+    if(delivery.getRetryPolicy() != null) {
+      if(delivery.getRetryPolicy().equals("")) {
+        delivery.setRetryPolicy(null);
+      }
+      if(!getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy());
+        return null;
+      }
+    }
+    if(smsNotificationAddress != null) {
+      if(smsNotificationAddress.equals("")) {
+        smsNotificationAddress = null;
+      }
+      if(!Address.validate(smsNotificationAddress)) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_sms_address", smsNotificationAddress);
+        return null;
+      }
+      delivery.setSmsNotificationAddress(new Address(smsNotificationAddress));
+    }
+    if(delivery.getEmailNotificationAddress() != null) {
+      if(delivery.getEmailNotificationAddress().equals("")) {
+        delivery.setEmailNotificationAddress(null);
+      }
+    }
+    if(!delivery.isSecret()) {
+      delivery.setSecretMessage(null);
+    }
+    if(delivery.getType() == Delivery.Type.SingleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
       return null;
-//    }
-//
+    }
+    try{
+      User u = getConfig().getUser(getUserName());
+      getConfig().modifyDelivery(u.getLogin(), u.getPassword(), delivery);
+    }catch (AdminException e){
+      addError(e);
+      return null;
+    }
+    return "DELIVERIES";
   }
 
 

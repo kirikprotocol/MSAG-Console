@@ -106,7 +106,9 @@ public class TestDcpConnection extends DcpConnection{
     if(delivery.getId() == null || !deliveries.containsKey(delivery.getId())) {
       throw new DeliveryException("interaction_error","");
     }
-    deliveries.put(delivery.getId(), new DeliveryWStatus(delivery, delivery.getId()));
+    DeliveryWStatus d = new DeliveryWStatus(delivery, delivery.getId());
+    d.status = deliveries.get(delivery.getId()).status;
+    deliveries.put(delivery.getId(), d);
   }
 
   public synchronized void dropDelivery(int deliveryId) throws AdminException {

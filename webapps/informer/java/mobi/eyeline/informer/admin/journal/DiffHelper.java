@@ -175,7 +175,7 @@ class DiffHelper {
 
       if (changed) {
         Method getter = getters.get(i);
-        String propertyName = getter.getName().substring(3);
+        String propertyName = getter.getName().startsWith("is") ? getter.getName().substring(2) : getter.getName().substring(3);
         char firstChar = propertyName.charAt(0);
         if (propertyName.length() > 1)
           propertyName = Character.toLowerCase(firstChar) + propertyName.substring(1);

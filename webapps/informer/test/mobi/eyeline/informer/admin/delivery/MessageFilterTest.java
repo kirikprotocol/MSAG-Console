@@ -16,17 +16,17 @@ public class MessageFilterTest {
   @Test
   public void testDates() throws AdminException{
     try{
-      MessageFilter f = new MessageFilter(null,new Date(), new Date());
+      new MessageFilter(null,new Date(), new Date());
       assertTrue(false);
     }catch (Exception e){}
 
     try{
-      MessageFilter f = new MessageFilter(1,null, new Date());
+       new MessageFilter(1, null, new Date());
       assertTrue(false);
     }catch (Exception e){}
 
     try{
-      MessageFilter f = new MessageFilter(1,new Date(), null);        
+      new MessageFilter(1, new Date(), null);        
       assertTrue(false);
     }catch (Exception e){}
 

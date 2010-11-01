@@ -222,10 +222,12 @@ public class Configuration {
 
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
     context.pauseDelivery(login, password, deliveryId);
+    journal.logDeliveryPaused(login, deliveryId);
   }
 
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
     context.activateDelivery(login, password, deliveryId);
+    journal.logDeliveryActivated(login, deliveryId);
   }
 
   public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
@@ -249,7 +251,13 @@ public class Configuration {
   }
 
   public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
+    Delivery oldD = context.getDelivery(login, password, delivery.getId());
+    if(oldD == null) {
+      throw new DeliveryException("delivery_not_found");
+    }
     context.modifyDelivery(login, password, delivery);
+    journal.logDeliveriesChanges(login, oldD, delivery);
+
   }
 
   public void createDelivery(String login, String password, Delivery delivery, DataSource msDataSource) throws AdminException {
