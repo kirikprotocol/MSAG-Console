@@ -1,0 +1,35 @@
+The text file contains message statistics for deliveries collected
+during periods.
+
+The file location is statistics/YYYY.MM.DD/HH.log
+and so it contains records written during one hour.
+
+The head of the file contains comment record prefixed with '#'
+character:
+
+# MINSEC,DLVID,USER,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD
+
+The following lines are records one per line, containing the folliwing
+fields:
+
+  MINSEC - minute and second of the record (MMSS). The statistics in
+           the record is collected during the previous minute.  The
+           number of seconds must be 00 when running, but may be
+           different when informer is stopping;
+  DLVID  - delivery id;
+  USER   - user owning delivery;
+  TOTAL  - increment of total number of messages (new messages added);
+  PROC   - a number of messages passed to processing;
+  SENT   - a number of messages sent during the period;
+  RETRY  - a number of messages passed to retry queue;
+  DLVD   - a number of delivered messages;
+  FAIL   - a number of failed messages;
+  EXPD   - a number of expired messages;
+
+Example:
+# MINSEC,DLVID,USER,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD
+5000,22,bukind,2,0,6,0,0,1,0
+5014,22,bukind,2,2,6,0,1,0,0
+
+Here we can see two records, the first was during 49:00 - 50:00,
+the second was during 50:00 - 50:14 (informer was stopped).
