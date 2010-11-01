@@ -40,7 +40,13 @@ public class DeliveriesCountByPeriodRecord extends TimeAggregatedStatRecord {
   }
 
 
-  void printCSV(PrintWriter writer) {
+  @Override
+  void printCSVheader(PrintWriter writer, boolean dtalized) {
+    writer.println(StringEncoderDecoder.toCSVString(new Object[]{"PERIOD","","COUNT"}));
+  }
+
+  @Override
+  void printCSV(PrintWriter writer, boolean detalized) {
     if(isParent()) {
       writer.println(StringEncoderDecoder.toCSVString(new Object[]{getPeriodString(),"",getCounter()}));
     }
@@ -48,6 +54,7 @@ public class DeliveriesCountByPeriodRecord extends TimeAggregatedStatRecord {
       writer.println(StringEncoderDecoder.toCSVString(new Object[]{"",getPeriodString(),getCounter()}));
     }
   }
+
 
   public Comparator getRecordsComparator(final DataTableSortOrder sortOrder) {
 

@@ -11,12 +11,12 @@
 <ui:composition template="/templates/main.xhtml">
 
 
-  <ui:param name="pageTitle" value="#{msg['informer.stats.delivery.common']} '#{statsDeliveryCommon.deliveryName}'"/>
+  <ui:param name="pageTitle" value="#{msg['informer.stats']} / #{msg['informer.stats.delivery.common']} '#{deliveryMessagesByPeriod.deliveryName}'"/>
 
   <ui:define name="content">
-    
+
     <tr:form id="smsc" rendered="#{!deliveryMessagesByPeriod.initError and deliveryMessagesByPeriod.delivery!=null}">
-      
+
 
       <h:panelGroup style="padding:10px">
 
@@ -33,6 +33,8 @@
               <h:selectOneMenu value="#{deliveryMessagesByPeriod.aggregation}" >
                 <f:selectItems value="#{deliveryMessagesByPeriod.aggregations}"/>
               </h:selectOneMenu>
+              <h:outputText value="#{msg['stat.page.detalised']}"/>
+              <h:selectBooleanCheckbox value="#{deliveryMessagesByPeriod.detalised}"/>
             </h:panelGrid>
           </h:panelGrid>
         </eye:dataTableFilter>
@@ -73,7 +75,7 @@
             </eye:buttons>
           </h:panelGroup>
 
-          <eye:dataTable value="#{deliveryMessagesByPeriod.records}" var="row" rendered="#{deliveryMessagesByPeriod.state == 2}">
+          <eye:dataTable value="#{deliveryMessagesByPeriod.records}" var="row" rendered="#{deliveryMessagesByPeriod.state == 2 and deliveryMessagesByPeriod.detalised}">
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText value="#{row.data.periodString}"/>
@@ -81,20 +83,72 @@
                   <h:outputText value="#{row.periodString}" style="color:GREEN"/>
                 </f:facet>
               </eye:column>
-              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.delivered}"/>
+              <eye:column name="new" title="#{msg['stat.page.newMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.newMessages}"/>
                 <f:facet name="inner">
-                  <h:outputText value="#{row.delivered}" style="color:GREEN"/>
+                  <h:outputText value="#{row.newMessages}" style="color:GREEN"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="process" title="#{msg['stat.page.processMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.processMessages}"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.processMessages}" style="color:GREEN"/>
+                </f:facet>
+              </eye:column>
+
+              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.deliveredMessages}(#{row.data.deliveredMessagesSMS})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.deliveredMessages}(#{row.deliveredMessagesSMS})" style="color:GREEN"/>
                 </f:facet>
               </eye:column>
               <eye:column name="failed" title="#{msg['stat.page.failed']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.failed}"/>
+                <h:outputText value="#{row.data.failedMessages}(#{row.data.failedMessagesSMS})"/>
                 <f:facet name="inner">
-                  <h:outputText value="#{row.failed}" style="color:GREEN"/>
+                  <h:outputText value="#{row.failedMessages}(#{row.failedMessagesSMS})" style="color:GREEN"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="expired" title="#{msg['stat.page.expiredMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.expiredMessages}(#{row.data.expiredMessagesSMS})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.expiredMessages}(#{row.expiredMessagesSMS})" style="color:GREEN"/>
                 </f:facet>
               </eye:column>
             </eye:row>
           </eye:dataTable>
+
+          <eye:dataTable value="#{deliveryMessagesByPeriod.records}" var="row" rendered="#{deliveryMessagesByPeriod.state == 2 and !deliveryMessagesByPeriod.detalised}">
+            <eye:row innerRows="#{row.innerRows}">
+              <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+                <h:outputText value="#{row.data.periodString}"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.periodString}" style="color:GREEN"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="wait" title="#{msg['stat.page.wait']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.newMessages + row.data.processMessages}"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.newMessages + row.processMessages}" style="color:GREEN"/>
+                </f:facet>
+              </eye:column>
+
+              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.deliveredMessages}(#{row.data.deliveredMessagesSMS})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.deliveredMessages}(#{row.deliveredMessagesSMS})" style="color:GREEN"/>
+                </f:facet>
+              </eye:column>
+              <eye:column name="notDelivered" title="#{msg['stat.page.notDelivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.data.failedMessages+row.data.expiredMessages}(#{row.data.failedMessagesSMS+row.data.expiredMessagesSMS})"/>
+                <f:facet name="inner">
+                  <h:outputText value="#{row.failedMessages+row.expiredMessages}(#{row.failedMessagesSMS+row.expiredMessagesSMS})" style="color:GREEN"/>
+                </f:facet>
+              </eye:column>
+
+            </eye:row>
+          </eye:dataTable>
+          
+          
           <eye:buttons rendered="#{deliveryMessagesByPeriod.state == 2}">
             <eye:space/>
             <eye:button >

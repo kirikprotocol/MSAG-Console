@@ -45,7 +45,9 @@ public class TopMenu {
           add(new MenuItem("informer.stats.deliveries", "/stats/deliveriesCountByPeriod.faces")).
           //add(new MenuItem("informer.stats.messages", "/stats/messages.faces"))
           add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDeliveries.faces")).
-          add(new MenuItem("informer.stats.messages.recipients", "/stats/messagesByRecs.faces"))
+          add(new MenuItem("informer.stats.messages.recipients", "/stats/messagesByRecs.faces")).
+          add(new MenuItem("informer.stats.messages.byUser", "/stats/messagesByUser.faces"))
+
           //add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDels.faces"))
       );
     }

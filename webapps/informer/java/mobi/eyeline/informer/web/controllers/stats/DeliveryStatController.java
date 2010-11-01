@@ -30,6 +30,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   private List<AggregatedRecord> records;
 
 
+  boolean detalised=false;
 
   public DeliveryStatController() {
     super();
@@ -181,13 +182,27 @@ public abstract class DeliveryStatController extends LongOperationController {
     };
   }
 
+  public boolean isDetalised() {
+    return detalised;
+  }
+
+  public void setDetalised(boolean detalised) {
+    this.detalised = detalised;
+  }
+
   @Override
-  protected void _download(PrintWriter writer) throws IOException {
-    //loadRecords();
-    for(AggregatedRecord r : records) {
-      r.printWithChildrenToCSV(writer);
+  protected void _download(PrintWriter writer) throws IOException {    
+    for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
+      AggregatedRecord r = records.get(i);
+      if(i==0) {
+        r.printCSVheader(writer,detalised);
+      }
+      r.printWithChildrenToCSV(writer, detalised);
     }
   }
+
+
+
 
   @Override
   public void reset() {

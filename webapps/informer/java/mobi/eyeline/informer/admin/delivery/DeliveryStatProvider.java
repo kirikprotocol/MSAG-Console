@@ -151,8 +151,13 @@ class DeliveryStatProvider {
       String line;
       while(( line = reader.readLine())!=null) {
         CSVTokenizer tokenizer = new CSVTokenizer(line);
-        //TASK_ID,USER,MINUTE,DELIVERED,FAILED
+        //# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,DLVDSMS,FAILSMS,EXPDSMS
         if(tokenizer.hasMoreTokens()) {
+          String minsec = tokenizer.nextToken();
+          int minute = Integer.parseInt(minsec.substring(0,minsec.length()-2));
+          if(minute < fromMin) continue;
+          if(minute > toMin)   break;
+          c.set(Calendar.MINUTE,minute);
 
           int taskId = Integer.parseInt(tokenizer.nextToken());
           if(filter!=null && filter.getTaskId()!=null && filter.getTaskId()!=taskId) continue;
@@ -160,16 +165,19 @@ class DeliveryStatProvider {
           String user = tokenizer.nextToken();
           if(filter!=null && filter.getUser()!=null && !filter.getUser().equals(user) ) continue;
 
-          int minute = Integer.parseInt(tokenizer.nextToken());
-          if(minute < fromMin) continue;
-          if(minute > toMin)   break;
+          int newmessages = Integer.parseInt(tokenizer.nextToken());
+          int processing  = Integer.parseInt(tokenizer.nextToken());
+          int delivered   = Integer.parseInt(tokenizer.nextToken());
+          int failed      = Integer.parseInt(tokenizer.nextToken());
+          int expired     = Integer.parseInt(tokenizer.nextToken());
+          int deliveredSms= Integer.parseInt(tokenizer.nextToken());
+          int failedSms   = Integer.parseInt(tokenizer.nextToken());
+          int expiredSms  = Integer.parseInt(tokenizer.nextToken());
 
-          c.set(Calendar.MINUTE,minute);
-
-          int delivered = Integer.parseInt(tokenizer.nextToken());
-          int failed = Integer.parseInt(tokenizer.nextToken());
-
-          DeliveryStatRecord rec = new DeliveryStatRecord(user, c.getTime(), taskId, delivered, failed);
+          DeliveryStatRecord rec = new DeliveryStatRecord(user, c.getTime(), taskId,
+              newmessages,processing,delivered,failed,expired,
+              deliveredSms,failedSms,expiredSms
+          );
 
           if(!visitor.visit(rec,totalFilesCount,currentFile)) {
             return false;

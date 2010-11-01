@@ -1,12 +1,11 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.web.config.Configuration;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Locale;
 
 /**
@@ -20,15 +19,8 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   private DeliveryStatFilter filter;
   private Delivery delivery= null;
 
-  public boolean isDetaliseBySMS() {
-    return detaliseBySMS;
-  }
 
-  public void setDetaliseBySMS(boolean detaliseBySMS) {
-    this.detaliseBySMS = detaliseBySMS;
-  }
-
-  boolean detaliseBySMS=false;
+ 
 
 
   public MessagesByPeriodController() {
@@ -74,7 +66,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     filter.setFromDate(null);
     filter.setTillDate(null);
     filter.setTaskId(getDeliveryId());
-    detaliseBySMS = false;
+    detalised = false;
   }
 
 
@@ -88,17 +80,16 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
 
   @Override
-  public void loadRecords(Configuration config, final Locale locale) throws AdminException {
-    DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
-    if(delivery!=null && filterCopy.getFromDate()==null) {
-      filterCopy.setFromDate(delivery.getStartDate());
-    }
-    if(detaliseBySMS) {
-      //todo bySMS detailed stat
-    }
-    else {
+  public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
+
+
+      DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
+      if(delivery!=null && filterCopy.getFromDate()==null) {
+        // todo remove comment
+        // filterCopy.setFromDate(delivery.getStartDate());
+      }
       config.statistics(filterCopy,this);
-    }
+
   }
 
 
@@ -115,6 +106,10 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     }
     return !isCancelled();
   }
+
+
+
+
 
 
 

@@ -1,0 +1,127 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+
+<ui:composition template="/templates/main.xhtml">
+
+
+  <ui:param name="pageTitle" value="#{msg['informer.stats']} / #{msg['informer.stats.messages.byUser']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smsc" rendered="#{!messagesByUserStats.initError}">
+
+
+      <h:panelGroup style="padding:10px">
+
+        <eye:dataTableFilter bean="#{messagesByUserStats}" clearAction="clearFilter" applyAction="start">
+          <h:panelGrid columns="2" columnClasses="column400Width,columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
+              <h:outputText value="#{msg['stat.page.from_date']}"/>
+              <t:inputDate value="#{messagesByUserStats.filter.fromDate}" popupCalendar="true" type="both" />
+              <h:outputText value="#{msg['stat.page.till_date']}"/>
+              <t:inputDate value="#{messagesByUserStats.filter.tillDate}"  popupCalendar="true" type="both"/>
+            </h:panelGrid>
+            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
+              <h:outputText value="#{msg['stat.page.user']}" rendered="#{messagesByUserStats.admin}"/>
+              <h:selectOneMenu value="#{messagesByUserStats.filter.user}" rendered="#{messagesByUserStats.admin}" required="false">
+                <f:selectItems value="#{messagesByUserStats.users}"/>
+              </h:selectOneMenu>
+
+              <h:outputText value="#{msg['stat.page.detalised']}"/>
+              <h:selectBooleanCheckbox value="#{messagesByUserStats.detalise}"/>
+            </h:panelGrid>
+          </h:panelGrid>
+        </eye:dataTableFilter>
+
+
+        <eye:updatableContent updatePeriod="1"  enabled="#{messagesByUserStats.state == 1}">
+
+
+
+          <eye:message level="error" rendered="#{messagesByUserStats.state == 3}">
+            <p/>
+            <h:outputText value="#{messagesByUserStats.error}"/>
+            <p/>
+          </eye:message>
+
+
+
+
+          <h:panelGroup rendered="#{messagesByUserStats.state == 1}">
+            <tr:message id="upload_message"/>
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{messagesByUserStats.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+
+            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+              <h:outputText value="#{msg['processing.label']}  #{messagesByUserStats.current}"/>
+              <eye:progressBar current="#{messagesByUserStats.current}" maximum="#{messagesByUserStats.total}" width="500" height="20" />
+            </h:panelGrid>
+
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{messagesByUserStats.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+          </h:panelGroup>
+
+          <eye:dataTable value="#{messagesByUserStats.records}" var="row" rendered="#{messagesByUserStats.state == 2}">
+            <eye:row innerRows="#{row.innerRows}">
+              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+                <h:outputText value="#{row.userId}"/>
+              </eye:column>
+              <eye:column name="new" title="#{msg['stat.page.newMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.newMessages}"/>
+              </eye:column>
+              <eye:column name="process" title="#{msg['stat.page.processMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.processMessages}"/>
+              </eye:column>
+              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.deliveredMessages}"/>
+              </eye:column>
+              <eye:column name="failed" title="#{msg['stat.page.failed']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.failedMessages}"/>
+              </eye:column>
+              <eye:column name="expired" title="#{msg['stat.page.expiredMessages']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.expiredMessages}"/>
+              </eye:column>
+            </eye:row>
+          </eye:dataTable>
+          <eye:buttons rendered="#{messagesByUserStats.state == 2}">
+            <eye:space/>
+            <eye:button>
+              <h:commandLink value="#{msg['download.button']}" >
+                <tr:fileDownloadActionListener method="#{messagesByUserStats.download}" contentType="application/csv" filename="messagesByUser.csv"/>
+              </h:commandLink>
+            </eye:button>
+          </eye:buttons>
+
+
+
+        </eye:updatableContent>
+
+      </h:panelGroup>
+
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

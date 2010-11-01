@@ -23,7 +23,10 @@ public abstract class AggregatedRecord implements DataTableRow {
 
   abstract Comparator getRecordsComparator(DataTableSortOrder sortOrder);
 
-  abstract void printWithChildrenToCSV( PrintWriter writer);
+  abstract void printCSVheader( PrintWriter writer, boolean detalised);
+
+  abstract void printWithChildrenToCSV( PrintWriter writer,boolean detalised);
+
 
 
   protected void addChild(AggregatedRecord newChild) {

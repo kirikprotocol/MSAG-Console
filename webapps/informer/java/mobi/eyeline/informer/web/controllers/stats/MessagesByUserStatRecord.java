@@ -76,11 +76,22 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
   }
 
   @Override
-  void printWithChildrenToCSV(PrintWriter writer) {
+  void printCSVheader(PrintWriter writer,boolean detalized) {
+      writer.println(StringEncoderDecoder.toCSVString(
+         new Object[]{"USER","NEW","PROCESS","DELIVERED","FAILED","EXPIRED"}
+      ));    
+  }
+
+
+  @Override
+  void printWithChildrenToCSV(PrintWriter writer, boolean detalized) {
      writer.println(StringEncoderDecoder.toCSVString(
          new Object[]{userId,newMessages,processMessages,deliveredMessages,failedMessages,expiredMessages}
      ));
   }
+
+
+
 
   public String getUserId() {
     return userId;

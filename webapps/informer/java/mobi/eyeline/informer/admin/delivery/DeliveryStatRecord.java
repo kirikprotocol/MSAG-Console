@@ -10,56 +10,73 @@ public class DeliveryStatRecord {
   private Date date;
 
   private int taskId;
+  private int newmessages;
+  private int processing;
   private int delivered;
   private int failed;
+  private int expired;
+  private int deliveredSMS;
+  private int failedSMS;
+  private int expiredSMS;
   private String user;
 
-  public DeliveryStatRecord(String user, Date date, int taskId, int delivered, int failed) {
+
+
+  public DeliveryStatRecord(String user, Date date, int taskId, int newmessages, int processing, int delivered, int failed, int expired, int deliveredSMS, int failedSMS, int expiredSMS) {
     this.user=user;
     this.date = date;
     this.taskId = taskId;
+    this.newmessages = newmessages;
+    this.processing = processing;
     this.delivered = delivered;
     this.failed = failed;
+    this.expired = expired;
+    this.deliveredSMS = deliveredSMS;
+    this.failedSMS = failedSMS;
+    this.expiredSMS = expiredSMS;
   }
-
-  /**
-   * Возвращает дату ( округленную до минуты)   к которой относится запись
-   * @return  дату ( округленную до минуты)   к которой относится запись
-   */
 
   public Date getDate() {
     return date;
   }
 
-  /**
-   * Возвращает идентификатор рассылки, к которой относится запись
-   * @return идентификатор рассылки, к которой относится запись
-   */
   public int getTaskId() {
     return taskId;
   }
 
-  /**
-   * Возвращает количество сообщений из рассылки, доставленный в указанную минуту
-   * @return количество сообщений из рассылки, доставленный в указанную минуту
-   */
+  public int getNewmessages() {
+    return newmessages;
+  }
+
+  public int getProcessing() {
+    return processing;
+  }
+
   public int getDelivered() {
     return delivered;
   }
 
-  /**
-   * Возвращает количество сообщений из рассылки, доставка которых провалилась в указанную минуту
-   * @return количество сообщений из рассылки, доставка которых провалилась в указанную минуту
-   */
   public int getFailed() {
     return failed;
   }
 
-  public String getUser() {
-    return user;
+  public int getExpired() {
+    return expired;
   }
 
-  public void setUser(String user) {
-    this.user = user;
+  public int getDeliveredSMS() {
+    return deliveredSMS;
+  }
+
+  public int getFailedSMS() {
+    return failedSMS;
+  }
+
+  public int getExpiredSMS() {
+    return expiredSMS;
+  }
+
+  public String getUser() {
+    return user;
   }
 }

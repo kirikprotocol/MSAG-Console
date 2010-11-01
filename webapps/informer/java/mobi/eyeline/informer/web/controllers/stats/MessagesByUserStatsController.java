@@ -93,7 +93,7 @@ public class MessagesByUserStatsController extends DeliveryStatController {
       filterCopy.setFromDate(delivery.getStartDate());
     }
 
-      //todo bySMS detailed stat
+
 
 
     DeliveryFilter deliveryFilter = new DeliveryFilter();
@@ -122,6 +122,8 @@ public class MessagesByUserStatsController extends DeliveryStatController {
             messageFilter.setFields(new MessageFields[]{MessageFields.Text});
 
             DeliveryStatistics stat = config.getDeliveryStats(getUser().getLogin(),getUser().getPassword(),deliveryId);
+
+            //todo bySMS detailed stat
 
             MessagesByUserStatRecord rec = new MessagesByUserStatRecord(deliveryInfo.getUserId(),stat);
             putRecord(rec);

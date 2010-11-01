@@ -270,6 +270,13 @@
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+      <managed-bean-name>messagesByUserStats</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByUserStatsController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -357,6 +364,13 @@
       <to-view-id>/stats/deliveryMessagesByPeriod.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+
+    <navigation-case>
+      <from-outcome>STATS_DELIVERY_MESSAGES_BY_USER</from-outcome>
+      <to-view-id>/stats/messagesByUser.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
 
     <navigation-case>
       <from-outcome>DELIVERIES</from-outcome>
