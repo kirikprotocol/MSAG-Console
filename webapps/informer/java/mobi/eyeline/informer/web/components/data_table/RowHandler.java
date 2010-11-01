@@ -41,16 +41,17 @@ public class RowHandler extends ComponentHandler {
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
 
     Row r = (Row) c;
+    String tid = (String)ctx.getVariableMapper().resolveVariable("___tid").getValue(ctx);
 
-    if (ctx.getVariableMapper().resolveVariable("___currentRow") == null) {
+    if (ctx.getVariableMapper().resolveVariable(tid + "___currentRow") == null) {
       r.setHeader(true);
 
     } else {
 
-      r.setInner(ctx.getVariableMapper().resolveVariable("___innerRow") != null);
-      String var = (String)ctx.getVariableMapper().resolveVariable("___var").getValue(ctx);
+      r.setInner(ctx.getVariableMapper().resolveVariable(tid + "___innerRow") != null);
+      String var = (String)ctx.getVariableMapper().resolveVariable(tid + "___var").getValue(ctx);
 
-      Object currentRow = ctx.getVariableMapper().resolveVariable("___currentRow").getValue(ctx);
+      Object currentRow = ctx.getVariableMapper().resolveVariable(tid + "___currentRow").getValue(ctx);
       r.setVar(ctx, currentRow);
 
       ctx.getVariableMapper().setVariable(var, r.getVarExpr());
@@ -67,15 +68,15 @@ public class RowHandler extends ComponentHandler {
           List innerRowsList = (List) innerRows.getObject(ctx);
           if (innerRowsList != null && !innerRowsList.isEmpty()) {
             r.setHasInnerRows(true);
-            ctx.getVariableMapper().setVariable("___innerRows", new ConstantExpression(innerRowsList));
-            ctx.getVariableMapper().setVariable("___innerRowsId", new ConstantExpression(r.getRowId()));
+            ctx.getVariableMapper().setVariable(tid + "___innerRows", new ConstantExpression(innerRowsList));
+            ctx.getVariableMapper().setVariable(tid + "___innerRowsId", new ConstantExpression(r.getRowId()));
           } else {
-            ctx.getVariableMapper().setVariable("___innerRows", null);
-            ctx.getVariableMapper().setVariable("___innerRowsId", null);
+            ctx.getVariableMapper().setVariable(tid + "___innerRows", null);
+            ctx.getVariableMapper().setVariable(tid + "___innerRowsId", null);
           }
         }
       } else {
-        r.setRowId((String) ctx.getVariableMapper().resolveVariable("___innerRowsId").getValue(ctx));
+        r.setRowId((String) ctx.getVariableMapper().resolveVariable(tid + "___innerRowsId").getValue(ctx));
       }
     }
 

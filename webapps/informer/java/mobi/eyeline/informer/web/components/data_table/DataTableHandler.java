@@ -52,6 +52,9 @@ public class DataTableHandler extends ComponentHandler {
 
 
     DataTable t = (DataTable) c;
+    String tid = t.getId();
+
+    ctx.getVariableMapper().setVariable("___tid", new ConstantExpression(tid));
 
     DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
     t.setModel(m);
@@ -83,9 +86,9 @@ public class DataTableHandler extends ComponentHandler {
     List rows = m.getRows(startPos, t.getPageSize(), s);
 
     // Body
-    ctx.getVariableMapper().setVariable("___var", new ConstantExpression(var.getValue()));
+    ctx.getVariableMapper().setVariable(tid + "___var", new ConstantExpression(var.getValue()));
     for (Object row : rows) {
-      ctx.getVariableMapper().setVariable("___currentRow", new ConstantExpression(row));
+      ctx.getVariableMapper().setVariable(tid + "___currentRow", new ConstantExpression(row));
 
       nextHandler.apply(ctx, c);
 
@@ -95,12 +98,12 @@ public class DataTableHandler extends ComponentHandler {
 
         if (innerRowsData != null && !innerRowsData.isEmpty()) {
 
-          ctx.getVariableMapper().setVariable("___innerRow", new ConstantExpression("inner"));
+          ctx.getVariableMapper().setVariable(tid + "___innerRow", new ConstantExpression("inner"));
           for (Object innerRow : innerRowsData) {
-            ctx.getVariableMapper().setVariable("___currentRow", new ConstantExpression(innerRow));
+            ctx.getVariableMapper().setVariable(tid + "___currentRow", new ConstantExpression(innerRow));
             nextHandler.apply(ctx, c);
           }
-          ctx.getVariableMapper().setVariable("___innerRow", null);
+          ctx.getVariableMapper().setVariable(tid + "___innerRow", null);
         }
       }
 
