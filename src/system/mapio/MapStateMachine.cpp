@@ -2092,7 +2092,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           }
           uint32_t dialogid_smsc=(rinst<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
           SmscCommand cmd = SmscCommand::makeSumbmitSm(
-            *dialog->sms.get(),dialogid_smsc);
+            sms,dialogid_smsc);
           proxy->putIncomingCommand(cmd);
           return;
         }
