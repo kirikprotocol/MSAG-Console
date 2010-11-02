@@ -127,6 +127,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
             for(DeliveryStatusHistory.Item item : hist.getHistoryItems()) {
               if(item.getStatus()==DeliveryStatus.Active) {
                 startDate = item.getDate();
+                endDate=null;
               }
               else  if(item.getStatus()==DeliveryStatus.Finished) {
                 endDate = item.getDate();
