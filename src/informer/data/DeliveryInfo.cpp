@@ -16,13 +16,15 @@ namespace informer {
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
 
+/*
 DeliveryInfo* DeliveryInfo::makeDeliveryInfo( InfosmeCore& core,
                                               UserInfo&    userInfo,
                                               const DeliveryInfoData& data )
 {
-    // const dlvid_type dlvId = core.getNextDlvId();
+    const dlvid_type dlvId = core.getNextDlvId();
     return 0;
 }
+ */
 
 
 DeliveryInfo* DeliveryInfo::readDeliveryInfo( InfosmeCore& core,

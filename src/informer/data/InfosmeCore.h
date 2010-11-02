@@ -43,9 +43,12 @@ public:
     virtual void updateRegion( regionid_type regionId ) = 0;
     virtual void deleteRegion( regionid_type regionId ) = 0;
 
-    // virtual DeliveryPtr getDelivery( dlvid_type dlvId ) = 0;
-    virtual void addDelivery( DeliveryInfo* info ) = 0;
-    virtual void updateDelivery( DeliveryInfo* info ) = 0;
+    /// create delivery bound to given user
+    virtual dlvid_type addDelivery( UserInfo& userInfo,
+                                    const DeliveryInfoData& info ) = 0;
+    /// update delivery by id.
+    virtual void updateDelivery( dlvid_type dlvid,
+                                 const DeliveryInfoData& info ) = 0;
     virtual void deleteDelivery( dlvid_type dlvId ) = 0;
     virtual void setDeliveryState( dlvid_type   dlvId,
                                    DlvState     newState,
