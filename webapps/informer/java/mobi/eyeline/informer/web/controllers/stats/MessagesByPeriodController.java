@@ -4,8 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.web.config.Configuration;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Locale;
 
 /**
@@ -66,7 +64,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     filter.setFromDate(null);
     filter.setTillDate(null);
     filter.setTaskId(getDeliveryId());
-    detalised = false;
+    fullMode = false;
   }
 
 
@@ -106,11 +104,6 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     }
     return !isCancelled();
   }
-
-
-
-
-
 
 
 }

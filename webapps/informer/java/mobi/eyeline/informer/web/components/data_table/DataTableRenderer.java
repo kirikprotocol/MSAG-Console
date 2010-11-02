@@ -145,8 +145,9 @@ public class DataTableRenderer extends Renderer {
     String ctxPath = context.getExternalContext().getRequestContextPath();
 
     w.append("<table class=\"navbar\" cellspacing=\"1\" cellpadding=\"0\">");
+    w.append("<tr>");
     if (m.getRowsCount() > t.getPageSize()) {
-      w.append("<tr>");
+
       w.append("<td class=\"first\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(0)\"><img src=\"" + ctxPath + "/images/nav_first.gif\" width=\"12\" height=\"11\"></a></td>");
       if (t.getCurrentPage() > 0)
         w.append("<td class=\"prev\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() - 1) + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"></a></td>");

@@ -121,7 +121,19 @@ public class MessagesByDeliveriesController extends LongOperationController {
             final int deliveryId = deliveryInfo.getDeliveryId();
 
             DeliveryStatistics stat = config.getDeliveryStats(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryId);
-            records.add(new MessagesByDeliveriesRecord(deliveryInfo,stat));
+            DeliveryStatusHistory hist = config.getDeliveryStatusHistory(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryId);
+            Date startDate = null;
+            Date endDate   = null;
+            for(DeliveryStatusHistory.Item item : hist.getHistoryItems()) {
+              if(item.getStatus()==DeliveryStatus.Active) {
+                startDate = item.getDate();
+              }
+              else  if(item.getStatus()==DeliveryStatus.Finished) {
+                endDate = item.getDate();
+              }
+            }
+
+            records.add(new MessagesByDeliveriesRecord(deliveryInfo,stat,startDate,endDate));
 
             setCurrent(getCurrent()+1);
             return !isCancelled();
@@ -167,8 +179,14 @@ public class MessagesByDeliveriesController extends LongOperationController {
               else if (sortOrder.getColumnId().equals("expired")) {
                 return o1.getStat().getExpiredMessages() >= o2.getStat().getExpiredMessages() ? mul : -mul;
               }
-              
-              //todo dates
+              else if (sortOrder.getColumnId().equals("startDate")) {
+                if(o1.getStartDate()==null)  return (o2.getStartDate()==null ? 0 : mul);
+                return mul*o1.getStartDate().compareTo(o2.getStartDate());
+              }
+              else if (sortOrder.getColumnId().equals("endDate")) {
+                if(o1.getEndDate()==null)  return (o2.getEndDate()==null ? 0 : mul);
+                return mul*o1.getEndDate().compareTo(o2.getEndDate());
+              }                            
               return 0;
             }
           });
@@ -194,8 +212,10 @@ public class MessagesByDeliveriesController extends LongOperationController {
   @Override
   protected void _download(PrintWriter writer) throws IOException {
 
-    for(MessagesByDeliveriesRecord r : records) {
-      r.printCSV(writer);
+    for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
+      MessagesByDeliveriesRecord r = records.get(i);
+      if (i==0) r.printCSVHeader(writer);
+        r.printCSV(writer);
     }
   }
 

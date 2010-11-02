@@ -80,6 +80,8 @@
                   <f:param name="delivery" value="#{row.info.deliveryId}"/>
                 </h:commandLink>
               </eye:column>
+
+
               <eye:column name="status" title="#{msg['stat.page.state']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.stat.deliveryState.status}"/>
               </eye:column>
@@ -97,6 +99,13 @@
               </eye:column>
               <eye:column name="expired" title="#{msg['stat.page.expiredMessages']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.stat.expiredMessages}"/>
+              </eye:column>
+
+              <eye:column name="startDate" title="#{msg['stat.page.startDate']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.startDateString}"/>
+              </eye:column>
+              <eye:column name="endDate" title="#{msg['stat.page.endDate']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.startDateString}"/>
               </eye:column>
             </eye:row>
           </eye:dataTable>

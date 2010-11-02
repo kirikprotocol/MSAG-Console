@@ -30,7 +30,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   private List<AggregatedRecord> records;
 
 
-  boolean detalised=false;
+  boolean fullMode =false;
 
   public DeliveryStatController() {
     super();
@@ -182,12 +182,12 @@ public abstract class DeliveryStatController extends LongOperationController {
     };
   }
 
-  public boolean isDetalised() {
-    return detalised;
+  public boolean isFullMode() {
+    return fullMode;
   }
 
-  public void setDetalised(boolean detalised) {
-    this.detalised = detalised;
+  public void setFullMode(boolean fullMode) {
+    this.fullMode = fullMode;
   }
 
   @Override
@@ -195,9 +195,9 @@ public abstract class DeliveryStatController extends LongOperationController {
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       AggregatedRecord r = records.get(i);
       if(i==0) {
-        r.printCSVheader(writer,detalised);
+        r.printCSVheader(writer, fullMode);
       }
-      r.printWithChildrenToCSV(writer, detalised);
+      r.printWithChildrenToCSV(writer, fullMode);
     }
   }
 
@@ -208,5 +208,13 @@ public abstract class DeliveryStatController extends LongOperationController {
   public void reset() {
     super.reset();    //To change body of overridden methods use File | Settings | File Templates.
     clearRecords();
+  }
+
+  public boolean isShowDetailed() {
+    return getState()==2 && fullMode;
+  }
+
+  public boolean isShowBrief() {
+    return getState()==2 && (!fullMode);
   }
 }
