@@ -1,9 +1,11 @@
 #ifndef _INFORMER_USERINFO_H
 #define _INFORMER_USERINFO_H
 
+#include <string.h>
 #include "core/buffers/FixedLengthString.hpp"
 #include "informer/io/EmbedRefPtr.h"
-#include "util/int.h"
+#include "informer/io/Typedefs.h"
+#include "informer/io/InfosmeException.h"
 
 namespace eyeline {
 namespace informer {
@@ -25,8 +27,34 @@ struct UserDlvStats
     uint32_t active;
     uint32_t finished;
     uint32_t cancelled;
+
+    void clear() {
+        ::memset(this,0,sizeof(*this));
+    }
+
+    bool isEmpty() const {
+        return paused == 0 && planned == 0 && active == 0 && finished == 0 && cancelled == 0;
+    }
+
+    // NOTE: we do not count finished deliveries
+    uint32_t getTotal() const {
+        return paused + planned + active;
+    }
+
+    void incStat( uint8_t state, int value ) {
+        switch (state) {
+        case DLVSTATE_PAUSED : paused += value; break;
+        case DLVSTATE_PLANNED : planned += value; break;
+        case DLVSTATE_ACTIVE: active += value; break;
+        case DLVSTATE_FINISHED: finished += value; break;
+        case DLVSTATE_CANCELLED: cancelled += value; break;
+        default:
+            throw InfosmeException("unknown delivery state %d",state);
+        }
+    }
 };
 
+class CommonSettings;
 
 class UserInfo
 {
@@ -39,8 +67,18 @@ public:
     bool hasRole( UserRole role ) const;
     void addRole( UserRole role );
 
+    unsigned getMaxTotalDeliveries() const { return maxTotalDeliveries_; }
+
     /// get current stats
-    void getStats( UserDlvStats& stats );
+    inline void getStats( UserDlvStats& stats ) {
+        MutexGuard mg(statLock_);
+        stats = stats_;
+    }
+
+    /// increment number of deliveries
+    void incStats( const CommonSettings& cs, uint8_t state, uint8_t fromState = 0 );
+
+    void popIncrementalStats( const CommonSettings& cs, UserDlvStats& ds );
 
 private:
     void ref();
@@ -51,6 +89,12 @@ private:
     userid_type userId_;
     std::string password_;
     uint64_t    roles_;
+    unsigned    maxTotalDeliveries_;
+
+    // statistics
+    smsc::core::synchronization::Mutex statLock_;
+    UserDlvStats                       stats_;
+    UserDlvStats                       incstats_[2];
 };
 
 typedef EmbedRefPtr<UserInfo> UserInfoPtr;

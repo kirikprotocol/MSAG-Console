@@ -3,6 +3,7 @@
 #include "UserInfo.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/Typedefs.h"
+#include "CommonSettings.h"
 
 namespace {
 smsc::logger::Logger* log_ = 0;
@@ -25,7 +26,7 @@ namespace informer {
 
 UserInfo::UserInfo( const char* id,
                     const char* pwd ) :
-ref_(0), roles_(0)
+ref_(0), roles_(0), maxTotalDeliveries_(10)
 {
     getlog();
     assert(id && pwd);
@@ -42,6 +43,9 @@ ref_(0), roles_(0)
     }
     userId_ = id;
     password_ = pwd;
+    stats_.clear();
+    incstats_[0].clear();
+    incstats_[1].clear();
     smsc_log_debug(log_,"U='%s' ctor",id);
 }
 
@@ -49,6 +53,38 @@ ref_(0), roles_(0)
 UserInfo::~UserInfo()
 {
     smsc_log_debug(log_,"U='%s' dtor",userId_.c_str());
+}
+
+
+void UserInfo::incStats( const CommonSettings& cs,
+                         uint8_t state,
+                         uint8_t fromState )
+{
+    if (state == fromState ) return;
+    MutexGuard mg(statLock_);
+    if (fromState) stats_.incStat(fromState,-1);
+    stats_.incStat(state,1);
+    unsigned total = stats_.getTotal();
+    if ( total > maxTotalDeliveries_ ) {
+        stats_.incStat(state,-1);
+        if (fromState) stats_.incStat(fromState,1);
+        throw InfosmeException("U='%s' add delivery state='%s' failed: count=%u limit=%u",
+                               userId_.c_str(), 
+                               dlvStateToString(DlvState(state)),
+                               total,
+                               maxTotalDeliveries_ );
+    }
+    const unsigned idx = cs.getStatBankIndex();
+    incstats_[idx].incStat(state,1);
+}
+
+
+void UserInfo::popIncrementalStats( const CommonSettings& cs, UserDlvStats& ds )
+{
+    MutexGuard mg(statLock_);
+    const unsigned idx = 1 - cs.getStatBankIndex();
+    ds = incstats_[idx];
+    incstats_[idx].clear();
 }
 
 

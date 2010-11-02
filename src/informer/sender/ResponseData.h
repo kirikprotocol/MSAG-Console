@@ -55,7 +55,7 @@ struct ReceiptData
     DlvRegMsgId drmId;
     ReceiptId   rcptId;
     int         status;
-    bool        responded;
+    uint16_t    responded; // 0 -- not responed, >0 -- responded (nchunks)
     bool        retry;
 };
 

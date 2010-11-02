@@ -269,7 +269,8 @@ void RegionalStorage::messageSent( msgid_type msgId,
 void RegionalStorage::retryMessage( msgid_type         msgId,
                                     const RetryPolicy& policy,
                                     msgtime_type       currentTime,
-                                    int                smppState )
+                                    int                smppState,
+                                    unsigned           nchunks )
 {
     const DeliveryInfo& info = dlv_.getDlvInfo();
 
@@ -301,7 +302,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         return;
     } else if ( retryDelay == -1 ) {
         // permanent failure
-        doFinalize(mg,iter,currentTime,MSGSTATE_FAILED,smppState);
+        doFinalize(mg,iter,currentTime,MSGSTATE_FAILED,smppState,nchunks);
         return;
     }
 
@@ -334,7 +335,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
         dlv_.activityLog_.incStats(m.state,1,prevState);
     } else {
-        doFinalize(mg,iter,currentTime,MSGSTATE_EXPIRED,smppState);
+        doFinalize(mg,iter,currentTime,MSGSTATE_EXPIRED,smppState,nchunks);
     }
 }
 
@@ -342,7 +343,8 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
 void RegionalStorage::finalizeMessage( msgid_type   msgId,
                                        msgtime_type currentTime,
                                        uint8_t      state,
-                                       int          smppState )
+                                       int          smppState,
+                                       unsigned     nchunks )
 {
     const DeliveryInfo& info = dlv_.getDlvInfo();
     RelockMutexGuard mg(cacheMon_);
@@ -353,7 +355,7 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
                                     unsigned(info.getDlvId()),
                                     ulonglong(msgId));
     }
-    doFinalize(mg,iter,currentTime,state,smppState);
+    doFinalize(mg,iter,currentTime,state,smppState,nchunks);
 }
 
 
@@ -361,7 +363,8 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
                                  MsgIter           iter,
                                  msgtime_type      currentTime,
                                  uint8_t           state,
-                                 int               smppState )
+                                 int               smppState,
+                                 unsigned          nchunks )
 {
     const dlvid_type dlvId = dlv_.getDlvId();
     MessageList tokill;
@@ -370,14 +373,20 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
     const bool checkFinal = messageList_.empty() && !nextResendFile_;
     mg.Unlock();
     Message& m = iter->msg;
+    if (!nchunks) {
+        const char* text = m.text->getText();
+        nchunks = dlv_.getDlvInfo().evaluateNchunks(text,strlen(text));
+    }
     m.lastTime = currentTime;
     m.timeLeft = 0;
+    m.retryCount = nchunks;
     const uint8_t prevState = m.state;
     m.state = state;
-    smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is finalized, state=%u, smpp=%u, checkFin=%d",
+    smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is finalized, state=%u, smpp=%u, nchunks=%u, checkFin=%d",
                    unsigned(regionId_),
                    unsigned(dlvId),
                    ulonglong(m.msgId),state,smppState,
+                   nchunks,
                    checkFinal);
     dlv_.activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
     dlv_.storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);

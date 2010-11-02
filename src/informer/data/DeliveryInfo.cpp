@@ -8,11 +8,13 @@
 #include "core/buffers/TmpBuf.hpp"
 #include "UserInfo.h"
 #include "InfosmeCore.h"
+#include "util/smstext.h"
 
 namespace {
 
 using namespace eyeline::informer;
 
+/*
 struct StateFileNameFilter
 {
     StateFileNameFilter(DlvState& st) : state(st) {}
@@ -27,6 +29,7 @@ struct StateFileNameFilter
     }
     DlvState& state;
 };
+ */
 
 }
 
@@ -35,64 +38,20 @@ namespace informer {
 
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
-
-/*
-void DeliveryInfo::incrementStats( const DeliveryStats& stats, DeliveryStats* result )
+void DeliveryInfo::setState( DlvState state, msgtime_type planTime )
 {
-    MutexGuard mg(lock_);
-    if ( stats.firstMessageSent ) {
-        if ( !stats_.firstMessageSent ) {
-            stats_.firstMessageSent = stats.firstMessageSent;
-        }
-        if ( stats_.lastMessageSent < stats.firstMessageSent ) {
-            stats_.lastMessageSent = stats.firstMessageSent;
-        }
+    if (!userInfo_) {
+        throw InfosmeException("D=%u userinfo is not set, cannot set state",dlvId_);
     }
-    stats_.totalMessages += stats.totalMessages;
-    stats_.sentMessages += stats.sentMessages;
-    stats_.dlvdMessages += stats.dlvdMessages;
-    stats_.failedMessages += stats.failedMessages;
-    stats_.expiredMessages += stats.expiredMessages;
-    if (result) { *result = stats_; }
+    smsc_log_debug(log_,"D=%u changing state %s(%d) -> %s(%d), planTime=%u",
+                   dlvId_,
+                   dlvStateToString(DlvState(state_)), state_,
+                   dlvStateToString(DlvState(state)), state,
+                   planTime );
+    userInfo_->incStats(cs_,state,state_);
+    state_ = state;
+    planTime_ = planTime;
 }
-
-
-void DeliveryInfo::updateStats( const DeliveryStats& stats )
-{
-    MutexGuard mg(lock_);
-    // find out the minimum first message sent time
-    if ( stats.firstMessageSent ) {
-        if ( stats_.firstMessageSent > stats.firstMessageSent ) {
-            stats_.firstMessageSent = stats.firstMessageSent;
-        }
-    }
-    if ( stats_.lastMessageSent < stats.lastMessageSent ) {
-        stats_.lastMessageSent = stats.lastMessageSent;
-    }
-    if ( stats_.totalMessages < stats.totalMessages ) {
-        stats_.totalMessages = stats.totalMessages;
-    }
-    if ( stats_.sentMessages < stats.sentMessages ) {
-        stats_.sentMessages = stats.sentMessages;
-    }
-    if ( stats_.dlvdMessages < stats.dlvdMessages ) {
-        stats_.dlvdMessages = stats.dlvdMessages;
-    }
-    if ( stats_.failedMessages < stats.failedMessages ) {
-        stats_.failedMessages = stats.failedMessages;
-    }
-    if ( stats_.expiredMessages < stats.expiredMessages ) {
-        stats_.expiredMessages = stats.expiredMessages;
-    }
-}
-
-
-void DeliveryInfo::getStats( DeliveryStats& stats ) const
-{
-    MutexGuard mg(lock_);
-    stats = stats_;
-}
- */
 
 
 void DeliveryInfo::read( InfosmeCore& core )
@@ -112,21 +71,33 @@ void DeliveryInfo::read( InfosmeCore& core )
         throw InfosmeException("U='%s' is not found",userId);
     }
     userInfo_ = user.get();
+}
 
-    /*
-    // reading state
-    std::vector< std::string > files;
-    files.reserve(2);
-    makeDirListing(StateFileNameFilter(state_),S_IFREG).list(buf.get(),files);
-    if (files.size()==1) {
-        // ok
-    } else {
-        // FIXME: should we be non-invasive? I.e. do not touch delivery elements
-        throw InfosmeException("D=%u has wrong number of state files: %u",dlvId_,unsigned(files.size()));
-        // smsc_log_warn(log_,"wrong number of state files in D=%u: %u",dlvId_,unsigned(files.size()));
-        // unlink all states
+
+unsigned DeliveryInfo::evaluateNchunks( const char* out, size_t outLen ) const
+{
+    if ( smsc::util::hasHighBit(out,outLen) ) {
+        // FIXME: replace with conversion from UTF8
+        outLen *= 2;
     }
-     */
+    if ( outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !useDataSm() ) {
+        // ok
+    } else if ( getDeliveryMode() != DLVMODE_SMS ) {
+        if (outLen > MAX_ALLOWED_MESSAGE_LENGTH) {
+            outLen = MAX_ALLOWED_MESSAGE_LENGTH;
+        }
+    } else {
+        if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
+            outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+        }
+    }
+
+    const unsigned chunkLen = cs_.getMaxMessageChunkSize();
+    if (chunkLen>0 && outLen > chunkLen) {
+        return unsigned(outLen-1)/chunkLen + 1;
+    } else {
+        return 1;
+    }
 }
 
 }

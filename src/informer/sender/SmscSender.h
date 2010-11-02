@@ -44,6 +44,7 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
     class SmscJournal;
 
     struct DRMTrans : public DlvRegMsgId {
+        unsigned    nchunks;
         bool        trans;
     };
 

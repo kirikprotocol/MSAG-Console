@@ -32,7 +32,8 @@ public:
     isReplaceIfPresent_(true), isFlash_(false), useDataSm_(false),
     transactionMode_(0),
     deliveryMode_(DLVMODE_SMS),
-    state_(DLVSTATE_PAUSED),
+    state_(DlvState(0)), // DLVSTATE_PAUSED),
+    planTime_(0),
     userInfo_(userInfo)
     {
         if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
@@ -59,34 +60,9 @@ public:
 
     const UserInfo* getUserInfo() const { return userInfo_; }
 
-    void setState( DlvState state, msgtime_type planTime ) {
-        state_ = state;
-        planTime_ = planTime;
-    }
+    void setState( DlvState state, msgtime_type planTime );
 
     personid_type getFrom() const { return from_; } 
-
-    /*
-    bool wantRetry( int status ) const {
-        switch (status) {
-        case smsc::system::Status::OK:
-            return false;
-        case smsc::system::Status::MSGQFUL:
-        case smsc::system::Status::THROTTLED:
-        case smsc::system::Status::LICENSELIMITREJECT:
-            return true;
-        default:
-            break;
-        }
-        if ( retryPolicyName_.empty() ) return false;
-        return !smsc::system::Status::isErrorPermanent(status);
-    }
-
-    const char* getRetryPolicyName() const { return retryPolicyName_.c_str(); }
-     */
-
-    // minimal time between retries, seconds
-    // unsigned getMinRetryTime() const { return 60; }
 
     /// message validity time, seconds
     unsigned getMessageValidityTime() const { return 3600; }
@@ -105,6 +81,9 @@ public:
 
     /// read delivery info
     void read( InfosmeCore& core );
+
+    /// evaluate number of chunks
+    unsigned evaluateNchunks( const char* out, size_t outLen ) const;
 
 private:
     static smsc::logger::Logger* log_;

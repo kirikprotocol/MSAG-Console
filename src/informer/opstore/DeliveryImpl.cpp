@@ -45,7 +45,7 @@ msgtime_type DeliveryImpl::initState()
 {
     FileGuard fg;
     char buf[200];
-    DlvState state = dlvInfo_->getState();
+    DlvState state = DLVSTATE_PAUSED;
     msgtime_type planTime = 0;
     const dlvid_type dlvId = dlvInfo_->getDlvId();
     bool hasBeenRead = false;

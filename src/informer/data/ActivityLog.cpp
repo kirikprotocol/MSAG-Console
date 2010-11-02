@@ -267,20 +267,32 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                 fg_.write(headbuf,size_t(headlen));
             }
         }
+
+        if ( currentTime < createTime_ ) {
+            // a fix for delayed write
+            smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
+                           info_.getDlvId(), unsigned(createTime_ - currentTime));
+            ::memcpy(buf.get(),"00",2);
+        }
         fg_.write(buf.get(),buf.GetPos());
+        doIncStats(msg.state,1,fromState,msg.retryCount);
     }
-    incStats(msg.state,1,fromState);
 }
 
 
-void ActivityLog::incStats( uint8_t state, int value, uint8_t fromState )
+void ActivityLog::incStats( uint8_t state, int value, uint8_t fromState, int smsValue )
 {
     MutexGuard mg(statLock_);
-    stats_.incStat(state,value);
-    if (fromState) {stats_.incStat(fromState,-value);}
+    doIncStats(state,value,fromState,smsValue);
+}
+
+
+void ActivityLog::doIncStats( uint8_t state, int value, uint8_t fromState, int smsValue )
+{
+    stats_.incStat(state,value,smsValue);
+    if (fromState) {stats_.incStat(fromState,-value,0);}
     const unsigned idx = info_.getCS().getStatBankIndex();
-    incstats_[idx].incStat(state,value);
-    if (fromState) {incstats_[idx].incStat(fromState,-value);}
+    incstats_[idx].incStat(state,value,smsValue);
 }
 
 

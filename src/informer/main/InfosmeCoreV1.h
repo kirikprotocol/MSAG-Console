@@ -41,8 +41,6 @@ class InfosmeCoreV1 : public InfosmeCore,
 public DeliveryActivator,
 public smsc::core::threads::Thread
 {
-private:
-
 public:
     static void readSmscConfig( SmscConfig& cfg,
                                 const smsc::util::config::ConfigView& cv );
@@ -129,6 +127,9 @@ public:
     void reloadRegions( const std::string& defaultSmscId );
 
     void bindDeliveryRegions( const BindSignal& bs );
+
+    /// invoked from stats dumper
+    void dumpUserStats( msgtime_type currentTime );
 
 protected:
     /// enter main loop, exit via 'stop()'

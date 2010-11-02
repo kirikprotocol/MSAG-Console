@@ -51,7 +51,7 @@ public:
             rd.drmId.dlvId = fb.get32();
             rd.drmId.regId = fb.get32();
             rd.drmId.msgId = fb.get64();
-            rd.responded = true;
+            rd.responded   = fb.get16();
             rd.status = smsc::system::Status::OK;
             rd.retry = false;
             rd.rcptId.setMsgId(fb.getCString());
@@ -105,13 +105,14 @@ public:
 
     void journalReceiptData( const ReceiptData& rd )
     {
-        assert(rd.responded == true);
+        assert(rd.responded > 0);
         char buf[100];
         ToBuf tb(buf,sizeof(buf));
         tb.skip(LENSIZE);
         tb.set32(rd.drmId.dlvId);
         tb.set32(rd.drmId.regId);
         tb.set64(rd.drmId.msgId);
+        tb.set16(rd.responded);
         tb.setCString(rd.rcptId.msgId);
         const size_t pos = tb.getPos();
         tb.setPos(0);
@@ -332,6 +333,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         drm->dlvId = info.getDlvId();
         drm->regId = ptr.getRegionId();
         drm->msgId = msg.msgId;
+        drm->nchunks = 0;
         drm->trans = info.getTransactionMode();
 
         {
@@ -449,6 +451,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
                 nchunks = 1;
             }
 
+            drm->nchunks = nchunks;
             smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
                            smscId_.c_str(),
                            ptr.getRegionId(),
@@ -744,14 +747,14 @@ void SmscSender::processQueue( DataQueue& queue )
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId));
-                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry, drm.nchunks );
             } else if ( *rd.rcptId.msgId == '\0' ) {
                 smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u R=%u/D=%u/M=%llu has no msgId, finalize?",
                               smscId_.c_str(), rd.seqNum,
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId));
-                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry, drm.nchunks );
                 continue;
             }
 
@@ -773,13 +776,13 @@ void SmscSender::processQueue( DataQueue& queue )
                               drm.dlvId,
                               ulonglong(drm.msgId),
                               rd.status, rd.retry, iter->status, iter->retry );
-                rproc_.receiveReceipt( drm, retryPolicy_, iter->status, iter->retry );
+                rproc_.receiveReceipt( drm, retryPolicy_, iter->status, iter->retry, drm.nchunks );
                 continue;
 
             }
 
             if ( rd.status != smsc::system::Status::OK ) {
-                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry, drm.nchunks );
                 continue;
             }
 
@@ -792,7 +795,7 @@ void SmscSender::processQueue( DataQueue& queue )
             iter->drmId = drm;
             iter->rcptId = rd.rcptId;
             iter->status = rd.status;
-            iter->responded = true;
+            iter->responded = drm.nchunks;
             iter->retry = rd.retry;
             receiptHash_.Insert(rd.rcptId.msgId,iter);
             journal_->journalReceiptData(*iter);
@@ -827,7 +830,7 @@ void SmscSender::processQueue( DataQueue& queue )
                             if (rollingIter_ == iter) { ++rollingIter_; }
                             rcptList.splice(rcptList.begin(),receiptList_,iter);
                         }
-                        rproc_.receiveReceipt(iter->drmId, retryPolicy_, rd.status, rd.retry );
+                        rproc_.receiveReceipt(iter->drmId, retryPolicy_, rd.status, rd.retry, iter->responded );
                     } else {
                         smsc_log_warn(log_,"FIXME: S='%s' strange receipt for R=%u/D=%u/M=%llu status=%d,msgid='%s',retry=%d",
                                       iter->drmId.regId,
@@ -846,7 +849,7 @@ void SmscSender::processQueue( DataQueue& queue )
 
             // iter is not found, so it is not responded
             ReceiptList::iterator iter = rcptList.insert(rcptList.begin(),ReceiptData());
-            iter->responded = false;
+            iter->responded = 0; // not responded
             iter->status = rd.status;
             iter->rcptId = rd.rcptId;
             iter->retry = rd.retry;

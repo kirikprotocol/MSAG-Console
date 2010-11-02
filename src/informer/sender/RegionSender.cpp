@@ -139,7 +139,7 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
         res = smsc::system::Status::UNKNOWNERR;
     }
     ptr.retryMessage( msg_.msgId, conn_->getRetryPolicy(), 
-                      msgtime_type(currentTime_/tuPerSec), res);
+                      msgtime_type(currentTime_/tuPerSec), res, nchunks);
     return -maxScoreIncrement;
 }
 

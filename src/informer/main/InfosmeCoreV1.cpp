@@ -15,13 +15,23 @@ using namespace smsc::util::config;
 
 namespace {
 
+using namespace eyeline::informer;
+
 std::string cgetString( const ConfigView& cv, const char* tag, const char* what )
 {
     std::auto_ptr<char> str(cv.getString(tag,what));
     return std::string(str.get());
 }
 
-}
+struct SortUserById
+{
+    bool operator () ( const UserInfoPtr& a, const UserInfoPtr& b ) const
+    {
+        return ::strcmp(a->getUserId(), b->getUserId()) < 0;
+    }
+};
+
+} // namespace
 
 namespace eyeline {
 namespace informer {
@@ -547,6 +557,53 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
             continue;
         }
         (*rs)->addDelivery(*rptr.get());
+    }
+}
+
+
+void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
+{
+    FileGuard fg;
+    char buf[200];
+    char* bufpos;
+    {
+        struct tm now;
+        const ulonglong ymd = msgTimeToYmd(currentTime,&now);
+        sprintf(buf,"statistics/%04u.%02u.%02u/dlv%02u.log",
+                now.tm_year + 1900, now.tm_mon+1, now.tm_mday, now.tm_hour );
+        fg.create((cs_.getStorePath()+buf).c_str(),true);
+        fg.seek(0,SEEK_END);
+        if (fg.getPos()==0) {
+            const char* header = "# MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL\n";
+            fg.write(header,strlen(header));
+        }
+        bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd%10000));
+    }
+    std::vector< UserInfoPtr > users;
+    {
+        MutexGuard mg(startMon_);
+        users.reserve(users_.GetCount());
+        char* userid;
+        UserInfoPtr* ptr;
+        for ( smsc::core::buffers::Hash<UserInfoPtr>::Iterator i(&users_); i.Next(userid,ptr); ) {
+            users.push_back(*ptr);
+        }
+    }
+    // sorting users
+    std::sort( users.begin(), users.end(), ::SortUserById() );
+    for ( std::vector< UserInfoPtr >::iterator i = users.begin();
+          i != users.end(); ++i ) {
+        UserDlvStats ds;
+        (*i)->popIncrementalStats(cs_,ds);
+        if ( ds.isEmpty() ) continue;
+        char* p = bufpos + sprintf(bufpos,"%s,%u,%u,%u,%u,%u\n",
+                                   (*i)->getUserId(),
+                                   ds.paused,
+                                   ds.planned,
+                                   ds.active,
+                                   ds.finished,
+                                   ds.cancelled );
+        fg.write(buf,p-buf);
     }
 }
 

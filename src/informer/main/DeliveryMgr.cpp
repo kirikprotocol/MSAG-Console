@@ -276,21 +276,20 @@ public:
     void dumpStats( msgtime_type currentTime )
     {
         mgr_.cs_.flipStatBank();
+        mgr_.core_.dumpUserStats( currentTime );
         FileGuard fg;
         char buf[200];
         char* bufpos;
         {
-            // FIXME: check stats fields
-
             struct tm now;
             const ulonglong ymd = msgTimeToYmd(currentTime,&now);
-            sprintf(buf,"statistics/%04u.%02u.%02u/%02u.log",
+            sprintf(buf,"statistics/%04u.%02u.%02u/msg%02u.log",
                     now.tm_year+1900, now.tm_mon+1,
                     now.tm_mday, now.tm_hour);
             fg.create((mgr_.cs_.getStorePath()+buf).c_str(),true);
             fg.seek(0,SEEK_END);
             if (fg.getPos() == 0) {
-                const char header[] = "# MINSEC,DLVID,USER,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD\n";
+                const char* header = "# MINSEC,DLVID,USER,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD\n";
                 fg.write(header,strlen(header));
             }
             bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
@@ -467,11 +466,12 @@ bool DeliveryMgr::isCoreStopping() const
 
 void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
                                   const RetryPolicy& policy,
-                                  int status, bool retry )
+                                  int status, bool retry,
+                                  unsigned nchunks )
 {
-    smsc_log_debug(log_,"rcpt received R=%u/D=%u/M=%llu status=%u retry=%d",
+    smsc_log_debug(log_,"rcpt received R=%u/D=%u/M=%llu status=%u retry=%d nchunks=%u",
                    drmId.regId, drmId.dlvId,
-                   drmId.msgId, status, retry );
+                   drmId.msgId, status, retry, nchunks );
     try {
         DeliveryImplPtr dlv;
         if ( !getDelivery(drmId.dlvId,dlv) ) {
@@ -492,12 +492,12 @@ void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
         const msgtime_type now(currentTimeSeconds());
 
         if (retry) {
-            reg->retryMessage( drmId.msgId, policy, now, status );
+            reg->retryMessage( drmId.msgId, policy, now, status, nchunks );
         } else {
             const bool ok = (status == smsc::system::Status::OK);
             reg->finalizeMessage(drmId.msgId, now,
                                  ok ? MSGSTATE_DELIVERED : MSGSTATE_FAILED,
-                                 status );
+                                 status, nchunks );
         }
     } catch ( std::exception& e ) {
         smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt processing failed: %s",

@@ -27,7 +27,10 @@ public:
                     uint8_t              fromState = 0 );
 
     /// increment stats, optionally decrementing fromState
-    void incStats( uint8_t state, int value = 1, uint8_t fromState = 0 );
+    void incStats( uint8_t state,
+                   int     value = 1,
+                   uint8_t fromState = 0,
+                   int     smsValue = 0 );
 
     void getStats( DeliveryStats& ds )
     {
@@ -39,18 +42,21 @@ public:
     void popIncrementalStats( DeliveryStats& ds );
 
 private:
+    void doIncStats( uint8_t state, int value, uint8_t fromState, int smsValue );
+
     bool readStatistics( const std::string& filename,
                          smsc::core::buffers::TmpBuf<char, 8192 >& buf );
 
 private:
     smsc::core::synchronization::Mutex lock_;
-    smsc::core::synchronization::Mutex statLock_;
     const DeliveryInfo&                info_;
-    DeliveryStats                      stats_;
-    DeliveryStats                      incstats_[2];
     FileGuard                          fg_;
     msgtime_type                       createTime_;
     msgtime_type                       period_;
+
+    smsc::core::synchronization::Mutex statLock_;
+    DeliveryStats                      stats_;
+    DeliveryStats                      incstats_[2];
 };
 
 } // informer

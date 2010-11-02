@@ -18,7 +18,8 @@ public:
     virtual void receiveReceipt( const DlvRegMsgId& drm,
                                  const RetryPolicy& policy,
                                  int                smppStatus,
-                                 bool               retry ) = 0;
+                                 bool               retry,
+                                 unsigned           nchunks ) = 0;
     virtual bool receiveResponse( const DlvRegMsgId& drm ) = 0;
 
     virtual void incIncoming() = 0;

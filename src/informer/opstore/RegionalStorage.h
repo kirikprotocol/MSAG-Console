@@ -70,13 +70,15 @@ public:
     void retryMessage( msgid_type         msgId,
                        const RetryPolicy& policy,
                        msgtime_type       currentTime,
-                       int                smppState );
+                       int                smppState,
+                       unsigned           nchunks );
 
     /// finalize message. message is removed from cache.
     void finalizeMessage( msgid_type   msgId,
                           msgtime_type currentTime,
                           uint8_t      state,
-                          int          smppState );
+                          int          smppState,
+                          unsigned     nchunks );
 
 
     /// notify transfer thread that it should be stopped.
@@ -117,7 +119,8 @@ protected:
                      MsgIter           iter,
                      msgtime_type      currentTime,
                      uint8_t           state,
-                     int               smppState );
+                     int               smppState,
+                     unsigned          nchunks );
 
 private:
     // message cleanup
