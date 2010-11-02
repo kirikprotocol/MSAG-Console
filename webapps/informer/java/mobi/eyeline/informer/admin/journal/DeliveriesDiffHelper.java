@@ -55,6 +55,14 @@ class DeliveriesDiffHelper extends DiffHelper{
 
       j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "endDate", temp1, temp2, oldDelivery.getName());
     }
+
+    if(oldDelivery.getValidityDate() == null && newDelivery.getValidityDate() != null) {
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "validityDate", "", dateFormat.format(newDelivery.getValidityDate()), oldDelivery.getName());
+    }else if(oldDelivery.getValidityDate() != null && newDelivery.getValidityDate() == null) {
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "validityDate", dateFormat.format(oldDelivery.getValidityDate()), "", oldDelivery.getName());
+    }else if(newDelivery.getValidityDate() != null && oldDelivery.getValidityDate() != null && !(temp1 = dateFormat.format(oldDelivery.getValidityDate())).equals((temp2 = dateFormat.format(newDelivery.getValidityDate())))) {
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "validityDate", temp1, temp2, oldDelivery.getName());
+    }
   }
 
 

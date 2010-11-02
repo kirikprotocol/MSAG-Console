@@ -51,6 +51,7 @@
           <eye:column name="name" title="#{deliveryBundle.name}" sortable="true" width="20%">
             <h:commandLink value="#{d.name}" action="DELIVERY_EDIT">
               <f:param name="#{deliveries.deliveryParam}" value="#{d.deliveryId}"/>
+              <f:param name="init" value="#{deliveries.init}"/>
             </h:commandLink>
           </eye:column>
           <eye:column name="userId" title="#{deliveryBundle.owner}" sortable="true" width="20%">

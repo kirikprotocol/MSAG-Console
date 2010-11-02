@@ -248,6 +248,11 @@
       <type>int</type>
     </attribute>
     <attribute>
+      <name>pageSizeRendered</name>
+      <description>Можно ли изменять кол-во строк на странице с веб-интерфейса (по умолчанию: можно)</description>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
       <name>selectedRows</name>
       <description>Тег, описывающий куда передать список идентификаторов выделенных строк таблицы</description>
       <type>java.util.List</type>

@@ -36,10 +36,10 @@ public class TopMenu {
           add(new MenuItem("informer.admin.journal", "/journal/index.faces"))
       );
       add(new MenuBarItem("informer.deliveries", "informer.deliveries.width").
-          add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")));
-//          add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
-//          add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
-//      );
+          add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
+          add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
+          add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
+      );
       add(new MenuBarItem("informer.stats", "informer.stats.width").
           add(new MenuItem("informer.stats.common", "/stats/messagesByPeriod.faces")).
           add(new MenuItem("informer.stats.deliveries", "/stats/deliveriesCountByPeriod.faces")).

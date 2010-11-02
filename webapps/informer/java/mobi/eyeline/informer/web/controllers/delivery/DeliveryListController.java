@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.model.SelectItem;
 import java.util.*;
@@ -21,18 +20,17 @@ public class DeliveryListController extends DeliveryController {
 
   private String status;
 
-  private Configuration config;
-
   private boolean init = false;
-
 
   private List<String> selected;
 
   private final static int MEMORY_LIMIT = 100;
 
-
   public DeliveryListController() {
-    config = getConfig();
+    String i = getRequestParameter("init");
+    if(i != null && i.length()>0) {
+      init = Boolean.valueOf(i);  
+    }
   }
 
   public String getNamePrefix() {
@@ -154,7 +152,7 @@ public class DeliveryListController extends DeliveryController {
         filter.setStatusFilter(new DeliveryStatus[]{DeliveryStatus.valueOf(status)});
       }
       final int total[] = new int[]{0};
-      getConfig().getDeliveries(u.getLogin(), u.getPassword(), filter, 1, new Visitor<DeliveryInfo>() {
+      config.getDeliveries(u.getLogin(), u.getPassword(), filter, 1, new Visitor<DeliveryInfo>() {
         public boolean visit(DeliveryInfo value) throws AdminException {
           if(namePrefix != null && (namePrefix = namePrefix.trim()).length() != 0 &&
               !value.getName().startsWith(namePrefix)) {

@@ -22,7 +22,7 @@ public class TestDcpConnection extends DcpConnection{
 
   private int reqIds = 0;
 
-  private Map<Integer, DeliveryWStatus> deliveries = new HashMap<Integer, DeliveryWStatus>();
+  private Map<Integer, DeliveryWStatus> deliveries = new LinkedHashMap<Integer, DeliveryWStatus>();
 
   private Map<Integer, List<MessageWState>> messages = new HashMap<Integer, List<MessageWState>>();
 
@@ -116,6 +116,9 @@ public class TestDcpConnection extends DcpConnection{
   }
 
   private boolean accept(DeliveryWStatus delivery, DeliveryFilter filter) {
+    if(delivery.getId() == 999) {
+      int t =0;
+    }
     if(filter.getEndDateFrom()!= null && delivery.getEndDate().before(filter.getEndDateFrom())) {
       return false;
     }

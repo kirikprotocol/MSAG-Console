@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -15,11 +16,15 @@ import java.util.Map;
  *
  * @author Aleksandr Khalitov
  */
-public class Delivery {
+public class Delivery implements Serializable{
 
   private static final ValidationHelper vh = new ValidationHelper(Delivery.class);
 
-  public static enum Type {SingleText, Common}
+  public static enum Type {SingleText, Common;
+    public String getValue() {
+      return toString();
+    }
+   }
 
   private Integer id;
 

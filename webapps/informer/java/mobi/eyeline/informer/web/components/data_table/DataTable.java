@@ -27,6 +27,8 @@ public class DataTable extends EyelineComponent {
   private List<String> selectedRows = new ArrayList<String>();
   private ValueExpression selectedRowsExpression;
 
+  private boolean pageSizeRendered = true;
+
   public DataTableModel getModel() {
     return model;
   }
@@ -71,6 +73,14 @@ public class DataTable extends EyelineComponent {
     int startIndex = this.currentPage * from;
     this.pageSize = to;
     currentPage = startIndex / pageSize;
+  }
+
+  public boolean isPageSizeRendered() {
+    return pageSizeRendered;
+  }
+
+  public void setPageSizeRendered(boolean pageSizeRendered) {
+    this.pageSizeRendered = pageSizeRendered;
   }
 
   public boolean isRowSelection() {
@@ -149,6 +159,7 @@ public class DataTable extends EyelineComponent {
     values[4] = currentPage;
     values[5] = pageSize;
     values[9] = sortOrder;
+    values[10] = pageSizeRendered;
     return (values);
   }
 
@@ -161,6 +172,7 @@ public class DataTable extends EyelineComponent {
     currentPage = (Integer) values[4];
     pageSize = (Integer) values[5];
     sortOrder = (String) values[9];
+    pageSizeRendered = (Boolean) values[10];
   }
 
 }

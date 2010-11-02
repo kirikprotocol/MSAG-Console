@@ -83,6 +83,12 @@
   </converter>
 
 
+  <converter>
+    <converter-id>addressConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.AddressConverter</converter-class>
+  </converter>
+
+
   <render-kit>
     <renderer>
       <component-family>Eyeline</component-family>
@@ -235,7 +241,13 @@
   <managed-bean>
       <managed-bean-name>deliveries</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryListController</managed-bean-class>
-      <managed-bean-scope>session</managed-bean-scope>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>deliveriesWeekly</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryWeeklyController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
 
@@ -275,14 +287,19 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByPeriodController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
-
+  
+  <managed-bean>
+      <managed-bean-name>createDelivery</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.CreateDeliveryController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+  
   <managed-bean>
       <managed-bean-name>messagesByUserStats</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByUserStatsController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
-
-
+  
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -368,7 +385,6 @@
     <navigation-case>
       <from-outcome>STATS_DELIVERY_MESSAGES_BY_PERIOD</from-outcome>
       <to-view-id>/stats/deliveryMessagesByPeriod.xhtml</to-view-id>
-      <redirect/>
     </navigation-case>
 
     <navigation-case>
@@ -385,11 +401,20 @@
     </navigation-case>
 
     <navigation-case>
+      <from-outcome>DELIVERIES_WEEKLY</from-outcome>
+      <to-view-id>/deliveries/scheduling.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
       <from-outcome>DELIVERY_EDIT</from-outcome>
       <to-view-id>/deliveries/edit.xhtml</to-view-id>
     </navigation-case>
 
-
+    <navigation-case>
+      <from-outcome>DELIVERY_CREATE</from-outcome>
+      <to-view-id>/deliveries/create.xhtml</to-view-id>
+    </navigation-case>
 
   </navigation-rule>
 

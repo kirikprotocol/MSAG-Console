@@ -24,7 +24,6 @@ public class PageCalendarRenderer extends Renderer {
 
   static void decodeCalendar(FacesContext context, PageCalendar cal) {
     String dateStr = context.getExternalContext().getRequestParameterMap().get(cal.getId() + "_date");
-    System.out.println(dateStr);
     if (dateStr != null) {
       long date = Long.parseLong(dateStr);
       cal.setDate(date);
@@ -45,7 +44,7 @@ public class PageCalendarRenderer extends Renderer {
     Writer w = context.getResponseWriter();
 
     if (!ajax) {
-      w.append("<input type=\"hidden\" id=\"" + cal.getId() + "_date\" name=\"" + cal.getId() + "_date\" />");
+      w.append("<input type=\"hidden\" id=\"" + cal.getId() + "_date\" name=\"" + cal.getId() + "_date\" value=\"" + cal.getDate() + "\"/>");
       w.append("\n<div id=\"" + cal.getId() + "\">");
     }
 
@@ -83,7 +82,6 @@ public class PageCalendarRenderer extends Renderer {
     w.append("\n</thead>\n<tbody>\n<tr>");
 
     List<UIComponent> childs = component.getChildren();
-    System.out.println(childs.size());
   }
 
   @Override

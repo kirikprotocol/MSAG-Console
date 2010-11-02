@@ -19,6 +19,7 @@ public class DataTableHandler extends ComponentHandler {
   private final TagAttribute value;
   private final TagAttribute autoUpdate;
   private final TagAttribute pageSize;
+  private final TagAttribute pageSizeRendered;
   private final TagAttribute selectedRows;
   private final TagAttribute updateUsingSubmit;
   private final TagAttribute var;
@@ -29,6 +30,7 @@ public class DataTableHandler extends ComponentHandler {
     value = getRequiredAttribute("value");
     autoUpdate = getAttribute("autoUpdate");
     pageSize = getAttribute("pageSize");
+    pageSizeRendered = getAttribute("pageSizeRendered");
     selectedRows = getAttribute("selectedRows");
     updateUsingSubmit = getAttribute("updateUsingSubmit");
     var = getAttribute("var");
@@ -40,6 +42,8 @@ public class DataTableHandler extends ComponentHandler {
       t.setAutoUpdate(autoUpdate.getInt(ctx));
     if (pageSize != null)
       t.setPageSize(pageSize.getInt(ctx));
+    if (pageSizeRendered != null)
+      t.setPageSizeRendered(pageSizeRendered.getBoolean(ctx));
     if (selectedRows != null)
       t.setSelectedRowsExpression(selectedRows.getValueExpression(ctx, List.class));
     if (updateUsingSubmit != null)

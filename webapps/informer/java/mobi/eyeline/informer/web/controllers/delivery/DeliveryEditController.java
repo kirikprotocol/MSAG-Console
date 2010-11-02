@@ -4,7 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
@@ -25,10 +24,6 @@ public class DeliveryEditController extends DeliveryController{
 
   private Delivery delivery;
 
-  private String smsNotificationAddress;
-
-//  private List<Delivery.Day> days = new ArrayList<Delivery.Day>(7);
-
   public DeliveryEditController() {
     super();
 
@@ -43,15 +38,11 @@ public class DeliveryEditController extends DeliveryController{
   }
 
   private void reload() throws AdminException{
-    User u = getConfig().getUser(getUserName());
-    if(id == null || (delivery = getConfig().getDelivery(u.getLogin(), u.getPassword(), id)) == null) {
+    User u = config.getUser(getUserName());
+    if(id == null || (delivery = config.getDelivery(u.getLogin(), u.getPassword(), id)) == null) {
       logger.error("Delivery is not found with id="+id);
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found",id);
-      return;
     }
-    smsNotificationAddress = delivery.getSmsNotificationAddress() == null ? null :
-        delivery.getSmsNotificationAddress().getSimpleAddress();
-//    days.addAll(Arrays.asList(delivery.getActiveWeekDays()));
   }
 
   public List<SelectItem> getUniqueDeliveryModes() {
@@ -61,14 +52,6 @@ public class DeliveryEditController extends DeliveryController{
     }
     return sIs;
   }
-
-//  public List<Delivery.Day> getDays() {
-//    return days;
-//  }
-//
-//  public void setDays(List<Delivery.Day> days) {
-//    this.days = days;
-//  }
 
   public List<SelectItem> getAllDays() {
     List<SelectItem> result = new ArrayList<SelectItem>(7);
@@ -81,40 +64,30 @@ public class DeliveryEditController extends DeliveryController{
   }
 
   public String save() {
-    if(delivery.getRetryPolicy() != null) {
-      if(delivery.getRetryPolicy().equals("")) {
-        delivery.setRetryPolicy(null);
-      }
-      if(!getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy());
+    if(delivery.getValidityDate() != null) {
+      delivery.setValidityPeriod(null);
+    }else {
+      if(delivery.getValidityPeriod() == null || delivery.getValidityPeriod().length() == 0) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.validity.empty");
         return null;
       }
     }
-    if(smsNotificationAddress != null) {
-      if(smsNotificationAddress.equals("")) {
-        smsNotificationAddress = null;
-      }
-      if(!Address.validate(smsNotificationAddress)) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_sms_address", smsNotificationAddress);
-        return null;
-      }
-      delivery.setSmsNotificationAddress(new Address(smsNotificationAddress));
+    if(delivery.isRetryOnFail() && (delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches())) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
+      return null;
     }
     if(delivery.getEmailNotificationAddress() != null) {
       if(delivery.getEmailNotificationAddress().equals("")) {
         delivery.setEmailNotificationAddress(null);
       }
     }
-    if(!delivery.isSecret()) {
-      delivery.setSecretMessage(null);
-    }
     if(delivery.getType() == Delivery.Type.SingleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
       return null;
     }
     try{
-      User u = getConfig().getUser(getUserName());
-      getConfig().modifyDelivery(u.getLogin(), u.getPassword(), delivery);
+      User u = config.getUser(getUserName());
+      config.modifyDelivery(u.getLogin(), u.getPassword(), delivery);
     }catch (AdminException e){
       addError(e);
       return null;
@@ -134,13 +107,5 @@ public class DeliveryEditController extends DeliveryController{
 
   public void setId(Integer id) {
     this.id = id;
-  }
-
-  public String getSmsNotificationAddress() {
-    return smsNotificationAddress;
-  }
-
-  public void setSmsNotificationAddress(String smsNotificationAddress) {
-    this.smsNotificationAddress = smsNotificationAddress;
   }
 }

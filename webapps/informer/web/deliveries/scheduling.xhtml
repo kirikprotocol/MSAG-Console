@@ -1,0 +1,52 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.deliveries.scheduling']}"/>
+
+  <ui:define name="content">
+    <tr:form>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" immediate="true" action="DELIVERIES_WEEKLY"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <h:panelGroup style="margin: 10px 10px 10px 10px">
+
+      <eye:pageCalendar var="list" value="#{deliveriesWeekly.calendarModel}">
+        <h:panelGroup>
+          <h:outputText value="&#160;"/>
+          <tr:iterator value="#{list}" var="d">
+            <br/>
+            <tr:commandLink text="#{d.name}" action="DELIVERY_EDIT">
+              <f:param name="#{deliveriesWeekly.deliveryParam}" value="#{d.deliveryId}"/>
+            </tr:commandLink>
+          </tr:iterator>
+        </h:panelGroup>
+      </eye:pageCalendar>
+        
+      </h:panelGroup>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" immediate="true" action="DELIVERIES_WEEKLY"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

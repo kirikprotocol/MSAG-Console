@@ -73,20 +73,21 @@ public class TestAdminContext extends AdminContext {
 
     List<User> users = usersManager.getUsers();
 
+    Random r1 = new Random();
 
-    for(int i=1;i<=1000;i++) {
+    for(int i=1;i<=10;i++) {
       User u = users.get((i-1)%users.size());
       Delivery d = (i%2 == 1) ? Delivery.newCommonDelivery() : Delivery.newSingleTextDelivery();
       d.setSourceAddress(new Address("+7901111"+i));
-      d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 7*86400000L*i));
-      d.setActivePeriodStart(new Date(System.currentTimeMillis() - 7*86400000L*i));
+      d.setActivePeriodEnd(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
+      d.setActivePeriodStart(new Date(System.currentTimeMillis() - (r1.nextInt(6)+1)*86400000L*i));
       d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
       d.setDeliveryMode(DeliveryMode.SMS);
-      d.setEndDate(new Date(System.currentTimeMillis() + 7*86400000L*i));
+      d.setEndDate(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
       d.setName("Test delivery"+i);
       d.setOwner(u.getLogin());
       d.setPriority(i%100 + 1);
-      d.setStartDate(new Date(System.currentTimeMillis() - 7*86400000L*i));
+      d.setStartDate(new Date(System.currentTimeMillis() - (r1.nextInt(6)+1)*86400000L*i));
       d.setSvcType("svc1");
       d.setValidityPeriod("1");
       if(d.getType() == Delivery.Type.Common) {
