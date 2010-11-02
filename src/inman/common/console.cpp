@@ -112,7 +112,7 @@ void Console::parse(const std::string& commandLine)
                     std::cout << (*iter).name << " = " << (std::string *)(*iter).var << std::endl;
                 else {
                     *((std::string *)(*iter).var) = "";         // reset variable
-                    for (int i = 0; i < arguments.size(); ++i)   // add new string
+                    for (size_t i = 0; i < arguments.size(); ++i)   // add new string
                         *((std::string *)(*iter).var) += arguments[i];
                 }
                 return;

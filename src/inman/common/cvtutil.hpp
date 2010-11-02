@@ -1,6 +1,6 @@
 /* This module contains various conversion functions widely used in 3GPP */
-#ident "$Id$"
 #ifndef __SMSC_CONVERSION_UTIL_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_CONVERSION_UTIL_HPP__
 
 #include <time.h>

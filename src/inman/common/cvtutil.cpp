@@ -1,7 +1,9 @@
 /* This module contains various conversion functions widely used in 3GPP */
-static char const ident[] = "$Id$";
+#ifdef MOD_IDENT_ON
+static const char ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
-#include "cvtutil.hpp"
+#include "inman/common/cvtutil.hpp"
 
 namespace smsc {
 namespace cvtutil {
@@ -139,7 +141,7 @@ unsigned packTextAs7BitSafe(const char* text, unsigned tlen, unsigned char* b7bu
     unsigned char*  b7buf_end = base + b7len;
     unsigned	    shift = 0, num7ch = 0;
 
-    for (unsigned i = 0, *octs = 0; i < tlen; ++i) {
+    for (unsigned i = 0; i < tlen; ++i) {
 #define __pchar(x)	packCharAs7BitSafe(b7buf, shift, x, b7buf_end); ++num7ch
 #define __escape(x)	__pchar(0x1b); __pchar(x);
 	switch (text[i]) {
@@ -153,7 +155,7 @@ unsigned packTextAs7BitSafe(const char* text, unsigned tlen, unsigned char* b7bu
 	case '~': __escape(0x3d); break;
 	case '\\':__escape(0x2f); break;
 	default:
-	    __pchar(_cvt_8bit_2_7bit[text[i]]);
+	    __pchar(_cvt_8bit_2_7bit[(uint8_t)text[i]]);
 	}
 #undef __pchar
 #undef __escape
@@ -169,7 +171,7 @@ unsigned packTextAs7Bit(const char* text, unsigned tlen, unsigned char* b7buf,
     unsigned char*  base = b7buf;
     unsigned	    shift = 0, num7ch = 0;
 
-    for (unsigned i = 0, *octs = 0; i < tlen; ++i) {
+    for (unsigned i = 0; i < tlen; ++i) {
 #define __pchar(x)	packCharAs7Bit(b7buf, shift, x); ++num7ch
 #define __escape(x)	__pchar(0x1b); __pchar(x);
 	switch (text[i]) {
@@ -183,7 +185,7 @@ unsigned packTextAs7Bit(const char* text, unsigned tlen, unsigned char* b7buf,
 	case '~': __escape(0x3d); break;
 	case '\\':__escape(0x2f); break;
 	default:
-	    __pchar(_cvt_8bit_2_7bit[text[i]]);
+	    __pchar(_cvt_8bit_2_7bit[(uint8_t)text[i]]);
 	}
 #undef __pchar
 #undef __escape

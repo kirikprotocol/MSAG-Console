@@ -96,7 +96,7 @@ static time_t timegm(struct tm *tm) {
 	tloc = mktime(tm);
 	if (tz) {
 		int bufsize = strlen(tz) + 4;
-		buf = alloca(bufsize);
+		buf = (char*)alloca(bufsize);
 		snprintf(buf, bufsize, "TZ=%s", tz);
 	} else {
 		buf = "TZ=";
