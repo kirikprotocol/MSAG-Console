@@ -104,12 +104,13 @@ msgtime_type DeliveryImpl::initState()
         ulonglong ymdTime;
         unsigned offset;
         int shift = 0;
-        sscanf(ptr,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u%n",
+        sscanf(ptr,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u%n",
                &cstate,&ymdTime,
                &offset,
                &ds.totalMessages, &ds.procMessages, &ds.sentMessages,
                &ds.retryMessages, &ds.dlvdMessages, &ds.failedMessages,
-               &ds.expiredMessages, &shift );
+               &ds.expiredMessages, &ds.dlvdSms, &ds.failedSms,
+               &ds.expiredSms, &shift );
         if (!shift) {
             smsc_log_warn(log_,"could not parse status record");
             break;
@@ -210,13 +211,13 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),true);
         fg.seek(0,SEEK_END);
         if (fg.getPos()==0) {
-            const char* header = "# TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD\n";
+            const char* header = "# TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
             fg.write(header,strlen(header));
         }
         DeliveryStats ds;
         activityLog_.getStats(ds);
         ymd = msgTimeToYmd(now);
-        int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u\n",
+        int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                              ymd,
                              dlvStateToString(newState)[0],
                              planTime-now,
@@ -226,7 +227,10 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.retryMessages,
                              ds.dlvdMessages,
                              ds.failedMessages,
-                             ds.expiredMessages );
+                             ds.expiredMessages,
+                             ds.dlvdSms,
+                             ds.failedSms,
+                             ds.expiredSms );
         assert(buflen>0);
         fg.write(buf,buflen);
     }

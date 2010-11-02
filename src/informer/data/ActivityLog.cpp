@@ -7,7 +7,7 @@
 #include "core/buffers/TmpBuf.hpp"
 
 namespace {
-const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPRD=%u%n";
+const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u%n";
 smsc::logger::Logger* log_ = 0;
 }
 
@@ -120,7 +120,9 @@ bool ActivityLog::readStatistics( const std::string& filename,
                        &ds.totalMessages, &ds.procMessages,
                        &ds.sentMessages, &ds.retryMessages,
                        &ds.dlvdMessages, &ds.failedMessages,
-                       &ds.expiredMessages, &shift );
+                       &ds.expiredMessages, &ds.dlvdSms,
+                       &ds.failedSms, &ds.expiredSms,
+                       &shift );
                 if (shift==0) {
                     // not a stat line
                     continue;
@@ -138,9 +140,9 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 throw InfosmeException("no stat line before the first record");
             }
             int shift = 0;
-            ulonglong datetime;
+            unsigned seconds;
             char cstate;
-            sscanf(line,"%llu,%c,%n",&datetime,&cstate,&shift);
+            sscanf(line,"%02u,%c,%n",&seconds,&cstate,&shift);
             if (!shift) {
                 throw InfosmeException("wrong record: '%s'",line);
             }
@@ -148,12 +150,28 @@ bool ActivityLog::readStatistics( const std::string& filename,
             case 'N' : ++ds.totalMessages;   break;
             case 'P' : ++ds.procMessages;    break;
             case 'R' : ++ds.retryMessages;   break;
-            case 'D' : ++ds.dlvdMessages;    break;
-            case 'E' : ++ds.expiredMessages; break;
-            case 'F' : ++ds.failedMessages;  break;
+            case 'D' :
+            case 'E' :
+            case 'F' : {
+                unsigned regId;
+                ulonglong msgId;
+                unsigned nchunks;
+                int shift2 = 0;
+                sscanf(line+shift,"%u,%llu,%u,%n",&regId,&msgId,&nchunks,&shift2);
+                if (!shift2 || !nchunks) {
+                    throw InfosmeException("cannot parse the number of sms in '%s'",line);
+                }
+                switch (cstate) {
+                case 'D': ++ds.dlvdMessages; ds.dlvdSms += nchunks; break;
+                case 'E': ++ds.failedMessages; ds.failedSms += nchunks; break;
+                case 'F': ++ds.expiredMessages; ds.expiredSms += nchunks; break;
+                default: break;
+                }
+            }
             default:
                 throw InfosmeException("unknown record state in '%s'",line);
             }
+
         } // while there is LF in buffer
 
         if (ptr > buf.get()) {
@@ -220,7 +238,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     smsc::core::buffers::TmpBuf<char,1024> buf;
     const int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,\"",
                             unsigned(ymdTime % 100), cstate, regId,
-                            msg.msgId, planTime, msg.retryCount,
+                            msg.msgId, msg.retryCount, planTime, 
                             caddr,
                             msg.timeLeft, smppStatus,
                             msg.userData.c_str());
@@ -258,7 +276,9 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                                       stats_.totalMessages, stats_.procMessages,
                                       stats_.sentMessages, stats_.retryMessages,
                                       stats_.dlvdMessages, stats_.failedMessages,
-                                      stats_.expiredMessages, &shift );
+                                      stats_.expiredMessages, stats_.dlvdSms,
+                                      stats_.failedSms, stats_.expiredSms,
+                                      &shift );
                     if (headlen<0) {
                         throw InfosmeException("cannot sprintf header");
                     }
