@@ -75,7 +75,8 @@ log_(smsc::logger::Logger::getInstance("core")),
 stopping_(false),
 started_(false),
 dlvMgr_(0),
-adminServer_(0)
+adminServer_(0),
+logStateTime_(0)
 {
 }
 
@@ -405,13 +406,13 @@ void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 }
 
 
-void InfosmeCoreV1::addDelivery( std::auto_ptr<DeliveryInfo> info )
+void InfosmeCoreV1::addDelivery( DeliveryInfo* info )
 {
     dlvMgr_->addDelivery(info);
 }
 
 
-void InfosmeCoreV1::updateDelivery( std::auto_ptr<DeliveryInfo> info )
+void InfosmeCoreV1::updateDelivery( DeliveryInfo* info )
 {
     dlvMgr_->updateDelivery(info);
 }
@@ -443,7 +444,7 @@ void InfosmeCoreV1::logStateChange( ulonglong   ymd,
                                     dlvid_type  dlvId,
                                     const char* userId,
                                     DlvState    newState,
-                                    unsigned    planTime )
+                                    msgtime_type planTime )
 {
     // prepare the buffer
     char buf[100];
@@ -454,11 +455,9 @@ void InfosmeCoreV1::logStateChange( ulonglong   ymd,
         throw InfosmeException("cannot write dlv state change, dlvId=%u",dlvId);
     }
 
-    ulonglong fileTime = ymd / 10000 * 10000;
-    FileGuard fg;
+    const ulonglong fileTime = ymd / 10000 * 10000;
     char fnbuf[50];
-    if ( fileTime != logStateTime_ ) {
-        char fnbuf[50];
+    if ( logStateTime_ < fileTime ) {
         const unsigned day( unsigned(fileTime / 1000000));
         sprintf(fnbuf,"status_log/%04u.%02u.%02u/%02u.log",
                 day / 10000, (day / 100) % 100, day % 100,
@@ -476,13 +475,12 @@ void InfosmeCoreV1::logStateChange( ulonglong   ymd,
             fg.write( header, strlen(header));
         }
         logStateTime_ = fileTime;
-        logStateOld_.swap(logStateCur_);
-        logStateCur_.swap(fg);
-        logStateCur_.write(buf,size_t(buflen));
-    } else if ( logStateOld_.isOpened() ) {
-        // previous file is opened, write there
-        logStateOld_.write(buf,size_t(buflen));
+        logStateFile_.swap(fg);
+    } else if ( logStateTime_ > fileTime ) {
+        // fix delayed record
+        memcpy(buf,"0000",4);
     }
+    logStateFile_.write(buf,size_t(buflen));
 }
 
 

@@ -31,12 +31,12 @@ class DeliveryInfo
 {
 public:
     /// create delivery info from dcp.
-    static DeliveryInfo* makeDeliveryInfo( const CommonSettings&   cs,
+    static DeliveryInfo* makeDeliveryInfo( InfosmeCore&            core,
                                            UserInfo&               userInfo,
                                            const DeliveryInfoData& data );
 
     /// read delivery info from filesystem
-    static DeliveryInfo* readDeliveryInfo( const CommonSettings&   cs,
+    static DeliveryInfo* readDeliveryInfo( InfosmeCore&            core,
                                            dlvid_type              dlvId );
 
 protected:

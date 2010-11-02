@@ -10,33 +10,29 @@
 #include "InfosmeCore.h"
 #include "util/smstext.h"
 
-namespace {
-
-using namespace eyeline::informer;
-
-/*
-struct StateFileNameFilter
-{
-    StateFileNameFilter(DlvState& st) : state(st) {}
-    bool operator() ( const char* fn ) const {
-        for ( DlvState st = DLVSTATE_PAUSED; st <= DLVSTATE_MAX; st = DlvState(int(st)+1) ) {
-            if ( 0 == strcmp(fn,dlvStateToString(st)) ) {
-                state = st;
-                return true;
-            }
-        }
-        return false;
-    }
-    DlvState& state;
-};
- */
-
-}
-
 namespace eyeline {
 namespace informer {
 
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
+
+
+DeliveryInfo* DeliveryInfo::makeDeliveryInfo( InfosmeCore& core,
+                                              UserInfo&    userInfo,
+                                              const DeliveryInfoData& data )
+{
+    // const dlvid_type dlvId = core.getNextDlvId();
+    return 0;
+}
+
+
+DeliveryInfo* DeliveryInfo::readDeliveryInfo( InfosmeCore& core,
+                                              dlvid_type   dlvId )
+{
+    std::auto_ptr< DeliveryInfo > ptr(new DeliveryInfo(core.getCS(),dlvId));
+    ptr->read( core );
+    return ptr.release();
+}
+
 
 void DeliveryInfo::setState( DlvState state, msgtime_type planTime )
 {

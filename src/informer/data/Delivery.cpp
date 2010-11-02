@@ -5,7 +5,7 @@
 namespace eyeline {
 namespace informer {
 
-Delivery::Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
+Delivery::Delivery( DeliveryInfo*               dlvInfo,
                     InputMessageSource*         source ) :
 log_(0),
 dlvInfo_(dlvInfo),

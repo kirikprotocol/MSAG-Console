@@ -289,7 +289,7 @@ public:
             fg.create((mgr_.cs_.getStorePath()+buf).c_str(),true);
             fg.seek(0,SEEK_END);
             if (fg.getPos() == 0) {
-                const char* header = "# MINSEC,DLVID,USER,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD\n";
+                const char* header = "# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
                 fg.write(header,strlen(header));
             }
             bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
@@ -315,15 +315,16 @@ public:
                 ++iter;
             }
             if ( ds.isEmpty() ) continue;
-            char* p = bufpos + sprintf(bufpos,"%u,%s,%d,%d,%d,%d,%d,%d,%d\n",
+            char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u\n",
                                        dlvId, userId.c_str(),
-                                       int32_t(ds.totalMessages),
-                                       int32_t(ds.procMessages),
-                                       int32_t(ds.sentMessages),
-                                       int32_t(ds.retryMessages),
-                                       int32_t(ds.dlvdMessages),
-                                       int32_t(ds.failedMessages),
-                                       int32_t(ds.expiredMessages) );
+                                       ds.totalMessages,
+                                       ds.procMessages,
+                                       ds.dlvdMessages,
+                                       ds.failedMessages,
+                                       ds.expiredMessages,
+                                       ds.dlvdSms,
+                                       ds.failedSms,
+                                       ds.expiredSms );
             fg.write(buf,p-buf);
         } while (true);
     }
@@ -402,9 +403,9 @@ void DeliveryMgr::init()
               ++idlv ) {
             // get dlvid
             const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
-            std::auto_ptr<DeliveryInfo> info(new DeliveryInfo(cs_,dlvId));
+            // std::auto_ptr<DeliveryInfo> info(new DeliveryInfo(cs_,dlvId));
             try {
-                info->read( core_ );
+                DeliveryInfo* info = DeliveryInfo::readDeliveryInfo(core_,dlvId);
                 core_.addDelivery(info);
             } catch (std::exception& e) {
                 smsc_log_error(log_,"cannot read/add dlvInfo D=%u: %s",dlvId,e.what());
@@ -558,9 +559,10 @@ void DeliveryMgr::incOutgoing( unsigned nchunks )
 }
 
 
-void DeliveryMgr::addDelivery( std::auto_ptr< DeliveryInfo > info )
+void DeliveryMgr::addDelivery( DeliveryInfo* info )
 {
-    if (!info.get()) {
+    std::auto_ptr< DeliveryInfo > infoptr(info);
+    if (!info) {
         throw InfosmeException("delivery info is NULL");
     }
     const dlvid_type dlvId = info->getDlvId();
@@ -570,7 +572,7 @@ void DeliveryMgr::addDelivery( std::auto_ptr< DeliveryInfo > info )
     }
     MutexGuard mg(mon_);
     InputMessageSource* ims = new InputStorage(core_,*inputJournal_);
-    dlv.reset( new DeliveryImpl(info,*storeJournal_,ims) );
+    dlv.reset( new DeliveryImpl(infoptr.release(),*storeJournal_,ims) );
     deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
     try {
         const msgtime_type planTime = dlv->initState();
@@ -584,9 +586,10 @@ void DeliveryMgr::addDelivery( std::auto_ptr< DeliveryInfo > info )
 }
 
 
-void DeliveryMgr::updateDelivery( std::auto_ptr<DeliveryInfo> info )
+void DeliveryMgr::updateDelivery( DeliveryInfo* info )
 {
-    if (!info.get()) {
+    std::auto_ptr< DeliveryInfo > infoptr(info);
+    if (!info) {
         throw InfosmeException("delivery info is NULL");
     }
     DeliveryImplPtr dlv;
@@ -594,7 +597,7 @@ void DeliveryMgr::updateDelivery( std::auto_ptr<DeliveryInfo> info )
         throw InfosmeException("delivery D=%u is not found",info->getDlvId());
     }
     // FIXME: we have to stop activity on this delivery for a while, unbind/bind?
-    dlv->updateDlvInfo(*info.get());
+    dlv->updateDlvInfo(*info);
     MutexGuard mg(mon_);
     mon_.notify();
 }

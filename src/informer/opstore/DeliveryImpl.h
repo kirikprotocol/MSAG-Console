@@ -14,7 +14,7 @@ class DeliveryImpl : public Delivery
     friend class RegionalStorage;
 
 public:
-    DeliveryImpl( std::auto_ptr<DeliveryInfo> dlvInfo,
+    DeliveryImpl( DeliveryInfo*               dlvInfo,
                   StoreJournal&               journal,
                   InputMessageSource*         source );
 

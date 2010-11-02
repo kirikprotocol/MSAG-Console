@@ -18,7 +18,7 @@ class Delivery
     friend class EmbedRefPtr< Delivery >;
     friend class EmbedRefPtr< DeliveryImpl >;
 public:
-    Delivery( std::auto_ptr<DeliveryInfo> dlvInfo,
+    Delivery( DeliveryInfo*               dlvInfo,
               InputMessageSource*         source );
 
     virtual ~Delivery();

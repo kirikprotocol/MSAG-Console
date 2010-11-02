@@ -35,14 +35,14 @@ public:
     /// set delivery state, used to call back from delivery itself
     virtual void setDeliveryState( dlvid_type   dlvId,
                                    DlvState     newState,
-                                   msgtime_type atTime = 0 ) = 0;
+                                   msgtime_type planTime = 0 ) = 0;
 
     /// log delivery state change
-    virtual void logStateChange( ulonglong   ymd,
-                                 dlvid_type  dlvId,
-                                 const char* userId,
-                                 DlvState    newState,
-                                 unsigned    planTime ) = 0;
+    virtual void logStateChange( ulonglong    ymd,
+                                 dlvid_type   dlvId,
+                                 const char*  userId,
+                                 DlvState     newState,
+                                 msgtime_type planTime ) = 0;
 };
 
 } // informer

@@ -22,7 +22,7 @@ void* memrchr(const void* s, int c, size_t n)
 namespace eyeline {
 namespace informer {
 
-DeliveryImpl::DeliveryImpl( std::auto_ptr<DeliveryInfo> dlvInfo,
+DeliveryImpl::DeliveryImpl( DeliveryInfo*               dlvInfo,
                             StoreJournal&               journal,
                             InputMessageSource*         source ) :
 Delivery(dlvInfo,source),
@@ -184,7 +184,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             }
             planTime -= now;
         } else {
-            planTime = now;
+            planTime = 0;
         }
         dlvInfo_->setState(newState,planTime);
         int regId;

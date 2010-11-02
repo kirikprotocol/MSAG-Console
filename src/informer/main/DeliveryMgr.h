@@ -49,8 +49,8 @@ public:
 
     // --- end of receipt processor iface
 
-    void addDelivery( std::auto_ptr<DeliveryInfo> info );
-    void updateDelivery( std::auto_ptr<DeliveryInfo> info );
+    void addDelivery( DeliveryInfo* info );
+    void updateDelivery( DeliveryInfo* info );
     void deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& regIds );
     void setDeliveryState( dlvid_type   dlvId,
                            DlvState     newState,

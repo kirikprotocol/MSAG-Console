@@ -44,8 +44,8 @@ public:
     virtual void deleteRegion( regionid_type regionId ) = 0;
 
     // virtual DeliveryPtr getDelivery( dlvid_type dlvId ) = 0;
-    virtual void addDelivery( std::auto_ptr<DeliveryInfo> info ) = 0;
-    virtual void updateDelivery( std::auto_ptr<DeliveryInfo> info ) = 0;
+    virtual void addDelivery( DeliveryInfo* info ) = 0;
+    virtual void updateDelivery( DeliveryInfo* info ) = 0;
     virtual void deleteDelivery( dlvid_type dlvId ) = 0;
     virtual void setDeliveryState( dlvid_type   dlvId,
                                    DlvState     newState,

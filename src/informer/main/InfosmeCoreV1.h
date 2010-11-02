@@ -74,8 +74,8 @@ public:
     virtual void updateRegion( regionid_type regionId );
     virtual void deleteRegion( regionid_type regionId );
 
-    virtual void addDelivery( std::auto_ptr<DeliveryInfo> info );
-    virtual void updateDelivery( std::auto_ptr<DeliveryInfo> info );
+    virtual void addDelivery( DeliveryInfo* info );
+    virtual void updateDelivery( DeliveryInfo* info );
     virtual void deleteDelivery( dlvid_type dlvId );
     virtual void setDeliveryState( dlvid_type   dlvId,
                                    DlvState     newState,
@@ -157,8 +157,7 @@ private:
 
     smsc::core::synchronization::Mutex            logStateLock_;
     ulonglong                                     logStateTime_;
-    FileGuard                                     logStateCur_;
-    FileGuard                                     logStateOld_;
+    FileGuard                                     logStateFile_;
 };
 
 } // informer
