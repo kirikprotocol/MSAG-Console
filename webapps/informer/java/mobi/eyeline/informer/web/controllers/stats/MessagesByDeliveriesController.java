@@ -56,6 +56,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
     initUser();
     filter.setFromDate(null);
     filter.setTillDate(null);
+    nameFilter=null;
   }
 
 

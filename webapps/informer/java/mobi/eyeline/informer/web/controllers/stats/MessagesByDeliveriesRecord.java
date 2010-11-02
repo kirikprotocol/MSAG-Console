@@ -45,24 +45,26 @@ public class MessagesByDeliveriesRecord {
       "NAME",
       "USER",
       "STATUS",
+      "STARTDATE",
+      "ENDDATE",
       "NEW",
       "PROCESS",
       "DELIVERED",
       "FAILED",
-      "EXPIRED",
-      "STARTDATE",
-      "ENDDATE"}));
+      "EXPIRED"
+      }));
     }
     else {
       writer.println(StringEncoderDecoder.toCSVString(new Object[]{
       "NAME",
       "USER",
       "STATUS",
+      "STARTDATE",
+      "ENDDATE",
       "WAIT",
       "DELIVERED",
-      "NOTDELIVERED",
-      "STARTDATE",
-      "ENDDATE"}));
+      "NOTDELIVERED"
+      }));
 
     }
   }
@@ -73,13 +75,14 @@ public class MessagesByDeliveriesRecord {
       info.getName(),
       info.getUserId(),
       stat.getDeliveryState().getStatus(),
+      getStartDateString(),
+      getEndDateString(),
       stat.getNewMessages(),
       stat.getProcessMessages(),
       stat.getDeliveredMessages(),
       stat.getFailedMessages(),
-      stat.getExpiredMessages(),
-      getStartDateString(),
-      getEndDateString()
+      stat.getExpiredMessages()
+
     }));
     }
     else {
@@ -87,11 +90,11 @@ public class MessagesByDeliveriesRecord {
        info.getName(),
        info.getUserId(),
        stat.getDeliveryState().getStatus(),
+       getStartDateString(),
+       getEndDateString(),
        stat.getNewMessages()+stat.getProcessMessages(),
        stat.getDeliveredMessages(),
-       stat.getFailedMessages()+stat.getExpiredMessages(),
-       getStartDateString(),
-       getEndDateString()
+       stat.getFailedMessages()+stat.getExpiredMessages()       
      }));      
     }
   }
