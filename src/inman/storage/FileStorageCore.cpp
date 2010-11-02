@@ -1,4 +1,6 @@
-static char const ident[] = "$Id$";
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -233,7 +235,7 @@ static const char _fmtTStamp[] = "%Y%m%d_%H%M%S";
 RollingFileStorage::RollingFileStorage(const std::string & location, const char *lastExt,
                                     const char *storageExt, unsigned long rollInterval,
                                     const RollingFileStorageParms * parms /* = NULL*/)
-    : _location(location), _headerLen(0), _interval(rollInterval),_lastRollTime(0)
+    : _location(location), _headerLen(0), _lastRollTime(0), _interval(rollInterval)
 {
     _lastExt += lastExt;
     _Ext += storageExt;

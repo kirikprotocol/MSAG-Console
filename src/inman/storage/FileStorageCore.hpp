@@ -1,5 +1,5 @@
-#ident "$Id$"
 #ifndef _FILE_STORAGE_CORE_H
+#ident "@(#)$Id$"
 #define _FILE_STORAGE_CORE_H
 
 #ifndef _FILE_OFFSET_BITS
@@ -21,8 +21,7 @@ namespace smsc {
 namespace inman {
 namespace filestore {
 
-class FileSystemException : public Exception
-{
+class FileSystemException : public Exception {
 protected:
     int   _code;   //exception code
     int   _status; //thrower status
@@ -31,10 +30,11 @@ public:
     FileSystemException(const FileSystemException& exc);
     FileSystemException(int exCode /* = errno*/, const char* fmt, ...);
     FileSystemException(const char* cause, int exCode = -1, int status = 0);
-    virtual ~FileSystemException() throw() {}
+    virtual ~FileSystemException() throw()
+    { }
 
-    inline int getErrorCode() const { return _code; }
-    inline int getErrorStatus() const { return _status; }
+    int getErrorCode() const { return _code; }
+    int getErrorStatus() const { return _status; }
 };
 
 
