@@ -33,7 +33,7 @@ public class MessagesByRecController extends LongOperationController {
 
   public MessagesByRecController() {
     super();
-    records = new ArrayList<MessagesByRecRecord>();
+    records = Collections.synchronizedList(new ArrayList<MessagesByRecRecord>());
     initUser();
   }
 

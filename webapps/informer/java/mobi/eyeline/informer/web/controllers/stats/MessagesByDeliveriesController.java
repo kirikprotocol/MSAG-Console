@@ -31,7 +31,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public MessagesByDeliveriesController() {
     super();
-    records = new ArrayList<MessagesByDeliveriesRecord>();
+    records = Collections.synchronizedList(new ArrayList<MessagesByDeliveriesRecord>());
     filter=new DeliveryStatFilter();
     initUser();
   }
@@ -118,7 +118,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
     config.getDeliveries(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryFilter,1000,
         new Visitor<DeliveryInfo>() {
-        public boolean visit(DeliveryInfo deliveryInfo ) throws AdminException {
+          public boolean visit(DeliveryInfo deliveryInfo ) throws AdminException {
             final int deliveryId = deliveryInfo.getDeliveryId();
 
             DeliveryStatistics stat = config.getDeliveryStats(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryId);
@@ -135,7 +135,8 @@ public class MessagesByDeliveriesController extends LongOperationController {
               }
             }
 
-            records.add(new MessagesByDeliveriesRecord(deliveryInfo,stat,startDate,endDate));
+            User owner = config.getUser(deliveryInfo.getUserId());
+            records.add(new MessagesByDeliveriesRecord(owner, deliveryInfo,stat,startDate,endDate));
 
             setCurrent(getCurrent()+1);
             return !isCancelled();
@@ -231,7 +232,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       MessagesByDeliveriesRecord r = records.get(i);
       if (i==0) r.printCSVHeader(writer,fullMode);
-        r.printCSV(writer,fullMode);
+      r.printCSV(writer,fullMode);
     }
   }
 

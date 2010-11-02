@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.delivery.DeliveryInfo;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
@@ -16,12 +17,14 @@ import java.util.Date;
  */
 public class MessagesByDeliveriesRecord {
 
+  private User user;
   private DeliveryInfo info;
   private DeliveryStatistics stat;
   private Date startDate;
   private Date endDate;
 
-  public MessagesByDeliveriesRecord(DeliveryInfo info, DeliveryStatistics stat, Date startDate, Date endDate) {
+  public MessagesByDeliveriesRecord(User user, DeliveryInfo info, DeliveryStatistics stat, Date startDate, Date endDate) {
+    this.user = user;
     this.info = info;
     this.stat = stat;
     this.startDate = startDate;
@@ -112,5 +115,9 @@ public class MessagesByDeliveriesRecord {
 
   public String getEndDateString() {
     return endDate==null ? "": fmtDate(endDate);
+  }
+
+  public String getUserDetails() {
+    return user==null ? "" : user.getFirstName()+" "+user.getLastName();
   }
 }

@@ -26,7 +26,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   private DeliveryStatFilter filter;
   private TimeAggregationType aggregation;
 
-  private TreeMap<Object, AggregatedRecord> recordsMap;
+  private Map<Object, AggregatedRecord> recordsMap;
   private List<AggregatedRecord> records;
 
 
@@ -37,8 +37,8 @@ public abstract class DeliveryStatController extends LongOperationController {
     aggregation= TimeAggregationType.HOUR;
     filter = new DeliveryStatFilter();
     initUser();
-    records = new ArrayList<AggregatedRecord>();
-    recordsMap = new TreeMap<Object, AggregatedRecord>();
+    records = Collections.synchronizedList(new ArrayList<AggregatedRecord>());
+    recordsMap = Collections.synchronizedMap(new TreeMap<Object, AggregatedRecord>());
   }
 
   private void initUser() {
