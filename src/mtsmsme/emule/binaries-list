@@ -5,7 +5,7 @@
     -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
     -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
     -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
-    -L$(SS7HA)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp \
+    -L$(SS7HA)/lib -leinss7_r_64 -lmtsmsme-sccp \
     -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lutil \
     -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl -lrt
 #mtsmsme/sccp/mosmgen mosmgen      -lmtsmsme-sccp \
@@ -15,7 +15,7 @@
     -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
     -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
     -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
-    -L$(SS7HA)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp \
+    -L$(SS7HA)/lib -leinss7_r_64 -lmtsmsme-sccp \
     -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lutil \
     -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl -lrt
 #mtsmsme/sccp/msc-sri msc-sri      -lmtsmsme-sccp \
@@ -25,17 +25,17 @@
     -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
     -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
     -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
-    -L$(SS7HA)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp \
+    -L$(SS7HA)/lib -leinss7_r_64 -lmtsmsme-sccp \
     -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lutil \
     -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl -lrt
-mtsmsme/sccphd/msc-sri msc-sri      -lmtsmsme-sccphd \
+#mtsmsme/sccphd/msc-sri msc-sri      -lmtsmsme-sccphd \
     -lmtsmsme-processor \
     -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
     -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
     -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
     -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
     -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
-    -L$(SS7HD)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccphd \
+    -L$(SS7HD)/lib -llibeinss7_n_r_64 -lmtsmsme-sccphd \
     -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lutil \
     -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl -lrt
 #mtsmsme/sua/mschlr mschlr         -lmtsmsme-sua \
@@ -122,6 +122,6 @@ mtsmsme/sccphd/msc-sri msc-sri      -lmtsmsme-sccphd \
     -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
     -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
     -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
-    -L$(SS7HA)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp \
+    -L$(SS7HA)/lib -leinss7_r_64 -lmtsmsme-sccp \
     -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lrt -lutil \
     -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl
