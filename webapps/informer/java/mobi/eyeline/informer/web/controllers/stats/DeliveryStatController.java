@@ -210,11 +210,4 @@ public abstract class DeliveryStatController extends LongOperationController {
     clearRecords();
   }
 
-  public boolean isShowDetailed() {
-    return getState()==2 && fullMode;
-  }
-
-  public boolean isShowBrief() {
-    return getState()==2 && (!fullMode);
-  }
 }

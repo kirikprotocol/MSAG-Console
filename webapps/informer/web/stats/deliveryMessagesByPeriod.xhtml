@@ -16,7 +16,7 @@
   <ui:define name="content">
 
     <tr:form id="smsc" rendered="#{!deliveryMessagesByPeriod.initError and deliveryMessagesByPeriod.delivery!=null}">
-
+      <c:set var="longOpState" value="#{deliveryMessagesByPeriod.state}"/>
 
       <h:panelGroup style="padding:10px">
 
@@ -40,11 +40,11 @@
         </eye:dataTableFilter>
 
 
-        <eye:updatableContent updatePeriod="1"  enabled="#{deliveryMessagesByPeriod.state == 1}">
+        <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
 
 
 
-          <eye:message level="error" rendered="#{deliveryMessagesByPeriod.state == 3}">
+          <eye:message level="error" rendered="#{longOpState == 3}">
             <p/>
             <h:outputText value="#{deliveryMessagesByPeriod.error}"/>
             <p/>
@@ -53,7 +53,7 @@
 
 
 
-          <h:panelGroup rendered="#{deliveryMessagesByPeriod.state == 1}">
+          <h:panelGroup rendered="#{longOpState == 1}">
             <tr:message id="upload_message"/>
             <eye:buttons>
               <eye:button>
@@ -75,7 +75,7 @@
             </eye:buttons>
           </h:panelGroup>
 
-          <eye:dataTable value="#{deliveryMessagesByPeriod.records}" var="row" rendered="#{deliveryMessagesByPeriod.showDetailed}">
+          <eye:dataTable value="#{deliveryMessagesByPeriod.records}" var="row" rendered="#{longOpState==2 and deliveryMessagesByPeriod.fullMode}">
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText value="#{row.data.periodString}"/>
@@ -117,7 +117,7 @@
             </eye:row>
           </eye:dataTable>
 
-          <eye:dataTable value="#{deliveryMessagesByPeriod.records}" var="row" rendered="#{deliveryMessagesByPeriod.showBrief}">
+          <eye:dataTable value="#{deliveryMessagesByPeriod.records}" var="row" rendered="#{longOpState==2 and !deliveryMessagesByPeriod.fullMode}">
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText value="#{row.data.periodString}"/>
@@ -149,7 +149,7 @@
           </eye:dataTable>
           
           
-          <eye:buttons rendered="#{deliveryMessagesByPeriod.state == 2}">
+          <eye:buttons rendered="#{longOpState == 2}">
             <eye:space/>
             <eye:button >
               <h:commandLink value="#{msg['download.button']}" >

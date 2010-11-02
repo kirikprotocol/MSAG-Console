@@ -16,6 +16,7 @@
 
     <tr:form id="smsc" rendered="#{!deliveriesCountByPeriod.initError}">
 
+      <c:set var="longOpState" value="#{deliveriesCountByPeriod.state}"/>
 
       <h:panelGroup style="padding:10px">
 
@@ -41,15 +42,15 @@
         </eye:dataTableFilter>
 
 
-        <eye:updatableContent updatePeriod="1" enabled="#{deliveriesCountByPeriod.state == 1}">
+        <eye:updatableContent updatePeriod="1" enabled="#{longOpState == 1}">
 
-          <eye:message level="error" rendered="#{deliveriesCountByPeriod.state == 3}">
+          <eye:message level="error" rendered="#{longOpState == 3}">
             <p/>
             <h:outputText value="#{deliveriesCountByPeriod.error}"/>
             <p/>
           </eye:message>
 
-          <h:panelGroup rendered="#{deliveriesCountByPeriod.state == 1}">
+          <h:panelGroup rendered="#{longOpState == 1}">
             <tr:message id="upload_message"/>
             <eye:buttons>
               <eye:button>
@@ -72,7 +73,7 @@
           </h:panelGroup>
 
 
-            <eye:dataTable value="#{deliveriesCountByPeriod.records}" var="row" rendered="#{deliveriesCountByPeriod.state == 2}" >
+            <eye:dataTable value="#{deliveriesCountByPeriod.records}" var="row" rendered="#{longOpState == 2}" >
               <eye:row innerRows="#{row.innerRows}">
                 <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                   <h:outputText value="#{row.data.periodString}"/>
@@ -89,7 +90,7 @@
               </eye:row>
             </eye:dataTable>
           
-          <eye:buttons rendered="#{deliveriesCountByPeriod.state == 2}">
+          <eye:buttons rendered="#{longOpState == 2}">
             <eye:space/>
             <eye:button>
               <h:commandLink value="#{msg['download.button']}"  >

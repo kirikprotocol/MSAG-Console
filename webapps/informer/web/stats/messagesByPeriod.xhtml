@@ -17,6 +17,7 @@
 
     <tr:form id="smsc" rendered="#{!messagesByPeriod.initError}">
 
+      <c:set var="longOpState" value="#{messagesByPeriod.state}"/>
 
       <h:panelGroup style="padding:10px">
 
@@ -47,11 +48,11 @@
         </eye:dataTableFilter>
 
 
-        <eye:updatableContent updatePeriod="1"  enabled="#{messagesByPeriod.state == 1}">
+        <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
 
 
 
-          <eye:message level="error" rendered="#{messagesByPeriod.state == 3}">
+          <eye:message level="error" rendered="#{longOpState == 3}">
             <p/>
             <h:outputText value="#{messagesByPeriod.error}"/>
             <p/>
@@ -60,7 +61,7 @@
 
 
 
-          <h:panelGroup rendered="#{messagesByPeriod.state == 1}">
+          <h:panelGroup rendered="#{longOpState == 1}">
             <tr:message id="upload_message"/>
             <eye:buttons>
               <eye:button>
@@ -82,7 +83,7 @@
             </eye:buttons>
           </h:panelGroup>
 
-          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{messagesByPeriod.showDetailed}" >
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{longOpState==2 and messagesByPeriod.fullMode}">
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText value="#{row.data.periodString}"/>
@@ -125,7 +126,7 @@
           </eye:dataTable>
 
 
-          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{messagesByPeriod.showBrief}" >
+          <eye:dataTable value="#{messagesByPeriod.records}" var="row" rendered="#{longOpState==2 and !messagesByPeriod.fullMode}" >
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="period" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
                 <h:outputText value="#{row.data.periodString}"/>
@@ -158,7 +159,7 @@
 
 
 
-          <eye:buttons rendered="#{messagesByPeriod.state == 2}">
+          <eye:buttons rendered="#{longOpState == 2}">
             <eye:space/>
             <eye:button>
               <h:commandLink value="#{msg['download.button']}" >

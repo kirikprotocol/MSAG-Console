@@ -25,6 +25,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
   private boolean initError=false;
   private List<MessagesByDeliveriesRecord> records;
   private DeliveryStatFilter filter;
+  boolean fullMode =false;
 
   private String nameFilter;
 
@@ -174,7 +175,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
               else if (sortOrder.getColumnId().equals("delivered")) {
                 return o1.getStat().getDeliveredMessages() >= o2.getStat().getDeliveredMessages() ? mul : -mul;
               }
-              else if (sortOrder.getColumnId().equals("falied")) {
+              else if (sortOrder.getColumnId().equals("failed")) {
                 return o1.getStat().getFailedMessages() >= o2.getStat().getFailedMessages() ? mul : -mul;
               }
               else if (sortOrder.getColumnId().equals("expired")) {
@@ -187,7 +188,13 @@ public class MessagesByDeliveriesController extends LongOperationController {
               else if (sortOrder.getColumnId().equals("endDate")) {
                 if(o1.getEndDate()==null)  return (o2.getEndDate()==null ? 0 : mul);
                 return mul*o1.getEndDate().compareTo(o2.getEndDate());
-              }                            
+              }
+              else if (sortOrder.getColumnId().equals("wait")) {
+                return o1.getStat().getNewMessages()+o1.getStat().getProcessMessages() >= o2.getStat().getNewMessages()+o2.getStat().getProcessMessages() ? mul : -mul;
+              }
+              else if (sortOrder.getColumnId().equals("notdelivered")) {
+                return o1.getStat().getFailedMessages()+o1.getStat().getExpiredMessages() >= o2.getStat().getFailedMessages()+o2.getStat().getExpiredMessages() ? mul : -mul;
+              }
               return 0;
             }
           });
@@ -210,15 +217,24 @@ public class MessagesByDeliveriesController extends LongOperationController {
     };
   }
 
+  public boolean isFullMode() {
+    return fullMode;
+  }
+
+  public void setFullMode(boolean fullMode) {
+    this.fullMode = fullMode;
+  }
+
   @Override
   protected void _download(PrintWriter writer) throws IOException {
 
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       MessagesByDeliveriesRecord r = records.get(i);
-      if (i==0) r.printCSVHeader(writer);
-        r.printCSV(writer);
+      if (i==0) r.printCSVHeader(writer,fullMode);
+        r.printCSV(writer,fullMode);
     }
   }
+
 
 
 }

@@ -10,14 +10,14 @@ public class DeliveryStatRecord {
   private Date date;
 
   private int taskId;
-  private int newmessages;
-  private int processing;
-  private int delivered;
-  private int failed;
-  private int expired;
-  private int deliveredSMS;
-  private int failedSMS;
-  private int expiredSMS;
+  private long newmessages;
+  private long processing;
+  private long delivered;
+  private long failed;
+  private long expired;
+  private long deliveredSMS;
+  private long failedSMS;
+  private long expiredSMS;
   private String user;
 
 
@@ -44,35 +44,35 @@ public class DeliveryStatRecord {
     return taskId;
   }
 
-  public int getNewmessages() {
+  public long getNewmessages() {
     return newmessages;
   }
 
-  public int getProcessing() {
+  public long getProcessing() {
     return processing;
   }
 
-  public int getDelivered() {
+  public long getDelivered() {
     return delivered;
   }
 
-  public int getFailed() {
+  public long getFailed() {
     return failed;
   }
 
-  public int getExpired() {
+  public long getExpired() {
     return expired;
   }
 
-  public int getDeliveredSMS() {
+  public long getDeliveredSMS() {
     return deliveredSMS;
   }
 
-  public int getFailedSMS() {
+  public long getFailedSMS() {
     return failedSMS;
   }
 
-  public int getExpiredSMS() {
+  public long getExpiredSMS() {
     return expiredSMS;
   }
 

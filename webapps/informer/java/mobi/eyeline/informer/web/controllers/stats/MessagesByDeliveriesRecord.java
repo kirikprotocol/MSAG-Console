@@ -36,21 +36,36 @@ public class MessagesByDeliveriesRecord {
     return stat;
   }
 
-  public void printCSVHeader(PrintWriter writer) {
-    writer.println(StringEncoderDecoder.toCSVString(new Object[]{
-    "NAME",
-    "USER",
-    "STATUS",
-    "NEW",
-    "PROCESS",
-    "DELIVERED",
-    "FAILED",
-    "EXPIRED",
-    "STARTDATE",
-    "ENDDATE"}));
+  public void printCSVHeader(PrintWriter writer, boolean fullMode) {
+    if(fullMode) {
+      writer.println(StringEncoderDecoder.toCSVString(new Object[]{
+      "NAME",
+      "USER",
+      "STATUS",
+      "NEW",
+      "PROCESS",
+      "DELIVERED",
+      "FAILED",
+      "EXPIRED",
+      "STARTDATE",
+      "ENDDATE"}));
+    }
+    else {
+      writer.println(StringEncoderDecoder.toCSVString(new Object[]{
+      "NAME",
+      "USER",
+      "STATUS",
+      "WAIT",
+      "DELIVERED",
+      "NOTDELIVERED",
+      "STARTDATE",
+      "ENDDATE"}));
+
+    }
   }
 
-  public void printCSV(PrintWriter writer) {
+  public void printCSV(PrintWriter writer, boolean fullMode) {
+    if(fullMode) {
      writer.println(StringEncoderDecoder.toCSVString(new Object[]{
       info.getName(),
       info.getUserId(),
@@ -61,8 +76,21 @@ public class MessagesByDeliveriesRecord {
       stat.getFailedMessages(),
       stat.getExpiredMessages(),
       getStartDateString(),
-      getEndtDateString()
+      getEndDateString()
     }));
+    }
+    else {
+      writer.println(StringEncoderDecoder.toCSVString(new Object[]{
+       info.getName(),
+       info.getUserId(),
+       stat.getDeliveryState().getStatus(),
+       stat.getNewMessages()+stat.getProcessMessages(),
+       stat.getDeliveredMessages(),
+       stat.getFailedMessages()+stat.getExpiredMessages(),
+       getStartDateString(),
+       getEndDateString()
+     }));      
+    }
   }
 
   public Date getStartDate() {
@@ -82,7 +110,7 @@ public class MessagesByDeliveriesRecord {
     return startDate==null ? "": fmtDate(startDate);
   }
 
-  public String getEndtDateString() {
+  public String getEndDateString() {
     return endDate==null ? "": fmtDate(endDate);
   }
 }

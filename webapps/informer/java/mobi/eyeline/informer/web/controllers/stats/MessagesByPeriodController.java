@@ -91,8 +91,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   }
 
 
-  public boolean visit(DeliveryStatRecord rec, int total, int current) {
-
+  public boolean visit(DeliveryStatRecord rec, int total, int current) {    
     setCurrentAndTotal(current,total);
     AggregatedRecord newRecord = new MessagesByPeriodRecord(rec,getAggregation(),true);
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());

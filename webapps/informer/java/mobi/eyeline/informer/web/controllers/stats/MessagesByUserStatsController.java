@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import java.util.Locale;
@@ -85,57 +86,77 @@ public class MessagesByUserStatsController extends DeliveryStatController {
     this.filter = filter;
   }
 
-
   @Override
   public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
-    DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
-    if(delivery!=null && filterCopy.getFromDate()==null) {
-      filterCopy.setFromDate(delivery.getStartDate());
-    }
+     DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
+     config.statistics(filterCopy,new DeliveryStatVisitor() {
 
-
-
-
-    DeliveryFilter deliveryFilter = new DeliveryFilter();
-    deliveryFilter.setStartDateFrom(filter.getFromDate());
-    deliveryFilter.setEndDateTo(filter.getTillDate());
-    if(filter.getUser()!=null) {
-      deliveryFilter.setUserIdFilter(new String[]{filter.getUser()});
-    }
-
-    setCurrentAndTotal(0,config.countDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter));
-
-    deliveryFilter.setResultFields(new DeliveryFields[]{DeliveryFields.UserId,DeliveryFields.StartDate,DeliveryFields.EndDate});
-
-    config.getDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter,1000,
-        new Visitor<DeliveryInfo>() {
-          public boolean visit(DeliveryInfo deliveryInfo ) throws AdminException {
-            final int deliveryId = deliveryInfo.getDeliveryId();
-
-
-            MessageFilter messageFilter = new MessageFilter(
-                deliveryId,
-                filter.getFromDate()==null ? deliveryInfo.getStartDate() : filter.getFromDate(),
-                filter.getTillDate()==null ? deliveryInfo.getEndDate() : filter.getTillDate()
-            );
-
-            messageFilter.setFields(new MessageFields[]{MessageFields.Text});
-
-            DeliveryStatistics stat = config.getDeliveryStats(getUser().getLogin(),getUser().getPassword(),deliveryId);
-
-            //todo bySMS detailed stat
-
-            MessagesByUserStatRecord rec = new MessagesByUserStatRecord(deliveryInfo.getUserId(),stat);
-            putRecord(rec);
-
-            setCurrent(getCurrent()+1);
-            return !isCancelled();
-          }
-        }
-    );
-
-
+       public boolean visit(DeliveryStatRecord rec, int total, int current) {
+         setCurrentAndTotal(current,total);
+         User owner = config.getUser(rec.getUser());
+         AggregatedRecord newRecord = new MessagesByUserStatRecord(rec.getUser(),owner, rec);
+         AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
+         if(oldRecord==null) {
+          putRecord(newRecord);
+         }
+         else {
+           oldRecord.add(newRecord);
+         }
+         return !isCancelled();
+       }
+     });
   }
+
+
+//  @Override
+//  public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
+//    DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
+//    if(delivery!=null && filterCopy.getFromDate()==null) {
+//      filterCopy.setFromDate(delivery.getStartDate());
+//    }
+//
+//
+//
+//
+//    DeliveryFilter deliveryFilter = new DeliveryFilter();
+//    deliveryFilter.setStartDateFrom(filter.getFromDate());
+//    deliveryFilter.setEndDateTo(filter.getTillDate());
+//    if(filter.getUser()!=null) {
+//      deliveryFilter.setUserIdFilter(new String[]{filter.getUser()});
+//    }
+//
+//    setCurrentAndTotal(0,config.countDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter));
+//
+//    deliveryFilter.setResultFields(new DeliveryFields[]{DeliveryFields.UserId,DeliveryFields.StartDate,DeliveryFields.EndDate});
+//
+//    config.getDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter,1000,
+//        new Visitor<DeliveryInfo>() {
+//          public boolean visit(DeliveryInfo deliveryInfo ) throws AdminException {
+//            final int deliveryId = deliveryInfo.getDeliveryId();
+//
+//
+//            MessageFilter messageFilter = new MessageFilter(
+//                deliveryId,
+//                filter.getFromDate()==null ? deliveryInfo.getStartDate() : filter.getFromDate(),
+//                filter.getTillDate()==null ? deliveryInfo.getEndDate() : filter.getTillDate()
+//            );
+//
+//            messageFilter.setFields(new MessageFields[]{MessageFields.Text});
+//
+//            DeliveryStatistics stat = config.getDeliveryStats(getUser().getLogin(),getUser().getPassword(),deliveryId);
+//
+//            User owner = config.getUser(deliveryInfo.getUserId());
+//            MessagesByUserStatRecord rec = new MessagesByUserStatRecord(deliveryInfo.getUserId(),owner,stat);
+//            putRecord(rec);
+//
+//            setCurrent(getCurrent()+1);
+//            return !isCancelled();
+//          }
+//        }
+//    );
+//
+//
+//  }
 
 
 

@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
-import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 
@@ -15,19 +16,28 @@ import java.util.Comparator;
  */
 public class MessagesByUserStatRecord extends AggregatedRecord {
   String userId;
+  private User user;
   private long newMessages;
   private long processMessages;
   private long deliveredMessages;
   private long failedMessages;
   private long expiredMessages;
+  private long deliveredMessagesSMS;
+  private long failedMessagesSMS;
+  private long expiredMessagesSMS;
 
-  public MessagesByUserStatRecord(String userId, DeliveryStatistics stat) {
+  public MessagesByUserStatRecord(String userId, User user, DeliveryStatRecord rec) {
     this.userId = userId;
-    this.newMessages = stat.getNewMessages();
-    this.processMessages = stat.getProcessMessages();
-    this.deliveredMessages= stat.getDeliveredMessages();
-    this.failedMessages= stat.getFailedMessages();
-    this.expiredMessages= stat.getExpiredMessages();
+    this.user=user;
+    this.newMessages = rec.getNewmessages();
+    this.processMessages = rec.getProcessing();
+    this.deliveredMessages= rec.getDelivered();
+    this.failedMessages= rec.getFailed();
+    this.expiredMessages= rec.getExpired();
+
+    this.deliveredMessagesSMS = rec.getDeliveredSMS();
+    this.failedMessagesSMS    = rec.getFailedSMS();
+    this.expiredMessagesSMS   = rec.getExpiredSMS();
   }
 
 
@@ -42,8 +52,11 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
      this.newMessages+=r.newMessages;
      this.processMessages+=r.processMessages;
      this.deliveredMessages+=r.deliveredMessages;
+     this.deliveredMessagesSMS+=r.deliveredMessagesSMS;
      this.failedMessages+=r.failedMessages;
+     this.failedMessagesSMS+=r.failedMessagesSMS;
      this.expiredMessages+=r.expiredMessages;
+     this.expiredMessagesSMS+=r.expiredMessagesSMS;
   }
 
   @Override
@@ -64,11 +77,17 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
               else if (sortOrder.getColumnId().equals("delivered")) {
                 return o1.getDeliveredMessages() >= o2.getDeliveredMessages() ? mul : -mul;
               }
-              else if (sortOrder.getColumnId().equals("falied")) {
+              else if (sortOrder.getColumnId().equals("failed")) {
                 return o1.getFailedMessages() >= o2.getFailedMessages() ? mul : -mul;
               }
               else if (sortOrder.getColumnId().equals("expired")) {
                 return o1.getExpiredMessages() >= o2.getExpiredMessages() ? mul : -mul;
+              }
+              else if (sortOrder.getColumnId().equals("wait")) {
+                return o1.getNewMessages()+o1.getProcessMessages() >= o2.getNewMessages()+o2.getProcessMessages() ? mul : -mul;
+              }
+              else if (sortOrder.getColumnId().equals("notDelivered")) {
+                return o1.getFailedMessages()+o1.getExpiredMessages() >= o2.getFailedMessages()+o2.getExpiredMessages() ? mul : -mul;
               }
               return 0;
             }
@@ -77,17 +96,36 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
 
   @Override
   void printCSVheader(PrintWriter writer,boolean detalized) {
+    if(detalized) {
       writer.println(StringEncoderDecoder.toCSVString(
-         new Object[]{"USER","NEW","PROCESS","DELIVERED","FAILED","EXPIRED"}
-      ));    
+         new Object[]{"USER","NEW","PROCESS","DELIVERED","DELIVERED_SMS","FAILED","FAILED_SMS","EXPIRED","EXPIRED_SMS"}
+      ));
+    }
+    else {
+      writer.println(StringEncoderDecoder.toCSVString(
+      new Object[]{"USER","WAIT","DELIVERED","DELIVERED_SMS","NOTDELIVERED","NOTDELIVERED_SMS"}
+      ));
+    }
   }
 
 
   @Override
   void printWithChildrenToCSV(PrintWriter writer, boolean detalized) {
-     writer.println(StringEncoderDecoder.toCSVString(
-         new Object[]{userId,newMessages,processMessages,deliveredMessages,failedMessages,expiredMessages}
-     ));
+    if(detalized) {
+      writer.println(StringEncoderDecoder.toCSVString(
+         new Object[]{userId,newMessages,processMessages,deliveredMessages,deliveredMessagesSMS,failedMessages,failedMessagesSMS,expiredMessages,expiredMessagesSMS}
+      ));
+    }
+    else {
+      writer.println(StringEncoderDecoder.toCSVString(
+         new Object[]{userId,
+             newMessages+processMessages,
+             deliveredMessages,
+             deliveredMessagesSMS,
+             failedMessages+expiredMessages,
+             failedMessagesSMS+expiredMessagesSMS}
+      ));
+    }
   }
 
 
@@ -115,5 +153,21 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
 
   public long getExpiredMessages() {
     return expiredMessages;
+  }
+
+  public long getDeliveredMessagesSMS() {
+    return deliveredMessagesSMS;
+  }
+
+  public long getFailedMessagesSMS() {
+    return failedMessagesSMS;
+  }
+
+  public long getExpiredMessagesSMS() {
+    return expiredMessagesSMS;
+  }
+
+  public String getUserDetails() {
+    return user==null ? "" : user.getFirstName()+" "+user.getLastName();
   }
 }

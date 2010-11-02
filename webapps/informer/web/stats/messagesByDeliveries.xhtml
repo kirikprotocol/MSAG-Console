@@ -4,6 +4,7 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
       xmlns:eye="http://taglib.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
@@ -13,19 +14,19 @@
   <ui:define name="content">
 
     <tr:form>
-
+      <c:set var="longOpState" value="#{messagesByDeliveries.state}"/>
 
       <h:panelGroup>
 
         <eye:dataTableFilter bean="#{messagesByDeliveries}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
-            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
+          <h:panelGrid columns="3" columnClasses="columnTopLeftAlign,columnTopLeftAlign, columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="column100WidthTopLeft, column300WidthTopLeft">
               <h:outputText value="#{msg['stat.page.from_date']}"/>
               <t:inputDate value="#{messagesByDeliveries.filter.fromDate}" popupCalendar="true" type="both" />
               <h:outputText value="#{msg['stat.page.till_date']}"/>
               <t:inputDate value="#{messagesByDeliveries.filter.tillDate}"  popupCalendar="true" type="both"/>
             </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
+            <h:panelGrid columns="2" columnClasses="column100WidthTopLeft, columnTopLeftAlign">
               <h:outputText value="#{msg['stat.page.deliveryName']}"/>
               <t:inputText id="Name" value="#{messagesByDeliveries.nameFilter}"/>
               <h:outputText value="#{msg['stat.page.user']}" rendered="#{messagesByDeliveries.admin}"/>
@@ -33,20 +34,24 @@
                 <f:selectItems value="#{messagesByDeliveries.users}"/>
               </h:selectOneMenu>
             </h:panelGrid>
+            <h:panelGrid columns="2" columnClasses="column100WidthTopLeft, columnTopLeftAlign">
+              <h:outputText value="#{msg['stat.page.detalised']}"/>
+              <h:selectBooleanCheckbox value="#{messagesByDeliveries.fullMode}"/>
+            </h:panelGrid>
 
           </h:panelGrid>
         </eye:dataTableFilter>
 
 
-        <eye:updatableContent updatePeriod="1" enabled="#{messagesByDeliveries.state == 1}" >
+        <eye:updatableContent updatePeriod="1" enabled="#{longOpState == 1}" >
 
-          <eye:message level="error" rendered="#{messagesByDeliveries.state == 3}">
+          <eye:message level="error" rendered="#{longOpState == 3}">
             <p/>
             <h:outputText value="#{messagesByDeliveries.error}"/>
             <p/>
           </eye:message>
 
-          <h:panelGroup rendered="#{messagesByDeliveries.state == 1}">
+          <h:panelGroup rendered="#{longOpState == 1}">
             <tr:message id="upload_message"/>
             <eye:buttons>
               <eye:button>
@@ -69,7 +74,7 @@
 
           </h:panelGroup>
 
-          <eye:dataTable value="#{messagesByDeliveries.records}" var="row" rendered="#{messagesByDeliveries.state == 2}" >
+          <eye:dataTable value="#{messagesByDeliveries.records}" var="row" rendered="#{(longOpState == 2) and (messagesByDeliveries.fullMode)}" >
 
             <eye:row>
               <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
@@ -109,7 +114,45 @@
               </eye:column>
             </eye:row>
           </eye:dataTable>
-          <eye:buttons rendered="#{messagesByDeliveries.state == 2}">
+
+
+          <eye:dataTable value="#{messagesByDeliveries.records}" var="row" rendered="#{(longOpState == 2) and (!messagesByDeliveries.fullMode)}" >
+
+            <eye:row>
+              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+                <h:outputText value="#{row.info.userId}"/>
+              </eye:column>
+              <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
+                <h:commandLink value="#{row.info.name}" action="DELIVERY_EDIT">
+                  <f:param name="delivery" value="#{row.info.deliveryId}"/>
+                </h:commandLink>
+              </eye:column>
+
+
+              <eye:column name="status" title="#{msg['stat.page.state']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.deliveryState.status}"/>
+              </eye:column>
+              <eye:column name="wait" title="#{msg['stat.page.wait']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.newMessages+row.stat.processMessages}"/>
+              </eye:column>
+              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.deliveredMessages}"/>
+              </eye:column>
+              <eye:column name="failed" title="#{msg['stat.page.notDelivered']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.stat.failedMessages+row.stat.expiredMessages}"/>
+              </eye:column>
+
+              <eye:column name="startDate" title="#{msg['stat.page.startDate']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.startDateString}"/>
+              </eye:column>
+              <eye:column name="endDate" title="#{msg['stat.page.endDate']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.endDateString}"/>
+              </eye:column>
+            </eye:row>
+          </eye:dataTable>
+
+
+          <eye:buttons rendered="#{longOpState == 2}">
             <eye:space/>
             <eye:button >
               <h:commandLink value="#{msg['download.button']}" >

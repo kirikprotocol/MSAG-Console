@@ -16,7 +16,7 @@
   <ui:define name="content">
 
     <tr:form id="smsc" rendered="#{!messagesByUserStats.initError}">
-
+      <c:set var="longOpState" value="#{messagesByUserStats.state}"/>
 
       <h:panelGroup style="padding:10px">
 
@@ -41,11 +41,11 @@
         </eye:dataTableFilter>
 
 
-        <eye:updatableContent updatePeriod="1"  enabled="#{messagesByUserStats.state == 1}">
+        <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
 
 
 
-          <eye:message level="error" rendered="#{messagesByUserStats.state == 3}">
+          <eye:message level="error" rendered="#{longOpState == 3}">
             <p/>
             <h:outputText value="#{messagesByUserStats.error}"/>
             <p/>
@@ -54,7 +54,7 @@
 
 
 
-          <h:panelGroup rendered="#{messagesByUserStats.state == 1}">
+          <h:panelGroup rendered="#{longOpState == 1}">
             <tr:message id="upload_message"/>
             <eye:buttons>
               <eye:button>
@@ -76,10 +76,13 @@
             </eye:buttons>
           </h:panelGroup>
 
-          <eye:dataTable value="#{messagesByUserStats.records}" var="row" rendered="#{messagesByUserStats.showDetailed}">
+          <eye:dataTable value="#{messagesByUserStats.records}" var="row" rendered="#{longOpState == 2 and messagesByUserStats.fullMode}">
             <eye:row innerRows="#{row.innerRows}">
               <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
-                <h:outputText value="#{row.userId}"/>
+                <h:commandLink value="#{row.userId}" action="USER_EDIT" title="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
+                  <f:param name="userId" value="#{row.userId}"/>
+                </h:commandLink>
+                <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
               </eye:column>
               <eye:column name="new" title="#{msg['stat.page.newMessages']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.newMessages}"/>
@@ -88,35 +91,38 @@
                 <h:outputText value="#{row.processMessages}"/>
               </eye:column>
               <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.deliveredMessages}"/>
+                <h:outputText value="#{row.deliveredMessages}(#{row.deliveredMessagesSMS})"/>
               </eye:column>
               <eye:column name="failed" title="#{msg['stat.page.failed']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.failedMessages}"/>
+                <h:outputText value="#{row.failedMessages}(#{row.failedMessagesSMS})"/>
               </eye:column>
               <eye:column name="expired" title="#{msg['stat.page.expiredMessages']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.expiredMessages}"/>
+                <h:outputText value="#{row.expiredMessages}(#{row.expiredMessagesSMS})"/>
               </eye:column>
             </eye:row>
           </eye:dataTable>
 
-          <eye:dataTable value="#{messagesByUserStats.records}" var="row" rendered="#{messagesByUserStats.showBrief}" >
+          <eye:dataTable value="#{messagesByUserStats.records}" var="row" rendered="#{longOpState == 2 and !messagesByUserStats.fullMode}" >
             <eye:row>
-              <eye:column name="period" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
-                <h:outputText value="#{row.data.userId}"/>
+              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
+                <h:commandLink value="#{row.userId}" action="USER_EDIT" title="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
+                  <f:param name="userId" value="#{row.userId}"/>
+                </h:commandLink>
+                <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
               </eye:column>
               <eye:column name="wait" title="#{msg['stat.page.wait']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.newMessages + row.data.processMessages}"/>
+                <h:outputText value="#{row.newMessages + row.processMessages}"/>
               </eye:column>
               <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.deliveredMessages}(#{row.data.deliveredMessagesSMS})"/>
+                <h:outputText value="#{row.deliveredMessages}(#{row.deliveredMessagesSMS})"/>
               </eye:column>
               <eye:column name="notDelivered" title="#{msg['stat.page.notDelivered']}" sortable="true" width="10%" align="center">
-                <h:outputText value="#{row.data.failedMessages+row.data.expiredMessages}(#{row.data.failedMessagesSMS+row.data.expiredMessagesSMS})"/>
+                <h:outputText value="#{row.failedMessages+row.expiredMessages}(#{row.failedMessagesSMS+row.expiredMessagesSMS})"/>
               </eye:column>
             </eye:row>
           </eye:dataTable>
 
-          <eye:buttons rendered="#{messagesByUserStats.state == 2}">
+          <eye:buttons rendered="#{longOpState == 2}">
             <eye:space/>
             <eye:button>
               <h:commandLink value="#{msg['download.button']}" >

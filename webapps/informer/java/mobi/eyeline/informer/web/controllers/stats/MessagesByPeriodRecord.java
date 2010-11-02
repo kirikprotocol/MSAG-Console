@@ -143,11 +143,17 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
         else if (sortOrder.getColumnId().equals("delivered")) {
           return o1.getDeliveredMessages() >= o2.getDeliveredMessages() ? mul : -mul;
         }
-        else if (sortOrder.getColumnId().equals("falied")) {
+        else if (sortOrder.getColumnId().equals("failed")) {
           return o1.getFailedMessages() >= o2.getFailedMessages() ? mul : -mul;
         }
         else if (sortOrder.getColumnId().equals("expired")) {
           return o1.getExpiredMessages() >= o2.getExpiredMessages() ? mul : -mul;
+        }
+        else if (sortOrder.getColumnId().equals("wait")) {
+          return o1.getNewMessages()+o1.getProcessMessages() >= o2.getNewMessages()+o2.getProcessMessages() ? mul : -mul;
+        }
+        else if (sortOrder.getColumnId().equals("notDelivered")) {
+          return o1.getFailedMessages()+o1.getExpiredMessages() >= o2.getFailedMessages()+o2.getExpiredMessages() ? mul : -mul;
         }
         return 0;
       }
@@ -159,63 +165,39 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
     return newMessages;
   }
 
-  public void setNewMessages(long newMessages) {
-    this.newMessages = newMessages;
-  }
 
   public long getProcessMessages() {
     return processMessages;
   }
 
-  public void setProcessMessages(long processMessages) {
-    this.processMessages = processMessages;
-  }
 
   public long getDeliveredMessages() {
     return deliveredMessages;
   }
 
-  public void setDeliveredMessages(long deliveredMessages) {
-    this.deliveredMessages = deliveredMessages;
-  }
 
   public long getFailedMessages() {
     return failedMessages;
   }
 
-  public void setFailedMessages(long failedMessages) {
-    this.failedMessages = failedMessages;
-  }
 
   public long getExpiredMessages() {
     return expiredMessages;
   }
 
-  public void setExpiredMessages(long expiredMessages) {
-    this.expiredMessages = expiredMessages;
-  }
 
   public long getDeliveredMessagesSMS() {
     return deliveredMessagesSMS;
   }
 
-  public void setDeliveredMessagesSMS(long deliveredMessagesSMS) {
-    this.deliveredMessagesSMS = deliveredMessagesSMS;
-  }
 
   public long getFailedMessagesSMS() {
     return failedMessagesSMS;
   }
 
-  public void setFailedMessagesSMS(long failedMessagesSMS) {
-    this.failedMessagesSMS = failedMessagesSMS;
-  }
 
   public long getExpiredMessagesSMS() {
     return expiredMessagesSMS;
   }
 
-  public void setExpiredMessagesSMS(long expiredMessagesSMS) {
-    this.expiredMessagesSMS = expiredMessagesSMS;
-  }
 }
