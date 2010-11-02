@@ -139,4 +139,13 @@
     </component>
   </tag>
 
+  <tag>
+    <tag-name>pageCalendar</tag-name>
+    <component>
+      <component-type>pageCalendar</component-type>
+      <renderer-type>pageCalendar</renderer-type>
+      <handler-class>mobi.eyeline.informer.web.components.page_calendar.PageCalendarHandler</handler-class>
+    </component>
+  </tag>
+
 </facelet-taglib>

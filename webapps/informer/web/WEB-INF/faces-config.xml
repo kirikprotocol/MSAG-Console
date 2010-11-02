@@ -125,6 +125,12 @@
       <renderer-type>updatableContent</renderer-type>
       <renderer-class>mobi.eyeline.informer.web.components.updatable_content.UpdatableContentRenderer</renderer-class>
     </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>pageCalendar</renderer-type>
+      <renderer-class>mobi.eyeline.informer.web.components.page_calendar.PageCalendarRenderer</renderer-class>
+    </renderer>
   </render-kit>
 
 

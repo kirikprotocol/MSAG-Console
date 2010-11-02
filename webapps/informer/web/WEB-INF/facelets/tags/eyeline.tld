@@ -388,5 +388,20 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>pageCalendar</name>
+    <description>Календарь, отображаемый на странице</description>
+    <attribute>
+      <name>var</name>
+      <description>Название переменной на странице, в которую будет записываться текущий объект календаря, полученный из модели</description>
+      <required>true</required>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>value</name>
+      <description>Модель календаря</description>
+      <required>true</required>
+    </attribute>
+  </tag>
 
 </taglib>

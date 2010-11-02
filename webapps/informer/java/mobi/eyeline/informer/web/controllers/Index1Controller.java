@@ -2,11 +2,10 @@ package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.page_calendar.PageCalendarModel;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -29,6 +28,21 @@ public class Index1Controller {
       current++;
     }
     return current;
+  }
+
+  final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
+
+  public PageCalendarModel getCalendarModel() {
+    return new PageCalendarModel() {
+
+      public void updateVisiblePeriod(Date startDate, Date endDate) {
+        System.out.println("Visible period: " + df.format(startDate) + " - " + df.format(endDate));
+      }
+
+      public Object getValue(Date date) {
+        return df.format(date);
+      }
+    };
   }
 
   public DataTableModel getModel() {
