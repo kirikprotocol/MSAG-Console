@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/inap/dispatcher.hpp"
 #include "inman/inap/ACRegistry.hpp"
@@ -133,7 +133,7 @@ bool TCAPDispatcher::Init(const TCDsp_CFG & use_cfg, Logger * use_log/* = NULL*/
 #ifdef EIN_HD
     _rcpMgrAdr = new char[_cfg.rcpMgrAdr.length() + 2];
     strcpy(_rcpMgrAdr, _cfg.rcpMgrAdr.c_str());
-#else EIN_HD
+#else /* EIN_HD */
     //set the single TCAP BE instance with id = 0
     SS7Unit_CFG tcUnit(TCAP_ID);
     tcUnit.instIds.insert(SS7UnitInstsMap::value_type(0, SS7UnitInstance(0)));
@@ -280,7 +280,6 @@ int TCAPDispatcher::Reconnect(void)
 {
 //  unsigned connCounter = 0;
   unsigned bindCounter = 0;
-  USHORT_T result = 0;
 
   _sync.Lock(); //waits here for Start()
   _dspState = dspRunning;
