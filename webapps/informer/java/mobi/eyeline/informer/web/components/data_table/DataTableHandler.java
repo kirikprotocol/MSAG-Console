@@ -92,7 +92,7 @@ public class DataTableHandler extends ComponentHandler {
 
       nextHandler.apply(ctx, c);
 
-      ValueExpression innerRowsExpr = ctx.getVariableMapper().resolveVariable("___innerRows");
+      ValueExpression innerRowsExpr = ctx.getVariableMapper().resolveVariable(tid + "___innerRows");
       if (innerRowsExpr != null) {
         List innerRowsData = (List) innerRowsExpr.getValue(ctx);
 
