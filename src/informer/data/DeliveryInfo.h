@@ -21,9 +21,26 @@ typedef enum {
 } DeliveryMode;
 
 
+/// the structure holding data from dcp protocol.
+struct DeliveryInfoData
+{
+};
+
+
 class DeliveryInfo
 {
 public:
+    /// create delivery info from dcp.
+    static const DeliveryInfo* makeDeliveryInfo( const CommonSettings&   cs,
+                                                 UserInfo&               userInfo,
+                                                 const DeliveryInfoData& data );
+
+    /// read delivery info from filesystem
+    static const DeliveryInfo* readDeliveryInfo( const CommonSettings&   cs,
+                                                 dlvid_type              dlvId );
+
+protected:
+    // constructor from file system
     DeliveryInfo( const CommonSettings& cs,
                   dlvid_type            dlvId,
                   UserInfo*             userInfo = 0 ) :
@@ -39,6 +56,7 @@ public:
         if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
     }
 
+public:
     const CommonSettings& getCS() const { return cs_; }
 
     // this method is invoked from regional storage.
