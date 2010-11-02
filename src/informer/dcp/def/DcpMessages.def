@@ -27,7 +27,11 @@ end
 
 message GetUserStatsResp 13
   int16 currentConnectionsCount 1
-  int16 currentDeliveriesCount 2
+  int32 currentActiveDeliveriesCount 2
+  int32 currentPausedDeliveriesCount 3
+  int32 currentPlannedDeliveriesCount 4
+  int32 currentFinishedDeliveriesCount 5
+  int32 currentCancelledDeliveriesCount 6
 end
 
 
@@ -92,6 +96,7 @@ message DeliveryMessage
   MessageType msgType 2 
   string text 3 opt
   int32 index 4 opt
+  string userData 5 opt
 end
 
 
@@ -211,8 +216,9 @@ message AddDeliveryMessagesResp 36
   int64 messageIds 1 array
 end
 
-message DropDeliverymessages 37
-  int64 messageIds 1 array
+message DropDeliveryMessages 37
+  int32 deliveryId 1
+  int64 messageIds 2 array
 end
 
 message GetDeliveryGlossary 38
