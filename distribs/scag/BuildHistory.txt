@@ -687,7 +687,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2010-10-05 12:00 bukind
   msag: bugfix: failed resp destroys ussd operation
 
---- current fixes ---
+=================================================================================================================
+2010-11-02 09:30 bukind msag-build-20101102
 2010-10-06 12:00 bukind
   msag bugfix: SmeAcceptor was not stopped before
                SmppReaders/SmppWriters which results in race-condition.
@@ -695,3 +696,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
                caused SMSC/SME connecting prior SmppSocketManager init.
 2010-10-06 13:00 bukind
   msag bugfix: status of BIND_RESP from SMSC was not checked
+
+--- current fixes ---
