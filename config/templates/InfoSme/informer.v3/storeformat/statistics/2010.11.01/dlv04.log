@@ -1,0 +1,29 @@
+The text file contains periodic delivery statistics by users.
+
+The file location is statistics/YYYY.MM.DD/dlvHH.log
+and so it contains records written during one hour.
+
+The head of the file contains comment record prefixed with '#'
+character:
+# MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL
+
+The following lines are records one per line, containing the following
+fields:
+
+  MINSEC  - minute and second of the record (MMSS). The statistics in
+            the record is collected during the previous minute.  The
+            number of seconds must be 00 when running, but may be
+            different when informer is stopping;
+  USER    - user id;
+  PAUSED  - how many times deliveries switched to paused;
+  PLANNED - how many times deliveries switched to planned;
+  ACTIVE  - how many times deliveries switched to active;
+  FINISH  - how many times deliveries switched to finished;
+  CANCEL  - how many times deliveries switched to cancelled.
+
+Example:
+# MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL
+2000,bukind,0,0,1,1,0
+
+Note, that in this example the single delivery switched to
+ -> active -> finished.
