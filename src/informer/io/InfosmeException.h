@@ -26,6 +26,11 @@ typedef enum
 {
     EXC_GENERIC = 0,
     EXC_DLVLIMITEXCEED,    // number of deliveries exceeded
+    EXC_LOGICERROR,        // program logic error
+    EXC_BADNAME,           // invalid/too long  userid/smscid/etc.
+    EXC_BADCONFIG,         // configuration problem
+    EXC_SYSTEM,            // system call/library function failure
+    EXC_IOERROR,           // conversion problem (text,binary data)
 } ErrorCode;
 
 
@@ -51,7 +56,7 @@ class ErrnoException : public InfosmeException
 public:
     ErrnoException( int err, const char* fmt, ...)
     {
-        code_ = EXC_GENERIC;
+        code_ = EXC_SYSTEM;
         SMSC_UTIL_EX_FILL(fmt);
         char ebuf[100];
         message += ": ";
