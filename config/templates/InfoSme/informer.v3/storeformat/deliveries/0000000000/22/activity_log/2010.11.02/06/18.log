@@ -1,0 +1,36 @@
+The text file contains activity log for given delivery.
+
+The file location relative to the delivery directory is 
+activity_log/YYYY.MM.DD/HH/MM.log
+and so it contains records written during one minute.
+
+The head of the file contains statistics pseudo-comment record 
+prefixed with '#' character:
+
+# TOTAL=0,PROC=0,SENT=0,RTRY=0,DLVD=0,FAIL=0,EXPRD=0
+
+The following lines are records one per line, containing the following
+fields:
+SEC,STATE,REGID,MSGID,RETRY,NEXT,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT
+where
+  SEC      - the number of seconds in the format SS, [00..59];
+  STATE    - message state, a char one of 'N', 'P', 'R', 'D', 'F', 'E',
+             for new, proc, retry, dlvd, fail, expired respectively.
+  REGID    - region id, positive integer [0..]
+  MSGID    - message id, positive integer [1..]
+  RETRY    - retry count of the message, [0..]
+  NEXT     - how much time to wait until next retry, seconds
+  SUBSCRIBER - the ISDN
+  TTL      - time to live, seconds [0..]
+  SMPP     - the smpp code
+  USERDATA - user data ASCII string
+  TEXT     - the escaped text of the messages
+
+Example:
+# TOTAL=0,PROC=0,SENT=0,RTRY=0,DLVD=0,FAIL=0,EXPRD=0
+13,N,0,1,0,0,+79137654079,0,0,myfirstmsg,"my \"f\" msg\nsee\\later"
+13,N,0,2,0,0,+79537699490,44,0,thesecondone,"the unbound message"
+13,P,0,1,0,0,+79137654079,3600,0,myfirstmsg,"my \"f\" msg\nsee\\later"
+13,P,0,2,0,0,+79537699490,3600,0,thesecondone,"the unbound message"
+14,F,0,2,0,0,+79537699490,0,1025,thesecondone,"the unbound message"
+14,D,0,1,0,0,+79137654079,0,0,myfirstmsg,"my \"f\" msg\nsee\\later"
