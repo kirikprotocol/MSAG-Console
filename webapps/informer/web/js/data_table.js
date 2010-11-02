@@ -48,6 +48,11 @@ function DataTable(tableId, updateUsingSubmit) {
       if (pname == null)
         pname = el.getAttribute("name");
       if (pname != null) {
+        if (el.tagName == "INPUT" && el.getAttribute("type") == "checkbox") {
+          if (el.getAttribute("checked") != null)
+            args += pname + '=true';
+          continue;
+        }
         var value = el.getAttribute("value");
         if (value == null) {
           if (el.checked)
