@@ -69,7 +69,10 @@
 
             <eye:row>
               <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
-                <h:outputText value="#{row.userId}" title="#{row.userDetails}"/>
+                <h:commandLink value="#{row.userId}" action="USER_EDIT" title="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
+                  <f:param name="userId" value="#{row.userId}"/>
+                </h:commandLink>                
+                <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
               </eye:column>
               <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
                 <h:commandLink value="#{row.name}" action="DELIVERY_EDIT">

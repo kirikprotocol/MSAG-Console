@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.delivery.MessageState;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
@@ -16,17 +17,20 @@ import java.util.Date;
  */
 public class MessagesByRecRecord {
 
-  private  Integer deliveryId;
   private  String  userId;
+  private  User user;
+  private  Integer deliveryId;
+
   private  String  name;
   private  String  text;
   private  Date    deliveryDate;
   private  MessageState state;
   private  String errorString;
 
-  public MessagesByRecRecord(Integer deliveryId, String userId, String name, String text, Date deliveryDate, MessageState state, String errorString) {
+  public MessagesByRecRecord(Integer deliveryId, String userId, User user, String name, String text, Date deliveryDate, MessageState state, String errorString) {
     this.deliveryId = deliveryId;
     this.userId = userId;
+    this.user = user;
     this.name = name;
     this.text = text;
     this.deliveryDate = deliveryDate;
@@ -67,6 +71,10 @@ public class MessagesByRecRecord {
     return errorString;
   }
 
+  public String getUserDetails() {
+    return user==null ? "" : user.getFirstName()+" "+user.getLastName();
+  }
+
   public void printCSV(PrintWriter writer) {
     writer.println(StringEncoderDecoder.toCSVString(new Object[]{
       name,
@@ -77,4 +85,6 @@ public class MessagesByRecRecord {
       errorString
     }));
   }
+
+
 }
