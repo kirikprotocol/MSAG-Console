@@ -6,6 +6,7 @@ namespace informer {
 
 class CommonSettings;
 struct DlvRegMsgId;
+class RetryPolicy;
 
 class ReceiptProcessor
 {
@@ -15,6 +16,7 @@ public:
     virtual const CommonSettings& getCS() const = 0;
 
     virtual void receiveReceipt( const DlvRegMsgId& drm,
+                                 const RetryPolicy& policy,
                                  int                smppStatus,
                                  bool               retry ) = 0;
     virtual bool receiveResponse( const DlvRegMsgId& drm ) = 0;

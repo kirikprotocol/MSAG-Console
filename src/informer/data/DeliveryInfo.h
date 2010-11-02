@@ -3,7 +3,7 @@
 
 #include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
-#include "system/status.h"
+// #include "system/status.h"
 // #include "DeliveryStats.h"
 #include "core/synchronization/Mutex.hpp"
 
@@ -66,6 +66,7 @@ public:
 
     personid_type getFrom() const { return from_; } 
 
+    /*
     bool wantRetry( int status ) const {
         switch (status) {
         case smsc::system::Status::OK:
@@ -82,20 +83,10 @@ public:
     }
 
     const char* getRetryPolicyName() const { return retryPolicyName_.c_str(); }
+     */
 
-    // minimal number of input messages per region when request for new
-    // input messages should be issued.
-    // unsigned getMinInputQueueSize() const { return 5; }
-
-    // maximum number of messages in resend queue that prevents the
-    // request for new input messages.
-    // unsigned getMaxResendQueueSize() const { return 20; }
-
-    // number of input messages to be requested.
-    // unsigned getUploadCount() const { return 10; }
-
-    /// minimal time between retries, seconds
-    unsigned getMinRetryTime() const { return 60; }
+    // minimal time between retries, seconds
+    // unsigned getMinRetryTime() const { return 60; }
 
     /// message validity time, seconds
     unsigned getMessageValidityTime() const { return 3600; }

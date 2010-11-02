@@ -73,7 +73,6 @@ adminServer_(0)
 InfosmeCoreV1::~InfosmeCoreV1()
 {
     smsc_log_info(log_,"dtor started, FIXME: cleanup");
-    printf("core dtor started\n");
 
     stop();
 
@@ -97,8 +96,6 @@ InfosmeCoreV1::~InfosmeCoreV1()
     regions_.Empty();
     users_.Empty();
     smsc_log_info(log_,"dtor finished");
-
-    printf("core dtor finished\n");
 }
 
 
@@ -110,7 +107,6 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     if (!dlvMgr_) { dlvMgr_ = new DeliveryMgr(*this,cs_); }
 
     // create admin server
-    /*
     if (!adminServer_) {
         adminServer_ = new admin::AdminServer();
         adminServer_->assignCore(this);
@@ -118,7 +114,6 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
                            cfg.getInt("Admin.port"),
                            cfg.getInt("Admin.handlers") );
     }
-     */
 
     // FIXME: load users
     {

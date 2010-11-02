@@ -11,6 +11,7 @@ class RegionFinder;
 class InputTransferTask;
 class ResendTransferTask;
 
+/// an interface for applying some activities on deliveries.
 class DeliveryActivator
 {
 public:

@@ -1,10 +1,10 @@
 #include <cassert>
 #include "RegionalStorage.h"
 #include "informer/io/UnlockMutexGuard.h"
-#include "informer/io/RelockMutexGuard.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/MessageGlossary.h"
+#include "informer/data/RetryPolicy.h"
 #include "DeliveryImpl.h"
 #include "StoreJournal.h"
 
@@ -266,23 +266,27 @@ void RegionalStorage::messageSent( msgid_type msgId,
 }
 
 
-void RegionalStorage::retryMessage( msgid_type   msgId,
-                                    msgtime_type currentTime,
-                                    int          smppState )
+void RegionalStorage::retryMessage( msgid_type         msgId,
+                                    const RetryPolicy& policy,
+                                    msgtime_type       currentTime,
+                                    int                smppState )
 {
     const DeliveryInfo& info = dlv_.getDlvInfo();
-    msgtime_type retryDelay = info.getCS().getRetryTime(info.getRetryPolicyName(),smppState);
 
     RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
         // not found
+        mg.Unlock();
         throw smsc::util::Exception("message R=%u/D=%u/M=%llu is not found (retryMessage)",
                                     unsigned(regionId_),
                                     unsigned(info.getDlvId()),
                                     ulonglong(msgId));
     }
-    if (retryDelay <= 0) {
+
+    timediff_type retryDelay = policy.getRetryTime(info,smppState,iter->msg.retryCount);
+
+    if (retryDelay == 0) {
         // immediate retry
         Message& m = iter->msg;
         // putting the message to the new queue
@@ -295,10 +299,12 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
                        unsigned(info.getDlvId()),
                        ulonglong(msgId));
         return;
+    } else if ( retryDelay == -1 ) {
+        // permanent failure
+        doFinalize(mg,iter,currentTime,MSGSTATE_FAILED,smppState);
+        return;
     }
 
-    MessageList tokill; // must be prior the msglock!
-    MsgLock ml(iter,this);
     Message& m = iter->msg;
 
     // FIXME: incrementing retry count, should we check here?
@@ -306,42 +312,29 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
 
     // fixing time left.
     m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
-    if ( m.timeLeft > timediff_type(info.getMinRetryTime()) ) {
+    if ( m.timeLeft > policy.getMinRetryTime() ) {
         // there is enough validity time to try the next time
-        if ( m.timeLeft < timediff_type(retryDelay) ) retryDelay = m.timeLeft;
+
+        MsgLock ml(iter,this);
+        if ( m.timeLeft < retryDelay ) retryDelay = m.timeLeft;
         m.timeLeft -= retryDelay;
-        retryDelay += currentTime;
-        resendQueue_.insert( std::make_pair(retryDelay,iter) );
+        m.lastTime = currentTime + retryDelay;
+        resendQueue_.insert( std::make_pair(m.lastTime,iter) );
         // FIXME: check if resendQueue become very big and it have
         // messages in the next+1 chunk, then start flush task.
 
         mg.Unlock();
-        m.lastTime = retryDelay;
         const uint8_t prevState = m.state;
         m.state = MSGSTATE_RETRY;
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %llu",
                        unsigned(regionId_),
                        unsigned(info.getDlvId()),
                        ulonglong(msgId),
-                       msgTimeToYmd(retryDelay) );
+                       msgTimeToYmd(m.lastTime) );
         dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
         dlv_.activityLog_.incStats(m.state,1,prevState);
     } else {
-        // not enough time to retry
-        // moving element to a not-valid part of the list
-        tokill.splice(tokill.begin(),messageList_,iter);
-        const bool checkFinal = messageList_.empty() && !nextResendFile_;
-        mg.Unlock();
-        m.lastTime = currentTime;
-        const uint8_t prevState = m.state;
-        m.state = MSGSTATE_EXPIRED;
-        smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is expired, smpp=%u",
-                       unsigned(regionId_),
-                       unsigned(info.getDlvId()),
-                       unsigned(msgId), smppState );
-        dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
-        dlv_.activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
-        if (checkFinal) dlv_.checkFinalize();
+        doFinalize(mg,iter,currentTime,MSGSTATE_EXPIRED,smppState);
     }
 }
 
@@ -360,6 +353,17 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
                                     unsigned(info.getDlvId()),
                                     ulonglong(msgId));
     }
+    doFinalize(mg,iter,currentTime,state,smppState);
+}
+
+
+void RegionalStorage::doFinalize(RelockMutexGuard& mg,
+                                 MsgIter           iter,
+                                 msgtime_type      currentTime,
+                                 uint8_t           state,
+                                 int               smppState )
+{
+    const dlvid_type dlvId = dlv_.getDlvId();
     MessageList tokill;
     MsgLock ml(iter,this);
     tokill.splice(tokill.begin(),messageList_,iter);
@@ -372,11 +376,11 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
     m.state = state;
     smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is finalized, state=%u, smpp=%u, checkFin=%d",
                    unsigned(regionId_),
-                   unsigned(info.getDlvId()),
-                   ulonglong(msgId),state,smppState,
+                   unsigned(dlvId),
+                   ulonglong(m.msgId),state,smppState,
                    checkFinal);
     dlv_.activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
-    dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
+    dlv_.storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
     if (checkFinal) dlv_.checkFinalize();
 }
 

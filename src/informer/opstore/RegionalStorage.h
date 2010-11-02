@@ -7,6 +7,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Condition.hpp"
 #include "informer/io/EmbedRefPtr.h"
+#include "informer/io/RelockMutexGuard.h"
 #include "informer/data/InputMessageSource.h"
 #include "logger/Logger.h"
 
@@ -16,6 +17,7 @@ namespace informer {
 class StoreJournal;
 class DeliveryImpl;
 class DeliveryInfo;
+class RetryPolicy;
 
 /// Working storage for messages for one Delivery/Region
 class RegionalStorage : protected TransferRequester
@@ -65,9 +67,10 @@ public:
 
     /// change message state when temporal failure received.
     /// message is removed from the cache.
-    void retryMessage( msgid_type msgId,
-                       msgtime_type currentTime,
-                       int smppState );
+    void retryMessage( msgid_type         msgId,
+                       const RetryPolicy& policy,
+                       msgtime_type       currentTime,
+                       int                smppState );
 
     /// finalize message. message is removed from cache.
     void finalizeMessage( msgid_type   msgId,
@@ -108,6 +111,13 @@ protected:
                                  MsgIter      iter2 );
 
     virtual void resendIO( bool isInputDirection );
+
+    /// NOTE: mg must be locked!
+    void doFinalize( RelockMutexGuard& mg,
+                     MsgIter           iter,
+                     msgtime_type      currentTime,
+                     uint8_t           state,
+                     int               smppState );
 
 private:
     // message cleanup

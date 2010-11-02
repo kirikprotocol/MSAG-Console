@@ -3,6 +3,7 @@
 #include "InfosmeCoreV1.h"
 #include "informer/newstore/InputStorage.h"
 #include "informer/io/DirListing.h"
+#include "system/status.h"
 
 namespace {
 
@@ -464,7 +465,9 @@ bool DeliveryMgr::isCoreStopping() const
 }
 
 
-void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId, int status, bool retry )
+void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
+                                  const RetryPolicy& policy,
+                                  int status, bool retry )
 {
     smsc_log_debug(log_,"rcpt received R=%u/D=%u/M=%llu status=%u retry=%d",
                    drmId.regId, drmId.dlvId,
@@ -477,7 +480,7 @@ void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId, int status, bool ret
             return;
         }
 
-        const DeliveryInfo& info = dlv->getDlvInfo();
+        // const DeliveryInfo& info = dlv->getDlvInfo();
 
         RegionalStoragePtr reg = dlv->getRegionalStorage(drmId.regId);
         if (!reg.get()) {
@@ -488,9 +491,8 @@ void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId, int status, bool ret
     
         const msgtime_type now(currentTimeSeconds());
 
-        if (retry && info.wantRetry(status) ) {
-            reg->retryMessage( drmId.msgId, now, status );
-
+        if (retry) {
+            reg->retryMessage( drmId.msgId, policy, now, status );
         } else {
             const bool ok = (status == smsc::system::Status::OK);
             reg->finalizeMessage(drmId.msgId, now,

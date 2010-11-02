@@ -276,7 +276,7 @@ SmscSender::~SmscSender()
 }
 
 
-int SmscSender::send( RegionalStorage& ptr, Message& msg )
+int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
 {
     const DeliveryInfo& info = ptr.getDlvInfo();
 
@@ -288,7 +288,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
     const char* what = "";
     int res = smsc::system::Status::OK;
     int seqNum;
-    int nchunks = 0;
+    nchunks = 0;
     do {
 
         if (isStopping_) {
@@ -496,7 +496,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                            ulonglong(msg.msgId),
                            ton,npi,len,len,ulonglong(addr), seqNum);
         }
-        return nchunks;
+        return res;
     }
 
     if (seqNum!=0) {
@@ -511,11 +511,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg )
                    info.getDlvId(),
                    ulonglong(msg.msgId),
                    ton,npi,len,len,ulonglong(addr), res, what);
-
-    if (res==smsc::system::Status::OK) {
-        return 0;
-    }
-    return -res;
+    return res;
 }
 
 
@@ -748,14 +744,14 @@ void SmscSender::processQueue( DataQueue& queue )
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId));
-                rproc_.receiveReceipt( drm, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry );
             } else if ( *rd.rcptId.msgId == '\0' ) {
                 smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u R=%u/D=%u/M=%llu has no msgId, finalize?",
                               smscId_.c_str(), rd.seqNum,
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId));
-                rproc_.receiveReceipt( drm, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry );
                 continue;
             }
 
@@ -777,13 +773,13 @@ void SmscSender::processQueue( DataQueue& queue )
                               drm.dlvId,
                               ulonglong(drm.msgId),
                               rd.status, rd.retry, iter->status, iter->retry );
-                rproc_.receiveReceipt( drm, iter->status, iter->retry );
+                rproc_.receiveReceipt( drm, retryPolicy_, iter->status, iter->retry );
                 continue;
 
             }
 
             if ( rd.status != smsc::system::Status::OK ) {
-                rproc_.receiveReceipt( drm, rd.status, rd.retry );
+                rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry );
                 continue;
             }
 
@@ -831,7 +827,7 @@ void SmscSender::processQueue( DataQueue& queue )
                             if (rollingIter_ == iter) { ++rollingIter_; }
                             rcptList.splice(rcptList.begin(),receiptList_,iter);
                         }
-                        rproc_.receiveReceipt(iter->drmId, rd.status, rd.retry );
+                        rproc_.receiveReceipt(iter->drmId, retryPolicy_, rd.status, rd.retry );
                     } else {
                         smsc_log_warn(log_,"FIXME: S='%s' strange receipt for R=%u/D=%u/M=%llu status=%d,msgid='%s',retry=%d",
                                       iter->drmId.regId,

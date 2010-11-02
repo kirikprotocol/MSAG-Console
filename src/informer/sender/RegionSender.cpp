@@ -110,11 +110,12 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredObjType& ptr )
 
 int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
 {
-    int nchunks;
+    int nchunks = 0;
+    int res;
     try {
 
-        nchunks = conn_->send(ptr, msg_);
-        if ( nchunks > 0 ) {
+        res = conn_->send(ptr, msg_, nchunks);
+        if ( res == smsc::system::Status::OK && nchunks > 0 ) {
             // message has been put into output queue
             smsc_log_debug(log_,"R=%u/D=%u/M=%llu sent nchunks=%d",
                            unsigned(getRegionId()),
@@ -124,10 +125,10 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
             // ptr.messageSent(msg_.msgId, msgtime_type(currentTime_/tuPerSec));
             return maxScoreIncrement / nchunks / ptr.getDlvInfo().getPriority();
         } else {
-            smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed nchunks=%d",
+            smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed, res=%d, nchunks=%d",
                           unsigned(getRegionId()),
                           unsigned(ptr.getDlvId()),
-                          ulonglong(msg_.msgId), nchunks);
+                          ulonglong(msg_.msgId), res, nchunks);
         }
 
     } catch ( std::exception& e ) {
@@ -135,10 +136,10 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
                       unsigned(getRegionId()),
                       unsigned(ptr.getDlvId()),
                       ulonglong(msg_.msgId), e.what());
-        nchunks = -smsc::system::Status::UNKNOWNERR;
+        res = smsc::system::Status::UNKNOWNERR;
     }
-    smsc_log_debug(log_,"FIXME: message could not be sent, analyse rc=%d",-nchunks);
-    ptr.retryMessage(msg_.msgId, msgtime_type(currentTime_/tuPerSec), -nchunks );
+    ptr.retryMessage( msg_.msgId, conn_->getRetryPolicy(), 
+                      msgtime_type(currentTime_/tuPerSec), res);
     return -maxScoreIncrement;
 }
 

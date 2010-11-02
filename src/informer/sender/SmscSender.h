@@ -7,6 +7,7 @@
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
+#include "informer/data/RetryPolicy.h"
 #include "informer/io/Typedefs.h"
 #include "informer/opstore/RegionalStorage.h"
 #include "logger/Logger.h"
@@ -55,15 +56,16 @@ public:
 
     const std::string& getSmscId() const { return smscId_; }
 
+    const RetryPolicy& getRetryPolicy() const { return retryPolicy_; }
+
     void start();
     void stop();
     /// sent when something is changing
     void wakeUp();
 
-    /// sending one message
-    /// @return positive or 0: number of chunks sent;
-    ///         negative: SMPP error
-    int send( RegionalStorage& dlv, Message& msg );
+    /// sending one message, filling nchunks.
+    /// @return SMPP status
+    int send( RegionalStorage& dlv, Message& msg, int& nchunks );
 
     /// a method allows to wait until sender stops it work
     /// NOTE: post-requisite -- task is released!
@@ -102,6 +104,7 @@ private:
 private:
     smsc::logger::Logger*                     log_;
     ReceiptProcessor&                         rproc_;
+    RetryPolicy                               retryPolicy_;
     smsc::sms::IllFormedReceiptParser*        parser_;
     std::string                               smscId_;
     SmscConfig                                smscConfig_;

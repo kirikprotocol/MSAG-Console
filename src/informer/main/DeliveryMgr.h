@@ -38,8 +38,8 @@ public:
 
     /// final state response/receipt has been received
     virtual void receiveReceipt( const DlvRegMsgId& drmId,
-                                 int smppStatus,
-                                 bool retry );
+                                 const RetryPolicy& retryPolicy,
+                                 int smppStatus, bool retry );
     virtual bool receiveResponse( const DlvRegMsgId& drmId );
 
     /// license traffic control
