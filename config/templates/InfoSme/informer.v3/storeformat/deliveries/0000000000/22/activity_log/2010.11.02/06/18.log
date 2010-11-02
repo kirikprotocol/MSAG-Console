@@ -18,7 +18,7 @@ where
              for new, proc, retry, dlvd, fail, expired respectively.
   REGID    - region id, positive integer [0..]
   MSGID    - message id, positive integer [1..]
-  RETRY    - retry count of the message, [0..]
+  RETRY    - retry count for retry / the number of sms chunks for final.
   NEXT     - how much time to wait until next retry, seconds
   SUBSCRIBER - the ISDN
   TTL      - time to live, seconds [0..]
@@ -32,5 +32,5 @@ Example:
 13,N,0,2,0,0,+79537699490,44,0,thesecondone,"the unbound message"
 13,P,0,1,0,0,+79137654079,3600,0,myfirstmsg,"my \"f\" msg\nsee\\later"
 13,P,0,2,0,0,+79537699490,3600,0,thesecondone,"the unbound message"
-14,F,0,2,0,0,+79537699490,0,1025,thesecondone,"the unbound message"
-14,D,0,1,0,0,+79137654079,0,0,myfirstmsg,"my \"f\" msg\nsee\\later"
+14,F,0,2,1,0,+79537699490,0,1025,thesecondone,"the unbound message"
+14,D,0,1,1,0,+79137654079,0,0,myfirstmsg,"my \"f\" msg\nsee\\later"
