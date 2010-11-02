@@ -5,7 +5,7 @@
 #include "EventSpecificInformationSMS.h"
 
 static asn_TYPE_member_t asn_MBR_o_smsFailureSpecificInfo_2[] = {
-	{ ATF_POINTER, 1, offsetof(struct o_smsFailureSpecificInfo, failureCause),
+	{ ATF_POINTER, 1, offsetof(o_smsFailureSpecificInfo_t, failureCause),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_MO_SMSCause,
@@ -21,8 +21,8 @@ static asn_TYPE_tag2member_t asn_MAP_o_smsFailureSpecificInfo_2_tag2el[] = {
     { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* failureCause at 116 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_o_smsFailureSpecificInfo_2_specs = {
-	sizeof(struct o_smsFailureSpecificInfo),
-	offsetof(struct o_smsFailureSpecificInfo, _asn_ctx),
+	sizeof(o_smsFailureSpecificInfo_t),
+	offsetof(o_smsFailureSpecificInfo_t, _asn_ctx),
 	asn_MAP_o_smsFailureSpecificInfo_2_tag2el,
 	1,	/* Count of tags in the map */
 	0,	/* Start extensions */
@@ -60,8 +60,8 @@ static ber_tlv_tag_t asn_DEF_o_smsSubmissionSpecificInfo_5_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_SEQUENCE_specifics_t asn_SPC_o_smsSubmissionSpecificInfo_5_specs = {
-	sizeof(struct o_smsSubmissionSpecificInfo),
-	offsetof(struct o_smsSubmissionSpecificInfo, _asn_ctx),
+	sizeof(o_smsSubmissionSpecificInfo_t),
+	offsetof(o_smsSubmissionSpecificInfo_t, _asn_ctx),
 	0,	/* No top level tags */
 	0,	/* No tags in the map */
 	-1,	/* Start extensions */
@@ -94,7 +94,7 @@ asn_TYPE_descriptor_t asn_DEF_o_smsSubmissionSpecificInfo_5 = {
 };
 
 static asn_TYPE_member_t asn_MBR_t_smsFailureSpecificInfo_7[] = {
-	{ ATF_POINTER, 1, offsetof(struct t_smsFailureSpecificInfo, failureCause),
+	{ ATF_POINTER, 1, offsetof(t_smsFailureSpecificInfo_t, failureCause),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_MT_SMSCause,
@@ -110,8 +110,8 @@ static asn_TYPE_tag2member_t asn_MAP_t_smsFailureSpecificInfo_7_tag2el[] = {
     { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* failureCause at 123 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_t_smsFailureSpecificInfo_7_specs = {
-	sizeof(struct t_smsFailureSpecificInfo),
-	offsetof(struct t_smsFailureSpecificInfo, _asn_ctx),
+	sizeof(t_smsFailureSpecificInfo_t),
+	offsetof(t_smsFailureSpecificInfo_t, _asn_ctx),
 	asn_MAP_t_smsFailureSpecificInfo_7_tag2el,
 	1,	/* Count of tags in the map */
 	0,	/* Start extensions */
@@ -149,8 +149,8 @@ static ber_tlv_tag_t asn_DEF_t_smsDeliverySpecificInfo_10_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_SEQUENCE_specifics_t asn_SPC_t_smsDeliverySpecificInfo_10_specs = {
-	sizeof(struct t_smsDeliverySpecificInfo),
-	offsetof(struct t_smsDeliverySpecificInfo, _asn_ctx),
+	sizeof(t_smsDeliverySpecificInfo_t),
+	offsetof(t_smsDeliverySpecificInfo_t, _asn_ctx),
 	0,	/* No top level tags */
 	0,	/* No tags in the map */
 	-1,	/* Start extensions */

@@ -123,7 +123,7 @@ typedef struct asn_TYPE_descriptor_s {
  * i.e. SEQUENCE, SET, CHOICE, etc.
  */
   enum asn_TYPE_flags_e {
-	ATF_NOFLAGS,
+	ATF_NOFLAGS = 0x00,
 	ATF_POINTER	= 0x01,	/* Represented by the pointer */
 	ATF_OPEN_TYPE	= 0x02	/* ANY type, without meaningful tag */
   };

@@ -31,14 +31,14 @@ memb_freeFormatData_2_constraint(asn_TYPE_descriptor_t *td, const void *sptr,
 }
 
 static asn_TYPE_member_t asn_MBR_fCIBCCCAMELsequence1_2[] = {
-	{ ATF_NOFLAGS, 0, offsetof(struct fCIBCCCAMELsequence1, freeFormatData),
+	{ ATF_NOFLAGS, 0, offsetof(fCIBCCCAMELsequence1_t, freeFormatData),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_OCTET_STRING,
 		memb_freeFormatData_2_constraint,
 		"freeFormatData"
 		},
-	{ ATF_POINTER, 1, offsetof(struct fCIBCCCAMELsequence1, appendFreeFormatData),
+	{ ATF_POINTER, 1, offsetof(fCIBCCCAMELsequence1_t, appendFreeFormatData),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_AppendFreeFormatData,
@@ -55,8 +55,8 @@ static asn_TYPE_tag2member_t asn_MAP_fCIBCCCAMELsequence1_2_tag2el[] = {
     { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* appendFreeFormatData at 107 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_fCIBCCCAMELsequence1_2_specs = {
-	sizeof(struct fCIBCCCAMELsequence1),
-	offsetof(struct fCIBCCCAMELsequence1, _asn_ctx),
+	sizeof(fCIBCCCAMELsequence1_t),
+	offsetof(fCIBCCCAMELsequence1_t, _asn_ctx),
 	asn_MAP_fCIBCCCAMELsequence1_2_tag2el,
 	2,	/* Count of tags in the map */
 	-1,	/* Start extensions */
