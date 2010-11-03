@@ -14,21 +14,15 @@ import java.util.Locale;
  */
 public class MessagesByPeriodController extends DeliveryStatController implements DeliveryStatVisitor {
 
-  private DeliveryStatFilter filter;
+
   private Delivery delivery= null;
-
-
- 
 
 
   public MessagesByPeriodController() {
     super();
-    filter = new DeliveryStatFilter();
-    setAggregation(TimeAggregationType.DAY);
   }
 
   public Integer getDeliveryId() {
-    Delivery d = getDelivery();
     return delivery!=null  ? delivery.getId() : null;
   }
 
@@ -46,7 +40,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
           reset();
         }
         delivery = getConfig().getDelivery(getUser().getLogin(),getUser().getPassword(),deliveryId);
-        filter.setTaskId(deliveryId);
+        getFilter().setTaskId(deliveryId);
       }
       catch (AdminException e) {
         addError(e);
@@ -59,23 +53,8 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
 
   public void clearFilter() {
-    reset();
-    clearRecords();
-    filter.setUser(null);
-    filter.setFromDate(null);
-    filter.setTillDate(null);
-    filter.setTaskId(getDeliveryId());
-    setAggregation(TimeAggregationType.DAY);
-    fullMode = false;
-  }
-
-
-  public DeliveryStatFilter getFilter() {
-    return filter;
-  }
-
-  public void setFilter(DeliveryStatFilter filter) {
-    this.filter = filter;
+    super.clearFilter();
+    getFilter().setTaskId(getDeliveryId());
   }
 
 
@@ -83,7 +62,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
 
 
-      DeliveryStatFilter filterCopy = new DeliveryStatFilter(filter);
+      DeliveryStatFilter filterCopy = new DeliveryStatFilter(getFilter());
       if(delivery!=null && filterCopy.getFromDate()==null) {
         // todo remove comment
         // filterCopy.setFromDate(delivery.getStartDate());

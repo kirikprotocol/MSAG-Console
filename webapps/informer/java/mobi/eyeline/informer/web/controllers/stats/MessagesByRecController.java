@@ -147,7 +147,7 @@ public class MessagesByRecController extends LongOperationController {
 
 
 
-  public DataTableModel getRecords() {
+  public synchronized DataTableModel getRecords() {
 
     return new DataTableModel() {
 

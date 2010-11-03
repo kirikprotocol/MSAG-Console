@@ -16,43 +16,25 @@ import java.util.Locale;
  */
 public class DeliveriesCountByPeriodController extends DeliveryStatController implements Visitor<DeliveryInfo> {
 
-  private DeliveryStatFilter filter;
+
 
 
   public DeliveriesCountByPeriodController() {
     super();
-    filter = new DeliveryStatFilter();
   }
 
 
-  public void clearFilter() {
-    reset();
-    clearRecords();
-    filter.setUser(null);
-    filter.setFromDate(null);
-    filter.setTillDate(null);
-    filter.setTaskId(null);
-  }
-
-
-  public DeliveryStatFilter getFilter() {
-    return filter;
-  }
-
-  public void setFilter(DeliveryStatFilter filter) {
-    this.filter = filter;
-  }
 
 
   @Override
   public void loadRecords(Configuration config, final Locale locale) throws AdminException{
       DeliveryFilter f = new DeliveryFilter();
-      String filterUser = filter.getUser();
+      String filterUser = getFilter().getUser();
       if(filterUser!=null) {
         f.setUserIdFilter(new String[]{filterUser});
       }
-      f.setStartDateFrom(filter.getFromDate());
-      f.setStartDateTo(filter.getTillDate());
+      f.setStartDateFrom(getFilter().getFromDate());
+      f.setStartDateTo(getFilter().getTillDate());
       f.setResultFields(new DeliveryFields[]{DeliveryFields.StartDate});
 
       config.getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);

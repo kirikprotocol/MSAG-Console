@@ -34,7 +34,7 @@ public abstract class DeliveryStatController extends LongOperationController {
 
   public DeliveryStatController() {
     super();
-    aggregation= TimeAggregationType.HOUR;
+    aggregation = TimeAggregationType.DAY;
     filter = new DeliveryStatFilter();
     initUser();
     records = Collections.synchronizedList(new ArrayList<AggregatedRecord>());
@@ -60,6 +60,7 @@ public abstract class DeliveryStatController extends LongOperationController {
     filter.setTillDate(null);
     filter.setTaskId(null);
     setFullMode(false);
+    setAggregation(TimeAggregationType.DAY);  
   }
 
 
