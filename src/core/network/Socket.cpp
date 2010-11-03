@@ -1,3 +1,4 @@
+// #ident "@(#)$Id$"
 
 #include "Socket.hpp"
 #include <string.h>
@@ -32,13 +33,13 @@ int Socket::Init(const char *host,int port,int timeout)
   sockAddr.sin_family=AF_INET;
   ulINAddr=inet_addr(host);
 #ifndef INADDR_NONE
-  if(ulINAddr!=-1)
+  if(ulINAddr != (in_addr_t)(-1))
 #else
-  if(ulINAddr!=INADDR_NONE)
+  if(ulINAddr != INADDR_NONE)
 #endif
   {
     memcpy(&sockAddr.sin_addr,&ulINAddr,sizeof(ulINAddr));
-  }else
+  } else
   {
 #ifndef _REENTRANT
     lpHostEnt=gethostbyname(host);
@@ -46,7 +47,7 @@ int Socket::Init(const char *host,int port,int timeout)
     char buf[1024];
     int h_err;
     hostent he;
-#ifdef __GNUC__
+#ifdef linux
       gethostbyname_r( host, &he, buf, sizeof(buf), &lpHostEnt, &h_err );
 #else
       lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
@@ -60,6 +61,46 @@ int Socket::Init(const char *host,int port,int timeout)
   }
   sockAddr.sin_port=htons(port);
   return 0;
+}
+
+int Socket::BindClient(const char* host)
+{
+  sockaddr_in sAddr;
+  hostent *   lpHostEnt;
+  in_addr_t   ulINAddr;
+
+  memset(&ulINAddr,0,sizeof(ulINAddr));
+  sAddr.sin_family=AF_INET;
+  ulINAddr=inet_addr(host);
+#ifndef INADDR_NONE
+  if(ulINAddr != (in_addr_t)(-1))
+#else
+  if(ulINAddr!=INADDR_NONE)
+#endif
+  {
+    memcpy(&sAddr.sin_addr,&ulINAddr,sizeof(ulINAddr));
+  } else
+  {
+#ifndef _REENTRANT
+    lpHostEnt=gethostbyname(host);
+#else
+    char buf[1024];
+    int h_err;
+    hostent he;
+#ifdef linux
+    gethostbyname_r( host, &he, buf, sizeof(buf), &lpHostEnt, &h_err );
+#else
+    lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
+#endif // __GNUC__
+#endif // _REENTRANT
+    if(lpHostEnt==NULL)
+    {
+      return -1;
+    }
+    memcpy(&sAddr.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
+  }
+  sAddr.sin_port=0;
+  return bind(sock,(sockaddr*)&sAddr,(int)sizeof(sAddr)) ? -1 : 0;
 }
 
 int Socket::Connect(bool nb)

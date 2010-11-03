@@ -1,4 +1,7 @@
 #ifndef __SMSC_CORE_NETWORK_SOCKET_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_CORE_NETWORK_SOCKET_HPP__
 
 #ifdef _WIN32
@@ -34,7 +37,6 @@ namespace network{
 class Socket{
 protected:
   sockaddr_in sockAddr;
-  // fd_set fd;
   timeval tv;
   char buffer[256];
   int connected;
@@ -83,46 +85,7 @@ public:
 
   int Init(const char *host,int port,int timeout);
 
-  int BindClient(const char* host)
-  {
-    sockaddr_in sAddr;
-    hostent* lpHostEnt;
-    in_addr_t ulINAddr;
-
-    memset(&ulINAddr,0,sizeof(ulINAddr));
-    sAddr.sin_family=AF_INET;
-    ulINAddr=inet_addr(host);
-  #ifndef INADDR_NONE
-    if(ulINAddr!=-1)
-  #else
-    if(ulINAddr!=INADDR_NONE)
-  #endif
-    {
-      memcpy(&sAddr.sin_addr,&ulINAddr,sizeof(ulINAddr));
-    }else
-    {
-  #ifndef _REENTRANT
-      lpHostEnt=gethostbyname(host);
-  #else
-      char buf[1024];
-      int h_err;
-      hostent he;
-#ifdef __GNUC__
-      gethostbyname_r( host, &he, buf, sizeof(buf), &lpHostEnt, &h_err );
-#else
-      lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
-#endif // __GNUC__
-  #endif
-      if(lpHostEnt==NULL)
-      {
-        return -1;
-      }
-      memcpy(&sAddr.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
-    }
-    sAddr.sin_port=0;
-    if(bind(sock,(sockaddr*)&sAddr,(int)sizeof(sAddr)))return -1;
-    return 0;
-  }
+  int BindClient(const char* host);
   int Connect(bool nb = false);
   int ConnectEx(bool nb,const char* bindHost);
   void Close();
