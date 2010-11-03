@@ -23,7 +23,7 @@ public:
         smsc_log_debug(erplog_,"ctor@%p x=%p",this,x_);
     }
     EmbedRefPtr( const EmbedRefPtr& p ) : x_(p.x_) {
-        if (x_) x_->ref(); 
+        if (x_) x_->ref();
         erpgetlog();
         smsc_log_debug(erplog_,"ctor@%p x=%p",this,x_);
     }
@@ -36,7 +36,7 @@ public:
     // NOTE: class U must be T or descendant of T
     template <class U>
     EmbedRefPtr( const EmbedRefPtr<U>& p ) : x_(const_cast<U*>(p.get())) {
-        if (x_) x_->ref(); 
+        if (x_) x_->ref();
         erpgetlog();
         smsc_log_debug(erplog_,"ctor@%p x=%p",this,x_);
     }
@@ -50,14 +50,14 @@ public:
         smsc_log_debug(erplog_,"dtor@%p x=%p",this,x_);
         if (x_) x_->unref();
     }
-    
+
     inline const T* get() const { return x_; }
     inline T* get() { return x_; }
     inline const T* operator -> () const { return x_; }
     inline T* operator -> () { return x_; }
 
-    inline T& operator * () { return x_; }
-    inline const T& operator * () const { return x_; }
+    inline T& operator * () { return *x_; }
+    inline const T& operator * () const { return *x_; }
 
     inline void reset( T* x ) {
         if (x != x_) {
