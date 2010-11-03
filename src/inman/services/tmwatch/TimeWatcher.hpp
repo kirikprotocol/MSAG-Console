@@ -2,7 +2,9 @@
  * Signalling Timers Watcher implementation.
  * ************************************************************************** */
 #ifndef _CORE_SYNC_TIMEWATCHER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _CORE_SYNC_TIMEWATCHER_HPP
 
 #include <list>

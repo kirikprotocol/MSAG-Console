@@ -1,14 +1,16 @@
 #ifndef __INMAN_USS_EMULATOR_USSMANEMULSERVICE_HPP__
 # define __INMAN_USS_EMULATOR_USSMANEMULSERVICE_HPP__
 
-# include <inman/interaction/connect.hpp>
-# include <inman/interaction/server.hpp>
-# include <util/config/ConfigView.h>
+# include "inman/interaction/connect.hpp"
+# include "inman/interaction/server.hpp"
+# include "util/config/ConfigView.h"
 # include "USSManEmulConnect.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace uss  {
+
+using smsc::logger::Logger;
 
 class USSManEmulService : public smsc::inman::interaction::ServerListenerITF {
 public:

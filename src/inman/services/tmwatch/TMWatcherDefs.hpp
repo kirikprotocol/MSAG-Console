@@ -2,7 +2,9 @@
  * Signalling Timers facility interfaces and helper classes defs.
  * ************************************************************************** */
 #ifndef _CORE_SYNC_TIMEWATCHER_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _CORE_SYNC_TIMEWATCHER_DEFS_HPP
 
 #include <inttypes.h>

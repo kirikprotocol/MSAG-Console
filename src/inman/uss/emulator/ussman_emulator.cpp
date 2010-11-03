@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
@@ -18,11 +18,13 @@ using smsc::inman::uss::USSSrvCfgReader;
 #include "USSManEmulConnect.hpp"
 #include "MessagesProcessor.hpp"
 
+using smsc::logger::Logger;
+
 static smsc::inman::uss::USSManEmulService* service = 0;
 
 volatile bool wasStopped = false;
 
-extern "C" static void sighandler( int signal )
+extern "C" void sighandler( int signal )
 {
   wasStopped = true;
 }
