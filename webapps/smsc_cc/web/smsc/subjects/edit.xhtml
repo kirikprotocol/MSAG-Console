@@ -34,16 +34,16 @@
 
       <eye:pageSubtitle value="#{msg['subject.edit.info']}"/>
 
-      <h:panelGrid columns="3" columnClasses="column0Width, column300WidthLeft, columnTopLeftAlign">
+      <h:panelGrid columns="3" columnClasses="column100Width, column300WidthLeft, columnTopLeftAlign">
 
         <h:outputText value="#{msg['subjects.page.column.name']}"/>
-        <h:inputText value="#{subjectEdit.subj.name}" style="width:100%">
+        <h:inputText value="#{subjectEdit.subj.name}" style="width:300px">
           <tr:validateLength minimum="1"/>
         </h:inputText>
         <h:outputText value="&#160;" style="width: 100%"/>
 
         <h:outputText value="#{msg['subjects.page.column.notes']}"/>
-        <h:inputTextarea value="#{subjectEdit.subj.notes}" rows="2" style="width:100%"/>
+        <h:inputTextarea value="#{subjectEdit.subj.notes}" rows="2" style="width:300px"/>
         <h:outputText value="&#160;" style="width: 100%"/>
 
         <h:outputText value="#{msg['subjects.page.column.defaultSme']}"/>
