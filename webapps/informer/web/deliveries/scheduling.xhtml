@@ -29,6 +29,7 @@
             <br/>
             <tr:commandLink text="#{d.name}" action="DELIVERY_EDIT">
               <f:param name="#{deliveriesWeekly.deliveryParam}" value="#{d.deliveryId}"/>
+              <f:param name="#{deliveriesWeekly.deliveryComeBackParam}" value="DELIVERIES_WEEKLY"/>
             </tr:commandLink>
           </tr:iterator>
         </h:panelGroup>

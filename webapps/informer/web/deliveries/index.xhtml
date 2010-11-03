@@ -13,17 +13,6 @@
   <ui:define name="content">
     <tr:form>
 
-      <h:panelGroup style="#{deliveries.init ? '' : 'display:none'}">
-        <eye:buttons>
-          <eye:button>
-            <tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
-      </h:panelGroup>
 
       <h:inputHidden value="#{deliveries.init}"/>
 
@@ -44,6 +33,18 @@
             </h:panelGrid>
           </h:panelGrid>
         </eye:dataTableFilter>
+      </h:panelGroup>
+
+      <h:panelGroup style="#{deliveries.init ? 'margin: 10px 10px 10px 10px' : 'display:none'}">
+        <eye:buttons>
+          <eye:button>
+            <tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}"/>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
+          </eye:button>
+          <eye:space/>
+        </eye:buttons>
       </h:panelGroup>
 
       <eye:dataTable value="#{deliveries.deliviries}" var="d" rendered="#{deliveries.init}" selectedRows="#{deliveries.selected}">

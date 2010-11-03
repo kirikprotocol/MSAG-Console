@@ -24,17 +24,32 @@ public class DeliveryEditController extends DeliveryController{
 
   private Delivery delivery;
 
+  private String comeBackParam;
+
   public DeliveryEditController() {
     super();
 
     String p = getRequestParameter(DELIVERY_PARAM);
     id = p==null || (p = p.trim()).length() == 0 ? null : Integer.parseInt(p);
 
+    p = getRequestParameter(DELIVERY_COMEBACK_PARAM);
+    if(p != null && p.length() != 0) {
+      comeBackParam = p;
+    }
+
     try{
       reload();
     }catch (AdminException e){
       addError(e);
     }
+  }
+
+  public String getComeBackParam() {
+    return comeBackParam;
+  }
+
+  public void setComeBackParam(String comeBackParam) {
+    this.comeBackParam = comeBackParam;
   }
 
   private void reload() throws AdminException{
@@ -94,7 +109,13 @@ public class DeliveryEditController extends DeliveryController{
       addError(e);
       return null;
     }
-    return "DELIVERIES";
+    return comeBackParam != null && comeBackParam.length() != 0 ? comeBackParam : "DELIVERIES";
+  }
+
+  public String cancel() {
+    String p = comeBackParam != null && comeBackParam.length() > 0 ? comeBackParam : getRequestParameter(DELIVERY_COMEBACK_PARAM);
+    return p != null && p.length() >0 ? p : "DELIVERIES";
+
   }
 
 

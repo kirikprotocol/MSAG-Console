@@ -19,7 +19,7 @@
           <tr:commandLink text="#{msg['done.button']}" action="#{deliveryEdit.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" action="#{deliveryEdit.cancel}" immediate="true"/>
         </eye:button>
         <eye:space/>
         <eye:button>
@@ -30,6 +30,7 @@
       </eye:buttons>
 
       <tr:inputHidden id="delivery" value="#{deliveryEdit.id}"/>
+      <tr:inputHidden id="delivery_comeback" value="#{deliveryEdit.comeBackParam}"/>
 
       <h:panelGrid style="padding:10px" columns="1">
 
@@ -141,7 +142,7 @@
           <tr:commandLink text="#{msg['done.button']}" action="#{deliveryEdit.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" action="#{deliveryEdit.cancel}" immediate="true"/>
         </eye:button>
         <eye:space/>
         <eye:button>
