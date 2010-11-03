@@ -1,17 +1,22 @@
 #include <cassert>
 #include "Delivery.h"
+#include "UserInfo.h"
 #include "CommonSettings.h"
 
 namespace eyeline {
 namespace informer {
 
 Delivery::Delivery( DeliveryInfo*               dlvInfo,
+                    UserInfo&                   userInfo,
                     InputMessageSource*         source ) :
 log_(0),
 dlvInfo_(dlvInfo),
+userInfo_(userInfo),
 activityLog_(*dlvInfo_.get()),
 source_(source),
-ref_(0)
+ref_(0),
+state_(DlvState(0)),
+planTime_(0)
 {
     char buf[20];
     sprintf(buf,"dl.%u",dlvInfo_->getDlvId());

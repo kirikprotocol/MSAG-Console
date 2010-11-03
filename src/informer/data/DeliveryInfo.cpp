@@ -1,14 +1,14 @@
 #include <cassert>
 #include <cstring>
 #include <vector>
-#include "informer/io/DirListing.h"
-#include "informer/io/FileGuard.h"
+// #include "informer/io/DirListing.h"
+#include "informer/io/InfosmeException.h"
 #include "DeliveryInfo.h"
 #include "CommonSettings.h"
-#include "core/buffers/TmpBuf.hpp"
-#include "UserInfo.h"
-#include "InfosmeCore.h"
-#include "util/smstext.h"
+// #include "core/buffers/TmpBuf.hpp"
+// #include "UserInfo.h"
+// #include "InfosmeCore.h"
+// #include "util/smstext.h"
 
 namespace {
 
@@ -53,6 +53,7 @@ namespace informer {
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
 
+/*
 void DeliveryInfo::setState( DlvState state, msgtime_type planTime )
 {
     smsc_log_debug(log_,"D=%u changing state %s(%d) -> %s(%d), planTime=%u",
@@ -64,6 +65,7 @@ void DeliveryInfo::setState( DlvState state, msgtime_type planTime )
     state_ = state;
     planTime_ = planTime;
 }
+ */
 
 
 /*
@@ -88,6 +90,8 @@ void DeliveryInfo::read( InfosmeCore& core )
  */
 
 
+/*
+ * FIXME: move to delivery
 unsigned DeliveryInfo::evaluateNchunks( const char* out, size_t outLen ) const
 {
     if ( smsc::util::hasHighBit(out,outLen) ) {
@@ -113,23 +117,24 @@ unsigned DeliveryInfo::evaluateNchunks( const char* out, size_t outLen ) const
         return 1;
     }
 }
+ */
 
 
-DeliveryInfo* DeliveryInfo::readDeliveryInfo( InfosmeCore& core,
-                                              dlvid_type   dlvId )
+DeliveryInfo* DeliveryInfo::readDeliveryInfo( const CommonSettings& cs,
+                                              dlvid_type            dlvId )
 {
     char buf[100];
     makeDeliveryPath(dlvId,buf);
-    const std::string path = core.getCS().getStorePath() + buf;
+    const std::string path = cs.getStorePath() + buf;
 
     DeliveryInfoData data;
 
     smsc_log_debug(log_,"FIXME: reading D=%u info '%s'",dlvId,path.c_str());
-    const char* userId = "bukind";
-    UserInfoPtr user( core.getUserInfo( userId ) );
-    if (!user.get()) {
-        throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
-    }
+    // const char* userId = "bukind";
+    // UserInfoPtr user( core.getUserInfo( userId ) );
+    // if (!user.get()) {
+    // throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
+    // }
     // userInfo_ = user.get();
     // FIXME: impl read delivery info
     // std::auto_ptr< DeliveryInfo > ptr(new DeliveryInfo(core.getCS(),dlvId));
@@ -148,7 +153,7 @@ DeliveryInfo* DeliveryInfo::readDeliveryInfo( InfosmeCore& core,
     data.flash = false;
     data.useDataSm = false;
     data.deliveryMode = DLVMODE_SMS;
-    data.owner = userId;
+    data.owner = "bukind";
     data.retryOnFail = true;
     data.retryPolicy = "fixme";
     data.replaceMessage = false;
@@ -156,24 +161,16 @@ DeliveryInfo* DeliveryInfo::readDeliveryInfo( InfosmeCore& core,
     data.userData = "dlv05";
     data.sourceAddress = ".0.1.10000";
 
-    DeliveryInfo* info = new DeliveryInfo( core.getCS(),
-                                           dlvId,
-                                           data,
-                                           * user.get() );
-    info->setState(DLVSTATE_PAUSED,0);
+    DeliveryInfo* info = new DeliveryInfo( cs, dlvId, data );
     return info;
 }
 
 
 DeliveryInfo::DeliveryInfo( const CommonSettings&   cs,
                             dlvid_type              dlvId,
-                            const DeliveryInfoData& data,
-                            UserInfo&               userInfo ) :
+                            const DeliveryInfoData& data ) :
 cs_(cs),
-userInfo_(userInfo),
 dlvId_(dlvId),
-state_(DlvState(0)),
-planTime_(0),
 startDate_(0),
 endDate_(0),
 activePeriodStart_(-1),

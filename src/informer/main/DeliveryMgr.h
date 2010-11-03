@@ -51,13 +51,8 @@ public:
 
     dlvid_type createDelivery( UserInfo& userInfo,
                                const DeliveryInfoData& info );
-    void updateDelivery( dlvid_type dlvId,
-                         const DeliveryInfoData& info );
-    void deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& regIds );
-    void setDeliveryState( dlvid_type   dlvId,
-                           DlvState     newState,
-                           msgtime_type atTime,
-                           std::vector<regionid_type>& regIds );
+    void deleteDelivery( dlvid_type dlvId,
+                         std::vector<regionid_type>& regIds );
 
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
@@ -73,7 +68,7 @@ public:
 
 protected:
     /// used internally
-    void addDelivery( DeliveryInfo* info );
+    void addDelivery( UserInfo& userInfo, DeliveryInfo* info );
 
     dlvid_type getNextDlvId();
     

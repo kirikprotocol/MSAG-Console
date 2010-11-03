@@ -23,9 +23,10 @@ namespace eyeline {
 namespace informer {
 
 DeliveryImpl::DeliveryImpl( DeliveryInfo*               dlvInfo,
+                            UserInfo&                   userInfo,
                             StoreJournal&               journal,
                             InputMessageSource*         source ) :
-Delivery(dlvInfo,source),
+Delivery(dlvInfo,userInfo,source),
 storeJournal_(journal)
 {
     const dlvid_type dlvId = dlvInfo_->getDlvId();
@@ -75,7 +76,6 @@ msgtime_type DeliveryImpl::initState()
         size_t wasread = fg.read(buf,sizeof(buf));
         if (wasread==0) {
             smsc_log_debug(log_,"D=%u status file is empty",dlvId);
-            state = dlvInfo_->getState();
             break;
         }
 
@@ -149,6 +149,7 @@ msgtime_type DeliveryImpl::initState()
         
     } while (false);
 
+    /*
     if (!hasBeenRead && state != DLVSTATE_PAUSED) {
         if (dlvInfo_->getState() == state) {
             dlvInfo_->setState(DLVSTATE_PAUSED,0); 
@@ -157,26 +158,26 @@ msgtime_type DeliveryImpl::initState()
     } else {
         dlvInfo_->setState(state,planTime);
     }
-    return planTime;
+     */
+    setState(state,planTime);
+    return planTime_;
 }
 
 
 void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 {
     const dlvid_type dlvId = dlvInfo_->getDlvId();
-    msgtime_type now;
-    ulonglong ymd;
     {
         MutexGuard mg(cacheLock_);
-        const DlvState oldState = dlvInfo_->getState();
+        const DlvState oldState = state_;
+        if (oldState == newState) return;
         smsc_log_debug(log_,"D=%u changing state: %s into %s",dlvId,
                        dlvStateToString(oldState), dlvStateToString(newState));
-        if (oldState == newState) return;
         if (oldState == DLVSTATE_CANCELLED) {
-            smsc_log_warn(log_,"D=%u is cancelled",dlvId);
-            return;
+            throw InfosmeException(EXC_LOGICERROR,
+                                  "D=%u is cancelled",dlvId);
         }
-        now = msgtime_type(currentTimeMicro()/tuPerSec);
+        const msgtime_type now = msgtime_type(currentTimeMicro()/tuPerSec);
         if (newState == DLVSTATE_PLANNED) {
             if (planTime < now) {
                 throw InfosmeException(EXC_LOGICERROR,
@@ -187,7 +188,9 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         } else {
             planTime = 0;
         }
-        dlvInfo_->setState(newState,planTime);
+        userInfo_.incStats(dlvInfo_->getCS(),newState,state_); // may throw
+        state_ = newState;
+        planTime_ = planTime;
         int regId;
         RegionalStoragePtr regPtr;
         switch (newState) {
@@ -217,7 +220,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         }
         DeliveryStats ds;
         activityLog_.getStats(ds);
-        ymd = msgTimeToYmd(now);
+        const ulonglong ymd = msgTimeToYmd(now);
         int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                              ymd,
                              dlvStateToString(newState)[0],
@@ -234,11 +237,16 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.expiredSms );
         assert(buflen>0);
         fg.write(buf,buflen);
+        source_->getDlvActivator().finishStateChange(ymd,
+                                                     *this,
+                                                     oldState);
     }
-    source_->getDlvActivator().logStateChange( ymd,
+    /*
+    source_->getDlvActivator().finishStateChange(logStateChange( ymd,
                                                dlvId,
                                                dlvInfo_->getUserInfo().getUserId(),
                                                newState,planTime);
+     */
 }
 
 
@@ -379,7 +387,8 @@ void DeliveryImpl::checkFinalize()
     if (finalize) {
         if (ds.isFinished()) {
             smsc_log_debug(log_,"D=%u all messages are final, confirmed by stats", dlvId);
-            source_->getDlvActivator().setDeliveryState(dlvId,DLVSTATE_FINISHED,0);
+            setState(DLVSTATE_FINISHED);
+            // source_->getDlvActivator().setDeliveryState(dlvId,DLVSTATE_FINISHED,0);
         } else {
             smsc_log_warn(log_,"D=%u all messages are final, discrep by stats: %u/%u/%u/%u",
                           dlvId,

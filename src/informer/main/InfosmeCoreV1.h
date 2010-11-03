@@ -102,15 +102,17 @@ public:
         rtp_.startTask(task);
     }
 
-    virtual void setDeliveryState( dlvid_type dlvId,
-                                   DlvState   newState,
-                                   msgtime_type planTime = 0 );
+    virtual void finishStateChange( ulonglong    ymdTime,
+                                    Delivery&    dlv,
+                                    DlvState     oldState );
 
-    virtual void logStateChange( ulonglong   ymd,
+    /*
+     // virtual void logStateChange( ulonglong   ymd,
                                  dlvid_type  dlvId,
                                  const char* userId,
                                  DlvState    newState,
                                  unsigned    planTime );
+     */
 
     // --- end of delivery activator iface
 

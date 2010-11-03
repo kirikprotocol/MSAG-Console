@@ -12,25 +12,35 @@ namespace eyeline {
 namespace informer {
 
 class DeliveryImpl;
+class UserInfo;
 
 class Delivery
 {
     friend class EmbedRefPtr< Delivery >;
     friend class EmbedRefPtr< DeliveryImpl >;
-public:
+protected:
     Delivery( DeliveryInfo*               dlvInfo,
+              UserInfo&                   userInfo,
               InputMessageSource*         source );
 
+public:
     virtual ~Delivery();
 
     inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 
     const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
 
+    const UserInfo& getUserInfo() const { return userInfo_; }
+
     void updateDlvInfo( const DeliveryInfoData& info );
 
+    inline DlvState getState( msgtime_type* planTime = 0 ) {
+        if (planTime) *planTime = planTime_;
+        return state_;
+    }
+
     // change the state of the delivery
-    virtual void setState( DlvState state, msgtime_type planTime = 0 );
+    virtual void setState( DlvState state, msgtime_type planTime = 0 ) = 0;
 
     void addNewMessages( MsgIter begin, MsgIter end ) {
         source_->addNewMessages(begin,end);
@@ -62,12 +72,15 @@ private:
 protected:
     smsc::logger::Logger*                              log_;
     std::auto_ptr<DeliveryInfo>                        dlvInfo_;
+    UserInfo&                                          userInfo_;
 
     ActivityLog                                        activityLog_;
     InputMessageSource*                                source_;       // owned
 
     smsc::core::synchronization::Mutex                 lock_;
     unsigned                                           ref_;
+    DlvState                                           state_;
+    msgtime_type                                       planTime_;
 };
 
 typedef EmbedRefPtr< Delivery >  DeliveryPtr;

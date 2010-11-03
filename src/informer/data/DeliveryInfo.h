@@ -4,16 +4,14 @@
 #include <vector>
 #include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
-// #include "system/status.h"
-// #include "DeliveryStats.h"
 #include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
 namespace informer {
 
 class CommonSettings;
-class UserInfo;
-class InfosmeCore;
+// class UserInfo;
+// class InfosmeCore;
 
 typedef enum {
     DLVMODE_SMS = 0,
@@ -57,14 +55,16 @@ public:
 
     dlvid_type getDlvId() const { return dlvId_; }
 
-    const UserInfo& getUserInfo() const { return userInfo_; }
+    // const UserInfo& getUserInfo() const { return userInfo_; }
 
+    /*
     DlvState getState( msgtime_type* planTime = 0 ) const {
         if (planTime) *planTime = planTime_;
         return state_;
     }
 
     void setState( DlvState state, msgtime_type planTime );
+     */
 
     void update( const DeliveryInfoData& data );
 
@@ -116,19 +116,19 @@ public:
 
     // ============ end of delivery settings ==========================
 
-    /// evaluate number of chunks
-    unsigned evaluateNchunks( const char* out, size_t outLen ) const;
+    // evaluate number of chunks
+    // unsigned evaluateNchunks( const char* out, size_t outLen ) const;
 
 protected:
+    /// FIXME: move to deliverymgr
     /// read delivery info from filesystem
-    static DeliveryInfo* readDeliveryInfo( InfosmeCore&            core,
+    static DeliveryInfo* readDeliveryInfo( const CommonSettings&   cs,
                                            dlvid_type              dlvId );
 
     // constructor from file system
     DeliveryInfo( const CommonSettings&   cs,
                   dlvid_type              dlvId,
-                  const DeliveryInfoData& data,
-                  UserInfo&               userInfo );
+                  const DeliveryInfoData& data );
 
     /// update cached fields from data
     void updateData( const DeliveryInfoData& data,
@@ -139,10 +139,7 @@ private:
 
 private:
     const CommonSettings& cs_;
-    UserInfo&             userInfo_;
     dlvid_type            dlvId_;
-    DlvState              state_;
-    msgtime_type          planTime_;
     DeliveryInfoData      data_;
 
     // cached things updated from data_
@@ -154,8 +151,6 @@ private:
     timediff_type         validityPeriod_;
     int                   activeWeekDays_;
     personid_type         sourceAddress_;
-
-    mutable smsc::core::synchronization::Mutex lock_;
 };
 
 } // informer

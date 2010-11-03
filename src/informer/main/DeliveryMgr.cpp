@@ -308,9 +308,8 @@ public:
                     firstPass = false;
                 }
                 if (iter == mgr_.deliveryList_.end()) { break; }
-                const DeliveryInfo& info = (*iter)->getDlvInfo();
-                dlvId = info.getDlvId();
-                userId = info.getUserInfo().getUserId();
+                dlvId = (*iter)->getDlvId();
+                userId = (*iter)->getUserInfo().getUserId();
                 (*iter)->popIncrementalStats(ds);
                 ++iter;
             }
@@ -404,7 +403,15 @@ void DeliveryMgr::init()
             // get dlvid
             const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
             try {
-                addDelivery(DeliveryInfo::readDeliveryInfo(core_,dlvId));
+
+                // FIXME
+                const char* userId = "bukind";
+                UserInfoPtr user( core_.getUserInfo(userId));
+                if (!user.get()) {
+                    throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
+                }
+                addDelivery(*user.get(),
+                            DeliveryInfo::readDeliveryInfo(core_.getCS(),dlvId));
             } catch (std::exception& e) {
                 smsc_log_error(log_,"cannot read/add dlvInfo D=%u: %s",dlvId,e.what());
                 continue;
@@ -563,12 +570,12 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
                                         const DeliveryInfoData& infoData )
 {
     const dlvid_type dlvId = getNextDlvId();
-    DeliveryInfo* info( new DeliveryInfo( cs_, dlvId, infoData, userInfo ) );
-    addDelivery(info);
+    addDelivery(userInfo,new DeliveryInfo(cs_, dlvId, infoData));
     return dlvId;
 }
 
 
+/*
 void DeliveryMgr::updateDelivery( dlvid_type dlvId,
                                   const DeliveryInfoData& info )
 {
@@ -581,6 +588,7 @@ void DeliveryMgr::updateDelivery( dlvid_type dlvId,
     MutexGuard mg(mon_);
     mon_.notify();
 }
+ */
 
 
 void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& regIds )
@@ -599,7 +607,8 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& 
 }
 
 
-void DeliveryMgr::setDeliveryState( dlvid_type   dlvId,
+/*
+// void DeliveryMgr::setDeliveryState( dlvid_type   dlvId,
                                     DlvState     newState,
                                     msgtime_type planTime,
                                     std::vector< regionid_type >& regIds )
@@ -626,16 +635,8 @@ void DeliveryMgr::setDeliveryState( dlvid_type   dlvId,
     }
 
     dlv->getRegionList(regIds);
-    /*
-    // FIXME: move bind outside
-    BindSignal bs;
-    bs.dlvId = dlvId;
-    bs.bind = (newState == DLVSTATE_ACTIVE ? true : false);
-    ptr->getRegionList(bs.regIds);
-    MutexGuard mg(startMon_);
-     // bindDeliveryRegions(bs);
-     */
 }
+ */
 
 
 int DeliveryMgr::Execute()
@@ -655,9 +656,9 @@ int DeliveryMgr::Execute()
                 DeliveryImplPtr dlv;
                 if (!getDelivery(*i,dlv)) {continue;}
                 msgtime_type planTime;
-                if ( DLVSTATE_PLANNED == dlv->getDlvInfo().getState(&planTime) &&
+                if ( DLVSTATE_PLANNED == dlv->getState(&planTime) &&
                      planTime <= now ) {
-                    core_.setDeliveryState(*i,DLVSTATE_ACTIVE,0);
+                    dlv->setState( DLVSTATE_ACTIVE );
                 }
             }
             wakeList.clear();
@@ -682,7 +683,7 @@ int DeliveryMgr::Execute()
 }
 
 
-void DeliveryMgr::addDelivery( DeliveryInfo* info )
+void DeliveryMgr::addDelivery( UserInfo& userInfo, DeliveryInfo* info )
 {
     std::auto_ptr< DeliveryInfo > infoptr(info);
     if (!info) {
@@ -695,7 +696,7 @@ void DeliveryMgr::addDelivery( DeliveryInfo* info )
     }
     MutexGuard mg(mon_);
     InputMessageSource* ims = new InputStorage(core_,*inputJournal_);
-    dlv.reset( new DeliveryImpl(infoptr.release(),*storeJournal_,ims) );
+    dlv.reset( new DeliveryImpl(infoptr.release(),userInfo,*storeJournal_,ims) );
     deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
     try {
         const msgtime_type planTime = dlv->initState();

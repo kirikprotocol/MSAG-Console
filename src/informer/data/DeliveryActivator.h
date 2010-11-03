@@ -10,6 +10,7 @@ namespace informer {
 class RegionFinder;
 class InputTransferTask;
 class ResendTransferTask;
+class Delivery;
 
 /// an interface for applying some activities on deliveries.
 class DeliveryActivator
@@ -32,17 +33,20 @@ public:
     virtual void startInputTransfer( InputTransferTask* ) = 0;
     virtual void startResendTransfer( ResendTransferTask* ) = 0;
 
-    /// set delivery state, used to call back from delivery itself
-    virtual void setDeliveryState( dlvid_type   dlvId,
-                                   DlvState     newState,
-                                   msgtime_type planTime = 0 ) = 0;
+    /// finish state change.
+    /// NOTE: should be invoked from delivery itself only!
+    virtual void finishStateChange( ulonglong    ymdTime,
+                                    Delivery&    dlv,
+                                    DlvState     oldState ) = 0;
 
-    /// log delivery state change
-    virtual void logStateChange( ulonglong    ymd,
+    // log delivery state change
+    /*
+     // virtual void logStateChange( ulonglong    ymd,
                                  dlvid_type   dlvId,
                                  const char*  userId,
                                  DlvState     newState,
                                  msgtime_type planTime ) = 0;
+     */
 };
 
 } // informer

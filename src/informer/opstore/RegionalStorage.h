@@ -46,6 +46,7 @@ public:
     dlvid_type getDlvId() const;
     virtual regionid_type getRegionId() const { return regionId_; }
     const DeliveryInfo& getDlvInfo() const;
+    DlvState getState() const;
 
     /// return true if there is no messages in new and resend
     bool isFinished();
@@ -121,6 +122,9 @@ protected:
                      uint8_t           state,
                      int               smppState,
                      unsigned          nchunks );
+
+    /// evaluate a number of chunks
+    unsigned evaluateNchunks( const char* out, size_t outLen ) const;
 
 private:
     // message cleanup

@@ -300,7 +300,8 @@ void InfosmeCoreV1::selfTest()
         mlk.msg.userData = "thesecondone";
         msgList.push_back(mlk);
         dlv->addNewMessages(msgList.begin(), msgList.end());
-        setDeliveryState(dlvId,DLVSTATE_ACTIVE,0);
+        // setDeliveryState(dlvId,DLVSTATE_ACTIVE,0);
+        dlv->setState(DLVSTATE_ACTIVE);
     }
     smsc_log_debug(log_,"selfTest finished");
 }
@@ -441,7 +442,7 @@ DeliveryPtr InfosmeCoreV1::getDelivery( const UserInfo& userInfo,
     if (!dlvMgr_->getDelivery(dlvId,ptr)) {
         throw InfosmeException(EXC_NOTFOUND,"no such delivery %u",dlvId);
     }
-    if ( &(ptr->getDlvInfo().getUserInfo()) != &userInfo &&
+    if ( &(ptr->getUserInfo()) != &userInfo &&
          !userInfo.hasRole(USERROLE_ADMIN)) {
         throw InfosmeException(EXC_ACCESSDENIED,"access denied to delivery %u",dlvId);
     }
@@ -449,19 +450,20 @@ DeliveryPtr InfosmeCoreV1::getDelivery( const UserInfo& userInfo,
 }
 
 
-void InfosmeCoreV1::setDeliveryState( dlvid_type   dlvId,
+/*
+// void InfosmeCoreV1::setDeliveryState( dlvid_type   dlvId,
                                       DlvState     newState,
                                       msgtime_type planTime )
 {
     BindSignal bs;
     bs.dlvId = dlvId;
     bs.bind = (newState == DLVSTATE_ACTIVE ? true : false);
-    dlvMgr_->setDeliveryState(dlvId,newState,planTime,bs.regIds);
+ // dlvMgr_->setDeliveryState(dlvId,newState,planTime,bs.regIds);
     bindDeliveryRegions(bs);
 }
 
 
-void InfosmeCoreV1::logStateChange( ulonglong   ymd,
+// void InfosmeCoreV1::logStateChange( ulonglong   ymd,
                                     dlvid_type  dlvId,
                                     const char* userId,
                                     DlvState    newState,
@@ -503,6 +505,7 @@ void InfosmeCoreV1::logStateChange( ulonglong   ymd,
     }
     logStateFile_.write(buf,size_t(buflen));
 }
+ */
 
 
 int InfosmeCoreV1::Execute()

@@ -15,6 +15,7 @@ class DeliveryImpl : public Delivery
 
 public:
     DeliveryImpl( DeliveryInfo*               dlvInfo,
+                  UserInfo&                   userInfo,
                   StoreJournal&               journal,
                   InputMessageSource*         source );
 
@@ -25,7 +26,7 @@ public:
 
     /// set delivery state.
     /// NOTE: must be invoked from core, with proper preparation.
-    void setState( DlvState state, msgtime_type planTime );
+    virtual void setState( DlvState state, msgtime_type planTime = 0 );
 
     /// get regional storage
     RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false);

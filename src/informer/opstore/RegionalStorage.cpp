@@ -104,6 +104,10 @@ const DeliveryInfo& RegionalStorage::getDlvInfo() const
 }
 
 
+DlvState RegionalStorage::getState() const {
+    return dlv_.getState();
+}
+
 /*
 bool RegionalStorage::getMessage( msgid_type msgId, Message& msg )
 {
@@ -138,7 +142,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     const CommonSettings& cs = info.getCS();
     const dlvid_type dlvId = info.getDlvId();
 
-    if ( info.getState() != DLVSTATE_ACTIVE ) return false;
+    if ( dlv_.getState() != DLVSTATE_ACTIVE ) return false;
 
     bool uploadNextResend = false;
     do { // fake loop
@@ -227,7 +231,9 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
     Message& m = iter->msg;
     m.lastTime = currentTime;
-    // m.timeLeft = info.getMessageValidityTime();
+    if (!m.timeLeft) {
+        m.timeLeft  = info.getValidityPeriod(); // FIXME validity period
+    }
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_PROCESS;
     msg = m;
@@ -375,7 +381,7 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
     Message& m = iter->msg;
     if (!nchunks) {
         const char* text = m.text->getText();
-        nchunks = dlv_.getDlvInfo().evaluateNchunks(text,strlen(text));
+        nchunks = evaluateNchunks(text,strlen(text));
     }
     m.lastTime = currentTime;
     m.timeLeft = 0;
@@ -574,9 +580,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         Message& m = i->msg;
         m.lastTime = currentTime;
-        // FIXME: validity period?
-        // FIXME: should timeLeft init be moved to getNextMessage()
-        m.timeLeft = info.getValidityPeriod();
+        m.timeLeft = 0;
         m.state = MSGSTATE_PROCESS;
         m.retryCount = 0;
         smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
