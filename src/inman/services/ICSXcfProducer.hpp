@@ -2,7 +2,9 @@
  * ICService producer that supports service configuration by XML file.
  * ************************************************************************** */
 #ifndef __INMAN_ICSERVICE_XCFPRODUCER_DEFS_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICSERVICE_XCFPRODUCER_DEFS_HPP__
 
 #include "inman/services/ICSCfgReader.hpp"

@@ -2,7 +2,9 @@
  * INMan Configurable Services Host types, interfaces and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_SVC_HOST_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_SVC_HOST_DEFS_HPP
 
 #include "inman/common/ObjRegistryT.hpp"

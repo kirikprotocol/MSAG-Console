@@ -2,7 +2,9 @@
  * INMan configurable services ids. 
  * ************************************************************************** */
 #ifndef __INMAN_CONFIGURABLE_SERVICES_IDS_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_CONFIGURABLE_SERVICES_IDS_HPP__
 
 #include <string>

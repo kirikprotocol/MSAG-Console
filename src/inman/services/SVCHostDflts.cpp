@@ -1,9 +1,9 @@
 /* ************************************************************************** *
  * ICServices registry default loadUp settings.
  * ************************************************************************** */
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #ifdef ICS_LINKAGE_static
 #define ICS_ABNTCACHE_LINKAGE_static

@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static const char ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static const char ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/common/DLGuard.hpp"
 using smsc::util::DLGuard;

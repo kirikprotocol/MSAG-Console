@@ -2,7 +2,9 @@
  * TCP Server service producer.
  * ************************************************************************* */
 #ifndef __INMAN_ICS_TCPSERVER_PRODUCER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_TCPSERVER_PRODUCER_HPP
 
 #include "inman/services/tcpsrv/ICSTcpSrv.hpp"

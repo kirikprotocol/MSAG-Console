@@ -2,7 +2,9 @@
  * INMan Configurable Services: configuration parsing classes
  * ************************************************************************** */
 #ifndef __INMAN_ICSERVICE_CFG_READER_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICSERVICE_CFG_READER_HPP__
 
 #include "util/config/XCFManager.hpp"

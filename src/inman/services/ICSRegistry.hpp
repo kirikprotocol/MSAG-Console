@@ -2,7 +2,9 @@
  * ICServices registry definitions and helpers.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_REGISTRY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_REGISTRY_HPP
 
 #include "inman/common/ObjRegistryT.hpp"

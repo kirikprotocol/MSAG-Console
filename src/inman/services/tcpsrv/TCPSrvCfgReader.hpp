@@ -2,7 +2,9 @@
  * Configurable Services Host config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_TCPSERVER_CONFIG_PARSING__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_TCPSERVER_CONFIG_PARSING__
 
 #include "inman/interaction/server.hpp"

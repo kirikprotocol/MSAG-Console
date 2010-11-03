@@ -2,7 +2,9 @@
  * INMan Configurable Services Host types, interfaces and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_SERVICES_HOST_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_SERVICES_HOST_HPP
 
 #include "inman/services/SvcHostDefs.hpp"

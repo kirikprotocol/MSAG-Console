@@ -2,7 +2,9 @@
  * TCP Server service interface definitions.
  * ************************************************************************* */
 #ifndef __INMAN_TCPSERVER_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_TCPSERVER_DEFS_HPP
 
 #include "inman/services/tcpsrv/ConnManager.hpp"

@@ -2,7 +2,9 @@
  * INMan configurable services facility interfaces and classes definition. 
  * ************************************************************************** */
 #ifndef __INMAN_CONFIGURABLE_SERVICES_DEFS_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_CONFIGURABLE_SERVICES_DEFS_HPP__
 
 #include "inman/services/ICSrvIDs.hpp"

@@ -3,7 +3,9 @@
  * handling INMan asynchronous TCP protocols.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_CONNECT_MANAGER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_CONNECT_MANAGER_HPP
 
 #include "inman/interaction/connect.hpp"

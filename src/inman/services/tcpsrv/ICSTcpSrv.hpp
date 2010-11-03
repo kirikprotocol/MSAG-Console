@@ -2,7 +2,9 @@
  * TCP Server service.
  * ************************************************************************* */
 #ifndef __INMAN_ICS_TCPSERVER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_TCPSERVER_HPP
 
 #include "inman/interaction/server.hpp"
@@ -13,6 +15,8 @@ namespace smsc {
 namespace inman {
 namespace tcpsrv {
 
+using smsc::core::network::Socket;
+
 using smsc::inman::ICServiceAC_T;
 
 using smsc::inman::interaction::INProtocol;
@@ -21,6 +25,7 @@ using smsc::inman::interaction::INPSerializer;
 using smsc::inman::interaction::ServSocketCFG;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListenerITF;
+using smsc::inman::interaction::SerializablePacketAC;
 
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::ConnectAC;

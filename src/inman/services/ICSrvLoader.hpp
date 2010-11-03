@@ -2,7 +2,9 @@
  * INMan configurable service shared library loader
  * ************************************************************************** */
 #ifndef __INMAN_ICSERVICE_LOADER_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICSERVICE_LOADER_HPP__
 
 #include "util/config/ConfigException.h"
