@@ -28,6 +28,7 @@ struct DeliveryInfoData
   std::string name;
   int32_t priority;
   bool transactionMode;
+  // DD.MM.YY hh:mm:ss
   std::string startDate;
   std::string endDate;
   std::string activePeriodStart;
