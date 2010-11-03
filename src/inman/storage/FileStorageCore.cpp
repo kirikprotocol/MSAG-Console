@@ -7,7 +7,7 @@ static char const ident[] = "@(#)$Id$";
 #include <dirent.h>
 
 #include "inman/storage/FileStorageCore.hpp"
-#include <core/buffers/TmpBuf.hpp>
+#include "core/buffers/TmpBuf.hpp"
 
 using smsc::core::buffers::FileException;
 using smsc::core::buffers::TmpBuf;
@@ -22,10 +22,9 @@ using smsc::core::synchronization::MutexGuard;
  * class FileSystemException implementation:
  * ************************************************************************** */
 FileSystemException::FileSystemException(const FileSystemException& exc)
-    : Exception(exc.what())
+    : smsc::util::Exception(exc.what())
     , _code(exc.getErrorCode()), _status(exc.getErrorStatus())
-{
-}
+{ }
 
 FileSystemException::FileSystemException(int exCode, const char* fmt, ...)
     : _code(exCode), _status(0)

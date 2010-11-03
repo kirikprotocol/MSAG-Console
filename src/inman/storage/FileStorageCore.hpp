@@ -1,5 +1,7 @@
 #ifndef _FILE_STORAGE_CORE_H
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _FILE_STORAGE_CORE_H
 
 #ifndef _FILE_OFFSET_BITS
@@ -13,15 +15,14 @@
 #include "core/synchronization/Mutex.hpp"
 #include "util/Exception.hpp"
 
-using smsc::core::synchronization::Mutex;
-using smsc::core::buffers::File;
-using smsc::util::Exception;
-
 namespace smsc {
 namespace inman {
 namespace filestore {
 
-class FileSystemException : public Exception {
+using smsc::core::synchronization::Mutex;
+using smsc::core::buffers::File;
+
+class FileSystemException : public smsc::util::Exception {
 protected:
     int   _code;   //exception code
     int   _status; //thrower status
@@ -43,7 +44,6 @@ typedef smsc::core::buffers::Array<std::string> FSEntriesArray;
 //FileSystemEntry: general file/directory operations:
 struct FSEntry { //all methods throws FileSystemException
 public:
-    
 //directory operations:
     static bool createDir(const std::string& dir); //mode: 775
     static bool createDir(const std::string& dir, mode_t mode);

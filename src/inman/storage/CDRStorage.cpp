@@ -1,4 +1,6 @@
-static char const ident[] = "$Id$";
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/storage/CDRStorage.hpp"
 

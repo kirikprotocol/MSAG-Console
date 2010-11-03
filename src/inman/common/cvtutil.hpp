@@ -1,12 +1,14 @@
 /* This module contains various conversion functions widely used in 3GPP */
 #ifndef __SMSC_CONVERSION_UTIL_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_CONVERSION_UTIL_HPP__
 
 #include <time.h>
 #include <string>
 #include <stdexcept>
-#include "util/int.h"
+#include <inttypes.h>
 
 namespace smsc {
 namespace cvtutil {

@@ -3,7 +3,9 @@
  * generation (external postprocessing, out of INMan scope).
  * ************************************************************************* */
 #ifndef _SMSC_INMAN_CDR_UTIL_H
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _SMSC_INMAN_CDR_UTIL_H
 
 #include "inman/CDRTypes.hpp"

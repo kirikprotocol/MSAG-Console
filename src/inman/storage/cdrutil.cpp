@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "util/csv/CSVFileEncoder.h"
 #include "inman/storage/cdrutil.hpp"
@@ -24,11 +24,10 @@ static const char *_chgPolicy[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECT
  * class CDRRecord implementation:
  * ************************************************************************** */
 CDRRecord::CDRRecord()
-    : _finalized(dpEmpty), _msgId(0), _partsNum(1)
-    , _cdrType(CDRRecord::dpOrdinary), _mediaType(CDRRecord::dpText)
-    , _bearer(CDRRecord::dpSMS), _dlvrRes(CDRRecord::dpDeliveryFailed)
-    , _smsXMask(0), _inBilled(false), _contract(abtUnknown)
-    , _chargePolicy(ON_DELIVERY), _chargeType(MO_Charge)
+    : _msgId(0), _cdrType(CDRRecord::dpOrdinary), _mediaType(CDRRecord::dpText)
+    , _bearer(CDRRecord::dpSMS), _partsNum(1), _dlvrRes(CDRRecord::dpDeliveryFailed)
+    , _smsXMask(0), _contract(abtUnknown), _chargePolicy(ON_DELIVERY)
+    , _inBilled(false), _chargeType(MO_Charge), _finalized(dpEmpty)
 {
     _serviceId = _userMsgRef = _dpLength = 0;
     _submitTime = _finalTime = 0;

@@ -1,5 +1,7 @@
-#ident "$Id$"
 #ifndef _INMAN_FILE_STORAGES_H
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define _INMAN_FILE_STORAGES_H
 
 #include <map>
@@ -12,16 +14,13 @@
 using smsc::logger::Logger;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::threads::Thread;
-using smsc::inman::filestore::RollingFileStorage;
-using smsc::inman::filestore::RollingFileStorageParms;
 
 namespace smsc {
 namespace inman {
 namespace filestore {
 
 //just a wrapper for RollingFileStorage that catches exceptions and logs them.
-class InRollingFileStorage : RollingFileStorage
-{
+class InRollingFileStorage : RollingFileStorage {
 public:
     //'rollInterval' == 0 forbids rolling by timer
     InRollingFileStorage(const std::string & location, const char *lastExt, const char *storageExt,
