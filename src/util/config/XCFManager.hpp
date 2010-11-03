@@ -3,7 +3,9 @@
  * operates with XML files and creates 'Config' objects.
  * ************************************************************************** */
 #ifndef __UTIL_XCFG_MANAGER_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __UTIL_XCFG_MANAGER_HPP__
 
 #include <sys/stat.h>

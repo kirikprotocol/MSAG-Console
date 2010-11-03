@@ -6,7 +6,9 @@
  * newly allocated string.
  * ************************************************************************** */
 #ifndef __UTIL_XCONFIG_VIEW_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __UTIL_XCONFIG_VIEW_HPP__
 
 #include "util/config/Config.h"
