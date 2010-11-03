@@ -6,7 +6,9 @@
  * 4) writing CDRs
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_INAP_BILLING__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_BILLING__
 
 /* SMBilling interoperation scheme:
@@ -45,6 +47,7 @@ using smsc::inman::iaprvd::AbonentSubscription;
 using smsc::inman::tcpsrv::WorkerAC;
 using smsc::inman::interaction::INPPacketAC;
 using smsc::inman::interaction::SMCAPSpecificInfo;
+using smsc::inman::cdr::CDRRecord;
 
 
 class Billing : public WorkerAC, TaskRefereeITF,

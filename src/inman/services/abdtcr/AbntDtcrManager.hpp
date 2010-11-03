@@ -3,7 +3,9 @@
  * in asynchronous mode.
  * ************************************************************************* */
 #ifndef __INMAN_ABNT_DETECTOR_MGR_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ABNT_DETECTOR_MGR_HPP
 
 #include "inman/incache/AbCacheDefs.hpp"
@@ -22,6 +24,7 @@ using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::iapmgr::AbonentPolicy;
 using smsc::inman::tcpsrv::ConnectManagerT;
 using smsc::inman::interaction::Connect;
+using smsc::inman::interaction::SerializablePacketAC;
 using smsc::core::timers::TimeoutHDL;
 
 struct AbonentDetectorCFG {

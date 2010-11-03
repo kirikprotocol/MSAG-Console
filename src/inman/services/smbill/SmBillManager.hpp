@@ -3,7 +3,9 @@
  * Connect in asynchronous mode.
  * ************************************************************************* */
 #ifndef __INMAN_BILLING_MANAGER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_BILLING_MANAGER_HPP
 
 #include "inman/INManErrors.hpp"
@@ -25,6 +27,7 @@ using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::iapmgr::AbonentPolicy;
 using smsc::inman::interaction::Connect;
+using smsc::inman::interaction::SerializablePacketAC;
 using smsc::inman::tcpsrv::ConnectManagerT;
 using smsc::core::timers::TimeoutHDL;
 using smsc::util::TaskSchedulerFactoryITF;

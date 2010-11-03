@@ -2,8 +2,10 @@
  * INMan testing console: commonly used defs and helpers
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_TEST_DEFS__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_TEST_DEFS__
-#ident "$Id$"
 
 #include "core/synchronization/Event.hpp"
 
@@ -17,9 +19,11 @@ namespace smsc  {
 namespace inman {
 namespace test {
 
+using smsc::logger::Logger;
 using smsc::core::synchronization::Event;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
+using smsc::core::network::Socket;
 
 using smsc::inman::AbonentContractInfo;
 
@@ -29,6 +33,7 @@ using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::ConnectAC;
 using smsc::inman::interaction::ConnectListenerITF;
 using smsc::inman::interaction::ObjectBuffer;
+using smsc::inman::interaction::SerializablePacketAC;
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPPacketAC;
 using smsc::inman::interaction::INPSerializer;
