@@ -12,44 +12,40 @@
 
 <ui:composition>
 
-    <tr:form>
+  <tr:form>
 
-      <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['next.button']}" action="#{createDelivery.next}"/>
-        </eye:button>
-        <eye:space/>
-      </eye:buttons>
+    <eye:pageSubtitle value="#{msg['informer.deliveries.create.type']}"/>
 
-      <eye:pageSubtitle value="#{msg['informer.deliveries.create.type']}"/>
+    <h:panelGrid columns="1" style="margin: 10px 10px 10px 10px">
+      <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
 
-      <h:panelGrid columns="1" style="margin: 10px 10px 10px 10px">
-        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
-          <tr:panelLabelAndMessage label="#{msg['infromer.deliveries.create.single']}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{createDelivery.activePage.singleText}" simple="true" onchange="
-          var e = document.getElementById('text');
-           if(!this.checked) {
-            e.value = ''; e.disabled=true;
-           }else {
-            e.disabled = false;
-           }"/>
-          </tr:panelLabelAndMessage>
-          <tr:panelLabelAndMessage label="#{msg['infromer.deliveries.create.single.text']}" labelStyle="text-align:left">
-            <tr:inputText disabled="#{!createDelivery.activePage.singleText}" id="text"
-                          value="#{createDelivery.activePage.text}" simple="true"/>
-          </tr:panelLabelAndMessage>
-        </tr:panelFormLayout>
-      </h:panelGrid>
+        <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left">
+          <tr:selectBooleanCheckbox value="#{createDelivery.activePage.singleText}" simple="true" onchange="
+              var e = document.getElementById('text');
+              if(this.checked) {
+                e.style.display = '';
+              }else {
+                e.style.display='none';
+              }
+            "/>
+          <h:inputText value="#{createDelivery.activePage.text}" id="text"
+                       style="#{createDelivery.activePage.singleText ? '' : 'display:none'}"/>
+        </tr:panelLabelAndMessage>
 
-      <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['next.button']}" action="#{createDelivery.next}"/>
-        </eye:button>
-        <eye:space/>
-      </eye:buttons>
+      </tr:panelFormLayout>
+    </h:panelGrid>
 
-    </tr:form>
+    <eye:buttons>
+      <eye:button>
+        <tr:commandLink text="#{msg['next.button']}" action="#{createDelivery.next}"/>
+      </eye:button>
+      <eye:space/>
+    </eye:buttons>
+
+  </tr:form>
 
 </ui:composition>
 
 </html>
+
+    

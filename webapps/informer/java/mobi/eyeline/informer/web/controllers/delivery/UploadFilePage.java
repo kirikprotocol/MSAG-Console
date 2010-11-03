@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.UploadController;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
@@ -28,7 +29,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     this.tmpFile = tmpFile;
   }
 
-  public CreateDeliveryPage process(String user) throws AdminException {
+  public CreateDeliveryPage process(String user, Configuration config) throws AdminException {
     if(isStoped() || getError() != null) {
       return new StartPage();
     }
@@ -38,6 +39,11 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   public String getPageId() {
     return "DELIVERY_UPLOAD_FILE";
+  }
+
+  @SuppressWarnings({"ResultOfMethodCallIgnored"})
+  public void cancel() {
+    tmpFile.delete();
   }
 
   @Override
@@ -69,7 +75,11 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
         if(delivery.getType() == Delivery.Type.SingleText) {
           address = line;
         }else {
-          address = line.split(",",2)[0];
+          String[] s = line.split(",",2);
+          if(s.length == 1) {
+            throw new IllegalArgumentException("Illegal file");
+          }
+          address = s[0];
         }
         if(!Address.validate(address)) {
           throw new DeliveryException("illegal_address",address);

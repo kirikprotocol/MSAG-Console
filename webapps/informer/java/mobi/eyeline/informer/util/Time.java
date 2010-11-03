@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.util;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.StringTokenizer;
 
 /**
@@ -78,6 +80,14 @@ public class Time {
     if(sec<10) sb.append('0');
     sb.append(sec);
     return sb.toString();
+  }
+
+  public Date getTimeDate() {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.HOUR_OF_DAY, hour);
+    c.set(Calendar.MINUTE, min);
+    c.set(Calendar.SECOND, sec);
+    return c.getTime();
   }
 
   @Override

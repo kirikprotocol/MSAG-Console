@@ -12,10 +12,19 @@ public class CreateDeliveryController extends InformerController {
 
   public String next() {
     try {
-      activePage = activePage.process(getUserName());
+      CreateDeliveryPage page = activePage.process(getUserName(), getConfig());
+      if(page != null) {
+        activePage = page;
+      }
     } catch (AdminException e) {
       addError(e);
     }
+    return null;
+  }
+
+  public String cancel() {
+    activePage.cancel();
+    activePage = new StartPage();
     return null;
   }
 

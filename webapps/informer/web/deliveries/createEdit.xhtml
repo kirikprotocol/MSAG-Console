@@ -13,13 +13,6 @@
 
 <ui:composition>
 
-    <eye:buttons>
-      <eye:button>
-        <tr:commandLink text="#{msg['next.button']}" action="#{createDelivery.next}"/>
-      </eye:button>
-      <eye:space/>
-    </eye:buttons>
-
     <eye:pageSubtitle value="#{msg['informer.deliveries.create.edit']}"/>
 
     <tr:form>
@@ -36,10 +29,9 @@
             <tr:inputText readOnly="true"  value="#{createDelivery.activePage.delivery.owner}" required="true" simple="true"/>
           </tr:panelLabelAndMessage>
 
+          
           <tr:panelLabelAndMessage label="#{deliveryBundle.sourceAddress}" labelStyle="text-align:left">
-            <tr:inputText simple="true" value="#{createDelivery.activePage.delivery.sourceAddress}" required="true">
-              <f:converter converterId="addressConverter"/>
-            </tr:inputText>
+            <tr:inputText converter="addressConverter" value="#{createDelivery.activePage.delivery.sourceAddress}" required="true" simple="true"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.activePeriodStart}" labelStyle="text-align:left">
@@ -64,19 +56,30 @@
             <t:inputDate popupCalendar="true" value="#{createDelivery.activePage.delivery.endDate}" requiredMessage="#{msg['date.required']}" required="true" type="full"/>
           </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.validityPeriod}" labelStyle="text-align:left">
-            <tr:inputText value="#{createDelivery.activePage.delivery.validityPeriod}" required="true" simple="true">
-              <tr:validateLongRange minimum="0"/>
-            </tr:inputText>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.validityChoise}" labelStyle="text-align:left">
+            <h:panelGrid columns="1">
+              <tr:inputText id="vPeriod" value="#{createDelivery.activePage.delivery.validityPeriod}" simple="true">
+                <tr:validateLongRange minimum="1" maximum="100"/>
+              </tr:inputText>
+              <tr:outputText value="#{msg['or']}"/>
+              <t:inputDate id="vDate" popupCalendar="true" value="#{createDelivery.activePage.delivery.validityDate}" type="full"/>
+            </h:panelGrid>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.retryOnFail}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{createDelivery.activePage.delivery.retryOnFail}" simple="true"/>
+            <tr:selectBooleanCheckbox id="retryOnFail" value="#{createDelivery.activePage.delivery.retryOnFail}" simple="true" onchange="
+              var e = document.getElementById('retryPolicy1');
+              if(this.checked) {
+                e.style.display = '';
+              }else {
+                e.style.display='none';
+              }
+            "/>
+            <h:inputText value="#{createDelivery.activePage.delivery.retryPolicy}" id="retryPolicy1"
+                          style="#{createDelivery.activePage.delivery.retryOnFail ? '' : 'display:none'}"/>
           </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.retryPolicy}" labelStyle="text-align:left">
-            <tr:inputText value="#{createDelivery.activePage.delivery.retryPolicy}" simple="true"/>
-          </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.transactionMode}" labelStyle="text-align:left">
             <tr:selectBooleanCheckbox id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"
@@ -101,31 +104,50 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.smsNotificationAddress}" labelStyle="text-align:left">
-            <tr:inputText simple="true" value="#{createDelivery.activePage.delivery.smsNotificationAddress}">
-              <f:converter converterId="addressConverter"/>
-            </tr:inputText>
+            <tr:selectBooleanCheckbox value="#{createDelivery.activePage.smsNotificationCheck}" simple="true" onchange="
+              var e = document.getElementById('sms');
+              if(this.checked) {
+                e.style.display = '';
+              }else {
+                e.style.display='none';
+              }
+            "/>
+            <h:inputText id="sms" style="#{createDelivery.activePage.smsNotificationCheck ? '' : 'display:none'}"
+                         converter="addressConverter" value="#{createDelivery.activePage.delivery.smsNotificationAddress}"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.emailNotificationAddress}" labelStyle="text-align:left">
-            <tr:inputText value="#{createDelivery.activePage.delivery.emailNotificationAddress}" simple="true"/>
+            <tr:selectBooleanCheckbox value="#{createDelivery.activePage.emailNotificationCheck}" simple="true" onchange="
+              var e = document.getElementById('email');
+              if(this.checked) {
+                e.style.display = '';
+              }else {
+                e.style.display='none';
+              }
+            "/>
+            <h:inputText id="email" style="#{createDelivery.activePage.emailNotificationCheck ? '' : 'display:none'}" 
+                         value="#{createDelivery.activePage.delivery.emailNotificationAddress}"/>
           </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left" rendered="#{createDelivery.activePage.delivery.type.value == 'SingleText'}">
-            <tr:inputText value="#{createDelivery.activePage.delivery.singleText}"  simple="true" required="true"/>
-          </tr:panelLabelAndMessage>
-
+          
           <tr:panelLabelAndMessage label="#{deliveryBundle.secret}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{createDelivery.activePage.delivery.secret}"  simple="true" onchange="var e = document.getElementById('secret'); e.disabled = !this.checked; if(!this.checked) {e.value = ''}"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{deliveryBundle.secretMessage}" labelStyle="text-align:left">
-            <tr:inputText id="secret" disabled="#{!createDelivery.activePage.delivery.secret}" value="#{createDelivery.activePage.delivery.secretMessage}"  simple="true"/>
+            <tr:selectBooleanCheckbox value="#{createDelivery.activePage.delivery.secret}" simple="true" onchange="
+              var e = document.getElementById('secret1');
+              if(this.checked) {
+                e.style.display = '';
+              }else {
+                e.style.display='none';
+              }
+            "/>
+            <h:inputText value="#{createDelivery.activePage.delivery.secretMessage}" id="secret1"
+                          style="#{createDelivery.activePage.delivery.secret ? '' : 'display:none'}"/>
           </tr:panelLabelAndMessage>
 
         </tr:panelFormLayout>
 
-
         <eye:buttons>
+          <eye:button>
+            <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true"/>
+          </eye:button>
           <eye:button>
             <tr:commandLink text="#{msg['next.button']}" action="#{createDelivery.next}"/>
           </eye:button>
