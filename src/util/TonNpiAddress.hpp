@@ -2,7 +2,9 @@
  * TonNpiAddress and GsmSCFinfo helper classes.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_TONNPIADDR_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_TONNPIADDR_HPP__
 
 #include <inttypes.h>

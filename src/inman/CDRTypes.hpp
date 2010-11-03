@@ -2,7 +2,9 @@
  * Definition of types used in SM/USSD Collected Data Records.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_CDR_TYPES
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_CDR_TYPES
 
 #include "util/TonNpiAddress.hpp"
