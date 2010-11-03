@@ -28,7 +28,8 @@ extern const char * DFLTRCDescriptor(uint32_t ret_code);
 
 class URCSpaceITF {
 protected:
-  virtual ~URCSpaceITF();
+  virtual ~URCSpaceITF()
+  { }
 
 public:
   virtual RCSpaceIdx   Idx(void) const  = 0;
