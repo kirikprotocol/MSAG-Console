@@ -2,7 +2,9 @@
  * Helpers: Character Separated Values container template : array
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_CSV_ARRAY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_CSV_ARRAY_HPP
 
 #include <vector>

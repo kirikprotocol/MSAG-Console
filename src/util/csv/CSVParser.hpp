@@ -2,7 +2,9 @@
  * Helpers: Primitive parser of Character Separated Values List.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_CSV_LIST_PARSER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_CSV_LIST_PARSER_HPP
 
 #include "util/strutil.hpp"

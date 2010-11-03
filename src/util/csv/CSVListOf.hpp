@@ -2,7 +2,9 @@
  * Helpers: Character Separated Values container template : list.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_CSV_LIST_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_CSV_LIST_HPP
 
 #include <list>

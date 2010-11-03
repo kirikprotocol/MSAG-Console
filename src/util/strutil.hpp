@@ -2,7 +2,9 @@
  * Various std::string related helpers.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_STRINGS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_STRINGS
 
 #include <string>

@@ -3,7 +3,9 @@
  * specialization for integer types.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_CSV_VALUE_TRAITS_INT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_CSV_VALUE_TRAITS_INT_HPP
 
 #include <inttypes.h>

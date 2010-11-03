@@ -2,7 +2,9 @@
  * Helpers: Character Separated Values List element traits template.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_CSV_VALUE_TRAITS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_CSV_VALUE_TRAITS_HPP
 
 #include "util/Exception.hpp"
