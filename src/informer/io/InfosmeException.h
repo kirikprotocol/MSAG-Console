@@ -25,12 +25,21 @@ namespace informer {
 typedef enum
 {
     EXC_GENERIC = 0,
+
     EXC_DLVLIMITEXCEED,    // number of deliveries exceeded
-    EXC_LOGICERROR,        // program logic error
+    EXC_NOTFOUND,          // item not found by id
+    EXC_ALREADYEXIST,      // item already exists
+
     EXC_BADNAME,           // invalid/too long  userid/smscid/etc.
-    EXC_BADCONFIG,         // configuration problem
-    EXC_SYSTEM,            // system call/library function failure
-    EXC_IOERROR,           // conversion problem (text,binary data)
+    EXC_SYSTEM,            // system call/libc failure/no resources
+
+    EXC_LOGICERROR,        // program logic error
+    EXC_CONFIG,            // configuration problem
+    EXC_IOERROR,           // conversion problem (text, binary data)
+    EXC_BADFILE,           // corrupted file
+    EXC_NOTIMPL,           // not implemented
+    EXC_NOTAUTH,           // not authorized
+    EXC_ACCESSDENIED,      // access denied
 } ErrorCode;
 
 
@@ -71,7 +80,7 @@ public:
     FileDataException( size_t pos, const char* fmt, ... ) :
     pos_(pos)
     {
-        code_ = EXC_GENERIC;
+        code_ = EXC_BADFILE;
         SMSC_UTIL_EX_FILL(fmt);
         char ebuf[30];
         sprintf(ebuf," at %llu",static_cast<unsigned long long>(pos));
