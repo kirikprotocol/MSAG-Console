@@ -2,7 +2,9 @@
  * Various Address packing utilities for SCCP, TCAP, MAP, CAP.
  * ************************************************************************** */
 #ifndef __SMSC_CONVERSION_ADDRESS_UTL_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 
 #include "util/TonNpiAddress.hpp"

@@ -115,7 +115,7 @@ unsigned estimate7BitAsText(const unsigned char* b7buf, unsigned b7len, unsigned
     unsigned char	*ptr  = (unsigned char*)b7buf;
     const unsigned char *ptrEnd = b7buf + b7len;
 
-    while (ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))
+    while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)))
 	tlen++;
 
     if (_7bit_chars)
@@ -269,7 +269,7 @@ unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
     unsigned char	ch, *ptr  = (unsigned char*)b7buf;
     const unsigned char *ptrEnd = b7buf + b7len;
 
-    while (ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))
+    while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)))
 	text[tlen++] = ch;
     text[tlen] = 0;
 
@@ -287,7 +287,7 @@ unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
     const unsigned char *ptrEnd = b7buf + b7len;
 
     str.clear();
-    while (ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)) {
+    while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))) {
         str += ch; tlen++;
     }
     str += '\0';
@@ -309,7 +309,7 @@ unsigned unpack7Bit2TextSafe(const unsigned char* b7buf, unsigned b7len,
     unsigned char	ch, *ptr  = (unsigned char*)b7buf;
     const unsigned char *ptrEnd = b7buf + b7len;
 
-    while (ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)) {
+    while ((ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))) {
 	if (tlen < maxtlen)
 	    text[tlen++] = ch;
 	else
