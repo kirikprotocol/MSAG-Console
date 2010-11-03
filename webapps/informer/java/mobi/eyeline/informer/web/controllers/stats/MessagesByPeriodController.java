@@ -24,6 +24,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   public MessagesByPeriodController() {
     super();
     filter = new DeliveryStatFilter();
+    setAggregation(TimeAggregationType.DAY);
   }
 
   public Integer getDeliveryId() {
@@ -64,6 +65,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     filter.setFromDate(null);
     filter.setTillDate(null);
     filter.setTaskId(getDeliveryId());
+    setAggregation(TimeAggregationType.DAY);
     fullMode = false;
   }
 
