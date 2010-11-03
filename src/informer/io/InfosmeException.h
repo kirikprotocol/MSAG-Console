@@ -39,7 +39,7 @@ typedef enum
     EXC_BADFILE,           // corrupted file
     EXC_NOTIMPL,           // not implemented
     EXC_NOTAUTH,           // not authorized
-    EXC_ACCESSDENIED,      // access denied
+    EXC_ACCESSDENIED       // access denied
 } ErrorCode;
 
 
