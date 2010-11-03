@@ -75,7 +75,7 @@ public class TestAdminContext extends AdminContext {
 
     Random r1 = new Random();
 
-    for(int i=1;i<=10;i++) {
+    for(int i=1;i<=100;i++) {
       User u = users.get((i-1)%users.size());
       Delivery d = (i%2 == 1) ? Delivery.newCommonDelivery() : Delivery.newSingleTextDelivery();
       d.setSourceAddress(new Address("+7901111"+i));
