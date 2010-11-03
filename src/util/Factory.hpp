@@ -2,7 +2,9 @@
  * Generic factories templates.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_FACTORYT_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_FACTORYT_HPP__
 
 #include <map>
