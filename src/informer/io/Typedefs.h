@@ -47,6 +47,14 @@ msgtime_type parseDate( const char* date );
 /// parse time in form 'HH:MM:SS'
 timediff_type parseTime( const char* theTime );
 
+/// collect week days into one integer, where each bit corresponds to one day.
+/// 2^0 -- monday, 2^1 -- tuesday, etc.
+/// example: 0x1f == mon,tue,wed,thu,fri
+int parseWeekDays( const std::vector<std::string>& wd );
+
+/// parse address in one of three form 'NNNNN', '+NNNNN', '.T.P.NNNNN'
+personid_type parseAddress( const char* isdn );
+
 /// some constants
 static const unsigned tuPerSec = 1000000U;
 static const unsigned maxScoreIncrement = 10000U;

@@ -55,6 +55,10 @@ public:
     inline T* get() { return x_; }
     inline const T* operator -> () const { return x_; }
     inline T* operator -> () { return x_; }
+
+    inline T* operator * () { return x_; }
+    inline const T* operator * () const { return x_; }
+
     inline void reset( T* x ) {
         if (x != x_) {
             if (x_) x_->unref();
