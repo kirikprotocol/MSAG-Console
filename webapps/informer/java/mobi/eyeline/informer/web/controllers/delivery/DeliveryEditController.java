@@ -72,7 +72,9 @@ public class DeliveryEditController extends DeliveryController{
         return null;
       }
     }
-    if(delivery.isRetryOnFail() && (delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches())) {
+    if(!delivery.isRetryOnFail()) {
+      delivery.setRetryPolicy(null);
+    }else if(delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
       return null;
     }
