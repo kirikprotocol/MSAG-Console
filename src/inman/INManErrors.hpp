@@ -2,7 +2,9 @@
  * INMan error codes.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_ERRORS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_ERRORS__
 
 #include "util/URCdb/URCRegistry.hpp"

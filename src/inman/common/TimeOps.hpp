@@ -3,7 +3,9 @@
  * ************************************************************************** */
  //NOTE: timevals should be normalized(microsecs/nanosecs) adjusted) !
 #ifndef _SMSC_CORE_TIME_OPS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _SMSC_CORE_TIME_OPS_HPP
 
 #include <sys/time.h>

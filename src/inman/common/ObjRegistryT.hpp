@@ -1,9 +1,11 @@
 /* ************************************************************************** *
  * Object Registry templates.
  * ************************************************************************** */
-#ifndef __UTIL_STRKEY_REGISTRY_HPP__
+#ifndef __UTIL_PTROBJ_REGISTRY_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
-#define __UTIL_STRKEY_REGISTRY_HPP__
+#endif
+#define __UTIL_PTROBJ_REGISTRY_HPP__
 
 #include <map>
 #include <string>
@@ -88,20 +90,20 @@ public:
         }
     };
 
-    inline const_iterator begin(void) const { return const_iterator(registry.begin()); }
-    inline const_iterator end(void) const { return const_iterator(registry.end()); }
+    const_iterator begin(void) const { return const_iterator(registry.begin()); }
+    const_iterator end(void) const { return const_iterator(registry.end()); }
 
-    inline size_type size(void) const { return registry.size(); }
-    inline bool empty(void) const { return registry.empty(); }
+    size_type size(void) const { return registry.size(); }
+    bool empty(void) const { return registry.empty(); }
 
 
-    inline _TArg * find(const _KeyTArg & use_key) const
+    _TArg * find(const _KeyTArg & use_key) const
     {
         typename TRegistry::const_iterator it = registry.find(use_key);
         return (it != registry.end()) ? it->second : NULL;
     }
 
-    inline bool insert(const _KeyTArg & use_key, _TArg * p_obj)
+    bool insert(const _KeyTArg & use_key, _TArg * p_obj)
     {
         std::pair<typename TRegistry::iterator, bool> res =
             registry.insert(typename TRegistry::value_type(use_key, p_obj));
@@ -142,5 +144,5 @@ public:
 
 } //util
 } //smsc
-#endif /* __UTIL_STRKEY_REGISTRY_HPP__ */
+#endif /* __UTIL_PTROBJ_REGISTRY_HPP__ */
 

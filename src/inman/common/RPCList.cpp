@@ -1,9 +1,9 @@
 /* ************************************************************************** *
  * Helper classes for operations with RPCauses (Reject Processing Cause)
  * ************************************************************************** */
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static const char ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/common/RPCList.hpp"
 #include "util/csv/CSVArrayOf.hpp"

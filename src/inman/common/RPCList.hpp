@@ -2,7 +2,9 @@
  * Helper classes for operations with RPCauses (Reject Processing Cause)
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_RPCLIST__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_RPCLIST__
 
 #include "util/csv/CSVListOf.hpp"
