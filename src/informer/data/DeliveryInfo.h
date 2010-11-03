@@ -24,6 +24,26 @@ typedef enum {
 /// the structure holding data from dcp protocol.
 struct DeliveryInfoData
 {
+  std::string name;
+  int32_t priority;
+  bool transactionMode;
+  std::string startDate;
+  std::string endDate;
+  std::string activePeriodEnd;
+  std::string activePeriodStart;
+  std::vector<std::string> activeWeekDays;
+  std::string validityDate;
+  std::string validityPeriod;
+  bool flash;
+  bool useDataSm;
+  DeliveryMode deliveryMode;
+  std::string owner;
+  bool retryOnFail;
+  std::string retryPolicy;
+  bool replaceMessage;
+  std::string svcType;
+  std::string userData;
+  std::string sourceAddress;
 };
 
 
@@ -80,7 +100,7 @@ public:
 
     void setState( DlvState state, msgtime_type planTime );
 
-    personid_type getFrom() const { return from_; } 
+    personid_type getFrom() const { return from_; }
 
     /// message validity time, seconds
     unsigned getMessageValidityTime() const { return 3600; }
