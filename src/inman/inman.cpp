@@ -27,7 +27,7 @@ using smsc::inman::inmanLogger;
 static char         _runService = 0;
 static SVCHost *    _svcHost = 0;
 
-extern "C" static void sighandler(int signal)
+extern "C" void sighandler(int signal)
 {
     _runService = 0;
 }
