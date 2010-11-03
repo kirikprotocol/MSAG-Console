@@ -67,7 +67,7 @@ public:
         case MSGSTATE_INPUT    : if (value>0) { totalMessages += value; } break;
         default :
             if (value<0) {
-                throw InfosmeException("cannot decrement final state %d",state);
+                throw InfosmeException(EXC_LOGICERROR,"cannot decrement final state %d",state);
             }
             switch (MsgState(state)) {
             case MSGSTATE_DELIVERED:
@@ -83,7 +83,7 @@ public:
                 failedSms += smsValue;
                 break;
             default:
-                throw InfosmeException("unknown state %d",state);
+                throw InfosmeException(EXC_LOGICERROR,"unknown state %d",state);
             }
         }
     }

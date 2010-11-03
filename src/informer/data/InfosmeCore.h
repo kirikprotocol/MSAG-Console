@@ -46,14 +46,12 @@ public:
     /// create delivery bound to given user
     virtual dlvid_type addDelivery( UserInfo& userInfo,
                                     const DeliveryInfoData& info ) = 0;
-    /// update delivery by id.
-    virtual void updateDelivery( dlvid_type dlvid,
-                                 const DeliveryInfoData& info ) = 0;
-    virtual void deleteDelivery( dlvid_type dlvId ) = 0;
-    virtual void setDeliveryState( dlvid_type   dlvId,
-                                   DlvState     newState,
-                                   msgtime_type atTime = 0 ) = 0;
 
+    virtual void deleteDelivery( const UserInfo&  userInfo,
+                                 dlvid_type       dlvId ) = 0;
+
+    virtual DeliveryPtr getDelivery( const UserInfo&  userInfo,
+                                     dlvid_type       dlvId ) = 0;
 };
 
 } // informer

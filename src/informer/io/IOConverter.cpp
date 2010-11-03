@@ -5,7 +5,7 @@
 
 #define checksz(sz) { \
     register const size_t newpos = pos + sz; \
-    if (newpos>buflen) { throw InfosmeException("buffer is too small: len=%u",unsigned(buflen)); } \
+    if (newpos>buflen) { throw InfosmeException(EXC_IOERROR,"buffer is too small: len=%u",unsigned(buflen)); } \
     pos = newpos; \
 }
 
@@ -95,7 +95,7 @@ const unsigned char* FromBuf::skip( size_t bytes )
 void FromBuf::setPos( size_t newpos )
 {
     if (newpos>buflen) {
-        throw InfosmeException("buffer is too small: len=%u, pos=%u",unsigned(buflen), unsigned(newpos));
+        throw InfosmeException(EXC_IOERROR,"buffer is too small: len=%u, pos=%u",unsigned(buflen), unsigned(newpos));
     }
     register int off = int(newpos) - int(pos);
     buf += off;
@@ -106,7 +106,7 @@ void FromBuf::setPos( size_t newpos )
 void FromBuf::setLen( size_t newlen )
 {
     if (newlen<pos) {
-        throw InfosmeException("buffer newlen is too small: len=%u, pos=%u", unsigned(newlen), unsigned(pos));
+        throw InfosmeException(EXC_IOERROR,"buffer newlen is too small: len=%u, pos=%u", unsigned(newlen), unsigned(pos));
     }
     buflen = newlen;
 }
@@ -184,7 +184,7 @@ void ToBuf::skip( size_t bytes )
 void ToBuf::setPos( size_t newpos )
 {
     if (newpos>buflen) {
-        throw InfosmeException("buffer is too small: len=%u, pos=%u",unsigned(buflen), unsigned(newpos));
+        throw InfosmeException(EXC_IOERROR,"buffer is too small: len=%u, pos=%u",unsigned(buflen), unsigned(newpos));
     }
     register int off = int(newpos) - int(pos);
     buf += off;

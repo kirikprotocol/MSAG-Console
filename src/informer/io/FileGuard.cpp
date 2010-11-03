@@ -71,7 +71,7 @@ size_t FileGuard::seek( off_t pos, int whence )
 const struct stat& FileGuard::getStat( struct stat& st ) const
 {
     if (fd_==-1) {
-        throw InfosmeException("stat failed: file is not opened");
+        throw InfosmeException(EXC_LOGICERROR,"stat failed: file is not opened");
     }
     if (-1 == fstat(fd_,&st)) {
         throw ErrnoException(errno,"fstat");
@@ -83,7 +83,7 @@ const struct stat& FileGuard::getStat( struct stat& st ) const
 void FileGuard::write( const void* buf, size_t buflen, bool atomic )
 {
     if (fd_==-1) {
-        throw InfosmeException("write failed: file is not opened");
+        throw InfosmeException(EXC_LOGICERROR,"write failed: file is not opened");
     }
     while (buflen>0) {
         ssize_t written = ::write(fd_,buf,buflen);
@@ -93,7 +93,8 @@ void FileGuard::write( const void* buf, size_t buflen, bool atomic )
         buflen -= written;
         pos_ += written;
         if (atomic && buflen>0) {
-            throw InfosmeException("write was not atomic: %d, buflen=%llu written=%u",
+            throw InfosmeException(EXC_SYSTEM,
+                                   "write was not atomic: %d, buflen=%llu written=%u",
                                    fd_,ulonglong(buflen+written),written);
         }
     }
@@ -103,7 +104,7 @@ void FileGuard::write( const void* buf, size_t buflen, bool atomic )
 size_t FileGuard::read( void* buf, size_t buflen )
 {
     if (fd_==-1) {
-        throw InfosmeException("read failed: file is not opened");
+        throw InfosmeException(EXC_LOGICERROR,"read failed: file is not opened");
     }
     size_t wasread = 0;
     while (buflen>0) {

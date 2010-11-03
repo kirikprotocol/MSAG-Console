@@ -31,7 +31,7 @@ public:
         while (len>0) {
             switch (*p) {
             case '\0' :
-                throw InfosmeException("NULL embedded into string at %u",unsigned(p-from));
+                throw InfosmeException(EXC_IOERROR,"NULL embedded into string at %u",unsigned(p-from));
                 break;
             case '\\' :
                 *to = '\\';

@@ -48,7 +48,7 @@ ulonglong msgTimeToYmd( msgtime_type tmp, std::tm* tmb )
     }
     const time_t t(tmp);
     if ( !gmtime_r(&t,tmb) ) {
-        throw InfosmeException("formatMsgTime: cannot gmtime_r");
+        throw InfosmeException(EXC_SYSTEM,"formatMsgTime: cannot gmtime_r");
     }
     return ( ( ( ( ulonglong(tmb->tm_year+1900)*100 +
                    tmb->tm_mon + 1 ) * 100 +
@@ -68,32 +68,32 @@ msgtime_type ymdToMsgTime( ulonglong tmp, std::tm* tmb )
     ulonglong tmp1 = tmp;
     tmb->tm_sec = int(tmp1 % 100);
     if (tmb->tm_sec < 0 || tmb->tm_sec > 59) {
-        throw InfosmeException("invalid sec %d in time buf %llu",tmb->tm_sec,tmp);
+        throw InfosmeException(EXC_SYSTEM,"invalid sec %d in time buf %llu",tmb->tm_sec,tmp);
     }
     tmp1 /= 100;
     tmb->tm_min = int(tmp1 % 100);
     if (tmb->tm_min < 0 || tmb->tm_min > 59) {
-        throw InfosmeException("invalid min %d in time buf %llu",tmb->tm_min,tmp);
+        throw InfosmeException(EXC_SYSTEM,"invalid min %d in time buf %llu",tmb->tm_min,tmp);
     }
     tmp1 /= 100;
     tmb->tm_hour = int(tmp1 % 100);
     if (tmb->tm_hour < 0 || tmb->tm_hour > 23) {
-        throw InfosmeException("invalid hour %d in time buf %llu",tmb->tm_hour,tmp);
+        throw InfosmeException(EXC_SYSTEM,"invalid hour %d in time buf %llu",tmb->tm_hour,tmp);
     }
     tmp1 /= 100;
     tmb->tm_mday = int(tmp1 % 100);
     if (tmb->tm_mday < 1 || tmb->tm_mday > 31) {
-        throw InfosmeException("invalid mday %d in time buf %llu",tmb->tm_mday,tmp);
+        throw InfosmeException(EXC_SYSTEM,"invalid mday %d in time buf %llu",tmb->tm_mday,tmp);
     }
     tmp1 /= 100;
     tmb->tm_mon = int(tmp1 % 100) - 1;
     if (tmb->tm_mon < 0 || tmb->tm_mon > 11) {
-        throw InfosmeException("invalid mon %d in time buf %llu",tmb->tm_mon,tmp);
+        throw InfosmeException(EXC_SYSTEM,"invalid mon %d in time buf %llu",tmb->tm_mon,tmp);
     }
     tmp1 /= 100;
     tmb->tm_year = int(tmp1) - 1900;
     if (tmb->tm_year < 100 || tmb->tm_year > 200) {
-        throw InfosmeException("invalid year %d in time buf %llu",tmb->tm_year,tmp);
+        throw InfosmeException(EXC_SYSTEM,"invalid year %d in time buf %llu",tmb->tm_year,tmp);
     }
     tmb->tm_isdst = 0;
     return msgtime_type(mktime(tmb)+localOffset());
@@ -104,6 +104,51 @@ usectime_type currentTimeMicro()
 {
     static smsc::util::TimeSourceSetup::AbsUSec usecSource;
     return usectime_type(usecSource.getUSec());
+}
+
+
+msgtime_type parseDateTime( const char* datetime )
+{
+    int shift = 0;
+    unsigned day, month, year, hour, minute, second;
+    sscanf(datetime,"%02u.%02u.%04u %02u:%02u:%02u%n",&day,&month,&year,&hour,&minute,&second,&shift);
+    if (!shift) {
+        throw InfosmeException(EXC_IOERROR,"invalid datetime '%s'",datetime);
+    }
+    return ymdToMsgTime(((((year*100+month)*100+day)*100+hour)*100+minute)*100+second);
+}
+
+
+msgtime_type parseDate( const char* date )
+{
+    int shift = 0;
+    unsigned day, month, year;
+    sscanf(date,"%02u.%02u.%04u%n",&day,&month,&year,&shift);
+    if (!shift) {
+        throw InfosmeException(EXC_IOERROR,"invalid date '%s'",date);
+    }
+    return ymdToMsgTime(((year*100+month)*100+day)*1000000);
+}
+
+
+timediff_type parseTime( const char* theTime )
+{
+    int shift = 0;
+    unsigned hour, minute, second;
+    sscanf(theTime,"%02u:%02u:%02u",&hour,&minute,&second,&shift);
+    if (!shift) {
+        throw InfosmeException(EXC_IOERROR,"invalid time '%s'",theTime);
+    }
+    if (hour > 23) {
+        throw InfosmeException(EXC_IOERROR,"invalid hour %u in '%s'",hour,theTime);
+    }
+    if (minute > 59) {
+        throw InfosmeException(EXC_IOERROR,"invalid minute %u in '%s'",minute,theTime);
+    }
+    if (second > 60) { // leap second
+        throw InfosmeException(EXC_IOERROR,"invalid second %u in '%s'",second,theTime);
+    }
+    return timediff_type((hour*60+minute)*60+second);
 }
 
 
@@ -141,7 +186,7 @@ char* makeDeliveryPath( dlvid_type dlvId, char* buf )
     const unsigned chunk = unsigned(dlvId/100)*100;
     const int rv = sprintf(buf,"deliveries/%010u/%u/",chunk,dlvId);
     if (rv<0) {
-        throw InfosmeException("cannot form delivery path D=%u, chunk=%u",dlvId,chunk);
+        throw InfosmeException(EXC_SYSTEM,"cannot form delivery path D=%u, chunk=%u",dlvId,chunk);
     }
     return buf + rv;
 }

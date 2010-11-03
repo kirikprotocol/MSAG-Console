@@ -98,7 +98,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
             // EOF
             if (ptr < buf.GetCurPtr()) {
                 // FIXME: should we truncate instead?
-                throw InfosmeException("file is not terminated with LF");
+                throw InfosmeException(EXC_BADFILE,"file is not terminated with LF");
             }
             break;
         }
@@ -128,7 +128,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                     continue;
                 }
                 if (statLineHasBeenRead) {
-                    throw InfosmeException("duplicate stat line");
+                    throw InfosmeException(EXC_BADFILE,"duplicate stat line");
                 }
                 statLineHasBeenRead = true;
                 continue;
@@ -137,14 +137,14 @@ bool ActivityLog::readStatistics( const std::string& filename,
 
             // record line, trying to read its head
             if (!statLineHasBeenRead) {
-                throw InfosmeException("no stat line before the first record");
+                throw InfosmeException(EXC_BADFILE,"no stat line before the first record");
             }
             int shift = 0;
             unsigned seconds;
             char cstate;
             sscanf(line,"%02u,%c,%n",&seconds,&cstate,&shift);
             if (!shift) {
-                throw InfosmeException("wrong record: '%s'",line);
+                throw InfosmeException(EXC_BADFILE,"wrong record: '%s'",line);
             }
             switch (cstate) {
             case 'N' : ++ds.totalMessages;   break;
@@ -159,7 +159,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 int shift2 = 0;
                 sscanf(line+shift,"%u,%llu,%u,%n",&regId,&msgId,&nchunks,&shift2);
                 if (!shift2 || !nchunks) {
-                    throw InfosmeException("cannot parse the number of sms in '%s'",line);
+                    throw InfosmeException(EXC_BADFILE,"cannot parse the number of sms in '%s'",line);
                 }
                 switch (cstate) {
                 case 'D': ++ds.dlvdMessages; ds.dlvdSms += nchunks; break;
@@ -169,7 +169,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 }
             }
             default:
-                throw InfosmeException("unknown record state in '%s'",line);
+                throw InfosmeException(EXC_BADFILE,"unknown record state in '%s'",line);
             }
 
         } // while there is LF in buffer
@@ -186,7 +186,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
         } else {
             // buffer is too small
             if (buf.getSize() > 100000) {
-                throw InfosmeException("too big record");
+                throw InfosmeException(EXC_BADFILE,"too big record");
             }
             buf.reserve(buf.getSize()+buf.getSize()/2+100);
         }
@@ -225,7 +225,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     case MSGSTATE_DELIVERED: cstate = 'D'; break;
     case MSGSTATE_FAILED:    cstate = 'F'; break;
     case MSGSTATE_EXPIRED:   cstate = 'E'; break;
-    default: throw InfosmeException("actlog unknown state %u",msg.state);
+    default: throw InfosmeException(EXC_LOGICERROR,"actlog unknown state %u",msg.state);
     }
 
     uint8_t ton, npi, len;
@@ -243,7 +243,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                             msg.timeLeft, smppStatus,
                             msg.userData.c_str());
     if ( off < 0 ) {
-        throw InfosmeException("cannot printf to activity.log: %d",off);
+        throw InfosmeException(EXC_SYSTEM,"cannot printf to activity.log: %d",off);
     }
     buf.SetPos(off);
     escapeText(buf, msg.text->getText(), strlen(msg.text->getText()));
@@ -280,7 +280,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                                       stats_.failedSms, stats_.expiredSms,
                                       &shift );
                     if (headlen<0) {
-                        throw InfosmeException("cannot sprintf header");
+                        throw InfosmeException(EXC_SYSTEM,"cannot sprintf header");
                     }
                     headbuf[headlen++] = '\n';
                 }

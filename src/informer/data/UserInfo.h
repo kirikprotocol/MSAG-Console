@@ -49,7 +49,7 @@ struct UserDlvStats
         case DLVSTATE_FINISHED: finished += value; break;
         case DLVSTATE_CANCELLED: cancelled += value; break;
         default:
-            throw InfosmeException("unknown delivery state %d",state);
+            throw InfosmeException(EXC_LOGICERROR,"unknown delivery state %d",state);
         }
     }
 };

@@ -34,12 +34,10 @@ Delivery::~Delivery()
 }
 
 
-void Delivery::updateDlvInfo( const DeliveryInfo& info )
+void Delivery::updateDlvInfo( const DeliveryInfoData& infoData )
 {
     assert( dlvInfo_.get() );
-    assert(dlvInfo_->getDlvId() == info.getDlvId());
-    // FIXME: update dlvinfo
-    //*dlvInfo_.get() = info;
+    dlvInfo_->update( infoData );
 }
 
 }

@@ -22,14 +22,14 @@ char* TextEscaper::unescapeText( char* text, const char* from, size_t len )
             if (len!=0) {
                 smsc_log_warn(log_,"NULL embedded into string! len=%u left=%u from='%s'",
                               unsigned(len),unsigned(left),from-len+left);
-                throw InfosmeException("NULL embedded into string at %u",unsigned(len-left));
+                throw InfosmeException(EXC_IOERROR,"NULL embedded into string at %u",unsigned(len-left));
             }
             left = 1;
             --o; // compensate
             break;
         case '\\' :
             if (!--left) {
-                throw InfosmeException("escape just before EOL");
+                throw InfosmeException(EXC_IOERROR,"escape just before EOL");
             }
             switch (*++from) {
             case '\\':
@@ -42,12 +42,13 @@ char* TextEscaper::unescapeText( char* text, const char* from, size_t len )
                 *o = '"';
                 break;
             default:
-                throw InfosmeException("wrong escape (\\%c) in string at %u",*from,unsigned(len ? len-left : size_t(-1)-left));
+                throw InfosmeException(EXC_IOERROR,"wrong escape (\\%c) in string at %u",*from,unsigned(len ? len-left : size_t(-1)-left));
             }
             break;
         case '\n':
         case '"':
-            throw InfosmeException("unescaped symbol <%s> found at %u",
+            throw InfosmeException(EXC_IOERROR,
+                                   "unescaped symbol <%s> found at %u",
                                    *from == '\n' ? "CR" : "QUOTE",
                                    unsigned((len?len:size_t(-1))-left));
         default:

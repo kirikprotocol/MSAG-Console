@@ -31,14 +31,14 @@ ref_(0), roles_(0), maxTotalDeliveries_(10)
     getlog();
     assert(id && pwd);
     if ( strlen(id) >= userid_type::npos ) {
-        throw InfosmeException("U='%s' too long name, must be less than %u",
+        throw InfosmeException(EXC_BADNAME,"U='%s' too long name, must be less than %u",
                                id, unsigned(userid_type::npos) );
     }
     // check symbols
     {
         char c;
         if ( ! isGoodAsciiName(id,&c) ) {
-            throw InfosmeException("U='%s' has forbidden char='%c'", id, c);
+            throw InfosmeException(EXC_BADNAME,"U='%s' has forbidden char='%c'", id, c);
         }
     }
     userId_ = id;
@@ -68,7 +68,8 @@ void UserInfo::incStats( const CommonSettings& cs,
     if ( total > maxTotalDeliveries_ ) {
         stats_.incStat(state,-1);
         if (fromState) stats_.incStat(fromState,1);
-        throw InfosmeException("U='%s' add delivery state='%s' failed: count=%u limit=%u",
+        throw InfosmeException(EXC_DLVLIMITEXCEED,
+                               "U='%s' add delivery state='%s' failed: count=%u limit=%u",
                                userId_.c_str(), 
                                dlvStateToString(DlvState(state)),
                                total,
@@ -113,7 +114,7 @@ void UserInfo::unref()
 bool UserInfo::hasRole( UserRole role ) const
 {
     if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
-        throw InfosmeException("U='%s' wrong role %u",userId_.c_str(),unsigned(role));
+        throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
     }
     return (roles_ & userroles[unsigned(role)]) != 0;
 }
@@ -122,7 +123,7 @@ bool UserInfo::hasRole( UserRole role ) const
 void UserInfo::addRole( UserRole role )
 {
     if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
-        throw InfosmeException("U='%s' wrong role %u",userId_.c_str(),unsigned(role));
+        throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
     }
     roles_ |= userroles[unsigned(role)];
 }

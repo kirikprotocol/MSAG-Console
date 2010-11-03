@@ -1,6 +1,7 @@
 #ifndef _INFORMER_DELIVERYINFO_H
 #define _INFORMER_DELIVERYINFO_H
 
+#include <vector>
 #include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
 // #include "system/status.h"
@@ -29,8 +30,8 @@ struct DeliveryInfoData
   bool transactionMode;
   std::string startDate;
   std::string endDate;
-  std::string activePeriodEnd;
   std::string activePeriodStart;
+  std::string activePeriodEnd;
   std::vector<std::string> activeWeekDays;
   std::string validityDate;
   std::string validityPeriod;
@@ -49,95 +50,109 @@ struct DeliveryInfoData
 
 class DeliveryInfo
 {
-public:
-    // create delivery info from dcp.
-    // static DeliveryInfo* makeDeliveryInfo( InfosmeCore&            core,
-    // UserInfo&               userInfo,
-    // const DeliveryInfoData& data );
-
-    /// read delivery info from filesystem
-    static DeliveryInfo* readDeliveryInfo( InfosmeCore&            core,
-                                           dlvid_type              dlvId );
-
-protected:
-    // constructor from file system
-    DeliveryInfo( const CommonSettings& cs,
-                  dlvid_type            dlvId,
-                  UserInfo*             userInfo = 0 ) :
-    cs_(cs), dlvId_(dlvId),
-    from_(0x4010000000000000ULL + 10000), // FIXME: .0.1.10000
-    isReplaceIfPresent_(true), isFlash_(false), useDataSm_(false),
-    transactionMode_(0),
-    deliveryMode_(DLVMODE_SMS),
-    state_(DlvState(0)), // DLVSTATE_PAUSED),
-    planTime_(0),
-    userInfo_(userInfo)
-    {
-        if (!log_) log_ = smsc::logger::Logger::getInstance("dlvinfo");
-    }
-
+    friend class DeliveryMgr;
 public:
     const CommonSettings& getCS() const { return cs_; }
 
-    // this method is invoked from regional storage.
-    // void incrementStats( const DeliveryStats& stats, DeliveryStats* result = 0 );
-    // this method is invoked to update stats from activity.log
-    // void updateStats( const DeliveryStats& stats );
-
-    // get stats
-    // void getStats( DeliveryStats& stats ) const;
-
     dlvid_type getDlvId() const { return dlvId_; }
 
-    unsigned getPriority() const { return 1; }
+    const UserInfo& getUserInfo() const { return userInfo_; }
 
     DlvState getState( msgtime_type* planTime = 0 ) const {
         if (planTime) *planTime = planTime_;
         return state_;
     }
 
-    const UserInfo* getUserInfo() const { return userInfo_; }
-
     void setState( DlvState state, msgtime_type planTime );
 
-    personid_type getFrom() const { return from_; }
+    void update( const DeliveryInfoData& data );
 
-    /// message validity time, seconds
-    unsigned getMessageValidityTime() const { return 3600; }
+    // ============ delivery settings ==========================
 
-    bool isReplaceIfPresent() const { return isReplaceIfPresent_; }
+    const char* getName() const { return data_.name.c_str(); }
 
-    const std::string& getSvcType() const { return svcType_; }
+    unsigned getPriority() const { return data_.priority; }
 
-    int getTransactionMode() const { return transactionMode_; }
+    bool isTransactional() const { return data_.transactionMode; }
 
-    bool isFlash() const { return isFlash_; }
+    /// return start date or -1
+    msgtime_type getStartDate() const { return startDate_; }
 
-    bool useDataSm() const { return useDataSm_; }
+    /// return end date or -1
+    msgtime_type getEndDate() const { return endDate_; }
 
-    DeliveryMode getDeliveryMode() const { return deliveryMode_; }
+    /// return active period start or -1
+    timediff_type getActivePeriodStart() const { return activePeriodStart_; }
 
-    /// read delivery info
-    void read( InfosmeCore& core );
+    /// return active period end or -1
+    timediff_type getActivePeriodEnd() const { return activePeriodEnd_; }
+
+    /// return active week days or -1
+    int getActiveWeekDays() const { return activeWeekDays_; }
+
+    /// get validity date or -1
+    msgtime_type getValidityDate() const { return validityDate_; }
+
+    /// get validity period or -1
+    msgtime_type getValidityPeriod() const { return validityPeriod_; }
+
+    bool isFlash() const { return data_.flash; }
+
+    bool useDataSm() const { return data_.useDataSm; }
+
+    DeliveryMode getDeliveryMode() const { return data_.deliveryMode; }
+
+    // FIXME: combine retry on fail together with retry policy string
+    bool wantRetryOnFail() const { return data_.retryOnFail; }
+
+    bool isReplaceIfPresent() const { return data_.replaceMessage; }
+
+    const char* getSvcType() const { return data_.svcType.c_str(); }
+
+    const char* getUserData() const { return data_.userData.c_str(); }
+
+    personid_type getSourceAddress() const { return sourceAddress_; }
+
+    // ============ end of delivery settings ==========================
 
     /// evaluate number of chunks
     unsigned evaluateNchunks( const char* out, size_t outLen ) const;
+
+protected:
+    /// read delivery info from filesystem
+    static DeliveryInfo* readDeliveryInfo( InfosmeCore&            core,
+                                           dlvid_type              dlvId );
+
+    // constructor from file system
+    DeliveryInfo( const CommonSettings&   cs,
+                  dlvid_type              dlvId,
+                  const DeliveryInfoData& data,
+                  UserInfo&               userInfo );
+
+    /// update cached fields from data
+    void updateData( const DeliveryInfoData& data,
+                     const DeliveryInfoData* old );
 
 private:
     static smsc::logger::Logger* log_;
 
 private:
     const CommonSettings& cs_;
-    dlvid_type      dlvId_;
-    personid_type   from_;
-    bool            isReplaceIfPresent_, isFlash_, useDataSm_;
-    std::string     svcType_;
-    int             transactionMode_;
-    DeliveryMode    deliveryMode_;
-    std::string     retryPolicyName_;
-    DlvState        state_;
-    msgtime_type    planTime_;
-    UserInfo*       userInfo_;
+    UserInfo&             userInfo_;
+    dlvid_type            dlvId_;
+    DlvState              state_;
+    msgtime_type          planTime_;
+    DeliveryInfoData      data_;
+
+    // cached things updated from data_
+    msgtime_type          startDate_;
+    msgtime_type          endDate_;
+    timediff_type         activePeriodStart_;
+    timediff_type         activePeriodEnd_;
+    msgtime_type          validityDate_;
+    timediff_type         validityPeriod_;
+    int                   activeWeekDays_;
+    personid_type         sourceAddress_;
 
     mutable smsc::core::synchronization::Mutex lock_;
 };

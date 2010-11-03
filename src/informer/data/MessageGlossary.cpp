@@ -208,7 +208,7 @@ void MessageGlossary::registerMessages( const std::string&  storePath,
         (*i)->ref_ = 1;
         if (newpos<=0) {
             registerFailed(texts,texts.end());
-            throw InfosmeException("D=%u failed to compose glossary record",dlvId);
+            throw InfosmeException(EXC_SYSTEM,"D=%u failed to compose glossary record",dlvId);
         }
         buf.SetPos(size_t(newpos));
         escapeText(buf,(*i)->text_,strlen((*i)->text_));
@@ -231,16 +231,16 @@ void MessageGlossary::doRegisterMessages( const std::string&    storePath,
         Node toInsert(i,list_.end());
         if ( txtId < 0 ) {
             registerFailed(texts,i);
-            throw InfosmeException("D=%u: negative txtId=%d cannot be registered",dlvId,txtId);
+            throw InfosmeException(EXC_LOGICERROR,"D=%u: negative txtId=%d cannot be registered",dlvId,txtId);
         } else if ( ! (*i)->text_ ) {
             registerFailed(texts,i);
-            throw InfosmeException("message w/o text, D=%u, txtId=%d",dlvId,txtId);
+            throw InfosmeException(EXC_LOGICERROR,"message w/o text, D=%u, txtId=%d",dlvId,txtId);
         } else if ( txtId == 0 ) {
             // new message, get dynamic id
             if ( ++posTxtId_ <= 0 ) {
                 --posTxtId_;
                 registerFailed(texts,i);
-                throw InfosmeException("D=%u: txtIds exhausted",dlvId);
+                throw InfosmeException(EXC_SYSTEM,"D=%u: txtIds exhausted",dlvId);
             }
             txtId = (*i)->id_ = posTxtId_;
             replId = 0;
@@ -250,14 +250,14 @@ void MessageGlossary::doRegisterMessages( const std::string&    storePath,
             if (node) {
                 if (0 == strcmp((*node->iter)->text_,(*i)->text_)) {
                     registerFailed(texts,i);
-                    throw InfosmeException("D=%u: attempt to replace w/ same text",dlvId);
+                    throw InfosmeException(EXC_LOGICERROR,"D=%u: attempt to replace w/ same text",dlvId);
                 }
                 // different text, try to get txtId from message itself
                 if (replId) {
                     // replacement id
                     if ( hash_.GetPtr(replId) ) {
                         registerFailed(texts,i);
-                        throw InfosmeException("D=%u: replacement id=%d already registered",dlvId,replId);
+                        throw InfosmeException(EXC_LOGICERROR,"D=%u: replacement id=%d already registered",dlvId,replId);
                     }
                     std::swap(txtId,replId);
                     if (posTxtId_<txtId) { posTxtId_ = txtId; }
@@ -265,7 +265,7 @@ void MessageGlossary::doRegisterMessages( const std::string&    storePath,
                     if (++posTxtId_ <= 0 ) {
                         --posTxtId_;
                         registerFailed(texts,i);
-                        throw InfosmeException("D=%u: txtIds exhausted on repl",dlvId);
+                        throw InfosmeException(EXC_SYSTEM,"D=%u: txtIds exhausted on repl",dlvId);
                     }
                     replId = txtId;
                     txtId = posTxtId_;

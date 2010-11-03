@@ -27,7 +27,10 @@ public:
 
     const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
 
-    void updateDlvInfo( const DeliveryInfo& info );
+    void updateDlvInfo( const DeliveryInfoData& info );
+
+    // change the state of the delivery
+    virtual void setState( DlvState state, msgtime_type planTime = 0 );
 
     void addNewMessages( MsgIter begin, MsgIter end ) {
         source_->addNewMessages(begin,end);

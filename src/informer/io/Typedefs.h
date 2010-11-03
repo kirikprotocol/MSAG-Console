@@ -38,6 +38,15 @@ msgtime_type ymdToMsgTime( ulonglong ymdTime, std::tm *tmb = 0 );
 /// get current microtime
 usectime_type currentTimeMicro();
 
+/// parse date time string in form 'DD.MM.YYYY HH:MM:SS'
+msgtime_type parseDateTime( const char* datetime );
+
+/// parse date in form 'DD.MM.YYYY'
+msgtime_type parseDate( const char* date );
+
+/// parse time in form 'HH:MM:SS'
+timediff_type parseTime( const char* theTime );
+
 /// some constants
 static const unsigned tuPerSec = 1000000U;
 static const unsigned maxScoreIncrement = 10000U;
