@@ -14,17 +14,6 @@ struct Message
 {
     static const size_t USERDATA_LENGTH = 24;
 
-    Message() {}
-    Message( const Message& m ) :
-    subscriber(m.subscriber),    // 8
-    msgId(m.msgId),              // 8
-    lastTime(m.lastTime),        // 4
-    timeLeft(m.timeLeft),        // 4
-    text(m.text),                // 8
-    userData(m.userData),        // 24
-    retryCount(m.retryCount),    // 2
-    state(m.state) {}            // 1
-
     personid_type    subscriber; // not changed (constant)
     msgid_type       msgId;      // unique message id (constant)
     msgtime_type     lastTime;   // lasttime / filenumber (for new messages)
