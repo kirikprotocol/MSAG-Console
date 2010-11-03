@@ -3,31 +3,28 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
-      xmlns:tr="http://myfaces.apache.org/trinidad">
+      xmlns:h="http://java.sun.com/jsf/html">
 
 <ui:composition>
-  
-  <table class="page_menu" width="100%">
+
+  <div class="data_table_filter">
+  <table class="data_table_filter" width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td align="left" width="10%">
-        <h:outputText value="#{msg['filter.by']}"/>
+        <h:outputText styleClass="filter" value="#{msg['filter.by']}"/>
       </td>
-      <td align="left" width="80%">
-        &nbsp;
-      </td>
+      <td align="left" width="80%">&#160;</td>
       <td width="10%" align="right">
-        <tr:commandLink text="#{msg['apply.button']}" action="#{bean[applyAction]}" rendered="#{bean != null and applyAction != null}"/>
-        <h:commandLink id="data_table_filter" value="#{msg['apply.button']}" onclick="new DataTableFilter('data_table_filter').clickApply()" rendered="#{bean == null or applyAction == null}"/>
+        <h:commandLink styleClass="filter_button" value="#{msg['apply.button']}" action="#{bean[applyAction]}" rendered="#{bean != null and applyAction != null}"/>
+        <h:commandLink styleClass="filter_button" id="data_table_filter" value="#{msg['apply.button']}" onclick="new DataTableFilter('data_table_filter').clickApply()" rendered="#{bean == null or applyAction == null}"/>
         <h:outputText value=" | " rendered="#{bean != null and clearAction != null}"/>
-        <tr:commandLink text="#{msg['clear.button']}" action="#{bean[clearAction]}" rendered="#{bean != null and clearAction != null}"/>
+        <h:commandLink styleClass="filter_button" value="#{msg['clear.button']}" action="#{bean[clearAction]}" rendered="#{bean != null and clearAction != null}"/>
       </td>
     </tr>
   </table>
-  <hr/>
+
   <ui:insert/>
+  </div>
   <p/>
 
 </ui:composition>

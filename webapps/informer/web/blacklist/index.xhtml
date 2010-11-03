@@ -17,58 +17,7 @@
       <tr:inputHidden value="#{blacklist.contains}"/>
 
 
-      <h:panelGroup>
-        <tr:panelGroupLayout inlineStyle="#{(!blacklist.init) ? '' : 'display:none'}">
-          <eye:buttons>
-            <eye:button>
-              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}"/>
-            </eye:button>
-            <eye:space/>
-            <eye:button>
-              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
-            </eye:button>
-          </eye:buttons>
-        </tr:panelGroupLayout>
-
-        <tr:panelGroupLayout inlineStyle="#{(blacklist.init and !blacklist.contains) ? '' : 'display:none'}">
-          <eye:buttons>
-            <eye:button>
-              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}"/>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['add.button']}" action="#{blacklist.add}"/>
-            </eye:button>
-            <eye:space/>
-            <eye:button>
-              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
-            </eye:button>
-          </eye:buttons>
-        </tr:panelGroupLayout>
-
-        <tr:panelGroupLayout inlineStyle="#{(blacklist.init and blacklist.contains) ? '' : 'display:none'}">
-          <eye:buttons>
-            <eye:button>
-              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}"/>
-            </eye:button>
-            <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}" inlineStyle="#{(blacklist.init and blacklist.contains) ? '' : 'display:none'}" action="#{blacklist.remove}"/>
-            </eye:button>
-            <eye:space/>
-            <eye:button>
-              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
-            </eye:button>
-          </eye:buttons>
-        </tr:panelGroupLayout>
-
-      </h:panelGroup>
-
-
-
-
-
-
-
-      <h:panelGrid columns="2" style="padding:10px" cellspacing="0" cellpadding="0">
+      <h:panelGrid columns="2" style="padding-bottom:10px" cellspacing="0" cellpadding="0">
 
         <h:panelGroup style="padding-left:20px">
 

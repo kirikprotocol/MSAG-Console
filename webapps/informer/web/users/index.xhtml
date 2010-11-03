@@ -16,22 +16,7 @@
 
     <tr:form id="smsc">
 
-      <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}"
-                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
-              />
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['edit.button']}" action="#{usersList.editSelected}"/>
-        </eye:button>
-        <eye:space/>
-      </eye:buttons>
-
-      <h:panelGroup style="padding:10px">
+      <h:panelGroup>
 
         <eye:dataTableFilter bean="#{usersList}" clearAction="clearFilter">
           <h:panelGrid columns="4" columnClasses="column200Width, column200Width, column200Width columnTopLeftAlign, columnTopLeftAlign">
@@ -59,6 +44,22 @@
 
         </eye:dataTableFilter>
 
+        <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}"
+                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
+              />
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['edit.button']}" action="#{usersList.editSelected}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+        <p/>
         
         <eye:dataTable value="#{usersList.usersModel}" selectedRows="#{usersList.selectedRows}" var="u">
           <eye:row rowId="#{u.login}">

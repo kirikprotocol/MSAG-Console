@@ -17,17 +17,6 @@
 
       <h:panelGroup rendered="#{regionsUpload.state == 0}">
 
-        <eye:buttons>
-          <eye:button>
-            <tr:commandLink text="#{msg['submit.button']}" action="#{regionsUpload.upload}"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['cancel.button']}" action="REGION" immediate="true"/>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
-
-
         <h:panelGrid columns="1" style="padding:10px" cellspacing="0" cellpadding="0" columnClasses=",column0WidthRight">
 
           <tr:panelFormLayout>

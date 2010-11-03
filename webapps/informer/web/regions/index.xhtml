@@ -16,21 +16,6 @@
 
     <tr:form id="smsc">
 
-      <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
-        </eye:button>
-        <eye:space/>
-        <eye:button>
-          <tr:commandLink text="#{msg['upload.button']}" action="REGION_UPLOAD"/>
-        </eye:button>
-      </eye:buttons>
-
-      <h:outputText style="padding-top:20px" value="&#160;"/>
-
       <eye:pageSubtitle value="#{msg['region.default.max']}"/>
 
       <tr:subform>
@@ -65,6 +50,21 @@
             </h:panelGrid>
           </h:panelGrid>
         </eye:dataTableFilter>
+
+        <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['upload.button']}" action="REGION_UPLOAD"/>
+        </eye:button>
+      </eye:buttons>
+
+      <h:outputText style="padding-top:20px" value="&#160;"/>
 
         <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="r">
           <eye:row rowId="#{r.regionId}">

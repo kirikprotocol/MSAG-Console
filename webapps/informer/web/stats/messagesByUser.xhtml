@@ -18,7 +18,7 @@
     <tr:form id="smsc" rendered="#{!messagesByUserStats.initError}">
       <c:set var="longOpState" value="#{messagesByUserStats.state}"/>
 
-      <h:panelGroup style="padding:10px">
+      <h:panelGroup style="padding-bottom:10px">
 
         <eye:dataTableFilter bean="#{messagesByUserStats}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="2" columnClasses="column400Width,columnTopLeftAlign">
