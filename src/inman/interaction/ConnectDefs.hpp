@@ -1,13 +1,16 @@
 #ifndef __SMSC_INMAN_CONNECT_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_CONNECT_DEFS_HPP
 
 #include "core/network/Socket.hpp"
-using smsc::core::network::Socket;
 
 namespace smsc  {
 namespace inman {
 namespace interaction  {
+
+using smsc::core::network::Socket;
 
 /* ************************************************************************** *
  * ConnectAC: acquires data from socket as it comes.

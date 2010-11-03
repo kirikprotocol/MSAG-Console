@@ -2,7 +2,9 @@
  * gsmSCF parameters.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_GSMSCF_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_GSMSCF_HPP
 
 #include "util/TonNpiAddress.hpp"
@@ -28,6 +30,8 @@ struct GsmSCFinfo {
     GsmSCFinfo(const TonNpiAddress & use_scf, uint32_t use_key)
         : serviceKey(use_key), scfAddress(use_scf)
     { }
+
+    bool empty(void) const { return scfAddress.empty(); }
 
     void Reset(void) { serviceKey = 0; scfAddress.clear(); }
 

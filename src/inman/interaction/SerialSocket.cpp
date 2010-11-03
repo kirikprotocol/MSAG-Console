@@ -1,6 +1,7 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
 #include <assert.h>
 
 #include "util/BinDump.hpp"
@@ -19,8 +20,8 @@ extern const SocketParms _SocketParms_DFLT = {
 
 SerialSocket::SerialSocket(Socket* sock, ConnectFormat frm/* = SerialSocket::frmLengthPrefixed*/,
                  SerializerITF * serializer/* = NULL*/, Logger * uselog/* = NULL*/)
-    : logger(uselog), socket(sock), _frm(frm), _exc(NULL)
-    , _objSerializer(serializer), _parms(_SocketParms_DFLT)
+    : socket(sock), _frm(frm), _parms(_SocketParms_DFLT)
+    , _objSerializer(serializer), _exc(NULL), logger(uselog)
 {
     assert(socket);
     if (!uselog)

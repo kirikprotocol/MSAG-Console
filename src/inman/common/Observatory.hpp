@@ -3,7 +3,9 @@
  * Listeners methods.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_GRDOBSERVATORY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_GRDOBSERVATORY_HPP
 
 #include <list>

@@ -3,7 +3,9 @@
  * objects. Designed mainly for testing purposes.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_SRLZ_CONNECT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_SRLZ_CONNECT_HPP
 
 #include "logger/Logger.h"
@@ -34,7 +36,7 @@ extern const SocketParms _SocketParms_DFLT;
 //It's caller responsibility to manage this exception.
 class SerialSocket  {
 public:
-    typedef enum { frmStraightData = 0, frmLengthPrefixed = 1 } ConnectFormat;
+    enum ConnectFormat { frmStraightData = 0, frmLengthPrefixed = 1 };
 
     SerialSocket(Socket* sock, ConnectFormat frm = SerialSocket::frmStraightData,
             SerializerITF * serializer = NULL, Logger * uselog = NULL);
@@ -70,12 +72,12 @@ protected:
 
     Mutex           sndSync, rcvSync;
     Socket*         socket;
-    Logger*         logger;
     ConnectFormat   _frm;
     SocketParms    _parms;
     SerializerITF * _objSerializer;
     std::auto_ptr<CustomException> _exc;   //last connect exception
     char            _logId[sizeof("Connect[%u]") + sizeof(unsigned)*3 + 1];
+    Logger*         logger;
 };
 
 } //interaction

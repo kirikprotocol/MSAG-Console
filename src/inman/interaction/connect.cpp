@@ -1,6 +1,7 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
 #include <assert.h>
 
 #include "util/BinDump.hpp"
@@ -63,7 +64,7 @@ SocketAcquirerAC::SAcqStatus PckAcquirer::onBytesReceived(unsigned lastRed)
  * ************************************************************************** */
 Connect::Connect(Socket* sock, SerializerITF * serializer, Logger * uselog/* = NULL*/,
                  ConnectParms * use_prm/* = NULL*/)
-    : ConnectAC(sock), logger(uselog), _exc(NULL), _objSerializer(serializer)
+    : ConnectAC(sock), _objSerializer(serializer), _exc(NULL), logger(uselog)
 {
     assert(_socket && serializer);
     if (!uselog)

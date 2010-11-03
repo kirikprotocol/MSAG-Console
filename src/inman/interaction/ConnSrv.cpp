@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifndef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/interaction/ConnSrv.hpp"
 
@@ -13,7 +13,8 @@ namespace interaction  {
  * class ConnectSrv implementation:
  * ************************************************************************** */
 ConnectSrv::ConnectSrv(unsigned tmo_msecs/* = POLL_TIMEOUT_ms*/, Logger * uselog /*= NULL*/)
-    : tmoMSecs(tmo_msecs), lstRestartCnt(0), _runState(ConnectSrv::lstStopped), logger(uselog)
+    : tmoMSecs(tmo_msecs), _runState(ConnectSrv::lstStopped)
+    , lstRestartCnt(0), logger(uselog)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.TCPSrv");
@@ -226,9 +227,9 @@ ConnectSrv::ShutdownReason ConnectSrv::Listen(void)
                     smsc_log_error(logger, "ConnSrv: Connect[%u] exception: %s", socket, exc.what());
                     st = ConnectAC::connException;
                 }
-                if (st == ConnectAC::connEOF)
+                if (st == ConnectAC::connEOF) {
                     smsc_log_debug(logger, "ConnSrv: remote point ends Connect[%u]", socket);
-                if (st != ConnectAC::connAlive)
+                } else if (st != ConnectAC::connAlive)
                     closeConnect(socket);
             }
             if (FD_ISSET((SOCKET)socket, &errorSet)) {

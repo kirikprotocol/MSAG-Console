@@ -1,5 +1,7 @@
 #ifndef __SMSC_INMAN_INTERACTION_SERIALIZER__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INTERACTION_SERIALIZER__
 
 #include <arpa/inet.h>
@@ -9,12 +11,7 @@
 #include <memory>
 
 #include "util/Uint64Converter.h"
-using smsc::util::Uint64Converter;
-
 #include "util/Exception.hpp"
-using smsc::util::format;
-using smsc::util::CustomException;
-
 #include "core/buffers/ExtendingBuf.hpp"
 #include "core/buffers/FixedLengthString.hpp"
 
@@ -22,13 +19,15 @@ namespace smsc  {
 namespace inman {
 namespace interaction {
 
-class SerializerException : public CustomException {
+using smsc::util::format;
+
+class SerializerException : public smsc::util::CustomException {
 public:
     enum ErrorClass { invPacket = 1, invObject, invObjData };
     SerializerException(const char * msg,
                         ErrorClass ex_class = SerializerException::invObjData,
                         const char * desc = NULL)
-        : CustomException((int)ex_class, msg, desc)
+        : smsc::util::CustomException((int)ex_class, msg, desc)
     { setExcId("SerializerException"); }
 
     ~SerializerException() throw()
@@ -188,7 +187,7 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str ) throw(Seri
 
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const uint64_t& val)
 {
-    uint64_t nval = Uint64Converter::toNetworkOrder(val);
+    uint64_t nval = smsc::util::Uint64Converter::toNetworkOrder(val);
     buf.Append((unsigned char*)&nval, 8);
     return buf;
 }
@@ -200,7 +199,7 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, uint64_t & val) throw(Seriali
                                     SerializerException::invObjData,
                                     " >> uint64_t: corrupted data");
     else
-        val = Uint64Converter::toHostOrder(nval);
+        val = smsc::util::Uint64Converter::toHostOrder(nval);
     return buf;
 }
 

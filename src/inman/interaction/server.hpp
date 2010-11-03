@@ -3,7 +3,9 @@
  * notifies associated connect listeners if data arrives.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_TCP_SERVER__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_TCP_SERVER__
 
 #include <string>

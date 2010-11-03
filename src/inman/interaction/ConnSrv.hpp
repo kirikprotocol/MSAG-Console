@@ -3,7 +3,9 @@
  * calls ConnectAC methods.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_CONN_SERVER__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_CONN_SERVER__
 
 #include <string>
@@ -73,7 +75,7 @@ protected:
         ConnectSupervisorITF * mgr;
 
         ConnectInfo(ConnectAC * use_conn = NULL, ConnectSupervisorITF * use_mgr = NULL)
-            : conn(use_conn), mgr(use_mgr), ignore(false)
+            : ignore(false), conn(use_conn), mgr(use_mgr)
         { }
     };
     typedef std::map<unsigned, ConnectInfo> ConnectsMap;

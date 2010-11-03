@@ -5,23 +5,24 @@
  * checks socket for incoming data and calls Connect methods.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_ACQ_CONNECT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_ACQ_CONNECT_HPP
 
 #include "logger/Logger.h"
-using smsc::logger::Logger;
-
-#include "inman/interaction/serializer.hpp"
-using smsc::inman::interaction::SerializablePacketAC;
-
 #include "inman/common/Observatory.hpp"
-using smsc::util::GRDObservatoryOfT;
-
+#include "inman/interaction/serializer.hpp"
 #include "inman/interaction/ConnectDefs.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
+
+using smsc::logger::Logger;
+using smsc::inman::interaction::SerializablePacketAC;
+using smsc::util::GRDObservatoryOfT;
+
 
 /* ************************************************************************** *
  * PckAcquirer: accumulates data from socket until whole length prefixed
@@ -147,7 +148,7 @@ protected:
     void notifyByExc(void);
     void notifyByMsg(std::auto_ptr<SerializablePacketAC>& p_msg);
 
-    smsc::core::synchronization::Mutex           sndSync;
+    smsc::core::synchronization::Mutex  sndSync;
     ConnectParms    _parms;
     SerializerITF * _objSerializer;
     PckAcquirer     pckAcq;

@@ -1,6 +1,7 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
 #include <assert.h>
 
 #include "inman/interaction/server.hpp"
@@ -15,7 +16,7 @@ namespace interaction  {
  * class Service implementation:
  * ************************************************************************** */
 Server::Server(const ServSocketCFG * in_cfg, Logger * uselog /*= NULL*/)
-    : _cfg(*in_cfg), lstRestartCnt(0), _runState(Server::lstStopped), logger(uselog)
+    : _cfg(*in_cfg), _runState(Server::lstStopped), lstRestartCnt(0), logger(uselog)
 {
     assert(_cfg.host.length());
     if (!logger)
@@ -239,9 +240,9 @@ Server::ShutdownReason Server::Listen(void)
 
             if (FD_ISSET(socket, &readSet)) {
                 ConnectAC::ConnectState  st = conn->onReadEvent();
-                if (st == ConnectAC::connEOF)
+                if (st == ConnectAC::connEOF) {
                     smsc_log_debug(logger, "TCPSrv: client ends Connect[%u]", socket);
-                if (st != ConnectAC::connAlive)
+                } else if (st != ConnectAC::connAlive)
                     closeConnectGuarded(it);
             }
             if (FD_ISSET(socket, &errorSet)) {
