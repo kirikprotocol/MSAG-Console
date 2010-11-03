@@ -1,5 +1,7 @@
 #ifndef __SMSC_CORE_EXTENDING_BUFFER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_CORE_EXTENDING_BUFFER_HPP
 
 #include <algorithm>
