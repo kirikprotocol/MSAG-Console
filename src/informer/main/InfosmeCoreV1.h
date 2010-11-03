@@ -74,12 +74,12 @@ public:
     virtual void updateRegion( regionid_type regionId );
     virtual void deleteRegion( regionid_type regionId );
 
-    virtual void addDelivery( DeliveryInfo* info );
-    virtual void updateDelivery( DeliveryInfo* info );
-    virtual void deleteDelivery( dlvid_type dlvId );
-    virtual void setDeliveryState( dlvid_type   dlvId,
-                                   DlvState     newState,
-                                   msgtime_type atTime = 0 );
+    virtual dlvid_type addDelivery( UserInfo& userInfo,
+                                    const DeliveryInfoData& info );
+    virtual void deleteDelivery( const UserInfo& userInfo,
+                                 dlvid_type      dlvId );
+    virtual DeliveryPtr getDelivery( const UserInfo& userInfo,
+                                     dlvid_type   dlvId );
 
     // --- end of infosme core iface
 
@@ -102,7 +102,9 @@ public:
         rtp_.startTask(task);
     }
 
-    // setDeliveryState above
+    virtual void setDeliveryState( dlvid_type dlvId,
+                                   DlvState   newState,
+                                   msgtime_type planTime = 0 );
 
     virtual void logStateChange( ulonglong   ymd,
                                  dlvid_type  dlvId,

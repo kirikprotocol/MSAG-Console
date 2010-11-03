@@ -139,7 +139,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
         smsc_log_info(log_,"reading smscs config '%s'",fname);
         std::auto_ptr< Config > centerConfig( Config::createFromFile(fname));
         if (!centerConfig.get()) {
-            throw InfosmeException("cannot create config from '%s'",fname);
+            throw InfosmeException(EXC_CONFIG,"cannot load config '%s'",fname);
         }
         std::auto_ptr< ConfigView > ccv(new ConfigView(*centerConfig.get(),"SMSCConnectors"));
         const ConfString defConn(ccv->getString("default","default SMSC id not found"));
@@ -212,13 +212,13 @@ void InfosmeCoreV1::stop()
 
 void InfosmeCoreV1::addUser( const char* user )
 {
-    throw InfosmeException("FIXME: not impl");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: addUser");
 }
 
 
 void InfosmeCoreV1::deleteUser( const char* user )
 {
-    throw InfosmeException("FIXME: not impl");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: deleteUser");
 }
 
 
@@ -233,7 +233,7 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 
 void InfosmeCoreV1::updateUserInfo( const char* user )
 {
-    throw InfosmeException("FIXME: not impl");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: updateUserInfo");
 }
 
 
@@ -322,7 +322,7 @@ void InfosmeCoreV1::reloadRegions( const std::string& defaultSmscId )
         const std::string& smscId = r->getSmscId();
         SmscSender** smsc = smscs_.GetPtr(smscId.c_str());
         if (!smsc || !*smsc) {
-            throw InfosmeException("S='%s' is not found for R=%u",smscId.c_str(),regionId);
+            throw InfosmeException(EXC_CONFIG,"S='%s' is not found for R=%u",smscId.c_str(),regionId);
         }
 
         RegionPtr* ptr = regions_.GetPtr(regionId);
@@ -366,65 +366,86 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
 
 void InfosmeCoreV1::addSmsc( const char* smscId )
 {
-    throw InfosmeException("FIXME: not impl yet");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: addSmsc");
 }
 
 
 void InfosmeCoreV1::updateSmsc( const char* smscId )
 {
-    throw InfosmeException("FIXME: not impl yet");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: updateSmsc");
 }
 
 
 void InfosmeCoreV1::deleteSmsc( const char* smscId )
 {
-    throw InfosmeException("FIXME: not impl yet");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: deleteSmsc");
 }
 
 
 void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 {
-    throw InfosmeException("FIXME: not impl yet");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: updateDefaultSmsc");
 }
 
 
 void InfosmeCoreV1::addRegion( regionid_type regionId )
 {
-    throw InfosmeException("FIXME: not impl yet");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: addRegion");
 }
 
 
 void InfosmeCoreV1::updateRegion( regionid_type regionId )
 {
-    throw InfosmeException("FIXME: not impl yet");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: updateRegion");
 }
 
 
 void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 {
-    throw InfosmeException("FIXME: not impl yet");
+    throw InfosmeException(EXC_NOTIMPL,"FIXME: deleteRegion");
 }
 
 
-void InfosmeCoreV1::addDelivery( DeliveryInfo* info )
+dlvid_type InfosmeCoreV1::addDelivery( UserInfo& userInfo,
+                                       const DeliveryInfoData& info )
 {
-    dlvMgr_->addDelivery(info);
+    return dlvMgr_->createDelivery(userInfo,info);
 }
 
 
-void InfosmeCoreV1::updateDelivery( DeliveryInfo* info )
+/*
+void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
+                                    const DeliveryInfoData& info )
 {
-    dlvMgr_->updateDelivery(info);
+    dlvMgr_->updateDelivery(dlvId,info);
 }
+ */
 
 
-void InfosmeCoreV1::deleteDelivery( dlvid_type dlvId )
+void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
+                                    dlvid_type      dlvId )
 {
     BindSignal bs;
     bs.bind = false;
     bs.dlvId = dlvId;
+    // FIXME: check userinfo
     dlvMgr_->deleteDelivery(dlvId,bs.regIds);
     bindDeliveryRegions(bs);
+}
+
+
+DeliveryPtr InfosmeCoreV1::getDelivery( const UserInfo& userInfo,
+                                        dlvid_type      dlvId )
+{
+    DeliveryImplPtr ptr;
+    if (!dlvMgr_->getDelivery(dlvId,ptr)) {
+        throw InfosmeException(EXC_NOTFOUND,"no such delivery %u",dlvId);
+    }
+    if ( &(ptr->getDlvInfo().getUserInfo()) != &userInfo &&
+         !userInfo.hasRole(USERROLE_ADMIN)) {
+        throw InfosmeException(EXC_ACCESSDENIED,"access denied to delivery %u",dlvId);
+    }
+    return ptr;
 }
 
 
@@ -452,7 +473,7 @@ void InfosmeCoreV1::logStateChange( ulonglong   ymd,
                                unsigned(ymd % 10000), dlvStateToString(newState)[0],
                                dlvId, userId, planTime );
     if ( buflen < 0 ) {
-        throw InfosmeException("cannot write dlv state change, dlvId=%u",dlvId);
+        throw InfosmeException(EXC_SYSTEM,"cannot write dlv state change, dlvId=%u",dlvId);
     }
 
     const ulonglong fileTime = ymd / 10000 * 10000;
@@ -531,7 +552,7 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
 
     DeliveryImplPtr dlv;
     if (!dlvMgr_->getDelivery(bs.dlvId,dlv)) {
-        throw InfosmeException("D=%u is not found",bs.dlvId);
+        throw InfosmeException(EXC_NOTFOUND,"D=%u is not found",bs.dlvId);
     }
 
     for ( regIdVector::const_iterator i = bs.regIds.begin();

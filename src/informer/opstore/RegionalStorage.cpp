@@ -413,7 +413,8 @@ size_t RegionalStorage::rollOver()
     const dlvid_type dlvId = info.getDlvId();
     RelockMutexGuard mg(cacheMon_);
     if ( storingIter_ != messageList_.end() ) {
-        throw InfosmeException("logic error: rolling in R=%u/D=%u is already in progress",
+        throw InfosmeException(EXC_LOGICERROR,
+                               "rolling in R=%u/D=%u is already in progress",
                                unsigned(regionId_), dlvId);
     }
     size_t written = 0;
@@ -497,7 +498,8 @@ bool RegionalStorage::postInit()
         dlv_.source_->getGlossary().bindMessage(m.text);
         switch (m.state) {
         case MSGSTATE_INPUT:
-            throw InfosmeException("logic error: input msg D=%u/M=%llu in opstore",
+            throw InfosmeException(EXC_LOGICERROR,
+                                   "input msg D=%u/M=%llu in opstore",
                                    getDlvId(),m.msgId);
         case MSGSTATE_PROCESS:
             // need to be moved to newQueue
@@ -515,7 +517,8 @@ bool RegionalStorage::postInit()
             // ++retry;
             break;
         default:
-            throw InfosmeException("logic error: final state D=%u/M=%llu in opstore",
+            throw InfosmeException(EXC_LOGICERROR,
+                                   "final state D=%u/M=%llu in opstore",
                                    getDlvId(), m.msgId );
         }
     }
@@ -571,7 +574,9 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         Message& m = i->msg;
         m.lastTime = currentTime;
-        m.timeLeft = info.getMessageValidityTime();
+        // FIXME: validity period?
+        // FIXME: should timeLeft init be moved to getNextMessage()
+        m.timeLeft = info.getValidityPeriod();
         m.state = MSGSTATE_PROCESS;
         m.retryCount = 0;
         smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",

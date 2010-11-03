@@ -179,7 +179,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         now = msgtime_type(currentTimeMicro()/tuPerSec);
         if (newState == DLVSTATE_PLANNED) {
             if (planTime < now) {
-                throw InfosmeException("D=%u cannot plan delivery into past %llu",
+                throw InfosmeException(EXC_LOGICERROR,
+                                       "D=%u cannot plan delivery into past %llu",
                                        dlvId,msgTimeToYmd(planTime));
             }
             planTime -= now;
@@ -202,7 +203,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             // FIXME: activate, do nothing here?
             break;
         default:
-            throw InfosmeException("unknown state %d",newState);
+            throw InfosmeException(EXC_LOGICERROR,"unknown state %d",newState);
         }
         // write status line into status file
         char buf[200];
@@ -236,7 +237,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     }
     source_->getDlvActivator().logStateChange( ymd,
                                                dlvId,
-                                               dlvInfo_->getUserInfo()->getUserId(),
+                                               dlvInfo_->getUserInfo().getUserId(),
                                                newState,planTime);
 }
 

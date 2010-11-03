@@ -30,7 +30,7 @@ public:
     virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
         const size_t rl(fb.get16());
         if ( rl > 100 ) {
-            throw InfosmeException("record at %llu has invalid len: %u",
+            throw InfosmeException(EXC_BADFILE,"record at %llu has invalid len: %u",
                                    ulonglong(filePos), unsigned(rl));
         }
         return rl;
@@ -124,9 +124,7 @@ void InputJournal::rollOver()
     std::string jpath = makePath(cs_.getStorePath());
     smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
-        char ebuf[100];
-        throw InfosmeException("cannot rename '%s': %d, %s",
-                               jpath.c_str(), errno, STRERROR(errno,ebuf,sizeof(ebuf)));
+        throw ErrnoException(errno,"rename('%s')",jpath.c_str());
     }
     FileGuard fg;
     fg.create(jpath.c_str());
@@ -154,7 +152,9 @@ void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
         FromBuf fb(buf,VERSIZE);
         uint32_t v = fb.get32();
         if ( v != 1 ) {
-            throw InfosmeException("file '%s' version %u is not supported",jpath.c_str(),v);
+            throw InfosmeException(EXC_BADFILE,
+                                   "file '%s' version %u is not supported",
+                                   jpath.c_str(),v);
         }
         version_ = v;
         smsc_log_debug(log_,"file '%s' header is ok, version=%u",jpath.c_str(),version_);

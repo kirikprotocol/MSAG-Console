@@ -35,7 +35,7 @@ public:
     virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
         const size_t rl(fb.get16());
         if (rl>10000) {
-            throw InfosmeException("reclen=%u is too big",unsigned(rl));
+            throw InfosmeException(EXC_BADFILE,"reclen=%u is too big",unsigned(rl));
         }
         return rl;
     }
@@ -47,7 +47,7 @@ public:
         mlk.serial = 0;
         const uint16_t version = fb.get16();
         if (version!=1) {
-            throw InfosmeException("unsupported version %u at %llu",
+            throw InfosmeException(EXC_BADFILE,"unsupported version %u at %llu",
                                    version,ulonglong(filePos));
         }
         Message& msg = mlk.msg;

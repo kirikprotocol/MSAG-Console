@@ -152,6 +152,47 @@ timediff_type parseTime( const char* theTime )
 }
 
 
+/// parse address in one of three form 'NNNNN', '+NNNNN', '.T.P.NNNNN'
+personid_type parseAddress( const char* isdn )
+{
+    unsigned ton, npi, len;
+    ulonglong value;
+    int shift = 0;
+    if ( !isdn ) {
+        throw InfosmeException(EXC_LOGICERROR,"address NULL passed");
+    }
+    if (isdn[0] == '+') {
+        ton = 0;
+        npi = 1;
+        sscanf(isdn,"+%llu%n",&value,&shift);
+        len = unsigned(shift - 1);
+    } else if (isdn[0] == '.') {
+        int start = 0;
+        sscanf(isdn,".%u.%u.%n%llu%n",&ton,&npi,&start,&value,&shift);
+        len = unsigned(shift-start);
+    } else {
+        sscanf(isdn,"%llu%n",&value,&shift);
+        len = unsigned(shift);
+    }
+    if (!shift) {
+        throw InfosmeException(EXC_BADADDRESS,"invalid address '%s'",isdn);
+    }
+    if (shift != strlen(isdn)) {
+        throw InfosmeException(EXC_BADADDRESS,"address '%s' has extra chars",isdn);
+    }
+    if (len<1 || len>16) {
+        throw InfosmeException(EXC_BADADDRESS,"invalid length=%u in '%s'",len,isdn);
+    }
+    if (ton>15) {
+        throw InfosmeException(EXC_BADADDRESS,"invalid ton=%u in '%s'",ton,isdn);
+    }
+    if (npi>15) {
+        throw InfosmeException(EXC_BADADDRESS,"invalid npi=%u in '%s'",npi,isdn);
+    }
+    return addressToSubscriber(uint8_t(len),uint8_t(ton),uint8_t(npi),uint64_t(value));
+}
+
+
 const char* msgStateToString( MsgState state )
 {
     switch (state) {

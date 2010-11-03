@@ -23,9 +23,9 @@ log_(smsc::logger::Logger::getInstance("regloader"))
         DOMTreeReader reader;
         const std::string cfgfile(findConfigFile(xmlfile));
         DOMDocument* document = reader.read(cfgfile.c_str());
-        if (!document) throw InfosmeException("parse result is null");
+        if (!document) throw InfosmeException(EXC_CONFIG,"parse result is null");
         DOMElement* root = document->getDocumentElement();
-        if (!root) throw InfosmeException("no root element");
+        if (!root) throw InfosmeException(EXC_CONFIG,"no root element");
 
         smsc_log_debug(log_,"xmlfile is parsed, root element obtained");
 
@@ -36,14 +36,14 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             smsc_log_debug(log_,"reading default region R=%u",rid);
             regions = root->getElementsByTagName(XmlStr("region_default"));
             if (regions->getLength() != 1) {
-                throw InfosmeException("default region is not found!");
+                throw InfosmeException(EXC_CONFIG,"default region is not found!");
             }
             DOMElement* region = static_cast<DOMElement*>(regions->item(0));
             const XmlStr sbandwidth = region->getAttribute(XmlStr("max_per_second"));
             char* endptr;
             const unsigned bandwidth(unsigned(strtoul(sbandwidth.c_str(),&endptr,10)));
             if (*endptr != '\0') {
-                throw InfosmeException("invalid max_per_second='%s' for region id=%u",
+                throw InfosmeException(EXC_CONFIG,"invalid max_per_second='%s' for region id=%u",
                                        sbandwidth.c_str(),rid);
             }
             Region* r = new Region(rid,"default",defaultSmscId,bandwidth,0);
@@ -66,10 +66,10 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             char* endptr;
             regionid_type rid(regionid_type(strtoul(id.c_str(),&endptr,10)));
             if (*endptr != '\0') {
-                throw InfosmeException("invalid id='%s'",id.c_str());
+                throw InfosmeException(EXC_CONFIG,"invalid id='%s'",id.c_str());
             }
             if ( rid == defaultRegionId || rid == anyRegionId ) {
-                throw InfosmeException("invalid region id=%u",rid);
+                throw InfosmeException(EXC_CONFIG,"invalid region id=%u",rid);
             }
             if ( requestedRegionId != anyRegionId && rid != requestedRegionId ) continue;
             smsc_log_debug(log_,"reading region R=%u",rid);
@@ -93,17 +93,17 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             const XmlStr sbandwidth = region->getAttribute(XmlStr("max_per_second"));
             const unsigned bandwidth(unsigned(strtoul(sbandwidth.c_str(),&endptr,10)));
             if (*endptr != '\0') {
-                throw InfosmeException("invalid max_per_second='%s' for region id=%u",
+                throw InfosmeException(EXC_CONFIG,"invalid max_per_second='%s' for region id=%u",
                                        sbandwidth.c_str(),rid);
             }
             const XmlStr stimezone = region->getAttribute(XmlStr("timezone"));
             int timezone, shift = 0;
             sscanf(stimezone.c_str(),"%d,%n",&timezone,&shift);
             if (shift == 0) {
-                throw InfosmeException("invalid timezone='%s' for region id=%u",
+                throw InfosmeException(EXC_CONFIG,"invalid timezone='%s' for region id=%u",
                                        stimezone.c_str(),rid);
             } else if ( timezone/3600*3600 != timezone ) {
-                throw InfosmeException("invalid timezone=%d, it does not divisable by 3600 w/o remainder");
+                throw InfosmeException(EXC_CONFIG,"invalid timezone=%d, it does not divisable by 3600 w/o remainder");
             }
 
             Region* r = new Region(rid,name.c_str(),smscId.c_str(),bandwidth,timezone,&masks);
@@ -116,7 +116,7 @@ log_(smsc::logger::Logger::getInstance("regloader"))
               i != regions_.rend(); ++i ) {
             delete *i;
         }
-        throw InfosmeException("cannot load regions from '%s': %s",xmlfile,e.what());
+        throw InfosmeException(EXC_CONFIG,"regions from '%s': %s",xmlfile,e.what());
     }
     smsc_log_info(log_,"%u regions are loaded", unsigned(regions_.size()));
 }

@@ -10,6 +10,43 @@
 #include "InfosmeCore.h"
 #include "util/smstext.h"
 
+namespace {
+
+using namespace eyeline::informer;
+
+int parseWeekDays( const std::vector< std::string >& wd )
+{
+    static const char* fulldays[7] = {
+        "Monday", "Tuesday", "Wednesday", "Thursday", 
+        "Friday", "Saturday", "Sunday"
+    };
+    static const char* shortdays[7] = {
+        "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+    };
+
+    int res = 0;
+    for ( std::vector< std::string >::const_iterator i = wd.begin();
+          i != wd.end(); ++i ) {
+        bool ok = false;
+        int x = 1;
+        for ( int j = 0; j < 7; ++j ) {
+            if ( 0 == strcmp(fulldays[j],i->c_str()) ||
+                 0 == strcmp(shortdays[j],i->c_str()) ) {
+                ok = true;
+                res |= x;
+                break;
+            }
+            x *= 2;
+        }
+        if (!ok) {
+            throw InfosmeException(EXC_IOERROR,"wrong weekday '%s'",i->c_str());
+        }
+    }
+    return res;
+}
+
+}
+
 namespace eyeline {
 namespace informer {
 
@@ -163,33 +200,33 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     personid_type sourceAddress = sourceAddress_;
 
     if (!old && !data.startDate.empty()) { // calculate only at start
-        startDate = parseDateTime(data.startDate);
+        startDate = parseDateTime(data.startDate.c_str());
     }
-    if (!old || old->endDate != data.endDate ) {
-        endDate = parseDateTime(data.endDate);
+    if ((!old || old->endDate != data.endDate) && !data.endDate.empty() ) {
+        endDate = parseDateTime(data.endDate.c_str());
     }
-    if (!old || old->activePeriodStart != data.activePeriodStart ) {
-        activePeriodStart = parseTime(data.activePeriodStart);
+    if ((!old || old->activePeriodStart != data.activePeriodStart) && !data.activePeriodStart.empty() ) {
+        activePeriodStart = parseTime(data.activePeriodStart.c_str());
     }
-    if (!old || old->activePeriodEnd != data.activePeriodEnd ) {
-        activePeriodEnd = parseTime(data.activePeriodEnd);
+    if ((!old || old->activePeriodEnd != data.activePeriodEnd) && !data.activePeriodEnd.empty()) {
+        activePeriodEnd = parseTime(data.activePeriodEnd.c_str());
     }
-    if (!old || old->activeWeekDays != data.activeWeekDays ) {
+    if ((!old || old->activeWeekDays != data.activeWeekDays) && !data.activeWeekDays.empty() ) {
         activeWeekDays = parseWeekDays(data.activeWeekDays);
     }
-    if (!old || old->validityDate != data.validityDate ) {
-        validityDate = parseDateTime(data.validityDate);
+    if ((!old || old->validityDate != data.validityDate) && !data.validityDate.empty() ) {
+        validityDate = parseDateTime(data.validityDate.c_str());
     }
-    if (!old || old->validityPeriod != data.validityPeriod) {
-        validityPeriod = parseTime(data.validityPeriod);
+    if ((!old || old->validityPeriod != data.validityPeriod) && !data.validityPeriod.empty() ) {
+        validityPeriod = parseTime(data.validityPeriod.c_str());
     }
     // FIXME: update retry policy: data.retryPolicy
-    if (!old || old->sourceAddress != data.sourceAddress) {
-        sourceAddress = parseAddress(data.sourceAddress);
+    if ((!old || old->sourceAddress != data.sourceAddress) && !data.sourceAddress.empty()) {
+        sourceAddress = parseAddress(data.sourceAddress.c_str());
     }
 
     if ( !isGoodAsciiName(data.userData.c_str()) ) {
-        throw InfosmeException(EXC_BADNAME,"invalid chars in userData '%s'",data.userData);
+        throw InfosmeException(EXC_BADNAME,"invalid chars in userData '%s'",data.userData.c_str());
     }
 
     /// post-parsing check & fill

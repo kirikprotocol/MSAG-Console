@@ -49,8 +49,10 @@ public:
 
     // --- end of receipt processor iface
 
-    void addDelivery( DeliveryInfo* info );
-    void updateDelivery( DeliveryInfo* info );
+    dlvid_type createDelivery( UserInfo& userInfo,
+                               const DeliveryInfoData& info );
+    void updateDelivery( dlvid_type dlvId,
+                         const DeliveryInfoData& info );
     void deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& regIds );
     void setDeliveryState( dlvid_type   dlvId,
                            DlvState     newState,
@@ -69,6 +71,12 @@ public:
         return true;
     }
 
+protected:
+    /// used internally
+    void addDelivery( DeliveryInfo* info );
+
+    dlvid_type getNextDlvId();
+    
 private:
     smsc::logger::Logger*                      log_;
     InfosmeCoreV1&                             core_;
@@ -98,7 +106,7 @@ private:
     smsc::core::synchronization::Mutex            logStateLock_;
     ulonglong                                     logStateTime_;
     FileGuard                                     logStateCur_;
-    FileGuard                                     logStateOld_;
+    dlvid_type                                    nextDlvId_;
 };
 
 } // informer

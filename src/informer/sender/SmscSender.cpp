@@ -40,7 +40,7 @@ public:
         virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
             size_t rl(fb.get16());
             if (rl>100) {
-                throw InfosmeException("record at %llu has invalid len: %u",
+                throw InfosmeException(EXC_BADFILE,"record at %llu has invalid len: %u",
                                        ulonglong(filePos), unsigned(rl));
             }
             return rl;
@@ -128,9 +128,7 @@ protected:
         const std::string jpath(makePath());
         smsc_log_info(sender_.log_,"rolling over '%s'",jpath.c_str());
         if (-1 == rename(jpath.c_str(),(jpath+".old").c_str())) {
-            char ebuf[100];
-            throw InfosmeException("cannot rename '%s': %d, %s",
-                                   jpath.c_str(), errno, STRERROR(errno,ebuf,sizeof(ebuf)));
+            throw ErrnoException(errno,"rename('%s')",jpath.c_str());
         }
         FileGuard fg;
         fg.create(jpath.c_str());
@@ -334,7 +332,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         drm->regId = ptr.getRegionId();
         drm->msgId = msg.msgId;
         drm->nchunks = 0;
-        drm->trans = info.getTransactionMode();
+        drm->trans = info.isTransactional();
 
         {
             ResponseTimer rt;
@@ -352,7 +350,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
                 uint8_t len;
                 uint64_t addr;
                 char buf[20];
-                addr = subscriberToAddress(info.getFrom(),len,oa.type,oa.plan);
+                addr = subscriberToAddress(info.getSourceAddress(),len,oa.type,oa.plan);
                 sprintf(buf,"%0*.*llu",len,len,ulonglong(addr));
                 oa.setValue(len,buf);
                 addr = subscriberToAddress(msg.subscriber,len,da.type,da.plan);
@@ -368,10 +366,11 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             sms.setValidTime(msg.lastTime + msg.timeLeft);
             sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                                 info.isReplaceIfPresent() ? 1 : 0 );
-            sms.setEServiceType( (info.isReplaceIfPresent() && !info.getSvcType().empty()) ?
-                                 info.getSvcType().c_str() : cs.getSvcType() );
+            sms.setEServiceType( (info.isReplaceIfPresent() && info.getSvcType()[0]) ?
+                                 info.getSvcType() : cs.getSvcType() );
             sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID, cs.getProtocolId());
-            sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS, info.getTransactionMode() ? 2 : 0);
+            sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
+                               info.isTransactional() ? 2 : 0);
             sms.setIntProperty(smsc::sms::Tag::SMPP_PRIORITY, 0);
             sms.setIntProperty(smsc::sms::Tag::SMPP_REGISTRED_DELIVERY, 1);
             if (info.isFlash()) {
@@ -929,7 +928,7 @@ void SmscSender::connectLoop()
     while ( !isStopping_ ) {
         MutexGuard mg(queueMon_);
         if ( !session_.get() ) {
-            throw InfosmeException("logic error: session is not configured");
+            throw InfosmeException(EXC_LOGICERROR,"session is not configured");
             // isStopping_ = true;
         } else if ( !session_->isClosed() ) {
             // session connected

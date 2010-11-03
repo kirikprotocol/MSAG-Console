@@ -33,11 +33,11 @@ public:
         FromBuf fb(buf,VERSIZE+4);
         uint32_t v = fb.get32();
         if (v != 1) {
-            throw InfosmeException("file '%s': version %u is not supported",jpath.c_str(),v);
+            throw InfosmeException(EXC_BADFILE,"file '%s': version %u is not supported",jpath.c_str(),v);
         }
         regionid_type s = fb.get32();
         if (s == 0 || serial_ == MessageLocker::lockedSerial) {
-            throw InfosmeException("file '%s': invalid serial number %u", s);
+            throw InfosmeException(EXC_BADFILE,"file '%s': invalid serial number %u", s);
         }
         version_ = v;
         serial_ = s;
@@ -56,7 +56,7 @@ public:
     virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) {
         size_t rl(fb.get16());
         if ( rl > 10000 ) {
-            throw InfosmeException("record at %llu has invalid len: %u",
+            throw InfosmeException(EXC_BADFILE,"record at %llu has invalid len: %u",
                                    ulonglong(filePos), unsigned(rl));
         }
         return rl;
@@ -70,7 +70,7 @@ public:
         if (readstate == NEXTRESENDID) {
             const msgtime_type nextResend = fb.get32();
             if (fb.getPos() != fb.getLen()) {
-                throw InfosmeException("next resend record at %llu has extra data", ulonglong(filePos));
+                throw InfosmeException(EXC_BADFILE,"next resend record at %llu has extra data", ulonglong(filePos));
             }
             reader_.setNextResendAtInit(dlvId,regId,nextResend);
             return;
@@ -93,7 +93,7 @@ public:
         } while (false);
         
         if (fb.getPos() != fb.getLen()) {
-            throw InfosmeException("record at %llu has extra data", ulonglong(filePos));
+            throw InfosmeException(EXC_BADFILE,"record at %llu has extra data", ulonglong(filePos));
         }
         reader_.setRecordAtInit(dlvId,regId,msg,serial_);
     }
@@ -256,9 +256,7 @@ void StoreJournal::rollOver()
     std::string jpath = makePath(cs_.getStorePath());
     smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
-        char ebuf[100];
-        throw InfosmeException("cannot rename '%s': %d, %s",
-                               jpath.c_str(), errno, STRERROR(errno,ebuf,sizeof(ebuf)));
+        throw ErrnoException(errno,"rename('%s')",jpath.c_str());
     }
     FileGuard fg;
     fg.create(jpath.c_str());

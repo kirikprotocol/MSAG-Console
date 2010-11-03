@@ -310,7 +310,7 @@ public:
                 if (iter == mgr_.deliveryList_.end()) { break; }
                 const DeliveryInfo& info = (*iter)->getDlvInfo();
                 dlvId = info.getDlvId();
-                userId = info.getUserInfo()->getUserId();
+                userId = info.getUserInfo().getUserId();
                 (*iter)->popIncrementalStats(ds);
                 ++iter;
             }
@@ -403,10 +403,8 @@ void DeliveryMgr::init()
               ++idlv ) {
             // get dlvid
             const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
-            // std::auto_ptr<DeliveryInfo> info(new DeliveryInfo(cs_,dlvId));
             try {
-                DeliveryInfo* info = DeliveryInfo::readDeliveryInfo(core_,dlvId);
-                core_.addDelivery(info);
+                addDelivery(DeliveryInfo::readDeliveryInfo(core_,dlvId));
             } catch (std::exception& e) {
                 smsc_log_error(log_,"cannot read/add dlvInfo D=%u: %s",dlvId,e.what());
                 continue;
@@ -551,53 +549,35 @@ bool DeliveryMgr::receiveResponse( const DlvRegMsgId& drmId )
 
 void DeliveryMgr::incIncoming()
 {
+    smsc_log_error(log_,"FIXME: incIncoming() not impl");
 }
 
 
 void DeliveryMgr::incOutgoing( unsigned nchunks )
 {
+    smsc_log_error(log_,"FIXME: incOutgoing(%u) not impl",nchunks);
 }
 
 
-void DeliveryMgr::addDelivery( DeliveryInfo* info )
+dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
+                                        const DeliveryInfoData& infoData )
 {
-    std::auto_ptr< DeliveryInfo > infoptr(info);
-    if (!info) {
-        throw InfosmeException("delivery info is NULL");
-    }
-    const dlvid_type dlvId = info->getDlvId();
-    DeliveryImplPtr dlv;
-    if ( getDelivery(dlvId,dlv) ) {
-        throw InfosmeException("D=%u already exists",dlvId);
-    }
-    MutexGuard mg(mon_);
-    InputMessageSource* ims = new InputStorage(core_,*inputJournal_);
-    dlv.reset( new DeliveryImpl(infoptr.release(),*storeJournal_,ims) );
-    deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
-    try {
-        const msgtime_type planTime = dlv->initState();
-        if (planTime) {
-            deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
-        }
-    } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"D=%u could not init state: %s", dlvId, e.what());
-    }
-    mon_.notify();
+    const dlvid_type dlvId = getNextDlvId();
+    DeliveryInfo* info( new DeliveryInfo( cs_, dlvId, infoData, userInfo ) );
+    addDelivery(info);
+    return dlvId;
 }
 
 
-void DeliveryMgr::updateDelivery( DeliveryInfo* info )
+void DeliveryMgr::updateDelivery( dlvid_type dlvId,
+                                  const DeliveryInfoData& info )
 {
-    std::auto_ptr< DeliveryInfo > infoptr(info);
-    if (!info) {
-        throw InfosmeException("delivery info is NULL");
-    }
     DeliveryImplPtr dlv;
-    if (!getDelivery(info->getDlvId(),dlv) ) {
-        throw InfosmeException("delivery D=%u is not found",info->getDlvId());
+    if (!getDelivery(dlvId,dlv) ) {
+        throw InfosmeException(EXC_NOTFOUND,"delivery D=%u is not found",dlvId);
     }
     // FIXME: we have to stop activity on this delivery for a while, unbind/bind?
-    dlv->updateDlvInfo(*info);
+    dlv->updateDlvInfo(info);
     MutexGuard mg(mon_);
     mon_.notify();
 }
@@ -609,7 +589,7 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& 
     MutexGuard mg(mon_);
     DeliveryList::iterator iter;
     if (!deliveryHash_.Pop(dlvId,iter) ) {
-        throw InfosmeException("delivery %u is not found",dlvId);
+        throw InfosmeException(EXC_NOTFOUND,"delivery %u is not found",dlvId);
     }
     if (inputRollingIter_ == iter) ++inputRollingIter_;
     if (storeRollingIter_ == iter) ++storeRollingIter_;
@@ -626,15 +606,15 @@ void DeliveryMgr::setDeliveryState( dlvid_type   dlvId,
 {
     DeliveryImplPtr dlv;
     if (!getDelivery(dlvId,dlv)) {
-        throw InfosmeException("delivery D=%u is not found",dlvId);
+        throw InfosmeException(EXC_NOTFOUND,"delivery D=%u is not found",dlvId);
     }
     const DlvState oldState = dlv->getDlvInfo().getState();
     if (oldState == DLVSTATE_CANCELLED) {
-        throw InfosmeException("delivery %u is cancelled",dlvId);
+        throw InfosmeException(EXC_LOGICERROR,"delivery %u is cancelled",dlvId);
     }
     if (newState == DLVSTATE_PLANNED) {
         if (!planTime) {
-            throw InfosmeException("plan time is not supplied");
+            throw InfosmeException(EXC_LOGICERROR,"plan time is not supplied");
         }
     }
 
@@ -701,6 +681,44 @@ int DeliveryMgr::Execute()
     return 0;
 }
 
+
+void DeliveryMgr::addDelivery( DeliveryInfo* info )
+{
+    std::auto_ptr< DeliveryInfo > infoptr(info);
+    if (!info) {
+        throw InfosmeException(EXC_LOGICERROR,"delivery info is NULL");
+    }
+    const dlvid_type dlvId = info->getDlvId();
+    DeliveryImplPtr dlv;
+    if ( getDelivery(dlvId,dlv) ) {
+        throw InfosmeException(EXC_ALREADYEXIST,"D=%u already exists",dlvId);
+    }
+    MutexGuard mg(mon_);
+    InputMessageSource* ims = new InputStorage(core_,*inputJournal_);
+    dlv.reset( new DeliveryImpl(infoptr.release(),*storeJournal_,ims) );
+    deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
+    try {
+        const msgtime_type planTime = dlv->initState();
+        if (planTime) {
+            deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
+        }
+    } catch ( std::exception& e ) {
+        smsc_log_warn(log_,"D=%u could not init state: %s", dlvId, e.what());
+    }
+    mon_.notify();
+}
+
+
+dlvid_type DeliveryMgr::getNextDlvId()
+{
+    MutexGuard mg(mon_);
+    for ( int i = 0; i < 1000; ++i ) {
+        while ( !++nextDlvId_ ) {}
+        DeliveryList::iterator* iter = deliveryHash_.GetPtr(nextDlvId_);
+        if (!iter) return nextDlvId_;
+    }
+    throw InfosmeException(EXC_SYSTEM,"no more free delivery ids, try again");
+}
 
 }
 }

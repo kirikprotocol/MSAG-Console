@@ -3,8 +3,6 @@
 #include <memory>
 #include <signal.h>
 
-// #include "admin/service/ComponentManager.h"
-// #include "admin/service/ServiceSocketListener.h"
 #include "license/check/license.hpp"
 #include "logger/Logger.h"
 #include "system/smscsignalhandlers.h"
@@ -17,7 +15,6 @@
 #include "util/xml/init.h"
 #include "version.inc"
 #include "informer/main/InfosmeCoreV1.h"
-#include "informer/main/InfosmeComponent.h"
 #include "informer/io/InfosmeException.h"
 
 smsc::logger::Logger* mainlog = 0;
@@ -171,8 +168,6 @@ int main( int argc, char** argv )
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
 
         std::auto_ptr< eyeline::informer::InfosmeCoreV1 > core;
-        // std::auto_ptr< eyeline::informer::admin::AdminServer > admin;
-        // std::auto_ptr< smsc::admin::service::ServiceSocketListener> adml;
 
         atexit( atExitHandler );
 
@@ -200,33 +195,12 @@ int main( int argc, char** argv )
             std::auto_ptr<smsc::util::config::Config> cfg
                 ( smsc::util::config::Config::createFromFile("config.xml") );
             if ( !cfg.get() ) {
-                throw eyeline::informer::InfosmeException("cannot create config");
+                throw eyeline::informer::InfosmeException(eyeline::informer::EXC_CONFIG,
+                                                          "cannot load main config");
             }
-
-            // NOTE: we need to start admin earlier, to be able to provide connection
-            // for tcp-check-daemon.
 
             core.reset( new eyeline::informer::InfosmeCoreV1 );
-            // admin.reset( new eyeline::informer::admin::AdminServer() );
-            // admin->assignCore( core.get() );
-            // InfosmeComponent(*core.get()) );
-            // adml.reset( new smsc::admin::service::ServiceSocketListener() );
 
-            /*
-            {
-                /// admin listener configuration
-                smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme.Admin");
-                adml->init(smsc::util::config::ConfString(cv.getString("host")).c_str(),
-                           cv.getInt("port"));
-                admin->Init(smsc::util::config::ConfString(cv.getString("host")).c_str(),
-                            cv.getInt("port"),
-                            cv.getInt("dcpHandlers") );
-            }
-             */
-
-            // smsc::admin::service::ComponentManager::registerComponent(admin.get());
-            // adml->Start();
-            // a guarantee that adml is started
             {
                 smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme");
                 core->init(cv);
@@ -249,7 +223,6 @@ int main( int argc, char** argv )
             }
             smsc_log_error(mainlog,"leaving main loop, stopping core");
 
-            // adml->shutdown();
             core->stop();
 
         } catch ( std::exception& e ) {
