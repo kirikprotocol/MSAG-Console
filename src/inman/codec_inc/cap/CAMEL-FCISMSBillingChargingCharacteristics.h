@@ -22,25 +22,24 @@ typedef enum CAMEL_FCISMSBillingChargingCharacteristics_PR {
 	CAMEL_FCISMSBillingChargingCharacteristics_PR_fCIBCCCAMELsequence1
 } CAMEL_FCISMSBillingChargingCharacteristics_PR;
 
+typedef struct fCIBCCCAMELsequence1_s {
+	OCTET_STRING_t	 freeFormatData;
+	AppendFreeFormatData_t	*appendFreeFormatData	/* DEFAULT 0 */;
+
+	/* Context for parsing across buffer boundaries */
+	asn_struct_ctx_t _asn_ctx;
+} fCIBCCCAMELsequence1_t;
+
 /* CAMEL-FCISMSBillingChargingCharacteristics */
 typedef struct CAMEL_FCISMSBillingChargingCharacteristics {
 	CAMEL_FCISMSBillingChargingCharacteristics_PR present;
 	union CAMEL_FCISMSBillingChargingCharacteristics_u {
-		struct fCIBCCCAMELsequence1_s {
-			OCTET_STRING_t	 freeFormatData;
-			AppendFreeFormatData_t	*appendFreeFormatData	/* DEFAULT 0 */;
-			
-			/* Context for parsing across buffer boundaries */
-			asn_struct_ctx_t _asn_ctx;
-		} fCIBCCCAMELsequence1;
+		struct fCIBCCCAMELsequence1_s  fCIBCCCAMELsequence1;
 	} choice;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
 } CAMEL_FCISMSBillingChargingCharacteristics_t;
-
-typedef CAMEL_FCISMSBillingChargingCharacteristics::CAMEL_FCISMSBillingChargingCharacteristics_u::fCIBCCCAMELsequence1_s
-  fCIBCCCAMELsequence1_t;
 
 /* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_CAMEL_FCISMSBillingChargingCharacteristics;

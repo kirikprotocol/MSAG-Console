@@ -19,14 +19,16 @@ extern "C" {
 struct Extensions;
 struct SMSEvent;
 
+typedef struct sMSEvents_s {
+	A_SEQUENCE_OF(struct SMSEvent) list;
+	
+	/* Context for parsing across buffer boundaries */
+	asn_struct_ctx_t _asn_ctx;
+} sMSEvents_t;
+
 /* RequestReportSMSEventArg */
 typedef struct RequestReportSMSEventArg {
-	struct sMSEvents {
-		A_SEQUENCE_OF(struct SMSEvent) list;
-		
-		/* Context for parsing across buffer boundaries */
-		asn_struct_ctx_t _asn_ctx;
-	} sMSEvents;
+	struct sMSEvents_s 	sMSEvents;
 	struct Extensions	*extensions	/* OPTIONAL */;
 	/*
 	 * This type is extensible,

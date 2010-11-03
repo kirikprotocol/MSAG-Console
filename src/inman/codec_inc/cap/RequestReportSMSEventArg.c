@@ -44,8 +44,8 @@ static ber_tlv_tag_t asn_DEF_sMSEvents_2_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_SET_OF_specifics_t asn_SPC_sMSEvents_2_specs = {
-	sizeof(struct RequestReportSMSEventArg::sMSEvents),
-	offsetof(struct RequestReportSMSEventArg::sMSEvents, _asn_ctx),
+	sizeof(struct sMSEvents_s),
+	offsetof(struct sMSEvents_s, _asn_ctx),
 	0,	/* XER encoding is XMLDelimitedItemList */
 };
 static /* Use -fall-defs-global to expose */
