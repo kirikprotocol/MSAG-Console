@@ -120,8 +120,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
     config.getDeliveries(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryFilter,1000,
         new Visitor<DeliveryInfo>() {
           public boolean visit(DeliveryInfo deliveryInfo ) throws AdminException {
-            final int deliveryId = deliveryInfo.getDeliveryId();
-
+            final int deliveryId = deliveryInfo.getDeliveryId();            
             DeliveryStatistics stat = config.getDeliveryStats(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryId);
             DeliveryStatusHistory hist = config.getDeliveryStatusHistory(getCurrentUser().getLogin(),getCurrentUser().getPassword(),deliveryId);
             Date startDate = null;

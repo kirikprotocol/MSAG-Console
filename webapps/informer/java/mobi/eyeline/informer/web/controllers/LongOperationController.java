@@ -6,6 +6,8 @@ import org.apache.log4j.Logger;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
 import javax.faces.context.FacesContext;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -35,7 +37,11 @@ public abstract class LongOperationController extends InformerController {
     if(fatalError!=null) {
       Throwable t = fatalError;
       fatalError = null;
-      throw t;
+      StringWriter sw = new StringWriter();
+      PrintWriter  pw = new PrintWriter(sw);
+      t.printStackTrace(pw);
+      pw.close();
+      return sw.toString();  
     }
     if(error!=null) {
       AdminException ex = error;
