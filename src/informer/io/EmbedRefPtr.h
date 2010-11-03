@@ -56,8 +56,8 @@ public:
     inline const T* operator -> () const { return x_; }
     inline T* operator -> () { return x_; }
 
-    inline T* operator * () { return x_; }
-    inline const T* operator * () const { return x_; }
+    inline T& operator * () { return x_; }
+    inline const T& operator * () const { return x_; }
 
     inline void reset( T* x ) {
         if (x != x_) {
