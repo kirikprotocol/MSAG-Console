@@ -41,7 +41,7 @@ public abstract class DeliveryStatController extends LongOperationController {
     recordsMap = Collections.synchronizedMap(new TreeMap<Object, AggregatedRecord>());
   }
 
-  private void initUser() {
+  protected void initUser() {
     user = getConfig().getUser(getUserName());
     if(user==null) initError = true;
     else if(!user.hasRole(User.INFORMER_ADMIN_ROLE)) {
@@ -59,6 +59,7 @@ public abstract class DeliveryStatController extends LongOperationController {
     filter.setFromDate(null);
     filter.setTillDate(null);
     filter.setTaskId(null);
+    setFullMode(false);
   }
 
 
