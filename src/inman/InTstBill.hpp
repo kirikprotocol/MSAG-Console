@@ -2,8 +2,10 @@
  * INMan testing console: Billing protocol client
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_TEST_BILLING__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_TEST_BILLING__
-#ident "$Id$"
 
 #include "inman/InTstDefs.hpp"
 using smsc::inman::test::TSTFacadeAC;
@@ -56,9 +58,9 @@ public:
 
     INDialog(unsigned int dlg_id, const INDialogCfg * use_cfg, bool batch_mode = false,
              uint32_t dlvr_res = 1016)
-        : did(dlg_id), cfg(*use_cfg), batchMode(batch_mode), dlvrRes(dlvr_res)
-        , state(dIdle)
-    {}
+        : did(dlg_id), cfg(*use_cfg), state(dIdle), batchMode(batch_mode)
+        , dlvrRes(dlvr_res)
+    { }
 
     void    setChargePolicy(CDRRecord::ChargingPolicy chg_pol) { cfg.chgPolicy = chg_pol; }
     void    setChargeType(CDRRecord::ChargingType chg_type) { cfg.chgType = chg_type; }
@@ -73,9 +75,9 @@ public:
 
 protected:
     unsigned int        did;
+    INDialogCfg         cfg;
     DlgState            state;
     bool                batchMode;
-    INDialogCfg         cfg;
     uint32_t            dlvrRes; //failure by default 
 };
 
@@ -96,8 +98,8 @@ protected:
 
 public:
     BillFacade(ConnectSrv * conn_srv, Logger * use_log = NULL)
-        : TSTFacadeAC(conn_srv, use_log), _maxDlgId(0)
-        , _msg_ref(0x0100), _msg_id(0x010203040000ULL)
+        : TSTFacadeAC(conn_srv, use_log)
+        , _msg_ref(0x0100), _msg_id(0x010203040000ULL), _maxDlgId(0)
         , _abDB(AbonentsDB::getInstance())
     { 
         strcpy(_logId, "TFBill");

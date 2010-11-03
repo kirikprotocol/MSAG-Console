@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 /* ************************************************************************** *
  * INMan testing console
  * ************************************************************************** */
@@ -30,6 +30,7 @@ using smsc::inman::AbonentContractInfo;
 using smsc::inman::interaction::ConnectSrv;
 using smsc::inman::cdr::CDRRecord;
 
+using smsc::logger::Logger;
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
@@ -333,8 +334,6 @@ static const char hlp_use_xsms[] = "USAGE: %s [?|help | Number[baseSym]]\n"
                                    "  baseSym: empty - Decimal, hH - Hex, Bb - Binary\n";
 void cmd_use_xsms(Console&, const std::vector<std::string> &args)
 {
-    uint32_t xId = 0;
-
     if ((args.size() < 2)
         || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
         fprintf(stdout, hlp_use_xsms, args[0].c_str());
@@ -594,7 +593,7 @@ int main(int argc, char** argv)
         _dtcrFacade->initConnect(host, port);
         console.run("inman>");
     } catch (const std::exception& error) {
-        fprintf(stderr, error.what());
+        fprintf(stderr, "%s", error.what());
     }
     _billFacade->Disconnect();
     _dtcrFacade->Disconnect();

@@ -2,8 +2,10 @@
  * INMan testing console: Contract determination protocol client
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_TEST_DETECTOR__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_TEST_DETECTOR__
-#ident "$Id$"
 
 #include "inman/InTstDefs.hpp"
 #include "inman/interaction/msgdtcr/MsgContract.hpp"
@@ -32,18 +34,18 @@ using smsc::inman::interaction::SPckContractResult;
  * ************************************************************************** */
 class DtcrDialog {
 public:
-    typedef enum { dIdle = 0, dRequested, dReported } DlgState;
+    enum DlgState { dIdle = 0, dRequested, dReported };
 
     DtcrDialog(TSTFacadeAC * use_mgr, unsigned dlg_id, unsigned ab_id, bool use_cache = true)
-        : _mgr(use_mgr), dId(dlg_id), abId(ab_id), useCache(use_cache), state(dIdle)
+        : _mgr(use_mgr), dId(dlg_id), abId(ab_id), state(dIdle), useCache(use_cache)
     { 
         abInfo = AbonentsDB::getInstance()->getAbnInfo(ab_id);
     }
 
-    inline unsigned getId(void) const { return dId; }
-    inline void     setState(DlgState new_state) { state = new_state; }
-    inline DlgState getState(void) const { return state; }
-    inline AbonentInfo * abnInfo(void) const { return abInfo; }
+    unsigned getId(void) const { return dId; }
+    void     setState(DlgState new_state) { state = new_state; }
+    DlgState getState(void) const { return state; }
+    AbonentInfo * abnInfo(void) const { return abInfo; }
 
     //composes and sends request
     bool sendRequest(unsigned num_bytes = 0) // 0 - forces sending whole packet
@@ -90,12 +92,12 @@ public:
     }
 
 protected:
+    TSTFacadeAC *   _mgr;
     unsigned        dId;
     unsigned        abId;   //abonent's id from AbonentsDB
     AbonentInfo *   abInfo;
     DlgState        state;
     bool            useCache;
-    TSTFacadeAC *   _mgr;
 };
 
 /* ************************************************************************** *

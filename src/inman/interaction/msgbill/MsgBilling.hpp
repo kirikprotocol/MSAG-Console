@@ -2,7 +2,9 @@
  * INMan SMS/USSD messages charging protocol PDUs definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_BILLING_MESSAGES__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_BILLING_MESSAGES__
 
 #include "inman/interaction/messages.hpp"
@@ -24,36 +26,50 @@ using smsc::inman::cdr::CDRRecord;
 // -------------------------------------------------------------------- //
 // Billing CommandSet: factory of billing commands and their subobjects
 // -------------------------------------------------------------------- //
-class INPCSBilling : public INPCommandSetAC {
+class INPCSBilling : public INPCommandSetAC { //singleton
+protected:
+  INPCSBilling();
+  ~INPCSBilling()
+  { }
+
 public:
-    enum CommandTag {
-        CHARGE_SMS_TAG          = 1,    // 1. ChargeSms         ( SMSC --> INMAN )
-        CHARGE_SMS_RESULT_TAG   = 2,    // 2. ChargeSmsResult   ( SMSC <-- INMAN )
-        DELIVERY_SMS_RESULT_TAG = 3,    // 3. DeliverySmsResult ( SMSC --> INMAN )
-        DELIVERED_SMS_DATA_TAG  = 4     // 1. DeliveredSmsData  ( SMSC --> INMAN )
-    };
-    enum HeaderFrm {
-        HDR_DIALOG = 1, HDR_SESSIONED_DLG = 2
-    };
+  enum CommandTag {
+    CHARGE_SMS_TAG          = 1,    // 1. ChargeSms         ( SMSC --> INMAN )
+    CHARGE_SMS_RESULT_TAG   = 2,    // 2. ChargeSmsResult   ( SMSC <-- INMAN )
+    DELIVERY_SMS_RESULT_TAG = 3,    // 3. DeliverySmsResult ( SMSC --> INMAN )
+    DELIVERED_SMS_DATA_TAG  = 4     // 1. DeliveredSmsData  ( SMSC --> INMAN )
+  };
+  enum HeaderFrm {
+    HDR_DIALOG = 1, HDR_SESSIONED_DLG = 2
+  };
 
-    INPCSBilling();
+  static INPCSBilling * getInstance(void);
 
-    static INPCSBilling * getInstance(void)
-    {
-        static INPCSBilling  cmdSet;
-        return &cmdSet;
-    }
-
-    INProtocol::CSId CsId(void) const { return INProtocol::csBilling; }
-    const char *    CsName(void) const { return "csBilling"; }
-    INPLoadMode loadMode(unsigned short obj_id) const { return INPCommandSetAC::lmHeader; }
+  // ----------------------------------------
+  // -- INPCommandSetAC interface methods
+  // ----------------------------------------
+  virtual INPLoadMode loadMode(unsigned short obj_id) const
+  {
+    return INPCommandSetAC::lmHeader;
+  }
 };
 
 class INPBillingCmd : public INPCommandAC {
+protected:
+  INPBillingCmd(INPCSBilling::CommandTag cmd_tag) : INPCommandAC(cmd_tag)
+  { }
+
 public:
-    INPBillingCmd(INPCSBilling::CommandTag cmd_tag) : INPCommandAC(cmd_tag)
-    { }
-    INPCommandSetAC * commandSet(void) const { return INPCSBilling::getInstance(); }
+  virtual ~INPBillingCmd()
+  { }
+
+  // ----------------------------------
+  // -- INPCommandAC interface methods
+  // ----------------------------------
+  virtual const INPCommandSetAC * commandSet(void) const
+  {
+    return INPCSBilling::getInstance();
+  }
 };
 
 // --------------------------------------------------------- //

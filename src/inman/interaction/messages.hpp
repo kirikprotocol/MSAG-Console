@@ -2,7 +2,9 @@
  * INMan Protocols: generic packet definition, packet serialization.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INTERACTION_MESSAGES__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INTERACTION_MESSAGES__
 
 #include "util/Factory.hpp"
@@ -14,18 +16,24 @@ namespace smsc  {
 namespace inman {
 namespace interaction {
 
-using smsc::util::FactoryT;
-
 //INMan Protocol CommandSet: factory of commands and their subobjects
 class INPCommandSetAC;
 
 typedef SerializableObjectAC INPHeaderAC;
 
 class INPCommandAC: public SerializableObjectAC {
+protected:
+  virtual ~INPCommandAC()
+  { }
+
 public:
-    INPCommandAC(unsigned short use_id) : SerializableObjectAC(use_id)
-    { }
-    virtual const INPCommandSetAC * commandSet(void) const = 0;
+  INPCommandAC(unsigned short use_id) : SerializableObjectAC(use_id)
+  { }
+
+  // ----------------------------------
+  // -- INPCommandAC interface methods
+  // ----------------------------------
+  virtual const INPCommandSetAC * commandSet(void) const = 0;
 };
 /*
  * Inman messages are transferred as length prefixed packet of two
@@ -39,85 +47,97 @@ public:
                       ---------  -- processed by load()/save() method --
 */
 class INPPacketAC : public SerializablePacket_T<2> { //[0] = header, [1] = cmdObject
-public:
-    INPPacketAC()
-    { }
-   
-    INPHeaderAC * pHdr(void) const { return static_cast<INPHeaderAC*>(getObj(0)); }
-    INPCommandAC * pCmd(void) const { return static_cast<INPCommandAC*>(getObj(1)); }
+protected:
+  INPPacketAC()
+  { }
 
-    //SerializablePacketAC interface implementation
-    void serialize(ObjectBuffer& out_buf) const throw(SerializerException)
-    {
-        out_buf << getObj(1)->Id();
-        out_buf << getObj(0)->Id();
-        getObj(0)->save(out_buf);
-        getObj(1)->save(out_buf);
-    }
+public:
+  virtual ~INPPacketAC()
+  { }
+
+  INPHeaderAC * pHdr(void) const { return static_cast<INPHeaderAC*>(getObj(0)); }
+  INPCommandAC * pCmd(void) const { return static_cast<INPCommandAC*>(getObj(1)); }
+
+  // --------------------------------------------------
+  // -- SerializablePacketAC interface implementation
+  // --------------------------------------------------
+  virtual void serialize(ObjectBuffer& out_buf) const throw(SerializerException)
+  {
+    out_buf << getObj(1)->Id();
+    out_buf << getObj(0)->Id();
+    getObj(0)->save(out_buf);
+    getObj(1)->save(out_buf);
+  }
 };
 
 //Template class for solid packet construction.
-template<class _Header /* : public INPHeaderAC*/,
-         class _Command /* : public INPCommandAC*/>
+template< class _Header /* : public INPHeaderAC*/,
+          class _Command /* : public INPCommandAC*/
+>
 class INPSolidPacketT : public INPPacketAC {
 protected:
-    _Header  pckHdr;
-    _Command pckCmd;
+  _Header  pckHdr;
+  _Command pckCmd;
 
 public:
-    INPSolidPacketT()
-      : INPPacketAC()
-    { referObj(0, pckHdr); referObj(1, pckCmd); }
-    //constructor for copying
-    INPSolidPacketT(const INPSolidPacketT &org_pck)
-      : INPPacketAC(org_pck)
-    { referObj(0, pckHdr); referObj(1, pckCmd); }
+  INPSolidPacketT() : INPPacketAC()
+  {
+    referObj(0, pckHdr); referObj(1, pckCmd);
+  }
+  //constructor for copying
+  INPSolidPacketT(const INPSolidPacketT &org_pck) : INPPacketAC(org_pck)
+  {
+    referObj(0, pckHdr); referObj(1, pckCmd);
+  }
+  ~INPSolidPacketT()
+  { }
 
-    _Header &  Hdr() { return pckHdr; }
-    _Command & Cmd() { return pckCmd; }
+  _Header &  Hdr() { return pckHdr; }
+  _Command & Cmd() { return pckCmd; }
 
-    const _Header &  Hdr() const { return pckHdr; }
-    const _Command & Cmd() const { return pckCmd; }
+  const _Header &  Hdr() const { return pckHdr; }
+  const _Command & Cmd() const { return pckCmd; }
 };
 
 //INMan Protocol CommandSet: factory of commands and their subobjects
 class INPCommandSetAC {
+private:
+  const INProtocol::CSId  _csId;
+
 protected:
-    typedef FactoryT<uint32_t, INPPacketAC> PckFactory;
-    PckFactory  pckFct;
+  typedef smsc::util::FactoryT<uint32_t, INPPacketAC> PckFactory;
+  PckFactory  _pckFct;
 
-    uint32_t mkPckIdx(unsigned short cmd_id, unsigned short hdr_frm) const
-    {
-        return ((cmd_id << 16) | (hdr_frm & 0xFFFF));
-    }
+  uint32_t mkPckIdx(unsigned short cmd_id, unsigned short hdr_frm) const
+  {
+    return ((cmd_id << 16) | (hdr_frm & 0xFFFF));
+  }
 
-//    typedef FactoryT<unsigned short, INPCommandAC> CmdFactory;
-//    CmdFactory  cmdFct;
-//    typedef FactoryT<unsigned short, INPHeaderAC> HdrFactory; 
-//    HdrFactory  hdrFct;
+  INPCommandSetAC(INProtocol::CSId cs_id) : _csId(cs_id)
+  { }
+  virtual ~INPCommandSetAC()
+  { }
 
 public:
-    //Packet deserialization modes
-    typedef enum {
-        lmHeader = 0,   //deserialize only header
-        lmFull          //deserialize full packet
-    } INPLoadMode;
+  //Packet deserialization modes
+  enum INPLoadMode {
+      lmHeader = 0,   //deserialize only header
+      lmFull          //deserialize full packet
+  };
 
-    virtual INProtocol::CSId CsId(void) const = 0;
-    virtual const char *    CsName(void) const = 0;
-    virtual INPLoadMode loadMode(unsigned short cmd_id) const = 0;
+  INProtocol::CSId  CsId(void) const { return _csId; }
+  const char *      CsName(void) const { return INProtocol::csName(_csId); }
 
-    //creates solid packet (header + command)
-    INPPacketAC * 
-        createPck(unsigned short cmd_id, unsigned short hdr_frm) const
-    {
-        return pckFct.create(mkPckIdx(cmd_id, hdr_frm));
-    }
+  // ----------------------------------------
+  // -- INPCommandSetAC interface methods
+  // ----------------------------------------
+  virtual INPLoadMode loadMode(unsigned short cmd_id) const = 0;
 
-//    INPHeaderAC * createHdr(unsigned short hdr_frm) const
-//        { return hdrFct.create(hdr_frm); }
-//    INPCommandAC * createCmd(unsigned short cmd_id) const
-//        { return cmdFct.create(obj_id); }
+  //creates solid packet (header + command)
+  INPPacketAC * createPck(unsigned short cmd_id, unsigned short hdr_frm) const
+  {
+    return _pckFct.create(mkPckIdx(cmd_id, hdr_frm));
+  }
 };
 
 

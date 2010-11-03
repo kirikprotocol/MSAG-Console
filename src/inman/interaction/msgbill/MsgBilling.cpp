@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 /* ************************************************************************* *
  * INMan SMS/USSD messages charging protocol PDUs definition.
  * ************************************************************************* */
@@ -17,36 +17,41 @@ namespace interaction {
 /* ************************************************************************** *
  * Billing CommandSet:
  * ************************************************************************** */
-INPCSBilling::INPCSBilling()
+INPCSBilling::INPCSBilling() : INPCommandSetAC(INProtocol::csBilling)
 {
-    pckFct.registerProduct(mkPckIdx(CHARGE_SMS_TAG, HDR_DIALOG), 
-                           new PckFactory::ProducerT< SPckChargeSms >());
-    pckFct.registerProduct(mkPckIdx(CHARGE_SMS_RESULT_TAG, HDR_DIALOG), 
-                           new PckFactory::ProducerT< SPckChargeSmsResult >());
-    pckFct.registerProduct(mkPckIdx(DELIVERY_SMS_RESULT_TAG, HDR_DIALOG), 
-                           new PckFactory::ProducerT< SPckDeliverySmsResult >());
-    pckFct.registerProduct(mkPckIdx(DELIVERED_SMS_DATA_TAG, HDR_DIALOG), 
-                           new PckFactory::ProducerT< SPckDeliveredSmsData >());
-//    INPSerializer::getInstance()->registerCmdSet(csBilling, this);
+  _pckFct.registerProduct(mkPckIdx(CHARGE_SMS_TAG, HDR_DIALOG), 
+                         new PckFactory::ProducerT< SPckChargeSms >());
+  _pckFct.registerProduct(mkPckIdx(CHARGE_SMS_RESULT_TAG, HDR_DIALOG), 
+                         new PckFactory::ProducerT< SPckChargeSmsResult >());
+  _pckFct.registerProduct(mkPckIdx(DELIVERY_SMS_RESULT_TAG, HDR_DIALOG), 
+                         new PckFactory::ProducerT< SPckDeliverySmsResult >());
+  _pckFct.registerProduct(mkPckIdx(DELIVERED_SMS_DATA_TAG, HDR_DIALOG), 
+                         new PckFactory::ProducerT< SPckDeliveredSmsData >());
+}
+//
+INPCSBilling * INPCSBilling::getInstance(void)
+{
+  static INPCSBilling  cmdSet;
+  return &cmdSet;
 }
 
 /* ************************************************************************** *
  * Billing command headers:
  * ************************************************************************** */
 CsBillingHdr_dlg::CsBillingHdr_dlg()
-    : SerializableObjectAC(INPCSBilling::HDR_DIALOG)
+  : SerializableObjectAC(INPCSBilling::HDR_DIALOG)
 { }
 CsBillingHdr_sess::CsBillingHdr_sess()
-    : SerializableObjectAC(INPCSBilling::HDR_SESSIONED_DLG)
+  : SerializableObjectAC(INPCSBilling::HDR_SESSIONED_DLG)
 { }
 
 /* ************************************************************************** *
  * class ChargeSms implementation:
  * ************************************************************************** */
 ChargeSms::ChargeSms()
-    : INPBillingCmd(INPCSBilling::CHARGE_SMS_TAG)
-    , partsNum(1), smsXSrvsId(0), chrgPolicy(CDRRecord::ON_DELIVERY)
-    , chrgFlags(0)
+  : INPBillingCmd(INPCSBilling::CHARGE_SMS_TAG)
+  , chrgPolicy(CDRRecord::ON_DELIVERY), partsNum(1), smsXSrvsId(0)
+  , chrgFlags(0)
 { }
 
 void ChargeSms::load(ObjectBuffer& in) throw(SerializerException)
@@ -140,10 +145,9 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
 // ChargeSmsResult impl
 //-----------------------------------------------
 ChargeSmsResult::ChargeSmsResult()
-    : INPBillingCmd(INPCSBilling::CHARGE_SMS_RESULT_TAG)
-    , value(CHARGING_POSSIBLE), errCode(0)
-{
-}
+  : INPBillingCmd(INPCSBilling::CHARGE_SMS_RESULT_TAG)
+  , value(CHARGING_POSSIBLE), errCode(0)
+{ }
 
 ChargeSmsResult::ChargeSmsResult(ChargeSmsResult_e res/* = CHARGING_NOT_POSSIBLE*/,
                                 uint32_t err_code/* = 0*/, const char * err_msg/* = NULL*/)
@@ -182,7 +186,7 @@ void ChargeSmsResult::save(ObjectBuffer& out) const
 DeliveredSmsData::DeliveredSmsData(uint32_t res/* = 0*/)
     : INPBillingCmd(INPCSBilling::DELIVERED_SMS_DATA_TAG)
     , chrgPolicy(CDRRecord::ON_DATA_COLLECTED)
-    , dlvrRes(res), partsNum(1), smsXSrvsId(0), chrgFlags(0)
+    , partsNum(1), smsXSrvsId(0), chrgFlags(0), dlvrRes(res)
 { }
 
 void DeliveredSmsData::load(ObjectBuffer& in) throw(SerializerException)

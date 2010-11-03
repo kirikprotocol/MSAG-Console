@@ -1,12 +1,23 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/interaction/messages.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
+/* ************************************************************************** *
+ * class INProtocol implementation:
+ * ************************************************************************** */
+const INProtocol::CSParams INProtocol::_csParm[] = {
+    INProtocol::CSParams(0, "csUndefined")
+  , INProtocol::CSParams(5, "csBilling")
+  , INProtocol::CSParams(9, "csAbntContract")
+  , INProtocol::CSParams((unsigned)(-1), "csUndefined")
+};
+
+
 /* ************************************************************************** *
  * class INPSerializer implementation:
  * ************************************************************************** */

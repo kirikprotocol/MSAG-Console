@@ -102,7 +102,7 @@ public:
             std::string msg;
             format(msg, "%s: connecting to InManager at %s:%d...\n", _logId, use_host, use_port);
             smsc_log_info(logger, msg.c_str());
-            fprintf(stdout, msg.c_str());
+            fprintf(stdout, "%s", msg.c_str());
         }
         Socket * socket = _connSrv->setConnection(use_host, use_port);
         if (socket) {
@@ -113,7 +113,7 @@ public:
                 std::string msg;
                 format(msg, "%s: connect[%u] created\n", _logId, _pipe->getId());
                 smsc_log_info(logger, msg.c_str());
-                fprintf(stdout, msg.c_str());
+                fprintf(stdout, "%s", msg.c_str());
             }
             return _pipe->getId();
         }

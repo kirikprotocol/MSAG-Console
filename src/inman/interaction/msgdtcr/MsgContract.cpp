@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 /* ************************************************************************* *
  * INMan Abonent Contract and gsmSCFs parameters determination protocol
  * PDUs definition.
@@ -15,18 +15,18 @@ namespace interaction {
  * Abonent Contract detection CommandSet:
  * ************************************************************************** */
 INPCSAbntContract::INPCSAbntContract()
+  : INPCommandSetAC(INProtocol::csAbntContract)
 {
-    pckFct.registerProduct(mkPckIdx(ABNT_CONTRACT_REQUEST_TAG, HDR_DIALOG),
-                           new PckFactory::ProducerT< SPckContractRequest >());
-    pckFct.registerProduct(mkPckIdx(ABNT_CONTRACT_RESULT_TAG, HDR_DIALOG),
-                           new PckFactory::ProducerT< SPckContractResult >());
-//    INPSerializer::getInstance()->registerCmdSet(csAbntContract, this);
+  _pckFct.registerProduct(mkPckIdx(ABNT_CONTRACT_REQUEST_TAG, HDR_DIALOG),
+                         new PckFactory::ProducerT< SPckContractRequest >());
+  _pckFct.registerProduct(mkPckIdx(ABNT_CONTRACT_RESULT_TAG, HDR_DIALOG),
+                         new PckFactory::ProducerT< SPckContractResult >());
 }
 
 INPCSAbntContract * INPCSAbntContract::getInstance(void)
 {
-    static INPCSAbntContract  cmdSet;
-    return &cmdSet;
+  static INPCSAbntContract  cmdSet;
+  return &cmdSet;
 }
 
 /* ************************************************************************** *
@@ -85,6 +85,16 @@ void AbntContractResult::save(ObjectBuffer& out) const
     out << errMsg;
 }
 
+void AbntContractResult::setError(uint32_t err_code, const char * err_msg/* = NULL*/)
+{ 
+    cntrInfo.ab_type = AbonentContractInfo::abtUnknown;
+    cntrInfo.tdpSCF.clear();
+    errCode = err_code;
+    if (err_msg)
+        errMsg = err_msg;
+    else
+        errMsg.clear();
+}
 
 } //interaction
 } //inman

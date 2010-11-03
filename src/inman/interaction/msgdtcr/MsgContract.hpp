@@ -3,7 +3,9 @@
  * PDUs definition.
  * ************************************************************************* */
 #ifndef SMSC_INMAN_ABNT_CONTRACT_MESSAGES_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define SMSC_INMAN_ABNT_CONTRACT_MESSAGES_HPP
 
 #include "inman/interaction/messages.hpp"
@@ -19,33 +21,48 @@ using smsc::util::TonNpiAddressString;
 // -------------------------------------------------------------------- //
 // Abonent Contract detection CommandSet: 
 // -------------------------------------------------------------------- //
-class INPCSAbntContract : public INPCommandSetAC {
+class INPCSAbntContract : public INPCommandSetAC { //singleton
+protected:
+  INPCSAbntContract();
+  ~INPCSAbntContract()
+  { }
+
 public:
-    enum CommandTag {
-        ABNT_CONTRACT_REQUEST_TAG  = 6,    // AbntContractRequest  ( SMSC --> INMAN )
-        ABNT_CONTRACT_RESULT_TAG   = 7     // AbntContractResult   ( SMSC <-- INMAN )
-    };
+  enum CommandTag {
+    ABNT_CONTRACT_REQUEST_TAG  = 6,    // AbntContractRequest  ( SMSC --> INMAN )
+    ABNT_CONTRACT_RESULT_TAG   = 7     // AbntContractResult   ( SMSC <-- INMAN )
+  };
 
-    enum HeaderFrm { HDR_DIALOG = 1 };
+  enum HeaderFrm { HDR_DIALOG = 1 };
 
-    INPCSAbntContract();
+  static INPCSAbntContract * getInstance(void);
 
-    static INPCSAbntContract * getInstance(void);
-
-    INProtocol::CSId CsId(void) const { return INProtocol::csAbntContract; }
-    const char *    CsName(void) const { return "csAbntContract"; }
-    INPLoadMode loadMode(unsigned short obj_id) const { return INPCommandSetAC::lmHeader; }
+  // ----------------------------------------
+  // -- INPCommandSetAC interface methods
+  // ----------------------------------------
+  virtual INPLoadMode loadMode(unsigned short obj_id) const
+  {
+    return INPCommandSetAC::lmHeader;
+  }
 };
 
 class INPAbntContractCmd : public INPCommandAC {
+protected:
+  INPAbntContractCmd(INPCSAbntContract::CommandTag cmd_tag)
+    : INPCommandAC(cmd_tag)
+  { }
+
 public:
-    INPAbntContractCmd(INPCSAbntContract::CommandTag cmd_tag)
-        : INPCommandAC(cmd_tag)
-    { }
-    const INPCommandSetAC * commandSet(void) const
-    {
-        return INPCSAbntContract::getInstance();
-    }
+  virtual ~INPAbntContractCmd()
+  { }
+
+  // ----------------------------------
+  // -- INPCommandAC interface methods
+  // ----------------------------------
+  virtual const INPCommandSetAC * commandSet(void) const
+  {
+    return INPCSAbntContract::getInstance();
+  }
 };
 
 // --------------------------------------------------------- //
@@ -123,16 +140,7 @@ public:
     //Setters:
     void setContractInfo(const AbonentContractInfo & cntr_info) { cntrInfo = cntr_info; }
     void setPolicy(const std::string nm_policy) { nmPolicy = nm_policy; }
-    void setError(uint32_t err_code, const char * err_msg = NULL)
-    { 
-        cntrInfo.ab_type = AbonentContractInfo::abtUnknown;
-        cntrInfo.tdpSCF.clear();
-        errCode = err_code;
-        if (err_msg)
-            errMsg = err_msg;
-        else
-            errMsg.clear();
-    }
+    void setError(uint32_t err_code, const char * err_msg = NULL);
 
     //Getters:
     bool  cacheUsed(void) const { return nmPolicy.empty(); }
