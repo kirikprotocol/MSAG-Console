@@ -309,8 +309,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
                     ProfileCommand* cmd = 0;
                     switch (act) {
                     case 'A' :
-                    case 'U' :
-                    case 'E' : {
+                    case 'U' : {
                         int shift;
                         int sc = sscanf( line.c_str()+propstart,"property=%n", &shift );
                         if ( sc < 0 ) {
@@ -327,17 +326,12 @@ int BackupProcessor::BackupProcessingTask::Execute()
                             prevline = line;
                             continue;
                         }
-                        if ( act != 'E' ) {
-                            SetCommand* kmd = new SetCommand();
-                            kmd->setProperty(property);
-                            cmd = kmd;
-                        } else {
-                            DelCommand* kmd = new DelCommand();
-                            kmd->setVarName(property.getName());
-                            cmd = kmd;
-                        }
+                        SetCommand* kmd = new SetCommand();
+                        kmd->setProperty(property);
+                        cmd = kmd;
                         break;
                     }
+                    case 'E' :
                     case 'D' : {
                         int shift;
                         int sc = sscanf( line.c_str()+propstart,"name=%n", &shift );
@@ -404,7 +398,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
 
 void BackupProcessor::BackupProcessingTask::readDir( std::vector< std::string >& files )
 {
-    std::string format(filename_ + ".%[0123456789-].log");
+    std::string format(filename_ + ".%[0123456789-].log%n");
     DIR* dir = opendir( dirname_.c_str() );
     if ( !dir ) {
         smsc_log_debug(log_,"cannot open dir %s", dirname_.c_str());
@@ -424,9 +418,13 @@ void BackupProcessor::BackupProcessingTask::readDir( std::vector< std::string >&
             taillen = reslen;
             tail.reset( new char[reslen]);
         }
-        int rv = sscanf(result->d_name,format.c_str(),tail.get());
+        int shift = 0;
+        int rv = sscanf(result->d_name,format.c_str(),tail.get(),&shift);
         if ( rv <= 0 ) {
             smsc_log_debug(log_,"sscanf returned %d",rv);
+            continue;
+        }
+        if (shift == 0) {
             continue;
         }
         if ( processor_.isFileProcessed(scope_,result->d_name) ) {
