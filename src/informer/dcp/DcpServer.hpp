@@ -6,6 +6,7 @@
 #include "informer/dcp/DcpHandler.hpp"
 #include "DcpServerProto.hpp"
 #include "informer/data/InfosmeCore.h"
+#include "DcpError.hpp"
 
 namespace eyeline{
 namespace informer{
@@ -42,8 +43,12 @@ protected:
   UserInfoPtr ui;
 };
 
-class DcpServer:public eyeline::protogen::ServerBase,DcpHandler{
+class DcpServer:public eyeline::protogen::ServerBase,public DcpHandler{
 public:
+  DcpServer():ServerBase("dcp")
+  {
+
+  }
   void assignCore(InfosmeCore* argCore)
   {
     core=argCore;

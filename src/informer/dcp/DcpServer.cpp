@@ -1,6 +1,5 @@
 #include "DcpServer.hpp"
 #include "informer/data/UserInfo.h"
-#include "DcpError.hpp"
 
 namespace eyeline{
 namespace informer{
