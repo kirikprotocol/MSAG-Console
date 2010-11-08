@@ -155,6 +155,12 @@
       <renderer-type>menuBar</renderer-type>
       <renderer-class>ru.novosoft.smsc.web.components.menubar.MenuBarRenderer</renderer-class>
     </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>updatableContent</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.updatable_content.UpdatableContentRenderer</renderer-class>
+    </renderer>
   </render-kit>
 
 
@@ -379,6 +385,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>smsView</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.sms_view.SmsViewController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -542,6 +554,11 @@
     <navigation-case>
       <from-outcome>ROUTE_TRACE</from-outcome>
       <to-view-id>/smsc/route_trace/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMS_VIEW</from-outcome>
+      <to-view-id>/smsc/sms_view/index.faces</to-view-id>
       <redirect/>
     </navigation-case>
 

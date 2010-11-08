@@ -9,6 +9,20 @@
   <namespace>http://taglib.eyeline.mobi</namespace>
 
   <tag>
+    <tag-name>progressBar</tag-name>
+    <source>progressBar.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>updatableContent</tag-name>
+    <component>
+      <component-type>updatableContent</component-type>
+      <renderer-type>updatableContent</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.updatable_content.UpdatableContentHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
     <tag-name>message</tag-name>
     <source>message.xhtml</source>
   </tag>
@@ -142,5 +156,7 @@
       <handler-class>ru.novosoft.smsc.web.components.menubar.MenuBarItemHandler</handler-class>
     </component>
   </tag>
+
+
 
 </facelet-taglib>

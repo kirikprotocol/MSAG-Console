@@ -326,6 +326,8 @@
     </attribute>
   </tag>
 
+  <!-- MENU BAR -->
+
   <tag>
     <name>menubar</name>
     <description>Элемент с выпадающим меню</description>
@@ -352,5 +354,86 @@
       <description>Отрисовывать элемент или нет. По умолчанию: true</description>
     </attribute>
   </tag>
+
+  <!-- PROGRESS BAR -->
+
+  <tag>
+    <name>progressBar</name>
+    <description>Шкала отображения динамики процесса</description>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <name>current</name>
+      <description>Текущее значение</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>maximum</name>
+      <description>Максимальное значение</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>width</name>
+      <description>Ширина шкалы в пикселях</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>height</name>
+      <description>Высота шкалы в пикселях</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>percents</name>
+      <description>Показывать проценты или нет</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>bgcolor</name>
+      <description>Цвет шкалы</description>
+      <type>java.lang.String</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>fontColor</name>
+      <description>Цвет шрифта</description>
+      <type>java.lang.String</type>
+      <required>false</required>
+    </attribute>
+
+  </tag>
+
+<!-- UPDATABLE CONTENT -->
+
+  <tag>
+    <name>updatableContent</name>
+    <description>Блок с обновляющимся содержимым</description>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <name>updatePeriod</name>
+      <description>Период обновления</description>
+      <type>int</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>enabled</name>
+      <description>Вкл/выкл обновления</description>
+      <type>boolean</type>
+    </attribute>
+
+  </tag>
+  
 
 </taglib>
