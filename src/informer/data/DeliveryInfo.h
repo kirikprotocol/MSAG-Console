@@ -67,6 +67,10 @@ public:
      */
 
     void update( const DeliveryInfoData& data );
+    const DeliveryInfoData& getDeliveryData()const
+    {
+      return data_;
+    }
 
     // ============ delivery settings ==========================
 
