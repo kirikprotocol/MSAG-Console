@@ -19,7 +19,7 @@ using eyeline::asn1::TSLength;
  * ************************************************************************* */
 template < 
   class _TArg /* unsigned integer type, sizeof(_TArg) < 32 bytes */
->
+> inline
 uint8_t estimate_INTEGER(const _TArg & use_val)
 {
   if (use_val <= 0xFF)
@@ -45,7 +45,7 @@ uint8_t estimate_INTEGER(const _TArg & use_val)
 // -----------------------------------------------
 // Specialization for uint8_t
 // -----------------------------------------------
-template <>
+template <> inline
 uint8_t estimate_INTEGER(const uint8_t & use_val)
 {
   return 1;
@@ -78,7 +78,7 @@ uint8_t encode_INTEGER(const _TArg & use_val, uint8_t * use_enc, TSLength max_le
 // -----------------------------------------------
 // Specialization for uint8_t
 // -----------------------------------------------
-template <>
+template <> inline
 uint8_t encode_INTEGER(const uint8_t & use_val, uint8_t * use_enc, TSLength max_len)
 {
   if (!max_len)
