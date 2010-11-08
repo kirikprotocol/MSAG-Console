@@ -27,7 +27,6 @@ public:
   {
     seqNum=0;
     deliveryIdFlag=false;
-    userIdFlag=false;
   }
  
   static int32_t messageGetTag()
@@ -56,15 +55,6 @@ public:
       sprintf(buf,"%d",deliveryId);
       rv+=buf;
     }
-    if(userIdFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="userId=";
-      rv+=userId;
-    }
     return rv;
   }
 
@@ -77,12 +67,6 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(deliveryId);
-    }
-    if(userIdFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(userId);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -109,28 +93,6 @@ public:
   {
     return deliveryIdFlag;
   }
-  const std::string& getUserId()const
-  {
-    if(!userIdFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("userId");
-    }
-    return userId;
-  }
-  void setUserId(const std::string& argValue)
-  {
-    userId=argValue;
-    userIdFlag=true;
-  }
-  std::string& getUserIdRef()
-  {
-    userIdFlag=true;
-    return userId;
-  }
-  bool hasUserId()const
-  {
-    return userIdFlag;
-  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -143,11 +105,6 @@ public:
     //ds.writeInt32(seqNum);
     ds.writeTag(deliveryIdTag);
     ds.writeInt32LV(deliveryId); 
-    if(userIdFlag)
-    {
-      ds.writeTag(userIdTag);
-    ds.writeStrLV(userId); 
-    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -176,15 +133,6 @@ public:
           }
           deliveryId=ds.readInt32LV();
           deliveryIdFlag=true;
-        }break;
-        case userIdTag:
-        {
-          if(userIdFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("userId");
-          }
-          userId=ds.readStrLV();
-          userIdFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -230,16 +178,13 @@ protected:
   //static const int8_t versionMinor=0;
 
   static const int32_t deliveryIdTag=1;
-  static const int32_t userIdTag=2;
 
   int32_t seqNum;
   int connId;
 
   int32_t deliveryId;
-  std::string userId;
 
   bool deliveryIdFlag;
-  bool userIdFlag;
 };
 
 }

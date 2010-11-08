@@ -29,7 +29,6 @@ public:
     seqNum=0;
     deliveryIdFlag=false;
     infoFlag=false;
-    userIdFlag=false;
   }
  
   static int32_t messageGetTag()
@@ -69,15 +68,6 @@ public:
       rv+=info.toString();
       rv+=')';
     }
-    if(userIdFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="userId=";
-      rv+=userId;
-    }
     return rv;
   }
 
@@ -96,12 +86,6 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=info.length<DataStream>();
-    }
-    if(userIdFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(userId);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -150,28 +134,6 @@ public:
   {
     return infoFlag;
   }
-  const std::string& getUserId()const
-  {
-    if(!userIdFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("userId");
-    }
-    return userId;
-  }
-  void setUserId(const std::string& argValue)
-  {
-    userId=argValue;
-    userIdFlag=true;
-  }
-  std::string& getUserIdRef()
-  {
-    userIdFlag=true;
-    return userId;
-  }
-  bool hasUserId()const
-  {
-    return userIdFlag;
-  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -191,11 +153,6 @@ public:
     ds.writeTag(infoTag);
     ds.writeLength(info.length<DataStream>());
     info.serialize(ds);
-    if(userIdFlag)
-    {
-      ds.writeTag(userIdTag);
-    ds.writeStrLV(userId); 
-    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -234,15 +191,6 @@ public:
 
           ds.readLength();info.deserialize(ds);
           infoFlag=true;
-        }break;
-        case userIdTag:
-        {
-          if(userIdFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("userId");
-          }
-          userId=ds.readStrLV();
-          userIdFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -293,18 +241,15 @@ protected:
 
   static const int32_t deliveryIdTag=1;
   static const int32_t infoTag=2;
-  static const int32_t userIdTag=3;
 
   int32_t seqNum;
   int connId;
 
   int32_t deliveryId;
   DeliveryInfo info;
-  std::string userId;
 
   bool deliveryIdFlag;
   bool infoFlag;
-  bool userIdFlag;
 };
 
 }
