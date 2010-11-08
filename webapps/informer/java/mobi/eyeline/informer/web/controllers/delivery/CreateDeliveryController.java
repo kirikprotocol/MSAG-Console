@@ -12,7 +12,7 @@ public class CreateDeliveryController extends InformerController {
 
   public String next() {
     try {
-      CreateDeliveryPage page = activePage.process(getUserName(), getConfig());
+      CreateDeliveryPage page = activePage.process(getUserName(), getConfig(), getLocale());
       if(page != null) {
         activePage = page;
       }

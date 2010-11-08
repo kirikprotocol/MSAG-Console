@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+
+<ui:composition>
+
+  <tr:form usesUpload="true">
+
+    <eye:pageSubtitle value="#{msg['informer.deliveries.create.finish']}"/>
+
+
+    <eye:updatableContent updatePeriod="1" rendered="#{createDelivery.activePage.state == 1}" enabled="#{!createDelivery.activePage.finished}">
+
+      <eye:message level="warn" rendered="#{createDelivery.activePage.error != null}">
+        <h:outputText value="#{createDelivery.activePage.error}"/>
+      </eye:message>
+
+
+      <eye:buttons>
+        <eye:button rendered="#{createDelivery.activePage.finished and !createDelivery.activePage.stoped and createDelivery.activePage.error == null}">
+          <tr:commandLink text="#{msg['finish.button']}" action="#{createDelivery.next}"/>
+        </eye:button>
+        <eye:button rendered="#{createDelivery.activePage.finished}">
+          <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true"/>
+        </eye:button>
+        <eye:button rendered="#{!createDelivery.activePage.finished}">
+          <tr:commandLink text="#{msg['stop.button']}" action="#{createDelivery.activePage.stop}"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button rendered="#{createDelivery.activePage.renderBL}" >
+          <h:commandLink value="#{msg['informer.deliveries.download.blacklist']}">
+            <tr:fileDownloadActionListener method="#{createDelivery.activePage.download}" contentType="application/csv" filename="blacklist.csv"/>
+          </h:commandLink>
+        </eye:button>
+      </eye:buttons>
+
+      <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+        <h:outputText value="#{msg['processing.label']}"/>
+        <eye:progressBar current="#{createDelivery.activePage.current}" maximum="#{createDelivery.activePage.maximum}" width="500" height="20" />
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button rendered="#{createDelivery.activePage.finished and !createDelivery.activePage.stoped and createDelivery.activePage.error == null}">
+          <tr:commandLink text="#{msg['finish.button']}" action="#{createDelivery.next}"/>
+        </eye:button>
+        <eye:button rendered="#{createDelivery.activePage.finished}">
+          <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true"/>
+        </eye:button>
+        <eye:button rendered="#{!createDelivery.activePage.finished}">
+          <tr:commandLink text="#{msg['stop.button']}" action="#{createDelivery.activePage.stop}"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button rendered="#{createDelivery.activePage.renderBL}" >
+          <h:commandLink value="#{msg['informer.deliveries.download.blacklist']}">
+            <tr:fileDownloadActionListener method="#{createDelivery.activePage.download}" contentType="application/csv" filename="blacklist.csv"/>
+          </h:commandLink>
+        </eye:button>
+      </eye:buttons>
+
+    </eye:updatableContent>
+
+
+
+  </tr:form>
+
+</ui:composition>
+
+
+</html>

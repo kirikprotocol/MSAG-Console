@@ -12,6 +12,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Aleksandr Khalitov
@@ -31,7 +32,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     this.tmpFile = tmpFile;
   }
 
-  public CreateDeliveryPage process(String user, Configuration config) throws AdminException {
+  public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
     if(smsNotificationCheck) {
       if(delivery.getSmsNotificationAddress() == null) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.sms.incorrect");
@@ -90,7 +91,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       delivery.setEmailNotificationAddress(null);      
     }
 
-    return null;
+    return new ProcessDeliveryPage(delivery, tmpFile, config, locale, user);
   }
 
   public List<SelectItem> getUniqueDeliveryModes() {

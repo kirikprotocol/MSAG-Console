@@ -141,6 +141,10 @@ public class TestAdminContext extends AdminContext {
     File servicesDir = new File(appBaseDir, "services");
     File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
     File statDir = new File(appBaseDir, "stat");
+    workDir = new File(appBaseDir, "work");
+    if(!workDir.exists() && !workDir.mkdirs()) {
+      throw new InitException("Can't create work dir: "+workDir.getAbsolutePath());
+    }
     servicesDir.mkdirs();
     confDir.mkdirs();
     try {

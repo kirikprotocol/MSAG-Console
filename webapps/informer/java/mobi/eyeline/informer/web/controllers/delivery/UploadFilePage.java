@@ -9,6 +9,7 @@ import mobi.eyeline.informer.web.controllers.UploadController;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
 import java.io.*;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -29,7 +30,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     this.tmpFile = tmpFile;
   }
 
-  public CreateDeliveryPage process(String user, Configuration config) throws AdminException {
+  public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
     if(isStoped() || getError() != null) {
       return new StartPage();
     }

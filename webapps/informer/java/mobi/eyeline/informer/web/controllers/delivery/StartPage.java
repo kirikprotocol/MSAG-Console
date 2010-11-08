@@ -12,13 +12,12 @@ import mobi.eyeline.informer.web.config.Configuration;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Aleksandr Khalitov
  */
 public class StartPage implements CreateDeliveryPage{
-
-  private Delivery delivery;
 
   private boolean singleText;
 
@@ -69,7 +68,8 @@ public class StartPage implements CreateDeliveryPage{
     delivery.setActiveWeekDays(days.toArray(new Delivery.Day[days.size()]));     
   }
 
-  public CreateDeliveryPage process(String user, Configuration config) throws AdminException{
+  public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException{
+    Delivery delivery;
     if(singleText) {
       if(text == null || (text = text.trim()).length() == 0) {
         throw new DeliveryException("delivery_text_empty");
@@ -81,7 +81,7 @@ public class StartPage implements CreateDeliveryPage{
     }
     setDefaults(user, config, delivery);
 
-    return new UploadFilePage(delivery, new File("messages_"+System.currentTimeMillis()));//todo
+    return new UploadFilePage(delivery, new File(config.getWorkDir(),"messages_"+user+System.currentTimeMillis()));
   }
 
   public boolean isSingleText() {

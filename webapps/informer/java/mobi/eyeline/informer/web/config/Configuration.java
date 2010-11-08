@@ -12,6 +12,7 @@ import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -260,8 +261,12 @@ public class Configuration {
 
   }
 
-  public void createDelivery(String login, String password, Delivery delivery, DataSource msDataSource) throws AdminException {
+  public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
     context.createDelivery(login, password, delivery, msDataSource);
+  }
+
+  public void createSingleTextDelivery(String login, String password, Delivery delivery, DataSource<Address> msDataSource) throws AdminException {
+    context.createSingleTextDelivery(login, password, delivery, msDataSource);
   }
 
   public void startInformer(String user) throws AdminException {
@@ -332,6 +337,10 @@ public class Configuration {
 
   public Revision getLastRevision(ConfigType configType) {
     return lastRevisions.get(configType);
+  }
+
+  public File getWorkDir() {
+    return context.getWorkDir();
   }
 
   public enum ConfigType {

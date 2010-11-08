@@ -18,6 +18,8 @@
 
       <ui:include src="#{createDelivery.activePage.pageId == 'DELIVERY_CREATE_EDIT' ? 'createEdit.xhtml' : ''}"/>
 
+      <ui:include src="#{createDelivery.activePage.pageId == 'DELIVERY_CREATE_PROCESSING' ? 'createFinish.xhtml' : ''}"/>
+
   </ui:define>
 
 </ui:composition>

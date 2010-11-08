@@ -65,6 +65,8 @@ public class AdminContext {
 
   protected DeliveryManager deliveryManager;
 
+  protected File workDir;
+
 // delivery ->user ->region->smsc
 
   final private Lock integrityLock = new ReentrantLock();
@@ -82,6 +84,11 @@ public class AdminContext {
       File servicesDir = new File(appBaseDir, "services");
 
       File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
+
+      workDir = new File(appBaseDir, "work");
+      if(!workDir.exists() && !workDir.mkdirs()) {
+        throw new InitException("Can't create work dir: "+workDir.getAbsolutePath());
+      }
 
       switch (this.instType) {
         case SINGLE:
@@ -127,6 +134,10 @@ public class AdminContext {
     }catch (PersonalizationClientException e) {
       throw new InitException(e);
     }
+  }
+
+  public File getWorkDir() {
+    return new File(workDir.getAbsolutePath());
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
@@ -382,13 +393,25 @@ public class AdminContext {
     return new LinkedList<Daemon>();
   }
 
-  public void createDelivery(String login, String password, Delivery delivery, DataSource msDataSource) throws AdminException {
+  public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
     try{
       integrityLock.lock();
       if(usersManager.getUser(delivery.getOwner()) == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
       }
       deliveryManager.createDelivery(login, password, delivery, msDataSource);
+    }finally {
+      integrityLock.unlock();
+    }
+  }
+
+  public void createSingleTextDelivery(String login, String password, Delivery delivery, DataSource<Address> msDataSource) throws AdminException {
+    try{
+      integrityLock.lock();
+      if(usersManager.getUser(delivery.getOwner()) == null) {
+        throw new IntegrityException("user_not_exist", delivery.getOwner());
+      }
+      deliveryManager.createSingleTextDelivery(login, password, delivery, msDataSource);
     }finally {
       integrityLock.unlock();
     }
