@@ -59,8 +59,7 @@ public:
  
   static const type ciSmsc=1;
   static const type ciRegion=2;
-  static const type ciRetry=3;
-  static const type ciUser=4;
+  static const type ciUser=3;
   static bool isValidValue(const type& value)
   {
     return nameByValue.find(value)!=nameByValue.end();
@@ -110,10 +109,8 @@ protected:
       valueByName.insert(std::map<std::string,type>::value_type("ciSmsc",1));
       nameByValue.insert(std::map<type,std::string>::value_type(2,"ciRegion"));
       valueByName.insert(std::map<std::string,type>::value_type("ciRegion",2));
-      nameByValue.insert(std::map<type,std::string>::value_type(3,"ciRetry"));
-      valueByName.insert(std::map<std::string,type>::value_type("ciRetry",3));
-      nameByValue.insert(std::map<type,std::string>::value_type(4,"ciUser"));
-      valueByName.insert(std::map<std::string,type>::value_type("ciUser",4));
+      nameByValue.insert(std::map<type,std::string>::value_type(3,"ciUser"));
+      valueByName.insert(std::map<std::string,type>::value_type("ciUser",3));
     }
   };
   static StaticInitializer staticInitializer;
