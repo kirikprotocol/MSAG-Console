@@ -4,11 +4,6 @@
 #include "informer/newstore/InputStorage.h"
 #include "informer/io/DirListing.h"
 #include "system/status.h"
-#include "util/config/Config.h"
-#include "util/config/ConfString.h"
-
-using smsc::util::config::Config;
-using smsc::util::config::ConfString;
 
 namespace {
 
@@ -292,7 +287,7 @@ public:
             sprintf(buf,"statistics/%04u.%02u.%02u/msg%02u.log",
                     now.tm_year+1900, now.tm_mon+1,
                     now.tm_mday, now.tm_hour);
-            fg.create((mgr_.cs_.getStorePath()+buf).c_str(),true);
+            fg.create((mgr_.cs_.getStorePath()+buf).c_str(),0666,true);
             fg.seek(0,SEEK_END);
             if (fg.getPos() == 0) {
                 const char* header = "# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
@@ -410,7 +405,7 @@ void DeliveryMgr::init()
         dlvs.clear();
         smsc_log_debug(log_,"listing delivery chunk '%s'",buf.get());
         makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), dlvs);
-        const size_t buflen = strlen(buf.get());
+//        const size_t buflen = strlen(buf.get());
         for ( std::vector<std::string>::iterator idlv = dlvs.begin();
               idlv != dlvs.end();
               ++idlv ) {
@@ -418,13 +413,8 @@ void DeliveryMgr::init()
             const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
             try {
 
-                // making a filepath
-                sprintf(buf.get()+buflen,"%u/config.xml",dlvId);
-
-                std::auto_ptr<Config> cfg(Config::createFromFile(buf.get()));
-
                 DeliveryInfoData data;
-                readDeliveryInfoData( dlvId, *cfg.get(), data );
+                DeliveryImpl::readDeliveryInfoData( cs_, dlvId, data );
 
                 UserInfoPtr user(core_.getUserInfo(data.owner.c_str()));
                 if (!user.get()) {
@@ -697,7 +687,7 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
         if ( logStateTime_ < fileTime ) {
             // need to replace cur file
             FileGuard fg;
-            fg.create( (cs_.getStorePath() + fnbuf).c_str(), true );
+            fg.create( (cs_.getStorePath() + fnbuf).c_str(), 0666, true );
             fg.seek(0,SEEK_END);
             if (fg.getPos() == 0) {
                 const char* header = "# MINSEC,STATE,DLVID,USER,PLAN\n";
@@ -768,94 +758,6 @@ dlvid_type DeliveryMgr::getNextDlvId()
         if (!iter) return nextDlvId_;
     }
     throw InfosmeException(EXC_SYSTEM,"no more free delivery ids, try again");
-}
-
-
-void DeliveryMgr::readDeliveryInfoData( dlvid_type                        dlvId,
-                                        const smsc::util::config::Config& config,
-                                        DeliveryInfoData&                 data )
-{
-    try {
-        data.name = ConfString(config.getString("name")).str();
-        data.priority = config.getInt("priority");
-        try {
-            data.transactionMode = config.getBool("transactionMode");
-        } catch (std::exception& ) {
-            data.transactionMode = false;
-        }
-        data.startDate = ConfString(config.getString("startDate")).str();
-        data.endDate = ConfString(config.getString("endDate")).str();
-        try {
-            data.activePeriodStart = ConfString(config.getString("activePeriodStart")).str();
-        } catch (std::exception& ) {
-            data.activePeriodStart = "";
-        }
-        try {
-            data.activePeriodEnd = ConfString(config.getString("activePeriodEnd")).str();
-        } catch (std::exception&) {
-            data.activePeriodEnd = "";
-        }
-        data.activeWeekDays.clear();
-        try {
-            std::string awd = ConfString(config.getString("activeWeekDays")).str();
-            std::vector< std::string > res;
-            for ( size_t start = 0; start < awd.size(); ++start ) {
-                while ( start < awd.size() && awd[start] == ' ' ) {
-                    ++start;
-                }
-                if ( start >= awd.size() ) { break; }
-                size_t comma = awd.find(',',start);
-                if ( comma == std::string::npos ) {
-                    comma = awd.size();
-                }
-                size_t end = comma - 1;
-                while ( end > start && awd[end] == ' ') {
-                    --end;
-                }
-                if (start < end) {
-                    res.push_back( std::string(awd, start, end-start) );
-                }
-                start = comma + 1;
-            }
-            data.activeWeekDays = res;
-        } catch (std::exception&) {
-        }
-
-        /*
-        try {
-            data.validityDate = ConfString(config.getString("validityDate")).str();
-        } catch (std::exception&) {
-            data.validityDate = "";
-        }
-        */
-        try {
-            data.validityPeriod = ConfString(config.getString("validityPeriod")).str();
-        } catch (std::exception&) {
-            data.validityPeriod = "";
-        }
-        data.flash = config.getBool("flash");
-        data.useDataSm = config.getBool("useDataSm");
-        ConfString dlvMode(config.getString("deliveryMode"));
-        if ( dlvMode.str() == "sms" ) {
-            data.deliveryMode = DLVMODE_SMS;
-        } else if ( dlvMode.str() == "ussdpush" ) {
-            data.deliveryMode = DLVMODE_USSDPUSH;
-        } else if ( dlvMode.str() == "ussdpushvlr" ) {
-            data.deliveryMode = DLVMODE_USSDPUSHVLR;
-        } else {
-            throw InfosmeException(EXC_CONFIG,"unknown delivery mode: '%s'",dlvMode.c_str());
-        }
-        data.owner = ConfString(config.getString("owner")).str();
-        data.retryOnFail = config.getBool("retryOnFail");
-        data.retryPolicy = ConfString(config.getString("retryPolicy")).str();
-        data.replaceMessage = config.getBool("replaceMessage");
-        data.svcType = ConfString(config.getString("svcType")).str();
-        data.userData = ConfString(config.getString("userData")).str();
-        data.sourceAddress = ConfString(config.getString("sourceAddress")).str();
-
-    } catch (std::exception& e) {
-        throw InfosmeException(EXC_CONFIG,"D=%u config: %s",dlvId,e.what());
-    }
 }
 
 }

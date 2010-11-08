@@ -234,7 +234,7 @@ void StoreJournal::init( Reader& jr )
     readRecordsFrom(jpath+".old",jr);
     readRecordsFrom(jpath,jr);
     if (jr.isStopping()) return;
-    fg_.create(jpath.c_str(),true,true);
+    fg_.create(jpath.c_str(),0666,true,true);
     if ( 0 == fg_.seek(0,SEEK_END) ) {
         // new file
         version_ = defaultVersion;
@@ -259,7 +259,7 @@ void StoreJournal::rollOver()
         throw ErrnoException(errno,"rename('%s')",jpath.c_str());
     }
     FileGuard fg;
-    fg.create(jpath.c_str());
+    fg.create(jpath.c_str(),0666);
     unsigned serial = serial_;
     do {
         ++serial;

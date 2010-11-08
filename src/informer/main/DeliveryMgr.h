@@ -10,14 +10,6 @@
 #include "informer/opstore/StoreJournal.h"
 #include "informer/sender/ReceiptProcessor.h"
 
-namespace smsc {
-namespace util {
-namespace config {
-class Config;
-}
-}
-}
-
 namespace eyeline {
 namespace informer {
 
@@ -88,10 +80,6 @@ protected:
 
     dlvid_type getNextDlvId();
     
-    void readDeliveryInfoData( dlvid_type                        dlvId,
-                               const smsc::util::config::Config& config,
-                               DeliveryInfoData&                 data );
-
 private:
     smsc::logger::Logger*                      log_;
     InfosmeCoreV1&                             core_;

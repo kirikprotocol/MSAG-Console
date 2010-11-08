@@ -270,7 +270,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
         ro.regionId = regId;
         getRecord(ro);
         FileGuard fg;
-        fg.create(makeFilePath(regId,ro.wfn).c_str());
+        fg.create(makeFilePath(regId,ro.wfn).c_str(),0666);
         fg.seek(ro.woff);
         msgid_type maxMsgId = 0;
         for ( MsgIter i = begin; i != end; ++i ) {
@@ -284,7 +284,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
                                unsigned(regId),
                                unsigned(getDlvId()),
                                fname.c_str() );
-                fg.create(fname.c_str(),true,true);
+                fg.create(fname.c_str(),0666,true,true);
                 // fg.seek(ro.woff);
             }
             // writing to a file

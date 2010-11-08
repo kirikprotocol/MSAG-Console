@@ -32,7 +32,7 @@ public:
 
     const UserInfo& getUserInfo() const { return userInfo_; }
 
-    void updateDlvInfo( const DeliveryInfoData& info );
+    virtual void updateDlvInfo( const DeliveryInfoData& data ) = 0;
 
     inline DlvState getState( msgtime_type* planTime = 0 ) const {
         if (planTime) *planTime = planTime_;

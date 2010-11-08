@@ -48,14 +48,19 @@ struct DeliveryInfoData
 
 class DeliveryInfo
 {
-    friend class DeliveryMgr;
 public:
+    // constructor from file system
+    DeliveryInfo( const CommonSettings&   cs,
+                  dlvid_type              dlvId,
+                  const DeliveryInfoData& data );
+
     const CommonSettings& getCS() const { return cs_; }
 
     dlvid_type getDlvId() const { return dlvId_; }
 
     void update( const DeliveryInfoData& data );
-    const DeliveryInfoData& getDeliveryData()const
+
+    const DeliveryInfoData& getDeliveryData() const
     {
       return data_;
     }
@@ -109,16 +114,6 @@ public:
     // ============ end of delivery settings ==========================
 
 protected:
-    // read delivery info from filesystem
-    // void readDeliveryInfoData( dlvid_type        dlvId,
-    // const smsc::util::config::Config& config,
-    // DeliveryInfoData& data );
-
-    // constructor from file system
-    DeliveryInfo( const CommonSettings&   cs,
-                  dlvid_type              dlvId,
-                  const DeliveryInfoData& data );
-
     /// update cached fields from data
     void updateData( const DeliveryInfoData& data,
                      const DeliveryInfoData* old );

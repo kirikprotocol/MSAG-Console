@@ -4,6 +4,11 @@
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/UserInfo.h"
 #include "informer/data/BindSignal.h"
+#include "util/config/Config.h"
+#include "util/config/ConfString.h"
+
+using smsc::util::config::Config;
+using smsc::util::config::ConfString;
 
 #ifdef sun
 namespace {
@@ -23,6 +28,93 @@ void* memrchr(const void* s, int c, size_t n)
 namespace eyeline {
 namespace informer {
 
+void DeliveryImpl::readDeliveryInfoData( const CommonSettings& cs,
+                                         dlvid_type            dlvId,
+                                         DeliveryInfoData&     data )
+{
+    try {
+        char buf[100];
+        sprintf(makeDeliveryPath(dlvId,buf),"/config.xml");
+
+        std::auto_ptr<Config> cfg(Config::createFromFile((cs.getStorePath()+buf).c_str()));
+        const Config& config = *cfg.get();
+
+        data.name = ConfString(config.getString("name")).str();
+        data.priority = config.getInt("priority");
+        try {
+            data.transactionMode = config.getBool("transactionMode");
+        } catch (std::exception& ) {
+            data.transactionMode = false;
+        }
+        data.startDate = ConfString(config.getString("startDate")).str();
+        data.endDate = ConfString(config.getString("endDate")).str();
+        try {
+            data.activePeriodStart = ConfString(config.getString("activePeriodStart")).str();
+        } catch (std::exception& ) {
+            data.activePeriodStart = "";
+        }
+        try {
+            data.activePeriodEnd = ConfString(config.getString("activePeriodEnd")).str();
+        } catch (std::exception&) {
+            data.activePeriodEnd = "";
+        }
+        data.activeWeekDays.clear();
+        try {
+            std::string awd = ConfString(config.getString("activeWeekDays")).str();
+            std::vector< std::string > res;
+            for ( size_t start = 0; start < awd.size(); ++start ) {
+                while ( start < awd.size() && awd[start] == ' ' ) {
+                    ++start;
+                }
+                if ( start >= awd.size() ) { break; }
+                size_t comma = awd.find(',',start);
+                if ( comma == std::string::npos ) {
+                    comma = awd.size();
+                }
+                size_t end = comma - 1;
+                while ( end > start && awd[end] == ' ') {
+                    --end;
+                }
+                if (start < end) {
+                    res.push_back( std::string(awd, start, end-start) );
+                }
+                start = comma + 1;
+            }
+            data.activeWeekDays = res;
+        } catch (std::exception&) {
+        }
+
+        try {
+            data.validityPeriod = ConfString(config.getString("validityPeriod")).str();
+        } catch (std::exception&) {
+            data.validityPeriod = "";
+        }
+        data.flash = config.getBool("flash");
+        data.useDataSm = config.getBool("useDataSm");
+        ConfString dlvMode(config.getString("deliveryMode"));
+        if ( dlvMode.str() == "sms" ) {
+            data.deliveryMode = DLVMODE_SMS;
+        } else if ( dlvMode.str() == "ussdpush" ) {
+            data.deliveryMode = DLVMODE_USSDPUSH;
+        } else if ( dlvMode.str() == "ussdpushvlr" ) {
+            data.deliveryMode = DLVMODE_USSDPUSHVLR;
+        } else {
+            throw InfosmeException(EXC_CONFIG,"unknown delivery mode: '%s'",dlvMode.c_str());
+        }
+        data.owner = ConfString(config.getString("owner")).str();
+        data.retryOnFail = config.getBool("retryOnFail");
+        data.retryPolicy = ConfString(config.getString("retryPolicy")).str();
+        data.replaceMessage = config.getBool("replaceMessage");
+        data.svcType = ConfString(config.getString("svcType")).str();
+        data.userData = ConfString(config.getString("userData")).str();
+        data.sourceAddress = ConfString(config.getString("sourceAddress")).str();
+
+    } catch (std::exception& e) {
+        throw InfosmeException(EXC_CONFIG,"D=%u config: %s",dlvId,e.what());
+    }
+}
+
+
 DeliveryImpl::DeliveryImpl( DeliveryInfo*               dlvInfo,
                             UserInfo&                   userInfo,
                             StoreJournal&               journal,
@@ -35,6 +127,7 @@ storeJournal_(journal)
     state_ = state;
     planTime_ = planTime;
     const dlvid_type dlvId = dlvInfo_->getDlvId();
+    writeDeliveryInfoData();
     smsc_log_info(log_,"ctor D=%u done",dlvId);
 }
 
@@ -122,118 +215,13 @@ DlvState DeliveryImpl::readState( const CommonSettings& cs,
 }
 
 
-/*
-msgtime_type DeliveryImpl::initState()
+void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
 {
-    FileGuard fg;
-    char buf[200];
-    DlvState state = DLVSTATE_PAUSED;
-    msgtime_type planTime = 0;
-    const dlvid_type dlvId = dlvInfo_->getDlvId();
-    bool hasBeenRead = false;
-    do {
-        MutexGuard mg(cacheLock_);
-        try {
-            sprintf(makeDeliveryPath(dlvId,buf),"status.log");
-            fg.ropen((dlvInfo_->getCS().getStorePath()+buf).c_str());
-        } catch ( InfosmeException& e ) {
-            smsc_log_debug(log_,"D=%u cannot open status file: %s", dlvId, e.what());
-            break;
-        }
-
-        try {
-            struct stat st;
-            const size_t pos = fg.getStat(st).st_size > sizeof(buf) ?
-                st.st_size - sizeof(buf) : 0;
-            if (fg.seek(pos) != pos) {
-                smsc_log_debug(log_,"D=%u cannot seek status file to %u",dlvId,unsigned(pos));
-                break;
-            }
-        } catch ( ErrnoException& e ) {
-            smsc_log_debug(log_,"D=%u cannot seek status file: %s",dlvId,e.what());
-            break;
-        }
-
-        size_t wasread = fg.read(buf,sizeof(buf));
-        if (wasread==0) {
-            smsc_log_debug(log_,"D=%u status file is empty",dlvId);
-            break;
-        }
-
-        char* ptr = reinterpret_cast<char*>(const_cast<void*>(::memrchr(buf,'\n',wasread)));
-        if (!ptr) {
-            smsc_log_warn(log_,"D=%u status record is not terminated",dlvId);
-            break;
-        }
-
-        if (size_t(ptr - buf)+1 != wasread) {
-            smsc_log_warn(log_,"D=%u status file is not terminated",dlvId);
-            break;
-        }
-
-        *ptr = '\0';
-        --wasread;
-        assert(wasread);
-        ptr = reinterpret_cast<char*>(const_cast<void*>(::memrchr(buf,'\n',wasread)));
-        if (!ptr) { ptr = buf; }
-        else { ++ptr; }
-
-        // scanning record
-        char cstate;
-        DeliveryStats ds;
-        ds.clear();
-        ulonglong ymdTime;
-        unsigned offset;
-        int shift = 0;
-        sscanf(ptr,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u%n",
-               &cstate,&ymdTime,
-               &offset,
-               &ds.totalMessages, &ds.procMessages, &ds.sentMessages,
-               &ds.retryMessages, &ds.dlvdMessages, &ds.failedMessages,
-               &ds.expiredMessages, &ds.dlvdSms, &ds.failedSms,
-               &ds.expiredSms, &shift );
-        if (!shift) {
-            smsc_log_warn(log_,"could not parse status record");
-            break;
-        }
-
-        switch (cstate) {
-        case 'P' : {
-            state = DLVSTATE_PLANNED;
-            planTime = ymdToMsgTime(ymdTime) + offset;
-            break;
-        }
-        case 'S' : state = DLVSTATE_PAUSED; break;
-        case 'A' : state = DLVSTATE_ACTIVE; break;
-        case 'F' : state = DLVSTATE_FINISHED; break;
-        case 'C' : state = DLVSTATE_CANCELLED; break;
-        default:
-            smsc_log_warn(log_,"D=%u cannot parse state",dlvId);
-            state = DLVSTATE_PAUSED;
-        }
-
-        // FIXME: check activity log stats
-        DeliveryStats ads;
-        activityLog_.getStats(ads);
-        if ( ads != ds ) {
-            smsc_log_warn(log_,"D=%u: FIXME: stats discrepance act(status): %u(%u)/%u(%u)/%u(%u)/%u(%u)/%u(%u)/%u(%u)/%u(%u)",
-                          dlvId,
-                          ads.totalMessages, ds.totalMessages,
-                          ads.procMessages,  ds.procMessages,
-                          ads.sentMessages,  ds.sentMessages,
-                          ads.retryMessages, ds.retryMessages,
-                          ads.dlvdMessages,  ds.dlvdMessages,
-                          ads.failedMessages, ds.failedMessages,
-                          ads.expiredMessages, ds.expiredMessages );
-        }
-        hasBeenRead = true;
-        
-    } while (false);
-
-    setState(state,planTime);
-    return planTime_;
+    // should we unbind first?
+    MutexGuard mg(cacheLock_);
+    dlvInfo_->update( data );
+    writeDeliveryInfoData();
 }
- */
 
 
 void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
@@ -284,7 +272,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         char buf[200];
         sprintf(makeDeliveryPath(dlvId,buf),"status.log");
         FileGuard fg;
-        fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),true);
+        fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),0666,true);
         fg.seek(0,SEEK_END);
         if (fg.getPos()==0) {
             const char* header = "# TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
@@ -473,6 +461,82 @@ void DeliveryImpl::checkFinalize()
         }
     }
 }
+
+
+void DeliveryImpl::writeDeliveryInfoData()
+{
+    const DeliveryInfoData& data = dlvInfo_->getDeliveryData();
+    Config config;
+    config.setString("name",data.name.c_str());
+    config.setInt("priority",data.priority);
+    config.setBool("transactionMode",data.transactionMode);
+    if (!data.startDate.empty()) { config.setString("startDate",data.startDate.c_str()); }
+    if (!data.endDate.empty()) { config.setString("endDate",data.endDate.c_str()); }
+    if (!data.activePeriodStart.empty()) {
+        config.setString("activePeriodStart",data.activePeriodStart.c_str());
+    }
+    if (!data.activePeriodEnd.empty()) {
+        config.setString("activePeriodEnd",data.activePeriodEnd.c_str());
+    }
+    if (!data.activeWeekDays.empty()) {
+        std::string awd = data.activeWeekDays.front();
+        std::vector< std::string >::const_iterator i = data.activeWeekDays.begin();
+        for ( ++i; i != data.activeWeekDays.end(); ++i ) {
+            awd += ',';
+            awd += *i;
+        }
+        config.setString("activeWeekDays",awd.c_str());
+    }
+    if (!data.validityPeriod.empty()) {
+        config.setString("validityPeriod",data.validityPeriod.c_str());
+    }
+    config.setBool("flash",data.flash);
+    config.setBool("useDataSm",data.useDataSm);
+    {
+        const char* what;
+        switch (data.deliveryMode) {
+        case DLVMODE_SMS : what = "sms"; break;
+        case DLVMODE_USSDPUSH : what = "ussdpush"; break;
+        case DLVMODE_USSDPUSHVLR : what = "ussdpushvlr"; break;
+        default: throw InfosmeException(EXC_LOGICERROR,"invalid dlvmode: %d",data.deliveryMode); break;
+        }
+        config.setString("deliveryMode",what);
+    }
+    config.setString("owner",userInfo_.getUserId());
+    config.setBool("retryOnFail",data.retryOnFail);
+    if (!data.retryPolicy.empty()) {
+        config.setString("retryPolicy",data.retryPolicy.c_str());
+    }
+    config.setBool("replaceMessage",data.replaceMessage);
+    if (!data.svcType.empty()) {
+        config.setString("svcType",data.svcType.c_str());
+    }
+    if (!data.userData.empty()) {
+        config.setString("userData",data.userData.c_str());
+    }
+    if (!data.sourceAddress.empty()) {
+        config.setString("sourceAddress",data.sourceAddress.c_str());
+    }
+
+    char buf[100];
+    const dlvid_type dlvId = getDlvId();
+    sprintf(makeDeliveryPath(dlvId,buf),"config.xml");
+
+    const std::string fpo = dlvInfo_->getCS().getStorePath() + buf;
+    const std::string fpn = fpo + ".new";
+    try {
+        config.saveToFile( fpn.c_str(), "utf-8" );
+    } catch ( std::exception& fe ) {
+        FileGuard fg;
+        fg.create(fpn.c_str(),0666,true,true);
+        fg.close();
+        config.saveToFile( fpn.c_str(), "utf-8" );
+    }
+    if ( -1 == rename( fpn.c_str(), fpo.c_str() ) ) {
+        throw ErrnoException(errno,"rename('%s')",fpo.c_str());
+    }
+}
+
 
 }
 }

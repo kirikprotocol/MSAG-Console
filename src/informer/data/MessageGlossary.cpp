@@ -204,7 +204,7 @@ void MessageGlossary::setTexts( const std::string&  storePath,
     strcat(makeDeliveryPath(dlvId,buf.get()),"glossary.txt");
     FileGuard fg;
     try {
-        fg.create((storePath+buf.get()).c_str(),true);
+        fg.create((storePath+buf.get()).c_str(),0666,true);
     } catch (std::exception& e) {
         registerFailed(texts,texts.end());
         throw InfosmeException(EXC_SYSTEM,"D=%u failed to create glossary file: %s",dlvId,e.what());
@@ -375,7 +375,7 @@ void MessageGlossary::readGlossaryFailed( const std::string& storePath,
     char buf[100];
     strcat(makeDeliveryPath(dlvId,buf),"glossary.txt");
     FileGuard fg;
-    fg.create((storePath+buf).c_str());
+    fg.create((storePath+buf).c_str(),0666);
     fg.truncate(trunc);
 }
 

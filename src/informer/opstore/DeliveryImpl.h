@@ -4,6 +4,14 @@
 #include "informer/data/Delivery.h"
 #include "RegionalStorage.h"
 
+namespace smsc {
+namespace util {
+namespace config {
+class Config;
+}
+}
+}
+
 namespace eyeline {
 namespace informer {
 
@@ -14,6 +22,10 @@ class DeliveryImpl : public Delivery
     friend class RegionalStorage;
 
 public:
+    static void readDeliveryInfoData( const CommonSettings& cs,
+                                      dlvid_type            dlvId,
+                                      DeliveryInfoData&     data );
+
     DeliveryImpl( DeliveryInfo*               dlvInfo,
                   UserInfo&                   userInfo,
                   StoreJournal&               journal,
@@ -27,6 +39,8 @@ public:
     static DlvState readState( const CommonSettings& cs,
                                dlvid_type            dlvId,
                                msgtime_type&         planTime );
+
+    virtual void updateDlvInfo( const DeliveryInfoData& info );
 
     /// set delivery state.
     /// NOTE: must be invoked from core, with proper preparation.
@@ -67,8 +81,11 @@ public:
                             std::vector<regionid_type>& emptyRegs );
 
 
+private:
     /// check if all regional storages is empty, and no messages in retries.
     void checkFinalize();
+
+    void writeDeliveryInfoData();
 
 private:
     typedef smsc::core::buffers::IntHash< RegionalStoragePtr > StoreHash;

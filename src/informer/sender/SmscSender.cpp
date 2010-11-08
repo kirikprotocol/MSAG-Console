@@ -82,7 +82,7 @@ public:
         std::string jpath(makePath());
         readRecordsFrom(jpath+".old");
         readRecordsFrom(jpath);
-        fg_.create(jpath.c_str(),true,true);
+        fg_.create(jpath.c_str(),0666,true,true);
         fg_.seek(0,SEEK_END);
     }
 
@@ -131,7 +131,7 @@ protected:
             throw ErrnoException(errno,"rename('%s')",jpath.c_str());
         }
         FileGuard fg;
-        fg.create(jpath.c_str());
+        fg.create(jpath.c_str(),0666);
         {
             smsc::core::synchronization::MutexGuard mg(lock_);
             fg_.swap(fg);

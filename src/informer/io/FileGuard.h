@@ -33,7 +33,10 @@ public:
 
     void ropen( const char* fn );
 
-    void create( const char* fn, bool mkdirs = false, bool truncate = false );
+    void create( const char* fn,
+                 mode_t      mode = 0666,
+                 bool        mkdirs = false,
+                 bool        truncate = false );
 
     size_t seek( off_t pos, int whence = SEEK_SET );
 

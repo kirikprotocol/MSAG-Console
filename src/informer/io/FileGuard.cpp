@@ -23,7 +23,7 @@ void FileGuard::ropen( const char* fn )
 }
 
 
-void FileGuard::create( const char* fn, bool mkdirs, bool truncate )
+void FileGuard::create( const char* fn, mode_t mode, bool mkdirs, bool truncate )
 {
     // create file, open for writing
     close();
@@ -32,7 +32,7 @@ void FileGuard::create( const char* fn, bool mkdirs, bool truncate )
         int flags = O_WRONLY|O_CREAT;
         if (truncate) flags |= O_TRUNC;
         do {
-            fd_ = open(fn,flags,0777);
+            fd_ = open(fn,flags,mode);
             if (fd_!= -1) break; // ok
             if (!mkdirs) break;  // dir creation is not allowed
             if (errno!=ENOENT) break; // other problems
@@ -49,7 +49,7 @@ void FileGuard::create( const char* fn, bool mkdirs, bool truncate )
         } while (true);
 
         if (fd_==-1) {
-            throw ErrnoException(errno,"create('%s',mkdirs=%d,trunc=%d)",fn,mkdirs,truncate);
+            throw ErrnoException(errno,"create('%s',mode=%o,mkdirs=%d,trunc=%d)",fn,mode,mkdirs,truncate);
         }
     }
 }

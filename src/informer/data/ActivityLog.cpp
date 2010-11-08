@@ -260,7 +260,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                     now.tm_year+1900, now.tm_mon+1, now.tm_mday,
                     now.tm_hour, now.tm_min );
             fg_.create((info_.getCS().getStorePath()+fnbuf).c_str(),
-                       true );
+                       0666, true );
             createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
             fg_.seek(0, SEEK_END);
             if (fg_.getPos() == 0) {
