@@ -26,46 +26,48 @@ public class StartPage implements CreateDeliveryPage{
   private static void setDefaults(String user, Configuration config, Delivery delivery) throws AdminException {
     delivery.setOwner(user);
     User u = config.getUser(user);
-    delivery.setSourceAddress(u.getSourceAddr());
-    delivery.setEmailNotificationAddress(u.getEmail());
-    if(u.getPhone() != null) {
-      delivery.setSmsNotificationAddress(new Address(u.getPhone()));
-    }
-    if(u.getDeliveryType() != null) {
-      switch (u.getDeliveryType()) {
-        case SMS:
-          delivery.setDeliveryMode(DeliveryMode.SMS);
-          break;
-        case USSD_PUSH:
-          delivery.setDeliveryMode(DeliveryMode.USSD_PUSH);
-          delivery.setTransactionMode(true);
-          break;
-        case USSD_PUSH_VIA_VLR:
-          delivery.setDeliveryMode(DeliveryMode.USSD_PUSH_VLR);
-          delivery.setTransactionMode(true);
-          break;
+    try{
+      delivery.setSourceAddress(u.getSourceAddr());
+      delivery.setEmailNotificationAddress(u.getEmail());
+      if(u.getPhone() != null) {
+        delivery.setSmsNotificationAddress(new Address(u.getPhone()));
       }
-    }
-    if(u.getPolicyId() != null) {
-      delivery.setRetryPolicy(u.getPolicyId());
-      delivery.setRetryOnFail(true);
-    }
-    delivery.setPriority(u.getPriority());
-    Time t;
-    if((t = u.getDeliveryStartTime()) != null) {
-      delivery.setActivePeriodStart(t.getTimeDate());
-    }
-    if((t = u.getDeliveryEndTime()) != null) {
-      delivery.setActivePeriodEnd(t.getTimeDate());
-    }
-    delivery.setValidityPeriod(Integer.toString(u.getValidHours()));
-    List<Delivery.Day> days = new ArrayList<Delivery.Day>(7);
-    if(u.getDeliveryDays() != null) {
-      for(Integer i : u.getDeliveryDays()) {
-        days.add(Delivery.Day.valueOf(i == 0 ? 7 : i));
+      if(u.getDeliveryType() != null) {
+        switch (u.getDeliveryType()) {
+          case SMS:
+            delivery.setDeliveryMode(DeliveryMode.SMS);
+            break;
+          case USSD_PUSH:
+            delivery.setDeliveryMode(DeliveryMode.USSD_PUSH);
+            delivery.setTransactionMode(true);
+            break;
+          case USSD_PUSH_VIA_VLR:
+            delivery.setDeliveryMode(DeliveryMode.USSD_PUSH_VLR);
+            delivery.setTransactionMode(true);
+            break;
+        }
       }
-    }
-    delivery.setActiveWeekDays(days.toArray(new Delivery.Day[days.size()]));     
+      if(u.getPolicyId() != null) {
+        delivery.setRetryPolicy(u.getPolicyId());
+        delivery.setRetryOnFail(true);
+      }
+      delivery.setPriority(u.getPriority());
+      Time t;
+      if((t = u.getDeliveryStartTime()) != null) {
+        delivery.setActivePeriodStart(t.getTimeDate());
+      }
+      if((t = u.getDeliveryEndTime()) != null) {
+        delivery.setActivePeriodEnd(t.getTimeDate());
+      }
+      delivery.setValidityPeriod(Integer.toString(u.getValidHours()));
+      if(u.getDeliveryDays() != null && !u.getDeliveryDays().isEmpty()) {
+        List<Delivery.Day> days = new ArrayList<Delivery.Day>(7);
+        for(Integer i : u.getDeliveryDays()) {
+          days.add(Delivery.Day.valueOf(i == 0 ? 7 : i));
+        }
+        delivery.setActiveWeekDays(days.toArray(new Delivery.Day[days.size()]));
+      }
+    }catch (AdminException e){}
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException{
