@@ -670,9 +670,9 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
                                      ulonglong       ymdTime,
                                      const Delivery& dlv )
 {
+    const dlvid_type dlvId = dlv.getDlvId();
     msgtime_type planTime;
     const DlvState newState = dlv.getState(&planTime);
-    const dlvid_type dlvId = dlv.getDlvId();
 
     // prepare the buffer to write state change
     char buf[100];

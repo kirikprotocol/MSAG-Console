@@ -363,6 +363,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             sms.setDestinationAddress(da);
             sms.setArchivationRequested(false);
             sms.setDeliveryReport(1);
+            // FIXME: apply activity period
             sms.setValidTime(msg.lastTime + msg.timeLeft);
             sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                                 info.isReplaceIfPresent() ? 1 : 0 );
@@ -464,6 +465,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             if (info.useDataSm()) {
                 msgtime_type validityDate = msg.timeLeft + msg.lastTime;
                 validityDate = ((validityDate <= now) ? 0 : (validityDate-now));
+                // FIXME: apply activity period
                 sms.setIntProperty( smsc::sms::Tag::SMPP_QOS_TIME_TO_LIVE, validityDate );
                 PduDataSm dataSm;
                 dataSm.get_header().set_sequenceNumber(seqNum);

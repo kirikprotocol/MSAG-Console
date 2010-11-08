@@ -420,13 +420,11 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
 
 void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
                                        ulonglong       ymdTime,
+                                       BindSignal&     bs,
                                        const Delivery& dlv )
 {
-    BindSignal bs;
-    bs.dlvId = dlv.getDlvId();
-    dlv.getRegionList(bs.regIds);
-    bs.bind = dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
-    bindDeliveryRegions(bs);
+    dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
+    deliveryRegions( bs.dlvId, bs.regIds, bs.bind );
 }
 
 

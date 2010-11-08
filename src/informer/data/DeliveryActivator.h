@@ -11,6 +11,7 @@ class RegionFinder;
 class InputTransferTask;
 class ResendTransferTask;
 class Delivery;
+class BindSignal;
 
 /// an interface for applying some activities on deliveries.
 class DeliveryActivator
@@ -35,8 +36,9 @@ public:
 
     /// finish state change.
     /// NOTE: should be invoked from delivery itself only!
-    virtual void finishStateChange( msgtime_type currentTime,
-                                    ulonglong    ymdTime,
+    virtual void finishStateChange( msgtime_type       currentTime,
+                                    ulonglong          ymdTime,
+                                    BindSignal&        bs,
                                     const Delivery&    dlv ) = 0;
 };
 

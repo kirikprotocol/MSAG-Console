@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 #include <map>
-#include "BindSignal.h"
 #include "RegionFinderV1.h"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
@@ -15,6 +14,7 @@
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/InfosmeCore.h"
+#include "informer/data/BindSignal.h"
 #include "logger/Logger.h"
 
 namespace smsc {
@@ -107,6 +107,7 @@ public:
 
     virtual void finishStateChange( msgtime_type    currentTime,
                                     ulonglong       ymdTime,
+                                    BindSignal&     bs,
                                     const Delivery& dlv );
 
     // --- end of delivery activator iface

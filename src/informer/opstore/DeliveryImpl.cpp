@@ -3,6 +3,7 @@
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/UserInfo.h"
+#include "informer/data/BindSignal.h"
 
 #ifdef sun
 namespace {
@@ -308,7 +309,19 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.expiredSms );
         assert(buflen>0);
         fg.write(buf,buflen);
-        source_->getDlvActivator().finishStateChange(now, ymd, *this );
+        BindSignal bs;
+        bs.dlvId = dlvId;
+        bs.bind = (newState == DLVSTATE_ACTIVE);
+        {
+            bs.regIds.reserve(storages_.Count());
+            int regId;
+            RegionalStoragePtr* ptr;
+            for (smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
+                 i.Next(regId,ptr); ) {
+                bs.regIds.push_back(regionid_type(regId));
+            }
+        }
+        source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
     }
 }
 
