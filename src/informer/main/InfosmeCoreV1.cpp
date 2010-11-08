@@ -313,7 +313,7 @@ void InfosmeCoreV1::selfTest()
         data.endDate = "";
         data.activePeriodStart = "";
         data.activePeriodEnd = "";
-        data.validityDate = "";
+        //data.validityDate = "";
         data.validityPeriod = "01:00:00";
         data.flash = false;
         data.useDataSm = false;

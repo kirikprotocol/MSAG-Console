@@ -36,7 +36,6 @@ public:
     activePeriodStartFlag=false;
     activeWeekDaysFlag=false;
     activeWeekDays.clear();
-    validityDateFlag=false;
     validityPeriodFlag=false;
     flashFlag=false;
     useDataSmFlag=false;
@@ -154,15 +153,6 @@ public:
         rv+=*it;
       }
       rv+="]";
-    }
-    if(validityDateFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="validityDate=";
-      rv+=validityDate;
     }
     if(validityPeriodFlag)
     {
@@ -323,12 +313,6 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(activeWeekDays);
-    }
-    if(validityDateFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(validityDate);
     }
     if(validityPeriodFlag)
     {
@@ -597,28 +581,6 @@ public:
   bool hasActiveWeekDays()const
   {
     return activeWeekDaysFlag;
-  }
-  const std::string& getValidityDate()const
-  {
-    if(!validityDateFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("validityDate");
-    }
-    return validityDate;
-  }
-  void setValidityDate(const std::string& argValue)
-  {
-    validityDate=argValue;
-    validityDateFlag=true;
-  }
-  std::string& getValidityDateRef()
-  {
-    validityDateFlag=true;
-    return validityDate;
-  }
-  bool hasValidityDate()const
-  {
-    return validityDateFlag;
   }
   const std::string& getValidityPeriod()const
   {
@@ -968,11 +930,6 @@ public:
       ds.writeTag(userIdTag);
     ds.writeStrLV(userId); 
     }
-    if(validityDateFlag)
-    {
-      ds.writeTag(validityDateTag);
-    ds.writeStrLV(validityDate); 
-    }
     if(validityPeriodFlag)
     {
       ds.writeTag(validityPeriodTag);
@@ -1099,15 +1056,6 @@ public:
             rd+=DataStream::lengthTypeSize;
           }
           activeWeekDaysFlag=true;
-        }break;
-        case validityDateTag:
-        {
-          if(validityDateFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("validityDate");
-          }
-          validityDate=ds.readStrLV();
-          validityDateFlag=true;
         }break;
         case validityPeriodTag:
         {
@@ -1307,7 +1255,6 @@ protected:
   static const int32_t activePeriodEndTag=7;
   static const int32_t activePeriodStartTag=8;
   static const int32_t activeWeekDaysTag=9;
-  static const int32_t validityDateTag=10;
   static const int32_t validityPeriodTag=11;
   static const int32_t flashTag=12;
   static const int32_t useDataSmTag=16;
@@ -1331,7 +1278,6 @@ protected:
   std::string activePeriodEnd;
   std::string activePeriodStart;
   std::vector<std::string> activeWeekDays;
-  std::string validityDate;
   std::string validityPeriod;
   bool flash;
   bool useDataSm;
@@ -1353,7 +1299,6 @@ protected:
   bool activePeriodEndFlag;
   bool activePeriodStartFlag;
   bool activeWeekDaysFlag;
-  bool validityDateFlag;
   bool validityPeriodFlag;
   bool flashFlag;
   bool useDataSmFlag;

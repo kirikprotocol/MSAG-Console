@@ -62,7 +62,8 @@ message DeliveryInfo
   string activePeriodStart 8
 // mon, tue, sun ...
   string activeWeekDays 9 array
-  string validityDate 10 opt
+  // removed. has no sense now
+//  string validityDate 10 opt
   string validityPeriod 11 opt
 
   bool flash 12

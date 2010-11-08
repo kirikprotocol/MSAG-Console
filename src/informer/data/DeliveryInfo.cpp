@@ -12,7 +12,7 @@ using namespace eyeline::informer;
 int parseWeekDays( const std::vector< std::string >& wd )
 {
     static const char* fulldays[7] = {
-        "Monday", "Tuesday", "Wednesday", "Thursday", 
+        "Monday", "Tuesday", "Wednesday", "Thursday",
         "Friday", "Saturday", "Sunday"
     };
     static const char* shortdays[7] = {
@@ -60,7 +60,7 @@ void DeliveryInfo::read( InfosmeCore& core )
     buf.setSize(path.size()+70);
     strcpy(buf.get(),path.c_str());
     assert(*(buf.get()+path.size()-1) == '/');
-    // char* end = 
+    // char* end =
     makeDeliveryPath(dlvId_,buf.get()+path.size());
     smsc_log_debug(log_,"FIXME: reading D=%u info '%s'",dlvId_,buf.get());
 
@@ -113,7 +113,7 @@ startDate_(0),
 endDate_(0),
 activePeriodStart_(-1),
 activePeriodEnd_(-1),
-validityDate_(0),
+//validityDate_(0),
 validityPeriod_(-1),
 activeWeekDays_(-1),
 sourceAddress_(0)
@@ -132,7 +132,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     msgtime_type endDate = endDate_;
     timediff_type activePeriodStart = activePeriodStart_;
     timediff_type activePeriodEnd = activePeriodEnd_;
-    msgtime_type validityDate = validityDate_;
+    //msgtime_type validityDate = validityDate_;
     timediff_type validityPeriod = validityPeriod_;
     int activeWeekDays = activeWeekDays_;
     personid_type sourceAddress = sourceAddress_;
@@ -152,9 +152,11 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if ((!old || old->activeWeekDays != data.activeWeekDays) && !data.activeWeekDays.empty() ) {
         activeWeekDays = parseWeekDays(data.activeWeekDays);
     }
+    /*
     if ((!old || old->validityDate != data.validityDate) && !data.validityDate.empty() ) {
         validityDate = parseDateTime(data.validityDate.c_str());
     }
+    */
     if ((!old || old->validityPeriod != data.validityPeriod) && !data.validityPeriod.empty() ) {
         validityPeriod = parseTime(data.validityPeriod.c_str());
     }
@@ -173,9 +175,11 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         throw InfosmeException(EXC_CONFIG,"invalid active period start/end");
     }
 
+    /*
     if ( validityDate <= 0 && validityPeriod <= 0 ) {
         throw InfosmeException(EXC_CONFIG,"invalid validity date/period");
     }
+    */
 
     if ( sourceAddress == 0 ) {
         throw InfosmeException(EXC_CONFIG,"source address in not specified");
@@ -186,7 +190,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (endDate != 0) { endDate_ = endDate; }
     if (activePeriodStart != -1) { activePeriodStart_ = activePeriodStart; }
     if (activePeriodEnd != -1) { activePeriodEnd_ = activePeriodEnd; }
-    if (validityDate != 0) { validityDate_ = validityDate; }
+    //if (validityDate != 0) { validityDate_ = validityDate; }
     if (validityPeriod != -1) { validityPeriod_ = validityPeriod; }
     if (activeWeekDays != -1) { activeWeekDays_ = activeWeekDays; }
     if (sourceAddress != 0) { sourceAddress_ = sourceAddress; }

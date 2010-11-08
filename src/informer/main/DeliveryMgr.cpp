@@ -240,7 +240,7 @@ public:
     mgr_(mgr), log_(smsc::logger::Logger::getInstance("statdump")) {}
     ~StatsDumper() { WaitFor(); }
 
-    virtual int Execute() 
+    virtual int Execute()
     {
         smsc_log_debug(log_,"stats dumper started");
 
@@ -525,7 +525,7 @@ void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
                           drmId.regId, drmId.dlvId, drmId.msgId );
             return;
         }
-    
+
         const msgtime_type now(currentTimeSeconds());
 
         if (retry) {
@@ -569,7 +569,7 @@ bool DeliveryMgr::receiveResponse( const DlvRegMsgId& drmId )
                           drmId.msgId );
             return false;
         }
-    
+
         const msgtime_type now(currentTimeSeconds());
 
         reg->messageSent(drmId.msgId,now);
@@ -646,7 +646,7 @@ int DeliveryMgr::Execute()
             }
             wakeList.clear();
         }
-        
+
         MutexGuard mg(mon_);
         DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
         for ( DeliveryWakeQueue::iterator i = deliveryWakeQueue_.begin();
@@ -821,11 +821,13 @@ void DeliveryMgr::readDeliveryInfoData( dlvid_type                        dlvId,
         } catch (std::exception&) {
         }
 
+        /*
         try {
             data.validityDate = ConfString(config.getString("validityDate")).str();
         } catch (std::exception&) {
             data.validityDate = "";
         }
+        */
         try {
             data.validityPeriod = ConfString(config.getString("validityPeriod")).str();
         } catch (std::exception&) {

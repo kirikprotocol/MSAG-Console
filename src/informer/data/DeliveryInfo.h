@@ -13,11 +13,11 @@ class CommonSettings;
 // class UserInfo;
 // class InfosmeCore;
 
-typedef enum {
+enum DeliveryMode{
     DLVMODE_SMS = 0,
     DLVMODE_USSDPUSH = 1,
     DLVMODE_USSDPUSHVLR = 2
-} DeliveryMode;
+};
 
 
 /// the structure holding data from dcp protocol.
@@ -32,7 +32,6 @@ struct DeliveryInfoData
   std::string activePeriodStart;
   std::string activePeriodEnd;
   std::vector<std::string> activeWeekDays;
-  std::string validityDate;
   std::string validityPeriod;
   bool flash;
   bool useDataSm;
@@ -85,7 +84,7 @@ public:
     int getActiveWeekDays() const { return activeWeekDays_; }
 
     /// get validity date or -1
-    msgtime_type getValidityDate() const { return validityDate_; }
+    //msgtime_type getValidityDate() const { return validityDate_; }
 
     /// get validity period or -1
     msgtime_type getValidityPeriod() const { return validityPeriod_; }
@@ -137,7 +136,7 @@ private:
     msgtime_type          endDate_;
     timediff_type         activePeriodStart_;
     timediff_type         activePeriodEnd_;
-    msgtime_type          validityDate_;
+    //msgtime_type          validityDate_;
     timediff_type         validityPeriod_;
     int                   activeWeekDays_;
     personid_type         sourceAddress_;

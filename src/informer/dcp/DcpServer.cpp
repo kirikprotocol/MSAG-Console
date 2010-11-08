@@ -189,10 +189,12 @@ static void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::De
   did.activePeriodEnd=di.getActivePeriodStart();
   did.activePeriodStart=di.getActivePeriodEnd();
   did.activeWeekDays=di.getActiveWeekDays();
+  /*
   if(di.hasValidityDate())
   {
     did.validityDate=di.getValidityDate();
   }
+  */
   if(di.hasValidityPeriod())
   {
     did.validityPeriod=di.getValidityPeriod();
@@ -235,10 +237,12 @@ static void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const Deliver
   di.setActivePeriodStart(did.activePeriodEnd);
   di.setActivePeriodEnd(did.activePeriodStart);
   di.setActiveWeekDays(did.activeWeekDays);
+  /*
   if(!did.validityDate.empty())
   {
     di.setValidityDate(did.validityDate);
   }
+  */
   if(!did.validityPeriod.empty())
   {
     di.setValidityPeriod(did.validityPeriod);
