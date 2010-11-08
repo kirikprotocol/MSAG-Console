@@ -2,7 +2,6 @@ package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -20,8 +19,6 @@ import java.util.Locale;
 public class StartPage implements CreateDeliveryPage{
 
   private boolean singleText;
-
-  private String text;
 
   private static void setDefaults(String user, Configuration config, Delivery delivery) throws AdminException {
     delivery.setOwner(user);
@@ -73,11 +70,7 @@ public class StartPage implements CreateDeliveryPage{
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException{
     Delivery delivery;
     if(singleText) {
-      if(text == null || (text = text.trim()).length() == 0) {
-        throw new DeliveryException("delivery_text_empty");
-      }
       delivery = Delivery.newSingleTextDelivery();
-      delivery.setSingleText(text);
     }else {
       delivery = Delivery.newCommonDelivery();
     }
@@ -92,14 +85,6 @@ public class StartPage implements CreateDeliveryPage{
 
   public void setSingleText(boolean singleText) {
     this.singleText = singleText;
-  }
-
-  public String getText() {
-    return text;
-  }
-
-  public void setText(String text) {
-    this.text = text;
   }
 
   public String getPageId() {

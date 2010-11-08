@@ -25,6 +25,8 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   private File tmpFile;
 
+  private int abonentsSize;
+
   public UploadFilePage(Delivery delivery, File tmpFile) {
     this.delivery = delivery;
     this.tmpFile = tmpFile;
@@ -62,6 +64,14 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     return null;
   }
 
+  public int getAbonentsSize() {
+    return abonentsSize;
+  }
+
+  public boolean isStoped() {
+    return super.isStoped();
+  }
+
   @Override
   protected void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception {
     maximum = (int)file.getLength();
@@ -87,6 +97,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
         }
         os.println(line);
         current+=line.length();
+        abonentsSize++;
       }
 
       if(!isStoped()) {

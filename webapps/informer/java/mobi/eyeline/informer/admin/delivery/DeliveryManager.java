@@ -85,6 +85,7 @@ public class DeliveryManager {
       messages.add(m);
       count++;
       if (count == 1000) {
+        Collections.shuffle(messages);
         long[] ids = conn.addDeliveryMessages(delivery.getId(), messages.toArray(new Message[messages.size()]));
         int i = 0;
         for (Message _m : messages) {
@@ -96,6 +97,7 @@ public class DeliveryManager {
       }
     }
     if (!messages.isEmpty()) {
+      Collections.shuffle(messages);
       long[] ids = conn.addDeliveryMessages(delivery.getId(), messages.toArray(new Message[messages.size()]));
       int i = 0;
       for (Message _m : messages) {
@@ -114,6 +116,7 @@ public class DeliveryManager {
       addresses.add(a);
       count++;
       if (count == 1000) {
+        Collections.shuffle(addresses);
         long[] ids = conn.addDeliveryMessages(delivery.getId(), addresses);
         for(long id : ids) {
           results.add(id);
@@ -123,6 +126,7 @@ public class DeliveryManager {
       }
     }
     if (!addresses.isEmpty()) {
+      Collections.shuffle(addresses);
       long[] ids = conn.addDeliveryMessages(delivery.getId(), addresses);
       for(long id : ids) {
         results.add(id);

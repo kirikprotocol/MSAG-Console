@@ -47,6 +47,13 @@
         <eye:progressBar current="#{createDelivery.activePage.current}" maximum="#{createDelivery.activePage.maximum}" width="500" height="20" />
       </h:panelGrid>
 
+      <h:panelGrid rendered="#{createDelivery.activePage.error == null and !createDelivery.activePage.stoped}" style="margin : 10px 10px 10px 10px">
+        <h:outputText
+            value="#{msg['informer.deliveries.create.abonetns.size']} #{createDelivery.activePage.processed}"/>
+        <h:outputText rendered="#{createDelivery.activePage.inBlacklist != 0}"
+            value="#{msg['informer.deliveries.create.abonetns.bl.size']} #{createDelivery.activePage.inBlacklist}"/>
+      </h:panelGrid>
+
       <eye:buttons>
         <eye:button rendered="#{createDelivery.activePage.finished and !createDelivery.activePage.stoped and createDelivery.activePage.error == null}">
           <tr:commandLink text="#{msg['finish.button']}" action="#{createDelivery.next}"/>

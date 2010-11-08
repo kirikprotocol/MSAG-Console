@@ -57,6 +57,10 @@
           </tr:panelLabelAndMessage>
 
 
+          <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left" rendered="#{createDelivery.activePage.delivery.type.value == 'SingleText'}">
+            <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
           <tr:panelLabelAndMessage label="#{deliveryBundle.validityChoise}" labelStyle="text-align:left">
             <h:panelGrid columns="1">
               <tr:inputText id="vPeriod" value="#{createDelivery.activePage.delivery.validityPeriod}" simple="true">

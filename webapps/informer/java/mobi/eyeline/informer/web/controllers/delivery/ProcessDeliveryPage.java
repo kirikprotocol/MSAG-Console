@@ -44,6 +44,10 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
   private File blacklist;
 
+  private int processed;
+
+  private int inBlacklist;
+
   public ProcessDeliveryPage(Delivery delivery, File tmpFile, Configuration config, Locale locale, String user) {
     this.delivery = delivery;
     this.config = config;
@@ -52,6 +56,14 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     this.tmpFile = tmpFile;
     thread.start();
     state=1;
+  }
+
+  public int getInBlacklist() {
+    return inBlacklist;
+  }
+
+  public int getProcessed() {
+    return processed;
   }
 
   public String getError() {
@@ -95,7 +107,9 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
                 current += line.length();
                 if(config.blacklistContains(line)) {
                   b[0].println(line);
+                  inBlacklist++;
                 }
+                processed++;
                 return new Address(line);
               }
             } catch (IOException e) {
@@ -120,7 +134,9 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
                 m.setAbonent(new Address(s[0]));
                 if(config.blacklistContains(s[0])) {
                   b[0].println(s[0]);
+                  inBlacklist++;
                 }
+                processed++;
                 return m;
               }
             } catch (IOException e) {

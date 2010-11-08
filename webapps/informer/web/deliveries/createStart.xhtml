@@ -20,16 +20,7 @@
       <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
 
         <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left">
-          <tr:selectBooleanCheckbox value="#{createDelivery.activePage.singleText}" simple="true" onchange="
-              var e = document.getElementById('text');
-              if(this.checked) {
-                e.style.display = '';
-              }else {
-                e.style.display='none';
-              }
-            "/>
-          <h:inputText value="#{createDelivery.activePage.text}" id="text"
-                       style="#{createDelivery.activePage.singleText ? '' : 'display:none'}"/>
+          <tr:selectBooleanCheckbox value="#{createDelivery.activePage.singleText}" simple="true"/>
         </tr:panelLabelAndMessage>
 
       </tr:panelFormLayout>
