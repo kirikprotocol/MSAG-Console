@@ -10,6 +10,14 @@
 #include "informer/opstore/StoreJournal.h"
 #include "informer/sender/ReceiptProcessor.h"
 
+namespace smsc {
+namespace util {
+namespace config {
+class Config;
+}
+}
+}
+
 namespace eyeline {
 namespace informer {
 
@@ -66,12 +74,24 @@ public:
         return true;
     }
 
+    /// invoked to from infosmecorev1 only!
+    bool finishStateChange( msgtime_type    currentTime,
+                            ulonglong       ymdTime,
+                            const Delivery& dlv );
+
 protected:
     /// used internally
-    void addDelivery( UserInfo& userInfo, DeliveryInfo* info );
+    void addDelivery( UserInfo&     userInfo,
+                      DeliveryInfo* info,
+                      DlvState      state = DLVSTATE_PAUSED,
+                      msgtime_type  planTime = 0 );
 
     dlvid_type getNextDlvId();
     
+    void readDeliveryInfoData( dlvid_type                        dlvId,
+                               const smsc::util::config::Config& config,
+                               DeliveryInfoData&                 data );
+
 private:
     smsc::logger::Logger*                      log_;
     InfosmeCoreV1&                             core_;
@@ -100,7 +120,7 @@ private:
 
     smsc::core::synchronization::Mutex            logStateLock_;
     ulonglong                                     logStateTime_;
-    FileGuard                                     logStateCur_;
+    FileGuard                                     logStateFile_;
     dlvid_type                                    nextDlvId_;
 };
 

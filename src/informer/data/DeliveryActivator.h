@@ -35,18 +35,9 @@ public:
 
     /// finish state change.
     /// NOTE: should be invoked from delivery itself only!
-    virtual void finishStateChange( ulonglong    ymdTime,
-                                    Delivery&    dlv,
-                                    DlvState     oldState ) = 0;
-
-    // log delivery state change
-    /*
-     // virtual void logStateChange( ulonglong    ymd,
-                                 dlvid_type   dlvId,
-                                 const char*  userId,
-                                 DlvState     newState,
-                                 msgtime_type planTime ) = 0;
-     */
+    virtual void finishStateChange( msgtime_type currentTime,
+                                    ulonglong    ymdTime,
+                                    const Delivery&    dlv ) = 0;
 };
 
 } // informer

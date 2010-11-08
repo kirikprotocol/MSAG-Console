@@ -25,10 +25,14 @@ namespace informer {
 DeliveryImpl::DeliveryImpl( DeliveryInfo*               dlvInfo,
                             UserInfo&                   userInfo,
                             StoreJournal&               journal,
-                            InputMessageSource*         source ) :
+                            InputMessageSource*         source,
+                            DlvState                    state,
+                            msgtime_type                planTime ) :
 Delivery(dlvInfo,userInfo,source),
 storeJournal_(journal)
 {
+    state_ = state;
+    planTime_ = planTime;
     const dlvid_type dlvId = dlvInfo_->getDlvId();
     smsc_log_info(log_,"ctor D=%u done",dlvId);
 }
@@ -42,6 +46,82 @@ DeliveryImpl::~DeliveryImpl()
 }
 
 
+DlvState DeliveryImpl::readState( const CommonSettings& cs,
+                                  dlvid_type            dlvId,
+                                  msgtime_type&         planTime )
+{
+    planTime = 0;
+    DlvState state = DLVSTATE_PAUSED;
+    char buf[200];
+    sprintf(makeDeliveryPath(dlvId,buf),"status.log");
+    FileGuard fg;
+    fg.ropen((cs.getStorePath()+buf).c_str());
+    struct stat st;
+    const size_t pos = fg.getStat(st).st_size > sizeof(buf) ?
+        st.st_size - sizeof(buf) : 0;
+    if (fg.seek(pos) != pos) {
+        throw InfosmeException(EXC_SYSTEM,"D=%u cannot seek status file to %u",dlvId,unsigned(pos));
+    }
+
+    size_t wasread = fg.read(buf,sizeof(buf));
+    if (wasread==0) {
+        throw InfosmeException(EXC_BADFILE,"D=%u status file is empty",dlvId);
+    }
+
+    char* ptr = reinterpret_cast<char*>(const_cast<void*>(::memrchr(buf,'\n',wasread)));
+    if (!ptr) {
+        throw InfosmeException(EXC_BADFILE,"D=%u status record is not terminated",dlvId);
+    }
+
+    if (size_t(ptr - buf)+1 != wasread) {
+        throw InfosmeException(EXC_BADFILE,"D=%u status file is not terminated",dlvId);
+    }
+
+    *ptr = '\0';
+    --wasread;
+    if (!wasread) {
+        throw InfosmeException(EXC_BADFILE,"D=%u last record is too short",dlvId);
+    }
+    ptr = reinterpret_cast<char*>(const_cast<void*>(::memrchr(buf,'\n',wasread)));
+    if (!ptr) { ptr = buf; }
+    else { ++ptr; }
+
+    // scanning record
+    char cstate;
+    DeliveryStats ds;
+    ds.clear();
+    ulonglong ymdTime;
+    unsigned offset;
+    int shift = 0;
+    sscanf(ptr,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u%n",
+           &cstate,&ymdTime,
+           &offset,
+           &ds.totalMessages, &ds.procMessages, &ds.sentMessages,
+           &ds.retryMessages, &ds.dlvdMessages, &ds.failedMessages,
+           &ds.expiredMessages, &ds.dlvdSms, &ds.failedSms,
+           &ds.expiredSms, &shift );
+    if (!shift) {
+        throw InfosmeException(EXC_BADFILE,"D=%u bad last status record",dlvId);
+    }
+
+    switch (cstate) {
+    case 'P' : {
+        state = DLVSTATE_PLANNED;
+        planTime = ymdToMsgTime(ymdTime) + offset;
+        break;
+    }
+    case 'S' : state = DLVSTATE_PAUSED; break;
+    case 'A' : state = DLVSTATE_ACTIVE; break;
+    case 'F' : state = DLVSTATE_FINISHED; break;
+    case 'C' : state = DLVSTATE_CANCELLED; break;
+    default:
+        throw InfosmeException(EXC_BADFILE,"D=%u cannot parse state",dlvId);
+    }
+    return state;
+}
+
+
+/*
 msgtime_type DeliveryImpl::initState()
 {
     FileGuard fg;
@@ -149,19 +229,10 @@ msgtime_type DeliveryImpl::initState()
         
     } while (false);
 
-    /*
-    if (!hasBeenRead && state != DLVSTATE_PAUSED) {
-        if (dlvInfo_->getState() == state) {
-            dlvInfo_->setState(DLVSTATE_PAUSED,0); 
-        }
-        setState(state,planTime);
-    } else {
-        dlvInfo_->setState(state,planTime);
-    }
-     */
     setState(state,planTime);
     return planTime_;
 }
+ */
 
 
 void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
@@ -237,16 +308,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.expiredSms );
         assert(buflen>0);
         fg.write(buf,buflen);
-        source_->getDlvActivator().finishStateChange(ymd,
-                                                     *this,
-                                                     oldState);
+        source_->getDlvActivator().finishStateChange(now, ymd, *this );
     }
-    /*
-    source_->getDlvActivator().finishStateChange(logStateChange( ymd,
-                                               dlvId,
-                                               dlvInfo_->getUserInfo().getUserId(),
-                                               newState,planTime);
-     */
 }
 
 
@@ -266,7 +329,7 @@ RegionalStoragePtr DeliveryImpl::getRegionalStorage( regionid_type regId, bool c
 }
 
 
-void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds )
+void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
 {
     MutexGuard mg(cacheLock_);
     regIds.reserve(storages_.Count());

@@ -380,6 +380,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             const char* out = msg.text->getText();
             size_t outLen = strlen(msg.text->getText());
             std::auto_ptr<char> msgBuf;
+            // FIXME: move this algorithm into regionalstorage
             if (smsc::util::hasHighBit(out,outLen)) {
                 size_t msgLen = outLen*2;
                 msgBuf.reset(new char[msgLen]);
@@ -405,8 +406,8 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
                         smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
                         outLen = MAX_ALLOWED_MESSAGE_LENGTH;
                     }
-                    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
-                    sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
+                    sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+                    sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, (unsigned)outLen);
                 } else {
                     if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
                         outLen = MAX_ALLOWED_PAYLOAD_LENGTH;

@@ -7,6 +7,7 @@
 #include "informer/data/RetryPolicy.h"
 #include "DeliveryImpl.h"
 #include "StoreJournal.h"
+#include "util/smstext.h"
 
 namespace eyeline {
 namespace informer {
@@ -107,23 +108,6 @@ const DeliveryInfo& RegionalStorage::getDlvInfo() const
 DlvState RegionalStorage::getState() const {
     return dlv_.getState();
 }
-
-/*
-bool RegionalStorage::getMessage( msgid_type msgId, Message& msg )
-{
-    MutexGuard mg(cacheMon_);
-    MsgIter* ptr = messageHash_.GetPtr(msgId);
-    if (!ptr) {
-        smsc_log_debug(log_,"Message R=%u/D=%u/M=%llu is not found (getMessage)",
-                       unsigned(regionId_),
-                       unsigned(dlv_.getDlvId()),
-                       ulonglong(msgId));
-        return false; 
-    }
-    msg = (*ptr)->msg;
-    return true;
-}
- */
 
 
 bool RegionalStorage::isFinished()
@@ -400,6 +384,34 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
 }
 
 
+unsigned RegionalStorage::evaluateNchunks( const char* out, size_t outLen ) const
+{
+    if (smsc::util::hasHighBit(out,outLen)) {
+        outLen *= 2;
+    }
+    const DeliveryInfo& info = dlv_.getDlvInfo();
+    if ( outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm() ) {
+        // ok
+    } else if ( info.getDeliveryMode() != DLVMODE_SMS ) {
+        if ( outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
+            outLen = MAX_ALLOWED_MESSAGE_LENGTH;
+        }
+    } else {
+        if ( outLen > MAX_ALLOWED_PAYLOAD_LENGTH ) {
+            outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+        }
+    }
+    const unsigned chunkLen = info.getCS().getMaxMessageChunkSize();
+    unsigned nchunks;
+    if ( chunkLen > 0 && outLen > chunkLen ) {
+        nchunks = unsigned(outLen-1) / chunkLen + 1;
+    } else {
+        nchunks = 1;
+    }
+    return nchunks;
+}
+
+
 void RegionalStorage::stopTransfer( bool finalizeAll )
 {
     MutexGuard mg(cacheMon_);
@@ -501,7 +513,7 @@ bool RegionalStorage::postInit()
     for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
         Message& m = i->msg;
         // bind to glossary
-        dlv_.source_->getGlossary().bindMessage(m.text);
+        dlv_.source_->getGlossary().bindText(m.text);
         switch (m.state) {
         case MSGSTATE_INPUT:
             throw InfosmeException(EXC_LOGICERROR,

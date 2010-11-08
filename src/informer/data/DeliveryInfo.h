@@ -55,17 +55,6 @@ public:
 
     dlvid_type getDlvId() const { return dlvId_; }
 
-    // const UserInfo& getUserInfo() const { return userInfo_; }
-
-    /*
-    DlvState getState( msgtime_type* planTime = 0 ) const {
-        if (planTime) *planTime = planTime_;
-        return state_;
-    }
-
-    void setState( DlvState state, msgtime_type planTime );
-     */
-
     void update( const DeliveryInfoData& data );
     const DeliveryInfoData& getDeliveryData()const
     {
@@ -120,14 +109,11 @@ public:
 
     // ============ end of delivery settings ==========================
 
-    // evaluate number of chunks
-    // unsigned evaluateNchunks( const char* out, size_t outLen ) const;
-
 protected:
-    /// FIXME: move to deliverymgr
-    /// read delivery info from filesystem
-    static DeliveryInfo* readDeliveryInfo( const CommonSettings&   cs,
-                                           dlvid_type              dlvId );
+    // read delivery info from filesystem
+    // void readDeliveryInfoData( dlvid_type        dlvId,
+    // const smsc::util::config::Config& config,
+    // DeliveryInfoData& data );
 
     // constructor from file system
     DeliveryInfo( const CommonSettings&   cs,

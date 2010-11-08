@@ -34,13 +34,14 @@ public:
 
     void updateDlvInfo( const DeliveryInfoData& info );
 
-    inline DlvState getState( msgtime_type* planTime = 0 ) {
+    inline DlvState getState( msgtime_type* planTime = 0 ) const {
         if (planTime) *planTime = planTime_;
         return state_;
     }
 
     // change the state of the delivery
     virtual void setState( DlvState state, msgtime_type planTime = 0 ) = 0;
+    virtual void getRegionList( std::vector< regionid_type >& regIds ) const = 0;
 
     void addNewMessages( MsgIter begin, MsgIter end ) {
         source_->addNewMessages(begin,end);
@@ -50,6 +51,9 @@ public:
     inline void popIncrementalStats( DeliveryStats& ds ) {
         return activityLog_.popIncrementalStats(ds);
     }
+
+    void getGlossary( std::vector< std::string >& texts ) const;
+    void setGlossary( const std::vector< std::string >& texts );
 
 private:
     void ref() {

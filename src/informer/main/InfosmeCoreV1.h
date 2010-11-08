@@ -31,6 +31,9 @@ namespace informer {
 namespace admin {
 class AdminServer;
 }
+namespace dcp {
+class DcpServer;
+}
 
 class SmscSender;
 class RegionSender;
@@ -102,17 +105,9 @@ public:
         rtp_.startTask(task);
     }
 
-    virtual void finishStateChange( ulonglong    ymdTime,
-                                    Delivery&    dlv,
-                                    DlvState     oldState );
-
-    /*
-     // virtual void logStateChange( ulonglong   ymd,
-                                 dlvid_type  dlvId,
-                                 const char* userId,
-                                 DlvState    newState,
-                                 unsigned    planTime );
-     */
+    virtual void finishStateChange( msgtime_type    currentTime,
+                                    ulonglong       ymdTime,
+                                    const Delivery& dlv );
 
     // --- end of delivery activator iface
 
@@ -157,11 +152,8 @@ private:
     RegionFinderV1                                rf_;
 
     DeliveryMgr*                                  dlvMgr_;       // owned
-    admin::AdminServer*                           adminServer_;
-
-    smsc::core::synchronization::Mutex            logStateLock_;
-    ulonglong                                     logStateTime_;
-    FileGuard                                     logStateFile_;
+    admin::AdminServer*                           adminServer_;  // owned
+    dcp::DcpServer*                               dcpServer_;    // owned
 };
 
 } // informer

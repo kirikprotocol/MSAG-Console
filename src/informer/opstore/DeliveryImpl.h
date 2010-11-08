@@ -17,12 +17,16 @@ public:
     DeliveryImpl( DeliveryInfo*               dlvInfo,
                   UserInfo&                   userInfo,
                   StoreJournal&               journal,
-                  InputMessageSource*         source );
+                  InputMessageSource*         source,
+                  DlvState                    state,
+                  msgtime_type                planTime );
 
     virtual ~DeliveryImpl();
 
-    /// init state, invoked from core init to get the last state of the delivery.
-    msgtime_type initState();
+    // init state, invoked from core init to get the last state of the delivery.
+    static DlvState readState( const CommonSettings& cs,
+                               dlvid_type            dlvId,
+                               msgtime_type&         planTime );
 
     /// set delivery state.
     /// NOTE: must be invoked from core, with proper preparation.
@@ -31,7 +35,7 @@ public:
     /// get regional storage
     RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false);
 
-    void getRegionList( std::vector<regionid_type>& regIds );
+    void getRegionList( std::vector<regionid_type>& regIds ) const;
 
     /// slowly dump all regions to storage
     size_t rollOverStore();
@@ -68,7 +72,7 @@ public:
 
 private:
     typedef smsc::core::buffers::IntHash< RegionalStoragePtr > StoreHash;
-    smsc::core::synchronization::Mutex                 cacheLock_;
+    mutable smsc::core::synchronization::Mutex         cacheLock_;
     StoreHash                                          storages_;
 
     StoreJournal&                                      storeJournal_;

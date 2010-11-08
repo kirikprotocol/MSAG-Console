@@ -2,6 +2,7 @@
 #define _INFORMER_MESSAGEGLOSSARY_H
 
 #include <list>
+#include <vector>
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/IntHash.hpp"
@@ -24,12 +25,14 @@ public:
     void init( const std::string& storePath, dlvid_type dlvId );
 
     /// bind message to glossary.
-    void bindMessage( MessageTextPtr& ptr );
+    void bindText( MessageTextPtr& ptr );
 
     /// NOTE: texts will be empty on exit
-    void registerMessages( const std::string&   storePath,
-                           dlvid_type           dlvId,
-                           TextList&            texts );
+    void setTexts( const std::string&   storePath,
+                   dlvid_type           dlvId,
+                   TextList&            texts );
+
+    void getTexts( std::vector< std::string >& texts ) const;
 
 private:
     struct Node {
@@ -52,7 +55,7 @@ private:
 
 private:
     smsc::logger::Logger*                              log_;
-    smsc::core::synchronization::Mutex                 lock_;
+    mutable smsc::core::synchronization::Mutex         lock_;
     TextList                                           list_; // owned
     TextHash                                           hash_;
     int32_t                                            negTxtId_;

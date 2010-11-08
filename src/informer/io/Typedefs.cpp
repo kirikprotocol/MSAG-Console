@@ -135,7 +135,7 @@ timediff_type parseTime( const char* theTime )
 {
     int shift = 0;
     unsigned hour, minute, second;
-    sscanf(theTime,"%02u:%02u:%02u",&hour,&minute,&second,&shift);
+    sscanf(theTime,"%02u:%02u:%02u%n",&hour,&minute,&second,&shift);
     if (!shift) {
         throw InfosmeException(EXC_IOERROR,"invalid time '%s'",theTime);
     }
@@ -162,7 +162,7 @@ personid_type parseAddress( const char* isdn )
         throw InfosmeException(EXC_LOGICERROR,"address NULL passed");
     }
     if (isdn[0] == '+') {
-        ton = 0;
+        ton = 1;
         npi = 1;
         sscanf(isdn,"+%llu%n",&value,&shift);
         len = unsigned(shift - 1);
@@ -172,12 +172,14 @@ personid_type parseAddress( const char* isdn )
         len = unsigned(shift-start);
     } else {
         sscanf(isdn,"%llu%n",&value,&shift);
+        ton = 0;
+        npi = 1;
         len = unsigned(shift);
     }
     if (!shift) {
         throw InfosmeException(EXC_BADADDRESS,"invalid address '%s'",isdn);
     }
-    if (shift != strlen(isdn)) {
+    if (unsigned(shift) != strlen(isdn)) {
         throw InfosmeException(EXC_BADADDRESS,"address '%s' has extra chars",isdn);
     }
     if (len<1 || len>16) {

@@ -1,14 +1,9 @@
 #include <cassert>
 #include <cstring>
 #include <vector>
-// #include "informer/io/DirListing.h"
 #include "informer/io/InfosmeException.h"
 #include "DeliveryInfo.h"
 #include "CommonSettings.h"
-// #include "core/buffers/TmpBuf.hpp"
-// #include "UserInfo.h"
-// #include "InfosmeCore.h"
-// #include "util/smstext.h"
 
 namespace {
 
@@ -52,21 +47,10 @@ namespace informer {
 
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
-
-/*
-void DeliveryInfo::setState( DlvState state, msgtime_type planTime )
+void DeliveryInfo::update( const DeliveryInfoData& data )
 {
-    smsc_log_debug(log_,"D=%u changing state %s(%d) -> %s(%d), planTime=%u",
-                   dlvId_,
-                   dlvStateToString(DlvState(state_)), state_,
-                   dlvStateToString(DlvState(state)), state,
-                   planTime );
-    userInfo_.incStats(cs_,state,state_);
-    state_ = state;
-    planTime_ = planTime;
+    throw InfosmeException(EXC_NOTIMPL, "DeliveryInfo::update(): not impl");
 }
- */
-
 
 /*
 void DeliveryInfo::read( InfosmeCore& core )
@@ -120,52 +104,6 @@ unsigned DeliveryInfo::evaluateNchunks( const char* out, size_t outLen ) const
  */
 
 
-DeliveryInfo* DeliveryInfo::readDeliveryInfo( const CommonSettings& cs,
-                                              dlvid_type            dlvId )
-{
-    char buf[100];
-    makeDeliveryPath(dlvId,buf);
-    const std::string path = cs.getStorePath() + buf;
-
-    DeliveryInfoData data;
-
-    smsc_log_debug(log_,"FIXME: reading D=%u info '%s'",dlvId,path.c_str());
-    // const char* userId = "bukind";
-    // UserInfoPtr user( core.getUserInfo( userId ) );
-    // if (!user.get()) {
-    // throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
-    // }
-    // userInfo_ = user.get();
-    // FIXME: impl read delivery info
-    // std::auto_ptr< DeliveryInfo > ptr(new DeliveryInfo(core.getCS(),dlvId));
-    // ptr->read( core );
-    // return ptr.release();
-
-    data.name = "dummy";
-    data.priority = 1;
-    data.transactionMode = 0;
-    data.startDate = "";
-    data.endDate = "";
-    data.activePeriodStart = "";
-    data.activePeriodEnd = "";
-    data.validityDate = "";
-    data.validityPeriod = "01:00:00";
-    data.flash = false;
-    data.useDataSm = false;
-    data.deliveryMode = DLVMODE_SMS;
-    data.owner = "bukind";
-    data.retryOnFail = true;
-    data.retryPolicy = "fixme";
-    data.replaceMessage = false;
-    data.svcType = "info";
-    data.userData = "dlv05";
-    data.sourceAddress = ".0.1.10000";
-
-    DeliveryInfo* info = new DeliveryInfo( cs, dlvId, data );
-    return info;
-}
-
-
 DeliveryInfo::DeliveryInfo( const CommonSettings&   cs,
                             dlvid_type              dlvId,
                             const DeliveryInfoData& data ) :
@@ -180,6 +118,9 @@ validityPeriod_(-1),
 activeWeekDays_(-1),
 sourceAddress_(0)
 {
+    if (!log_) {
+        log_ = smsc::logger::Logger::getInstance("dlvinfo");
+    }
     updateData( data, 0 );
 }
 

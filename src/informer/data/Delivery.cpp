@@ -2,6 +2,7 @@
 #include "Delivery.h"
 #include "UserInfo.h"
 #include "CommonSettings.h"
+#include "MessageGlossary.h"
 
 namespace eyeline {
 namespace informer {
@@ -43,6 +44,28 @@ void Delivery::updateDlvInfo( const DeliveryInfoData& infoData )
 {
     assert( dlvInfo_.get() );
     dlvInfo_->update( infoData );
+}
+
+
+void Delivery::getGlossary( std::vector< std::string >& texts ) const
+{
+    source_->getGlossary().getTexts( texts );
+}
+
+
+void Delivery::setGlossary( const std::vector< std::string >& texts )
+{
+    const dlvid_type dlvId = dlvInfo_->getDlvId();
+    if ( texts.size() > 300 ) {
+        throw InfosmeException(EXC_SYSTEM,"D=%u too long glossary requested",dlvId);
+    }
+    MessageGlossary::TextList tl;
+    int32_t id = 0;
+    for ( std::vector< std::string >::const_iterator i = texts.begin();
+          i != texts.end(); ++i ) {
+        tl.push_back( new MessageText( i->c_str(), ++id) );
+    }
+    source_->getGlossary().setTexts( dlvInfo_->getCS().getStorePath(), dlvId, tl );
 }
 
 }

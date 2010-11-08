@@ -116,7 +116,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
     // FIXME: we need to bind to glossary before
     for ( MsgIter i = begin; i != end; ++i ) {
-        glossary_.bindMessage(i->msg.text);
+        glossary_.bindText(i->msg.text);
         activityLog_->addRecord( currentTime, i->serial, i->msg, 0);
     }
     core_.deliveryRegions( getDlvId(), regs, true );
@@ -392,7 +392,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
         if ( ! msglist.empty() ) {
             // write back record
             for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
-                glossary_.bindMessage( i->msg.text );
+                glossary_.bindText( i->msg.text );
             }
 
             const msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));

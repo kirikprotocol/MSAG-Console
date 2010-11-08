@@ -10,6 +10,7 @@
 #include "util/config/ConfString.h"
 #include "util/config/ConfigView.h"
 #include "informer/admin/AdminServer.hpp"
+#include "informer/dcp/DcpServer.hpp"
 
 using namespace smsc::util::config;
 
@@ -76,7 +77,7 @@ stopping_(false),
 started_(false),
 dlvMgr_(0),
 adminServer_(0),
-logStateTime_(0)
+dcpServer_(0)
 {
 }
 
@@ -88,6 +89,7 @@ InfosmeCoreV1::~InfosmeCoreV1()
     stop();
 
     delete adminServer_;
+    delete dcpServer_;
 
     char* smscId;
     SmscSender* sender;
@@ -161,6 +163,14 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     }
 
     dlvMgr_->init();
+
+    if (!dcpServer_) {
+        dcpServer_ = new dcp::DcpServer();
+        dcpServer_->assignCore(this);
+        dcpServer_->Init(smsc::util::config::ConfString(cfg.getString("Dcp.host")).c_str(),
+                         cfg.getInt("Dcp.port"),
+                         cfg.getInt("Dcp.handlers") );
+    }
 }
 
 
@@ -195,6 +205,7 @@ void InfosmeCoreV1::stop()
             rtp_.stopNotify();
             startMon_.notifyAll();
         }
+        if (dcpServer_) dcpServer_->Stop();
         if (adminServer_) adminServer_->Stop();
         if (dlvMgr_) dlvMgr_->stop();
 
@@ -286,9 +297,52 @@ void InfosmeCoreV1::updateSmsc( const std::string& smscId,
 void InfosmeCoreV1::selfTest()
 {
     smsc_log_debug(log_,"selfTest started");
-    dlvid_type dlvId = 22;
-    DeliveryImplPtr dlv;
-    if (dlvMgr_->getDelivery(dlvId,dlv)) {
+
+    const char* userId = "bukind";
+    UserInfoPtr user = getUserInfo(userId);
+    if (!user.get()) {
+        throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
+    }
+
+    DeliveryInfoData data;
+    {
+        data.name = "testdlv";
+        data.priority = 1;
+        data.transactionMode = false;
+        data.startDate = "";
+        data.endDate = "";
+        data.activePeriodStart = "";
+        data.activePeriodEnd = "";
+        data.validityDate = "";
+        data.validityPeriod = "01:00:00";
+        data.flash = false;
+        data.useDataSm = false;
+        data.deliveryMode = DLVMODE_SMS;
+        data.owner = userId;
+        data.retryOnFail = true;
+        data.retryPolicy = "";
+        data.replaceMessage = false;
+        data.svcType = "info";
+        data.userData = "0xdeadbeaf";
+        data.sourceAddress = "10000";
+    }
+    const dlvid_type dlvId = addDelivery(*user, data);
+    smsc_log_debug(log_,"delivery D=%u added");
+
+    DeliveryPtr dlv = getDelivery(*user,dlvId);
+    if (!dlv.get()) {
+        throw InfosmeException(EXC_NOTFOUND,"D=%u is not found",dlvId);
+    }
+
+    // adding glossary messages
+    {
+        std::vector< std::string > glotexts;
+        glotexts.push_back("the first message");
+        glotexts.push_back("the second message");
+        dlv->setGlossary( glotexts );
+    }
+
+    {
         MessageList msgList;
         MessageLocker mlk;
         mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
@@ -300,7 +354,6 @@ void InfosmeCoreV1::selfTest()
         mlk.msg.userData = "thesecondone";
         msgList.push_back(mlk);
         dlv->addNewMessages(msgList.begin(), msgList.end());
-        // setDeliveryState(dlvId,DLVSTATE_ACTIVE,0);
         dlv->setState(DLVSTATE_ACTIVE);
     }
     smsc_log_debug(log_,"selfTest finished");
@@ -365,6 +418,18 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
 }
 
 
+void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
+                                       ulonglong       ymdTime,
+                                       const Delivery& dlv )
+{
+    BindSignal bs;
+    bs.dlvId = dlv.getDlvId();
+    dlv.getRegionList(bs.regIds);
+    bs.bind = dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
+    bindDeliveryRegions(bs);
+}
+
+
 void InfosmeCoreV1::addSmsc( const char* smscId )
 {
     throw InfosmeException(EXC_NOTIMPL,"FIXME: addSmsc");
@@ -414,15 +479,6 @@ dlvid_type InfosmeCoreV1::addDelivery( UserInfo& userInfo,
 }
 
 
-/*
-void InfosmeCoreV1::updateDelivery( dlvid_type dlvId,
-                                    const DeliveryInfoData& info )
-{
-    dlvMgr_->updateDelivery(dlvId,info);
-}
- */
-
-
 void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
                                     dlvid_type      dlvId )
 {
@@ -448,64 +504,6 @@ DeliveryPtr InfosmeCoreV1::getDelivery( const UserInfo& userInfo,
     }
     return ptr;
 }
-
-
-/*
-// void InfosmeCoreV1::setDeliveryState( dlvid_type   dlvId,
-                                      DlvState     newState,
-                                      msgtime_type planTime )
-{
-    BindSignal bs;
-    bs.dlvId = dlvId;
-    bs.bind = (newState == DLVSTATE_ACTIVE ? true : false);
- // dlvMgr_->setDeliveryState(dlvId,newState,planTime,bs.regIds);
-    bindDeliveryRegions(bs);
-}
-
-
-// void InfosmeCoreV1::logStateChange( ulonglong   ymd,
-                                    dlvid_type  dlvId,
-                                    const char* userId,
-                                    DlvState    newState,
-                                    msgtime_type planTime )
-{
-    // prepare the buffer
-    char buf[100];
-    const int buflen = sprintf(buf,"%04u,%c,%u,%s,%u\n",
-                               unsigned(ymd % 10000), dlvStateToString(newState)[0],
-                               dlvId, userId, planTime );
-    if ( buflen < 0 ) {
-        throw InfosmeException(EXC_SYSTEM,"cannot write dlv state change, dlvId=%u",dlvId);
-    }
-
-    const ulonglong fileTime = ymd / 10000 * 10000;
-    char fnbuf[50];
-    if ( logStateTime_ < fileTime ) {
-        const unsigned day( unsigned(fileTime / 1000000));
-        sprintf(fnbuf,"status_log/%04u.%02u.%02u/%02u.log",
-                day / 10000, (day / 100) % 100, day % 100,
-                unsigned((ymd/10000) % 100) );
-    }
-
-    MutexGuard mg(logStateLock_);
-    if ( logStateTime_ < fileTime ) {
-        // need to replace cur file
-        FileGuard fg;
-        fg.create( (cs_.getStorePath() + fnbuf).c_str(), true );
-        fg.seek(0,SEEK_END);
-        if (fg.getPos() == 0) {
-            const char* header = "# MINSEC,STATE,DLVID,USER,PLAN\n";
-            fg.write( header, strlen(header));
-        }
-        logStateTime_ = fileTime;
-        logStateFile_.swap(fg);
-    } else if ( logStateTime_ > fileTime ) {
-        // fix delayed record
-        memcpy(buf,"0000",4);
-    }
-    logStateFile_.write(buf,size_t(buflen));
-}
- */
 
 
 int InfosmeCoreV1::Execute()

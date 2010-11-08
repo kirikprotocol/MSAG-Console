@@ -4,6 +4,11 @@
 #include "informer/newstore/InputStorage.h"
 #include "informer/io/DirListing.h"
 #include "system/status.h"
+#include "util/config/Config.h"
+#include "util/config/ConfString.h"
+
+using smsc::util::config::Config;
+using smsc::util::config::ConfString;
 
 namespace {
 
@@ -19,6 +24,7 @@ struct NumericNameFilter {
 
 namespace eyeline {
 namespace informer {
+
 
 class DeliveryMgr::InputJournalReader : public InputJournal::Reader
 {
@@ -343,11 +349,13 @@ stopping_(true),
 inputRollingIter_(deliveryList_.end()),
 storeRollingIter_(deliveryList_.end()),
 statsDumpingIter_(deliveryList_.end()),
-storeJournal_( new StoreJournal(core.getCS()) ),
-inputJournal_( new InputJournal(core.getCS()) ),
+storeJournal_( new StoreJournal(cs_)),
+inputJournal_( new InputJournal(cs_)),
 inputRoller_(0),
 storeRoller_(0),
-statsDumper_(0)
+statsDumper_(0),
+logStateTime_(0),
+nextDlvId_(1)
 {
     smsc_log_debug(log_,"ctor");
 }
@@ -379,16 +387,21 @@ void DeliveryMgr::init()
     // loading deliveries
     smsc_log_debug(log_,"--- loading deliveries ---");
 
-    smsc::core::buffers::TmpBuf<char,200> buf;
+    smsc::core::buffers::TmpBuf<char,250> buf;
     const std::string& path = cs_.getStorePath();
-    buf.setSize(path.size()+50);
+    buf.setSize(path.size()+100);
     strcpy(buf.get(),path.c_str());
     strcat(buf.get(),"deliveries/");
     buf.SetPos(strlen(buf.get()));
     std::vector<std::string> chunks;
     std::vector<std::string> dlvs;
     smsc_log_debug(log_,"listing deliveries storage '%s'",buf.get());
-    makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), chunks);
+    try {
+        makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), chunks);
+    } catch ( std::exception& e ) {
+        smsc_log_warn(log_,"directory '%s' does not exist",buf.get());
+        FileGuard::makedirs(buf.get());
+    }
     std::sort( chunks.begin(), chunks.end() );
     for ( std::vector<std::string>::iterator ichunk = chunks.begin();
           ichunk != chunks.end(); ++ichunk ) {
@@ -397,6 +410,7 @@ void DeliveryMgr::init()
         dlvs.clear();
         smsc_log_debug(log_,"listing delivery chunk '%s'",buf.get());
         makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), dlvs);
+        const size_t buflen = strlen(buf.get());
         for ( std::vector<std::string>::iterator idlv = dlvs.begin();
               idlv != dlvs.end();
               ++idlv ) {
@@ -404,14 +418,31 @@ void DeliveryMgr::init()
             const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
             try {
 
-                // FIXME
-                const char* userId = "bukind";
-                UserInfoPtr user( core_.getUserInfo(userId));
+                // making a filepath
+                sprintf(buf.get()+buflen,"%u/config.xml",dlvId);
+
+                std::auto_ptr<Config> cfg(Config::createFromFile(buf.get()));
+
+                DeliveryInfoData data;
+                readDeliveryInfoData( dlvId, *cfg.get(), data );
+
+                UserInfoPtr user(core_.getUserInfo(data.owner.c_str()));
                 if (!user.get()) {
-                    throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
+                    throw InfosmeException(EXC_CONFIG,"D=%u has unknown user: '%s'",
+                                           dlvId,data.owner.c_str());
                 }
-                addDelivery(*user.get(),
-                            DeliveryInfo::readDeliveryInfo(core_.getCS(),dlvId));
+
+                // read state
+                msgtime_type planTime = 0;
+                const DlvState state = DeliveryImpl::readState( cs_,
+                                                                dlvId,
+                                                                planTime );
+
+                DeliveryInfo* info = new DeliveryInfo(cs_,
+                                                      dlvId,
+                                                      data );
+                addDelivery(*user.get(), info, state, planTime );
+
             } catch (std::exception& e) {
                 smsc_log_error(log_,"cannot read/add dlvInfo D=%u: %s",dlvId,e.what());
                 continue;
@@ -570,25 +601,9 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
                                         const DeliveryInfoData& infoData )
 {
     const dlvid_type dlvId = getNextDlvId();
-    addDelivery(userInfo,new DeliveryInfo(cs_, dlvId, infoData));
+    addDelivery(userInfo,new DeliveryInfo(cs_,dlvId,infoData));
     return dlvId;
 }
-
-
-/*
-void DeliveryMgr::updateDelivery( dlvid_type dlvId,
-                                  const DeliveryInfoData& info )
-{
-    DeliveryImplPtr dlv;
-    if (!getDelivery(dlvId,dlv) ) {
-        throw InfosmeException(EXC_NOTFOUND,"delivery D=%u is not found",dlvId);
-    }
-    // FIXME: we have to stop activity on this delivery for a while, unbind/bind?
-    dlv->updateDlvInfo(info);
-    MutexGuard mg(mon_);
-    mon_.notify();
-}
- */
 
 
 void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& regIds )
@@ -605,38 +620,6 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& 
     (*iter)->getRegionList(regIds);
     deliveryList_.erase(iter);
 }
-
-
-/*
-// void DeliveryMgr::setDeliveryState( dlvid_type   dlvId,
-                                    DlvState     newState,
-                                    msgtime_type planTime,
-                                    std::vector< regionid_type >& regIds )
-{
-    DeliveryImplPtr dlv;
-    if (!getDelivery(dlvId,dlv)) {
-        throw InfosmeException(EXC_NOTFOUND,"delivery D=%u is not found",dlvId);
-    }
-    const DlvState oldState = dlv->getDlvInfo().getState();
-    if (oldState == DLVSTATE_CANCELLED) {
-        throw InfosmeException(EXC_LOGICERROR,"delivery %u is cancelled",dlvId);
-    }
-    if (newState == DLVSTATE_PLANNED) {
-        if (!planTime) {
-            throw InfosmeException(EXC_LOGICERROR,"plan time is not supplied");
-        }
-    }
-
-    dlv->setState(newState,planTime);
-    if (newState == DLVSTATE_PLANNED) {
-        MutexGuard mg(mon_);
-        deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
-        mon_.notify();
-    }
-
-    dlv->getRegionList(regIds);
-}
- */
 
 
 int DeliveryMgr::Execute()
@@ -683,7 +666,67 @@ int DeliveryMgr::Execute()
 }
 
 
-void DeliveryMgr::addDelivery( UserInfo& userInfo, DeliveryInfo* info )
+bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
+                                     ulonglong       ymdTime,
+                                     const Delivery& dlv )
+{
+    msgtime_type planTime;
+    const DlvState newState = dlv.getState(&planTime);
+    const dlvid_type dlvId = dlv.getDlvId();
+
+    // prepare the buffer to write state change
+    char buf[100];
+    const int buflen = sprintf(buf,"%04u,%c,%u,%s,%u\n",
+                               unsigned(ymdTime % 10000), dlvStateToString(newState)[0],
+                               dlvId, dlv.getUserInfo().getUserId(), planTime );
+    if ( buflen < 0 ) {
+        throw InfosmeException(EXC_SYSTEM,"cannot write dlv state change, dlvId=%u",dlvId);
+    }
+
+    const ulonglong fileTime = ymdTime / 10000 * 10000;
+    char fnbuf[50];
+    if ( logStateTime_ < fileTime ) {
+        const unsigned day( unsigned(fileTime / 1000000));
+        sprintf(fnbuf,"status_log/%04u.%02u.%02u/%02u.log",
+                day / 10000, (day / 100) % 100, day % 100,
+                unsigned((ymdTime/10000) % 100) );
+    }
+
+    {
+        MutexGuard mg(logStateLock_);
+        if ( logStateTime_ < fileTime ) {
+            // need to replace cur file
+            FileGuard fg;
+            fg.create( (cs_.getStorePath() + fnbuf).c_str(), true );
+            fg.seek(0,SEEK_END);
+            if (fg.getPos() == 0) {
+                const char* header = "# MINSEC,STATE,DLVID,USER,PLAN\n";
+                fg.write( header, strlen(header));
+            }
+            logStateTime_ = fileTime;
+            logStateFile_.swap(fg);
+        } else if ( logStateTime_ > fileTime ) {
+            // fix delayed record
+            memcpy(buf,"0000",4);
+        }
+        logStateFile_.write(buf,size_t(buflen));
+    }
+
+    // put into plan queue
+    if (newState == DLVSTATE_PLANNED) {
+        MutexGuard mg(mon_);
+        deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
+        mon_.notify();
+    }
+    // return true if we need to activate delivery regions
+    return newState == DLVSTATE_ACTIVE;
+}
+
+
+void DeliveryMgr::addDelivery( UserInfo&     userInfo,
+                               DeliveryInfo* info,
+                               DlvState      state,
+                               msgtime_type  planTime )
 {
     std::auto_ptr< DeliveryInfo > infoptr(info);
     if (!info) {
@@ -694,17 +737,23 @@ void DeliveryMgr::addDelivery( UserInfo& userInfo, DeliveryInfo* info )
     if ( getDelivery(dlvId,dlv) ) {
         throw InfosmeException(EXC_ALREADYEXIST,"D=%u already exists",dlvId);
     }
-    MutexGuard mg(mon_);
-    InputMessageSource* ims = new InputStorage(core_,*inputJournal_);
-    dlv.reset( new DeliveryImpl(infoptr.release(),userInfo,*storeJournal_,ims) );
-    deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
     try {
-        const msgtime_type planTime = dlv->initState();
-        if (planTime) {
-            deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
-        }
-    } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"D=%u could not init state: %s", dlvId, e.what());
+        userInfo.incStats(cs_,state);
+    } catch (std::exception& e) {
+        // FIXME: move to paused?
+        throw InfosmeException(EXC_DLVLIMITEXCEED,"D=%u cannot set state: %s",dlvId,e.what());
+    }
+    InputMessageSource* ims = new InputStorage(core_,*inputJournal_);
+    dlv.reset( new DeliveryImpl(infoptr.release(),
+                                userInfo,
+                                *storeJournal_,
+                                ims,
+                                state,
+                                planTime ));
+    MutexGuard mg(mon_);
+    deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
+    if (planTime) {
+        deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
     }
     mon_.notify();
 }
@@ -719,6 +768,92 @@ dlvid_type DeliveryMgr::getNextDlvId()
         if (!iter) return nextDlvId_;
     }
     throw InfosmeException(EXC_SYSTEM,"no more free delivery ids, try again");
+}
+
+
+void DeliveryMgr::readDeliveryInfoData( dlvid_type                        dlvId,
+                                        const smsc::util::config::Config& config,
+                                        DeliveryInfoData&                 data )
+{
+    try {
+        data.name = ConfString(config.getString("name")).str();
+        data.priority = config.getInt("priority");
+        try {
+            data.transactionMode = config.getBool("transactionMode");
+        } catch (std::exception& ) {
+            data.transactionMode = false;
+        }
+        data.startDate = ConfString(config.getString("startDate")).str();
+        data.endDate = ConfString(config.getString("endDate")).str();
+        try {
+            data.activePeriodStart = ConfString(config.getString("activePeriodStart")).str();
+        } catch (std::exception& ) {
+            data.activePeriodStart = "";
+        }
+        try {
+            data.activePeriodEnd = ConfString(config.getString("activePeriodEnd")).str();
+        } catch (std::exception&) {
+            data.activePeriodEnd = "";
+        }
+        data.activeWeekDays.clear();
+        try {
+            std::string awd = ConfString(config.getString("activeWeekDays")).str();
+            std::vector< std::string > res;
+            for ( size_t start = 0; start < awd.size(); ++start ) {
+                while ( start < awd.size() && awd[start] == ' ' ) {
+                    ++start;
+                }
+                if ( start >= awd.size() ) { break; }
+                size_t comma = awd.find(',',start);
+                if ( comma == std::string::npos ) {
+                    comma = awd.size();
+                }
+                size_t end = comma - 1;
+                while ( end > start && awd[end] == ' ') {
+                    --end;
+                }
+                if (start < end) {
+                    res.push_back( std::string(awd, start, end-start) );
+                }
+                start = comma + 1;
+            }
+            data.activeWeekDays = res;
+        } catch (std::exception&) {
+        }
+
+        try {
+            data.validityDate = ConfString(config.getString("validityDate")).str();
+        } catch (std::exception&) {
+            data.validityDate = "";
+        }
+        try {
+            data.validityPeriod = ConfString(config.getString("validityPeriod")).str();
+        } catch (std::exception&) {
+            data.validityPeriod = "";
+        }
+        data.flash = config.getBool("flash");
+        data.useDataSm = config.getBool("useDataSm");
+        ConfString dlvMode(config.getString("deliveryMode"));
+        if ( dlvMode.str() == "sms" ) {
+            data.deliveryMode = DLVMODE_SMS;
+        } else if ( dlvMode.str() == "ussdpush" ) {
+            data.deliveryMode = DLVMODE_USSDPUSH;
+        } else if ( dlvMode.str() == "ussdpushvlr" ) {
+            data.deliveryMode = DLVMODE_USSDPUSHVLR;
+        } else {
+            throw InfosmeException(EXC_CONFIG,"unknown delivery mode: '%s'",dlvMode.c_str());
+        }
+        data.owner = ConfString(config.getString("owner")).str();
+        data.retryOnFail = config.getBool("retryOnFail");
+        data.retryPolicy = ConfString(config.getString("retryPolicy")).str();
+        data.replaceMessage = config.getBool("replaceMessage");
+        data.svcType = ConfString(config.getString("svcType")).str();
+        data.userData = ConfString(config.getString("userData")).str();
+        data.sourceAddress = ConfString(config.getString("sourceAddress")).str();
+
+    } catch (std::exception& e) {
+        throw InfosmeException(EXC_CONFIG,"D=%u config: %s",dlvId,e.what());
+    }
 }
 
 }

@@ -115,7 +115,7 @@ MessageGlossary::~MessageGlossary()
 }
 
 
-void MessageGlossary::bindMessage( MessageTextPtr& p )
+void MessageGlossary::bindText( MessageTextPtr& p )
 {
     if (!p.get()) {
         smsc_log_fatal(log_,"ptr is not valid");
@@ -192,17 +192,23 @@ void MessageGlossary::bindMessage( MessageTextPtr& p )
 }
 
 
-void MessageGlossary::registerMessages( const std::string&  storePath,
-                                        dlvid_type          dlvId,
-                                        TextList&           texts )
+void MessageGlossary::setTexts( const std::string&  storePath,
+                                dlvid_type          dlvId,
+                                TextList&           texts )
 {
     smsc::core::synchronization::MutexGuard mg(lock_);
     doRegisterMessages(storePath,dlvId,texts);
+    if (texts.empty()) return;
     // inserting texts into glossary file
     smsc::core::buffers::TmpBuf<char,200> buf;
     strcat(makeDeliveryPath(dlvId,buf.get()),"glossary.txt");
     FileGuard fg;
-    fg.create((storePath+buf.get()).c_str(),true);
+    try {
+        fg.create((storePath+buf.get()).c_str(),true);
+    } catch (std::exception& e) {
+        registerFailed(texts,texts.end());
+        throw InfosmeException(EXC_SYSTEM,"D=%u failed to create glossary file: %s",dlvId,e.what());
+    }
     for ( TextList::iterator i = texts.begin(); i != texts.end(); ++i ) {
         int newpos = sprintf(buf.get(),"%u,%u,",(*i)->id_,(*i)->ref_);
         (*i)->ref_ = 1;
@@ -211,12 +217,57 @@ void MessageGlossary::registerMessages( const std::string&  storePath,
             throw InfosmeException(EXC_SYSTEM,"D=%u failed to compose glossary record",dlvId);
         }
         buf.SetPos(size_t(newpos));
-        escapeText(buf,(*i)->text_,strlen((*i)->text_));
-        *buf.GetCurPtr() = '\n';
-        fg.write(buf.get(),buf.GetPos()+1);
+        try {
+            escapeText(buf,(*i)->text_,strlen((*i)->text_));
+            *buf.GetCurPtr() = '\n';
+            fg.write(buf.get(),buf.GetPos()+1);
+        } catch (std::exception& e) {
+            registerFailed(texts,texts.end());
+            throw InfosmeException(EXC_SYSTEM,"D=%u cannot write glossary record: %s",dlvId,e.what());
+        }
     }
     fg.close();
     list_.splice(list_.begin(),texts,texts.begin(),texts.end());
+}
+
+
+void MessageGlossary::getTexts( std::vector< std::string >& texts ) const
+{
+    {
+        MutexGuard mg(lock_);
+        texts.reserve(100);
+        int id;
+        Node* node;
+        for ( TextHash::Iterator i(hash_); i.Next(id,node); ) {
+            Node* orig = node;
+            int32_t origId = id;
+            while (orig->repl != list_.end()) {
+                // this is a replacement node, try to find the original node
+                origId = (*orig->repl)->id_;
+                orig = hash_.GetPtr(origId);
+                if (!orig) {
+                    throw InfosmeException(EXC_LOGICERROR,"glossary corrupted at id=%u repl=%u",id,origId);
+                }
+            }
+            smsc_log_debug(log_,"got node=%d orig=%d",id,origId);
+            if (origId<=0) {
+                throw InfosmeException(EXC_LOGICERROR,"invalid origId=%d",origId);
+            }
+            if (unsigned(origId) > texts.size()) {
+                texts.resize(origId);
+            }
+            if ( texts[origId-1].empty() ) {
+                texts[origId-1] = (*node->iter)->text_;
+            }
+        }
+    }
+    for ( std::vector< std::string >::iterator i = texts.begin();
+          i != texts.end(); ++i ) {
+        if ( i->empty() ) {
+            throw InfosmeException(EXC_LOGICERROR,"empty glossary element at %u",
+                                   unsigned(std::distance(texts.begin(),i)+1));
+        }
+    }
 }
 
 
@@ -225,7 +276,7 @@ void MessageGlossary::doRegisterMessages( const std::string&    storePath,
                                           TextList&             texts )
 {
     // adding all messages to the hash and list
-    for ( TextList::iterator i = texts.begin(); i != texts.end(); ++i ) {
+    for ( TextList::iterator i = texts.begin(); i != texts.end(); ) {
         int32_t txtId = (*i)->id_;
         int32_t replId = (*i)->ref_;
         Node toInsert(i,list_.end());
@@ -249,8 +300,10 @@ void MessageGlossary::doRegisterMessages( const std::string&    storePath,
             Node* node = hash_.GetPtr(txtId);
             if (node) {
                 if (0 == strcmp((*node->iter)->text_,(*i)->text_)) {
-                    registerFailed(texts,i);
-                    throw InfosmeException(EXC_LOGICERROR,"D=%u: attempt to replace w/ same text",dlvId);
+                    smsc_log_debug(log_,"D=%u: not adding text id=%u w/ the same text='%s'",
+                                   dlvId,txtId,(*i)->text_);
+                    i = texts.erase(i);
+                    continue;
                 }
                 // different text, try to get txtId from message itself
                 if (replId) {
@@ -282,6 +335,7 @@ void MessageGlossary::doRegisterMessages( const std::string&    storePath,
         (*i)->ref_ = replId;
         (*i)->gloss_ = this;
         hash_.Insert(txtId,toInsert);
+        ++i;
     }
 }
 
