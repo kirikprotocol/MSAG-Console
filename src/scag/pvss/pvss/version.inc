@@ -4,7 +4,7 @@
 #define VER_BUILD 20101108
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
-#define VER_DATE  "Mon Nov 08 13:00:00 NOVST 2010"
+#define VER_DATE  "Mon Nov 08 14:05:00 NOVST 2010"
 
 #define VER_STR "Eyeline PVSS ver " VER_MAKE_STR(VER_MAJOR) "." VER_MAKE_STR(VER_MINOR) " build " VER_MAKE_STR(VER_BUILD) " date " VER_DATE
 
