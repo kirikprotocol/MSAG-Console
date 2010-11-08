@@ -410,10 +410,13 @@ void BackupProcessor::BackupProcessingTask::readDir( std::vector< std::string >&
         smsc_log_debug(log_,"cannot open dir %s", dirname_.c_str());
         return;
     }
-    struct dirent entry, *result;
+    smsc::core::buffers::TmpBuf<char,512> dirbuf(sizeof(dirent)+
+                                                 pathconf(dirname_.c_str(),_PC_NAME_MAX)+1);
+    dirent* entry = reinterpret_cast<dirent*>(dirbuf.get());
+    dirent* result;
     std::auto_ptr<char> tail;
     size_t taillen = 0;
-    while ( 0 == readdir_r(dir,&entry,&result) && result != 0 ) {
+    while ( 0 == readdir_r(dir,entry,&result) && result != 0 ) {
         // dir entry is read
         smsc_log_debug(log_,"entry: %s",result->d_name);
         const size_t reslen = ::strlen(result->d_name) + 1;

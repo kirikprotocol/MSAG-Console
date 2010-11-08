@@ -698,3 +698,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag bugfix: status of BIND_RESP from SMSC was not checked
 
 --- current fixes ---
+2010-11-08 12:50 bukind
+  pvss bugfix: silly bug in setting buffer for readdir_r in backup processor
