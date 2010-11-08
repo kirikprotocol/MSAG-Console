@@ -22,9 +22,9 @@ public class ArchiveDemon {
 
   private static final Logger logger = Logger.getLogger(ArchiveDemon.class);
 
-  private final ArchiveDaemonManagerImpl manager;
+  private final ArchiveDaemonManager manager;
 
-  public ArchiveDemon(ArchiveDaemonManagerImpl manager) throws AdminException {
+  public ArchiveDemon(ArchiveDaemonManager manager) throws AdminException {
     this.manager = manager;
   }
 

@@ -3,8 +3,10 @@ package ru.novosoft.smsc.web;
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.alias.AliasManager;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
+import ru.novosoft.smsc.admin.operative_store.OperativeStoreProvider;
 import ru.novosoft.smsc.admin.profile.ProfileManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
@@ -68,6 +70,8 @@ public class WebContext {
   private final WSmscManager smscManager;
   private final WTimezoneManager timezoneManager;
   private final WUserManager userManager;
+  private final OperativeStoreProvider operativeStoreProvider;
+  private final ArchiveDemon archiveDaemon;
 
   public static void init(Authenticator authenticator, WebXml webXml, AdminContext adminContext) throws InitException {
     auth = authenticator;
@@ -122,6 +126,8 @@ public class WebContext {
     smscManager = new WSmscManager(adminContext.getSmscManager(), journal, user);
     timezoneManager = new WTimezoneManager(adminContext.getTimezoneManager(), journal, user);
     userManager = new WUserManager(adminContext.getUsersManager(), journal, user);
+    operativeStoreProvider = adminContext.getOperativeStoreProvider();
+    archiveDaemon = adminContext.getArchiveDaemon();
   }
 
   public WebXml getWebXml() {
@@ -211,6 +217,14 @@ public class WebContext {
 
   public WUserManager getUserManager() {
     return userManager;
+  }
+
+  public OperativeStoreProvider getOperativeStoreProvider() {
+    return operativeStoreProvider;
+  }
+
+  public ArchiveDemon getArchiveDaemon() {
+    return archiveDaemon;
   }
 
   public Journal getJournal() {

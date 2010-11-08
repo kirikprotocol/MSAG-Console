@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.alias.AliasManagerImpl;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManagerImpl;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.category.CategoryManagerImpl;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
@@ -64,6 +65,7 @@ public class AdminContext {
   protected FileSystem fileSystem;
   protected SmscManagerImpl smscManager;
   protected ArchiveDaemonManager archiveDaemonManager;
+  protected ArchiveDemon archiveDaemon;
   protected ClusterController clusterController;
   protected AliasManager aliasManager;
   protected RescheduleManager rescheduleManager;
@@ -120,8 +122,10 @@ public class AdminContext {
     File smscConfigDir = smscManager.getConfigDir();
     File smscConfigBackupDir = smscManager.getConfigBackupDir();
 
-    if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager))
+    if (ArchiveDaemonManagerImpl.isDaemonDeployed(serviceManager)) {
       archiveDaemonManager = new ArchiveDaemonManagerImpl(serviceManager, fileSystem);
+      archiveDaemon = new ArchiveDemon(archiveDaemonManager);
+    }
 
     aliasManager = new AliasManagerImpl(new File(smscManager.getSettings().getCommonSettings().getAliasStoreFile()), clusterController, fileSystem);
 
@@ -260,6 +264,10 @@ public class AdminContext {
 
   public OperativeStoreProvider getOperativeStoreProvider() {
     return operativeStoreProvider;
+  }
+
+  public ArchiveDemon getArchiveDaemon() {
+    return archiveDaemon;
   }
 
   public InstallationType getInstallationType() {
