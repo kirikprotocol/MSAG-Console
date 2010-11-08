@@ -9,6 +9,7 @@ import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
+import mobi.eyeline.informer.admin.restriction.TestRestrictionsManager;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
 import mobi.eyeline.informer.admin.smsc.Smsc;
@@ -39,6 +40,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
+    TestUtils.exportResource(TestRestrictionsManager.class.getResourceAsStream("restrictions.csv"), new File(confDir, "restrictions.csv"), false);
   }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
@@ -177,6 +179,10 @@ public class TestAdminContext extends AdminContext {
 
       deliveryManager = new TestDeliveryManager(new TestDeliveryStatProvider(statDir, fileSystem));
       createDeliveries();
+
+      restrictionsManager = new TestRestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
+          new File(confDir, "backup"), fileSystem);
+
 
     } catch (IOException e) {
       throw new InitException(e);

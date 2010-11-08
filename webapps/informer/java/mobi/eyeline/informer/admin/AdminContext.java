@@ -14,6 +14,9 @@ import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
+import mobi.eyeline.informer.admin.restriction.Restriction;
+import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
+import mobi.eyeline.informer.admin.restriction.RestrictionsManager;
 import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.SmscException;
@@ -66,6 +69,8 @@ public class AdminContext {
   protected DeliveryManager deliveryManager;
 
   protected File workDir;
+  
+  protected RestrictionsManager restrictionsManager;
 
 // delivery ->user ->region->smsc
 
@@ -128,6 +133,9 @@ public class AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       deliveryManager = new DeliveryManager(is.getHost(), is.getDeliveriesPort(), new File(is.getStatDir()), fileSystem);
+
+      restrictionsManager = new RestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
+          new File(confDir, "backup"), fileSystem);
 
     }catch (AdminException e) {
       throw new InitException(e);
@@ -471,5 +479,25 @@ public class AdminContext {
 
   public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliverId) throws AdminException {
     return deliveryManager.getDeliveryStatusHistory(login, password, deliverId);
+  }
+
+  public Restriction getRestriction(int id) {
+    return restrictionsManager.getRestriction(id);
+  }
+
+  public List<Restriction> getRestrictions(RestrictionsFilter filter) {
+    return restrictionsManager.getRestrictions(filter);
+  }
+
+  public void addRestriction(Restriction r) throws AdminException {
+    restrictionsManager.addRestriction(r);
+  }
+
+  public void updateRestriction(Restriction r) throws AdminException {
+    restrictionsManager.updateRestriction(r);
+  }
+
+  public void deleteRestriction(int id) throws AdminException {
+    restrictionsManager.deleteRestriction(id);
   }
 }

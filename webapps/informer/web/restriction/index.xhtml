@@ -1,0 +1,92 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.restrictions']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smsc">
+
+      <h:panelGroup>
+
+        <eye:dataTableFilter bean="#{restrictionsList}" clearAction="clearFilter">
+          <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
+              <h:outputText id="fromDate" value="#{msg['restriction.page.from_date']}"/>
+              <t:inputDate value="#{restrictionsList.filter.startDate}" popupCalendar="true" type="both" />
+              <h:outputText value="#{msg['restriction.page.till_date']}"/>
+              <t:inputDate id="tillDate" value="#{restrictionsList.filter.endDate}"  popupCalendar="true" type="both"/>
+            </h:panelGrid>
+            <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
+              <h:outputText value="#{msg['restriction.page.namePattern']}"/>
+              <tr:inputText id="namePattern" value="#{restrictionsList.filter.nameFilter}"/>
+            </h:panelGrid>
+          </h:panelGrid>
+        </eye:dataTableFilter>
+
+        <eye:buttons>
+          <eye:button>
+            <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT"/>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['delete.button']}" action="#{restrictionsList.removeSelected}"
+                            onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
+                />
+          </eye:button>
+          <eye:space/>
+        </eye:buttons>
+
+        <p/>
+
+        <eye:dataTable value="#{restrictionsList.restrictionsModel}" selectedRows="#{restrictionsList.selectedRows}" var="r">
+          <eye:row rowId="#{r.id}">
+            <eye:column name="name" title="#{msg['restriction.page.name']}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
+              <h:commandLink value="#{r.name}" action="RESTRICTION_EDIT">
+                <f:param name="restrictionId" value="#{r.id}"/>
+              </h:commandLink>
+            </eye:column>
+            <eye:column name="startDate" title="#{msg['restriction.page.startDate']}" sortable="true" width="20%" align="left">
+              <h:outputText value="#{r.startDate}"><f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/></h:outputText>
+            </eye:column>
+            <eye:column name="endDate" title="#{msg['restriction.page.endDate']}" sortable="true" width="20%" align="left">
+              <h:outputText value="#{r.endDate}"><f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/></h:outputText>
+            </eye:column>
+            <eye:column name="allUsers" title="#{msg['restriction.page.allUsers']}" sortable="true" width="40%" align="left">
+              <h:outputText value="#{r.allUsers}"/>
+            </eye:column>
+          </eye:row>
+        </eye:dataTable>
+
+
+      </h:panelGroup>
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{restrictionsList.removeSelected}"
+                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
+              />
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

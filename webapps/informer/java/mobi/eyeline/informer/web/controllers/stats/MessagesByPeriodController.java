@@ -63,9 +63,8 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
 
       DeliveryStatFilter filterCopy = new DeliveryStatFilter(getFilter());
-      if(delivery!=null && filterCopy.getFromDate()==null) {
-        // todo remove comment
-        // filterCopy.setFromDate(delivery.getStartDate());
+      if(delivery!=null && filterCopy.getFromDate()==null) {        
+        filterCopy.setFromDate(delivery.getStartDate());
       }
       config.statistics(filterCopy,this);
 

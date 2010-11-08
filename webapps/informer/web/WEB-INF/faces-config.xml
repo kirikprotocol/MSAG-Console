@@ -299,6 +299,18 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByUserStatsController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>restrictionsList</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.restriction.RestrictionListController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>restrictionEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.restriction.RestrictionEditController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
   
   <navigation-rule>
     <navigation-case>
@@ -414,6 +426,17 @@
     <navigation-case>
       <from-outcome>DELIVERY_CREATE</from-outcome>
       <to-view-id>/deliveries/create.xhtml</to-view-id>
+    </navigation-case>
+
+
+    <navigation-case>
+      <from-outcome>RESTRICTIONS</from-outcome>
+      <to-view-id>/restriction/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>RESTRICTION_EDIT</from-outcome>
+      <to-view-id>/restriction/edit.xhtml</to-view-id>
     </navigation-case>
 
   </navigation-rule>

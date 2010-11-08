@@ -18,7 +18,8 @@ public enum Subject {
   REGIONS("subject.regions"),  
   DAEMONS("subject.daemons"),
   INFORMER("subject.informer"),
-  DELIVERIES("subject.deliveries");
+  DELIVERIES("subject.deliveries"),
+  RESTRICTIONS("subject.restrictions");
 
   private static Map<String, Subject> map = new HashMap<String, Subject>(values().length) {      {
       for(Subject s : Subject.values()) {

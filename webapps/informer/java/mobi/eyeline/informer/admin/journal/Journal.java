@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 
@@ -33,6 +34,8 @@ public class Journal {
   private final InformerDiffHelper informer = new InformerDiffHelper();
 
   private final DeliveriesDiffHelper deliveries = new DeliveriesDiffHelper();
+
+  private final RestrictionsDiffHelper restrictions = new RestrictionsDiffHelper();
 
   private final JournalDataSource ds;
 
@@ -302,5 +305,17 @@ public class Journal {
 
   public void logDeliveriesChanges(String user, Delivery oldDelivery, Delivery newDelivery) throws AdminException {
     deliveries.logChanges(this, user, oldDelivery, newDelivery);
+  }
+
+  public void logAddRestriction(Restriction r, String user) throws AdminException {
+    restrictions.logRestrictionAdd(this,user,r);
+  }
+
+  public void logUpdateRestriction(Restriction r, Restriction oldR, String user) throws AdminException {
+    restrictions.logUpdateRestriction(this,user, r, oldR);
+  }
+
+  public void logDeleteRestriction(Restriction r, String user) throws AdminException {
+    restrictions.logDeleteRestriction(this,user, r);
   }
 }

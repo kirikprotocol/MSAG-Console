@@ -8,6 +8,9 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.restriction.Restriction;
+import mobi.eyeline.informer.admin.restriction.RestrictionException;
+import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -324,6 +327,34 @@ public class Configuration {
 
   public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
     return context.getDeliveryStatusHistory(login, password, deliveryId);
+  }
+
+   public Restriction getRestriction(int id) {
+    return context.getRestriction(id);
+  }
+
+  public List<Restriction> getRestrictions(RestrictionsFilter filter) {
+    return context.getRestrictions(filter);
+  }
+
+  public void addRestriction(Restriction r, String user) throws AdminException {
+    context.addRestriction(r);
+    journal.logAddRestriction(r,user);
+  }
+
+  public void updateRestriction(Restriction r, String user) throws AdminException {
+    Restriction oldr = context.getRestriction(r.getId());
+    if(oldr == null) {
+      throw new RestrictionException("restriction.not.found");
+    }
+    context.updateRestriction(r);
+    journal.logUpdateRestriction(r,oldr,user);
+  }
+
+  public void deleteRestriction(int id, String user) throws AdminException {
+    Restriction oldr = context.getRestriction(id);
+    context.deleteRestriction(id);
+    journal.logDeleteRestriction(oldr,user);
   }
 
   private final Lock lock = new ReentrantLock();

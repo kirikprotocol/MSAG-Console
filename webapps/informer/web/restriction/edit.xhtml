@@ -1,0 +1,87 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{ restrictionEdit.restrictionId!=null ? msg['restriction.edit.title'] : msg['restriction.add.title']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="userForm" rendered="#{!restrictionEdit.initError}">
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{restrictionEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="RESTRICTIONS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <tr:inputHidden id="restrictionId" value="#{restrictionEdit.restrictionId}"/>
+
+      <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+
+        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+
+          <tr:panelLabelAndMessage label="#{msg['restriction.page.name']}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <tr:inputText value="#{restrictionEdit.restriction.name}"  simple="true">
+              <tr:validateLength minimum="1"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{msg['restriction.page.startDate']}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <t:inputDate value="#{restrictionEdit.restriction.startDate}"  popupCalendar="true" type="both" />
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{msg['restriction.page.endDate']}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <t:inputDate value="#{restrictionEdit.restriction.endDate}"  popupCalendar="true" type="both" />
+          </tr:panelLabelAndMessage>
+
+
+          <tr:panelLabelAndMessage label="#{msg['restriction.page.allUsers']}" labelStyle="text-align:left" inlineStyle="align:left;">
+            <t:selectBooleanCheckbox value="#{restrictionEdit.restriction.allUsers}"
+                                     onchange="
+                                     var shuttleDiv = document.getElementById('usersShuttle');
+                                     shuttleDiv.style.visibility = this.checked ? 'hidden':'visible';                                     
+                                     "
+            />
+          </tr:panelLabelAndMessage>
+          
+
+          <tr:selectManyShuttle id="usersShuttle" value="#{restrictionEdit.selectedUsers}"
+                leadingHeader="#{msg['restriction.page.availableUsers']}"
+                trailingHeader="#{msg['restriction.page.selectedUsers']}"
+                
+                inlineStyle="visibility: #{restrictionEdit.restriction.allUsers==true ? 'hidden':'visible'};">
+            <f:selectItems value="#{restrictionEdit.users}"/>
+          </tr:selectManyShuttle>
+
+        </tr:panelFormLayout>
+      </h:panelGrid>
+
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" action="#{restrictionEdit.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="RESTRICTIONS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
