@@ -128,14 +128,8 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
                            cfg.getInt("Admin.handlers") );
     }
 
-    // FIXME: load users
+    // load all users
     loadUsers("");
-    /*
-    {
-        UserInfo* ui = new UserInfo("bukind","pwd");
-        users_.Insert(ui->getUserId(),UserInfoPtr(ui));
-    }
-     */
 
     // create smscs
     {

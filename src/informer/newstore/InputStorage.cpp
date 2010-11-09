@@ -123,50 +123,6 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
 }
 
 
-/*
-InputTransferTask* InputStorage::startInputTransfer( TransferRequester& requester,
-                                                     unsigned           count,
-                                                     bool               mayDetachRegion )
-{
-    InputTransferTask* task = 0;
-    if (count==0) return task;
-    const regionid_type regId = requester.getRegionId();
-    try {
-        smsc_log_debug(log_,"start transfer task R=%u/D=%u for %u msgs, mayDetach=%u",
-                       unsigned(regId), unsigned(getDlvId()), count, mayDetachRegion );
-        InputRegionRecord ro;
-        ro.regionId = regId;
-        getRecord(ro);
-        if (ro.rfn==0) { ro.rfn=1; ro.roff=0; }
-        if (ro.rfn<ro.wfn || (ro.rfn==ro.wfn && ro.roff<ro.woff)) {
-            // ok
-            task = new InputTransferTaskImpl(requester,count,*this);
-            core_.startInputTransfer(task);
-        } else {
-            // no data
-            smsc_log_debug(log_,"R=%u/D=%u data is not ready: RP=%u/%u, WP=%u/%u",
-                           regId, getDlvId(),
-                           ro.rfn, ro.roff, ro.wfn, ro.woff );
-        }
-    } catch ( std::exception& e ) {
-        smsc_log_error(log_,"cannot start transfer task: %s", e.what());
-    }
-    if (!task && mayDetachRegion) {
-        std::vector<regionid_type> regs;
-        regs.push_back(regId);
-        core_.deliveryRegions(getDlvId(),regs,false);
-    }
-    return task;
-}
-
-
-void InputStorage::startResendTransfer( ResendTransferTask* task )
-{
-    core_.startResendTransfer(task);
-}
- */
-
-
 void InputStorage::setRecordAtInit( const InputRegionRecord& ro,
                                     uint64_t maxMsgId )
 {
