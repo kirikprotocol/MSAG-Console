@@ -284,4 +284,14 @@ public class StringEncoderDecoder {
     }
     return sb.toString();
   }
+
+  public static String toCSVString(List<Object> args) {
+    StringBuilder sb = new StringBuilder();
+    String sep = "";
+    for(Object s : args) {
+      sb.append(sep).append(csvEscape(s));
+      sep = ",";
+    }
+    return sb.toString();
+  }
 }

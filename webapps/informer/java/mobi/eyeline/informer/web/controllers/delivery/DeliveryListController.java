@@ -24,7 +24,7 @@ public class DeliveryListController extends DeliveryController {
 
   private List<String> selected;
 
-  private final static int MEMORY_LIMIT = 100;
+  private final static int MEMORY_LIMIT = 100;     //todo
 
   public DeliveryListController() {
     String i = getRequestParameter("init");
@@ -152,14 +152,15 @@ public class DeliveryListController extends DeliveryController {
         filter.setStatusFilter(new DeliveryStatus[]{DeliveryStatus.valueOf(status)});
       }
       final int total[] = new int[]{0};
-      config.getDeliveries(u.getLogin(), u.getPassword(), filter, 1, new Visitor<DeliveryInfo>() {
+      config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<DeliveryInfo>() {
         public boolean visit(DeliveryInfo value) throws AdminException {
           if(namePrefix != null && (namePrefix = namePrefix.trim()).length() != 0 &&
               !value.getName().startsWith(namePrefix)) {
             return true;
           }
           int compare;
-          if(infimum == null || (compare = comparator.compare(infimum, value)) < 0 || (compare == 0 && infimum.getDeliveryId() != value.getDeliveryId())) {
+          if(infimum == null || (compare = comparator.compare(infimum, value)) < 0 ||
+              (compare == 0 && infimum.getDeliveryId() != value.getDeliveryId())) {
             result.add(value);
             total[0]++;
           }

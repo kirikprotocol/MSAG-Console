@@ -85,7 +85,7 @@ public class DcpConverter {
     return mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMode.valueOf(mode.toString());
   }
 
-  public static Delivery convert(int id, mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo di, Map<String, String> uD, String[] glossary) throws AdminException {
+  public static Delivery convert(int id, mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo di, String[] glossary) throws AdminException {
     if (di == null) {
       return null;
     }
@@ -110,7 +110,9 @@ public class DcpConverter {
     delivery.setRetryOnFail(di.getRetryOnFail());
     delivery.setRetryPolicy(di.getRetryPolicy());
     delivery.setSourceAddress(new Address(di.getSourceAddress()));
-    if(uD != null) {
+
+    if(di.hasUserData()) {
+      Map<String, String> uD = convertUserData(di.getUserData());
       String t = uD.get("secret");
       delivery.setSecret(t != null && Boolean.valueOf(t));
       t = uD.get("secretFlash");
@@ -127,6 +129,7 @@ public class DcpConverter {
       if(t != null) {
         delivery.setEmailNotificationAddress(t);
       }
+      delivery.setRestriction(uD.containsKey("restriction"));
     }
     delivery.setStartDate(convertDate(di.getStartDate()));
     if (di.hasSvcType()) {
@@ -253,6 +256,10 @@ public class DcpConverter {
     if (di.hasUserId()) {
       result.setUserId(di.getUserId());
     }
+    if(di.hasUserData()) {
+      Map<String, String> uD = convertUserData(di.getUserData());
+      result.setRestriction(uD.containsKey("restriction"));
+    }
     return result;
   }
 
@@ -289,6 +296,9 @@ public class DcpConverter {
     }
     if(di.getType() == Delivery.Type.SingleText) {
       userData.put("singleText", true);
+    }
+    if(di.isRestriction()) {
+      userData.put("restriction", true);
     }
     delivery.setUserData(convertUserData(userData));
     delivery.setStartDate(convertDate(di.getStartDate()));

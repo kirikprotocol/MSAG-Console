@@ -62,7 +62,8 @@ public class DcpConverterTest {
     d.setSvcType("svc1");
     d.setValidityDate(new Date());
     d.setValidityPeriod("1:00:00");
-    assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d), null, null));
+    d.setRestriction(true);
+    assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d), null));
   }
 
 

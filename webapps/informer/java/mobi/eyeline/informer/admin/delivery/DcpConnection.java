@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
@@ -282,7 +283,7 @@ public class DcpConnection {
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo info = resp.getInfo();
     Map<String, String> userData = DcpConverter.convertUserData(info.getUserData());
     if(!userData.containsKey("singleText")) {
-      return DcpConverter.convert(deliveryId, info, userData, null);
+      return DcpConverter.convert(deliveryId, info, null);
     } else{
       GetDeliveryGlossary reqG = new GetDeliveryGlossary();
       GetDeliveryGlossaryResp respG;
@@ -293,7 +294,7 @@ public class DcpConnection {
       } finally {
         lock.unlock();
       }
-      return DcpConverter.convert(deliveryId, info, userData, respG.getGlossary().getMessages());
+      return DcpConverter.convert(deliveryId, info, respG.getGlossary().getMessages());
     }
   }
 
@@ -343,7 +344,7 @@ public class DcpConnection {
    * @return идентификатор запроса
    * @throws AdminException ошибка выполнения команды
    */
-  public int getDeliviries(DeliveryFilter deliveryFilter) throws AdminException {
+  public int getDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
     GetDeliveriesList req = new GetDeliveriesList();
     if (deliveryFilter.getEndDateFrom() != null) {
       req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
@@ -378,6 +379,12 @@ public class DcpConnection {
     if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
       req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
     }
+    DeliveryFields[] fieldses = DcpConverter.convert(deliveryFilter.getResultFields());
+    DeliveryFields[] fs = new DeliveryFields[fieldses.length + 1];
+    fs[0] = DeliveryFields.UserData;
+    System.arraycopy(fieldses, 0, fs, 1, fieldses.length);
+    req.setResultFields(fs);
+
     GetDeliveriesListResp resp;
     try {
       lock.lock();
@@ -475,8 +482,8 @@ public class DcpConnection {
     }
     if (resp.getInfo() != null) {
       for (mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
-          messages.add(DcpConverter.convert(mi,
-              delivery.getType() == Delivery.Type.SingleText ? delivery.getSingleText() : null));
+        messages.add(DcpConverter.convert(mi,
+            delivery.getType() == Delivery.Type.SingleText ? delivery.getSingleText() : null));
       }
     }
     return resp.getMoreMessages();

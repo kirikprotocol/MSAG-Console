@@ -413,7 +413,7 @@ public class DeliveryManager {
       throw new DeliveryException("resultFields");
     }
     DcpConnection conn = getDeliveryConnection(login, password);
-    int _reqId = conn.getDeliviries(deliveryFilter);
+    int _reqId = conn.getDeliveries(deliveryFilter);
     new DeliveryDataSource<DeliveryInfo>(_pieceSize, _reqId, conn) {
       protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<DeliveryInfo> result) throws AdminException {
         return connection.getNextDeliviries(reqId, pieceSize, result);
@@ -488,6 +488,27 @@ public class DeliveryManager {
    */
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     statsProvider.accept(filter, visitor);
+  }
+
+
+  /**
+   * Устанавливает у рассылки флаг в поле userData попадает она под запрет или нет
+   * @param login         логин
+   * @param password      пароль
+   * @param deliveryId идентификатор рассылки
+   * @param restriction флаг
+   * @throws AdminException ошибка выполнения команды
+   * @return рассылка
+   */
+  public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
+    DcpConnection conn = getDeliveryConnection(login, password);
+    Delivery d = conn.getDelivery(deliveryId);
+    if(d == null) {
+      throw new DeliveryException("delivery_not_found");
+    }
+    d.setRestriction(restriction);
+    conn.modifyDelivery(d);
+    return d;
   }
 
   /**

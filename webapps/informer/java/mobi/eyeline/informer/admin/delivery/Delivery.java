@@ -65,6 +65,8 @@ public class Delivery implements Serializable{
 
   private final Type type;
 
+  private boolean restriction;
+
   public static Delivery newSingleTextDelivery() {
     return new Delivery(Type.SingleText);
   }
@@ -76,6 +78,14 @@ public class Delivery implements Serializable{
 
   Delivery(Type type) {
     this.type = type;
+  }
+
+  public boolean isRestriction() {
+    return restriction;
+  }
+
+  public void setRestriction(boolean restriction) {
+    this.restriction = restriction;
   }
 
   public Type getType() {
@@ -389,6 +399,9 @@ public class Delivery implements Serializable{
     if(type != delivery.type) {
       return false;
     }
+    if(restriction != delivery.isRestriction()) {
+      return false;
+    }
 
     if (sourceAddress != null ? !sourceAddress.getSimpleAddress().equals(delivery.sourceAddress.getSimpleAddress()) : delivery.sourceAddress != null)
       return false;
@@ -433,6 +446,7 @@ public class Delivery implements Serializable{
     d.smsNotificationAddress = smsNotificationAddress == null ? null : new Address(smsNotificationAddress.getSimpleAddress());
     d.sourceAddress = sourceAddress == null ? null : new Address(sourceAddress.getSimpleAddress());
     d.singleText = singleText;
+    d.restriction = restriction;
     return d;
   }
 }

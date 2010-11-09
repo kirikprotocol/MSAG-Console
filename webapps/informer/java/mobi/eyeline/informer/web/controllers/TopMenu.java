@@ -22,12 +22,10 @@ public class TopMenu {
       add(new MenuBarItem("informer.admin", "informer.admin.width").
           add(new MenuItem("informer.admin.status", "/index.faces")).
           add(new MenuItem("informer.admin.config", "/config/index.faces")).
-//          add(new MenuItem("informer.admin.users", "/users/index.faces")).
           add(new MenuItem("informer.admin.regions", "/regions/index.faces")).
           add(new MenuItem("informer.admin.smsc", "/smsc/index.faces")).
           add(new MenuItem("informer.admin.blacklist", "/blacklist/index.faces")).
           add(new MenuItem("informer.admin.users", "/users/index.faces")).
-//          add(new MenuItem("informer.admin.reschedules", "/reschedule/index.faces")).
           add(new MenuItem("informer.admin.restrictions", "/restriction/index.faces")).
 //          add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
 //          add(new MenuItem("informer.admin.import", "/import/index.faces")).

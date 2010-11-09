@@ -304,7 +304,7 @@ public class TestDcpConnection extends DcpConnection{
     return stats;
   }
 
-  public synchronized int getDeliviries(DeliveryFilter deliveryFilter) throws AdminException {
+  public synchronized int getDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
     int r = reqIds++;
     deliveryReqs.put(r, new DeliveryRequest(deliveryFilter));
     return r;
@@ -336,6 +336,7 @@ public class TestDcpConnection extends DcpConnection{
       info.setStartDate(d.getStartDate());
       info.setStatus(d.status);
       info.setUserId(d.getOwner());
+      info.setRestriction(d.isRestriction());
       deliveries.add(info);
     }
     return result.size() < pieceSize;

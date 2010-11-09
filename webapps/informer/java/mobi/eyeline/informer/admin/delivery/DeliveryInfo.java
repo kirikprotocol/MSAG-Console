@@ -17,6 +17,7 @@ public class DeliveryInfo {
   private Date endDate;
   private Date activityPeriodStart;
   private Date activityPeriodEnd;
+  private boolean restriction;
 
   public int getDeliveryId() {
     return deliveryId;
@@ -80,5 +81,13 @@ public class DeliveryInfo {
 
   void setActivityPeriodEnd(Date activityPeriodEnd) {
     this.activityPeriodEnd = activityPeriodEnd;
+  }
+
+  public boolean isRestriction() {
+    return restriction;
+  }
+
+  void setRestriction(boolean restriction) {
+    this.restriction = restriction;
   }
 }
