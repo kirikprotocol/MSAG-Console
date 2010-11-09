@@ -54,3 +54,20 @@ message LoggerSetCategoriesResp 6
   int32 status 1
 end
 
+enum byte DeliveryMode
+  SMS 1
+  USSD_PUSH 2
+  USSD_PUSH_VLR 3
+end
+
+message SendTestSms 9
+  string sourceAddr 1
+  string abonent 2
+  string text 3
+  bool flash 4
+  DeliveryMode deliveryMode 5
+end
+
+message SendTestSmsResp 10
+  int32 respCode 1
+end
