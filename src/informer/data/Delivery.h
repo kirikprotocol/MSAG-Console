@@ -30,7 +30,7 @@ public:
 
     const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
 
-    const UserInfo& getUserInfo() const { return userInfo_; }
+    const UserInfo& getUserInfo() const { return *userInfo_; }
 
     virtual void updateDlvInfo( const DeliveryInfoData& data ) = 0;
 
@@ -76,7 +76,7 @@ private:
 protected:
     smsc::logger::Logger*                              log_;
     std::auto_ptr<DeliveryInfo>                        dlvInfo_;
-    UserInfo&                                          userInfo_;
+    EmbedRefPtr<UserInfo>                              userInfo_;
 
     ActivityLog                                        activityLog_;
     InputMessageSource*                                source_;       // owned

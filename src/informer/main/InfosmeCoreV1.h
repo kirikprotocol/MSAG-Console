@@ -135,6 +135,8 @@ protected:
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
 
+    void loadUsers( const char* userId );
+
 private:
     smsc::logger::Logger*                      log_;
     CommonSettings                             cs_;

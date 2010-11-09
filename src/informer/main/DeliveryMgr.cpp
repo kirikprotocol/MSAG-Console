@@ -372,6 +372,10 @@ DeliveryMgr::~DeliveryMgr()
     delete inputJournal_;
 
     deliveryHash_.Empty();
+    // detach all deliveries from user infos
+    for ( DeliveryList::iterator i = deliveryList_.begin(); i != deliveryList_.end(); ++i ) {
+        (*i)->detachFromUserInfo();
+    }
     deliveryList_.clear();
     smsc_log_info(log_,"dtor done, list_=%p",&deliveryList_);
 }
@@ -598,17 +602,20 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
 
 void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& regIds )
 {
-    // FIXME: make unbind in core
-    MutexGuard mg(mon_);
+    DeliveryList tokill;
     DeliveryList::iterator iter;
-    if (!deliveryHash_.Pop(dlvId,iter) ) {
-        throw InfosmeException(EXC_NOTFOUND,"delivery %u is not found",dlvId);
+    {
+        MutexGuard mg(mon_);
+        if (!deliveryHash_.Pop(dlvId,iter) ) {
+            throw InfosmeException(EXC_NOTFOUND,"delivery %u is not found",dlvId);
+        }
+        if (inputRollingIter_ == iter) ++inputRollingIter_;
+        if (storeRollingIter_ == iter) ++storeRollingIter_;
+        if (statsDumpingIter_ == iter) ++statsDumpingIter_;
+        tokill.splice(tokill.begin(),deliveryList_,iter);
     }
-    if (inputRollingIter_ == iter) ++inputRollingIter_;
-    if (storeRollingIter_ == iter) ++storeRollingIter_;
-    if (statsDumpingIter_ == iter) ++statsDumpingIter_;
     (*iter)->getRegionList(regIds);
-    deliveryList_.erase(iter);
+    (*iter)->detachFromUserInfo();
 }
 
 
@@ -616,7 +623,7 @@ int DeliveryMgr::Execute()
 {
     typedef int64_t msectime_type;
 
-    std::vector< dlvid_type > wakeList;
+    DeliveryWakeQueue wakeList;
     while ( !stopping_ ) {
 
         const msectime_type curTime = msectime_type(currentTimeMicro() / 1000);
@@ -624,13 +631,13 @@ int DeliveryMgr::Execute()
 
         // processing wakelist
         if ( ! wakeList.empty() ) {
-            for ( std::vector<dlvid_type>::const_iterator i = wakeList.begin();
+            for ( DeliveryWakeQueue::const_iterator i = wakeList.begin();
                   i != wakeList.end(); ++i ) {
                 DeliveryImplPtr dlv;
-                if (!getDelivery(*i,dlv)) {continue;}
+                if (!getDelivery(i->second,dlv)) {continue;}
                 msgtime_type planTime;
                 if ( DLVSTATE_PLANNED == dlv->getState(&planTime) &&
-                     planTime <= now ) {
+                     planTime == i->first ) {
                     dlv->setState( DLVSTATE_ACTIVE );
                 }
             }
@@ -639,10 +646,7 @@ int DeliveryMgr::Execute()
 
         MutexGuard mg(mon_);
         DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
-        for ( DeliveryWakeQueue::iterator i = deliveryWakeQueue_.begin();
-              i != uptoNow; ++i ) {
-            wakeList.push_back(i->second);
-        }
+        wakeList.insert(deliveryWakeQueue_.begin(),uptoNow);
         deliveryWakeQueue_.erase(deliveryWakeQueue_.begin(), uptoNow);
         if (!wakeList.empty()) continue;
         msectime_type wakeTime = 10000;
@@ -740,6 +744,7 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
                                 ims,
                                 state,
                                 planTime ));
+    userInfo.attachDelivery( dlv );
     MutexGuard mg(mon_);
     deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
     if (planTime) {

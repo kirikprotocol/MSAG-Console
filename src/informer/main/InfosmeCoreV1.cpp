@@ -129,10 +129,13 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     }
 
     // FIXME: load users
+    loadUsers("");
+    /*
     {
         UserInfo* ui = new UserInfo("bukind","pwd");
         users_.Insert(ui->getUserId(),UserInfoPtr(ui));
     }
+     */
 
     // create smscs
     {
@@ -223,18 +226,35 @@ void InfosmeCoreV1::stop()
 
 void InfosmeCoreV1::addUser( const char* user )
 {
-    throw InfosmeException(EXC_NOTIMPL,"FIXME: addUser");
+    UserInfoPtr ptr = getUserInfo(user);
+    if (ptr.get()) throw InfosmeException(EXC_ALREADYEXIST,"user '%s' already exists",user);
+    loadUsers(user);
 }
 
 
-void InfosmeCoreV1::deleteUser( const char* user )
+void InfosmeCoreV1::deleteUser( const char* login )
 {
-    throw InfosmeException(EXC_NOTIMPL,"FIXME: deleteUser");
+    if (!login) throw InfosmeException(EXC_LOGICERROR,"deluser NULL passed");
+    UserInfoPtr user;
+    {
+        MutexGuard mg(startMon_);
+        users_.Pop(login,user);
+    }
+    if (!user.get()) throw InfosmeException(EXC_NOTFOUND,"no such user '%s'",login);
+
+    std::vector< DeliveryPtr > dlvs;
+    user->getDeliveries( dlvs );
+    for ( std::vector< DeliveryPtr >::iterator i = dlvs.begin(); i != dlvs.end(); ++i ) {
+        (*i)->setState(DLVSTATE_CANCELLED);
+        deleteDelivery(*user,(*i)->getDlvId());
+    }
+    // FIXME: should we dump statistics of the user after all deliveries stopped?
 }
 
 
 UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 {
+    if (!login) throw InfosmeException(EXC_LOGICERROR,"userid NULL passed");
     MutexGuard mg(startMon_);
     UserInfoPtr* ptr = users_.GetPtr(login);
     if (!ptr) return UserInfoPtr();
@@ -242,13 +262,12 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 }
 
 
-void InfosmeCoreV1::updateUserInfo( const char* user )
+void InfosmeCoreV1::updateUserInfo( const char* login )
 {
-    throw InfosmeException(EXC_NOTIMPL,"FIXME: updateUserInfo");
+    UserInfoPtr ptr = getUserInfo(login);
+    if (!ptr.get()) throw InfosmeException(EXC_NOTFOUND,"user '%s' is not found",login);
+    loadUsers(login);
 }
-
-
-
 
 
 void InfosmeCoreV1::updateSmsc( const std::string& smscId,
@@ -414,6 +433,7 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
     bs.dlvId = dlvId;
     bs.regIds.swap(regIds);
     bs.bind = bind;
+    bs.ignoreState = bind;
     bindQueue_.Push(bs);
 }
 
@@ -423,8 +443,14 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
                                        BindSignal&     bs,
                                        const Delivery& dlv )
 {
+    if (log_->isDebugEnabled()) {
+        smsc_log_debug(log_,"D=%u finish state change, state=%s, bind=%d, regs=[%s]",
+                       bs.dlvId, dlvStateToString(dlv.getState()), bs.bind,
+                       formatRegionList(bs.regIds.begin(),bs.regIds.end()).c_str() );
+    }
     dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
-    deliveryRegions( bs.dlvId, bs.regIds, bs.bind );
+    bs.ignoreState = false;
+    bindDeliveryRegions( bs );
 }
 
 
@@ -481,7 +507,7 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
                                     dlvid_type      dlvId )
 {
     BindSignal bs;
-    bs.bind = false;
+    bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
     // FIXME: check userinfo
     dlvMgr_->deleteDelivery(dlvId,bs.regIds);
@@ -554,6 +580,12 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
         throw InfosmeException(EXC_NOTFOUND,"D=%u is not found",bs.dlvId);
     }
 
+    // check state again
+    if (!bs.ignoreState && dlv->getState() != DLVSTATE_ACTIVE) {
+        smsc_log_warn(log_,"D='%u' trying to bind regions of inactive delivery",bs.dlvId);
+        return;
+    }
+
     for ( regIdVector::const_iterator i = bs.regIds.begin();
           i != bs.regIds.end(); ++i ) {
         MutexGuard mg(startMon_);
@@ -624,6 +656,95 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
         fg.write(buf,p-buf);
     }
 }
+
+
+void InfosmeCoreV1::loadUsers( const char* userId )
+{
+    // FIXME: optimize smsc::util::config to load only one section
+    std::vector< UserInfoPtr > uservec;
+    try {
+        if (!userId) throw InfosmeException(EXC_LOGICERROR,"loadUsers: NULL passed");
+        smsc_log_info(log_,"loading user(s) '%s'",userId);
+        if (userId[0] != '\0' && !isGoodAsciiName(userId)) {
+            throw InfosmeException(EXC_BADNAME,"invalid userId '%s'",userId);
+        }
+        std::auto_ptr<Config> users(Config::createFromFile("users.xml"));
+        users.reset( users->getSubConfig("USERS",true) );
+        if (!users.get()) {
+            throw InfosmeException(EXC_CONFIG,"config has no section USERS");
+        }
+        std::auto_ptr<CStrSet> sections;
+        if (userId[0] != '\0') {
+            sections.reset(new CStrSet);
+            sections->insert(userId);
+        } else {
+            sections.reset( users->getRootSectionNames());
+            if (!sections.get()) {
+                smsc_log_warn(log_,"no users in users.xml");
+                return;
+            }
+            uservec.reserve( sections->size() );
+        }
+        smsc_log_debug(log_,"trying to load %u users",sections->size());
+        for ( CStrSet::iterator i = sections->begin(); i != sections->end(); ++i ) {
+            if (!isGoodAsciiName(i->c_str())) {
+                throw InfosmeException(EXC_BADNAME,"invalid user '%s'",i->c_str());
+            }
+            std::auto_ptr<Config> uc(users->getSubConfig(i->c_str(),true));
+            if (!uc.get()) {
+                throw InfosmeException(EXC_CONFIG,"user '%s' is not found",i->c_str());
+            }
+            smsc_log_debug(log_,"trying to load U='%s'",i->c_str());
+            std::auto_ptr<Config> roles;
+            try { roles.reset(uc->getSubConfig("ROLES",true)); } catch (...) {}
+            // reading user
+            unsigned priority = 1;
+            try { priority = uc->getInt("priority"); } catch (...) {}
+            unsigned speed = 1;
+            try { speed = uc->getInt("smsPerSec"); } catch (...) {}
+            const unsigned totaldlv = 100;
+            uservec.push_back(UserInfoPtr(new UserInfo(i->c_str(),
+                                                       uc->getString("password"),
+                                                       priority,
+                                                       speed,
+                                                       totaldlv )));
+            UserInfoPtr& user = uservec.back();
+            if (roles.get()) {
+                try { 
+                    if (uc->getBool("informer-admin")) {
+                        user->addRole(USERROLE_ADMIN); 
+                    }
+                } catch (...) {}
+                try {
+                    if (uc->getBool("informer-user")) {
+                        user->addRole(USERROLE_USER);
+                    }
+                } catch (...) {}
+            } else {
+                user->addRole(USERROLE_USER);
+            }
+        }
+    } catch ( InfosmeException& ) {
+        throw;
+    } catch (std::exception& e) {
+        throw InfosmeException(EXC_CONFIG,"loadUsers: %s",e.what());
+    }
+
+    smsc_log_info(log_,"users.xml has been read (%u users), applying",unsigned(uservec.size()));
+    MutexGuard mg(startMon_);
+    for ( std::vector<UserInfoPtr>::iterator i = uservec.begin(); i != uservec.end(); ++i ) {
+        UserInfoPtr* olduser = users_.GetPtr((*i)->getUserId());
+        if (!olduser) {
+            users_.Insert((*i)->getUserId(),*i);
+            smsc_log_info(log_,"new user U='%s' added",(*i)->getUserId());
+        } else {
+            (*olduser)->update(**i);
+            smsc_log_info(log_,"user U='%s' updated",(*i)->getUserId());
+        }
+    }
+    startMon_.notify();
+}
+
 
 }
 }

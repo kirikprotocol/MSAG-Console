@@ -12,6 +12,7 @@ struct BindSignal
     dlvid_type                   dlvId;
     std::vector< regionid_type > regIds;
     bool                         bind;
+    bool                         ignoreState; // skip check (state==active) when bind=true
 };
 
 } // informer

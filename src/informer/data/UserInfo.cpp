@@ -14,9 +14,17 @@ void getlog() {
 }
 
 using namespace eyeline::informer;
+
 const uint64_t userroles[] = {
     1ULL << int(USERROLE_ADMIN),
     1ULL << int(USERROLE_USER)
+};
+
+struct OrderByDlvId
+{
+    bool operator () ( const DeliveryPtr& ptr, dlvid_type dlvId ) const {
+        return (ptr->getDlvId() < dlvId);
+    }
 };
 
 }
@@ -25,8 +33,14 @@ namespace eyeline {
 namespace informer {
 
 UserInfo::UserInfo( const char* id,
-                    const char* pwd ) :
-ref_(0), roles_(0), maxTotalDeliveries_(10)
+                    const char* pwd,
+                    unsigned    priority,
+                    unsigned    speed,
+                    unsigned    totaldlv ) :
+ref_(0), roles_(0),
+maxTotalDeliveries_(totaldlv),
+speed_(speed),
+priority_(priority)
 {
     getlog();
     assert(id && pwd);
@@ -46,13 +60,65 @@ ref_(0), roles_(0), maxTotalDeliveries_(10)
     stats_.clear();
     incstats_[0].clear();
     incstats_[1].clear();
-    smsc_log_debug(log_,"U='%s' ctor",id);
+    static const unsigned maxprio = 100;
+    if (priority_ > maxprio) {
+        smsc_log_warn(log_,"U='%s' too big priority %u replaced with %u",id,priority_,maxprio);
+        priority_ = maxprio;
+    }
+    static const unsigned maxspeed = 1000;
+    if (speed_ > maxspeed) {
+        smsc_log_warn(log_,"U='%s' too big speed %u replaced with %u",id,speed_,maxspeed);
+        speed_ = maxspeed;
+    }
+    static const unsigned maxdlv = 1000000;
+    if (maxTotalDeliveries_ > maxdlv) {
+        smsc_log_warn(log_,"U='%s' too many maxdlvs %u replaced with %u",id,maxTotalDeliveries_,maxdlv);
+        maxTotalDeliveries_ = maxdlv;
+    }
+    smsc_log_debug(log_,"U='%s' ctor done",id);
 }
 
 
 UserInfo::~UserInfo()
 {
     smsc_log_debug(log_,"U='%s' dtor",userId_.c_str());
+}
+
+
+bool UserInfo::hasRole( UserRole role ) const
+{
+    if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
+        throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
+    }
+    return (roles_ & userroles[unsigned(role)]) != 0;
+}
+
+
+void UserInfo::addRole( UserRole role )
+{
+    if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
+        throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
+    }
+    roles_ |= userroles[unsigned(role)];
+}
+
+
+void UserInfo::update( const UserInfo& user )
+{
+    MutexGuard mg(lock_);
+    password_ = user.password_;
+    roles_ = user.roles_;
+    maxTotalDeliveries_ = user.maxTotalDeliveries_;
+    speed_ = user.speed_;
+    priority_ = user.priority_;
+}
+
+
+
+void UserInfo::getDeliveries( DeliveryList& dlvs )
+{
+    MutexGuard mg(lock_);
+    dlvs = deliveries_;
 }
 
 
@@ -89,6 +155,36 @@ void UserInfo::popIncrementalStats( const CommonSettings& cs, UserDlvStats& ds )
 }
 
 
+void UserInfo::attachDelivery( const DeliveryPtr& dlv )
+{
+    assert(&dlv->getUserInfo() == this);
+    MutexGuard mg(lock_);
+    DeliveryList::iterator i = 
+        std::lower_bound( deliveries_.begin(),
+                          deliveries_.end(),
+                          dlv->getDlvId(),
+                          ::OrderByDlvId() );
+    if ( i != deliveries_.end() ) {
+        if ( i->get() == dlv.get() ) return; // already attached
+        if ( (*i)->getDlvId() == dlv->getDlvId() ) {
+            throw InfosmeException(EXC_ALREADYEXIST,"U='%s' already has delivery D=%u",
+                                   userId_.c_str(),dlv->getDlvId());
+        }
+    }
+    deliveries_.insert(i,dlv);
+}
+
+
+void UserInfo::detachDelivery( dlvid_type dlvId )
+{
+    DeliveryList::iterator i =
+        std::lower_bound( deliveries_.begin(),
+                          deliveries_.end(),
+                          dlvId,
+                          ::OrderByDlvId() );
+}
+
+
 void UserInfo::ref()
 {
     smsc::core::synchronization::MutexGuard mg(lock_);
@@ -110,23 +206,6 @@ void UserInfo::unref()
     delete this;
 }
 
-
-bool UserInfo::hasRole( UserRole role ) const
-{
-    if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
-        throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
-    }
-    return (roles_ & userroles[unsigned(role)]) != 0;
-}
-
-
-void UserInfo::addRole( UserRole role )
-{
-    if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
-        throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
-    }
-    roles_ |= userroles[unsigned(role)];
-}
 
 }
 }

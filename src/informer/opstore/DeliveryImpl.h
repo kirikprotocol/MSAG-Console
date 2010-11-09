@@ -81,6 +81,8 @@ public:
                             std::vector<regionid_type>& emptyRegs );
 
 
+    void detachFromUserInfo();
+
 private:
     /// check if all regional storages is empty, and no messages in retries.
     void checkFinalize();

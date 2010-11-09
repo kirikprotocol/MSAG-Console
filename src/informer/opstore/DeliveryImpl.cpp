@@ -227,6 +227,9 @@ void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
 void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 {
     const dlvid_type dlvId = dlvInfo_->getDlvId();
+    BindSignal bs;
+    msgtime_type now;
+    ulonglong ymd;
     {
         MutexGuard mg(cacheLock_);
         const DlvState oldState = state_;
@@ -237,7 +240,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             throw InfosmeException(EXC_LOGICERROR,
                                   "D=%u is cancelled",dlvId);
         }
-        const msgtime_type now = msgtime_type(currentTimeMicro()/tuPerSec);
+        now = msgtime_type(currentTimeMicro()/tuPerSec);
         if (newState == DLVSTATE_PLANNED) {
             if (planTime < now) {
                 throw InfosmeException(EXC_LOGICERROR,
@@ -248,7 +251,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         } else {
             planTime = 0;
         }
-        userInfo_.incStats(dlvInfo_->getCS(),newState,state_); // may throw
+        userInfo_->incStats(dlvInfo_->getCS(),newState,state_); // may throw
         state_ = newState;
         planTime_ = planTime;
         int regId;
@@ -280,7 +283,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         }
         DeliveryStats ds;
         activityLog_.getStats(ds);
-        const ulonglong ymd = msgTimeToYmd(now);
+        ymd = msgTimeToYmd(now);
         int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                              ymd,
                              dlvStateToString(newState)[0],
@@ -297,7 +300,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.expiredSms );
         assert(buflen>0);
         fg.write(buf,buflen);
-        BindSignal bs;
+        smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
         bs.dlvId = dlvId;
         bs.bind = (newState == DLVSTATE_ACTIVE);
         {
@@ -309,8 +312,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                 bs.regIds.push_back(regionid_type(regId));
             }
         }
-        source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
     }
+    source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
 }
 
 
@@ -429,6 +432,12 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 }
 
 
+void DeliveryImpl::detachFromUserInfo()
+{
+    userInfo_->detachDelivery(dlvInfo_->getDlvId());
+}
+
+
 void DeliveryImpl::checkFinalize()
 {
     const dlvid_type dlvId = dlvInfo_->getDlvId();
@@ -502,7 +511,7 @@ void DeliveryImpl::writeDeliveryInfoData()
         }
         config.setString("deliveryMode",what);
     }
-    config.setString("owner",userInfo_.getUserId());
+    config.setString("owner",userInfo_->getUserId());
     config.setBool("retryOnFail",data.retryOnFail);
     if (!data.retryPolicy.empty()) {
         config.setString("retryPolicy",data.retryPolicy.c_str());

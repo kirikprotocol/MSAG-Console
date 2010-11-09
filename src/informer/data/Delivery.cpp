@@ -12,7 +12,7 @@ Delivery::Delivery( DeliveryInfo*               dlvInfo,
                     InputMessageSource*         source ) :
 log_(0),
 dlvInfo_(dlvInfo),
-userInfo_(userInfo),
+userInfo_(&userInfo),
 activityLog_(*dlvInfo_.get()),
 source_(source),
 ref_(0),
