@@ -2,7 +2,9 @@
  * ASN.1 OBJECT-IDENTIFIER & RELATIVE-OID types.
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_OID_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_SYNTAX_OID_DEFS__
 
 #include <inttypes.h>

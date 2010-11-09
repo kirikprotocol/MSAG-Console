@@ -2,7 +2,9 @@
  * Helper templates for union classes.
  * ************************************************************************* */
 #ifndef __EYELINE_UTIL_UNION_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_UTIL_UNION_HPP
 
 #include <inttypes.h>

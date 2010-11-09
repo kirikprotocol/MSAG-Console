@@ -2,7 +2,9 @@
  * Class(es) implementing ASN.1 ABSTRACT-SYNTAX class
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_SYNTAX_DEFS__
 
 #include "eyeline/asn1/TransferSyntax.hpp"

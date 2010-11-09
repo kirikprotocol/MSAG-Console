@@ -2,7 +2,9 @@
  * Helper templates representing CHOICE classes.
  * ************************************************************************* */
 #ifndef __EYELINE_UTIL_CHOICE_OF_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_UTIL_CHOICE_OF_HPP
 
 #include "eyeline/util/UnionT.hpp"

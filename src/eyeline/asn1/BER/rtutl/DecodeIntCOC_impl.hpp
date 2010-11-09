@@ -2,7 +2,9 @@
  * BER Runtime: integer value content octets decomposition algorithm.
  * ************************************************************************* */
 #ifndef __ASN1_BER_TLV_DECODER_INT_ALGORITHM
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_TLV_DECODER_INT_ALGORITHM
 
 #include "eyeline/asn1/TransferSyntax.hpp"
@@ -18,6 +20,7 @@ using eyeline::asn1::DECResult;
  * Decomposes content octets of the integer value according to X.690 cl. 8.3
  * ************************************************************************* */
 template <class _TArg /* unsigned integer type */>
+inline
 DECResult decodeCOC_UINTEGER(_TArg & use_val, const uint8_t * use_enc, TSLength max_len)
 {
   DECResult rval(DECResult::decOk, 

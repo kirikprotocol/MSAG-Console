@@ -2,7 +2,9 @@
  * Lightweight Array element traits definition.
  * ************************************************************************* */
 #ifndef __LWARRAY_TRAITS_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __LWARRAY_TRAITS_DEFS
 
 #include <inttypes.h>

@@ -2,7 +2,9 @@
  * BER Runtime: decoding of tag or subIdentifier.
  * ************************************************************************* */
 #ifndef __ASN1_BER_TLV_DECODER_SUBID_ALGORITHM
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_TLV_DECODER_SUBID_ALGORITHM
 
 #include "eyeline/asn1/TransferSyntax.hpp"
@@ -22,6 +24,7 @@ using eyeline::asn1::DECResult;
 template <
   class _TArg /* unsigned integer type, sizeof(_TArg) < 32 bytes */
 >
+inline 
 DECResult decode_identifier(_TArg & use_val, const uint8_t * use_enc, TSLength enc_len)
 {
   DECResult rval(DECResult::decOk);

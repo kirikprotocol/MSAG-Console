@@ -2,7 +2,9 @@
  * ASN.1 transfer syntaxes definition.
  * ************************************************************************* */
 #ifndef __TRANSFER_SYNTAX_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __TRANSFER_SYNTAX_DEFS
 
 #include <inttypes.h>

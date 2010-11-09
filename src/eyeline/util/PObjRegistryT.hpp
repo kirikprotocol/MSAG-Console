@@ -2,7 +2,9 @@
  * Object Registry templates.
  * ************************************************************************** */
 #ifndef __ELC_UTIL_POBJ_REGISTRY_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ELC_UTIL_POBJ_REGISTRY_HPP__
 
 #include <map>

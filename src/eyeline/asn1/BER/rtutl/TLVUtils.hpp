@@ -2,7 +2,9 @@
  * BER Runtime: Various TLV utilities.
  * ************************************************************************* */
 #ifndef __ASN1_BER_TLV_UTILS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_TLV_UTILS
 
 #include "eyeline/asn1/ASNTags.hpp"

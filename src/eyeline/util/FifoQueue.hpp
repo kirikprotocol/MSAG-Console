@@ -2,7 +2,9 @@
  * FIFO queue template.
  * ************************************************************************* */
 #ifndef __EYELINE_UTIL_FIFO_QUEUE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_UTIL_FIFO_QUEUE_HPP
 
 namespace eyeline {

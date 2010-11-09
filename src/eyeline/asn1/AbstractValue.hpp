@@ -2,7 +2,9 @@
  * ASN.1 ABSTRACT-SYNTAX.&Type value implementation
  * ************************************************************************* */
 #ifndef __ABSTRACT_VALUE_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_VALUE_DEFS__
 
 #include "eyeline/asn1/AbstractSyntax.hpp"

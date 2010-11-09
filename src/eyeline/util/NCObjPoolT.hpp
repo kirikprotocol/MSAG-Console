@@ -2,7 +2,9 @@
  * Two variants of pool of objects, which have no copying constructor defined. 
  * ************************************************************************* */
 #ifndef __EYELINE_UTIL_NONCOPYING_OBJ_POOL
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_UTIL_NONCOPYING_OBJ_POOL
 
 #include <vector>

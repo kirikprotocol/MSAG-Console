@@ -2,7 +2,9 @@
  * Universal ASN.1 Object Identifier (OID or number).
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_UID_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_SYNTAX_UID_DEFS__
 
 #include "eyeline/asn1/EncodedOID.hpp"
@@ -20,11 +22,13 @@ private:
   EncodedOID  oidRef;
     
 public:
-  UniversalID(uint32_t use_ref = 0)
+  explicit UniversalID(uint32_t use_ref = 0)
     : refKind(uidLocal), numRef(use_ref)
   { }
-  UniversalID(const EncodedOID & use_ref)
+  explicit UniversalID(const EncodedOID & use_ref)
     : refKind(uidGlobal), numRef(0), oidRef(use_ref)
+  { }
+  ~UniversalID()
   { }
 
   void setLocal(uint32_t use_ref) { refKind = uidLocal; numRef = use_ref; }

@@ -2,7 +2,9 @@
  * EmbeddedEncoding helper type: used in EXTERNAL/EMBEDDED PDV definitions.
  * ************************************************************************* */
 #ifndef __ASN1_EMBEDDED_ENCODING_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_EMBEDDED_ENCODING_DEFS
 
 #include "eyeline/asn1/TransferSyntax.hpp"

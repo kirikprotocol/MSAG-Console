@@ -2,7 +2,9 @@
  * USSD-Res type definition.
  * ************************************************************************** */
 #ifndef __EYELINE_ASN1_UNKNOWN_EXTENSIONS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ASN1_UNKNOWN_EXTENSIONS_HPP
 
 #include <list>

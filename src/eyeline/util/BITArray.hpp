@@ -3,7 +3,9 @@
  * exceed specified limit.
  * ************************************************************************* */
 #ifndef __BITARRAY_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __BITARRAY_DEFS__
 
 #include <memory.h>

@@ -3,7 +3,9 @@
  *                   Type[En/De]coders in same preallocated memory.
  * ************************************************************************* */
 #ifndef __ASN1_BER_CODERS_CHOICE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_CODERS_CHOICE_HPP
 
 #include "eyeline/asn1/ASNTags.hpp"

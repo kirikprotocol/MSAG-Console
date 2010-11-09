@@ -2,7 +2,9 @@
  * ASN.1 OCTET STRING type definitions.
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_OCTSTR_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_SYNTAX_OCTSTR_DEFS__
 
 #include "eyeline/util/LWArray.hpp"

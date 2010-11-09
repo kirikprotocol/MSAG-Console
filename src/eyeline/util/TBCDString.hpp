@@ -2,7 +2,9 @@
  * Telephony and ordinary Binary Coded Decimal Strings.
  * ************************************************************************** */
 #ifndef __EYELINE_UTIL_TBCD_STRING_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_UTIL_TBCD_STRING_HPP
 
 #include <string>

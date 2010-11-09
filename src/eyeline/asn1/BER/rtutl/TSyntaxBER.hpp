@@ -2,7 +2,9 @@
  * BER group of transfer syntaxes.
  * ************************************************************************* */
 #ifndef __BER_TRANSFER_SYNTAXES_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __BER_TRANSFER_SYNTAXES_DEFS
 
 #include "eyeline/asn1/TransferSyntax.hpp"

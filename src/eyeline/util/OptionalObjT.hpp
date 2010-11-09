@@ -3,7 +3,9 @@
  * preallocated memory.
  * ************************************************************************* */
 #ifndef __EYELINE_UTIL_OBJECT_PRODUCER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_UTIL_OBJECT_PRODUCER_HPP
 
 #include <inttypes.h>

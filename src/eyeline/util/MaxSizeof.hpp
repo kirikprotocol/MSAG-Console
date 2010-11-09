@@ -2,7 +2,9 @@
  * Templates helping to determine maximum size of several classes.
  * ************************************************************************* */
 #ifndef __CPP_MAXSIZEOF_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __CPP_MAXSIZEOF_DEFS__
 
 #include <sys/types.h>

@@ -2,7 +2,9 @@
  * ASN.1 BIT STRING type definitions.
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_BITSTR_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_SYNTAX_BITSTR_DEFS__
 
 #include "eyeline/util/BITArray.hpp"

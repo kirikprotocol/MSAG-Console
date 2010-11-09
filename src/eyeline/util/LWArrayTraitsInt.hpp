@@ -2,7 +2,9 @@
  * Lightweight Array element traits: partial specializations for integer types.
  * ************************************************************************* */
 #ifndef __LWARRAY_TRAITS_INT_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __LWARRAY_TRAITS_INT_DEFS
 
 #include <memory.h>

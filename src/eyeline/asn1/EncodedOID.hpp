@@ -2,7 +2,9 @@
  * Encoded ASN.1 Object Identifier.
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_ENCODED_OID_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_SYNTAX_ENCODED_OID_DEFS
 
 #include "eyeline/asn1/ObjectID.hpp"

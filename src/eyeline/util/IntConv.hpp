@@ -2,7 +2,9 @@
  * Various integer types conversion helpers.
  * ************************************************************************* */
 #ifndef __INTEGER_CONVERSIONS_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INTEGER_CONVERSIONS_DEFS
 
 #include <inttypes.h>

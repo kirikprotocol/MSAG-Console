@@ -2,7 +2,9 @@
  * Class(es) implementing ASN.1 1997 EXTERNAL type
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_EXTERNAL_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_SYNTAX_EXTERNAL_DEFS__
 
 #include <string>

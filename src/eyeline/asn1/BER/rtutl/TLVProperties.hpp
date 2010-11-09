@@ -2,7 +2,9 @@
  * BER Runtime: 'TLV' elements/properites definitions.
  * ************************************************************************* */
 #ifndef __ASN1_BER_TLV_PROPERTOES
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_TLV_PROPERTOES
 
 #include "eyeline/asn1/TransferSyntax.hpp"
@@ -21,7 +23,7 @@ struct LDeterminant {
   TSLength  _valLen;  //length of addressed value encoding,
                       //may be zero (undefined) in case of frmIndefinite
 
-  LDeterminant(Form_e use_form = frmIndefinite, TSLength use_vlen = 0)
+  explicit LDeterminant(Form_e use_form = frmIndefinite, TSLength use_vlen = 0)
     : _ldForm(use_form), _valLen(use_vlen)
   { }
 
@@ -35,7 +37,7 @@ struct TLVProperty : public LDeterminant {
   bool      _isConstructed; //encoding constructedness
 
   //default constructor is for primitive encoding
-  TLVProperty(Form_e use_form = frmIndefinite, TSLength use_vlen = 0, bool use_construct = false)
+  explicit TLVProperty(Form_e use_form = frmIndefinite, TSLength use_vlen = 0, bool use_construct = false)
     : LDeterminant(use_form, use_vlen), _isConstructed(use_construct)
   { }
   ~TLVProperty()
@@ -49,9 +51,9 @@ struct TLVProperty : public LDeterminant {
 
 
 //Macro that determines maximum number of 'tag octets'
-#define MAX_IDENTIFIER_OCTS(ident_type) (1 + (sizeof(ident_type)<<3 + 6)/7)
+#define MAX_IDENTIFIER_OCTS(ident_type) (1 + ((sizeof(ident_type)<<3) + 6)/7)
 //Macro that determines maximum number of 'length octets'
-#define MAX_LDETERMINANT_OCTS(ldet_type) (1 + (sizeof(ldet_type)<<3 + 7)/8)
+#define MAX_LDETERMINANT_OCTS(ldet_type) (1 + ((sizeof(ldet_type)<<3) + 7)/8)
 
 //TLV Encoding structure (octets layout)
 struct TLVStruct : public TLVProperty {
@@ -63,8 +65,7 @@ struct TLVStruct : public TLVProperty {
                    // - 2 in case of indefinite form of length determinant,
                    // - 0 in case of definite form
 
-  explicit TLVStruct()
-    : TLVProperty(), _szoTag(0), _szoLOC(0)
+  TLVStruct() : TLVProperty(), _szoTag(0), _szoLOC(0)
   { }
   explicit TLVStruct(const TLVProperty & use_prop)
     : TLVProperty(use_prop), _szoTag(0), _szoLOC(0)
