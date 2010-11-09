@@ -262,6 +262,18 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 }
 
 
+void InfosmeCoreV1::getUsers( std::vector< UserInfoPtr >& users )
+{
+    users.reserve( users.size() + users_.Count() + 2 );
+    MutexGuard mg(startMon_);
+    char* userId;
+    UserInfoPtr* user;
+    for ( Hash< UserInfoPtr >::Iterator i(users_); i.Next(userId,user); ) {
+        users.push_back(*user);
+    }
+}
+
+
 void InfosmeCoreV1::updateUserInfo( const char* login )
 {
     UserInfoPtr ptr = getUserInfo(login);

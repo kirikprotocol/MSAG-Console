@@ -32,6 +32,10 @@ public:
     virtual UserInfoPtr getUserInfo( const char* login ) = 0;
     virtual void updateUserInfo( const char* login ) = 0;
 
+    /// get the list of users. It is client's responsibility to check
+    /// if it is allowed.
+    virtual void getUsers( std::vector< UserInfoPtr >& users ) = 0;
+
     /// create/update smsc
     virtual void addSmsc( const char* smscId ) = 0;
     virtual void updateSmsc( const char* smscId ) = 0;

@@ -72,6 +72,7 @@ public:
     virtual void updateSmsc( const char* smscId );
     virtual void deleteSmsc( const char* smscId );
     virtual void updateDefaultSmsc( const char* smscId );
+    virtual void getUsers( std::vector< UserInfoPtr >& users );
 
     virtual void addRegion( regionid_type regionId );
     virtual void updateRegion( regionid_type regionId );
