@@ -2,7 +2,9 @@
  * BER Encoder: INTEGER type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_INTEGER
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_INTEGER
 
 #include <inttypes.h>

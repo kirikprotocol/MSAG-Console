@@ -3,7 +3,9 @@
  *              by EXTERNAL/EMBEDDED PDV decoders)
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_EMBEDDED_ENCODING
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_EMBEDDED_ENCODING
 
 #include "eyeline/asn1/EmbdEncoding.hpp"

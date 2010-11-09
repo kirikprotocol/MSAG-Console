@@ -2,7 +2,9 @@
  * BER Encoder: BOOLEAN type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_BOOL
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_BOOL
 
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"

@@ -3,7 +3,9 @@
  *              encoders.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_STRUCT_EXT
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_STRUCT_EXT
 
 #include "eyeline/asn1/UnknownExtensions.hpp"

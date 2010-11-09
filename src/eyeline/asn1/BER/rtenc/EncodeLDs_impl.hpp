@@ -2,7 +2,9 @@
  * BER Encoder: Length determinant encoding.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_LDETERMINANT_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_LDETERMINANT_DEFS
 
 #include "eyeline/asn1/BER/rtenc/EncodeInt_impl.hpp"
@@ -20,7 +22,7 @@ namespace ber {
 template <
   class _TArg /* unsigned integer type, sizeof(_TArg) <= 126 bytes */
 >
-uint8_t estimate_ldeterminant(const _TArg & use_val)
+inline uint8_t estimate_ldeterminant(const _TArg & use_val)
 {
   if (use_val < 0x80)
     return 1;
@@ -38,7 +40,7 @@ uint8_t estimate_ldeterminant(const _TArg & use_val)
 template <
   class _TArg /* unsigned integer type, sizeof(_TArg) <= 126 bytes */
 >
-uint8_t encode_ldeterminant(const _TArg & use_val, uint8_t * use_enc, uint8_t max_len)
+inline uint8_t encode_ldeterminant(const _TArg & use_val, uint8_t * use_enc, uint8_t max_len)
 {
   if (!max_len)
     return 0;

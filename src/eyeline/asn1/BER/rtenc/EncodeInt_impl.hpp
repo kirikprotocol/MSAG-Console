@@ -2,7 +2,9 @@
  * BER Encoder: integer types encoding.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_INT_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_INT_DEFS
 
 #include "eyeline/asn1/TransferSyntax.hpp"
@@ -19,13 +21,13 @@ using eyeline::asn1::TSLength;
  * ************************************************************************* */
 template < 
   class _TArg /* unsigned integer type, sizeof(_TArg) < 32 bytes */
-> inline
-uint8_t estimate_INTEGER(const _TArg & use_val)
+>
+inline uint8_t estimate_INTEGER(const _TArg & use_val)
 {
   if (use_val <= 0xFF)
     return 1;
 
-  uint8_t msBit = sizeof(_TArg)<<3 - 1;
+  uint8_t msBit = (sizeof(_TArg)<<3) - 1;
   if (use_val & (1 << msBit)) { //'two's complement' number
     //check that 9 consequitive bits starting from MSB are not
     //all set, in order to get fewest meaningfull octets
@@ -58,7 +60,7 @@ uint8_t estimate_INTEGER(const uint8_t & use_val)
  * Returns  number of bytes of resulted encoding or zero in case of
  * insufficient length of buffer provided.
  * ************************************************************************* */
-template <class _TArg /* unsigned integer type */>
+template <class _TArg /* unsigned integer type */> inline
 uint8_t encode_INTEGER(const _TArg & use_val, uint8_t * use_enc, TSLength max_len)
 {
   uint8_t rlen = estimate_INTEGER(use_val);

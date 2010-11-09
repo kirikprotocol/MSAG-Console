@@ -2,7 +2,9 @@
  * BER Encoder: SEQUENCE OF type encoder base class.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_SEQUENCE_OF
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_SEQUENCE_OF
 
 #include "eyeline/asn1/BER/rtenc/EncodeSequenced.hpp"

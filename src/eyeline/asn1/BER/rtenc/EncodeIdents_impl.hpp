@@ -2,7 +2,9 @@
  * BER Encoder: tag or OID subIdentifier encoding.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_IDENTS_DEFS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_IDENTS_DEFS
 
 #include <inttypes.h>
@@ -20,7 +22,7 @@ namespace ber {
 template <
   class _TArg /* unsigned integer type, sizeof(_TArg) <= 222 bytes */
 >
-uint8_t estimate_identifier(const _TArg & use_val)
+inline uint8_t estimate_identifier(const _TArg & use_val)
 {
   if (use_val < 0x80)
     return 1;
@@ -41,7 +43,7 @@ uint8_t estimate_identifier(const _TArg & use_val)
 template <
   class _TArg /* unsigned integer type, sizeof(_TArg) <= 222 bytes */
 >
-uint8_t encode_identifier(const _TArg & use_val, uint8_t * use_enc, uint8_t max_len)
+inline uint8_t encode_identifier(const _TArg & use_val, uint8_t * use_enc, uint8_t max_len)
 {
   if (use_val < 0x80) {
     if (max_len) {

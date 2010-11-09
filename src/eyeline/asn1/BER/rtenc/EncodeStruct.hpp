@@ -2,7 +2,9 @@
  * BER Encoder: base class for structured types (SET, SEQUENCE) encoders.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_STRUCT
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_STRUCT
 
 #include "eyeline/asn1/BER/rtenc/EncodeConstructed.hpp"

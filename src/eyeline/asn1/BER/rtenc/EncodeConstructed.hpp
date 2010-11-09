@@ -3,7 +3,9 @@
  *              (SET, SET OF, SEQUENCE, SEQUENCE OF).
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_CONSTRUCTED
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_CONSTRUCTED
 
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"

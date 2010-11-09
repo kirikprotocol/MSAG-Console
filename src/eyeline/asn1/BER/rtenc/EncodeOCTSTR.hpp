@@ -2,7 +2,9 @@
  * BER Encoder: OCTET STRING type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_OCTSTR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_OCTSTR
 
 #include "eyeline/asn1/OCTSTR.hpp"

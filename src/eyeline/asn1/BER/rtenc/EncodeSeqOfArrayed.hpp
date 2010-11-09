@@ -2,7 +2,9 @@
  * BER Encoder: SEQUENCE OF type encoder (arrayed representation).
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_SEQUENCE_OF_ARRAYED
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_SEQUENCE_OF_ARRAYED
 
 #include "eyeline/util/LWArray.hpp"

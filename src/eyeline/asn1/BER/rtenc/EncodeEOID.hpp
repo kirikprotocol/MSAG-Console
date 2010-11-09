@@ -3,7 +3,9 @@
  *              form of OID value.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_EOID
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_EOID
 
 #include "eyeline/asn1/EncodedOID.hpp"

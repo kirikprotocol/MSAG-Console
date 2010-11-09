@@ -2,7 +2,9 @@
  * BER Encoder: RELATIVE-OID type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_ROID
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_ROID
 
 #include "eyeline/asn1/ObjectID.hpp"

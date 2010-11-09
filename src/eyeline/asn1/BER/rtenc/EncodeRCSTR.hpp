@@ -2,7 +2,9 @@
  * BER Encoder: Generic Restricted Character String encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_RCSTR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_RCSTR
 
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"

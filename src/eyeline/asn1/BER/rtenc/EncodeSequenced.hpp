@@ -3,7 +3,9 @@
  *              (SET OF, SEQUENCE OF).
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_SEQUENCED
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_SEQUENCED
 
 #include "eyeline/asn1/BER/rtenc/EncoderProducer.hpp"

@@ -2,7 +2,9 @@
  * BER Encoder: SEQUENCE OF type encoder (linked represenattion).
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_SEQUENCE_OF_LINKED
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_SEQUENCE_OF_LINKED
 
 #include <list>

@@ -2,7 +2,9 @@
  * BER Encoder methods: extensible SEQUENCE type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_SEQUENCE_EXT
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_SEQUENCE_EXT
 
 #include "eyeline/asn1/BER/rtenc/EncodeStructExt.hpp"

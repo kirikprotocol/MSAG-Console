@@ -2,7 +2,9 @@
  * BER Encoder: Tag encoding methods.
  * ************************************************************************* */
 #ifndef __ASN1_BER_TAG_ENCODER
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_TAG_ENCODER
 
 #include "eyeline/asn1/ASNTags.hpp"

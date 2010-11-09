@@ -2,7 +2,9 @@
  * BER Encoder: GraphicString type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_GRAPHIC_STR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_GRAPHIC_STR
 
 #include "eyeline/asn1/BER/rtenc/EncodeRCSTR.hpp"

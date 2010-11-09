@@ -90,14 +90,14 @@ const TLVStruct &
 
     _tlws.reserve(_effTags->size()); //cann't fail here
     //traverse tags from inner to outer
-    while (--tagIdx)
+    do
     { //NOTE: keep the same LD form for all LDs in tagging
-      _tlws[tagIdx].init(_vProp._ldForm, valLen, constructedness);
+      _tlws[--tagIdx].init(_vProp._ldForm, valLen, constructedness);
       _tlws[tagIdx].calculate((*_effTags)[tagIdx]);
       valLen = _tlws[tagIdx].getTLVsize();
       constructedness = true;
       _szoBOC += _tlws[tagIdx].getBOCsize();
-    }
+    } while (tagIdx);
   }
   return _tlws[0];
 }

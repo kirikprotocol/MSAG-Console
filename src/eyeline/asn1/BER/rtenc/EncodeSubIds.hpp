@@ -2,7 +2,9 @@
  * BER Encoder: encoding of ObjectID/RelativeOID subidentifiers.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_SUBIDS
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_SUBIDS
 
 #include "eyeline/asn1/ObjectID.hpp"

@@ -2,7 +2,9 @@
  * BER Encoder: BIT STRING type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_BITSTR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_BITSTR
 
 #include "eyeline/asn1/BITSTR.hpp"

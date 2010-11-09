@@ -2,7 +2,9 @@
  * BER Encoder: EXTERNAL encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_EXTERNAL
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_EXTERNAL
 
 #include "eyeline/asn1/ASExternal.hpp"

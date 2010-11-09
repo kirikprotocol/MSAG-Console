@@ -2,7 +2,9 @@
  * BER Encoder: NULL type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_NULL
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_NULL
 
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"

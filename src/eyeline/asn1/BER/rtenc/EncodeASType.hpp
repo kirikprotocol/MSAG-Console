@@ -2,7 +2,9 @@
  * BER Encoder: ANY and ABSTRACT-SYNTAX.&Type (Opentype) encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_ASTYPE
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_ENCODER_ASTYPE
 
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"
