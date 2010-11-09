@@ -153,7 +153,8 @@ public:
   ASTagging(const ASTag & use_tag, Environment_e use_env)
     : ASTagsArray(1), _tagEnv(use_env)
   {
-    ASTagsArray::_buf[0] = use_tag;
+    //ASTagsArray::_buf[0] = use_tag;
+    append(use_tag);
   }
   //Copying constructor
   ASTagging(const ASTagging & use_tags)
