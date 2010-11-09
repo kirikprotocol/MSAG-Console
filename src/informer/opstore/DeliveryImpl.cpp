@@ -266,7 +266,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             }
             break;
         case DLVSTATE_ACTIVE:
-            // FIXME: activate, do nothing here?
+            // do nothing here, activation is below in delivery activator
             break;
         default:
             throw InfosmeException(EXC_LOGICERROR,"unknown state %d",newState);

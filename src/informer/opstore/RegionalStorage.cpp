@@ -216,7 +216,8 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     Message& m = iter->msg;
     m.lastTime = currentTime;
     if (!m.timeLeft) {
-        m.timeLeft  = info.getValidityPeriod(); // FIXME validity period
+        /// this one is a new message, set its TTL initially
+        m.timeLeft  = info.getValidityPeriod();
     }
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_PROCESS;
@@ -416,11 +417,13 @@ void RegionalStorage::stopTransfer( bool finalizeAll )
 {
     MutexGuard mg(cacheMon_);
     if ( inputTransferTask_ ) {
-        // FIXME: should we wait until it stop?
         inputTransferTask_->stop();
+        smsc_log_warn(log_,"R=%u/D=%u FIXME should we wait until input transfer task stops?",
+                      regionId_, dlv_.getDlvId() );
     }
     if ( finalizeAll ) {
-        // FIXME: make all messages fail
+        smsc_log_warn(log_,"R=%u/D=%u FIXME make all messages fail (state=cancel?)",
+                      regionId_, dlv_.getDlvId() );
     }
 }
 
@@ -614,6 +617,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
 
 void RegionalStorage::resendIO( bool isInputDirection )
 {
+    /// this method is invoked from ResendTransferTask
     smsc_log_debug(log_,"FIXME: R=%u/D=%u resend IO dir=%s",
                    regionId_, dlv_.getDlvInfo().getDlvId(),
                    isInputDirection ? "in" : "out");

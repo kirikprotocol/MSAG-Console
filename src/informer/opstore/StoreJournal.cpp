@@ -299,7 +299,7 @@ void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
         serial_ = sjreader.serial_;
     } catch ( FileDataException& e ) {
         smsc_log_warn(log_,"file '%s': %s", jpath.c_str(), e.what());
-        // FIXME: should we trunk the file?
+        // FIXME: the journal is corrupted, should we trunk the file?
         throw;
     } catch ( std::exception& e ) {
         smsc_log_error(log_,"file '%s': %s", jpath.c_str(), e.what());
