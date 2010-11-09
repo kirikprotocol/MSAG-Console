@@ -1,4 +1,4 @@
-#include <sys/types.h>
+#include <string.h>
 
 #include "common.hpp"
 #include "eyeline/utilx/hexdmp.hpp"

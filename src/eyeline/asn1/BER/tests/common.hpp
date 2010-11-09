@@ -1,10 +1,15 @@
 #ifndef __EYELINE_ASN1_BER_TESTS_COMMON_HPP__
+#ifndef __GNUC__
 # ident "@(#)$Id$"
+#endif
 # define __EYELINE_ASN1_BER_TESTS_COMMON_HPP__
+
+#include <stddef.h>
 
 # define MAX_PATTERN_LEN 2048
 # define MAX_ENCODED_LEN 1024
 # define MAX_ERR_MESSAGE 65535
+
 
 namespace eyeline {
 namespace asn1 {

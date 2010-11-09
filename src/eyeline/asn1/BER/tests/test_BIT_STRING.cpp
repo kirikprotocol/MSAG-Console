@@ -33,7 +33,7 @@ test_BIT_STRING(char* err_msg)
     return false;
 
   fprintf(logfile, "test_BIT_STRING:: BitStrValue=%s, trSyntax=%s, retVal=%ld\n",
-          utilx::hexdmp(buf4value, sizeof(buf4value)).c_str(), patternTrSyntax, retVal.encoded);
+          utilx::hexdmp(buf4value, sizeof(buf4value)).c_str(), patternTrSyntax, (long int)retVal.encoded);
 
   EncoderOfBITSTR encBitStr;
   encBitStr.setValue((TSLength)sizeof(buf4value)*8 - 2, buf4value);
