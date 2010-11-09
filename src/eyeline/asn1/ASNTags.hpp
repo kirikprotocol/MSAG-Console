@@ -2,7 +2,9 @@
  * Classes which implement ASN.1 type Tags
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_TAGS_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ABSTRACT_SYNTAX_TAGS_DEFS__
 
 #include <inttypes.h>
@@ -153,8 +155,7 @@ public:
   ASTagging(const ASTag & use_tag, Environment_e use_env)
     : ASTagsArray(1), _tagEnv(use_env)
   {
-    //ASTagsArray::_buf[0] = use_tag;
-    append(use_tag);
+    ASTagsArray::_buf[0] = use_tag;
   }
   //Copying constructor
   ASTagging(const ASTagging & use_tags)
