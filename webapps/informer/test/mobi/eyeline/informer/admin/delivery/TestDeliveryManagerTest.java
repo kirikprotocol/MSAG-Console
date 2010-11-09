@@ -95,6 +95,7 @@ public class TestDeliveryManagerTest {
       assertTrue(nonEmpty[0]);
     }
     assertEquals(manager.countMessages("","", messageFilter), 2);
+    manager.dropDelivery("","",d.getId());
   }
 
   private void checkGetDeliviries(final Delivery d1, DeliveryStatus[] statuses) throws AdminException{
@@ -158,7 +159,7 @@ public class TestDeliveryManagerTest {
     d.setValidityPeriod("1:00:00");
     d.setSourceAddress(new Address("+79123942341"));
 
-    manager.createDelivery("","", d, new DataSource() {
+    manager.createDelivery("","", d, new DataSource<Message>() {
       private LinkedList<Message> ms = new LinkedList<Message>() {
         {
           Message m1 = Message.newMessage("text1");
