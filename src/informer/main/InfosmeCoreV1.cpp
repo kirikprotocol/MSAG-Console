@@ -84,7 +84,7 @@ dcpServer_(0)
 
 InfosmeCoreV1::~InfosmeCoreV1()
 {
-    smsc_log_info(log_,"dtor started, FIXME: cleanup");
+    smsc_log_info(log_,"--- destroying core ---");
 
     stop();
 
@@ -108,19 +108,25 @@ InfosmeCoreV1::~InfosmeCoreV1()
 
     regions_.Empty();
     users_.Empty();
-    smsc_log_info(log_,"dtor finished");
+    smsc_log_info(log_,"--- core destroyed ---");
 }
 
 
 void InfosmeCoreV1::init( const ConfigView& cfg )
 {
-    smsc_log_info(log_,"initing InfosmeCore");
+    smsc_log_info(log_,"--- initing core ---");
 
+    // loading common settings
     cs_.init("store/");
-    if (!dlvMgr_) { dlvMgr_ = new DeliveryMgr(*this,cs_); }
+
+    if (!dlvMgr_) {
+        smsc_log_info(log_,"--- creating delivery mgr ---");
+        dlvMgr_ = new DeliveryMgr(*this,cs_);
+    }
 
     // create admin server
     if (!adminServer_) {
+        smsc_log_info(log_,"--- creating admin server ---");
         adminServer_ = new admin::AdminServer();
         adminServer_->assignCore(this);
         adminServer_->Init(smsc::util::config::ConfString(cfg.getString("Admin.host")).c_str(),
@@ -129,11 +135,12 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     }
 
     // load all users
+    smsc_log_info(log_,"--- loading users ---");
     loadUsers("");
 
     // create smscs
     {
-        smsc_log_debug(log_,"--- loading smsc ---");
+        smsc_log_info(log_,"--- loading smscs ---");
         const char* fname = "smsc.xml";
         smsc_log_info(log_,"reading smscs config '%s'",fname);
         std::auto_ptr< Config > centerConfig( Config::createFromFile(fname));
@@ -146,6 +153,7 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
         if ( connNames->find(defConn.str()) == connNames->end() ) {
             throw ConfigException("default SMSC '%s' does not match any section",defConn.c_str());
         }
+        defaultSmscId_ = defConn.str();
         for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
             smsc_log_info(log_,"processing smsc S='%s'",i->c_str());
             std::auto_ptr< ConfigView > sect(ccv->getSubConfig(i->c_str()));
@@ -154,10 +162,11 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
             updateSmsc( i->c_str(), &smscConfig );
         }
 
-        // create regions
-        smsc_log_debug(log_,"--- loading regions ---");
-        reloadRegions( defConn.str() );
     }
+
+    // create regions
+    smsc_log_info(log_,"--- loading regions ---");
+    reloadRegions();
 
     dlvMgr_->init();
 
@@ -242,7 +251,7 @@ void InfosmeCoreV1::deleteUser( const char* login )
         (*i)->setState(DLVSTATE_CANCELLED);
         deleteDelivery(*user,(*i)->getDlvId());
     }
-    // FIXME: should we dump statistics of the user after all deliveries stopped?
+    smsc_log_warn(log_,"U='%s' FIXME should we dump stats of the user after all dlvs stopped?",login);
 }
 
 
@@ -385,10 +394,10 @@ void InfosmeCoreV1::selfTest()
 }
 
 
-void InfosmeCoreV1::reloadRegions( const std::string& defaultSmscId )
+void InfosmeCoreV1::reloadRegions()
 {
     // reading region file
-    RegionLoader rl("regions.xml",defaultSmscId.c_str());
+    RegionLoader rl("regions.xml",defaultSmscId_.c_str());
 
     MutexGuard mg(startMon_); // guaranteed that there is no sending
     do {

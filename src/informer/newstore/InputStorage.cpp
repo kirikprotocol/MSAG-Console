@@ -114,7 +114,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     regs.reserve(32);
     dispatchMessages(begin, end, regs);
     msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
-    // FIXME: we need to bind to glossary before
+    // binding to glossary (necessary to write texts to activity log)
     for ( MsgIter i = begin; i != end; ++i ) {
         glossary_.bindText(i->msg.text);
         activityLog_->addRecord( currentTime, i->serial, i->msg, 0);

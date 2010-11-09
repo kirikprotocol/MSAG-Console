@@ -125,7 +125,7 @@ public:
     void updateSmsc( const std::string& smscId, const SmscConfig* cfg );
 
     /// reload all regions
-    void reloadRegions( const std::string& defaultSmscId );
+    void reloadRegions();
 
     void bindDeliveryRegions( const BindSignal& bs );
 
@@ -144,6 +144,7 @@ private:
     smsc::core::synchronization::EventMonitor  startMon_;
     bool                                       stopping_;
     bool                                       started_;
+    std::string                                defaultSmscId_;
     smsc::core::threads::ThreadPool            itp_;        // input transfer pool
     smsc::core::threads::ThreadPool            rtp_;        // resend transfer pool
     smsc::core::buffers::Hash< UserInfoPtr >      users_;        // owned

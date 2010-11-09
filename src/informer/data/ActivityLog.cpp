@@ -264,8 +264,8 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
             fg_.seek(0, SEEK_END);
             if (fg_.getPos() == 0) {
-                // const char* header = "#1 TIME,STATE,REGID,MSGID,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT\n";
-                // fg_.write(header,strlen(header));
+                const char* header = "#1 SEC,STATE,REGID,MSGID,RETRY,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT\n";
+                fg_.write(header,strlen(header));
                 char headbuf[200];
                 int headlen;
                 {
