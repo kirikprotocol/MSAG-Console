@@ -1,4 +1,4 @@
-#include <sys/types.h>
+#include <stdio.h>
 #include <string>
 #include "hexdmp.hpp"
 
@@ -6,14 +6,14 @@ namespace eyeline {
 namespace utilx {
 
 std::string
-hexdmp(const uchar_t* buf, size_t bufSz)
+hexdmp(const uint8_t* buf, size_t bufSz)
 {
   char hexBuf[65535];
   return hexdmp(hexBuf, sizeof(hexBuf), buf, bufSz);
 }
 
 char*
-hexdmp(char* dumpBuf, size_t dumpBufSz, const uchar_t* buf, size_t bufSz)
+hexdmp(char* dumpBuf, size_t dumpBufSz, const uint8_t* buf, size_t bufSz)
 {
   int offset=0;
   for (size_t i=0; i<bufSz; ++i) {
@@ -25,3 +25,4 @@ hexdmp(char* dumpBuf, size_t dumpBufSz, const uchar_t* buf, size_t bufSz)
 }
 
 }}
+

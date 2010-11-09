@@ -2,7 +2,7 @@
 # define __EYELINE_UTILX_PREALLOCATEDMEMORYMANAGER_HPP__
 
 # include <pthread.h>
-# include <sys/types.h>
+# include <inttypes.h>
 # include <pthread.h>
 # include <errno.h>
 
