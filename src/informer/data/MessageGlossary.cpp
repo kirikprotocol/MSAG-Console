@@ -161,16 +161,6 @@ void MessageGlossary::bindText( MessageTextPtr& p )
             if (!node) { // new message
                 smsc_log_fatal(log_,"txtId=%d not found, should be registered first",msg->id_);
                 abort();
-                /*
-                if (!msg->text_) {
-                    smsc_log_fatal(log_,"cannot bind new msg w/o text");
-                    abort();
-                }
-                iter = &hash_.Insert(msg->id_,
-                                     list_.insert(list_.begin(),msg));
-                msg->ref_ = 2;
-                msg->gloss_ = this;
-                 */
             } else if (!msg->text_) { // already exist and new has no text, ok
                 delete p.ptr_;
                 p.ptr_ = *node->iter;

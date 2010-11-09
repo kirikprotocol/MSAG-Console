@@ -10,8 +10,6 @@ namespace eyeline {
 namespace informer {
 
 class CommonSettings;
-// class UserInfo;
-// class InfosmeCore;
 
 enum DeliveryMode{
     DLVMODE_SMS = 0,
@@ -26,7 +24,7 @@ struct DeliveryInfoData
   std::string name;
   int32_t priority;
   bool transactionMode;
-  // DD.MM.YY hh:mm:ss
+  // DD.MM.YY hh:mm:ss (gmt)
   std::string startDate;
   std::string endDate;
   std::string activePeriodStart;
@@ -88,9 +86,6 @@ public:
     /// return active week days or -1
     int getActiveWeekDays() const { return activeWeekDays_; }
 
-    /// get validity date or -1
-    //msgtime_type getValidityDate() const { return validityDate_; }
-
     /// get validity period or -1
     msgtime_type getValidityPeriod() const { return validityPeriod_; }
 
@@ -100,7 +95,6 @@ public:
 
     DeliveryMode getDeliveryMode() const { return data_.deliveryMode; }
 
-    // FIXME: combine retry on fail together with retry policy string
     bool wantRetryOnFail() const { return data_.retryOnFail; }
 
     bool isReplaceIfPresent() const { return data_.replaceMessage; }
@@ -131,7 +125,6 @@ private:
     msgtime_type          endDate_;
     timediff_type         activePeriodStart_;
     timediff_type         activePeriodEnd_;
-    //msgtime_type          validityDate_;
     timediff_type         validityPeriod_;
     int                   activeWeekDays_;
     personid_type         sourceAddress_;

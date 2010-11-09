@@ -264,11 +264,11 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 
 void InfosmeCoreV1::getUsers( std::vector< UserInfoPtr >& users )
 {
-    users.reserve( users.size() + users_.Count() + 2 );
+    users.reserve( users.size() + users_.GetCount() + 2 );
     MutexGuard mg(startMon_);
     char* userId;
     UserInfoPtr* user;
-    for ( Hash< UserInfoPtr >::Iterator i(users_); i.Next(userId,user); ) {
+    for ( Hash< UserInfoPtr >::Iterator i(&users_); i.Next(userId,user); ) {
         users.push_back(*user);
     }
 }

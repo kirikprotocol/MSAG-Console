@@ -34,7 +34,7 @@ public:
     const char* c_str( const string_type& str ) const { return str.empty() ? "" : &str[0]; }
 
 private:
-    static std::auto_ptr<char> digits_;
+    // static std::auto_ptr<char> digits_;
 };
 
 }

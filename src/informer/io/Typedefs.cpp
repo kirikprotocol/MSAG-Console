@@ -43,7 +43,7 @@ ulonglong msgTimeToYmd( msgtime_type tmp, std::tm* tmb )
     std::tm tx;
     if (!tmb) tmb = &tx;
     if (!tmp) {
-        // FIXME: memset(tmb,0,sizeof(*tmb));
+        // FIXME:  should we clear tm? memset(tmb,0,sizeof(*tmb));
         return 0;
     }
     const time_t t(tmp);

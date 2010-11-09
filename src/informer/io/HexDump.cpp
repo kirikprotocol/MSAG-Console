@@ -3,6 +3,7 @@
 #include "HexDump.h"
 #include "core/synchronization/Mutex.hpp"
 
+/*
 namespace {
 smsc::core::synchronization::Mutex mtx;
 
@@ -16,11 +17,12 @@ std::auto_ptr<char> getDigits()
 }
 
 }
+ */
 
 namespace eyeline {
 namespace informer {
 
-std::auto_ptr< char > HexDump::digits_;
+// std::auto_ptr< char > HexDump::digits_;
 
 char* HexDump::hexdump( register char* outbuf,
                         const void* inBuf,
