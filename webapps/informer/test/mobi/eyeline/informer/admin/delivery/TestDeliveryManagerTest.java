@@ -75,6 +75,7 @@ public class TestDeliveryManagerTest {
       }
     });
     assertTrue(ok[0]);
+    manager.dropDelivery("","",d.getId());
 
   }
 
@@ -95,7 +96,6 @@ public class TestDeliveryManagerTest {
       assertTrue(nonEmpty[0]);
     }
     assertEquals(manager.countMessages("","", messageFilter), 2);
-    manager.dropDelivery("","",d.getId());
   }
 
   private void checkGetDeliviries(final Delivery d1, DeliveryStatus[] statuses) throws AdminException{
