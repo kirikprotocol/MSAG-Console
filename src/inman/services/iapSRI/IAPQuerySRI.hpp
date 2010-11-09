@@ -5,7 +5,9 @@
  * in case of prepaid type of contract.
  * ************************************************************************** */
 #ifndef SMSC_INMAN_IAPQUERY_HLR_SRI_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define SMSC_INMAN_IAPQUERY_HLR_SRI_HPP
 
 #include "inman/abprov/facility/IAPThrFacility.hpp"
@@ -45,7 +47,7 @@ public:
     const char * taskType(void) const { return "IAPQuerySRI"; }
 
 protected:
-    friend smsc::inman::inap::chsri::MapCHSRIDlg;
+    friend class smsc::inman::inap::chsri::MapCHSRIDlg;
     // ****************************************
     //-- CHSRIhandlerITF implementation:
     // ****************************************
