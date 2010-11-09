@@ -1,1 +1,1 @@
--DASN1_XER_NOT_USED -I/Users/shulga/projects/telcom/src/inman/asn1rt/ -g
+-DASN1_XER_NOT_USED -I$(SMSC_SRCDIR)/inman/asn1rt/ -g
