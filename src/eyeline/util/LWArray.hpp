@@ -168,9 +168,10 @@ public:
   //but within capacity, all elements up to specified one are initialized.
   _TArg & at(_SizeTypeArg use_idx) //throw(std::exception)
   {
-    if ((use_idx < npos()) && (use_idx >= capacity()))
-      reallocBuf(use_idx + 1);
-    else
+    if (use_idx < npos()) {
+      if (use_idx >= capacity())
+        reallocBuf(use_idx + 1);
+    } else
       denyIndex(use_idx);
 
     if (use_idx >= _numElem) {
