@@ -3,9 +3,11 @@
  * exceed specified limit.
  * NOTE: array reallocation occurs only in case of explicit demand!
  * ************************************************************************* */
-#ifndef __LWARRAY_DEFS__
+#ifndef __UTIL_LWARRAY_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
-#define __LWARRAY_DEFS__
+#endif
+#define __UTIL_LWARRAY_DEFS__
 
 #include <algorithm>
 
@@ -113,6 +115,7 @@ protected:
   }
 
 public:
+  typedef _TArg         value_type;
   typedef _SizeTypeArg  size_type;
 
   _SizeTypeArg _MAX_SIZE(void) const { return (_SizeTypeArg)(-1); }
@@ -160,13 +163,16 @@ public:
   const _TArg * get(void) const { return _numElem ? _buf : 0; }
 
   //Returns initialized/assigned element of array at specified index.
-  //Throws if specified index exceeds array capacity. 
+  //Throws if specified index exceeds maximal allowed array capacity.
   //if specified index is beyond of the space of initialized elemens
   //but within capacity, all elements up to specified one are initialized.
   _TArg & at(_SizeTypeArg use_idx) //throw(std::exception)
   {
-    if (use_idx >= capacity())
+    if ((use_idx < npos()) && (use_idx >= capacity()))
+      reallocBuf(use_idx + 1);
+    else
       denyIndex(use_idx);
+
     if (use_idx >= _numElem) {
       LWArrayTraits<_TArg>::construct(_buf + _numElem, use_idx - _numElem + 1);
       _numElem = use_idx + 1;
@@ -207,7 +213,8 @@ public:
   {
     return at(use_idx);
   }
-  //
+  //Returns initialized/assigned element of array at pos 'use_idx'
+  //Throws if specified index is beyond of the space of initialized elemens.
   const _TArg & operator[](_SizeTypeArg use_idx) const //throw(std::exception)
   {
     return at(use_idx);
@@ -235,11 +242,10 @@ public:
 
   //Reserves space for storing given number of elements
   //Returns false if requested capacity exceeds _MAX_SIZE().
-  bool reserve(_SizeTypeArg num_to_reserve) //throw()
+  void reserve(_SizeTypeArg num_to_reserve) //throw()
   {
     if (num_to_reserve > capacity())
       reallocBuf(num_to_reserve);
-    return true;
   }
 
   //Alters the array size.  If the new size is greater than the current
@@ -257,7 +263,8 @@ public:
       _numElem = req_sz;
       return true;
     }
-    if ((req_sz > _numElem) && reserve(req_sz)) {
+    if (req_sz > _numElem) {
+      reserve(req_sz);
       LWArrayTraits<_TArg>::construct(_buf + _numElem, req_sz - _numElem);
       _numElem = req_sz;
       return true;
@@ -492,5 +499,5 @@ public:
 } //util
 } //eyeline
 
-#endif /* __LWARRAY_DEFS__ */
+#endif /* __UTIL_LWARRAY_DEFS__ */
 
