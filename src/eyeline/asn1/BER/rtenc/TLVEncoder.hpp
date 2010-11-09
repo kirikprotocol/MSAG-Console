@@ -25,7 +25,7 @@ using eyeline::asn1::ENCResult;
  * ************************************************************************* */
 class ValueEncoderIface {
 protected:
-  virtual ~ValueEncoderIface();
+  virtual ~ValueEncoderIface() {}
 
 public:
   //Determines properties of addressed value encoding (LD form, constructedness)
@@ -240,7 +240,9 @@ public:
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : ASTypeEncoderAC(use_rule), TypeTagging(eff_tags)
     , _tlvEnc(TSGroupBER::getBERRule(use_rule))
-  { }
+  {
+    _tlvEnc.setTagging(&eff_tags);
+  }
   //'Untagged CHOICE/Opentype type encoder' constructor
   TypeEncoderAC(const TaggingOptions & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
