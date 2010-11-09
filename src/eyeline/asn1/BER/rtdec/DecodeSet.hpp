@@ -2,7 +2,9 @@
  * BER Decoder: SET type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_SET
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_SET
 
 #include "eyeline/asn1/BER/rtdec/ElementDecoderOfSET.hpp"
@@ -19,14 +21,14 @@ private:
 
 protected:
   //constructor for types defined as SET with own tagging
-  DecoderOfSet_T(const ASTagging & eff_tags,
+  explicit DecoderOfSet_T(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfSetAC(_seqDec, eff_tags, use_rule)
   { }
 
 public:
   // constructor for untagged SET
-  DecoderOfSet_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfSet_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfSetAC(_setDec, asn1::_tagsSETOF, use_rule)
   { }
   // constructor for tagged SET

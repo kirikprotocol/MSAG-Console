@@ -2,7 +2,9 @@
  * BER Decoder: base class of SEQUENCE OF type decoders.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_SEQUENCE_OF
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_SEQUENCE_OF
 
 #include "eyeline/asn1/BER/rtdec/ElementDecoderOfSETOF.hpp"
@@ -116,7 +118,7 @@ protected:
 
 public:
   // constructor for untagged SEQUENCE OF
-  DecoderOfSeqOfAC_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfSeqOfAC_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfStructAC(_setofDec, asn1::_tagsSEQOF, use_rule)
     , _pDec(0), _maxNum(0), _curNum(0)
   { }

@@ -2,7 +2,9 @@
  * BER Decoder: ANY and ABSTRACT-SYNTAX.&Type (Opentype) decoders.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_ASTYPE
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_ASTYPE
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
@@ -23,7 +25,7 @@ protected:
 
 public:
   // constructor for untagged ANY/OpenType
-  DecoderOfASType(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfASType(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(0, use_rule), _valDec(0)
   { }
   // constructor for tagged ANY/OpenType

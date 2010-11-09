@@ -2,7 +2,9 @@
  * BER Decoder: GraphicString type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_GRAPHSTR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_GRAPHSTR
 
 #include <string>
@@ -17,7 +19,7 @@ protected:
   std::string * _dVal;
 
 public:
-  GraphStrDecConverter(std::string * use_val = 0)
+  explicit GraphStrDecConverter(std::string * use_val = 0)
     : _dVal(use_val)
   { }
   ~GraphStrDecConverter()
@@ -50,7 +52,7 @@ protected:
 
 public:
   //Constructor for base type
-  DecoderOfGraphicSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfGraphicSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : RCSTRValueDecoder(_vCvt, asn1::_tagsGraphicSTR, use_rule)
   { }
   //Constructor for tagged base type

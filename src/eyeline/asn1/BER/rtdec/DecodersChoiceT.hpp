@@ -3,7 +3,9 @@
  *              in same preallocated memory.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODERS_CHOICE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODERS_CHOICE_HPP
 
 #include "eyeline/asn1/BER/rtutl/CodersChoiceT.hpp"

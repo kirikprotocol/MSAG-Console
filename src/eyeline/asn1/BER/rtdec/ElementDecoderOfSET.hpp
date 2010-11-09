@@ -2,7 +2,9 @@
  * BER Decoder: SET type element decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_SET_ELEMENT_DECODER
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_SET_ELEMENT_DECODER
 
 #include "eyeline/asn1/BER/rtdec/ElementDecoderByTag.hpp"
@@ -32,7 +34,7 @@ protected:
   { }
 
 public:
-  SETElementDecoderAC(EDAlternativesSTORE & alt_store)
+  explicit SETElementDecoderAC(EDAlternativesSTORE & alt_store)
     : ElementDecoderByTagAC(alt_store, orderNone)
   { }
   ~SETElementDecoderAC()
@@ -46,7 +48,7 @@ private:
   eyeline::util::LWArray_T<EDAlternative, uint16_t, _SizeTArg> _altStore;
 
 public:
-  SETElementDecoder_T(ElementDecoderByTagAC::Order_e use_order 
+  explicit SETElementDecoder_T(ElementDecoderByTagAC::Order_e use_order 
                                   = ElementDecoderByTagAC::orderNone)
     : SETElementDecoderAC(_altStore, use_order)
   { }

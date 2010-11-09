@@ -2,7 +2,9 @@
  * BER Decoder: BOOLEAN type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_BOOL
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_BOOL
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
@@ -31,7 +33,7 @@ protected:
 
   //Tagged type referencing BOOLEAN.
   // NOTE: eff_tags is a complete effective tagging of type!
-  DecoderOfBOOL(const ASTagging & eff_tags,
+  explicit DecoderOfBOOL(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(eff_tags, use_rule)
     , _dVal(0)

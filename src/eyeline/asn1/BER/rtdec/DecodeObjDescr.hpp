@@ -2,7 +2,9 @@
  * BER Decoder: ObjectDescriptor type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_OBJDESCRIPTOR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_OBJDESCRIPTOR
 
 #include "eyeline/asn1/BER/rtdec/DecodeGraphSTR.hpp"

@@ -2,7 +2,9 @@
  * BER Decoder: decoder of unknown extension of structured type.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_UNKNOWN_EXTENSION
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_UNKNOWN_EXTENSION
 
 #include "eyeline/asn1/UnknownExtensions.hpp"
@@ -23,7 +25,7 @@ protected:
     /*throw(BERDecoderException)*/;
 
 public:
-  DecoderOfUExtension(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfUExtension(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(0, use_rule), _valDec(0)
   { }
   ~DecoderOfUExtension()

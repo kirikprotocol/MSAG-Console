@@ -2,7 +2,9 @@
  * BER Decoder: Generic Restricted Character String decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_RCSTR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_RCSTR
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"

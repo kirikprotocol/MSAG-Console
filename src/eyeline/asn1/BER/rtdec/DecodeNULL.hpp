@@ -2,7 +2,9 @@
  * BER Decoder: NULL type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_NULL
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_NULL
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
@@ -30,7 +32,7 @@ protected:
 
 public:
   //Constructor for NULL type
-  DecoderOfNULL(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfNULL(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(asn1::_tagsNULL, use_rule)
   { }
   //Constructor for tagged NULL type

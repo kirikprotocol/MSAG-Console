@@ -2,7 +2,9 @@
  * BER Decoder: SEQUENCE OF type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_SEQUENCE_OF_ARRAYED
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_SEQUENCE_OF_ARRAYED
 
 #include "eyeline/asn1/BER/rtdec/DecodeSeqOf.hpp"

@@ -2,7 +2,9 @@
  * BER Decoder: CHOICE type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_CHOICE
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_CHOICE
 
 #include "eyeline/asn1/BER/rtdec/ElementDecoderOfCHC.hpp"
@@ -51,7 +53,7 @@ protected:
     setOptions(_altTags);
   }
 
-  DecoderOfChoiceAC(CHCElementDecoderAC & use_eldec,
+  explicit DecoderOfChoiceAC(CHCElementDecoderAC & use_eldec,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(&_altTags, use_rule), _elDec(&use_eldec)
   {
@@ -128,7 +130,7 @@ protected:
 
 public:
   // constructor for untagged CHOICE
-  DecoderOfChoice_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfChoice_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfChoiceAC(_chcDec, use_rule)
   {
     //NOTE.1: in case of untagged CHOICE, tagging of canonical alternative

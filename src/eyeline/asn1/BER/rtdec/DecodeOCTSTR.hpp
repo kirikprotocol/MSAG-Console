@@ -2,7 +2,9 @@
  * BER Decoder: OCTET STRING type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_OCTSTR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_OCTSTR
 
 #include "eyeline/asn1/OCTSTR.hpp"
@@ -24,7 +26,7 @@ protected:
   ArrayType *   _dVal;
 
 public:
-  OSTRDecConverter_T(ArrayType * use_val = 0)
+  explicit OSTRDecConverter_T(ArrayType * use_val = 0)
     : _maxSize(0), _dVal(use_val)
   { }
   ~OSTRDecConverter_T()
@@ -77,7 +79,7 @@ public:
   typedef typename eyeline::util::LWArrayExtension_T<uint8_t, _SizeTypeArg> ArrayType;
 
   //Constructor for base type
-  DecoderOfOCTSTR_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfOCTSTR_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : RCSTRValueDecoder(_vCvt, asn1::_tagsOCTSTR, use_rule)
   { }
   //Constructor for tagged base type

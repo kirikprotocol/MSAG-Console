@@ -2,7 +2,9 @@
  * BER Decoder: SET OF type element decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_SET_OF_ELEMENT_DECODER
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_SET_OF_ELEMENT_DECODER
 
 #include "eyeline/asn1/BER/rtdec/ElementDecoderByTag.hpp"

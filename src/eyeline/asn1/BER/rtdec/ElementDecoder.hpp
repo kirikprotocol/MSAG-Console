@@ -3,7 +3,9 @@
  * (SEQUENCE, SET, CHOICE, SEQUENCE OF, SET OF).
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_ELEMENTS_DECODER
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_ELEMENTS_DECODER
 
 #include "util/Exception.hpp"
@@ -134,7 +136,7 @@ protected:
   virtual EDAResult verifyTDCompletion(void) const /*throw()*/ = 0;
 
 public:
-  ElementDecoderAC(EDAlternativesArray & alt_store)
+  explicit ElementDecoderAC(EDAlternativesArray & alt_store)
     : _tdState(tdEmpty), _extensible(false), _altsArr(&alt_store)
   { }
   virtual ~ElementDecoderAC()

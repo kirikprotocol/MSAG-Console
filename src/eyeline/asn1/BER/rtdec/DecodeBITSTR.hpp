@@ -2,7 +2,9 @@
  * BER Decoder: BIT STRING type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_BITSTR
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_BITSTR
 
 #include "eyeline/asn1/BITSTR.hpp"
@@ -24,7 +26,7 @@ protected:
   ArrayType * _dVal;
 
 public:
-  BSTRDecConverter_T(ArrayType * use_val = 0)
+  explicit BSTRDecConverter_T(ArrayType * use_val = 0)
     : _prvUnused(0), _dVal(use_val)
   { }
   ~BSTRDecConverter_T()
@@ -77,7 +79,7 @@ public:
   typedef typename eyeline::util::BITArrayExtension_T<_SizeTypeArg> ArrayType;
 
   //Constructor for base type
-  DecoderOfBITSTR_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfBITSTR_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : RCSTRValueDecoder(_vCvt, asn1::_tagsBITSTR, use_rule)
   { }
   //Constructor for tagged base type

@@ -3,7 +3,9 @@
  *              tags as ordering factor.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_ELEMENTS_DECODER_BY_TAG
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_ELEMENTS_DECODER_BY_TAG
 
 #include "eyeline/asn1/BER/rtdec/ElementDecoder.hpp"
@@ -40,7 +42,7 @@ protected:
       : _alt(0), _occCan(0), _blocked(false), _optional(true)
       , _count(0), _optCount(0)
     { }
-    TagOccurence(const EDAlternative & use_alt, TagOccurence * occ_can = 0)
+    explicit TagOccurence(const EDAlternative & use_alt, TagOccurence * occ_can = 0)
       : _alt(&use_alt), _occCan(occ_can), _blocked(false)
       , _optional(!occ_can ? use_alt.isOptional() : true)
       , _count(0), _optCount(0)
@@ -130,7 +132,7 @@ protected:
   { }
 
 public:
-  ElementDecoderByTagAC(EDAlternativesArray & alt_store, Order_e use_order = orderNone)
+  explicit ElementDecoderByTagAC(EDAlternativesArray & alt_store, Order_e use_order = orderNone)
     : ElementDecoderAC(alt_store), _order(use_order)
   { }
   ~ElementDecoderByTagAC()

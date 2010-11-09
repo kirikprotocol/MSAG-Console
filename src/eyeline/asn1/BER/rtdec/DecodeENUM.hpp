@@ -2,7 +2,9 @@
  * BER Decoder: ENUMERATED type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_ENUM
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_ENUM
 
 #include "eyeline/asn1/BER/rtdec/DecodeINT.hpp"
@@ -17,7 +19,7 @@ namespace ber {
  * ************************************************************************* */
 class DecoderOfENUM : public DecoderOfINTEGER {
 public:
-  DecoderOfENUM(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfENUM(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfINTEGER(asn1::_tagsENUM, use_rule)
   { }
   //Tagged ENUMERATED type encoder constructor

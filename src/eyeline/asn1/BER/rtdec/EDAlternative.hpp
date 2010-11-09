@@ -2,7 +2,9 @@
  * BER Decoder: Structured type ElementDecoder alternative class.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_ELEMENTS_DECODER_ALT_DEF
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_ELEMENTS_DECODER_ALT_DEF
 
 #include "eyeline/asn1/BER/rtutl/TypeTagging.hpp"

@@ -2,7 +2,9 @@
  * BER Decoder: OBJECT-IDENTIFIER type decoder (encoded form of OID value).
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_EOID
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_EOID
 
 #include "eyeline/asn1/EncodedOID.hpp"
@@ -32,7 +34,7 @@ protected:
 
   //Tagged type referencing OBJECT-IDENTIFIER. 
   // NOTE: eff_tags is a complete effective tagging of type!
-  DecoderOfEOID(const ASTagging & eff_tags,
+  explicit DecoderOfEOID(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(eff_tags, use_rule)
     , _dVal(0)

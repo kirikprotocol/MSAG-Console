@@ -2,7 +2,9 @@
  * BER Decoder: INTEGER type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_INTEGER
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_INTEGER
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
@@ -38,7 +40,7 @@ protected:
 
   //Tagged type referencing INTEGER. 
   // NOTE: eff_tags is a complete effective tagging of type!
-  DecoderOfINTEGER(const ASTagging & eff_tags,
+  explicit DecoderOfINTEGER(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(eff_tags, use_rule)
     , _vSzo(szo8)
@@ -48,7 +50,7 @@ protected:
 
 public:
   //Untagged INTEGER type encoder constructor. 
-  DecoderOfINTEGER(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfINTEGER(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeValueDecoderAC(asn1::_tagsINTEGER, use_rule)
     , _vSzo(szo8)
   {

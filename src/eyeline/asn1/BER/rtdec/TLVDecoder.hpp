@@ -2,7 +2,9 @@
  * BER Decoder: 'TLV' encoding decoder definitions.
  * ************************************************************************* */
 #ifndef __ASN1_BER_TLV_DECODER
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_TLV_DECODER
 
 #include "eyeline/asn1/AbstractSyntax.hpp"
@@ -60,7 +62,7 @@ protected:
 
 public:
   //Empty constructor: for later initialization
-  TaggingDecoder(const ASTagging * use_tags = NULL)
+  explicit TaggingDecoder(const ASTagging * use_tags = NULL)
     : _tlws(use_tags ? use_tags->size() : 0)
     , _effTags(use_tags), _outerTL(0)
   { }
@@ -96,7 +98,7 @@ public:
  * ************************************************************************* */
 class ValueDecoderIface {
 protected:
-  virtual ~ValueDecoderIface();
+  virtual ~ValueDecoderIface() { }
 
 public:
   // -----------------------------------------------------------
@@ -124,7 +126,7 @@ protected:
     /*throw(std::exception)*/;
 
 public:
-  ValueDecoderOf_T(_TArg * use_val = 0)
+  explicit ValueDecoderOf_T(_TArg * use_val = 0)
     : _dVal(use_val)
   { }
   ~ValueDecoderOf_T()
@@ -157,13 +159,13 @@ protected:
 public:
   //'Generic type decoder' constructor
   // NOTE: eff_tags is a complete effective tagging of type!
-  TypeDecoderAC(const ASTagging & eff_tags,
+  explicit TypeDecoderAC(const ASTagging & eff_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(eff_tags)
     , _relaxedRule(false), _valDec(0)
   { }
   //'Untagged CHOICE/Opentype type decoder' constructor
-  TypeDecoderAC(const TaggingOptions * base_tags,
+  explicit TypeDecoderAC(const TaggingOptions * base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(base_tags)
     , _relaxedRule(false), _valDec(0)
@@ -211,12 +213,12 @@ public:
   // -- ------------------------------------------------- --
   // -- ASTypeDecoderAC abstract methods implementation
   // -- ------------------------------------------------- --
-  bool isTSsupported(TransferSyntax::Rule_e use_rule) const /*throw()*/
+  virtual bool isTSsupported(TransferSyntax::Rule_e use_rule) const /*throw()*/
   {
     return TSGroupBER::isBERSyntax(use_rule);
   }
   //
-  DECResult decode(const uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/;
+  virtual DECResult decode(const uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/;
 };
 
 
@@ -250,14 +252,14 @@ protected:
 public:
   //'Generic type decoder' constructor
   // NOTE: eff_tags is a complete effective tagging of type!
-  TypeValueDecoderAC(const ASTagging & eff_tags,
+  explicit TypeValueDecoderAC(const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeDecoderAC(eff_tags, use_rule)
   {
     TypeDecoderAC::init(*(ValueDecoderIface*)this);
   }
   //'Untagged CHOICE/Opentype type decoder' constructor
-  TypeValueDecoderAC(const TaggingOptions * base_tags,
+  explicit TypeValueDecoderAC(const TaggingOptions * base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeDecoderAC(base_tags, use_rule)
   {
@@ -305,7 +307,7 @@ protected:
 
 public:
   //Constructor for UNIVERSAL type value decoder
-  UNITypeValueDecoder_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit UNITypeValueDecoder_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeDecoderAC(_uniTags_TArg, use_rule)
   {
     TypeDecoderAC::init(*(ValueDecoderIface*)this);

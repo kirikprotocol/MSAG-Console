@@ -3,7 +3,9 @@
  *              definition as ordering factor).
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_ELEMENTS_DECODER_BY_TYPEDEF
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_ELEMENTS_DECODER_BY_TYPEDEF
 
 #include "eyeline/util/BITArray.hpp"

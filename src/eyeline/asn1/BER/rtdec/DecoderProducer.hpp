@@ -3,7 +3,9 @@
  *              preallocated memory.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_PRODUCER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_PRODUCER_HPP
 
 #include "eyeline/util/OptionalObjT.hpp"

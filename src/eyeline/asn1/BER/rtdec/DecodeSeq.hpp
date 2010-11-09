@@ -2,7 +2,9 @@
  * BER Decoder: SEQUENCE type decoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_DECODER_SEQUENCE
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_DECODER_SEQUENCE
 
 #include "eyeline/asn1/BER/rtdec/ElementDecoderOfSEQ.hpp"
@@ -27,14 +29,14 @@ protected:
   //virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ = 0;
 
   //constructor for types defined as SEQUENCE with own tagging
-  DecoderOfSequence_T(const ASTagging & eff_tags,
-                  TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfSequence_T(const ASTagging & eff_tags,
+                               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfStructAC(_seqDec, eff_tags, use_rule)
   { }
 
 public:
   // constructor for untagged SEQUENCE
-  DecoderOfSequence_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+  explicit DecoderOfSequence_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfStructAC(_seqDec, asn1::_tagsSEQOF, use_rule)
   { }
   // constructor for tagged SEQUENCE
