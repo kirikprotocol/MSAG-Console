@@ -60,9 +60,15 @@ SubsystemsManager::initialize()
     sigdelset(&_blocked_signals, SIGALRM);
     sigdelset(&_blocked_signals, SIGSEGV); sigdelset(&_blocked_signals, SIGBUS);
     sigdelset(&_blocked_signals, SIGFPE); sigdelset(&_blocked_signals, SIGILL);
+#ifdef SIGWAITING
     sigdelset(&_blocked_signals, SIGWAITING);
+#endif
+#ifdef SIGLWP
     sigdelset(&_blocked_signals, SIGLWP);
+#endif
+#ifdef SIGCANCEL
     sigdelset(&_blocked_signals, SIGCANCEL);
+#endif
 
     sigdelset(&_blocked_signals, SIGCHLD);
     sigdelset(&_blocked_signals, SIGUSR1);
