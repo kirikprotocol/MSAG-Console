@@ -53,7 +53,29 @@ public class TestDeliveryManagerTest {
     manager.dropDelivery("","", d.getId());
 
     assertNull(manager.getDelivery("","",d.getId()));
-    
+
+  }
+
+  @Test
+  public void setRestriction() throws AdminException, InterruptedException {
+    Delivery d = _createDelivery();
+    assertTrue(!d.isRestriction());
+    manager.setDeliveryRestriction("","", d.getId(), true);
+    d = manager.getDelivery("","",d.getId());
+    assertTrue(d.isRestriction());
+    final boolean[] ok = new boolean[]{false};
+    final int id = d.getId();
+    manager.getDeliveries("","", new DeliveryFilter(), 10000, new Visitor<DeliveryInfo>() {
+      public boolean visit(DeliveryInfo value) throws AdminException {
+        if(id == value.getDeliveryId()) {
+          ok[0] = true;
+          return false;
+        }
+        return true;
+      }
+    });
+    assertTrue(ok[0]);
+
   }
 
   private void checkGetMessages(final Delivery d, MessageState[] states) throws AdminException{
@@ -155,7 +177,7 @@ public class TestDeliveryManagerTest {
         return ms.removeFirst();
       }
     });
-    
+
     assertNotNull(d.getId());
     manager.activateDelivery("","",d.getId());
 
