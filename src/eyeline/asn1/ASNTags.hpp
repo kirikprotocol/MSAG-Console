@@ -149,13 +149,13 @@ public:
             Environment_e use_env)
     : ASTagsArray(1), _tagEnv(use_env)
   {
-    ASTagsArray::_buf[0] = ASTag(tag_class, use_tag);
+    ASTagsArray::at(0) = ASTag(tag_class, use_tag);
   }
   //
   ASTagging(const ASTag & use_tag, Environment_e use_env)
     : ASTagsArray(1), _tagEnv(use_env)
   {
-    ASTagsArray::_buf[0] = use_tag;
+    ASTagsArray::at(0) = use_tag;
   }
   //Copying constructor
   ASTagging(const ASTagging & use_tags)
@@ -167,7 +167,7 @@ public:
             const ASTagging & inner_tags)
     : ASTagsArray(1), _tagEnv(use_env)
   {
-    ASTagsArray::_buf[0] = use_tag;
+    ASTagsArray::at(0) = use_tag;
     conjoin(inner_tags);
   }
   ASTagging(const ASTagging & outer_tags, const ASTagging & inner_tags)

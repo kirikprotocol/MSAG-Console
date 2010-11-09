@@ -33,12 +33,12 @@ ASTagging::ASTagging(Environment_e use_env,
                      uint8_t num_tags, const ASTag * use_tag1, ... /* , const ASTag * use_tagN*/)
   : ASTagsArray(num_tags), _tagEnv(use_env)
 {
-  ASTagsArray::_buf[0] = *use_tag1;
+  ASTagsArray::at(0) = *use_tag1;
 
   va_list  useTags;
   va_start(useTags, use_tag1);
   for (uint8_t i = 1; i < num_tags; ++i)
-    ASTagsArray::_buf[i] = *va_arg(useTags, const ASTag*);
+    ASTagsArray::at(i) = *va_arg(useTags, const ASTag*);
   va_end(useTags);
 }
 
