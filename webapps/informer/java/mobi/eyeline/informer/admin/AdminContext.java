@@ -15,6 +15,7 @@ import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
 import mobi.eyeline.informer.admin.restriction.Restriction;
+import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
 import mobi.eyeline.informer.admin.restriction.RestrictionsManager;
 import mobi.eyeline.informer.admin.service.ServiceManager;
@@ -71,6 +72,8 @@ public class AdminContext {
   protected File workDir;
   
   protected RestrictionsManager restrictionsManager;
+
+  protected RestrictionDaemon restrictionDaemon;
 
 // delivery ->user ->region->smsc
 
@@ -136,6 +139,8 @@ public class AdminContext {
 
       restrictionsManager = new RestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
           new File(confDir, "backup"), fileSystem);
+
+      restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
 
     }catch (AdminException e) {
       throw new InitException(e);
@@ -397,11 +402,15 @@ public class AdminContext {
   }
 
   public List<Daemon> getDaemons() {
-    //todo
-    return new LinkedList<Daemon>();
+    List<Daemon> ret = new LinkedList<Daemon>();
+    ret.add(restrictionDaemon);
+    return ret;
   }
 
   public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
+    if(restrictionsManager.hasActiveRestriction(login)) {
+      throw new DeliveryException("creation_restricted");
+    }
     try{
       integrityLock.lock();
       if(usersManager.getUser(delivery.getOwner()) == null) {
@@ -438,6 +447,7 @@ public class AdminContext {
   }
 
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
+    deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
     deliveryManager.dropDelivery(login, password, deliveryId);
   }
 
@@ -450,14 +460,19 @@ public class AdminContext {
   }
 
   public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
+    deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
     deliveryManager.cancelDelivery(login, password, deliveryId);
   }
 
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
+    deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
     deliveryManager.pauseDelivery(login, password, deliveryId);
   }
 
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
+    if(restrictionsManager.hasActiveRestriction(login)) {
+      throw new DeliveryException("activation_restricted");
+    }
     deliveryManager.activateDelivery(login, password, deliveryId);
   }
 
@@ -491,13 +506,20 @@ public class AdminContext {
 
   public void addRestriction(Restriction r) throws AdminException {
     restrictionsManager.addRestriction(r);
+    restrictionDaemon.restrictionChanged(null,r);
   }
 
   public void updateRestriction(Restriction r) throws AdminException {
     restrictionsManager.updateRestriction(r);
+    restrictionDaemon.restrictionChanged(r.getId(),r);
   }
 
   public void deleteRestriction(int id) throws AdminException {
     restrictionsManager.deleteRestriction(id);
+    restrictionDaemon.restrictionChanged(id,null);
+  }
+
+  public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
+    return deliveryManager.setDeliveryRestriction(login, password, deliveryId, restriction);
   }
 }

@@ -9,9 +9,10 @@ import java.util.Date;
  * Time: 13:52:27
  */
 public class RestrictionsFilter {
-  Date startDate;
-  Date endDate;
-  String nameFilter;
+  private Date startDate;
+  private Date endDate;
+  private String nameFilter;
+  private String userId;
 
   public Date getStartDate() {
     return startDate;
@@ -37,7 +38,17 @@ public class RestrictionsFilter {
     this.nameFilter = nameFilter;
   }
 
+  public String getUserId() {
+    return userId;
+  }
+
+  public void setUserId(String userId) {
+    this.userId = userId;
+  }
+
+
   public RestrictionsFilter() {
 
   }
+
 }

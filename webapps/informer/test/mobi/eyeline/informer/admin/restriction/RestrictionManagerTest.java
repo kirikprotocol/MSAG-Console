@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.InfosmeException;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,32 +41,7 @@ public class RestrictionManagerTest {
 
   @Before
   public void before() throws Exception {
-    Infosme infosem = new TestInfosme(){
-      @Override
-      public void addRegion(String regionId) throws AdminException {
-        if(infosmeError) {
-          throw new InfosmeException("interaction_error","");
-        }
-        super.addRegion(regionId);
-      }
-
-      @Override
-      public void updateRegion(String regionId) throws AdminException {
-        if(infosmeError) {
-          throw new InfosmeException("interaction_error","");
-        }
-        super.updateRegion(regionId);
-      }
-
-      @Override
-      public void removeRegion(String regionId) throws AdminException {
-        if(infosmeError) {
-          throw new InfosmeException("interaction_error","");
-        }
-        super.removeRegion(regionId);
-      }
-
-    };
+    Infosme infosem = new TestInfosme();
     restrictionsManager = new TestRestrictionsManager(infosem, configFile, backupDir, FileSystem.getFSForSingleInst());
   }
 
@@ -184,5 +160,15 @@ public class RestrictionManagerTest {
 
   }
 
+  @SuppressWarnings({"ResultOfMethodCallIgnored"})
+  @AfterClass
+  public static void shutdown() {
+    if(configFile != null) {
+      configFile.delete();
+    }
+    if(backupDir != null) {
+      TestUtils.recursiveDeleteFolder(backupDir);
+    }
+  }
 
 }

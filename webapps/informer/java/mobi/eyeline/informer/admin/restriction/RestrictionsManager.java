@@ -9,6 +9,7 @@ import mobi.eyeline.informer.admin.util.config.SettingsReader;
 import mobi.eyeline.informer.admin.util.config.SettingsWriter;
 
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -45,7 +46,7 @@ public class RestrictionsManager extends BaseManager<RestrictionSettings>{
         settings.addRestriction(r);
       }
       public void infosmeCommand(Infosme infosme) throws AdminException {
-        //todo 
+        //nothing to do
       }
     });
   }
@@ -56,7 +57,7 @@ public class RestrictionsManager extends BaseManager<RestrictionSettings>{
         settings.updateRestriction(r);
       }
       public void infosmeCommand(Infosme infosme) throws AdminException {
-        //todo
+        //nothing to do
       }
     });
   }
@@ -67,10 +68,18 @@ public class RestrictionsManager extends BaseManager<RestrictionSettings>{
         settings.deleteRestriction(id);
       }
       public void infosmeCommand(Infosme infosme) throws AdminException {
-        //todo
+        //nothing to do
       }
     });
   }
 
+  public boolean hasActiveRestriction(String userId) {
+    RestrictionsFilter filter = new RestrictionsFilter();
+    Date startDate = new Date();
+    filter.setStartDate(startDate);
+    filter.setEndDate(startDate);
+    filter.setUserId(userId);
+    return getRestrictions(filter).size()>0;
+  }
 
 }

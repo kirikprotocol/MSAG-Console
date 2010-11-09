@@ -56,12 +56,17 @@ class RestrictionSettings {
     for(Restriction r : restrictions.values()) {
       if(filter!=null) {
         if(filter.getStartDate()!=null) {
-          if(filter.getStartDate().after(r.getEndDate())) continue;
+          long startT = filter.getStartDate().getTime();
+          if(r.getEndDate().getTime()<startT) continue;
         }
         if(filter.getEndDate()!=null) {
-          if(filter.getEndDate().before(r.getStartDate())) continue;
+          long endT = filter.getEndDate().getTime();
+          if(r.getStartDate().getTime()>=endT) continue;
         }
         if(filter.getNameFilter()!=null && r.getName().indexOf(filter.getNameFilter())==-1) continue;
+        if(filter.getUserId()!=null && !r.isAllUsers() ) {
+          if(!r.getUserIds().contains(filter.getUserId())) continue;
+        }
       }
       ret.add(new Restriction(r));
     }

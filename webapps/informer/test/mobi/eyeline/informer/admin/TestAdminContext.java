@@ -9,6 +9,7 @@ import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
+import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
 import mobi.eyeline.informer.admin.restriction.TestRestrictionsManager;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
@@ -183,6 +184,7 @@ public class TestAdminContext extends AdminContext {
       restrictionsManager = new TestRestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
           new File(confDir, "backup"), fileSystem);
 
+      restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
 
     } catch (IOException e) {
       throw new InitException(e);
