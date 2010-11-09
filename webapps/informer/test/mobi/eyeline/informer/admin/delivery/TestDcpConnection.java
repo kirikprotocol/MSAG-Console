@@ -172,7 +172,7 @@ public class TestDcpConnection extends DcpConnection{
   }
 
 
-  private boolean accept(int deliveryId, Message message,MessageFilter filter) {
+  private boolean accept(int deliveryId, MessageWState message, MessageFilter filter) {
     if(filter.getDeliveryId() != null && filter.getDeliveryId() != deliveryId) {
       return false;
     }
@@ -187,6 +187,12 @@ public class TestDcpConnection extends DcpConnection{
       if(!accept) {
         return false;
       }
+    }    //todo status
+    if(filter.getStartDate() != null && message.date.before(filter.getStartDate())) {
+      return false;
+    }
+    if(filter.getEndDate() != null && message.date.after(filter.getEndDate())) {
+      return false;
     }
 
     return true;
@@ -741,6 +747,16 @@ public class TestDcpConnection extends DcpConnection{
     public void setSvcType(String svcType) {
       delivery.setSvcType(svcType);
     }
+
+    @Override
+    public void setRestriction(boolean restriction) {
+      delivery.setRestriction(restriction);
+    }
+
+    @Override
+    public boolean isRestriction() {
+      return delivery.isRestriction();
+    }
   }
 
   private static class MessageWState extends Message{
@@ -780,6 +796,12 @@ public class TestDcpConnection extends DcpConnection{
     @Override
     public String getText() {
       return message.getText();
+    }
+
+
+    @Override
+    void setText(String text) {
+      message.setText(text);   
     }
   }
 

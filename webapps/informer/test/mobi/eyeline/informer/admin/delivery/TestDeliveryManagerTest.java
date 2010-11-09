@@ -68,13 +68,26 @@ public class TestDeliveryManagerTest {
     manager.getDeliveries("","", new DeliveryFilter(), 10000, new Visitor<DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
         if(id == value.getDeliveryId()) {
-          ok[0] = true;
+          ok[0] = value.isRestriction();
           return false;
         }
         return true;
       }
     });
     assertTrue(ok[0]);
+    ok[0] = false;
+    manager.setDeliveryRestriction("","", d.getId(), false);
+    d = manager.getDelivery("","",d.getId());
+    assertTrue(!d.isRestriction());
+    manager.getDeliveries("","", new DeliveryFilter(), 10000, new Visitor<DeliveryInfo>() {
+      public boolean visit(DeliveryInfo value) throws AdminException {
+        if(id == value.getDeliveryId()) {
+          ok[0] = !value.isRestriction();
+          return false;
+        }
+        return true;
+      }
+    });
     manager.dropDelivery("","",d.getId());
 
   }
