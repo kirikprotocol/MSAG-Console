@@ -2,7 +2,6 @@
 # define __EYELINE_UTILX_SUBSYSTEM_HPP__
 
 # include <string>
-# include <util/config/ConfigView.h>
 # include <eyeline/utilx/runtime_cfg/RuntimeConfig.hpp>
 
 namespace eyeline {
