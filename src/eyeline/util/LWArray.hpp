@@ -33,12 +33,13 @@ template <
                           //restricts maximum number of elements in array!
 >
 class LWArrayExtension_T {
-protected:
+private:
   _SizeTypeArg  _orgSz;         //number of max elements in original array
   _TArg *       _buf;           //pointer to data elements buffer (either extension heap or original buf)
   _SizeTypeArg  _heapBufSz;     //size of heap buffer allocated
   _SizeTypeArg  _numElem;       //number of initilized/assigned elements
 
+protected:
   _SizeTypeArg _MAX_FACTOR(void) const { return _MAX_SIZE()/_orgSz; }
 
   void denyIndex(_SizeTypeArg use_idx) const //throw(std::exception)
@@ -139,6 +140,8 @@ public:
   }
 
   bool empty(void) const { return _numElem == 0; }
+
+  bool isHeapBuf(void) const { return _heapBufSz != 0; }
 
   //Assigns buffer to extend
   void assign(_SizeTypeArg org_max_sz, _TArg * org_buf,
@@ -452,7 +455,7 @@ template <
   , _SizeTypeArg _max_STACK_SZ  //maximum number of elements are to store on stack
 >
 class LWArray_T : public LWArrayExtension_T<_TArg, _SizeTypeArg> {
-protected:
+private:
   union {
     uint8_t  _buf[_max_STACK_SZ * sizeof(_TArg)];
     void *   _alignedPtr;
@@ -484,7 +487,7 @@ public:
   }
   ~LWArray_T()
   {
-    if (!this->_heapBufSz)
+    if (!this->isHeapBuf()) //elements on private stack were never moved, so destroy them
       this->clear();
   }
 

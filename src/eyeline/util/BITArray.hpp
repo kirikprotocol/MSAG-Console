@@ -32,13 +32,13 @@ template <
   typename _SizeTypeArg         //must be an unsigned integer type!
 >
 class BITArrayExtension_T {
-protected:
+private:
   _SizeTypeArg  _orgBits;   //number of max bits in original array
   uint8_t *     _buf;       //pointer to data buffer (either heap or stack)
   _SizeTypeArg  _heapBufSz; //size of heap buffer allocated
   _SizeTypeArg  _numBits;   //number of initialized/assigned bits
 
-
+protected:
   _SizeTypeArg _MAX_FACTOR(void) const { return _MAX_SIZE()/_orgBits; }
 
   void denyIndex(_SizeTypeArg bit_idx) const //throw(std::exception)
@@ -205,6 +205,8 @@ public:
   }
 
   bool empty(void) const { return _numBits == 0; }
+
+  bool isHeapBuf(void) const { return _heapBufSz != 0; }
 
   //Assigns buffer to extend
   void assign(_SizeTypeArg org_max_bits, uint8_t * org_buf,
@@ -473,7 +475,10 @@ public:
     append(use_arr); //NOTE: here append() cann't fail
   }
   ~BITArray_T()
-  { }
+  {
+    if (!this->isHeapBuf()) //elements on private stack were never moved, so destroy them
+      this->clear();
+  }
 
   template <_SizeTypeArg _SZArg>
   BITArray_T & operator= (const BITArray_T<_SizeTypeArg, _SZArg> & use_arr) //throw()
