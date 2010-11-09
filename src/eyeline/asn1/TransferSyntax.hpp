@@ -101,8 +101,8 @@ struct ENCResult {
   TSLength  nbytes; //number of bytes successfully encoded (even
                     //if encMoreMem indicated)
 
-  ENCResult(Status_e use_status = encBadVal, TSLength nb_encoded = 0)
-    : status(encBadVal), nbytes(nb_encoded)
+  explicit ENCResult(Status_e use_status = encBadVal, TSLength nb_encoded = 0)
+    : status(use_status), nbytes(nb_encoded)
   { }
 
   bool isOk(void) const { return (status == encOk); }
@@ -131,7 +131,7 @@ struct DECResult {
   TSLength  nbytes; //number of bytes processed (either succsefully
                     //decoded or utilized prior to error was detected)
 
-  DECResult(Status_e use_status = decBadEncoding, TSLength nb_decoded = 0)
+  explicit DECResult(Status_e use_status = decBadEncoding, TSLength nb_decoded = 0)
     : status(use_status), nbytes(nb_decoded)
   { }
 
