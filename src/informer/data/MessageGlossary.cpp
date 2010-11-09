@@ -128,7 +128,8 @@ void MessageGlossary::bindText( MessageTextPtr& p )
             abort();
         }
         smsc_log_debug(log_,"bind text='%s' id=%d ref=%u p=%p",
-                       msg->text_, msg->id_, msg->ref_, msg);
+                       msg->text_ ? msg->text_ : "",
+                       msg->id_, msg->ref_, msg);
         MutexGuard mg(lock_);
         if ( !msg->id_ ) {
             if (!msg->text_) {
