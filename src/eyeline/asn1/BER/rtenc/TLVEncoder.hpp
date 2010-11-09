@@ -2,7 +2,9 @@
  * DER Encoder: 'TL' parts encoding methods.
  * ************************************************************************* */
 #ifndef __ASN1_BER_TLV_ENCODER
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ASN1_BER_TLV_ENCODER
 
 #include "eyeline/asn1/AbstractSyntax.hpp"
@@ -81,7 +83,7 @@ protected:
   uint8_t _octLOC[MAX_LDETERMINANT_OCTS(TSLength)];       //5 bytes as max for uint32_t
 
 public:
-  explicit TLComposer() : TLVStruct()
+  TLComposer() : TLVStruct()
   {
     _octTag[0] = _octLOC[0] = 0;
   }
@@ -206,11 +208,12 @@ public:
   //on encoding properties implied by addressed value.
   //Returns  TLVProperty for outermost tag.
   // 
-  //NOTE: if 'calc_indef' is set, then full TLV encoding length is calculated even
-  //if indefinite LD form is used. This may be required if this TLV is enclosed by
-  //another that uses definite LD form.
+  //NOTE: if 'calc_indef' is set, then full TLV encoding length is calculated
+  //even if indefinite LD form is used. This may be required if this TLV is
+  //enclosed by another that uses definite LD form.
   const TLVStruct & calculateTLV(bool calc_indef = false) /*throw(std::exception)*/;
-  //Encodes by BER/DER/CER the previously calculated TLV layout (composes complete TLV encoding).
+  //Encodes by BER/DER/CER the previously calculated TLV layout (composes
+  //complete TLV encoding).
   //NOTE: Throws in case the layout wasn't calculated.
   ENCResult encodeTLV(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
 };
@@ -223,6 +226,7 @@ class TypeEncoderAC : public ASTypeEncoderAC, public TypeTagging {
 protected:
   TLVLayoutEncoder    _tlvEnc; //keeps reference to ValueEncoderIface
 
+  //NOTE: refreshes tagging and initializes TLVLayoutEncoder
   const TLVStruct & prepareTLV(bool calc_indef) /*throw(std::exception)*/;
 
   TypeEncoderAC(const TypeEncoderAC & use_obj)
@@ -240,9 +244,7 @@ public:
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : ASTypeEncoderAC(use_rule), TypeTagging(eff_tags)
     , _tlvEnc(TSGroupBER::getBERRule(use_rule))
-  {
-    _tlvEnc.setTagging(&eff_tags);
-  }
+  { }
   //'Untagged CHOICE/Opentype type encoder' constructor
   TypeEncoderAC(const TaggingOptions & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
@@ -296,7 +298,7 @@ public:
   //Sets required transferSyntax encoding rule
   //Returns: true if value encoding should be (re)calculated
   //Throws: in case of unsupported rule
-  bool setTSRule(TransferSyntax::Rule_e use_rule) /*throw(std::exception)*/
+  virtual bool setTSRule(TransferSyntax::Rule_e use_rule) /*throw(std::exception)*/
   {
     return ASTypeEncoderAC::setTSRule(use_rule) ? 
       _tlvEnc.setVALRule(TSGroupBER::getBERRule(use_rule)) : false;
@@ -305,7 +307,7 @@ public:
   // -- ------------------------------------------------- --
   // -- ASTypeEncoderAC abstract methods implementation
   // -- ------------------------------------------------- --
-  bool isTSsupported(TransferSyntax::Rule_e use_rule) const /*throw()*/
+  virtual bool isTSsupported(TransferSyntax::Rule_e use_rule) const /*throw()*/
   { //TODO: CER isn't implemented yet
     //if (use_rule == TransferSyntax::ruleCER)
     //  return false; 
@@ -315,12 +317,12 @@ public:
   //Calculates length of resulted encoding without its composition.
   //NOTE: if calculation is impossible (f.ex. stream encoding) 
   //      ENCResult::encUnsupported is returned.
-  ENCResult calculate(void) /*throw(std::exception)*/;
+  virtual ENCResult calculate(void) /*throw(std::exception)*/;
 
   //Encodes by BER/DER/CER the TLV layout (composes complete TLV encoding).
   //NOTE: Throws in case of value that cann't be encoded.
   //NOTE: Calculates TLV layout if it wasn't calculated yet
-  ENCResult encode(uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/;
+  virtual ENCResult encode(uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/;
 };
 
 
