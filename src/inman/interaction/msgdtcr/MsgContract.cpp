@@ -38,57 +38,45 @@ void AbntContractResult::load(ObjectBuffer& in) throw(SerializerException)
     {
         uint8_t itmp;
         in >> itmp;
-        cntrInfo.ab_type = static_cast<AbonentContractInfo::ContractType>(itmp);
+        cntrType = (itmp > AbonentContractInfo::abtPrepaid)
+                  ? AbonentContractInfo::abtUnknown 
+                  : static_cast<AbonentContractInfo::ContractType>(itmp);
     }
+    gsmSCF.Reset();
     {
         TonNpiAddressString stmp;
         in >> stmp;
-        if (stmp.empty())
-            cntrInfo.tdpSCF.clear();
-        else {
-            TonNpiAddress adr;
-            if (!adr.fromText(stmp.c_str()))
-                throw SerializerException("invalid gsmSCF address",
-                                          SerializerException::invObjData, stmp.c_str());
-            cntrInfo.tdpSCF[TDPCategory::dpMO_SM].scfAddress = adr;
-        }
+        if (!stmp.empty() && !gsmSCF.scfAddress.fromText(stmp.c_str()))
+            throw SerializerException("invalid gsmSCF address",
+                                      SerializerException::invObjData, stmp.c_str());
     }
     in >> errCode;
-    if (cntrInfo.getSCFinfo(TDPCategory::dpMO_SM)) {
-        cntrInfo.tdpSCF[TDPCategory::dpMO_SM].serviceKey = errCode;
+    if (!gsmSCF.scfAddress.empty()) {
+        gsmSCF.serviceKey = errCode;
         errCode = 0;
     }
-    in >> cntrInfo.abImsi;
+    in >> abImsi;
     in >> errMsg;
 }
 
 void AbntContractResult::save(ObjectBuffer& out) const
 {
     out << nmPolicy;
-    out << (uint8_t)cntrInfo.ab_type;
+    out << (uint8_t)cntrType;
 
-    GsmSCFinfo          smScf;
-    const GsmSCFinfo *  p_scf = cntrInfo.getSCFinfo(TDPCategory::dpMO_SM);
-    if (!p_scf) { //check if SCF for MO-BC may be used
-        if ((p_scf = cntrInfo.getSCFinfo(TDPCategory::dpMO_BC)) != 0)
-            smScf.scfAddress = p_scf->scfAddress;
-    } else 
-        smScf = *p_scf;
-
-    if (smScf.scfAddress.empty())
+    if (gsmSCF.scfAddress.empty())
         out << (uint8_t)0x00;
     else
-        out << smScf.scfAddress.toString();
+        out << gsmSCF.scfAddress.toString();
 
-    out << (errCode ? errCode : smScf.serviceKey);
-    out << cntrInfo.abImsi;
+    out << (errCode ? errCode : gsmSCF.serviceKey);
+    out << abImsi;
     out << errMsg;
 }
 
 void AbntContractResult::setError(uint32_t err_code, const char * err_msg/* = NULL*/)
 { 
-    cntrInfo.ab_type = AbonentContractInfo::abtUnknown;
-    cntrInfo.tdpSCF.clear();
+    cntrType = AbonentContractInfo::abtUnknown;
     errCode = err_code;
     if (err_msg)
         errMsg = err_msg;

@@ -120,9 +120,11 @@ public:
 
 class AbntContractResult : public INPAbntContractCmd {
 protected:
-    AbonentContractInfo cntrInfo;
-    std::string     nmPolicy;
+    AbonentContractInfo::ContractType cntrType;
     uint32_t        errCode;
+    IMSIString      abImsi;
+    GsmSCFinfo      gsmSCF;
+    std::string     nmPolicy;
     std::string     errMsg;
 
     // -----------------------------------------
@@ -133,23 +135,27 @@ protected:
 
 public:
     AbntContractResult()
-        : INPAbntContractCmd(INPCSAbntContract::ABNT_CONTRACT_RESULT_TAG), errCode(0)
+        : INPAbntContractCmd(INPCSAbntContract::ABNT_CONTRACT_RESULT_TAG)
+        , cntrType(AbonentContractInfo::abtUnknown), errCode(0)
     { }
-    ~AbntContractResult() { }
+    ~AbntContractResult()
+    { }
 
     //Setters:
-    void setContractInfo(const AbonentContractInfo & cntr_info) { cntrInfo = cntr_info; }
-    void setPolicy(const std::string nm_policy) { nmPolicy = nm_policy; }
+    void setContractInfo(AbonentContractInfo::ContractType cntr_type, const char * ab_imsi = NULL);
+    void setGsmSCF(const GsmSCFinfo & gsm_scf) { gsmSCF = gsm_scf; }
+    void setPolicy(const std::string & nm_policy) { nmPolicy = nm_policy; }
     void setError(uint32_t err_code, const char * err_msg = NULL);
 
     //Getters:
     bool  cacheUsed(void) const { return nmPolicy.empty(); }
-    const char * policyUsed(void) const { return nmPolicy.empty() ? NULL: nmPolicy.c_str(); }
+    const char * policyUsed(void) const { return nmPolicy.empty() ? NULL : nmPolicy.c_str(); }
     uint32_t    errorCode(void) const { return errCode; }
     const char * errorMsg(void) const { return errMsg.c_str(); }
 
-    const AbonentContractInfo::ContractType contractType(void) const { return cntrInfo.ab_type; }
-    const AbonentContractInfo & contractInfo(void) const { return cntrInfo; }
+    AbonentContractInfo::ContractType contractType(void) const { return cntrType; }
+    const char * getSubscrImsi(void) const { return abImsi.empty() ? NULL : abImsi.c_str(); }
+    const GsmSCFinfo * getGsmSCF(void) const { return gsmSCF.empty() ? NULL : &gsmSCF; }
 };
 
 // --------------------------------------------------------- //

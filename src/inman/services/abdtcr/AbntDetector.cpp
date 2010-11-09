@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/services/abdtcr/AbntDetector.hpp"
 using smsc::inman::iaprvd::IAProviderITF;
@@ -331,6 +331,7 @@ void AbonentDetector::StopTimer(void)
 
 bool AbonentDetector::sendResult(void)
 {
+  GsmSCFinfo  smScf;
   std::string dstr;
   format(dstr, "%s: <-- RESULT, abonent(%s) type %s", _logId,
          abNumber.getSignals(), AbonentContractInfo::type2Str(abRec.ab_type));
@@ -342,17 +343,15 @@ bool AbonentDetector::sendResult(void)
       }
   } else {
       if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
-          GsmSCFinfo          smScf;
-          const GsmSCFinfo *  p_scf = abRec.getSCFinfo(TDPCategory::dpMO_SM);
+          const GsmSCFinfo * pScf = abRec.getSCFinfo(TDPCategory::dpMO_SM);
 
-          if (!p_scf) { //check if SCF for MO-BC may be used
-              p_scf = abRec.getSCFinfo(TDPCategory::dpMO_BC);
-              smScf.scfAddress = p_scf->scfAddress;
+          if (!pScf) { //check if SCF for MO-BC may be used
+              pScf = abRec.getSCFinfo(TDPCategory::dpMO_BC);
+              smScf.scfAddress = pScf->scfAddress;
           } else 
-              smScf = *p_scf;
+              smScf = *pScf;
           format(dstr, ", SCF %s", smScf.toString().c_str());
       }
-
       if (abRec.getImsi()) {
           dstr += ", IMSI: "; dstr += abRec.getImsi();
       }
@@ -363,7 +362,9 @@ bool AbonentDetector::sendResult(void)
   if (_wErr)
       spck.Cmd().setError(_wErr, URCRegistry::explainHash(_wErr).c_str());
   else {
-      spck.Cmd().setContractInfo(abRec);
+      spck.Cmd().setContractInfo(abRec.ab_type, abRec.getImsi());
+      if (!smScf.empty())
+        spck.Cmd().setGsmSCF(smScf);
       if (_cfg.iaPol)
           spck.Cmd().setPolicy(_cfg.iaPol->Ident());
   }
