@@ -9,4 +9,6 @@ protocol InformerAdminProto
   LoggerGetCategoriesResp outmsg
   LoggerSetCategories inmsg
   LoggerSetCategoriesResp outmsg
+  SendTestSms inmsg
+  SendTestSmsResp outmsg
 end
