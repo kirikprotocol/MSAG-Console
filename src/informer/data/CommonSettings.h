@@ -10,7 +10,9 @@ namespace informer {
 class CommonSettings
 {
 public:
-    CommonSettings() : path_("./"),
+    CommonSettings() :
+    path_("./"),
+    statpath_("./"),
     unrespondedMessagesMax_(100),
     responseWaitTime_(65),
     receiptWaitTime_(600),
@@ -19,14 +21,20 @@ public:
     incStatBank_(0)
     {}
 
-    void init( const std::string& path ) {
+    void init( const std::string& path, const std::string& statpath ) {
         path_ = path;
         if (path_.empty()) path_ = "./";
         else if (path_[path_.size()-1] != '/') path_.push_back('/');
+        statpath_ = statpath_;
+        if (statpath_.empty()) statpath_ = "./";
+        else if (statpath_[statpath_.size()-1] != '/') statpath_.push_back('/');
     }
 
     inline const std::string& getStorePath() const {
         return path_;
+    }
+    inline const std::string& getStatPath() const {
+        return statpath_;
     }
 
     msgtime_type getActivityLogPeriod() const { return 60; }
@@ -83,6 +91,7 @@ public:
 
 private:
     std::string path_;
+    std::string statpath_;
     unsigned unrespondedMessagesMax_;
     unsigned responseWaitTime_;
     unsigned receiptWaitTime_;

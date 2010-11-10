@@ -2,27 +2,20 @@
 #include "DeliveryMgr.h"
 #include "InfosmeCoreV1.h"
 #include "RegionLoader.h"
+#include "informer/admin/AdminServer.hpp"
 #include "informer/data/UserInfo.h"
+#include "informer/dcp/DcpServer.hpp"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/sender/RegionSender.h"
 #include "informer/sender/SmscSender.h"
-#include "util/config/ConfString.h"
-#include "util/config/ConfigView.h"
-#include "informer/admin/AdminServer.hpp"
-#include "informer/dcp/DcpServer.hpp"
+#include "util/config/Config.h"
 
 using namespace smsc::util::config;
 
 namespace {
 
 using namespace eyeline::informer;
-
-std::string cgetString( const ConfigView& cv, const char* tag, const char* what )
-{
-    std::auto_ptr<char> str(cv.getString(tag,what));
-    return std::string(str.get());
-}
 
 struct SortUserById
 {
@@ -32,44 +25,51 @@ struct SortUserById
     }
 };
 
+void readSmscConfig( const char*   name,
+                     SmscConfig&   cfg,
+                     const Config& config )
+{
+    try {
+        smsc::sme::SmeConfig& rv = cfg.smeConfig;
+        rv.host = config.getString("host");
+        rv.sid = config.getString("sid");
+        rv.port = config.getInt("port");
+        rv.timeOut = config.getInt("timeout");
+        try {
+            rv.password = config.getString("password");
+        } catch (ConfigException&) {}
+        try {
+            const std::string systemType = config.getString("systemType");
+            rv.setSystemType(systemType);
+        } catch (ConfigException&) {}
+        try {
+            rv.interfaceVersion = config.getInt("interfaceVersion");
+        } catch (ConfigException&) {}
+        try {
+            const std::string ar = config.getString("rangeOfAddress");
+            rv.setAddressRange(ar);
+        } catch (ConfigException&) {}
+        try {
+            cfg.ussdPushOp = config.getInt("ussdPushTag");
+        } catch (ConfigException) {
+            cfg.ussdPushOp = -1;
+        }
+        try {
+            cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
+        } catch (ConfigException) {
+            cfg.ussdPushVlrOp = -1;
+        }
+    } catch ( InfosmeException& e ) {
+        throw;
+    } catch ( std::exception& e ) {
+        throw InfosmeException(EXC_CONFIG,"exc in smsc '%s' config: %s", e.what());
+    }
+}
+    
 } // namespace
 
 namespace eyeline {
 namespace informer {
-
-void InfosmeCoreV1::readSmscConfig( SmscConfig& cfg, const ConfigView& config )
-{
-    smsc::sme::SmeConfig& rv = cfg.smeConfig;
-    rv.host = ::cgetString(config,"host","SMSC host was not defined");
-    rv.sid = ::cgetString(config,"sid","infosme id was not defined");
-    rv.port = config.getInt("port","SMSC port was not defined");
-    rv.timeOut = config.getInt("timeout","connect timeout was not defined");
-    try {
-        rv.password = ::cgetString(config,"password","InfoSme password wasn't defined !");
-    } catch (ConfigException&) {}
-    try {
-        const std::string systemType = ::cgetString(config,"systemType","InfoSme system type wasn't defined !");
-        rv.setSystemType(systemType);
-    } catch (ConfigException&) {}
-    try {
-        rv.interfaceVersion = config.getInt("interfaceVersion","InfoSme interface version wasn't defined!");
-    } catch (ConfigException&) {}
-    try {
-        const std::string ar = ::cgetString(config,"rangeOfAddress","InfoSme range of address was not defined");
-        rv.setAddressRange(ar);
-    } catch (ConfigException&) {}
-    try {
-        cfg.ussdPushOp = config.getInt("ussdPushTag");
-    } catch (ConfigException) {
-        cfg.ussdPushOp = -1;
-    }
-    try {
-        cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
-    } catch (ConfigException) {
-        cfg.ussdPushVlrOp = -1;
-    }
-}
-
 
 InfosmeCoreV1::InfosmeCoreV1() :
 log_(smsc::logger::Logger::getInstance("core")),
@@ -126,12 +126,28 @@ InfosmeCoreV1::~InfosmeCoreV1()
 }
 
 
-void InfosmeCoreV1::init( const ConfigView& cfg )
+void InfosmeCoreV1::init()
 {
     smsc_log_info(log_,"--- initing core ---");
 
+    const char* filename = "config.xml";
+
+    std::auto_ptr<Config> cfg( Config::createFromFile(filename));
+    if (!cfg.get()) {
+        throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",filename);
+    }
+    cfg.reset( cfg->getSubConfig("informer",true) );
+    if (!cfg.get()) {
+        throw InfosmeException(EXC_CONFIG,"section 'informer' is not found in '%s'",filename);
+    }
+
     // loading common settings
-    cs_.init("store/");
+    try {
+        cs_.init( cfg->getString("storePath"),
+                  cfg->getString("statPath") );
+    } catch ( std::exception& e ) {
+        throw InfosmeException(EXC_CONFIG,"exc in '%s': %s", filename, e.what());
+    }
 
     if (!dlvMgr_) {
         smsc_log_info(log_,"--- creating delivery mgr ---");
@@ -143,9 +159,9 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
         smsc_log_info(log_,"--- creating admin server ---");
         adminServer_ = new admin::AdminServer();
         adminServer_->assignCore(this);
-        adminServer_->Init(smsc::util::config::ConfString(cfg.getString("Admin.host")).c_str(),
-                           cfg.getInt("Admin.port"),
-                           cfg.getInt("Admin.handlers") );
+        adminServer_->Init( cfg->getString("adminHost"),
+                            cfg->getInt("adminPort"),
+                            cfg->getInt("adminHandlers") );
     }
 
     // load all users
@@ -153,29 +169,37 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     loadUsers("");
 
     // create smscs
-    {
+    const char* smscfilename = "smsc.xml";
+    try {
         smsc_log_info(log_,"--- loading smscs ---");
-        const char* fname = "smsc.xml";
-        smsc_log_info(log_,"reading smscs config '%s'",fname);
-        std::auto_ptr< Config > centerConfig( Config::createFromFile(fname));
-        if (!centerConfig.get()) {
-            throw InfosmeException(EXC_CONFIG,"cannot load config '%s'",fname);
+        smsc_log_info(log_,"reading smscs config '%s'",smscfilename);
+        std::auto_ptr< Config > scfg( Config::createFromFile(smscfilename));
+        if (!scfg.get()) {
+            throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",smscfilename);
         }
-        std::auto_ptr< ConfigView > ccv(new ConfigView(*centerConfig.get(),"SMSCConnectors"));
-        const ConfString defConn(ccv->getString("default","default SMSC id not found"));
-        std::auto_ptr< CStrSet > connNames(ccv->getShortSectionNames());
-        if ( connNames->find(defConn.str()) == connNames->end() ) {
-            throw ConfigException("default SMSC '%s' does not match any section",defConn.c_str());
+        const char* smscSectionName = "SMSCConnectors";
+        scfg.reset( scfg->getSubConfig(smscSectionName,true) );
+        if (!scfg.get()) {
+            throw InfosmeException(EXC_CONFIG,"section '%s' is not found in config file '%s'",
+                                   smscSectionName, smscfilename);
         }
-        defaultSmscId_ = defConn.str();
+        const char* defConn = scfg->getString("default");
+        std::auto_ptr< CStrSet > connNames(scfg->getRootSectionNames());
+        if ( connNames->find(defConn) == connNames->end() ) {
+            throw InfosmeException(EXC_CONFIG,"default SMSC '%s' does not match any section",defConn);
+        }
+        defaultSmscId_ = defConn;
         for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
             smsc_log_info(log_,"processing smsc S='%s'",i->c_str());
-            std::auto_ptr< ConfigView > sect(ccv->getSubConfig(i->c_str()));
+            std::auto_ptr< Config > sect(scfg->getSubConfig(i->c_str(),true));
             SmscConfig smscConfig;
-            readSmscConfig(smscConfig, *sect.get());
+            readSmscConfig(i->c_str(), smscConfig, *sect.get());
             updateSmsc( i->c_str(), &smscConfig );
         }
-
+    } catch ( InfosmeException& e ) {
+        throw;
+    } catch ( std::exception& e ) {
+        throw InfosmeException(EXC_CONFIG,"exc reading '%s': %s",smscfilename,e.what());
     }
 
     // create regions
@@ -187,9 +211,9 @@ void InfosmeCoreV1::init( const ConfigView& cfg )
     if (!dcpServer_) {
         dcpServer_ = new dcp::DcpServer();
         dcpServer_->assignCore(this);
-        dcpServer_->Init(smsc::util::config::ConfString(cfg.getString("Dcp.host")).c_str(),
-                         cfg.getInt("Dcp.port"),
-                         cfg.getInt("Dcp.handlers") );
+        dcpServer_->Init( cfg->getString("dcpHost"),
+                          cfg->getInt("dcpPort"),
+                          cfg->getInt("dcpHandlers") );
     }
 }
 

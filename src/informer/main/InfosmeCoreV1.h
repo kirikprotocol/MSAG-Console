@@ -18,14 +18,6 @@
 #include "informer/sender/RegionSender.h"
 #include "logger/Logger.h"
 
-namespace smsc {
-namespace util {
-namespace config {
-class ConfigView;
-}
-}
-}
-
 namespace eyeline {
 namespace informer {
 
@@ -45,16 +37,16 @@ public DeliveryActivator,
 public smsc::core::threads::Thread
 {
 public:
+    /*
     static void readSmscConfig( SmscConfig& cfg,
-                                const smsc::util::config::ConfigView& cv );
+                                const smsc::util::config::Config& cv );
+     */
 
     InfosmeCoreV1();
 
     virtual ~InfosmeCoreV1();
 
-    /// configuration
-    /// NOTE: do not keep a ref on cfg!
-    void init( const smsc::util::config::ConfigView& cfg );
+    void init();
     void start();
     void stop();
 

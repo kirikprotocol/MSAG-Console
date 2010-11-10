@@ -6,8 +6,8 @@
 #include "license/check/license.hpp"
 #include "logger/Logger.h"
 #include "system/smscsignalhandlers.h"
-#include "util/config/Config.h"
-#include "util/config/ConfigView.h"
+// #include "util/config/Config.h"
+// #include "util/config/ConfigView.h"
 #include "util/config/ConfString.h"
 #include "util/crc32.h"
 #include "util/findConfigFile.h"
@@ -191,20 +191,22 @@ int main( int argc, char** argv )
             // license
             checkLicenseFile();
 
+            core.reset( new eyeline::informer::InfosmeCoreV1 );
+            core->init();
+
             // read the config
+            /*
             std::auto_ptr<smsc::util::config::Config> cfg
                 ( smsc::util::config::Config::createFromFile("config.xml") );
             if ( !cfg.get() ) {
                 throw eyeline::informer::InfosmeException(eyeline::informer::EXC_CONFIG,
                                                           "cannot load main config");
             }
-
-            core.reset( new eyeline::informer::InfosmeCoreV1 );
-
             {
                 smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme");
                 core->init(cv);
             }
+             */
 
             // enter main loop
             core->start();
