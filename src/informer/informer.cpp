@@ -216,7 +216,7 @@ int main( int argc, char** argv )
                 core->selfTest();
             } catch (std::exception& e ) {
                 smsc_log_error(mainlog,"self test failed: %s",e.what());
-                isStarted = false;
+                // isStarted = false;
             }
 
             while ( isStarted ) {

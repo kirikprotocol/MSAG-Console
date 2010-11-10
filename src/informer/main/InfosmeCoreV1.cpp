@@ -369,13 +369,15 @@ void InfosmeCoreV1::updateSmsc( const std::string& smscId,
 
 void InfosmeCoreV1::selfTest()
 {
-    smsc_log_debug(log_,"selfTest started");
+    smsc_log_debug(log_,"--- selfTest started ---");
 
     const char* userId = "bukind";
+    smsc_log_debug(log_,"--- getting user '%s' ---",userId);
     UserInfoPtr user = getUserInfo(userId);
     if (!user.get()) {
         throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
     }
+    smsc_log_debug(log_,"--- user '%s' got ---",userId);
 
     DeliveryInfoData data;
     {
@@ -399,13 +401,15 @@ void InfosmeCoreV1::selfTest()
         data.userData = "0xdeadbeaf";
         data.sourceAddress = "10000";
     }
+    smsc_log_debug(log_,"--- adding new delivery ---");
     const dlvid_type dlvId = addDelivery(*user, data);
-    smsc_log_debug(log_,"delivery D=%u added");
+    smsc_log_debug(log_,"--- delivery D=%u added ---", dlvId);
 
     DeliveryPtr dlv = getDelivery(*user,dlvId);
     if (!dlv.get()) {
         throw InfosmeException(EXC_NOTFOUND,"D=%u is not found",dlvId);
     }
+    smsc_log_debug(log_,"--- delivery D=%u got, setting delivery texts ---", dlvId);
 
     // adding glossary messages
     {
@@ -414,7 +418,7 @@ void InfosmeCoreV1::selfTest()
         glotexts.push_back("the second message");
         dlv->setGlossary( glotexts );
     }
-
+    smsc_log_debug(log_,"--- glossary updated, adding messages ---");
     {
         MessageList msgList;
         MessageLocker mlk;
@@ -427,9 +431,11 @@ void InfosmeCoreV1::selfTest()
         mlk.msg.userData = "thesecondone";
         msgList.push_back(mlk);
         dlv->addNewMessages(msgList.begin(), msgList.end());
+        smsc_log_debug(log_,"--- messages added, setting active state ---");
         dlv->setState(DLVSTATE_ACTIVE);
+        smsc_log_debug(log_,"--- delivery activated ---");
     }
-    smsc_log_debug(log_,"selfTest finished");
+    smsc_log_debug(log_,"--- selfTest finished ---");
 }
 
 
@@ -503,6 +509,7 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
                        formatRegionList(bs.regIds.begin(),bs.regIds.end()).c_str() );
     }
     dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
+    if ( bs.regIds.empty() ) return;
     bs.ignoreState = false;
     bindDeliveryRegions( bs );
 }
@@ -595,6 +602,7 @@ int InfosmeCoreV1::Execute()
 
         BindSignal bs;
         while ( bindQueue_.Pop(bs) ) {
+            if (bs.regIds.empty()) continue;
             bindDeliveryRegions(bs);
         }
         bindQueue_.waitForItem();
@@ -609,6 +617,8 @@ int InfosmeCoreV1::Execute()
 
 void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
 {
+    if (bs.regIds.empty()) return;
+
     typedef std::vector<regionid_type> regIdVector;
     smsc_log_debug(log_,"%sbinding D=%u with [%s]",
                    bs.bind ? "" : "un", unsigned(bs.dlvId),
