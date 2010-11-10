@@ -109,11 +109,11 @@ private:
     smsc::sms::IllFormedReceiptParser*        parser_;
     std::string                               smscId_;
     SmscConfig                                smscConfig_;
-    std::auto_ptr<smsc::sme::SmppSession>     session_;
-    smsc::core::synchronization::Mutex        reconfLock_;
-    ScoredList< SmscSender >                  scoredList_; // not owned
-    usectime_type                             currentTime_;
-    bool                                      isStopping_;
+
+    smsc::core::synchronization::Mutex                reconfLock_;
+    std::auto_ptr<smsc::sme::SmppSession>             session_;
+    ScoredList< SmscSender >                          scoredList_; // not owned
+    usectime_type                                     currentTime_;
 
     smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;
     smsc::core::buffers::CyclicQueue< ResponseTimer > respWaitQueue_;
@@ -133,6 +133,7 @@ private:
     smsc::core::synchronization::EventMonitor          queueMon_;
     std::auto_ptr<DataQueue>                           wQueue_;
     bool                                               awaken_;
+    bool                                               isStopping_;
 };
 
 } // informer

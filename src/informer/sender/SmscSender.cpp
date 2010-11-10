@@ -226,8 +226,9 @@ smscId_(smscId),
 smscConfig_(cfg),
 scoredList_(*this,2*maxScoreIncrement,
             smsc::logger::Logger::getInstance("reglist")),
-isStopping_(true),
-journal_(0)
+journal_(0),
+awaken_(false),
+isStopping_(true)
 {
     {
         char c;
@@ -717,6 +718,7 @@ bool SmscSender::queueData( const ResponseData& rd )
                    rd.seqNum ? "response" : "receipt",
                    rd.seqNum, rd.status, rd.rcptId.msgId );
     MutexGuard mg(queueMon_);
+    if (isStopping_) return false;
     wQueue_->Push(rd);
     queueMon_.notify();
     return true;
@@ -872,9 +874,12 @@ void SmscSender::start()
 {
     if (!isStopping_) return;
     {
-        MutexGuard rmg(reconfLock_);
+        MutexGuard mg(queueMon_);
         if (!isStopping_) return;
         isStopping_ = false;
+    }
+    {
+        MutexGuard rmg(reconfLock_);
         session_.reset(new smsc::sme::SmppSession(smscConfig_.smeConfig,this));
     }
     Start();
@@ -885,12 +890,13 @@ void SmscSender::stop()
 {
     if (isStopping_) return;
     {
-        MutexGuard mg(reconfLock_);
+        MutexGuard mg(queueMon_);
         if (isStopping_) return;
         isStopping_ = true;
+        awaken_ = true;
+        queueMon_.notifyAll();
     }
     journal_->stop();
-    wakeUp();
     WaitFor();
 }
 
@@ -927,10 +933,9 @@ int SmscSender::Execute()
 
 void SmscSender::connectLoop()
 {
-    while ( true ) {
-        MutexGuard mg(reconfLock_);
-        if (isStopping_) break;
+    while ( !isStopping_) {
 
+        MutexGuard mg(reconfLock_);
         smsc_log_debug(log_,"S='%s': trying to connect",smscId_.c_str());
         if ( !session_.get() ) {
             throw InfosmeException(EXC_LOGICERROR,"session is not configured");
