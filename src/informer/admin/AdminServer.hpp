@@ -19,6 +19,7 @@ public:
   AdminServer():ServerBase("admin")
   {
     log=smsc::logger::Logger::getInstance("admin");
+    proto.assignHandler(this);
   }
   void assignCore(InfosmeCore* argCore)
   {
@@ -40,6 +41,7 @@ protected:
   virtual void handle(const messages::SetDefaultSmsc& cmd);
   virtual void handle(const messages::LoggerGetCategories& cmd);
   virtual void handle(const messages::LoggerSetCategories& cmd);
+  virtual void handle(const messages::SendTestSms& cmd);
 
 };
 

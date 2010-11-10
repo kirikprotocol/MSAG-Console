@@ -3,6 +3,7 @@
 #include "messages/SetDefaultSmsc.hpp"
 #include "messages/LoggerGetCategories.hpp"
 #include "messages/LoggerSetCategories.hpp"
+#include "messages/SendTestSms.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -53,6 +54,14 @@ void InformerAdminProto::decodeAndHandleMessage(eyeline::protogen::framework::Se
     case tag_LoggerSetCategories:
     {
       messages::LoggerSetCategories msg;
+      msg.deserialize(ss);
+      msg.messageSetSeqNum(seq);
+      msg.messageSetConnId(connId);
+      handler->handle(msg);
+    }break;
+    case tag_SendTestSms:
+    {
+      messages::SendTestSms msg;
       msg.deserialize(ss);
       msg.messageSetSeqNum(seq);
       msg.messageSetConnId(connId);

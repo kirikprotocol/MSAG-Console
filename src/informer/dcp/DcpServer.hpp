@@ -47,7 +47,7 @@ class DcpServer:public eyeline::protogen::ServerBase,public DcpHandler{
 public:
   DcpServer():ServerBase("dcp")
   {
-
+    proto.assignHandler(this);
   }
   void assignCore(InfosmeCore* argCore)
   {

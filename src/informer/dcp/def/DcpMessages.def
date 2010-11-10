@@ -332,6 +332,7 @@ message CountMessages 56
   int32 deliveryId 1
   DeliveryMessageState states 2 array opt
   string msisdnFilter 7 array opt
+  int32 codeFilter 8 array opt
   // DD:MM:YY hh:mm:ss
   string startDate 4
   // DD:MM:YY hh:mm:ss

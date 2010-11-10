@@ -111,6 +111,15 @@ void AdminServer::handle(const messages::LoggerSetCategories& cmd)
   enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
 }
 
+void AdminServer::handle(const messages::SendTestSms& cmd)
+{
+  int code=0; //TODO:send sms in sync mode
+  messages::SendTestSmsResp resp;
+  resp.messageSetSeqNum(cmd.messageGetSeqNum());
+  resp.setRespCode(code);
+  enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
+}
+
 
 }
 }

@@ -7,6 +7,7 @@
 #include "messages/SetDefaultSmscResp.hpp"
 #include "messages/LoggerGetCategoriesResp.hpp"
 #include "messages/LoggerSetCategoriesResp.hpp"
+#include "messages/SendTestSmsResp.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -22,7 +23,9 @@ public:
     tag_LoggerGetCategories=3,
     tag_LoggerGetCategoriesResp=4,
     tag_LoggerSetCategories=5,
-    tag_LoggerSetCategoriesResp=6
+    tag_LoggerSetCategoriesResp=6,
+    tag_SendTestSms=9,
+    tag_SendTestSmsResp=10
   };
  
   InformerAdminProto():handler(0)
