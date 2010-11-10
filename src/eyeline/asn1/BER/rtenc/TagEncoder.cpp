@@ -41,7 +41,7 @@ uint8_t compose_toc(const ASTag & use_tag, bool is_constructed,
     *use_enc = 0x1F;
   }
   //complete 1st byte: class & constructedness
-  *use_enc |= (uint8_t)use_tag._tagClass << 6;
+  *use_enc |= (uint8_t)use_tag._tagClass; // << 6
   if (is_constructed)
     *use_enc |= 0x20;
   ++rval;
