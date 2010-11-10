@@ -15,6 +15,7 @@
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/BindSignal.h"
+#include "informer/sender/RegionSender.h"
 #include "logger/Logger.h"
 
 namespace smsc {
@@ -36,7 +37,6 @@ class DcpServer;
 }
 
 class SmscSender;
-class RegionSender;
 class SmscConfig;
 class DeliveryMgr;
 
@@ -150,7 +150,7 @@ private:
     smsc::core::buffers::Hash< UserInfoPtr >      users_;        // owned
     smsc::core::buffers::Hash< SmscSender* >      smscs_;        // owned
     smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
-    smsc::core::buffers::IntHash< RegionSender* > regSends_;     // owned
+    smsc::core::buffers::IntHash< RegionSenderPtr > regSends_;   // owned
 
     smsc::core::buffers::FastMTQueue<BindSignal>  bindQueue_;
 

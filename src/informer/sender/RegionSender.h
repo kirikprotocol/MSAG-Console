@@ -2,6 +2,7 @@
 #define _INFORMER_REGIONSENDER_H
 
 #include "informer/data/Region.h"
+#include "informer/io/EmbedRefPtr.h"
 #include "informer/opstore/RegionalStorage.h"
 #include "ScoredList.h"
 #include "SpeedControl.h"
@@ -16,6 +17,7 @@ class SmscSender;
 class RegionSender
 {
     friend class ScoredList< RegionSender >;
+    friend class EmbedRefPtr< RegionSender >;
 
 public:
     RegionSender( SmscSender& conn, const RegionPtr& r );
@@ -24,7 +26,7 @@ public:
 
     // used to switch senders
     // NOTE: this method should be invoked from locked state.
-    void assignSender( SmscSender& conn, const RegionPtr& r );
+    void assignSender( SmscSender* conn, const RegionPtr& r );
 
     inline regionid_type getRegionId() const {
         return region_.get() ? region_->getRegionId() : 0;
@@ -50,7 +52,6 @@ public:
     unsigned processRegion(usectime_type currentTime) 
     {
         smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
-        // MutexGuard mg(lock_);
         static const unsigned sleepTime = unsigned(1*tuPerSec);
         currentTime_ = currentTime;
         MutexGuard mg(lock_);
@@ -73,10 +74,26 @@ private:
     unsigned scoredObjIsReady( unsigned unused, ScoredObjType& dlv );
     int processScoredObj( unsigned unused, ScoredObjType& dlv );
 
-private:
-
+    inline void ref() {
+        MutexGuard mg(reflock_);
+        ++ref_;
+    }
+    inline void unref() {
+        {
+            MutexGuard mg(reflock_);
+            if (ref_>1) {
+                --ref_;
+                return;
+            }
+        }
+        delete this;
+    }
+    
 private:
     smsc::logger::Logger*              log_;
+
+    smsc::core::synchronization::Mutex reflock_;
+    unsigned                           ref_;
 
     smsc::core::synchronization::Mutex lock_;
     SmscSender*                        conn_;     // not owned
@@ -87,6 +104,8 @@ private:
     Message                            msg_;    // a cache
     usectime_type                      currentTime_;
 };
+
+typedef EmbedRefPtr< RegionSender > RegionSenderPtr;
 
 } // informer
 } // smsc

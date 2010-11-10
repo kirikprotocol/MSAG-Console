@@ -25,17 +25,17 @@ taskList_(*this,2*maxScoreIncrement,
           smsc::logger::Logger::getInstance("dlvlist"))
 {
     smsc_log_debug(log_,"ctor S='%s' R=%u",conn.getSmscId().c_str(),unsigned(r->getRegionId()));
-    assignSender(conn,r);
+    assignSender(&conn,r);
 }
 
 
-void RegionSender::assignSender( SmscSender& conn, const RegionPtr& r )
+void RegionSender::assignSender( SmscSender* conn, const RegionPtr& r )
 {
-    if ( conn_ != &conn ) {
+    if ( conn_ != conn ) {
         if (conn_) conn_->detachRegionSender(*this);
-        conn_ = &conn;
+        conn_ = conn;
         region_ = r;
-        conn_->attachRegionSender(*this);
+        if (conn_) conn_->attachRegionSender(*this);
     } else {
         region_ = r;
     }
@@ -58,7 +58,7 @@ void RegionSender::addDelivery( RegionalStorage& ptr )
         taskList_.add(&ptr);
     }
     // FIXME: reset speed control
-    conn_->wakeUp();
+    if (conn_) conn_->wakeUp();
 }
 
 
@@ -114,6 +114,7 @@ int RegionSender::processScoredObj(unsigned, ScoredObjType& ptr)
     int res;
     try {
 
+        assert(conn_);
         res = conn_->send(ptr, msg_, nchunks);
         if ( res == smsc::system::Status::OK && nchunks > 0 ) {
             // message has been put into output queue
