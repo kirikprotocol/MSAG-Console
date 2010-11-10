@@ -46,6 +46,7 @@ void EncoderOfBITSTR::calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e us
       val_prop._isConstructed = true;
       val_prop._ldForm = LDeterminant::frmIndefinite;
       val_prop._valLen = calculateFragments();
+      return;
     }
   }
   //default form
@@ -98,6 +99,8 @@ ENCResult EncoderOfBITSTR::encodeVAL(uint8_t * use_enc, TSLength max_len) const
       ++(rval.nbytes);
       memcpy(use_enc + rval.nbytes, _encVal, _encValOcts);
       rval.nbytes += _encValOcts;
+      //mask unused bits
+      use_enc[rval.nbytes-1] &= (0xFF << use_enc[0]);
     }
   }
   return rval;

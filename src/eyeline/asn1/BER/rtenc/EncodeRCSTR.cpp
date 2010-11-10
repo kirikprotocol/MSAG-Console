@@ -46,6 +46,7 @@ void
       val_prop._isConstructed = true;
       val_prop._ldForm = LDeterminant::frmIndefinite;
       val_prop._valLen = calculateFragments();
+      return;
     }
   }
   //default form
