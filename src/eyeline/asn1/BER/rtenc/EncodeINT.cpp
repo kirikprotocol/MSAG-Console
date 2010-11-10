@@ -24,15 +24,22 @@ void EncoderOfINTEGER::calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e u
 {
   switch (_vSzo) {
   case szo32: {
-    val_prop._valLen = estimate_INTEGER(_encVal.u32);
+    val_prop._valLen = _signed ? estimate_signed_INTEGER(_encVal.i32)
+                                : estimate_unsigned_INTEGER(_encVal.u32);
   } break;
 
   case szo16: {
-    val_prop._valLen = estimate_INTEGER(_encVal.u16);
+    val_prop._valLen = _signed ? estimate_signed_INTEGER(_encVal.i16)
+                                : estimate_unsigned_INTEGER(_encVal.u16);
+  } break;
+ 
+  case szo8: {
+    val_prop._valLen = _signed ? estimate_signed_INTEGER(_encVal.i8)
+                                : estimate_unsigned_INTEGER(_encVal.u8);
   } break;
 
-  default: //szo8
-    val_prop._valLen = estimate_INTEGER(_encVal.u8);
+  default: //szoNone
+    throw smsc::util::Exception("asn1::ber::EncoderOfINTEGER: value isn't set");
   }
   val_prop._ldForm = LDeterminant::frmDefinite;
   val_prop._isConstructed = false;
@@ -46,15 +53,22 @@ ENCResult
 
   switch (_vSzo) {
   case szo32: {
-    rval.nbytes = encode_INTEGER(_encVal.u32, use_enc, max_len);
+    rval.nbytes = _signed ? encode_signed_INTEGER(_encVal.i32, use_enc, max_len)
+                          : encode_unsigned_INTEGER(_encVal.u32, use_enc, max_len);
   } break;
 
   case szo16: {
-    rval.nbytes = encode_INTEGER(_encVal.u16, use_enc, max_len);
+    rval.nbytes = _signed ? encode_signed_INTEGER(_encVal.i16, use_enc, max_len)
+                          : encode_unsigned_INTEGER(_encVal.u16, use_enc, max_len);
   } break;
 
-  default: //szo8
-    rval.nbytes = encode_INTEGER(_encVal.u8, use_enc, max_len);
+  case szo8: {
+    rval.nbytes = _signed ? encode_signed_INTEGER(_encVal.i8, use_enc, max_len)
+                          : encode_unsigned_INTEGER(_encVal.u8, use_enc, max_len);
+  } break;
+
+  default: //szoNone
+    rval.status = ENCResult::encBadVal;
   }
   if (!rval.nbytes)
     rval.status = ENCResult::encMoreMem;

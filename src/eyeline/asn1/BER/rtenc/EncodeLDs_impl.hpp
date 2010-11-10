@@ -27,7 +27,7 @@ inline uint8_t estimate_ldeterminant(const _TArg & use_val)
   if (use_val < 0x80)
     return 1;
 
-  return 1 + estimate_INTEGER(use_val);
+  return 1 + estimate_unsigned_INTEGER(use_val);
 }
 
 /* ************************************************************************* *
@@ -50,7 +50,7 @@ inline uint8_t encode_ldeterminant(const _TArg & use_val, uint8_t * use_enc, uin
     return 1;
   }
   //long form encoding: prefix octet + unsigned number encding
-  uint8_t rlen = encode_INTEGER(use_val, use_enc + 1, max_len - 1);
+  uint8_t rlen = encode_unsigned_INTEGER(use_val, use_enc + 1, max_len - 1);
   if (rlen) {
     //encode prefix octet of long form
     use_enc[0] = rlen | 0x80;
