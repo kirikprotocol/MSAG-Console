@@ -11,7 +11,7 @@ namespace informer {
 
 class CommonSettings;
 
-enum DeliveryMode{
+enum DlvMode{
     DLVMODE_SMS = 0,
     DLVMODE_USSDPUSH = 1,
     DLVMODE_USSDPUSHVLR = 2
@@ -33,7 +33,7 @@ struct DeliveryInfoData
   std::string validityPeriod;
   bool flash;
   bool useDataSm;
-  DeliveryMode deliveryMode;
+  DlvMode deliveryMode;
   std::string owner;
   bool retryOnFail;
   std::string retryPolicy;
@@ -93,7 +93,7 @@ public:
 
     bool useDataSm() const { return data_.useDataSm; }
 
-    DeliveryMode getDeliveryMode() const { return data_.deliveryMode; }
+    DlvMode getDeliveryMode() const { return data_.deliveryMode; }
 
     bool wantRetryOnFail() const { return data_.retryOnFail; }
 

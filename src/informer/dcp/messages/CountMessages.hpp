@@ -32,6 +32,8 @@ public:
     states.clear();
     msisdnFilterFlag=false;
     msisdnFilter.clear();
+    codeFilterFlag=false;
+    codeFilter.clear();
     startDateFlag=false;
     endDateFlag=false;
   }
@@ -105,6 +107,29 @@ public:
       }
       rv+="]";
     }
+    if(codeFilterFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="codeFilter=";
+      rv+="[";
+      bool first=true;
+      for(std::vector<int32_t>::const_iterator it=codeFilter.begin(),end=codeFilter.end();it!=end;++it)
+      {
+        if(first)
+        {
+          first=false;
+        }else
+        {
+          rv+=",";
+        }
+        sprintf(buf,"%d",*it);
+        rv+=buf;
+      }
+      rv+="]";
+    }
     if(startDateFlag)
     {
       if(rv.length()>0)
@@ -148,6 +173,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(msisdnFilter);
+    }
+    if(codeFilterFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(codeFilter);
     }
     if(startDateFlag)
     {
@@ -229,6 +260,28 @@ public:
   bool hasMsisdnFilter()const
   {
     return msisdnFilterFlag;
+  }
+  const std::vector<int32_t>& getCodeFilter()const
+  {
+    if(!codeFilterFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("codeFilter");
+    }
+    return codeFilter;
+  }
+  void setCodeFilter(const std::vector<int32_t>& argValue)
+  {
+    codeFilter=argValue;
+    codeFilterFlag=true;
+  }
+  std::vector<int32_t>& getCodeFilterRef()
+  {
+    codeFilterFlag=true;
+    return codeFilter;
+  }
+  bool hasCodeFilter()const
+  {
+    return codeFilterFlag;
   }
   const std::string& getStartDate()const
   {
@@ -317,6 +370,15 @@ public:
       ds.writeStr(*it);
           }
     }
+    if(codeFilterFlag)
+    {
+      ds.writeTag(codeFilterTag);
+    ds.writeLength(DataStream::fieldSize(codeFilter));
+    for(std::vector<int32_t>::const_iterator it=codeFilter.begin(),end=codeFilter.end();it!=end;++it)
+    {
+      ds.writeInt32(*it);
+          }
+    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -374,6 +436,20 @@ public:
             rd+=DataStream::lengthTypeSize;
           }
           msisdnFilterFlag=true;
+        }break;
+        case codeFilterTag:
+        {
+          if(codeFilterFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("codeFilter");
+          }
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            codeFilter.push_back(ds.readInt32());
+            rd+=DataStream::fieldSize(codeFilter.back());
+          }
+          codeFilterFlag=true;
         }break;
         case startDateTag:
         {
@@ -447,6 +523,7 @@ protected:
   static const int32_t deliveryIdTag=1;
   static const int32_t statesTag=2;
   static const int32_t msisdnFilterTag=7;
+  static const int32_t codeFilterTag=8;
   static const int32_t startDateTag=4;
   static const int32_t endDateTag=5;
 
@@ -456,12 +533,14 @@ protected:
   int32_t deliveryId;
   std::vector<DeliveryMessageState> states;
   std::vector<std::string> msisdnFilter;
+  std::vector<int32_t> codeFilter;
   std::string startDate;
   std::string endDate;
 
   bool deliveryIdFlag;
   bool statesFlag;
   bool msisdnFilterFlag;
+  bool codeFilterFlag;
   bool startDateFlag;
   bool endDateFlag;
 };

@@ -1,10 +1,10 @@
 #include <memory>
+#include "informer/admin/AdminServer.hpp"
+#include "informer/dcp/DcpServer.hpp"
 #include "DeliveryMgr.h"
 #include "InfosmeCoreV1.h"
 #include "RegionLoader.h"
-#include "informer/admin/AdminServer.hpp"
 #include "informer/data/UserInfo.h"
-#include "informer/dcp/DcpServer.hpp"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/sender/RegionSender.h"
@@ -67,7 +67,7 @@ void readSmscConfig( const char*   name,
         throw InfosmeException(EXC_CONFIG,"exc in smsc '%s': %s", name, e.what());
     }
 }
-    
+
 } // namespace
 
 namespace eyeline {
@@ -133,7 +133,7 @@ void InfosmeCoreV1::init()
     smsc_log_info(log_,"--- initing core ---");
 
     const char* mainfilename = "config.xml";
-    
+
     const char* section = "";
     const char* filename = mainfilename;
 
@@ -789,9 +789,9 @@ void InfosmeCoreV1::loadUsers( const char* userId )
                                                        totaldlv )));
             UserInfoPtr& user = uservec.back();
             if (roles.get()) {
-                try { 
+                try {
                     if (uc->getBool("informer-admin")) {
-                        user->addRole(USERROLE_ADMIN); 
+                        user->addRole(USERROLE_ADMIN);
                     }
                 } catch (...) {}
                 try {
