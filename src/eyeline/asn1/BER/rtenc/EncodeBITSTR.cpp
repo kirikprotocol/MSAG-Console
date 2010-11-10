@@ -8,14 +8,13 @@ namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-class BITFragment : public TLComposer
-{
-  public:
-    BITFragment(TSLength val_len = 1000) : TLComposer()
-    {
-      init(LDeterminant::frmDefinite, val_len, false);
-      compose(_tagBITSTR);
-    }
+class BITFragment : public TLComposer {
+public:
+  explicit BITFragment(TSLength val_len = 1000) : TLComposer()
+  {
+    init(LDeterminant::frmDefinite, val_len, false);
+    calculate(_tagBITSTR);
+  }
 };
 
 static BITFragment _bitFragm;

@@ -14,19 +14,12 @@ namespace ber {
 /* ************************************************************************* *
  * Class TLComposer implementation:
  * ************************************************************************* */
-//Calculates number of 'Tag', 'Length' and 'EOC' octets
 void TLComposer::calculate(const ASTag & use_tag)
 {
-  _szoTag = estimate_tag(use_tag);
-  _szoLOC = isDefinite() ? estimate_ldeterminant(_valLen) : 1;
-}
-
-void TLComposer::compose(const ASTag & use_tag)
-{
-  //here encode_tag_internal() cannt' fail, otherwise assertion!
+  //here encode_tag_internal() cann't fail, otherwise assertion!
   _szoTag = compose_toc(use_tag, _isConstructed, _octTag, (uint8_t)sizeof(_octTag));
   if (isDefinite()) {
-    //here encode_identifier() cannt' fail, otherwise assertion!
+    //here encode_identifier() cann't fail, otherwise assertion!
     _szoLOC = encode_ldeterminant(_valLen, _octLOC, (uint8_t)sizeof(_octLOC));
   } else {
     _octLOC[0] = 0x80;
@@ -47,6 +40,7 @@ ENCResult TLComposer::encodeBOC(uint8_t * use_enc, TSLength max_len) const
     //copy LD encoding
     for (uint8_t i = 0; i < _szoLOC; ++i)
       use_enc[_szoTag + i] = _octLOC[i];
+    rval.nbytes = _szoTag + _szoLOC;
   }
   return rval;
 }

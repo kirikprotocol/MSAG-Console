@@ -97,8 +97,6 @@ public:
 
   //Calculates number of 'Tag', 'Length' and 'EOC' octets
   void calculate(const ASTag & use_tag);
-  //Composes 'Tag' and 'Length' octets;
-  void compose(const ASTag & use_tag);
 
   //Encodes 'begin-of-content' octets of TLV encoding
   ENCResult encodeBOC(uint8_t * use_enc, TSLength max_len) const;
@@ -133,7 +131,7 @@ protected:
 
 public:
   //Empty constructor: for later initialization
-  TLVLayoutEncoder(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+  explicit TLVLayoutEncoder(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : _szoBOC(0), _effTags(NULL), _valEnc(NULL), _vRule(use_rule)
   { }
   //'Generic type layout encoder' constructor.

@@ -8,14 +8,13 @@ namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-class OCTFragment : public TLComposer
-{
-  public:
-    OCTFragment(TSLength val_len = 1000) : TLComposer()
-    {
-      init(LDeterminant::frmDefinite, val_len, false);
-      compose(_tagOCTSTR);
-    }
+class OCTFragment : public TLComposer {
+public:
+  explicit OCTFragment(TSLength val_len = 1000) : TLComposer()
+  {
+    init(LDeterminant::frmDefinite, val_len, false);
+    calculate(_tagOCTSTR);
+  }
 };
 
 static OCTFragment _octFragm;
