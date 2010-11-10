@@ -26,6 +26,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.junit.Assert.assertNotNull;
@@ -77,14 +79,16 @@ public class TestAdminContext extends AdminContext {
     List<User> users = usersManager.getUsers();
 
     Random r1 = new Random();
-
+    SimpleDateFormat df = new SimpleDateFormat("HHmmss");
     for(int i=1;i<=100;i++) {
       User u = users.get((i-1)%users.size());
       Delivery d = (i%2 == 1) ? Delivery.newCommonDelivery() : Delivery.newSingleTextDelivery();
       d.setSourceAddress(new Address("+7901111"+i));
-      d.setActivePeriodEnd(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
-      d.setActivePeriodStart(new Date(System.currentTimeMillis() - (r1.nextInt(6)+1)*86400000L*i));
-      d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
+      try{
+        d.setActivePeriodEnd(df.parse("200000"));
+        d.setActivePeriodStart(df.parse("090000"));
+      }catch (ParseException e){}
+      d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Mon, Delivery.Day.Thu, Delivery.Day.Wed, Delivery.Day.Thu,});
       d.setDeliveryMode(DeliveryMode.SMS);
       d.setEndDate(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
       d.setName("Test delivery"+i);
@@ -98,7 +102,7 @@ public class TestAdminContext extends AdminContext {
           private LinkedList<Message> ms = new LinkedList<Message>() {
             {
               Random r = new Random();
-              for(int k=0;k<100;k++) {
+              for(int k=0;k<1000;k++) {
                 Message m1 = Message.newMessage("text"+r.nextInt(10000));
                 m1.setAbonent(new Address("+7913"+k));
                 add(m1);

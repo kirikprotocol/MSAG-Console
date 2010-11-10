@@ -4,6 +4,8 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -190,6 +192,18 @@ public class TestDcpConnection extends DcpConnection{
     }    //todo status
     if(filter.getStartDate() != null && message.date.before(filter.getStartDate())) {
       return false;
+    }
+    if(filter.getStates() != null && filter.getStates().length > 0) {
+      boolean accept = false;
+      for(MessageState s : filter.getStates()) {
+        if(s.equals(message.state)) {
+          accept = true;
+          break;
+        }
+      }
+      if(!accept) {
+        return false;
+      }
     }
     if(filter.getEndDate() != null && message.date.after(filter.getEndDate())) {
       return false;
@@ -397,8 +411,36 @@ public class TestDcpConnection extends DcpConnection{
 
   private synchronized void modifyAll() throws AdminException {
     Random r = new Random();
+    SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+    Date now = new Date();
     for(DeliveryWStatus d : deliveries.values()) {
       if(d.status == DeliveryStatus.Active) {
+        if(d.getStartDate().after(now)) {
+          continue;
+        }
+        if(d.getEndDate().before(now)) {
+          d.status = DeliveryStatus.Finished;
+          continue;
+        }
+        int today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+        boolean send = false;
+        for(Delivery.Day day : d.getActiveWeekDays()) {
+          if((day.getDay()%7) + 1 == today) {
+            send = true;
+            break;
+          }
+        }
+        if(!send) {
+          continue;
+        }
+        try{
+          if(sdf.parse(sdf.format(d.getActivePeriodStart())).after(sdf.parse(sdf.format(now)))) {
+            continue;
+          }
+          if(sdf.parse(sdf.format(d.getActivePeriodEnd())).before(sdf.parse(sdf.format(now)))) {
+            continue;
+          }
+        }catch (ParseException e){}
         List<MessageWState> ms = messages.get(d.getId());
         int count = 0;
         for(MessageWState m : ms) {
@@ -801,7 +843,7 @@ public class TestDcpConnection extends DcpConnection{
 
     @Override
     void setText(String text) {
-      message.setText(text);   
+      message.setText(text);
     }
   }
 
