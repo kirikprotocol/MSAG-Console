@@ -88,6 +88,7 @@ public class TestDeliveryManagerTest {
         return true;
       }
     });
+    assertTrue(ok[0]);
     manager.dropDelivery("","",d.getId());
 
   }
@@ -155,18 +156,18 @@ public class TestDeliveryManagerTest {
 
   private Delivery _createDelivery() throws AdminException{
     Delivery d = Delivery.newCommonDelivery();
-    d.setActivePeriodEnd(new Date());
-    d.setActivePeriodStart(new Date(0));
-    d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
+    d.setActivePeriodStart(new Date(System.currentTimeMillis() - 300000));
+    d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 300000));
+    d.setActiveWeekDays(Delivery.Day.values());
     d.setDeliveryMode(DeliveryMode.SMS);
-    d.setEndDate(new Date(System.currentTimeMillis() + 1000000));
+    d.setEndDate(new Date(System.currentTimeMillis() + 300000));
+    d.setStartDate(new Date(System.currentTimeMillis() - 300000));
     d.setName("Test delivery");
     d.setOwner("me");
     d.setPriority(15);
     d.setReplaceMessage(true);
     d.setRetryOnFail(true);
     d.setRetryPolicy("policy1");
-    d.setStartDate(new Date());
     d.setSvcType("svc1");
     d.setValidityDate(new Date());
     d.setValidityPeriod("1:00:00");
