@@ -490,7 +490,7 @@ struct SmeConfig{
   SmeConfig()
   {
     port=-1;
-    timeOut=10;
+    timeOut=10;          // connect timeout
     smppTimeOut=120;
     idleTimeout=60;
     disconnectTimeout=300;
@@ -544,7 +544,7 @@ struct SmeConfig{
   std::string host;
   int port;
   std::string sid;
-  int timeOut;
+  int timeOut;        // connect timeout, seconds
   int smppTimeOut;
   std::string password;
   std::string systemType;
@@ -765,6 +765,7 @@ public:
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkResolve);
 
+    socket.setConnectTimeout(cfg.timeOut);
     if(socket.Connect()==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkConnect);
     reader.Start();
