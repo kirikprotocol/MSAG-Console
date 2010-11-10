@@ -44,10 +44,15 @@ public class RestrictionDaemon implements Daemon {
   }
 
   public synchronized void start() throws AdminException {
-    scheduler = Executors.newSingleThreadScheduledExecutor();
-    taskNum=0;
-    rebuildSchedule();
-
+    if(!isStarted()) {
+      scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory(){
+        public Thread newThread(Runnable runnable) {
+          return new Thread(runnable,NAME);
+        }
+      });
+      taskNum=0;
+      rebuildSchedule();
+    }
   }
 
   public synchronized void rebuildSchedule() {
@@ -140,7 +145,6 @@ public class RestrictionDaemon implements Daemon {
         deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),di.getDeliveryId());
       }
     }
-
   }
 
   public synchronized void stop() throws AdminException {
