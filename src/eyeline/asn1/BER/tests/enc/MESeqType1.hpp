@@ -22,9 +22,9 @@ public:
     construct();
   }
 
-  MESeqType1(const SeqType1& value,
+  explicit MESeqType1(const SeqType1& value,
              TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-  : EncoderOfSequence_T<3>(use_rule),
+  : EncoderOfSequence_T<3>(use_rule), _eA(use_rule),
     _eB(_tag_b, ASTagging::tagsIMPLICIT, use_rule),
     _eC(_tag_c, ASTagging::tagsIMPLICIT, use_rule)
   {
@@ -34,7 +34,7 @@ public:
 
   MESeqType1(const ASTag & use_tag, ASTagging::Environment_e tag_env,
              TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-  : EncoderOfSequence_T<3>(use_tag, tag_env, use_rule),
+  : EncoderOfSequence_T<3>(use_tag, tag_env, use_rule), _eA(use_rule),
     _eB(_tag_b, ASTagging::tagsIMPLICIT, use_rule),
     _eC(_tag_c, ASTagging::tagsIMPLICIT, use_rule)
   {
@@ -51,7 +51,7 @@ private:
 
   EncoderOfINTEGER _eA;
   EncoderOfINTEGER _eB;
-  EncoderOfNULL _eC;
+  EncoderOfNULL    _eC;
 };
 
 }}}}}
