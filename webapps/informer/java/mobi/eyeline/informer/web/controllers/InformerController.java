@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.web.LocaleFilter;
 import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.config.Configuration;
+import org.apache.log4j.Logger;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
 import javax.faces.application.FacesMessage;
@@ -25,6 +26,8 @@ import java.util.regex.Pattern;
  * @author Aleksandr Khalitov
  */
 public abstract class InformerController implements Serializable {
+
+  private static final Logger logger = Logger.getLogger(InformerController.class);
 
   /**
    * Возвращает Configuration
@@ -101,6 +104,7 @@ public abstract class InformerController implements Serializable {
    * @param e ошибка
    */
   protected void addError(AdminException e) {
+    logger.error(e,e);
     addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
   }
 
