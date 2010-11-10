@@ -37,32 +37,34 @@ void readSmscConfig( const char*   name,
         rv.timeOut = config.getInt("timeout");
         try {
             rv.password = config.getString("password");
-        } catch (ConfigException&) {}
+        } catch (HashInvalidKeyException&) {}
         try {
             const std::string systemType = config.getString("systemType");
             rv.setSystemType(systemType);
-        } catch (ConfigException&) {}
+        } catch (HashInvalidKeyException&) {}
         try {
             rv.interfaceVersion = config.getInt("interfaceVersion");
-        } catch (ConfigException&) {}
+        } catch (HashInvalidKeyException&) {}
         try {
             const std::string ar = config.getString("rangeOfAddress");
             rv.setAddressRange(ar);
-        } catch (ConfigException&) {}
+        } catch (HashInvalidKeyException&) {}
         try {
             cfg.ussdPushOp = config.getInt("ussdPushTag");
-        } catch (ConfigException) {
+        } catch (HashInvalidKeyException&) {
             cfg.ussdPushOp = -1;
         }
         try {
             cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
-        } catch (ConfigException) {
+        } catch (HashInvalidKeyException&) {
             cfg.ussdPushVlrOp = -1;
         }
     } catch ( InfosmeException& e ) {
         throw;
+    } catch ( HashInvalidKeyException& e ) {
+        throw InfosmeException(EXC_CONFIG,"exc in smsc '%s': param '%s' not found", name, e.getKey());
     } catch ( std::exception& e ) {
-        throw InfosmeException(EXC_CONFIG,"exc in smsc '%s' config: %s", e.what());
+        throw InfosmeException(EXC_CONFIG,"exc in smsc '%s': %s", name, e.what());
     }
 }
     
@@ -130,59 +132,53 @@ void InfosmeCoreV1::init()
 {
     smsc_log_info(log_,"--- initing core ---");
 
-    const char* filename = "config.xml";
+    const char* mainfilename = "config.xml";
+    
+    const char* section = "";
+    const char* filename = mainfilename;
 
-    std::auto_ptr<Config> cfg( Config::createFromFile(filename));
-    if (!cfg.get()) {
-        throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",filename);
-    }
-    cfg.reset( cfg->getSubConfig("informer",true) );
-    if (!cfg.get()) {
-        throw InfosmeException(EXC_CONFIG,"section 'informer' is not found in '%s'",filename);
-    }
-
-    // loading common settings
     try {
+        std::auto_ptr<Config> cfg( Config::createFromFile(mainfilename));
+        if (!cfg.get()) {
+            throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",mainfilename);
+        }
+
+        section = "informer";
+        cfg.reset( cfg->getSubConfig(section,true) );
+
         cs_.init( cfg->getString("storePath"),
                   cfg->getString("statPath") );
-    } catch ( std::exception& e ) {
-        throw InfosmeException(EXC_CONFIG,"exc in '%s': %s", filename, e.what());
-    }
 
-    if (!dlvMgr_) {
-        smsc_log_info(log_,"--- creating delivery mgr ---");
-        dlvMgr_ = new DeliveryMgr(*this,cs_);
-    }
+        if (!dlvMgr_) {
+            smsc_log_info(log_,"--- creating delivery mgr ---");
+            dlvMgr_ = new DeliveryMgr(*this,cs_);
+        }
 
-    // create admin server
-    if (!adminServer_) {
-        smsc_log_info(log_,"--- creating admin server ---");
-        adminServer_ = new admin::AdminServer();
-        adminServer_->assignCore(this);
-        adminServer_->Init( cfg->getString("adminHost"),
-                            cfg->getInt("adminPort"),
-                            cfg->getInt("adminHandlers") );
-    }
+        // create admin server
+        if (!adminServer_) {
+            smsc_log_info(log_,"--- creating admin server ---");
+            adminServer_ = new admin::AdminServer();
+            adminServer_->assignCore(this);
+            adminServer_->Init( cfg->getString("adminHost"),
+                                cfg->getInt("adminPort"),
+                                cfg->getInt("adminHandlers") );
+        }
 
-    // load all users
-    smsc_log_info(log_,"--- loading users ---");
-    loadUsers("");
+        // load all users
+        smsc_log_info(log_,"--- loading users ---");
+        loadUsers("");
 
-    // create smscs
-    const char* smscfilename = "smsc.xml";
-    try {
+        // create smscs
+        const char* smscfilename = "smsc.xml";
+        filename = smscfilename;
+
         smsc_log_info(log_,"--- loading smscs ---");
-        smsc_log_info(log_,"reading smscs config '%s'",smscfilename);
         std::auto_ptr< Config > scfg( Config::createFromFile(smscfilename));
         if (!scfg.get()) {
             throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",smscfilename);
         }
-        const char* smscSectionName = "SMSCConnectors";
-        scfg.reset( scfg->getSubConfig(smscSectionName,true) );
-        if (!scfg.get()) {
-            throw InfosmeException(EXC_CONFIG,"section '%s' is not found in config file '%s'",
-                                   smscSectionName, smscfilename);
-        }
+        section = "SMSCConnectors";
+        scfg.reset( scfg->getSubConfig(section,true) );
         const char* defConn = scfg->getString("default");
         std::auto_ptr< CStrSet > connNames(scfg->getRootSectionNames());
         if ( connNames->find(defConn) == connNames->end() ) {
@@ -196,24 +192,29 @@ void InfosmeCoreV1::init()
             readSmscConfig(i->c_str(), smscConfig, *sect.get());
             updateSmsc( i->c_str(), &smscConfig );
         }
+
+        // create regions
+        smsc_log_info(log_,"--- loading regions ---");
+        reloadRegions();
+
+        dlvMgr_->init();
+
+        filename = mainfilename;
+        section = "informer";
+        if (!dcpServer_) {
+            dcpServer_ = new dcp::DcpServer();
+            dcpServer_->assignCore(this);
+            dcpServer_->Init( cfg->getString("dcpHost"),
+                              cfg->getInt("dcpPort"),
+                              cfg->getInt("dcpHandlers") );
+        }
     } catch ( InfosmeException& e ) {
         throw;
+    } catch ( HashInvalidKeyException& e ) {
+        throw InfosmeException(EXC_CONFIG,"exc reading '%s', section '%s': param '%s' not found",
+                               filename, section, e.getKey() );
     } catch ( std::exception& e ) {
-        throw InfosmeException(EXC_CONFIG,"exc reading '%s': %s",smscfilename,e.what());
-    }
-
-    // create regions
-    smsc_log_info(log_,"--- loading regions ---");
-    reloadRegions();
-
-    dlvMgr_->init();
-
-    if (!dcpServer_) {
-        dcpServer_ = new dcp::DcpServer();
-        dcpServer_->assignCore(this);
-        dcpServer_->Init( cfg->getString("dcpHost"),
-                          cfg->getInt("dcpPort"),
-                          cfg->getInt("dcpHandlers") );
+        throw InfosmeException(EXC_CONFIG,"exc in core init: %s", e.what());
     }
 }
 
