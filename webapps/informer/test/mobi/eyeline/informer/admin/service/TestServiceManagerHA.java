@@ -20,7 +20,7 @@ public class TestServiceManagerHA extends ServiceManager {
     this.servicesDir = servicesDir;
     this.hosts = hosts;
     services = new HashMap<String, ServiceInfo>();
-    services.put("informer", getInfo("informer", true));
+    services.put("Informer", getInfo("Informer", true));
   }
 
   private ServiceInfo getInfo(String serviceId, boolean online) {
