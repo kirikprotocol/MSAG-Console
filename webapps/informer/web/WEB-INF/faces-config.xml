@@ -88,6 +88,15 @@
     <converter-class>mobi.eyeline.informer.web.controllers.AddressConverter</converter-class>
   </converter>
 
+  <converter>
+    <converter-id>messageStateConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.delivery.MessageStateConverter</converter-class>
+  </converter>
+
+  <converter>
+    <converter-id>errorCodeConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.ErrorCodeConverter</converter-class>
+  </converter>
 
   <render-kit>
     <renderer>
@@ -293,6 +302,12 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.CreateDeliveryController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>messages</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.MessageListController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
   
   <managed-bean>
       <managed-bean-name>messagesByUserStats</managed-bean-name>
@@ -426,6 +441,11 @@
     <navigation-case>
       <from-outcome>DELIVERY_CREATE</from-outcome>
       <to-view-id>/deliveries/create.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>MESSAGES</from-outcome>
+      <to-view-id>/deliveries/messages.xhtml</to-view-id>
     </navigation-case>
 
 

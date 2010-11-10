@@ -77,7 +77,7 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
    * @param id id региона
    * @return регион
    */
-  public Region getRegion(final String id)  {
+  public Region getRegion(final Integer id)  {
     return readSettings(new SettingsReader<RegionsSettings, Region>(){
       public Region executeRead(RegionsSettings settings)  {
         Region region = settings.getRegion(id);
@@ -92,7 +92,7 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
    * @param regionId id региона
    * @throws AdminException ошибка сохранения
    */
-  public void removeRegion(final String regionId) throws AdminException{
+  public void removeRegion(final Integer regionId) throws AdminException{
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
         settings.removeRegion(regionId);

@@ -21,7 +21,7 @@ public class RegionEditController extends RegionsController{
 
   private static final Logger logger = Logger.getLogger(RegionEditController.class);
 
-  private String id;
+  private Integer id;
 
   private Region region;
 
@@ -55,12 +55,13 @@ public class RegionEditController extends RegionsController{
   public RegionEditController() {
     super();
 
-    id = getRequestParameter(REGION_ID_PARAMETER);
+    String id = getRequestParameter(REGION_ID_PARAMETER);
 
 
     ss = getConfig().getSmscs();
 
     if(id != null && id.length() > 0) {
+      this.id = Integer.parseInt(id);
       try{
         reload();
       }catch (AdminException e){
@@ -175,11 +176,11 @@ public class RegionEditController extends RegionsController{
     return region;
   }
 
-  public String getId() {
+  public Integer getId() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(Integer id) {
     this.id = id;
   }
 }

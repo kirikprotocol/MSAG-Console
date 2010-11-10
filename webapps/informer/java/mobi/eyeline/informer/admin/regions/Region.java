@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class Region {
 
-  private String regionId;
+  private Integer regionId;
 
   private String name;
 
@@ -26,7 +26,7 @@ public class Region {
 
   private Collection<Address> masks = new LinkedList<Address>();
 
-  void setRegionId(String regionId) {
+  void setRegionId(Integer regionId) {
     this.regionId = regionId;
   }
 
@@ -39,7 +39,7 @@ public class Region {
     this.name = name;
   }
 
-  public String getRegionId() {
+  public Integer getRegionId() {
     return regionId;
   }
 

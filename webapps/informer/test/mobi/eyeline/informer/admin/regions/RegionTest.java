@@ -94,7 +94,7 @@ public class RegionTest {
     Region r1 = new Region();
     r1.setMaxSmsPerSecond(200);
     r1.setName("MR SIBIR'");
-    r1.setRegionId("123");
+    r1.setRegionId(123);
     r1.setSmsc("SMSC1");
     r1.setTimeZone(TimeZone.getDefault());
     r1.addMask(new Address("+7913948????"));

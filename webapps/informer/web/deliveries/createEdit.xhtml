@@ -56,19 +56,10 @@
             <t:inputDate popupCalendar="true" value="#{createDelivery.activePage.delivery.endDate}" requiredMessage="#{msg['date.required']}" required="true" type="full"/>
           </tr:panelLabelAndMessage>
 
-
-          <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left" rendered="#{createDelivery.activePage.delivery.type.value == 'SingleText'}">
-            <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" required="true" simple="true"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{deliveryBundle.validityChoise}" labelStyle="text-align:left">
-            <h:panelGrid columns="1">
-              <tr:inputText id="vPeriod" value="#{createDelivery.activePage.delivery.validityPeriod}" simple="true">
+          <tr:panelLabelAndMessage label="#{deliveryBundle.validityPeriod}" labelStyle="text-align:left">
+            <tr:inputText id="vPeriod" value="#{createDelivery.activePage.delivery.validityPeriod}" simple="true" required="true">
                 <tr:validateLongRange minimum="1" maximum="100"/>
               </tr:inputText>
-              <tr:outputText value="#{msg['or']}"/>
-              <t:inputDate id="vDate" popupCalendar="true" value="#{createDelivery.activePage.delivery.validityDate}" type="full"/>
-            </h:panelGrid>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.retryOnFail}" labelStyle="text-align:left">
@@ -144,6 +135,13 @@
             "/>
             <h:inputText value="#{createDelivery.activePage.delivery.secretMessage}" id="secret1"
                           style="#{createDelivery.activePage.delivery.secret ? '' : 'display:none'}"/>
+          </tr:panelLabelAndMessage>
+
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left" rendered="#{createDelivery.activePage.delivery.type.value == 'SingleText'}">
+            <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" required="true" simple="true"/>
+            <tr:outputText value="&#160;"/>
+            <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>
           </tr:panelLabelAndMessage>
 
         </tr:panelFormLayout>

@@ -1,0 +1,96 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.deliveries.messages']} '#{messages.delivery != null ? messages.delivery.name : ''}'"/>
+
+  <ui:define name="content">
+    <tr:form>
+
+
+      <h:inputHidden id="delivery" value="#{messages.deliveryId}"/>
+      <h:inputHidden value="#{messages.init}"/>
+
+      <h:panelGroup style="padding:10px 10px 10px 10px" rendered="#{messages.delivery != null}">
+
+        <eye:dataTableFilter bean="#{messages}" clearAction="clear" applyAction="query">
+          <h:panelGrid columns="3" columnClasses="column400Width, column400Width, columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+
+              <h:outputText value="#{msg['informer.deliveries.message.abonent']}"/>
+              <h:inputText value="#{messages.msisdn}"/>
+              <h:outputText value="#{msg['informer.deliveries.messages.from_date']}"/>
+              <t:inputDate value="#{messages.fromDate}" popupCalendar="true" type="date" autocomplete="true"/>
+
+            </h:panelGrid>
+            <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+
+              <h:outputText value="#{msg['informer.deliveries.message.state']}"/>
+              <h:selectOneMenu value="#{messages.state}">
+                <f:selectItem itemLabel="" itemValue=""/>
+                <f:selectItems value="#{messages.uniqueStates}"/>
+              </h:selectOneMenu>
+
+              <h:outputText value="#{msg['informer.deliveries.messages.till_date']}"/>
+              <t:inputDate value="#{messages.tillDate}" popupCalendar="true" type="date" autocomplete="true"/>
+            </h:panelGrid>
+
+            <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+
+              <h:outputText value="#{msg['informer.deliveries.message.error']}"/>
+              <tr:inputText value="#{messages.errorCode}" simple="true">
+                <tr:validateLongRange minimum="0"/>
+              </tr:inputText>
+              
+            </h:panelGrid>
+
+          </h:panelGrid>
+        </eye:dataTableFilter>
+      </h:panelGroup>
+
+      <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init}" selectedRows="#{messages.selected}">
+        <eye:row rowId="#{m.id}">
+          <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
+            <h:outputText value="#{m.abonent}"/>
+          </eye:column>
+          <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="15%">
+            <h:outputText value="#{m.state}" converter="messageStateConverter"/>
+          </eye:column>
+          <eye:column name="date" title="#{msg['informer.deliveries.message.date']}" width="15%">
+            <tr:outputText value="#{m.date}">
+              <f:convertDateTime dateStyle="short" type="both"/>
+            </tr:outputText>
+          </eye:column>
+          <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%">
+            <h:outputText value="#{m.text}"/>
+          </eye:column>
+          <eye:column name="error" title="#{msg['informer.deliveries.message.error']}" width="20%">
+            <h:outputText value="#{m.errorCode}" converter="errorCodeConverter"/>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <h:panelGrid>
+        <h:outputText value="&#160;"/>
+      </h:panelGrid>
+
+
+      <h:panelGroup style="#{messages.init ? '' : 'display:none'}">
+        <eye:buttons>
+          <eye:space/>
+        </eye:buttons>
+      </h:panelGroup>
+
+    </tr:form>
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

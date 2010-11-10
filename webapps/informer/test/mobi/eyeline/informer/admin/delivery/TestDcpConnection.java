@@ -241,7 +241,7 @@ public class TestDcpConnection extends DcpConnection{
     return histories.get(deliveryId);
   }
 
-  public synchronized void dropMessages(long[] messageIds) throws AdminException {
+  public synchronized void dropMessages(int deliveryId, long[] messageIds) throws AdminException {
     Set<Long> ids = new HashSet<Long>();
     for(long m : messageIds) {
       ids.add(m);
@@ -661,22 +661,12 @@ public class TestDcpConnection extends DcpConnection{
     }
 
     @Override
-    public Date getValidityDate() {
-      return delivery.getValidityDate();
-    }
-
-    @Override
-    public void setValidityDate(Date validityDate) {
-      delivery.setValidityDate(validityDate);
-    }
-
-    @Override
     public String getValidityPeriod() {
       return delivery.getValidityPeriod();
     }
 
     @Override
-    public void setValidityPeriod(String validityPeriod) {
+    public void setValidityPeriod(String validityPeriod) throws AdminException{
       delivery.setValidityPeriod(validityPeriod);
     }
 

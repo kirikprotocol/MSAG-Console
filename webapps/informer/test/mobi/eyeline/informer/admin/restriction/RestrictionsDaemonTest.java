@@ -7,7 +7,6 @@ import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.admin.users.UsersManagerTest;
 import mobi.eyeline.informer.util.Address;
 import org.junit.AfterClass;
@@ -22,7 +21,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Aleksandr Khalitov
@@ -126,8 +125,7 @@ public class RestrictionsDaemonTest {
     d.setRetryPolicy("policy1");
 
     d.setSvcType("svc1");
-    d.setValidityDate(new Date());
-    d.setValidityPeriod("1:00:00");
+    d.setValidityPeriod("1");
     d.setSourceAddress(new Address("+79123942341"));
 
     deliveryManager.createDelivery(userId,"1", d, new DataSource<Message>() {

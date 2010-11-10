@@ -3,10 +3,8 @@ package mobi.eyeline.informer.admin.infosme.protogen;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.InfosmeException;
-import mobi.eyeline.informer.admin.infosme.protogen.protocol.ConfigId;
-import mobi.eyeline.informer.admin.infosme.protogen.protocol.ConfigOp;
-import mobi.eyeline.informer.admin.infosme.protogen.protocol.ConfigOpId;
-import mobi.eyeline.informer.admin.infosme.protogen.protocol.SetDefaultSmsc;
+import mobi.eyeline.informer.admin.infosme.TestSms;
+import mobi.eyeline.informer.admin.infosme.protogen.protocol.*;
 
 /**
  * Администрирование Informer
@@ -33,7 +31,7 @@ public class InfosmeImpl implements Infosme {
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciSmsc);
     configOp.setOp(ConfigOpId.coAdd);
-    configOp.setObjId(smscId);
+    configOp.setObjName(smscId);
     checkResponse(client.send(configOp).getStatus());
   }
 
@@ -44,25 +42,19 @@ public class InfosmeImpl implements Infosme {
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciSmsc);
     configOp.setOp(ConfigOpId.coRemove);
-    configOp.setObjId(smscId);
+    configOp.setObjName(smscId);
     checkResponse(client.send(configOp).getStatus());
   }
 
   public void updateSmsc(String smscId) throws AdminException {
-    if(smscId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciSmsc);
     configOp.setOp(ConfigOpId.coUpdate);
-    configOp.setObjId(smscId);
+    configOp.setObjName(smscId);
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void addRegion(String regionId) throws AdminException {
-    if(regionId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
+  public void addRegion(int regionId) throws AdminException {
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRegion);
     configOp.setOp(ConfigOpId.coAdd);
@@ -70,10 +62,7 @@ public class InfosmeImpl implements Infosme {
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void updateRegion(String regionId) throws AdminException {
-    if(regionId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
+  public void updateRegion(int regionId) throws AdminException {
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRegion);
     configOp.setOp(ConfigOpId.coUpdate);
@@ -81,10 +70,7 @@ public class InfosmeImpl implements Infosme {
     checkResponse(client.send(configOp).getStatus());
   }
 
-  public void removeRegion(String regionId) throws AdminException {
-    if(regionId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
+  public void removeRegion(int regionId) throws AdminException {
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciRegion);
     configOp.setOp(ConfigOpId.coRemove);
@@ -99,7 +85,7 @@ public class InfosmeImpl implements Infosme {
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciUser);
     configOp.setOp(ConfigOpId.coAdd);
-    configOp.setObjId(userId);
+    configOp.setObjName(userId);
     checkResponse(client.send(configOp).getStatus());
   }
 
@@ -110,7 +96,7 @@ public class InfosmeImpl implements Infosme {
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciUser);
     configOp.setOp(ConfigOpId.coUpdate);
-    configOp.setObjId(userId);
+    configOp.setObjName(userId);
     checkResponse(client.send(configOp).getStatus());
   }
 
@@ -121,7 +107,7 @@ public class InfosmeImpl implements Infosme {
     ConfigOp configOp = new ConfigOp();
     configOp.setCfgId(ConfigId.ciUser);
     configOp.setOp(ConfigOpId.coRemove);
-    configOp.setObjId(userId);
+    configOp.setObjName(userId);
     checkResponse(client.send(configOp).getStatus());
   }
 
@@ -132,6 +118,16 @@ public class InfosmeImpl implements Infosme {
     SetDefaultSmsc s = new SetDefaultSmsc();
     s.setId(smscId);
     checkResponse(client.send(s).getStatus());
+  }
+
+  public void sendTestSms(TestSms sms) throws AdminException {
+    SendTestSms req = new SendTestSms();
+    req.setAbonent(sms.getDestAddr().getSimpleAddress());
+    req.setSourceAddr(sms.getSourceAddr().getSimpleAddress());
+    req.setDeliveryMode(DeliveryMode.valueOf(sms.getMode().toString()));
+    req.setFlash(sms.isFlash());
+    req.setText(sms.getText());
+    checkResponse(client.send(req).getRespCode());
   }
 
   public boolean isOnline() throws AdminException {

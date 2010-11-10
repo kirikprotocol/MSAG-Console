@@ -139,7 +139,7 @@ public class DeliveryManager {
     if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
       throw new DeliveryException("replace_illegal");
     }
-    if (delivery.getValidityDate() == null && delivery.getValidityPeriod() == null) {
+    if (delivery.getValidityPeriod() == null) {
       throw new DeliveryException("validation_illegal");
     }
     if ((delivery.getActivePeriodStart() == null || delivery.getActivePeriodEnd() == null)) {
@@ -300,15 +300,16 @@ public class DeliveryManager {
    *
    * @param login      логин
    * @param password   пароль
+   * @param deliveryId идентификатор рассылки
    * @param messageIds идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public void dropMessages(String login, String password, long[] messageIds) throws AdminException {
+  public void dropMessages(String login, String password, int deliveryId, long[] messageIds) throws AdminException {
     if (logger.isDebugEnabled()) {
       logger.debug("Drop Messages");
     }
     DcpConnection conn = getDeliveryConnection(login, password);
-    conn.dropMessages(messageIds);
+    conn.dropMessages(deliveryId, messageIds);
   }
 
   /**

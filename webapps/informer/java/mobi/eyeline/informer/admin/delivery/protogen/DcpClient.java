@@ -158,7 +158,7 @@ public class DcpClient extends ClientConnection {
     sendPdu(req, new OkResponse());
   }
 
-  public void send(DropDeliverymessages req) throws AdminException {
+  public void send(DropDeliveryMessages req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 

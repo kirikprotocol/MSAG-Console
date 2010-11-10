@@ -39,7 +39,7 @@ public class RegionsManagerTest {
   public void before() throws Exception {
     Infosme infosem = new TestInfosme(){
       @Override
-      public void addRegion(String regionId) throws AdminException {
+      public void addRegion(int regionId) throws AdminException {
         if(infosmeError) {
           throw new InfosmeException("interaction_error","");
         }
@@ -47,7 +47,7 @@ public class RegionsManagerTest {
       }
 
       @Override
-      public void updateRegion(String regionId) throws AdminException {
+      public void updateRegion(int regionId) throws AdminException {
         if(infosmeError) {
           throw new InfosmeException("interaction_error","");
         }
@@ -55,7 +55,7 @@ public class RegionsManagerTest {
       }
 
       @Override
-      public void removeRegion(String regionId) throws AdminException {
+      public void removeRegion(int regionId) throws AdminException {
         if(infosmeError) {
           throw new InfosmeException("interaction_error","");
         }
@@ -65,7 +65,7 @@ public class RegionsManagerTest {
     };
     regionsManager = new RegionsManager(infosem, configFile, backupDir, FileSystem.getFSForSingleInst());
     for(Region s : regionsManager.getRegions()) {
-      infosem.addRegion(s.getName());
+      infosem.addRegion(s.getRegionId());
     }
   }
 

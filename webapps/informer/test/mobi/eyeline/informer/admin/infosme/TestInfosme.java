@@ -40,25 +40,16 @@ public class TestInfosme implements Infosme{
     smscHelper.update(smscId);
   }
 
-  public void addRegion(String regionId) throws AdminException {
-    if(regionId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
-    regionHelper.add(regionId);
+  public void addRegion(int regionId) throws AdminException {
+    regionHelper.add(Integer.toString(regionId));
   }
 
-  public void updateRegion(String regionId) throws AdminException {
-    if(regionId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
-    regionHelper.update(regionId);
+  public void updateRegion(int regionId) throws AdminException {
+    regionHelper.update(Integer.toString(regionId));
   }
 
-  public void removeRegion(String regionId) throws AdminException {
-    if(regionId == null) {
-      throw new IllegalArgumentException("Id is null");
-    }
-    regionHelper.remove(regionId);
+  public void removeRegion(int regionId) throws AdminException {
+    regionHelper.remove(Integer.toString(regionId));
   }
 
   public void addUser(String userId) throws AdminException {
@@ -88,6 +79,13 @@ public class TestInfosme implements Infosme{
       throw new IllegalArgumentException("Id is null");
     }
     smscHelper.setDefaultSmsc(smscId);
+  }
+
+  public void sendTestSms(TestSms sms) throws AdminException {
+    if(sms == null) {
+      throw new IllegalArgumentException("sms is null");
+    }
+    System.out.println("Sms has been sent: "+sms);
   }
 
   private boolean online = true;

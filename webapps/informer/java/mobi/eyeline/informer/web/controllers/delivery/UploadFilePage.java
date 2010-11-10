@@ -37,7 +37,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
       return new StartPage();
     }
     next();
-    return new DeliveryEditPage(delivery, tmpFile);
+    return new DeliveryEditPage(delivery, tmpFile, config);
   }
 
   public String getPageId() {

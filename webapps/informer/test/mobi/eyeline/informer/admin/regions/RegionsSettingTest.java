@@ -44,7 +44,7 @@ public class RegionsSettingTest {
   public void addGetRemove() throws AdminException{
     Region r = buildRegion();
     settings.addRegion(r);
-    assertEquals(r.getRegionId(), "0");
+    assertEquals(r.getRegionId(), new Integer(0));
     Region r2 = buildRegion();
     try{
       settings.addRegion(r2);

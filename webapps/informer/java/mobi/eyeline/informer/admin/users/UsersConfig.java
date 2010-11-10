@@ -83,14 +83,14 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     return u;
   }
 
-  private List<String> loadUserRegions(XmlConfigSection section) throws XmlConfigException {
+  private List<Integer> loadUserRegions(XmlConfigSection section) throws XmlConfigException {
     if(section.containsSection("REGIONS")) {
-      List<String> result = new ArrayList<String>();
+      List<Integer> result = new ArrayList<Integer>();
       XmlConfigSection regions = section.getSection("REGIONS");
       Collection<XmlConfigParam> params = regions.params();
       for(XmlConfigParam p : params) {
         if(p.getBool()) {
-          result.add(p.getName());
+          result.add(Integer.parseInt(p.getName()));
         }
       }
       return result.isEmpty() ? null : result;
@@ -209,9 +209,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
 
   private XmlConfigSection createRegionsSection(User user) {
     XmlConfigSection regionsSection = new XmlConfigSection("REGIONS");
-    List<String> regions = user.getRegions();
-    for(String region : regions) {
-      regionsSection.setBool(region,true);
+    List<Integer> regions = user.getRegions();
+    for(Integer region : regions) {
+      regionsSection.setBool(region.toString(),true);
     }
     return regionsSection;
   }

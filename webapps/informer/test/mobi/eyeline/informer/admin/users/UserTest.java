@@ -259,10 +259,10 @@ public class UserTest {
   @Test
   public void testRegion() throws AdminException {
     User o = new User();
-    List<String> regions = new ArrayList<String>();
-    regions.add("fio");
-    regions.add("fuo");
-    regions.add("foe");
+    List<Integer> regions = new ArrayList<Integer>();
+    regions.add(1);
+    regions.add(2);
+    regions.add(3);
     o.setRegions(regions);
     assertEquals(o.getRegions(),regions);
 
@@ -270,7 +270,7 @@ public class UserTest {
     assertTrue(o.getRegions()==null);
        
     try {
-      regions.add("");
+      regions.add(null);
       o.setRegions(regions);
       assertTrue(false);
     }

@@ -11,7 +11,7 @@ import java.util.*;
 class RegionsSettings {
 
   private Map<String, Region> regionsByMasks = new HashMap<String, Region>();
-  private Map<String, Region> regions = new LinkedHashMap<String, Region>();
+  private Map<Integer, Region> regions = new LinkedHashMap<Integer, Region>();
 
   private int defaultMaxPerSecond;
 
@@ -26,11 +26,11 @@ class RegionsSettings {
 
   }
 
-  private synchronized String getNextId() {
+  private synchronized Integer getNextId() {
     int maxId = -1;
     for (Region r : regions.values())
-      maxId = Math.max(maxId, Integer.parseInt(r.getRegionId()));
-    return (maxId + 1) + "";
+      maxId = Math.max(maxId, r.getRegionId());
+    return maxId + 1;
 
   }
 
@@ -52,7 +52,7 @@ class RegionsSettings {
     regions.put(region.getRegionId(), region);
   }
 
-  void removeRegion(String regionId) throws AdminException {
+  void removeRegion(Integer regionId) throws AdminException {
     Region r = regions.remove(regionId);
     if(r != null) {
       for(Address a : r.getMasks()) {
@@ -77,7 +77,7 @@ class RegionsSettings {
   }
 
 
-  Region getRegion(String id) {
+  Region getRegion(Integer id) {
     Region r = regions.get(id);
     return r == null ? null : r.cloneRegion();
   }

@@ -169,8 +169,7 @@ public class TestDeliveryManagerTest {
     d.setRetryOnFail(true);
     d.setRetryPolicy("policy1");
     d.setSvcType("svc1");
-    d.setValidityDate(new Date());
-    d.setValidityPeriod("1:00:00");
+    d.setValidityPeriod("1");
     d.setSourceAddress(new Address("+79123942341"));
 
     manager.createDelivery("","", d, new DataSource<Message>() {

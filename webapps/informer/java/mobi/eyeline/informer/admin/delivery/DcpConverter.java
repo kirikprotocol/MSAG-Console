@@ -138,9 +138,6 @@ public class DcpConverter {
     delivery.setTransactionMode(di.getTransactionMode());
     delivery.setUseDataSm(di.getUseDataSm());
 
-    if (di.hasValidityDate()) {
-      delivery.setValidityDate(convertDate(di.getValidityDate()));
-    }
     if (di.hasValidityPeriod()) {
       delivery.setValidityPeriod(di.getValidityPeriod());
     }
@@ -308,9 +305,6 @@ public class DcpConverter {
     delivery.setTransactionMode(di.isTransactionMode());
     delivery.setUseDataSm(di.isUseDataSm());
 
-    if (di.getValidityDate() != null) {
-      delivery.setValidityDate(convertDate(di.getValidityDate()));
-    }
     if (di.getValidityPeriod() != null) {
       delivery.setValidityPeriod(di.getValidityPeriod());
     }

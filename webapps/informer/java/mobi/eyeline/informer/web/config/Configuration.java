@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
+import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
@@ -168,7 +169,7 @@ public class Configuration {
 
 
 
-  public void removeRegion(String regionId, String user) throws AdminException {
+  public void removeRegion(Integer regionId, String user) throws AdminException {
     Region r = getRegion(regionId);
     if(r != null) {
       context.removeRegion(r.getRegionId());
@@ -176,7 +177,7 @@ public class Configuration {
     }
   }
 
-  public Region getRegion(String id) {
+  public Region getRegion(Integer id) {
     return context.getRegion(id);
   }
 
@@ -355,6 +356,25 @@ public class Configuration {
     Restriction oldr = context.getRestriction(id);
     context.deleteRestriction(id);
     journal.logDeleteRestriction(oldr,user);
+  }
+
+  public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
+    //todo journal
+    context.addMessages(login, password, msDataSource, deliveryId);
+  }
+
+  public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+    //todo journal
+    return context.addSingleTextMessages(login, password, msDataSource, deliveryId);
+  }
+
+  public void dropMessages(String login, String password, int deliveryId, long[] messageIds) throws AdminException {
+    //todo journal
+    context.dropMessages(login, password, deliveryId, messageIds);
+  }
+
+  public void sendTestSms(TestSms sms) throws AdminException {
+    context.sendTestSms(sms);
   }
 
   private final Lock lock = new ReentrantLock();

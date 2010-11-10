@@ -37,7 +37,6 @@ public class Delivery implements Serializable{
   private Date activePeriodEnd;
   private Date activePeriodStart;
   private Day[] activeWeekDays;
-  private Date validityDate;
   private String validityPeriod;
 
   private boolean flash;
@@ -208,19 +207,12 @@ public class Delivery implements Serializable{
     this.activeWeekDays = days;
   }
 
-  public Date getValidityDate() {
-    return validityDate;
-  }
-
-  public void setValidityDate(Date validityDate) {
-    this.validityDate = validityDate;
-  }
-
   public String getValidityPeriod() {
     return validityPeriod;
   }
 
-  public void setValidityPeriod(String validityPeriod) {
+  public void setValidityPeriod(String validityPeriod) throws AdminException{
+    vh.checkNotEmpty("validityPeriod", validityPeriod);
     this.validityPeriod = validityPeriod;
   }
 
@@ -386,8 +378,6 @@ public class Delivery implements Serializable{
     if (startDate != null ? !dateFormat.format(startDate).equals(delivery.startDate == null ? null : dateFormat.format(delivery.startDate)) : delivery.startDate != null)
       return false;
     if (svcType != null ? !svcType.equals(delivery.svcType) : delivery.svcType != null) return false;
-    if (validityDate != null ? !dateFormat.format(validityDate).equals(delivery.validityDate == null ? null : dateFormat.format(delivery.validityDate)) : delivery.validityDate != null)
-      return false;
     if (validityPeriod != null ? !validityPeriod.equals(delivery.validityPeriod) : delivery.validityPeriod != null)
       return false;
     if (smsNotificationAddress != null ? !smsNotificationAddress.getSimpleAddress().equals(delivery.smsNotificationAddress.getSimpleAddress()) : delivery.smsNotificationAddress != null)
@@ -424,7 +414,6 @@ public class Delivery implements Serializable{
     d.activePeriodStart = activePeriodStart == null ? null : new Date(activePeriodStart.getTime());
     d.activeWeekDays = new Day[activeWeekDays.length];
     System.arraycopy(activeWeekDays, 0, d.activeWeekDays, 0, activeWeekDays.length);
-    d.validityDate = validityDate == null ? null : new Date(validityDate.getTime());
     d.validityPeriod = validityPeriod;
 
     d.flash = flash;

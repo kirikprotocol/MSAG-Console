@@ -2,7 +2,9 @@ package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -27,9 +29,12 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private boolean emailNotificationCheck;
 
-  public DeliveryEditPage(Delivery delivery, File tmpFile) {
+  private Configuration config;
+
+  public DeliveryEditPage(Delivery delivery, File tmpFile, Configuration config) {
     this.delivery = delivery;
     this.tmpFile = tmpFile;
+    this.config = config;
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
@@ -42,14 +47,6 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     if(emailNotificationCheck) {
       if(delivery.getEmailNotificationAddress() == null) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.email.incorrect");
-        return null;
-      }
-    }
-    if(delivery.getValidityDate() != null) {
-      delivery.setValidityPeriod(null);
-    }else {
-      if(delivery.getValidityPeriod() == null || delivery.getValidityPeriod().length() == 0) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.validity.empty");
         return null;
       }
     }
@@ -135,6 +132,32 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
   @SuppressWarnings({"ResultOfMethodCallIgnored"})
   public void cancel() {
     tmpFile.delete();
+  }
+
+
+
+  public String sendTest() {
+    if(delivery.getType() != Delivery.Type.SingleText) {
+      return null;
+    }
+    try{
+      User u = config.getUser(getUserName());
+      TestSms sms = new TestSms();
+      sms.setDestAddr(new Address(u.getPhone()));
+      sms.setFlash(delivery.isFlash());
+      switch (delivery.getDeliveryMode()) {
+        case USSD_PUSH: sms.setMode(TestSms.Mode.USSD_PUSH); break;
+        case SMS: sms.setMode(TestSms.Mode.SMS); break;
+        case USSD_PUSH_VLR: sms.setMode(TestSms.Mode.USSD_PUSH_VLR); break;
+      }
+      sms.setSourceAddr(delivery.getSourceAddress());
+      sms.setText(delivery.getSingleText());
+      config.sendTestSms(sms);
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", u.getPhone());
+    }catch (AdminException e) {
+      addError(e);
+    }
+    return null;
   }
 
   public Delivery getDelivery() {

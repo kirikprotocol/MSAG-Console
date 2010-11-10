@@ -27,6 +27,11 @@
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
           </tr:commandLink>
         </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES">
+            <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
+          </tr:commandLink>
+        </eye:button>
       </eye:buttons>
 
       <tr:inputHidden id="delivery" value="#{deliveryEdit.id}"/>
@@ -71,14 +76,10 @@
           </tr:panelLabelAndMessage>
 
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.validityChoise}" labelStyle="text-align:left">
-            <h:panelGrid columns="1">
-              <tr:inputText id="vPeriod" value="#{deliveryEdit.delivery.validityPeriod}" simple="true">
-                <tr:validateLongRange minimum="1" maximum="100"/>
-              </tr:inputText>
-              <tr:outputText value="#{msg['or']}"/>
-              <t:inputDate id="vDate" popupCalendar="true" value="#{deliveryEdit.delivery.validityDate}" type="full"/>
-            </h:panelGrid>
+          <tr:panelLabelAndMessage label="#{deliveryBundle.validityPeriod}" labelStyle="text-align:left">
+            <tr:inputText id="vPeriod" value="#{deliveryEdit.delivery.validityPeriod}" simple="true" required="true">
+              <tr:validateLongRange minimum="1" maximum="100"/>
+            </tr:inputText>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.retryOnFail}" labelStyle="text-align:left">
@@ -91,7 +92,7 @@
               }
             "/>
             <h:inputText value="#{deliveryEdit.delivery.retryPolicy}" id="retryPolicy1"
-                          style="#{deliveryEdit.delivery.retryOnFail ? '' : 'display:none'}"/>
+                         style="#{deliveryEdit.delivery.retryOnFail ? '' : 'display:none'}"/>
           </tr:panelLabelAndMessage>
 
 
@@ -127,6 +128,8 @@
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}">
             <tr:inputText value="#{deliveryEdit.delivery.singleText}"  simple="true" required="true"/>
+            <tr:outputText value="&#160;"/>
+            <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.secretMessage}" labelStyle="text-align:left" rendered="#{deliveryEdit.delivery.secret}">
@@ -147,6 +150,11 @@
         <eye:space/>
         <eye:button>
           <tr:commandLink text="#{msg['informer.stats']}" action="STATS_DELIVERY_MESSAGES_BY_PERIOD">
+            <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
           </tr:commandLink>
         </eye:button>

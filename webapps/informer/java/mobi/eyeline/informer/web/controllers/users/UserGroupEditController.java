@@ -24,7 +24,7 @@ public class UserGroupEditController extends UserController {
   private String organization;
   private boolean admin;
   private int smsPerSec;
-  private List<String> regions = new ArrayList<String>();
+  private List<Integer> regions = new ArrayList<Integer>();
   private Address sourceAddr;
   private List<Integer> deliveryDays = new ArrayList<Integer>();
   private String deliveryEndTime;
@@ -73,7 +73,7 @@ public class UserGroupEditController extends UserController {
           u.getRoles().remove(User.INFORMER_ADMIN_ROLE);
         }
         u.setSmsPerSec(smsPerSec);
-        u.setRegions(new ArrayList<String>(regions));
+        u.setRegions(new ArrayList<Integer>(regions));
         u.setSourceAddr(sourceAddr);
         u.setDeliveryDays(new ArrayList<Integer>(deliveryDays));
 
@@ -136,11 +136,11 @@ public class UserGroupEditController extends UserController {
     this.smsPerSec = smsPerSec;
   }
 
-  public List<String> getRegions() {
+  public List<Integer> getRegions() {
     return regions;
   }
 
-  public void setRegions(List<String> regions) {
+  public void setRegions(List<Integer> regions) {
     this.regions = regions;
   }
 

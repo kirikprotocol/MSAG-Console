@@ -9,4 +9,6 @@ protocol WebappAdminProto
   LoggerGetCategoriesResp inmsg
   LoggerSetCategories outmsg
   LoggerSetCategoriesResp inmsg
+  SendTestSms outmsg
+  SendTestSmsResp inmsg
 end

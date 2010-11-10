@@ -246,12 +246,14 @@ public class DcpConnection {
   /**
    * Удаляет сообщения из рассылки
    *
+   * @param deliveryId идентификатор рассылки
    * @param messageIds идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public void dropMessages(long[] messageIds) throws AdminException {
-    DropDeliverymessages req = new DropDeliverymessages();
+  public void dropMessages(int deliveryId, long[] messageIds) throws AdminException {
+    DropDeliveryMessages req = new DropDeliveryMessages();
     req.setMessageIds(messageIds);
+    req.setDeliveryId(deliveryId);
     try {
       lock.lock();
       client.send(req);

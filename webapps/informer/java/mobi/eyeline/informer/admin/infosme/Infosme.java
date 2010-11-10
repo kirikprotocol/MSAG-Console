@@ -15,11 +15,11 @@ public interface Infosme {
 
   public void updateSmsc(String smscId) throws AdminException;
 
-  public void addRegion(String regionId) throws AdminException;
+  public void addRegion(int regionId) throws AdminException;
 
-  public void updateRegion(String regionId) throws AdminException;
+  public void updateRegion(int regionId) throws AdminException;
 
-  public void removeRegion(String regionId) throws AdminException;
+  public void removeRegion(int regionId) throws AdminException;
 
   public void addUser(String userId) throws AdminException;
 
@@ -27,7 +27,9 @@ public interface Infosme {
 
   public void removeUser(String userId) throws AdminException;
 
-  public void setDefaultSmsc(String smscId) throws AdminException;
+  public void setDefaultSmsc(String smscId) throws AdminException;    
+
+  public void sendTestSms(TestSms sms) throws AdminException;
 
   public boolean isOnline() throws AdminException;
 

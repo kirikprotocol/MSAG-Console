@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.Infosme;
+import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.Region;
@@ -197,9 +198,9 @@ public class AdminContext {
     try{
       integrityLock.lock();
       if(u.getRegions()!=null) {
-        for(String rId : u.getRegions()) {
+        for(Integer rId : u.getRegions()) {
           if(null == regionsManager.getRegion(rId)) {
-            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
+            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId.toString());
           }
         }
       }
@@ -214,9 +215,9 @@ public class AdminContext {
     try{
       integrityLock.lock();
       if(u.getRegions()!=null) {
-        for(String rId : u.getRegions()) {
+        for(Integer rId : u.getRegions()) {
           if(null == regionsManager.getRegion(rId)) {
-            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId);
+            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId.toString());
           }
         }
       }
@@ -347,11 +348,11 @@ public class AdminContext {
     regionsManager.setDefaultMaxPerSecond(defMaxPerSecond);
   }
 
-  public void removeRegion(String regionId) throws AdminException{
+  public void removeRegion(Integer regionId) throws AdminException{
     try{
       integrityLock.lock();
       for(User u : usersManager.getUsers()) {
-        for(String s : u.getRegions()) {
+        for(Integer s : u.getRegions()) {
           if(s.equals(regionId)) {
             throw new IntegrityException("fail.delete.region.to.user",regionsManager.getRegion(regionId).getName(),u.getLogin());
           }
@@ -364,7 +365,7 @@ public class AdminContext {
     }
   }
 
-  public Region getRegion(String regionId){
+  public Region getRegion(Integer regionId){
     return regionsManager.getRegion(regionId);
   }
 
@@ -451,6 +452,18 @@ public class AdminContext {
     deliveryManager.dropDelivery(login, password, deliveryId);
   }
 
+  public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
+    deliveryManager.addMessages(login, password, msDataSource, deliveryId);
+  }
+
+  public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+    return deliveryManager.addSingleTextMessages(login, password, msDataSource, deliveryId);
+  }
+
+  public void dropMessages(String login, String password, int deliveryId, long[] messageIds) throws AdminException {
+    deliveryManager.dropMessages(login, password, deliveryId, messageIds);
+  }
+
   public int countDeliveries(String login, String password, DeliveryFilter deliveryFilter) throws AdminException {
     return deliveryManager.countDeliveries(login, password, deliveryFilter);
   }
@@ -521,5 +534,9 @@ public class AdminContext {
 
   public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
     return deliveryManager.setDeliveryRestriction(login, password, deliveryId, restriction);
+  }
+
+  public void sendTestSms(TestSms sms) throws AdminException {
+    infosme.sendTestSms(sms);
   }
 }

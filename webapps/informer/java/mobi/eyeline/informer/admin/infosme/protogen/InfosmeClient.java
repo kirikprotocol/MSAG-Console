@@ -133,6 +133,10 @@ class InfosmeClient extends ClientConnection {
     return sendPdu(req, new SetDefaultSmscResp());
   }
 
+  protected SendTestSmsResp send(SendTestSms req) throws AdminException {
+    return sendPdu(req, new SendTestSmsResp());
+  }
+
   public void shutdown() {
     connected = false;
     super.shutdown();

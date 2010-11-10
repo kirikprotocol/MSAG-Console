@@ -3,7 +3,9 @@ package mobi.eyeline.informer.web.controllers.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
+import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
@@ -79,14 +81,6 @@ public class DeliveryEditController extends DeliveryController{
   }
 
   public String save() {
-    if(delivery.getValidityDate() != null) {
-      delivery.setValidityPeriod(null);
-    }else {
-      if(delivery.getValidityPeriod() == null || delivery.getValidityPeriod().length() == 0) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.validity.empty");
-        return null;
-      }
-    }
     if(!delivery.isRetryOnFail()) {
       delivery.setRetryPolicy(null);
     }else if(delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
@@ -116,6 +110,30 @@ public class DeliveryEditController extends DeliveryController{
     String p = comeBackParam != null && comeBackParam.length() > 0 ? comeBackParam : getRequestParameter(DELIVERY_COMEBACK_PARAM);
     return p != null && p.length() >0 ? p : "DELIVERIES";
 
+  }
+
+  public String sendTest() {
+    if(delivery.getType() != Delivery.Type.SingleText) {
+      return null;
+    }
+    try{
+      User u = config.getUser(getUserName());
+      TestSms sms = new TestSms();
+      sms.setDestAddr(new Address(u.getPhone()));
+      sms.setFlash(delivery.isFlash());
+      switch (delivery.getDeliveryMode()) {
+        case USSD_PUSH: sms.setMode(TestSms.Mode.USSD_PUSH); break;
+        case SMS: sms.setMode(TestSms.Mode.SMS); break;
+        case USSD_PUSH_VLR: sms.setMode(TestSms.Mode.USSD_PUSH_VLR); break;
+      }
+      sms.setSourceAddr(delivery.getSourceAddress());
+      sms.setText(delivery.getSingleText());
+      config.sendTestSms(sms);
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", u.getPhone());
+    }catch (AdminException e) {
+      addError(e);
+    }
+    return null;
   }
 
 

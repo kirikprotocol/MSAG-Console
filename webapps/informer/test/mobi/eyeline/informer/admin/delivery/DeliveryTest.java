@@ -109,13 +109,16 @@ public class DeliveryTest {
   }
 
   @Test
-  public void testValidity() {
+  public void testValidity() throws AdminException{
     Delivery d = Delivery.newCommonDelivery();
-    d.setValidityDate(null);
-    d.setValidityDate(new Date());
-    d.setValidityPeriod(null);
-    d.setValidityPeriod("");
-    d.setValidityPeriod("dsadas");
+    try{
+      d.setValidityPeriod(null);
+      assertTrue(false);
+    }catch (AdminException e){}
+    try{
+      d.setValidityPeriod("");
+      assertTrue(false);
+    }catch (AdminException e){}
     d.setValidityPeriod("23");
   }
 
@@ -148,7 +151,7 @@ public class DeliveryTest {
   @Test
   public void testRetry() {
     Delivery d = Delivery.newCommonDelivery();
-    d.setRetryOnFail(false);  
+    d.setRetryOnFail(false);
     d.setRetryPolicy("");
     d.setRetryPolicy(null);
     d.setRetryPolicy("dasd");

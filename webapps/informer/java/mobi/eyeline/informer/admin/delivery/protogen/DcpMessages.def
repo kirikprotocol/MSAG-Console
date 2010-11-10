@@ -27,7 +27,11 @@ end
 
 message GetUserStatsResp 13
   int16 currentConnectionsCount 1
-  int16 currentDeliveriesCount 2
+  int32 currentActiveDeliveriesCount 2
+  int32 currentPausedDeliveriesCount 3
+  int32 currentPlannedDeliveriesCount 4
+  int32 currentFinishedDeliveriesCount 5
+  int32 currentCancelledDeliveriesCount 6
 end
 
 
@@ -48,9 +52,9 @@ message DeliveryInfo
   int32 priority 3
   bool transactionMode 4
 
-// DD:MM:YY hh:mm:ss
+// DD.MM.YY hh:mm:ss
   string startDate 5 
-// DD:MM:YY hh:mm:ss
+// DD.MM.YY hh:mm:ss
   string endDate 6
 // hh:mm
   string activePeriodEnd 7
@@ -58,7 +62,8 @@ message DeliveryInfo
   string activePeriodStart 8
 // mon, tue, sun ...
   string activeWeekDays 9 array
-  string validityDate 10 opt
+  // removed. has no sense now
+//  string validityDate 10 opt
   string validityPeriod 11 opt
 
   bool flash 12
@@ -92,6 +97,7 @@ message DeliveryMessage
   MessageType msgType 2 
   string text 3 opt
   int32 index 4 opt
+  string userData 5 opt
 end
 
 
@@ -211,8 +217,9 @@ message AddDeliveryMessagesResp 36
   int64 messageIds 1 array
 end
 
-message DropDeliverymessages 37
-  int64 messageIds 1 array
+message DropDeliveryMessages 37
+  int32 deliveryId 1
+  int64 messageIds 2 array
 end
 
 message GetDeliveryGlossary 38
@@ -286,6 +293,7 @@ message RequestMessagesState 43
   int32 deliveryId 1
   DeliveryMessageState states 2 array opt
   string msisdnFilter 7 array opt
+  int32 codeFilter 8 array opt
   // DD:MM:YY hh:mm:ss
   string startDate 4
   // DD:MM:YY hh:mm:ss

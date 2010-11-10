@@ -133,7 +133,7 @@ public class RegionsListController extends RegionsController{
     if(toRemove != null) {
       for(String r : toRemove) {
         try{
-          getConfig().removeRegion(r, getUserName());
+          getConfig().removeRegion(Integer.parseInt(r), getUserName());
         }catch (AdminException e){
           addError(e);
         }

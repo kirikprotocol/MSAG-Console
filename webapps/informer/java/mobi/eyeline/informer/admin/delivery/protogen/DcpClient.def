@@ -14,7 +14,7 @@ protocol DcpClient
   ChangeDeliveryState outmsg
   AddDeliveryMessages outmsg
   AddDeliveryMessagesResp inmsg
-  DropDeliverymessages outmsg
+  DropDeliveryMessages outmsg
   GetDeliveryGlossary outmsg
   GetDeliveryGlossaryResp inmsg
   ModifyDeliveryGlossary outmsg

@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.util.validation.ValidationException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
@@ -37,7 +36,7 @@ public class User implements Serializable{
   private int validHours;
   private DeliveryType deliveryType;
   private boolean transactionMode;
-  private List<String> regions = new ArrayList<String>();
+  private List<Integer> regions = new ArrayList<Integer>();
   private int priority;
   private boolean emailNotification;
   private boolean smsNotification;
@@ -77,7 +76,7 @@ public class User implements Serializable{
     this.deliveryType = user.deliveryType;
     this.transactionMode=user.transactionMode;
     this.policyId = user.policyId;
-    this.regions = user.getRegions() == null ? null : new ArrayList<String>(user.getRegions());
+    this.regions = user.getRegions() == null ? null : new ArrayList<Integer>(user.getRegions());
     this.priority = user.priority;
     this.emailNotification = user.smsNotification;
     this.smsNotification = user.smsNotification;
@@ -245,7 +244,7 @@ public class User implements Serializable{
     if(deliveryDays!=null) {
       for(Integer day : deliveryDays) {
         vh.checkNotContains("deliveryDays",deliveryDaysOut,day);
-        vh.checkBetween("deliveryDays",day,new Integer(0),new Integer(6));
+        vh.checkBetween("deliveryDays",day, 0, 6);
         deliveryDaysOut.add(day);
       }
     }
@@ -278,19 +277,19 @@ public class User implements Serializable{
     this.policyId = policyId;
   }
 
-  public List<String> getRegions() {
+  public List<Integer> getRegions() {
     return regions;
   }
 
-  public void setRegions(List<String> regions) throws AdminException {
+  public void setRegions(List<Integer> regions) throws AdminException {
     if(regions==null) {
       this.regions = null;
       return;
     }
-    List<String> regionsIds = new ArrayList<String>();
-    for(String r : regions) {
+    List<Integer> regionsIds = new ArrayList<Integer>();
+    for(Integer r : regions) {
       vh.checkNotContains("regions",regionsIds,r);
-      vh.checkNotEmpty("regions",r);
+      vh.checkNotNull("regions",r);
       regionsIds.add(r);
     }
 

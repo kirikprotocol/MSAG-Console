@@ -24,7 +24,7 @@ class RegionsConfig  implements ManagedConfigFile<RegionsSettings> {
     d.appendChild(rootElement);
     for(Region r : conf.getRegions()) {
       Element region = d.createElement("region");
-      region.setAttribute("id", r.getRegionId());
+      region.setAttribute("id", Integer.toString(r.getRegionId()));
       region.setAttribute("name", r.getName());
       region.setAttribute("timezone", new StringBuilder(50).
           append(r.getTimeZone().getRawOffset()/1000).append(',').append(r.getTimeZone().getID()).toString());
@@ -58,7 +58,7 @@ class RegionsConfig  implements ManagedConfigFile<RegionsSettings> {
       String tz = region.getAttribute("timezone");
       tz = tz.substring(tz.indexOf(',')+1);
       r.setTimeZone(TimeZone.getTimeZone(tz));
-      r.setRegionId(region.getAttribute("id"));
+      r.setRegionId(Integer.parseInt(region.getAttribute("id")));
       NodeList masks = region.getElementsByTagName("mask");
       for(int j=0; j<masks.getLength(); j++) {
         Element mask = (Element)masks.item(j);

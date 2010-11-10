@@ -25,10 +25,10 @@
       <eye:pageCalendar var="list" value="#{deliveriesWeekly.calendarModel}">
         <h:panelGroup>
           <h:outputText value="&#160;"/>
-          <tr:iterator value="#{list}" var="d">
+          <tr:iterator value="#{list}" var="m">
             <br/>
-            <tr:commandLink text="#{d.name}" action="DELIVERY_EDIT">
-              <f:param name="#{deliveriesWeekly.deliveryParam}" value="#{d.deliveryId}"/>
+            <tr:commandLink text="#{m.name}" action="DELIVERY_EDIT">
+              <f:param name="#{deliveriesWeekly.deliveryParam}" value="#{m.deliveryId}"/>
               <f:param name="#{deliveriesWeekly.deliveryComeBackParam}" value="DELIVERIES_WEEKLY"/>
             </tr:commandLink>
           </tr:iterator>
