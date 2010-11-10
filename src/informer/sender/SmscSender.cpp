@@ -241,8 +241,7 @@ journal_(0)
     journal_ = new SmscJournal(*this);
     // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();
-    rQueue_ = new DataQueue();
-    wQueue_ = new DataQueue();
+    wQueue_.reset(new DataQueue());
     journal_->init();
     // restore receipt wait queue
     const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
@@ -261,13 +260,16 @@ SmscSender::~SmscSender()
     stop();
     if (session_.get()) session_->close();
     if (parser_) delete parser_;
+    /*
     if (rQueue_) {
         assert(rQueue_->Count() == 0);
         delete rQueue_;
     }
-    if (wQueue_) {
+     */
+    if (wQueue_.get()) {
         assert(wQueue_->Count() == 0);
-        delete wQueue_;
+        wQueue_.reset(0);
+        // delete wQueue_;
     }
     if (journal_) {
         delete journal_;
@@ -526,8 +528,6 @@ void SmscSender::updateConfig( const SmscConfig& config )
     MutexGuard mg(reconfLock_);
     smscConfig_ = config;
     session_.reset(new smsc::sme::SmppSession(smscConfig_.smeConfig,this));
-    // ussdPushOp_ = config.ussdPushOp;
-    // ussdPushVlrOp_ = config.ussdPushVlrOp;
 }
 
 
@@ -872,12 +872,9 @@ void SmscSender::start()
 {
     if (!isStopping_) return;
     {
-        MutexGuard mg(queueMon_);
+        MutexGuard rmg(reconfLock_);
         if (!isStopping_) return;
         isStopping_ = false;
-    }
-    {
-        MutexGuard rmg(reconfLock_);
         session_.reset(new smsc::sme::SmppSession(smscConfig_.smeConfig,this));
     }
     Start();
@@ -886,12 +883,14 @@ void SmscSender::start()
 
 void SmscSender::stop()
 {
-    if (!isStopping_) {
-        MutexGuard mg(queueMon_);
+    if (isStopping_) return;
+    {
+        MutexGuard mg(reconfLock_);
+        if (isStopping_) return;
         isStopping_ = true;
-        queueMon_.notifyAll();
     }
     journal_->stop();
+    wakeUp();
     WaitFor();
 }
 
@@ -928,11 +927,13 @@ int SmscSender::Execute()
 
 void SmscSender::connectLoop()
 {
-    while ( !isStopping_ ) {
-        MutexGuard mg(queueMon_);
+    while ( true ) {
+        MutexGuard mg(reconfLock_);
+        if (isStopping_) break;
+
+        smsc_log_debug(log_,"S='%s': trying to connect",smscId_.c_str());
         if ( !session_.get() ) {
             throw InfosmeException(EXC_LOGICERROR,"session is not configured");
-            // isStopping_ = true;
         } else if ( !session_->isClosed() ) {
             // session connected
             break;
@@ -943,8 +944,6 @@ void SmscSender::connectLoop()
         } catch ( std::exception& e ) {
             smsc_log_error(log_,"connection failed: %s", e.what());
         }
-        // smsc_log_debug(log_,"FIXME: configure timeout b/w attempts");
-        queueMon_.wait(10000);
     }
 }
 
@@ -956,54 +955,55 @@ void SmscSender::sendLoop()
     currentTime_ = currentTimeMicro();
     // usectime_type movingStart = currentTime_;
     usectime_type nextWakeTime = currentTime_;
+    std::auto_ptr<DataQueue> rQueue(new DataQueue);
     while ( !isStopping_ ) {
 
-        if ( !session_.get() || session_->isClosed() ) break;
-
-        // sleeping until next wake time
         currentTime_ = currentTimeMicro();
-        int waitTime = int((nextWakeTime - currentTime_ + 1000)/1000U); // in msec
-
-        if (rQueue_->Count() == 0) {
+        if (rQueue->Count() == 0) {
 
             MutexGuard mg(queueMon_);
-
             if (wQueue_->Count()>0) {
                 // taking wqueue
-                std::swap(rQueue_,wQueue_);
+                std::swap(rQueue,wQueue_);
             } else if (awaken_) {
                 awaken_ = false;
-                waitTime = 0;
-                nextWakeTime = currentTime_;
-            } else if (waitTime > 0) {
 
-                if (waitTime < 10) waitTime = 10;
-                smsc_log_debug(log_,"S='%s' is going to sleep %d msec",
-                               smscId_.c_str(),waitTime);
-                queueMon_.wait(waitTime);
-                if (wQueue_->Count()>0) {
-                    std::swap(rQueue_,wQueue_);
+            } else {
+
+                // sleeping until next wake time
+                int waitTime = int((nextWakeTime - currentTime_ + 1000)/1000U); // in msec
+                if (waitTime>0) {
+                    if (waitTime < 10) waitTime = 10;
+                    smsc_log_debug(log_,"S='%s' is going to sleep %d msec",
+                                   smscId_.c_str(),waitTime);
+                    queueMon_.wait(waitTime);
+                    if (wQueue_->Count()>0) {
+                        std::swap(rQueue,wQueue_);
+                    }
+                    continue;
                 }
-                continue;
             }
         }
 
+
         MutexGuard mg(reconfLock_);  // prevent reconfiguration
-
-        // 1. FIXME: fully process rQueue
-        if (rQueue_->Count() > 0) {
-            processQueue(*rQueue_);
+        if ( !session_.get() || session_->isClosed() ) break;
+        if (rQueue->Count() > 0) {
+            processQueue(*rQueue.get());
         }
-        if (waitTime>0) {
-            continue;
-        }
-
         nextWakeTime = currentTime_ + scoredList_.processOnce(0, sleepTime);
         processWaitingEvents();
     }
-    if (session_.get() && !session_->isClosed()) session_->close();
-    if (rQueue_->Count() > 0) processQueue(*rQueue_);
-    if (wQueue_->Count() > 0) processQueue(*wQueue_);
+    {
+        MutexGuard mg(reconfLock_);
+        if (session_.get() && !session_->isClosed()) session_->close();
+        if (rQueue->Count() > 0) processQueue(*rQueue.get());
+    }
+    {
+        MutexGuard mg(queueMon_);
+        std::swap(rQueue,wQueue_);
+    }
+    if (rQueue->Count() > 0) processQueue(*rQueue.get());
 }
 
 

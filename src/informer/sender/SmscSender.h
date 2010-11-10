@@ -127,9 +127,11 @@ private:
     smsc::core::buffers::Hash< ReceiptList::iterator > receiptHash_;
     SmscJournal*                                       journal_;
 
-    smsc::core::synchronization::EventMonitor          queueMon_;
     DataQueue*                                         rQueue_;
-    DataQueue*                                         wQueue_;
+
+    // queueMon only to put into queue and notify
+    smsc::core::synchronization::EventMonitor          queueMon_;
+    std::auto_ptr<DataQueue>                           wQueue_;
     bool                                               awaken_;
 };
 
