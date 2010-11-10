@@ -35,6 +35,13 @@ void readSmscConfig( const char*   name,
         rv.sid = config.getString("sid");
         rv.port = config.getInt("port");
         rv.timeOut = config.getInt("timeout");
+        if ( rv.timeOut < 1 || rv.timeOut > 10 ) {
+            throw InfosmeException(EXC_CONFIG, "smsc '%s' has invalid value of timeout, should be [1..10]",name);
+        }
+        cfg.interConnectPeriod = config.getInt("interConnectPeriod");
+        if (cfg.interConnectPeriod<20) {
+            throw InfosmeException(EXC_CONFIG,"smsc '%s' has invalid value of interConnectPeriod, should be greater than 20",name);
+        }
         try {
             rv.password = config.getString("password");
         } catch (HashInvalidKeyException&) {}
@@ -169,29 +176,8 @@ void InfosmeCoreV1::init()
         loadUsers("");
 
         // create smscs
-        const char* smscfilename = "smsc.xml";
-        filename = smscfilename;
-
         smsc_log_info(log_,"--- loading smscs ---");
-        std::auto_ptr< Config > scfg( Config::createFromFile(smscfilename));
-        if (!scfg.get()) {
-            throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",smscfilename);
-        }
-        section = "SMSCConnectors";
-        scfg.reset( scfg->getSubConfig(section,true) );
-        const char* defConn = scfg->getString("default");
-        std::auto_ptr< CStrSet > connNames(scfg->getRootSectionNames());
-        if ( connNames->find(defConn) == connNames->end() ) {
-            throw InfosmeException(EXC_CONFIG,"default SMSC '%s' does not match any section",defConn);
-        }
-        defaultSmscId_ = defConn;
-        for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
-            smsc_log_info(log_,"processing smsc S='%s'",i->c_str());
-            std::auto_ptr< Config > sect(scfg->getSubConfig(i->c_str(),true));
-            SmscConfig smscConfig;
-            readSmscConfig(i->c_str(), smscConfig, *sect.get());
-            updateSmsc( i->c_str(), &smscConfig );
-        }
+        loadSmscs("");
 
         // create regions
         smsc_log_info(log_,"--- loading regions ---");
@@ -245,11 +231,13 @@ void InfosmeCoreV1::stop()
             if (stopping_) return;
             smsc_log_info(log_,"--- stopping core ---");
             stopping_ = true;
-            bindQueue_.notify();  // wake up bind queue
-            itp_.stopNotify();
-            rtp_.stopNotify();
             startMon_.notifyAll();
         }
+
+        bindQueue_.notify();  // wake up bind queue
+        itp_.stopNotify();
+        rtp_.stopNotify();
+
         if (dcpServer_) dcpServer_->Stop();
         if (adminServer_) adminServer_->Stop();
         if (dlvMgr_) dlvMgr_->stop();
@@ -279,7 +267,7 @@ void InfosmeCoreV1::deleteUser( const char* login )
     if (!login) throw InfosmeException(EXC_LOGICERROR,"deluser NULL passed");
     UserInfoPtr user;
     {
-        MutexGuard mg(startMon_);
+        MutexGuard mg(userLock_);
         users_.Pop(login,user);
     }
     if (!user.get()) throw InfosmeException(EXC_NOTFOUND,"no such user '%s'",login);
@@ -297,7 +285,7 @@ void InfosmeCoreV1::deleteUser( const char* login )
 UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 {
     if (!login) throw InfosmeException(EXC_LOGICERROR,"userid NULL passed");
-    MutexGuard mg(startMon_);
+    MutexGuard mg(userLock_);
     UserInfoPtr* ptr = users_.GetPtr(login);
     if (!ptr) return UserInfoPtr();
     return *ptr;
@@ -307,7 +295,7 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 void InfosmeCoreV1::getUsers( std::vector< UserInfoPtr >& users )
 {
     users.reserve( users.size() + users_.GetCount() + 2 );
-    MutexGuard mg(startMon_);
+    MutexGuard mg(userLock_);
     char* userId;
     UserInfoPtr* user;
     for ( Hash< UserInfoPtr >::Iterator i(&users_); i.Next(userId,user); ) {
@@ -321,49 +309,6 @@ void InfosmeCoreV1::updateUserInfo( const char* login )
     UserInfoPtr ptr = getUserInfo(login);
     if (!ptr.get()) throw InfosmeException(EXC_NOTFOUND,"user '%s' is not found",login);
     loadUsers(login);
-}
-
-
-void InfosmeCoreV1::updateSmsc( const std::string& smscId,
-                                const SmscConfig*  cfg )
-{
-    if (cfg) {
-        // create/update
-        SmscSender* p = 0;
-        SmscSender** ptr = 0;
-        MutexGuard mg(startMon_);
-        try {
-            ptr = smscs_.GetPtr(smscId.c_str());
-            if (!ptr) {
-                p = new SmscSender(*dlvMgr_,smscId,*cfg);
-                ptr = smscs_.SetItem(smscId.c_str(),p);
-            } else if (*ptr) {
-                (*ptr)->updateConfig(*cfg);
-                // (*ptr)->waitUntilReleased();
-            } else {
-                p = new SmscSender(*dlvMgr_,smscId,*cfg);
-                *ptr = p;
-            }
-        } catch ( std::exception& e ) {
-            smsc_log_error(log_,"smscsender create error: %s", e.what());
-            if (p) {
-                smscs_.Delete(smscId.c_str());
-                delete p;
-            }
-        }
-        if (ptr && *ptr && started_) {
-            (*ptr)->start();
-        }
-    } else {
-        // delete the smsc
-        MutexGuard mg(startMon_);
-        SmscSender* ptr = 0;
-        if (smscs_.Pop(smscId.c_str(),ptr) && ptr) {
-            ptr->stop();
-            // ptr->waitUntilReleased();
-            delete ptr;
-        }
-    }
 }
 
 
@@ -517,25 +462,66 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
 
 void InfosmeCoreV1::addSmsc( const char* smscId )
 {
-    throw InfosmeException(EXC_NOTIMPL,"FIXME: addSmsc");
+    if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
+    {
+        MutexGuard mg(startMon_);
+        SmscSender** ptr = smscs_.GetPtr(smscId);
+        if (ptr) {
+            throw InfosmeException(EXC_ALREADYEXIST,"smsc '%s' already exists",smscId);
+        }
+    }
+    if (!isGoodAsciiName(smscId)) {
+        throw InfosmeException(EXC_BADNAME,"bad smsc name '%s'",smscId);
+    }
+    loadSmscs(smscId);
 }
 
 
-void InfosmeCoreV1::updateSmsc( const char* smscId )
+void InfosmeCoreV1::updateSmsc(const char* smscId)
 {
-    throw InfosmeException(EXC_NOTIMPL,"FIXME: updateSmsc");
+    if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
+    {
+        MutexGuard mg(startMon_);
+        SmscSender** ptr = smscs_.GetPtr(smscId);
+        if (!ptr) {
+            throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
+        }
+    }
+    if (!isGoodAsciiName(smscId)) {
+        throw InfosmeException(EXC_BADNAME,"bad smsc name '%s'",smscId);
+    }
+    loadSmscs(smscId);
 }
 
 
 void InfosmeCoreV1::deleteSmsc( const char* smscId )
 {
-    throw InfosmeException(EXC_NOTIMPL,"FIXME: deleteSmsc");
+    MutexGuard mg(startMon_);
+    updateSmsc(smscId,0);
 }
 
 
 void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 {
-    throw InfosmeException(EXC_NOTIMPL,"FIXME: updateDefaultSmsc");
+    MutexGuard mg(startMon_);
+    if (!smscId || !smscId[0] || !isGoodAsciiName(smscId)) {
+        throw InfosmeException(EXC_BADNAME,"invalid default smsc name '%s'",smscId ? smscId : "");
+    }
+    if (smscId == defaultSmscId_) return;
+    SmscSender** ptr = smscs_.GetPtr(smscId);
+    if (!ptr) {
+        throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
+    }
+    RegionSenderPtr* regptr = regSends_.GetPtr(0);
+    if (!regptr) {
+        throw InfosmeException(EXC_LOGICERROR,"default RS is not found");
+    }
+    RegionPtr* rptr = regions_.GetPtr(0);
+    if (!rptr) {
+        throw InfosmeException(EXC_LOGICERROR,"default R is not found");
+    }
+    defaultSmscId_ = smscId;
+    (*regptr)->assignSender(*ptr,*rptr);
 }
 
 
@@ -710,7 +696,7 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
     }
     std::vector< UserInfoPtr > users;
     {
-        MutexGuard mg(startMon_);
+        MutexGuard mg(userLock_);
         users.reserve(users_.GetCount());
         char* userid;
         UserInfoPtr* ptr;
@@ -810,7 +796,7 @@ void InfosmeCoreV1::loadUsers( const char* userId )
     }
 
     smsc_log_info(log_,"users.xml has been read (%u users), applying",unsigned(uservec.size()));
-    MutexGuard mg(startMon_);
+    MutexGuard mg(userLock_);
     for ( std::vector<UserInfoPtr>::iterator i = uservec.begin(); i != uservec.end(); ++i ) {
         UserInfoPtr* olduser = users_.GetPtr((*i)->getUserId());
         if (!olduser) {
@@ -821,7 +807,94 @@ void InfosmeCoreV1::loadUsers( const char* userId )
             smsc_log_info(log_,"user U='%s' updated",(*i)->getUserId());
         }
     }
-    startMon_.notify();
+}
+
+
+void InfosmeCoreV1::loadSmscs( const char* smscId )
+{
+    const char* smscfilename = "smsc.xml";
+    const char* section = "SMSCConnectors";
+    try {
+        std::auto_ptr< Config > scfg( Config::createFromFile(smscfilename));
+        if (!scfg.get()) {
+            throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",smscfilename);
+        }
+        scfg.reset( scfg->getSubConfig(section,true) );
+
+        std::auto_ptr< CStrSet > connNames;
+        if (smscId && smscId[0]) {
+            if (!scfg->findSection(smscId)) {
+                throw InfosmeException(EXC_CONFIG,"smsc '%s' not found in config",smscId);
+            }
+            connNames.reset(new CStrSet);
+            connNames->insert(smscId);
+        } else {
+            connNames.reset(scfg->getRootSectionNames());
+            const char* defConn = scfg->getString("default");
+            if ( connNames->find(defConn) == connNames->end() ) {
+                throw InfosmeException(EXC_CONFIG,"default SMSC '%s' does not match any section",defConn);
+            }
+            defaultSmscId_ = defConn;
+        }
+
+        for ( CStrSet::iterator i = connNames->begin(); i != connNames->end(); ++i ) {
+            smsc_log_info(log_,"processing smsc S='%s'",i->c_str());
+            std::auto_ptr< Config > sect(scfg->getSubConfig(i->c_str(),true));
+            SmscConfig smscConfig;
+            readSmscConfig(i->c_str(), smscConfig, *sect.get());
+            updateSmsc( i->c_str(), &smscConfig );
+        }
+
+    } catch ( InfosmeException& e ) {
+        throw;
+    } catch ( std::exception& e ) {
+        throw InfosmeException(EXC_CONFIG,"exc loading smsc: %s",e.what());
+    }
+}
+
+
+void InfosmeCoreV1::updateSmsc( const char*       smscId,
+                                const SmscConfig* cfg )
+{
+    if (cfg) {
+        // create/update
+        MutexGuard mg(startMon_);
+        SmscSender** ptr = smscs_.GetPtr(smscId);
+        if (!ptr) {
+            ptr = smscs_.SetItem(smscId,
+                                 new SmscSender(*dlvMgr_,smscId,*cfg));
+        } else if (*ptr) {
+            (*ptr)->updateConfig(*cfg);
+            // (*ptr)->waitUntilReleased();
+        } else {
+            *ptr = new SmscSender(*dlvMgr_,smscId,*cfg);
+        }
+        if (ptr && *ptr && started_) {
+            (*ptr)->start();
+        }
+    } else {
+        // delete the smsc
+        SmscSender* ptr = 0;
+        {
+            MutexGuard mg(startMon_);
+            if (!smscs_.Pop(smscId,ptr)) {
+                throw InfosmeException(EXC_NOTFOUND,"smsc '%s' is not found",smscId);
+            }
+            ptr->stop();
+            int regId;
+            RegionSenderPtr* regSend;
+            RegionPtr rptr;
+            for ( smsc::core::buffers::IntHash< RegionSenderPtr >::Iterator i(regSends_);
+                  i.Next(regId,regSend); ) {
+                if ( (*regSend)->getConn() == ptr ) {
+                    smsc_log_debug(log_,"destroying RS=%u from S='%s'",
+                                   (*regSend)->getRegionId(), smscId);
+                    regSends_.Delete(regId);
+                }
+            }
+        }
+        delete ptr;
+    }
 }
 
 

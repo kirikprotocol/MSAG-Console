@@ -110,12 +110,6 @@ public:
     // smsc has just been stopped
     // virtual void notifySmscFinished( const std::string& smscId );
 
-    /// this methods has several functions:
-    /// 1. create smsc: new smscId, valid cfg;
-    /// 2. update smsc: old smscId, valid cfg;
-    /// 3. delete smsc: old smscId, cfg=0.
-    void updateSmsc( const std::string& smscId, const SmscConfig* cfg );
-
     /// reload all regions
     void reloadRegions();
 
@@ -129,24 +123,34 @@ protected:
     virtual int Execute();
 
     void loadUsers( const char* userId );
+    void loadSmscs( const char* smscId );
+
+    /// this methods has several functions:
+    /// 1. create smsc: new smscId, valid cfg;
+    /// 2. update smsc: old smscId, valid cfg;
+    /// 3. delete smsc: old smscId, cfg=0.
+    void updateSmsc( const char* smscId, const SmscConfig* cfg );
 
 private:
     smsc::logger::Logger*                      log_;
     CommonSettings                             cs_;
+
     smsc::core::synchronization::EventMonitor  startMon_;
     bool                                       stopping_;
     bool                                       started_;
-    std::string                                defaultSmscId_;
+    std::string                                     defaultSmscId_;
+    smsc::core::buffers::Hash< SmscSender* >        smscs_;        // owned
+    smsc::core::buffers::IntHash< RegionPtr >       regions_;      // owned
+    smsc::core::buffers::IntHash< RegionSenderPtr > regSends_;   // owned
+    RegionFinderV1                                  rf_;
+
     smsc::core::threads::ThreadPool            itp_;        // input transfer pool
     smsc::core::threads::ThreadPool            rtp_;        // resend transfer pool
+
+    smsc::core::synchronization::Mutex            userLock_;
     smsc::core::buffers::Hash< UserInfoPtr >      users_;        // owned
-    smsc::core::buffers::Hash< SmscSender* >      smscs_;        // owned
-    smsc::core::buffers::IntHash< RegionPtr >     regions_;      // owned
-    smsc::core::buffers::IntHash< RegionSenderPtr > regSends_;   // owned
 
     smsc::core::buffers::FastMTQueue<BindSignal>  bindQueue_;
-
-    RegionFinderV1                                rf_;
 
     DeliveryMgr*                                  dlvMgr_;       // owned
     admin::AdminServer*                           adminServer_;  // owned

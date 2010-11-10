@@ -237,6 +237,10 @@ char* makeDeliveryPath( dlvid_type dlvId, char* buf )
 
 bool isGoodAsciiName( const char* str, char* badchar )
 {
+    if (!str || !str[0]) {
+        if (badchar) { *badchar = '0'; }
+        return false;
+    }
     assert(str);
     for ( const char* p = str; *p != '\0'; ++p ) {
         register const char c = *p;

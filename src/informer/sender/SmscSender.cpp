@@ -935,19 +935,33 @@ void SmscSender::connectLoop()
 {
     while ( !isStopping_) {
 
-        MutexGuard mg(reconfLock_);
-        smsc_log_debug(log_,"S='%s': trying to connect",smscId_.c_str());
-        if ( !session_.get() ) {
-            throw InfosmeException(EXC_LOGICERROR,"session is not configured");
-        } else if ( !session_->isClosed() ) {
-            // session connected
-            break;
+        const usectime_type startingConn = currentTimeMicro();
+        msgtime_type interConnect;
+        {
+            MutexGuard mg(reconfLock_);
+            smsc_log_debug(log_,"S='%s': trying to connect",smscId_.c_str());
+            if ( !session_.get() ) {
+                throw InfosmeException(EXC_LOGICERROR,"session is not configured");
+            } else if ( !session_->isClosed() ) {
+                // session connected
+                break;
+            }
+            try {
+                interConnect = smscConfig_.interConnectPeriod;
+                session_->connect();
+                if (!session_->isClosed()) break;
+            } catch ( std::exception& e ) {
+                smsc_log_error(log_,"connection failed: %s", e.what());
+            }
         }
-        try {
-            session_->connect();
-            if (!session_->isClosed()) break;
-        } catch ( std::exception& e ) {
-            smsc_log_error(log_,"connection failed: %s", e.what());
+        // connection failed, waiting
+        MutexGuard mg(queueMon_);
+        if (isStopping_) break;
+        const usectime_type now = currentTimeMicro();
+        const int waitTime = int((now - startingConn)/1000 - 
+                                 usectime_type(interConnect)*1000);
+        if ( waitTime > 0 ) {
+            queueMon_.wait(waitTime);
         }
     }
 }

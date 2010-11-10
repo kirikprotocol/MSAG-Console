@@ -24,6 +24,8 @@ public:
 
     ~RegionSender() {}
 
+    inline const SmscSender* getConn() const { return conn_; }
+    
     // used to switch senders
     // NOTE: this method should be invoked from locked state.
     void assignSender( SmscSender* conn, const RegionPtr& r );

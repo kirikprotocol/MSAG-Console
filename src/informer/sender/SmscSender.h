@@ -29,6 +29,7 @@ class Message;
 struct SmscConfig
 {
     smsc::sme::SmeConfig smeConfig;
+    int interConnectPeriod;
     int ussdPushOp;
     int ussdPushVlrOp;
 };
