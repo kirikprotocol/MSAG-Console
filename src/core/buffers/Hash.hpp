@@ -31,14 +31,16 @@ typedef const hashchar* pchashstr;
 class HashInvalidKeyException: public std::runtime_error
 {
 public:
-  HashInvalidKeyException():runtime_error("HashInvalidKeyException")
+  HashInvalidKeyException():runtime_error("HashInvalidKeyException"), key_("?unknown?")
   {
-    
   }
-  HashInvalidKeyException(const char* key):runtime_error(std::string("HashInvalidKeyException:")+key)
+  HashInvalidKeyException(const char* key):runtime_error(std::string("HashInvalidKeyException:")+key), key_(key)
   {
-    
   }
+    inline const char* getKey() const { return key_.c_str(); }
+    virtual ~HashInvalidKeyException() throw () {}
+private:
+    std::string key_;
 };
 
 namespace _hashinternall{
