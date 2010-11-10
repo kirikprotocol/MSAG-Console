@@ -284,10 +284,10 @@ public:
         {
             struct tm now;
             const ulonglong ymd = msgTimeToYmd(currentTime,&now);
-            sprintf(buf,"statistics/%04u.%02u.%02u/msg%02u.log",
+            sprintf(buf,"%04u.%02u.%02u/msg%02u.log",
                     now.tm_year+1900, now.tm_mon+1,
                     now.tm_mday, now.tm_hour);
-            fg.create((mgr_.cs_.getStorePath()+buf).c_str(),0666,true);
+            fg.create((mgr_.cs_.getStatPath()+buf).c_str(),0666,true);
             fg.seek(0,SEEK_END);
             if (fg.getPos() == 0) {
                 const char* header = "# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
