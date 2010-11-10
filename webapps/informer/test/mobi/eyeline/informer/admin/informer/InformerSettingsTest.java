@@ -22,18 +22,18 @@ public class InformerSettingsTest {
   }
 
   @Test
-  public void host() throws AdminException{
+  public void adminHost() throws AdminException{
     try {
-      cs.setHost("");
+      cs.setAdminHost("");
       assertTrue(false);
     } catch (AdminException e) {}
     try {
-      cs.setHost(null);
+      cs.setAdminHost(null);
       assertTrue(false);
     } catch (AdminException e) {}
 
-    cs.setHost("host");
-    assertEquals("host", cs.getHost());
+    cs.setAdminHost("host");
+    assertEquals("host", cs.getAdminHost());
   }
 
   @Test
@@ -82,47 +82,54 @@ public class InformerSettingsTest {
   }
 
   @Test
-  public void deliveriesPort() throws AdminException{
+  public void dcpHost() throws AdminException{
     try {
-      cs.setDeliveriesPort(-1);
+      cs.setDcpHost("");
       assertTrue(false);
     } catch (AdminException e) {}
     try {
-      cs.setDeliveriesPort(65536);
+      cs.setDcpHost(null);
       assertTrue(false);
     } catch (AdminException e) {}
 
-    cs.setDeliveriesPort(1);
-    assertEquals(1, cs.getDeliveriesPort());
+    cs.setDcpHost("host");
+    assertEquals("host", cs.getDcpHost());
   }
 
   @Test
-  public void save() throws AdminException, XmlConfigException {
-    cs.setAdminPort(1);
-    cs.setDeliveriesPort(2);
-    cs.setHost("dsa");
-    XmlConfig c = new XmlConfig();
-    cs.save(c);
+  public void dcpPort() throws AdminException{
+    try {
+      cs.setDcpPort(-1);
+      assertTrue(false);
+    } catch (AdminException e) {}
+    try {
+      cs.setDcpPort(65536);
+      assertTrue(false);
+    } catch (AdminException e) {}
 
-    InformerSettings cs1 = new InformerSettings();
-    cs1.load(c);
-
-    assertEquals(cs.getHost(), cs1.getHost());
-    assertEquals(cs.getAdminPort(), cs1.getAdminPort());
-    assertEquals(cs.getDeliveriesPort(), cs1.getDeliveriesPort());
+    cs.setDcpPort(1);
+    assertEquals(1, cs.getDcpPort());
   }
 
   @Test
   public void cloneSettings() throws AdminException {
+    cs.setAdminHost("adminHost");
     cs.setAdminPort(1);
-    cs.setDeliveriesPort(2);
-    cs.setHost("dsa");
+    cs.setDcpHost("dcpHost");
+    cs.setDcpPort(2);
+    cs.setPersHost("persHost");
+    cs.setPersPort(3);
+    cs.setStatDir("statDir");
 
     InformerSettings cs1 = cs.cloneSettings();
 
     assertTrue(cs != cs1);
-    assertEquals(cs.getHost(), cs1.getHost());
+    assertEquals(cs.getAdminHost(), cs1.getAdminHost());
     assertEquals(cs.getAdminPort(), cs1.getAdminPort());
-    assertEquals(cs.getDeliveriesPort(), cs1.getDeliveriesPort());
+    assertEquals(cs.getDcpHost(), cs1.getDcpHost());
+    assertEquals(cs.getDcpPort(), cs1.getDcpPort());
+    assertEquals(cs.getPersHost(), cs1.getPersHost());
+    assertEquals(cs.getPersPort(), cs1.getPersPort());
+    assertEquals(cs.getStatDir(), cs1.getStatDir());
   }
 }

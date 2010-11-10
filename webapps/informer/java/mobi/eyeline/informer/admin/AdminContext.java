@@ -119,7 +119,7 @@ public class AdminContext {
           new File(confDir, "backup"), fileSystem, serviceManager);
 
       InformerSettings is = informerManager.getConfigSettings();
-      infosme = new InfosmeImpl(is.getHost(), is.getAdminPort());
+      infosme = new InfosmeImpl(is.getAdminHost(), is.getAdminPort());
 
       usersManager = new UsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
 
@@ -136,7 +136,7 @@ public class AdminContext {
       regionsManager = new RegionsManager(infosme, new File(confDir, "regions.xml"),
           new File(confDir, "backup"), fileSystem);
 
-      deliveryManager = new DeliveryManager(is.getHost(), is.getDeliveriesPort(), new File(is.getStatDir()), fileSystem);
+      deliveryManager = new DeliveryManager(is.getDcpHost(), is.getDcpPort(), new File(is.getStatDir()), fileSystem);
 
       restrictionsManager = new RestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
           new File(confDir, "backup"), fileSystem);

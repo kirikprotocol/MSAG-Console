@@ -1,14 +1,15 @@
 <config>
 
   <section name="informer">
-    <param name="host" type="string">host1</param>
-    <param name="adminPort" type="string">8080</param>
-    <param name="deliveriesPort" type="string">8088</param>
+    <param name="adminHost" type="string">adminHost</param>
+    <param name="adminPort" type="int">8080</param>
+    <param name="dcpHost" type="string">dcpHost</param>
+    <param name="dcpPort" type="int">8088</param>
   </section>
 
   <section name="pvss">
-    <param name="host" type="string">niagara</param>
-    <param name="port" type="string">25403</param>
+    <param name="host" type="string">pvssHost</param>
+    <param name="port" type="int">25403</param>
   </section>
 
   <section name="stat">

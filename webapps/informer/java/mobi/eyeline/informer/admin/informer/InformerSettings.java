@@ -2,9 +2,6 @@ package mobi.eyeline.informer.admin.informer;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
-import mobi.eyeline.informer.util.config.XmlConfig;
-import mobi.eyeline.informer.util.config.XmlConfigException;
-import mobi.eyeline.informer.util.config.XmlConfigSection;
 
 /**
  * Настройки Informer
@@ -14,50 +11,24 @@ public class InformerSettings {
 
   private final ValidationHelper vh = new ValidationHelper(InformerSettings.class);
 
-  private String host;
-
+  private String adminHost;
   private int adminPort;
 
-  private int deliveriesPort;
+  private String dcpHost;
+  private int dcpPort;
 
   private String persHost;
-
   private int persPort;
 
   private String statDir;
 
-  void load(XmlConfig config) throws XmlConfigException{
-    XmlConfigSection s = config.getSection("informer");
-    host = s.getString("host", null);
-    adminPort = s.getInt("adminPort", 0);
-    deliveriesPort = s.getInt("deliveriesPort", 0);
-    s = config.getSection("pvss");
-    persHost = s.getString("host");
-    persPort = s.getInt("port");
-    s = config.getSection("stat");
-    statDir =  s.getString("directory",null);
+  public String getAdminHost() {
+    return adminHost;
   }
 
-  void save(XmlConfig config) throws XmlConfigException{
-    XmlConfigSection s = config.getOrCreateSection("informer");
-    s.setString("host", host);
-    s.setInt("adminPort", adminPort);
-    s.setInt("deliveriesPort", deliveriesPort);
-    s = config.getOrCreateSection("pvss");
-    s.setString("host", persHost);
-    s.setInt("port", persPort);
-    s = config.getOrCreateSection("stat");
-    s.setString("directory",statDir);
-  }
-
-  public String getHost() {
-    return host;
-  }
-
-
-  public void setHost(String host) throws AdminException{
-    vh.checkNotEmpty("host", host);
-    this.host = host;
+  public void setAdminHost(String host) throws AdminException{
+    vh.checkNotEmpty("adminHost", host);
+    this.adminHost = host;
   }
 
   public int getAdminPort() {
@@ -69,13 +40,22 @@ public class InformerSettings {
     this.adminPort = adminPort;
   }
 
-  public int getDeliveriesPort() {
-    return deliveriesPort;
+  public int getDcpPort() {
+    return dcpPort;
   }
 
-  public void setDeliveriesPort(int deliveriesPort) throws AdminException {
-    vh.checkPort("deliveriesPort", deliveriesPort);
-    this.deliveriesPort = deliveriesPort;
+  public void setDcpPort(int port) throws AdminException {
+    vh.checkPort("dcpPort", port);
+    this.dcpPort = port;
+  }
+
+  public String getDcpHost() {
+    return dcpHost;
+  }
+
+  public void setDcpHost(String dcpHost) throws AdminException {
+    vh.checkNotEmpty("dcpHost", dcpHost);
+    this.dcpHost = dcpHost;
   }
 
   public String getPersHost() {
@@ -111,9 +91,10 @@ public class InformerSettings {
    */
   public InformerSettings cloneSettings(){
     InformerSettings cs = new InformerSettings();
+    cs.adminHost = adminHost;
     cs.adminPort = adminPort;
-    cs.deliveriesPort = deliveriesPort;
-    cs.host = host;
+    cs.dcpHost = dcpHost;
+    cs.dcpPort = dcpPort;
     cs.persHost = persHost;
     cs.persPort = persPort;
     cs.statDir = statDir;

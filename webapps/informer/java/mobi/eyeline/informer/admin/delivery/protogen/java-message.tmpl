@@ -254,7 +254,7 @@ $-select$
 $-if$
     } $if field.mandatory$ else throw new MissingMandatoryFieldException("$var field.name$");$-if$
 $-foreach$
-    writer.writeTag(0xFFFF); // end message tag
+    writer.writeTag(0xFF); // end message tag
   }
 
   public void decode(BufferReader reader) throws IOException {
@@ -263,7 +263,7 @@ $if message.haveparent$
 $-if$
     while( true ) {
       int tag = reader.readTag();
-      if( tag == 0xFFFF ) break;
+      if( tag == 0xFF ) break;
       switch( tag ) {
 $foreach field$
         case $var field.tag$: {

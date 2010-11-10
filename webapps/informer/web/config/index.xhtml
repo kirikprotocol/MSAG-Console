@@ -30,16 +30,19 @@
 
         <eye:collapsingGroup label="#{msg['config.informer.section']}" opened="true">
           <tr:panelFormLayout>
-            <tr:panelLabelAndMessage label="#{informerSettings.host}">
-              <tr:inputText value="#{config.settings.host}" simple="true" required="true"/>
+            <tr:panelLabelAndMessage label="#{informerSettings.adminHost}">
+              <tr:inputText value="#{config.settings.adminHost}" simple="true" required="true"/>
             </tr:panelLabelAndMessage>
             <tr:panelLabelAndMessage label="#{informerSettings.adminPort}">
               <tr:inputText value="#{config.settings.adminPort}" simple="true" required="true">
                 <eye:validatePort/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{informerSettings.deliveriesPort}">
-              <tr:inputText value="#{config.settings.deliveriesPort}" simple="true" required="true">
+            <tr:panelLabelAndMessage label="#{informerSettings.dcpHost}">
+              <tr:inputText value="#{config.settings.dcpHost}" simple="true" required="true"/>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{informerSettings.dcpPort}">
+              <tr:inputText value="#{config.settings.dcpPort}" simple="true" required="true">
                 <eye:validatePort/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
