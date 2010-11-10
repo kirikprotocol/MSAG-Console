@@ -262,6 +262,9 @@ public class RestrictionsDaemonTest {
     if(usersConfigFile != null) {
       usersConfigFile.delete();
     }
+    if(restrictionConfigFile!= null) {
+      restrictionConfigFile.delete();
+    }    
     if(backupDir != null) {
       TestUtils.recursiveDeleteFolder(backupDir);
     }
