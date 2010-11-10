@@ -22,7 +22,7 @@ public class InformerManagerImpl implements InformerManager{
 
   private final ServiceManager serviceManager;
 
-  private final static String SERVICE_ID = "Informer";
+  private final static String SERVICE_ID = "informer";
 
   /**
    * Конструктор
