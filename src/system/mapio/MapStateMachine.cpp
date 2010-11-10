@@ -1946,13 +1946,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &destAddr, GetUSSDAddr(), &destRef, 0/*&origRef*/, 0/*&specificInfo*/ ), __func__);
     }else
     {
-      if( dialog->s_imsi.length() > 0 )
-      {
-        mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
-      } else
-      {
-        mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
-      }
+      mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
       checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, &specificInfo ), __func__);
     }
   }
