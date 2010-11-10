@@ -305,11 +305,11 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         bs.bind = (newState == DLVSTATE_ACTIVE);
         {
             bs.regIds.reserve(storages_.Count());
-            int regId;
+            int ri;
             RegionalStoragePtr* ptr;
             for (smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
-                 i.Next(regId,ptr); ) {
-                bs.regIds.push_back(regionid_type(regId));
+                 i.Next(ri,ptr); ) {
+                bs.regIds.push_back(regionid_type(ri));
             }
         }
     }
