@@ -27,7 +27,7 @@ void EncoderOfBOOL::calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_
 ENCResult EncoderOfBOOL::encodeVAL(uint8_t * use_enc, TSLength max_len) const
   /*throw(std::exception)*/
 {
-  *use_enc = _encVal ? 0x00 : 0xFF;
+  *use_enc = !_encVal ? 0x00 : 0xFF;
   return ENCResult(ENCResult::encOk, 1);
 }
 
