@@ -17,9 +17,7 @@ import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedList;
+import java.util.*;
 
 import static org.junit.Assert.assertTrue;
 
@@ -60,21 +58,197 @@ public class RestrictionsDaemonTest {
 
   @Test
   public void startStop() throws Exception {
+    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
     assertTrue(!daemon.isStarted());
     daemon.start();
+    long start;
+
     assertTrue(daemon.isStarted());
     daemon.stop();
     assertTrue(!daemon.isStarted());
 
-    int aId = _createDelivery("a").getId();
-    int bId = _createDelivery("b").getId();
+    Delivery da = _createDelivery("a");
+    Delivery db = _createDelivery("b");
+    deliveryManager.activateDelivery("a","1",da.getId());
+    deliveryManager.activateDelivery("b","1",db.getId());
+
+    start = System.currentTimeMillis();
+    Restriction ra  = createRestriction("a",new Date(start),new Date(start+1000));
+    Restriction rb  = createRestriction("b",new Date(start+1000),new Date(start+2000));
+    Restriction rab = createRestriction(null,new Date(start+3000),new Date(start+4000));
+
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    daemon.start();
+
+    waitT(500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,true,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    checkNextTaskDate(1000,start);
+    waitT(1500,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Paused,true,start);
+    checkNextTaskDate(2000,start);
+    waitT(2500,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    checkNextTaskDate(3000,start);
+    waitT(3500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,true,start);
+    checkDeliveryState(db,DeliveryStatus.Paused,true,start);
+    checkNextTaskDate(4000,start);
+    waitT(4500,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    checkNextTaskDate(Long.MAX_VALUE-start,start);
+
+    //test restriction change
+    start = System.currentTimeMillis();
+    System.out.println("====new time base====");
+    ra.setEndDate(new Date(start+2000));
+    restrictionsManager.updateRestriction(ra);
+    daemon.rebuildSchedule();
+    waitT(1000,start);
+    checkNextTaskDate(2000,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,true,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    waitT(3000,start);
+    checkNextTaskDate(Long.MAX_VALUE-start,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+
+   //
+    start = System.currentTimeMillis();
+    System.out.println("====new time base====");
+    ra.setEndDate(new Date(start+5000));
+    restrictionsManager.updateRestriction(ra);
+    daemon.rebuildSchedule();
+    waitT(500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,true,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    ra.setStartDate(new Date(start+3000));
+    restrictionsManager.updateRestriction(ra);
+    daemon.rebuildSchedule();
+    waitT(1000,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    checkNextTaskDate(3000,start);
+    waitT(3500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,true,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    checkNextTaskDate(5000,start);
 
 
-    
+    start = System.currentTimeMillis();
+    System.out.println("====new time base====");
+    ra.setStartDate(new Date(start+1000));
+    ra.setEndDate(new Date(start+3000));
+    rb.setStartDate(new Date(start+2000));
+    rb.setEndDate(new Date(start+4000));
+    restrictionsManager.updateRestriction(ra);
+    restrictionsManager.updateRestriction(rb);
+    daemon.rebuildSchedule();
+
+    waitT(500,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    checkNextTaskDate(1000,start);
+    waitT(1500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,true,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+    checkNextTaskDate(2000,start);
+    waitT(2500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,true,start);
+    checkDeliveryState(db,DeliveryStatus.Paused,true,start);
+    checkNextTaskDate(3000,start);
+    waitT(3500,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Paused,true,start);
+    checkNextTaskDate(4000,start);
+    waitT(4500,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkDeliveryState(db,DeliveryStatus.Active,false,start);
+
+
+    start = System.currentTimeMillis();
+    System.out.println("====new time base====");
+    ra.setStartDate(new Date(start+1000));
+    ra.setEndDate(new Date(start+2000));
+    deliveryManager.pauseDelivery("a","1",da.getId());
+    restrictionsManager.updateRestriction(ra);
+    daemon.rebuildSchedule();
+    waitT(500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,false,start);
+    checkNextTaskDate(1000,start);
+    waitT(1500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,false,start);
+    checkNextTaskDate(2000,start);
+    waitT(2500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,false,start);
+    deliveryManager.activateDelivery("a","1",da.getId());
+
+
+
+
+
+    start = System.currentTimeMillis();
+    System.out.println("====new time base====");
+    ra.setStartDate(new Date(start+1000));
+    ra.setEndDate(new Date(start+3000));
+    restrictionsManager.deleteRestriction(rb.getId());
+    restrictionsManager.deleteRestriction(rab.getId());
+    restrictionsManager.updateRestriction(ra);
+    daemon.rebuildSchedule();
+    waitT(500,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);
+    checkNextTaskDate(1000,start);
+    waitT(1500,start);
+    checkDeliveryState(da,DeliveryStatus.Paused,true,start);
+    checkNextTaskDate(3000,start);
+
+    waitT(2000,start);
+    restrictionsManager.deleteRestriction(ra.getId());
+    daemon.rebuildSchedule();
+    waitT(2500,start);
+    checkDeliveryState(da,DeliveryStatus.Active,false,start);    
+
+
+
+
+
+
   }
 
+  private void checkDeliveryState(final Delivery d, final DeliveryStatus requiredStatus, final boolean requiredRestricted , final long start) throws AdminException {
+    DeliveryFilter filter = new DeliveryFilter();
+    filter.setResultFields(new DeliveryFields[]{DeliveryFields.Status});
+    filter.setUserIdFilter(new String[]{d.getOwner()});
+    deliveryManager.getDeliveries(d.getOwner(),"1",filter,100,new Visitor<DeliveryInfo>(){
+      public boolean visit(DeliveryInfo di) throws AdminException {
+        System.out.println((System.currentTimeMillis()-start)+" "+d.getOwner()+" status="+di.getStatus()+" "+di.isRestriction());
+        assertTrue(di.getStatus()==requiredStatus);
+        assertTrue(di.isRestriction()==requiredRestricted);
+        return true;
+      }
+    });
 
+  }
+
+  private Restriction createRestriction(String user, Date startDate, Date endDate) throws AdminException {
+    Restriction r = new Restriction();
+    r.setAllUsers(user==null);
+    r.setStartDate(startDate);
+    r.setEndDate(endDate);
+    r.setName("restr_"+user);
+    if(user!=null) {
+      List<String> users = new ArrayList<String>();
+      users.add(user);
+      r.setUserIds(users);
+    }
+    restrictionsManager.addRestriction(r);
+    return r;
+  }
 
 
 
@@ -148,6 +322,18 @@ public class RestrictionsDaemonTest {
       }
     });
     return d;
+  }
+
+  private synchronized void waitT(long t, long startTime) throws InterruptedException {
+    long tw = t+(startTime-System.currentTimeMillis());
+    if(tw<0) return;
+    wait(tw);
+  }
+
+  void checkNextTaskDate(long isAt, long startDate) {
+    long taskT = daemon.getTaskDate()-startDate;
+    System.out.println("nextTask "+daemon.getTaskNum()+" -> "+  taskT);
+    assertTrue(taskT == isAt);
   }
 
 }

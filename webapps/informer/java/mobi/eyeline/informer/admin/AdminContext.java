@@ -519,17 +519,17 @@ public class AdminContext {
 
   public void addRestriction(Restriction r) throws AdminException {
     restrictionsManager.addRestriction(r);
-    restrictionDaemon.restrictionChanged(null,r);
+    restrictionDaemon.rebuildSchedule();
   }
 
   public void updateRestriction(Restriction r) throws AdminException {
     restrictionsManager.updateRestriction(r);
-    restrictionDaemon.restrictionChanged(r.getId(),r);
+    restrictionDaemon.rebuildSchedule();
   }
 
   public void deleteRestriction(int id) throws AdminException {
     restrictionsManager.deleteRestriction(id);
-    restrictionDaemon.restrictionChanged(id,null);
+    restrictionDaemon.rebuildSchedule();
   }
 
   public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {

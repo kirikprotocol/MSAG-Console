@@ -15,6 +15,7 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static junit.framework.Assert.assertTrue;
@@ -157,6 +158,37 @@ public class RestrictionManagerTest {
     for(Restriction rr : result) {
       assertTrue(rr.getId()!=1);
     }
+
+    restrictionsManager.deleteRestriction(2);
+    restrictionsManager.deleteRestriction(3);
+
+    r = new Restriction();
+    long startDate = System.currentTimeMillis();
+    r.setStartDate(new Date(startDate));
+    r.setEndDate(new Date(startDate+1000));
+    r.setName("bla");
+    r.setAllUsers(true);
+    restrictionsManager.addRestriction(r);
+
+    RestrictionsFilter filter = new RestrictionsFilter();
+    filter.setStartDate(new Date(startDate));
+    assertTrue(restrictionsManager.getRestrictions(filter).size()==1);
+    filter.setStartDate(new Date(startDate+1000));
+    assertTrue(restrictionsManager.getRestrictions(filter).size()==0);
+
+    filter.setStartDate(null);
+    filter.setEndDate(new Date(startDate));
+    assertTrue(restrictionsManager.getRestrictions(filter).size()==0);
+    filter.setEndDate(new Date(startDate+1000));
+    assertTrue(restrictionsManager.getRestrictions(filter).size()==1);
+
+    filter.setStartDate(new Date(startDate));
+    filter.setEndDate(new Date(startDate+1));
+    assertTrue(restrictionsManager.getRestrictions(filter).size()==1);
+
+    filter.setStartDate(new Date(startDate+1000));
+    filter.setEndDate(new Date(startDate+1001));
+    assertTrue(restrictionsManager.getRestrictions(filter).size()==0);
 
   }
 

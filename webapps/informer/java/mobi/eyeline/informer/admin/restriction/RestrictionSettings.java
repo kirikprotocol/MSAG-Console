@@ -57,7 +57,7 @@ class RestrictionSettings {
       if(filter!=null) {
         if(filter.getStartDate()!=null) {
           long startT = filter.getStartDate().getTime();
-          if(r.getEndDate().getTime()<startT) continue;
+          if(r.getEndDate().getTime()<=startT) continue;
         }
         if(filter.getEndDate()!=null) {
           long endT = filter.getEndDate().getTime();
