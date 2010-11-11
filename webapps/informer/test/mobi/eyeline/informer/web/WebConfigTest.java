@@ -11,6 +11,7 @@ import testutils.TestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,6 +49,14 @@ public class WebConfigTest {
   @Test
   public void testData() throws Exception{
     WebConfigManager config = new WebConfigManager(configFile,backupDir,fileSys);
+
+    //change settings to cause save of file
+    Properties props = config.getJavaMailProperties();
+    props.put("mail.host","kikimora");
+    config.setJavaMailProperties(props);
+
+    //check after rereading
+    config = new WebConfigManager(configFile,backupDir,fileSys);
     Assert.assertEquals(config.getInstallationType(), InstallationType.HA);
     assertEquals(config.getHSDaemonHost(), "localhost");
     assertEquals(config.getSingleDaemonHost(), "localhost");
@@ -58,6 +67,14 @@ public class WebConfigTest {
     assertEquals(config.getHSDaemonHosts().size(), 1);
     assertEquals(config.getHSDaemonHosts().iterator().next(),"sunfire");
     assertEquals(config.getJournalDir(), "journal");
+
+    props = config.getJavaMailProperties();
+    assertEquals(props.get("mail.host"),"kikimora");
+    assertEquals(props.get("mail.user"),"user");
+    assertEquals(props.get("mail.password"),"password");
+    assertEquals(props.get("mail.transport.protocol"),"smtp");
+    assertEquals(props.get("mail.from"),"admin@informer.com");
+
   }
 
 }

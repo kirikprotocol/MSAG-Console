@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin;
 import mobi.eyeline.informer.admin.util.config.ManagedConfigFile;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
+import mobi.eyeline.informer.util.config.XmlConfigParam;
 import mobi.eyeline.informer.util.config.XmlConfigSection;
 
 import java.io.File;
@@ -10,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  * Copyright Eyeline.mobi
@@ -19,8 +21,18 @@ import java.util.Collection;
  */
 class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
-  public void save(InputStream oldFile, OutputStream newFile, WebConfigSettings conf) throws Exception {
+  public void save(InputStream oldFile, OutputStream newFile, WebConfigSettings settings) throws Exception {
+    XmlConfig config = new XmlConfig();
+    config.load(oldFile);
 
+    XmlConfigSection  javamail = config.getOrCreateSection("javamail");
+
+    Properties props = settings.getJavaMailProperties();
+    for(String s : props.stringPropertyNames()) {
+      javamail.addParam(new XmlConfigParam(s,(String)props.get(s),XmlConfigParam.Type.STRING));
+    }
+    config.addSection(javamail);    
+    config.save(newFile);
   }
 
   public WebConfigSettings load(InputStream is) throws Exception {
@@ -58,6 +70,10 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
       XmlConfigSection system = webconfig.getSection("system");
       settings.setJournalDir(system.getString("journal dir"));
+
+      XmlConfigSection javamail = webconfig.getSection("javamail");
+      settings.setJavaMailProperties(javamail.toProperties("",null));
+
 
       return settings;
     }

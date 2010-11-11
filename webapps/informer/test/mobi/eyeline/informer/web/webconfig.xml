@@ -21,5 +21,13 @@
     <param name="journal dir" type="string">journal</param>
   </section>
 
+  <section name="javamail">
+    <param name="mail.host" type="string">localhost</param>
+    <param name="mail.user" type="string">user</param>
+    <param name="mail.password" type="string">password</param>
+    <param name="mail.transport.protocol" type="string">smtp</param>
+    <param name="mail.from" type="string">admin@informer.com</param>
+  </section>
+
 
 </config>

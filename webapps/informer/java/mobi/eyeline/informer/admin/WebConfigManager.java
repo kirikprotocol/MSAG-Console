@@ -1,10 +1,14 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.util.config.BaseManager;
 import mobi.eyeline.informer.admin.util.config.SettingsReader;
+import mobi.eyeline.informer.admin.util.config.SettingsWriter;
+
 import java.io.File;
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  * Copyright Eyeline.mobi
@@ -13,6 +17,8 @@ import java.util.Collection;
  * Time: 15:07:16
  */
 public class WebConfigManager extends BaseManager<WebConfigSettings> {
+
+
   public WebConfigManager(File config, File backup, FileSystem fileSys) throws InitException {
     super(null, config, backup, fileSys ,new WebConfig());
     if(fileSys==null) {
@@ -126,6 +132,32 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     return readSettings(new SettingsReader<WebConfigSettings,String>(){
       public String executeRead(WebConfigSettings settings) {
         return settings.getJournalDir();
+      }
+    });
+  }
+
+  public Properties getJavaMailProperties() {
+    return readSettings(new SettingsReader<WebConfigSettings,Properties>(){
+      public Properties executeRead(WebConfigSettings settings) {
+        return settings.getJavaMailProperties();
+      }
+    });
+
+  }
+
+  public void setJavaMailProperties(final Properties props) throws AdminException {
+    updateSettings(new SettingsWriter<WebConfigSettings>() {
+
+      public void changeSettings(WebConfigSettings settings) throws AdminException {
+        Properties copy = new Properties();
+        for(String s : props.stringPropertyNames()) {
+          copy.put(s,props.get(s));
+        }
+        settings.setJavaMailProperties(copy);
+      }
+
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        //dummy
       }
     });
   }

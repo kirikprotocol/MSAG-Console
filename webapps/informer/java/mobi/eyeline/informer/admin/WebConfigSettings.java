@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  * Copyright Eyeline.mobi
@@ -16,9 +17,9 @@ class WebConfigSettings {
   private File[] appMirrorDirs;
   private Collection<String> HSDaemonHosts;
   private String journalDir;
+  private Properties javaMailProperties;
 
-
-  public InstallationType getInstallationType() {
+  InstallationType getInstallationType() {
     return installationType;
   }
 
@@ -27,7 +28,7 @@ class WebConfigSettings {
   }
 
 
-  public String getSingleDaemonHost() {
+  String getSingleDaemonHost() {
     return daemonHost;
   }
 
@@ -36,7 +37,7 @@ class WebConfigSettings {
   }
 
 
-  public Integer getSingleDaemonPort() {
+  Integer getSingleDaemonPort() {
     return daemonPort;
   }
 
@@ -45,7 +46,7 @@ class WebConfigSettings {
   }
 
 
-  public File[] getAppMirrorDirs() {
+  File[] getAppMirrorDirs() {
     return appMirrorDirs;
   }
 
@@ -53,17 +54,17 @@ class WebConfigSettings {
     this.appMirrorDirs = appMirrorDirs;
   }
 
-  public String getHSDaemonHost() {
+  String getHSDaemonHost() {
     return daemonHost;
   }
 
 
-  public Integer getHSDaemonPort() {
+  Integer getHSDaemonPort() {
     return daemonPort;
   }
 
 
-  public Collection<String> getHSDaemonHosts() {
+  Collection<String> getHSDaemonHosts() {
     return HSDaemonHosts;
   }
 
@@ -72,7 +73,7 @@ class WebConfigSettings {
   }
 
 
-  public String getJournalDir() {
+  String getJournalDir() {
     return journalDir;
   }
 
@@ -81,4 +82,15 @@ class WebConfigSettings {
   }
 
 
+  Properties getJavaMailProperties() {
+    Properties props = new Properties();
+    for(String s : javaMailProperties.stringPropertyNames()) {
+      props.put(s,javaMailProperties.get(s));
+    }
+    return props;
+  }
+
+  void setJavaMailProperties(Properties javaMailProperties) {
+    this.javaMailProperties = javaMailProperties;
+  }
 }
