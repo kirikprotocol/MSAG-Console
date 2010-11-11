@@ -150,7 +150,7 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
 
       public void changeSettings(WebConfigSettings settings) throws AdminException {
         Properties copy = new Properties();
-        for(String s : props.stringPropertyNames()) {
+        for(Object s : props.keySet()) {
           copy.put(s,props.get(s));
         }
         settings.setJavaMailProperties(copy);

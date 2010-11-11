@@ -84,7 +84,7 @@ class WebConfigSettings {
 
   Properties getJavaMailProperties() {
     Properties props = new Properties();
-    for(String s : javaMailProperties.stringPropertyNames()) {
+    for(Object s : javaMailProperties.keySet()) {
       props.put(s,javaMailProperties.get(s));
     }
     return props;

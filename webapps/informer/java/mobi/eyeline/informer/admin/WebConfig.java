@@ -28,8 +28,8 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     XmlConfigSection  javamail = config.getOrCreateSection("javamail");
 
     Properties props = settings.getJavaMailProperties();
-    for(String s : props.stringPropertyNames()) {
-      javamail.addParam(new XmlConfigParam(s,(String)props.get(s),XmlConfigParam.Type.STRING));
+    for(Object s : props.keySet()) {
+      javamail.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
     }
     config.addSection(javamail);    
     config.save(newFile);
