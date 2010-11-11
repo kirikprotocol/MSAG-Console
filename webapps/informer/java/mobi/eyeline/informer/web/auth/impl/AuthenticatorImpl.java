@@ -27,6 +27,7 @@ public class AuthenticatorImpl implements Authenticator {
       }
       if(User.Status.ENABLED != u.getStatus()) {
         logger.warn("AuthenticatorImpl.authenticate('" + login + "', '" + password + "') FAILED - User not ENABLED.");
+        return null;
       }
       if(!password.equals(u.getPassword())) {
         logger.warn("AuthenticatorImpl.authenticate('" + login + "', '" + password + "') FAILED - Incorrect password.");
