@@ -371,13 +371,14 @@ DeliveryMgr::~DeliveryMgr()
     delete storeJournal_;
     delete inputJournal_;
 
+    smsc_log_info(log_,"--- destroying all deliveries ---");
     deliveryHash_.Empty();
     // detach all deliveries from user infos
     for ( DeliveryList::iterator i = deliveryList_.begin(); i != deliveryList_.end(); ++i ) {
         (*i)->detachFromUserInfo();
     }
     deliveryList_.clear();
-    smsc_log_info(log_,"dtor done, list_=%p",&deliveryList_);
+    smsc_log_info(log_,"--- delivery mgr dtor done ---");
 }
 
 

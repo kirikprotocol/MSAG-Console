@@ -37,7 +37,8 @@ UserInfo::UserInfo( const char* id,
                     unsigned    priority,
                     unsigned    speed,
                     unsigned    totaldlv ) :
-ref_(0), roles_(0),
+ref_(0),
+roles_(0),
 maxTotalDeliveries_(totaldlv),
 speed_(speed),
 priority_(priority)
@@ -177,11 +178,15 @@ void UserInfo::attachDelivery( const DeliveryPtr& dlv )
 
 void UserInfo::detachDelivery( dlvid_type dlvId )
 {
+    MutexGuard mg(lock_);
     DeliveryList::iterator i =
         std::lower_bound( deliveries_.begin(),
                           deliveries_.end(),
                           dlvId,
                           ::OrderByDlvId() );
+    if (i != deliveries_.end()) {
+        deliveries_.erase(i);
+    }
 }
 
 

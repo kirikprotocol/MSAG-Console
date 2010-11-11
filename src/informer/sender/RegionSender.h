@@ -4,7 +4,7 @@
 #include "informer/data/Region.h"
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/opstore/RegionalStorage.h"
-#include "ScoredList.h"
+#include "ScoredPtrList.h"
 #include "SpeedControl.h"
 #include "core/synchronization/Mutex.hpp"
 
@@ -16,7 +16,7 @@ class SmscSender;
 /// NOTE: the synchronization of this class state is done in SmscSender.
 class RegionSender
 {
-    friend class ScoredList< RegionSender >;
+    friend class ScoredPtrList< RegionSender >;
     friend class EmbedRefPtr< RegionSender >;
 
 public:
@@ -64,17 +64,18 @@ public:
     void removeDelivery( dlvid_type dlvId );
 
 private:
-    typedef RegionalStorage ScoredObjType;
+    typedef RegionalStoragePtr ScoredPtrType;
 
-    void scoredObjToString( std::string& s, const ScoredObjType& dlv )
+    void scoredObjToString( std::string& s, const ScoredPtrType& dlv )
     {
+        if (!dlv) return;
         char buf[20];
-        sprintf(buf,"D=%u",dlv.getDlvId());
+        sprintf(buf,"D=%u",dlv->getDlvId());
         s.append(buf);
     }
 
-    unsigned scoredObjIsReady( unsigned unused, ScoredObjType& dlv );
-    int processScoredObj( unsigned unused, ScoredObjType& dlv );
+    unsigned scoredObjIsReady( unsigned unused, ScoredPtrType& dlv );
+    int processScoredObj( unsigned unused, ScoredPtrType& dlv );
 
     inline void ref() {
         MutexGuard mg(reflock_);
@@ -100,7 +101,7 @@ private:
     smsc::core::synchronization::Mutex lock_;
     SmscSender*                        conn_;     // not owned
     RegionPtr                          region_;   // shared ownership
-    ScoredList< RegionSender >         taskList_; // not owned
+    ScoredPtrList< RegionSender >      taskList_; // dlvs are not owned
 
     SpeedControl<tuPerSec,uint64_t>    speedControl_;
     Message                            msg_;    // a cache
