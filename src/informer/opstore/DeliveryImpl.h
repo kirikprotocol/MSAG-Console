@@ -51,6 +51,10 @@ public:
 
     void getRegionList( std::vector<regionid_type>& regIds ) const;
 
+    inline void popIncrementalStats( DeliveryStats& ds ) {
+        activityLog_.popIncrementalStats(ds);
+    }
+
     /// slowly dump all regions to storage
     size_t rollOverStore();
 

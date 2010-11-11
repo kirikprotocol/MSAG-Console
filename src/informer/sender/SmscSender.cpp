@@ -1040,7 +1040,8 @@ void SmscSender::sendLoop()
         if (rQueue->Count() > 0) {
             processQueue(*rQueue.get());
         }
-        nextWakeTime = currentTime_ + scoredList_.processOnce(0, sleepTime);
+        nextWakeTime = currentTime_ + scoredList_.processOnce(0/* not used*/,
+                                                              sleepTime);
         processWaitingEvents();
     }
     {

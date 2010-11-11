@@ -92,7 +92,7 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
                                ulonglong(msg_.msgId));
                 return 0;
             } else {
-                smsc_log_debug(log_,"R=%u/D=%u: is not ready, will sleep %llu usec",
+                smsc_log_debug(log_,"R=%u/D=%u: is not ready, going to sleep %llu usec",
                                unsigned(getRegionId()),
                                unsigned(ptr->getDlvId()),
                                ulonglong(sleepTimeNotReady));

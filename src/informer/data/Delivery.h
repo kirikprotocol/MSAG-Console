@@ -47,10 +47,9 @@ public:
         source_->addNewMessages(begin,end);
     }
 
+    void dropMessages( const std::vector< msgid_type >& msgid );
+
     inline void getStats( DeliveryStats& ds ) { return activityLog_.getStats(ds); }
-    inline void popIncrementalStats( DeliveryStats& ds ) {
-        return activityLog_.popIncrementalStats(ds);
-    }
 
     void getGlossary( std::vector< std::string >& texts ) const;
     void setGlossary( const std::vector< std::string >& texts );

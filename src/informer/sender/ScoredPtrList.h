@@ -88,6 +88,13 @@ public:
                 if ( objSleep > 0 ) {
                     // object is not ready
                     if ( objSleep < wantToSleep ) wantToSleep = objSleep;
+                    if (log_ && log_->isDebugEnabled()) {
+                        std::string s;
+                        proc_.scoredObjToString(s,i->ptr);
+                        smsc_log_debug(log_,"obj #%u (%s) score=%u is not ready, objSleep=%u, wantSleep=%u",
+                                       unsigned(std::distance(objects_.begin(),i)),
+                                       s.c_str(), i->score, objSleep, wantToSleep );
+                    }
                     continue;
                 }
                 if (log_ && log_->isDebugEnabled()) {
