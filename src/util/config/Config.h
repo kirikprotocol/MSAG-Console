@@ -123,6 +123,10 @@ public:
 
     void setString(const char * const paramName, const char * const value)
     {
+        char* oldval;
+        if ( strParams.Pop(paramName,oldval) ) {
+            delete [] oldval;
+        }
         strParams[paramName] = cStringCopy(value);
     }
 
@@ -220,6 +224,7 @@ public:
                 delete value;
             sections.Empty();
             params.clear();
+            free(name);
         }
 
         void addParam(const char * const name,

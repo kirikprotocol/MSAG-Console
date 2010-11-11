@@ -300,10 +300,10 @@ void Config::ConfigTree::addParam(const char * const _name,
   {
     *p = 0;
     ConfigTree* node = createSection(sname);
-    node->params.push_back(ConfigParam(strdup(p+1), type, strdup(value)));
+    node->params.push_back(ConfigParam(p+1, type, value));
   }
   else {
-    params.push_back(ConfigParam(strdup(_name), type, strdup(value)));
+    params.push_back(ConfigParam(_name, type, value));
   }
   free(sname);
 }
