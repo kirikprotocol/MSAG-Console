@@ -28,7 +28,7 @@ public:
     
     // used to switch senders
     // NOTE: this method should be invoked from locked state.
-    void assignSender( SmscSender* conn, const RegionPtr& r );
+    void assignSender( SmscSender* conn );
 
     inline regionid_type getRegionId() const {
         return region_.get() ? region_->getRegionId() : 0;

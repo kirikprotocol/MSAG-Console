@@ -20,24 +20,22 @@ namespace informer {
 
 RegionSender::RegionSender( SmscSender& conn, const RegionPtr& r ) :
 log_(smsc::logger::Logger::getInstance("regsend")),
-conn_(0), region_(0),
+conn_(0),
+region_(r),
 taskList_(*this,2*maxScoreIncrement,
           smsc::logger::Logger::getInstance("dlvlist"))
 {
     smsc_log_debug(log_,"ctor S='%s' R=%u",conn.getSmscId().c_str(),unsigned(r->getRegionId()));
-    assignSender(&conn,r);
+    assignSender(&conn);
 }
 
 
-void RegionSender::assignSender( SmscSender* conn, const RegionPtr& r )
+void RegionSender::assignSender( SmscSender* conn )
 {
     if ( conn_ != conn ) {
         if (conn_) conn_->detachRegionSender(*this);
         conn_ = conn;
-        region_ = r;
         if (conn_) conn_->attachRegionSender(*this);
-    } else {
-        region_ = r;
     }
 }
 

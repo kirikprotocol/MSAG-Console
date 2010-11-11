@@ -13,6 +13,24 @@
 #include "sms/sms.h"
 #include "system/status.h"
 
+namespace {
+
+using namespace eyeline::informer;
+
+struct RSScan
+{
+    RSScan( std::vector< regionid_type >& r ) : regions(r) {}
+    bool operator () ( const RegionSender* rs ) {
+        if (rs) { regions.push_back(rs->getRegionId()); }
+        return false;
+    }
+    std::vector< regionid_type >& regions;
+};
+
+}
+
+
+
 namespace eyeline {
 namespace informer {
 
@@ -551,6 +569,16 @@ void SmscSender::attachRegionSender( RegionSender& rs )
 }
 
 
+void SmscSender::getRegionList( std::vector< regionid_type >& regions )
+{
+    MutexGuard mg(reconfLock_);
+    regions.reserve(scoredList_.size());
+    ::RSScan rss(regions);
+    // we use remove to scan the list
+    scoredList_.remove( rss );
+}
+
+
 void SmscSender::handleEvent( smsc::sme::SmppHeader* pdu )
 {
     smsc_log_debug(log_,"S='%s' pdu received, cmdid=%x", smscId_.c_str(), pdu->get_commandId());
@@ -958,8 +986,10 @@ void SmscSender::connectLoop()
         MutexGuard mg(queueMon_);
         if (isStopping_) break;
         const usectime_type now = currentTimeMicro();
-        const int waitTime = int((now - startingConn)/1000 - 
-                                 usectime_type(interConnect)*1000);
+        const int waitTime = int(usectime_type(interConnect)*1000 -
+                                 (now - startingConn)/1000);
+        // smsc_log_debug(log_,"startcon=%llu now=%llu interconn=%u wait=%d",
+        // startingConn,now,interConnect,waitTime);
         if ( waitTime > 0 ) {
             queueMon_.wait(waitTime);
         }

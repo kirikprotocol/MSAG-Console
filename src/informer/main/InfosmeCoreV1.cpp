@@ -109,7 +109,7 @@ InfosmeCoreV1::~InfosmeCoreV1()
     RegionSenderPtr* regsend;
     for ( IntHash< RegionSenderPtr >::Iterator i(regSends_); i.Next(regId,regsend); ) {
         smsc_log_debug(log_,"detaching regsend RS=%u", regionid_type(regId));
-        (*regsend)->assignSender(0,RegionPtr());
+        (*regsend)->assignSender(0);
     }
     smsc_log_debug(log_,"removing all regsends");
     regSends_.Empty();
@@ -420,7 +420,7 @@ void InfosmeCoreV1::reloadRegions()
         if (!rs) {
             rs = &regSends_.Insert(regionId,RegionSenderPtr(new RegionSender(**smsc,*ptr)));
         } else {
-            (*rs)->assignSender(*smsc,*ptr);
+            (*rs)->assignSender(*smsc);
         }
 
     } while (true);
@@ -516,12 +516,8 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
     if (!regptr) {
         throw InfosmeException(EXC_LOGICERROR,"default RS is not found");
     }
-    RegionPtr* rptr = regions_.GetPtr(0);
-    if (!rptr) {
-        throw InfosmeException(EXC_LOGICERROR,"default R is not found");
-    }
     defaultSmscId_ = smscId;
-    (*regptr)->assignSender(*ptr,*rptr);
+    (*regptr)->assignSender(*ptr);
 }
 
 
@@ -881,16 +877,12 @@ void InfosmeCoreV1::updateSmsc( const char*       smscId,
                 throw InfosmeException(EXC_NOTFOUND,"smsc '%s' is not found",smscId);
             }
             ptr->stop();
-            int regId;
-            RegionSenderPtr* regSend;
-            RegionPtr rptr;
-            for ( smsc::core::buffers::IntHash< RegionSenderPtr >::Iterator i(regSends_);
-                  i.Next(regId,regSend); ) {
-                if ( (*regSend)->getConn() == ptr ) {
-                    smsc_log_debug(log_,"destroying RS=%u from S='%s'",
-                                   (*regSend)->getRegionId(), smscId);
-                    regSends_.Delete(regId);
-                }
+            std::vector< regionid_type > regIds;
+            ptr->getRegionList(regIds);
+            for ( std::vector< regionid_type >::const_iterator i = regIds.begin();
+                  i != regIds.end(); ++i ) {
+                smsc_log_debug(log_,"removing RS=%u for S='%s' from core", *i, smscId);
+                regSends_.Delete(*i);
             }
         }
         delete ptr;

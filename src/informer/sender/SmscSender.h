@@ -77,6 +77,7 @@ public:
     /// this two methods are invoked from locked state.
     void detachRegionSender( RegionSender& rs );
     void attachRegionSender( RegionSender& rs );
+    void getRegionList( std::vector< regionid_type >& regions );
 
 private:
     virtual void handleEvent( smsc::sme::SmppHeader* pdu );

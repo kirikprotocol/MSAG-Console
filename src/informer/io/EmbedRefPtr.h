@@ -1,6 +1,7 @@
 #ifndef _INFORMER_EMBEDREFPTR_H
 #define _INFORMER_EMBEDREFPTR_H
 
+#include <typeinfo>
 #include "logger/Logger.h"
 
 namespace eyeline {
@@ -20,15 +21,18 @@ public:
     explicit EmbedRefPtr( T* x = 0 ) : x_(x) {
         if (x_) x_->ref();
         erpgetlog();
-        smsc_log_debug(erplog_,"ctor@%p x=%p",this,x_);
+        if (x_) {
+            smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_);
+        }
     }
     EmbedRefPtr( const EmbedRefPtr& p ) : x_(p.x_) {
         if (x_) x_->ref();
         erpgetlog();
-        smsc_log_debug(erplog_,"ctor@%p x=%p",this,x_);
+        if (x_) {
+            smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_);
+        }
     }
     EmbedRefPtr& operator = ( const EmbedRefPtr& p ) {
-        smsc_log_debug(erplog_,"copy@%p x=%p -> x=%p",this,x_,p.x_);
         reset(p.x_);
         return *this;
     }
@@ -38,17 +42,20 @@ public:
     EmbedRefPtr( const EmbedRefPtr<U>& p ) : x_(const_cast<U*>(p.get())) {
         if (x_) x_->ref();
         erpgetlog();
-        smsc_log_debug(erplog_,"ctor@%p x=%p",this,x_);
+        if (x_) {
+            smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_);
+        }
     }
     template <class U>
     EmbedRefPtr< T >& operator = ( const EmbedRefPtr< U >& p ) {
-        smsc_log_debug(erplog_,"copy@%p x=%p -> x=%p",this,x_,p.get());
         reset( static_cast<T*>(const_cast<U*>(p.get())) );
         return *this;
     }
     ~EmbedRefPtr() {
-        smsc_log_debug(erplog_,"dtor@%p x=%p",this,x_);
-        if (x_) x_->unref();
+        if (x_) {
+            smsc_log_debug(erplog_,"dtor(%s)@%p x=%p",thetypename(),this,x_);
+            x_->unref();
+        }
     }
 
     inline const T* get() const { return x_; }
@@ -61,10 +68,15 @@ public:
 
     inline void reset( T* x ) {
         if (x != x_) {
+            smsc_log_debug(erplog_,"reset(%s)@%p x=%p -> x=%p",thetypename(),this,x_,x);
             if (x_) x_->unref();
             x_ = x;
             if (x_) x_->ref();
         }
+    }
+protected:
+    inline const char* thetypename() const {
+        return typeid(T).name();
     }
 
 protected:
