@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UsersManager;
+import org.apache.log4j.Logger;
 
 import java.util.Date;
 import java.util.List;
@@ -18,9 +19,8 @@ import java.util.concurrent.*;
  */
 public class RestrictionDaemon implements Daemon {
 
-  public final static DeliveryStatus[] STATUSES_FOR_BOTH_EVENTS = {DeliveryStatus.Planned,DeliveryStatus.Active,DeliveryStatus.Paused};
-  public final static DeliveryStatus[] STATUSES_FOR_START_EVENT = {DeliveryStatus.Planned,DeliveryStatus.Active};
-  public final static DeliveryStatus[] STATUSES_FOR_STOP_EVENT  = {DeliveryStatus.Paused};
+  Logger log = Logger.getLogger(this.getClass());
+
 
   public static final String NAME = "RestrictionDaemon";
   DeliveryManager deliveryManager;
@@ -30,6 +30,7 @@ public class RestrictionDaemon implements Daemon {
   ScheduledFuture task;
   long startDate;
   int taskNum;
+
 
 
   public RestrictionDaemon(DeliveryManager deliveryManager, RestrictionsManager restrictionManager, UsersManager userManager ) {
@@ -44,6 +45,7 @@ public class RestrictionDaemon implements Daemon {
   }
 
   public synchronized void start() throws AdminException {
+
     if(!isStarted()) {
       scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory(){
         public Thread newThread(Runnable runnable) {
@@ -63,10 +65,14 @@ public class RestrictionDaemon implements Daemon {
 
 
   private synchronized void nextSchedule() {
+    //System.out.println("next schedule<-");
     if(isStarted()) {
-      long minTime = startDate==0 ? 0 : Long.MAX_VALUE;
       RestrictionsFilter rFilter = new RestrictionsFilter();
       List<Restriction> restrictions = restrictionManager.getRestrictions(rFilter);
+      RestrictionTask rTask;
+      long delay;
+
+      long minTime = startDate==0 ? 0 : Long.MAX_VALUE;
       for(Restriction r : restrictions) {
         long eventTime = r.getStartDate().getTime();
         if( eventTime > startDate ) {
@@ -78,49 +84,65 @@ public class RestrictionDaemon implements Daemon {
         }
       }
       startDate = System.currentTimeMillis();
-      long delay = minTime - startDate;
+      delay = minTime - startDate;
       if(delay < 0) delay = 0L ;
       startDate = startDate+delay;
-      task = scheduler.schedule(new RestrictionTask(taskNum,startDate),delay,TimeUnit.MILLISECONDS);
+      rTask= new RestrictionTask(taskNum,startDate);
       taskNum++;
-      System.out.println("task "+taskNum+" delay="+delay);
+
+      task = scheduler.schedule(rTask,delay,TimeUnit.MILLISECONDS);
+      //System.out.println("task "+taskNum+" delay="+delay);
     }
+
+    //System.out.println("next schedule->");
   }
 
   private void cancelCurrentTask() {
     if(task!=null) {
-      if(!task.isDone()) task.cancel(true);
+      if(!task.isDone()) task.cancel(false);
       task=null;
     }
   }
 
 
   private void applyRestrictions(long forDate) throws AdminException {
-    System.out.println("applyRestictions");
+    //System.out.println("apply restrictions<-");
     List<User> users  = userManager.getUsers();
     for(final User u : users) {
-      final List<Restriction> restrictions = getActiveRestrictions(forDate,  u);
+      final List<Restriction> restrictions=
+          (u.getStatus()==User.Status.ENABLED) ?
+              getActiveRestrictions(forDate,  u)
+              :
+              null;
+
       DeliveryFilter dFilter = new DeliveryFilter();
       dFilter.setUserIdFilter(new String[]{u.getLogin()});
       dFilter.setStatusFilter(new DeliveryStatus[]{DeliveryStatus.Planned,DeliveryStatus.Active,DeliveryStatus.Paused});
       dFilter.setResultFields(new DeliveryFields[]{DeliveryFields.Status});
+      //System.out.println("apply restrictions get deliveries");
       deliveryManager.getDeliveries(u.getLogin(),u.getPassword(),dFilter,1000,
           new Visitor<DeliveryInfo>() {
             public boolean visit(DeliveryInfo di) throws AdminException {
-              boolean shouldBeRestricted=u.getStatus()!=User.Status.ENABLED;
-              if(!shouldBeRestricted) {
+              //System.out.println("visit");
+              boolean shouldBeRestricted;
+              if(restrictions!=null) {
+                shouldBeRestricted=false;
                 for(Restriction r : restrictions) {
-                  if(r.isAllUsers() || r.getUserIds().contains(u.getLogin())  ) {
+                  if(r.isAllUsers() || r.getUserIds().contains(u.getLogin())) {
                     shouldBeRestricted = true;
                     break;
                   }
                 }
+              }
+              else {
+                shouldBeRestricted=true;
               }
               adjustDeliveryState(u,di,shouldBeRestricted);
               return true;
             }
           });
     }
+    //System.out.println("applyRestictions->");
   }
 
   private List<Restriction> getActiveRestrictions(long startDate, User u) {
@@ -132,41 +154,43 @@ public class RestrictionDaemon implements Daemon {
   }
 
   private void adjustDeliveryState(User u, DeliveryInfo di, boolean shouldBeRestricted) throws AdminException {
-    System.out.println("adjust delivery "+di.getDeliveryId()+" "+di.getUserId()+" to restricted="+shouldBeRestricted);
+    //System.out.println("adjust delivery "+di.getDeliveryId()+" "+di.getUserId()+" to restricted="+shouldBeRestricted);
     if(shouldBeRestricted) {
       if(di.getStatus()!=DeliveryStatus.Paused) {
-        System.out.println("changed");
+        //System.out.println("changed");
         deliveryManager.setDeliveryRestriction(u.getLogin(),u.getPassword(),di.getDeliveryId(),true);
         deliveryManager.pauseDelivery(u.getLogin(),u.getPassword(),di.getDeliveryId());
       }
     }
     else {
       if(di.getStatus()==DeliveryStatus.Paused && di.isRestriction()) {
-        System.out.println("changed");
+        //System.out.println("changed");
         deliveryManager.setDeliveryRestriction(u.getLogin(),u.getPassword(),di.getDeliveryId(),false);
         deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),di.getDeliveryId());
       }
     }
   }
 
-  public synchronized void stop() throws AdminException {
-    cancelCurrentTask();
-    task=null;
-    scheduler.shutdown();
-    try {
-      // Wait a while for existing tasks to terminate
-      if (!scheduler.awaitTermination(60, TimeUnit.SECONDS)) {
+  public void stop() throws AdminException {
+    ExecutorService executor;
+    if(isStarted()) {
+      synchronized (this) {
+        executor = scheduler;
         scheduler.shutdownNow(); // Cancel currently executing tasks
-        // Wait a while for tasks to respond to being cancelled
-        if (!scheduler.awaitTermination(60, TimeUnit.SECONDS))
-          System.err.println("Pool did not terminate");
+        scheduler = null;
+        task=null;
+      }
+
+      //wait termination
+      try {
+        if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+          log.error("Unable to shutdown  "+NAME+" in 60 sec");
+        }
+      }
+      catch (InterruptedException e) {
+        log.error("Unable to shutdown "+NAME,e);
       }
     }
-    catch (InterruptedException ie) {
-      scheduler.shutdownNow();
-      Thread.currentThread().interrupt();
-    }
-    scheduler = null;
   }
 
 
