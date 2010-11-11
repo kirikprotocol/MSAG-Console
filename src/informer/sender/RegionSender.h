@@ -51,14 +51,7 @@ public:
         speedControl_.suspend(unsigned(currentTime % flipTimePeriod));
     }
 
-    unsigned processRegion(usectime_type currentTime) 
-    {
-        smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
-        static const unsigned sleepTime = unsigned(1*tuPerSec);
-        currentTime_ = currentTime;
-        MutexGuard mg(lock_);
-        return taskList_.processOnce(0,sleepTime);
-    }
+    unsigned processRegion(usectime_type currentTime);
 
     void addDelivery( RegionalStorage& ptr );
     void removeDelivery( dlvid_type dlvId );

@@ -260,6 +260,5 @@ bool isGoodAsciiName( const char* str, char* badchar )
     return true;
 }
 
-
 }
 }

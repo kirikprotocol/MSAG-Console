@@ -294,6 +294,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
 {
     const regionid_type regId = req.getRegionId();
     smsc_log_debug(log_,"transfer R=%u/D=%u started, count=%u", regId, getDlvId(), count);
+    bool ok = false;
     try {
         InputRegionRecord ro;
         ro.regionId = regId;
@@ -357,13 +358,21 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                                 msglist.begin(),
                                 msglist.end() );
             setRecord(ro,0);
+            ok = true;
         }
 
     } catch (std::exception& e) {
         smsc_log_error(log_,"transfer failed R=%u/D=%u: %s",
                        regId, getDlvId(), e.what());
     }
-    smsc_log_debug(log_,"transfer task R=%u/D=%u finished", regId, getDlvId());
+    smsc_log_debug(log_,"transfer task R=%u/D=%u finished%s",
+                   regId, getDlvId(), ok ?
+                   ", notifying core" : ", no msgs passed" );
+    if ( ok ) {
+        std::vector< regionid_type > regs;
+        regs.push_back(regId);
+        core_.deliveryRegions( getDlvId(), regs, true );
+    }
 }
 
 

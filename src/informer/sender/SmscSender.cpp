@@ -328,9 +328,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         // check the number of seqnums
         if ( unsigned(seqnumHash_.Count()) > cs.getUnrespondedMessagesMax() ) {
             what = "too many unresp msgs";
-            // FIXME: which error code to select?
-            // res = smsc::system::Status::MSGQFUL;
-            res = smsc::system::Status::THROTTLED;
+            res = smsc::system::Status::MSGQFUL;
             break;
         }
 
@@ -400,42 +398,8 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             }
 
             const char* out = msg.text->getText();
-            size_t outLen = strlen(msg.text->getText());
-            std::auto_ptr<char> msgBuf;
-            // FIXME: move this algorithm into regionalstorage
-            if (smsc::util::hasHighBit(out,outLen)) {
-                size_t msgLen = outLen*2;
-                msgBuf.reset(new char[msgLen]);
-                // FIXME: replace with conversion from UTF8.
-                // FIXME: move conversion into glossary loading.
-                // FIXME: it will require to glossary char* -> std::string modification
-                ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf.get(), msgLen,
-                                       CONV_ENCODING_CP1251);
-                sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::UCS2);
-                out = msgBuf.get();
-                outLen = msgLen;
-            } else {
-                sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
-            }
-
             try {
-                if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm()) {
-                    sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
-                    sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-                } else if ( info.getDeliveryMode() != DLVMODE_SMS ) {
-                    // ussdpush or ussdpushvlr
-                    if (outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
-                        smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
-                        outLen = MAX_ALLOWED_MESSAGE_LENGTH;
-                    }
-                    sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
-                    sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-                } else {
-                    if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
-                        outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
-                    }
-                    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, out, (unsigned)outLen);
-                }
+                nchunks = ptr.evaluateNchunks(out,strlen(out),&sms);
             } catch ( std::exception& e ) {
                 what = "wrong message body";
                 res = smsc::system::Status::SYSERR;
@@ -464,14 +428,6 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
                     break;
                 }
             } // ussdpush
-
-            const unsigned chunkLen = cs.getMaxMessageChunkSize();
-            if (chunkLen>0 && outLen > chunkLen) {
-                // SMS will be splitted into nchunks chunks (estimation)
-                nchunks = unsigned(outLen-1) / chunkLen + 1;
-            } else {
-                nchunks = 1;
-            }
 
             drm->nchunks = nchunks;
             smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
@@ -1016,6 +972,7 @@ void SmscSender::sendLoop()
                 std::swap(rQueue,wQueue_);
             } else if (awaken_) {
                 awaken_ = false;
+                nextWakeTime = currentTime_;
 
             } else {
 
@@ -1034,15 +991,16 @@ void SmscSender::sendLoop()
             }
         }
 
-
         MutexGuard mg(reconfLock_);  // prevent reconfiguration
         if ( !session_.get() || session_->isClosed() ) break;
         if (rQueue->Count() > 0) {
             processQueue(*rQueue.get());
         }
+        if (nextWakeTime > currentTime_) continue;
+        // fixme?
+        processExpiredTimers();
         nextWakeTime = currentTime_ + scoredList_.processOnce(0/* not used*/,
                                                               sleepTime);
-        processWaitingEvents();
     }
     {
         MutexGuard mg(reconfLock_);
@@ -1070,7 +1028,7 @@ int SmscSender::processScoredObj( unsigned, ScoredObjType& regionSender )
     unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
     try {
         const unsigned wantToSleep = regionSender.processRegion(currentTime_);
-        smsc_log_debug(log_,"R=%u processed, sleep=%u", regionSender.getRegionId(), wantToSleep);
+        smsc_log_debug(log_,"R=%u processRegion finished, sleep=%u", regionSender.getRegionId(), wantToSleep);
         if (wantToSleep>0) {
             // all deliveries want to sleep
             regionSender.suspend(currentTime_ + wantToSleep);
@@ -1090,16 +1048,18 @@ void SmscSender::scoredObjToString( std::string& s, ScoredObjType& regionSender 
 }
 
 
-void SmscSender::processWaitingEvents()
+void SmscSender::processExpiredTimers()
 {
-    smsc_log_error(log_,"FIXME: S='%s'@%p process waiting events at %llu",
+    smsc_log_error(log_,"FIXME: S='%s'@%p process expired timers at %llu",
                    smscId_.c_str(), this, currentTime_);
+    // process expired resp/recp here?
 }
 
 
 void SmscSender::journalReceiptData( const ReceiptData& rd )
 {
     assert(rd.responded);
+    // FIXME: journal receipt data
 }
 
 }

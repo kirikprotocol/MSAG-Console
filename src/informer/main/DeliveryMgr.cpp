@@ -290,7 +290,7 @@ public:
             fg.create((mgr_.cs_.getStatPath()+buf).c_str(),0666,true);
             fg.seek(0,SEEK_END);
             if (fg.getPos() == 0) {
-                const char* header = "# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
+                const char* header = "#1 MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
                 fg.write(header,strlen(header));
             }
             bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
@@ -695,7 +695,7 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
             fg.create( (cs_.getStorePath() + fnbuf).c_str(), 0666, true );
             fg.seek(0,SEEK_END);
             if (fg.getPos() == 0) {
-                const char* header = "# MINSEC,STATE,DLVID,USER,PLAN\n";
+                const char* header = "#1 MINSEC,STATE,DLVID,USER,PLAN\n";
                 fg.write( header, strlen(header));
             }
             logStateTime_ = fileTime;

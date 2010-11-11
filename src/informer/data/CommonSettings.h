@@ -7,28 +7,15 @@
 namespace eyeline {
 namespace informer {
 
+class UTF8;
+
 class CommonSettings
 {
 public:
-    CommonSettings() :
-    path_("./"),
-    statpath_("./"),
-    unrespondedMessagesMax_(100),
-    responseWaitTime_(65),
-    receiptWaitTime_(600),
-    svcType_("ESME"),
-    protocolId_(1), // FIXME
-    incStatBank_(0)
-    {}
+    CommonSettings();
+    ~CommonSettings();
 
-    void init( const std::string& path, const std::string& statpath ) {
-        path_ = path;
-        if (path_.empty()) path_ = "./";
-        else if (path_[path_.size()-1] != '/') path_.push_back('/');
-        statpath_ = statpath;
-        if (statpath_.empty()) statpath_ = "./";
-        else if (statpath_[statpath_.size()-1] != '/') statpath_.push_back('/');
-    }
+    void init( const std::string& path, const std::string& statpath );
 
     inline const std::string& getStorePath() const {
         return path_;
@@ -89,15 +76,18 @@ public:
         incStatBank_ = 1 - incStatBank_;
     }
 
+    UTF8& getUTF8() const { return *utf8_; }
+
 private:
     std::string path_;
     std::string statpath_;
-    unsigned unrespondedMessagesMax_;
-    unsigned responseWaitTime_;
-    unsigned receiptWaitTime_;
+    unsigned    unrespondedMessagesMax_;
+    unsigned    responseWaitTime_;
+    unsigned    receiptWaitTime_;
     std::string svcType_;
-    unsigned protocolId_;
-    unsigned incStatBank_;
+    unsigned    protocolId_;
+    unsigned    incStatBank_;
+    UTF8*       utf8_;      // owned converter
 };
 
 } // informer

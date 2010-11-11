@@ -11,6 +11,12 @@
 #include "informer/data/InputMessageSource.h"
 #include "logger/Logger.h"
 
+namespace smsc {
+namespace sms {
+class SMS;
+}
+}
+
 namespace eyeline {
 namespace informer {
 
@@ -100,6 +106,11 @@ public:
     /// into newQueue and resendQueue.
     bool postInit();
 
+    /// evaluate a number of chunks, fills sms fields
+    unsigned evaluateNchunks( const char*     out,
+                              size_t          outLen,
+                              smsc::sms::SMS* sms = 0 ) const;
+
 protected:
     /// invoked when upload task has finished.
     virtual void transferFinished( InputTransferTask* );
@@ -122,9 +133,6 @@ protected:
                      uint8_t           state,
                      int               smppState,
                      unsigned          nchunks );
-
-    /// evaluate a number of chunks
-    unsigned evaluateNchunks( const char* out, size_t outLen ) const;
 
 private:
     // message cleanup

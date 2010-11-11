@@ -1,6 +1,7 @@
 #include <cassert>
 #include "RegionalStorage.h"
 #include "informer/io/UnlockMutexGuard.h"
+#include "informer/io/UTF8.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/MessageGlossary.h"
@@ -8,6 +9,7 @@
 #include "DeliveryImpl.h"
 #include "StoreJournal.h"
 #include "util/smstext.h"
+#include "sms/sms.h"
 
 namespace eyeline {
 namespace informer {
@@ -385,31 +387,60 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
 }
 
 
-unsigned RegionalStorage::evaluateNchunks( const char* out, size_t outLen ) const
+unsigned RegionalStorage::evaluateNchunks( const char*     outText,
+                                           size_t          outLen,
+                                           smsc::sms::SMS* sms ) const
 {
-    if (smsc::util::hasHighBit(out,outLen)) {
-        outLen *= 2;
-    }
     const DeliveryInfo& info = dlv_.getDlvInfo();
-    if ( outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm() ) {
-        // ok
-    } else if ( info.getDeliveryMode() != DLVMODE_SMS ) {
-        if ( outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
-            outLen = MAX_ALLOWED_MESSAGE_LENGTH;
+    try {
+        const char* out = outText;
+        UTF8::BufType ucstext;
+        const bool hasHighBit = smsc::util::hasHighBit(out,outLen);
+        if (hasHighBit) {
+            info.getCS().getUTF8().convertToUcs2(out,outLen,ucstext);
+            outLen = ucstext.GetPos();
+            out = ucstext.get();
+            if (sms) sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+        } else if (sms) {
+            sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
         }
-    } else {
-        if ( outLen > MAX_ALLOWED_PAYLOAD_LENGTH ) {
-            outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+
+        if ( outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm() ) {
+            if (sms) {
+                sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, unsigned(outLen));
+                sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, unsigned(outLen));
+            }
+        } else if ( info.getDeliveryMode() != DLVMODE_SMS ) {
+            // ussdpush*
+            if ( outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
+                smsc_log_warn(log_,"ussdpush: max allowed msg len reached: %u",unsigned(outLen));
+                outLen = MAX_ALLOWED_MESSAGE_LENGTH;
+            }
+            if (sms) {
+                sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, unsigned(outLen));
+                sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, unsigned(outLen));
+            }
+        } else {
+            if ( outLen > MAX_ALLOWED_PAYLOAD_LENGTH ) {
+                outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+            }
+            if (sms) {
+                sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, out, unsigned(outLen));
+            }
         }
+        
+        const unsigned chunkLen = info.getCS().getMaxMessageChunkSize();
+        unsigned nchunks;
+        if ( chunkLen > 0 && outLen > chunkLen ) {
+            nchunks = unsigned(outLen-1) / chunkLen + 1;
+        } else {
+            nchunks = 1;
+        }
+        return nchunks;
+    } catch ( std::exception& e ) {
+        throw InfosmeException(EXC_IOERROR,"bad msg body: '%s'",outText);
     }
-    const unsigned chunkLen = info.getCS().getMaxMessageChunkSize();
-    unsigned nchunks;
-    if ( chunkLen > 0 && outLen > chunkLen ) {
-        nchunks = unsigned(outLen-1) / chunkLen + 1;
-    } else {
-        nchunks = 1;
-    }
-    return nchunks;
+    return 0;
 }
 
 
@@ -601,7 +632,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
         smsc_log_debug(log_,"new input msg R=%u/D=%u/M=%llu",
                        unsigned(regionId_),
                        unsigned(info.getDlvId()),
-                       unsigned(m.msgId));
+                       ulonglong(m.msgId));
         regionid_type serial = 0;
         dlv_.activityLog_.addRecord(currentTime,regionId_,m,0);
         dlv_.storeJournal_.journalMessage(info.getDlvId(),regionId_,m,serial);

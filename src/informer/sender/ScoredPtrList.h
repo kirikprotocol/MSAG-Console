@@ -158,6 +158,12 @@ public:
     void add( const Ptr& object ) {
         // add an object to the end of the list
         if ( ! object ) return;
+        // a check if we don't have this object already
+        isEqual comp(object);
+        for ( typename PtrVector::const_iterator i = objects_.begin();
+              i != objects_.end(); ++i ) {
+            if ( comp(i->ptr) ) return;
+        }
         objects_.push_back( ScoredPtr(object, objects_.empty() ? 0 : objects_.back().score ) );
     }
 

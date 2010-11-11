@@ -101,7 +101,7 @@ private:
     unsigned scoredObjIsReady( unsigned unused, ScoredObjType& regionSender );
     int processScoredObj( unsigned unused, ScoredObjType& regionSender );
     void scoredObjToString( std::string& s, ScoredObjType& regionSender );
-    void processWaitingEvents();
+    void processExpiredTimers();
     void journalReceiptData( const ReceiptData& rd );
 
 private:

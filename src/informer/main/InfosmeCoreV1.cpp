@@ -685,7 +685,7 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
         fg.create((cs_.getStatPath()+buf).c_str(),0666,true);
         fg.seek(0,SEEK_END);
         if (fg.getPos()==0) {
-            const char* header = "# MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL\n";
+            const char* header = "#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL\n";
             fg.write(header,strlen(header));
         }
         bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd%10000));

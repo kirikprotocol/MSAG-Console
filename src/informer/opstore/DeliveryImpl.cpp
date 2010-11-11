@@ -278,7 +278,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),0666,true);
         fg.seek(0,SEEK_END);
         if (fg.getPos()==0) {
-            const char* header = "# TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
+            const char* header = "#1 TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
             fg.write(header,strlen(header));
         }
         DeliveryStats ds;

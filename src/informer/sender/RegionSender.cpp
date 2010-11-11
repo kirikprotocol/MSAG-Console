@@ -49,6 +49,16 @@ std::string RegionSender::toString() const
 }
 
 
+unsigned RegionSender::processRegion( usectime_type currentTime )
+{
+    smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
+    static const unsigned sleepTime = unsigned(1*tuPerSec);
+    currentTime_ = currentTime;
+    MutexGuard mg(lock_);
+    return taskList_.processOnce(0/*not used*/,sleepTime);
+}
+
+
 void RegionSender::addDelivery( RegionalStorage& ptr )
 {
     smsc_log_debug(log_,"add delivery D=%u",ptr.getDlvId());
