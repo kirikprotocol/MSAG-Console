@@ -26,8 +26,12 @@ public:
         memset(this,0,sizeof(*this));
     }
 
+    int32_t getNewMessagesCount()const{
+      return totalMessages-procMessages-sentMessages-retryMessages-dlvdMessages-failedMessages-expiredMessages;
+    }
+
     bool isEmpty() const {
-        return 
+        return
             totalMessages == 0 &&
             procMessages == 0 &&
             sentMessages == 0 &&
@@ -45,7 +49,7 @@ public:
     }
 
     bool operator != ( const DeliveryStats& ds ) const {
-        return 
+        return
             ( totalMessages   != ds.totalMessages   ) ||
             ( procMessages    != ds.procMessages    ) ||
             ( sentMessages    != ds.sentMessages    ) ||
