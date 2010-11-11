@@ -52,7 +52,7 @@ public class AdminContext {
 
   protected UsersManager usersManager;
 
-  protected WebConfig webConfig;
+  protected WebConfigManager webConfig;
 
   protected InformerManager informerManager;
 
@@ -83,7 +83,7 @@ public class AdminContext {
   protected AdminContext() {
   }
 
-  public AdminContext(File appBaseDir, WebConfig webConfig) throws InitException{
+  public AdminContext(File appBaseDir, WebConfigManager webConfig) throws InitException{
     this.webConfig = webConfig;
     this.appBaseDir = appBaseDir;
     try{

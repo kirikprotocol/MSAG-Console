@@ -143,7 +143,7 @@ public class TestAdminContext extends AdminContext {
   }
 
 
-  public TestAdminContext(File appBaseDir, WebConfig webConfig) throws InitException {
+  public TestAdminContext(File appBaseDir, WebConfigManager webConfig) throws InitException {
     fileSystem = new TestFileSystem();
     File servicesDir = new File(appBaseDir, "services");
     File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");

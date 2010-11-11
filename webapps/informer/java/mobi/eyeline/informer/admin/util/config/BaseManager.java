@@ -56,7 +56,7 @@ public class BaseManager<C> {
       lock.writeLock().lock();
       e.changeSettings(settings);
       File backup = save();
-      if(infosme.isOnline()) {
+      if(infosme!=null && infosme.isOnline()) {
         try {
           e.infosmeCommand(infosme);
         }
@@ -78,5 +78,5 @@ public class BaseManager<C> {
       lock.readLock().unlock();
     }
   }
-    
+
 }

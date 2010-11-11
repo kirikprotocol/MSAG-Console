@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web;
 
-import mobi.eyeline.informer.admin.WebConfig;
+import mobi.eyeline.informer.admin.WebConfigManager;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.xml.WebXml;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -57,9 +58,9 @@ public class InitListener implements ServletContextListener {
       }
 
 
-      WebConfig webConfig = new WebConfig(webconfig);
 
-      WebContext.init(webXml, webConfig, appBaseDir);
+
+      WebContext.init(webXml, webconfig, appBaseDir);
 
       context = WebContext.getInstance();
 
