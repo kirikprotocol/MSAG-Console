@@ -140,7 +140,8 @@ enum byte DeliveryFields
   UserData 7
 end
 
-message GetDeliveriesList 50
+message DeliveriesFilter
+  property innerMessage=true
   string userIdFilter 1 array opt
   string nameFilter 2 array opt
   DeliveryStatus statusFilter 3 array opt
@@ -148,7 +149,11 @@ message GetDeliveriesList 50
   string startDateTo 5 opt
   string endDateFrom 6 opt
   string endDateTo 7 opt
-  DeliveryFields resultFields 8 array
+end
+
+message GetDeliveriesList 50
+  DeliveriesFilter filter 1
+  DeliveryFields resultFields 2 array
 end
 
 message GetDeliveriesListResp 51
@@ -179,13 +184,7 @@ message GetDeliveriesListNextResp 53
 end
 
 message CountDeliveries 54
-  string userIdFilter 1 array opt
-  string nameFilter 2 array opt
-  DeliveryStatus statusFilter 3 array opt
-  string startDateFrom 4 opt
-  string startDateTo 5 opt
-  string endDateFrom 6 opt
-  string endDateTo 7 opt
+  DeliveriesFilter filter 1
 end
 
 message CountDeliveriesResp 55

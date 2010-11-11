@@ -1,9 +1,150 @@
 #include "DcpServer.hpp"
 #include "informer/data/UserInfo.h"
+#include <time.h>
 
 namespace eyeline{
 namespace informer{
 namespace dcp{
+
+namespace {
+
+void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryInfo& di)
+{
+  did.name=di.getName();
+  did.priority=di.getPriority();
+  did.transactionMode=di.getTransactionMode();
+  did.startDate=di.getStartDate();
+  did.endDate=di.getEndDate();
+  did.activePeriodEnd=di.getActivePeriodStart();
+  did.activePeriodStart=di.getActivePeriodEnd();
+  did.activeWeekDays=di.getActiveWeekDays();
+  /*
+  if(di.hasValidityDate())
+  {
+    did.validityDate=di.getValidityDate();
+  }
+  */
+  if(di.hasValidityPeriod())
+  {
+    did.validityPeriod=di.getValidityPeriod();
+  }
+  did.flash=di.getFlash();
+  did.useDataSm=di.getUseDataSm();
+  switch(di.getDeliveryMode().getValue())
+  {
+    case messages::DeliveryMode::SMS:did.deliveryMode=DLVMODE_SMS;break;
+    case messages::DeliveryMode::USSD_PUSH:did.deliveryMode=DLVMODE_USSDPUSH;break;
+    case messages::DeliveryMode::USSD_PUSH_VLR:did.deliveryMode=DLVMODE_USSDPUSHVLR;break;
+  }
+  did.owner=di.getOwner();
+  did.retryOnFail=di.getRetryOnFail();
+  if(di.hasRetryPolicy())
+  {
+    did.retryPolicy=di.getRetryPolicy();
+  }
+  did.replaceMessage=di.getReplaceMessage();
+  if(di.hasSvcType())
+  {
+    did.svcType=di.getSvcType();
+  }
+  if(di.hasUserData())
+  {
+    did.userData=di.getUserData();
+  }
+
+  did.sourceAddress=di.getSourceAddress();
+
+}
+
+void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoData& did)
+{
+  di.setName(did.name);
+  di.setPriority(did.priority);
+  di.setTransactionMode(did.transactionMode);
+  di.setStartDate(did.startDate);
+  di.setEndDate(did.endDate);
+  di.setActivePeriodStart(did.activePeriodEnd);
+  di.setActivePeriodEnd(did.activePeriodStart);
+  di.setActiveWeekDays(did.activeWeekDays);
+  /*
+  if(!did.validityDate.empty())
+  {
+    di.setValidityDate(did.validityDate);
+  }
+  */
+  if(!did.validityPeriod.empty())
+  {
+    di.setValidityPeriod(did.validityPeriod);
+  }
+  di.setFlash(did.flash);
+  di.setUseDataSm(did.useDataSm);
+  switch(did.deliveryMode)
+  {
+    case DLVMODE_SMS:di.setDeliveryMode(messages::DeliveryMode::SMS);break;
+    case DLVMODE_USSDPUSH:di.setDeliveryMode(messages::DeliveryMode::USSD_PUSH);break;
+    case DLVMODE_USSDPUSHVLR:di.setDeliveryMode(messages::DeliveryMode::USSD_PUSH_VLR);break;
+  }
+  di.setOwner(did.owner);
+  di.setRetryOnFail(did.retryOnFail);
+  if(!did.retryPolicy.empty())
+  {
+    di.setRetryPolicy(did.retryPolicy);
+  }
+  di.setReplaceMessage(did.replaceMessage);
+  if(!did.svcType.empty())
+  {
+    di.setSvcType(did.svcType);
+  }
+  if(!did.userData.empty())
+  {
+    di.setUserData(did.userData);
+  }
+
+  di.setSourceAddress(did.sourceAddress);
+
+}
+
+std::string msgTimeToDateStr(msgtime_type t)
+{
+  ::tm tm;
+  time_t tmp=(time_t)t;
+  gmtime_r(&tmp,&tm);
+  char buf[64];
+  sprintf(buf,"%02d.%02d.%02d",tm.tm_mday,tm.tm_mon+1,tm.tm_year%100);
+  return buf;
+}
+
+std::string msgTimeToTimeStr(msgtime_type t)
+{
+  int sec=t%60;
+  t/=60;
+  int min=t%60;
+  t/=60;
+  int hour=t%24;
+  char buf[64];
+  sprintf(buf,"%02d:%02d:%02d",hour,min,sec);
+  return buf;
+}
+
+std::string msgTimeToDateTimeStr(msgtime_type t)
+{
+  return msgTimeToDateStr(t)+" "+msgTimeToTimeStr(t);
+}
+
+messages::DeliveryStatus dlvStateToDeliveryStatus(DlvState st)
+{
+  switch(st)
+  {
+    case DLVSTATE_PAUSED:return messages::DeliveryStatus(messages::DeliveryStatus::Paused);
+    case DLVSTATE_PLANNED:return messages::DeliveryStatus(messages::DeliveryStatus::Planned);
+    case DLVSTATE_ACTIVE:return messages::DeliveryStatus(messages::DeliveryStatus::Active);
+    case DLVSTATE_FINISHED:return messages::DeliveryStatus(messages::DeliveryStatus::Finished);
+    case DLVSTATE_CANCELLED:return messages::DeliveryStatus(messages::DeliveryStatus::Cancelled);
+  }
+  throw InfosmeException(EXC_GENERIC,"Unknown delivery state %d",st);
+}
+
+}
 
 /*
  * limit conn per ip
@@ -179,102 +320,6 @@ void DcpServer::handle(const messages::GetUserStats& inmsg)
   enqueueResp(resp,inmsg);
 }
 
-static void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryInfo& di)
-{
-  did.name=di.getName();
-  did.priority=di.getPriority();
-  did.transactionMode=di.getTransactionMode();
-  did.startDate=di.getStartDate();
-  did.endDate=di.getEndDate();
-  did.activePeriodEnd=di.getActivePeriodStart();
-  did.activePeriodStart=di.getActivePeriodEnd();
-  did.activeWeekDays=di.getActiveWeekDays();
-  /*
-  if(di.hasValidityDate())
-  {
-    did.validityDate=di.getValidityDate();
-  }
-  */
-  if(di.hasValidityPeriod())
-  {
-    did.validityPeriod=di.getValidityPeriod();
-  }
-  did.flash=di.getFlash();
-  did.useDataSm=di.getUseDataSm();
-  switch(di.getDeliveryMode().getValue())
-  {
-    case messages::DeliveryMode::SMS:did.deliveryMode=DLVMODE_SMS;break;
-    case messages::DeliveryMode::USSD_PUSH:did.deliveryMode=DLVMODE_USSDPUSH;break;
-    case messages::DeliveryMode::USSD_PUSH_VLR:did.deliveryMode=DLVMODE_USSDPUSHVLR;break;
-  }
-  did.owner=di.getOwner();
-  did.retryOnFail=di.getRetryOnFail();
-  if(di.hasRetryPolicy())
-  {
-    did.retryPolicy=di.getRetryPolicy();
-  }
-  did.replaceMessage=di.getReplaceMessage();
-  if(di.hasSvcType())
-  {
-    did.svcType=di.getSvcType();
-  }
-  if(di.hasUserData())
-  {
-    did.userData=di.getUserData();
-  }
-
-  did.sourceAddress=di.getSourceAddress();
-
-}
-
-static void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoData& did)
-{
-  di.setName(did.name);
-  di.setPriority(did.priority);
-  di.setTransactionMode(did.transactionMode);
-  di.setStartDate(did.startDate);
-  di.setEndDate(did.endDate);
-  di.setActivePeriodStart(did.activePeriodEnd);
-  di.setActivePeriodEnd(did.activePeriodStart);
-  di.setActiveWeekDays(did.activeWeekDays);
-  /*
-  if(!did.validityDate.empty())
-  {
-    di.setValidityDate(did.validityDate);
-  }
-  */
-  if(!did.validityPeriod.empty())
-  {
-    di.setValidityPeriod(did.validityPeriod);
-  }
-  di.setFlash(did.flash);
-  di.setUseDataSm(did.useDataSm);
-  switch(did.deliveryMode)
-  {
-    case DLVMODE_SMS:di.setDeliveryMode(messages::DeliveryMode::SMS);break;
-    case DLVMODE_USSDPUSH:di.setDeliveryMode(messages::DeliveryMode::USSD_PUSH);break;
-    case DLVMODE_USSDPUSHVLR:di.setDeliveryMode(messages::DeliveryMode::USSD_PUSH_VLR);break;
-  }
-  di.setOwner(did.owner);
-  di.setRetryOnFail(did.retryOnFail);
-  if(!did.retryPolicy.empty())
-  {
-    di.setRetryPolicy(did.retryPolicy);
-  }
-  di.setReplaceMessage(did.replaceMessage);
-  if(!did.svcType.empty())
-  {
-    di.setSvcType(did.svcType);
-  }
-  if(!did.userData.empty())
-  {
-    di.setUserData(did.userData);
-  }
-
-  di.setSourceAddress(did.sourceAddress);
-
-}
-
 
 void DcpServer::handle(const messages::CreateDelivery& inmsg)
 {
@@ -386,12 +431,19 @@ void DcpServer::handle(const messages::DropDeliveryMessages& inmsg)
 
 void DcpServer::handle(const messages::GetDeliveryGlossary& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  messages::GetDeliveryGlossaryResp resp;
+  dlv->getGlossary(resp.getGlossaryRef().getMessagesRef());
+  enqueueResp(resp,inmsg);
 }
 
 void DcpServer::handle(const messages::ModifyDeliveryGlossary& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  dlv->setGlossary(inmsg.getGlossary().getMessages());
+  mkOkResponse(inmsg);
 }
 
 void DcpServer::handle(const messages::GetDeliveryState& inmsg)
@@ -402,9 +454,21 @@ void DcpServer::handle(const messages::GetDeliveryState& inmsg)
   messages::GetDeliveryStateResp resp;
   messages::DeliveryState& respState=resp.getStateRef();
   messages::DeliveryStatistics& respStats=resp.getStatsRef();
-  //TODO: fill state and stats
-  //switch(dlv->get)
-  //
+  msgtime_type planDate;
+  respState.setStatus(dlvStateToDeliveryStatus(dlv->getState(&planDate)));
+  if(respState.getStatus()==messages::DeliveryStatus::Planned)
+  {
+    respState.setDate(msgTimeToDateTimeStr(planDate));
+  }
+
+  DeliveryStats ds;
+  dlv->getStats(ds);
+  respStats.setDeliveredMessages(ds.dlvdMessages);
+  respStats.setExpiredMessages(ds.expiredMessages);
+  respStats.setFailedMessage(ds.failedMessages);
+  respStats.setNewMessages(ds.getNewMessagesCount());
+  respStats.setProcessMessage(ds.procMessages);
+
   enqueueResp(resp,inmsg);
 }
 
@@ -419,19 +483,248 @@ void DcpServer::handle(const messages::GetDeliveryInfo& inmsg)
   enqueueResp(resp,inmsg);
 }
 
+#define VECLOOP(it,type,vec) for(std::vector<type>::const_iterator it=vec.begin(),end=vec.end();it!=end;++it)
+
+static bool isDeliveryMatchFilter(Delivery* dlv,const messages::DeliveriesFilter& flt)
+{
+  if(flt.hasNameFilter())
+  {
+    std::string nm=dlv->getDlvInfo().getName();
+    bool found=false;
+    VECLOOP(it,std::string,flt.getNameFilter())
+    {
+      if(nm.find(*it)!=std::string::npos)
+      {
+        found=true;
+        break;
+      }
+    }
+    if(!found)
+    {
+      return false;
+    }
+  }
+  if(flt.hasStatusFilter())
+  {
+    bool found=false;
+    VECLOOP(it,messages::DeliveryStatus,flt.getStatusFilter())
+    {
+      if(dlv->getState(0)==it->getValue())
+      {
+        found=true;
+        break;
+      }
+    }
+    if(!found)
+    {
+      return false;
+    }
+  }
+  if(flt.hasStartDateFrom())
+  {
+    msgtime_type t=parseDateTime(flt.getStartDateFrom().c_str());
+    if(dlv->getDlvInfo().getStartDate()<t)
+    {
+      return false;
+    }
+  }
+  if(flt.hasStartDateTo())
+  {
+    msgtime_type t=parseDateTime(flt.getStartDateTo().c_str());
+    if(dlv->getDlvInfo().getStartDate()>t)
+    {
+      return false;
+    }
+  }
+  if(flt.hasEndDateFrom())
+  {
+    msgtime_type t=parseDateTime(flt.getEndDateFrom().c_str());
+    if(dlv->getDlvInfo().getEndDate()<t)
+    {
+      return false;
+    }
+  }
+  if(flt.hasEndDateTo())
+  {
+    msgtime_type t=parseDateTime(flt.getEndDateTo().c_str());
+    if(dlv->getDlvInfo().getEndDate()>t)
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void DcpServer::handle(const messages::GetDeliveriesList& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  std::vector<UserInfoPtr> users;
+  if(!ui->hasRole(USERROLE_ADMIN))
+  {
+    if(inmsg.getFilter().hasUserIdFilter() && !inmsg.getFilter().getUserIdFilter().empty() &&
+        (
+            inmsg.getFilter().getUserIdFilter().size()!=1 ||
+            inmsg.getFilter().getUserIdFilter().back()!=ui->getUserId()
+        ))
+    {
+      mkFailResponse(inmsg,DcpError::AdminRoleRequired,"admin role required for userid filter");
+      return;
+    }
+    users.push_back(ui);
+  }else
+  {
+    if(inmsg.getFilter().hasUserIdFilter())
+    {
+      VECLOOP(it,std::string,inmsg.getFilter().getUserIdFilter())
+      {
+        users.push_back(core->getUserInfo(it->c_str()));
+      }
+    }else
+    {
+      core->getUsers(users);
+    }
+  }
+  std::vector<DeliveryPtr> dlvLst;
+  VECLOOP(it,UserInfoPtr,users)
+  {
+    UserInfo::DeliveryList lst;
+    (*it)->getDeliveries(lst);
+    for(UserInfo::DeliveryList::iterator dit=lst.begin(),dend=lst.end();dit!=dend;++dit)
+    {
+      if(isDeliveryMatchFilter(dit->get(),inmsg.getFilter()))
+      {
+        dlvLst.push_back(*dit);
+      }
+    }
+  }
+  messages::GetDeliveriesListResp resp;
+  {
+    sync::MutexGuard mg(dlvReqMtx);
+    time_t now=time(0);
+    while(!dlvListReqTimeMap.empty() && dlvListReqTimeMap.begin()->first<now)
+    {
+      int reqId=dlvListReqTimeMap.begin()->second;
+      DlvListReqMap::iterator it=dlvListReqMap.find(reqId);
+      if(it!=dlvListReqMap.end())
+      {
+        smsc_log_info(log,"deliveries list request with reqId=%d expired",reqId);
+        delete it->second;
+        dlvListReqMap.erase(it);
+      }
+      dlvListReqTimeMap.erase(dlvListReqTimeMap.begin());
+    }
+    int reqId=dlvListReqIdSeq++;
+    smsc_log_info(log,"created deliveries list reqId=%d for connId=%d (%lu total records)",reqId,inmsg.messageGetConnId(),dlvLst.size());
+    resp.setReqId(reqId);
+    DlvListRequest* req=new DlvListRequest(inmsg.messageGetConnId(),reqId);
+    req->dlvLst.swap(dlvLst);
+    req->last=req->dlvLst.begin();
+    req->timeMapIt=dlvListReqTimeMap.insert(DlvListReqTimeMap::value_type(time(0)+dlvListReqExpirationTime,reqId));
+    dlvListReqMap.insert(DlvListReqMap::value_type(reqId,req));
+  }
+  enqueueResp(resp,inmsg);
 }
 
 void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  messages::GetDeliveriesListNextResp resp;
+  {
+    sync::MutexGuard mg(dlvReqMtx);
+    DlvListReqMap::iterator it=dlvListReqMap.find(inmsg.getReqId());
+    if(it==dlvListReqMap.end())
+    {
+      mkFailResponse(inmsg,DcpError::RequestNotFound,"request for given id not found");
+      return;
+    }
+    DlvListRequest* req=it->second;
+    if(req->connId!=inmsg.messageGetConnId())
+    {
+      mkFailResponse(inmsg,DcpError::RequestNotFound,"request for given id do not belong to this connection");
+      return;
+    }
+    std::vector<messages::DeliveryListInfo>& info=resp.getInfoRef();
+    resp.setMoreDeliveries(true);
+    for(int i=0;i<inmsg.getCount();i++)
+    {
+      info.push_back(messages::DeliveryListInfo());
+      messages::DeliveryListInfo& dli=info.back();
+      Delivery* dlv=req->last->get();
+      const DeliveryInfo& di=dlv->getDlvInfo();
+      VECLOOP(fit,messages::DeliveryFields,req->fields)
+      {
+        switch(fit->getValue())
+        {
+          case messages::DeliveryFields::ActivityPeriod:dli.setActivityPeriodEnd(msgTimeToTimeStr(di.getActivePeriodEnd()));break;
+          case messages::DeliveryFields::EndDate:dli.setEndDate(msgTimeToDateTimeStr(di.getEndDate()));break;
+          case messages::DeliveryFields::Name:dli.setName(di.getName());break;
+          case messages::DeliveryFields::StartDate:dli.setStartDate(msgTimeToDateTimeStr(di.getStartDate()));break;
+          case messages::DeliveryFields::Status:dli.setStatus(dlvStateToDeliveryStatus(dlv->getState(0)));break;
+          case messages::DeliveryFields::UserData:dli.setUserData(di.getUserData());break;
+          case messages::DeliveryFields::UserId:dli.setUserId(dlv->getUserInfo().getUserId());break;
+        }
+      }
+      req->last++;
+      if(req->last==req->dlvLst.end())
+      {
+        resp.setMoreDeliveries(false);
+        dlvListReqTimeMap.erase(req->timeMapIt);
+        delete req;
+        dlvListReqMap.erase(it);
+        break;
+      }
+    }
+  }
+  smsc_log_info(log,"next portion of deliveries list for reqId=%d for connId=%d - %lu records, mms=%s)",
+      inmsg.getReqId(),inmsg.messageGetConnId(),resp.getInfo().size(),resp.getMoreDeliveries()?"true":"false");
+  enqueueResp(resp,inmsg);
 }
 
 void DcpServer::handle(const messages::CountDeliveries& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  std::vector<UserInfoPtr> users;
+  if(!ui->hasRole(USERROLE_ADMIN))
+  {
+    if(inmsg.getFilter().hasUserIdFilter() && !inmsg.getFilter().getUserIdFilter().empty() &&
+        (
+            inmsg.getFilter().getUserIdFilter().size()!=1 ||
+            inmsg.getFilter().getUserIdFilter().back()!=ui->getUserId()
+        ))
+    {
+      mkFailResponse(inmsg,DcpError::AdminRoleRequired,"admin role required for userid filter");
+      return;
+    }
+    users.push_back(ui);
+  }else
+  {
+    if(inmsg.getFilter().hasUserIdFilter())
+    {
+      VECLOOP(it,std::string,inmsg.getFilter().getUserIdFilter())
+      {
+        users.push_back(core->getUserInfo(it->c_str()));
+      }
+    }else
+    {
+      core->getUsers(users);
+    }
+  }
+  int result=0;
+  VECLOOP(it,UserInfoPtr,users)
+  {
+    UserInfo::DeliveryList lst;
+    (*it)->getDeliveries(lst);
+    for(UserInfo::DeliveryList::iterator dit=lst.begin(),dend=lst.end();dit!=dend;++dit)
+    {
+      if(isDeliveryMatchFilter(dit->get(),inmsg.getFilter()))
+      {
+        result++;
+      }
+    }
+  }
+  messages::CountDeliveriesResp resp;
+  resp.setResult(result);
 }
 
 void DcpServer::handle(const messages::RequestMessagesState& inmsg)

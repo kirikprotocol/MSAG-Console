@@ -12,6 +12,7 @@ static const int CommandHandlingError=2;
 static const int AdminRoleRequired=3;
 static const int TooManyDeliveries=4;
 static const int AuthFailed=5;
+static const int RequestNotFound=5;
 
 
 };

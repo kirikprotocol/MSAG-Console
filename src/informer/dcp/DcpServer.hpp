@@ -19,7 +19,6 @@ class DcpClientSocket:public eyeline::protogen::ProtocolSocketBase{
 public:
   DcpClientSocket(net::Socket* sck,int connId):ProtocolSocketBase(sck,connId),authorized(false)
   {
-
   }
   virtual ~DcpClientSocket(){}
   void setAuthorized(bool value)
@@ -48,6 +47,8 @@ public:
   DcpServer():ServerBase("dcp")
   {
     proto.assignHandler(this);
+    dlvListReqIdSeq=0;
+    dlvListReqExpirationTime=3600;
   }
   void assignCore(InfosmeCore* argCore)
   {
@@ -105,7 +106,7 @@ protected:
   template <class MSG>
   void mkFailResponse(const MSG& msg,int status,const std::string& txt)
   {
-    mkFailResponse(msg.messagesGetConnId(),msg.messageGetSeqNum(),status,txt);
+    mkFailResponse(msg.messageGetConnId(),msg.messageGetSeqNum(),status,txt);
   }
   template <class T,class U>
   void enqueueResp(T& respMsg,const U& reqMsg)
@@ -174,8 +175,28 @@ protected:
   }
 */
 
-
   DcpClientSocket* getSocketByConnId(int connId);
+
+  typedef std::multimap<time_t,int> DlvListReqTimeMap;
+
+  struct DlvListRequest{
+    DlvListRequest(int connId,int argReqId):reqId(argReqId)
+    {
+
+    }
+    int connId;
+    int reqId;
+    std::vector<messages::DeliveryFields> fields;
+    std::vector<DeliveryPtr>::iterator last;
+    std::vector<DeliveryPtr> dlvLst;
+    DlvListReqTimeMap::iterator timeMapIt;
+  };
+  sync::Mutex dlvReqMtx;
+  typedef std::map<int,DlvListRequest*> DlvListReqMap;
+  DlvListReqMap dlvListReqMap;
+  DlvListReqTimeMap dlvListReqTimeMap;
+  int dlvListReqIdSeq;
+  time_t dlvListReqExpirationTime;
 
 };
 
