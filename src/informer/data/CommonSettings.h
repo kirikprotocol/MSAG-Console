@@ -25,7 +25,7 @@ public:
         path_ = path;
         if (path_.empty()) path_ = "./";
         else if (path_[path_.size()-1] != '/') path_.push_back('/');
-        statpath_ = statpath_;
+        statpath_ = statpath;
         if (statpath_.empty()) statpath_ = "./";
         else if (statpath_[statpath_.size()-1] != '/') statpath_.push_back('/');
     }
