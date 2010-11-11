@@ -113,7 +113,7 @@ public:
                 }
 
                 movedObjects_.push_back(*i);
-                i->ptr = static_cast<Ptr>(0);
+                i->ptr = Ptr(0);
 
                 if ( increment > 0 ) {
                     // object is processed
@@ -200,7 +200,7 @@ protected:
             needsClean = true;
         }
         if ( needsClean ) {
-            remove(isEqual(static_cast<Ptr>(0)));
+            remove(isEqual(Ptr(0)));
         }
         if ( ! movedObjects_.empty() ) {
             std::sort( movedObjects_.begin(), movedObjects_.end() );
