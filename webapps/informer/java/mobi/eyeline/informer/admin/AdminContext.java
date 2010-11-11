@@ -204,7 +204,11 @@ public class AdminContext {
           }
         }
       }
+      User oldUser = usersManager.getUser(u.getLogin());
       usersManager.updateUser(u);
+      if(oldUser.getStatus()!=u.getStatus()) {
+        restrictionDaemon.rebuildSchedule();
+      }
     }
     finally {
       integrityLock.unlock();
@@ -221,7 +225,7 @@ public class AdminContext {
           }
         }
       }
-      usersManager.addUser(u);
+      usersManager.addUser(u);      
     }
     finally {
       integrityLock.unlock();

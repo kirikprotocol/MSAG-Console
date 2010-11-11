@@ -107,11 +107,13 @@ public class RestrictionDaemon implements Daemon {
       deliveryManager.getDeliveries(u.getLogin(),u.getPassword(),dFilter,1000,
           new Visitor<DeliveryInfo>() {
             public boolean visit(DeliveryInfo di) throws AdminException {
-              boolean shouldBeRestricted=false;
-              for(Restriction r : restrictions) {
-                if(r.isAllUsers() || r.getUserIds().contains(u.getLogin())) {
-                  shouldBeRestricted = true;
-                  break;
+              boolean shouldBeRestricted=u.getStatus()!=User.Status.ENABLED;
+              if(!shouldBeRestricted) {
+                for(Restriction r : restrictions) {
+                  if(r.isAllUsers() || r.getUserIds().contains(u.getLogin())  ) {
+                    shouldBeRestricted = true;
+                    break;
+                  }
                 }
               }
               adjustDeliveryState(u,di,shouldBeRestricted);
