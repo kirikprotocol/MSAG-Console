@@ -116,7 +116,7 @@ void UserInfo::update( const UserInfo& user )
 
 
 
-void UserInfo::getDeliveries( DeliveryList& dlvs )
+void UserInfo::getDeliveries( DeliveryList& dlvs ) const
 {
     MutexGuard mg(lock_);
     dlvs = deliveries_;

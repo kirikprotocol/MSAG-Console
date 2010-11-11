@@ -100,7 +100,7 @@ public:
     }
 
     /// get the list of deliveries, ordered by dlvid
-    void getDeliveries( DeliveryList& dlvs );
+    void getDeliveries( DeliveryList& dlvs ) const;
 
     /// increment number of deliveries
     void incStats( const CommonSettings& cs, uint8_t state, uint8_t fromState = 0 );
@@ -117,7 +117,7 @@ private:
 
 private:
 
-    smsc::core::synchronization::Mutex lock_;
+    mutable smsc::core::synchronization::Mutex lock_;
     unsigned    ref_;
 
     userid_type userId_;
