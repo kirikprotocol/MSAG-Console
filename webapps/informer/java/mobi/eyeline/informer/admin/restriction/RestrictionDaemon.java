@@ -109,6 +109,8 @@ public class RestrictionDaemon implements Daemon {
     //System.out.println("apply restrictions<-");
     List<User> users  = userManager.getUsers();
     for(final User u : users) {
+
+      //do not get restrictions if user disabled
       final List<Restriction> restrictions=
           (u.getStatus()==User.Status.ENABLED) ?
               getActiveRestrictions(forDate,  u)
