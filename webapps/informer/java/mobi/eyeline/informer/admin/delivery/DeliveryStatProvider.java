@@ -79,7 +79,7 @@ class DeliveryStatProvider {
     }
   }
 
-  private List<File> filterFiles(DeliveryStatFilter filter) {
+  private List<File> filterFiles(DeliveryStatFilter filter) throws AdminException {
 
     String minSubDirName = null;
     String maxSubDirName = null;
@@ -98,32 +98,37 @@ class DeliveryStatProvider {
 
 
     List<File> files= new ArrayList<File>();
-    for (String subDirName : fileSys.list(baseDir)) {
-      if(minSubDirName!=null) {
-        if(subDirName.compareTo(minSubDirName)<0) {
-          continue;
-        }
-      }
-      if(maxSubDirName!=null) {
-        if(subDirName.compareTo(maxSubDirName)>0) {
-          continue;
-        }
-      }
-      File subDir = new File(baseDir,subDirName);
-      for(String fileName : fileSys.list(subDir)) {
-        String filePath = subDirName+File.separatorChar+fileName;
-        if(minFilePath!=null) {
-          if(filePath.compareTo(minFilePath)<0) {
+    if(fileSys.exists(baseDir)) {
+      for (String subDirName : fileSys.list(baseDir)) {
+        if(minSubDirName!=null) {
+          if(subDirName.compareTo(minSubDirName)<0) {
             continue;
           }
         }
-        if(maxFilePath!=null) {
-          if(filePath.compareTo(maxFilePath)>0) {
+        if(maxSubDirName!=null) {
+          if(subDirName.compareTo(maxSubDirName)>0) {
             continue;
           }
         }
-        files.add(new File(subDir,fileName));
+        File subDir = new File(baseDir,subDirName);
+        for(String fileName : fileSys.list(subDir)) {
+          String filePath = subDirName+File.separatorChar+fileName;
+          if(minFilePath!=null) {
+            if(filePath.compareTo(minFilePath)<0) {
+              continue;
+            }
+          }
+          if(maxFilePath!=null) {
+            if(filePath.compareTo(maxFilePath)>0) {
+              continue;
+            }
+          }
+          files.add(new File(subDir,fileName));
+        }
       }
+    }
+    else {
+      log.error("Delivery statictics baseDir not exists:"+ baseDir.getAbsolutePath());
     }
     return files;
   }
