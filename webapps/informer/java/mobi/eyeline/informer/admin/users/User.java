@@ -25,7 +25,7 @@ public class User implements Serializable{
   private Locale locale;
   private Set<String> roles = new TreeSet<String>();
 
-
+  private boolean retryOnFail;
   private String policyId;
   private boolean createCDR=true;
   private int smsPerSec=1;
@@ -377,6 +377,14 @@ public class User implements Serializable{
 
   public boolean isAllRegionsAllowed() {
     return allRegionsAllowed;
+  }
+
+  public boolean isRetryOnFail() {
+    return retryOnFail;
+  }
+
+  public void setRetryOnFail(boolean retryOnFail) {
+    this.retryOnFail = retryOnFail;
   }
 
   public void setAllRegionsAllowed(boolean allRegionsAllowed) {
