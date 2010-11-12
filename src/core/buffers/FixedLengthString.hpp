@@ -175,6 +175,9 @@ struct FixedLengthString{
   size_t capacity() const { return N; }
 };
 
+template< size_t N >
+const size_t FixedLengthString< N >::npos;
+
 }//namespace buffers
 }//namespace core
 }//namespace smsc

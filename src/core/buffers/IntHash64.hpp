@@ -91,7 +91,7 @@ public:
     if(n>size)Rehash(n);
   }
 
-  int Insert(KeyType key,const T& value)
+  T& Insert(KeyType key,const T& value)
   {
     //printf("ins:%d\n",key);fflush(stdout);
     if(!size || count>=size/2)Rehash();
@@ -113,7 +113,8 @@ public:
       {
         //printf("ins:exists\n");fflush(stdout);
         values[idx]=value;
-        refcounts[idx]++;
+        // the next line commented (a bug supposed), bukind 2010-11-12
+        // refcounts[idx]++;
         res=0;
         break;
       }
@@ -130,7 +131,7 @@ public:
       idx=Index(key,attempt);
     }
     if(res)count++;
-    return res;
+    return values[idx];
   }
 
   const T& Get(KeyType key)const
@@ -226,6 +227,32 @@ public:
     }
     count--;
     return 1;
+  }
+
+  bool Pop( KeyType key, T& value )
+  {
+    if(size==0)return false;
+    unsigned int idx;
+    int attempt=0;
+    do{
+      idx=Index(key,attempt);
+      if(refcounts[idx]==0)
+      {
+        //printf("del:not found\n");fflush(stdout);
+        return false;
+      }
+      AddRef(idx,attempt);
+    }while(keys[idx]!=key);
+    //printf("del:ok\n");fflush(stdout);
+    value = values[idx];
+    keys[idx]=-1;
+    for(int i=0;i<attempt;i++)
+    {
+      //printf("dele:%d\n",reflist[i]);fflush(stdout);
+      refcounts[reflist[i]]--;
+    }
+    count--;
+    return true;
   }
 
   class Iterator{
