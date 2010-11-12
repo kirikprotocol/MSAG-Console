@@ -184,7 +184,7 @@ void UserInfo::detachDelivery( dlvid_type dlvId )
                           deliveries_.end(),
                           dlvId,
                           ::OrderByDlvId() );
-    if (i != deliveries_.end()) {
+    if (i != deliveries_.end() && (*i)->getDlvId() == dlvId ) {
         deliveries_.erase(i);
     }
 }

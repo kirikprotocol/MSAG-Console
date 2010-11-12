@@ -32,6 +32,8 @@ struct SmscConfig
     int interConnectPeriod;
     int ussdPushOp;
     int ussdPushVlrOp;
+    timediff_type minValidityTime;
+    timediff_type maxValidityTime;
 };
 
 
@@ -45,8 +47,9 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
     class SmscJournal;
 
     struct DRMTrans : public DlvRegMsgId {
-        unsigned    nchunks;
-        bool        trans;
+        unsigned     nchunks;
+        bool         trans;
+        msgtime_type endTime; // wait time of receipt
     };
 
 public:
@@ -119,7 +122,7 @@ private:
 
     smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;
     smsc::core::buffers::CyclicQueue< ResponseTimer > respWaitQueue_;
-    smsc::core::buffers::CyclicQueue< ReceiptTimer >  rcptWaitQueue_;
+    std::multimap<msgtime_type, ReceiptId>            rcptWaitQueue_;
 
     // when process receipt/response.
     // monitor is used by journal also.

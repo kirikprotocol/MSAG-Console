@@ -69,6 +69,7 @@ public:
             rd.drmId.dlvId = fb.get32();
             rd.drmId.regId = fb.get32();
             rd.drmId.msgId = fb.get64();
+            rd.endTime     = fb.get32();
             rd.responded   = fb.get16();
             rd.status = smsc::system::Status::OK;
             rd.retry = false;
@@ -130,6 +131,7 @@ public:
         tb.set32(rd.drmId.dlvId);
         tb.set32(rd.drmId.regId);
         tb.set64(rd.drmId.msgId);
+        tb.set32(rd.endTime);
         tb.set16(rd.responded);
         tb.setCString(rd.rcptId.msgId);
         const size_t pos = tb.getPos();
@@ -214,7 +216,7 @@ protected:
                 }
                 if (isStopping_) { break; }
                 journalReceiptData(rd);
-                smsc_log_debug(sender_.log_,"FIXME: S='%s' place limit on throughput",sender_.smscId_.c_str());
+                smsc_log_debug(sender_.log_,"FIXME: optimize S='%s' place limit on throughput",sender_.smscId_.c_str());
             } while (true);
             smsc_log_debug(sender_.log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
             if (!isStopping_) { rollOver(); }
@@ -263,13 +265,9 @@ isStopping_(true)
     wQueue_.reset(new DataQueue());
     journal_->init();
     // restore receipt wait queue
-    const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
-    ReceiptTimer rt;
-    rt.endTime = now + rproc_.getCS().getReceiptWaitTime();
     for ( ReceiptList::iterator i = receiptList_.begin();
           i != receiptList_.end(); ++i ) {
-        rt.rcptId = i->rcptId;
-        rcptWaitQueue_.Push(rt);
+        rcptWaitQueue_.insert(std::make_pair(i->endTime,i->rcptId));
     }
 }
 
@@ -332,12 +330,82 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             break;
         }
 
-        const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
-        if ( msg.lastTime + msg.timeLeft < now ) {
-            what = "msg is already expired";
-            res = smsc::system::Status::EXPIRED;
+        // NOTE: it is guaranteed that msg.lastTime is currentTime
+        const msgtime_type now = msg.lastTime;
+
+        // calculate the validityTime of the message
+        timediff_type validityTime = info.getValidityPeriod();
+
+        if ( validityTime > smscConfig_.maxValidityTime ) {
+            validityTime = smscConfig_.maxValidityTime;
+        } else if ( validityTime < smscConfig_.minValidityTime ) {
+            validityTime = smscConfig_.minValidityTime;
+        }
+        if ( validityTime > msg.timeLeft ) {
+            validityTime = msg.timeLeft;
+        }
+
+        static const timediff_type daynight = 86400;
+
+        const timediff_type ms = timediff_type(now) % daynight;
+        timediff_type as, ae;
+        as = ae = ms;
+        if (info.getActivePeriodEnd() >= 0) {
+            as = info.getActivePeriodStart();
+            ae = info.getActivePeriodEnd();
+            if (as > ae) {
+                if (ms<ae) {as -= daynight;}
+                else if (ms>as) {ae += daynight; }
+            }
+            if (ms + validityTime > ae) {
+                validityTime = ae - ms;
+            }
+        }
+
+        smsc_log_debug(log_,"R=%u/D=%u/M=%llu info.VT=%d S.minVT=%d S.maxVT=%d msg.TTL=%d as=%d ae=%d ms=%u -> VT=%u",
+                       ptr.getRegionId(), info.getDlvId(), ulonglong(msg.msgId),
+                       info.getValidityPeriod(),
+                       smscConfig_.minValidityTime,
+                       smscConfig_.maxValidityTime,
+                       msg.timeLeft,
+                       info.getActivePeriodStart(),
+                       info.getActivePeriodEnd(),
+                       ms, validityTime );
+
+        if (ms<as || ms>ae) {
+            what = "now is out of active period";
+            res = smsc::system::Status::DELIVERYTIMEDOUT;
             break;
         }
+
+        if (validityTime<60) {
+            // less than one minute, cannot send
+            what = "validity time is less than a minute";
+            res = smsc::system::Status::DELIVERYTIMEDOUT;
+            break;
+        }
+
+        /*
+        // FIXME: move this code to getNextMsg.
+        const timediff_type ae = info.getActivityPeriodEnd();
+        if ( ae >= 0 ) {
+            const timediff_type as = info.getActityPeriodStart();
+            const timediff_type ms = timediff_type(now % 86400);
+            if ( as < ae ) {
+                if (ms < as || ms > ae) {
+                    what = "out of active period";
+                    res = smsc::system::Status::RX_T_APPN;
+                    break;
+                }
+            } else {
+                if (ms < as && ms > ae) {
+                    what = "out of active period";
+                    res = smsc::system::Status::RX_T_APPN;
+                    break;
+                }
+            }
+        }
+         */
 
         // receive and register the seqnum
         do {
@@ -352,6 +420,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         drm->msgId = msg.msgId;
         drm->nchunks = 0;
         drm->trans = info.isTransactional();
+        drm->endTime = now + validityTime;
 
         {
             ResponseTimer rt;
@@ -382,8 +451,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             sms.setDestinationAddress(da);
             sms.setArchivationRequested(false);
             sms.setDeliveryReport(1);
-            // FIXME: apply activity period
-            sms.setValidTime(msg.lastTime + msg.timeLeft);
+
+            sms.setValidTime(now + validityTime);
+
             sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                                 info.isReplaceIfPresent() ? 1 : 0 );
             sms.setEServiceType( (info.isReplaceIfPresent() && info.getSvcType()[0]) ?
@@ -440,10 +510,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
                            oa.type, oa.plan, oa.length, oa.length, oa.value,
                            da.type, da.plan, da.length, da.length, da.value );
             if (info.useDataSm()) {
-                msgtime_type validityDate = msg.timeLeft + msg.lastTime;
-                validityDate = ((validityDate <= now) ? 0 : (validityDate-now));
-                // FIXME: apply activity period
-                sms.setIntProperty( smsc::sms::Tag::SMPP_QOS_TIME_TO_LIVE, validityDate );
+                sms.setIntProperty( smsc::sms::Tag::SMPP_QOS_TIME_TO_LIVE, validityTime );
                 PduDataSm dataSm;
                 dataSm.get_header().set_sequenceNumber(seqNum);
                 dataSm.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM);
@@ -712,11 +779,11 @@ bool SmscSender::queueData( const ResponseData& rd )
 void SmscSender::processQueue( DataQueue& queue )
 {
     ResponseData rd;
-    // FIXME: preprocess queue to match resp+rcpt
+    // FIXME: optimize queue (preprocess) to match resp+rcpt
 
     while ( queue.Pop(rd) ) {
 
-        smsc_log_debug(log_,"FIXME: S='%s' processing RD(seq=%u,status=%d,msgid='%s',retry=%d)",
+        smsc_log_debug(log_,"S='%s' processing RD(seq=%u,status=%d,msgid='%s',retry=%d)",
                        smscId_.c_str(),rd.seqNum,rd.status,rd.rcptId.msgId,rd.retry);
 
         if ( rd.seqNum ) {
@@ -727,7 +794,6 @@ void SmscSender::processQueue( DataQueue& queue )
                 smsc_log_warn(log_,"S='%s' resp seq=%u has no drm mapping", smscId_.c_str(), rd.seqNum);
                 continue;
             }
-            // FIXME: notify on seqnumHash_.Count() change
 
             if (drm.trans) {
                 smsc_log_info(log_,"S='%s' resp seq=%u R=%u/D=%u/M=%llu ends transaction",
@@ -736,12 +802,18 @@ void SmscSender::processQueue( DataQueue& queue )
                               drm.dlvId,
                               ulonglong(drm.msgId));
                 rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry, drm.nchunks );
+                continue;
             } else if ( *rd.rcptId.msgId == '\0' ) {
-                smsc_log_warn(log_,"FIXME: S='%s' resp seq=%u R=%u/D=%u/M=%llu has no msgId, finalize?",
-                              smscId_.c_str(), rd.seqNum,
-                              drm.regId,
-                              drm.dlvId,
-                              ulonglong(drm.msgId));
+                if (rd.status == smsc::system::Status::OK || log_->isDebugEnabled()) {
+                    log_->log_( rd.status == smsc::system::Status::OK ?
+                                smsc::logger::Logger::LEVEL_WARN :
+                                smsc::logger::Logger::LEVEL_DEBUG ,
+                                "S='%s' resp seq=%u R=%u/D=%u/M=%llu has no msgId",
+                                smscId_.c_str(), rd.seqNum,
+                                drm.regId,
+                                drm.dlvId,
+                                ulonglong(drm.msgId));
+                }
                 rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry, drm.nchunks );
                 continue;
             }
@@ -759,28 +831,30 @@ void SmscSender::processQueue( DataQueue& queue )
                 }
 
                 // finalize message, ignoring resp status
-                smsc_log_info(log_,"FIXME: S='%s' R=%u/D=%u/M=%llu ignoring resp status=%d,retry=%d, using status=%d,retry=%d",
+                smsc_log_info(log_,"S='%s' R=%u/D=%u/M=%llu ignoring resp status=%d,retry=%d, using status=%d,retry=%d",
                               drm.regId,
                               drm.dlvId,
                               ulonglong(drm.msgId),
                               rd.status, rd.retry, iter->status, iter->retry );
                 rproc_.receiveReceipt( drm, retryPolicy_, iter->status, iter->retry, drm.nchunks );
                 continue;
-
             }
 
             if ( rd.status != smsc::system::Status::OK ) {
+                // bad response status -- finalization
                 rproc_.receiveReceipt( drm, retryPolicy_, rd.status, rd.retry, drm.nchunks );
                 continue;
             }
 
             if ( !rproc_.receiveResponse( drm ) ) {
+                // response processing failed -- no dlv, no msg?
                 continue;
             }
 
-            // receipt hash has no mapping, adding one
+            // receipt hash has not been receipt, adding one
             iter = rcptList.insert(rcptList.begin(),ReceiptData());
             iter->drmId = drm;
+            iter->endTime = drm.endTime;
             iter->rcptId = rd.rcptId;
             iter->status = rd.status;
             iter->responded = drm.nchunks;
@@ -793,11 +867,7 @@ void SmscSender::processQueue( DataQueue& queue )
             }
 
             // adding receipt wait timer
-            ReceiptTimer rt;
-            const msgtime_type now = msgtime_type(currentTimeMicro() / tuPerSec);
-            rt.endTime = now + rproc_.getCS().getReceiptWaitTime();
-            rt.rcptId = rd.rcptId;
-            rcptWaitQueue_.Push(rt);
+            rcptWaitQueue_.insert(std::make_pair(drm.endTime,rd.rcptId));
 
         } else {
             // receipt
@@ -997,7 +1067,6 @@ void SmscSender::sendLoop()
             processQueue(*rQueue.get());
         }
         if (nextWakeTime > currentTime_) continue;
-        // fixme?
         processExpiredTimers();
         nextWakeTime = currentTime_ + scoredList_.processOnce(0/* not used*/,
                                                               sleepTime);
@@ -1050,9 +1119,41 @@ void SmscSender::scoredObjToString( std::string& s, ScoredObjType& regionSender 
 
 void SmscSender::processExpiredTimers()
 {
-    smsc_log_error(log_,"FIXME: S='%s'@%p process expired timers at %llu",
-                   smscId_.c_str(), this, currentTime_);
-    // process expired resp/recp here?
+    // NOTE: i'm too lazy to implement the same code here, so calling queueData
+    const msgtime_type now = msgtime_type(currentTime_/tuPerSec);
+    ResponseTimer rt;
+    while (!isStopping_) {
+
+        if ( respWaitQueue_.Count() <= 0 ) { break; }
+        if ( respWaitQueue_.Front().endTime > now ) { break; }
+        if (!respWaitQueue_.Pop(rt)) { break; }
+
+        smsc_log_debug(log_,"S='%s' expired (%u sec) resp seq=%u",
+                       smscId_.c_str(), unsigned(now-rt.endTime), rt.seqNum);
+        ResponseData rd;
+        rd.seqNum = rt.seqNum;
+        rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
+        rd.rcptId.setMsgId("");
+        rd.retry = true;
+        queueData(rd);
+    }
+
+    if (isStopping_) return;
+    std::multimap<msgtime_type, ReceiptId>::iterator i, upto;
+    i = rcptWaitQueue_.begin();
+    upto = rcptWaitQueue_.lower_bound(now);
+    for ( ; i != upto; ++i ) {
+        if (isStopping_) { break; }
+        smsc_log_debug(log_,"S='%s' expired (%u sec) rcpt.msgId='%s'",
+                       smscId_.c_str(), unsigned(now-rt.endTime), i->second.msgId);
+        ResponseData rd;
+        rd.seqNum = 0; // receipt
+        rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
+        rd.rcptId.setMsgId(i->second.msgId);
+        rd.retry = true;
+        queueData(rd);
+    }
+    rcptWaitQueue_.erase(rcptWaitQueue_.begin(), i);
 }
 
 

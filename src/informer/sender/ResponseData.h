@@ -52,19 +52,22 @@ struct ResponseTimer
 
 struct ReceiptData
 {
-    DlvRegMsgId drmId;
-    ReceiptId   rcptId;
-    int         status;
-    uint16_t    responded; // 0 -- not responed, >0 -- responded (nchunks)
-    bool        retry;
+    DlvRegMsgId  drmId;
+    ReceiptId    rcptId;
+    msgtime_type endTime;
+    int          status;
+    uint16_t     responded; // 0 -- not responed, >0 -- responded (nchunks)
+    bool         retry;
 };
 
 
+/*
 struct ReceiptTimer
 {
     msgtime_type endTime;
     ReceiptId    rcptId;
 };
+ */
 
 } // informer
 } // smsc

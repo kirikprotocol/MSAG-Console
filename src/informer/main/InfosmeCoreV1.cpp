@@ -67,6 +67,16 @@ void readSmscConfig( const char*   name,
         } catch (HashInvalidKeyException&) {
             cfg.ussdPushVlrOp = -1;
         }
+        try {
+            cfg.minValidityPeriod = config.getInt("minValidityPeriod");
+        } catch (HashInvalidKeyException&) {
+            cfg.minValidityPeriod = 30;
+        }
+        try {
+            cfg.maxValidityPeriod = config.getInt("maxValidityPeriod");
+        } catch (HashInvalidKeyException&) {
+            cfg.maxValidityPeriod = 120;
+        }
     } catch ( InfosmeException& e ) {
         throw;
     } catch ( HashInvalidKeyException& e ) {

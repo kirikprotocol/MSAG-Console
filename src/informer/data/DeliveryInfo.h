@@ -92,7 +92,7 @@ public:
     int getActiveWeekDays() const { return activeWeekDays_; }
 
     /// get validity period or -1
-    msgtime_type getValidityPeriod() const { return validityPeriod_; }
+    timediff_type getValidityPeriod() const { return validityPeriod_; }
 
     bool isFlash() const { return data_.flash; }
 
