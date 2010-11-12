@@ -8,11 +8,13 @@ import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Журнал операций Informer
@@ -36,6 +38,8 @@ public class Journal {
   private final DeliveriesDiffHelper deliveries = new DeliveriesDiffHelper();
 
   private final RestrictionsDiffHelper restrictions = new RestrictionsDiffHelper();
+
+  private final WebconfigDiffHelper webconfig = new WebconfigDiffHelper();
 
   private final JournalDataSource ds;
 
@@ -317,5 +321,18 @@ public class Journal {
 
   public void logDeleteRestriction(Restriction r, String user) throws AdminException {
     restrictions.logDeleteRestriction(this,user, r);
+  }
+
+  public void logUpdateJavaMailProps(Properties props, Properties old, String user) throws AdminException {
+    webconfig.logUpdateJavaMailProps(this,props,old,user);
+  }
+
+  public void logUpdateNotificationTemplates(Properties props, Properties old, String user) throws AdminException {
+    webconfig.logUpdateNotificationTemplates(this,props,old,user);
+  }
+
+  public void logUpdateSmsSenderAddress(Address addr, Address old, String user) throws AdminException {
+    webconfig.logUpdateSmsSenderAddress(this,addr,old,user);
+
   }
 }

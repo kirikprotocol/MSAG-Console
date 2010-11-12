@@ -40,7 +40,7 @@ class XmlConfigReader {
     NodeList list = node.getChildNodes();
     for (int i = 0; i < list.getLength(); i++) {
       if (list.item(i).getNodeType() == Node.TEXT_NODE)
-        result.append(list.item(i).getNodeValue());
+        result.append(StringEncoderDecoder.decode(list.item(i).getNodeValue()));
     }
     return result.toString();
   }

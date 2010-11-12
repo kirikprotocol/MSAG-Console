@@ -11,6 +11,7 @@ import mobi.eyeline.informer.web.auth.impl.AuthenticatorImpl;
 import mobi.eyeline.informer.web.auth.impl.Users;
 import mobi.eyeline.informer.web.config.Configuration;
 import org.apache.log4j.Logger;
+import testutils.TestUtils;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
@@ -55,15 +56,18 @@ public class WebContext {
     this.webXml = webXml;
     try{
       File confDir = new File(webconfigFile.getParent());
-      WebConfigManager webConfigManager = new  WebConfigManager(webconfigFile ,new File(confDir, "backup"), FileSystem.getFSForSingleInst()) ;
+
 
       if(Mode.testMode) {
         if(logger.isInfoEnabled()) {
           logger.info(" -- TEST MODE -- TEST MODE -- TEST MODE -- TEST MODE -- ");
         }
+        TestUtils.exportResource(TestWebConfigManager.class.getResourceAsStream("webconfig.xml"), new File(confDir, "webconfig.xml"), false);
+        WebConfigManager webConfigManager = new  TestWebConfigManager(webconfigFile ,new File(confDir, "backup"), FileSystem.getFSForSingleInst()) ;
         this.adminContext = (AdminContext)Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
             getConstructor(File.class, WebConfigManager.class).newInstance(baseDir, webConfigManager);
       }else {
+        WebConfigManager webConfigManager = new  WebConfigManager(webconfigFile ,new File(confDir, "backup"), FileSystem.getFSForSingleInst()) ;
         this.adminContext = new AdminContext(baseDir, webConfigManager);
       }
 

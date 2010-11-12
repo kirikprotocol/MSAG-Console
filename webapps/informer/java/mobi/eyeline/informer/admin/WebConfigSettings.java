@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin;
 
+import mobi.eyeline.informer.util.Address;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.Properties;
@@ -18,6 +20,8 @@ class WebConfigSettings {
   private Collection<String> HSDaemonHosts;
   private String journalDir;
   private Properties javaMailProperties;
+  private Address smsSenderAddress;
+  private Properties notificationTemplates;
 
   InstallationType getInstallationType() {
     return installationType;
@@ -91,6 +95,36 @@ class WebConfigSettings {
   }
 
   void setJavaMailProperties(Properties javaMailProperties) {
+    validateJavaMailProperties(javaMailProperties);
     this.javaMailProperties = javaMailProperties;
+  }
+
+  Address getSmsSenderAddress() {
+    return smsSenderAddress;
+  }
+
+  void setSmsSenderAddress(Address smsSenderAddress) {
+    this.smsSenderAddress = smsSenderAddress;
+  }
+
+  void setNotificationTemplates(Properties notificationTemplates) {
+    validateNotificationTemplates(notificationTemplates);
+    this.notificationTemplates =notificationTemplates;
+  }
+
+  Properties getNotificationTemplates() {
+    Properties props = new Properties();
+    for(Object s : notificationTemplates.keySet()) {
+      props.put(s,notificationTemplates.get(s));
+    }
+    return props;
+  }
+
+
+  private void validateNotificationTemplates(Properties notificationTemplates) {
+    //todo check required properties
+  }
+  private void validateJavaMailProperties(Properties javaMailProperties) {
+    //todo check required properties
   }
 }

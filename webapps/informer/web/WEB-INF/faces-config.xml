@@ -326,7 +326,14 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.restriction.RestrictionEditController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
-  
+
+  <managed-bean>
+      <managed-bean-name>notificationSettings</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.notifications.NotificationSettingsController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>

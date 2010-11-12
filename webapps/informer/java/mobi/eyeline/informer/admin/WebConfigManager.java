@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.util.config.BaseManager;
 import mobi.eyeline.informer.admin.util.config.SettingsReader;
 import mobi.eyeline.informer.admin.util.config.SettingsWriter;
+import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
 import java.util.Collection;
@@ -146,6 +147,7 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
   }
 
   public void setJavaMailProperties(final Properties props) throws AdminException {
+
     updateSettings(new SettingsWriter<WebConfigSettings>() {
 
       public void changeSettings(WebConfigSettings settings) throws AdminException {
@@ -161,4 +163,52 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
       }
     });
   }
+
+
+
+  public Properties getNotificationTemplates() {
+    return readSettings(new SettingsReader<WebConfigSettings,Properties>(){
+      public Properties executeRead(WebConfigSettings settings) {
+        return settings.getNotificationTemplates();
+      }
+    });
+
+  }
+
+  public void setNotificationTemplates(final Properties props) throws AdminException {
+
+    updateSettings(new SettingsWriter<WebConfigSettings>() {
+      public void changeSettings(WebConfigSettings settings) throws AdminException {
+        Properties copy = new Properties();
+        for(Object s : props.keySet()) {
+          copy.put(s,props.get(s));
+        }
+        settings.setNotificationTemplates(copy);
+      }
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        //dummy
+      }
+    });
+  }
+
+  public Address getSmsSenderAddress() {
+    return readSettings(new SettingsReader<WebConfigSettings,Address >(){
+      public Address executeRead(WebConfigSettings settings) {
+        return settings.getSmsSenderAddress();
+      }
+    });
+
+  }
+
+  public void setSmsSenderAddress(final Address addr) throws AdminException {
+    updateSettings(new SettingsWriter<WebConfigSettings>() {
+      public void changeSettings(WebConfigSettings settings) throws AdminException {
+        settings.setSmsSenderAddress(addr);
+      }
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        //dummy
+      }
+    });
+  }
+
 }

@@ -29,6 +29,14 @@ public class StringEncoderDecoder {
     return result.toString();
   }
 
+  public static Object decode(String str) {
+    str = str.replaceAll("&quot;","\"");
+    str = str.replaceAll("&lt;","<");
+    str = str.replaceAll("&gt;",">");
+    str = str.replaceAll("&amp;","&");
+    return str;
+  }
+
   public static String encodeHTML(String str) {
     if (str == null) return "";
     StringBuilder result = new StringBuilder(str.length());
@@ -294,4 +302,6 @@ public class StringEncoderDecoder {
     }
     return sb.toString();
   }
+
+
 }

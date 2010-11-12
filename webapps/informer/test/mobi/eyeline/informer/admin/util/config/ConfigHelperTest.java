@@ -1,6 +1,9 @@
 package mobi.eyeline.informer.admin.util.config;
 
+
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.util.config.XmlConfig;
+import mobi.eyeline.informer.util.config.XmlConfigSection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -44,5 +47,21 @@ public class ConfigHelperTest {
     assertTrue(configFile.delete() && configFile.createNewFile());
     ConfigHelper.rollbackConfig(backup, configFile, fs);
     assertEquals(configFile.length(), backup.length());
+  }
+
+  @Test
+  public void testEncode() throws Exception{
+    FileSystem fs = FileSystem.getFSForSingleInst();
+    File backup = ConfigHelper.createBackup(configFile, backupDir, fs);
+    XmlConfig config = new XmlConfig();
+    config.load(configFile);
+    XmlConfigSection section = config.getSection("section1");
+    assertEquals("Hello",section.getString("param4"));
+    section.setString("param4","<>\"&blablabla");
+    ConfigHelper.saveXmlConfig(config,configFile,backupDir,fs);
+
+    config.load(configFile);
+    section = config.getSection("section1");
+    assertEquals("<>\"&blablabla",section.getString("param4"));
   }
 }

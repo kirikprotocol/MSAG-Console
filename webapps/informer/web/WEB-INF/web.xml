@@ -259,6 +259,7 @@
       <url-pattern>/archieve/*</url-pattern>
       <url-pattern>/cdr/*</url-pattern>
       <url-pattern>/journal/*</url-pattern>
+      <url-pattern>/notifications/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>informer-admin</role-name>

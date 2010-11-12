@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.util.config.ManagedConfigFile;
+import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigParam;
@@ -31,6 +32,16 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     for(Object s : props.keySet()) {
       javamail.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
     }
+
+    XmlConfigSection sms = config.getSection("sms");
+    sms.addParam(new XmlConfigParam("senderAddress",settings.getSmsSenderAddress().getSimpleAddress(),XmlConfigParam.Type.STRING));
+
+    XmlConfigSection notificationTemplates=config.getSection("notificationTemplates");
+    props = settings.getNotificationTemplates();
+    for(Object s : props.keySet()) {
+      notificationTemplates.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
+    }
+
     config.addSection(javamail);    
     config.save(newFile);
   }
@@ -74,6 +85,11 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       XmlConfigSection javamail = webconfig.getSection("javamail");
       settings.setJavaMailProperties(javamail.toProperties("",null));
 
+      XmlConfigSection sms = webconfig.getSection("sms");
+      settings.setSmsSenderAddress(new Address(sms.getString("senderAddress")));
+
+      XmlConfigSection notificationTemplates =webconfig.getSection("notificationTemplates");
+      settings.setNotificationTemplates(notificationTemplates.toProperties("",null));
 
       return settings;
     }

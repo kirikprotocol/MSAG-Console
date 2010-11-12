@@ -55,6 +55,10 @@ public class WebConfigTest {
     props.put("mail.host","kikimora");
     config.setJavaMailProperties(props);
 
+    props = config.getNotificationTemplates();
+    props.put("delivery.state.changed.sms.template","Wow! &#<> Delivery \"{0}\" state changed to '{1}' at {2}");
+    config.setNotificationTemplates(props);
+
     //check after rereading
     config = new WebConfigManager(configFile,backupDir,fileSys);
     Assert.assertEquals(config.getInstallationType(), InstallationType.HA);
@@ -69,11 +73,16 @@ public class WebConfigTest {
     assertEquals(config.getJournalDir(), "journal");
 
     props = config.getJavaMailProperties();
-    assertEquals(props.get("mail.host"),"kikimora");
-    assertEquals(props.get("mail.user"),"user");
-    assertEquals(props.get("mail.password"),"password");
-    assertEquals(props.get("mail.transport.protocol"),"smtp");
-    assertEquals(props.get("mail.from"),"admin@informer.com");
+    assertEquals("kikimora",props.get("mail.host"));
+    assertEquals("user",props.get("mail.user"));
+    assertEquals("password",props.get("mail.password"));
+    assertEquals("smtp",props.get("mail.transport.protocol"));
+    assertEquals("admin@informer.com",props.get("mail.from"));
+
+    props = config.getNotificationTemplates();
+    assertEquals("Wow! &#<> Delivery \"{0}\" state changed to '{1}' at {2}",props.get("delivery.state.changed.sms.template"));
+    assertEquals("Delivery {0} {1}",props.get("delivery.state.changed.email.template.subject"));
+    assertEquals("Dear, {3}. Delivery {0} state was changed to {1} at {2}. ",props.get("delivery.state.changed.email.template.body"));
 
   }
 

@@ -29,5 +29,14 @@
     <param name="mail.from" type="string">admin@informer.com</param>
   </section>
 
+  <section name="sms">
+    <param name="senderAddress" type="string">+79130000000</param>
+  </section>
+
+  <section name="notificationTemplates">
+    <param name="delivery.state.changed.sms.template"           type="string">Delivery {0} state changed to {1} at {2} </param>
+    <param name="delivery.state.changed.email.template.subject" type="string">Delivery {0} {1}</param>
+    <param name="delivery.state.changed.email.template.body"    type="string">Dear, {3}. Delivery {0} state was changed to {1} at {2}. </param>
+  </section>
 
 </config>

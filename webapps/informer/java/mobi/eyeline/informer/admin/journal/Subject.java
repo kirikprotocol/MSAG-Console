@@ -19,7 +19,8 @@ public enum Subject {
   DAEMONS("subject.daemons"),
   INFORMER("subject.informer"),
   DELIVERIES("subject.deliveries"),
-  RESTRICTIONS("subject.restrictions");
+  RESTRICTIONS("subject.restrictions"), 
+  WEBCONFIG("subject.webconfig");
 
   private static Map<String, Subject> map = new HashMap<String, Subject>(values().length) {      {
       for(Subject s : Subject.values()) {

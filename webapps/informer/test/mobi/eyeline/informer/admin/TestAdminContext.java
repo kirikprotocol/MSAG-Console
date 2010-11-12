@@ -18,6 +18,7 @@ import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.web.TestWebConfigManager;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -43,7 +44,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
-    TestUtils.exportResource(TestRestrictionsManager.class.getResourceAsStream("restrictions.csv"), new File(confDir, "restrictions.csv"), false);
+    TestUtils.exportResource(TestRestrictionsManager.class.getResourceAsStream("restrictions.csv"), new File(confDir, "restrictions.csv"), false);    
   }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
@@ -144,6 +145,7 @@ public class TestAdminContext extends AdminContext {
 
 
   public TestAdminContext(File appBaseDir, WebConfigManager webConfig) throws InitException {
+    this.webConfig = webConfig;
     fileSystem = new TestFileSystem();
     File servicesDir = new File(appBaseDir, "services");
     File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");

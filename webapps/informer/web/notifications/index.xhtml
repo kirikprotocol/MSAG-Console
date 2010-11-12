@@ -1,0 +1,109 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.notifications']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+
+
+      <eye:buttons>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{notificationSettings.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="#{notificationSettings.reset}" immediate="true"/>
+        </eye:button>
+      </eye:buttons>
+
+      <h:panelGroup style="padding:10px 10px 10px 10px">
+        <eye:collapsingGroup label="#{msg['notifications.config.sms']}" opened="true">
+          <tr:panelFormLayout>
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.sms.sender.addr']}">
+              <tr:inputText id="SMSaddr" value="#{notificationSettings.smsSenderAddress}" simple="true" required="true">
+                <eye:validatePhone/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.changed.sms.template']}">
+              <tr:inputText rows="3" id="SMStemplate" value="#{notificationSettings.smsTemplate}" simple="true" required="true">
+                <tr:validateLength minimum="1"/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+          </tr:panelFormLayout>
+        </eye:collapsingGroup>
+      </h:panelGroup>
+
+      <h:panelGroup style="padding:10px 10px 10px 10px">
+        <eye:collapsingGroup label="#{msg['notifications.config.email']}" opened="true">
+          <tr:panelFormLayout>
+
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.mail.from']}">
+              <tr:inputText id="mailFrom" value="#{notificationSettings.mailFrom}" simple="true" required="true">
+                <tr:validateLength minimum="1"/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.mail.host']}">
+              <tr:inputText id="mailHost" value="#{notificationSettings.mailHost}" simple="true" required="true">
+                <tr:validateLength minimum="1"/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.mail.user']}">
+              <tr:inputText id="mailUser" value="#{notificationSettings.mailUser}" simple="true"/>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.mail.password']}">
+              <tr:inputText id="mailPwd" secret="true" value="#{notificationSettings.mailPassword}"  simple="true"/>
+            </tr:panelLabelAndMessage>
+
+
+            <p/>
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.changed.email.template.subject']}">
+              <tr:inputText id="emailSubj" value="#{notificationSettings.emailSubjectTemplate}" simple="true" required="true">
+                <tr:validateLength minimum="1"/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.changed.email.template.body']}">
+              <tr:inputText id="emailText" rows="10"  value="#{notificationSettings.emailBodyTemplate}" simple="true" required="true">
+                <tr:validateLength minimum="1"/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+          </tr:panelFormLayout>
+        </eye:collapsingGroup>
+
+        <p class="comment">
+        <h:outputText  value="#{msg['notifications.config.comment']}" escape="false"/>
+        </p>
+
+
+      </h:panelGroup>
+
+      <eye:buttons>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{notificationSettings.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="#{notificationSettings.reset}" immediate="true"/>
+        </eye:button>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

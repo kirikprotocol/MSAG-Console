@@ -377,6 +377,36 @@ public class Configuration {
     context.sendTestSms(sms);
   }
 
+  public Properties getJavaMailProperties() {
+    return context.getJavaMailProperties();
+  }
+
+  public void updateJavaMailProperties(Properties props,String user) throws AdminException {
+    Properties old = context.getJavaMailProperties();
+    context.setJavaMailProperties(props);
+    journal.logUpdateJavaMailProps(props,old,user);
+  }
+
+  public Properties getNotificationTemplates() {
+    return context.getNotificationTemplates();
+  }
+
+  public void updateNotificationTemplates(Properties props,String user) throws AdminException {
+    Properties old = context.getNotificationTemplates();
+    context.setNotificationTemplates(props);
+    journal.logUpdateNotificationTemplates(props,old,user);
+  }
+
+  public Address getSmsSenderAddress() {
+    return context.getSmsSenderAddress();
+  }
+
+  public void setSmsSenderAddress(Address addr, String user) throws AdminException {
+    Address old = getSmsSenderAddress();
+    context.setSmsSenderAddress(addr);
+    journal.logUpdateSmsSenderAddress(addr,old,user);
+  }
+
   private final Lock lock = new ReentrantLock();
 
   public void lock() {
@@ -389,6 +419,8 @@ public class Configuration {
   public Revision getLastRevision(ConfigType configType) {
     return lastRevisions.get(configType);
   }
+
+
 
   public File getWorkDir() {
     return context.getWorkDir();

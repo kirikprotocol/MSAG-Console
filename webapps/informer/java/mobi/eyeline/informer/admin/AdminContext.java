@@ -543,4 +543,28 @@ public class AdminContext {
   public void sendTestSms(TestSms sms) throws AdminException {
     infosme.sendTestSms(sms);
   }
+
+  public Properties getJavaMailProperties() {
+    return webConfig.getJavaMailProperties();
+  }
+
+  public void setJavaMailProperties(Properties props) throws AdminException {
+    webConfig.setJavaMailProperties(props);
+  }
+
+  public Properties getNotificationTemplates() {
+    return webConfig.getNotificationTemplates();
+  }
+
+  public void setNotificationTemplates(Properties props) throws AdminException {
+    webConfig.setNotificationTemplates(props);
+  }
+
+  public Address getSmsSenderAddress() {
+    return webConfig.getSmsSenderAddress();
+  }
+
+  public void setSmsSenderAddress(Address addr) throws AdminException {
+    webConfig.setSmsSenderAddress(addr);
+  }
 }
