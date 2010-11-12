@@ -9,7 +9,7 @@ namespace snmp {
 /* ************************************************************************** *
  * class TrapRecordLog implementation:
  * ************************************************************************** */
-static const RollingFileStorageParms _smsc_snmp_STORAGE_parms = {
+static const smsc::inman::filestore::RollingFileStorageParms _smsc_snmp_STORAGE_parms = {
     TrapRecord::headerText(), 0, 0, NULL
 };
 TrapRecordLog::TrapRecordLog(const std::string & location,
