@@ -19,6 +19,14 @@ public class Time {
     initFromString(s);
   }
 
+  public Time(Date d) {
+    Calendar c = Calendar.getInstance();
+    c.setTime(d);
+    hour = c.get(Calendar.HOUR_OF_DAY);
+    min = c.get(Calendar.MINUTE);
+    sec = c.get(Calendar.SECOND);
+  }
+
   private void initFromString(String s) {
     StringTokenizer st = new StringTokenizer(s,":");
     if(st.countTokens()<2) throw new IllegalArgumentException("Invalid time string:'"+s+"'" );

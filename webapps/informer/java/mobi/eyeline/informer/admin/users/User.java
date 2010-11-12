@@ -36,7 +36,8 @@ public class User implements Serializable{
   private int validHours;
   private DeliveryType deliveryType;
   private boolean transactionMode;
-  private List<Integer> regions = new ArrayList<Integer>();
+  private boolean allRegionsAllowed;
+  private List<Integer> allowedRegions = new ArrayList<Integer>();
   private int priority;
   private boolean emailNotification;
   private boolean smsNotification;
@@ -76,7 +77,7 @@ public class User implements Serializable{
     this.deliveryType = user.deliveryType;
     this.transactionMode=user.transactionMode;
     this.policyId = user.policyId;
-    this.regions = user.getRegions() == null ? null : new ArrayList<Integer>(user.getRegions());
+    this.allowedRegions = user.getRegions() == null ? null : new ArrayList<Integer>(user.getRegions());
     this.priority = user.priority;
     this.emailNotification = user.smsNotification;
     this.smsNotification = user.smsNotification;
@@ -86,6 +87,7 @@ public class User implements Serializable{
     this.directoryPoolPeriod=user.directoryPoolPeriod;
     this.createReports=user.createReports;
     this.reportsLifetime=user.reportsLifetime;
+    this.allRegionsAllowed=user.allRegionsAllowed;
 
   }
 
@@ -278,12 +280,12 @@ public class User implements Serializable{
   }
 
   public List<Integer> getRegions() {
-    return regions;
+    return allowedRegions;
   }
 
   public void setRegions(List<Integer> regions) throws AdminException {
     if(regions==null) {
-      this.regions = null;
+      this.allowedRegions = null;
       return;
     }
     List<Integer> regionsIds = new ArrayList<Integer>();
@@ -293,7 +295,7 @@ public class User implements Serializable{
       regionsIds.add(r);
     }
 
-    this.regions = regionsIds;
+    this.allowedRegions = regionsIds;
   }
 
   public int getPriority() {
@@ -373,6 +375,13 @@ public class User implements Serializable{
     this.reportsLifetime = reportsLifetime;
   }
 
+  public boolean isAllRegionsAllowed() {
+    return allRegionsAllowed;
+  }
+
+  public void setAllRegionsAllowed(boolean allRegionsAllowed) {
+    this.allRegionsAllowed = allRegionsAllowed;
+  }
 
   public enum Status {
     ENABLED,

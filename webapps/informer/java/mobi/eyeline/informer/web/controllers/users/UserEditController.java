@@ -8,9 +8,7 @@ import mobi.eyeline.informer.util.Time;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Copyright Eyeline.mobi
@@ -52,6 +50,12 @@ public class UserEditController extends UserController {
     if(userId==null || userId.length()==0) {
       userId=null;
       userToEdit = new User();
+      userToEdit.setDeliveryStartTime(new Time(9,0,0));
+      userToEdit.setDeliveryEndTime(new Time(22,0,0));
+      userToEdit.setDeliveryDays(Arrays.<Integer>asList(0,1,2,3,4,5,6));
+      userToEdit.setValidHours(3);
+      userToEdit.setPriority(1);
+      userToEdit.setAllRegionsAllowed(true);
     }
     else {
       userToEdit = getConfig().getUser(userId);
@@ -60,6 +64,13 @@ public class UserEditController extends UserController {
     passwordConfirm = userToEdit.getPassword();
   }
 
+  public void setActiveWeekDays(Integer[] days) throws AdminException {
+    userToEdit.setDeliveryDays(Arrays.<Integer>asList(days));
+  }
+
+  public Integer[] getActiveWeekDays() {
+    return userToEdit.getDeliveryDays().toArray(new Integer[0]);
+  }
 
   public boolean isInitError() {
     return initError;
@@ -136,23 +147,35 @@ public class UserEditController extends UserController {
 
 
 
-  public void setDeliveryEndTime(String t) {
-    if(t==null || t.trim().length()==0) userToEdit.setDeliveryEndTime(null);
+  public void setDeliveryEndTime(Date t) {
+    if(t==null) userToEdit.setDeliveryEndTime(null);
     else userToEdit.setDeliveryEndTime(new Time(t));
   }
-  public void setDeliveryStartTime(String t) {
-    if(t==null || t.trim().length()==0) userToEdit.setDeliveryStartTime(null);
+  public void setDeliveryStartTime(Date t) {
+    if(t==null) userToEdit.setDeliveryStartTime(null);
     else userToEdit.setDeliveryStartTime(new Time(t));
   }
 
-  public String getDeliveryEndTime() {
+  public Date getDeliveryEndTime() {
     if(userToEdit.getDeliveryEndTime()==null) return null;
-    return userToEdit.getDeliveryEndTime().getTimeString();
+    return userToEdit.getDeliveryEndTime().getTimeDate();
   }
 
-  public String getDeliveryStartTime() {
+  public Date getDeliveryStartTime() {
     if(userToEdit.getDeliveryStartTime()==null) return null;
-    return userToEdit.getDeliveryStartTime().getTimeString();
+    return userToEdit.getDeliveryStartTime().getTimeDate();
+  }
+
+  public boolean isBlocked() {
+    return userToEdit.getStatus() == User.Status.DISABLED;
+  }
+
+  public void setBlocked(boolean blocked) throws AdminException {
+    userToEdit.setStatus(blocked ? User.Status.DISABLED : User.Status.ENABLED);
+  }
+
+  public boolean isSmsDeliveryMode() {
+    return userToEdit.getDeliveryType() == User.DeliveryType.SMS;
   }
 
   public List<SelectItem> getLocales() {
