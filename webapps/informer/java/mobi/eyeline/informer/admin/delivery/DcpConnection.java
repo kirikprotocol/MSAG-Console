@@ -116,7 +116,7 @@ public class DcpConnection {
    * @return идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public long[] addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException {
+  public long[] addDeliveryMessages(int deliveryId, List<Message> messages) throws AdminException {
     AddDeliveryMessages req = new AddDeliveryMessages();
     req.setDeliveryId(deliveryId);
     req.setMessages(DcpConverter.convert(messages));
@@ -135,11 +135,11 @@ public class DcpConnection {
    * Добавляет сообщения в рассылку
    *
    * @param deliveryId идентификатор рассылки
-   * @param addresses   сообщения
+   * @param addresses   адресаты
    * @return идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public long[] addDeliveryMessages(int deliveryId, List<Address> addresses) throws AdminException {
+  public long[] addDeliveryAddresses(int deliveryId, List<Address> addresses) throws AdminException {
     AddDeliveryMessages req = new AddDeliveryMessages();
     req.setDeliveryId(deliveryId);
     req.setMessages(DcpConverter.convert(addresses));
@@ -450,6 +450,11 @@ public class DcpConnection {
       if (filter.getStates() != null && filter.getStates().length > 0) {
         req.setStates(DcpConverter.convert(filter.getStates()));
       }
+      if (filter.getErrorCodes() != null && filter.getErrorCodes().length > 0) {
+        int[] codes = new int[filter.getErrorCodes().length];
+        System.arraycopy(filter.getErrorCodes(), 0, codes, 0, codes.length);
+        req.setCodeFilter(codes);
+      }
     }
     RequestMessagesStateResp resp;
     try {
@@ -513,6 +518,11 @@ public class DcpConnection {
       }
       if (filter.getStates() != null && filter.getStates().length > 0) {
         req.setStates(DcpConverter.convert(filter.getStates()));
+      }
+      if (filter.getErrorCodes() != null && filter.getErrorCodes().length > 0) {
+        int[] codes = new int[filter.getErrorCodes().length];
+        System.arraycopy(filter.getErrorCodes(), 0, codes, 0, codes.length);
+        req.setCodeFilter(codes);
       }
     }
     CountMessagesResp resp;

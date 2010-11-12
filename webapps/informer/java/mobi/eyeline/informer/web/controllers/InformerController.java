@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  */
 public abstract class InformerController implements Serializable {
 
-  private static final Logger logger = Logger.getLogger(InformerController.class);
+  protected static final Logger logger = Logger.getLogger(InformerController.class);
 
   /**
    * Возвращает Configuration
@@ -123,6 +123,14 @@ public abstract class InformerController implements Serializable {
    */
   protected Map<String, String> getRequestParameters() {
     return FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
+  }
+
+  /**
+   * Возвращает все параметры запроса
+   * @return параметры запроса
+   */
+  protected Map<String, Object> getRequest() {
+    return FacesContext.getCurrentInstance().getExternalContext().getRequestMap();
   }
 
   /**

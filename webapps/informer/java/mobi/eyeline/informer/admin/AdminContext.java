@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -71,7 +72,7 @@ public class AdminContext {
   protected DeliveryManager deliveryManager;
 
   protected File workDir;
-  
+
   protected RestrictionsManager restrictionsManager;
 
   protected RestrictionDaemon restrictionDaemon;
@@ -79,6 +80,8 @@ public class AdminContext {
 // delivery ->user ->region->smsc
 
   final private Lock integrityLock = new ReentrantLock();
+
+  final private ConcurrentHashMap<Integer, Object> deliveriesLock = new ConcurrentHashMap<Integer, Object>(10);
 
   protected AdminContext() {
   }
@@ -246,7 +249,7 @@ public class AdminContext {
         }
       });
       if(!notExist[0]) {
-        throw new IntegrityException("fail.delete.user.by.delivery", login);       
+        throw new IntegrityException("fail.delete.user.by.delivery", login);
       }
       usersManager.removeUser(login);
     }
@@ -412,6 +415,17 @@ public class AdminContext {
     return ret;
   }
 
+  private Object getLock(int deliveryId) {
+    Object lock = deliveriesLock.get(deliveryId);
+    if(lock == null) {
+      Object l = deliveriesLock.putIfAbsent(deliveryId, lock = new Object());
+      if(l != null) {
+        lock = l;
+      }
+    }
+    return lock;
+  }
+
   public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
     if(restrictionsManager.hasActiveRestriction(login)) {
       throw new DeliveryException("creation_restricted");
@@ -445,27 +459,38 @@ public class AdminContext {
       if(usersManager.getUser(delivery.getOwner()) == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
       }
-      deliveryManager.modifyDelivery(login, password, delivery);
+      synchronized (getLock(delivery.getId())) {
+        deliveryManager.modifyDelivery(login, password, delivery);
+      }
     }finally {
       integrityLock.unlock();
     }
   }
 
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
-    deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
-    deliveryManager.dropDelivery(login, password, deliveryId);
+    synchronized (getLock(deliveryId)) {
+      deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
+      deliveryManager.dropDelivery(login, password, deliveryId);
+    }
   }
 
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-    deliveryManager.addMessages(login, password, msDataSource, deliveryId);
+
+    synchronized (getLock(deliveryId)) {
+      deliveryManager.addMessages(login, password, msDataSource, deliveryId);
+    }
   }
 
   public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
-    return deliveryManager.addSingleTextMessages(login, password, msDataSource, deliveryId);
+    synchronized (getLock(deliveryId)) {
+      return deliveryManager.addSingleTextMessages(login, password, msDataSource, deliveryId);
+    }
   }
 
-  public void dropMessages(String login, String password, int deliveryId, long[] messageIds) throws AdminException {
-    deliveryManager.dropMessages(login, password, deliveryId, messageIds);
+  public void dropMessages(String login, String password, int deliveryId, Collection<Long> messageIds) throws AdminException {
+    synchronized (getLock(deliveryId)) {
+      deliveryManager.dropMessages(login, password, deliveryId, messageIds);
+    }
   }
 
   public int countDeliveries(String login, String password, DeliveryFilter deliveryFilter) throws AdminException {
@@ -477,24 +502,32 @@ public class AdminContext {
   }
 
   public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
-    deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
-    deliveryManager.cancelDelivery(login, password, deliveryId);
+    synchronized (getLock(deliveryId)) {
+      deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
+      deliveryManager.cancelDelivery(login, password, deliveryId);
+    }
   }
 
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
-    deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
-    deliveryManager.pauseDelivery(login, password, deliveryId);
+    synchronized (getLock(deliveryId)) {
+      deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
+      deliveryManager.pauseDelivery(login, password, deliveryId);
+    }
   }
 
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
-    if(restrictionsManager.hasActiveRestriction(login)) {
-      throw new DeliveryException("activation_restricted");
+    synchronized (getLock(deliveryId)) {
+      if(restrictionsManager.hasActiveRestriction(login)) {
+        throw new DeliveryException("activation_restricted");
+      }
+      deliveryManager.activateDelivery(login, password, deliveryId);
     }
-    deliveryManager.activateDelivery(login, password, deliveryId);
   }
 
   public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
-    return deliveryManager.getDeliveryStats(login, password, deliveryId);
+    synchronized (getLock(deliveryId)) {
+      return deliveryManager.getDeliveryStats(login, password, deliveryId);
+    }
   }
 
   public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
@@ -502,15 +535,21 @@ public class AdminContext {
   }
 
   public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
-    deliveryManager.getMessages(login, password, filter, _pieceSize, visitor);
+    synchronized (getLock(filter.getDeliveryId())) {
+      deliveryManager.getMessages(login, password, filter, _pieceSize, visitor);
+    }
   }
 
   public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException {
-    return deliveryManager.countMessages(login, password, messageFilter);
+    synchronized (getLock(messageFilter.getDeliveryId())) {
+      return deliveryManager.countMessages(login, password, messageFilter);
+    }
   }
 
   public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliverId) throws AdminException {
-    return deliveryManager.getDeliveryStatusHistory(login, password, deliverId);
+    synchronized (getLock(deliverId)) {
+      return deliveryManager.getDeliveryStatusHistory(login, password, deliverId);
+    }
   }
 
   public Restriction getRestriction(int id) {
@@ -537,7 +576,9 @@ public class AdminContext {
   }
 
   public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
-    return deliveryManager.setDeliveryRestriction(login, password, deliveryId, restriction);
+    synchronized (getLock(deliveryId)) {
+      return deliveryManager.setDeliveryRestriction(login, password, deliveryId, restriction);
+    }
   }
 
   public void sendTestSms(TestSms sms) throws AdminException {

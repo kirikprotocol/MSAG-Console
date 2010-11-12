@@ -9,7 +9,6 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
-import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.Locale;
@@ -19,8 +18,6 @@ import java.util.ResourceBundle;
  * @author Aleksandr Khalitov
  */
 public class ProcessDeliveryPage extends InformerController implements CreateDeliveryPage{
-
-  private static final Logger logger = Logger.getLogger(ProcessDeliveryPage.class);
 
   private int state = 1;
 
@@ -92,8 +89,8 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     maximum = (int)tmpFile.length();
 
     try{
-      r[0] = new BufferedReader(new FileReader(tmpFile));
-      b[0] = new PrintWriter(new BufferedWriter(new FileWriter(blacklist)));
+      r[0] = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(tmpFile)));
+      b[0] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(config.getFileSystem().getOutputStream(blacklist, false))));
 
       if(delivery.getType() == Delivery.Type.SingleText) {
         config.createSingleTextDelivery(u.getLogin(), u.getPassword(), delivery, new DataSource<Address>() {
@@ -220,7 +217,12 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     }
     BufferedReader r = null;
     try{
-      r = new BufferedReader(new FileReader(blacklist));
+      try {
+        r = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(blacklist)));
+      } catch (AdminException e) {
+        logger.error(e,e);
+        throw new IOException(e.getMessage());
+      }
       String line;
       while((line = r.readLine()) != null) {
         writer.println(line);

@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
@@ -368,10 +369,6 @@ public class Configuration {
     return context.addSingleTextMessages(login, password, msDataSource, deliveryId);
   }
 
-  public void dropMessages(String login, String password, int deliveryId, long[] messageIds) throws AdminException {
-    //todo journal
-    context.dropMessages(login, password, deliveryId, messageIds);
-  }
 
   public void sendTestSms(TestSms sms) throws AdminException {
     context.sendTestSms(sms);
@@ -414,6 +411,10 @@ public class Configuration {
   }
   public void unlock() {
     lock.unlock();
+  }
+
+  public FileSystem getFileSystem() {
+    return context.getFileSystem();
   }
 
   public Revision getLastRevision(ConfigType configType) {

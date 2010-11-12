@@ -19,7 +19,7 @@
         <div style="background-color:#{bgcolor==null ? '#6495ed' : bgcolor};width:#{current/maximum*width}px;height:#{height}px;">
           <div style="margin-left:#{width/2-10}px; font-weight:bold; color:#{fontColor == null ? 'black' : fontColor}; padding-top:#{height/2-6}px">
             <h:panelGroup rendered="#{percents == null ? 'true' : percents}">
-              <h:outputText value="#{current/maximum*100}">
+              <h:outputText value="#{maximum != 0 ? current/maximum*100 : 100}">
                 <f:convertNumber maxFractionDigits="0"/>
               </h:outputText>
               <h:outputText value="%"/>

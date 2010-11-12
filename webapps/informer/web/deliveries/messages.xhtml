@@ -8,7 +8,7 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{msg['informer.deliveries.messages']} '#{messages.delivery != null ? messages.delivery.name : ''}'"/>
+  <ui:param name="pageTitle" value="#{msg['informer.deliveries.messages']} '#{messages.deliveryName}'"/>
 
   <ui:define name="content">
     <tr:form>
@@ -16,75 +16,143 @@
 
       <h:inputHidden id="delivery" value="#{messages.deliveryId}"/>
       <h:inputHidden value="#{messages.init}"/>
+      <h:inputHidden value="#{messages.deliveryName}"/>
 
-      <h:panelGroup style="padding:10px 10px 10px 10px" rendered="#{messages.delivery != null}">
+      <h:panelGroup rendered="#{messages.state == 0}">
 
-        <eye:dataTableFilter bean="#{messages}" clearAction="clear" applyAction="query">
-          <h:panelGrid columns="3" columnClasses="column400Width, column400Width, columnTopLeftAlign">
-            <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+        <h:panelGroup style="padding:10px 10px 10px 10px" rendered="#{messages.deliveryId!= null}">
 
-              <h:outputText value="#{msg['informer.deliveries.message.abonent']}"/>
-              <h:inputText value="#{messages.msisdn}"/>
-              <h:outputText value="#{msg['informer.deliveries.messages.from_date']}"/>
-              <t:inputDate value="#{messages.fromDate}" popupCalendar="true" type="date" autocomplete="true"/>
+          <eye:dataTableFilter bean="#{messages}" clearAction="clear" applyAction="query">
+            <h:panelGrid columns="3" columnClasses="column400Width, column400Width, columnTopLeftAlign">
+              <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+
+                <h:outputText value="#{msg['informer.deliveries.message.abonent']}"/>
+                <h:inputText id="msisdn" value="#{messages.msgFilter.msisdn}"/>
+                <h:outputText value="#{msg['informer.deliveries.messages.from_date']}"/>
+                <t:inputDate id="fromDate" value="#{messages.msgFilter.fromDate}" popupCalendar="true" type="date" autocomplete="true"/>
+
+              </h:panelGrid>
+              <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+
+                <h:outputText value="#{msg['informer.deliveries.message.state']}"/>
+                <h:selectOneMenu id="state"  value="#{messages.msgFilter.state}">
+                  <f:selectItem itemLabel="" itemValue=""/>
+                  <f:selectItems value="#{messages.uniqueStates}"/>
+                </h:selectOneMenu>
+
+                <h:outputText value="#{msg['informer.deliveries.messages.till_date']}"/>
+                <t:inputDate id="tillDate" value="#{messages.msgFilter.tillDate}" popupCalendar="true" type="date" autocomplete="true"/>
+              </h:panelGrid>
+
+              <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+
+                <h:outputText value="#{msg['informer.deliveries.message.error']}"/>
+                <tr:inputText id="errorCode" value="#{messages.msgFilter.errorCode}" simple="true">
+                  <tr:validateLongRange minimum="0"/>
+                </tr:inputText>
+
+              </h:panelGrid>
 
             </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+          </eye:dataTableFilter>
+        </h:panelGroup>
 
-              <h:outputText value="#{msg['informer.deliveries.message.state']}"/>
-              <h:selectOneMenu value="#{messages.state}">
-                <f:selectItem itemLabel="" itemValue=""/>
-                <f:selectItems value="#{messages.uniqueStates}"/>
-              </h:selectOneMenu>
+        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init}" selectedRows="#{messages.selected}">
+          <eye:row rowId="#{m.id}">
+            <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
+              <h:outputText value="#{m.abonent}"/>
+            </eye:column>
+            <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="15%">
+              <h:outputText value="#{m.state}" converter="messageStateConverter"/>
+            </eye:column>
+            <eye:column name="date" title="#{msg['informer.deliveries.message.date']}" width="15%">
+              <tr:outputText value="#{m.date}">
+                <f:convertDateTime dateStyle="short" type="both"/>
+              </tr:outputText>
+            </eye:column>
+            <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%">
+              <h:outputText value="#{m.text}"/>
+            </eye:column>
+            <eye:column name="error" title="#{msg['informer.deliveries.message.error']}" width="20%">
+              <h:outputText value="#{m.errorCode}"/>
+              <h:outputText value=":&#160;"/>
+              <h:outputText value="#{m.errorCode}" converter="errorCodeConverter"/>
+            </eye:column>
+          </eye:row>
+        </eye:dataTable>
 
-              <h:outputText value="#{msg['informer.deliveries.messages.till_date']}"/>
-              <t:inputDate value="#{messages.tillDate}" popupCalendar="true" type="date" autocomplete="true"/>
-            </h:panelGrid>
+        <h:panelGrid>
+          <h:outputText value="&#160;"/>
+        </h:panelGrid>
 
-            <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
 
-              <h:outputText value="#{msg['informer.deliveries.message.error']}"/>
-              <tr:inputText value="#{messages.errorCode}" simple="true">
-                <tr:validateLongRange minimum="0"/>
-              </tr:inputText>
-              
-            </h:panelGrid>
+        <h:panelGroup style="#{messages.init ? '' : 'display:none'}">
+          <eye:buttons>
+            <eye:button>
+              <tr:commandLink text="#{msg['resend.button']}" action="#{messages.resend}"
+                              onclick="if (!confirm('#{msg['informer.deliveries.messages.resend.confirm']}')) return false"/>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['resend.all.button']}" action="#{messages.resendAll}"
+                              onclick="if (!confirm('#{msg['informer.deliveries.messages.resend.confirm']}')) return false"/>
+            </eye:button>
+            <eye:space/>
+            <eye:button>
+              <tr:commandLink text="#{msg['download.button']}">
+                <tr:fileDownloadActionListener method="#{messages.download}" contentType="application/csv" filename="messages.csv"/>
+              </tr:commandLink>
+            </eye:button>
+          </eye:buttons>
+        </h:panelGroup>
 
-          </h:panelGrid>
-        </eye:dataTableFilter>
       </h:panelGroup>
 
-      <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init}" selectedRows="#{messages.selected}">
-        <eye:row rowId="#{m.id}">
-          <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
-            <h:outputText value="#{m.abonent}"/>
-          </eye:column>
-          <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="15%">
-            <h:outputText value="#{m.state}" converter="messageStateConverter"/>
-          </eye:column>
-          <eye:column name="date" title="#{msg['informer.deliveries.message.date']}" width="15%">
-            <tr:outputText value="#{m.date}">
-              <f:convertDateTime dateStyle="short" type="both"/>
-            </tr:outputText>
-          </eye:column>
-          <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%">
-            <h:outputText value="#{m.text}"/>
-          </eye:column>
-          <eye:column name="error" title="#{msg['informer.deliveries.message.error']}" width="20%">
-            <h:outputText value="#{m.errorCode}" converter="errorCodeConverter"/>
-          </eye:column>
-        </eye:row>
-      </eye:dataTable>
+      <h:panelGroup rendered="#{messages.state == 1}">
 
-      <h:panelGrid>
-        <h:outputText value="&#160;"/>
-      </h:panelGrid>
+        <eye:updatableContent updatePeriod="2" enabled="#{!messages.finished}">
+
+          <eye:message level="warn" rendered="#{messages.error != null}">
+            <tr:outputText value="#{messages.error}"/>
+          </eye:message>
+
+          <eye:pageSubtitle value="#{msg['informer.deliveries.messages.resending']}"/>
+
+          <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+            <h:outputText value="#{msg['processing.label']}"/>
+            <eye:progressBar current="#{messages.resendCurrent}" maximum="#{messages.resendTotal}" width="500" height="20" />
+          </h:panelGrid>
+
+          <h:panelGrid columns="2" columnClasses="column200Width, ">
+            <h:panelGrid style="padding:10px 10px 10px 10px" columns="2">
+              <h:outputText value="#{msg['informer.deliveries.messages.resent']}"/><h:outputText value="#{messages.resended}"/>
+              <h:outputText value="#{msg['informer.deliveries.messages.resending.state']}"/>
+              <h:outputText style="color:blue;" rendered="#{messages.finished}" value="#{msg['informer.deliveries.messages.resending.state.done']}"/>
+              <h:outputText style="color:red;" rendered="#{!messages.finished}" value="#{msg['informer.deliveries.messages.resending.state.process']}"/>
+            </h:panelGrid>
+            <h:outputText value="&#160;"/>
+          </h:panelGrid>
+
+          <h:panelGroup style="#{messages.finished ? '' : 'display:none'}">
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['finish.button']}" action="#{messages.resendFinish}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+          </h:panelGroup>
+
+          <h:panelGroup style="#{!messages.finished ? '' : 'display:none'}">
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{messages.stop}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+          </h:panelGroup>
 
 
-      <h:panelGroup style="#{messages.init ? '' : 'display:none'}">
-        <eye:buttons>
-          <eye:space/>
-        </eye:buttons>
+        </eye:updatableContent>
+
       </h:panelGroup>
 
     </tr:form>

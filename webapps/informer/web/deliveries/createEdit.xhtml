@@ -57,7 +57,7 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.validityPeriod}" labelStyle="text-align:left">
-            <tr:inputText id="vPeriod" value="#{createDelivery.activePage.delivery.validityPeriod}" simple="true" required="true">
+            <tr:inputText id="vPeriod" value="#{createDelivery.activePage.delivery.validityPeriod}" simple="true">
                 <tr:validateLongRange minimum="1" maximum="100"/>
               </tr:inputText>
           </tr:panelLabelAndMessage>

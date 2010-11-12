@@ -62,7 +62,7 @@ public class TestDcpConnection extends DcpConnection{
     return id;
   }
 
-  public synchronized long[] addDeliveryMessages(int deliveryId, Message[] messages) throws AdminException {
+  public synchronized long[] addDeliveryMessages(int deliveryId, List<Message> messages) throws AdminException {
     if(!deliveries.containsKey(deliveryId)) {
       throw new DeliveryException("interaction_error","");
     }
@@ -71,7 +71,7 @@ public class TestDcpConnection extends DcpConnection{
       ms = new LinkedList<MessageWState>();
       this.messages.put(deliveryId, ms);
     }
-    long[] ids = new long[messages.length];
+    long[] ids = new long[messages.size()];
     int i = 0;
     for(Message m : messages) {
       ids[i] = mIdCounter++;
@@ -82,7 +82,7 @@ public class TestDcpConnection extends DcpConnection{
     return ids;
   }
 
-  public synchronized long[] addDeliveryMessages(int deliveryId, List<Address> addresses) throws AdminException {
+  public synchronized long[] addDeliveryAddresses(int deliveryId, List<Address> addresses) throws AdminException {
     if(!deliveries.containsKey(deliveryId)) {
       throw new DeliveryException("interaction_error","");
     }
@@ -118,9 +118,6 @@ public class TestDcpConnection extends DcpConnection{
   }
 
   private boolean accept(DeliveryWStatus delivery, DeliveryFilter filter) {
-    if(delivery.getId() == 999) {
-      int t =0;
-    }
     if(filter.getEndDateFrom()!= null && delivery.getEndDate().before(filter.getEndDateFrom())) {
       return false;
     }
@@ -189,7 +186,7 @@ public class TestDcpConnection extends DcpConnection{
       if(!accept) {
         return false;
       }
-    }    //todo status
+    }
     if(filter.getStartDate() != null && message.date.before(filter.getStartDate())) {
       return false;
     }
@@ -207,6 +204,18 @@ public class TestDcpConnection extends DcpConnection{
     }
     if(filter.getEndDate() != null && message.date.after(filter.getEndDate())) {
       return false;
+    }
+    if(filter.getErrorCodes() != null && filter.getErrorCodes().length > 0) {
+      boolean accept = false;
+      for(Integer s : filter.getErrorCodes()) {
+        if(s.equals(message.errorCode)) {
+          accept = true;
+          break;
+        }
+      }
+      if(!accept) {
+        return false;
+      }
     }
 
     return true;
@@ -242,11 +251,12 @@ public class TestDcpConnection extends DcpConnection{
   }
 
   public synchronized void dropMessages(int deliveryId, long[] messageIds) throws AdminException {
-    Set<Long> ids = new HashSet<Long>();
+    Set<Long> ids = new HashSet<Long>(messageIds.length);
     for(long m : messageIds) {
       ids.add(m);
     }
-    for(List<MessageWState> ms : messages.values()) {
+    List<MessageWState> ms = messages.get(deliveryId);
+    if(ms != null) {
       Iterator<MessageWState> i = ms.iterator();
       while(i.hasNext()) {
         MessageWState m = i.next();
@@ -375,20 +385,17 @@ public class TestDcpConnection extends DcpConnection{
     MessageRequest r = messReqs.get(reqId);
     int count = 0;
     List<MessageWState> result = new LinkedList<MessageWState>();
-    for(Map.Entry<Integer, List<MessageWState>> e : this.messages.entrySet()) {
-      int deliveryId = e.getKey();
-      for(MessageWState m : e.getValue()) {
-        if(accept(deliveryId, m, r.filter) && ++count > r.position) {
-          result.add(m);
-          if(result.size() == pieceSize) {
-            break;
-          }
+    int deliveryId = delivery.getId();
+
+    for(MessageWState m : this.messages.get(delivery.getId())) {
+      if(accept(deliveryId, m, r.filter) && ++count > r.position) {
+        result.add(m);
+        if(result.size() == pieceSize) {
+          break;
         }
       }
-      if(result.size() == pieceSize) {
-        break;
-      }
     }
+
     r.position+=result.size();
     for(MessageWState d : result) {
       MessageInfo info = new MessageInfo();
@@ -409,6 +416,7 @@ public class TestDcpConnection extends DcpConnection{
   }
 
 
+  @SuppressWarnings({"EmptyCatchBlock"})
   private synchronized void modifyAll() throws AdminException {
     Random r = new Random();
     SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
@@ -445,7 +453,7 @@ public class TestDcpConnection extends DcpConnection{
         int count = 0;
         for(MessageWState m : ms) {
           if(m.state == MessageState.New) {
-            if(count<10) {
+            if(count<100) {
               boolean delivered = r.nextBoolean();
               if(delivered) {
                 m.state = MessageState.Delivered;
@@ -513,6 +521,7 @@ public class TestDcpConnection extends DcpConnection{
       this.filter.setFields(filter.getFields());
       this.filter.setStates(filter.getStates());
       this.filter.setMsisdnFilter(filter.getMsisdnFilter());
+      this.filter.setErrorCodes(filter.getErrorCodes());
     }
   }
 

@@ -201,13 +201,15 @@ public class DcpConverter {
     return result;
   }
 
-  public static DeliveryMessage[] convert(Message[] dm) {
+  public static DeliveryMessage[] convert(Collection<Message> dm) {
     if (dm == null) {
       return null;
     }
-    DeliveryMessage[] result = new DeliveryMessage[dm.length];
-    for (int i = 0; i < dm.length; i++) {
-      result[i] = convert(dm[i]);
+    DeliveryMessage[] result = new DeliveryMessage[dm.size()];
+    int i = 0;
+    for (Message m : dm) {
+      result[i] = convert(m);
+      i++;
     }
     return result;
   }

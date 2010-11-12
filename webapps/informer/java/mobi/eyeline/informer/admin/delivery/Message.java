@@ -21,7 +21,16 @@ public class Message {
     return new Message(text);
   }
 
+  public static Message newMessage(Address abonent, String text) {
+    return new Message(abonent, text);
+  }
+
   private Message(String text) {
+    this.text = text;
+  }
+
+  private Message(Address abonent, String text) {
+    this.abonent = abonent;
     this.text = text;
   }
 
@@ -77,6 +86,9 @@ public class Message {
 
   @Override
   public int hashCode() {
-    return 0;
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (text != null ? text.hashCode() : 0);
+    result = 31 * result + (abonent != null ? abonent.hashCode() : 0);
+    return result;
   }
 }

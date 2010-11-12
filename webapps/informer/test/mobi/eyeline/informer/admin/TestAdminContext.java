@@ -18,7 +18,6 @@ import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
-import mobi.eyeline.informer.web.TestWebConfigManager;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -123,7 +122,7 @@ public class TestAdminContext extends AdminContext {
         deliveryManager.createSingleTextDelivery(u.getLogin(),u.getPassword(), d, new DataSource<Address>() {
           private LinkedList<Address> as = new LinkedList<Address>() {
             {
-              for(int k=0;k<100;k++) {
+              for(int k=0;k<1000;k++) {
                 add(new Address("+7913"+k));
               }
             }

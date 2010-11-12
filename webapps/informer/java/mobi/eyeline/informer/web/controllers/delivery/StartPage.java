@@ -83,7 +83,7 @@ public class StartPage implements CreateDeliveryPage{
     }
     setDefaults(user, config, delivery);
 
-    return new UploadFilePage(delivery, new File(config.getWorkDir(),"messages_"+user+System.currentTimeMillis()));
+    return new UploadFilePage(delivery, new File(config.getWorkDir(),"messages_"+user+System.currentTimeMillis()), config.getFileSystem());
   }
 
   public boolean isSingleText() {

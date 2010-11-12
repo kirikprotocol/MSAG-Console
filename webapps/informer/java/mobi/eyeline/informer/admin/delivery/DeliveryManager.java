@@ -86,7 +86,7 @@ public class DeliveryManager {
       count++;
       if (count == 1000) {
         Collections.shuffle(messages);
-        long[] ids = conn.addDeliveryMessages(delivery.getId(), messages.toArray(new Message[messages.size()]));
+        long[] ids = conn.addDeliveryMessages(delivery.getId(), messages);
         int i = 0;
         for (Message _m : messages) {
           _m.setId(ids[i]);
@@ -98,7 +98,7 @@ public class DeliveryManager {
     }
     if (!messages.isEmpty()) {
       Collections.shuffle(messages);
-      long[] ids = conn.addDeliveryMessages(delivery.getId(), messages.toArray(new Message[messages.size()]));
+      long[] ids = conn.addDeliveryMessages(delivery.getId(), messages);
       int i = 0;
       for (Message _m : messages) {
         _m.setId(ids[i]);
@@ -117,7 +117,7 @@ public class DeliveryManager {
       count++;
       if (count == 1000) {
         Collections.shuffle(addresses);
-        long[] ids = conn.addDeliveryMessages(delivery.getId(), addresses);
+        long[] ids = conn.addDeliveryAddresses(delivery.getId(), addresses);
         for(long id : ids) {
           results.add(id);
         }
@@ -127,7 +127,7 @@ public class DeliveryManager {
     }
     if (!addresses.isEmpty()) {
       Collections.shuffle(addresses);
-      long[] ids = conn.addDeliveryMessages(delivery.getId(), addresses);
+      long[] ids = conn.addDeliveryAddresses(delivery.getId(), addresses);
       for(long id : ids) {
         results.add(id);
       }
@@ -138,9 +138,6 @@ public class DeliveryManager {
   private static void validateDelivery(final Delivery delivery) throws AdminException {
     if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
       throw new DeliveryException("replace_illegal");
-    }
-    if (delivery.getValidityPeriod() == null) {
-      throw new DeliveryException("validation_illegal");
     }
     if ((delivery.getActivePeriodStart() == null || delivery.getActivePeriodEnd() == null)) {
       throw new DeliveryException("active_period_illegal");
@@ -304,12 +301,22 @@ public class DeliveryManager {
    * @param messageIds идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public void dropMessages(String login, String password, int deliveryId, long[] messageIds) throws AdminException {
+  public void dropMessages(String login, String password, int deliveryId, Collection<Long> messageIds) throws AdminException {
+    DcpConnection conn = getDeliveryConnection(login, password);
+    dropMessages(conn, deliveryId, messageIds);
+  }
+
+  private  void dropMessages(DcpConnection conn, int deliveryId, Collection<Long> messageIds) throws AdminException {
     if (logger.isDebugEnabled()) {
       logger.debug("Drop Messages");
     }
-    DcpConnection conn = getDeliveryConnection(login, password);
-    conn.dropMessages(deliveryId, messageIds);
+    long[] ids = new long[messageIds.size()];
+    int i=0;
+    for(Long l : messageIds) {
+      ids[i] = l;
+      i++;
+    }
+    conn.dropMessages(deliveryId, ids);
   }
 
   /**

@@ -18,6 +18,9 @@ public class MessageInfo {
   private Integer errorCode;
   private String userData;
 
+  MessageInfo() {
+  }
+
   public long getId() {
     return id;
   }

@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.controllers.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
+import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.UploadController;
@@ -21,15 +22,18 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   private int maximum = Integer.MAX_VALUE;
 
-  private Delivery delivery;
+  private final Delivery delivery;
 
   private File tmpFile;
 
   private int abonentsSize;
 
-  public UploadFilePage(Delivery delivery, File tmpFile) {
+  private final FileSystem fs;
+
+  public UploadFilePage(Delivery delivery, File tmpFile, FileSystem fs) {
     this.delivery = delivery;
     this.tmpFile = tmpFile;
+    this.fs = fs;
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
@@ -79,7 +83,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     PrintWriter os = null;
     try{
       is = new BufferedReader(new InputStreamReader(file.getInputStream()));
-      os = new PrintWriter(new BufferedWriter(new FileWriter(tmpFile)));
+      os = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(tmpFile, false))));
       String line;
       while((line = is.readLine()) != null && !isStoped()) {
         String address;

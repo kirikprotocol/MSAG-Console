@@ -20,6 +20,7 @@ public class MessageFilter {
   private Date startDate;
   private Date endDate;
   private MessageFields[] fields = MessageFields.ALL;
+  private Integer[] errorCodes;
 
   public MessageFilter(Integer deliveryId, Date startDate, Date endDate) {
     if(deliveryId == null || startDate == null || endDate == null) {
@@ -53,6 +54,14 @@ public class MessageFilter {
 
   public void setMsisdnFilter(String[] msisdnFilter) {
     this.msisdnFilter = msisdnFilter;
+  }
+
+  public Integer[] getErrorCodes() {
+    return errorCodes;
+  }
+
+  public void setErrorCodes(Integer[] errorCodes) {
+    this.errorCodes = errorCodes;
   }
 
   public Date getStartDate() {
