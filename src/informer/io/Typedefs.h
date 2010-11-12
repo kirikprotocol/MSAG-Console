@@ -76,6 +76,17 @@ inline personid_type addressToSubscriber( uint8_t len, uint8_t ton, uint8_t npi,
     return ( uint64_t( (uint16_t((len-1) & 0xf) << 8) | ((ton & 0xf) << 4) | (npi & 0xf)) << 52 ) | (value & 0xfffffffffffffULL);
 }
 
+/// buf must be at least 20 bytes
+inline char* printSubscriber( char* buf, personid_type subsc ) {
+    uint8_t ton, npi, len;
+    const uint64_t addr = subscriberToAddress(subsc,len,ton,npi);
+    if (npi==1 && ton==1) { sprintf(buf,"+%*.*llu",len,len,addr); }
+    else if (npi==1 && ton==0) { sprintf(buf,"%*.*llu",len,len,addr); }
+    else { sprintf(buf,".%u.%u.%*.*llu",ton,npi,len,len,addr); }
+    return buf;
+}
+
+
 typedef enum {
     MSGSTATE_INPUT = 1,
     MSGSTATE_PROCESS = 2,
@@ -124,7 +135,7 @@ template <typename RegIter> std::string formatRegionList( RegIter begin, RegIter
 
 /// buf must be at least 40 bytes
 /// @return pointer to trailing \0.
-char* makeDeliveryPath( dlvid_type dlvId, char* buf );
+char* makeDeliveryPath( char* buf, dlvid_type dlvId );
 
 /// check if name contains only good ascii characters
 bool isGoodAsciiName( const char* str, char* badchar = 0 );

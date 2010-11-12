@@ -34,7 +34,7 @@ void DeliveryImpl::readDeliveryInfoData( const CommonSettings& cs,
 {
     try {
         char buf[100];
-        sprintf(makeDeliveryPath(dlvId,buf),"/config.xml");
+        sprintf(makeDeliveryPath(buf,dlvId),"/config.xml");
 
         std::auto_ptr<Config> cfg(Config::createFromFile((cs.getStorePath()+buf).c_str()));
         const Config& config = *cfg.get();
@@ -147,7 +147,7 @@ DlvState DeliveryImpl::readState( const CommonSettings& cs,
     planTime = 0;
     DlvState state = DLVSTATE_PAUSED;
     char buf[200];
-    sprintf(makeDeliveryPath(dlvId,buf),"status.log");
+    sprintf(makeDeliveryPath(buf,dlvId),"status.log");
     FileGuard fg;
     fg.ropen((cs.getStorePath()+buf).c_str());
     struct stat st;
@@ -273,7 +273,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         }
         // write status line into status file
         char buf[200];
-        sprintf(makeDeliveryPath(dlvId,buf),"status.log");
+        sprintf(makeDeliveryPath(buf,dlvId),"status.log");
         FileGuard fg;
         fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),0666,true);
         fg.seek(0,SEEK_END);
@@ -529,7 +529,7 @@ void DeliveryImpl::writeDeliveryInfoData()
 
     char buf[100];
     const dlvid_type dlvId = getDlvId();
-    sprintf(makeDeliveryPath(dlvId,buf),"config.xml");
+    sprintf(makeDeliveryPath(buf,dlvId),"config.xml");
 
     const std::string fpo = dlvInfo_->getCS().getStorePath() + buf;
     const std::string fpn = fpo + ".new";

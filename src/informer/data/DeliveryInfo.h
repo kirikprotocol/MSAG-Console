@@ -41,6 +41,8 @@ struct DeliveryInfoData
   std::string svcType;
   std::string userData;
   std::string sourceAddress;
+  bool finalDlvRecords;
+  bool finalMsgRecords;
 };
 
 
@@ -70,6 +72,9 @@ public:
     unsigned getPriority() const { return data_.priority; }
 
     bool isTransactional() const { return data_.transactionMode; }
+
+    bool wantFinalMsgRecords() const { return data_.finalMsgRecords; }
+    bool wantFinalDlvRecords() const { return data_.finalDlvRecords; }
 
     /// return start date or -1
     msgtime_type getStartDate() const { return startDate_; }

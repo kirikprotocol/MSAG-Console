@@ -4,6 +4,8 @@
 #include "informer/io/UTF8.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
+#include "informer/data/FinalLog.h"
+#include "informer/data/UserInfo.h"
 #include "informer/data/MessageGlossary.h"
 #include "informer/data/RetryPolicy.h"
 #include "DeliveryImpl.h"
@@ -382,6 +384,14 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
                    nchunks,
                    checkFinal);
     dlv_.activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
+    if (dlv_.getDlvInfo().wantFinalMsgRecords()) {
+        dlv_.source_->getDlvActivator().getFinalLog()
+            .addMsgRecord(currentTime,
+                          dlvId,
+                          dlv_.getUserInfo().getUserId(),
+                          m,
+                          smppState);
+    }
     dlv_.storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
     if (checkFinal) dlv_.checkFinalize();
 }

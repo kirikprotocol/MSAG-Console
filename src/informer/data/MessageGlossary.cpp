@@ -22,7 +22,7 @@ void MessageGlossary::init( const std::string& storePath,
     smsc_log_warn(log_,"reading glossary at init");
     smsc::core::synchronization::MutexGuard mg(lock_);
     smsc::core::buffers::TmpBuf<char,8192> buf;
-    strcat(makeDeliveryPath(dlvId,buf.get()),"glossary.txt");
+    strcat(makeDeliveryPath(buf.get(),dlvId),"glossary.txt");
     FileGuard fg;
     try {
         fg.ropen((storePath+buf.get()).c_str());
@@ -192,7 +192,7 @@ void MessageGlossary::setTexts( const std::string&  storePath,
     if (texts.empty()) return;
     // inserting texts into glossary file
     smsc::core::buffers::TmpBuf<char,200> buf;
-    strcat(makeDeliveryPath(dlvId,buf.get()),"glossary.txt");
+    strcat(makeDeliveryPath(buf.get(),dlvId),"glossary.txt");
     FileGuard fg;
     try {
         fg.create((storePath+buf.get()).c_str(),0666,true);
@@ -364,7 +364,7 @@ void MessageGlossary::readGlossaryFailed( const std::string& storePath,
 {
     smsc_log_warn(log_,"D=%u %s at %llu, to be truncated",dlvId,msg,ulonglong(trunc));
     char buf[100];
-    strcat(makeDeliveryPath(dlvId,buf),"glossary.txt");
+    strcat(makeDeliveryPath(buf,dlvId),"glossary.txt");
     FileGuard fg;
     fg.create((storePath+buf).c_str(),0666);
     fg.truncate(trunc);

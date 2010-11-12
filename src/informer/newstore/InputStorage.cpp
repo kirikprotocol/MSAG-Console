@@ -442,7 +442,7 @@ std::string InputStorage::makeFilePath( regionid_type regId, uint32_t fn ) const
 {
     if (fn==0) return "";
     char buf[70];
-    sprintf(makeDeliveryPath(getDlvId(),buf),"new/%u/%u.data",unsigned(regId),unsigned(fn));
+    sprintf(makeDeliveryPath(buf,getDlvId()),"new/%u/%u.data",unsigned(regId),unsigned(fn));
     smsc_log_debug(log_,"filepath for R=%u/D=%u/F=%u is %s",
                    unsigned(regId),
                    unsigned(getDlvId()),

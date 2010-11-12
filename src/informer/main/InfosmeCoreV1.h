@@ -103,6 +103,8 @@ public:
                                     BindSignal&     bs,
                                     const Delivery& dlv );
 
+    virtual FinalLog& getFinalLog() { return *finalLog_; }
+
     // --- end of delivery activator iface
 
     void selfTest();
@@ -153,6 +155,7 @@ private:
     smsc::core::buffers::FastMTQueue<BindSignal>  bindQueue_;
 
     DeliveryMgr*                                  dlvMgr_;       // owned
+    FinalLog*                                     finalLog_;     // owned
     admin::AdminServer*                           adminServer_;  // owned
     dcp::DcpServer*                               dcpServer_;    // owned
 };

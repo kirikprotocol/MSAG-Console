@@ -224,7 +224,7 @@ const char* dlvStateToString( DlvState state )
 }
 
 
-char* makeDeliveryPath( dlvid_type dlvId, char* buf )
+char* makeDeliveryPath( char* buf, dlvid_type dlvId )
 {
     const unsigned chunk = unsigned(dlvId/100)*100;
     const int rv = sprintf(buf,"deliveries/%010u/%u/",chunk,dlvId);

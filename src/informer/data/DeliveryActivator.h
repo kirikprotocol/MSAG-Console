@@ -12,6 +12,7 @@ class InputTransferTask;
 class ResendTransferTask;
 class Delivery;
 class BindSignal;
+class FinalLog;
 
 /// an interface for applying some activities on deliveries.
 class DeliveryActivator
@@ -40,6 +41,8 @@ public:
                                     ulonglong          ymdTime,
                                     BindSignal&        bs,
                                     const Delivery&    dlv ) = 0;
+
+    virtual FinalLog& getFinalLog() = 0;
 };
 
 } // informer

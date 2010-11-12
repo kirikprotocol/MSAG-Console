@@ -5,6 +5,7 @@
 #include "InfosmeCoreV1.h"
 #include "RegionLoader.h"
 #include "informer/data/UserInfo.h"
+#include "informer/data/FinalLog.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/sender/RegionSender.h"
@@ -85,6 +86,7 @@ log_(smsc::logger::Logger::getInstance("core")),
 stopping_(false),
 started_(false),
 dlvMgr_(0),
+finalLog_(0),
 adminServer_(0),
 dcpServer_(0)
 {
@@ -125,6 +127,9 @@ InfosmeCoreV1::~InfosmeCoreV1()
     smsc_log_info(log_,"--- destroying delivery mgr ---");
     delete dlvMgr_;
 
+    smsc_log_info(log_,"--- destroying final log ---");
+    delete finalLog_;
+
     smsc_log_info(log_,"--- destroying regions ---");
     regions_.Empty();
 
@@ -155,6 +160,8 @@ void InfosmeCoreV1::init()
 
         cs_.init( cfg->getString("storePath"),
                   cfg->getString("statPath") );
+
+        finalLog_ = new FinalLog(cs_);
 
         if (!dlvMgr_) {
             smsc_log_info(log_,"--- creating delivery mgr ---");
@@ -448,10 +455,17 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
                                        BindSignal&     bs,
                                        const Delivery& dlv )
 {
+    const DlvState newState = dlv.getState();
     if (log_->isDebugEnabled()) {
         smsc_log_debug(log_,"D=%u finish state change, state=%s, bind=%d, regs=[%s]",
-                       bs.dlvId, dlvStateToString(dlv.getState()), bs.bind,
+                       bs.dlvId, dlvStateToString(newState), bs.bind,
                        formatRegionList(bs.regIds.begin(),bs.regIds.end()).c_str() );
+    }
+    if (dlv.getDlvInfo().wantFinalDlvRecords() &&
+        (newState == DLVSTATE_FINISHED || newState == DLVSTATE_ACTIVE) ) {
+        finalLog_->addDlvRecord(currentTime,bs.dlvId,
+                                dlv.getUserInfo().getUserId(),
+                                newState );
     }
     dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
     if ( bs.regIds.empty() ) return;

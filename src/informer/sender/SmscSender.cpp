@@ -370,10 +370,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
                 uint64_t addr;
                 char buf[20];
                 addr = subscriberToAddress(info.getSourceAddress(),len,oa.type,oa.plan);
-                sprintf(buf,"%0*.*llu",len,len,ulonglong(addr));
+                sprintf(buf,"%*.*llu",len,len,ulonglong(addr));
                 oa.setValue(len,buf);
                 addr = subscriberToAddress(msg.subscriber,len,da.type,da.plan);
-                sprintf(buf,"%0*.*llu",len,len,ulonglong(addr));
+                sprintf(buf,"%*.*llu",len,len,ulonglong(addr));
                 da.setValue(len,buf);
             }
 

@@ -35,7 +35,7 @@ createTime_(0)
         DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
         std::vector< std::string > dirs;
         char fnbuf[150];
-        makeDeliveryPath(info.getDlvId(),fnbuf);
+        makeDeliveryPath(fnbuf,info.getDlvId());
         const std::string actpath = info.getCS().getStorePath() + fnbuf + "activity_log/";
         dl.list( actpath.c_str(), dirs );
         std::sort( dirs.begin(), dirs.end() );
@@ -228,12 +228,8 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     default: throw InfosmeException(EXC_LOGICERROR,"actlog unknown state %u",msg.state);
     }
 
-    uint8_t ton, npi, len;
-    const uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
     char caddr[30];
-    if (npi == 1 && ton == 1) {sprintf(caddr,"+%0*.*llu",len,len,addr);}
-    else if (npi == 1 && ton==0) {sprintf(caddr,"%0*.*llu",len,len,addr);}
-    else { sprintf(caddr,".%u.%u.%0*.*llu",ton,npi,len,len,addr); }
+    printSubscriber(caddr,msg.subscriber);
 
     smsc::core::buffers::TmpBuf<char,1024> buf;
     const int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,\"",
@@ -255,7 +251,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             char fnbuf[100];
             const int oldmin = now.tm_min;
             now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
-            sprintf(makeDeliveryPath(info_.getDlvId(),fnbuf),
+            sprintf(makeDeliveryPath(fnbuf,info_.getDlvId()),
                     "activity_log/%04u.%02u.%02u/%02u/%02u.log",
                     now.tm_year+1900, now.tm_mon+1, now.tm_mday,
                     now.tm_hour, now.tm_min );
