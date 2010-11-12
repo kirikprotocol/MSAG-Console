@@ -86,11 +86,13 @@ public class AdminContext {
   protected AdminContext() {
   }
 
-  public AdminContext(File appBaseDir, WebConfigManager webConfig) throws InitException{
-    this.webConfig = webConfig;
-    this.appBaseDir = appBaseDir;
-    try{
+  public AdminContext(File appBaseDir) throws InitException{
 
+    try {
+      this.appBaseDir = appBaseDir;
+      File webConfDir = new File(appBaseDir,"conf");
+      this.webConfig = new  WebConfigManager(new File(webConfDir,"webconfig.xml") ,new File(webConfDir, "backup"), FileSystem.getFSForSingleInst()) ;
+    
       this.instType = webConfig.getInstallationType();
 
       File servicesDir = new File(appBaseDir, "services");

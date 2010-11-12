@@ -33,7 +33,7 @@ public class InitListener implements ServletContextListener {
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
 
-      File webconfig = new File(System.getProperty("informer.config.webconfig"));
+
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
       if(System.getProperty("informer.log4j.file") != null) {
         initLog4j(System.getProperty("informer.log4j.file"));
@@ -60,7 +60,7 @@ public class InitListener implements ServletContextListener {
 
 
 
-      WebContext.init(webXml, webconfig, appBaseDir);
+      WebContext.init(webXml,  appBaseDir);
 
       context = WebContext.getInstance();
 

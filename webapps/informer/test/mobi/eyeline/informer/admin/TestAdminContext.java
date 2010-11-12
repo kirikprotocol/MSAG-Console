@@ -143,19 +143,24 @@ public class TestAdminContext extends AdminContext {
   }
 
 
-  public TestAdminContext(File appBaseDir, WebConfigManager webConfig) throws InitException {
-    this.webConfig = webConfig;
-    fileSystem = new TestFileSystem();
-    File servicesDir = new File(appBaseDir, "services");
-    File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
-    File statDir = new File(appBaseDir, "stat");
-    workDir = new File(appBaseDir, "work");
-    if(!workDir.exists() && !workDir.mkdirs()) {
-      throw new InitException("Can't create work dir: "+workDir.getAbsolutePath());
-    }
-    servicesDir.mkdirs();
-    confDir.mkdirs();
+  public TestAdminContext(File appBaseDir) throws InitException {
+
     try {
+      File webConfDir = new File(appBaseDir,"conf");
+      TestUtils.exportResource(TestWebConfigManager.class.getResourceAsStream("webconfig.xml"), new File(webConfDir, "webconfig.xml"), false);
+      this.webConfig = new  TestWebConfigManager(new File(webConfDir,"webconfig.xml") ,new File(webConfDir, "backup"), FileSystem.getFSForSingleInst()) ;
+
+      fileSystem = new TestFileSystem();
+      File servicesDir = new File(appBaseDir, "services");
+      File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
+      File statDir = new File(appBaseDir, "stat");
+      workDir = new File(appBaseDir, "work");
+      if(!workDir.exists() && !workDir.mkdirs()) {
+        throw new InitException("Can't create work dir: "+workDir.getAbsolutePath());
+      }
+      servicesDir.mkdirs();
+      confDir.mkdirs();
+
       prepareServices(confDir);
       prepareStat(statDir,fileSystem);
 

@@ -36,9 +36,9 @@ public class WebContext {
 
   protected Configuration configuration;
 
-  public static void init(WebXml webXml, File config, File baseDir) throws InitException {
+  public static void init(WebXml webXml,  File baseDir) throws InitException {
     if (instance == null) {
-      instance = new WebContext(webXml, config, baseDir);
+      instance = new WebContext(webXml, baseDir);
       initLatch.countDown();
     }
   }
@@ -52,23 +52,20 @@ public class WebContext {
     }
   }
 
-  private WebContext(WebXml webXml, File webconfigFile, File baseDir) throws InitException {
+  private WebContext(WebXml webXml,  File baseDir) throws InitException {
     this.webXml = webXml;
     try{
-      File confDir = new File(webconfigFile.getParent());
+
 
 
       if(Mode.testMode) {
         if(logger.isInfoEnabled()) {
           logger.info(" -- TEST MODE -- TEST MODE -- TEST MODE -- TEST MODE -- ");
-        }
-        TestUtils.exportResource(TestWebConfigManager.class.getResourceAsStream("webconfig.xml"), new File(confDir, "webconfig.xml"), false);
-        WebConfigManager webConfigManager = new  TestWebConfigManager(webconfigFile ,new File(confDir, "backup"), FileSystem.getFSForSingleInst()) ;
+        }                
         this.adminContext = (AdminContext)Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
-            getConstructor(File.class, WebConfigManager.class).newInstance(baseDir, webConfigManager);
+            getConstructor(File.class).newInstance(baseDir);
       }else {
-        WebConfigManager webConfigManager = new  WebConfigManager(webconfigFile ,new File(confDir, "backup"), FileSystem.getFSForSingleInst()) ;
-        this.adminContext = new AdminContext(baseDir, webConfigManager);
+        this.adminContext = new AdminContext(baseDir);
       }
 
       this.authenticator = new AuthenticatorImpl(new Users() {
