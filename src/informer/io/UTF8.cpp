@@ -32,12 +32,20 @@ void UTF8::convertToUcs2( const char* inptr, size_t inlen, BufType& buf )
         buf.reserve(buf.GetPos()+inlen*maxBytesPerChar);
         size_t outbytesleft = buf.getSize() - buf.GetPos();
         char* out = buf.GetCurPtr();
+#ifdef linux
         char* in = const_cast<char*>(inptr); // fix for GNUC
+#endif
 
         {
             smsc::core::synchronization::MutexGuard mg(lock_);
             iconv(conv_, NULL, NULL, NULL, NULL);
-            if (iconv(conv_, &in, &inlen, &out, &outbytesleft) == size_t(-1)) {
+            if (iconv(conv_,
+#ifdef linux
+                      &in, 
+#else
+                      &inptr,
+#endif
+                      &inlen, &out, &outbytesleft) == size_t(-1)) {
                 buf.SetPos(buf.getSize()-outbytesleft);
                 if (errno == E2BIG) {
                     continue;

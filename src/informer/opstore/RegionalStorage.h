@@ -3,7 +3,7 @@
 
 #include <map>
 #include "core/buffers/CyclicQueue.hpp"
-#include "core/buffers/IntHash.hpp"
+#include "core/buffers/IntHash64.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Condition.hpp"
 #include "informer/io/EmbedRefPtr.h"
@@ -37,7 +37,7 @@ private:
     /// ALL messages are kept in this list
     /// The message may be locked from modification for the time of serialization.
     typedef std::multimap< msgtime_type, MsgIter >      ResendQueue;
-    typedef smsc::core::buffers::IntHash< MsgIter >     MessageHash;
+    typedef smsc::core::buffers::IntHash64< MsgIter >   MessageHash;
     typedef smsc::core::buffers::CyclicQueue< MsgIter > NewQueue;
 
     /// message locking guard fwd decl

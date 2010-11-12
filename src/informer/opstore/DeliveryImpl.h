@@ -3,6 +3,7 @@
 
 #include "informer/data/Delivery.h"
 #include "RegionalStorage.h"
+#include "core/buffers/IntHash.hpp"
 
 namespace smsc {
 namespace util {
