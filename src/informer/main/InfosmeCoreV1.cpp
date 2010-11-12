@@ -352,6 +352,8 @@ void InfosmeCoreV1::selfTest()
         data.svcType = "info";
         data.userData = "0xdeadbeaf";
         data.sourceAddress = "10000";
+        data.finalDlvRecords = true;
+        data.finalMsgRecords = true;
     }
     smsc_log_debug(log_,"--- adding new delivery ---");
     const dlvid_type dlvId = addDelivery(*user, data);

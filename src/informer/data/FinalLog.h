@@ -28,8 +28,8 @@ public:
                        DlvState             state );
 
 private:
-    void checkRollFile( msgtime_type        currentTime,
-                        struct ::tm&        now );
+    void checkRollFile( msgtime_type        currentTime );
+    void rollFile( const char* fn );
 
 private:
     smsc::core::synchronization::Mutex lock_;
@@ -37,6 +37,7 @@ private:
     FileGuard                          fg_;
     msgtime_type                       createTime_;
     msgtime_type                       period_;
+    char                               filename_[100];
 };
 
 } // informer

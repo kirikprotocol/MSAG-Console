@@ -21,7 +21,7 @@ int localOffset()
             const time_t curTime(currentTimeMicro()/tuPerSec);
             ::tm now;
             if (!gmtime_r(&curTime,&now)) {
-                std::abort();
+                throw InfosmeException(EXC_SYSTEM,"localOffset: gmtime_r(%u) failed",unsigned(curTime));
             }
             now.tm_isdst = 0;
             const int res(int(mktime(&now)));
@@ -48,7 +48,7 @@ ulonglong msgTimeToYmd( msgtime_type tmp, std::tm* tmb )
     }
     const time_t t(tmp);
     if ( !gmtime_r(&t,tmb) ) {
-        throw InfosmeException(EXC_SYSTEM,"formatMsgTime: cannot gmtime_r");
+        throw InfosmeException(EXC_SYSTEM,"formatMsgTime: gmtime_r(%u) failed",tmp);
     }
     return ( ( ( ( ulonglong(tmb->tm_year+1900)*100 +
                    tmb->tm_mon + 1 ) * 100 +
