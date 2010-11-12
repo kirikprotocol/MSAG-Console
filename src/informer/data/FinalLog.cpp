@@ -42,8 +42,12 @@ period_(60)
     std::vector< ulonglong > logfiles;
     std::vector< std::string > dummy;
     ::LogFileFilter lff(logfiles);
-    makeDirListing( lff, S_IFREG ).list( (cs_.getStorePath() + "final_log").c_str(),
-                                         dummy );
+    try {
+        makeDirListing( lff, S_IFREG ).list( (cs_.getStorePath() + "final_log").c_str(),
+                                             dummy );
+    } catch ( ErrnoException& e ) {
+        return;
+    }
     std::sort( logfiles.begin(), logfiles.end() );
     const ulonglong ymdTime = msgTimeToYmd(currentTimeSeconds());
     for ( std::vector< ulonglong >::const_iterator i = logfiles.begin();
@@ -70,11 +74,19 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
                             const Message&       msg,
                             int                  smppStatus )
 {
+    char cstate;
+    switch (msg.state) {
+    case MSGSTATE_DELIVERED: cstate = 'D'; break;
+    case MSGSTATE_FAILED:    cstate = 'F'; break;
+    case MSGSTATE_EXPIRED:   cstate = 'E'; break;
+    default: return;
+    }
     char caddr[30];
     printSubscriber(caddr,msg.subscriber);
     char buf[200];
-    const int bufsize = sprintf(buf,"%02u,%u,%s,0,%llu,%d,%s,%s\n",
+    const int bufsize = sprintf(buf,"%02u,%u,%s,0,%llu,%c,%d,%s,%s\n",
                                 currentTime % 60, dlvId, userId, msg.msgId,
+                                cstate,
                                 smppStatus, caddr, msg.userData.c_str() );
     if (bufsize < 0) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf to final.log: %d",bufsize);

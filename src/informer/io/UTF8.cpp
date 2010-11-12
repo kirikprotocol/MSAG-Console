@@ -9,7 +9,7 @@ namespace informer {
 UTF8::UTF8() :
 conv_(iconv_t(-1))
 {
-    conv_ = iconv_open("UTF-8","UCS2-BE");
+    conv_ = iconv_open("UTF-8","UCS-2BE");
     if (conv_ == iconv_t(-1)) {
         throw ErrnoException(errno,"iconv_open");
     }
