@@ -49,7 +49,7 @@ public class StartPage implements CreateDeliveryPage{
           break;
       }
     }
-    if(u.getPolicyId() != null) {
+    if(u.isRetryOnFail()) {
       delivery.setRetryPolicy(u.getPolicyId());
       delivery.setRetryOnFail(true);
     }

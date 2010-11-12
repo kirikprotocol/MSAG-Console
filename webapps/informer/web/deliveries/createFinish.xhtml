@@ -36,7 +36,7 @@
         </eye:button>
         <eye:space/>
         <eye:button rendered="#{createDelivery.activePage.renderBL}" >
-          <h:commandLink value="#{msg['informer.deliveries.download.blacklist']}">
+          <h:commandLink value="#{msg['informer.deliveries.download.region.not.found']}">
             <tr:fileDownloadActionListener method="#{createDelivery.activePage.download}" contentType="application/csv" filename="blacklist.csv"/>
           </h:commandLink>
         </eye:button>
@@ -50,8 +50,8 @@
       <h:panelGrid rendered="#{createDelivery.activePage.error == null and !createDelivery.activePage.stoped}" style="margin : 10px 10px 10px 10px">
         <h:outputText
             value="#{msg['informer.deliveries.create.abonetns.size']} #{createDelivery.activePage.processed}"/>
-        <h:outputText rendered="#{createDelivery.activePage.inBlacklist != 0}"
-            value="#{msg['informer.deliveries.create.abonetns.bl.size']} #{createDelivery.activePage.inBlacklist}"/>
+        <h:outputText rendered="#{createDelivery.activePage.regionNotFound != 0}"
+            value="#{msg['informer.deliveries.create.abonetns.region.not.found']} #{createDelivery.activePage.regionNotFound}"/>
       </h:panelGrid>
 
       <eye:buttons>
@@ -66,8 +66,8 @@
         </eye:button>
         <eye:space/>
         <eye:button rendered="#{createDelivery.activePage.renderBL}" >
-          <h:commandLink value="#{msg['informer.deliveries.download.blacklist']}">
-            <tr:fileDownloadActionListener method="#{createDelivery.activePage.download}" contentType="application/csv" filename="blacklist.csv"/>
+          <h:commandLink value="#{msg['informer.deliveries.download.region.not.found']}">
+            <tr:fileDownloadActionListener method="#{createDelivery.activePage.download}" contentType="application/csv" filename="region_not_found.csv"/>
           </h:commandLink>
         </eye:button>
       </eye:buttons>

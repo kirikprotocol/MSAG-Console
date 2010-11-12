@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.DataSource;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.delivery.Message;
+import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.config.Configuration;
@@ -39,11 +40,11 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
   private int maximum = Integer.MAX_VALUE;
 
-  private File blacklist;
+  private File regionNotFoundFile;
 
   private int processed;
 
-  private int inBlacklist;
+  private int regionNotFound;
 
   public ProcessDeliveryPage(Delivery delivery, File tmpFile, Configuration config, Locale locale, String user) {
     this.delivery = delivery;
@@ -55,8 +56,8 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     state=1;
   }
 
-  public int getInBlacklist() {
-    return inBlacklist;
+  public int getRegionNotFound() {
+    return regionNotFound;
   }
 
   public int getProcessed() {
@@ -76,12 +77,25 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     return maximum;
   }
 
+  private boolean checkRegion(User u, String address, PrintWriter writer) {
+    Region r;
+    if (u.isAllRegionsAllowed() ||
+        ((r = config.getRegion(new Address(address))) != null
+            && u.getRegions().contains(r.getRegionId()))) {
+      return true;
+    } else {
+      writer.println(address);
+      regionNotFound++;
+      return false;
+    }
+  }
+
   @SuppressWarnings({"EmptyCatchBlock"})
   protected void _process() throws Exception{
 
-    blacklist = new File(config.getWorkDir(), "blacklist_"+user+System.currentTimeMillis());
+    regionNotFoundFile = new File(config.getWorkDir(), "region_not_found_"+user+System.currentTimeMillis());
 
-    User u = config.getUser(user);
+    final User u = config.getUser(user);
 
     final BufferedReader[] r = new BufferedReader[]{null};
     final PrintWriter[] b = new PrintWriter[]{null};
@@ -90,7 +104,7 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
     try{
       r[0] = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(tmpFile)));
-      b[0] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(config.getFileSystem().getOutputStream(blacklist, false))));
+      b[0] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(config.getFileSystem().getOutputStream(regionNotFoundFile, false))));
 
       if(delivery.getType() == Delivery.Type.SingleText) {
         config.createSingleTextDelivery(u.getLogin(), u.getPassword(), delivery, new DataSource<Address>() {
@@ -100,14 +114,12 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
             }
             String line;
             try {
-              if((line = r[0].readLine()) != null) {
+              while((line = r[0].readLine()) != null) {
                 current += line.length();
-                if(config.blacklistContains(line)) {
-                  b[0].println(line);
-                  inBlacklist++;
+                if(checkRegion(u, line, b[0])) {
+                  processed++;
+                  return new Address(line);
                 }
-                processed++;
-                return new Address(line);
               }
             } catch (IOException e) {
               logger.error(e,e);
@@ -124,17 +136,15 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
             }
             String line;
             try {
-              if((line = r[0].readLine()) != null) {
+              while((line = r[0].readLine()) != null) {
                 current += line.length();
                 String[] s = line.split(",",2);
-                Message m = Message.newMessage(s[1]);
-                m.setAbonent(new Address(s[0]));
-                if(config.blacklistContains(s[0])) {
-                  b[0].println(s[0]);
-                  inBlacklist++;
+                if(checkRegion(u, s[0], b[0])) {
+                  Message m = Message.newMessage(s[1]);
+                  m.setAbonent(new Address(s[0]));
+                  processed++;
+                  return m;
                 }
-                processed++;
-                return m;
               }
             } catch (IOException e) {
               logger.error(e,e);
@@ -184,8 +194,8 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
     tmpFile.delete();
-    if(blacklist != null) {
-      blacklist.delete();
+    if(regionNotFoundFile != null) {
+      regionNotFoundFile.delete();
     }
     return new StartPage();
   }
@@ -196,8 +206,8 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
   public void cancel() {
     tmpFile.delete();
-    if(blacklist != null) {
-      blacklist.delete();
+    if(regionNotFoundFile != null) {
+      regionNotFoundFile.delete();
     }
     try{
       if(delivery.getId() != null) {
@@ -212,13 +222,13 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
   @SuppressWarnings({"EmptyCatchBlock"})
   @Override
   protected void _download(PrintWriter writer) throws IOException {
-    if(blacklist == null || !blacklist.exists()) {
+    if(regionNotFoundFile == null || !regionNotFoundFile.exists()) {
       return;
     }
     BufferedReader r = null;
     try{
       try {
-        r = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(blacklist)));
+        r = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(regionNotFoundFile)));
       } catch (AdminException e) {
         logger.error(e,e);
         throw new IOException(e.getMessage());
@@ -233,11 +243,11 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
           r.close();
         }catch (IOException e){}
       }
-    }           
+    }
   }
 
   public boolean isRenderBL() {
-    return blacklist != null && blacklist.length() > 0 && isFinished() && (error == null);
+    return regionNotFoundFile != null && regionNotFoundFile.length() > 0 && isFinished() && (error == null);
   }
 
   private class ProcessThread extends Thread {
