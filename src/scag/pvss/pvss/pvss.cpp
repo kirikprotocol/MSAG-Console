@@ -246,7 +246,14 @@ void getAbntStorageConfig(AbonentStorageConfig& abntCfg, ConfigView& locationsCo
 
 int main(int argc, char* argv[]) {
 
-  Logger::Init(); 
+    try {
+        Logger::Init();
+        smsc_log_debug(smsc::logger::Logger::getInstance("logger"),"inited");
+    } catch ( std::exception& e ) {
+        printf("logger initialization failure\n");
+        fprintf(stderr,"logger initialization failure\n");
+        return -1;
+    }
 
     // counter manager
 
