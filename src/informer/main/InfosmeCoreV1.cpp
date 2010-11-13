@@ -1,6 +1,7 @@
 #include <memory>
 #include "informer/admin/AdminServer.hpp"
 #include "informer/dcp/DcpServer.hpp"
+#include "informer/alm/ActivityLogMiner.hpp"
 #include "DeliveryMgr.h"
 #include "InfosmeCoreV1.h"
 #include "RegionLoader.h"
@@ -98,7 +99,8 @@ started_(false),
 dlvMgr_(0),
 finalLog_(0),
 adminServer_(0),
-dcpServer_(0)
+dcpServer_(0),
+alm_(0)
 {
 }
 
@@ -114,6 +116,9 @@ InfosmeCoreV1::~InfosmeCoreV1()
 
     smsc_log_info(log_,"--- destroying dcp server ---");
     delete dcpServer_;
+
+    smsc_log_info(log_,"--- destroying activity log miner ---");
+    delete alm_;
 
     // detaching region senders
     smsc_log_info(log_,"--- destroying region senders ---");
@@ -204,6 +209,13 @@ void InfosmeCoreV1::init()
 
         filename = mainfilename;
         section = "informer";
+
+        if (!alm_) {
+            alm_ = new alm::ActivityLogMiner();
+            alm_->init(cs_.getStorePath(),
+                       cfg->getInt("almRequestTimeout"));
+        }
+
         if (!dcpServer_) {
             dcpServer_ = new dcp::DcpServer();
             dcpServer_->assignCore(this);
@@ -211,6 +223,7 @@ void InfosmeCoreV1::init()
                               cfg->getInt("dcpPort"),
                               cfg->getInt("dcpHandlers") );
         }
+
     } catch ( InfosmeException& e ) {
         throw;
     } catch ( HashInvalidKeyException& e ) {

@@ -158,6 +158,7 @@ private:
     FinalLog*                                     finalLog_;     // owned
     admin::AdminServer*                           adminServer_;  // owned
     dcp::DcpServer*                               dcpServer_;    // owned
+    alm::IActivityLogMiner*                       alm_;          // owned
 };
 
 } // informer

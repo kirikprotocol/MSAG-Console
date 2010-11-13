@@ -16,6 +16,10 @@ class RegionFinder;
 class InputTransferTask;
 class ResendTransferTask;
 
+namespace alm {
+class IActivityLogMiner;
+}
+
 class InfosmeCore
 {
 public:
@@ -56,6 +60,8 @@ public:
 
     virtual DeliveryPtr getDelivery( const UserInfo&  userInfo,
                                      dlvid_type       dlvId ) = 0;
+
+    virtual alm::IActivityLogMiner& getALM() = 0;
 };
 
 } // informer

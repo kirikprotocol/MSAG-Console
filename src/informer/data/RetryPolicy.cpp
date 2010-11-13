@@ -1,6 +1,13 @@
 #include "system/status.h"
 #include "RetryPolicy.h"
 
+namespace {
+smsc::logger::Logger* log_ = 0;
+void getlog()
+{
+}
+}
+
 namespace eyeline {
 namespace informer {
 

@@ -13,7 +13,7 @@ class RetryPolicy
 {
 public:
     /// calculate the retry time for given delivery
-    /// -1 - no retry -- permanent error
+    /// <0 - no retry -- permanent error
     ///  0 - immediate retry
     /// >0 - delayed retry
     timediff_type getRetryTime( const DeliveryInfo& info,

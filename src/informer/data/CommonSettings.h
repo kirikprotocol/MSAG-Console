@@ -39,10 +39,6 @@ public:
 
     unsigned getMaxMessageChunkSize() const { return 160; /* FIXME */ }
 
-    msgtime_type getRetryTime( const char* policyName, int status ) const {
-        return 3600; // FIXME
-    }
-
     /// a number of messages (low mark) when input upload should start.
     unsigned getMinInputQueueSize() const {
         return 10;

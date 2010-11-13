@@ -219,7 +219,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     switch (msg.state) {
     case MSGSTATE_INPUT:     cstate = 'N'; break;
     case MSGSTATE_PROCESS:   cstate = 'P'; break;
-    case MSGSTATE_RETRY:
+    case MSGSTATE_RETRY:     cstate = 'R';
         planTime = unsigned(msg.lastTime - currentTime);
         break;
     case MSGSTATE_DELIVERED: cstate = 'D'; break;
