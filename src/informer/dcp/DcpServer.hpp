@@ -50,6 +50,10 @@ public:
     dlvListReqIdSeq=0;
     dlvListReqExpirationTime=3600;
   }
+  virtual ~DcpServer()
+  {
+
+  }
   void assignCore(InfosmeCore* argCore)
   {
     core=argCore;

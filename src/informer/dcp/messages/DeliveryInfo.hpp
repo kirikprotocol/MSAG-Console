@@ -47,6 +47,8 @@ public:
     svcTypeFlag=false;
     userDataFlag=false;
     sourceAddressFlag=false;
+    finalDlvRecordsFlag=false;
+    finalMsgRecordsFlag=false;
   }
  
 
@@ -253,6 +255,24 @@ public:
       rv+="sourceAddress=";
       rv+=sourceAddress;
     }
+    if(finalDlvRecordsFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="finalDlvRecords=";
+      rv+=finalDlvRecords?"true":"false";
+    }
+    if(finalMsgRecordsFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="finalMsgRecords=";
+      rv+=finalMsgRecords?"true":"false";
+    }
     return rv;
   }
 
@@ -380,6 +400,18 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(sourceAddress);
+    }
+    if(finalDlvRecordsFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(finalDlvRecords);
+    }
+    if(finalMsgRecordsFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(finalMsgRecords);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -824,6 +856,50 @@ public:
   {
     return sourceAddressFlag;
   }
+  bool getFinalDlvRecords()const
+  {
+    if(!finalDlvRecordsFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("finalDlvRecords");
+    }
+    return finalDlvRecords;
+  }
+  void setFinalDlvRecords(bool argValue)
+  {
+    finalDlvRecords=argValue;
+    finalDlvRecordsFlag=true;
+  }
+  bool& getFinalDlvRecordsRef()
+  {
+    finalDlvRecordsFlag=true;
+    return finalDlvRecords;
+  }
+  bool hasFinalDlvRecords()const
+  {
+    return finalDlvRecordsFlag;
+  }
+  bool getFinalMsgRecords()const
+  {
+    if(!finalMsgRecordsFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("finalMsgRecords");
+    }
+    return finalMsgRecords;
+  }
+  void setFinalMsgRecords(bool argValue)
+  {
+    finalMsgRecords=argValue;
+    finalMsgRecordsFlag=true;
+  }
+  bool& getFinalMsgRecordsRef()
+  {
+    finalMsgRecordsFlag=true;
+    return finalMsgRecords;
+  }
+  bool hasFinalMsgRecords()const
+  {
+    return finalMsgRecordsFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -887,6 +963,14 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("sourceAddress");
     }
+    if(!finalDlvRecordsFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("finalDlvRecords");
+    }
+    if(!finalMsgRecordsFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("finalMsgRecords");
+    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
@@ -925,6 +1009,10 @@ public:
     ds.writeBoolLV(replaceMessage); 
     ds.writeTag(sourceAddressTag);
     ds.writeStrLV(sourceAddress); 
+    ds.writeTag(finalDlvRecordsTag);
+    ds.writeBoolLV(finalDlvRecords); 
+    ds.writeTag(finalMsgRecordsTag);
+    ds.writeBoolLV(finalMsgRecords); 
     if(userIdFlag)
     {
       ds.writeTag(userIdTag);
@@ -1156,6 +1244,24 @@ public:
           sourceAddress=ds.readStrLV();
           sourceAddressFlag=true;
         }break;
+        case finalDlvRecordsTag:
+        {
+          if(finalDlvRecordsFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("finalDlvRecords");
+          }
+          finalDlvRecords=ds.readBoolLV();
+          finalDlvRecordsFlag=true;
+        }break;
+        case finalMsgRecordsTag:
+        {
+          if(finalMsgRecordsFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("finalMsgRecords");
+          }
+          finalMsgRecords=ds.readBoolLV();
+          finalMsgRecordsFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -1227,6 +1333,14 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("sourceAddress");
     }
+    if(!finalDlvRecordsFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("finalDlvRecords");
+    }
+    if(!finalMsgRecordsFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("finalMsgRecords");
+    }
 
   }
 
@@ -1266,6 +1380,8 @@ protected:
   static const int32_t svcTypeTag=22;
   static const int32_t userDataTag=23;
   static const int32_t sourceAddressTag=24;
+  static const int32_t finalDlvRecordsTag=25;
+  static const int32_t finalMsgRecordsTag=26;
 
   int connId;
 
@@ -1289,6 +1405,8 @@ protected:
   std::string svcType;
   std::string userData;
   std::string sourceAddress;
+  bool finalDlvRecords;
+  bool finalMsgRecords;
 
   bool nameFlag;
   bool userIdFlag;
@@ -1310,6 +1428,8 @@ protected:
   bool svcTypeFlag;
   bool userDataFlag;
   bool sourceAddressFlag;
+  bool finalDlvRecordsFlag;
+  bool finalMsgRecordsFlag;
 };
 
 }

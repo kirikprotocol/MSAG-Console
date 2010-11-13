@@ -84,6 +84,10 @@ message DeliveryInfo
   string userData 23 opt
   
   string sourceAddress 24
+  
+  bool finalDlvRecords 25
+  bool finalMsgRecords 26
+  
 end
 
 enum byte MessageType
@@ -317,7 +321,7 @@ message MessageInfo
   string date 3 opt
   string abonent 4 opt
   string text 5 opt
-  int32 index 8 opt
+//  int32 index 8 opt
   int32 errorCode 6 opt
   string userData 7 opt
 end

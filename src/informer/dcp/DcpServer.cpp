@@ -1,6 +1,8 @@
 #include "DcpServer.hpp"
 #include "informer/data/UserInfo.h"
 #include <time.h>
+#include "informer/alm/IActivityLogMiner.hpp"
+#include "informer/dcp/messages/DeliveryMessageState.hpp"
 
 namespace eyeline{
 namespace informer{
@@ -53,7 +55,8 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   }
 
   did.sourceAddress=di.getSourceAddress();
-
+  did.finalDlvRecords=di.getFinalDlvRecords();
+  did.finalMsgRecords=di.getFinalMsgRecords();
 }
 
 void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoData& did)
@@ -101,6 +104,8 @@ void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoDa
   }
 
   di.setSourceAddress(did.sourceAddress);
+  di.setFinalDlvRecords(did.finalDlvRecords);
+  di.setFinalMsgRecords(did.finalMsgRecords);
 
 }
 
@@ -644,6 +649,8 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
       mkFailResponse(inmsg,DcpError::RequestNotFound,"request for given id do not belong to this connection");
       return;
     }
+    dlvListReqTimeMap.erase(req->timeMapIt);
+    req->timeMapIt=dlvListReqTimeMap.insert(DlvListReqTimeMap::value_type(time(0)+dlvListReqExpirationTime,inmsg.getReqId()));
     std::vector<messages::DeliveryListInfo>& info=resp.getInfoRef();
     resp.setMoreDeliveries(true);
     for(int i=0;i<inmsg.getCount();i++)
@@ -725,21 +732,127 @@ void DcpServer::handle(const messages::CountDeliveries& inmsg)
   }
   messages::CountDeliveriesResp resp;
   resp.setResult(result);
+  enqueueResp(resp,inmsg);
+}
+
+namespace {
+
+template <class MSG>
+void fillFilter(const MSG& inmsg,alm::ALMRequestFilter& filter)
+{
+  if(inmsg.hasCodeFilter())
+  {
+    VECLOOP(it,int32_t,inmsg.getCodeFilter())
+    {
+      filter.codeFilter.insert(*it);
+    }
+  }
+  if(inmsg.hasStates())
+  {
+    VECLOOP(it,messages::DeliveryMessageState,inmsg.getStates())
+    {
+      MsgState st;
+      switch(it->getValue())
+      {
+        case messages::DeliveryMessageState::New:st=MSGSTATE_INPUT;break;
+        case messages::DeliveryMessageState::Process:st=MSGSTATE_PROCESS;break;
+        case messages::DeliveryMessageState::Delivered:st=MSGSTATE_DELIVERED;break;
+        case messages::DeliveryMessageState::Failed:st=MSGSTATE_FAILED;break;
+        case messages::DeliveryMessageState::Expired:st=MSGSTATE_EXPIRED;break;
+      }
+      filter.stateFilter.insert(st);
+    }
+  }
+  if(inmsg.hasMsisdnFilter())
+  {
+    VECLOOP(it,std::string,inmsg.getMsisdnFilter())
+    {
+      filter.abonentFilter.insert(*it);
+    }
+  }
+  filter.resultFields=0;
+}
+
 }
 
 void DcpServer::handle(const messages::RequestMessagesState& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  alm::ALMRequestFilter filter;
+  fillFilter(inmsg,filter);
+  VECLOOP(it,messages::ReqField,inmsg.getFields())
+  {
+    switch(it->getValue())
+    {
+      case messages::ReqField::Abonent:filter.resultFields|=alm::rfAbonent;break;
+      case messages::ReqField::Date:filter.resultFields|=alm::rfDate;break;
+      case messages::ReqField::ErrorCode:filter.resultFields|=alm::rfErrorCode;break;
+      case messages::ReqField::State:filter.resultFields|=alm::rfState;break;
+      case messages::ReqField::Text:filter.resultFields|=alm::rfText;break;
+      case messages::ReqField::UserData:filter.resultFields|=alm::rfUserData;break;
+    }
+  }
+  messages::RequestMessagesStateResp resp;
+  resp.setReqId(core->getALM().createRequest(inmsg.getDeliveryId(),filter));
+  enqueueResp(resp,inmsg);
 }
 
 void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  messages::GetNextMessagesPackResp resp;
+  std::vector<alm::ALMResult> result;
+  resp.setMoreMessages(core->getALM().getNext(inmsg.getReqId(),result,inmsg.getCount()));
+  std::vector<messages::MessageInfo>& miv=resp.getInfoRef();
+  VECLOOP(it,alm::ALMResult,result)
+  {
+    miv.push_back(messages::MessageInfo());
+    messages::MessageInfo& mi=miv.back();
+    if(it->resultFields&alm::rfAbonent)
+    {
+      mi.setAbonent(it->abonent.c_str());
+    }
+    if(it->resultFields&alm::rfDate)
+    {
+      mi.setDate(msgTimeToDateTimeStr(it->date));
+    }
+    if(it->resultFields&alm::rfErrorCode)
+    {
+      mi.setErrorCode(it->code);
+    }
+    if(it->resultFields&alm::rfState)
+    {
+      switch(it->state)
+      {
+        case MSGSTATE_INPUT:mi.setState(messages::DeliveryMessageState::New);break;
+        case MSGSTATE_PROCESS:mi.setState(messages::DeliveryMessageState::Process);break;
+        case MSGSTATE_DELIVERED:mi.setState(messages::DeliveryMessageState::Delivered);break;
+        case MSGSTATE_FAILED:mi.setState(messages::DeliveryMessageState::Failed);break;
+        case MSGSTATE_EXPIRED:mi.setState(messages::DeliveryMessageState::Expired);break;
+      }
+    }
+    if(it->resultFields&alm::rfText)
+    {
+      mi.setText(it->text);
+    }
+    if(it->resultFields&alm::rfUserData)
+    {
+      mi.setUserData(it->userData);
+    }
+  }
+  enqueueResp(resp,inmsg);
 }
 
 void DcpServer::handle(const messages::CountMessages& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  alm::ALMRequestFilter filter;
+  fillFilter(inmsg,filter);
+  messages::CountMessagesResp resp;
+  resp.setCount(core->getALM().counteRecords(inmsg.getDeliveryId(),filter));
+  enqueueResp(resp,inmsg);
 }
 
 void DcpServer::handle(const messages::GetDeliveryHistory& inmsg)
