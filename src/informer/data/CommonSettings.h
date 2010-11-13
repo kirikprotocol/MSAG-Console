@@ -49,6 +49,11 @@ public:
         return 100;
     }
 
+    /// how many seconds to keep waiting receipt after its validity period expired.
+    timediff_type getExtraReceiptWaitTime() const {
+        return 60;
+    }
+
     /// return a length of period (second) to split resend messages into.
     /// must state: assert(3600%ret==0), assert(ret%60==0).
     msgtime_type getResendUploadPeriod() const {

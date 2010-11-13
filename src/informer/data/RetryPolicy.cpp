@@ -1,5 +1,6 @@
 #include "system/status.h"
 #include "RetryPolicy.h"
+#include "logger/Logger.h"
 
 namespace {
 smsc::logger::Logger* log_ = 0;

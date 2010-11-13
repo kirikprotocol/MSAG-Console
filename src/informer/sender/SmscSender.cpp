@@ -420,7 +420,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         drm->msgId = msg.msgId;
         drm->nchunks = 0;
         drm->trans = info.isTransactional();
-        drm->endTime = now + validityTime;
+        drm->endTime = now + validityTime + cs.getExtraReceiptWaitTime();
 
         {
             ResponseTimer rt;
