@@ -29,6 +29,7 @@ struct ALMRequestFilter{
 };
 
 struct ALMResult{
+  int32_t resultFields;
   msgid_type id;
   MsgState state;
   smsc::core::buffers::FixedLengthString<32> abonent;
@@ -42,7 +43,7 @@ class IActivityLogMiner{
 public:
   virtual int createRequest(dlvid_type dlvId,const ALMRequestFilter& filter)=0;
   virtual bool getNext(int reqId,std::vector<ALMResult>& result,int count)=0;
-  virtual int counteRecords(dlvid_type dlvId,const ALMRequestFilter& filter)=0;
+  virtual int countRecords(dlvid_type dlvId,const ALMRequestFilter& filter)=0;
 };
 
 }

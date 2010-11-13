@@ -213,7 +213,8 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
       {
         throw InfosmeException(EXC_BADFORMAT,"expected message text in line '%s'",line.c_str());
       }
-      for(;;)
+      rec.text.reserve(line.length()-pos);
+      for(;;pos++)
       {
         if(pos>=line.length())
         {
