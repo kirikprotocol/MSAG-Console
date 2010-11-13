@@ -11,6 +11,13 @@ ActivityLogMiner::ActivityLogMiner():reqIdSeq(0)
   requestTimeout=60*60;
 }
 
+void ActivityLogMiner::init(const std::string& argPath,time_t argRequestTimeout)
+{
+  path=argPath;
+  requestTimeout=argRequestTimeout;
+}
+
+
 int ActivityLogMiner::createRequest(dlvid_type dlvId,const ALMRequestFilter& filter)
 {
   Request* req=new Request;
