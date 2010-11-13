@@ -127,7 +127,7 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
       nextFile=true;
       continue;
     }
-    if(!line.empty() && line[0]=='#')
+    if(line.empty() || line[0]=='#')
     {
       continue;
     }

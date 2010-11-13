@@ -3,6 +3,9 @@
 #include <time.h>
 #include "informer/alm/IActivityLogMiner.hpp"
 #include "informer/dcp/messages/DeliveryMessageState.hpp"
+#include "informer/data/DeliveryInfo.h"
+#include "informer/data/CommonSettings.h"
+#include "core/buffers/File.hpp"
 
 namespace eyeline{
 namespace informer{
@@ -857,7 +860,47 @@ void DcpServer::handle(const messages::CountMessages& inmsg)
 
 void DcpServer::handle(const messages::GetDeliveryHistory& inmsg)
 {
-
+  UserInfoPtr ui=getUserInfo(inmsg);
+  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  std::string path=dlv->getDlvInfo().getCS().getStorePath();
+  char buf[64];
+  makeDeliveryPath(buf,inmsg.getDeliveryId());
+  path+=buf;
+  path+="status.log";
+  messages::GetDeliveryHistoryResp resp;
+  std::vector<messages::DeliveryHistoryItem>& hv=resp.getHistoryRef();
+  if(smsc::core::buffers::File::Exists(path.c_str()))
+  {
+    smsc::core::buffers::File f;
+    f.ROpen(path.c_str());
+    std::string line;
+    ulonglong date;
+    char state;
+    while(f.ReadLine(line))
+    {
+      if(line.empty() || line[0]=='#')
+      {
+        continue;
+      }
+      if(sscanf(line.c_str(),"%llu,%c",&date,&state)!=2)
+      {
+        throw InfosmeException(EXC_BADFORMAT,"failed to parse status.log line:'%s",line.c_str());
+      }
+      msgtime_type t=ymdToMsgTime(date);
+      hv.push_back(messages::DeliveryHistoryItem());
+      messages::DeliveryHistoryItem& hi=hv.back();
+      hi.setDate(msgTimeToDateTimeStr(t));
+      switch(state)
+      {
+        case 'S':hi.setStatus(messages::DeliveryStatus::Paused);break;
+        case 'P':hi.setStatus(messages::DeliveryStatus::Planned);break;
+        case 'A':hi.setStatus(messages::DeliveryStatus::Active);break;
+        case 'F':hi.setStatus(messages::DeliveryStatus::Finished);break;
+        case 'C':hi.setStatus(messages::DeliveryStatus::Cancelled);break;
+      }
+    }
+  }
+  enqueueResp(resp,inmsg);
 }
 
 
