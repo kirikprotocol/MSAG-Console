@@ -77,6 +77,8 @@ public:
     virtual DeliveryPtr getDelivery( const UserInfo& userInfo,
                                      dlvid_type   dlvId );
 
+    virtual alm::IActivityLogMiner& getALM() { return *alm_; }
+
     // --- end of infosme core iface
 
     // --- delivery activator iface
