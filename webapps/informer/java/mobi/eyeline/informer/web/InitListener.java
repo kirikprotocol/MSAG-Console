@@ -33,9 +33,7 @@ public class InitListener implements ServletContextListener {
 
 
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
-      if(System.getProperty("informer.log4j.file") != null) {
-        initLog4j(new File(appBaseDir, "conf"+File.separatorChar+"log4j.properties").getAbsolutePath());
-      }
+      initLog4j(new File(new File(appBaseDir, "conf"),"log4j.properties").getAbsolutePath());
 
       WebXml webXml;
       InputStream is = null;
