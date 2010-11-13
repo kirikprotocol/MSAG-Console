@@ -851,7 +851,7 @@ void DcpServer::handle(const messages::CountMessages& inmsg)
   alm::ALMRequestFilter filter;
   fillFilter(inmsg,filter);
   messages::CountMessagesResp resp;
-  resp.setCount(core->getALM().counteRecords(inmsg.getDeliveryId(),filter));
+  resp.setCount(core->getALM().countRecords(inmsg.getDeliveryId(),filter));
   enqueueResp(resp,inmsg);
 }
 
