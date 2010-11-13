@@ -22,7 +22,7 @@ public:
   int createRequest(dlvid_type dlvId,const ALMRequestFilter& filter);
   bool getNext(int reqId,std::vector<ALMResult>& result,int count);
 
-  int counteRecords(dlvid_type dlvId,const ALMRequestFilter& filter);
+  int countRecords(dlvid_type dlvId,const ALMRequestFilter& filter);
 
 protected:
 

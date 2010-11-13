@@ -74,7 +74,7 @@ bool ActivityLogMiner::getNext(int reqId,std::vector<ALMResult>& result,int coun
   return parseFiles(it->second,&result,count,false)==count;
 }
 
-int ActivityLogMiner::counteRecords(dlvid_type dlvId,const ALMRequestFilter& filter)
+int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filter)
 {
   Request req;
   req.dlvId=dlvId;
