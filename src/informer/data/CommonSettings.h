@@ -69,6 +69,11 @@ public:
         return 60;
     }
 
+    /// minimal retry interval allowed to 
+    timediff_type getMinTimeLeftToRetry() const {
+        return 30;
+    }
+
     /// incremental statistics bank index
     inline unsigned getStatBankIndex() const { return incStatBank_; }
 

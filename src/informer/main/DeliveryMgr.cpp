@@ -498,7 +498,8 @@ bool DeliveryMgr::isCoreStopping() const
 
 void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
                                   const RetryPolicy& policy,
-                                  int status, bool retry,
+                                  int      status,
+                                  bool     retry,
                                   unsigned nchunks )
 {
     smsc_log_debug(log_,"rcpt received R=%u/D=%u/M=%llu status=%u retry=%d nchunks=%u",
@@ -524,7 +525,8 @@ void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
         const msgtime_type now(currentTimeSeconds());
 
         if (retry) {
-            reg->retryMessage( drmId.msgId, policy, now, status, nchunks );
+            // attempt to retry
+            reg->retryMessage( drmId.msgId, policy, now, status, nchunks);
         } else {
             const bool ok = (status == smsc::system::Status::OK);
             reg->finalizeMessage(drmId.msgId, now,

@@ -100,6 +100,7 @@ public:
 
     DlvMode getDeliveryMode() const { return data_.deliveryMode; }
 
+    // if retry on fail is requested.
     bool wantRetryOnFail() const { return data_.retryOnFail; }
 
     bool isReplaceIfPresent() const { return data_.replaceMessage; }

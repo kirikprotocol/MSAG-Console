@@ -681,11 +681,14 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
         retry = true;
         break;
     case smsc::smpp::SmppMessageState::ENROUTE:
-    case smsc::smpp::SmppMessageState::UNKNOWN:
     case smsc::smpp::SmppMessageState::ACCEPTED:
+    case smsc::smpp::SmppMessageState::UNKNOWN:
     case smsc::smpp::SmppMessageState::REJECTED:
+        smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u has intermediate receipt state %d, skipped",
+                      smscId_.c_str(), msgid, pdu->get_sequenceNumber(), msgState);
+        return;
     case smsc::smpp::SmppMessageState::UNDELIVERABLE:
-        // permanent failure
+        // permanent error
         break;
     default:
         smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u invalid receipt state=%d",
@@ -693,10 +696,16 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
         break;
     } // switch msgState
     
-    if ( rd.status == smsc::system::Status::OK && !delivered ) {
-        smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
-                      smscId_.c_str(), msgid, pdu->get_sequenceNumber());
-        rd.status = smsc::system::Status::UNKNOWNERR;
+    if (!delivered) {
+        if (rd.status == smsc::system::Status::OK) {
+            // replacing with network errcode
+            rd.status = err;
+        }
+        if ( rd.status == smsc::system::Status::OK ) {
+            smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
+                          smscId_.c_str(), msgid, pdu->get_sequenceNumber());
+            rd.status = smsc::system::Status::UNKNOWNERR;
+        }
     }
 
     rd.rcptId.setMsgId(msgid);
@@ -756,7 +765,8 @@ void SmscSender::handleResponse( smsc::sme::SmppHeader* pdu )
         smsc_log_info(log_,"S='%s' sms msgid='%s' seq=%u wasn't accepted, errcode=%d",
                       smscId_.c_str(), rd.rcptId.msgId, rd.seqNum, rd.status );
     }
-    rd.retry = rd.wantRetry(rd.status);
+    // rd.retry = rd.wantRetry(rd.status);
+    rd.retry = true;
     queueData(rd);
 }
 
@@ -846,7 +856,7 @@ void SmscSender::processQueue( DataQueue& queue )
                 continue;
             }
 
-            if ( !rproc_.receiveResponse( drm ) ) {
+            if ( !rproc_.receiveResponse(drm) ) {
                 // response processing failed -- no dlv, no msg?
                 continue;
             }
@@ -877,26 +887,14 @@ void SmscSender::processQueue( DataQueue& queue )
             if (piter) {
                 ReceiptList::iterator iter = *piter;
                 if (iter->responded) {
-                    // we have already received a response
-                    if ( rd.retry ||
-                         rd.status == smsc::system::Status::OK ||
-                         smsc::system::Status::isErrorPermanent(rd.status) ) {
-                        // if receipt is in bad state -- finalize
-                        receiptHash_.Delete(rd.rcptId.msgId);
-                        {
-                            smsc::core::synchronization::MutexGuard mg(receiptMon_);
-                            if (rollingIter_ == iter) { ++rollingIter_; }
-                            rcptList.splice(rcptList.begin(),receiptList_,iter);
-                        }
-                        rproc_.receiveReceipt(iter->drmId, retryPolicy_, rd.status, rd.retry, iter->responded );
-                    } else {
-                        smsc_log_warn(log_,"FIXME: S='%s' strange receipt for R=%u/D=%u/M=%llu status=%d,msgid='%s',retry=%d",
-                                      iter->drmId.regId,
-                                      iter->drmId.dlvId,
-                                      iter->drmId.msgId,
-                                      rd.status,rd.rcptId.msgId,rd.retry);
-                        iter->status = rd.status;
+                    // we have already received a response, finalize
+                    receiptHash_.Delete(rd.rcptId.msgId);
+                    {
+                        smsc::core::synchronization::MutexGuard mg(receiptMon_);
+                        if (rollingIter_ == iter) { ++rollingIter_; }
+                        rcptList.splice(rcptList.begin(),receiptList_,iter);
                     }
+                    rproc_.receiveReceipt(iter->drmId, retryPolicy_, rd.status, rd.retry, iter->responded );
                 } else {
                     // still not responded, modify receipt status
                     iter->status = rd.status;

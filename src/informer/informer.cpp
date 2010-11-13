@@ -17,6 +17,8 @@
 #include "informer/main/InfosmeCoreV1.h"
 #include "informer/io/InfosmeException.h"
 
+using namespace eyeline::informer;
+
 smsc::logger::Logger* mainlog = 0;
 
 static sigset_t original_signal_mask;
@@ -58,7 +60,7 @@ unsigned checkLicenseFile()
     const std::string licenseSig = smsc::util::findConfigFile("license.sig");
     struct stat fst;
     if (::stat(licenseFile.c_str(),&fst) != 0) {
-        throw smsc::util::Exception("License file is not found: %s", licenseFile.c_str());
+        throw InfosmeException(EXC_NOTFOUND,"License file is not found: %s",licenseFile.c_str());
     }
     if (fst.st_mtime == licenseFileMTime) {
         return maxsms;
@@ -79,12 +81,12 @@ unsigned checkLicenseFile()
     if (!smsc::license::check::CheckLicense(licenseFile.c_str(),licenseSig.c_str(),
                                             licconfig,lkeys,sizeof(lkeys)/sizeof(lkeys[0])))
     {
-        throw smsc::util::Exception("Invalid license");
+        throw InfosmeException(EXC_IOERROR,"Invalid license");
     }
     licenseFileMTime=fst.st_mtime;
     maxsms = unsigned(atoi(licconfig["MaxSmsThroughput"].c_str()));
     if ( maxsms > 10000 ) {
-        throw smsc::util::Exception("Too big value for MaxSmsThroughput: %u", maxsms);
+        throw InfosmeException(EXC_CONFIG,"Too big value for MaxSmsThroughput: %u", maxsms);
     }
 
     time_t expdate;
@@ -167,7 +169,7 @@ int main( int argc, char** argv )
                       "------------------------------------------------------------------------");
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
 
-        std::auto_ptr< eyeline::informer::InfosmeCoreV1 > core;
+        std::auto_ptr< InfosmeCoreV1 > core;
 
         atexit( atExitHandler );
 
@@ -191,7 +193,7 @@ int main( int argc, char** argv )
             // license
             checkLicenseFile();
 
-            core.reset( new eyeline::informer::InfosmeCoreV1 );
+            core.reset( new InfosmeCoreV1 );
             core->init();
 
             // read the config

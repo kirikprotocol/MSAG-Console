@@ -32,6 +32,7 @@ public:
     ReceiptId   rcptId;
     bool        retry;
     
+    /* not needed anymore - using per smsc policy
     static bool wantRetry( int stat ) {
         if ( stat != smsc::system::Status::OK && 
              !smsc::system::Status::isErrorPermanent(stat) ) {
@@ -40,6 +41,7 @@ public:
             return false;
         }
     }
+     */
 };
 
 
@@ -59,15 +61,6 @@ struct ReceiptData
     uint16_t     responded; // 0 -- not responed, >0 -- responded (nchunks)
     bool         retry;
 };
-
-
-/*
-struct ReceiptTimer
-{
-    msgtime_type endTime;
-    ReceiptId    rcptId;
-};
- */
 
 } // informer
 } // smsc

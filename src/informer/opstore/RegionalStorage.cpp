@@ -245,10 +245,10 @@ void RegionalStorage::messageSent( msgid_type msgId,
     MsgIter* ptr = messageHash_.GetPtr(msgId);
     const DeliveryInfo& info = dlv_.getDlvInfo();
     if (!ptr) {
-        throw smsc::util::Exception("message R=%u/D=%u/M=%llu is not found (messageSent)",
-                                    unsigned(regionId_),
-                                    unsigned(info.getDlvId()),
-                                    ulonglong(msgId));
+        throw InfosmeException(EXC_NOTFOUND,"message R=%u/D=%u/M=%llu is not found (messageSent)",
+                               unsigned(regionId_),
+                               unsigned(info.getDlvId()),
+                               ulonglong(msgId));
     }
     MsgLock ml(*ptr,this);
     mg.Unlock();
@@ -273,14 +273,18 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
         // not found
-        mg.Unlock();
-        throw smsc::util::Exception("message R=%u/D=%u/M=%llu is not found (retryMessage)",
-                                    unsigned(regionId_),
-                                    unsigned(info.getDlvId()),
-                                    ulonglong(msgId));
+        throw InfosmeException(EXC_NOTFOUND,"message R=%u/D=%u/M=%llu is not found (retryMessage)",
+                               unsigned(regionId_),
+                               unsigned(info.getDlvId()),
+                               ulonglong(msgId));
     }
 
-    timediff_type retryDelay = policy.getRetryTime(info,smppState,iter->msg.retryCount);
+    timediff_type retryDelay = -1;
+    if ( info.wantRetryOnFail() ) {
+        retryDelay = policy.getRetryInterval( info.isTransactional(),
+                                              smppState,
+                                              iter->msg.retryCount );
+    }
 
     if (retryDelay == 0) {
         // immediate retry
@@ -308,7 +312,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
 
     // fixing time left.
     m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
-    if ( m.timeLeft > policy.getMinRetryTime() ) {
+    if ( m.timeLeft > info.getCS().getMinTimeLeftToRetry() ) {
         // there is enough validity time to try the next time
 
         MsgLock ml(iter,this);
@@ -345,10 +349,10 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
     RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
-        throw smsc::util::Exception("message R=%u/D=%u/M=%llu is not found (finalizeMessage)",
-                                    unsigned(regionId_),
-                                    unsigned(info.getDlvId()),
-                                    ulonglong(msgId));
+        throw InfosmeException(EXC_NOTFOUND,"message R=%u/D=%u/M=%llu is not found (finalizeMessage)",
+                               unsigned(regionId_),
+                               unsigned(info.getDlvId()),
+                               ulonglong(msgId));
     }
     doFinalize(mg,iter,currentTime,state,smppState,nchunks);
 }
