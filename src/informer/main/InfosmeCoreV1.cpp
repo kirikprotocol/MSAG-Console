@@ -211,9 +211,10 @@ void InfosmeCoreV1::init()
         section = "informer";
 
         if (!alm_) {
-            alm_ = new alm::ActivityLogMiner();
-            alm_->init(cs_.getStorePath(),
-                       cfg->getInt("almRequestTimeout"));
+            alm::ActivityLogMiner* alm;
+            alm_ = alm = new alm::ActivityLogMiner();
+            alm->init(cs_.getStorePath(),
+                      cfg->getInt("almRequestTimeout"));
         }
 
         if (!dcpServer_) {
