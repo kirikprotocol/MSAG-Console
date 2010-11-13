@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
+import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.CSVTokenizer;
@@ -21,29 +23,40 @@ import java.util.concurrent.TimeUnit;
  * Time: 16:52:38
  */
 public class DeliveryNotificationsProducer implements Runnable {
-  
+
   Logger log = Logger.getLogger(this.getClass());
-  private File baseDir, backupDir;
+  private File baseDir;
+  private File backupDir;
   private FileSystem fileSys;
   ScheduledExecutorService scheduler;
   final List<DeliveryNotificationsListener> listeners = Collections.synchronizedList(new LinkedList<DeliveryNotificationsListener>());
 
 
-  public DeliveryNotificationsProducer(File directory,FileSystem fileSys) {
+  public DeliveryNotificationsProducer(File directory,FileSystem fileSys) throws InitException {
     this.baseDir = directory;
     this.fileSys = fileSys;
+    backupDir = new File(baseDir,"processedFiles");
+    try {
+      if(!fileSys.exists(backupDir)) {
+        fileSys.mkdirs(backupDir);
+      }
+    }
+    catch (AdminException e) {
+      throw new InitException("Can't create dir for processed files :"+backupDir, e);
+    }
+
   }
 
   public void addListener(DeliveryNotificationsListener listener) {
-      listeners.add(listener);
+    listeners.add(listener);
   }
 
   public void removeListener(DeliveryNotificationsListener listener) {
-      listeners.remove(listener);
+    listeners.remove(listener);
   }
 
   public void removeAllListeners() {
-      listeners.clear();
+    listeners.clear();
   }
 
 
@@ -128,10 +141,11 @@ public class DeliveryNotificationsProducer implements Runnable {
           MessageState messageState = getMessageState(t.nextToken());
           int smpp_status = Integer.valueOf(t.nextToken());
           Address addr = new Address(t.nextToken());
-          String userData = t.nextToken();
+          String userData = null;
+          if(t.hasMoreTokens()) userData = t.nextToken();
           notification = new DeliveryMessageNotification(type,c.getTime(),deliveryId,userId,
-                 msgId,messageState,smpp_status,addr,userData
-              );
+              msgId,messageState,smpp_status,addr,userData
+          );
         }
         else {
           notification = new DeliveryNotification(type,c.getTime(),deliveryId,userId);
@@ -144,7 +158,7 @@ public class DeliveryNotificationsProducer implements Runnable {
     }
   }
 
-  private void notifyListeners(DeliveryNotification notification) {    
+  private void notifyListeners(DeliveryNotification notification) {
     for(DeliveryNotificationsListener listener : listeners) {
       listener.onDeliveryNotification(notification);
     }
@@ -157,7 +171,7 @@ public class DeliveryNotificationsProducer implements Runnable {
         case 'E' : return MessageState.Expired;
         case 'D' : return MessageState.Delivered;
         case 'F' : return MessageState.Failed;
-        default  :
+        default  : break;
       }
     }
     throw new IllegalArgumentException("invalid message event state ='"+s+"'");
@@ -168,9 +182,9 @@ public class DeliveryNotificationsProducer implements Runnable {
       case 0 : return DeliveryNotificationType.MESSAGE_FINISHED;
       case 1 : return DeliveryNotificationType.DELIVERY_START;
       case 2 : return DeliveryNotificationType.DELIVERY_FINISHED;
-      default: throw new IllegalArgumentException("Invalid event type = "+value);
+      default: break;
     }
-
+    throw new IllegalArgumentException("Invalid event type = "+value);
   }
 
 

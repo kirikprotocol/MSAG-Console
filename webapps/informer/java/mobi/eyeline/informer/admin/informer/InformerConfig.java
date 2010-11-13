@@ -32,7 +32,8 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
 
     s = config.getSection("stat");
     settings.setStatDir(s.getString("directory",null));
-
+    s = config.getSection("statuslogs");
+    settings.setStatusLogsDir(s.getString("directory",null));
     return settings;
   }
 
@@ -48,6 +49,8 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     s.setInt("port", settings.getPersPort());
     s = config.getOrCreateSection("stat");
     s.setString("directory",settings.getStatDir());
+    s = config.getOrCreateSection("statuslogs");
+    s.setString("directory",settings.getStatusLogsDir());
     config.save(os);
   }
 }

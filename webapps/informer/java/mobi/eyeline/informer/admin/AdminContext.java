@@ -77,6 +77,8 @@ public class AdminContext {
 
   protected RestrictionDaemon restrictionDaemon;
 
+  protected DeliveryNotificationsProducer deliveryNotificationsProducer;
+
 // delivery ->user ->region->smsc
 
   final private Lock integrityLock = new ReentrantLock();
@@ -148,6 +150,10 @@ public class AdminContext {
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
 
+      deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(new File(is.getStatusLogsDir()),fileSystem);
+      //todo add listeners to deliveryNotificationsProducer
+
+      deliveryNotificationsProducer.start();
     }catch (AdminException e) {
       throw new InitException(e);
     }catch (PersonalizationClientException e) {

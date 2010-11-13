@@ -6,7 +6,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.TestUtils;
 
-import javax.management.Notification;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
@@ -15,10 +14,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 
 /**

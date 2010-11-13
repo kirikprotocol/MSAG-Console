@@ -21,6 +21,7 @@ public class InformerSettings {
   private int persPort;
 
   private String statDir;
+  private String statusLogsDir;
 
   public String getAdminHost() {
     return adminHost;
@@ -85,6 +86,15 @@ public class InformerSettings {
     this.statDir = statDir;
   }
 
+  public String getStatusLogsDir() {
+    return statusLogsDir;
+  }
+
+  public void setStatusLogsDir(String statusLogsDir) throws AdminException {
+    vh.checkNotEmpty("statusLogsDir", statDir);
+    this.statusLogsDir = statusLogsDir;
+  }
+
   /**
    * Копирует настройки
    * @return копия настроек
@@ -100,4 +110,5 @@ public class InformerSettings {
     cs.statDir = statDir;
     return cs;
   }
+
 }

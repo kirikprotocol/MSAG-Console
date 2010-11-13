@@ -17,7 +17,7 @@ public class DeliveryNotification {
   public DeliveryNotification(DeliveryNotificationType type, Date eventDate, int deliveryId, String userId) {
     this.type = type;
     this.eventDate = eventDate;
-    deliveryId = deliveryId;
+    this.deliveryId = deliveryId;
     this.userId = userId;
   }
 

@@ -75,6 +75,34 @@ public class TestAdminContext extends AdminContext {
     }
   }
 
+  private void prepareNotificationLogs(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
+    if(!fileSystem.exists(dstStatDir)) {
+      URL u = TestDeliveryStatProvider.class.getResource("");
+      URI uri = u.toURI();
+
+      if("jar".equals(uri.getScheme())) {
+        String jarPath = uri.getSchemeSpecificPart();
+        String jarFileURI   = jarPath.substring(0,jarPath.indexOf("!/"));
+        String jarEntryPathURI = jarPath.substring(jarPath.indexOf("!/")+2)+"statuslogs";
+        InputStream is = null;
+        try {
+          is = fileSystem.getInputStream(new File(new URI(jarFileURI)));
+          TestUtils.extractDirFromJar(is,jarEntryPathURI,dstStatDir,fileSystem);
+        }
+        finally {
+          if(is!=null) is.close();
+        }
+
+      }
+      else {
+        File srcStatDir = new File(uri);
+        srcStatDir = new File(srcStatDir,"statuslogs");
+        TestUtils.copyDirectory(srcStatDir,dstStatDir,fileSystem);
+      }
+
+    }
+  }
+
   private void createDeliveries() throws AdminException {
 
     List<User> users = usersManager.getUsers();
@@ -156,6 +184,7 @@ public class TestAdminContext extends AdminContext {
       File servicesDir = new File(appBaseDir, "services");
       File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
       File statDir = new File(appBaseDir, "stat");
+      File statusLogsDir = new File(appBaseDir, "statuslogs");
       workDir = new File(appBaseDir, "work");
       if(!workDir.exists() && !workDir.mkdirs()) {
         throw new InitException("Can't create work dir: "+workDir.getAbsolutePath());
@@ -165,6 +194,7 @@ public class TestAdminContext extends AdminContext {
 
       prepareServices(confDir);
       prepareStat(statDir,fileSystem);
+      prepareNotificationLogs(statusLogsDir,fileSystem);
 
       if (webConfig.getInstallationType() == InstallationType.SINGLE)  {
         serviceManager = new TestServiceManagerSingle(servicesDir);
@@ -197,6 +227,12 @@ public class TestAdminContext extends AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
+
+      deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);
+      //todo add listeners to deliveryNotificationsProducer 
+
+
+      deliveryNotificationsProducer.start();
 
     } catch (IOException e) {
       throw new InitException(e);

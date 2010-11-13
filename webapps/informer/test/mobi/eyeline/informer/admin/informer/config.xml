@@ -16,4 +16,8 @@
     <param name="directory" type="string">stat</param>
   </section>
 
+  <section name="statuslogs">
+    <param name="directory" type="string">statuslogs</param>
+  </section>
+
 </config>
