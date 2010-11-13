@@ -314,6 +314,24 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
                     break;
                 }
                 const std::string fname = makeFilePath(regId,ro.rfn);
+                // check if the file exists
+                struct stat st;
+                if ( -1 == stat( fname.c_str(), &st ) ) {
+                    if (ro.roff != 0) {
+                        throw InfosmeException(EXC_LOGICERROR,"R=%u/D=%u file '%s' has roff=%u, but is inaccessible",
+                                               regId, getDlvId(), fname.c_str(), ro.roff);
+                    }
+                    if (errno == ENOENT) {
+                        smsc_log_debug(log_,"R=%u/D=%u file '%s' does not exist, move on",
+                                       regId, getDlvId(), fname.c_str());
+                        ++ro.rfn;
+                        ro.roff = 0;
+                        continue;
+                    }
+                    throw ErrnoException(errno,"stat('%s')",fname.c_str());
+                } else if ( !S_ISREG(st.st_mode) ) {
+                    throw InfosmeException(EXC_LOGICERROR,"'%s' is not a file",fname.c_str());
+                }
                 smsc_log_debug(log_,"R=%u/D=%u trying to open new file '%s'",
                                regId, getDlvId(), fname.c_str());
                 fg.ropen(fname.c_str());
