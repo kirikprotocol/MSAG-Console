@@ -40,7 +40,9 @@ typedef enum
     EXC_NOTIMPL,           // not implemented
     EXC_NOTAUTH,           // not authorized
     EXC_ACCESSDENIED,      // access denied
-    EXC_BADADDRESS         // invalid address
+    EXC_BADADDRESS,        // invalid address
+    EXC_EXPIRED,           // request/resource expired
+    EXC_BADFORMAT          // parsing failed
 } ErrorCode;
 
 
