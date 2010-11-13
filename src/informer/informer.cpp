@@ -169,46 +169,32 @@ int main( int argc, char** argv )
                       "------------------------------------------------------------------------");
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
 
-        std::auto_ptr< InfosmeCoreV1 > core;
-
-        atexit( atExitHandler );
-
-        // block all signals
-        sigfillset(&blocked_signals);
-        sigdelset(&blocked_signals, SIGKILL);
-        sigdelset(&blocked_signals, SIGALRM);
-        sigdelset(&blocked_signals, SIGSEGV);
-        sigdelset(&blocked_signals, SIGBUS);
-        sigdelset(&blocked_signals, SIGFPE);
-        sigdelset(&blocked_signals, SIGILL);
-        pthread_sigmask(SIG_SETMASK, &blocked_signals, &original_signal_mask);
-
-        // setting signal handlers
-        sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
-        sigset(SIGINT, appSignalHandler);
-        sigset(SIGPIPE, SIG_IGN);
-
         try {
+
+            std::auto_ptr< InfosmeCoreV1 > core;
+
+            atexit( atExitHandler );
+
+            // block all signals
+            sigfillset(&blocked_signals);
+            sigdelset(&blocked_signals, SIGKILL);
+            sigdelset(&blocked_signals, SIGALRM);
+            sigdelset(&blocked_signals, SIGSEGV);
+            sigdelset(&blocked_signals, SIGBUS);
+            sigdelset(&blocked_signals, SIGFPE);
+            sigdelset(&blocked_signals, SIGILL);
+            pthread_sigmask(SIG_SETMASK, &blocked_signals, &original_signal_mask);
+
+            // setting signal handlers
+            sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
+            sigset(SIGINT, appSignalHandler);
+            sigset(SIGPIPE, SIG_IGN);
 
             // license
             checkLicenseFile();
 
             core.reset( new InfosmeCoreV1 );
             core->init();
-
-            // read the config
-            /*
-            std::auto_ptr<smsc::util::config::Config> cfg
-                ( smsc::util::config::Config::createFromFile("config.xml") );
-            if ( !cfg.get() ) {
-                throw eyeline::informer::InfosmeException(eyeline::informer::EXC_CONFIG,
-                                                          "cannot load main config");
-            }
-            {
-                smsc::util::config::ConfigView cv(*cfg.get(),"InfoSme");
-                core->init(cv);
-            }
-             */
 
             // enter main loop
             core->start();
@@ -226,21 +212,18 @@ int main( int argc, char** argv )
                 startMon.wait(1000);
             }
             smsc_log_error(mainlog,"leaving main loop, stopping core");
-
             core->stop();
-
+            
         } catch ( std::exception& e ) {
-
-            smsc_log_error(mainlog,"error: %s", e.what());
-
+            smsc_log_error(mainlog,"EXCEPTION: %s",e.what());
+            throw;
         }
-        smsc_log_debug(mainlog,"end of main scope");
 
     } catch ( std::exception& e ) {
-        fprintf(stderr,"exception caught %s\n",e.what());
+        fprintf(stderr,"EXCEPTION: %s\n",e.what());
         return -1;
     } catch ( ... ) {
-        fprintf(stderr,"unknown exception caught\n");
+        fprintf(stderr,"UNKNOWN EXCEPTION\n");
         return -1;
     }
     return 0;
