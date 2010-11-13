@@ -36,8 +36,13 @@
               </tr:inputText>
             </tr:panelLabelAndMessage>
 
-            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.changed.sms.template']}">
-              <tr:inputText rows="3" id="SMStemplate" value="#{notificationSettings.smsTemplate}" simple="true" required="true">
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.activated.sms.template']}">
+              <tr:inputText rows="3" id="SMStemplateActivated" value="#{notificationSettings.smsTemplateActivated}" simple="true" required="true">
+                <tr:validateLength minimum="1"/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.finished.sms.template']}">
+              <tr:inputText rows="3" id="SMStemplateFinished" value="#{notificationSettings.smsTemplateFinished}" simple="true" required="true">
                 <tr:validateLength minimum="1"/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -74,8 +79,13 @@
                 <tr:validateLength minimum="1"/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.changed.email.template.body']}">
-              <tr:inputText id="emailText" rows="10"  value="#{notificationSettings.emailBodyTemplate}" simple="true" required="true">
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.activated.email.template.body']}">
+              <tr:inputText id="emailTextActivated" rows="10"  value="#{notificationSettings.emailTemplateActivated}" simple="true" required="true">
+                <tr:validateLength minimum="1"/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+            <tr:panelLabelAndMessage label="#{msg['notifications.config.delivery.state.finished.email.template.body']}">
+              <tr:inputText id="emailTextFinished" rows="10"  value="#{notificationSettings.emailTemplateFinished}" simple="true" required="true">
                 <tr:validateLength minimum="1"/>
               </tr:inputText>
             </tr:panelLabelAndMessage>

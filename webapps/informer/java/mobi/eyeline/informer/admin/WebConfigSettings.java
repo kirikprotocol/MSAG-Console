@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin;
 import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -51,7 +52,9 @@ class WebConfigSettings {
 
 
   File[] getAppMirrorDirs() {
-    return appMirrorDirs;
+    File[] ret = new File[appMirrorDirs.length];
+    System.arraycopy(appMirrorDirs, 0, ret, 0, ret.length);
+    return ret;
   }
 
   void setAppMirrorDirs(File[] appMirrorDirs) {
@@ -69,7 +72,7 @@ class WebConfigSettings {
 
 
   Collection<String> getHSDaemonHosts() {
-    return HSDaemonHosts;
+    return new ArrayList<String>(HSDaemonHosts);
   }
 
   void setHSDaemonHosts(Collection<String> HSDaemonHosts) {
@@ -87,37 +90,29 @@ class WebConfigSettings {
 
 
   Properties getJavaMailProperties() {
-    Properties props = new Properties();
-    for(Object s : javaMailProperties.keySet()) {
-      props.put(s,javaMailProperties.get(s));
-    }
-    return props;
+    return cloneProps(javaMailProperties);
   }
 
   void setJavaMailProperties(Properties javaMailProperties) {
     validateJavaMailProperties(javaMailProperties);
-    this.javaMailProperties = javaMailProperties;
+    this.javaMailProperties = cloneProps(javaMailProperties);
   }
 
   Address getSmsSenderAddress() {
-    return smsSenderAddress;
+    return new Address(smsSenderAddress);
   }
 
   void setSmsSenderAddress(Address smsSenderAddress) {
-    this.smsSenderAddress = smsSenderAddress;
+    this.smsSenderAddress = new Address(smsSenderAddress);
   }
 
   void setNotificationTemplates(Properties notificationTemplates) {
     validateNotificationTemplates(notificationTemplates);
-    this.notificationTemplates =notificationTemplates;
+    this.notificationTemplates =cloneProps(notificationTemplates);
   }
 
   Properties getNotificationTemplates() {
-    Properties props = new Properties();
-    for(Object s : notificationTemplates.keySet()) {
-      props.put(s,notificationTemplates.get(s));
-    }
-    return props;
+    return cloneProps(notificationTemplates);
   }
 
 
@@ -126,5 +121,13 @@ class WebConfigSettings {
   }
   private void validateJavaMailProperties(Properties javaMailProperties) {
     //todo check required properties
+  }
+
+  private Properties cloneProps(Properties other) {
+    Properties props = new Properties();
+    for(Object s : other.keySet()) {
+      props.put(s,other.get(s));
+    }
+    return props;
   }
 }

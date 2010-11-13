@@ -56,7 +56,7 @@ public class WebConfigTest {
     config.setJavaMailProperties(props);
 
     props = config.getNotificationTemplates();
-    props.put("delivery.state.changed.sms.template","Wow! &#<> Delivery \"{0}\" state changed to '{1}' at {2}");
+    props.put("delivery.state.activated.sms.template","Wow! &#<> Delivery \"{0}\" state changed to '{1}' at {2}");
     config.setNotificationTemplates(props);
 
     //check after rereading
@@ -80,9 +80,13 @@ public class WebConfigTest {
     assertEquals("admin@informer.com",props.get("mail.from"));
 
     props = config.getNotificationTemplates();
-    assertEquals("Wow! &#<> Delivery \"{0}\" state changed to '{1}' at {2}",props.get("delivery.state.changed.sms.template"));
-    assertEquals("Delivery {0} {1}",props.get("delivery.state.changed.email.template.subject"));
-    assertEquals("Dear, {3}. Delivery {0} state was changed to {1} at {2}. ",props.get("delivery.state.changed.email.template.body"));
+    assertEquals("Wow! &#<> Delivery \"{0}\" state changed to '{1}' at {2}",props.get("delivery.state.activated.sms.template"));
+    assertEquals("Delivery {0} finished  {1} ",props.get("delivery.state.finished.sms.template"));
+    assertEquals("Delivery state changed",props.get("delivery.state.changed.email.template.subject"));
+    assertEquals("Delivery {0} activated at {1}. ",props.get("delivery.state.activated.email.template.line"));
+    assertEquals("Delivery {0} finished  at {1}. ",props.get("delivery.state.finished.email.template.line"));
+
+        
 
   }
 

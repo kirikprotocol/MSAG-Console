@@ -34,9 +34,11 @@
   </section>
 
   <section name="notificationTemplates">
-    <param name="delivery.state.changed.sms.template"           type="string">Delivery {0} state changed to {1} at {2} </param>
-    <param name="delivery.state.changed.email.template.subject" type="string">Delivery {0} {1}</param>
-    <param name="delivery.state.changed.email.template.body"    type="string">Dear, {3}. Delivery {0} state was changed to {1} at {2}. </param>
+    <param name="delivery.state.activated.sms.template"         type="string">Delivery {0} activated {1} </param>
+    <param name="delivery.state.finished.sms.template"          type="string">Delivery {0} finished  {1} </param>
+    <param name="delivery.state.changed.email.template.subject" type="string">Delivery state changed</param>
+    <param name="delivery.state.activated.email.template.line"  type="string">Delivery {0} activated at {1}. </param>
+    <param name="delivery.state.finished.email.template.line"   type="string">Delivery {0} finished  at {1}. </param>
   </section>
 
 </config>

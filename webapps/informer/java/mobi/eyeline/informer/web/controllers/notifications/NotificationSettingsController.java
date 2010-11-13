@@ -20,6 +20,13 @@ public class NotificationSettingsController extends InformerController {
   private Properties notificationTemplates;
   private Address smsSenderAddress;
 
+  private static final String SMS_TEMPLATE_ACTIVATED = "delivery.state.activated.sms.template";
+  private static final String SMS_TEMPLATE_FINISHED  = "delivery.state.finished.sms.template";
+  private static final String EMAIL_TEMPLATE_SUBJECT ="delivery.state.changed.email.template.subject";
+  private static final String EMAIL_TEMPLATE_ACTIVATED="delivery.state.activated.email.template.line";
+  private static final String EMAIL_TEMPLATE_FINISHED="delivery.state.finished.email.template.line";
+
+
 
   public NotificationSettingsController() {
     super();
@@ -55,29 +62,41 @@ public class NotificationSettingsController extends InformerController {
   }
 
 
-  public void setSmsTemplate(String smsTemplate) {
-    notificationTemplates.put("delivery.state.changed.sms.template",smsTemplate);
+  public void setSmsTemplateActivated(String smsTemplate) {
+    notificationTemplates.put(SMS_TEMPLATE_ACTIVATED,smsTemplate);
+  }
+  public void setSmsTemplateFinished(String smsTemplate) {
+    notificationTemplates.put(SMS_TEMPLATE_FINISHED,smsTemplate);
   }
 
-  public String getSmsTemplate() {
-    return (String) notificationTemplates.get("delivery.state.changed.sms.template");
+  public String getSmsTemplateActivated() {
+    return (String) notificationTemplates.get(SMS_TEMPLATE_ACTIVATED);
+  }
+  public String getSmsTemplateFinished() {
+    return (String) notificationTemplates.get(SMS_TEMPLATE_FINISHED);
   }
 
 
-  public void setEmailBodyTemplate(String smsTemplate) {
-    notificationTemplates.put("delivery.state.changed.email.template.body",smsTemplate);
+  public void setEmailTemplateActivated(String smsTemplate) {
+    notificationTemplates.put(EMAIL_TEMPLATE_ACTIVATED,smsTemplate);
+  }
+  public void setEmailTemplateFinished(String smsTemplate) {
+    notificationTemplates.put(EMAIL_TEMPLATE_FINISHED,smsTemplate);
   }
 
-  public String getEmailBodyTemplate() {
-    return (String) notificationTemplates.get("delivery.state.changed.email.template.body");
+  public String getEmailTemplateActivated() {
+    return (String) notificationTemplates.get(EMAIL_TEMPLATE_ACTIVATED);
+  }
+  public String getEmailTemplateFinished() {
+    return (String) notificationTemplates.get(EMAIL_TEMPLATE_FINISHED);
   }
 
   public void setEmailSubjectTemplate(String smsTemplate) {
-    notificationTemplates.put("delivery.state.changed.email.template.subject",smsTemplate);
+    notificationTemplates.put(EMAIL_TEMPLATE_SUBJECT,smsTemplate);
   }
 
   public String getEmailSubjectTemplate() {
-    return (String) notificationTemplates.get("delivery.state.changed.email.template.subject");
+    return (String) notificationTemplates.get(EMAIL_TEMPLATE_SUBJECT);
   }
 
   public String getMailFrom() {
