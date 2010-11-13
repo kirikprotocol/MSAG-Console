@@ -2,8 +2,6 @@ package mobi.eyeline.informer.web;
 
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.InitException;
-import mobi.eyeline.informer.admin.WebConfigManager;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.xml.WebXml;
 import mobi.eyeline.informer.web.auth.Authenticator;
@@ -11,7 +9,6 @@ import mobi.eyeline.informer.web.auth.impl.AuthenticatorImpl;
 import mobi.eyeline.informer.web.auth.impl.Users;
 import mobi.eyeline.informer.web.config.Configuration;
 import org.apache.log4j.Logger;
-import testutils.TestUtils;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;

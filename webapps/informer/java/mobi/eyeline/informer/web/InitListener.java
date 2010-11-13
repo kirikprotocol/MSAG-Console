@@ -1,7 +1,5 @@
 package mobi.eyeline.informer.web;
 
-import mobi.eyeline.informer.admin.WebConfigManager;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.xml.WebXml;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -36,7 +34,7 @@ public class InitListener implements ServletContextListener {
 
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
       if(System.getProperty("informer.log4j.file") != null) {
-        initLog4j(System.getProperty("informer.log4j.file"));
+        initLog4j(new File(appBaseDir, "conf"+File.separatorChar+"log4j.properties").getAbsolutePath());
       }
 
       WebXml webXml;
@@ -56,9 +54,6 @@ public class InitListener implements ServletContextListener {
         System.setProperty("java.security.auth.login.config",
             servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
       }
-
-
-
 
       WebContext.init(webXml,  appBaseDir);
 

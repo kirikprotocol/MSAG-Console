@@ -18,6 +18,7 @@ import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.web.TestWebConfigManager;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -87,7 +88,7 @@ public class TestAdminContext extends AdminContext {
       try{
         d.setActivePeriodEnd(df.parse("200000"));
         d.setActivePeriodStart(df.parse("090000"));
-      }catch (ParseException e){}
+      }catch (ParseException ignored){}
       d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Mon, Delivery.Day.Thu, Delivery.Day.Wed, Delivery.Day.Thu,});
       d.setDeliveryMode(DeliveryMode.SMS);
       d.setEndDate(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
@@ -143,6 +144,7 @@ public class TestAdminContext extends AdminContext {
   }
 
 
+  @SuppressWarnings({"ResultOfMethodCallIgnored"})
   public TestAdminContext(File appBaseDir) throws InitException {
 
     try {
