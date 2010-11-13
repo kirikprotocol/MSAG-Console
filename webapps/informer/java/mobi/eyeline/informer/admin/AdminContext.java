@@ -26,12 +26,10 @@ import mobi.eyeline.informer.admin.smsc.SmscManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -94,7 +92,7 @@ public class AdminContext {
       this.appBaseDir = appBaseDir;
       File webConfDir = new File(appBaseDir,"conf");
       this.webConfig = new  WebConfigManager(new File(webConfDir,"webconfig.xml") ,new File(webConfDir, "backup"), FileSystem.getFSForSingleInst()) ;
-    
+
       this.instType = webConfig.getInstallationType();
 
       File servicesDir = new File(appBaseDir, "services");
@@ -236,7 +234,7 @@ public class AdminContext {
           }
         }
       }
-      usersManager.addUser(u);      
+      usersManager.addUser(u);
     }
     finally {
       integrityLock.unlock();
@@ -558,6 +556,64 @@ public class AdminContext {
     synchronized (getLock(deliverId)) {
       return deliveryManager.getDeliveryStatusHistory(login, password, deliverId);
     }
+  }
+
+  public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
+    User u = getUser(user);
+    if(u == null) {
+      throw new IntegrityException("user_not_exist", user);
+    }
+
+    delivery.setOwner(user);
+
+    if(u.getSourceAddr() != null) {
+      delivery.setSourceAddress(u.getSourceAddr());
+    }
+    if(u.getEmail() != null) {
+      delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, u.getEmail());
+    }
+    if(u.getPhone() != null) {
+      delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, u.getPhone());
+    }
+    if(u.getDeliveryType() != null) {
+      switch (u.getDeliveryType()) {
+        case SMS:
+          delivery.setDeliveryMode(DeliveryMode.SMS);
+          break;
+        case USSD_PUSH:
+          delivery.setDeliveryMode(DeliveryMode.USSD_PUSH);
+          delivery.setTransactionMode(true);
+          break;
+        case USSD_PUSH_VIA_VLR:
+          delivery.setDeliveryMode(DeliveryMode.USSD_PUSH_VLR);
+          delivery.setTransactionMode(true);
+          break;
+      }
+    }
+    if(u.isRetryOnFail()) {
+      delivery.setRetryPolicy(u.getPolicyId());
+      delivery.setRetryOnFail(true);
+    }
+    try{
+      delivery.setPriority(u.getPriority());
+    }catch (AdminException ignored){}
+
+    Time t;
+    if((t = u.getDeliveryStartTime()) != null) {
+      delivery.setActivePeriodStart(t.getTimeDate());
+    }
+    if((t = u.getDeliveryEndTime()) != null) {
+      delivery.setActivePeriodEnd(t.getTimeDate());
+    }
+    delivery.setValidityPeriod(Integer.toString(u.getValidHours()));
+    if(u.getDeliveryDays() != null && !u.getDeliveryDays().isEmpty()) {
+      List<Delivery.Day> days = new ArrayList<Delivery.Day>(7);
+      for(Integer i : u.getDeliveryDays()) {
+        days.add(Delivery.Day.valueOf(i == 0 ? 7 : i));
+      }
+      delivery.setActiveWeekDays(days.toArray(new Delivery.Day[days.size()]));
+    }
+
   }
 
   public Restriction getRestriction(int id) {

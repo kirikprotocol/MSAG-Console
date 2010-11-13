@@ -102,7 +102,7 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.flash}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true" onchange=""/>
+            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.priority}" labelStyle="text-align:left">
@@ -119,11 +119,11 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.smsNotificationAddress}" labelStyle="text-align:left">
-            <tr:inputText converter="addressConverter" value="#{deliveryEdit.delivery.smsNotificationAddress}" simple="true"/>
+            <tr:inputText converter="addressConverter" value="#{deliveryEdit.smsNotificationAddress}" simple="true"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.emailNotificationAddress}" labelStyle="text-align:left">
-            <tr:inputText value="#{deliveryEdit.delivery.emailNotificationAddress}" simple="true"/>
+            <tr:inputText value="#{deliveryEdit.emailNotificationAddress}" simple="true"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}">
@@ -132,8 +132,12 @@
             <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}"/>
           </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.secretMessage}" labelStyle="text-align:left" rendered="#{deliveryEdit.delivery.secret}">
-            <tr:inputText rows="5" readOnly="true" value="#{deliveryEdit.delivery.secretMessage}"  simple="true"/>
+          <tr:panelLabelAndMessage label="#{deliveryBundle.secretMessage}" labelStyle="text-align:left" rendered="#{deliveryEdit.secret}">
+            <tr:inputText rows="5" readOnly="true" value="#{deliveryEdit.secretMessage}"  simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.secretFlash}" labelStyle="text-align:left" rendered="#{deliveryEdit.secret}">
+            <tr:selectBooleanCheckbox readOnly="true" value="#{deliveryEdit.flashSecret}" simple="true"/>
           </tr:panelLabelAndMessage>
 
         </tr:panelFormLayout>

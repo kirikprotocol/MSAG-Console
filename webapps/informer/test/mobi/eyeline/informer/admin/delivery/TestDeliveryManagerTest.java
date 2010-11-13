@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.util.Address;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -59,16 +60,16 @@ public class TestDeliveryManagerTest {
   @Test
   public void setRestriction() throws AdminException, InterruptedException {
     Delivery d = _createDelivery();
-    assertTrue(!d.isRestriction());
+    assertTrue(!Boolean.valueOf(d.getProperty(UserDataConsts.RESTRICTION)));
     manager.setDeliveryRestriction("","", d.getId(), true);
     d = manager.getDelivery("","",d.getId());
-    assertTrue(d.isRestriction());
+    assertTrue(Boolean.valueOf(d.getProperty(UserDataConsts.RESTRICTION)));
     final boolean[] ok = new boolean[]{false};
     final int id = d.getId();
     manager.getDeliveries("","", new DeliveryFilter(), 10000, new Visitor<DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
         if(id == value.getDeliveryId()) {
-          ok[0] = value.isRestriction();
+          ok[0] = Boolean.valueOf(value.getProperty(UserDataConsts.RESTRICTION));
           return false;
         }
         return true;
@@ -78,11 +79,11 @@ public class TestDeliveryManagerTest {
     ok[0] = false;
     manager.setDeliveryRestriction("","", d.getId(), false);
     d = manager.getDelivery("","",d.getId());
-    assertTrue(!d.isRestriction());
+    assertTrue(!Boolean.valueOf(d.getProperty(UserDataConsts.RESTRICTION)));
     manager.getDeliveries("","", new DeliveryFilter(), 10000, new Visitor<DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
         if(id == value.getDeliveryId()) {
-          ok[0] = !value.isRestriction();
+          ok[0] = !Boolean.valueOf(value.getProperty(UserDataConsts.RESTRICTION));
           return false;
         }
         return true;

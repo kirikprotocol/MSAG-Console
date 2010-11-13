@@ -113,23 +113,7 @@ public class DcpConverter {
 
     if(di.hasUserData()) {
       Map<String, String> uD = convertUserData(di.getUserData());
-      String t = uD.get("secret");
-      delivery.setSecret(t != null && Boolean.valueOf(t));
-      t = uD.get("secretFlash");
-      delivery.setSecretFlash(t != null && Boolean.valueOf(t));
-      t = uD.get("secretMessage");
-      if(t != null) {
-        delivery.setSecretMessage(t);
-      }
-      t = uD.get("smsNotification");
-      if(t != null) {
-        delivery.setSmsNotificationAddress(new Address(t));
-      }
-      t = uD.get("emailNotification");
-      if(t != null) {
-        delivery.setEmailNotificationAddress(t);
-      }
-      delivery.setRestriction(uD.containsKey("restriction"));
+      delivery.addProperties(uD);
     }
     delivery.setStartDate(convertDate(di.getStartDate()));
     if (di.hasSvcType()) {
@@ -188,7 +172,7 @@ public class DcpConverter {
       result.setText(text);
     }
     if (mi.hasUserData()) {
-      result.setUserData(mi.getUserData());
+      result.addProperties(convertUserData(mi.getUserData()));
     }
     return result;
   }
@@ -198,6 +182,7 @@ public class DcpConverter {
     result.setAbonent(m.getAbonent().getSimpleAddress());
     result.setText(m.getText());
     result.setMsgType(MessageType.TextMessage);
+    result.setUserData(convertUserData(m.getProperties()));
     return result;
   }
 
@@ -257,7 +242,7 @@ public class DcpConverter {
     }
     if(di.hasUserData()) {
       Map<String, String> uD = convertUserData(di.getUserData());
-      result.setRestriction(uD.containsKey("restriction"));
+      result.addProperties(uD);
     }
     return result;
   }
@@ -280,26 +265,7 @@ public class DcpConverter {
     delivery.setRetryOnFail(di.isRetryOnFail());
     delivery.setRetryPolicy(di.getRetryPolicy());
     delivery.setSourceAddress(di.getSourceAddress().getSimpleAddress());
-//    delivery,set
-    Map<String, Object> userData = new HashMap<String, Object>(3);
-    userData.put("secret", di.isSecret());
-    userData.put("secretFlash", di.isSecretFlash());
-    if(di.getSecretMessage() != null) {
-      userData.put("secretMessage", di.getSecretMessage());
-    }
-    if(di.getSmsNotificationAddress() != null) {
-      userData.put("smsNotification", di.getSmsNotificationAddress());
-    }
-    if(di.getEmailNotificationAddress() != null) {
-      userData.put("emailNotification", di.getEmailNotificationAddress());
-    }
-    if(di.getType() == Delivery.Type.SingleText) {
-      userData.put("singleText", true);
-    }
-    if(di.isRestriction()) {
-      userData.put("restriction", true);
-    }
-    delivery.setUserData(convertUserData(userData));
+    delivery.setUserData(convertUserData(di.getProperties()));
     delivery.setStartDate(convertDate(di.getStartDate()));
     if (di.getSvcType() != null) {
       delivery.setSvcType(di.getSvcType());
@@ -429,12 +395,12 @@ public class DcpConverter {
   }
 
 
-  private static String convertUserData(Map<String, Object> m) {
+  private static String convertUserData(Properties m) {
     if(m == null || m.isEmpty()) {
       return null;
     }
     StringBuilder sb = new StringBuilder();
-    for(Map.Entry<String, Object> e : m.entrySet()) {
+    for(Map.Entry e : m.entrySet()) {
       sb.append(';').append(e.getKey()).append('=').append(e.getValue());
     }
     return sb.substring(1);

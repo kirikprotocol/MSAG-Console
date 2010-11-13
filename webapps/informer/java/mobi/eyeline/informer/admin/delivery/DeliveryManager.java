@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
@@ -514,7 +515,7 @@ public class DeliveryManager {
     if(d == null) {
       throw new DeliveryException("delivery_not_found");
     }
-    d.setRestriction(restriction);
+    d.setProperty(UserDataConsts.RESTRICTION, Boolean.toString(restriction));
     conn.modifyDelivery(d);
     return d;
   }

@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryListInfo;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMessage;
 import mobi.eyeline.informer.util.Address;
@@ -61,7 +62,7 @@ public class DcpConverterTest {
     d.setStartDate(new Date());
     d.setSvcType("svc1");
     d.setValidityPeriod("1");
-    d.setRestriction(true);
+    d.setProperty(UserDataConsts.RESTRICTION, "true");
     assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d), null));
   }
 
@@ -85,7 +86,7 @@ public class DcpConverterTest {
     mi.setIndex(13);
     mi.setText("sms_text");
     mi.setState(mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMessageState.Failed);
-    mi.setUserData("user's data");
+    mi.setUserData("user=data");
     MessageInfo info = DcpConverter.convert(mi, null);
     assertEquals(mi.getAbonent(), info.getAbonent());
     assertEquals(DcpConverter.convertDate(mi.getDate()), info.getDate());
@@ -94,7 +95,6 @@ public class DcpConverterTest {
     assertEquals(mi.getId(), info.getId());
     assertEquals(mi.getText(), info.getText());
     assertEquals(DcpConverter.convert(mi.getState()), info.getState());
-    assertEquals(mi.getUserData(), info.getUserData());
   }
 
 

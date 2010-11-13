@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.infosme.TestSms;
@@ -59,7 +60,16 @@ public class DeliveryEditController extends DeliveryController{
     if(id == null || (delivery = config.getDelivery(u.getLogin(), u.getPassword(), id)) == null) {
       logger.error("Delivery is not found with id="+id);
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found",id);
+      return;
     }
+    String p = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
+    if(p != null) {
+      smsNotificationAddress = new Address(p);
+    }
+    emailNotificationAddress = delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
+    secret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET));
+    flashSecret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET_FLASH));
+    secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
   }
 
   public List<SelectItem> getUniqueDeliveryModes() {
@@ -80,6 +90,56 @@ public class DeliveryEditController extends DeliveryController{
     return result;
   }
 
+  private String emailNotificationAddress;
+
+  public String getEmailNotificationAddress() {
+    return emailNotificationAddress;
+  }
+
+  public void setEmailNotificationAddress(String emailNotificationAddress) {
+    this.emailNotificationAddress = emailNotificationAddress;
+  }
+
+  private Address smsNotificationAddress;
+
+  public Address getSmsNotificationAddress() {
+    return smsNotificationAddress;
+  }
+
+  public void setSmsNotificationAddress(Address smsNotificationAddress) {
+    this.smsNotificationAddress = smsNotificationAddress;
+  }
+
+  public boolean secret;
+
+  public String secretMessage;
+
+  public boolean flashSecret;
+
+  public boolean isSecret() {
+    return secret;
+  }
+
+  public void setSecret(boolean secret) {
+    this.secret = secret;
+  }
+
+  public String getSecretMessage() {
+    return secretMessage;
+  }
+
+  public void setSecretMessage(String secretMessage) {
+    this.secretMessage = secretMessage;
+  }
+
+  public boolean isFlashSecret() {
+    return flashSecret;
+  }
+
+  public void setFlashSecret(boolean flashSecret) {
+    this.flashSecret = flashSecret;
+  }
+
   public String save() {
     if(!delivery.isRetryOnFail()) {
       delivery.setRetryPolicy(null);
@@ -87,15 +147,18 @@ public class DeliveryEditController extends DeliveryController{
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
       return null;
     }
-    if(delivery.getEmailNotificationAddress() != null) {
-      if(delivery.getEmailNotificationAddress().equals("")) {
-        delivery.setEmailNotificationAddress(null);
-      }
+    if(emailNotificationAddress != null && (emailNotificationAddress = emailNotificationAddress.trim()).length() != 0) {
+      delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotificationAddress);
+    }
+    if(smsNotificationAddress != null) {
+      delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotificationAddress.getSimpleAddress());
     }
     if(delivery.getType() == Delivery.Type.SingleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
       return null;
     }
+
+
     try{
       User u = config.getUser(getUserName());
       config.modifyDelivery(u.getLogin(), u.getPassword(), delivery);

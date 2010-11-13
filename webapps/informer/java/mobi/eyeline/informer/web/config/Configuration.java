@@ -360,15 +360,16 @@ public class Configuration {
   }
 
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-    //todo journal
     context.addMessages(login, password, msDataSource, deliveryId);
   }
 
   public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
-    //todo journal
     return context.addSingleTextMessages(login, password, msDataSource, deliveryId);
   }
 
+  public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
+    context.getDefaultDelivery(user, delivery);
+  }
 
   public void sendTestSms(TestSms sms) throws AdminException {
     context.sendTestSms(sms);

@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.restriction;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UsersManager;
@@ -165,7 +166,7 @@ public class RestrictionDaemon implements Daemon {
       }
     }
     else {
-      if(di.getStatus()==DeliveryStatus.Paused && di.isRestriction()) {
+      if(di.getStatus()==DeliveryStatus.Paused && Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION))) {
         //System.out.println("changed");
         deliveryManager.setDeliveryRestriction(u.getLogin(),u.getPassword(),di.getDeliveryId(),false);
         deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),di.getDeliveryId());

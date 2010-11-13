@@ -441,9 +441,12 @@ public class DcpConnection {
       req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
       req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
 
-      if (filter.getFields() != null && filter.getFields().length > 0) {
-        req.setFields(DcpConverter.convert(filter.getFields()));
-      }
+      ReqField[] fieldses = DcpConverter.convert(filter.getFields());
+      ReqField[] fs = new ReqField[fieldses.length + 1];
+      fs[0] = ReqField.UserData;
+      System.arraycopy(fieldses, 0, fs, 1, fieldses.length);
+      req.setFields(fs);
+      
       if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
         req.setMsisdnFilter(filter.getMsisdnFilter());
       }

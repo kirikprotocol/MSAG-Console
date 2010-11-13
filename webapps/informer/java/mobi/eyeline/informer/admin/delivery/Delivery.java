@@ -6,10 +6,7 @@ import mobi.eyeline.informer.util.Address;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Настройки рассылки
@@ -40,9 +37,6 @@ public class Delivery implements Serializable{
   private String validityPeriod;
 
   private boolean flash;
-  private boolean secret;
-  private boolean secretFlash;
-  private String secretMessage;
   private boolean useDataSm;
   private DeliveryMode deliveryMode;
 
@@ -54,9 +48,6 @@ public class Delivery implements Serializable{
   private boolean replaceMessage;
   private String svcType;
 
-  private String emailNotificationAddress;
-
-  private Address smsNotificationAddress;
 
   private Address sourceAddress;
 
@@ -64,7 +55,7 @@ public class Delivery implements Serializable{
 
   private final Type type;
 
-  private boolean restriction;
+  private Properties properties = new Properties();
 
   public static Delivery newSingleTextDelivery() {
     return new Delivery(Type.SingleText);
@@ -79,12 +70,30 @@ public class Delivery implements Serializable{
     this.type = type;
   }
 
-  public boolean isRestriction() {
-    return restriction;
+  public void setProperty(String name, String value) {
+    properties.setProperty(name, value);
   }
 
-  public void setRestriction(boolean restriction) {
-    this.restriction = restriction;
+  public String removeProperty(String name) {
+    return (String)properties.remove(name);
+  }
+
+  public void addProperties(Map<String, String> props) {
+    properties.putAll(props);
+  }
+
+  public String getProperty(String name) {
+    return properties.getProperty(name);
+  }
+
+  public boolean containsProperty(String name) {
+    return properties.containsKey(name);
+  }
+
+  public Properties getProperties() {
+    Properties properties = new Properties();
+    properties.putAll(this.properties);
+    return properties;
   }
 
   public Type getType() {
@@ -100,21 +109,21 @@ public class Delivery implements Serializable{
     this.sourceAddress = sourceAddress;
   }
 
-  public String getEmailNotificationAddress() {
-    return emailNotificationAddress;
-  }
-
-  public void setEmailNotificationAddress(String emailNotificationAddress) {
-    this.emailNotificationAddress = emailNotificationAddress;
-  }
-
-  public Address getSmsNotificationAddress() {
-    return smsNotificationAddress;
-  }
-
-  public void setSmsNotificationAddress(Address smsNotificationAddress) {
-    this.smsNotificationAddress = smsNotificationAddress;
-  }
+//  public String getEmailNotificationAddress() {
+//    return emailNotificationAddress;
+//  }
+//
+//  public void setEmailNotificationAddress(String emailNotificationAddress) {
+//    this.emailNotificationAddress = emailNotificationAddress;
+//  }
+//
+//  public Address getSmsNotificationAddress() {
+//    return smsNotificationAddress;
+//  }
+//
+//  public void setSmsNotificationAddress(Address smsNotificationAddress) {
+//    this.smsNotificationAddress = smsNotificationAddress;
+//  }
 
   public String getSingleText() {
     return singleText;
@@ -222,30 +231,6 @@ public class Delivery implements Serializable{
 
   public void setFlash(boolean flash) {
     this.flash = flash;
-  }
-
-  public boolean isSecret() {
-    return secret;
-  }
-
-  public void setSecret(boolean secret) {
-    this.secret = secret;
-  }
-
-  public boolean isSecretFlash() {
-    return secretFlash;
-  }
-
-  public void setSecretFlash(boolean secretFlash) {
-    this.secretFlash = secretFlash;
-  }
-
-  public String getSecretMessage() {
-    return secretMessage;
-  }
-
-  public void setSecretMessage(String secretMessage) {
-    this.secretMessage = secretMessage;
   }
 
   public boolean isUseDataSm() {
@@ -357,10 +342,6 @@ public class Delivery implements Serializable{
     if (priority != delivery.priority) return false;
     if (replaceMessage != delivery.replaceMessage) return false;
     if (retryOnFail != delivery.retryOnFail) return false;
-    if (secret != delivery.secret) return false;
-    if (secretFlash != delivery.secretFlash) return false;
-    if (secretMessage != null ? !secretMessage.equals(delivery.secretMessage) : delivery.secretMessage != null)
-      return false;
     if (transactionMode != delivery.transactionMode) return false;
     if (useDataSm != delivery.useDataSm) return false;
     if (activePeriodEnd != null ? !timeFormat.format(activePeriodEnd).equals(delivery.activePeriodEnd == null ? null : timeFormat.format(delivery.activePeriodEnd)) : delivery.activePeriodEnd != null)
@@ -380,22 +361,25 @@ public class Delivery implements Serializable{
     if (svcType != null ? !svcType.equals(delivery.svcType) : delivery.svcType != null) return false;
     if (validityPeriod != null ? !validityPeriod.equals(delivery.validityPeriod) : delivery.validityPeriod != null)
       return false;
-    if (smsNotificationAddress != null ? !smsNotificationAddress.getSimpleAddress().equals(delivery.smsNotificationAddress.getSimpleAddress()) : delivery.smsNotificationAddress != null)
-      return false;
-    if (emailNotificationAddress != null ? !emailNotificationAddress.equals(delivery.emailNotificationAddress) : delivery.emailNotificationAddress != null)
-      return false;
     if (singleText != null ? !singleText.equals(delivery.singleText) : delivery.singleText != null)
       return false;
     if(type != delivery.type) {
       return false;
     }
-    if(restriction != delivery.isRestriction()) {
-      return false;
-    }
-
     if (sourceAddress != null ? !sourceAddress.getSimpleAddress().equals(delivery.sourceAddress.getSimpleAddress()) : delivery.sourceAddress != null)
       return false;
 
+    if(properties.size() != delivery.properties.size()) {
+      return false;
+    }
+    for(Map.Entry e : properties.entrySet()) {
+      if(!delivery.properties.containsKey(e.getKey())) {
+        return false;
+      }
+      if(!delivery.properties.get(e.getKey()).equals(e.getValue())) {
+        return false;
+      }
+    }
 
     return true;
   }
@@ -417,9 +401,6 @@ public class Delivery implements Serializable{
     d.validityPeriod = validityPeriod;
 
     d.flash = flash;
-    d.secret = secret;
-    d.secretFlash = secretFlash;
-    d.secretMessage = secretMessage;
     d.useDataSm = useDataSm;
     d.deliveryMode = deliveryMode;
 
@@ -431,11 +412,9 @@ public class Delivery implements Serializable{
     d.replaceMessage = replaceMessage;
     d.svcType = svcType;
 
-    d.emailNotificationAddress = emailNotificationAddress;
-    d.smsNotificationAddress = smsNotificationAddress == null ? null : new Address(smsNotificationAddress.getSimpleAddress());
     d.sourceAddress = sourceAddress == null ? null : new Address(sourceAddress.getSimpleAddress());
     d.singleText = singleText;
-    d.restriction = restriction;
+    d.properties.putAll(properties);
     return d;
   }
 }

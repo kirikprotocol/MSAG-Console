@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
@@ -366,7 +367,7 @@ public class TestDcpConnection extends DcpConnection{
       info.setStartDate(d.getStartDate());
       info.setStatus(d.status);
       info.setUserId(d.getOwner());
-      info.setRestriction(d.isRestriction());
+      info.setProperty(UserDataConsts.RESTRICTION, Boolean.valueOf(d.getProperty(UserDataConsts.RESTRICTION)).toString());
       deliveries.add(info);
     }
     return result.size() < pieceSize;
@@ -409,7 +410,10 @@ public class TestDcpConnection extends DcpConnection{
       }
       info.setState(d.state);
       info.setId(d.getId());
-      info.setUserData("");
+      d.getProperties().propertyNames();
+      for(Map.Entry e : d.getProperties().entrySet()) {
+        info.setProperty(e.getKey().toString(), e.getValue().toString());
+      }
       messages.add(info);
     }
     return result.size() < pieceSize;
@@ -549,25 +553,6 @@ public class TestDcpConnection extends DcpConnection{
       delivery.setSourceAddress(sourceAddress);
     }
 
-    @Override
-    public String getEmailNotificationAddress() {
-      return delivery.getEmailNotificationAddress();
-    }
-
-    @Override
-    public void setEmailNotificationAddress(String emailNotificationAddress) {
-      delivery.setEmailNotificationAddress(emailNotificationAddress);
-    }
-
-    @Override
-    public Address getSmsNotificationAddress() {
-      return delivery.getSmsNotificationAddress();
-    }
-
-    @Override
-    public void setSmsNotificationAddress(Address smsNotificationAddress) {
-      delivery.setSmsNotificationAddress(smsNotificationAddress);
-    }
 
     @Override
     public String getSingleText() {
@@ -690,36 +675,6 @@ public class TestDcpConnection extends DcpConnection{
     }
 
     @Override
-    public boolean isSecret() {
-      return delivery.isSecret();
-    }
-
-    @Override
-    public void setSecret(boolean secret) {
-      delivery.setSecret(secret);
-    }
-
-    @Override
-    public boolean isSecretFlash() {
-      return delivery.isSecretFlash();
-    }
-
-    @Override
-    public void setSecretFlash(boolean secretFlash) {
-      delivery.setSecretFlash(secretFlash);
-    }
-
-    @Override
-    public String getSecretMessage() {
-      return delivery.getSecretMessage();
-    }
-
-    @Override
-    public void setSecretMessage(String secretMessage) {
-      delivery.setSecretMessage(secretMessage);
-    }
-
-    @Override
     public boolean isUseDataSm() {
       return delivery.isUseDataSm();
     }
@@ -790,13 +745,28 @@ public class TestDcpConnection extends DcpConnection{
     }
 
     @Override
-    public void setRestriction(boolean restriction) {
-      delivery.setRestriction(restriction);
+    public void setProperty(String name, String value) {
+      delivery.setProperty(name, value);
     }
 
     @Override
-    public boolean isRestriction() {
-      return delivery.isRestriction();
+    public void addProperties(Map<String, String> props) {
+      delivery.addProperties(props);
+    }
+
+    @Override
+    public String getProperty(String name) {
+      return delivery.getProperty(name);
+    }
+
+    @Override
+    public boolean containsProperty(String name) {
+      return delivery.containsProperty(name);
+    }
+
+    @Override
+    public Properties getProperties() {
+      return delivery.getProperties();
     }
   }
 

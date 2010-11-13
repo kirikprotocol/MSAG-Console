@@ -14,8 +14,8 @@ public class SiebelDelivery {
   private Date lastUpdate;
   private int priority;
   private boolean flash;
-  private boolean save;
-  private boolean beep;
+  private boolean save;    //todo
+  private boolean beep;    //todo
   private Integer expPeriod;
   private Status status;
 

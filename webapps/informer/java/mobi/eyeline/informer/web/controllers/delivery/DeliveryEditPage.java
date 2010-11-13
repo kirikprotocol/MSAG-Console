@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
@@ -29,25 +30,94 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private boolean emailNotificationCheck;
 
+  private Address smsNotificationAddress;
+
+  private String emailNotificationAddress;
+
+  private boolean secret;
+
+  private String secretMessage;
+
+  private boolean secretFlash;
+
+
   private Configuration config;
 
   public DeliveryEditPage(Delivery delivery, File tmpFile, Configuration config) {
     this.delivery = delivery;
     this.tmpFile = tmpFile;
     this.config = config;
+
+    String p = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
+    if(p != null) {
+      smsNotificationAddress = new Address(p);
+    }
+    emailNotificationAddress = delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
+    secret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET));
+    secretFlash = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET_FLASH));
+    secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
+  }
+
+
+  public Address getSmsNotificationAddress() {
+    return smsNotificationAddress;
+  }
+
+  public void setSmsNotificationAddress(Address smsNotificationAddress) {
+    this.smsNotificationAddress = smsNotificationAddress;
+  }
+
+  public String getEmailNotificationAddress() {
+    return emailNotificationAddress;
+  }
+
+  public void setEmailNotificationAddress(String emailNotificationAddress) {
+    this.emailNotificationAddress = emailNotificationAddress;
+  }
+
+  public boolean isSecret() {
+    return secret;
+  }
+
+  public void setSecret(boolean secret) {
+    this.secret = secret;
+  }
+
+  public String getSecretMessage() {
+    return secretMessage;
+  }
+
+  public void setSecretMessage(String secretMessage) {
+    this.secretMessage = secretMessage;
+  }
+
+  public boolean isSecretFlash() {
+    return secretFlash;
+  }
+
+  public void setSecretFlash(boolean secretFlash) {
+    this.secretFlash = secretFlash;
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
+    if(secret && (secretMessage == null || (secretMessage = secretMessage.trim()).length() == 0)) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.secret.message.empty");
+      return null;
+    }
     if(smsNotificationCheck) {
-      if(delivery.getSmsNotificationAddress() == null) {
+      if(smsNotificationAddress == null) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.sms.incorrect");
         return null;
+      }else {
+        delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotificationAddress.getSimpleAddress());
       }
     }
     if(emailNotificationCheck) {
-      if(delivery.getEmailNotificationAddress() == null) {
+      if(emailNotificationAddress == null || (emailNotificationAddress = emailNotificationAddress.trim()).length() == 0) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.email.incorrect");
         return null;
+      }else {
+        delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotificationAddress);
       }
     }
     if(!delivery.isRetryOnFail()) {
@@ -55,11 +125,6 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     }else if(delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
       return null;
-    }
-    if(delivery.getEmailNotificationAddress() != null) {
-      if(delivery.getEmailNotificationAddress().equals("")) {
-        delivery.setEmailNotificationAddress(null);
-      }
     }
     if(delivery.getType() == Delivery.Type.SingleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
@@ -80,12 +145,17 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       return null;
     }
 
+    delivery.setProperty(UserDataConsts.SECRET, Boolean.toString(secret));
+    if(secret) {
+      delivery.setProperty(UserDataConsts.SECRET_TEXT, secretMessage);
+      delivery.setProperty(UserDataConsts.SECRET_FLASH, Boolean.toString(secretFlash));
+    }
 
     if(!smsNotificationCheck) {
-      delivery.setSmsNotificationAddress(null);
+      delivery.removeProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
     }
     if(!emailNotificationCheck) {
-      delivery.setEmailNotificationAddress(null);      
+      delivery.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
     }
 
     return new ProcessDeliveryPage(delivery, tmpFile, config, locale, user);

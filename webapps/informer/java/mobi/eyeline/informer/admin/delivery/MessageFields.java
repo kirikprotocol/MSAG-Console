@@ -10,8 +10,7 @@ public enum MessageFields {
   Date,
   Abonent,
   Text,
-  ErrorCode,
-  UserData;
+  ErrorCode;
   public static MessageFields[] ALL = MessageFields.values();
 
 }

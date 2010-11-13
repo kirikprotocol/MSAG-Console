@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.restriction;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
@@ -226,9 +227,9 @@ public class RestrictionsDaemonTest {
     filter.setUserIdFilter(new String[]{d.getOwner()});
     deliveryManager.getDeliveries(d.getOwner(),"1",filter,100,new Visitor<DeliveryInfo>(){
       public boolean visit(DeliveryInfo di) throws AdminException {
-        System.out.println((System.currentTimeMillis()-start)+" "+d.getOwner()+" status="+di.getStatus()+" "+di.isRestriction());
+        System.out.println((System.currentTimeMillis()-start)+" "+d.getOwner()+" status="+di.getStatus()+" "+Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION)));
         assertTrue(di.getStatus()==requiredStatus);
-        assertTrue(di.isRestriction()==requiredRestricted);
+        assertTrue(Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION))==requiredRestricted);
         return true;
       }
     });

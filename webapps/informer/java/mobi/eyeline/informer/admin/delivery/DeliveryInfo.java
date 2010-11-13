@@ -1,6 +1,8 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Краткая информация о рассылке
@@ -17,7 +19,36 @@ public class DeliveryInfo {
   private Date endDate;
   private Date activityPeriodStart;
   private Date activityPeriodEnd;
-  private boolean restriction;
+
+  private Properties properties = new Properties();
+
+
+  public void setProperty(String name, String value) {
+    properties.setProperty(name, value);
+  }
+
+  public void addProperties(Map<String, String> props) {
+    properties.putAll(props);
+  }
+
+  public String getProperty(String name) {
+    return properties.getProperty(name);
+  }            
+
+  public String removeProperty(String name) {
+    return (String)properties.remove(name);
+  }
+
+  public boolean containsProperty(String name) {
+    return properties.containsKey(name);
+  }
+
+  public Properties getProperties() {
+    Properties properties = new Properties();
+    properties.putAll(this.properties);
+    return properties;
+  }
+
 
   public int getDeliveryId() {
     return deliveryId;
@@ -81,13 +112,5 @@ public class DeliveryInfo {
 
   void setActivityPeriodEnd(Date activityPeriodEnd) {
     this.activityPeriodEnd = activityPeriodEnd;
-  }
-
-  public boolean isRestriction() {
-    return restriction;
-  }
-
-  void setRestriction(boolean restriction) {
-    this.restriction = restriction;
   }
 }

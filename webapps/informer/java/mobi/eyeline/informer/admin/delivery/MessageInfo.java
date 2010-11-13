@@ -2,6 +2,8 @@ package mobi.eyeline.informer.admin.delivery;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Информация о состоянии рассылки
@@ -16,7 +18,8 @@ public class MessageInfo {
   private String abonent;
   private String text;
   private Integer errorCode;
-  private String userData;
+
+  private Properties properties = new Properties();
 
   MessageInfo() {
   }
@@ -69,13 +72,32 @@ public class MessageInfo {
     this.errorCode = errorCode;
   }
 
-  public String getUserData() {
-    return userData;
+  public String removeProperty(String name) {
+    return (String)properties.remove(name);
   }
 
-  void setUserData(String userData) {
-    this.userData = userData;
+  public void setProperty(String name, String value) {
+    properties.setProperty(name, value);
   }
+
+  public void addProperties(Map<String, String> props) {
+    properties.putAll(props);
+  }
+
+  public String getProperty(String name) {
+    return properties.getProperty(name);
+  }
+
+  public boolean containsProperty(String name) {
+    return properties.containsKey(name);
+  }
+
+  public Properties getProperties() {
+    Properties properties = new Properties();
+    properties.putAll(this.properties);
+    return properties;
+  }
+
 
   @Override
   public boolean equals(Object o) {
@@ -93,7 +115,20 @@ public class MessageInfo {
     if (errorCode != null ? !errorCode.equals(that.errorCode) : that.errorCode != null) return false;
     if (state != that.state) return false;
     if (text != null ? !text.equals(that.text) : that.text != null) return false;
-    if (userData != null ? !userData.equals(that.userData) : that.userData != null) return false;
+    if((properties != null && that.properties == null) || (properties == null && that.properties != null)) {
+      return false;
+    }
+    if(properties != null) {
+      if(properties.size() != that.properties.size()) {
+        return false;
+      }
+      for(Map.Entry e : properties.entrySet()) {
+        Object v;
+        if(((v = that.properties.get(e.getKey())) == null) || !v.equals(e.getValue())) {
+          return false;
+        }
+      }
+    }
 
     return true;
   }

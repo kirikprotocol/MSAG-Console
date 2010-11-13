@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.journal;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 
 import java.lang.reflect.Method;
@@ -25,7 +26,7 @@ class DeliveriesDiffHelper extends DiffHelper{
   }
 
   void logChanges(Journal j, String user, Delivery oldDelivery, Delivery newDelivery) throws AdminException {
-    List<Method> getters = getGetters(Delivery.class, "getActivePeriodEnd","getActivePeriodStart", "getStartDate", "getEndDate", "getValidityDate");
+    List<Method> getters = getGetters(Delivery.class, "getProperty", "getProperties", "getActivePeriodEnd","getActivePeriodStart", "getStartDate", "getEndDate", "getValidityDate");
     List<Object> oldValues = callGetters(getters, oldDelivery);
     List<Object> newValues = callGetters(getters, newDelivery);
     logChanges(j, oldValues, newValues, getters, user, "delivery_property_changed", newDelivery.getName());
@@ -55,6 +56,43 @@ class DeliveriesDiffHelper extends DiffHelper{
 
       j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "endDate", temp1, temp2, oldDelivery.getName());
     }
+    if(((temp1 = oldDelivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS)) != null &&
+        !temp1.equals(temp2 = newDelivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS))) ||
+        ((temp2 = newDelivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS)) != null && !temp2.equals(temp1))) {
+
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "sms notification",
+          temp1 == null ? "" : temp1, temp2 == null ? "" : temp2, oldDelivery.getName());
+    }
+    if(((temp1 = oldDelivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS)) != null &&
+        !temp1.equals(temp2 = newDelivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS))) ||
+        ((temp2 = newDelivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS)) != null && !temp2.equals(temp1))) {
+
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "email notification",
+          temp1 == null ? "" : temp1, temp2 == null ? "" : temp2, oldDelivery.getName());
+    }
+    if(((temp1 = oldDelivery.getProperty(UserDataConsts.SECRET)) != null &&
+        !temp1.equals(temp2 = newDelivery.getProperty(UserDataConsts.SECRET))) ||
+        ((temp2 = newDelivery.getProperty(UserDataConsts.SECRET)) != null && !temp2.equals(temp1))) {
+
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "secret",
+          temp1 == null ? "" : temp1, temp2 == null ? "" : temp2, oldDelivery.getName());
+    }
+    if(((temp1 = oldDelivery.getProperty(UserDataConsts.SECRET_TEXT)) != null &&
+        !temp1.equals(temp2 = newDelivery.getProperty(UserDataConsts.SECRET_TEXT))) ||
+        ((temp2 = newDelivery.getProperty(UserDataConsts.SECRET_TEXT)) != null && !temp2.equals(temp1))) {
+
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "secret text",
+          temp1 == null ? "" : temp1, temp2 == null ? "" : temp2, oldDelivery.getName());
+    }
+    if(((temp1 = oldDelivery.getProperty(UserDataConsts.SECRET_FLASH)) != null &&
+        !temp1.equals(temp2 = newDelivery.getProperty(UserDataConsts.SECRET_FLASH))) ||
+        ((temp2 = newDelivery.getProperty(UserDataConsts.SECRET_FLASH)) != null && !temp2.equals(temp1))) {
+
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "secret flash",
+          temp1 == null ? "" : temp1, temp2 == null ? "" : temp2, oldDelivery.getName());
+    }
+
+
   }
 
 
