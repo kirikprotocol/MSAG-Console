@@ -2,7 +2,9 @@
  * USSMan service configuration structure.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USS_USSSERVICE_CFG_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 # define __SMSC_INMAN_USS_USSSERVICE_CFG_HPP__
 
 #include "inman/interaction/server.hpp"

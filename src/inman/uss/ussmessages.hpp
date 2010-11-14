@@ -2,7 +2,9 @@
  * USSMan USS request execution protocol PDUs definition.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USS_USSMESSAGES__
-#ident "$Id$"
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_USS_USSMESSAGES__
 
 #include <logger/Logger.h>
@@ -70,7 +72,10 @@ protected:
     uint32_t    dlgId;
 
 public:
-    USSPacketAC(uint32_t dlg_id = 0) : dlgId(dlg_id)
+    explicit USSPacketAC(uint32_t dlg_id = 0)
+      : SerializablePacket_T<1>(), dlgId(dlg_id)
+    { }
+    virtual ~USSPacketAC()
     { }
    
     SerializableObjectAC * const pCmd(void) { return getObj(0); }
@@ -95,10 +100,16 @@ protected:
 
 public:
     USSSolidPacketT() : USSPacketAC()
-        { referObj(0, pckCmd); }
+    {
+      referObj(0, pckCmd);  //fix at(0) reference
+    }
     //constructor for copying
-    USSSolidPacketT(const USSSolidPacketT &org_pck) : *this(org_pck)
-        { referObj(0, pckCmd); } //fix at(0) reference
+    USSSolidPacketT(const USSSolidPacketT &org_pck) : USSPacketAC(org_pck)
+    {
+      referObj(0, pckCmd);  //fix at(0) reference
+    }
+    ~USSSolidPacketT()
+    { }
 
     _Command & Cmd(void) { return pckCmd; }
     const _Command & Cmd() const { return pckCmd; }
@@ -111,16 +122,26 @@ typedef std::vector<unsigned char> USSDATA_T;
 
 //Abstract class for USSman commands
 class USSMessageAC : public SerializableObjectAC {
+protected:
+  unsigned char   _dCS, _flg;
+  bool            _dCS_wasRead;
+  std::string     _latin1Text;
+  USSDATA_T       _ussData;
+  TonNpiAddress   _msAdr;
+  smsc::logger::Logger* _logger; // for debug
+
+
+  explicit USSMessageAC(unsigned short msgTag)
+    : SerializableObjectAC(msgTag)
+    , _dCS(0), _flg(UNKNOWN_CODING), _dCS_wasRead(false)
+    , _logger(smsc::logger::Logger::getInstance("smsc.ussman"))
+  { }
+
 public:
   enum  DataFlag_e {
     PREPARED_USS_REQ=0, LATIN1_USS_TEXT, UCS2_USS_TEXT, UNKNOWN_CODING=0XFF
   };
 
-  USSMessageAC(unsigned short msgTag)
-    : SerializableObjectAC(msgTag)
-    , _dCS(0), _flg(UNKNOWN_CODING), _dCS_wasRead(false)
-    , _logger(smsc::logger::Logger::getInstance("smsc.ussman"))
-  { }
   virtual ~USSMessageAC()
   { }
 
@@ -148,14 +169,6 @@ public:
   unsigned char    getDCS(void) const     { return _dCS; }
 
   virtual std::string toString() const;
-  
-protected:
-  unsigned char   _dCS, _flg;
-  bool            _dCS_wasRead;
-  std::string     _latin1Text;
-  USSDATA_T       _ussData;
-  TonNpiAddress   _msAdr;
-  smsc::logger::Logger* _logger; // for debug
 };
 
 

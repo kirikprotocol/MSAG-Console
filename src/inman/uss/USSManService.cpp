@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include <assert.h>
 
@@ -19,10 +19,10 @@ namespace uss {
 
 USSManService::USSManService(const UssService_CFG & in_cfg, const char * log_id/* = NULL*/,
                              Logger * use_log/* = NULL*/)
-  : _cfg(in_cfg), _logId(log_id ? log_id : "USSManSrv"),
-    _logger(use_log ? use_log : Logger::getInstance("smsc.ussman.Service")),
-    _server(new smsc::inman::interaction::Server(&_cfg.sock, _logger)),
-    _running(false), _disp(new smsc::inman::inap::TCAPDispatcher())
+  : _logger(use_log ? use_log : Logger::getInstance("smsc.ussman.Service"))
+  , _logId(log_id ? log_id : "USSManSrv"), _cfg(in_cfg)
+  , _server(new smsc::inman::interaction::Server(&_cfg.sock, _logger))
+  , _running(false), _disp(new smsc::inman::inap::TCAPDispatcher())
 {
     assert(_server && _disp);
     smsc_log_debug(_logger, "%s: Creating ..", _logId);
@@ -72,7 +72,7 @@ bool USSManService::start()
         return false;
     }
     smsc_log_debug(_logger, "%s: Started.", _logId);
-    return _running = true;
+    return (_running = true);
 }
 
 //##ModelId=45750EA80188

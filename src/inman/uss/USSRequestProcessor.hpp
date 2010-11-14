@@ -2,7 +2,9 @@
  *
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USS_USSREQUESTPROCESSOR_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 # define __SMSC_INMAN_USS_USSREQUESTPROCESSOR_HPP__ 1
 
 //# include "logger/Logger.h"

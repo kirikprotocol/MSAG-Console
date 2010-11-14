@@ -2,7 +2,9 @@
  * USSMan global return codes registry initialization
  * ************************************************************************* */
 #ifndef __SMSC_USSMAN_URCREGISTRY_INIT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_USSMAN_URCREGISTRY_INIT_HPP
 
 #ifdef URCREGISTRY_GLOBAL_INIT

@@ -2,9 +2,9 @@
  * USSBalance service: utilizes the USSMan functionality for handling abonents
  * balance requests.
  * ************************************************************************** */
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/uss/ussversion.hpp"
 #include "util/config/XCFManager.hpp"
@@ -26,7 +26,7 @@ static smsc::inman::uss::USSManService* service = 0;
 
 volatile bool wasStopped = false;
 
-extern "C" static void sighandler( int signal )
+extern "C" void sighandler( int signal )
 {
   wasStopped = true;
 }

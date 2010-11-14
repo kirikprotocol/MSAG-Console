@@ -1,5 +1,7 @@
 #ifndef __SMSC_USSMAN_VERSION__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_USSMAN_VERSION__
 
 /* -- automatically generated BUILD number and date -- */

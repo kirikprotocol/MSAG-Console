@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include <assert.h>
 #include <string>
@@ -220,7 +220,7 @@ bool  USSResultMessage::getUSSDataAsLatin1Text(std::string & str)
   CBS_DCS    parsedDCS;
 
   if (parseCBS_DCS(_dCS, parsedDCS) == CBS_DCS::dcGSM7Bit) {
-    unsigned ussdLen = unpack7BitPadded2Text(&_ussData[0], (unsigned)_ussData.size(), str);
+    //unsigned ussdLen = unpack7BitPadded2Text(&_ussData[0], (unsigned)_ussData.size(), str);
     //skip language prefix
     if (parsedDCS.lngPrefix == CBS_DCS::lng4GSM7Bit)
       str.erase(0, 3);

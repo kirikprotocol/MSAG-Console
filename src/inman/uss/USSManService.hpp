@@ -3,7 +3,9 @@
  * asynchronous mode, manages corresponding USSD dialogs using TCAP layer.
  * ************************************************************************** */
 #ifndef USSMAN_SERVICE_HPP_HEADER_INCLUDED_BA8AF0D8
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 # define USSMAN_SERVICE_HPP_HEADER_INCLUDED_BA8AF0D8
 
 //# include <map>

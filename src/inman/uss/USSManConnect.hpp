@@ -4,7 +4,9 @@
  * TCAP layer.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USSMAN_CONNECT_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 # define __SMSC_INMAN_USSMAN_CONNECT_HPP__ 1
 
 # include <memory>

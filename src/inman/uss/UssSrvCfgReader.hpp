@@ -2,7 +2,9 @@
  * USSMan XML config file parser
  * ************************************************************************** */
 #ifndef __SMSC_USSMAN_CFG_READER_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 # define __SMSC_USSMAN_CFG_READER_HPP__
 
 #include "logger/Logger.h"
@@ -25,10 +27,10 @@ using smsc::inman::inap::TCAPUsrCfgParser;
 
 class USSSrvCfgReader {
 private:
-    Logger *        logger;
     const char *    nmSrv; //name of USS Service
      //structure containing parsed configuration
     std::auto_ptr<UssService_CFG> stCfg;
+    Logger *        logger;
 
 public:
     static const uint32_t _DFLT_CLIENT_CONNS = 5;

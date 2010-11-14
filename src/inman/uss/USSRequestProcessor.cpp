@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include <sys/types.h>
 #include <vector>
@@ -24,10 +24,10 @@ USSRequestProcessor::USSRequestProcessor(USSManConnect* ussManConn, Connect* con
                                          const UssService_CFG& cfg, uint32_t dialog_id,
                                          const USSProcSearchCrit& ussProcSearchCrit,
                                          Logger * use_log/* = NULL*/)
-  : _isRunning(true), _ussManConn(ussManConn), _conn(conn), _cfg(cfg), _dialogId(dialog_id)
-  , _mapDialog(NULL), _resultAsLatin1(false), _dcs(0)
-  , _ussProcSearchCrit(ussProcSearchCrit)
+  : _isRunning(true), _ussManConn(ussManConn), _conn(conn), _cfg(cfg)
+  , _dialogId(dialog_id), _ussProcSearchCrit(ussProcSearchCrit)
   , _logger(use_log ? use_log : Logger::getInstance("smsc.ussman"))
+  , _mapDialog(NULL), _resultAsLatin1(false), _dcs(0)
 {
   core::synchronization::MutexGuard synchronize(_connLock);
   snprintf(_logId, sizeof(_logId)-1, "USSreq[%u:%u]", _conn->getId(), _dialogId);
