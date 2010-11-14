@@ -22,6 +22,9 @@ bool test_OCTET_STRING(char* err_msg);
 bool test_BIT_STRING(char* err_msg);
 bool test_SeqType1(char* err_msg);
 bool test_SeqType2(char* err_msg);
+bool test_SeqType3(char* err_msg);
+bool test_SeqType4(char* err_msg);
+bool test_SeqOfType1(char* err_msg);
 
 int
 write_transfer_syntax(const void *buffer, size_t size, void *pattern_tr_syntax);

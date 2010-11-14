@@ -1,1 +1,1 @@
--I$(SMSC_SRCDIR)/inman/asn1rt/ -g
+-I$(SMSC_SRCDIR)/inman/asn1rt/ 

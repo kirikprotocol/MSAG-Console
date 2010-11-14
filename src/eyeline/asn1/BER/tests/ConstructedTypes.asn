@@ -17,4 +17,22 @@ BEGIN
             a         INTEGER,
             b [3]     INTEGER OPTIONAL
         }
+
+        SeqType3 ::= SEQUENCE {
+            a         INTEGER,
+            b [3]     INTEGER OPTIONAL,
+            ...
+        }
+
+        SeqType4 ::= SEQUENCE {
+            a         INTEGER,
+            b [3]     INTEGER OPTIONAL,
+            ... ,
+            c [4]     INTEGER OPTIONAL
+        }
+
+        maxCount  INTEGER ::= 5
+
+        SeqOfType1 ::= SEQUENCE SIZE (1..maxCount) OF SeqType1
+
 END

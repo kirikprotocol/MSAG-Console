@@ -23,5 +23,3 @@ struct SeqType2 {
 }}}}
 
 #endif
-
-

@@ -12,6 +12,9 @@ struct SeqType1 {
   SeqType1()
   : a(0), b(0), c(0)
   {}
+  SeqType1(int a_arg, int b_arg)
+  : a(a_arg), b(b_arg), c(0)
+  {}
   int a;
   int b;
   uint8_t c;

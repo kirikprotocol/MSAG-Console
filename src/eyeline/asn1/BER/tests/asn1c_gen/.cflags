@@ -1,1 +1,1 @@
--DASN1_XER_NOT_USED -I$(SMSC_SRCDIR)/inman/asn1rt/ -g
+-DASN1_XER_NOT_USED -I$(SMSC_SRCDIR)/inman/asn1rt/ -I$(SMSC_SRCDIR)/eyeline/asn1/BER/tests/asn1c_gen/ 
