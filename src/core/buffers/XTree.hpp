@@ -1,4 +1,7 @@
 #ifndef __SMSC_CORE_BUFFERS_XTREE_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __SMSC_CORE_BUFFERS_XTREE_HPP__
 
 #include <vector>
@@ -530,6 +533,28 @@ public:
     return false;
   }
 
+  const T * Find(const char * key) const
+  {
+    if (!root)
+      return NULL;
+
+    const T * pDat = FindRec(root, key);
+    if (!pDat)
+    {
+      Node * ptr = root->maskNode;
+      key++;
+      while (ptr && *key)
+      {
+        ptr=ptr->maskNode;
+        key++;
+      }
+      if (ptr && ptr->data)
+        return ptr->data;
+    }
+    return pDat;
+  }
+
+
   void Clear()
   {
     root->Clear();
@@ -651,6 +676,36 @@ protected:
       key++;
     }
     return false;
+  }
+
+  const T * FindRec(Node * ptr, const char * key) const
+  {
+    ptr=ptr->Find(*key);
+    key++;
+    while (ptr)
+    {
+      if (!*key)
+        return ptr->data;
+
+      if (ptr->maskNode)
+      {
+        const T * pDat = FindRec(ptr, key);
+        if (pDat)
+          return pDat;
+
+        ptr=ptr->maskNode;
+        key++;
+        while (ptr && *key)
+        {
+          ptr=ptr->maskNode;
+          key++;
+        }
+        return (ptr && ptr->data) ? ptr->data : NULL;
+      }
+      ptr=ptr->Find(*key);
+      key++;
+    }
+    return NULL;
   }
 
 };
