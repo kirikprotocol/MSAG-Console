@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 /* ************************************************************************* *
  * MAP-PROCESS-UNSTRUCTURED-SS-REQUEST service:
  * dialog implementation (over TCAP dialog)
@@ -121,8 +121,8 @@ static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & own_ad
  * ************************************************************************** */
 MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler,
                         Logger * uselog/* = NULL*/)
-    : resHdl(res_handler), session(pSession), _logPfx("MapUSS")
-    , dialog(NULL), logger(uselog)
+    : _logPfx("MapUSS"), dialog(NULL), session(pSession), resHdl(res_handler)
+    , logger(uselog)
 {
     dlgState.value = 0;
     if (!logger)
@@ -251,8 +251,9 @@ void MapUSSDlg::onInvokeLCancel(InvokeRFP pInv)
 void MapUSSDlg::onDialogContinue(bool compPresent)
 {
     MutexGuard  grd(_sync);
-    if (!compPresent)
+    if (!compPresent) {
         smsc_log_error(logger, "%s: missing component in TC_CONT_IND", _logId);
+    }
      //else wait for ongoing Invoke result/error
     return;
 }

@@ -2,7 +2,9 @@
  * MAP Network Unstructured Supplementary Service v2 Components definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPUSS_COMPS_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_MAPUSS_COMPS_HPP__
 
 #include "logger/Logger.h"

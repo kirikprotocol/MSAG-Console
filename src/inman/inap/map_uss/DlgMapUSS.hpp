@@ -3,7 +3,9 @@
  * dialog implementation (over TCAP dialog)
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_MAP_USS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_MAP_USS__
 
 #include "core/synchronization/EventMonitor.hpp"
@@ -96,11 +98,10 @@ private:
     char            _logId[sizeof("MapUSS[%u:%Xh]") + 2*sizeof(unsigned)*3 + 1];
     Dialog *        dialog;     //TCAP dialog
     TCSessionSR *   session;    //TCAP dialogs factory
-    Logger *        logger;
     USSDhandlerITF * resHdl;    //request result handler
     USSDState       dlgState;   //current state of dialog
     std::auto_ptr<MAPUSS2CompAC> reqRes;
-
+    Logger *        logger;
 
     void initSSDialog(ProcessUSSRequestArg & arg, const TonNpiAddress * subsc_adr = NULL,
                       const char * subscr_imsi = NULL) throw (CustomException);
