@@ -8,6 +8,7 @@
 #endif
 #define _SMSC_INMAN_CDR_UTIL_H
 
+#include "util/TonNpiAddress.hpp"
 #include "inman/CDRTypes.hpp"
 
 namespace smsc  {
