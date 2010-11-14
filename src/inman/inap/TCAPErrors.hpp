@@ -2,7 +2,9 @@
  * Various TC provider return/error codes.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_TCAP_ERRORS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_TCAP_ERRORS__
 
 #include "inman/inap/SS7MsgErrors.hpp"

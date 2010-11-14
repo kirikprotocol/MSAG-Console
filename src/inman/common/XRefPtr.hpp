@@ -2,7 +2,9 @@
  * Various reference counting pointer classes for multithread environment.
  * ************************************************************************** */
 #ifndef __MT_REFPTR_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __MT_REFPTR_HPP__
 
 #include "core/synchronization/Mutex.hpp"

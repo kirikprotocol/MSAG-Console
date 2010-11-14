@@ -2,7 +2,9 @@
  * MAP operations error codes according to inman/codec_inc/map_errors.asn
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_MAP_OPS_ERRORS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_MAP_OPS_ERRORS__
 
 #include "util/URCdb/URCRegistry.hpp"

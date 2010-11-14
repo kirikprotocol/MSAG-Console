@@ -2,7 +2,9 @@
  * TCAP Dispatcher & User XML configurations parsers.
  * ************************************************************************** */
 #ifndef __INMAN_TCAP_CFGS_PARSERS_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_TCAP_CFGS_PARSERS_HPP__
 
 #include "inman/inap/TCDspDefs.hpp"

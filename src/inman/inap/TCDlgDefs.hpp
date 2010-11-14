@@ -2,7 +2,9 @@
  * TCDialog states definition and helper classes for its analysis
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_TCAP_DEFS__
 
 #include <string>

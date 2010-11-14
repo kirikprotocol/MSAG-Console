@@ -2,7 +2,9 @@
  * SubSystem Session that supports HD version of TCAP BE
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_INAP_SESSION__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_SESSION__
 
 #include <set>

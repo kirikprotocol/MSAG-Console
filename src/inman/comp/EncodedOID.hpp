@@ -2,7 +2,9 @@
  * Encoded ASN.1 Object Identificator.
  * ************************************************************************* */
 #ifndef __INMAN_INAP_COMP_EOID_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_INAP_COMP_EOID_HPP
 
 #include <inttypes.h>
@@ -67,10 +69,10 @@ public:
             asnValue(_nick);
     }
 
-    inline uint8_t  length(void) const { return (uint8_t)_octs.size(); }
-    inline const uint8_t * octets(void) const { return &_octs[0]; }
-    inline uint16_t  numSubIds(void) const { return _numIds; }
-    inline const char * nick(void) const { return _nick.c_str(); }
+    uint8_t  length(void) const { return (uint8_t)_octs.size(); }
+    const uint8_t * octets(void) const { return &_octs[0]; }
+    uint16_t  numSubIds(void) const { return _numIds; }
+    const char * nick(void) const { return _nick.c_str(); }
 
     uint32_t  subId(uint16_t idx) const
     {
@@ -99,15 +101,18 @@ public:
         return val;
     }
 
-    inline bool operator< (const EncodedOID & obj2) const
+    bool operator< (const EncodedOID & obj2) const
     {
         return _octs < obj2._octs;
     }
-    inline bool operator== (const EncodedOID & obj2) const
+    bool operator== (const EncodedOID & obj2) const
     {
         return _octs == obj2._octs;
     }
-
+    bool operator!= (const EncodedOID & obj2) const
+    {
+        return !(*this == obj2);
+    }
 };
 
 } //comp

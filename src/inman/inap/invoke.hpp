@@ -2,7 +2,9 @@
  * Transaction Component: ROS::Invoke
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_INVOKE__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_TCAP_INVOKE__
 
 #include <string>

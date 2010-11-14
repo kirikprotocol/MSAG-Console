@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
 
@@ -42,6 +42,23 @@ const char * _nmMessageType(enum messageType msg_type)
     default:;
     }
     return "unknown";
+}
+
+
+const char * CapSMSOp::code2Name(unsigned char op_code)
+{
+    switch (op_code) {
+    case InitialDPSMS:          return "InitialDPSMS"; break;
+    case FurnishChargingInformationSMS: return "FurnishChargingInformationSMS"; break;
+    case ConnectSMS:            return "ConnectSMS"; break;
+    case RequestReportSMSEvent: return "RequestReportSMSEvent"; break;
+    case EventReportSMS:        return "EventReportSMS"; break;
+    case ContinueSMS:           return "ContinueSMS"; break;
+    case ReleaseSMS:            return "ReleaseSMS"; break;
+    case ResetTimerSMS:         return "ResetTimerSMS"; break;
+    default:;
+    }
+    return "IllegalOp";
 }
 
 }//namespace comps

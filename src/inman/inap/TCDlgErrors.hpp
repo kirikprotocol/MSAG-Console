@@ -2,7 +2,9 @@
  * TCAP dialog error codes.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_TCDIALOG_ERR__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_TCDIALOG_ERR__
 
 #include "util/URCdb/URCRegistry.hpp"

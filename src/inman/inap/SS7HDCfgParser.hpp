@@ -2,7 +2,9 @@
  * EIN SS7 HD stack interaction parameters XML configurations parser.
  * ************************************************************************** */
 #ifndef __SS7HD_CFG_PARSER_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SS7HD_CFG_PARSER_HPP__
 
 #include "inman/inap/SS7HDCfgDefs.hpp"

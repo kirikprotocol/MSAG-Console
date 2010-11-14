@@ -3,7 +3,9 @@
  * of EIN SS7 stack. 
  * ************************************************************************* */
 #ifndef __SS7HD_DISPATCHER_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SS7HD_DISPATCHER_DEFS_HPP
 
 #include <string>

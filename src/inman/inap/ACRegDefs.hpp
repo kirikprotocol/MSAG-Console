@@ -2,7 +2,9 @@
  * Application Context registry interface and definitions.
  * ************************************************************************* */
 #ifndef __INMAN_INAP_ACREGISTRY_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_INAP_ACREGISTRY_DEFS_HPP
 
 #include "inman/comp/ROSFactory.hpp"

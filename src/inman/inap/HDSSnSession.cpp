@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "util/vformat.hpp"
 using smsc::util::format;
@@ -26,7 +26,7 @@ TCDlgStateMASK   _TCDlgStateMasks;
  * ************************************************************************** */
 TCSessionAC::TCSessionAC(uint16_t uid, SSNSession * owner, uint8_t fake_ssn,
                 const TonNpiAddress & own_addr, const ROSComponentsFactory * use_fact)
-    : tcUID(uid), _owner(owner), acFab(use_fact), ownAdr(own_addr)
+    : _owner(owner), tcUID(uid), ownAdr(own_addr), acFab(use_fact)
 {
     ownAdr.fixISDN();
     senderSsn = _owner->getSSN();
@@ -181,10 +181,11 @@ SSNSession::~SSNSession()
                                 (it != dialogs.end()) && it->second; ++it) {
             Dialog* pDlg = it->second;
             unsigned invNum = 0;
-            if (!pDlg->isFinished(&invNum))
+            if (!pDlg->isFinished(&invNum)) {
                 smsc_log_warn(logger,
                     "SSN[%u]: %s is active, %u invokes pending, state {%s}",
                     (unsigned)_SSN, pDlg->idStr(), invNum, pDlg->getState().Print().c_str());
+            }
             delete it->second;
         }
         dialogs.clear();

@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 /* ************************************************************************* *
  * 3GPP TS 24.011 Annex E-2: RP-cause definition mobile originating SM-transfer.
  * ************************************************************************* */

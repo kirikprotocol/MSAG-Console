@@ -2,7 +2,9 @@
  * 
  * ************************************************************************* */
 #ifndef __INMAN_INAP_TCCALLBACKS_HPP
-#ident "$Id$"
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 #define __INMAN_INAP_TCCALLBACKS_HPP
 
 /* function to be called when a connection is broken */

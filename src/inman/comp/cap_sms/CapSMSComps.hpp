@@ -2,7 +2,9 @@
  * CAMEL phase 3 SMS Service components definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_CAP3SMS_COMPS_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_CAP3SMS_COMPS_HPP__
 
 #include <map>
@@ -61,31 +63,18 @@ extern const char * _nmEventTypeSMS(enum EventTypeSMS event);
 extern const char * _nmMessageType(enum messageType msg_type);
 
 struct CapSMSOp {
-    enum Code {
-	InitialDPSMS 			= 60,
+  enum Code {
+	InitialDPSMS 			        = 60,
 	FurnishChargingInformationSMS	= 61,
-	ConnectSMS			= 62,
-	RequestReportSMSEvent		= 63,
-	EventReportSMS			= 64,
-	ContinueSMS			= 65,
-	ReleaseSMS			= 66,
-	ResetTimerSMS			= 67
-    };
-    static const char * code2Name(unsigned char op_code)
-    {
-        switch (op_code) {
-        case InitialDPSMS: return "InitialDPSMS"; break;
-        case FurnishChargingInformationSMS: return "FurnishChargingInformationSMS"; break;
-        case ConnectSMS: return "ConnectSMS"; break;
-        case RequestReportSMSEvent: return "RequestReportSMSEvent"; break;
-        case EventReportSMS: return "EventReportSMS"; break;
-        case ContinueSMS: return "ContinueSMS"; break;
-        case ReleaseSMS: return "ReleaseSMS"; break;
-        case ResetTimerSMS: return "ResetTimerSMS"; break;
-        default:;
-        }
-        return "IllegalOp";
-    }
+	ConnectSMS			            = 62,
+	RequestReportSMSEvent		    = 63,
+	EventReportSMS			        = 64,
+	ContinueSMS			            = 65,
+	ReleaseSMS			            = 66,
+	ResetTimerSMS			        = 67
+  };
+
+  static const char * code2Name(unsigned char op_code);
 };
 
 struct CAP3SMSerrCode {
@@ -106,10 +95,10 @@ enum TP_VP_format {
     tp_vp_absolute  // '11'
 };
 
-typedef enum DeliveryMode {
-    DeliveryMode_Originating = 1, //EventTypeSMS_sms_CollectedInfo
-    DeliveryMode_Terminating = 11 //EventTypeSMS_sms_DeliveryRequested
-} DeliveryMode_e;
+enum DeliveryMode_e {
+  DeliveryMode_Originating = 1, //EventTypeSMS_sms_CollectedInfo
+  DeliveryMode_Terminating = 11 //EventTypeSMS_sms_DeliveryRequested
+};
 
 
 class SMSEventDPs : public std::map<EventTypeSMS_e, MonitorMode_e> {
@@ -141,7 +130,7 @@ class PrivateInitialDPSMSArg;
 //NOTE: requires the preceeding call of tzset()
 class SMSInitialDPArg: public Component { //SSF -> SCF
 public:
-    SMSInitialDPArg(Logger * use_log = NULL);
+    explicit SMSInitialDPArg(Logger * use_log = NULL);
     ~SMSInitialDPArg();
 
     enum { //errors in addition to CAP3SMSerrCode
@@ -177,12 +166,12 @@ public:
     void setLocationInformationMSC(const TonNpiAddress& addr) throw(CustomException);
     void setLocationInformationMSC(const char* text) throw(CustomException);
 
-    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
+    virtual void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
 private:
     uint32_t    servKey;
+    PrivateInitialDPSMSArg * comp;
     Logger *    compLogger;
-    PrivateInitialDPSMSArg* comp;
 };
       
 //  Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Terbsms
@@ -191,7 +180,7 @@ private:
 //  the gsmSCF in a RequestReportSMSEvent operation.
 class SMSEventReportArg: public Component { //SSF -> SCF
 public:
-    SMSEventReportArg(Logger * use_log = NULL)
+    explicit SMSEventReportArg(Logger * use_log = NULL)
         : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.ERSmsArg"))
     { }
     ~SMSEventReportArg()
@@ -201,9 +190,9 @@ public:
     {
         eventType = et; messageType = mt;
     }
-
-    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
     std::string & print(std::string & dump) const;
+
+    virtual void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
 private:
     EventTypeSMS_e  eventType;
@@ -218,7 +207,7 @@ private:
 //  NOTE: Inman uses only SCF -> SSF
 class SMSRequestReportEventArg: public Component { //SSF -> SCF, SCF -> SSF
 public:
-    SMSRequestReportEventArg(Logger * use_log = NULL)
+    explicit SMSRequestReportEventArg(Logger * use_log = NULL)
         : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.RRSmsEvtArg"))
     { }
     ~SMSRequestReportEventArg()
@@ -227,7 +216,7 @@ public:
     const SMSEventDPs& SMSEvents(void) const { return events; }
     std::string & printEvents(std::string & dump) { return events.print(dump); }
 
-    void  decode(const std::vector<unsigned char>& buf) throw(CustomException);
+    virtual void  decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     SMSEventDPs events;
@@ -241,7 +230,7 @@ class SMSConnectArg: public Component { //SCF -> SSF
 public:
     enum Params { connNone = 0, connDSN = 0x01, connCPN = 0x02, connSMSC = 0x04 };
 
-    SMSConnectArg(Logger * use_log = NULL)
+    explicit SMSConnectArg(Logger * use_log = NULL)
         : mask(0), compLogger(use_log ? use_log :
                               Logger::getInstance("smsc.inman.comp.ConnSmsArg"))
     { }
@@ -253,7 +242,7 @@ public:
     const TonNpiAddress&	callingPartyNumber(void) const { return clngPN; }
     const TonNpiAddress&	SMSCAddress(void) const { return sMSCAdr; }
 
-    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
+    virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 protected:
     TonNpiAddress   dstSN, clngPN, sMSCAdr;
@@ -286,19 +275,20 @@ private:
 //  This operation is used to prevent an attempt to submit or deliver a short message. 
 class SMSReleaseArg: public Component { //SCF -> SSF 
 private:
-    Logger* compLogger;
-    unsigned char _rPCause;
+  unsigned char _rPCause;
+  Logger* compLogger;
 
 public:
-    SMSReleaseArg(Logger * use_log = NULL)
-        : _rPCause(0), compLogger(use_log ? use_log :
-                    Logger::getInstance("smsc.inman.comp.RLSSmsArg"))
-    { }
-    ~SMSReleaseArg()
-    { }
+  explicit SMSReleaseArg(Logger * use_log = NULL)
+    : _rPCause(0), compLogger(use_log ? use_log :
+                              Logger::getInstance("smsc.inman.comp.RLSSmsArg"))
+  { }
+  ~SMSReleaseArg()
+  { }
 
-    unsigned char rPCause(void) const { return _rPCause; }
-    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
+  unsigned char rPCause(void) const { return _rPCause; }
+
+  virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 };
 
 // Direction: gsmSCF -> smsSSF, Timer: Trtsms 
@@ -306,19 +296,21 @@ public:
 // timer in the smsSSF.
 class SMSResetTimerArg: public Component { //SCF -> SSF 
 private:
-    Logger* compLogger;
-    time_t  tmrValue;
+  time_t  tmrValue;
+  Logger* compLogger;
+
 
 public:
-    SMSResetTimerArg(Logger * use_log = NULL)
-        : tmrValue(0), compLogger(use_log ? use_log :
-                Logger::getInstance("smsc.inman.comp.RSTSmsArg"))
-    { }
-    ~SMSResetTimerArg()
-    { }
+  explicit SMSResetTimerArg(Logger * use_log = NULL)
+    : tmrValue(0), compLogger(use_log ? use_log :
+                              Logger::getInstance("smsc.inman.comp.RSTSmsArg"))
+  { }
+  ~SMSResetTimerArg()
+  { }
 
-    time_t timerValue(void) const { return tmrValue; }
-    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
+  time_t timerValue(void) const { return tmrValue; }
+
+  virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 };
 
 }//namespace comp

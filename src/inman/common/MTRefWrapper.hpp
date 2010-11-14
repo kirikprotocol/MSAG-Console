@@ -2,7 +2,9 @@
  * 
  * ************************************************************************** */
 #ifndef __MT_REFWRAPPER_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __MT_REFWRAPPER_HPP__
 
 #include <pthread.h>

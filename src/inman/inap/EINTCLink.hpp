@@ -2,7 +2,9 @@
  * Structure(s) for linking TCAP API Callbacks with EINSS7 library
  * ************************************************************************** */
 #ifndef __EINSS7_TCAPI_LINK_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EINSS7_TCAPI_LINK_HPP
 
 #ifndef EINSS7_FUNC_POINTER

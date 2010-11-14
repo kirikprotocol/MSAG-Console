@@ -2,7 +2,9 @@
  * Various helper functions for use in ROS component encoding/decoding.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_INAP_COMPS_UTL_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_COMPS_UTL_HPP__
 
 #include "logger/Logger.h"

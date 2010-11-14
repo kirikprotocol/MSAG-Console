@@ -2,7 +2,9 @@
  * ROS Operations Components factory(ARGUMENT, RESULT, ERRORS).
  * ************************************************************************* */
 #ifndef __INMAN_COMP_ROSFACTORY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_COMP_ROSFACTORY_HPP
 
 #include <stdarg.h>

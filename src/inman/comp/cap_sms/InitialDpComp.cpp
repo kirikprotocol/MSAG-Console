@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/asn1rt/asn_internal.h"
 #include "inman/codec_inc/cap/InitialDPSMSArg.h"
@@ -69,8 +69,8 @@ public:
 };
 
 SMSInitialDPArg::SMSInitialDPArg(Logger * use_log/* = NULL*/)
-    : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.IDPSmsArg"))
-    , servKey(0), comp(new PrivateInitialDPSMSArg())
+    : servKey(0), comp(new PrivateInitialDPSMSArg())
+    , compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.IDPSmsArg"))
 { }
 
 SMSInitialDPArg::~SMSInitialDPArg()

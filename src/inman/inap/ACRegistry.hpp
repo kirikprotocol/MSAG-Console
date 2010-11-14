@@ -3,7 +3,9 @@
  * ************************************************************************* */
 /* NOTE: ApplicationContextRegistry initialization is not a threadsafe one!! */
 #ifndef __INMAN_INAP_ACREGISTRY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_INAP_ACREGISTRY_HPP
 
 #include "core/synchronization/Mutex.hpp"

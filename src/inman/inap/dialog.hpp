@@ -2,7 +2,9 @@
  * TCAP dialog implementation (initiated by local point).
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_DIALOG__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_TCAP_DIALOG__
 
 #include <map>
@@ -86,7 +88,6 @@ private:
     uint8_t         priority;
     uint8_t         _lastInvId;
     Logger*         logger;
-
 
 
     void clearInvokes(void);

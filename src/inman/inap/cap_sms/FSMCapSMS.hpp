@@ -4,7 +4,9 @@
  * 3GPP TS 29.078 version 6.x.x Release 6, clause 12
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_CAP3SMS_FSM__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_CAP3SMS_FSM__
 
 #include "inman/comp/cap_sms/CapSMSComps.hpp"

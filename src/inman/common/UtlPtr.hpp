@@ -2,7 +2,9 @@
  * Helper class for automatic object utilizing (analog of std:auto_ptr).
  * ************************************************************************* */
 #ifndef __SMSC_UTIL_AUTO_PTR_UTL_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_UTIL_AUTO_PTR_UTL_HPP
 
 namespace smsc {

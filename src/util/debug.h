@@ -318,7 +318,7 @@ namespace util{
               func,
               line,
               expr_text);
-      fprintf(ASSERT_LOG_STREAM,throw_message);
+      fprintf(ASSERT_LOG_STREAM,"%s", throw_message);
       //throw throw_message;
                         throw AssertException();
     }

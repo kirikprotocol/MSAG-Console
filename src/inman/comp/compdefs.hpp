@@ -2,7 +2,9 @@
  * ROS Operations Component interface definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_COMP_DEFS_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_COMP_DEFS_HPP__
 
 #include <vector>

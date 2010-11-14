@@ -1,4 +1,6 @@
-static const char ident[] = "$Id$";
+#ifdef MOD_IDENT_ON
+static const char ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "ThreadPool.hpp"
 #include <exception>
@@ -11,8 +13,6 @@ namespace threads{
 
 int ThreadPool::PooledThread::Execute()
 {
-  int rawheapsize;
-  int blocksheapquantum;
   sigset_t set;
   sigemptyset(&set);
   for (int i=1; i<=37; i++)

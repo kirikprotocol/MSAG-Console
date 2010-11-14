@@ -2,7 +2,9 @@
  * 3GPP TS 24.011 Annex E-2: RP-cause definition mobile originating SM-transfer.
  * ************************************************************************* */
 #ifndef _SMSC_INMAN_COMP_CAPSMS_RP_CAUSES_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _SMSC_INMAN_COMP_CAPSMS_RP_CAUSES_HPP
 
 #include "util/URCdb/URCRegistry.hpp"

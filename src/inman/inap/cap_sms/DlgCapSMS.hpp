@@ -2,7 +2,9 @@
  * cap3SMS CONTRACT implementation (over TCAP dialog)
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_CAP3SMS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_CAP3SMS__
 
 #include "core/synchronization/EventMonitor.hpp"

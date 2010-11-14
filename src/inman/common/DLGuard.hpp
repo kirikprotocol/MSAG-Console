@@ -3,7 +3,9 @@
  * exceptions).
  * ************************************************************************** */
 #ifndef __UTIL_DL_GUARD_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __UTIL_DL_GUARD_HPP__
 
 #include <dlfcn.h>

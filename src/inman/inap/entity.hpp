@@ -2,7 +2,9 @@
  * Transaction Component with local operation tag (no objId as opcode).
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_ENTITY__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_TCAP_ENTITY__
 
 #include "inman/comp/compdefs.hpp"

@@ -2,7 +2,9 @@
  * TCAP Dispatcher types, interfaces and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_TCAP_DISPATCHER_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_TCAP_DISPATCHER_DEFS_HPP
 
 #include "logger/Logger.h"

@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 /* ************************************************************************* *
  * TCAP dialog implementation (initiated by local point).
  * ************************************************************************* */
@@ -22,10 +22,10 @@ Dialog::Dialog(const std::string & sess_uid, const TCDialogID & dlg_id, USHORT_T
                const ROSComponentsFactory * use_fact,
                const SCCP_ADDRESS_T & loc_addr, UCHAR_T sender_ssn/* = 0*/,
                Logger * uselog/* = NULL*/)
-    : logger(uselog), _tcSUId(sess_uid), _dId(dlg_id), ownAddr(loc_addr)
-    , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
-    , _timeout(_DFLT_INVOKE_TIMER), _lastInvId(0), acFab(use_fact)
-    , ac(use_fact->acOID()), msgUserId(msg_user_id)
+    : _tcSUId(sess_uid), ownAddr(loc_addr), msgUserId(msg_user_id)
+    , ac(use_fact->acOID()), acFab(use_fact), _dId(dlg_id)
+    , _timeout(_DFLT_INVOKE_TIMER), qSrvc(EINSS7_I97TCAP_QLT_BOTH)
+    , priority(EINSS7_I97TCAP_PRI_HIGH_0), _lastInvId(0), logger(uselog)
 {
     dSSN = sender_ssn ? sender_ssn : ownAddr.addr[1];
     if (!logger)
@@ -65,9 +65,10 @@ void Dialog::reset(const TCDialogID & new_id, const SCCP_ADDRESS_T * rmt_addr/* 
                        _logId, (unsigned)new_id.tcInstId, (unsigned)new_id.dlgId,
                        cnt, pUser.get() ? ", user refs exist":"");
         clearInvokes();
-    } else if (!(_dId == new_id)) //otherwise dialog was just created
+    } else if (!(_dId == new_id)) { //otherwise dialog was just created
         smsc_log_debug(logger, "%s: resetting to [%u:%Xh]", _logId,
                        (unsigned)new_id.tcInstId, (unsigned)new_id.dlgId);
+    }
 
     pUser.Reset(NULL);
     _lastInvId = 0;
@@ -514,10 +515,11 @@ USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
         pInv->setStatus(Invoke::resLCancel);
         invMap.erase(it);
         if ((pInv->getStatus() <= Invoke::resNotLast)
-            && (pInv->getResultType() == Invoke::respResultOrError))
+            && (pInv->getResultType() == Invoke::respResultOrError)) {
             smsc_log_error(logger,
                 "%s: Invoke[%u]{%u} got L_CANCEL expecting returnResult",
                 _logId, (unsigned)invId, pInv->getOpcode());
+        }
         smsc_log_debug(logger, "%s: releasing %s", _logId,
                        pInv->strStatus().c_str());
 
@@ -703,13 +705,14 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
                                    _logId, (unsigned)invId, (unsigned)op[0], exc.what());
                     delete resParm;
                 }
-            } else if (pmlen)
+            } else if (pmlen) {
                 smsc_log_warn(logger, "%s: Invoke[%u]: unregistered Error[%u] parameter",
                                 _logId, (unsigned)invId, (unsigned)op[0]);
-        } else
+            }
+        } else {
             smsc_log_error(logger, "%s: Invoke[%u]: unregistered Error[%u]",
                             _logId, (unsigned)invId, (unsigned)op[0]);
-
+        }
         if (!pUser.get()) {
             updateState(true);
             return MSG_OK;
