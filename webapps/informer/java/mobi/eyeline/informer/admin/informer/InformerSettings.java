@@ -108,6 +108,7 @@ public class InformerSettings {
     cs.persHost = persHost;
     cs.persPort = persPort;
     cs.statDir = statDir;
+    cs.statusLogsDir = statusLogsDir;
     return cs;
   }
 
