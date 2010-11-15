@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.7.11 or higher -->
+<!-- configuration for INMan v0.8.0 or higher -->
 <config>
-  <param name="version" type="string">0.7.11</param>   <!-- config version -->
+  <param name="version" type="string">0.8.0</param>   <!-- config version -->
 
   <section name="Services">
     <param name="Host" type="string">uid: icsTCPServer</param> <!--  -->
@@ -21,9 +21,9 @@
 
   <section name="AbonentDetector"> <!-- Abonent contract type and gsmSCF params determination -->
     <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 
-      preferred abonent policy (defined in section AbonentPolicies) , if it's missing, 
-      the policy is to use will be determined according to sender address and specified
-      policies address pool.
+      default abonent contract determination policy (defined in 'AbonentPolicies'
+      section), it's used if abonent ISDN address doesn't belong to any of
+      address pools specified in 'AbonentPolicies' section.
      -->
     <param name="maxRequests" type="int">500</param>   <!--  [1 .. 100000] , default 1000 
      maximium number of simultaneous requests per client  connection ,
@@ -73,8 +73,9 @@
     always   : always determine
     -->
     <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 
-      preferred abonent contract determination policy (defined in section AbonentPolicies) ,
-      obligatory if there is at least one billing mode set to IN or abonentTypeRequest is set to always
+      default abonent contract determination policy (defined in 'AbonentPolicies'
+      section), it's used if abonent ISDN address doesn't belong to any of
+      address pools specified in 'AbonentPolicies' section.
      -->
     <param name="abonentTypeTimeout" type="int">8</param> <!-- units: seconds, [1 .. 65535],
     maximum allowed time for determining abonent contract type,  default 8
@@ -83,12 +84,15 @@
     <param name="maxBillings" type="int">200</param>   <!--  [1 .. 100000] , default 1000 
      maximium simultaneous billing requests per INMan client  connect,
      0 - means use default value-->
-    <param name="maxTimeout" type="int">30</param>  <!-- units: seconds, [5 .. 65535], default 120 
-    maximum allowed value for billing suspending time (SMSC interaction), billing aborts on its expiration
+    <param name="maxTimeout" type="int">30</param>  <!--
+     units: seconds [5 .. 65535], default 120, 
+    maximum allowed value for billing suspending time (SMSC/IAProvider interaction, etc),
+    billing aborts on its expiration.
+    NOTE: setting timeout to less then default value may cause unpredicted behavior!!!
      -->
     <param name="cdrDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
     <param name="cdrInterval" type="int">120</param>   <!-- CDR storage rolling interval, units: seconds -->
-    <param name="cdrMode" type="string">billMode</param>    <!-- 
+    <param name="cdrMode" type="string">billMode</param> <!-- 
       options: [none, all, billMode]
       none:   don't write any CDR at all;
       all:    always write CDR for each transaction perfomed;
@@ -97,12 +101,12 @@
     <!-- OPTIONAL PARAMETERS follow:: -->
     <param name="useCache" type="bool">true</param>    <!--
     switches abonents cache usage, default: true  -->
-    <param name="cacheExpiration" type="int">20</param>   <!--
+    <param name="cacheExpiration" type="int">10</param>   <!--
      abonent info cache data expiration interval, units: minutes, [1 .. 65535], default 20,
      0 - means the default cache  interval is used
     -->
     <param name="smsExtraConfig" type="string">cfg_extra.xml</param>   <!-- config file for extra SMS services -->
-    <param name="CAP3Sms" type="string">TCAPUser</param>  <!--
+    <param name="CAP3Sms" type="string">TCAPUserCAP</param>  <!--
     section name for TCAP user configuration CAP3Sms uses, defualt: TCAPUser
     -->
   </section>
@@ -206,7 +210,7 @@
     NOTE: is overriden by value from cp.cnf  --> 
   </section>
 
-  <section name="TCAPUser"> <!-- SSF specific TCUser configuration -->
+  <section name="TCAPUserCAP"> <!-- CAP3 specific TCUser configuration -->
     <param name="ownSsn" type="int">146</param>
     <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
     <!-- OPTIONAL PARAMETERS follow:: -->
@@ -231,7 +235,22 @@
     <param name="fakeSsn" type="int">8</param>    <!--
     SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
     -->
-    <param name="rosTimeout" type="int">6</param>   <!--
+    <param name="rosTimeout" type="int">10</param>   <!--
+    timeout on MAP operations, units: seconds, max: 65535, default 20
+    -->
+  </section>
+
+  <section name="TCAPUserATSI"> <!-- ATSI specific TCUser configuration -->
+    <param name="ownSsn" type="int">147</param>
+    <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxDialogs" type="int">500</param>   <!--
+    maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+    -->
+    <param name="fakeSsn" type="int">8</param>    <!--
+    SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+    -->
+    <param name="rosTimeout" type="int">10</param>   <!--
     timeout on MAP operations, units: seconds, max: 65535, default 20
     -->
   </section>
@@ -247,114 +266,760 @@
   </section>
 
   <section name="AbonentPolicies">
- <!--  policy value is a CSV list of  two parts, which are both optional:
-          1) name of abonent provider to use (defined in section AbonentProviders) 
-          for getting abonent contract type (possibly with gsmSCF parms),
-          2) CSV  list of IN-platform (defined in section IN-platforms)
-          NOTE 1: * is a special symbol, replacing all defined IN-platforms
-          NOTE 2: serviceKey from IN-platform config overrides the one returned by abonent provider
-         -->
-    <section name="MTC_NskExtra_SRI"> <!-- get contract/gsmSCF from HLR, 
-      serviceKey from INMan config -->
-      <param name="policy" type="string">HLR_Nsk_SRI, *</param>
-      <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
-      <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
-    </section>
+  <!--  policy value is a CSV(:) list of  two parts(first one is optional):
 
-      <section name="MTC_Nsk_Default">
-          <param name="policy" type="string">, IN_Nsk_Huawei</param> <!-- get contract from gsmSCF, No provider at all !!!  -->
-          <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
-          <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
+       1) prioritized CSV(,) List of abonent providers to use (defined in
+          section AbonentProviders) for getting abonent contract type
+          (possibly with gsmSCF parms),
+
+       2) CSV(,) list of IN-platform (defined in section IN-platforms)
+         NOTE: * is a special symbol, replacing all defined IN-platforms
+  -->
+    <section name="MTC_Default">
+      <param name="policy" type="string">HLR_CH_SRI : *</param> <!-- get contract from gsmSCF, No provider at all !!!  -->
+      <section name="AddressPools">
+        <param name="pool_RU" type="string">79?????????</param>  <!-- address pool mask -->
       </section>
-
-    <section name="MTC_Nsk_SRI"> <!-- get contract/gsmSCF from HLR, serviceKey from INMan config -->
-        <param name="policy" type="string">HLR_Nsk_SRI, IN_Nsk_Huawei</param>
-        <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
-        <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
+      <!-- param name="active" type="bool">false</param -->    <!-- use or ignore this policy, default: true -->
     </section>
 
+    <section name="MTC_Nsk_SRI"> <!--
+    get contract/gsmSCF from HLR using SRI, serviceKey from INMan config
+    -->
+      <param name="policy" type="string">HLR_CH_SRI : *</param>
+      <section name="AddressPools">
+        <param name="pool_Nsk_913" type="string">7913???????</param>  <!-- address pool mask -->
+      </section>
+      <!-- param name="active" type="bool">false</param -->    <!-- use or ignore this policy, default: true -->
+    </section>
 
-  </section>
+    <section name="MTC_Msk_ATSI"> <!-- get contract/gsmSCF from HLR using ATSI -->
+      <param name="policy" type="string">HLR_ATSI : *</param>
+      <section name="AddressPools">
+        <param name="pool_Msk_tst_1" type="string">79104075344</param>  <!-- address pool mask -->
+        <param name="pool_Msk_tst_2" type="string">791040753??</param>  <!-- address pool mask -->
+      </section>
+      <!-- param name="active" type="bool">false</param -->    <!-- use or ignore this policy, default: true -->
+    </section>
+
+  </section> <!-- AbonentPolicies -->
 
   <section name="IN-platforms"> <!-- known IN-platforms with serviceKeys specified -->
-      <!--  IN-platform configuration may have optional fields defined:
-            1) param name="RPCList_retry" type="string"  - it's a comma 
-            separated list of strings, which specify the RPCause that
-            forces IN-platform interaction retrying. Each such string is a
-            colon separated pair of RPCause code and number of additional
-            interaction attempts, example: 41:1, 42:2
+  <!--  IN-platform configuration may have optional fields defined:
+     1) param name="RPCList_retry" type="string"  - it's a comma 
+     separated list of strings, which specify the RPCause that
+     forces IN-platform interaction retrying. Each such string is a
+     colon separated pair of RPCause code and number of additional
+     interaction attempts, example: 41:1, 42:2
 
-            2) param name="RPCList_reject" type="string"  - it's a comma
-            separated list of extra (in addition to 21) RP MO causes returned
-            by IN platform, which forbid DP processing because of low balance
-            if supported, example(Alcatel): 16
+     2) param name="RPCList_reject" type="string"  - it's a comma
+     separated list of extra (in addition to 21) RP MO causes returned
+     by IN platform, which forbid DP processing because of low balance
+     if supported, example(Alcatel): 16
 
-            3) param name="IDPLocationInfo" type="string" - sets the nature of
-            address to substitute into LocationInformationMSC of InitialDP
-            operation while interacting this IN platform,
-            options: MSC (default), SMSC, SSF (INMan own address)
+     3) param name="IDPLocationInfo" type="string" - sets the nature of
+     address to substitute into LocationInformationMSC of InitialDP
+     operation while interacting this IN platform,
+     options: MSC (default), SMSC, SSF (INMan own address)
 
-            4) param name="IDPReqMode" type="string"      - sets the sending
-            mode (parallel or sequential) of several InitialDP operations per
-            same abonent. Some implementations of IN-points unable to process
-            several InitialDP requests at same times.
-            options: MT (default: parallel), SEQ (sequential)
-      -->
-      <section name="IN_Nsk_Huawei">
-          <param name="scfAddress" type="string">79139860005</param>  <!-- IN (gsmSCF) point address -->
-          <section name="ServiceKeys">
-            <param name="MO-SM" type="string">11</param>  <!-- uint32_t or algorithm -->
-          </section>
-          <param name="RPCList_retry" type="string">41, 42:2</param> 
-          <param name="RPCList_reject" type="string"></param>     <!-- not supported -->
-          <param name="IDPLocationInfo" type="string"></param>  <!-- [MSC (default), SMSC, SSF] -->
-          <param name="IDPReqMode" type="string"></param>  <!-- [MT (default), SEQ] -->
+     4) param name="IDPReqMode" type="string"      - sets the sending
+     mode (parallel or sequential) of several InitialDP operations per
+     same abonent. Some implementations of IN-points unable to process
+     several InitialDP requests at same times.
+     options: MT (default: parallel), SEQ (sequential)
+
+     NOTE: IN parameters specified in this section overrides ones received
+           from other sources.
+  -->
+    <section name="IN_Nsk_Huawei">
+      <param name="scfAddress" type="string">79139860005</param>  <!-- IN (gsmSCF) point address -->
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">11</param>  <!-- uint32_t or algorithm -->
       </section>
+      <param name="RPCList_retry" type="string">41, 42:2</param> 
+      <param name="RPCList_reject" type="string"></param>     <!-- not supported -->
+      <param name="IDPLocationInfo" type="string"></param>  <!-- [MSC (default), SMSC, SSF] -->
+      <param name="IDPReqMode" type="string"></param>  <!-- [MT (default), SEQ] -->
+      <param name="defaultIMSI" type="string">250013903368782</param>
+    </section>
 
-      <section name="IN_Ural_Alcatel">
-        <param name="scfAddress" type="string">79126313005</param>  <!-- IN (gsmSCF) point address -->
-        <section name="ServiceKeys">
-           <param name="MO-SM" type="string">2</param>   <!-- uint32_t or  algorithm --> 
-        </section>
-
-        <param name="RPCList_retry" type="string">41, 42:2</param>
-        <param name="RPCList_reject" type="string">16</param> <!-- supported -->
-        <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
-        <param name="IDPReqMode" type="string"></param>  <!-- [MT (default), SEQ] -->
+    <section name="IN_Vlad_Huawei">
+      <param name="scfAddress" type="string">79147991005</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">11</param>   <!-- uint32_t or algorithm -->
       </section>
+    </section>
 
-      <section name="IN_Krd_Ericcson_1">
-        <param name="scfAddress" type="string">79184790291</param>  <!-- IN (gsmSCF) point address -->
-        <param name="aliasFor" type="string">IN_Krd_Ericcson</param>
+    <section name="IN_NNov_Alcatel">
+      <param name="scfAddress" type="string">79104999105</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
       </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
 
-      <section name="IN_Krd_Ericcson_2">
-        <param name="scfAddress" type="string">79184790292</param>  <!-- IN (gsmSCF) point address -->
-        <param name="aliasFor" type="string">IN_Krd_Ericcson</param>
+    <section name="IN_NNov_Alcatel_1">
+      <param name="scfAddress" type="string">79104999107</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
       </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
 
-      <section name="IN_Krd_Ericcson">
-        <param name="scfAddress" type="string">79184790295</param>  <!-- IN (gsmSCF) point address -->
-        <section name="ServiceKeys">
-          <param name="MO-SM" type="string">map: MO-BC: mapMOBC-MOSM</param>
-        </section>
-        <param name="RPCList_retry" type="string"></param>
-        <param name="RPCList_reject" type="string"></param>     <!-- not supported -->
-        <param name="IDPLocationInfo" type="string"></param>  <!-- [MSC (default), SMSC, SSF] -->
-
-        <section name="mapMOBC-MOSM">
-          <param name="80" type="int">1</param>
-          <param name="82" type="int">2</param>
-          <param name="84" type="int">3</param>
-          <param name="86" type="int">4</param>
-          <param name="88" type="int">5</param>
-        </section>
+    <section name="IN_NNov_Alcatel_2">
+      <param name="scfAddress" type="string">79104999108</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
       </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
 
-  </section>
+    <section name="IN_Samara_Comverse">
+      <param name="scfAddress" type="string">79171002005</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+      <param name="IDPReqMode" type="string">SEQ</param>  <!-- [MT (default), SEQ] -->
+    </section>
+
+    <section name="IN_Samara_Alcatel_1">
+      <param name="scfAddress" type="string">79171002006</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Samara_Alcatel_2">
+      <param name="scfAddress" type="string">79171002007</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Peter_Alcatel">
+      <param name="scfAddress" type="string">79112009998</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Peter_Alcatel_1">
+      <param name="scfAddress" type="string">79112009984</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Peter_Alcatel_2">
+      <param name="scfAddress" type="string">79112009985</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Ural_Alcatel">
+      <param name="scfAddress" type="string">79126313005</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Ural_Alcatel_1">
+      <param name="scfAddress" type="string">79126313006</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_postpaid" type="string"></param>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Ural_Alcatel_2">
+      <param name="scfAddress" type="string">79126313007</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Ksd_Alcatel">
+      <param name="scfAddress" type="string">79184790251</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Ksd_Alcatel_1">
+      <param name="scfAddress" type="string">79184790252</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Ksd_Alcatel_2">
+      <param name="scfAddress" type="string">79184790253</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
+      </section>
+      <param name="RPCList_reject" type="string">16</param>
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+    </section>
+
+    <section name="IN_Msk_Siemens_1">
+      <param name="scfAddress" type="string">79168960001</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">105</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Msk_Siemens_2">
+      <param name="scfAddress" type="string">79168960002</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">105</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Msk_Siemens_3">
+      <param name="scfAddress" type="string">79168960003</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">105</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Msk_Siemens_4">
+      <param name="scfAddress" type="string">79168960004</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">105</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Msk_Strom">
+      <param name="scfAddress" type="string">79168960005</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Orel_Strom">
+      <param name="scfAddress" type="string">79107459991</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Ksd_Strom">
+      <param name="scfAddress" type="string">79184790270</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Peter_Strom">
+      <param name="scfAddress" type="string">79112009962</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Ural_Strom">
+      <param name="scfAddress" type="string">79126313011</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Nsk_Strom">
+      <param name="scfAddress" type="string">79139860010</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_NNov_Strom">
+      <param name="scfAddress" type="string">79107999985</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Samara_Strom">
+      <param name="scfAddress" type="string">79171002025</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Vlad_Strom">
+      <param name="scfAddress" type="string">79147991012</param>
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
+      </section>
+    </section>
+
+    <section name="IN_Msk_Comverse_Main">
+      <param name="scfAddress" type="string">79168960239</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_1">
+      <param name="scfAddress" type="string">79168960223</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+     </section>
+     <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_2">
+      <param name="scfAddress" type="string">79168960224</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_3">
+      <param name="scfAddress" type="string">79168960225</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_4">
+      <param name="scfAddress" type="string">79168960226</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_5">
+      <param name="scfAddress" type="string">79168960227</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_6">
+      <param name="scfAddress" type="string">79168960228</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_7">
+      <param name="scfAddress" type="string">79168960229</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_8">
+      <param name="scfAddress" type="string">79168960230</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_9">
+      <param name="scfAddress" type="string">79168960231</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_10">
+      <param name="scfAddress" type="string">79168960240</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_11">
+      <param name="scfAddress" type="string">79168960241</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_12">
+      <param name="scfAddress" type="string">79168960232</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_13">
+      <param name="scfAddress" type="string">79168960233</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_14">
+      <param name="scfAddress" type="string">79168960234</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_15">
+      <param name="scfAddress" type="string">79168960235</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_16">
+      <param name="scfAddress" type="string">79168960236</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Msk_Comverse_17">
+      <param name="scfAddress" type="string">79168960242</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_Main">
+      <param name="scfAddress" type="string">79112009957</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_1">
+      <param name="scfAddress" type="string">79112009965</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_2">
+      <param name="scfAddress" type="string">79112009966</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_3">
+      <param name="scfAddress" type="string">79112009967</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_4">
+      <param name="scfAddress" type="string">79112009968</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_5">
+      <param name="scfAddress" type="string">79112009969</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_6">
+      <param name="scfAddress" type="string">79112009950</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_7">
+      <param name="scfAddress" type="string">79112009951</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_8">
+      <param name="scfAddress" type="string">79112009952</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_9">
+      <param name="scfAddress" type="string">79112009953</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_10">
+      <param name="scfAddress" type="string">79112009954</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Peter_Comverse_11">
+      <param name="scfAddress" type="string">79112009956</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_Main">
+      <param name="scfAddress" type="string">79184790275</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_1">
+      <param name="scfAddress" type="string">79184790261</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_2">
+      <param name="scfAddress" type="string">79184790262</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_3">
+      <param name="scfAddress" type="string">79184790263</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_4">
+      <param name="scfAddress" type="string">79184790264</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_5">
+      <param name="scfAddress" type="string">79184790265</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_6">
+      <param name="scfAddress" type="string">79184790266</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_7">
+      <param name="scfAddress" type="string">79184790267</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_8">
+      <param name="scfAddress" type="string">79184790268</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_9">
+      <param name="scfAddress" type="string">79184790269</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_10">
+      <param name="scfAddress" type="string">79184790273</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Comverse_11">
+      <param name="scfAddress" type="string">79184790274</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Nsk_Comverse_Main">
+      <param name="scfAddress" type="string">79139860020</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Nsk_Comverse_1">
+      <param name="scfAddress" type="string">79139860013</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Nsk_Comverse_2">
+      <param name="scfAddress" type="string">79139860014</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Nsk_Comverse_3">
+      <param name="scfAddress" type="string">79139860015</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Nsk_Comverse_4">
+      <param name="scfAddress" type="string">79139860016</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Nsk_Comverse_5">
+      <param name="scfAddress" type="string">79139860017</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Nsk_Comverse_6">
+      <param name="scfAddress" type="string">79139860018</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Nsk_Comverse_7">
+      <param name="scfAddress" type="string">79139860019</param> 
+      <section name="ServiceKeys">
+         <param name="MO-SM" type="string">120</param> 
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+    </section>
+
+    <section name="IN_Ksd_Ericcson_1">
+      <param name="scfAddress" type="string">79184790201</param>  <!-- IN (gsmSCF) point address -->
+      <param name="aliasFor" type="string">IN_Ksd_Ericcson</param>
+    </section>
+
+    <section name="IN_Ksd_Ericcson_2">
+      <param name="scfAddress" type="string">79184790202</param>  <!-- IN (gsmSCF) point address -->
+      <param name="aliasFor" type="string">IN_Ksd_Ericcson</param>
+    </section>
+
+    <section name="IN_Ksd_Ericcson_3">
+      <param name="scfAddress" type="string">79184790203</param>  <!-- IN (gsmSCF) point address -->
+      <param name="aliasFor" type="string">IN_Ksd_Ericcson</param>
+    </section>
+
+    <section name="IN_Ksd_Ericcson_4">
+      <param name="scfAddress" type="string">79184790204</param>  <!-- IN (gsmSCF) point address -->
+      <param name="aliasFor" type="string">IN_Ksd_Ericcson</param>
+    </section>
+
+    <section name="IN_Ksd_Ericcson">
+      <param name="scfAddress" type="string">79184790295</param>  <!-- IN (gsmSCF) point address -->
+      <section name="ServiceKeys">
+        <param name="MO-SM" type="string">map: MO-BC: mapMOBC-MOSM</param>
+      </section>
+      <param name="RPCList_retry" type="string">41:2</param>
+      <param name="RPCList_reject" type="string"></param>     <!-- not supported -->
+      <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+
+      <section name="mapMOBC-MOSM">
+        <param name="80" type="int">1</param>
+        <param name="82" type="int">2</param>
+        <param name="84" type="int">4</param>
+        <param name="86" type="int">5</param>
+        <param name="88" type="int">3</param>
+      </section>
+    </section>
+
+  </section> <!-- IN-platforms -->
 
   <section name="AbonentProviders"> <!-- abonent contract/gsmSCF params  providers -->
-      <section name="HLR_Nsk_SRI">
+      <section name="HLR_CH_SRI">
         <param name="loadup" type="string">uid: icsIAPrvdSRI</param>
         <section name="Config">
           <param name="tcapUser" type="string">TCAPUserSRI</param> <!--
@@ -366,6 +1031,19 @@
         </section>
       </section>
 
+       <section name="HLR_ATSI">
+        <param name="loadup" type="string">uid: icsIAPrvdATSI</param>
+        <section name="Config">
+          <param name="tcapUser" type="string">TCAPUserATSI</param> <!--
+          section name for TCAP user configuration this provider uses
+          -->
+          <param name="iniThreads" type="int">5</param>  <!--
+          initial number of threads serving IAPQUeries
+          -->
+        </section>
+      </section>
+
   </section> <!-- AbonentProviders -->
+
 </config>
 
