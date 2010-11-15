@@ -147,17 +147,21 @@ public class DeliveryEditController extends DeliveryController{
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
       return null;
     }
-    if(emailNotificationAddress != null && (emailNotificationAddress = emailNotificationAddress.trim()).length() != 0) {
-      delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotificationAddress);
-    }
-    if(smsNotificationAddress != null) {
-      delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotificationAddress.getSimpleAddress());
-    }
     if(delivery.getType() == Delivery.Type.SingleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
       return null;
     }
 
+    if(emailNotificationAddress != null && (emailNotificationAddress = emailNotificationAddress.trim()).length() != 0) {
+      delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotificationAddress);
+    }else {
+      delivery.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
+    }
+    if(smsNotificationAddress != null) {
+      delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotificationAddress.getSimpleAddress());
+    }else {
+      delivery.removeProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
+    }
 
     try{
       User u = config.getUser(getUserName());
