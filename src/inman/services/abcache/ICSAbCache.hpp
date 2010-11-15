@@ -2,7 +2,9 @@
  * Abonents cache service (contract and gsmSCF parameters).
  * ************************************************************************** */
 #ifndef __INMAN_ICS_ABNT_CACHE__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_ABNT_CACHE__
 
 #include "inman/services/ICSrvDefs.hpp"
@@ -63,13 +65,14 @@ public:
     // -------------------------------------
     // AbonentCacheITF interface methods:
     // -------------------------------------
-    AbonentContractInfo::ContractType
-            getAbonentInfo(const AbonentId & ab_number,
-                           AbonentRecord * ab_rec = NULL, uint32_t exp_timeout = 0)
+    virtual AbonentContract_e
+      getAbonentInfo(const AbonentId & ab_number,
+                     AbonentSubscription * ab_rec = NULL, uint32_t exp_timeout = 0)
     {
         return cache->getAbonentInfo(ab_number, ab_rec, exp_timeout);
     }
-    void setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec)
+    virtual void 
+      setAbonentInfo(const AbonentId & ab_number, const AbonentSubscription & ab_rec)
     {
         cache->setAbonentInfo(ab_number, ab_rec);
     }
