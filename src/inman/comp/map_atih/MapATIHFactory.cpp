@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/comp/map_atih/MapATIHFactory.hpp"
 #include "inman/comp/map_atih/MapATSIComps.hpp"
@@ -24,11 +24,11 @@ namespace atih {
 ROSComponentsFactory * initMAPATIH3Components(void)
 {
     ROSComponentsFactory * fact = new ROSComponentsFactory(_ac_map_anyTimeInfoHandling_v3);
-    fact->registerArg(MAPATIH_OpCode::anyTimeSubscriptionInterrogation,
+    fact->registerArg(MAP_ATIH::anyTimeSubscriptionInterrogation,
       new CompFactory::ProducerT<smsc::inman::comp::atih::ATSIArg>() );
-    fact->registerRes(MAPATIH_OpCode::anyTimeSubscriptionInterrogation,
+    fact->registerRes(MAP_ATIH::anyTimeSubscriptionInterrogation,
       new CompFactory::ProducerT<smsc::inman::comp::atih::ATSIRes>() );
-    fact->bindErrors(MAPATIH_OpCode::anyTimeSubscriptionInterrogation, 10, 
+    fact->bindErrors(MAP_ATIH::anyTimeSubscriptionInterrogation, 10,
                      ERR_ATSI::unknownSubscriber,
                      ERR_ATSI::bearerServiceNotProvisioned,
                      ERR_ATSI::teleserviceNotProvisioned,
