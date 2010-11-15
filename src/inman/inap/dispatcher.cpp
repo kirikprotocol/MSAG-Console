@@ -269,9 +269,10 @@ unsigned short TCAPDispatcher::dispatchMsg(void)
     EINSS7CpReleaseMsgBuffer(&msg);
     if ((MSG_BROKEN_CONNECTION == result) || (MSG_NOT_CONNECTED == result))
       result = MSG_TIMEOUT;
-    else if (result)
+    else if (result) {
       smsc_log_error(logger, "%s: MsgRecv() failed with code %u (%s)", _logId,
                       result, rc2Txt_SS7_CP(result));
+    }
   }
   return result;
 }
@@ -326,8 +327,9 @@ void TCAPDispatcher::onDisconnect(unsigned char inst_id)
     for (SSNmap_T::iterator it = _sessions.begin(); it != _sessions.end(); ++it) {
       SSNSession * pSess = it->second;
       pSess->ResetUnit(inst_id, UNITStatus::unitError);
-      if (pSess->bindStatus() < SSNBinding::ssnPartiallyBound)
+      if (pSess->bindStatus() < SSNBinding::ssnPartiallyBound) {
         smsc_log_error(logger, "%s: SSN[%u] has been disbound!", _logId, (unsigned)pSess->getSSN());
+      }
     }
     //check for last instance disconnection
     bool allBroken = false;
@@ -337,9 +339,10 @@ void TCAPDispatcher::onDisconnect(unsigned char inst_id)
       _connCounter = MAX_UCONN_ATTEMPTS;  //force total reconnection in Reconnect()
     }
     _sync.notify(); //awake reconnector thread
-  } else
+  } else {
     smsc_log_debug(logger, "%s: connection broken userId=%u -> TCAP[instId = %u]",
                   _logId, _cfg.mpUserId, inst_id);
+  }
 }
 
 void TCAPDispatcher::onDisconnect(unsigned short from_usrID,
@@ -448,9 +451,10 @@ void TCAPDispatcher::disconnectUnits(void)
         }
   #endif /* EIN_HD */
       }
-      if (result)
+      if (result) {
           smsc_log_error(logger, "%s: MsgRel(TCAP instId = %u) failed: %s (code %u)",
                       _logId, (unsigned)it->second.instId, rc2Txt_SS7_CP(result), result);
+      }
     }
     it->second.connStatus = SS7UnitInstance::uconnIdle;
   }
@@ -685,8 +689,9 @@ int TCAPDispatcher::connectCP(SS7State_e upTo/* = ss7CONNECTED*/)
 //NOTE: _sync MUST be locked upon entry!
 void TCAPDispatcher::disconnectCP(SS7State_e downTo/* = ss7None*/)
 {
-    if (_ss7State > downTo)
+    if (_ss7State > downTo) {
         smsc_log_info(logger, "%s: disconnecting SS7 stack: %u -> %u ..", _logId, _ss7State, downTo);
+    }
     while (_ss7State > downTo) {
       switch (_ss7State) {
       case ss7CONNECTED: { //Releasing of connections to other users.
@@ -698,10 +703,11 @@ void TCAPDispatcher::disconnectCP(SS7State_e downTo/* = ss7None*/)
 
       case ss7OPENED: { //Closing of the input queue.
         USHORT_T result;
-        if ((result = MsgClose(_cfg.mpUserId)) != 0)
+        if ((result = MsgClose(_cfg.mpUserId)) != 0) {
             smsc_log_error(logger, "%s: MsgClose(userId = %u) failed: %s (code %u)",
                            _logId, (unsigned)_cfg.mpUserId, 
                            rc2Txt_SS7_CP(result), result);
+        }
         smsc_log_info(logger, "%s: state REGISTERED", _logId);
         _ss7State = ss7REGISTERED;
       } break;
@@ -781,9 +787,10 @@ void TCAPDispatcher::confirmSSN(uint8_t ssn, uint8_t tc_inst_id, uint8_t bindRes
                      _logId, (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id,
                      rc2Txt_TC_BindResult(bindResult), bindResult);
     }
-    if (!pSession->SignalUnit(tc_inst_id, rval))
+    if (!pSession->SignalUnit(tc_inst_id, rval)) {
       smsc_log_warn(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) : invalid/inactive instance",
                  _logId, (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id);
+    }
     return;
 }
 
