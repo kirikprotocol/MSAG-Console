@@ -2,7 +2,9 @@
  * Abonents Cache service config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_ABCACHE_CONFIG_PARSING__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ABCACHE_CONFIG_PARSING__
 
 #include "inman/incache/AbCacheDefs.hpp"
