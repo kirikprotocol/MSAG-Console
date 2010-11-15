@@ -2,18 +2,20 @@
  * SMS/USSD Billing service config file parsing.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_CONFIG_PARSING__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_CONFIG_PARSING__
 
 #include "inman/services/ICSCfgReader.hpp"
-using smsc::inman::ICSIdent;
-using smsc::inman::ICSrvCfgReaderAC_T;
-
 #include "inman/services/smbill/SmBillDefs.hpp"
 
 namespace smsc   {
 namespace inman  {
 namespace smbill {
+
+using smsc::inman::ICSIdent;
+using smsc::inman::ICSrvCfgReaderAC_T;
 
 #ifdef SMSEXTRA
 // SMS Extra services configuration reader

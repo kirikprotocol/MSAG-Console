@@ -2,7 +2,9 @@
  * TCAP Dispatcher service config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_IAPRVD_SRI_CONFIG_PARSING__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_IAPRVD_SRI_CONFIG_PARSING__
 
 #include "inman/services/ICSCfgReader.hpp"

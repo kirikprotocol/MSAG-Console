@@ -2,12 +2,13 @@
  * TCAP Dispatcher service config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_TCDSP_CONFIG_PARSING__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_TCDSP_CONFIG_PARSING__
 
 #include "inman/inap/TCXCfgParser.hpp"
 #include "inman/services/ICSCfgReader.hpp"
-using smsc::inman::ICSrvCfgReaderAC_T;
 
 #ifdef EIN_HD
 #define NM_SS7_CFG_SECTION "SS7_HD"
@@ -18,6 +19,8 @@ using smsc::inman::ICSrvCfgReaderAC_T;
 namespace smsc {
 namespace inman {
 namespace inap {
+
+using smsc::inman::ICSrvCfgReaderAC_T;
 
 class ICSTCDispCfgReader : public ICSrvCfgReaderAC_T<TCDsp_CFG> {
 protected:

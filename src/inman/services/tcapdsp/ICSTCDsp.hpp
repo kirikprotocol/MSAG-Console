@@ -2,11 +2,14 @@
  * TCAP Dispatcher service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_TCAP_DISPATCHER__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_TCAP_DISPATCHER__
 
 #include "inman/inap/dispatcher.hpp"
 #include "inman/services/ICSrvDefs.hpp"
+
 namespace smsc {
 namespace inman {
 namespace inap {
@@ -14,9 +17,7 @@ namespace inap {
 using smsc::inman::ICServiceAC_T;
 
 //TCAP Dispatcher service
-class ICSTCDispatcher : public ICServiceAC_T<TCDsp_CFG>
-//                        , public TCAPDispatcherITF 
-{
+class ICSTCDispatcher : public ICServiceAC_T<TCDsp_CFG> {
 protected:
     mutable Mutex   _sync;
     std::auto_ptr<TCDsp_CFG> _cfg;
@@ -62,38 +63,6 @@ public:
     {
         return (TCAPDispatcherITF*)_disp.get();
     }
-
-/*
-    // -------------------------------------
-    // TCAPDispatcherITF interface methods:
-    // -------------------------------------
-    //Returns dispatcher state
-    DSPState_e  dspState(void) const
-    {
-        return _disp->dspState();
-    }
-    //Returns state of TCAP BE unit(s) connection
-    SS7State_e  ss7State(void) const
-    {
-        return _disp->ss7State();
-    }
-    //Binds SSN and initializes SSNSession (TCAP dialogs factory)
-    SSNSession * openSSN(uint8_t ssn_id, uint16_t max_dlg_id = 2000,
-                                Logger * uselog = NULL)
-    {
-        return _disp->openSSN(ssn_id, max_dlg_id, uselog);
-    }
-    //
-    SSNSession* findSession(uint8_t ssn) const
-    {
-        return _disp->findSession(ssn);
-    }
-    //
-    ApplicationContextRegistryITF * acRegistry(void) const
-    {
-        return _disp->acRegistry();
-    }
-*/
 };
 
 } //inap

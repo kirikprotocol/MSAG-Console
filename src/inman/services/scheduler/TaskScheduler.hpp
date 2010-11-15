@@ -3,7 +3,9 @@
  * 
  * ************************************************************************* */
 #ifndef __SMSC_TASK_SCHEDULER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_TASK_SCHEDULER_HPP
 
 #include <map>

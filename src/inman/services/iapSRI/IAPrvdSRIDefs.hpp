@@ -3,7 +3,9 @@
  INMan configurable services facility interfaces and classes definition. 
  * ************************************************************************** */
 #ifndef __INMAN_IAPRVD_SRI_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_IAPRVD_SRI_DEFS_HPP
 
 #include "inman/inap/TCDspDefs.hpp"

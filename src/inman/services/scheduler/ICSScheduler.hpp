@@ -2,7 +2,9 @@
  * Signalling Task Sheduler service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_SCHEDULER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_SCHEDULER_HPP
 
 #include "inman/common/ObjRegistryT.hpp"

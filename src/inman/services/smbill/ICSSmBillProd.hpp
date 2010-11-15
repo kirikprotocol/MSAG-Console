@@ -2,7 +2,9 @@
  * SMS/USSD messages billing service producer.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_SMBILLING_PRODUCER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_SMBILLING_PRODUCER_HPP
 
 #include "inman/services/smbill/ICSSmBilling.hpp"

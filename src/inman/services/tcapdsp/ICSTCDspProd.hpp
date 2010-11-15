@@ -2,7 +2,9 @@
  * TCAP Dispatcher service producer.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_TCAPDISP_PRODUCER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_TCAPDISP_PRODUCER_HPP
 
 #include "inman/services/tcapdsp/ICSTCDsp.hpp"

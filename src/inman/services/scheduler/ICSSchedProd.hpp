@@ -2,7 +2,9 @@
  * Signalling Task Sheduler service producer.
  * ************************************************************************* */
 #ifndef __INMAN_ICS_SCHEDULER_PRODUCER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_SCHEDULER_PRODUCER_HPP
 
 #include "inman/services/scheduler/ICSScheduler.hpp"

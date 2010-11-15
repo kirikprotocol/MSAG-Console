@@ -2,7 +2,9 @@
  * IAPManager (abonent policies/providers manager) service producer.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_IAPMGR_PRODUCER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_IAPMGR_PRODUCER_HPP
 
 #include "inman/services/iapmgr/ICSIAPManager.hpp"
