@@ -33,7 +33,8 @@ size_t  CSIRecordsMap::str_size(void) const
 
 std::string CSIRecordsMap::toString(void) const
 {
-  std::string str(0, str_size());
+  std::string str;
+  str.reserve(str_size());
     
   str = "SCFs: ";
   if (empty())
