@@ -115,7 +115,7 @@ msgtime_type parseDateTime( const char* datetime )
     if (!shift) {
         throw InfosmeException(EXC_IOERROR,"invalid datetime '%s'",datetime);
     }
-    return ymdToMsgTime(((((year*100+month)*100+day)*100+hour)*100+minute)*100+second);
+    return ymdToMsgTime((((ulonglong(year*100+month)*100+day)*100+hour)*100+minute)*100+second);
 }
 
 
@@ -127,7 +127,7 @@ msgtime_type parseDate( const char* date )
     if (!shift) {
         throw InfosmeException(EXC_IOERROR,"invalid date '%s'",date);
     }
-    return ymdToMsgTime(((year*100+month)*100+day)*1000000);
+    return ymdToMsgTime((ulonglong(year*100+month)*100+day)*1000000);
 }
 
 
