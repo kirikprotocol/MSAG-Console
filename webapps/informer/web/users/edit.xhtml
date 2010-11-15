@@ -73,8 +73,10 @@
         <h:selectOneMenu value="#{userEdit.userLocale}" style="align:left;" required="true" >
           <f:selectItems value="#{userEdit.locales}"/>
         </h:selectOneMenu>
-                        
+
       </h:panelGrid>
+
+      <p/>
 
       <eye:collapsingGroup label="#{msg['user.edit.defaults']}" opened="true">
 
@@ -99,7 +101,10 @@
           </tr:inputText>
 
           <h:outputText value="#{userBundle.policyId}"/>
-          <tr:inputText value="#{userEdit.userToEdit.policyId}" simple="true"/>
+          <h:panelGroup>
+            <h:selectBooleanCheckbox id="retryOnFail" value="#{userEdit.userToEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;"/>
+            <h:inputText id="retryPolicy" value="#{userEdit.userToEdit.policyId}"  disabled="#{!userEdit.userToEdit.retryOnFail}"/>
+          </h:panelGroup>
 
           <h:outputText value="#{userBundle.deliveryType}"/>
           <h:selectOneMenu id="deliveryType" value="#{userEdit.userToEdit.deliveryType}" style="align:left;" required="true" onchange="
@@ -120,20 +125,21 @@
             <eye:validatePositive/>
           </tr:inputText>
         </h:panelGrid>
-        
+
       </eye:collapsingGroup>
 
+      <p/>
 
       <eye:collapsingGroup label="#{msg['user.edit.restrictions']}" opened="true">
-        <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+        <h:panelGrid style="padding-top:10px; padding-left:10px" columns="1" columnClasses="columnTopLeftAlign">
 
           <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
             <tr:panelLabelAndMessage label="#{userBundle.smsPerSec}" labelStyle="text-align:left" inlineStyle="align:left;">
-              <tr:inputText value="#{userEdit.userToEdit.smsPerSec}" simple="true">
+              <tr:inputText value="#{userEdit.userToEdit.smsPerSec}" simple="true" columns="5">
                 <eye:validatePositive/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
-            <tr:panelLabelAndMessage label="#{userBundle.regions}" labelStyle="vertical-align:top; text-align:left">              
+            <tr:panelLabelAndMessage label="#{userBundle.regions}" labelStyle="vertical-align:top; text-align:left">
                 <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.allRegionsAllowed}" text="#{msg['user.edit.all']}" simple="true" required="false" onchange="var el = document.getElementById('regionsSelectMany'); el.style.display = this.checked ? 'none':'';"/>
             </tr:panelLabelAndMessage>
             <tr:panelLabelAndMessage label="&#160;" labelStyle="text-align:left" >
@@ -146,8 +152,10 @@
         </h:panelGrid>
       </eye:collapsingGroup>
 
+      <p/>
+
       <eye:collapsingGroup label="#{msg['user.edit.notifications']}" opened="true">
-        <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+        <h:panelGrid style="padding-top:10px; padding-left:10px" columns="1" columnClasses="columnTopLeftAlign">
           <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
             <tr:panelLabelAndMessage label="#{userBundle.smsNotification}" labelStyle="text-align:left">
               <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" simple="true"/>
@@ -159,55 +167,61 @@
         </h:panelGrid>
       </eye:collapsingGroup>
 
+      <p/>
+
       <eye:collapsingGroup label="#{msg['user.edit.import']}" opened="true">
-        <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
-          <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
 
-            <tr:panelLabelAndMessage label="#{userBundle.directory}" labelStyle="text-align:left" inlineStyle="align:left;">
-              <tr:inputText value="#{userEdit.userToEdit.directory}" required="true" simple="true"/>
-            </tr:panelLabelAndMessage>
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
+          <h:outputText value="#{msg['user.edit.enable.import']}"/>
+          <h:selectBooleanCheckbox value="#{userEdit.userToEdit.importDeliveriesFromDir}" onchange="
+            document.getElementById('importDeliveriesSettings').style.display=this.checked ? '' : 'none';
+            var createReports = document.getElementById('createReports').checked &amp;&amp; this.checked;
+            document.getElementById('reportsExportSettings').style.display=createReports ? '' : 'none';
+          "/>
+        </h:panelGrid>
 
-            <tr:panelLabelAndMessage label="#{userBundle.directoryPoolPeriod}" labelStyle="text-align:left" inlineStyle="align:left;">
-              <tr:inputText value="#{userEdit.userToEdit.directoryPoolPeriod}" simple="true" required="true" >
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
+        <h:panelGrid id="importDeliveriesSettings" style="padding-left:10px; display: #{userEdit.userToEdit.importDeliveriesFromDir ? '':'none'};" columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
+          <h:outputText value="#{userBundle.directory}"/>
+          <tr:inputText value="#{userEdit.userToEdit.directory}" required="true" simple="true" columns="100"/>
 
-            <tr:panelLabelAndMessage label="#{userBundle.createReports}" labelStyle="text-align:left">
-              <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.createReports}" simple="true" onchange="document.getElementById('reportsLifeTime').disabled = !this.checked;"/>
-            </tr:panelLabelAndMessage>
+          <h:outputText value="#{userBundle.directoryPoolPeriod}"/>
+          <tr:inputText value="#{userEdit.userToEdit.directoryPoolPeriod}" simple="true" required="true" columns="5">
+            <eye:validatePositive/>
+          </tr:inputText>
 
-            <tr:panelLabelAndMessage label="#{userBundle.reportsLifetime}" labelStyle="text-align:left" inlineStyle="align:left;">
-              <tr:inputText id="reportsLifeTime" value="#{userEdit.userToEdit.reportsLifetime}" simple="true" required="true" disabled="#{!userEdit.userToEdit.createReports}">
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
+          <h:outputText value="#{userBundle.createReports}"/>
+          <h:selectBooleanCheckbox id="createReports" value="#{userEdit.userToEdit.createReports}" onchange="document.getElementById('reportsExportSettings').style.display=this.checked ? '' : 'none';"/>
+        </h:panelGrid>
 
-          </tr:panelFormLayout>
+        <h:panelGrid id="reportsExportSettings" style="padding-left:10px; display: #{(userEdit.userToEdit.importDeliveriesFromDir and userEdit.userToEdit.createReports) ? '':'none'};" columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
+          <h:outputText value="#{userBundle.reportsLifetime}"/>
+          <tr:inputText id="reportsLifeTime" value="#{userEdit.userToEdit.reportsLifetime}" simple="true" required="true" columns="5">
+            <eye:validatePositive/>
+          </tr:inputText>
         </h:panelGrid>
       </eye:collapsingGroup>
+
+      <p/>
 
       <eye:collapsingGroup label="#{msg['user.edit.archive']}" opened="true">
-        <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
 
-          <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
+          <h:outputText value="#{userBundle.createArchive}"/>
+          <h:selectBooleanCheckbox value="#{userEdit.userToEdit.createArchive}" onchange="document.getElementById('archiveSettings').style.display=this.checked ? '' : 'none'"/>
+        </h:panelGrid>
 
-            <tr:panelLabelAndMessage label="#{userBundle.createArchive}" labelStyle="text-align:left">
-              <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.createArchive}" simple="true"/>
-            </tr:panelLabelAndMessage>
-
-            <tr:panelLabelAndMessage label="#{userBundle.deliveryLifetime}" labelStyle="text-align:left">
-              <tr:inputText value="#{userEdit.userToEdit.deliveryLifetime}" simple="true" required="true">
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
-
-          </tr:panelFormLayout>
+        <h:panelGrid id="archiveSettings" style="padding-left:10px;display: #{userEdit.userToEdit.createArchive ? '':'none'};" columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
+          <h:outputText value="#{msg['user.edit.delivery.lifetime']}"/>
+          <tr:inputText value="#{userEdit.userToEdit.deliveryLifetime}" simple="true" required="true" columns="5">
+            <eye:validatePositive/>
+          </tr:inputText>
         </h:panelGrid>
       </eye:collapsingGroup>
 
+      <p/>
+
       <eye:collapsingGroup label="#{msg['user.edit.billing']}" opened="true">
-        <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="1" columnClasses="columnTopLeftAlign">
           <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
             <tr:panelLabelAndMessage label="#{userBundle.createCDR}" labelStyle="text-align:left" inlineStyle="align:left;">
               <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.createCDR}" simple="true"/>
@@ -216,6 +230,8 @@
         </h:panelGrid>
       </eye:collapsingGroup>
 
+      <p/>
+      
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}"/>

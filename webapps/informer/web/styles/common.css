@@ -77,6 +77,10 @@ input.radio, input.check {
   margin: 0px;
 }
 
+input.x27 {
+  font-size: 100%;
+}
+
 input.radio {
   border: none;
 }
@@ -151,6 +155,11 @@ div.query_result {
 
 .column100Width {
   width:100px;
+}
+
+.column100WidthNoWrap {
+  width:100px;
+  white-space:nowrap;
 }
 .column100WidthTopLeft {
   width:100px;

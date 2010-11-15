@@ -44,6 +44,7 @@ public class User implements Serializable{
   private boolean createArchive;
   private int deliveryLifetime;
 
+  private boolean importDeliveriesFromDir;
   private String directory;
   private int directoryPoolPeriod;
   private boolean createReports;
@@ -88,7 +89,7 @@ public class User implements Serializable{
     this.createReports=user.createReports;
     this.reportsLifetime=user.reportsLifetime;
     this.allRegionsAllowed=user.allRegionsAllowed;
-
+    this.importDeliveriesFromDir = user.importDeliveriesFromDir;
   }
 
 
@@ -389,6 +390,14 @@ public class User implements Serializable{
 
   public void setAllRegionsAllowed(boolean allRegionsAllowed) {
     this.allRegionsAllowed = allRegionsAllowed;
+  }
+
+  public boolean isImportDeliveriesFromDir() {
+    return importDeliveriesFromDir;
+  }
+
+  public void setImportDeliveriesFromDir(boolean importDeliveriesFromDir) {
+    this.importDeliveriesFromDir = importDeliveriesFromDir;
   }
 
   public enum Status {

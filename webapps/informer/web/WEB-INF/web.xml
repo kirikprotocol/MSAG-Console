@@ -253,7 +253,7 @@
       <url-pattern>/smsc/*</url-pattern>
       <url-pattern>/blacklist/*</url-pattern>
       <url-pattern>/reschedule/*</url-pattern>
-      <url-pattern>/restrictions/*</url-pattern>
+      <url-pattern>/restriction/*</url-pattern>
       <url-pattern>/siebel/*</url-pattern>
       <url-pattern>/import/*</url-pattern>
       <url-pattern>/archieve/*</url-pattern>

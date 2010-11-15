@@ -77,6 +77,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     u.setCreateArchive(section.getBool("createArchive",false));
     u.setDeliveryLifetime(section.getInt("deliveryLifetime"));
 
+    u.setImportDeliveriesFromDir(section.getBool("importDeliveriesFromDir", false));
     u.setDirectory(section.getString("directory"));
     u.setDirectoryPoolPeriod(section.getInt("directoryPoolPeriod"));
     u.setCreateReports(section.getBool("createReports",false));
@@ -201,6 +202,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     }
 
     userSection.setInt("deliveryLifetime",user.getDeliveryLifetime());
+    userSection.setBool("importDeliveriesFromDir", user.isImportDeliveriesFromDir());
     userSection.setString("directory",user.getDirectory());
     userSection.setInt("directoryPoolPeriod",user.getDirectoryPoolPeriod());
     if(user.isCreateReports()) {
