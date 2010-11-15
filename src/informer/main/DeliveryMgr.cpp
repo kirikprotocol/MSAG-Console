@@ -598,7 +598,17 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
                                         const DeliveryInfoData& infoData )
 {
     const dlvid_type dlvId = getNextDlvId();
-    addDelivery(userInfo,new DeliveryInfo(cs_,dlvId,infoData));
+    DeliveryInfo* info = new DeliveryInfo(cs_,dlvId,infoData);
+    DlvState state = DLVSTATE_PAUSED;
+    msgtime_type planTime = 0;
+    if (info->getStartDate()) {
+        msgtime_type now = currentTimeSeconds();
+        if (info->getStartDate() > now + 5) {
+            state = DLVSTATE_PLANNED;
+            planTime = info->getStartDate();
+        }
+    }
+    addDelivery(userInfo,info,state,planTime);
     return dlvId;
 }
 

@@ -82,6 +82,8 @@ protected:
 
     smsc::core::synchronization::Mutex                 lock_;
     unsigned                                           ref_;
+
+    // fixme: move under separate lock?
     DlvState                                           state_;
     msgtime_type                                       planTime_;
 };

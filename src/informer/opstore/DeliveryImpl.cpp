@@ -5,10 +5,8 @@
 #include "informer/data/UserInfo.h"
 #include "informer/data/BindSignal.h"
 #include "util/config/Config.h"
-#include "util/config/ConfString.h"
 
 using smsc::util::config::Config;
-using smsc::util::config::ConfString;
 
 #ifdef sun
 namespace {
@@ -39,28 +37,36 @@ void DeliveryImpl::readDeliveryInfoData( const CommonSettings& cs,
         std::auto_ptr<Config> cfg(Config::createFromFile((cs.getStorePath()+buf).c_str()));
         const Config& config = *cfg.get();
 
-        data.name = ConfString(config.getString("name")).str();
+        data.name = config.getString("name");
         data.priority = config.getInt("priority");
         try {
             data.transactionMode = config.getBool("transactionMode");
         } catch (std::exception& ) {
             data.transactionMode = false;
         }
-        data.startDate = ConfString(config.getString("startDate")).str();
-        data.endDate = ConfString(config.getString("endDate")).str();
         try {
-            data.activePeriodStart = ConfString(config.getString("activePeriodStart")).str();
+            data.startDate = config.getString("startDate");
+        } catch (std::exception&) {
+            data.startDate = "";
+        }
+        try {
+            data.endDate = config.getString("endDate");
+        } catch (std::exception&) {
+            data.endDate = "";
+        }
+        try {
+            data.activePeriodStart = config.getString("activePeriodStart");
         } catch (std::exception& ) {
             data.activePeriodStart = "";
         }
         try {
-            data.activePeriodEnd = ConfString(config.getString("activePeriodEnd")).str();
+            data.activePeriodEnd = config.getString("activePeriodEnd");
         } catch (std::exception&) {
             data.activePeriodEnd = "";
         }
         data.activeWeekDays.clear();
         try {
-            std::string awd = ConfString(config.getString("activeWeekDays")).str();
+            std::string awd = config.getString("activeWeekDays");
             std::vector< std::string > res;
             for ( size_t start = 0; start < awd.size(); ++start ) {
                 while ( start < awd.size() && awd[start] == ' ' ) {
@@ -85,29 +91,29 @@ void DeliveryImpl::readDeliveryInfoData( const CommonSettings& cs,
         }
 
         try {
-            data.validityPeriod = ConfString(config.getString("validityPeriod")).str();
+            data.validityPeriod = config.getString("validityPeriod");
         } catch (std::exception&) {
             data.validityPeriod = "";
         }
         data.flash = config.getBool("flash");
         data.useDataSm = config.getBool("useDataSm");
-        ConfString dlvMode(config.getString("deliveryMode"));
-        if ( dlvMode.str() == "sms" ) {
+        const std::string dlvMode = config.getString("deliveryMode");
+        if ( dlvMode == "sms" ) {
             data.deliveryMode = DLVMODE_SMS;
-        } else if ( dlvMode.str() == "ussdpush" ) {
+        } else if ( dlvMode == "ussdpush" ) {
             data.deliveryMode = DLVMODE_USSDPUSH;
-        } else if ( dlvMode.str() == "ussdpushvlr" ) {
+        } else if ( dlvMode == "ussdpushvlr" ) {
             data.deliveryMode = DLVMODE_USSDPUSHVLR;
         } else {
             throw InfosmeException(EXC_CONFIG,"unknown delivery mode: '%s'",dlvMode.c_str());
         }
-        data.owner = ConfString(config.getString("owner")).str();
+        data.owner = config.getString("owner");
         data.retryOnFail = config.getBool("retryOnFail");
-        data.retryPolicy = ConfString(config.getString("retryPolicy")).str();
+        data.retryPolicy = config.getString("retryPolicy");
         data.replaceMessage = config.getBool("replaceMessage");
-        data.svcType = ConfString(config.getString("svcType")).str();
-        data.userData = ConfString(config.getString("userData")).str();
-        data.sourceAddress = ConfString(config.getString("sourceAddress")).str();
+        data.svcType = config.getString("svcType");
+        data.userData = config.getString("userData");
+        data.sourceAddress = config.getString("sourceAddress");
 
     } catch (std::exception& e) {
         throw InfosmeException(EXC_CONFIG,"D=%u config: %s",dlvId,e.what());
@@ -491,7 +497,9 @@ void DeliveryImpl::writeDeliveryInfoData()
     config.setString("name",data.name.c_str());
     config.setInt("priority",data.priority);
     config.setBool("transactionMode",data.transactionMode);
-    if (!data.startDate.empty()) { config.setString("startDate",data.startDate.c_str()); }
+    if (!data.startDate.empty()) {
+        config.setString("startDate",data.startDate.c_str());
+    }
     if (!data.endDate.empty()) { config.setString("endDate",data.endDate.c_str()); }
     if (!data.activePeriodStart.empty()) {
         config.setString("activePeriodStart",data.activePeriodStart.c_str());

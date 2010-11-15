@@ -74,7 +74,6 @@ sourceAddress_(0)
 
 void DeliveryInfo::update( const DeliveryInfoData& data )
 {
-    // FIXME: should we lock?
     updateData( data, &data_);
 }
 
@@ -240,7 +239,9 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     }
 
     // filling
-    if (startDate != 0) { startDate_ = startDate; }
+    if (startDate != 0) {
+        startDate_ = startDate;
+    }
     if (endDate != 0) { endDate_ = endDate; }
     if (activePeriodStart != -1) { activePeriodStart_ = activePeriodStart; }
     if (activePeriodEnd != -1) { activePeriodEnd_ = activePeriodEnd; }
@@ -248,6 +249,19 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (activeWeekDays != -1) { activeWeekDays_ = activeWeekDays; }
     if (sourceAddress != 0) { sourceAddress_ = sourceAddress; }
     data_ = data;
+    /*
+    if (startDate_ == 0) {
+        startDate_ = currentTimeSeconds();
+        char buf[30];
+        const time_t tmp(startDate_);
+        struct tm tmnow;
+        gmtime_r(&tmp,&tmnow);
+        sprintf(buf,"%02u.%02u.%04u %02u:%02u:%02u",
+                tmnow.tm_mday, tmnow.tm_mon+1, tmnow.tm_year+1900,
+                tmnow.tm_hour, tmnow.tm_min, tmnow.tm_sec);
+        data_.startDate = buf;
+    }
+     */
 }
 
 }

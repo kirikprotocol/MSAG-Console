@@ -75,8 +75,8 @@ protected:
     /// used internally
     void addDelivery( UserInfo&     userInfo,
                       DeliveryInfo* info,
-                      DlvState      state = DLVSTATE_PAUSED,
-                      msgtime_type  planTime = 0 );
+                      DlvState      state,
+                      msgtime_type  planTime );
 
     dlvid_type getNextDlvId();
     

@@ -53,8 +53,8 @@ public:
         Message& msg = mlk.msg;
         msg.subscriber = fb.get64();
         msg.msgId = fb.get64();
-        msg.lastTime = fb.get32();
-        msg.timeLeft = fb.get32();
+        // msg.lastTime = fb.get32();
+        // msg.timeLeft = fb.get32();
         msg.userData = fb.getCString();
         msg.state = fb.get8();
         if (msg.state & 0x80) {
@@ -113,7 +113,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     std::vector< regionid_type > regs;
     regs.reserve(32);
     dispatchMessages(begin, end, regs);
-    msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
+    msgtime_type currentTime(currentTimeSeconds());
     // binding to glossary (necessary to write texts to activity log)
     for ( MsgIter i = begin; i != end; ++i ) {
         glossary_.bindText(i->msg.text);
@@ -198,8 +198,12 @@ void InputStorage::dispatchMessages( MsgIter begin,
     unsigned count = 0;
     for ( MsgIter i = begin; i != end; ++i ) {
         const regionid_type regId = rf.findRegion( i->msg.subscriber );
-        i->msg.msgId = ++lastMsgId_;
-        i->msg.state = MSGSTATE_INPUT;
+        Message& msg = i->msg;
+        msg.msgId = ++lastMsgId_;
+        msg.lastTime = 0;
+        msg.timeLeft = 0;
+        msg.retryCount = 0;
+        msg.state = MSGSTATE_INPUT;
         i->serial = regId;
         if (log_->isDebugEnabled()) {
             uint8_t len, ton, npi;
@@ -248,8 +252,8 @@ void InputStorage::dispatchMessages( MsgIter begin,
             if (msg.isTextUnique()) {
                 msgbuf.setSize(90+strlen(msg.text->getText()));
             }
-            msg.lastTime = ro.wfn;
-            msg.timeLeft = ro.woff;
+            // msg.lastTime = ro.wfn;
+            // msg.timeLeft = ro.woff;
             maxMsgId = msg.msgId;
             ToBuf tb(msgbuf.get(),msgbuf.getSize());
             tb.skip(LENSIZE);
@@ -257,8 +261,8 @@ void InputStorage::dispatchMessages( MsgIter begin,
             // i->msg.toBuf(::defaultVersion,tb);
             tb.set64(msg.subscriber);
             tb.set64(msg.msgId);
-            tb.set32(msg.lastTime);
-            tb.set32(msg.timeLeft);
+            // tb.set32(msg.lastTime);
+            // tb.set32(msg.timeLeft);
             tb.setCString(msg.userData.c_str());
             if (msg.isTextUnique()) {
                 tb.set8(msg.state | 0x80);
