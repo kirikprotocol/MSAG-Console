@@ -26,6 +26,7 @@ public:
         , icsIdAbntCache
         , icsIdTCAPDisp
         , icsIAPrvdSRI
+        , icsIAPrvdATSI
         , icsIdIAPManager
         , icsIdSmBilling
         , icsIdAbntDetector
@@ -45,6 +46,7 @@ protected:
         ids.insert(ICSNames::value_type(icsIdAbntCache, "icsAbntCache"));
         ids.insert(ICSNames::value_type(icsIdTCAPDisp, "icsTCAPDisp"));
         ids.insert(ICSNames::value_type(icsIAPrvdSRI, "icsIAPrvdSRI"));
+        ids.insert(ICSNames::value_type(icsIAPrvdATSI, "icsIAPrvdATSI"));
         ids.insert(ICSNames::value_type(icsIdIAPManager, "icsIAPManager"));
         ids.insert(ICSNames::value_type(icsIdSmBilling, "icsSmBilling"));
         ids.insert(ICSNames::value_type(icsIdAbntDetector, "icsAbntDetector"));
