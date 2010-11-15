@@ -40,9 +40,9 @@ CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
            uint16_t inv_timeout/* = 0*/, const char * scf_ident/* = NULL*/,
             Logger * uselog/* = NULL*/) _THROWS_NONE
     : SMS_SSF_Fsm(EventTypeSMS_sms_CollectedInfo), _logPfx("CapSMS")
-    , session(pSession), ssfHdl(ssfHandler), nmScf(scf_ident), logger(uselog)
-    , rPCause(0), _timer(0), reportType(MessageType_request), dialog(0)
-    , invTimeout(inv_timeout)
+    , dialog(0), session(pSession), ssfHdl(ssfHandler)
+    , rPCause(0), _timer(0), nmScf(scf_ident), logger(uselog)
+    , reportType(MessageType_request), invTimeout(inv_timeout)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.CapSMS");
@@ -211,8 +211,9 @@ void CapSMSDlg::onInvokeLCancel(InvokeRFP pInv)
 void CapSMSDlg::onDialogContinue(bool compPresent)
 {
     MutexGuard  grd(_sync);
-    if (!compPresent)
+    if (!compPresent) {
         smsc_log_error(logger, "%s: missing component in TC_CONT_IND", _logId);
+    }
     //else wait for ongoing Invoke result/error
 }
 
@@ -314,9 +315,10 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
         if (_capState.s.smsEnd) //TC_END_IND was get
             doEnd = true;
 
-        if (!op->getParam() && (op->getOpcode() != CapSMSOp::ContinueSMS))
+        if (!op->getParam() && (op->getOpcode() != CapSMSOp::ContinueSMS)) {
             smsc_log_error(logger, "%s: <-- %s: %s { Arg missed !!! }", _logId,
                             nmScf, CapSMSOp::code2Name(op->getOpcode()));
+        }
     
         switch (op->getOpcode()) {
         case CapSMSOp::ReleaseSMS: {

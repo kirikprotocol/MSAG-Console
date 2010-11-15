@@ -2,7 +2,9 @@
  * MAP CallHandling service SEND_ROUTING_INFO (v3) Components definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPCHSRI_COMPS_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_MAPCHSRI_COMPS_HPP__
 
 #include "logger/Logger.h"
@@ -53,11 +55,11 @@ struct ERR_CHSendRountigInfo {
 
 class CHSendRoutingInfoArg : public Component {
 public:
-    CHSendRoutingInfoArg(Logger * use_log = NULL)
+    explicit CHSendRoutingInfoArg(Logger * use_log = NULL)
         : compLogger(use_log ? use_log : 
                      Logger::getInstance("smsc.inman.comp.CHSRIArg"))
     { }
-    ~CHSendRoutingInfoArg()
+    virtual ~CHSendRoutingInfoArg()
     { }
 
     //sets ISDN address of requesting point
@@ -71,21 +73,21 @@ public:
     void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
 private:
-    TonNpiAddress      	scfAdr;     //requesting GMSC or SCF address
-    TonNpiAddress      	subscrAdr;  // MS ISDN address, '\0' or "0" for absence
-    Logger*		compLogger;
+    TonNpiAddress   scfAdr;     //requesting GMSC or SCF address
+    TonNpiAddress   subscrAdr;  // MS ISDN address, '\0' or "0" for absence
+    Logger *        compLogger;
 };
 
 
 class CHSendRoutingInfoRes : public MAPComponent {
 public:
-    CHSendRoutingInfoRes(Logger * use_log = NULL)
+    explicit CHSendRoutingInfoRes(Logger * use_log = NULL)
         : compLogger(use_log ? use_log : 
                  Logger::getInstance("smsc.inman.comp.CHSRIRes"))
     {
         mask.value = 0;
     }
-    ~CHSendRoutingInfoRes()
+    virtual ~CHSendRoutingInfoRes()
     {}
 
     unsigned short getSCFinfo(GsmSCFinfo * scf_dat) const;

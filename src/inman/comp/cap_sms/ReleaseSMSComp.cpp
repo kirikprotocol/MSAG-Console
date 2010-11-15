@@ -22,8 +22,9 @@ void SMSReleaseArg::decode(const std::vector<unsigned char>& buf) throw(CustomEx
 
     //NOTE: there is a deficiency in asn1c printing:
     //it doesn't print name for type defined via primitive type
-    if (asn_DEF_ReleaseSMSArg.name)
+    if (asn_DEF_ReleaseSMSArg.name) {
         smsc_log_debug(compLogger, "%s ::= ", asn_DEF_ReleaseSMSArg.name);
+    }
     smsc_log_component(compLogger, &asn_DEF_ReleaseSMSArg, dcmd);
     asn_DEF_ReleaseSMSArg.free_struct(&asn_DEF_ReleaseSMSArg, dcmd, 0);
 }

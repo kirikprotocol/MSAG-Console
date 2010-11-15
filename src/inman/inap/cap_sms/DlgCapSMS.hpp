@@ -110,7 +110,7 @@ public:
     void abortSMS(void);
 
 protected:
-    friend class Dialog;
+    friend class smsc::inman::inap::Dialog;
     // TCDialogUserITF interface
     void onDialogInvoke(Invoke* op, bool lastComp);
     void onDialogContinue(bool compPresent);
