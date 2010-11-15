@@ -219,7 +219,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if ( ( activePeriodStart < 0 && activePeriodEnd >= 0 ) ||
          ( activePeriodStart >= 0 && activePeriodEnd < 0 ) ) {
         throw InfosmeException(EXC_CONFIG,"invalid active period start/end");
-    } else {
+    } else if ( activePeriodStart >= 0 ) {
         activePeriodStart %= daynight;
         activePeriodEnd %= daynight;
         timediff_type diff = activePeriodEnd - activePeriodStart;
