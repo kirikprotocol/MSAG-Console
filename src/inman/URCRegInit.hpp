@@ -2,7 +2,9 @@
  * INMan Unified
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_URCREGISTRY_INIT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_URCREGISTRY_INIT_HPP
 
 #include "inman/INManErrors.hpp"
