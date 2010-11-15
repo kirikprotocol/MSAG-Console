@@ -10,12 +10,15 @@
 
 #include "inman/interaction/messages.hpp"
 #include "inman/AbntContract.hpp"
+#include "inman/GsmSCFInfo.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
 
 using smsc::inman::AbonentContractInfo;
+using smsc::inman::AbonentContract_e;
+using smsc::inman::GsmSCFinfo;
 using smsc::util::TonNpiAddressString;
 
 // -------------------------------------------------------------------- //
@@ -120,7 +123,7 @@ public:
 
 class AbntContractResult : public INPAbntContractCmd {
 protected:
-    AbonentContractInfo::ContractType cntrType;
+    AbonentContract_e cntrType;
     uint32_t        errCode;
     IMSIString      abImsi;
     GsmSCFinfo      gsmSCF;
@@ -142,7 +145,7 @@ public:
     { }
 
     //Setters:
-    void setContractInfo(AbonentContractInfo::ContractType cntr_type, const char * ab_imsi = NULL);
+    void setContractInfo(AbonentContract_e cntr_type, const char * ab_imsi = NULL);
     void setGsmSCF(const GsmSCFinfo & gsm_scf) { gsmSCF = gsm_scf; }
     void setPolicy(const std::string & nm_policy) { nmPolicy = nm_policy; }
     void setError(uint32_t err_code, const char * err_msg = NULL);
@@ -153,7 +156,7 @@ public:
     uint32_t    errorCode(void) const { return errCode; }
     const char * errorMsg(void) const { return errMsg.c_str(); }
 
-    AbonentContractInfo::ContractType contractType(void) const { return cntrType; }
+    AbonentContract_e contractType(void) const { return cntrType; }
     const char * getSubscrImsi(void) const { return abImsi.empty() ? NULL : abImsi.c_str(); }
     const GsmSCFinfo * getGsmSCF(void) const { return gsmSCF.empty() ? NULL : &gsmSCF; }
 };

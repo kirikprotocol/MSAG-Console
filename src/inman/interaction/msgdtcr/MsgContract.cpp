@@ -40,7 +40,7 @@ void AbntContractResult::load(ObjectBuffer& in) throw(SerializerException)
         in >> itmp;
         cntrType = (itmp > AbonentContractInfo::abtPrepaid)
                   ? AbonentContractInfo::abtUnknown 
-                  : static_cast<AbonentContractInfo::ContractType>(itmp);
+                  : static_cast<AbonentContract_e>(itmp);
     }
     gsmSCF.Reset();
     {
