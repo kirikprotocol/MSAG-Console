@@ -279,6 +279,7 @@ void DcpServer::handle(const messages::UserAuth& inmsg)
   {
     sync::MutexGuard mg(clntsMon);
     getSocketByConnId(connId)->setAuthorized(true);
+    getSocketByConnId(connId)->setUserInfo(ui);
   }
   mkOkResponse(connId,inmsg.messageGetSeqNum());
 }
