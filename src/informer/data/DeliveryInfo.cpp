@@ -9,6 +9,11 @@ namespace {
 
 using namespace eyeline::informer;
 
+/// bit value corresponding to the weekday from tm_wday.
+static const int weekBits[] = { 0x40, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 };
+
+static const timediff_type daynight = 24*3600;
+
 int parseWeekDays( const std::vector< std::string >& wd )
 {
     static const char* fulldays[7] = {
@@ -47,12 +52,6 @@ namespace informer {
 
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
-void DeliveryInfo::update( const DeliveryInfoData& data )
-{
-    throw InfosmeException(EXC_NOTIMPL, "DeliveryInfo::update(): not impl");
-}
-
-
 DeliveryInfo::DeliveryInfo( const CommonSettings&   cs,
                             dlvid_type              dlvId,
                             const DeliveryInfoData& data ) :
@@ -70,6 +69,107 @@ sourceAddress_(0)
         log_ = smsc::logger::Logger::getInstance("dlvinfo");
     }
     updateData( data, 0 );
+}
+
+
+void DeliveryInfo::update( const DeliveryInfoData& data )
+{
+    throw InfosmeException(EXC_NOTIMPL, "DeliveryInfo::update(): not impl");
+}
+
+
+timediff_type DeliveryInfo::nextActiveTime( int tm_wday, msgtime_type now ) const
+{
+    if ((activeWeekDays_ & 0x6f) == 0) {
+        throw InfosmeException(EXC_LOGICERROR,"wrong active week days: %d",activeWeekDays_);
+    }
+    // current day time
+    timediff_type ms = timediff_type(now % daynight);
+    timediff_type res = 0;
+    const char* what = "";
+    for (;;) {
+
+        smsc_log_debug(log_,"D=%u acttime wday=%u ms=%u as=%d ae=%d res=%u",
+                       dlvId_, tm_wday, ms, activePeriodStart_, activePeriodEnd_, res );
+
+        if ((weekBits[tm_wday] & activeWeekDays_)!=0) {
+            // day is allowed
+            if (activePeriodStart_<0) {
+                // not limited by period
+                what = "all day allowed";
+                break;
+            }
+
+            if (ms<activePeriodStart_) {
+                if (activePeriodEnd_ < activePeriodStart_ && ms < activePeriodEnd_ ) {
+                    what = "before invend";
+                    break;
+                } else {
+                    what = "before start";
+                    res += activePeriodStart_ - ms;
+                    break;
+                }
+            } else if (activePeriodEnd_ < activePeriodStart_) {
+                what = "after invstart";
+                break;
+            }
+        }
+
+        // move to the next day
+        res += (daynight - ms);
+        ms = 0;
+        if ( ++tm_wday >= 7 ) {tm_wday = 0;}
+
+    }
+    smsc_log_debug(log_,"D=%u acttime final (%s) res=%u",dlvId_,what,res);
+    return res;
+}
+
+
+timediff_type DeliveryInfo::nextStopTime( int tm_wday, msgtime_type now ) const
+{
+    if ( (activeWeekDays_ & 0x6f) == 0x6f &&
+         activePeriodStart_<0 ) {
+        // not limited
+        return -1;
+    }
+    timediff_type ms = timediff_type(now % daynight);
+    timediff_type res = 0;
+    const char* what = "";
+    for (;;) {
+
+        smsc_log_debug(log_,"D=%u stoptime wday=%u ms=%u as=%d ae=%d res=%u",
+                       dlvId_, tm_wday, ms, activePeriodStart_, activePeriodEnd_, res );
+
+        if ((weekBits[tm_wday] & activeWeekDays_)==0) {
+            // day is not allowed
+            what = "all day forbidden";
+            break;
+        }
+        // day is allowed
+        if (activePeriodStart_>=0) {
+            if (ms < activePeriodEnd_) {
+                if (activePeriodStart_<activePeriodEnd_ && ms < activePeriodStart_) {
+                    what = "before start";
+                    break;
+                } else {
+                    res += activePeriodEnd_ - ms;
+                    what = "before end";
+                    break;
+                }
+            } else if (ms < activePeriodStart_) {
+                what = "before invstart";
+                break;
+            }
+        }
+
+        // move to the next day
+        res += (daynight - ms);
+        ms = 0;
+        if (++tm_wday>=7) {tm_wday = 0;}
+    }
+    smsc_log_debug(log_,"D=%u stoptime final (%s) res=%u",dlvId_,what,res);
+    return res;
 }
 
 

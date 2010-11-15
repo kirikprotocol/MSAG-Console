@@ -627,6 +627,7 @@ int DeliveryMgr::Execute()
     typedef int64_t msectime_type;
 
     DeliveryWakeQueue wakeList;
+    DeliveryWakeQueue stopList;
     while ( !stopping_ ) {
 
         const msectime_type curTime = msectime_type(currentTimeMicro() / 1000);
@@ -646,16 +647,54 @@ int DeliveryMgr::Execute()
             }
             wakeList.clear();
         }
+        if ( !stopList.empty() ) {
+            struct ::tm tmnow;
+            const time_t tmp(now);
+            if ( !gmtime_r(&tmp,&tmnow) ) {
+                throw InfosmeException(EXC_SYSTEM,"gmtime_r");
+            }
+            for ( DeliveryWakeQueue::const_iterator i = stopList.begin();
+                  i != stopList.end(); ++i ) {
+                DeliveryImplPtr dlv;
+                if ( !getDelivery(i->second,dlv) ||
+                     (DLVSTATE_ACTIVE != dlv->getState()) ) {
+                    continue;
+                }
+                const timediff_type planTime = 
+                    dlv->getDlvInfo().nextActiveTime(tmnow.tm_wday,now);
+                if ( planTime <= 0 ) {
+                    // should not stop
+                    continue;
+                }
+                dlv->setState(DLVSTATE_PLANNED,now+planTime);
+            }
+            stopList.clear();
+        }
+
 
         MutexGuard mg(mon_);
         DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
-        wakeList.insert(deliveryWakeQueue_.begin(),uptoNow);
-        deliveryWakeQueue_.erase(deliveryWakeQueue_.begin(), uptoNow);
-        if (!wakeList.empty()) continue;
+        if ( uptoNow != deliveryWakeQueue_.begin() ) {
+            wakeList.insert(deliveryWakeQueue_.begin(),uptoNow);
+            deliveryWakeQueue_.erase(deliveryWakeQueue_.begin(), uptoNow);
+        }
+        uptoNow = deliveryStopQueue_.upper_bound(now);
+        if ( uptoNow != deliveryStopQueue_.begin() ) {
+            stopList.insert(deliveryStopQueue_.begin(),uptoNow);
+            deliveryStopQueue_.erase(deliveryStopQueue_.begin(), uptoNow);
+        }
+        if (!wakeList.empty() || !stopList.empty()) continue;
+
         msectime_type wakeTime = 10000;
         if (!deliveryWakeQueue_.empty()) {
-            wakeTime = msectime_type(deliveryWakeQueue_.begin()->first)*1000 - curTime;
-            if (wakeTime > 10000) {wakeTime = 10000;}
+            msectime_type thisWakeTime = 
+                msectime_type(deliveryWakeQueue_.begin()->first)*1000 - curTime;
+            if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
+        }
+        if (!deliveryStopQueue_.empty()) {
+            msectime_type thisWakeTime =
+                msectime_type(deliveryStopQueue_.begin()->first)*1000 - curTime;
+            if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
         }
         if (wakeTime>0) { mon_.wait(int(wakeTime)); }
     }
@@ -675,7 +714,8 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
     char buf[100];
     const int buflen = sprintf(buf,"%04u,%c,%u,%s,%u\n",
                                unsigned(ymdTime % 10000), dlvStateToString(newState)[0],
-                               dlvId, dlv.getUserInfo().getUserId(), planTime );
+                               dlvId, dlv.getUserInfo().getUserId(),
+                               newState == DLVSTATE_PLANNED ? planTime : 0);
     if ( buflen < 0 ) {
         throw InfosmeException(EXC_SYSTEM,"cannot write dlv state change, dlvId=%u",dlvId);
     }
@@ -715,6 +755,11 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
         mon_.notify();
     }
+    if (newState == DLVSTATE_ACTIVE && planTime != 0) {
+        MutexGuard mg(mon_);
+        deliveryStopQueue_.insert(std::make_pair(planTime,dlvId));
+        mon_.notify();
+    }
     // return true if we need to activate delivery regions
     return newState == DLVSTATE_ACTIVE;
 }
@@ -750,8 +795,11 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
     userInfo.attachDelivery( dlv );
     MutexGuard mg(mon_);
     deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
-    if (planTime) {
+    if (state == DLVSTATE_PLANNED && planTime) {
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
+    }
+    if (state == DLVSTATE_ACTIVE && planTime) {
+        deliveryStopQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
     }
     mon_.notify();
 }

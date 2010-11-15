@@ -240,7 +240,9 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             throw InfosmeException(EXC_LOGICERROR,
                                   "D=%u is cancelled",dlvId);
         }
-        now = msgtime_type(currentTimeMicro()/tuPerSec);
+        now = currentTimeSeconds();
+        struct tm tmnow;
+        ymd = msgTimeToYmd(now,&tmnow);
         if (newState == DLVSTATE_PLANNED) {
             if (planTime < now) {
                 throw InfosmeException(EXC_LOGICERROR,
@@ -248,6 +250,18 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                                        dlvId,msgTimeToYmd(planTime));
             }
             planTime -= now;
+        } else if (newState == DLVSTATE_ACTIVE) {
+            timediff_type diff = dlvInfo_->nextStopTime(tmnow.tm_mday,now);
+            if (diff>0) {
+                planTime = now + diff;
+            } else if (diff<0) {
+                planTime = 0;
+            } else {
+                smsc_log_warn(log_,"FIXME: D=%u cannot activate (by active period), going to pause");
+                newState = DLVSTATE_PAUSED;
+                if (oldState == newState) return;
+                planTime = 0;
+            }
         } else {
             planTime = 0;
         }
@@ -283,7 +297,6 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         }
         DeliveryStats ds;
         activityLog_.getStats(ds);
-        ymd = msgTimeToYmd(now);
         int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                              ymd,
                              dlvStateToString(newState)[0],

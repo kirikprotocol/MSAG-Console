@@ -385,28 +385,6 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             break;
         }
 
-        /*
-        // FIXME: move this code to getNextMsg.
-        const timediff_type ae = info.getActivityPeriodEnd();
-        if ( ae >= 0 ) {
-            const timediff_type as = info.getActityPeriodStart();
-            const timediff_type ms = timediff_type(now % 86400);
-            if ( as < ae ) {
-                if (ms < as || ms > ae) {
-                    what = "out of active period";
-                    res = smsc::system::Status::RX_T_APPN;
-                    break;
-                }
-            } else {
-                if (ms < as && ms > ae) {
-                    what = "out of active period";
-                    res = smsc::system::Status::RX_T_APPN;
-                    break;
-                }
-            }
-        }
-         */
-
         // receive and register the seqnum
         do {
             seqNum = session_->getNextSeq();
