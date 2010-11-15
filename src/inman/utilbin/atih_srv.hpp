@@ -3,7 +3,9 @@
  * service of HLR.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_ATIH_SERVICE__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_ATIH_SERVICE__
 
 #include <map>
@@ -11,104 +13,115 @@
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
 #include "inman/inap/dispatcher.hpp"
-
+#include "inman/tests/AbonentInfo.hpp"
 #include "inman/utilbin/MAPUsrCfg.hpp"
 
 namespace smsc  {
 namespace inman {
 
+using smsc::inman::test::AbonentInfo;
+
 using smsc::inman::comp::atih::RequestedSubscription;
 using smsc::inman::comp::atih::ATSIRes;
-using smsc::inman::comp::atih::ATSIArg;
 
 using smsc::inman::inap::TCAPDispatcher;
+using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::MAPUsr_CFG;
 
 using smsc::inman::inap::atih::ATSIhandlerITF;
 using smsc::inman::inap::atih::MapATSIDlg;
 
-class ATCSIListener {
+class AT_CSIListenerIface {
+protected:
+  virtual ~AT_CSIListenerIface()
+  { }
+
 public:
-    virtual void onCSIresult(const std::string & subcr_addr, const GsmSCFinfo* scfInfo) = 0;
-    virtual void onCSIabort(const std::string &subcr_addr, RCHash ercode) = 0;
+  virtual void onCSIresult(const AbonentInfo & ab_info) = 0;
+  virtual void onCSIabort(const TonNpiAddress & subcr_addr, RCHash ercode) = 0;
 };
 
-class ATIInterrogator: ATSIhandlerITF {
+class ATIInterrogator : ATSIhandlerITF {
 public:
-    ATIInterrogator(TCSessionMA* pSession, ATCSIListener * csi_listener,
-                    Logger * uselog = NULL);
-    ~ATIInterrogator();
+  ATIInterrogator(TCSessionMA * pSession, AT_CSIListenerIface * csi_listener,
+                  Logger * uselog = NULL);
+  ~ATIInterrogator();
 
-    bool isActive(void);
-    //sets subscriber identity: IMSI or MSISDN addr
-    bool interrogate(const RequestedSubscription & req_cfg, const std::string &subcr_addr, bool imsi = false);
-    void cancel(void);
+  bool isActive(void);
+  //sets subscriber identity: IMSI or MSISDN addr
+  bool interrogate(const RequestedSubscription & req_cfg,
+                   const TonNpiAddress & subcr_adr);
+  void cancel(void);
 
 protected:
-    friend class smsc::inman::inap::atih::MapATSIDlg;
-    //ATSIhandlerITF interface
-    void onATSIResult(ATSIRes* arg);
-    //dialog finalization/error handling:
-    //if ercode != 0, no result has been got from MAP service,
-    void onEndATSI(RCHash ercode = 0);
-    //
-    inline void Awake(void) { _sync.notify(); }
+  friend class smsc::inman::inap::atih::MapATSIDlg;
+  // ---------------------------------------
+  // -- ATSIhandlerITF interface
+  // ---------------------------------------
+  virtual void onATSIResult(ATSIRes & res);
+  //dialog finalization/error handling:
+  //if ercode != 0, no result has been got from MAP service,
+  virtual void onEndATSI(RCHash ercode = 0);
+  //
+  virtual void Awake(void) { _sync.notify(); }
 
 private:
-    mutable EventMonitor  _sync;
-    volatile bool   _active;
-    TCSessionMA *   tcSesssion;
-    MapATSIDlg *    mapDlg;
-    GsmSCFinfo      scfInfo;
-    ATCSIListener * csiHdl;
-    std::string     subcrAddr;
-    Logger *        logger;
+  mutable EventMonitor  _sync;
+  volatile bool         _active;
+  TCSessionMA *         tcSesssion;
+  MapATSIDlg *          mapDlg;
+  AT_CSIListenerIface *  csiHdl;
+  RequestedSubscription _reqCfg;
+  AbonentInfo           _abnInfo;
+  Logger *              logger;
 
-    void rlseMapDialog(void);
+  void rlseMapDialog(void);
 };
 
 struct ServiceATIH_CFG {
-    MAPUsr_CFG      mapCfg;
-    ATCSIListener * client;
+  MAPUsr_CFG      mapCfg;
+  AT_CSIListenerIface * client;
 };
 
-class ServiceATIH: ATCSIListener {
+class ServiceATIH: AT_CSIListenerIface {
 public:
-    ServiceATIH(const ServiceATIH_CFG & in_cfg, Logger * uselog = NULL);
-    virtual ~ServiceATIH();
+  ServiceATIH(const ServiceATIH_CFG & in_cfg, Logger * uselog = NULL);
+  virtual ~ServiceATIH();
 
-    bool start();
-    void stop(bool do_wait = false);
+  bool start();
+  void stop(bool do_wait = false);
 
-    RequestedSubscription & getRequestCfg(void) { return _reqCfg; }
-    const RequestedSubscription & getRequestCfg(void) const { return _reqCfg; }
-    
-    //sets subscriber identity: IMSI or MSISDN addr
-    bool requestCSI(const std::string &subcr_addr, bool imsi = true);
+  RequestedSubscription & getRequestCfg(void) { return _reqCfg; }
+  const RequestedSubscription & getRequestCfg(void) const { return _reqCfg; }
+
+  //sets subscriber identity: MSISDN addr
+  bool requestCSI(const TonNpiAddress & subcr_addr);
 
 protected:
-    friend class ATIInterrogator;
-    //-- ATCSIListener interface
-    void onCSIresult(const std::string &subcr_addr, const GsmSCFinfo* scfInfo);
-    void onCSIabort(const std::string &subcr_addr, RCHash ercode);
+  friend class ATIInterrogator;
+  // -----------------------------------
+  // -- AT_CSIListenerIface interface
+  // -----------------------------------
+  virtual void onCSIresult(const AbonentInfo & ab_info);
+  virtual void onCSIabort(const TonNpiAddress & subcr_addr, RCHash ercode);
 
 private:
-    typedef std::map<std::string, ATIInterrogator *> IntrgtrMAP;
-    typedef std::list<ATIInterrogator *> IntrgtrLIST;
+  typedef std::map<TonNpiAddress, ATIInterrogator *> IntrgtrMAP;
+  typedef std::list<ATIInterrogator *> IntrgtrLIST;
 
-    bool getSession(void);
-    ATIInterrogator * newWorker(void);
+  bool getSession(void);
+  ATIInterrogator * newWorker(void);
 
-    mutable Mutex   _sync;
-    Logger*         logger;
-    const char *    _logId;
-    TCSessionMA *   mapSess;
-    TCAPDispatcher* disp;
-    volatile bool   running;
-    ServiceATIH_CFG _cfg;
-    IntrgtrMAP      workers;
-    IntrgtrLIST     pool;
-    RequestedSubscription _reqCfg;
+  mutable Mutex     _sync;
+  Logger *          logger;
+  const char *      _logId;
+  TCSessionMA *     mapSess;
+  TCAPDispatcher *  disp;
+  volatile bool     running;
+  ServiceATIH_CFG   _cfg;
+  IntrgtrMAP        workers;
+  IntrgtrLIST       pool;
+  RequestedSubscription _reqCfg;
 };
 
 

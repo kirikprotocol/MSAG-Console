@@ -8,13 +8,15 @@
 #define __SMSC_INMAN_ERRORS__
 
 #include "util/URCdb/URCRegistry.hpp"
-using smsc::util::URCSpacePTR;
 
 namespace smsc {
 namespace inman {
 
+using smsc::util::URCSpacePTR;
+
 struct INManErrorId {
-    enum Codes {
+    enum Code_e {
+        noErr = 0,
         protocolGeneralError = 1,
         protocolInvalidData,
         cfgSpecific,

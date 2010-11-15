@@ -1,5 +1,7 @@
 #ifndef __SMSC_INMAN_VERSION__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_VERSION__
 
 /* -- automatically generated BUILD number and date -- */
@@ -8,8 +10,8 @@
 
 /* -- NOTE: these defines are set by developers -- */
 #define INMAN_VER_MAJOR     0    //major verison
-#define INMAN_VER_MINOR     7    //minor version
-#define INMAN_VER_FIX       12   //bug fix version
+#define INMAN_VER_MINOR     8    //minor version
+#define INMAN_VER_FIX       0    //bug fix version
 /* -- ----------------------------------------- -- */
 
 #define INMAN_VENDOR        "Eyeline"

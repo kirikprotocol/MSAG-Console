@@ -2,26 +2,27 @@
  * Simple console application testing MAP Send Routing Info (Call Handling)
  * service of HLR.
  * ************************************************************************** */
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifndef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/common/console.hpp"
 using smsc::inman::common::Console;
 
-#include "inman/GsmSCFInfo.hpp"
-using smsc::inman::GsmSCFinfo;
-
 #include "inman/utilbin/URCInitMAP.hpp"
 #include "inman/utilbin/chsri_srv.hpp"
-using smsc::inman::SRI_CSIListener;
+using smsc::inman::SRI_CSIListenerIface;
 using smsc::inman::ServiceCHSRI;
 using smsc::inman::ServiceCHSRI_CFG;
 using smsc::inman::inap::MAPUsrCfgReader;
 
-#include "inman/utilbin/AbonentsDb.hpp"
-using smsc::inman::AbonentsDb;
-using smsc::inman::AbonentInfo;
+#include "inman/tests/AbonentsDB.hpp"
+using smsc::inman::AbonentContractInfo;
+using smsc::inman::test::AbonentsDB;
+using smsc::inman::test::AbonentInfo;
+using smsc::inman::test::AbonentPreset;
+
+using smsc::util::IMSIString;
 
 #include "util/config/XCFManager.hpp"
 using smsc::util::config::XCFManager;
@@ -33,53 +34,64 @@ static char         _runService = 0;
 static ServiceCHSRI* g_pService = 0;
 
 
-extern "C" static void sighandler(int signal)
+extern "C" void sighandler(int signal)
 {
     _runService = 0;
 }
 
 //GLOBAL:
-AbonentsDb     abnData;
+smsc::inman::test::AbonentsDB * _abonentsData;
+
+static const AbonentPreset  _abonents[] = {
+  //Nezhinsky phone(prepaid):
+    AbonentPreset(AbonentContractInfo::abtPrepaid, ".1.1.79139343290", "250013900405871")
+  //tst phone (prepaid):
+  , AbonentPreset(AbonentContractInfo::abtPrepaid, ".1.1.79133821781", "250013903368782")
+  //Ryzhkov phone(postpaid):
+  , AbonentPreset(AbonentContractInfo::abtPostpaid, ".1.1.79139859489", "250013901464251")
+  //Stupnik phone(postpaid):
+  , AbonentPreset(AbonentContractInfo::abtPostpaid, ".1.1.79139033669", "250013901464251")
+};
+#define PRE_ABONENTS_NUM (sizeof(_abonents)/sizeof(AbonentPreset))
 
 
-class CHSRIClient: public SRI_CSIListener {
+class CHSRIClient: public SRI_CSIListenerIface {
 private:
-    FILE * outStream;
+  AbonentsDB &  _abnDb;
+  FILE *        _outStream;
 
 public:
-    CHSRIClient(FILE * out_stream)
-        : outStream(out_stream)
-    { }
-    ~CHSRIClient()
-    { }
-    //-- SRI_CSIListener interface
-    void onCSIresult(const std::string &subcr_addr,
-                     const char * subcr_imsi, const GsmSCFinfo* scfInfo)
-    {
-        unsigned ab_id = abnData.lookUp(subcr_addr);
-        if (ab_id) {
-            abnData.setAbnInfo(ab_id, scfInfo, subcr_imsi);
-            fprintf(outStream, "\n");
-            abnData.printAbnInfo(outStream, ab_id);
-        } else
-            fprintf(outStream, "ERR: CSI result for unregistered subscriber %s",
-                    subcr_addr.c_str());
-        return;
-    }
-    void onCSIabort(const std::string &subcr_addr, RCHash ercode)
-    {
-        fprintf(outStream, "ERR: CSI request for subscriber %s failed: code %u, %s\n",
-                subcr_addr.c_str(), ercode, URCRegistry::explainHash(ercode).c_str());
-    }
+  explicit CHSRIClient(AbonentsDB & abn_db, FILE * out_stream)
+  : _abnDb(abn_db), _outStream(out_stream)
+  { }
+  ~CHSRIClient()
+  { }
+  // ---------------------------------------
+  // -- SRI_CSIListenerIface interface
+  // ---------------------------------------
+  virtual void onCSIresult(const AbonentInfo & ab_info)
+  {
+    unsigned ab_id = _abnDb.searchAbn(ab_info.msIsdn);
+    if (ab_id) {
+      _abnDb.setAbnInfo(ab_id, ab_info);
+      _abnDb.printAbnInfo(_outStream, ab_id);
+    } else
+      fprintf(_outStream, "ERR: CSI result for unregistered subscriber %s",
+              ab_info.msIsdn.toString().c_str());
+  }
+  void onCSIabort(const TonNpiAddress & subcr_addr, RCHash ercode)
+  {
+    fprintf(_outStream, "ERR: CSI request for subscriber %s failed: code %u, %s\n",
+            subcr_addr.toString().c_str(), ercode, URCRegistry::explainHash(ercode).c_str());
+  }
 };
 
-#define NOT_IMSI(addr) ((addr).typeOfNumber || ((addr).numPlanInd != 1))
 /* ************************************************************************** *
  * Console commands:
  * ************************************************************************** */
 void cmd_config(Console&, const std::vector<std::string> &args)
 {
-    abnData.printAbnInfo(stdout, 0, 0);
+  _abonentsData->printAbonents(stdout, 0, 0);
 }
 
 
@@ -87,139 +99,138 @@ void cmd_config(Console&, const std::vector<std::string> &args)
 static const char hlp_set_abn[] = "USAGE: set_abn ['.1.1.signals' | 'isdn_number'] ['imsi_number']\n";
 void cmd_set_abn(Console&, const std::vector<std::string> &args)
 {
-    if (args.size() < 2) {
-        fprintf(stdout, hlp_set_abn);
-        return;
-    }
-    TonNpiAddress   adr[2]; //msisdn, imsi
+  if (args.size() < 2) {
+    fputs(hlp_set_abn, stdout);
+    return;
+  }
+  TonNpiAddress   abIsdn;
+  IMSIString      abImsi;
 
-    if (args.size() >= 2) { //msisdn
-        if (!adr[0].fromText(args[1].c_str()) || !adr[0].interISDN()) {
-            fprintf(stdout, "ERR: bad MSISDN");
-            fprintf(stdout, hlp_set_abn);
-            return;
-        }
+  if (args.size() >= 2) { //msisdn
+    if (!abIsdn.fromText(args[1].c_str()) || !abIsdn.interISDN()) {
+      fprintf(stdout, "ERR: bad MSISDN \'%s\'", args[1].c_str());
+      fputs(hlp_set_abn, stdout);
+      return;
     }
-    if (args.size() >= 3) { //imsi: (isdn, unknown)
-        if (!adr[1].fromText(args[2].c_str()) || NOT_IMSI(adr[1])) {
-            fprintf(stdout, "ERR: bad IMSI");
-            fprintf(stdout, hlp_set_abn);
-            return;
-        }
+  }
+  if (args.size() >= 3) { //imsi: (isdn, unknown)
+    if (!abImsi.fromText(args[2].c_str())) {
+      fprintf(stdout, "ERR: bad IMSI \'%s\'", args[2].c_str());
+      fputs(hlp_set_abn, stdout);
+      return;
     }
-    abnData.addAbonent(&adr[0], adr[1].signals);
+  }
+  _abonentsData->setAbonent(abIsdn, AbonentContractInfo::abtUnknown,
+                           abImsi.empty() ? NULL : abImsi.c_str());
 }
 
 //requests SCF info via O_CSI
 //> o_csi address
 // where addres either 'abn.N' or '.1.1.signals' or 'isdn_number'
-static const char hlp_o_csi[] = "USAGE: o_csi [abn.NN | '.1.1.signals' | 'isdn_number']\n";
-void cmd_o_csi(Console&, const std::vector<std::string> &args)
+static const char hlp_get_csi[] = "USAGE: get_csi [abn.NN | '.1.1.signals' | 'isdn_number']\n";
+void cmd_get_csi(Console&, const std::vector<std::string> &args)
 {
-    if (args.size() < 2) {
-        fprintf(stdout, hlp_o_csi);
-        return;
-    }
-    std::string subscr;
-    unsigned abId = 0;
+  if (args.size() < 2) {
+    fputs(hlp_get_csi, stdout);
+    return;
+  }
+  TonNpiAddress sbscrIsdn;
+  unsigned      abId = 0;
 
-    const char * s_abn = args[1].c_str();
-    if (!strncmp(s_abn, "abn.", 4)) {       //abonent id
-        abId = (unsigned)atoi(s_abn + 4);
-        if (!abId || abId > abnData.getMaxAbId()) {
-            fprintf(stdout, "ERR:  %s abonent Id %s\n", !abId ? "bad" : "unknown", s_abn);
-            fprintf(stdout, hlp_o_csi);
-            return;
-        }
-        AbonentInfo ab_inf = *abnData.getAbnInfo(abId);
-        subscr = ab_inf.addr.toString();
-    } else if (!strncmp(s_abn, ".1.1.", 5)) { //msisdn
-        TonNpiAddress addr;
-        if (!addr.fromText(s_abn)) {
-            fprintf(stdout, "ERR:  bad MSISDN %s\n", s_abn);
-            fprintf(stdout, hlp_o_csi);
-            return;
-        }
-        abId = abnData.addAbonent(&addr, NULL);
-        subscr = addr.toString();
-    } else {                                //isdn unknown
-        TonNpiAddress addr;
-        if (!addr.fromText(s_abn) || !addr.interISDN()) {
-            fprintf(stdout, "ERR:  bad MSISDN: %s\n", s_abn);
-            fprintf(stdout, hlp_o_csi);
-            return;
-        }
-        abId = abnData.addAbonent(&addr, NULL);
-        subscr = addr.toString();
+  const char * s_abn = args[1].c_str();
+  if (!strncmp(s_abn, "abn.", 4)) {       //abn.NN
+    abId = (unsigned)atoi(s_abn + 4);
+    if (!abId || (abId > _abonentsData->getMaxAbId())) {
+      fprintf(stdout, "ERR: %s abonent Id %s\n", !abId ? "bad" : "unknown", s_abn);
+      fputs(hlp_get_csi, stdout);
+      return;
     }
-    fprintf(stdout, "[o_csi] abn.%u: %s\n",  abId, subscr.c_str());
-    if (!g_pService->requestCSI(subscr))
-        fprintf(stdout, "[o_csi] failed to request CSI");
+    AbonentInfo * abInfo = _abonentsData->getAbnInfo(abId);  //cann't be NULL here!
+    sbscrIsdn = abInfo->msIsdn;
+    /* */
+  } else if ((s_abn[0] == '+') || !strncmp(s_abn, ".1.1.", 5)) { //msisdn
+    if (!sbscrIsdn.fromText(s_abn)) {
+      fprintf(stdout, "ERR:  bad MSISDN \'%s\'\n", s_abn);
+      fputs(hlp_get_csi, stdout);
+      return;
+    }
+    abId = _abonentsData->setAbonent(sbscrIsdn);
+    /* */
+  } else {                                //isdn unknown
+    fprintf(stdout, "ERR:  bad MSISDN \'%s\'\n", s_abn);
+    fputs(hlp_get_csi, stdout);
+    return;
+  }
+  fprintf(stdout, "[get_csi] abn.%u: %s\n",  abId, sbscrIsdn.toString().c_str());
+  if (!g_pService->requestCSI(sbscrIsdn))
+    fprintf(stdout, "[get_csi] failed to request CSI");
 }
 
 
 static const char * const _nmTst = "CH-SRI";
 int main(int argc, char** argv)
 {
-    int     rval = 0;
-    const char *  cfgFile = "config.maptst.xml";
+  int     rval = 0;
+  const char *  cfgFile = "config.maptst.xml";
 
-    tzset();
-    URCRegistryInit4MAP();
-    Logger::Init();
-    Logger * rootLogger = Logger::getInstance("smsc.inman");
+  tzset();
+  URCRegistryInit4MAP();
+  Logger::Init();
+  Logger * rootLogger = Logger::getInstance("smsc.inman");
 
-    smsc_log_info(rootLogger,"***************************");
-    smsc_log_info(rootLogger,"* SIBINCO MAP %s TEST *", _nmTst);
-    smsc_log_info(rootLogger,"***************************");
-    if (argc > 1)
-        cfgFile = argv[1];
-    smsc_log_info(rootLogger,"* Config file: %s", cfgFile);
-    smsc_log_info(rootLogger,"******************************");
+  smsc_log_info(rootLogger,"***************************");
+  smsc_log_info(rootLogger,"* SIBINCO MAP %s TEST *", _nmTst);
+  smsc_log_info(rootLogger,"***************************");
+  if (argc > 1)
+    cfgFile = argv[1];
+  smsc_log_info(rootLogger,"* Config file: %s", cfgFile);
+  smsc_log_info(rootLogger,"******************************");
 
-    ServiceCHSRI_CFG  tstCfg;
-    try {
-        std::auto_ptr<Config> config(XCFManager::getInstance().getConfig(cfgFile)); //throws
-        MAPUsrCfgReader parser(_nmTst, rootLogger);
-        parser.readConfig(*config.get()); //throws
-        tstCfg.mapCfg = *parser.getConfig();
-    } catch (const ConfigException & exc) {
-        smsc_log_error(rootLogger, "%s: %s", _nmTst, exc.what());
-        smsc_log_error(rootLogger, "%s: Exiting!", _nmTst);
-        exit(-1);
+  ServiceCHSRI_CFG  tstCfg;
+  try {
+    std::auto_ptr<Config> config(XCFManager::getInstance().getConfig(cfgFile)); //throws
+    MAPUsrCfgReader parser(_nmTst, rootLogger);
+    parser.readConfig(*config.get()); //throws
+    tstCfg.mapCfg = *parser.getConfig();
+  } catch (const ConfigException & exc) {
+    smsc_log_error(rootLogger, "%s: %s", _nmTst, exc.what());
+    smsc_log_error(rootLogger, "%s: Exiting!", _nmTst);
+    exit(-1);
+  }
+  _abonentsData = AbonentsDB::getInstance();
+  _abonentsData->Init((unsigned)PRE_ABONENTS_NUM, _abonents);
+
+  CHSRIClient  sriClient(*_abonentsData, stdout);
+  tstCfg.client = &sriClient;
+
+  try {
+    g_pService = new ServiceCHSRI(tstCfg, rootLogger);
+    Console console;
+    console.addItem("get_csi", cmd_get_csi);
+    console.addItem("config", cmd_config);
+    console.addItem("set_abn", cmd_set_abn);
+
+    _runService = 1;
+    if (g_pService->start()) {
+      //handle SIGTERM only in main thread
+      sigset(SIGTERM, sighandler);
+    } else {
+      smsc_log_fatal(rootLogger, "%s: SRISrv startup failure. Exiting.", _nmTst);
+      _runService = 0;
+      rval = 1;
     }
-    abnData.Init();
-    CHSRIClient  sriClient(stdout);
-    tstCfg.client = &sriClient;
+    if (_runService)
+      console.run("SRISrv>");
+    g_pService->stop();
 
-    try {
-        g_pService = new ServiceCHSRI(tstCfg, rootLogger);
-        Console console;
-        console.addItem("o_csi", cmd_o_csi);
-        console.addItem("config", cmd_config);
-        console.addItem("set_abn", cmd_set_abn);
-
-        _runService = 1;
-        if (g_pService->start()) {
-            //handle SIGTERM only in main thread
-            sigset(SIGTERM, sighandler);
-        } else {
-            smsc_log_fatal(rootLogger, "%s: SRISrv startup failure. Exiting.", _nmTst);
-            _runService = 0;
-            rval = 1;
-        }
-        if (_runService)
-            console.run("SRISrv>");
-        g_pService->stop();
-
-    } catch(const std::exception& error) {
-        smsc_log_fatal(rootLogger, "%s: %s", _nmTst, error.what());
-        fprintf(stdout, "%s: Fatal error: %s\n", _nmTst, error.what());
-        rval = 1;
-    }
-    if (g_pService)
-        delete g_pService;
-    smsc_log_info(rootLogger, "%s TEST shutdown complete", _nmTst);
-    return rval;
+  } catch (const std::exception& error) {
+    smsc_log_fatal(rootLogger, "%s: %s", _nmTst, error.what());
+    fprintf(stdout, "%s: Fatal error: %s\n", _nmTst, error.what());
+    rval = 1;
+  }
+  if (g_pService)
+    delete g_pService;
+  smsc_log_info(rootLogger, "%s TEST shutdown complete", _nmTst);
+  return rval;
 }
 
