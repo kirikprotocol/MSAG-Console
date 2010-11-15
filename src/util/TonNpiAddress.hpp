@@ -130,6 +130,16 @@ struct TonNpiAddress {
     {
       return !(*this == adr2);
     }
+
+    bool operator < (const TonNpiAddress & cmp_obj) const
+    {
+      if (typeOfNumber == cmp_obj.typeOfNumber) {
+        if (numPlanInd == cmp_obj.numPlanInd)
+          return (strcmp(signals, cmp_obj.signals) < 0);
+        return (numPlanInd < cmp_obj.numPlanInd);
+      }
+      return (typeOfNumber < cmp_obj.typeOfNumber);
+    }
 };
 
 
