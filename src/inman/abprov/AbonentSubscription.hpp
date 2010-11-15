@@ -8,6 +8,7 @@
 #define SMSC_INMAN_ABONENT_SUBSCRIPTION_HPP
 
 #include <string>
+#include <time.h>
 
 #include "inman/abprov/CSIRecordsMap.hpp"
 #include "inman/AbntContract.hpp"
