@@ -7,7 +7,7 @@
 #endif
 #define __SMSC_INMAN_CDR_TYPES
 
-#include "util/TonNpiAddress.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc  {
 namespace inman {

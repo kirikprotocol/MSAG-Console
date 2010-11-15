@@ -7,6 +7,8 @@
 #endif
 #define __SMSC_INMAN_GSMSCF_HPP
 
+#include <stdio.h>
+
 #include "util/TonNpiAddress.hpp"
 
 namespace smsc {
