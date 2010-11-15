@@ -278,6 +278,16 @@ void DcpServer::handle(const messages::UserAuth& inmsg)
   }
   {
     sync::MutexGuard mg(clntsMon);
+    UsersMap::iterator it=usersMap.find(inmsg.getUserId());
+    if(it!=usersMap.end())
+    {
+      it->second.connCount++;
+      //if(it->second.connCount>)
+    }else
+    {
+      it=usersMap.insert(UsersMap::value_type(inmsg.getUserId(),UserConnInfo(1))).first;
+    }
+    smsc_log_info(log,"new connect by userId=%s, connId=%s, connCount=%d",inmsg.getUserId().c_str(),inmsg.messageGetConnId(),it->second.connCount);
     getSocketByConnId(connId)->setAuthorized(true);
     getSocketByConnId(connId)->setUserInfo(ui);
   }

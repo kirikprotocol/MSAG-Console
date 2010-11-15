@@ -64,7 +64,7 @@ protected:
   DcpServerProto proto;
 
   struct UserConnInfo{
-    UserConnInfo():connCount(0){}
+    UserConnInfo(int argConnCount=0):connCount(argConnCount){}
     int connCount;
   };
 
