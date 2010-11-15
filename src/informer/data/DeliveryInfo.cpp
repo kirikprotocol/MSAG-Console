@@ -87,10 +87,12 @@ timediff_type DeliveryInfo::nextActiveTime( int tm_wday, msgtime_type now ) cons
     timediff_type ms = timediff_type(now % daynight);
     timediff_type res = 0;
     const char* what = "";
+    timediff_type fixedAE = activePeriodEnd_ - 60; // one minute less
+    if (fixedAE<0) { fixedAE += daynight; }
     for (;;) {
 
         smsc_log_debug(log_,"D=%u acttime wday=%u ms=%u as=%d ae=%d res=%u",
-                       dlvId_, tm_wday, ms, activePeriodStart_, activePeriodEnd_, res );
+                       dlvId_, tm_wday, ms, activePeriodStart_, fixedAE, res );
 
         if ((weekBits[tm_wday] & activeWeekDays_)!=0) {
             // day is allowed
@@ -101,7 +103,7 @@ timediff_type DeliveryInfo::nextActiveTime( int tm_wday, msgtime_type now ) cons
             }
 
             if (ms<activePeriodStart_) {
-                if (activePeriodEnd_ < activePeriodStart_ && ms < activePeriodEnd_ ) {
+                if (fixedAE < activePeriodStart_ && ms < fixedAE ) {
                     what = "before invend";
                     break;
                 } else {
@@ -109,7 +111,7 @@ timediff_type DeliveryInfo::nextActiveTime( int tm_wday, msgtime_type now ) cons
                     res += activePeriodStart_ - ms;
                     break;
                 }
-            } else if (activePeriodEnd_ < activePeriodStart_) {
+            } else if (fixedAE < activePeriodStart_) {
                 what = "after invstart";
                 break;
             }
@@ -134,12 +136,14 @@ timediff_type DeliveryInfo::nextStopTime( int tm_wday, msgtime_type now ) const
         return -1;
     }
     timediff_type ms = timediff_type(now % daynight);
+    timediff_type fixedAE = activePeriodEnd_ - 60;
+    if (fixedAE<0) { fixedAE += daynight; }
     timediff_type res = 0;
     const char* what = "";
     for (;;) {
 
         smsc_log_debug(log_,"D=%u stoptime wday=%u ms=%u as=%d ae=%d res=%u",
-                       dlvId_, tm_wday, ms, activePeriodStart_, activePeriodEnd_, res );
+                       dlvId_, tm_wday, ms, activePeriodStart_, fixedAE, res );
 
         if ((weekBits[tm_wday] & activeWeekDays_)==0) {
             // day is not allowed
@@ -148,12 +152,12 @@ timediff_type DeliveryInfo::nextStopTime( int tm_wday, msgtime_type now ) const
         }
         // day is allowed
         if (activePeriodStart_>=0) {
-            if (ms < activePeriodEnd_) {
-                if (activePeriodStart_<activePeriodEnd_ && ms < activePeriodStart_) {
+            if (ms < fixedAE) {
+                if (activePeriodStart_<fixedAE && ms < activePeriodStart_) {
                     what = "before start";
                     break;
                 } else {
-                    res += activePeriodEnd_ - ms;
+                    res += fixedAE - ms;
                     what = "before end";
                     break;
                 }
@@ -215,6 +219,19 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if ( ( activePeriodStart < 0 && activePeriodEnd >= 0 ) ||
          ( activePeriodStart >= 0 && activePeriodEnd < 0 ) ) {
         throw InfosmeException(EXC_CONFIG,"invalid active period start/end");
+    } else {
+        activePeriodStart %= daynight;
+        activePeriodEnd %= daynight;
+        timediff_type diff = activePeriodEnd - activePeriodStart;
+        if (diff < 0) diff += daynight;
+        if (diff <= 60) {
+            throw InfosmeException(EXC_CONFIG,"too small active period AS=%d AE=%d",
+                                   activePeriodStart, activePeriodEnd);
+        }
+        if (diff >= daynight+60) {
+            throw InfosmeException(EXC_CONFIG,"too big active period AS=%d AE=%d",
+                                   activePeriodStart, activePeriodEnd);
+        }
     }
 
     if ( sourceAddress == 0 ) {
