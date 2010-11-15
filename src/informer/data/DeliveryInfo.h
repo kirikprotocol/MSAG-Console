@@ -5,6 +5,7 @@
 #include "informer/io/Typedefs.h"
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
+#include "RetryString.h"
 
 namespace eyeline {
 namespace informer {
@@ -119,6 +120,9 @@ public:
 
     // if retry on fail is requested.
     bool wantRetryOnFail() const { return data_.retryOnFail; }
+    timediff_type getRetryInterval( uint16_t retryCount ) const {
+        return retryPolicy_.getRetryInterval(retryCount);
+    }
 
     bool isReplaceIfPresent() const { return data_.replaceMessage; }
 
@@ -151,6 +155,7 @@ private:
     timediff_type         validityPeriod_;
     int                   activeWeekDays_;
     personid_type         sourceAddress_;
+    RetryString           retryPolicy_;
 };
 
 } // informer

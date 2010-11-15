@@ -281,9 +281,17 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
 
     timediff_type retryDelay = -1;
     if ( info.wantRetryOnFail() ) {
-        retryDelay = policy.getRetryInterval( info.isTransactional(),
-                                              smppState,
-                                              iter->msg.retryCount );
+        retryDelay = info.getRetryInterval(iter->msg.retryCount);
+        if (retryDelay!=-1) {
+            timediff_type smscrd = policy.getRetryInterval( info.isTransactional(),
+                                                            smppState,
+                                                            iter->msg.retryCount );
+            if (smscrd==-1) {
+                retryDelay = smscrd;
+            } else if (smscrd > retryDelay) {
+                retryDelay = smscrd;
+            }
+        }
     }
 
     if (retryDelay == 0) {

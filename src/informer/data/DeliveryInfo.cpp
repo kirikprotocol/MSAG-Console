@@ -187,6 +187,8 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     timediff_type validityPeriod = validityPeriod_;
     int activeWeekDays = activeWeekDays_;
     personid_type sourceAddress = sourceAddress_;
+    RetryString retryPolicy;
+    bool newRetryPolicy = false;
 
     if (!old && !data.startDate.empty()) { // calculate only at start
         startDate = parseDateTime(data.startDate.c_str());
@@ -207,6 +209,10 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         validityPeriod = parseTime(data.validityPeriod.c_str());
     }
     // FIXME: update retry policy: data.retryPolicy
+    if (!old || old->retryPolicy != data.retryPolicy) {
+        retryPolicy.init(data.retryPolicy.c_str());
+        newRetryPolicy = true;
+    }
     if ((!old || old->sourceAddress != data.sourceAddress) && !data.sourceAddress.empty()) {
         sourceAddress = parseAddress(data.sourceAddress.c_str());
     }
@@ -248,6 +254,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (validityPeriod != -1) { validityPeriod_ = validityPeriod; }
     if (activeWeekDays != -1) { activeWeekDays_ = activeWeekDays; }
     if (sourceAddress != 0) { sourceAddress_ = sourceAddress; }
+    if (newRetryPolicy) { retryPolicy_ = retryPolicy; }
     data_ = data;
     /*
     if (startDate_ == 0) {

@@ -109,7 +109,11 @@ void DeliveryImpl::readDeliveryInfoData( const CommonSettings& cs,
         }
         data.owner = config.getString("owner");
         data.retryOnFail = config.getBool("retryOnFail");
-        data.retryPolicy = config.getString("retryPolicy");
+        try {
+            data.retryPolicy = config.getString("retryPolicy");
+        } catch (std::exception&) {
+            data.retryPolicy = "";
+        }
         data.replaceMessage = config.getBool("replaceMessage");
         data.svcType = config.getString("svcType");
         data.userData = config.getString("userData");
@@ -190,8 +194,8 @@ DlvState DeliveryImpl::readState( const CommonSettings& cs,
     ulonglong ymdTime;
     unsigned offset;
     int shift = 0;
-    sscanf(ptr,"%c,%llu,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u%n",
-           &cstate,&ymdTime,
+    sscanf(ptr,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u%n",
+           &ymdTime, &cstate,
            &offset,
            &ds.totalMessages, &ds.procMessages, &ds.sentMessages,
            &ds.retryMessages, &ds.dlvdMessages, &ds.failedMessages,
