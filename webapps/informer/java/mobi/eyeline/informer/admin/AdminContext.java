@@ -148,7 +148,7 @@ public class AdminContext {
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
 
-      deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(new File(is.getStatusLogsDir()),fileSystem);
+      deliveryNotificationsProducer  = new DeliveryNotificationsProducer(new File(is.getStatusLogsDir()),fileSystem);
       //todo add listeners to deliveryNotificationsProducer
 
       deliveryNotificationsProducer.start();
