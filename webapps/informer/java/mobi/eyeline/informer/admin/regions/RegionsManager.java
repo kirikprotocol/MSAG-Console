@@ -26,10 +26,11 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Добавляет новый регион
-   * @param region регион
+   * @param r регион
    * @throws AdminException ошибка сохранения
    */
-  public void addRegion(final Region region) throws AdminException{
+  public void addRegion(final Region r) throws AdminException{
+    final Region region = r.cloneRegion();
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
         settings.addRegion(region);
@@ -42,10 +43,11 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Обновляет существующий регион
-   * @param region регион
+   * @param r регион
    * @throws AdminException ошибка сохранения
    */
-  public void updateRegion(final Region region) throws AdminException{
+  public void updateRegion(final Region r) throws AdminException{
+    final Region region = r.cloneRegion();
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
         settings.updateRegion(region);

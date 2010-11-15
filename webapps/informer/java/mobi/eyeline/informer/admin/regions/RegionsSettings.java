@@ -78,8 +78,7 @@ class RegionsSettings {
 
 
   Region getRegion(Integer id) {
-    Region r = regions.get(id);
-    return r == null ? null : r.cloneRegion();
+    return regions.get(id);
   }
 
   Region getRegionByAddress(Address address) {
