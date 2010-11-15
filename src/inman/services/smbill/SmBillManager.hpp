@@ -25,12 +25,18 @@ namespace smbill {
 using smsc::inman::INManErrorId;
 using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::cache::AbonentCacheITF;
+
 using smsc::inman::iapmgr::AbonentPolicy;
+using smsc::inman::iapmgr::AbonentPolicyName_t;
+using smsc::inman::iapmgr::IAPManagerITF;
+
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::SerializablePacketAC;
 using smsc::inman::tcpsrv::ConnectManagerT;
+
 using smsc::core::timers::TimeoutHDL;
 using smsc::util::TaskSchedulerFactoryITF;
+
 using smsc::inman::inap::TCAPDispatcherITF;
 
 
@@ -41,20 +47,22 @@ struct SmBillingCFG {
     TimeoutHDL      abtTimeout;     //maximum timeout on abonent type requets,
                                     //(HLR & DB interaction), on expiration billing
                                     //continues in CDR mode 
-    const AbonentPolicy *   iaPol;  // 
+    AbonentPolicyName_t     policyNm;   //name of default AbonenPolicy
+    const IAPManagerITF *   iapMgr;
     AbonentCacheITF *       abCache;
     TCAPDispatcherITF *     tcDisp;
     TaskSchedulerFactoryITF * schedMgr;
     std::auto_ptr<InBillingFileStorage> bfs; //CDR files rolling storage
 
     SmBillingCFG() : prm(new SmBillParams())
-        , iaPol(NULL), abCache(NULL), schedMgr(NULL), tcDisp(NULL)
+      , iapMgr(NULL), abCache(NULL), tcDisp(NULL), schedMgr(NULL)
     { }
 
     SmBillingCFG(SmBillingXCFG & use_xcfg)
-        : prm(use_xcfg.prm.release())
-        , maxTimeout(use_xcfg.maxTimeout), abtTimeout(use_xcfg.abtTimeout)
-        , iaPol(NULL), abCache(NULL), schedMgr(NULL), tcDisp(NULL)
+      : prm(use_xcfg.prm.release())
+      , maxTimeout(use_xcfg.maxTimeout), abtTimeout(use_xcfg.abtTimeout)
+      , policyNm(use_xcfg.policyNm.c_str())
+      , iapMgr(NULL), abCache(NULL), tcDisp(NULL), schedMgr(NULL)
     { }
 };
 
@@ -63,7 +71,7 @@ protected:
     unsigned _denyCnt;
     //Composes and sends ChargeSmsResult packet
     //returns -1 on error, or number of total bytes sent
-    int denyCharging(unsigned dlg_id, INManErrorId::Codes use_error);
+    int denyCharging(unsigned dlg_id, INManErrorId::Code_e use_error);
 
 public: 
     SmBillManager(const SmBillingCFG & cfg, unsigned cm_id,

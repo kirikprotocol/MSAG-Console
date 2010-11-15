@@ -2,7 +2,9 @@
  * Abonent detector service producer.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_ABNTDETECTOR_PRODUCER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_ABNTDETECTOR_PRODUCER_HPP
 
 #include "inman/services/abdtcr/ICSAbntDtcr.hpp"

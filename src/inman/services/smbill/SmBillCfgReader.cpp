@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/services/smbill/SmBillCfgReader.hpp"
 
@@ -108,8 +108,7 @@ ICSrvCfgReaderAC::CfgState
   smsc_log_info(logger, "  abonentTypeRequest: %s%s", _abReq[icsCfg->prm->cntrReq],
                 !cstr ? " (default)":"");
 
-  if ((icsCfg->prm->cntrReq == ChargeParm::reqAlways)
-      || icsCfg->prm->mo_billMode.useIN() || icsCfg->prm->mt_billMode.useIN()) {
+  if (icsCfg->prm->needIAProvider()) {
     //abonent contract determination policy is required
     cstr = NULL;
     try { cstr = cfgSec.getString("abonentPolicy");
@@ -117,8 +116,8 @@ ICSrvCfgReaderAC::CfgState
     if (!cstr || !cstr[0])
       throw ConfigException("abonent contract determination policy is not set!");
     smsc_log_info(logger, "  using abonent policy %s", cstr);
-    icsCfg->prm->policyNm = cstr;
-    icsDeps.insert(ICSIdent::icsIdIAPManager, icsCfg->prm->policyNm);
+    icsCfg->policyNm = cstr;
+    icsDeps.insert(ICSIdent::icsIdIAPManager, icsCfg->policyNm);
 
     tmo = 0;    //abtTimeout
     try { tmo = (uint32_t)cfgSec.getInt("abonentTypeTimeout");
@@ -328,8 +327,6 @@ void ICSSmBillingCfgReader::readBillingModes(XConfigView & cfg)
   if (msgs->empty())
     throw ConfigException("no billing modes set");
 
-  uint32_t tmo = 0;
-  char * cstr = NULL;
   for (CStrSet::iterator sit = msgs->begin(); sit != msgs->end(); ++sit) {
     std::auto_ptr<XConfigView> curMsg(bmCfg->getSubConfig(sit->c_str()));
     if (!strcmp(_MSGtypes[ChargeParm::msgSMS], sit->c_str()))

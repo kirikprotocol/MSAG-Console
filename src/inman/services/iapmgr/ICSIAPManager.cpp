@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static const char ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/services/iapmgr/ICSIAPManager.hpp"
 
@@ -14,20 +14,23 @@ namespace iapmgr {
 //Initializes service verifying that all dependent services are inited
 ICServiceAC::RCode ICSIAPManager::_icsInit(void)
 {
+  //build address pools registry
+  if (!_cfg->poolsReg.Count())
+    _cfg->initPoolsRegistry();
+
   //initailize all required IAProviders and store their interfaces
   IAPrvdsRegistry::const_iterator it = _cfg->prvdReg->begin();
   for (; it != _cfg->prvdReg->end(); ++it) {
     ICServiceAC * pSrv = _icsHost->getICService(it.pValue()->_icsUId);
     if (!pSrv || (pSrv->icsState() < ICServiceAC::icsStInited))
       return ICServiceAC::icsRcError;
-    IAProviderITF * iface = (IAProviderITF *)(pSrv->Interface());
+    IAProviderAC * iface = (IAProviderAC *)(pSrv->Interface());
     it.pValue()->_iface = iface;
-    smsc_log_info(logger, "%s: AbonentProvider '%s': type %s, ident: %s, ability: %s",
-                  _logId, it->first.c_str(), IAProviderITF::nmType(iface->type()),
-                  iface->ident(), IAProviderITF::nmAbility(iface->ability()));
+    smsc_log_info(logger, "%s: AbonentProvider '%s': type %s",
+                  _logId, it->first.c_str(), iface->getProperty().toString().c_str());
   }
   //bind IAProviders and associated policies
-  return  _cfg->polReg.Init(*(_cfg->prvdReg.get())) ?
+  return  _cfg->policiesReg.bindProviders(*(_cfg->prvdReg.get())) ?
             ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
 }
 

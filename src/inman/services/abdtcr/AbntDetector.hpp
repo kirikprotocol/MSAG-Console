@@ -5,7 +5,9 @@
  * 2) determination of IN platform and configuring its dialog parameters
  * ************************************************************************** */
 #ifndef __INMAN_ABNT_DETECTOR_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ABNT_DETECTOR_HPP
 
 #include "inman/abprov/IAProvider.hpp"
@@ -17,27 +19,35 @@ namespace inman {
 namespace abdtcr {
 
 using smsc::inman::tcpsrv::WorkerAC;
+
 using smsc::core::timers::TimerListenerITF;
 using smsc::core::timers::TimeWatcherITF;
 using smsc::core::timers::TimerHdl;
 using smsc::core::timers::OPAQUE_OBJ;
+
+using smsc::inman::iaprvd::IAPType_e;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
+using smsc::inman::iaprvd::AbonentId;
 using smsc::inman::iaprvd::AbonentSubscription;
+
 using smsc::inman::interaction::INPPacketAC;
 using smsc::inman::interaction::AbntContractReqHandlerITF;
 using smsc::inman::interaction::AbntContractRequest;
 
+using smsc::inman::iapmgr::IAPRule;
+using smsc::inman::iapmgr::INScfCFG;
+
 class AbonentDetector : public WorkerAC, IAPQueryListenerITF,
                      TimerListenerITF, AbntContractReqHandlerITF {
 public:
-    typedef enum {
+    enum ADState {
         adIdle = 0,
         adIAPQuering,
         adTimedOut,
         adDetermined,
         adCompleted,    // AD -> SMSC : AbntContractResult
         adAborted
-    } ADState;
+    };
 
     AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Logger * uselog = NULL);
     virtual ~AbonentDetector();
@@ -65,11 +75,13 @@ private:
                     //prefix for logging info
     char            _logId[sizeof("AbntDet[%u:%u]") + sizeof(unsigned int)*3 + 1];
 
-    AbonentRecord   abRec;      //ab_type = abtUnknown
-    TonNpiAddress   abNumber;   //calling abonent ISDN number
-    const INScfCFG* abScf;      ////corresponding IN-point configuration 
-    bool            providerQueried;
-    uint32_t        _wErr;
+    AbonentSubscription   abRec;      //
+    TonNpiAddress         abNumber;   //calling abonent ISDN number
+    IAPRule               _iapRule;   //abonent policy rule
+    IAPType_e             _lastIAPrvd;  //UId of last IAProvider asked
+    volatile bool         providerQueried;
+    const INScfCFG *      _cfgScf;    //serving gsmSCF(IN-point) configuration
+    uint32_t              _wErr;
     std::auto_ptr<TimerHdl> iapTimer;   //timer for InAbonentProvider quering
 
     bool verifyReq(AbntContractRequest* req);

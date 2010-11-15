@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/services/smbill/CAPSmTask.hpp"
 using smsc::inman::common::RPCauseATT;
@@ -45,9 +45,9 @@ RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
             ssnSess = cfgSS7.disp->openSSN(cfgSS7.ownSsn, cfgSS7.maxDlgId, logger);
 
         if (!(capSess = ssnSess->newSRsession(cfgSS7.ownAddr,
-                                _ac_cap3_sms, 146, abScf->scfAdr, cfgSS7.fakeSsn))) {
+                                _ac_cap3_sms, 146, abScf->_scfAdr, cfgSS7.fakeSsn))) {
             std::string sid =
-                ssnSess->mkSignature(cfgSS7.ownAddr, _ac_cap3_sms, 146, &(abScf->scfAdr));
+                ssnSess->mkSignature(cfgSS7.ownAddr, _ac_cap3_sms, 146, &(abScf->_scfAdr));
             smsc_log_error(logger, "%s: Unable to init TCSR session: %s", _logId, sid.c_str());
             return (use_da->scfErr = _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit));
         }
@@ -114,8 +114,8 @@ void CAPSmTaskAC::onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
         } else {            //ReleaseSMS
             res->doCharge = false;
             //check first for RPCause that forces interaction retrying
-            const RPCauseATT * rAtt = abScf->retryRPC.exist(rp_cause);
-            if (rAtt && (res->attNum < (rAtt->_att + 1))) {
+            const RPCauseATT * rAtt = abScf->_capSms.retryRPC.exist(rp_cause);
+            if (rAtt && (res->attNum < (rAtt->_att + 1U))) {
                 daList.push_front(res);
                 corpses.push_back(res->dlgRes->releaseDlg());
                 res->resetRes();

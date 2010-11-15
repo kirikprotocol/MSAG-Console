@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/services/abdtcr/ICSAbntDtcr.hpp"
 using smsc::inman::iapmgr::IAPManagerITF;
@@ -28,9 +28,11 @@ void ICSAbntDetector::_icsStop(bool do_wait/* = true*/)
 
 ICServiceAC::RCode ICSAbntDetector::_icsInit(void)
 {
-    const IAPManagerITF * iapMgr = (const IAPManagerITF*)
-                                _icsHost->getInterface(ICSIdent::icsIdIAPManager);
-    if (!(wCfg.iaPol = iapMgr->getPolicy(wCfg.policyNm))) {
+    wCfg.iapMgr = (const IAPManagerITF *)
+                  _icsHost->getInterface(ICSIdent::icsIdIAPManager);
+    //check that default policy is configured
+    const AbonentPolicy * dfltPol = wCfg.iapMgr->getPolicy(wCfg.policyNm);
+    if (!dfltPol) {
         smsc_log_fatal(logger, "%s: IAPolicy %s is not configured!", _logId,
                        wCfg.policyNm.c_str());
         return ICServiceAC::icsRcError;
@@ -71,10 +73,11 @@ ConnectManagerAC * ICSAbntDetector::getConnManager(uint32_t sess_id, Connect * u
 void ICSAbntDetector::rlseConnManager(uint32_t sess_id)
 {
     MutexGuard  grd(_sync);
-    if (!sesMgrs.erase(sess_id))
+    if (!sesMgrs.erase(sess_id)) {
         smsc_log_error(logger, "%s: SmBillManager[%u] is "
                                "unknown/already released",
                                 _logId, sess_id);
+    }
 }
 
 } //abdtcr

@@ -2,7 +2,9 @@
  * SMS/USSD messages billing service types and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_SMBILLING_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_SMBILLING_DEFS_HPP
 
 #include <map>
@@ -15,6 +17,7 @@ namespace smsc    {
 namespace inman   {
 namespace smbill  {
 
+using smsc::util::TonNpiAddress;
 using smsc::inman::inap::TCAPUsr_CFG;
 
 //_smsXSrvs bits to mask, i.e. exclude from processing logic
@@ -27,11 +30,11 @@ struct XSmsService {
     std::string     name;
     uint32_t        mask;
     uint32_t        svcCode; //actually it's a serviceId
-    util::TonNpiAddress   adr;
+    TonNpiAddress   adr;
     bool            chargeBearer;
 
-    XSmsService(const char * use_name = NULL, uint32_t use_mask = 0)
-        : name(use_name), svcCode(0), mask(use_mask), chargeBearer(false)
+    explicit XSmsService(const char * use_name = NULL, uint32_t use_mask = 0)
+        : name(use_name), mask(use_mask), svcCode(0), chargeBearer(false)
     { }
 };
 typedef std::map<uint32_t, XSmsService> SmsXServiceMap;
@@ -82,7 +85,7 @@ public:
     ~BillModes()
     { }
 
-    inline bool assign(ChargeParm::MSG_TYPE msg_type, ChargeParm::BILL_MODE mode_1st,
+    bool assign(ChargeParm::MSG_TYPE msg_type, ChargeParm::BILL_MODE mode_1st,
                         ChargeParm::BILL_MODE mode_2nd = ChargeParm::billOFF)
     {
         std::pair<BModesMAP::iterator, bool> res =
@@ -125,7 +128,6 @@ public:
 
 //core SM billing parameters
 struct SmBillParams : public ChargeParm {
-    std::string     policyNm;       //name of default AbonenPolicy
     BillModes       mo_billMode;    //Billing modes for MobileOriginating messages
     BillModes       mt_billMode;    //Billing modes for MobileTerminating messages
     ContractReqMode cntrReq;
@@ -144,11 +146,18 @@ struct SmBillParams : public ChargeParm {
         : cntrReq(reqOnDemand), cdrMode(cdrBILLMODE), maxBilling(0)
         , cacheTmo(0), cdrInterval(0)
     { }
+
+    bool needIAProvider(void) const
+    {
+      return ((cntrReq == ChargeParm::reqAlways)
+              || mo_billMode.useIN() || mt_billMode.useIN());
+    }
 };
 
 //Billing service configuration parameters (from config.xml)
 struct SmBillingXCFG {
     std::auto_ptr<SmBillParams> prm; //core SM billing parameters
+    std::string     policyNm;       //name of default AbonenPolicy
     uint16_t        maxTimeout;     //maximum timeout for TCP operations,
                                     //billing aborts on its expiration
     uint16_t        abtTimeout;     //maximum timeout on abonent type requets,

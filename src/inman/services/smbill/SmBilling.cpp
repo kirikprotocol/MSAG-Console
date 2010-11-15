@@ -1,9 +1,13 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/services/smbill/SmBilling.hpp"
-using smsc::inman::iaprvd::IAProviderITF;
+using smsc::inman::iaprvd::IAProviderAC;
+using smsc::inman::iaprvd::CSIRecord;
+using smsc::inman::iapmgr::IAProviderInfo;
+using smsc::inman::iapmgr::INParmsCapSms;
+
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPCSBilling;
 using smsc::inman::interaction::SPckChargeSmsResult;
@@ -18,6 +22,8 @@ using smsc::util::URCRegistry;
 
 using smsc::inman::smbill::_SMSubmitOK;
 using smsc::inman::smbill::_SMSubmitNO;
+
+using smsc::inman::comp::UnifiedCSI;
 
 #include "inman/comp/cap_sms/MOSM_RPCauses.hpp"
 using smsc::inman::comp::_RCS_MOSM_RPCause;
@@ -42,7 +48,7 @@ const char * const _CDRmodes[] = {"none", "billMode", "all"};
  * class SmBillManager implementation:
  * ************************************************************************** */
 //NOTE: _mutex SHOULD be locked upon entry!
-int SmBillManager::denyCharging(unsigned dlg_id, INManErrorId::Codes use_error)
+int SmBillManager::denyCharging(unsigned dlg_id, INManErrorId::Code_e use_error)
 {
     if (!_conn)
         return -1;
@@ -119,6 +125,23 @@ Billing::~Billing()
     MutexGuard grd(_sync);
     doCleanUp();
     smsc_log_debug(logger, "%s: Deleted", _logId);
+}
+
+const char * Billing::nmBState(BillingState bil_state)
+{
+    switch (bil_state) {
+    case bilStarted:        return "bilStarted";
+    case bilQueried:        return "bilQueried";
+    case bilInited:         return "bilInited";
+    case bilReleased:       return "bilReleased";
+    case bilContinued:      return "bilContinued";
+    case bilAborted:        return "bilAborted";
+    case bilSubmitted:      return "bilSubmitted";
+    case bilReported:       return "bilReported";
+    case bilComplete:       return "bilComplete";
+    case bilIdle:           return "bilIdle";
+    }
+    return "billUnknown";
 }
 
 //returns true if required (depending on chargeMode) CDR data fullfilled
@@ -261,13 +284,21 @@ void Billing::Abort(const char * reason/* = NULL*/)
  * NOTE: these methods are not the processing graph entries, so never lock _sync,
  *       it's a caller responsibility to lock _sync !!!
  * ---------------------------------------------------------------------------------- */
+
+void Billing::cancelIAPQuery(void)
+{
+  const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_lastIAPrvd);
+  if (pPrvd)
+    pPrvd->_iface->cancelQuery(abNumber, this);
+  providerQueried = false;
+}
+
 void Billing::doCleanUp(void)
 {
     //check for pending query to AbonentProvider
-    if (providerQueried) {
-        _cfg.iaPol->getIAProvider()->cancelQuery(abNumber, this);
-        providerQueried = false;
-    }
+    if (providerQueried)
+      cancelIAPQuery();
+
     if (!timers.empty()) { //release active timers
         for (TimersMAP::iterator it = timers.begin(); it != timers.end(); ++it) {
             TimerHdl & timer = it->second;
@@ -284,7 +315,7 @@ void Billing::doCleanUp(void)
 unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
-    cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abCsi.abRec.ab_type);
+    cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abCsi.abType);
     //set the location MSC of charged abonent to last known one
     if (cdr._chargeType) {  //MT: from delivery report
         if (cdr._dstMSC.empty() && !abCsi.vlrNum.empty())
@@ -298,14 +329,15 @@ unsigned Billing::writeCDR(void)
         TonNpiAddress tna;
         if (tna.fromText(cdr._srcMSC.c_str()))
             cdr._srcMSC = tna.getSignals();
-        else if ((cdr._chargeType == CDRRecord::MO_Charge) && abNumber.interISDN())
+        else if ((cdr._chargeType == CDRRecord::MO_Charge) && abNumber.interISDN()) {
             smsc_log_warn(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
+        }
 
         if (tna.fromText(cdr._dstMSC.c_str()))
             cdr._dstMSC = tna.getSignals();
-        else if ((cdr._chargeType == CDRRecord::MT_Charge) && abNumber.interISDN())
+        else if ((cdr._chargeType == CDRRecord::MT_Charge) && abNumber.interISDN()) {
             smsc_log_warn(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
-
+        }
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId: %llu, status: %u, IN billed: %s, charged: %s",
                     _logId, cdr._msgId, cdr._dlvrRes, cdr._inBilled ? "true": "false",
@@ -324,8 +356,8 @@ void Billing::doFinalize(void)
                           " abonent(%s), type %s, CDR(s) written: %u", _logId,
             BillComplete() ? "" : "IN", cdr._chargeType ? "MT" : "MO",
             cdr.nmPolicy(), cdr.dpType().c_str(),
-            cdr._inBilled ? abScf->Ident() : _cfg.prm->billModeStr(billMode), billErr,
-            abNumber.getSignals(), abCsi.abRec.type2Str(), cdrs);
+            cdr._inBilled ? _cfgScf->Ident() : _cfg.prm->billModeStr(billMode), billErr,
+            abNumber.getSignals(), abCsi.type2Str(), cdrs);
 
     doCleanUp();
     if (state != bilAborted)
@@ -352,20 +384,20 @@ void Billing::abortThis(const char * reason/* = NULL*/)
 
 RCHash Billing::startCAPSmTask(void)
 {
-    capSched = _cfg.schedMgr->getScheduler((abScf->idpReqMode == INScfCFG::idpReqMT) ? 
+    capSched = _cfg.schedMgr->getScheduler((_cfgScf->_capSms.idpReqMode == INParmsCapSms::idpReqMT) ? 
                         TaskSchedulerITF::schedMT : TaskSchedulerITF::schedSEQ);
     if (!capSched) {
         smsc_log_error(logger, "%s: TaskScheduler is not srarted", _logId);
         return _RCS_INManErrors->mkhash(INManErrorId::internalError);
     }
-    CAPSmTaskCFG    cfgSS7(*(_cfg.prm->capSms.get()), _cfg.tcDisp, abScf);
-    uint32_t        skeyMOSM = abCsi.abRec.tdpSCF[TDPCategory::dpMO_SM].serviceKey;
+    CAPSmTaskCFG    cfgSS7(*(_cfg.prm->capSms.get()), _cfg.tcDisp, _cfgScf);
+    const GsmSCFinfo * smScf = abCsi.getSCFinfo(UnifiedCSI::csi_MO_SM);
     std::auto_ptr<CAPSmTaskAC> smTask;
 
-    if (abScf->idpReqMode == INScfCFG::idpReqMT) {
-        smTask.reset(new CAPSmTaskMT(abNumber, cfgSS7, skeyMOSM, CAPSmTaskAC::idpMO, logger));
+    if (_cfgScf->_capSms.idpReqMode == INParmsCapSms::idpReqMT) {
+        smTask.reset(new CAPSmTaskMT(abNumber, cfgSS7, smScf->serviceKey, CAPSmTaskAC::idpMO, logger));
     } else
-        smTask.reset(new CAPSmTaskSQ(abNumber, cfgSS7, skeyMOSM, CAPSmTaskAC::idpMO, logger));
+        smTask.reset(new CAPSmTaskSQ(abNumber, cfgSS7, smScf->serviceKey, CAPSmTaskAC::idpMO, logger));
 
     //determine number of required CAP dialogs and corresponding destination addresses
     if (!xsmsSrv || xsmsSrv->chargeBearer) {
@@ -389,15 +421,15 @@ RCHash Billing::startCAPSmTask(void)
     
     RCHash rval = 0;
     try { //compose InitialDPSMS argument
-        switch (abScf->idpLiAddr) {
-        case INScfCFG::idpLiSSF:
+        switch (_cfgScf->_capSms.idpLiAddr) {
+        case INParmsCapSms::idpLiSSF:
             smTask->Arg().setLocationInformationMSC(cfgSS7.ownAddr); break;
-        case INScfCFG::idpLiSMSC:
+        case INParmsCapSms::idpLiSMSC:
             smTask->Arg().setLocationInformationMSC(csInfo.smscAddress.c_str()); break;
         default:
             smTask->Arg().setLocationInformationMSC(abCsi.vlrNum);
         }
-        smTask->Arg().setIMSI(abCsi.abRec.abImsi);
+        smTask->Arg().setIMSI(abCsi.abImsi);
         smTask->Arg().setSMSCAddress(csInfo.smscAddress.c_str());
         smTask->Arg().setTimeAndTimezone(cdr._submitTime);
         smTask->Arg().setTPShortMessageSpecificInfo(csInfo.tpShortMessageSpecificInfo);
@@ -471,7 +503,7 @@ bool Billing::verifyChargeSms(void)
         return false;
     }
     //remember IMSI of abonent is to charge (if present)
-    abCsi.abRec.abImsi = cdr._chargeType ? cdr._dstIMSI : cdr._srcIMSI;
+    abCsi.abImsi = cdr._chargeType ? cdr._dstIMSI : cdr._srcIMSI;
     //remember location MSC of abonent is to charge (if present)
     abCsi.vlrNum.fromText(cdr._chargeType ? cdr._dstMSC.c_str() : cdr._srcMSC.c_str());
 
@@ -559,15 +591,16 @@ Billing::PGraphState Billing::onChargeSms(void)
     }
 
     if (_cfg.abCache) {
-        AbonentRecord cacheRec;
+        //NOTE: vlrNum doesn't stored in cache
+        AbonentSubscription cacheRec;
         _cfg.abCache->getAbonentInfo(abNumber, &cacheRec);
-        abCsi.abRec.Merge(cacheRec);     //merge available abonent info
+        abCsi.Merge(cacheRec);     //merge available abonent info
     }
     //check for IMSI being defined
-    if (!abCsi.abRec.getImsi())
-        abCsi.abRec.ab_type = AbonentContractInfo::abtUnknown;
+    if (!abCsi.getImsi())
+        abCsi.abType = AbonentContractInfo::abtUnknown;
 
-    if (abCsi.abRec.ab_type == AbonentContractInfo::abtPostpaid) {
+    if (abCsi.isPostpaid()) {
         billMode = ChargeParm::bill2CDR;
         //do not interact IN platform, just create CDR
         return chargeResult(true);
@@ -581,17 +614,16 @@ Billing::PGraphState Billing::onChargeSms(void)
     /* **************************************************** */
     bool askProvider = ((_cfg.prm->cntrReq == ChargeParm::reqAlways)
                         || ( (billMode == ChargeParm::bill2IN) 
-                             && ( (abCsi.abRec.ab_type == AbonentContractInfo::abtUnknown)
-                                  || !abCsi.abRec.getSCFinfo(TDPCategory::dpMO_SM) ) )
+                             && ( (abCsi.isUnknown())
+                                  || !abCsi.getSCFinfo(UnifiedCSI::csi_MO_SM) ) )
                         );
 
     //check if AbonentProvider should be requested for current abonent location
-    if (abCsi.vlrNum.empty() && _cfg.iaPol
-        && (_cfg.iaPol->getIAPAbilities() & IAProviderITF::abSCF))
+    if (abCsi.vlrNum.empty() && _cfg.iapMgr)
         askProvider = true;
 
     /* **************************************************** */
-    /* conditions which switch OFF provider request         */
+    /* conditions which switch OFF IAProvider request       */
     /* **************************************************** */
 
     //verify that abonent number is in ISDN international format
@@ -601,23 +633,37 @@ Billing::PGraphState Billing::onChargeSms(void)
     if (chrgFlags & ChargeSms::chrgCDR)
         askProvider = false;
 
-    if (askProvider && _cfg.iaPol) {
-        smsc_log_debug(logger, "%s: using policy %s for %s", _logId, _cfg.iaPol->Ident(),
+    if (askProvider && _cfg.iapMgr) {
+      //determine policy rule
+      const IAPRule * pRule = _cfg.iapMgr->getPolicy(abNumber);
+      if (pRule) {
+        _iapRule = *pRule;
+      } else {
+        _iapRule._nmPool = "<default>";
+        _iapRule._iaPolicy = _cfg.iapMgr->getPolicy(_cfg.policyNm);
+      }
+      if (_iapRule._iaPolicy) {
+        smsc_log_debug(logger, "%s: using policy %s for %s", _logId, _iapRule.toString().c_str(),
                         abNumber.toString().c_str());
-        // configure SCF by quering provider first
-        IAProviderITF *prvd = _cfg.iaPol->getIAProvider();
-        if (prvd) {
-            if (StartTimer(_cfg.abtTimeout)
-                && (providerQueried = prvd->startQuery(abNumber, this))) {
-                //execution will continue in onIAPQueried() by another thread.
-                return Billing::pgCont;
-            }
-            smsc_log_error(logger, "%s: startIAPQuery(%s) failed!", _logId,
-                               abNumber.getSignals());
+        const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_lastIAPrvd);
+        if (pPrvd) {
+          _lastIAPrvd = pPrvd->_iface->getType();
+          if (StartTimer(_cfg.abtTimeout)
+              && (providerQueried = pPrvd->_iface->startQuery(abNumber, this))) {
+              state = bilStarted;
+              //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
+              return Billing::pgCont;
+          }
+          billErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
+          smsc_log_error(logger, "%s: startIAPQuery(%s) failed!", _logId, abNumber.getSignals());
         } else {
-            billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
-            smsc_log_warn(logger, "%s: no IAProvider configured", _logId);
+          billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
+          smsc_log_warn(logger, "%s: no IAProvider configured for %s", _logId, abNumber.getSignals());
         }
+      } else {
+        billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
+        smsc_log_error(logger, "%s: no IAPolicy configured for %s", _logId, abNumber.getSignals());
+      }
     }
     return ConfigureSCFandCharge();
 }
@@ -625,79 +671,85 @@ Billing::PGraphState Billing::onChargeSms(void)
 //Here goes either bill2IN or bill2CDR ..
 Billing::PGraphState Billing::ConfigureSCFandCharge(void)
 {
-    if (abCsi.abRec.ab_type == AbonentContractInfo::abtPostpaid) {
-        billMode = ChargeParm::bill2CDR;
-        return chargeResult(true);
+    if (abCsi.isPostpaid()) {
+      billMode = ChargeParm::bill2CDR;
+      return chargeResult(true);
     }
     //Here goes either abtPrepaid or abtUnknown ..
     RCHash err = 0;
     if (billMode == ChargeParm::bill2IN) {
-        const char * errmsg = NULL;
-        const GsmSCFinfo * p_scf = abCsi.abRec.getSCFinfo(TDPCategory::dpMO_SM);
-        if (!p_scf) //check if SCF for MO-BC may be used
-            p_scf = abCsi.abRec.getSCFinfo(TDPCategory::dpMO_BC);
-        
-        if (!abCsi.abRec.getImsi())
-            errmsg = "unable to determine abonent IMSI";
-        else if (p_scf) { //SCF is set only for prepaid abonent by cache/IAProvider
-            if (_cfg.iaPol) //lookup policy for extra SCF parms (serviceKey, RPC lists)
-                abScf = _cfg.iaPol->getSCFparms(&(p_scf->scfAddress));
-        } else {    //attempt to determine SCF params from config.xml
-            if (!_cfg.iaPol) {
-                errmsg = "unable to determine IN params (no policy set)";
-            } else {
-                //look for single IN serving
-                if (_cfg.iaPol->ScfMap().size() == 1)
-                    abScf = _cfg.iaPol->ScfMap().begin()->second;
-                else
-                    errmsg = "unable to determine IN params (too many INs)";
-            }
-        }
-        //check for MO_SM serviceKey being defined
-        if (!errmsg) {
-            if (!abScf)
-                errmsg = "unable to determine IN params";
-            else {
-            // renew MO-SM SCF params in abonent record tdpSCF map and in abonent cache
-                p_scf = abCsi.abRec.getSCFinfo(TDPCategory::dpMO_SM);
-                uint32_t recMOSM = p_scf ? p_scf->serviceKey : 0;
-                uint32_t cfgMOSM = abScf->getSKey(&abCsi.abRec.tdpSCF, TDPCategory::dpMO_SM);
-                //serviceKey from config.xml has a higher priority
-                if ((cfgMOSM != recMOSM) && cfgMOSM) {
-                    recMOSM = cfgMOSM;
-                    abCsi.abRec.tdpSCF[TDPCategory::dpMO_SM] = GsmSCFinfo(abScf->scfAdr, recMOSM);
-                }
-                if (!recMOSM)
-                    errmsg = "unable to determine IN MO-SM serviceKey";
-            }
-        }
-        if (!errmsg && abCsi.vlrNum.empty())   //check for charged abonent location
-            errmsg = "failed to determine abonent location MSC";
-        if (errmsg) {
-            err = billErr ? 0 : _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
-            if ((billMode = billPrio->second) == ChargeParm::billOFF) {
-                smsc_log_error(logger, "%s: %s", _logId, errmsg);
-                return chargeResult(false, err);
-            }
-            smsc_log_error(logger, "%s: switching to CDR mode: %s", _logId, errmsg);
-        }
+      err = _RCS_INManErrors->mkhash(configureSCF());
+      if (err) {
+        if ((billMode = billPrio->second) == ChargeParm::billOFF)
+          return chargeResult(false, err);
+        //else //billCDR
+        smsc_log_info(logger, "%s: switching to CDR mode for abonent(%s)",
+                      _logId, abNumber.toString().c_str());
+      }
     }
-
     if (billMode == ChargeParm::bill2IN) {
-        RCHash capErr = startCAPSmTask();
-        if (!capErr)
-            return pgCont; //awaiting response from IN point
-        
-        err = capErr;
-        std::string errStr = URCRegistry::explainHash(capErr);
-        if ((billMode = billPrio->second) == ChargeParm::billOFF) {
-            smsc_log_error(logger, "%s: %s", _logId, errStr.c_str());
-            return chargeResult(false, err);
-        }
-        smsc_log_error(logger, "%s: switching to CDR mode: %s", _logId, errStr.c_str());
+      err = startCAPSmTask();
+      if (!err)
+          return pgCont; //awaiting response from IN point
+
+      smsc_log_error(logger, "%s: %s", _logId, URCRegistry::explainHash(err).c_str());
+      if ((billMode = billPrio->second) == ChargeParm::billOFF)
+        return chargeResult(false, err);
+      //else //billCDR
+      smsc_log_info(logger, "%s: switching to CDR mode for abonent(%s)",
+                    _logId, abNumber.toString().c_str());
     }
     //billMode == ChargeParm::bill2CDR
     return chargeResult(true, err);
+}
+
+INManErrorId::Code_e Billing::configureSCF(void)
+{
+  const GsmSCFinfo *  p_scf = abCsi.getSCFinfo(UnifiedCSI::csi_MO_SM);
+  uint32_t            recMOSM = 0;
+
+  if (p_scf)
+    recMOSM = p_scf->serviceKey;
+  else //check if SCF for MO-BC may be used
+    p_scf = abCsi.getSCFinfo(UnifiedCSI::csi_O_BC);
+
+  //check if extra parameters are configuured for serving gsmSCF
+  if (p_scf && _iapRule._iaPolicy)
+    _cfgScf = _iapRule._iaPolicy->getSCFparms(p_scf->scfAddress);
+
+  //verify serviceKey
+  if (!recMOSM && _cfgScf) {
+    CSIRecord csiRec(IAPProperty::iapUnknown, UnifiedCSI::csi_MO_SM, *p_scf);
+    csiRec.scfInfo.serviceKey = _cfgScf->getSKey(UnifiedCSI::csi_MO_SM,
+                                    abCsi.csiSCF.empty() ? NULL : &abCsi.csiSCF);
+    //serviceKey from config.xml has a higher priority
+    if (csiRec.scfInfo.serviceKey && (csiRec.scfInfo.serviceKey != recMOSM)) {
+      abCsi.csiSCF.insertRecord(csiRec);
+      recMOSM = csiRec.scfInfo.serviceKey;
+    }
+  }
+  if (!recMOSM) {
+    smsc_log_error(logger, "%s: misconfigured serviceKey(MO-SM) for gsmSCF(%s)", _logId,
+                   p_scf->scfAddress.toString().c_str());
+    return INManErrorId::cfgInconsistency;
+  }
+
+  //verify IMSI
+  if (!abCsi.getImsi() && _cfgScf && !_cfgScf->_dfltImsi.empty())
+    abCsi.setImsi(_cfgScf->_dfltImsi.c_str());
+  if (!abCsi.getImsi()) {
+    smsc_log_error(logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
+                   abNumber.toString().c_str());
+    return INManErrorId::cfgInconsistency;
+  }
+
+  //verify abonent location MSC
+  if (abCsi.vlrNum.empty()) { 
+    smsc_log_error(logger, "%s: unable to determine location MSC for abonent(%s)",
+                   _logId, abNumber.toString().c_str());
+    return INManErrorId::cfgInconsistency;
+  }
+  return INManErrorId::noErr;
 }
 
 //NOTE: _sync should be locked upon entry
@@ -739,7 +791,7 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
       std::string reply = !do_charge ? 
                     format("NOT_POSSIBLE (cause %u", billErr) :
                     format("POSSIBLE (via %s, cause %u", (billMode == ChargeParm::bill2CDR) ?
-                           "CDR" : abScf->Ident(), billErr);
+                           "CDR" : _cfgScf->Ident(), billErr);
       if (billErr) {
           reply += ": ";
           reply += URCRegistry::explainHash(billErr);
@@ -749,7 +801,7 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
                    "%s: <-- %s %s CHARGING_%s, abonent(%s) type: %s (%u)",
                    _logId, cdr.dpType().c_str(), cdr._chargeType ? "MT" : "MO",
                    reply.c_str(), abNumber.getSignals(),
-                   abCsi.abRec.type2Str(), (unsigned)abCsi.abRec.ab_type);
+                   abCsi.type2Str(), (unsigned)abCsi.abType);
     }
 
     if ((cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED)
@@ -759,7 +811,7 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
     SPckChargeSmsResult res;
     res.Cmd().setValue(do_charge ? ChargeSmsResult::CHARGING_POSSIBLE : 
                                 ChargeSmsResult::CHARGING_NOT_POSSIBLE);
-    cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abCsi.abRec.ab_type);
+    cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abCsi.abType);
     res.Cmd().setContract(cdr._contract);
     if (billErr)
         res.Cmd().setError(billErr, URCRegistry::explainHash(billErr).c_str());
@@ -792,7 +844,7 @@ Billing::PGraphState Billing::onSubmitReport(RCHash scf_err, bool in_billed/* = 
         if (submitted) 
             billMode = ChargeParm::bill2CDR;
         smsc_log_error(logger, "%s: %s%s interaction failure: %s",
-                _logId, submitted ? "switching to CDR mode: " : "", abScf->Ident(),
+                _logId, submitted ? "switching to CDR mode: " : "", _cfgScf->Ident(),
                 URCRegistry::explainHash(scf_err).c_str());
     } else
         cdr._inBilled = in_billed;
@@ -845,8 +897,7 @@ TimeWatcherITF::SignalResult
         //target operation doesn't complete yet.
         if (state == Billing::bilStarted) {
             //abonent provider query is expired
-            _cfg.iaPol->getIAProvider()->cancelQuery(abNumber, this);
-            providerQueried = false;
+            cancelIAPQuery();
             if (Billing::pgEnd == ConfigureSCFandCharge())
                 doFinalize();
             return TimeWatcherITF::evtOk;
@@ -895,28 +946,29 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
 
     providerQueried = false;
     if (state > bilStarted) {
-        smsc_log_warn(logger, "%s: abonentQueried at state: %u", _logId, state);
-        return;
+      smsc_log_warn(logger, "%s: abonentQueried at state: %u", _logId, state);
+      return;
     }
     StopTimer(state);
     state = bilQueried;
-    if (qry_status) {
-        billErr = qry_status;
-        abCsi.abRec.Merge(ab_info.abRec); //merge known abonent info
-    } else {
-        abCsi.abRec = ab_info.abRec; //renew abonent info, overwrite TDPScfMAP
-        if (_cfg.abCache)
-            _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
-    }
+
 #ifdef SMSEXTRA
     //TMP_PATCH: Keep MSC address in case of special one reserved for SMSX WEB gateway
-    if (strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT))
+    if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)) {
+      TonNpiAddress orgVLR = abCsi.vlrNum;
+      abCsi.Merge(ab_info); //merge known abonent info
+      abCsi.vlrNum = orgVLR;
+    } else
 #endif /* SMSEXTRA */
-    if (!ab_info.vlrNum.empty())
-        abCsi.vlrNum = ab_info.vlrNum;
+      abCsi.Merge(ab_info); //merge known abonent info
+
+    if (qry_status)
+      billErr = qry_status;
+    else if (_cfg.abCache)
+      _cfg.abCache->setAbonentInfo(abNumber, abCsi);
 
     if (ConfigureSCFandCharge() == Billing::pgEnd)
-        doFinalize();
+      doFinalize();
     return;
 }
 
@@ -943,7 +995,7 @@ void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * tas
             capErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
             if (billPrio->second == ChargeParm::bill2CDR) {
                 smsc_log_error(logger, "%s: switching to CDR mode: %s interaction failure",
-                               _logId, abScf->Ident());
+                               _logId, _cfgScf->Ident());
                 billMode = ChargeParm::bill2CDR;
                 doCharge = true;
             } else
@@ -951,7 +1003,7 @@ void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * tas
         } else if (!sm_res->doCharge && !sm_res->rejectRPC
                 && (billPrio->second == ChargeParm::bill2CDR)) {
             smsc_log_error(logger, "%s: switching to CDR mode: %s interaction failure",
-                        _logId, abScf->Ident());
+                        _logId, _cfgScf->Ident());
             billMode = ChargeParm::bill2CDR;
             doCharge = true;
         }
@@ -971,7 +1023,7 @@ void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * tas
             //Note1: it's unknown whether the SCF finalized transaction or 
             //      not, so unconditionally create CDR and rise in_billed flag
             smsc_log_error(logger, "%s: switching to CDR mode: %s interaction failure",
-                           _logId, abScf->Ident());
+                           _logId, _cfgScf->Ident());
             billMode = ChargeParm::bill2CDR;
         }
         unrefCAPSmTask(false);
@@ -983,7 +1035,7 @@ void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * tas
         //despite of secondary billmode setting
         unrefCAPSmTask(false);
         smsc_log_error(logger, "%s: switching to CDR mode: %s interaction failure: %s",
-                    _logId, abScf->Ident(), URCRegistry::explainHash(capErr).c_str());
+                    _logId, _cfgScf->Ident(), URCRegistry::explainHash(capErr).c_str());
         billMode = ChargeParm::bill2CDR;
         billErr = sm_res->scfErr;
     } else {

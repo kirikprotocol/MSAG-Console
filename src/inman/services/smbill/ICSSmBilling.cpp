@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/services/smbill/ICSSmBilling.hpp"
 using smsc::core::timers::TimeWatchersRegistryITF;
@@ -62,20 +62,23 @@ ICServiceAC::RCode ICSSmBilling::_icsInit(void)
         }
     }
 
-    //there are only two timeout values Smbilling uses.
+    if (wCfg.prm->needIAProvider()) {
+      wCfg.iapMgr = (const IAPManagerITF *)
+                    _icsHost->getInterface(ICSIdent::icsIdIAPManager);
+      //check that default policy is configured
+      const AbonentPolicy * dfltPol = wCfg.iapMgr->getPolicy(wCfg.policyNm);
+      if (!dfltPol) {
+          smsc_log_fatal(logger, "%s: IAPolicy %s is not configured!", _logId,
+                         wCfg.policyNm.c_str());
+          return ICServiceAC::icsRcError;
+      }
+    }
+
+    //Smbilling uses up to two timeout values.
     TimeWatchersRegistryITF * icsTW = (TimeWatchersRegistryITF *)
                                     _icsHost->getInterface(ICSIdent::icsIdTimeWatcher);
-
-    if (!wCfg.prm->policyNm.empty()) {
-        const IAPManagerITF * iapMgr = (const IAPManagerITF*)
-                            _icsHost->getInterface(ICSIdent::icsIdIAPManager);
-        if (!(wCfg.iaPol = iapMgr->getPolicy(wCfg.prm->policyNm))) {
-            smsc_log_fatal(logger, "%s: IAPolicy %s is not configured!", _logId,
-                           wCfg.prm->policyNm.c_str());
-            return ICServiceAC::icsRcError;
-        }
-        wCfg.abtTimeout.Init(icsTW, wCfg.prm->maxBilling);
-    }
+    if (wCfg.iapMgr)
+      wCfg.abtTimeout.Init(icsTW, wCfg.prm->maxBilling);
     wCfg.maxTimeout.Init(icsTW, wCfg.prm->maxBilling);
 
     TCPServerITF * tcpSrv = (TCPServerITF *)_icsHost->getInterface(ICSIdent::icsIdTCPServer);

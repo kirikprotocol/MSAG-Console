@@ -2,7 +2,9 @@
  * IAProvider service utilizing MAP CH-SRI service.
  * ************************************************************************* */
 #ifndef __INMAN_ICS_IAPRVD_SRI_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_IAPRVD_SRI_HPP
 
 #include "inman/services/ICSrvDefs.hpp"
@@ -17,7 +19,7 @@ namespace sri {
 
 using smsc::inman::ICServiceAC_T;
 using smsc::inman::iaprvd::IAPQueryProcessorITF;
-using smsc::inman::iaprvd::IAProviderITF;
+using smsc::inman::iaprvd::IAProviderAC;
 
 
 struct IAPrvdSRI_CFG {
@@ -36,7 +38,7 @@ struct IAPrvdSRI_CFG {
 
 
 class ICSIAPrvdSRI : public ICServiceAC_T<IAProviderSRI_XCFG>,
-                      public IAProviderITF {
+                      public IAProviderAC {
 private:
     mutable Mutex   _sync;
     const char *    _logId; //logging prefix
@@ -66,6 +68,7 @@ public:
     ICSIAPrvdSRI(std::auto_ptr<IAProviderSRI_XCFG> & use_cfg,
                  const ICServicesHostITF * svc_host, Logger * use_log = NULL)
         : ICServiceAC_T<IAProviderSRI_XCFG>(ICSIdent::icsIAPrvdSRI, svc_host, use_cfg, use_log)
+        , IAProviderAC(IAPProperty::iapCHSRI)
         , _logId("iapSRI"), _cfg(use_cfg->sriCfg)
     {
       _fcltCfg.init_threads = _cfg.init_threads;
@@ -82,7 +85,7 @@ public:
     }
 
     //Returns IAProviderITF
-    void * Interface(void) const { return (IAProviderITF*)this; }
+    void * Interface(void) const { return (IAProviderAC *)this; }
 
     // ----------------------------------
     // -- IAPQueryProcessorITF interface methods
@@ -106,13 +109,9 @@ public:
     }
 
     // ----------------------------------
-    // -- IAProviderITF interface methods
+    // -- IAProviderAC interface methods
     // ----------------------------------
-    IAProviderITF::Type_e     type(void)      const { return IAProviderITF::iapHLR; }
-    IAProviderITF::Ability_e  ability(void)   const { return IAProviderITF::abContractSCF; }
-
-    const char *  ident(void) const { return "iapHLR_SRI"; }
-    void          logConfig(Logger * use_log = NULL) const;
+    virtual void  logConfig(Logger * use_log = NULL) const;
 };
 
 } //sri

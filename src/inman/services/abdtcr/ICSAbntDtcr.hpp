@@ -2,7 +2,9 @@
  * Abonent contract and gsmSCF parameters determination service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_ABNT_DETECTOR__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_ABNT_DETECTOR__
 
 #include "inman/common/ObjRegistryT.hpp"
@@ -46,7 +48,7 @@ public:
                     ICServicesHostITF * svc_host, Logger * use_log)
         : ICServiceAC_T<AbntDetectorXCFG>
             (ICSIdent::icsIdAbntDetector, svc_host, use_cfg, use_log)
-        , wCfg(*use_cfg.get()), _logId("AbDtcr")
+        , _logId("AbDtcr"), wCfg(*use_cfg.get())
     {
         _icsDeps = use_cfg->icsDeps;
         _icsState = ICServiceAC::icsStConfig;

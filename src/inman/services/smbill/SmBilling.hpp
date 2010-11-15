@@ -42,8 +42,14 @@ using smsc::core::timers::TimerHdl;
 using smsc::core::timers::OPAQUE_OBJ;
 using smsc::util::TaskRefereeITF;
 using smsc::util::ScheduledTaskAC;
+
+using smsc::inman::iaprvd::IAPProperty;
+using smsc::inman::iaprvd::IAPType_e;
+using smsc::inman::iaprvd::AbonentId;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
+using smsc::inman::iapmgr::IAPRule;
+
 using smsc::inman::tcpsrv::WorkerAC;
 using smsc::inman::interaction::INPPacketAC;
 using smsc::inman::interaction::SMCAPSpecificInfo;
@@ -77,21 +83,7 @@ public:
         pgEnd = 1       //processing has been finished (worker may be released)
     };
 
-    static const char * nmBState(BillingState bil_state)
-    {
-        switch (bil_state) {
-        case bilStarted:        return "bilStarted";
-        case bilQueried:        return "bilQueried";
-        case bilInited:         return "bilInited";
-        case bilReleased:       return "bilReleased";
-        case bilContinued:      return "bilContinued";
-        case bilAborted:        return "bilAborted";
-        case bilSubmitted:      return "bilSubmitted";
-        case bilReported:       return "bilReported";
-        case bilComplete:       return "bilComplete";
-        }
-        return "bilIdle";
-    }
+    static const char * nmBState(BillingState bil_state);
 
 private:
     typedef std::map<unsigned, TimerHdl> TimersMAP;
@@ -112,9 +104,11 @@ private:
     TimersMAP           timers;     //active timers
     AbonentSubscription abCsi;      //CAMEL subscription info of abonent is to charge
     TonNpiAddress       abNumber;   //ISDN number of abonent is to charge
+    IAPRule             _iapRule;   //abonent policy rule
+    IAPType_e           _lastIAPrvd;  //UId of last IAProvider asked
     volatile bool       providerQueried;
     // ...
-    const INScfCFG *    abScf;      //corresponding IN-point configuration
+    const INScfCFG *    _cfgScf;    //serving gsmSCF(IN-point) configuration
     XSmsService *       xsmsSrv;    //optional SMS Extra service config.
     RCHash              billErr;    //global error code made by URCRegistry
     // ...
@@ -125,6 +119,7 @@ private:
 
     //Returns false if PDU contains invalid data preventing request processing
     bool verifyChargeSms(void);
+    void cancelIAPQuery(void);
     void doCleanUp(void);
     unsigned writeCDR(void);
     void doFinalize(void);
@@ -135,6 +130,7 @@ private:
     bool StartTimer(const TimeoutHDL & tmo_hdl);
     void StopTimer(BillingState bilState);
     PGraphState chargeResult(bool do_charge, RCHash last_err = 0);
+    INManErrorId::Code_e configureSCF(void);
     PGraphState ConfigureSCFandCharge(void);
     PGraphState onSubmitReport(RCHash scf_err, bool in_billed = false);
 
@@ -158,8 +154,8 @@ public:
         : WorkerAC(b_id, owner, uselog), _cfg(owner->getConfig())
         , state(bilIdle), chrgFlags(0), billPrio(0)
         , msgType(ChargeParm::msgUnknown), billMode(ChargeParm::billOFF)
-        , providerQueried(false), abScf(0), xsmsSrv(0), billErr(0)
-        , capTask(0), capSched(0)
+        , _lastIAPrvd(IAPProperty::iapUnknown), providerQueried(false)
+        , _cfgScf(0), xsmsSrv(0), billErr(0), capTask(0), capSched(0)
     {
         logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
         snprintf(_logId, sizeof(_logId)-1, "Billing[%u:%u]", _mgr->cmId(), _wId);

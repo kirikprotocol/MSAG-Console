@@ -21,7 +21,11 @@ namespace abdtcr {
 
 using smsc::inman::INManErrorId;
 using smsc::inman::cache::AbonentCacheITF;
+
+using smsc::inman::iapmgr::IAPManagerITF;
 using smsc::inman::iapmgr::AbonentPolicy;
+using smsc::inman::iapmgr::AbonentPolicyName_t;
+
 using smsc::inman::tcpsrv::ConnectManagerT;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::SerializablePacketAC;
@@ -30,20 +34,20 @@ using smsc::core::timers::TimeoutHDL;
 struct AbonentDetectorCFG {
     bool                useCache;       //use abonents contract data cache
     AbonentCacheITF *   abCache;
-    const AbonentPolicy * iaPol;
+    const IAPManagerITF * iapMgr;
 
-    std::string         policyNm;       //name of default AbonenPolicy
+    AbonentPolicyName_t policyNm;       //name of default AbonenPolicy
     TimeoutHDL          abtTimeout;     //maximum timeout on abonent type requests,
                                         //(Abonentprovider interaction)
     uint16_t            maxRequests;    //maximum number of requests per connect
     uint32_t            cacheTmo;       //abonent cache data expiration timeout in secs
 
     AbonentDetectorCFG()
-        : useCache(false), abCache(0), iaPol(0)
+        : useCache(false), abCache(0), iapMgr(0)
         , abtTimeout(0), maxRequests(0), cacheTmo(0)
     { }
     AbonentDetectorCFG(const AbntDetectorXCFG & use_xcfg)
-        : useCache(false), abCache(0), iaPol(0), policyNm(use_xcfg.policyNm)
+        : useCache(false), abCache(0), iapMgr(0), policyNm(use_xcfg.policyNm.c_str())
         , abtTimeout(use_xcfg.abtTimeout), maxRequests(use_xcfg.maxRequests)
         , cacheTmo(use_xcfg.cacheTmo)
     { }
@@ -53,7 +57,7 @@ class AbntDetectorManager: public ConnectManagerT<AbonentDetectorCFG> {
 protected:
     //Composes and sends ContractResult packet
     //returns -1 on error, or number of total bytes sent
-    int denyRequest(unsigned dlg_id, INManErrorId::Codes use_error);
+    int denyRequest(unsigned dlg_id, INManErrorId::Code_e use_error);
 
 public: 
     AbntDetectorManager(const AbonentDetectorCFG & cfg, uint32_t cm_id,

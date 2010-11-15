@@ -2,10 +2,13 @@
  * IAPManager (abonent policies/providers manager) service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_IAP_MANAGER__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_IAP_MANAGER__
 
 #include "inman/services/ICSrvDefs.hpp"
+#include "inman/services/iapmgr/IAPMgrCfg.hpp"
 #include "inman/services/iapmgr/IAPMgrDefs.hpp"
 
 namespace smsc {
@@ -55,10 +58,18 @@ public:
     // -------------------------------------
     // IAPManagerITF interface methods:
     // -------------------------------------
-    const AbonentPolicy * getPolicy(const std::string & nm_pol) const
+    virtual const AbonentPolicy *
+      getPolicy(const AbonentPolicyName_t & nm_pol) const
     {
         MutexGuard grd(_sync);
-        return _cfg->polReg.find(nm_pol);
+        return _cfg->policiesReg.find(nm_pol);
+    }
+
+    virtual const IAPRule *
+      getPolicy(const TonNpiAddress & subscr_addr) const
+    {
+        MutexGuard grd(_sync);
+        return _cfg->poolsReg.Find(subscr_addr.getSignals());
     }
 };
 

@@ -1,52 +1,73 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static const char ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
 #include "inman/services/iapmgr/IAPMgrCfgReader.hpp"
+using smsc::inman::ICSIdent;
 
 #include "util/csv/CSVArrayOf.hpp"
+#include "util/csv/CSVListOf.hpp"
 using smsc::util::csv::CSVArrayOfStr;
+using smsc::util::csv::CSVListOfStr;
 
 namespace smsc {
 namespace inman {
 namespace iapmgr {
 
+//PolicyValue ::= "[ProvidersList] : INs_List"
+//  ProvidersList ::= "Prvd_1, ... , Prvd_n"
+//  INs_List ::= "*" | "IN_1, ..., IN_n"
 struct IAPolicyParser {
-  std::string prvdNm;
-  CStrSet     scfNms;
+  const char *  nmPol;
+  CSVListOfStr  prvdNms;
+  CSVListOfStr  scfNms;
 
-  bool Parse(const char * str)
+  IAPolicyParser(const char * nm_pol) : nmPol(nm_pol)
+    , prvdNms(','), scfNms(',')
+  { }
+
+  void Parse(const char * str) /*throw(ConfigException)*/
   {
-    CSVArrayOfStr vlist((CSVArrayOfStr::size_type)2);
-    if (!vlist.fromStr(str))
-      return false;
+    CSVArrayOfStr vPart((CSVArrayOfStr::size_type)2, ':');
+    if (!vPart.fromStr(str) || vPart.size() != 2)
+      throw ConfigException("%s: valie is invalid", nmPol);
 
-    prvdNm = vlist[0]; //provider section name may be empty!
-    //prepare SCF sections name set
-    for (CSVArrayOfStr::size_type n = 1; n < vlist.size(); ++n) {
-      if (!vlist[n].empty())
-        scfNms.insert(vlist[n]);
+    //Parse ProvidersList, NOTE it may be empty!
+    prvdNms.fromStr(vPart[0].c_str());
+    //verify lengths
+    for (CSVListOfStr::const_iterator
+         cit = prvdNms.begin(); cit != prvdNms.end(); ++cit) {
+      if ((cit->length() + 1) > AbonentPolicyName_t::MAX_SZ) {
+        throw ConfigException("^s: IAProvider name is too long (max %u chars): \'%s\'",
+                                    nmPol, AbonentPolicyName_t::MAX_SZ-1, cit->c_str());
+      }
     }
-    return !(prvdNm.empty() && scfNms.empty());
-  }
-
-  const char * nmPrvd(void) const
-  {
-    return prvdNm.empty() ? NULL : prvdNm.c_str();
+    //Parse INs_List, it cann't be empty!
+    scfNms.fromStr(vPart[1].c_str());
+    //verify lengths
+    for (CSVListOfStr::const_iterator
+         cit = scfNms.begin(); cit != scfNms.end(); ++cit) {
+      if ((cit->length() + 1) > INScfIdent_t::MAX_SZ) {
+        throw ConfigException("%s: IN-Platform name is too long (max %u chars): \'%s\'",
+                                    nmPol, INScfIdent_t::MAX_SZ-1, cit->c_str());
+      }
+    }
+    if (scfNms.empty())
+      throw ConfigException("%s: IN-Platform name(s) is missed", nmPol);
   }
 
   void print(std::string & pstr) const
   {
-    pstr += "Prvd{";
-    pstr += prvdNm.empty() ? "<none>" : prvdNm.c_str();
+    pstr += "Prvds{";
+    if (!prvdNms.empty())
+      prvdNms.toString(pstr);
+    else
+      pstr += "<none>";
+
     pstr += "}, INs{";
-    if (!scfNms.empty()) {
-      CStrSet::const_iterator it = scfNms.begin();
-      pstr += *it;
-      for (++it; it != scfNms.end(); ++it) {
-        pstr += ",  "; pstr += *it;
-      }
-    } else
+    if (!scfNms.empty())
+      scfNms.toString(pstr);
+    else
       pstr += "<none>";
     pstr += "}";
   }
@@ -65,11 +86,9 @@ struct IAPolicyParser {
 IAPManagerCFG * ICSIAPMgrCfgReader::rlseConfig(void)
 {
   icsCfg->scfReg.reset(scfReader.rlseConfig());
-  std::auto_ptr<IAPrvdConfig> prvdCfg(prvdReader.rlseConfig());
-  icsCfg->prvdReg.reset(prvdCfg->registry.release());
-  //combine dependencies
+  icsCfg->prvdReg.reset(prvdReader.rlseConfig());
   icsDeps.exportDeps(icsCfg->deps);
-  icsCfg->deps.insert(prvdCfg->deps.begin(), prvdCfg->deps.end());
+  /**/
   return icsCfg.release();
 }
 
@@ -90,29 +109,65 @@ ICSrvCfgReaderAC::CfgState
 
   smsc_log_info(logger, "Reading %s policy config ..", nm_cfg);
   const char * cstr = NULL;
+
+  try { cstr = cfg_sec->getString("active");
+  } catch (const ConfigException & exc) { }
+
+  if (cstr && cstr[0]) {
+    std::string tStr(cstr);
+    smsc::util::str_cut_blanks(tStr);
+    if (!strcmp("false", tStr.c_str())) {
+      smsc_log_info(logger, "  policy is inactive");
+      //mark section as completely parsed
+      state.cfgState = ICSrvCfgReaderAC::cfgComplete;
+      return registerSection(nm_sec, state);
+    }
+    if (strcmp("true", tStr.c_str()))
+      throw ConfigException("\'%s.active\' value is invalid", nm_cfg);
+  }
+
   cstr = cfg_sec->getString("policy"); //throws
 
-  IAPolicyParser   polXCFG;
-  if (!polXCFG.Parse(cstr))
-    throw ConfigException("'%s' policy value is invalid: %s", nm_cfg, cstr ? cstr : "");
+  IAPolicyParser   polXCFG(nm_cfg);
+  polXCFG.Parse(cstr); //throws
   smsc_log_info(logger, "  policy is: %s", polXCFG.print().c_str());
 
-  std::auto_ptr<AbonentPolicy> polDat(new AbonentPolicy(nm_cfg, polXCFG.nmPrvd()));
+  std::auto_ptr<AbonentPolicy> polDat(new AbonentPolicy(nm_cfg, polXCFG.prvdNms));
+
+  //parse AddressPools
+  {
+    std::auto_ptr<CStrSet>  poolsSet;
+
+    if (cfg_sec->findSubSection("AddressPools")) {
+      std::auto_ptr<XConfigView> poolsCfg(cfg_sec->getSubConfig("AddressPools"));
+  
+      poolsSet.reset(poolsCfg->getStrParamNames());
+  
+      for (CStrSet::iterator it = poolsSet->begin(); it != poolsSet->end(); ++it) {
+        AddressPool itPool(it->c_str());
+
+        cstr = poolsCfg->getString(it->c_str());
+        if (!itPool._mask.fromText(cstr))
+          throw ConfigException("\'%s\'value is invalid: %s", it->c_str(), cstr);
+        polDat->_poolsSet.insert(itPool);
+      }
+    }
+    if (!poolsSet.get()) {
+      smsc_log_warn(logger, "  'AddressPools' subsection is missed/empty");
+    }
+  }
     
   if (!polXCFG.scfNms.empty()) {  //lookup IN platforms configs
     scfReader.addArguments(polXCFG.scfNms);
-    scfReader.readConfig(&(polDat->scfMap)); //throws
+    scfReader.readConfig(&(polDat->_scfMap)); //throws
     icsDeps.insert(ICSIdent::icsIdTCAPDisp);
   }
-  if (polXCFG.nmPrvd()) {      //add Abonent Provider in dependencies
-    prvdReader.addArgument(polDat->prvdNm);
-    if (prvdReader.readConfig()) { //throws
-      ICSIdsSet ids;
-      prvdReader.Deps().exportDeps(ids);
-      icsDeps.insert(ids);
-    }
+  if (!polXCFG.prvdNms.empty()) {      //add Abonent Provider in dependencies
+    prvdReader.addArguments(polXCFG.prvdNms);
+    if (prvdReader.readConfig()) //throws
+      icsDeps.importDeps(prvdReader.Deps());
   }
-  icsCfg->polReg.insert(polDat->ident, polDat.release());
+  icsCfg->policiesReg.insert(polDat->_ident, polDat.release());
   //mark section as completely parsed
   state.cfgState = ICSrvCfgReaderAC::cfgComplete;
   return registerSection(nm_sec, state);

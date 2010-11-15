@@ -2,7 +2,9 @@
  * Abonent Detector service types and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_ICS_ABNT_DETECTOR_DEFS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_ABNT_DETECTOR_DEFS__
 
 #include "inman/services/ICSrvDefs.hpp"

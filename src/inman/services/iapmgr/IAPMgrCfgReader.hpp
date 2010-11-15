@@ -2,20 +2,22 @@
  * IAPManager (abonent policies/providers) service config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_IAPMGR_CFG_PARSING__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_IAPMGR_CFG_PARSING__
 
 #include "inman/services/ICSCfgReader.hpp"
-using smsc::inman::ICSIdent;
-using smsc::inman::ICSMultiSectionCfgReaderAC_T;
-
-#include "inman/services/iapmgr/IAPMgrDefs.hpp"
+#include "inman/services/iapmgr/IAPMgrCfg.hpp"
 #include "inman/services/iapmgr/IAPrvdsCfgReader.hpp"
 #include "inman/services/iapmgr/SCFsCfgReader.hpp"
 
 namespace smsc {
 namespace inman {
 namespace iapmgr {
+
+using smsc::inman::ICSMultiSectionCfgReaderAC_T;
+
 
 class ICSIAPMgrCfgReader : public ICSMultiSectionCfgReaderAC_T<IAPManagerCFG> {
 private:

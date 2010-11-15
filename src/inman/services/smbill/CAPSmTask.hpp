@@ -5,27 +5,31 @@
  * response (ReleaseSMS or some error).
  * ************************************************************************* */
 #ifndef __INMAN_CAPSM_TASK_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_CAPSM_TASK_HPP
 
-#include "inman/InScf.hpp"
-using smsc::inman::INScfCFG;
-
+#include "inman/services/iapmgr/InScfCfg.hpp"
 #include "inman/services/scheduler/TaskSchedulerDefs.hpp"
-using smsc::util::ScheduledTaskAC;
 
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
-using smsc::inman::inap::CapSMSDlg;
-using smsc::inman::inap::CapSMS_SSFhandlerITF;
-using smsc::inman::inap::TCDialogID;
-
 #include "inman/inap/TCDspDefs.hpp"
-using smsc::inman::inap::TCAPDispatcherITF;
-using smsc::inman::inap::TCAPUsr_CFG;
 
 namespace smsc {
 namespace inman {
 namespace smbill {
+
+using smsc::util::ScheduledTaskAC;
+
+using smsc::inman::iapmgr::INScfCFG;
+
+using smsc::inman::inap::CapSMSDlg;
+using smsc::inman::inap::CapSMS_SSFhandlerITF;
+using smsc::inman::inap::TCDialogID;
+using smsc::inman::inap::TCAPDispatcherITF;
+using smsc::inman::inap::TCAPUsr_CFG;
+
 
 struct CAPSmTaskCFG : public TCAPUsr_CFG {
     TCAPDispatcherITF * disp;
@@ -45,8 +49,8 @@ public:
     bool            completed; //dialog has been finished
     CapSMSDlg *     pDlg;
 
-    CAPSmDlgResult(CapSMSDlg * use_dlg = NULL)
-        : rpCause(0), pDlg(use_dlg), answered(false), completed(false)
+    explicit CAPSmDlgResult(CapSMSDlg * use_dlg = NULL)
+        : rpCause(0), answered(false), completed(false), pDlg(use_dlg)
     { }
     ~CAPSmDlgResult()
     {
@@ -70,8 +74,8 @@ public:
     SMSConnectArg *     smsArg; //last ConnectSMSArg received
     CAPSmDlgResult *    dlgRes; //last CAPSmsDialog result
 
-    CAPSmDPResult(const TonNpiAddress & use_da)
-        : dstAdr(use_da), attNum(0), doCharge(false), scfErr(0), dlgRes(0), smsArg(0)
+    explicit CAPSmDPResult(const TonNpiAddress & use_da)
+        : dstAdr(use_da), attNum(0), doCharge(false), scfErr(0), smsArg(0), dlgRes(0)
     { }
     ~CAPSmDPResult()
     { 
@@ -103,8 +107,8 @@ public:
     bool             allReplied;//
     CAPSmDPList      dpRes;     //
 
-    CAPSmResult(const INScfCFG * use_scf)
-        : abScf(use_scf), doCharge(false), rejectRPC(false), scfErr(0), allReplied(false)
+    explicit CAPSmResult(const INScfCFG * use_scf)
+        : abScf(use_scf), doCharge(false), scfErr(0), rejectRPC(false), allReplied(false)
     { }
     ~CAPSmResult()
     { }
@@ -130,7 +134,7 @@ public:
         for (CAPSmDPList::const_iterator it = dpRes.begin();
               (it != dpRes.end()) && it->dlgRes && it->dlgRes->answered; ++it) {
             ++cnt;
-            if (abScf->rejectRPC.exist(it->dlgRes->rpCause))
+            if (abScf->_capSms.rejectRPC.exist(it->dlgRes->rpCause))
                 rejectRPC = true;
         }
         return (allReplied = (cnt == dpRes.size()) ? true : false);
@@ -177,7 +181,7 @@ protected:
         }
     };
 
-    const char *    logPfx;        //prefix for logging info
+    const char *        logPfx;     //prefix for logging info
     const CAPSmTaskCFG  cfgSS7;
     const TonNpiAddress abNumber;
 
@@ -283,9 +287,8 @@ public:
     CAPSmTaskAC(const TonNpiAddress & use_abn, const CAPSmTaskCFG & cfg_ss7,
                 uint32_t serv_key, CAPSmMode idp_mode = idpMO,
                 const char * log_pfx = "CAPSm", Logger * use_log = NULL)
-        : CAPSmResult(cfg_ss7.abScf), cfgSS7(cfg_ss7)
-        , abNumber(use_abn), capSess(0), _pMode(pmIdle)
-        , logPfx(log_pfx), logger(use_log)
+        : CAPSmResult(cfg_ss7.abScf), logPfx(log_pfx), cfgSS7(cfg_ss7)
+        , abNumber(use_abn), _pMode(pmIdle), capSess(0), logger(use_log)
     {
         _arg.reset(new SMSInitialDPArg(logger));
         _arg->setIDPParms(!idp_mode ? smsc::inman::comp::DeliveryMode_Originating :
@@ -310,8 +313,9 @@ public:
         case pmMonitoring:      return "pmMonitoring";
         case pmReportingEvent:  return "pmReportingEvent";
         case pmAcknowledging:   return "pmAcknowledging";
+        case pmIdle:            return "pmIdle";
         }
-        return "pmIdle";
+        return "pmUnknown";
     }
     //
     const char * nmPMode(void) const { return nmPMode(_pMode); }
@@ -401,7 +405,7 @@ public:
         : CAPSmTaskAC(use_abn, cfg_ss7, serv_key,
                       idp_mode, (const char *)"CAPSmSQ", use_log)
     { 
-        _Criterion += abScf->scfAdr.getSignals();
+        _Criterion += abScf->_scfAdr.getSignals();
         _Criterion += abNumber.toString();
     }
     ~CAPSmTaskSQ()
@@ -439,8 +443,8 @@ protected:
     bool smSubmit;
 
 public:
-    CAPSmSubmit(bool sm_submmit = false, bool do_del = false)
-        : smSubmit(sm_submmit), doDel(do_del)
+    explicit CAPSmSubmit(bool sm_submmit = false, bool do_del = false)
+      : doDel(do_del), smSubmit(sm_submmit)
     { }
     ~CAPSmSubmit()
     { }

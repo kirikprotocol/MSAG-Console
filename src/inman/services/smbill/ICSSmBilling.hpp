@@ -2,7 +2,9 @@
  * SMS/USSD messages billing service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_SMBILLING_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __INMAN_ICS_SMBILLING_HPP
 
 #include "inman/services/smbill/SmBillManager.hpp"
@@ -47,7 +49,7 @@ public:
                     ICServicesHostITF * svc_host, Logger * use_log)
         : ICServiceAC_T<SmBillingXCFG>
             (ICSIdent::icsIdSmBilling, svc_host, use_cfg, use_log)
-        , wCfg(*(use_cfg.get())), _logId("SmBill")
+        , _logId("SmBill"), wCfg(*(use_cfg.get()))
     {
         _icsDeps = use_cfg->deps;
         delete use_cfg.release();
@@ -59,13 +61,13 @@ public:
     }
 
     //Returns ConnServiceITF
-    void * Interface(void) const { return (ConnServiceITF*)this; }
+    virtual void * Interface(void) const { return (ConnServiceITF*)this; }
 
     // -------------------------------------
     // ConnServiceITF interface methods:
     // -------------------------------------
-    ConnectManagerAC * getConnManager(uint32_t sess_id, Connect * use_conn);
-    void               rlseConnManager(uint32_t sess_id);
+    virtual ConnectManagerAC * getConnManager(uint32_t sess_id, Connect * use_conn);
+    virtual void               rlseConnManager(uint32_t sess_id);
 };
 
 } //smbill
