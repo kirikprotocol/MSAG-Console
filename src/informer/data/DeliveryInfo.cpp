@@ -74,7 +74,8 @@ sourceAddress_(0)
 
 void DeliveryInfo::update( const DeliveryInfoData& data )
 {
-    throw InfosmeException(EXC_NOTIMPL, "DeliveryInfo::update(): not impl");
+    // FIXME: should we lock?
+    updateData( data, &data_);
 }
 
 
