@@ -2,7 +2,9 @@
  * Abonent Provider query status definition and description.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_IAPRVD_ERRORS__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_IAPRVD_ERRORS__
 
 #include "util/URCdb/URCRegistry.hpp"

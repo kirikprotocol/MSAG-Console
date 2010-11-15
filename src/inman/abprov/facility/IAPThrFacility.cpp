@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static const char ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static const char ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/abprov/facility/IAPThrFacility.hpp"
 #include <algorithm>
@@ -15,8 +15,8 @@ namespace iaprvd {
  * ************************************************************************** */
 IAPQueryAC::IAPQueryAC(unsigned q_id, IAPQueryManagerITF * owner,
                        unsigned timeout_secs, Logger * use_log/* = NULL*/)
-    : ThreadedTask(), _qId(q_id), _owner(owner), _qStatus(IAPQStatus::iqOk)
-    , timeOut(timeout_secs), usage(0), logger(use_log)
+    : ThreadedTask(), _qId(q_id), _owner(owner), usage(0), timeOut(timeout_secs)
+    , _qStatus(IAPQStatus::iqOk), _qError(0), logger(use_log)
 { }
 
 IAPQueryAC::~IAPQueryAC()
@@ -28,13 +28,21 @@ IAPQueryAC::~IAPQueryAC()
     }
 }
 
+void IAPQueryAC::mkTaskName(void)
+{
+    char buf[sizeof("[%u:%lu]") + 1];
+    snprintf(buf, sizeof(buf), "[%u:%lu]", _qId, usage);
+    tName = taskType();
+    tName += buf;
+}
+
 bool IAPQueryAC::init(const AbonentId & ab_number)
 {
     MutexGuard tmp(_mutex);
     _qStatus = IAPQStatus::iqOk;
     _qError = 0;
     abonent = ab_number;
-    abInfo.reset();
+    abInfo.clear();
     isReleased = isStopping = false;
     usage++;
     mkTaskName();
@@ -91,8 +99,9 @@ IAPQueryFacility::~IAPQueryFacility()
     for (QueriesList::iterator it = qryPool.begin(); it != qryPool.end(); ++it)
         delete *it;
     //clean up quieries cache
-    if (qryCache.GetUsage())
+    if (qryCache.GetUsage()) {
         smsc_log_warn(logger, "%s: shutdown - queries cache is not empty!", _logId);
+    }
     qryCache.Empty();
     smsc_log_debug(logger, "%s: shutdown complete", _logId);
 }
@@ -186,17 +195,12 @@ void IAPQueryFacility::releaseQuery(IAPQueryAC * query)
             qryPool.push_back(query);
         //else query is being deleted by PooledThread::Execute()
         if (query->Status() == IAPQStatus::iqOk)
-            smsc_log_info(logger,
-                    "%s: %s(%s): finished, contract %s, IMSI %s, MSC %s, %s", _logId,
-                    query->taskName(), (query->getAbonentId()).getSignals(),
-                    query->getAbonentInfo().abRec.type2Str(),
-                    query->getAbonentInfo().abRec.imsiCStr(),
-                    query->getAbonentInfo().vlr2Str().c_str(),
-                    query->getAbonentInfo().abRec.tdpSCF.toString().c_str()
-                );
+            smsc_log_info(logger, "%s: %s(%s): finished, %s", _logId,
+                    query->taskName(), query->getAbonentId().getSignals(),
+                    query->getAbonentInfo().toString().c_str());
         else
             smsc_log_info(logger, "%s: %s(%s): %s", _logId,
-                query->taskName(), (query->getAbonentId()).getSignals(),
+                query->taskName(), query->getAbonentId().getSignals(),
                 query->Status2Str().c_str());
     }
     return;

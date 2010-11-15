@@ -1,6 +1,6 @@
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
 
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
@@ -23,10 +23,10 @@ namespace chsri {
 /* ************************************************************************** *
  * class MapCHSRIDlg implementation:
  * ************************************************************************** */
-MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler,
+MapCHSRIDlg::MapCHSRIDlg(TCSessionMA * pSession, CHSRIhandlerITF * sri_handler,
                         Logger * uselog/* = NULL*/)
-    : sriHdl(sri_handler), session(pSession), _logPfx("MapSRI")
-    , dialog(NULL), logger(uselog)
+  : _logPfx("MapSRI"), dialog(NULL), session(pSession), logger(uselog)
+  , sriHdl(sri_handler)
 {
     _sriState.value = 0;
     if (!logger)
@@ -53,8 +53,9 @@ bool MapCHSRIDlg::Unbind(void)
 void MapCHSRIDlg::endMapDlg(void)
 {
     MutexGuard  grd(_sync);
-    if (sriHdl.get())
+    if (sriHdl.get()) {
         smsc_log_error(logger, "%s: endMapDlg(): reference to handler exists", _logId);
+    }
     sriHdl.Reset(NULL);
     endTCap();
 }
@@ -139,7 +140,7 @@ void MapCHSRIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
         if (!sriHdl.Lock())
             return;
     }
-    sriHdl->onMapResult(&reqRes);
+    sriHdl->onMapResult(reqRes);
     if (do_end)
         sriHdl->onEndMapDlg();
     unRefHdl();
@@ -186,8 +187,9 @@ void MapCHSRIDlg::onInvokeLCancel(InvokeRFP pInv)
 void MapCHSRIDlg::onDialogContinue(bool compPresent)
 {
     MutexGuard  grd(_sync);
-    if (!compPresent)
+    if (!compPresent) {
         smsc_log_error(logger, "%s: missing component in TC_CONT_IND", _logId);
+    }
      //else wait for ongoing Invoke result/error
     return;
 }

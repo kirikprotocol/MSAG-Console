@@ -2,7 +2,9 @@
  * MAP_SEND_ROUTING_INFO service: dialog implementation (over TCAP dialog)
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_MAP_CHSRI__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_INMAN_INAP_MAP_CHSRI__
 
 #include "core/synchronization/EventMonitor.hpp"
@@ -29,12 +31,12 @@ protected:
     { }
 
 public:
-    virtual void onMapResult(CHSendRoutingInfoRes* arg) = 0;
+    virtual void onMapResult(CHSendRoutingInfoRes & res) = 0;
     //Dialog finalization/error handling:
     //if ercode != 0, no result has been got from MAP service,
     //NOTE: MAP dialog may be deleted only from this callback !!!
     virtual void onEndMapDlg(RCHash ercode = 0) = 0;
-
+    //
     virtual void Awake(void) = 0;
 };
 
@@ -52,7 +54,8 @@ typedef union {
 //innate timer of the SS7 stack for Invoke lifetime.
 class MapCHSRIDlg : TCDialogUserITF { // GMSC/SCF -> HLR
 public:
-    MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler, Logger * uselog = NULL);
+    MapCHSRIDlg(TCSessionMA * pSession, CHSRIhandlerITF * sri_handler,
+                Logger * uselog = NULL);
     //May be called only after successfull Unbind() call
     virtual ~MapCHSRIDlg();
 

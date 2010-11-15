@@ -7,7 +7,9 @@
  *      HFREHASH_LOG_DBG - turns on full rehashing logging
  * ************************************************************************** */
 #ifndef _MULTITHREADED_HASH_FILE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _MULTITHREADED_HASH_FILE_HPP
 
 #ifdef  HFREHASH_LOG_DBG
@@ -698,8 +700,8 @@ public:
                    , Logger * use_log = NULL
 #endif /* HFREHASH_LOG_ON */
                    )
-            : _running(false), client(p_client), srcHF(use_src)
-            , tgtUsage(tgt_usage), collStep(coll_step)
+            : _running(false), srcHF(use_src), tgtUsage(tgt_usage)
+            , collStep(coll_step), client(p_client)
         {
             srcHF->getCFG(lastHdr);
             maxSize = srcHF->MaxSize();
