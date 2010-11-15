@@ -233,8 +233,11 @@ class SccpChan: public Thread {
           requestProcessor = factory->createRequestProcessor(&mtsms, &fakeHLR);
           if (!requestProcessor)
             throw Exception("RequestProcessor is undefined");
-      ////
-          requestProcessor->configure(cfg.user,cfg.ssn,cfg.msc,cfg.vlr,cfg.hlr);
+          //requestProcessor->configure(cfg.user,cfg.ssn,cfg.msc,cfg.vlr,cfg.hlr);
+          requestProcessor->configure(cfg.user,cfg.ssn,
+                                      cfg.msc,cfg.vlr,cfg.hlr,
+                                      cfg.cpMgrHostAndPort.c_str(),
+                                      cfg.remoteInstances.c_str());
     }
     void Stopping() {st = 0; requestProcessor->Stop(); }
     virtual int Execute()
