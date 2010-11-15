@@ -1,9 +1,7 @@
 #
 # $Id$
 #
-# INMan and INMan testing console executables
-
-inman/inmanTest inmanTest -linman -linman-interaction-msgbill -linman-interaction-msgdtcr -linman-interaction -linman-common -linman-storage $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lutil-csv -lutil -lcore-threads -llogger -lcore-network -lnsl -lutil @liblogger.so
+# INMan executable
 
 switch INMAN_ICS_LINKAGE
 static:\
