@@ -49,12 +49,10 @@
           <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}"
-                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
-              />
+          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" />
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['edit.button']}" action="#{usersList.editSelected}"/>
+          <tr:commandLink text="#{msg['edit.selected.button']}" action="#{usersList.editSelected}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -68,17 +66,20 @@
                 <f:param name="userId" value="#{u.login}"/>
               </h:commandLink>
             </eye:column>
+             <eye:column name="status" title="#{msg['user.list.enabled']}" sortable="true" width="1%" align="center">
+              <h:graphicImage value="/images/ic_checked.gif" rendered="#{u.active}"/>
+            </eye:column>
+            <eye:column name="status" title="#{msg['user.list.admin']}" sortable="true" width="1%" align="center">
+              <h:graphicImage value="/images/ic_checked.gif" rendered="#{u.admin}"/>
+            </eye:column>
             <eye:column name="firstName" title="#{userBundle.firstName}" sortable="true" width="20%" align="left">
               <h:outputText value="#{u.firstName}"/>
             </eye:column>
             <eye:column name="lastName" title="#{userBundle.lastName}" sortable="true" width="20%" align="left">
               <h:outputText value="#{u.lastName}"/>
             </eye:column>
-            <eye:column name="organization" title="#{userBundle.organization}" sortable="true" width="20%" align="left">
+            <eye:column name="organization" title="#{userBundle.organization}" sortable="true" width="39%" align="left">
               <h:outputText value="#{u.organization}"/>
-            </eye:column>
-            <eye:column name="status" title="#{userBundle.status}" sortable="true" width="20%" align="left">
-              <h:outputText value="#{u.status}"/>
             </eye:column>
           </eye:row>
         </eye:dataTable>
@@ -90,12 +91,10 @@
           <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}"
-                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
-              />
+          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}"  onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['edit.button']}" action="#{usersList.editSelected}"/>
+          <tr:commandLink text="#{msg['edit.selected.button']}" action="#{usersList.editSelected}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

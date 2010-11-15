@@ -84,11 +84,11 @@ public class UserListController extends InformerController {
             }
           });
         }
-        List<User> result = new LinkedList<User>();
+        List<UserWrapper> result = new LinkedList<UserWrapper>();
         for (Iterator<User> i = users.iterator(); i.hasNext() && count > 0;) {
           User u = i.next();
           if (--startPos < 0) {
-            result.add(u);
+            result.add(new UserWrapper(u));
             count--;
           }
         }
@@ -191,6 +191,21 @@ public class UserListController extends InformerController {
       }
     }
     return null;
+  }
+
+  public static class UserWrapper extends User {
+
+    private UserWrapper(User user) {
+      super(user);
+    }
+
+    public boolean isActive() {
+      return getStatus() == User.Status.ENABLED;
+    }
+
+    public boolean isAdmin() {
+      return getRoles().contains(User.INFORMER_ADMIN_ROLE);
+    }
   }
 }
 

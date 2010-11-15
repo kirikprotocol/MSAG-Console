@@ -10,6 +10,8 @@ import mobi.eyeline.informer.web.config.Configuration;
 import javax.faces.application.FacesMessage;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 
@@ -21,24 +23,63 @@ import java.util.List;
  */
 public class UserGroupEditController extends UserController {
   private List<String> userIds;
+
+  private boolean editOrganization;
   private String organization;
+
+  private boolean editAdmin;
   private boolean admin;
-  private int smsPerSec;
-  private List<Integer> regions = new ArrayList<Integer>();
+
+  private boolean editBlocked;
+  private boolean blocked;
+
+  private boolean editSourceAddr;
   private Address sourceAddr;
+
+  private boolean editDeliveryDays;
   private List<Integer> deliveryDays = new ArrayList<Integer>();
-  private String deliveryEndTime;
-  private String deliveryStartTime;
-  private int validHours;
+
+  private boolean editDeliveryStartTime;
+  private Date deliveryStartTime;
+
+  private boolean editDeliveryEndTime;
+  private Date deliveryEndTime;
+
+  private boolean editPriority;
+  private int priority;
+
+  private boolean editRetryPolicy;
+  private boolean retryOnFail;
+  private String policyId;
+
+  private boolean editDeliveryType;
   private User.DeliveryType deliveryType;
 
+  private boolean editTransactionMode;
   private boolean transactionMode;
-  private String policyId;
-  private int priority;
+
+  private boolean editValidHours;
+  private int validHours;
+
+  private boolean editSmsPerSec;
+  private int smsPerSec;
+
+  private boolean editAllowedRegions;
+  private boolean allRegionsAllowed;
+  private List<Integer> regions = new ArrayList<Integer>();
+
+  private boolean editSmsNotification;
   private boolean smsNotification;
+
+  private boolean editEmailNotification;
   private boolean emailNotification;
+
+  private boolean editArchivateDeliveries;
   private boolean createArchive;
   private int deliveryLifetime;
+
+  private boolean editCreateCdr;
+  private boolean createCdr;
 
 
 
@@ -52,6 +93,14 @@ public class UserGroupEditController extends UserController {
     if(session!=null) {
       userIds = (List<String>) session.getAttribute("userIds");
     }
+    deliveryStartTime = new Time(9,0,0).getTimeDate();
+    deliveryEndTime = new Time(22,0,0).getTimeDate();
+    deliveryType=User.DeliveryType.SMS;
+    validHours=3;
+    smsPerSec=10;
+    priority=1;
+    deliveryLifetime=72;
+    deliveryDays=Arrays.asList(0,1,2,3,4,5,6);
   }
 
 
@@ -65,37 +114,74 @@ public class UserGroupEditController extends UserController {
       List<User> users = new ArrayList<User>();
       for(String id : userIds) {
         User u = config.getUser(id);
-        u.setOrganization(organization);
-        if(admin && !u.hasRole(User.INFORMER_ADMIN_ROLE)) {
-          u.getRoles().add(User.INFORMER_ADMIN_ROLE);
+
+        if (editOrganization)
+          u.setOrganization(organization);
+
+        if (editAdmin) {
+          if(admin && !u.hasRole(User.INFORMER_ADMIN_ROLE))
+            u.getRoles().add(User.INFORMER_ADMIN_ROLE);
+          if(!admin && u.hasRole(User.INFORMER_ADMIN_ROLE))
+            u.getRoles().remove(User.INFORMER_ADMIN_ROLE);
         }
-        if(!admin && u.hasRole(User.INFORMER_ADMIN_ROLE)) {
-          u.getRoles().remove(User.INFORMER_ADMIN_ROLE);
+
+        if (editBlocked)
+          u.setStatus(blocked ? User.Status.DISABLED : User.Status.ENABLED);
+
+        if (editSourceAddr)
+          u.setSourceAddr(sourceAddr);
+
+        if (editDeliveryDays)
+          u.setDeliveryDays(new ArrayList<Integer>(deliveryDays));
+
+        if (editDeliveryStartTime) {
+          if(deliveryStartTime==null) u.setDeliveryStartTime(null);
+          else u.setDeliveryStartTime(new Time(deliveryStartTime));
         }
-        u.setSmsPerSec(smsPerSec);
-        u.setRegions(new ArrayList<Integer>(regions));
-        u.setSourceAddr(sourceAddr);
-        u.setDeliveryDays(new ArrayList<Integer>(deliveryDays));
 
+        if (editDeliveryEndTime) {
+          if(deliveryEndTime==null) u.setDeliveryEndTime(null);
+          else u.setDeliveryEndTime(new Time(deliveryEndTime));
+        }
 
-        if(deliveryEndTime==null || deliveryEndTime.trim().length()==0) u.setDeliveryEndTime(null);
-        else u.setDeliveryEndTime(new Time(deliveryEndTime));
+        if (editPriority)
+          u.setPriority(priority);
 
-        if(deliveryStartTime==null || deliveryStartTime.trim().length()==0) u.setDeliveryStartTime(null);
-        else u.setDeliveryStartTime(new Time(deliveryStartTime));
+        if (editRetryPolicy) {
+          u.setRetryOnFail(retryOnFail);
+          u.setPolicyId(policyId);
+        }
 
+        if (editDeliveryType)
+          u.setDeliveryType(deliveryType);
 
-        u.setValidHours(validHours);
-        u.setDeliveryType(deliveryType);
+        if (editTransactionMode)
+          u.setTransactionMode(transactionMode);
 
+        if (editValidHours)
+          u.setValidHours(validHours);
 
-        u.setTransactionMode(transactionMode);
-        u.setPolicyId(policyId);
-        u.setPriority(priority);
-        u.setSmsNotification(smsNotification);
-        u.setEmailNotification(emailNotification);
-        u.setCreateArchive(createArchive);
-        u.setDeliveryLifetime(deliveryLifetime);
+        if (editSmsPerSec)
+          u.setSmsPerSec(smsPerSec);
+
+        if (editAllowedRegions) {
+          u.setAllRegionsAllowed(allRegionsAllowed);
+          u.setRegions(new ArrayList<Integer>(regions));
+        }
+
+        if (editSmsNotification)
+          u.setSmsNotification(smsNotification);
+
+        if (editEmailNotification)
+          u.setEmailNotification(emailNotification);
+
+        if (editArchivateDeliveries) {
+          u.setCreateArchive(createArchive);
+          u.setDeliveryLifetime(deliveryLifetime);
+        }
+
+        if (editCreateCdr)
+          u.setCreateCDR(createCdr);
 
         users.add(u);
       }
@@ -154,29 +240,27 @@ public class UserGroupEditController extends UserController {
     return sourceAddr==null ? null : sourceAddr.getSimpleAddress();
   }
 
-  public List<Integer> getDeliveryDays() {
-    return deliveryDays;
+  public Integer[] getDeliveryDays() {
+    return deliveryDays.toArray(new Integer[0]);
   }
 
-  public void setDeliveryDays(List<Integer> deliveryDays) {
-    this.deliveryDays = deliveryDays;
+  public void setDeliveryDays(Integer[] deliveryDays) {
+    this.deliveryDays = Arrays.<Integer>asList(deliveryDays);
   }
 
-  public String getDeliveryEndTime() {
+  public Date getDeliveryEndTime() {
     return deliveryEndTime;
   }
 
-  public void setDeliveryEndTime(String deliveryEndTime) {
-    if(deliveryEndTime!=null && deliveryEndTime.trim().length()>0) new Time(deliveryEndTime);
+  public void setDeliveryEndTime(Date deliveryEndTime) {
     this.deliveryEndTime = deliveryEndTime;
   }
 
-  public String getDeliveryStartTime() {
+  public Date getDeliveryStartTime() {
     return deliveryStartTime;
   }
 
-  public void setDeliveryStartTime(String deliveryStartTime) {
-    if(deliveryStartTime!=null && deliveryStartTime.trim().length()>0) new Time(deliveryStartTime);
+  public void setDeliveryStartTime(Date deliveryStartTime) {
     this.deliveryStartTime = deliveryStartTime;
   }
 
@@ -251,5 +335,185 @@ public class UserGroupEditController extends UserController {
 
   public void setDeliveryLifetime(int deliveryLifetime) {
     this.deliveryLifetime = deliveryLifetime;
+  }
+
+  public boolean isRetryOnFail() {
+    return retryOnFail;
+  }
+
+  public void setRetryOnFail(boolean retryOnFail) {
+    this.retryOnFail = retryOnFail;
+  }
+
+  public boolean isBlocked() {
+    return blocked;
+  }
+
+  public void setBlocked(boolean blocked) {
+    this.blocked = blocked;
+  }
+
+  public boolean isSmsDeliveryMode() {
+    return deliveryType == User.DeliveryType.SMS;
+  }
+
+  public boolean isAllRegionsAllowed() {
+    return allRegionsAllowed;
+  }
+
+  public void setAllRegionsAllowed(boolean allRegionsAllowed) {
+    this.allRegionsAllowed = allRegionsAllowed;
+  }
+
+  public boolean isCreateCdr() {
+    return createCdr;
+  }
+
+  public void setCreateCdr(boolean createCdr) {
+    this.createCdr = createCdr;
+  }
+
+  public boolean isEditOrganization() {
+    return editOrganization;
+  }
+
+  public void setEditOrganization(boolean editOrganization) {
+    this.editOrganization = editOrganization;
+  }
+
+  public boolean isEditAdmin() {
+    return editAdmin;
+  }
+
+  public void setEditAdmin(boolean editAdmin) {
+    this.editAdmin = editAdmin;
+  }
+
+  public boolean isEditBlocked() {
+    return editBlocked;
+  }
+
+  public void setEditBlocked(boolean editBlocked) {
+    this.editBlocked = editBlocked;
+  }
+
+  public boolean isEditSourceAddr() {
+    return editSourceAddr;
+  }
+
+  public void setEditSourceAddr(boolean editSourceAddr) {
+    this.editSourceAddr = editSourceAddr;
+  }
+
+  public boolean isEditDeliveryDays() {
+    return editDeliveryDays;
+  }
+
+  public void setEditDeliveryDays(boolean editDeliveryDays) {
+    this.editDeliveryDays = editDeliveryDays;
+  }
+
+  public boolean isEditDeliveryStartTime() {
+    return editDeliveryStartTime;
+  }
+
+  public void setEditDeliveryStartTime(boolean editDeliveryStartTime) {
+    this.editDeliveryStartTime = editDeliveryStartTime;
+  }
+
+  public boolean isEditDeliveryEndTime() {
+    return editDeliveryEndTime;
+  }
+
+  public void setEditDeliveryEndTime(boolean editDeliveryEndTime) {
+    this.editDeliveryEndTime = editDeliveryEndTime;
+  }
+
+  public boolean isEditPriority() {
+    return editPriority;
+  }
+
+  public void setEditPriority(boolean editPriority) {
+    this.editPriority = editPriority;
+  }
+
+  public boolean isEditRetryPolicy() {
+    return editRetryPolicy;
+  }
+
+  public void setEditRetryPolicy(boolean editRetryPolicy) {
+    this.editRetryPolicy = editRetryPolicy;
+  }
+
+  public boolean isEditDeliveryType() {
+    return editDeliveryType;
+  }
+
+  public void setEditDeliveryType(boolean editDeliveryType) {
+    this.editDeliveryType = editDeliveryType;
+  }
+
+  public boolean isEditTransactionMode() {
+    return editTransactionMode;
+  }
+
+  public void setEditTransactionMode(boolean editTransactionMode) {
+    this.editTransactionMode = editTransactionMode;
+  }
+
+  public boolean isEditValidHours() {
+    return editValidHours;
+  }
+
+  public void setEditValidHours(boolean editValidHours) {
+    this.editValidHours = editValidHours;
+  }
+
+  public boolean isEditSmsPerSec() {
+    return editSmsPerSec;
+  }
+
+  public void setEditSmsPerSec(boolean editSmsPerSec) {
+    this.editSmsPerSec = editSmsPerSec;
+  }
+
+  public boolean isEditAllowedRegions() {
+    return editAllowedRegions;
+  }
+
+  public void setEditAllowedRegions(boolean editAllowedRegions) {
+    this.editAllowedRegions = editAllowedRegions;
+  }
+
+  public boolean isEditSmsNotification() {
+    return editSmsNotification;
+  }
+
+  public void setEditSmsNotification(boolean editSmsNotification) {
+    this.editSmsNotification = editSmsNotification;
+  }
+
+  public boolean isEditEmailNotification() {
+    return editEmailNotification;
+  }
+
+  public void setEditEmailNotification(boolean editEmailNotification) {
+    this.editEmailNotification = editEmailNotification;
+  }
+
+  public boolean isEditArchivateDeliveries() {
+    return editArchivateDeliveries;
+  }
+
+  public void setEditArchivateDeliveries(boolean editArchivateDeliveries) {
+    this.editArchivateDeliveries = editArchivateDeliveries;
+  }
+
+  public boolean isEditCreateCdr() {
+    return editCreateCdr;
+  }
+
+  public void setEditCreateCdr(boolean editCreateCrd) {
+    this.editCreateCdr = editCreateCrd;
   }
 }
