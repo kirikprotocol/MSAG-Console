@@ -4,7 +4,9 @@ static char const ident[] = "$Id$";
 #include <stdio.h>
 #include "inman/common/cvtutil.hpp"
 
-static char _tstr[] = "*100#";
+static char _tstr[] = "*100*1#";
+//"*100#";
+
 /*
 static unsigned char _res[] = {
     0xD6, 0xF0, 0x1C, 0x0D, 0xA2, 0xBF, 0xC7, 0x68, 0x77, 0x3A, 0x0F, 0x12,
@@ -24,11 +26,27 @@ static unsigned char _res[] = {
 //  0xaa, 0x98, 0x6c, 0x36, 0x02
 };
 
-inline void printHex(const unsigned char * buf, unsigned len) {
+inline void printHex(const unsigned char * buf, unsigned len)
+{
     for (unsigned i = 0; i < len; i++)
         printf(" %02x", (unsigned)buf[i]);
     return;    
 }
+
+inline void printAscii(const char * buf, unsigned len)
+{
+    for (unsigned i = 0; i < len; i++) {
+      switch (buf[i]) {
+      case '\n': printf("\\n"); break;
+      case '\r': printf("\\r"); break;
+      case '\t': printf("\\t"); break;
+      default:
+        printf("%c", buf[i]);
+      }
+    }
+    return;    
+}
+
 
 int main (void)
 {
@@ -44,6 +62,13 @@ int main (void)
     printHex(_buffer, len);
     printf("\n");
 
+    std::string  txt;
+    len = smsc::cvtutil::unpack7BitPadded2Text(&_buffer[0], len, txt);
+    printf("\nUnpacked ASCII Text: <");
+    printAscii(txt.c_str(), (unsigned)txt.length());
+    printf(">\n");
+
+/*
     memset(_buffer, 0, sizeof(_buffer));
     printf("Packed 7-Bit GSM text (%d bytes): ", len = (unsigned)sizeof(_res));
     printHex(&_res[0], len);
@@ -55,6 +80,6 @@ int main (void)
     std::string  txt;
     len = smsc::cvtutil::unpack7BitPadded2Text(&_res[0], (unsigned)sizeof(_res), txt);
     printf("\nInitial ASCII Text: <%s>\n", txt.c_str());
-
+*/
     return 0;
 }
