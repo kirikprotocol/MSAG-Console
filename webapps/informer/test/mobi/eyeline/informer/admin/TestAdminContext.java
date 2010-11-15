@@ -228,9 +228,9 @@ public class TestAdminContext extends AdminContext {
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
 
-      deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);
-      //todo add listeners to deliveryNotificationsProducer 
-
+      deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);       
+      deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
+      deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
       deliveryNotificationsProducer.start();
 

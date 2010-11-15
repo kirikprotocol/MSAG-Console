@@ -74,8 +74,8 @@ public class WebConfigTest {
 
     props = config.getJavaMailProperties();
     assertEquals("kikimora",props.get("mail.host"));
-    assertEquals("user",props.get("mail.user"));
-    assertEquals("password",props.get("mail.password"));
+    assertEquals("arrivedok",props.get("mail.user"));
+    assertEquals("12345qwe",props.get("mail.password"));
     assertEquals("smtp",props.get("mail.transport.protocol"));
     assertEquals("admin@informer.com",props.get("mail.from"));
 

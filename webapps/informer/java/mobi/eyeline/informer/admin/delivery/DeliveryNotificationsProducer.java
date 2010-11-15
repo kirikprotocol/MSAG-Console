@@ -67,6 +67,7 @@ public class DeliveryNotificationsProducer implements Runnable {
   }
 
   public synchronized void shutdown() {
+    if(scheduler==null) return;
     scheduler.shutdown();
     try {
       scheduler.awaitTermination(15,TimeUnit.SECONDS);
@@ -90,14 +91,11 @@ public class DeliveryNotificationsProducer implements Runnable {
     }
     catch (Exception e) {
       log.error("Fatal error, Notification producer EXITING! ", e);
-      synchronized (this) {
-        scheduler.shutdown();
-        scheduler=null;
-      }
+      shutdown();
     }
   }
 
-  private void processFile(String fileName) throws Exception {
+  private synchronized void processFile(String fileName) throws Exception {
     File f = new File(baseDir,fileName);
     BufferedReader reader=null;
     try {
@@ -160,7 +158,12 @@ public class DeliveryNotificationsProducer implements Runnable {
 
   private void notifyListeners(DeliveryNotification notification) {
     for(DeliveryNotificationsListener listener : listeners) {
-      listener.onDeliveryNotification(notification);
+      try {
+        listener.onDeliveryNotification(notification);
+      }
+      catch (Throwable e) {
+        log.error("error in listener",e);
+      }
     }
   }
 

@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.notifications;
 
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotificationTemplatesConstants;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -19,13 +20,6 @@ public class NotificationSettingsController extends InformerController {
   private Properties javaMailProps;
   private Properties notificationTemplates;
   private Address smsSenderAddress;
-
-  private static final String SMS_TEMPLATE_ACTIVATED = "delivery.state.activated.sms.template";
-  private static final String SMS_TEMPLATE_FINISHED  = "delivery.state.finished.sms.template";
-  private static final String EMAIL_TEMPLATE_SUBJECT ="delivery.state.changed.email.template.subject";
-  private static final String EMAIL_TEMPLATE_ACTIVATED="delivery.state.activated.email.template.line";
-  private static final String EMAIL_TEMPLATE_FINISHED="delivery.state.finished.email.template.line";
-
 
 
   public NotificationSettingsController() {
@@ -63,40 +57,40 @@ public class NotificationSettingsController extends InformerController {
 
 
   public void setSmsTemplateActivated(String smsTemplate) {
-    notificationTemplates.put(SMS_TEMPLATE_ACTIVATED,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED,smsTemplate);
   }
   public void setSmsTemplateFinished(String smsTemplate) {
-    notificationTemplates.put(SMS_TEMPLATE_FINISHED,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED,smsTemplate);
   }
 
   public String getSmsTemplateActivated() {
-    return (String) notificationTemplates.get(SMS_TEMPLATE_ACTIVATED);
+    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED);
   }
   public String getSmsTemplateFinished() {
-    return (String) notificationTemplates.get(SMS_TEMPLATE_FINISHED);
+    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED);
   }
 
 
   public void setEmailTemplateActivated(String smsTemplate) {
-    notificationTemplates.put(EMAIL_TEMPLATE_ACTIVATED,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED,smsTemplate);
   }
   public void setEmailTemplateFinished(String smsTemplate) {
-    notificationTemplates.put(EMAIL_TEMPLATE_FINISHED,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED,smsTemplate);
   }
 
   public String getEmailTemplateActivated() {
-    return (String) notificationTemplates.get(EMAIL_TEMPLATE_ACTIVATED);
+    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED);
   }
   public String getEmailTemplateFinished() {
-    return (String) notificationTemplates.get(EMAIL_TEMPLATE_FINISHED);
+    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED);
   }
 
   public void setEmailSubjectTemplate(String smsTemplate) {
-    notificationTemplates.put(EMAIL_TEMPLATE_SUBJECT,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT,smsTemplate);
   }
 
   public String getEmailSubjectTemplate() {
-    return (String) notificationTemplates.get(EMAIL_TEMPLATE_SUBJECT);
+    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT);
   }
 
   public String getMailFrom() {

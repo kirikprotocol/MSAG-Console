@@ -77,6 +77,8 @@ public class AdminContext {
 
   protected DeliveryNotificationsProducer deliveryNotificationsProducer;
 
+  protected DeliveryNotificationsDaemon deliveryNotificationsDaemon;
+
 // delivery ->user ->region->smsc
 
   final private Lock integrityLock = new ReentrantLock();
@@ -149,7 +151,8 @@ public class AdminContext {
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
 
       deliveryNotificationsProducer  = new DeliveryNotificationsProducer(new File(is.getStatusLogsDir()),fileSystem);
-      //todo add listeners to deliveryNotificationsProducer
+      deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
+      deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
       deliveryNotificationsProducer.start();
     }catch (AdminException e) {
@@ -164,7 +167,19 @@ public class AdminContext {
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
-  public void shutdown() {
+  public void shutdown() {        
+    if(deliveryNotificationsProducer != null) {
+      try{
+        deliveryNotificationsProducer.shutdown();
+      }catch (Exception e){}
+    }
+    if(deliveryNotificationsDaemon != null) {
+      try{
+        deliveryNotificationsDaemon.shutdown();
+      }catch (Exception e){}
+
+    }
+
     if(personalizationClientPool != null) {
       try{
         personalizationClientPool.shutdown();
@@ -179,7 +194,6 @@ public class AdminContext {
       try{
         deliveryManager.shutdown();
       }catch (Exception e){}
-
     }
   }
 

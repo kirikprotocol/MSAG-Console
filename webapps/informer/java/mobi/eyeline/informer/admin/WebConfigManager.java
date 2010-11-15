@@ -151,11 +151,7 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     updateSettings(new SettingsWriter<WebConfigSettings>() {
 
       public void changeSettings(WebConfigSettings settings) throws AdminException {
-        Properties copy = new Properties();
-        for(Object s : props.keySet()) {
-          copy.put(s,props.get(s));
-        }
-        settings.setJavaMailProperties(copy);
+        settings.setJavaMailProperties(props);
       }
 
       public void infosmeCommand(Infosme infosme) throws AdminException {
@@ -179,11 +175,7 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
 
     updateSettings(new SettingsWriter<WebConfigSettings>() {
       public void changeSettings(WebConfigSettings settings) throws AdminException {
-        Properties copy = new Properties();
-        for(Object s : props.keySet()) {
-          copy.put(s,props.get(s));
-        }
-        settings.setNotificationTemplates(copy);
+        settings.setNotificationTemplates(props);
       }
       public void infosmeCommand(Infosme infosme) throws AdminException {
         //dummy
