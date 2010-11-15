@@ -198,12 +198,11 @@ DlvState DeliveryImpl::readState( const CommonSettings& cs,
         throw InfosmeException(EXC_BADFILE,"D=%u bad last status record",dlvId);
     }
 
+    if (offset>0) { planTime = offset + ymdToMsgTime(ymdTime); }
+    else { planTime = 0; }
+
     switch (cstate) {
-    case 'P' : {
-        state = DLVSTATE_PLANNED;
-        planTime = ymdToMsgTime(ymdTime) + offset;
-        break;
-    }
+    case 'P' : state = DLVSTATE_PLANNED; break;
     case 'S' : state = DLVSTATE_PAUSED; break;
     case 'A' : state = DLVSTATE_ACTIVE; break;
     case 'F' : state = DLVSTATE_FINISHED; break;
@@ -300,7 +299,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                              ymd,
                              dlvStateToString(newState)[0],
-                             planTime-now,
+                             planTime ? planTime-now : 0,
                              ds.totalMessages,
                              ds.procMessages,
                              ds.sentMessages,
