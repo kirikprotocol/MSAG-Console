@@ -7,6 +7,8 @@
 #endif
 #define __INMAN_ICSERVICE_CFG_READER_HPP__
 
+#include <list>
+
 #include "util/config/XCFManager.hpp"
 #include "util/config/XCFView.hpp"
 #include "inman/services/ICSrvDefs.hpp"
@@ -29,6 +31,8 @@ struct ICSCfgArgs {
 };
 
 typedef std::map<ICSUId, ICSCfgArgs> ICSArgsMap;
+
+typedef std::list<std::string> CStrList;
 
 //Inman Configurable Services Configuration Dependencies
 class ICSCfgDeps {
@@ -81,18 +85,20 @@ public:
         getNode(uid)->second._args.insert(ics_arg);
     }
     //
-    void insert(ICSUId uid, CStrSet & ics_arg)
+    void insert(ICSUId uid, const CStrSet & ics_arg)
     {
         getNode(uid)->second._args.insert(ics_arg.begin(), ics_arg.end());
     }
-    void insert(ICSUId uid, const CStrSet & ics_arg)
+    //Imports only ICSUIds 
+    void importDeps(const ICSCfgDeps & ics_deps)
     {
-        CStrSet & args = getNode(uid)->second._args;
-        for (CStrSet::const_iterator it = ics_arg.begin(); it != ics_arg.end(); ++it) {
-            args.insert(*it);
+        for (ICSArgsMap::const_iterator
+             cit = ics_deps.icsArgs.begin(); cit != ics_deps.icsArgs.end(); ++cit) {
+            insert(cit->first);
         }
     }
-    //NOTE: zero value of 'nm_sec' forves the section name reset
+
+    //NOTE: zero value of 'nm_sec' forces the section name reset
     void setSection(ICSUId uid, const char * nm_sec)
     {
       if (nm_sec)
@@ -151,7 +157,28 @@ public:
         }
     }
     //Adds arguments which customize config parsing
-    void addArguments(CStrSet & use_args)
+    void addArguments(const CStrList & use_args)
+    {
+        if (use_args.empty())
+            return;
+        if (!icsArg.empty() && !icsArg.begin()->compare("*"))
+            return;
+        //first search for "*"
+        for (CStrList::const_iterator
+             it = use_args.begin(); it != use_args.end(); ++it) {
+          if (!it->compare("*")) {
+            addArgument(*it);
+            return;
+          }
+        }
+        for (CStrList::const_iterator
+             it = use_args.begin(); it != use_args.end(); ++it ) {
+          icsArg.insert(*it);
+        }
+    }
+
+    //Adds arguments which customize config parsing
+    void addArguments(const CStrSet & use_args)
     {
         if (use_args.empty())
             return;
@@ -159,23 +186,6 @@ public:
             return;
         if (use_args.find("*") == use_args.end())
             icsArg.insert(use_args.begin(), use_args.end());
-        else
-            addArgument(std::string("*"));
-    }
-
-    void addArguments(const CStrSet & use_args)
-    {
-        if (use_args.empty())
-            return;
-        if (!icsArg.empty() && !icsArg.begin()->compare("*"))
-            return;
-        if (use_args.find("*") == use_args.end()) {
-            icsArg.insert(use_args.begin(), use_args.end());
-            for (CStrSet::const_iterator it = use_args.begin();
-                                          it != use_args.end(); ++it ) {
-              icsArg.insert(*it);
-            }
-        }
         else
             addArgument(std::string("*"));
     }
