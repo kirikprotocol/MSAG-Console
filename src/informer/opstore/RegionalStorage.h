@@ -173,7 +173,7 @@ private:
     ResendQueue                       resendQueue_;
     NewQueue                          newQueue_;
 
-    DeliveryImpl&                     dlv_;
+    EmbedRefPtr<DeliveryImpl>         dlv_;
     InputTransferTask*                inputTransferTask_;  // owned
     ResendTransferTask*               resendTransferTask_;  // owned
     regionid_type                     regionId_;

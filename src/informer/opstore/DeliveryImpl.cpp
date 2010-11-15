@@ -140,9 +140,6 @@ storeJournal_(journal)
 
 DeliveryImpl::~DeliveryImpl()
 {
-    smsc_log_info(log_,"dtor impl D=%u",dlvInfo_->getDlvId());
-    storages_.Empty();
-    smsc_log_info(log_,"dtor done");
 }
 
 
@@ -450,9 +447,12 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 }
 
 
-void DeliveryImpl::detachFromUserInfo()
+void DeliveryImpl::detachEverything()
 {
+    smsc_log_debug(log_,"D=%u detaching everything",dlvInfo_->getDlvId());
     userInfo_->detachDelivery(dlvInfo_->getDlvId());
+    storages_.Empty();
+    smsc_log_debug(log_,"D=%u detached",dlvInfo_->getDlvId());
 }
 
 

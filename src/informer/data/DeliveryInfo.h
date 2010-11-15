@@ -76,10 +76,10 @@ public:
     bool wantFinalMsgRecords() const { return data_.finalMsgRecords; }
     bool wantFinalDlvRecords() const { return data_.finalDlvRecords; }
 
-    /// return start date or -1
+    /// return start date or 0
     msgtime_type getStartDate() const { return startDate_; }
 
-    /// return end date or -1
+    /// return end date or 0
     msgtime_type getEndDate() const { return endDate_; }
 
     /// return active period start or -1

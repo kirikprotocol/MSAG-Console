@@ -374,7 +374,7 @@ void InfosmeCoreV1::selfTest()
         data.retryPolicy = "";
         data.replaceMessage = false;
         data.svcType = "info";
-        data.userData = "0xdeadbeaf";
+        data.userData = "0xdeadbeef";
         data.sourceAddress = "10000";
         data.finalDlvRecords = true;
         data.finalMsgRecords = true;

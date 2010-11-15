@@ -375,7 +375,7 @@ DeliveryMgr::~DeliveryMgr()
     deliveryHash_.Empty();
     // detach all deliveries from user infos
     for ( DeliveryList::iterator i = deliveryList_.begin(); i != deliveryList_.end(); ++i ) {
-        (*i)->detachFromUserInfo();
+        (*i)->detachEverything();
     }
     deliveryList_.clear();
     smsc_log_info(log_,"--- delivery mgr dtor done ---");
@@ -628,7 +628,7 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& 
         tokill.splice(tokill.begin(),deliveryList_,iter);
     }
     (*iter)->getRegionList(regIds);
-    (*iter)->detachFromUserInfo();
+    (*iter)->detachEverything();
 }
 
 

@@ -35,8 +35,10 @@ planTime_(0)
 
 Delivery::~Delivery()
 {
-    smsc_log_info(log_,"dtor D=%u",dlvInfo_->getDlvId());
     delete source_;
+    const dlvid_type dlvId = dlvInfo_->getDlvId();
+    dlvInfo_.reset(0);
+    smsc_log_info(log_,"dtor D=%u done",dlvId);
 }
 
 
