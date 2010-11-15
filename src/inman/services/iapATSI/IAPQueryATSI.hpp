@@ -25,11 +25,13 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::inman::iaprvd::IAPQueryAC;
 using smsc::inman::iaprvd::IAPQueryManagerITF;
 
+using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::atih::MapATSIDlg;
 using smsc::inman::inap::atih::ATSIhandlerITF;
 
 using smsc::inman::comp::UnifiedCSI;
 using smsc::inman::comp::atih::RequestedSubscription;
+using smsc::inman::comp::atih::ATSIRes;
 
 
 class IAPQueryATSI_CFG  : public RequestedSubscription {

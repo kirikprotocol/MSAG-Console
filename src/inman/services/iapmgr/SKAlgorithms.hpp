@@ -46,7 +46,7 @@ public:
   std::string toString(void) const
   {
     std::string outStr;
-    toString(outStr);
+    print(outStr);
     return outStr;
   }
   // ----------------------------------------
@@ -55,7 +55,7 @@ public:
   //NOTE: argument type depends on algorithm
   virtual uint32_t  getSKey(const void * arg = NULL) const = 0;
   //
-  virtual void      toString(std::string & out_str) const = 0;
+  virtual void      print(std::string & out_str) const = 0;
 };
 
 //
@@ -75,7 +75,7 @@ public:
   // ----------------------------------------
   virtual uint32_t  getSKey(const void * arg = NULL) const { return skVal; }
   //
-  virtual void      toString(std::string & out_str) const
+  virtual void      print(std::string & out_str) const
   {
     char buf[sizeof("val: %u") + sizeof(uint32_t)*3];
     snprintf(buf, sizeof(buf)-1, "val: %u", skVal);
@@ -120,7 +120,7 @@ public:
     return it != _skMap.end() ? it->second : 0;
   }
   //
-  virtual void      toString(std::string & out_str) const
+  virtual void      print(std::string & out_str) const
   {
     out_str += "map{";
     out_str += UnifiedCSI::nmTDP(_argCSI); out_str += ",";
