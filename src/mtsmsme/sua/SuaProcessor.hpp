@@ -18,7 +18,7 @@ class SuaProcessor : public RequestProcessor,SccpSender {
                            Address& msc, Address& vlr, Address& hlr);
     virtual void configure(int user_id, int ssn,
                            Address& msc, Address& vlr, Address& hlr,
-                           char* cpmgr, char* instlist);
+                           const char* cpmgr, const char* instlist);
     virtual void send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp);
     virtual HLROAM* getHLROAM();
     virtual int Run();

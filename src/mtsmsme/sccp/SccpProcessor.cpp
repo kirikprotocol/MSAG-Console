@@ -43,7 +43,7 @@ void SccpProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr, 
 }
 void SccpProcessor::configure(int user_id, int ssn,
                               Address& msc, Address& vlr, Address& hlr,
-                              char* cpmgr, char* instlist)
+                              const char* cpmgr, const char* instlist)
 {
   configure(user_id,ssn,msc,vlr,hlr);
 }
