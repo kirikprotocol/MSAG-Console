@@ -15,7 +15,10 @@
     <tr:form>
 
       <h:inputHidden value="#{config.revision}"/>
-
+      <h:panelGrid style="padding-bottom:10px">
+        <eye:message level="info"><h:outputText value="#{msg['config.apply.after.restart.notification']}"/></eye:message>
+      </h:panelGrid>
+      
       <eye:buttons>
         <eye:space/>
         <eye:button>
@@ -29,12 +32,12 @@
       <h:panelGroup style="padding:10px 10px 10px 10px">
 
         <eye:collapsingGroup label="#{msg['config.informer.section']}" opened="true">
-          <tr:panelFormLayout>
+          <tr:panelFormLayout inlineStyle="padding: 10px">
             <tr:panelLabelAndMessage label="#{informerSettings.adminHost}">
               <tr:inputText value="#{config.settings.adminHost}" simple="true" required="true"/>
             </tr:panelLabelAndMessage>
             <tr:panelLabelAndMessage label="#{informerSettings.adminPort}">
-              <tr:inputText value="#{config.settings.adminPort}" simple="true" required="true">
+              <tr:inputText value="#{config.settings.adminPort}" simple="true" required="true" columns="6">
                 <eye:validatePort/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -42,7 +45,7 @@
               <tr:inputText value="#{config.settings.dcpHost}" simple="true" required="true"/>
             </tr:panelLabelAndMessage>
             <tr:panelLabelAndMessage label="#{informerSettings.dcpPort}">
-              <tr:inputText value="#{config.settings.dcpPort}" simple="true" required="true">
+              <tr:inputText value="#{config.settings.dcpPort}" simple="true" required="true" columns="6">
                 <eye:validatePort/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -54,12 +57,12 @@
       <h:panelGroup style="padding:10px 10px 10px 10px">
 
         <eye:collapsingGroup label="#{msg['config.pvss.section']}" opened="true">
-          <tr:panelFormLayout>
+          <tr:panelFormLayout inlineStyle="padding: 10px">
             <tr:panelLabelAndMessage label="#{informerSettings.persHost}">
               <tr:inputText value="#{config.settings.persHost}" simple="true" required="true"/>
             </tr:panelLabelAndMessage>
             <tr:panelLabelAndMessage label="#{informerSettings.persPort}">
-              <tr:inputText value="#{config.settings.persPort}" simple="true" required="true">
+              <tr:inputText value="#{config.settings.persPort}" simple="true" required="true" columns="6">
                 <eye:validatePort/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -71,9 +74,9 @@
       <h:panelGroup style="padding:10px 10px 10px 10px">
 
         <eye:collapsingGroup label="#{msg['config.stats.section']}" opened="true">
-          <tr:panelFormLayout>
+          <tr:panelFormLayout inlineStyle="padding: 10px">
             <tr:panelLabelAndMessage label="#{informerSettings.statDir}">
-              <tr:inputText value="#{config.settings.statDir}" simple="true" required="true"/>
+              <tr:inputText value="#{config.settings.statDir}" simple="true" required="true" columns="100"/>
             </tr:panelLabelAndMessage>
           </tr:panelFormLayout>
         </eye:collapsingGroup>

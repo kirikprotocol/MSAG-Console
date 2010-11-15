@@ -17,6 +17,10 @@
 
       <h:panelGroup rendered="#{regionsUpload.state == 0}">
 
+        <h:panelGrid style="padding-bottom:10px">
+          <eye:message level="warn"><h:outputText value="#{msg['regions.upload.warning']}"/></eye:message>
+        </h:panelGrid>
+
         <h:panelGrid columns="1" style="padding:10px" cellspacing="0" cellpadding="0" columnClasses=",column0WidthRight">
 
           <tr:panelFormLayout>

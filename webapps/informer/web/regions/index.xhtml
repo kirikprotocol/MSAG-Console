@@ -37,16 +37,16 @@
           <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">
             <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
               <h:outputText value="#{regionBundle.name}"/>
-              <h:inputText value="#{regions.regionPrefix}"/>
+              <tr:inputText value="#{regions.regionPrefix}" simple="true" columns="50"/>
               <h:outputText value="#{regionBundle.smsc}"/>
               <h:selectOneMenu value="#{regions.smscPrefix}">
                 <f:selectItem itemLabel="" itemValue=""/>
                 <f:selectItems value="#{regions.smscs}"/>
               </h:selectOneMenu>
             </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
+            <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign">
               <h:outputText value="#{regionBundle.mask}"/>
-              <t:inputText value="#{regions.address}"/>
+              <h:inputText value="#{regions.address}"/>
             </h:panelGrid>
           </h:panelGrid>
         </eye:dataTableFilter>

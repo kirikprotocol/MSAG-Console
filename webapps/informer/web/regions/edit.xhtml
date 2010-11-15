@@ -35,7 +35,7 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{regionBundle.maxSmsPerSecond}" labelStyle="text-align:left">
-            <tr:inputText value="#{regionEdit.region.maxSmsPerSecond}" required="true" simple="true">
+            <tr:inputText value="#{regionEdit.region.maxSmsPerSecond}" required="true" simple="true" columns="5">
               <eye:validatePositive/>
             </tr:inputText>
           </tr:panelLabelAndMessage>
@@ -53,7 +53,7 @@
               <f:selectItems value="#{regionEdit.smscs}"/>
             </h:selectOneMenu>
             <tr:outputText value="&#160;"/>
-            <tr:commandLink text="#{msg['edit.button']}" action="SMSC_EDIT" immediate="true">
+            <tr:commandLink text=">>" action="SMSC_EDIT" immediate="true">
               <f:param value="#{regionEdit.region.smsc}" name="smsc_name"/>
             </tr:commandLink>
           </tr:panelLabelAndMessage>

@@ -379,9 +379,15 @@ public class AdminContext {
     try{
       integrityLock.lock();
       for(User u : usersManager.getUsers()) {
-        for(Integer s : u.getRegions()) {
-          if(s.equals(regionId)) {
-            throw new IntegrityException("fail.delete.region.to.user",regionsManager.getRegion(regionId).getName(),u.getLogin());
+        if (u.getRegions() == null)
+          continue;
+        List<Integer> regions = u.getRegions();
+        for(Iterator<Integer> iter = regions.iterator(); iter.hasNext();) {
+          if(iter.next().equals(regionId)) {
+            iter.remove();
+            u.setRegions(regions);
+            usersManager.updateUser(u);
+            break;
           }
         }
       }

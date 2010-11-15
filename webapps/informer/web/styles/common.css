@@ -137,6 +137,10 @@ div.query_result {
  vertical-align:top;
 }
 
+.columnLeftAlign {
+ text-align:left;
+}
+
 .columnTopLeftAlign {
  vertical-align:top;
  text-align:left;
@@ -148,6 +152,11 @@ div.query_result {
 
 .column50Width {
   width:50px;
+}
+
+.column50WidthNoWrap {
+  width:50px;
+  white-space:nowrap;
 }
 .column70Width {
   width:70px;
