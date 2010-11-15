@@ -130,6 +130,9 @@ class RequestProcessorConfig {
     Address msc;
     Address vlr;
     Address hlr;
+    string cpMgrHostAndPort;
+    string localInstance;
+    string remoteInstances;
   private:
     char* msc_str;
     char* vlr_str;
@@ -149,6 +152,21 @@ class RequestProcessorConfig {
         throw ConfigException("\'sccp\' section is missed");
 
       ConfigView sccpConfig(manager, "msrn.sccp");
+
+      try { localInstance = sccpConfig.getString("localInstance");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'localInstance\' is unknown or missing");
+      }
+
+      try { cpMgrHostAndPort = sccpConfig.getString("cpMgrHostAndPort");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'cpMgrHostAndPort\' is unknown or missing");
+      }
+
+      try { remoteInstances = sccpConfig.getString("remoteInstances");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'remoteInstances\' is unknown or missing");
+      }
 
       try { user = sccpConfig.getInt("user_id");
       } catch (ConfigException& exc) {
