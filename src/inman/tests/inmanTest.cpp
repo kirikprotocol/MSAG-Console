@@ -587,6 +587,10 @@ int main(int argc, char** argv)
   Logger::Init();
   Logger * _logger = Logger::getInstance("smsc.InTST");
 
+  smsc_log_info(_logger, "********************************************************");
+  smsc_log_info(_logger, "* INMan testing console");
+  smsc_log_info(_logger, "********************************************************");
+
   AbonentsDB::Init((unsigned)PRE_ABONENTS_NUM, _abonents);
 
   std::auto_ptr<ConnectSrv> _connServ(new ConnectSrv(ConnectSrv::POLL_TIMEOUT_ms, _logger));
@@ -635,10 +639,13 @@ int main(int argc, char** argv)
     console.addItem("detect",  cmd_detect_abn);
     console.addItem("m_detect",  cmd_detect_mlt);
 /* -------------------------------------------------------------------------- */
-    _connServ->Start();
-    _billFacade->initConnect(host, port);
-    _dtcrFacade->initConnect(host, port);
-    console.run("inman>");
+    if (!_connServ->Start()) {
+      smsc_log_fatal(_logger, "TCP server failed to start");
+    } else {
+      _billFacade->initConnect(host, port);
+      _dtcrFacade->initConnect(host, port);
+      console.run("inman>"); //cycles
+    }
   } catch (const std::exception& error) {
     fprintf(stderr, "%s", error.what());
   }
