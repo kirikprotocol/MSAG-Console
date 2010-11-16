@@ -84,6 +84,13 @@ void AbntContractResult::setError(uint32_t err_code, const char * err_msg/* = NU
         errMsg.clear();
 }
 
+void AbntContractResult::setContractInfo(AbonentContract_e cntr_type, const char * ab_imsi/* = NULL*/)
+{
+  cntrType = cntr_type;
+  if(ab_imsi)
+    abImsi = ab_imsi;
+}
+
 } //interaction
 } //inman
 } //smsc
