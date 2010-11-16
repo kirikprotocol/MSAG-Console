@@ -9,7 +9,7 @@
 switch INMAN_ICS_LINKAGE
 static: #no need for .so loader, service is statically linked into libinman
 default: \
-inman/ldlib/libinman_ics_abcache.so AbCacheLoader $(SHARED_OPT) -linman-services-abcache -linman-incache-solid -linman-common -lutil -ldl -lrt
+inman/ldlib/libinman_ics_abcache.so AbCacheLoader $(SHARED_OPT) -linman-services-abcache -linman-incache-solid -linman-abprov -linman-comp -linman-common -lutil -ldl -lrt
 end switch
 
 
