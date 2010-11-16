@@ -207,7 +207,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
             smsc_log_debug(logger,"taking rule from actionContext");
             rulePtr = session.getLongCallContext().getActionContext()->getRule();
         } else {
-            Rule** rp = rulesRef.rules->rules.GetPtr(key);
+            Rule** rp = rulesRef->GetPtr(key);
             rulePtr = rp ? *rp : 0;
         }
 
@@ -237,7 +237,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
         //actions::CommandProperty cp = CommandBridge::getCommandProperty(command, session.sessionKey().address(), session.sessionPrimaryKey(),
           //                                                              currentOp ? currentOp->type() : 0, &session);
         CommandBridge::CheckCommandProperty(command, cp, session.sessionPrimaryKey(), &session);
-        const bool newevent = ( !session.getLongCallContext().continueExec );
+        // const bool newevent = ( !session.getLongCallContext().continueExec );
         if ( rulePtr ) {
            rulePtr->process( command, session, rs, cp, &hrt );
         } //else if (newevent) {
@@ -296,8 +296,12 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
             continue;
         }
 
-        {
-            Rule** rp = rulesRef.rules->rules.GetPtr(key);
+        if ( session.getLongCallContext().continueExec ) {
+            __require__( session.getLongCallContext().getActionContext() );
+            smsc_log_debug(logger,"taking rule from actionContext");
+            rulePtr = session.getLongCallContext().getActionContext()->getRule();
+        } else {
+            Rule** rp = rulesRef->GetPtr(key);
             rulePtr = rp ? *rp : 0;
         }
 
@@ -307,6 +311,8 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
             if ( rs.status == STATUS_LONG_CALL ) {
                 // session.getLongCallContext().continueExec = true;
                 session.getLongCallContext().getActionContext()->setRule( *rulePtr );
+            } else {
+                session.getLongCallContext().continueExec = false;
             }
             if ( rs.status != STATUS_OK ) break;
 
@@ -321,10 +327,11 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
         // throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", 0 ); // session.getRuleKey().serviceId );
 
     }
-    if ( rs.status == STATUS_LONG_CALL ) {
+    if ( rs.status == STATUS_LONG_CALL && rulePtr ) {
         session.getLongCallContext().getActionContext()->setRule( *rulePtr );
+    } else {
+        session.getLongCallContext().continueExec = false;
     }
-
     return;
 }
 

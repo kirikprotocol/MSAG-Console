@@ -89,8 +89,6 @@ private:
 
     struct RulesReference
     {
-        Rules*  rules;
-
         RulesReference(Rules* _rules) : rules(_rules)
         {
             __require__(rules);
@@ -109,14 +107,20 @@ private:
             rules->unref();
         }
 
-        CRulesHash& operator->()
+        CRulesHash* operator->()
         {
             __require__(rules);
-            return rules->rules;
+            return &(rules->rules);
         }
+
+    private:
+        RulesReference& operator = (const RulesReference&);
+        Rules*  rules;
     };
 
 private:
+    RulesReference& operator = ( const RulesReference& );
+
     RulesReference getRules()
     {
         MutexGuard mg(rulesLock);
@@ -126,9 +130,11 @@ private:
     void changeRules(Rules* _rules)
     {
         MutexGuard mg(rulesLock);
-        __require__(_rules);
-        rules->unref();
-        rules = _rules;
+        if (rules != _rules) {
+            __require__(_rules);
+            rules->unref();
+            rules = _rules;
+        }
     }
 
     Rules* copyReference()
@@ -144,7 +150,6 @@ private:
             rule->ref();
             newRules->rules.Insert(oldKey, rule);
         }
-
         return newRules;
     }
 
