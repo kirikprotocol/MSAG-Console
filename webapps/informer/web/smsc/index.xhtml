@@ -14,6 +14,8 @@
   <ui:define name="content">
 
     <tr:form id="smsc">
+      
+      <eye:delimiter/>
 
       <eye:buttons>
         <eye:button>
@@ -22,7 +24,9 @@
         <eye:space/>
       </eye:buttons>
 
-      <t:dataTable value="#{smsc.smscs}" var="g" styleClass="list" style="padding:10px" rowIndexVar="rowIndex" rowStyleClass="row#{requestScope['rowIndex']%2}">
+      <eye:delimiter/>
+
+      <t:dataTable value="#{smsc.smscs}" var="g" styleClass="list" rowIndexVar="rowIndex" rowStyleClass="row#{requestScope['rowIndex']%2}">
         <h:column headerClass="column100Width">
           <f:facet name="header">
             <h:outputText value="#{msg['smsc.default']}"/>
@@ -55,7 +59,6 @@
           <tr:outputText value="#{g.port}"/>
         </h:column>
 
-
         <h:column>
           <f:facet name="header">
             <h:outputText value="&#160;"/>
@@ -66,6 +69,8 @@
         </h:column>
 
       </t:dataTable>
+
+      <eye:delimiter/>
 
       <eye:buttons>
         <eye:button>

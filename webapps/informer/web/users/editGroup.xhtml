@@ -44,7 +44,7 @@
       <p/>
 
       <eye:collapsingGroup label="#{msg['user.edit.defaults']}" opened="true">
-        <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100Width, columnTopLeftAlign">
+        <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
 
           <h:selectBooleanCheckbox id="editSourceAddr" value="#{userGroupEdit.editSourceAddr}" onchange="document.getElementById('sourceAddr').disabled=!this.checked"/>
           <h:outputText value="#{userBundle.sourceAddr}"/>        

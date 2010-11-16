@@ -6,6 +6,12 @@
   <description>
   </description>
 
+  <!-- DELIMITER -->
+  <tag>
+    <name>delimiter</name>
+    <description>Вертикальный разделитель, замена &lt;p/&gt;</description>
+  </tag>
+
 
   <!-- PROGRESS BAR -->
 

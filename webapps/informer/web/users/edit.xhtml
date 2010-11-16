@@ -80,7 +80,7 @@
 
       <eye:collapsingGroup label="#{msg['user.edit.defaults']}" opened="true">
 
-        <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+        <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
           <h:outputText value="#{userBundle.sourceAddr}"/>
           <tr:inputText value="#{userEdit.sourceAddr}" simple="true" required="true" columns="15"/>
 
@@ -89,11 +89,13 @@
             <f:selectItems value="#{userEdit.daysItems}"/>
           </h:selectManyCheckbox>
 
-          <h:outputText value="#{userBundle.deliveryStartTime}"/>
-          <t:inputDate value="#{userEdit.deliveryStartTime}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+          <h:outputText value="#{msg['user.edit.active.period']}"/>
+          <h:panelGroup>
+            <t:inputDate value="#{userEdit.deliveryStartTime}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+            <h:outputText value=" - "/>
+            <t:inputDate value="#{userEdit.deliveryEndTime}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+          </h:panelGroup>
 
-          <h:outputText value="#{userBundle.deliveryEndTime}"/>
-          <t:inputDate value="#{userEdit.deliveryEndTime}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
 
           <h:outputText value="#{userBundle.priority}"/>
           <tr:inputText value="#{userEdit.userToEdit.priority}" simple="true" required="true" columns="3">

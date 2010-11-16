@@ -16,10 +16,12 @@
 
     <tr:form id="smsc">
 
+      <eye:delimiter/>
+
       <eye:pageSubtitle value="#{msg['region.default.max']}"/>
 
       <tr:subform>
-        <h:panelGrid columns="3" columnClasses="column100Width, column100Width," style="padding-top:10px;padding-bottom:10px;">
+        <h:panelGrid columns="3" columnClasses="column100Width, column100Width,columnTopLeftAlign">
           <tr:inputText columns="8" value="#{regions.defaultMax}" required="true">
             <eye:validatePositive/>
           </tr:inputText>
@@ -28,30 +30,32 @@
         </h:panelGrid>
       </tr:subform>
 
-      <h:outputText style="padding-top:10px" value="&#160;"/>
+      <eye:delimiter/>
 
       <eye:pageSubtitle value="#{msg['region.regions']}"/>
 
-      <h:panelGroup style="padding:10px">
-        <eye:dataTableFilter bean="#{regions}" clearAction="clearFilter">
-          <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">
-            <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
-              <h:outputText value="#{regionBundle.name}"/>
-              <tr:inputText value="#{regions.regionPrefix}" simple="true" columns="50"/>
-              <h:outputText value="#{regionBundle.smsc}"/>
-              <h:selectOneMenu value="#{regions.smscPrefix}">
-                <f:selectItem itemLabel="" itemValue=""/>
-                <f:selectItems value="#{regions.smscs}"/>
-              </h:selectOneMenu>
-            </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign">
-              <h:outputText value="#{regionBundle.mask}"/>
-              <h:inputText value="#{regions.address}"/>
-            </h:panelGrid>
-          </h:panelGrid>
-        </eye:dataTableFilter>
+      <eye:dataTableFilter bean="#{regions}" clearAction="clearFilter">
+        <h:panelGrid columns="4" columnClasses="column50Width, column400Width, column50Width, columnTopLeftAlign">
+          <h:outputText value="#{regionBundle.name}"/>
+          <tr:inputText value="#{regions.regionPrefix}" simple="true" columns="50"/>
 
-        <eye:buttons>
+          <h:outputText value="#{regionBundle.smsc}"/>
+          <h:selectOneMenu value="#{regions.smscPrefix}">
+            <f:selectItem itemLabel="" itemValue=""/>
+            <f:selectItems value="#{regions.smscs}"/>
+          </h:selectOneMenu>
+
+          <h:outputText value="#{regionBundle.mask}"/>
+          <h:inputText value="#{regions.address}"/>
+
+          <h:outputText value="&#160;"/>
+          <h:outputText value="&#160;"/>
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
         </eye:button>
@@ -64,33 +68,33 @@
         </eye:button>
       </eye:buttons>
 
-      <h:outputText style="padding-top:20px" value="&#160;"/>
+      <eye:delimiter/>
 
-        <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="r">
-          <eye:row rowId="#{r.regionId}">
+      <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="r">
+        <eye:row rowId="#{r.regionId}">
 
-            <eye:column name="name" title="#{regionBundle.name}" sortable="true" width="25%" align="center">
-              <h:commandLink value="#{r.name}" action="REGION_EDIT">
-                <f:param name="REGION_ID" value="#{r.regionId}"/>
-              </h:commandLink>
-            </eye:column>
+          <eye:column name="name" title="#{regionBundle.name}" sortable="true" width="25%" align="center">
+            <h:commandLink value="#{r.name}" action="REGION_EDIT">
+              <f:param name="REGION_ID" value="#{r.regionId}"/>
+            </h:commandLink>
+          </eye:column>
 
-            <eye:column name="smsc" title="#{regionBundle.smsc}" sortable="true" width="25%" align="center">
-              <h:outputText value="#{r.smsc}"/>
-            </eye:column>
+          <eye:column name="smsc" title="#{regionBundle.smsc}" sortable="true" width="25%" align="center">
+            <h:outputText value="#{r.smsc}"/>
+          </eye:column>
 
-            <eye:column name="timezone" title="#{regionBundle.timeZone}" sortable="true" width="25%" align="center">
-              <h:outputText value="#{r.timeZone}" converter="timeZoneConverter"/>
-            </eye:column>
+          <eye:column name="timezone" title="#{regionBundle.timeZone}" sortable="true" width="25%" align="center">
+            <h:outputText value="#{r.timeZone}" converter="timeZoneConverter"/>
+          </eye:column>
 
-            <eye:column name="maxPerSecond" title="#{regionBundle.maxSmsPerSecond}" sortable="true" width="25%" align="center">
-              <h:outputText value="#{r.maxSmsPerSecond}"/>
-            </eye:column>
+          <eye:column name="maxPerSecond" title="#{regionBundle.maxSmsPerSecond}" sortable="true" width="25%" align="center">
+            <h:outputText value="#{r.maxSmsPerSecond}"/>
+          </eye:column>
 
-          </eye:row>
-        </eye:dataTable>
+        </eye:row>
+      </eye:dataTable>
 
-      </h:panelGroup>
+      <eye:delimiter/>
 
       <eye:buttons>
         <eye:button>

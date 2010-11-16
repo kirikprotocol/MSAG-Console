@@ -64,7 +64,10 @@ function TextColumn(columnId, allowEditAfterAdd) {
     return document.getElementById(id).value;
   }
 
-
+  this.clearLastRowValue = function(tableId) {
+    var id = tableId + "_newcell_" + columnId;
+    document.getElementById(id).value = "";
+  }
 }
 
 /**
@@ -231,8 +234,11 @@ function DynamicTable(contextPath, tableId, columns) {
     image.setAttribute("class", "button");
     image.onclick = function(e) {
       var values = new Array();
-      for (var i = 0; i < columns.length; i++)
+      for (var i = 0; i < columns.length; i++) {
         values[i] = columns[i].getLastRowValue(tableId);
+        columns[i].clearLastRowValue(tableId)
+      }
+
       tableInstance.addRow(values);
     };
     newRow.insertCell(newRow.cells.length).appendChild(image);

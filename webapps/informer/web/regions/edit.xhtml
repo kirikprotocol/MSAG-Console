@@ -14,6 +14,8 @@
 
     <tr:form>
 
+      <eye:delimiter/>
+
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['done.button']}" action="#{regionEdit.save}"/>
@@ -31,7 +33,7 @@
         <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
 
           <tr:panelLabelAndMessage label="#{regionBundle.name}" labelStyle="text-align:left">
-            <tr:inputText value="#{regionEdit.region.name}" required="true" simple="true"/>
+            <tr:inputText value="#{regionEdit.region.name}" required="true" simple="true" columns="50"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{regionBundle.maxSmsPerSecond}" labelStyle="text-align:left">
@@ -42,7 +44,6 @@
 
           <tr:panelLabelAndMessage label="#{regionBundle.timeZone}" labelStyle="text-align:left">
             <h:selectOneMenu id="timezone" value="#{regionEdit.region.timeZone}" required="true" converter="timeZoneIdConverter">
-              <f:selectItem itemLabel=""/>
               <f:selectItems value="#{regionEdit.timeZones}"/>
             </h:selectOneMenu>
           </tr:panelLabelAndMessage>
