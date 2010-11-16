@@ -32,17 +32,19 @@
         </h:panelGrid>
       </eye:dataTableFilter>
 
+      <eye:delimiter/>
+
       <eye:dataTable value="#{journal.records}" var="rec" rendered="#{journal.init}">
         <eye:row>
-          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="10%" align="center">
+          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="15%" align="center">
             <h:outputText value="#{rec.date}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </h:outputText>
           </eye:column>
-          <eye:column name="user" title="#{msg['journal.page.user']}" sortable="true" width="10%" align="center">
+          <eye:column name="user" title="#{msg['journal.page.user']}" sortable="true" width="7%" align="center">
             <h:outputText value="#{rec.user}" title="#{rec.userDetails}"/>
           </eye:column>
-          <eye:column name="subject" title="#{msg['journal.page.subject']}" sortable="true" width="10%" align="center">
+          <eye:column name="subject" title="#{msg['journal.page.subject']}" sortable="true" width="8%" align="center">
             <h:outputText value="#{rec.subject}"/>
           </eye:column>
           <eye:column name="description" title="#{msg['journal.page.description']}" width="70%">
@@ -52,6 +54,7 @@
       </eye:dataTable>
 
       <h:panelGroup style="#{journal.init ? '' : 'display:none'}">
+        <eye:delimiter/>
         <eye:buttons>
           <eye:space/>
           <eye:button>

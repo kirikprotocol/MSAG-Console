@@ -16,61 +16,80 @@
 
     <tr:form id="smsc">
 
-      <h:panelGroup>
+      <eye:message level="warn" rendered="#{!restrictionEdit.restrictionDaemonStarted}">
+        <h:outputText value="#{msg['restriction.edit.daemon.over.warn']}"/>
+      </eye:message>
+      <eye:delimiter rendered="#{!restrictionEdit.restrictionDaemonStarted}"/>
 
-        <eye:dataTableFilter bean="#{restrictionsList}" clearAction="clearFilter">
-          <h:panelGrid columns="4" columnClasses="column50WidthNoWrap, column400Width, column50WidthNoWrap, columnTopLeftAlign">
+      <eye:dataTableFilter bean="#{restrictionsList}" clearAction="clearFilter">
+        <h:panelGrid columns="4" columnClasses="column50WidthNoWrap, column400Width, column50WidthNoWrap, columnTopLeftAlign">
 
-            <h:outputText value="#{msg['restriction.page.namePattern']}"/>
-            <tr:inputText id="namePattern" value="#{restrictionsList.filter.nameFilter}" simple="true"/>
+          <h:outputText value="#{msg['restriction.page.namePattern']}"/>
+          <tr:inputText id="namePattern" value="#{restrictionsList.filter.nameFilter}" simple="true"/>
 
-            <h:outputText value="&#160;"/>
-            <h:outputText value="&#160;"/>
+          <h:outputText value="#{msg['restriction.page.userId']}"/>
+          <tr:inputText value="#{restrictionsList.filter.userId}" simple="true"/>
 
-            <h:outputText id="fromDate" value="#{msg['restriction.page.from_date']}"/>
-            <t:inputDate value="#{restrictionsList.filter.startDate}" popupCalendar="true" type="both" />
+          <h:outputText id="fromDate" value="#{msg['restriction.page.from_date']}"/>
+          <t:inputDate value="#{restrictionsList.filter.startDate}" popupCalendar="true" type="both"/>
 
-            <h:outputText value="#{msg['restriction.page.till_date']}"/>
-            <t:inputDate id="tillDate" value="#{restrictionsList.filter.endDate}"  popupCalendar="true" type="both"/>
+          <h:outputText value="#{msg['restriction.page.till_date']}"/>
+          <t:inputDate id="tillDate" value="#{restrictionsList.filter.endDate}" popupCalendar="true" type="both"/>
 
-          </h:panelGrid>
-        </eye:dataTableFilter>
+        </h:panelGrid>
+      </eye:dataTableFilter>
 
-        <eye:buttons>
-          <eye:button>
-            <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['delete.button']}" action="#{restrictionsList.removeSelected}"
-                            onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
-                />
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
+      <eye:delimiter/>
 
-        <p/>
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" action="#{restrictionsList.removeSelected}"
+                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
+              />
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
 
-        <eye:dataTable value="#{restrictionsList.restrictionsModel}" selectedRows="#{restrictionsList.selectedRows}" var="r">
-          <eye:row rowId="#{r.id}">
-            <eye:column name="name" title="#{msg['restriction.page.name']}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
-              <h:commandLink value="#{r.name}" action="RESTRICTION_EDIT">
-                <f:param name="restrictionId" value="#{r.id}"/>
-              </h:commandLink>
-            </eye:column>
-            <eye:column name="startDate" title="#{msg['restriction.page.startDate']}" sortable="true" width="20%" align="left">
-              <h:outputText value="#{r.startDate}"><f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/></h:outputText>
-            </eye:column>
-            <eye:column name="endDate" title="#{msg['restriction.page.endDate']}" sortable="true" width="20%" align="left">
-              <h:outputText value="#{r.endDate}"><f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/></h:outputText>
-            </eye:column>
-            <eye:column name="allUsers" title="#{msg['restriction.page.allUsers']}" sortable="true" width="40%" align="left">
-              <h:outputText value="#{r.allUsers}"/>
-            </eye:column>
-          </eye:row>
-        </eye:dataTable>
+      <eye:delimiter/>
 
+      <eye:dataTable value="#{restrictionsList.restrictionsModel}" selectedRows="#{restrictionsList.selectedRows}" var="r">
+        <eye:row rowId="#{r.id}" innerData="#{!r.allUsers}">
+          <eye:column name="name" title="#{msg['restriction.page.name']}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
+            <h:commandLink value="#{r.name}" action="RESTRICTION_EDIT">
+              <f:param name="restrictionId" value="#{r.id}"/>
+            </h:commandLink>
+          </eye:column>
+          <eye:column name="startDate" title="#{msg['restriction.page.startDate']}" sortable="true" width="20%" align="center">
+            <h:outputText value="#{r.startDate}"><f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/></h:outputText>
+          </eye:column>
+          <eye:column name="endDate" title="#{msg['restriction.page.endDate']}" sortable="true" width="20%" align="center">
+            <h:outputText value="#{r.endDate}"><f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/></h:outputText>
+          </eye:column>
+          <eye:column name="allUsers" title="#{msg['restriction.page.allUsers']}" sortable="true" width="40%" align="center">
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{r.allUsers}"/>
+          </eye:column>
 
-      </h:panelGroup>
+          <f:facet name="innerData">
+            <h:panelGroup>
+              <h:outputText value="#{msg['restriction.page.users']}: " style="font-weight:bold;"/>
+              <c:set var="mx" value="#{fn:length(r.userIds)}"/>
+              <tr:iterator value="#{r.userIds}" var="user" varStatus="cnt">
+                <h:commandLink value="#{user}" action="USER_EDIT">
+                  <f:param name="userId" value="#{user}"/>
+                </h:commandLink>                
+                <h:outputText value=", " rendered="#{ (mx) gt cnt.count}"/>
+              </tr:iterator>
+            </h:panelGroup>
+          </f:facet>
+        </eye:row>
+
+      </eye:dataTable>
+
+      <eye:delimiter/>
+
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT"/>

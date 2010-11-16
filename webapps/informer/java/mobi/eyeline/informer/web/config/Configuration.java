@@ -359,6 +359,10 @@ public class Configuration {
     journal.logDeleteRestriction(oldr,user);
   }
 
+  public boolean isResctictionDaemonStarted() {
+    return context.isRestrictionDaemonStarted();
+  }
+
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
     context.addMessages(login, password, msDataSource, deliveryId);
   }

@@ -14,6 +14,11 @@
 
     <tr:form id="userForm" rendered="#{!restrictionEdit.initError}">
 
+      <eye:message level="warn" rendered="#{!restrictionEdit.restrictionDaemonStarted}">
+        <h:outputText value="#{msg['restriction.edit.daemon.over.warn']}"/>
+      </eye:message>
+      <eye:delimiter rendered="#{!restrictionEdit.restrictionDaemonStarted}"/>
+
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['done.button']}" action="#{restrictionEdit.save}"/>
@@ -26,46 +31,42 @@
 
       <tr:inputHidden id="restrictionId" value="#{restrictionEdit.restrictionId}"/>
 
-      <h:panelGrid style="padding:10px" columns="1" columnClasses="columnTopLeftAlign">
+      <eye:delimiter/>
 
-        <tr:panelFormLayout inlineStyle="align:left; width:300px;" labelWidth="30%" fieldWidth="69%">
+      <h:panelGrid style="padding-left:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
-          <tr:panelLabelAndMessage label="#{msg['restriction.page.name']}" labelStyle="text-align:left" inlineStyle="align:left;">
-            <tr:inputText value="#{restrictionEdit.restriction.name}"  simple="true">
-              <tr:validateLength minimum="1"/>
-            </tr:inputText>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.name']}"/>
+        <tr:inputText value="#{restrictionEdit.restriction.name}"  simple="true">
+          <tr:validateLength minimum="1"/>
+        </tr:inputText>
 
-          <tr:panelLabelAndMessage label="#{msg['restriction.page.startDate']}" labelStyle="text-align:left" inlineStyle="align:left;">
-            <t:inputDate value="#{restrictionEdit.restriction.startDate}"  popupCalendar="true" type="both" />
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.startDate']}"/>
+        <t:inputDate value="#{restrictionEdit.restriction.startDate}"  popupCalendar="true" type="both" />
 
-          <tr:panelLabelAndMessage label="#{msg['restriction.page.endDate']}" labelStyle="text-align:left" inlineStyle="align:left;">
-            <t:inputDate value="#{restrictionEdit.restriction.endDate}"  popupCalendar="true" type="both" />
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.endDate']}"/>
+        <t:inputDate value="#{restrictionEdit.restriction.endDate}"  popupCalendar="true" type="both" />
 
-
-          <tr:panelLabelAndMessage label="#{msg['restriction.page.allUsers']}" labelStyle="text-align:left" inlineStyle="align:left;">
-            <t:selectBooleanCheckbox value="#{restrictionEdit.restriction.allUsers}"
+        <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.allUsers']}"/>
+        <t:selectBooleanCheckbox value="#{restrictionEdit.restriction.allUsers}"
                                      onchange="
                                      var shuttleDiv = document.getElementById('usersShuttle');
-                                     shuttleDiv.style.visibility = this.checked ? 'hidden':'visible';                                     
+                                     shuttleDiv.style.display = this.checked ? 'none':'';
                                      "
             />
-          </tr:panelLabelAndMessage>
-          
 
+        <h:outputText style="white-space:nowrap;" value="&#160;"/>
+        <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <tr:selectManyShuttle id="usersShuttle" value="#{restrictionEdit.selectedUsers}"
-                leadingHeader="#{msg['restriction.page.availableUsers']}"
-                trailingHeader="#{msg['restriction.page.selectedUsers']}"
-                
-                inlineStyle="visibility: #{restrictionEdit.restriction.allUsers==true ? 'hidden':'visible'};">
+                                leadingHeader="#{msg['restriction.page.availableUsers']}"
+                                trailingHeader="#{msg['restriction.page.selectedUsers']}"
+
+                                inlineStyle="display: #{restrictionEdit.restriction.allUsers==true ? 'none':''};">
             <f:selectItems value="#{restrictionEdit.users}"/>
           </tr:selectManyShuttle>
+          <h:outputText value="&#160;"/>
+        </h:panelGrid>
 
-        </tr:panelFormLayout>
       </h:panelGrid>
-
 
       <eye:buttons>
         <eye:button>

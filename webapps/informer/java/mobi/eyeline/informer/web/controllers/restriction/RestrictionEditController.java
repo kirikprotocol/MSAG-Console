@@ -15,7 +15,7 @@ import java.util.List;
  * Date: 08.11.2010
  * Time: 14:49:06
  */
-public class RestrictionEditController extends InformerController{
+public class RestrictionEditController extends RestrictionController{
   private Integer restrictionId;
   private Restriction restriction;
   private static final String ID_PARAMETER = "restrictionId";
@@ -24,7 +24,6 @@ public class RestrictionEditController extends InformerController{
 
 
   public RestrictionEditController() {
-    super();
     try {
       String s = getRequestParameter(ID_PARAMETER);
       setRestrictionId(s==null || s.length()==0 ? null :Integer.valueOf(s));

@@ -659,6 +659,10 @@ public class AdminContext {
     restrictionDaemon.rebuildSchedule();
   }
 
+  public boolean isRestrictionDaemonStarted() {
+    return restrictionDaemon.isStarted();
+  }
+
   public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
     synchronized (getLock(deliveryId)) {
       return deliveryManager.setDeliveryRestriction(login, password, deliveryId, restriction);

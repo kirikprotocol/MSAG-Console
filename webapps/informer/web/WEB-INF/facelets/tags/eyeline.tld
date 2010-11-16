@@ -10,6 +10,13 @@
   <tag>
     <name>delimiter</name>
     <description>Вертикальный разделитель, замена &lt;p/&gt;</description>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Флаг, определяющий отображать или нет данный элемент на странице</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
   </tag>
 
 

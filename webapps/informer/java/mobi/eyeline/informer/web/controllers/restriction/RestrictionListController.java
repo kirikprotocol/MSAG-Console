@@ -15,13 +15,12 @@ import java.util.*;
  * Date: 08.11.2010
  * Time: 14:04:40
  */
-public class RestrictionListController extends InformerController {
+public class RestrictionListController extends RestrictionController {
 
   RestrictionsFilter filter;
   private List<String> selectedRows;
 
   public RestrictionListController() throws AdminException {
-    super();
     filter = new RestrictionsFilter();
   }
 
@@ -29,6 +28,7 @@ public class RestrictionListController extends InformerController {
     filter.setStartDate(null);
     filter.setEndDate(null);
     filter.setNameFilter(null);
+    filter.setUserId(null);
   }
 
   public RestrictionsFilter getFilter() {
