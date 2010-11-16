@@ -31,12 +31,20 @@ struct AbonentPreset {
 class AbonentsDB { //Singleton
 protected:
   typedef std::map<unsigned, AbonentInfo> AbonentsMAP;
+  typedef std::map<TonNpiAddress, unsigned> AbonentsIdxMAP;
 
   mutable Mutex   _sync;
   AbonentsMAP     _registry;
+  AbonentsIdxMAP  _idxReg;
   unsigned        _lastAbnId;
 
   void initDB(unsigned n_abn, const AbonentPreset * p_abn);
+
+  void insertAbonent(unsigned ab_idx, const AbonentInfo & ab_info)
+  {
+    _registry[ab_idx] = ab_info;
+    _idxReg[ab_info.msIsdn] = ab_idx;
+  }
 
   AbonentsDB(void) : _lastAbnId(0)
   { }
@@ -52,7 +60,7 @@ public:
   unsigned nextId(unsigned ab_id) const { return (ab_id >= _lastAbnId) ? 1 : ++ab_id; }
 
   AbonentInfo * getAbnInfo(unsigned ab_id);
-
+  const AbonentInfo * getAbnInfo(unsigned ab_id) const;
   //
   unsigned searchNextAbn(AbonentContract_e ab_type, unsigned min_id = 0) const;
   //
@@ -66,9 +74,9 @@ public:
   void printAbonents(FILE * stream, unsigned min_id = 0, unsigned max_id = 0) const;
 
   //Adds AbonentInfo entry
-  unsigned setAbnInfo(const AbonentInfo & abn);
+  unsigned setAbnInfo(const AbonentInfo & ab_info);
   //Overwrires/Adds AbonentInfo entry 
-  unsigned setAbnInfo(unsigned ab_id, const AbonentInfo & abn);
+  unsigned setAbnInfo(unsigned ab_id, const AbonentInfo & ab_info);
   //Reserves AbonentInfo entry for abonent with given address
   unsigned setAbonent(const TonNpiAddress & addr,
                       AbonentContract_e cntr_type = AbonentContractInfo::abtUnknown,

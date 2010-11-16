@@ -18,7 +18,7 @@ void AbonentsDB::initDB(unsigned n_abn, const AbonentPreset * p_abn)
   for (unsigned i = 0; i < n_abn; ++i) {
     AbonentInfo  abn(p_abn[i].abType, p_abn[i].addr, p_abn[i].imsi);
     if (!abn.Empty())
-      _registry.insert(AbonentsMAP::value_type(++_lastAbnId, abn));
+      insertAbonent(++_lastAbnId, abn);
   }
 }
 
@@ -49,7 +49,15 @@ AbonentInfo * AbonentsDB::getAbnInfo(unsigned ab_id)
   return (it != _registry.end()) ? &(it->second) : NULL;
 }
 
-unsigned AbonentsDB::searchNextAbn(AbonentContract_e ab_type, unsigned min_id/* = 0*/) const
+const AbonentInfo * AbonentsDB::getAbnInfo(unsigned ab_id) const
+{
+  MutexGuard  grd(_sync);
+  AbonentsMAP::const_iterator it = _registry.find(ab_id);
+  return (it != _registry.end()) ? &(it->second) : NULL;
+}
+
+unsigned AbonentsDB::searchNextAbn(AbonentContract_e ab_type,
+                                   unsigned min_id/* = 0*/) const
 {
   MutexGuard  grd(_sync);
   AbonentsMAP::const_iterator it = _registry.begin();
@@ -75,13 +83,8 @@ unsigned AbonentsDB::searchAbn(const std::string & addr) const
 unsigned AbonentsDB::searchAbn(const TonNpiAddress & subscr) const
 {
   MutexGuard  grd(_sync);
-  for (AbonentsMAP::const_iterator
-       it = _registry.begin(); it != _registry.end(); ++it) {
-    const AbonentInfo & abn = it->second;
-    if (abn.msIsdn == subscr)
-      return it->first;
-  }
-  return 0; //unknown
+  AbonentsIdxMAP::const_iterator idxIt = _idxReg.find(subscr);
+  return (idxIt == _idxReg.end()) ? 0 : idxIt->second;
 }
 
 
@@ -115,21 +118,21 @@ void AbonentsDB::printAbonents(FILE * stream, unsigned min_id/* = 0*/, unsigned 
   }
 }
 
-unsigned AbonentsDB::setAbnInfo(const AbonentInfo & abn)
+unsigned AbonentsDB::setAbnInfo(const AbonentInfo & ab_info)
 {
-  unsigned ab_id = searchAbn(abn.msIsdn);
+  unsigned ab_id = searchAbn(ab_info.msIsdn);
   MutexGuard  grd(_sync);
   if (!ab_id)
     ab_id = ++_lastAbnId; 
-  _registry.insert(AbonentsMAP::value_type(ab_id, abn));
+  insertAbonent(ab_id, ab_info);
   return ab_id;
 }
 
-unsigned AbonentsDB::setAbnInfo(unsigned ab_id, const AbonentInfo & abn)
+unsigned AbonentsDB::setAbnInfo(unsigned ab_id, const AbonentInfo & ab_info)
 {
   MutexGuard  grd(_sync);
   if (ab_id <= _lastAbnId) {
-    _registry.insert(AbonentsMAP::value_type(ab_id, abn));
+    _registry[ab_id] = ab_info;
     return ab_id;
   }
   return 0;
@@ -139,13 +142,13 @@ unsigned AbonentsDB::setAbonent(const TonNpiAddress & addr,
                       AbonentContract_e cntr_type/* = AbonentContractInfo::abtUnknown*/,
                       const char * sbcr_imsi/* = NULL*/)
 {
-  AbonentInfo   abn(addr, cntr_type, sbcr_imsi);
-  unsigned      ab_id = searchAbn(abn.msIsdn);
+  AbonentInfo   abInfo(addr, cntr_type, sbcr_imsi);
+  unsigned      ab_id = searchAbn(abInfo.msIsdn);
 
   MutexGuard  grd(_sync);
   if (!ab_id)
-    ab_id = ++_lastAbnId; 
-  _registry.insert(AbonentsMAP::value_type(ab_id, abn));
+    ab_id = ++_lastAbnId;
+  insertAbonent(ab_id, abInfo);
   return ab_id;
 }
 
