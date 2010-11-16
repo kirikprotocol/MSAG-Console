@@ -37,7 +37,7 @@ IAPQueryAC * IAPQueryATSIFactory::newQuery(unsigned q_id, IAPQueryManagerITF * o
 /* ************************************************************************** *
  * class IAPQueryATSI implementation:
  * ************************************************************************** */
-const IAPQueryATSI::TypeString_t _qryType("IAPQueryATSI");
+const IAPQueryATSI::TypeString_t IAPQueryATSI::_qryType("IAPQueryATSI");
 
 IAPQueryATSI::IAPQueryATSI(unsigned q_id, IAPQueryManagerITF * owner, 
                         Logger * use_log, const IAPQueryATSI_CFG & use_cfg)

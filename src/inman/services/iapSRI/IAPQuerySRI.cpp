@@ -40,7 +40,7 @@ IAPQueryAC * IAPQuerySRIFactory::newQuery(unsigned q_id, IAPQueryManagerITF * ow
 /* ************************************************************************** *
  * class IAPQuerySRI implementation:
  * ************************************************************************** */
-const IAPQuerySRI::TypeString_t _qryType("IAPQuerySRI");
+const IAPQuerySRI::TypeString_t IAPQuerySRI::_qryType("IAPQuerySRI");
 
 IAPQuerySRI::IAPQuerySRI(unsigned q_id, IAPQueryManagerITF * owner, 
                         Logger * use_log, const IAPQuerySRI_CFG & use_cfg)
