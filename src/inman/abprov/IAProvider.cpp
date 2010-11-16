@@ -23,7 +23,7 @@ IAPAbilityStr_t IAPAbility::toString(void) const
     if (!first) {
       str += ',';  first = false;
     }
-    str += "contract";
+    str += "gsmSCF";
   }
   if (value.st.imsi) {
     if (!first) {
