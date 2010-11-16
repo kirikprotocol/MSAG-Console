@@ -101,8 +101,8 @@ unsigned SCFsCfgReader::readSrvKeys(XConfigView & scf_cfg, SKAlgorithmsDb & sk_a
       std::auto_ptr<SKAlgorithmAC> pAlg(readSkeyAlg(scf_cfg, csiType, cstr));
 
       if (pAlg.get()) {
-        sk_alg.addAlgorithm(csiType, pAlg.release());
         smsc_log_info(logger, "  skey %s %s", sit->c_str(), pAlg->toString().c_str());
+        sk_alg.addAlgorithm(csiType, pAlg.release());
       } else
         throw ConfigException("  %s service key value/algorithm is invalid", sit->c_str());
     } else
@@ -143,7 +143,7 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
   }
   if ((pin->_capSms.rejectRPC.size() <= 1)
       || !pin->_capSms.rejectRPC.toString(cppStr))
-    cppStr += "unsupported";
+    cppStr += "<none>";
   smsc_log_info(logger, cppStr.c_str());
 
   //list of RP causes indicating that IN point should be
@@ -164,7 +164,7 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
       ++(it->_att);
   }
   if (!pin->_capSms.retryRPC.toString(cppStr))
-    cppStr += "unsupported";
+    cppStr += "<none>";
   smsc_log_info(logger, cppStr.c_str());
 
   cstr = NULL;
