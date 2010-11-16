@@ -678,8 +678,9 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
     //Here goes either abtPrepaid or abtUnknown ..
     RCHash err = 0;
     if (billMode == ChargeParm::bill2IN) {
-      err = _RCS_INManErrors->mkhash(configureSCF());
-      if (err) {
+      INManErrorId::Code_e rc = configureSCF();
+      if (rc) {
+        err = _RCS_INManErrors->mkhash(rc);
         if ((billMode = billPrio->second) == ChargeParm::billOFF)
           return chargeResult(false, err);
         //else //billCDR
