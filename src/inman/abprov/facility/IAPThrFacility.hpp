@@ -86,8 +86,8 @@ public:
   unsigned                 getId(void)             const { return _qId; }
   unsigned long            Usage(void)             const { return usage; }
   IAPQStatus::Code         Status(void)            const { return _qStatus; }
-  RCHash                   Error(void)             const { return _qError; }
-  std::string              Status2Str(void)        const;
+  RCHash                   getError(void)          const;
+  std::string              status2Str(void)        const;
 
 protected:
   EventMonitor        _mutex;

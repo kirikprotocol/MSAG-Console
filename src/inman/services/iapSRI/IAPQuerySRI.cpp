@@ -56,14 +56,11 @@ int IAPQuerySRI::Execute(void)
     MutexGuard tmp(_mutex);
     if (isStopping || !_owner->hasListeners(abonent)) {
       //query was cancelled by either QueryManager or ThreadPool
-      _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqCancelled);
-      return _qStatus;
+      return (_qStatus = IAPQStatus::iqCancelled);
     }
     //MAP_SRI serves only ISDN International numbers
-    if (!abonent.interISDN()) {
-      _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqBadArg);
-      return _qStatus;
-    }
+    if (!abonent.interISDN())
+      return (_qStatus = IAPQStatus::iqBadArg);
 
     try {
       sriDlg = new MapCHSRIDlg(_cfg.mapSess, this); //binds this as user
@@ -72,9 +69,9 @@ int IAPQuerySRI::Execute(void)
       if (_mutex.wait(_cfg.mapTimeout*1000 + 100) != 0) //Unlocks, waits, locks
           _qStatus = IAPQStatus::iqTimeout;
     } catch (const std::exception & exc) {
-      smsc_log_error(logger, "%s(%s): %s", taskName(),
-                 abonent.getSignals(), exc.what());
-      _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqError);
+      smsc_log_error(logger, "%s(%s): %s", taskName(), abonent.getSignals(),
+                     exc.what());
+      _qStatus = IAPQStatus::iqError;
       _exc = exc.what();
     }
     if (sriDlg) {
@@ -93,7 +90,7 @@ void IAPQuerySRI::stop(void)
 {
   MutexGuard  grd(_mutex);
   isStopping = true;
-  _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqCancelled);
+  _qStatus = IAPQStatus::iqCancelled;
   _mutex.notify();
 }
 // ****************************************

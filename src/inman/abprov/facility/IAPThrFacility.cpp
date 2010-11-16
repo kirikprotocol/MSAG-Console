@@ -50,7 +50,13 @@ bool IAPQueryAC::init(const AbonentId & ab_number)
     return true;
 }
 
-std::string IAPQueryAC::Status2Str(void) const
+RCHash  IAPQueryAC::getError(void) const
+{
+  return (!_qError && (_qStatus != IAPQStatus::iqOk)) ?
+          _RCS_IAPQStatus->mkhash(_qStatus) : _qError;
+}
+
+std::string IAPQueryAC::status2Str(void) const
 {
     std::string st;
     switch (_qStatus) {
@@ -66,6 +72,8 @@ std::string IAPQueryAC::Status2Str(void) const
         st += "failed";
         if (!_exc.empty()) {
             st += ", "; st += _exc;
+        } else if (_qError) {
+            st += ", "; st += URCRegistry::explainHash(_qError);
         }
     }
     } /* eosw */
@@ -174,8 +182,8 @@ void IAPQueryFacility::releaseQuery(IAPQueryAC * query)
                     qry_rec->cbList.pop_front();
                     qrsGuard.Unlock();
                     try { hdl->onIAPQueried(query->getAbonentId(),
-                                        query->getAbonentInfo(), query->Error());
-                    } catch (std::exception &exc) {
+                                        query->getAbonentInfo(), query->getError());
+                    } catch (const std::exception & exc) {
                         smsc_log_error(logger, "%s: %s(%s): listener exception: %s", _logId,
                                 query->taskName(), (query->getAbonentId()).getSignals(),
                                 exc.what());
@@ -201,7 +209,7 @@ void IAPQueryFacility::releaseQuery(IAPQueryAC * query)
         else
             smsc_log_info(logger, "%s: %s(%s): %s", _logId,
                 query->taskName(), query->getAbonentId().getSignals(),
-                query->Status2Str().c_str());
+                query->status2Str().c_str());
     }
     return;
 }
