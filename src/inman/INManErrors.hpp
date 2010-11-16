@@ -36,6 +36,7 @@ extern URCSpacePTR  _RCS_INManErrors;
 #define FDECL_rc2Txt_INManErrors()    \
 const char * rc2Txt_INManErrors(uint32_t err_code) { \
     switch (err_code) { \
+    case INManErrorId::noErr:           return "Ok"; \
     case INManErrorId::protocolGeneralError: return "illegal/invalid PDU"; \
     case INManErrorId::protocolInvalidData: return "invalid or insufficient PDU data"; \
     case INManErrorId::cfgSpecific:         return "specific config settings"; \
@@ -51,7 +52,7 @@ const char * rc2Txt_INManErrors(uint32_t err_code) { \
 }
 
 #define ODECL_RCS_INManErrors() FDECL_rc2Txt_INManErrors() \
-URCSpacePTR  _RCS_INManErrors("errINMan", INManErrorId::protocolGeneralError, \
+URCSpacePTR  _RCS_INManErrors("errINMan", INManErrorId::noErr, \
                                 INManErrorId::internalError, rc2Txt_INManErrors)
 
 /* ------------------------------------------------------------------------- *
