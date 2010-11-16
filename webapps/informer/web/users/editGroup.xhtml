@@ -28,15 +28,15 @@
       <h:panelGrid style="padding:10px" columns="3" columnClasses="column20Width, column100Width, columnTopLeftAlign">
 
         <h:selectBooleanCheckbox id="editOrganization" value="#{userGroupEdit.editOrganization}" onchange="document.getElementById('organization').disabled=!this.checked"/>
-        <h:outputText value="#{userBundle.organization}"/>
+        <h:outputText style="white-space:nowrap;" value="#{userBundle.organization}"/>
         <tr:inputText id="organization" value="#{userGroupEdit.organization}" simple="true" />
 
         <h:selectBooleanCheckbox id="editAdmin" value="#{userGroupEdit.editAdmin}" onchange="document.getElementById('admin').disabled=!this.checked"/>
-        <h:outputText value="#{msg['user.edit.isAdmin']}"/>
+        <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.isAdmin']}"/>
         <h:selectBooleanCheckbox id="admin" value="#{userGroupEdit.admin}"/>
 
         <h:selectBooleanCheckbox id="editBlocked" value="#{userGroupEdit.editBlocked}" onchange="document.getElementById('blocked').disabled=!this.checked"/>
-        <h:outputText value="#{msg['user.edit.blocked']}"/>
+        <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.blocked']}"/>
         <h:selectBooleanCheckbox id="blocked" value="#{userGroupEdit.blocked}"/>
 
       </h:panelGrid>
@@ -47,14 +47,14 @@
         <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
 
           <h:selectBooleanCheckbox id="editSourceAddr" value="#{userGroupEdit.editSourceAddr}" onchange="document.getElementById('sourceAddr').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.sourceAddr}"/>        
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.sourceAddr}"/>        
           <tr:inputText id="sourceAddr" value="#{userGroupEdit.sourceAddr}" simple="true" columns="15" />
 
           <h:selectBooleanCheckbox id="editDeliveryDays" value="#{userGroupEdit.editDeliveryDays}" onchange="
           for (var i = 0; i&lt;7; i++)
             document.getElementById('deliveryDays:' + i).disabled=!this.checked
           "/>
-          <h:outputText value="#{userBundle.deliveryDays}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryDays}"/>
           <h:selectManyCheckbox id="deliveryDays" value="#{userGroupEdit.deliveryDays}" style="width: 100px" >
             <f:selectItems value="#{userGroupEdit.daysItems}"/>
           </h:selectManyCheckbox>
@@ -64,7 +64,7 @@
           document.getElementById('deliveryStartTime.seconds').disabled=!this.checked;
           document.getElementById('deliveryStartTime.minutes').disabled=!this.checked"
               />
-          <h:outputText value="#{userBundle.deliveryStartTime}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryStartTime}"/>
           <t:inputDate id="deliveryStartTime" value="#{userGroupEdit.deliveryStartTime}" requiredMessage="#{msg['date.required']}" type="time"/>
 
           <h:selectBooleanCheckbox id="editDeliveryEndTime" value="#{userGroupEdit.editDeliveryEndTime}" onchange="
@@ -72,33 +72,33 @@
           document.getElementById('deliveryEndTime.minutes').disabled=!this.checked;
           document.getElementById('deliveryEndTime.seconds').disabled=!this.checked;
           "/>
-          <h:outputText value="#{userBundle.deliveryEndTime}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryEndTime}"/>
           <t:inputDate id="deliveryEndTime" value="#{userGroupEdit.deliveryEndTime}" requiredMessage="#{msg['date.required']}" type="time"/>
 
           <h:selectBooleanCheckbox id="editPriority" value="#{userGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.priority}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.priority}"/>
           <tr:inputText id="priority" value="#{userGroupEdit.priority}" simple="true"  columns="3"/>
 
           <h:selectBooleanCheckbox id="editRetryPolicy" value="#{userGroupEdit.editRetryPolicy}" onchange="
           document.getElementById('retryPolicy').disabled=!this.checked || !document.getElementById('retryOnFail').checked;
           document.getElementById('retryOnFail').disabled=!this.checked;
           "/>
-          <h:outputText value="#{userBundle.policyId}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
           <h:panelGroup>
             <h:selectBooleanCheckbox id="retryOnFail" value="#{userGroupEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;" disabled="#{!userGroupEdit.editRetryPolicy}"/>
             <h:inputText id="retryPolicy" value="#{userGroupEdit.policyId}" />
           </h:panelGroup>
 
           <h:selectBooleanCheckbox id="editSmsNotification" value="#{userGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.smsNotification}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
           <tr:selectBooleanCheckbox id="smsNotification" value="#{userGroupEdit.smsNotification}" simple="true"/>
 
           <h:selectBooleanCheckbox id="editEmailNotification" value="#{userGroupEdit.editEmailNotification}" onchange="document.getElementById('emailNotification').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.emailNotification}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
           <tr:selectBooleanCheckbox id="emailNotification" value="#{userGroupEdit.emailNotification}" simple="true" />
 
           <h:selectBooleanCheckbox id="editDeliveryType" value="#{userGroupEdit.editDeliveryType}" onchange="document.getElementById('deliveryType').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.deliveryType}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryType}"/>
           <h:selectOneMenu id="deliveryType" value="#{userGroupEdit.deliveryType}" style="align:left;"  onchange="
           var dt = document.getElementById('deliveryType');
           var disp = dt.options[0].selected ? '' : 'none';
@@ -112,11 +112,11 @@
         <h:panelGrid id="smsSettings" style="padding-left:10px; display: #{userGroupEdit.smsDeliveryMode == true ? '' : 'none'}" columns="3" columnClasses="column20Width, column100Width, columnTopLeftAlign">
 
           <h:selectBooleanCheckbox id="editTransactionMode" value="#{userGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.transactionMode}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.transactionMode}"/>
           <h:selectBooleanCheckbox id="transactionMode" value="#{userGroupEdit.transactionMode}" />
 
           <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidHours}" onchange="document.getElementById('validHours').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.validHours}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.validHours}"/>
           <tr:inputText id="validHours" value="#{userGroupEdit.validHours}" simple="true" columns="3" />
 
         </h:panelGrid>
@@ -127,7 +127,7 @@
       <eye:collapsingGroup label="#{msg['user.edit.restrictions']}" opened="true">
         <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100Width, columnTopLeftAlign">
           <h:selectBooleanCheckbox id="editSmsPerSec" value="#{userGroupEdit.editSmsPerSec}" onchange="document.getElementById('smsPerSec').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.smsPerSec}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.smsPerSec}"/>
           <tr:inputText id="smsPerSec" value="#{userGroupEdit.smsPerSec}" simple="true" columns="5"/>
 
           <h:selectBooleanCheckbox id="editAllowedRegions" value="#{userGroupEdit.editAllowedRegions}" onchange="
@@ -142,11 +142,11 @@
             i++;
           }
           "/>
-          <h:outputText value="#{userBundle.regions}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.regions}"/>
           <tr:selectBooleanCheckbox id="allRegions" value="#{userGroupEdit.allRegionsAllowed}" text="#{msg['user.edit.all']}" simple="true" onchange="var el = document.getElementById('regionsSelectMany'); el.style.display = this.checked ? 'none':'';"/>
 
-          <h:outputText value="&#160;"/>
-          <h:outputText value="&#160;"/>
+          <h:outputText style="white-space:nowrap;" value="&#160;"/>
+          <h:outputText style="white-space:nowrap;" value="&#160;"/>
           <tr:selectManyCheckbox id="regionsSelectMany" value="#{userGroupEdit.regions}" simple="true" contentStyle="display: #{userGroupEdit.allRegionsAllowed==true ? 'none':''};">
             <f:selectItems value="#{userGroupEdit.regionsList}"/>
           </tr:selectManyCheckbox>
@@ -163,13 +163,13 @@
           document.getElementById('createArchive').disabled=!this.checked;
           document.getElementById('deliveryLifetime').disabled=!this.checked;
           "/>
-          <h:outputText value="#{userBundle.createArchive}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.createArchive}"/>
           <h:selectBooleanCheckbox id="createArchive" value="#{userGroupEdit.createArchive}" onchange="document.getElementById('archiveSettings').style.display=this.checked ? '' : 'none'"/>
         </h:panelGrid>
 
         <h:panelGrid id="archiveSettings" style="padding-left:10px;display: #{userGroupEdit.createArchive ? '':'none'};" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
-          <h:outputText value="&#160;"/>
-          <h:outputText value="#{msg['user.edit.delivery.lifetime']}"/>
+          <h:outputText style="white-space:nowrap;" value="&#160;"/>
+          <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.delivery.lifetime']}"/>
           <tr:inputText id="deliveryLifetime" value="#{userGroupEdit.deliveryLifetime}" simple="true" columns="5"/>
         </h:panelGrid>
       </eye:collapsingGroup>
@@ -179,7 +179,7 @@
       <eye:collapsingGroup label="#{msg['user.edit.billing']}" opened="true">
         <h:panelGrid style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width, column100WidthNoWrap, columnTopLeftAlign">
           <h:selectBooleanCheckbox id="editCreateCdr" value="#{userGroupEdit.editSmsPerSec}" onchange="document.getElementById('createCdr').disabled=!this.checked"/>
-          <h:outputText value="#{userBundle.createCDR}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.createCDR}"/>
           <h:selectBooleanCheckbox id="createCdr" value="#{userGroupEdit.createCdr}" />
         </h:panelGrid>
       </eye:collapsingGroup>

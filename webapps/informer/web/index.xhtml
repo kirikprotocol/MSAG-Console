@@ -88,10 +88,10 @@
             </eye:column>
 
             <eye:column name="action" title="#{msg['status.page.action']}">
-              <h:commandLink value="#{msg['status.page.stop']}" rendered="#{data.started}" action="#{informerStatus.stopDaemon}">
+              <h:commandLink value="#{msg['status.page.disable']}" rendered="#{data.started}" action="#{informerStatus.stopDaemon}">
                 <f:param name="daemon" value="#{data.name}"/>
               </h:commandLink>
-              <h:commandLink value="#{msg['status.page.start']}" rendered="#{!data.started}" action="#{informerStatus.startDaemon}">
+              <h:commandLink value="#{msg['status.page.enable']}" rendered="#{!data.started}" action="#{informerStatus.startDaemon}">
                 <f:param name="daemon" value="#{data.name}"/>
               </h:commandLink>
             </eye:column>

@@ -14,7 +14,6 @@
 
     <tr:form>
 
-      <eye:delimiter/>
 
       <eye:buttons>
         <eye:button>
@@ -36,53 +35,53 @@
       </h:panelGrid>
 
       <eye:delimiter/>
-      
+
       <eye:collapsingGroup label="#{msg['smsc.edit.connection.settings']}" opened="true">
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <h:panelGroup style="white-space: nowrap;">  <!-- THIS AND OTHER PANEL GROUPS IS WORKAROUND FOR IE -->
-            <h:outputText value="#{smscBundle.host}"/>
-          </h:panelGroup>
+          <!-- THIS AND OTHER PANEL GROUPS IS WORKAROUND FOR IE -->
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.host}"/>
+
           <tr:inputText value="#{smscEdit.smsc.host}" required="true" simple="true"/>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.port}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.port}"/>
+
           <tr:inputText value="#{smscEdit.smsc.port}" required="true" simple="true" columns="6">
             <eye:validatePort/>
           </tr:inputText>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.interfaceVersion}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.interfaceVersion}"/>
+
           <tr:inputText value="#{smscEdit.smsc.interfaceVersion}" required="true" simple="true" columns="6">
             <tr:validateLongRange minimum="0"/>
           </tr:inputText>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.systemType}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.systemType}"/>
+
           <tr:inputText value="#{smscEdit.smsc.systemType}" required="true" simple="true"/>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.systemId}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.systemId}"/>
+
           <tr:inputText value="#{smscEdit.smsc.systemId}" required="true" simple="true"/>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.password}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.password}"/>
+
           <tr:inputText value="#{smscEdit.smsc.password}" required="true" simple="true"/>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.timeout}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.timeout}"/>
+
           <tr:inputText value="#{smscEdit.smsc.timeout}" required="true" simple="true" columns="6">
             <eye:validatePositive/>
           </tr:inputText>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.rangeOfAddress}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.rangeOfAddress}"/>
+
           <tr:inputText value="#{smscEdit.smsc.rangeOfAddress}" required="true" simple="true" columns="6">
             <tr:validateLongRange/>
           </tr:inputText>
@@ -93,54 +92,54 @@
 
       <eye:collapsingGroup label="#{msg['smsc.edit.advanced']}" opened="true">
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <h:panelGroup style="white-space: nowrap;"> <!-- THIS AND OTHER PANEL GROUPS IS WORKAROUND FOR IE -->
-            <h:outputText value="#{smscBundle.ussdServiceOp}"/>
-          </h:panelGroup>
+          <!-- THIS AND OTHER PANEL GROUPS IS WORKAROUND FOR IE -->
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.ussdServiceOp}"/>
+
           <tr:inputText value="#{smscEdit.smsc.ussdServiceOp}" required="true" simple="true" columns="6">
             <tr:validateLongRange minimum="0"/>
           </tr:inputText>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.vlrUssdServiceOp}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.vlrUssdServiceOp}"/>
+
           <tr:inputText value="#{smscEdit.smsc.vlrUssdServiceOp}" required="true" simple="true" columns="6">
             <tr:validateLongRange minimum="0"/>
           </tr:inputText>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.defaultValidityPeriod}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.defaultValidityPeriod}"/>
+
           <tr:inputText value="#{smscEdit.smsc.defaultValidityPeriod}" required="true" simple="true" columns="6">
             <tr:validateLongRange minimum="0"/>
           </tr:inputText>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.minValidityPeriod}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.minValidityPeriod}"/>
+
           <tr:inputText value="#{smscEdit.smsc.minValidityPeriod}" required="true" simple="true" columns="6">
             <tr:validateLongRange minimum="0"/>
           </tr:inputText>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.maxValidityPeriod}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.maxValidityPeriod}"/>
+
           <tr:inputText value="#{smscEdit.smsc.maxValidityPeriod}" required="true" simple="true" columns="6">
             <tr:validateLongRange minimum="0"/>
           </tr:inputText>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.immediateErrors}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.immediateErrors}"/>
+
           <tr:inputText value="#{smscEdit.smsc.immedErrors}" simple="true" columns="50"/>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.permanentErrors}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.permanentErrors}"/>
+
           <tr:inputText value="#{smscEdit.smsc.permErrors}" simple="true" columns="50"/>
 
-          <h:panelGroup style="white-space: nowrap;">
-            <h:outputText value="#{smscBundle.temporaryErrors}"/>
-          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.temporaryErrors}"/>
+
           <eye:dynamicTable value="#{smscEdit.tempErrors}">
             <eye:textColumn name="interval" allowEditAfterAdd="true"/>
             <eye:textColumn name="errors" allowEditAfterAdd="true"/>

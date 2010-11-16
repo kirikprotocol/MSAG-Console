@@ -16,35 +16,36 @@
 
     <tr:form id="smsc">
 
-      <h:panelGroup>
 
-        <eye:dataTableFilter bean="#{usersList}" clearAction="clearFilter">
-          <h:panelGrid columns="4" columnClasses="column200Width, column200Width, column200Width columnTopLeftAlign, columnTopLeftAlign">
-            <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
-              <h:outputText value="#{userBundle.login}" />
-              <h:inputText value="#{usersList.loginPrefix}" styleClass="column100Width"/>
-              <h:outputText value="#{userBundle.status}"/>
-              <h:selectOneMenu value="#{usersList.statusFilter}" styleClass="column100Width">
-                <f:selectItem itemLabel="" itemValue=""/>
-                <f:selectItems value="#{usersList.statusItems}"/>
-              </h:selectOneMenu>
-            </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
-              <h:outputText value="#{userBundle.firstName}"/>
-              <h:inputText value="#{usersList.firstNamePrefix}" styleClass="column100Width"/>
-              <h:outputText value="#{userBundle.lastName}"/>
-              <h:inputText value="#{usersList.lastNamePrefix}" styleClass="column100Width"/>
-            </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
-              <h:outputText value="#{userBundle.organization}"/>
-              <h:inputText value="#{usersList.organizationPrefix}" styleClass="column100Width"/>              
-            </h:panelGrid>
-
+      <eye:dataTableFilter bean="#{usersList}" clearAction="clearFilter">
+        <h:panelGrid columns="4" columnClasses="column200Width, column200Width, column200Width columnTopLeftAlign, columnTopLeftAlign">
+          <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
+            <h:outputText value="#{userBundle.login}" />
+            <h:inputText value="#{usersList.loginPrefix}" styleClass="column100Width"/>
+            <h:outputText value="#{userBundle.status}"/>
+            <h:selectOneMenu value="#{usersList.statusFilter}" styleClass="column100Width">
+              <f:selectItem itemLabel="" itemValue=""/>
+              <f:selectItems value="#{usersList.statusItems}"/>
+            </h:selectOneMenu>
+          </h:panelGrid>
+          <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
+            <h:outputText value="#{userBundle.firstName}"/>
+            <h:inputText value="#{usersList.firstNamePrefix}" styleClass="column100Width"/>
+            <h:outputText value="#{userBundle.lastName}"/>
+            <h:inputText value="#{usersList.lastNamePrefix}" styleClass="column100Width"/>
+          </h:panelGrid>
+          <h:panelGrid columns="2" columnClasses="columnTopLeftAlign,columnTopLeftAlign">
+            <h:outputText value="#{userBundle.organization}"/>
+            <h:inputText value="#{usersList.organizationPrefix}" styleClass="column100Width"/>
           </h:panelGrid>
 
-        </eye:dataTableFilter>
+        </h:panelGrid>
 
-        <eye:buttons>
+      </eye:dataTableFilter>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
         </eye:button>
@@ -57,35 +58,35 @@
         <eye:space/>
       </eye:buttons>
 
-        <p/>
+      <eye:delimiter/>
         
-        <eye:dataTable value="#{usersList.usersModel}" selectedRows="#{usersList.selectedRows}" var="u">
-          <eye:row rowId="#{u.login}">
-            <eye:column name="login" title="#{userBundle.login}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
-              <h:commandLink value="#{u.login}" action="USER_EDIT">
-                <f:param name="userId" value="#{u.login}"/>
-              </h:commandLink>
-            </eye:column>
-             <eye:column name="status" title="#{msg['user.list.enabled']}" sortable="true" width="1%" align="center">
-              <h:graphicImage value="/images/ic_checked.gif" rendered="#{u.active}"/>
-            </eye:column>
-            <eye:column name="status" title="#{msg['user.list.admin']}" sortable="true" width="1%" align="center">
-              <h:graphicImage value="/images/ic_checked.gif" rendered="#{u.admin}"/>
-            </eye:column>
-            <eye:column name="firstName" title="#{userBundle.firstName}" sortable="true" width="20%" align="left">
-              <h:outputText value="#{u.firstName}"/>
-            </eye:column>
-            <eye:column name="lastName" title="#{userBundle.lastName}" sortable="true" width="20%" align="left">
-              <h:outputText value="#{u.lastName}"/>
-            </eye:column>
-            <eye:column name="organization" title="#{userBundle.organization}" sortable="true" width="39%" align="left">
-              <h:outputText value="#{u.organization}"/>
-            </eye:column>
-          </eye:row>
-        </eye:dataTable>
+      <eye:dataTable value="#{usersList.usersModel}" selectedRows="#{usersList.selectedRows}" var="u">
+        <eye:row rowId="#{u.login}">
+          <eye:column name="login" title="#{userBundle.login}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
+            <h:commandLink value="#{u.login}" action="USER_EDIT">
+              <f:param name="userId" value="#{u.login}"/>
+            </h:commandLink>
+          </eye:column>
+          <eye:column name="status" title="#{msg['user.list.enabled']}" sortable="true" width="1%" align="center">
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{u.active}"/>
+          </eye:column>
+          <eye:column name="status" title="#{msg['user.list.admin']}" sortable="true" width="1%" align="center">
+            <h:graphicImage value="/images/ic_checked.gif" rendered="#{u.admin}"/>
+          </eye:column>
+          <eye:column name="firstName" title="#{userBundle.firstName}" sortable="true" width="20%" align="left">
+            <h:outputText value="#{u.firstName}"/>
+          </eye:column>
+          <eye:column name="lastName" title="#{userBundle.lastName}" sortable="true" width="20%" align="left">
+            <h:outputText value="#{u.lastName}"/>
+          </eye:column>
+          <eye:column name="organization" title="#{userBundle.organization}" sortable="true" width="39%" align="left">
+            <h:outputText value="#{u.organization}"/>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
 
+      <eye:delimiter/>
 
-      </h:panelGroup>
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
