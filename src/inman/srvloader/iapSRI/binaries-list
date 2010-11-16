@@ -9,9 +9,9 @@
 switch INMAN_ICS_LINKAGE
 static: #no need for .so loader, module is statically linked into libinman
 staticSS7:\
-inman/ldlib/libinman_iap_sri.so IAPrvdSRILoader  $(SHARED_OPT) -linman-services-iapSRI -linman-inap-map_chsri -linman-comp-map_chsri -linman-comp -linman-common -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt @inman/ldlib/libinman_iap_fclt.so -lrt -linman-asn1rt
+inman/ldlib/libinman_iap_sri.so IAPrvdSRILoader  $(SHARED_OPT) -linman-services-iapSRI -linman-abprov -linman-inap-map_chsri -linman-comp-map_chsri -linman-comp -linman-common -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt @inman/ldlib/libinman_iap_fclt.so -lrt -linman-asn1rt -lutil
 default:\
-inman/ldlib/libinman_iap_sri.so IAPrvdSRILoader  $(SHARED_OPT) -linman-services-iapSRI -linman-inap-map_chsri -linman-comp-map_chsri -linman-comp -linman-common -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt @inman/ldlib/libinman_iap_fclt.so -linman_ics_tcapdsp @inman/ldlib/libinman_ics_tcapdsp.so -lrt -linman-asn1rt
+inman/ldlib/libinman_iap_sri.so IAPrvdSRILoader  $(SHARED_OPT) -linman-services-iapSRI -linman-abprov -linman-inap-map_chsri -linman-comp-map_chsri -linman-comp -linman-common -linman-codec_inc-map -ldl -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_iap_fclt @inman/ldlib/libinman_iap_fclt.so -linman_ics_tcapdsp @inman/ldlib/libinman_ics_tcapdsp.so -lrt -linman-asn1rt -lutil
 end switch
 
 
