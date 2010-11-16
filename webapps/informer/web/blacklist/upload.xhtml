@@ -30,12 +30,12 @@
 
         <eye:buttons>
           <eye:button>
-            <tr:commandLink text="#{msg['add.button']}" action="#{blacklistUpload.upload}">
+            <tr:commandLink text="#{msg['add.button']}" action="#{blacklistUpload.upload}" shortDesc="#{msg['blacklist.upload.add.desc']}">
               <f:param name="file_add" value="true"/>
             </tr:commandLink>
           </eye:button>
           <eye:button>
-            <tr:commandLink text="#{msg['delete.button']}" action="#{blacklistUpload.upload}">
+            <tr:commandLink text="#{msg['delete.button']}" action="#{blacklistUpload.upload}" shortDesc="#{msg['blacklist.upload.del.desc']}">
               <f:param name="file_remove" value="true"/>
             </tr:commandLink>
           </eye:button>

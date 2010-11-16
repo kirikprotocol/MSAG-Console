@@ -17,37 +17,29 @@
       <tr:inputHidden value="#{blacklist.contains}"/>
 
 
-      <h:panelGrid columns="2" style="padding-bottom:10px" cellspacing="0" cellpadding="0">
+      <eye:delimiter/>
 
-        <h:panelGroup style="padding-left:20px">
-
-          <tr:panelFormLayout>
-            <tr:panelLabelAndMessage label="#{msg['blacklist.address']}">
-              <tr:inputText value="#{blacklist.msisdn}" simple="true"/>
-            </tr:panelLabelAndMessage>
-            <h:panelGroup>
-              <tr:outputText inlineStyle="font-weight:bold;" value="#{blacklist.msisdn} #{msg['blacklist.contains']}" rendered="#{blacklist.init and blacklist.contains}"/>
-              <tr:outputText inlineStyle="font-weight:bold" value="#{blacklist.msisdn} #{msg['blacklist.not.contains']}" rendered="#{blacklist.init and !blacklist.contains}"/>
-            </h:panelGroup>
-          </tr:panelFormLayout>
-
+      <tr:panelFormLayout inlineStyle="padding-left:20px">
+        <tr:panelLabelAndMessage label="#{msg['blacklist.address']}">
+          <tr:inputText value="#{blacklist.msisdn}" simple="true"/>
+        </tr:panelLabelAndMessage>
+        <h:panelGroup>
+          <tr:outputText inlineStyle="font-weight:bold;" value="#{blacklist.msisdn} #{msg['blacklist.contains']}" rendered="#{blacklist.init and blacklist.contains}"/>
+          <tr:outputText inlineStyle="font-weight:bold" value="#{blacklist.msisdn} #{msg['blacklist.not.contains']}" rendered="#{blacklist.init and !blacklist.contains}"/>
         </h:panelGroup>
+      </tr:panelFormLayout>
 
-      </h:panelGrid>
-
-
-
-
+      <eye:delimiter/>
 
       <h:panelGroup>
         <tr:panelGroupLayout inlineStyle="#{(!blacklist.init) ? '' : 'display:none'}">
           <eye:buttons>
             <eye:button>
-              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}"/>
+              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}" shortDesc="#{msg['blacklist.lookup.button.desc']}"/>
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD" shortDesc="#{msg['blacklist.upload.desc']}"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -55,14 +47,14 @@
         <tr:panelGroupLayout inlineStyle="#{(blacklist.init and !blacklist.contains) ? '' : 'display:none'}">
           <eye:buttons>
             <eye:button>
-              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}"/>
+              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}" shortDesc="#{msg['blacklist.lookup.button.desc']}"/>
             </eye:button>
             <eye:button>
-              <tr:commandLink text="#{msg['add.button']}" action="#{blacklist.add}"/>
+              <tr:commandLink text="#{msg['add.button']}" action="#{blacklist.add}" shortDesc="#{msg['blacklist.add.desc']}"/>
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD" shortDesc="#{msg['blacklist.upload.desc']}"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
@@ -70,14 +62,14 @@
         <tr:panelGroupLayout inlineStyle="#{(blacklist.init and blacklist.contains) ? '' : 'display:none'}">
           <eye:buttons>
             <eye:button>
-              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}"/>
+              <tr:commandLink text="#{msg['blacklist.lookup.button']}" action="#{blacklist.lookup}" shortDesc="#{msg['blacklist.lookup.button.desc']}"/>
             </eye:button>
             <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}" inlineStyle="#{(blacklist.init and blacklist.contains) ? '' : 'display:none'}" action="#{blacklist.remove}"/>
+              <tr:commandLink text="#{msg['delete.button']}" inlineStyle="#{(blacklist.init and blacklist.contains) ? '' : 'display:none'}" action="#{blacklist.remove}" shortDesc="#{msg['blacklist.del.desc']}"/>
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD"/>
+              <tr:commandLink text="#{msg['upload.button']}" action="BLACKLIST_UPLOAD" shortDesc="#{msg['blacklist.upload.desc']}"/>
             </eye:button>
           </eye:buttons>
         </tr:panelGroupLayout>
