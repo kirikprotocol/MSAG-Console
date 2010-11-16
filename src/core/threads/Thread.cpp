@@ -27,7 +27,7 @@ void* Thread::ThreadRunner(void* obj)
 }
 #endif
 
-Thread::Thread():thread(0)
+Thread::Thread() : retcode(0), thread(0)
 {
 }
 
@@ -52,7 +52,7 @@ void Thread::Start(int stacksize)
 #ifdef _WIN32
   thread=(HANDLE)_beginthread(&Thread::ThreadRunner,stacksize,(void*)this);
 #else
-  if(pthread_create(&thread,NULL,(ThreadFunc)&Thread::ThreadRunner,this)!=0)
+  if ((retcode = pthread_create(&thread,NULL,(ThreadFunc)&Thread::ThreadRunner,this) != 0))
   {
     thread=0;
   }else
