@@ -9,6 +9,6 @@
 switch INMAN_ICS_LINKAGE
 static: #no need for .so loader, service is statically linked into libinman
 default: \
-inman/ldlib/libinman_ics_abdtcr.so AbntDtcrLoader $(SHARED_OPT) -linman-services-abdtcr -linman-interaction-msgdtcr -ldl -lrt
+inman/ldlib/libinman_ics_abdtcr.so AbntDtcrLoader $(SHARED_OPT) -linman-services-abdtcr -linman-services-iapmgr -linman-interaction-msgdtcr -linman-abprov -lutil -ldl -lrt
 end switch
 
