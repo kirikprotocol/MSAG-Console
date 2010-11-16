@@ -242,7 +242,8 @@ Server::ShutdownReason Server::Listen(void)
                 ConnectAC::ConnectState  st = conn->onReadEvent();
                 if (st == ConnectAC::connEOF) {
                     smsc_log_debug(logger, "TCPSrv: client ends Connect[%u]", socket);
-                } else if (st != ConnectAC::connAlive)
+                }
+                if (st != ConnectAC::connAlive)
                     closeConnectGuarded(it);
             }
             if (FD_ISSET(socket, &errorSet)) {

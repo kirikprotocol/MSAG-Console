@@ -41,6 +41,9 @@ Socket * ConnectSrv::setConnection(const char * host, unsigned port, unsigned ti
         smsc_log_error(logger, "ConnSrv: unable to set connection to %s:%u : %s (%d)",
                        host, port, strerror(errno), errno);
         return NULL;
+    } else {
+      smsc_log_debug(logger, "ConnSrv: established connection[%u] to %s:%u",
+                     (unsigned)socket->getSocket(), host, port);
     }
     return socket.release();
 }
@@ -80,9 +83,16 @@ unsigned ConnectSrv::numOfConnects(void)
 bool ConnectSrv::Start(void)
 {
     Thread::Start();
-    if (lstEvent.Wait(POLL_TIMEOUT_ms)) {
-        smsc_log_error(logger, "ConnSrv: unable to start Listener thread!");
-        return false;
+    int rc = Thread::getRetCode();
+    if (rc) {
+      smsc_log_error(logger, "ConnSrv: Listener thread start is failed: %s (%d)",
+                     strerror(rc), rc);
+      return false;
+    }
+    if ((rc = lstEvent.Wait(POLL_TIMEOUT_ms)) != 0) {
+      smsc_log_error(logger, "ConnSrv: Listener thread start is timed out: %s (%d)",
+                     strerror(rc), rc);
+      return false;
     }
     return true;
 }
@@ -153,8 +163,8 @@ void ConnectSrv::closeConnect(unsigned conn_id, bool abort/* = false*/)
         if (it == connects.end())
             return;
         
-        conn = ((*it).second).conn;
-        mgr = ((*it).second).mgr;
+        conn = it->second.conn;
+        mgr = it->second.mgr;
         connects.erase(it);
         conn->Close(abort);
         smsc_log_debug(logger, "ConnSrv: Connect[%u] %s.", conn_id,
@@ -183,9 +193,9 @@ ConnectSrv::ShutdownReason ConnectSrv::Listen(void)
         FD_ZERO(&readSet);
         FD_ZERO(&errorSet);
         //in case of lstStopping the clients connection should be served for a while
-        for (ConnectsMap::iterator i = connects.begin();
-                            i != connects.end() && !(i->second).ignore; i++) {
-            SOCKET  socket = (i->second).conn->getId();
+        for (ConnectsMap::iterator it = connects.begin();
+                            it != connects.end() && !it->second.ignore; ++it) {
+            SOCKET  socket = it->second.conn->getId();
             FD_SET(socket, &readSet);
             FD_SET(socket, &errorSet);
             if (socket > maxSock)
@@ -215,9 +225,9 @@ ConnectSrv::ShutdownReason ConnectSrv::Listen(void)
             _runState = ConnectSrv::lstStopped;
             break;
         }
-        for (ConnectsMap::iterator i = connects.begin();
-                            i != connects.end()&& !(i->second).ignore; i++) {
-            ConnectAC* conn = ((*i).second).conn;
+        for (ConnectsMap::iterator it = connects.begin();
+                            it != connects.end() && !it->second.ignore; ++it) {
+            ConnectAC* conn = it->second.conn;
             unsigned socket = conn->getId();
 
             if (FD_ISSET((SOCKET)socket, &readSet)) {
@@ -229,7 +239,8 @@ ConnectSrv::ShutdownReason ConnectSrv::Listen(void)
                 }
                 if (st == ConnectAC::connEOF) {
                     smsc_log_debug(logger, "ConnSrv: remote point ends Connect[%u]", socket);
-                } else if (st != ConnectAC::connAlive)
+                }
+                if (st != ConnectAC::connAlive)
                     closeConnect(socket);
             }
             if (FD_ISSET((SOCKET)socket, &errorSet)) {
@@ -253,7 +264,8 @@ int ConnectSrv::Execute()
     ConnectSrv::ShutdownReason result = ConnectSrv::srvStopped;
     do {
         try {
-            smsc_log_debug(logger, "ConnSrv: Listener started.");
+            smsc_log_debug(logger, "ConnSrv: Listener thread[%lu] started.",
+                           (unsigned long)pthread_self());
             result = Listen();
         } catch (const std::exception& error) {
             smsc_log_error(logger, "ConnSrv: Listener unexpected failure: %s", error.what());
