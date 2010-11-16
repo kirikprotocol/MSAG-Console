@@ -32,10 +32,11 @@ const char * UnifiedCSI::nmCSI(CSId_e cs_id)
   return "csi_UNDEFINED";
 }
 
+//TriggerDetectionPoints category names
 static const char * _tdpNames[] = {
-  "O_BC", "T_BC", "VT", "TIF", "GPRS"
-  , "MO_SM", "SS", "M", "D", "MT_SM", "MG"
-  , "O_IM", "D_IM", "VT_IM"
+  "O-BC", "T-BC", "VT", "TIF", "GPRS"
+  , "MO-SM", "SS", "M", "D", "MT-SM", "MG"
+  , "O-IM", "D-IM", "VT-IM"
 };
 
 const char * UnifiedCSI::nmTDP(CSId_e cs_id)
