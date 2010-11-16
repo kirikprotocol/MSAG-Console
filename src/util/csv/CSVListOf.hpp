@@ -73,7 +73,7 @@ public:
     } else
       dlmStr[1] = 0;
 
-    size_type      i = 0;
+    size_type      i = 1;
     const_iterator it = CSVListOf_T::begin();
     out_str += CSValueTraits_T<_TArg>::val2str(*it);
     while ((++it) != CSVListOf_T::end()) {
