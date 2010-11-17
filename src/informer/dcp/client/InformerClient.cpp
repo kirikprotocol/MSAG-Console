@@ -37,17 +37,26 @@ void InformerClient::registerFailResp(int respSeqNum,int code,const std::string&
 
 void InformerClient::onHandleCommand(Buffer& buf)
 {
-
+  proto.decodeAndHandleMessage(buf.data,buf.dataSize,0);
 }
 
 void InformerClient::onConnect()
 {
-
+  smsc_log_info(log,"connect");
 }
 
 void InformerClient::onDisconnect()
 {
-
+  sync::MutexGuard mg(reqMtx);
+  while(!reqMap.empty())
+  {
+    ReqMap::iterator it=reqMap.begin();
+    it->second->code=2;
+    it->second->error="disconnect";
+    it->second->cnd.Signal();
+    reqMap.erase(it);
+  }
+  smsc_log_info(log,"disconnect");
 }
 
 
@@ -176,10 +185,11 @@ int32_t InformerClient::getDeliveriesList(messages::GetDeliveriesList& msg)
 }
 
 
-bool InformerClient::getDeliveriesListNext(int32_t reqId,std::vector<messages::DeliveryListInfo>& result)
+bool InformerClient::getDeliveriesListNext(int32_t reqId,int count,std::vector<messages::DeliveryListInfo>& result)
 {
   messages::GetDeliveriesListNext msg;
   msg.setReqId(reqId);
+  msg.setCount(count);
   RequestGetDeliveriesListNext req(result);
   sendReq(msg,&req);
   return req.mms;
@@ -202,10 +212,11 @@ int32_t InformerClient::requestMessagesState(messages::RequestMessagesState& msg
 }
 
 
-bool InformerClient::getNextMessagesPack(int32_t reqId,std::vector<messages::MessageInfo>& result)
+bool InformerClient::getNextMessagesPack(int32_t reqId,int count,std::vector<messages::MessageInfo>& result)
 {
   messages::GetNextMessagesPack msg;
   msg.setReqId(reqId);
+  msg.setCount(count);
   RequestGetNextMessagesPack req(result);
   sendReq(msg,&req);
   return req.mms;
@@ -219,6 +230,13 @@ int32_t InformerClient::countMessages(messages::CountMessages& msg)
   return req.resultData;
 }
 
+void InformerClient::getDeliveryHistory(int32_t deliveryId,std::vector<messages::DeliveryHistoryItem>& result)
+{
+  RequestGetDeliveryHistory req(result);
+  messages::GetDeliveryHistory msg;
+  msg.setDeliveryId(deliveryId);
+  sendReq(msg,&req);
+}
 
 
 

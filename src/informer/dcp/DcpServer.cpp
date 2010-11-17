@@ -20,8 +20,8 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   did.transactionMode=di.getTransactionMode();
   did.startDate=di.getStartDate();
   did.endDate=di.getEndDate();
-  did.activePeriodEnd=di.getActivePeriodStart();
-  did.activePeriodStart=di.getActivePeriodEnd();
+  did.activePeriodStart=di.getActivePeriodStart();
+  did.activePeriodEnd=di.getActivePeriodEnd();
   did.activeWeekDays=di.getActiveWeekDays();
   /*
   if(di.hasValidityDate())
@@ -217,6 +217,7 @@ void DcpServer::onHandleCommand(eyeline::protogen::ProtocolSocketBase::Packet& p
     proto.decodeAndHandleMessage(pkt.data,pkt.dataSize,pkt.connId);
   }catch(InfosmeException& e)
   {
+    smsc_log_info(log,"command handling exception:%s",e.what());
     eyeline::protogen::framework::SerializerBuffer sb;
     sb.setExternalData(pkt.data,pkt.dataSize);
     sb.skip(4);//tag
@@ -226,11 +227,13 @@ void DcpServer::onHandleCommand(eyeline::protogen::ProtocolSocketBase::Packet& p
       case EXC_NOTAUTH:err=DcpError::NotAuthorized;break;
       case EXC_ACCESSDENIED:err=DcpError::AdminRoleRequired;break;
       case EXC_DLVLIMITEXCEED:err=DcpError::TooManyDeliveries;break;
+      case EXC_EXPIRED:err=DcpError::Expired;break;
     }
     mkFailResponse(pkt.connId,sb.readInt32(),err,e.what());
   }
   catch(std::exception& e)
   {
+    smsc_log_info(log,"command handling exception:%s",e.what());
     eyeline::protogen::framework::SerializerBuffer sb;
     sb.setExternalData(pkt.data,pkt.dataSize);
     sb.skip(4);//tag
@@ -278,6 +281,11 @@ void DcpServer::handle(const messages::UserAuth& inmsg)
   }
   {
     sync::MutexGuard mg(clntsMon);
+    DcpClientSocket* dcs=getSocketByConnId(connId);
+    if(dcs->isAuthorized())
+    {
+      throw InfosmeException(EXC_LOGICERROR,"Already authorized");
+    }
     UsersMap::iterator it=usersMap.find(inmsg.getUserId());
     if(it!=usersMap.end())
     {
@@ -287,9 +295,9 @@ void DcpServer::handle(const messages::UserAuth& inmsg)
     {
       it=usersMap.insert(UsersMap::value_type(inmsg.getUserId(),UserConnInfo(1))).first;
     }
-    smsc_log_info(log,"new connect by userId=%s, connId=%s, connCount=%d",inmsg.getUserId().c_str(),inmsg.messageGetConnId(),it->second.connCount);
-    getSocketByConnId(connId)->setAuthorized(true);
-    getSocketByConnId(connId)->setUserInfo(ui);
+    smsc_log_info(log,"new connect by userId=%s, connId=%d, connCount=%d",inmsg.getUserId().c_str(),inmsg.messageGetConnId(),it->second.connCount);
+    dcs->setAuthorized(true);
+    dcs->setUserInfo(ui);
   }
   mkOkResponse(connId,inmsg.messageGetSeqNum());
 }
@@ -442,8 +450,8 @@ void DcpServer::handle(const messages::DropDeliveryMessages& inmsg)
 {
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
-  //TODO: drop messages
-  //dlv->
+
+  dlv->dropMessages(reinterpret_cast<const std::vector< msgid_type >&>(inmsg.getMessageIds()));
 
   mkOkResponse(inmsg);
 }
@@ -639,7 +647,9 @@ void DcpServer::handle(const messages::GetDeliveriesList& inmsg)
     DlvListRequest* req=new DlvListRequest(inmsg.messageGetConnId(),reqId);
     req->dlvLst.swap(dlvLst);
     req->last=req->dlvLst.begin();
+    req->connId=inmsg.messageGetConnId();
     req->timeMapIt=dlvListReqTimeMap.insert(DlvListReqTimeMap::value_type(time(0)+dlvListReqExpirationTime,reqId));
+    req->fields=inmsg.getResultFields();
     dlvListReqMap.insert(DlvListReqMap::value_type(reqId,req));
   }
   enqueueResp(resp,inmsg);
@@ -673,14 +683,34 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
       messages::DeliveryListInfo& dli=info.back();
       Delivery* dlv=req->last->get();
       const DeliveryInfo& di=dlv->getDlvInfo();
+      dli.setDeliveryId(dlv->getDlvId());
       VECLOOP(fit,messages::DeliveryFields,req->fields)
       {
         switch(fit->getValue())
         {
-          case messages::DeliveryFields::ActivityPeriod:dli.setActivityPeriodEnd(msgTimeToTimeStr(di.getActivePeriodEnd()));break;
-          case messages::DeliveryFields::EndDate:dli.setEndDate(msgTimeToDateTimeStr(di.getEndDate()));break;
+          case messages::DeliveryFields::ActivityPeriod:
+            if(di.getActivePeriodStart()!=-1)
+            {
+              dli.setActivityPeriodStart(msgTimeToTimeStr(di.getActivePeriodStart()));
+            }
+            if(di.getActivePeriodEnd()!=-1)
+            {
+              dli.setActivityPeriodEnd(msgTimeToTimeStr(di.getActivePeriodEnd()));
+            }
+            break;
+          case messages::DeliveryFields::EndDate:
+            if(di.getEndDate()!=0)
+            {
+              dli.setEndDate(msgTimeToDateTimeStr(di.getEndDate()));
+            }
+            break;
           case messages::DeliveryFields::Name:dli.setName(di.getName());break;
-          case messages::DeliveryFields::StartDate:dli.setStartDate(msgTimeToDateTimeStr(di.getStartDate()));break;
+          case messages::DeliveryFields::StartDate:
+            if(di.getStartDate()!=0)
+            {
+              dli.setStartDate(msgTimeToDateTimeStr(di.getStartDate()));
+            }
+            break;
           case messages::DeliveryFields::Status:dli.setStatus(dlvStateToDeliveryStatus(dlv->getState(0)));break;
           case messages::DeliveryFields::UserData:dli.setUserData(di.getUserData());break;
           case messages::DeliveryFields::UserId:dli.setUserId(dlv->getUserInfo().getUserId());break;
@@ -754,6 +784,8 @@ namespace {
 template <class MSG>
 void fillFilter(const MSG& inmsg,alm::ALMRequestFilter& filter)
 {
+  filter.startDate=parseDateTime(inmsg.getStartDate().c_str());
+  filter.endDate=parseDateTime(inmsg.getEndDate().c_str());
   if(inmsg.hasCodeFilter())
   {
     VECLOOP(it,int32_t,inmsg.getCodeFilter())
@@ -823,6 +855,7 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
   {
     miv.push_back(messages::MessageInfo());
     messages::MessageInfo& mi=miv.back();
+    mi.setId(it->id);
     if(it->resultFields&alm::rfAbonent)
     {
       mi.setAbonent(it->abonent.c_str());

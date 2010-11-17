@@ -29,11 +29,12 @@ namespace sync=smsc::core::synchronization;
 
 class FailedRequestException:public std::exception{
 public:
-  FailedRequestException(int32_t argCode,const std::string& argMsg):code(argCode),msg(argMsg)
+  FailedRequestException(const std::string& cmd,int32_t argCode,const std::string& argMsg):code(argCode),msg(argMsg)
   {
+    msg=cmd+":"+msg;
   }
 
-  ~FailedRequestException()throw()
+  virtual ~FailedRequestException()throw()
   {
   }
 
@@ -64,7 +65,7 @@ public:
   void changeDeliveryState(int32_t deliveryId,const messages::DeliveryState& state);
   messages::GetDeliveryStateResp getDeliveryState(int32_t deliveryId);
   int32_t getDeliveriesList(messages::GetDeliveriesList& req);
-  bool getDeliveriesListNext(int32_t reqId,std::vector<messages::DeliveryListInfo>& result);
+  bool getDeliveriesListNext(int32_t reqId,int count,std::vector<messages::DeliveryListInfo>& result);
   int32_t countDeliveries(messages::CountDeliveries& req);
   void getDeliveryHistory(int32_t deliveryId,std::vector<messages::DeliveryHistoryItem>& result);
 
@@ -75,7 +76,7 @@ public:
   void modifyDeliveryGlossary(int32_t deliveryId,messages::DeliveryGlossary& glossary);
 
   int32_t requestMessagesState(messages::RequestMessagesState& req);
-  bool getNextMessagesPack(int32_t reqId,std::vector<messages::MessageInfo>& result);
+  bool getNextMessagesPack(int32_t reqId,int count,std::vector<messages::MessageInfo>& result);
   int32_t countMessages(messages::CountMessages& req);
 
 
@@ -279,7 +280,7 @@ protected:
     req->cnd.WaitOn(reqMtx);
     if(req->code!=0)
     {
-      throw FailedRequestException(req->code,req->error);
+      throw FailedRequestException(msg.messageGetName(),req->code,req->error);
     }
   }
 
