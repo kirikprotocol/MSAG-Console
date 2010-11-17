@@ -226,7 +226,7 @@ public:
         smsc::core::buffers::TmpBuf<char,2048> tobuf;
         FromBuf fb(buf.get(),0);
         ToBuf tb(tobuf.get(),tobuf.getSize());
-        std::vector<msgid_type>::const_iterator it = dropped.begin();
+        std::vector<msgid_type>::iterator it = dropped.begin();
         while (true) {
             if (is_.core_.isStopping()) { return false; }
             if (fb.getPos() >= fb.getLen() && ofg.isOpened()) {
@@ -244,13 +244,16 @@ public:
             }
 
             // dumping elements from vector until nextItem found
-            while ( it != dropped.end() && *it < nextItem ) {
+            std::vector<msgid_type>::iterator jt =
+                std::lower_bound(it,dropped.end(),nextItem);
+            for ( ; it != jt; ++it ) {
                 tb.set64(*it);
                 if (tb.getPos() == tb.getLen()) {
                     nfg.write(tobuf.get(),tb.getPos());
                     tb.setPos(0);
                 }
             }
+            it = jt;
             if (nextItem != size_t(-1)) {
                 tb.set64(nextItem);
                 if (tb.getPos() == tb.getLen()) {
