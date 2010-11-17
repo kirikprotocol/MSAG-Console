@@ -37,6 +37,7 @@ static EINSS7INSTANCE_T USER_INSTANCE = 1;
 static EINSS7INSTANCE_T SCCP_INSTANCE = 1;
 static UCHAR_T SSN = 191;
 static UCHAR_T NODEID = 0;
+static char cpMgrHostAndPort[30] = {0};
 
 void SccpHDProcessor::configure(int user_id, int ssn,
                                 Address& msc, Address& vlr, Address& hlr)
@@ -50,6 +51,8 @@ void SccpHDProcessor::configure(int user_id, int ssn,
                                 const char* cpmgr, const char* instlist)
 {
   configure(user_id,ssn,msc,vlr,hlr);
+  strncpy(cpMgrHostAndPort,cpmgr,sizeof(cpMgrHostAndPort)-1);
+  cpMgrHostAndPort[sizeof(cpMgrHostAndPort)] = 0;
 }
 SccpHDProcessor::SccpHDProcessor(TCO* _coordinator, SubscriberRegistrator* _registrator)
 {
@@ -176,6 +179,7 @@ int SccpHDProcessor::Run()
 
   // old (non HD) API
   // result = EINSS7CpMsgInitNoSig(MAXENTRIES);
+  EINSS7CpMain_CpInit();
   result = EINSS7CpRegisterMPOwner(USER);
   if (result != 0) {
     smsc_log_error(MtSmsProcessorLogger,
@@ -184,7 +188,7 @@ int SccpHDProcessor::Run()
     goto msg_init_error;
   }
 
-  result = EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, "localhost:6669");
+  result = EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, cpMgrHostAndPort);
   if (result != 0) {
     smsc_log_error(MtSmsProcessorLogger,
                    "EINSS7CpRegisterRemoteCPMgmt failed with code %d(%s)",
