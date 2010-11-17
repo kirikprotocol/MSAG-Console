@@ -330,15 +330,15 @@ public class AdminContext {
       DeliveryFilter filter = new DeliveryFilter();
       filter.setUserIdFilter(login);
       filter.setResultFields(DeliveryFields.Name);
-      final boolean[] notExist = new boolean[]{true};
+      final String[] exist = new String[]{null};
       deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
         public boolean visit(DeliveryInfo value) throws AdminException {
-          notExist[0] = false;
+          exist[0] = value.getName();
           return false;
         }
       });
-      if(!notExist[0]) {
-        throw new IntegrityException("fail.delete.user.by.delivery", login);
+      if(exist[0] != null) {
+        throw new IntegrityException("fail.delete.user.by.delivery", login, exist[0]);
       }
       usersManager.removeUser(login);
     }

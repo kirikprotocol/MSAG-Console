@@ -13,6 +13,12 @@ import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
 import mobi.eyeline.informer.admin.restriction.TestRestrictionsManager;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
+import mobi.eyeline.informer.admin.siebel.SiebelManager;
+import mobi.eyeline.informer.admin.siebel.TestSiebelManager;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelDeliveries;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelFinalStateListener;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelUserManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
@@ -258,9 +264,25 @@ public class TestAdminContext extends AdminContext {
   }};
 
   @Override
-  protected void initSiebel() throws AdminException {
-//todo    super.initSiebel();
+  protected void initSiebel() throws AdminException {      
 
+    SiebelDeliveries siebelDeliveries = new SiebelDeliveriesImpl(this);
+    SiebelRegionManager siebelRegions = new SiebelRegionManagerImpl(this);
+    SiebelUserManager userManager = new SiebelUserManagerImpl(this);
+
+    User siebelUser = usersManager.getUser(webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
+
+    if(siebelUser == null) {
+      throw new IntegrityException("user_not_exist", webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
+    }
+
+    siebelManager = new TestSiebelManager(siebelDeliveries, siebelRegions);
+
+    siebelManager.start(siebelUser, webConfig.getSiebelProperties());
+
+    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager);
+
+    deliveryNotificationsProducer.addListener(siebelFinalStateListener);
 
   }
 

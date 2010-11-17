@@ -27,17 +27,17 @@ abstract class DeliveryDataSource<T> {
 
 
   void visit(Visitor<T> visitor) throws AdminException {
-    boolean exit;
+    boolean haveMore;
     List<T> list = new ArrayList<T>(pieceSize);
     do {
       list.clear();
-      exit = load(dcpConnection, pieceSize, reqId, list);
+      haveMore = load(dcpConnection, pieceSize, reqId, list);
       for (T t : list) {
         if (!visitor.visit(t)) {
           return;
         }
       }
-    } while (!exit);
+    } while (haveMore);
   }
 
   protected abstract boolean load(DcpConnection connection, int pieseSize, int reqId, Collection<T> result) throws AdminException;

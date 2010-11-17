@@ -172,9 +172,9 @@ public class SiebelManagerTest {
 
   @Test
   public void testDelivery() throws Exception{
-    int wid = (int)System.currentTimeMillis();
+    int wid = 10000;
     try{
-      siebel.createTestDelivery(wid);
+      CreateDelivery.createDelivery(wid);
       Thread.sleep(1000*TIMEOUT+5000);
 
       testCreation(wid);
@@ -216,7 +216,7 @@ public class SiebelManagerTest {
       testDeleted(wid);
 
     }finally {
-      removeAll(wid);
+      CreateDelivery.removeDelivery(wid);
     }
   }
 
@@ -303,46 +303,6 @@ public class SiebelManagerTest {
         try{
           connection.close();
         }catch (SQLException ignored){}
-      }
-    }
-  }
-
-  
-  private static void removeAll(int wid) throws Exception{
-
-    Connection connection = null;
-
-    try {
-      connection = ConnectionPool.getPool("default").getConnection();
-
-      PreparedStatement prepStatement = null;
-      try {
-        prepStatement = connection.prepareStatement("DELETE FROM SMS_MAIL where WAVE_INT_ID=?");
-        prepStatement.setString(1, Integer.toString(wid));
-        prepStatement.executeUpdate();
-      } finally {
-        if (prepStatement != null) {
-          prepStatement.close();
-        }
-      }
-
-      prepStatement = null;
-      try {
-        prepStatement = connection.prepareStatement("DELETE FROM SMS_MAIL_PARAMS where WAVE_INT_ID=?");
-        prepStatement.setString(1, Integer.toString(wid));
-        prepStatement.executeUpdate();
-      } finally {
-        if (prepStatement != null) {
-          prepStatement.close();
-        }
-      }
-      System.out.println("Removing tables: Finished");
-    } finally {
-      try {
-        if (connection != null) {
-          connection.close();
-        }
-      } catch (Throwable ignored) {
       }
     }
   }

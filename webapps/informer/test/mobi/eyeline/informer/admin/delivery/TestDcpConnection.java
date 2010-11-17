@@ -320,11 +320,13 @@ public class TestDcpConnection extends DcpConnection{
     int delivered = 0;
     int failed = 0;
     int newD = 0;
-    for(MessageWState m : ms) {
-      switch (m.state) {
-        case Delivered: delivered++; break;
-        case New: newD++;break;
-        case Failed: failed++;
+    if(ms != null) {
+      for(MessageWState m : ms) {
+        switch (m.state) {
+          case Delivered: delivered++; break;
+          case New: newD++;break;
+          case Failed: failed++;
+        }
       }
     }
     stats.setDeliveryState(state);
@@ -371,7 +373,7 @@ public class TestDcpConnection extends DcpConnection{
       }
       deliveries.add(info);
     }
-    return result.size() < pieceSize;
+    return result.size() == pieceSize;
   }
 
   public synchronized int getMessages(MessageFilter filter) throws AdminException {
@@ -389,6 +391,10 @@ public class TestDcpConnection extends DcpConnection{
     List<MessageWState> result = new LinkedList<MessageWState>();
     int deliveryId = delivery.getId();
 
+    if(this.messages.get(delivery.getId()) == null) {
+      return false;
+    }
+    
     for(MessageWState m : this.messages.get(delivery.getId())) {
       if(accept(deliveryId, m, r.filter) && ++count > r.position) {
         result.add(m);
@@ -416,7 +422,7 @@ public class TestDcpConnection extends DcpConnection{
       }
       messages.add(info);
     }
-    return result.size() < pieceSize;
+    return result.size() == pieceSize;
   }
 
 
@@ -454,6 +460,9 @@ public class TestDcpConnection extends DcpConnection{
           }
         }catch (ParseException e){}
         List<MessageWState> ms = messages.get(d.getId());
+        if(ms == null) {
+          continue;
+        }
         int count = 0;
         for(MessageWState m : ms) {
           if(m.state == MessageState.New) {

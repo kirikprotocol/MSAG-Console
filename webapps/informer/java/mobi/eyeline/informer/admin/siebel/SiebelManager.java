@@ -412,7 +412,7 @@ public class SiebelManager {
 
       deliveries.addMessages(siebelUser.getLogin(), siebelUser.getPassword(), new DataSource<Message>() {
         public Message next() throws AdminException {
-          Message msg = null;
+          Message msg;
           while(messages.next()) {
             SiebelMessage sM = messages.get();
             String msisdn = sM.getMsisdn();
@@ -424,6 +424,7 @@ public class SiebelManager {
                 msg = Message.newMessage(abonent, sM.getMessage());
                 msg.setProperty(UserDataConsts.SIEBEL_MESSAGE_ID, sM.getClcId());
                 countMessages[0]++;
+                return msg;
               } else {
                 unloaded.add(sM.getClcId());
               }
@@ -435,7 +436,7 @@ public class SiebelManager {
               unloaded.clear();
             }
           }
-          return msg;
+          return null;
         }
       }, delivery.getId());
 
