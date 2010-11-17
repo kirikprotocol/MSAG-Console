@@ -170,7 +170,8 @@ public:
       if (acit->second->algId() == SKAlgorithmAC::algSKVal)
         return acit->second->getSKey(NULL);
 
-      if ((acit->second->algId() == SKAlgorithmAC::algSKMap) && org_csis) {
+      if ((acit->second->algId() == SKAlgorithmAC::algSKMap)
+          && org_csis && !org_csis->empty()) {
         SKAlgorithm_SKMap * alg = static_cast<SKAlgorithm_SKMap *>(acit->second);
 
         CSIRecordsMap::const_iterator tcit = org_csis->find(alg->argType());
