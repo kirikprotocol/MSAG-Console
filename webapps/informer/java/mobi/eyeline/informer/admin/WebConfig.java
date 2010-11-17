@@ -42,7 +42,16 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       notificationTemplates.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
     }
 
-    config.addSection(javamail);    
+    config.addSection(javamail);
+
+    XmlConfigSection siebel = config.getOrCreateSection("siebel");
+    props = settings.getSiebelProperties();
+    for(Object s : props.keySet()) {
+      siebel.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
+    }
+
+    config.addSection(siebel);
+
     config.save(newFile);
   }
 
@@ -90,6 +99,9 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
       XmlConfigSection notificationTemplates =webconfig.getSection("notificationTemplates");
       settings.setNotificationTemplates(notificationTemplates.toProperties("",null));
+
+      XmlConfigSection siebel = webconfig.getSection("siebel");
+      settings.setSiebelProperties(siebel.toProperties("", null));
 
       return settings;
     }

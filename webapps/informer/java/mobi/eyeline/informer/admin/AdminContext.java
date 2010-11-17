@@ -20,13 +20,21 @@ import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
 import mobi.eyeline.informer.admin.restriction.RestrictionsManager;
 import mobi.eyeline.informer.admin.service.ServiceManager;
+import mobi.eyeline.informer.admin.siebel.SiebelException;
+import mobi.eyeline.informer.admin.siebel.SiebelManager;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelDeliveries;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelFinalStateListener;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelUserManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.SmscException;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.admin.users.UserException;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.*;
@@ -40,6 +48,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Aleksandr Khalitov
  */
 public class AdminContext {
+
+  protected static final Logger logger = Logger.getLogger(AdminContext.class);
 
   protected File appBaseDir;
 
@@ -76,6 +86,10 @@ public class AdminContext {
   protected RestrictionDaemon restrictionDaemon;
 
   protected DeliveryNotificationsProducer deliveryNotificationsProducer;
+
+  protected SiebelManager siebelManager;
+
+  protected SiebelFinalStateListener siebelFinalStateListener;
 
   protected DeliveryNotificationsDaemon deliveryNotificationsDaemon;
 
@@ -154,11 +168,56 @@ public class AdminContext {
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
+      initSiebel();
+
       deliveryNotificationsProducer.start();
+
+
     }catch (AdminException e) {
       throw new InitException(e);
     }catch (PersonalizationClientException e) {
       throw new InitException(e);
+    }
+  }
+
+  protected void initSiebel() throws AdminException {
+    SiebelDeliveries siebelDeliveries = new SiebelDeliveriesImpl(this);
+    SiebelRegionManager siebelRegions = new SiebelRegionManagerImpl(this);
+    SiebelUserManager userManager = new SiebelUserManagerImpl(this);
+
+    User siebelUser = usersManager.getUser(webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
+
+    if(siebelUser == null) {
+      throw new IntegrityException("user_not_exist", webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
+    }
+
+    siebelManager = new SiebelManager(siebelDeliveries, siebelRegions);
+
+    siebelManager.start(siebelUser, webConfig.getSiebelProperties());
+
+    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager);
+
+    deliveryNotificationsProducer.addListener(siebelFinalStateListener);
+
+  }
+
+  private void shutdownSiebel() {
+    if(siebelFinalStateListener != null) {
+      if(deliveryNotificationsProducer != null) {
+        try{
+          deliveryNotificationsProducer.removeListener(siebelFinalStateListener);
+        }catch (Exception ignored){}
+      }
+
+      try{
+        siebelFinalStateListener.shutdown();
+      }catch (Exception ignored){}
+    }
+
+    if(siebelManager != null) {
+      try{
+        siebelManager.stop();
+      }catch (Exception ignored){}
     }
   }
 
@@ -167,7 +226,13 @@ public class AdminContext {
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
-  public void shutdown() {        
+  public void shutdown() {
+    shutdownSiebel();
+    if(restrictionDaemon != null) {
+      try{
+        restrictionDaemon.stop();
+      }catch(Exception e){}
+    }
     if(deliveryNotificationsProducer != null) {
       try{
         deliveryNotificationsProducer.shutdown();
@@ -258,9 +323,13 @@ public class AdminContext {
   public void removeUser(String login) throws AdminException {
     try{
       integrityLock.lock();
+      if(login.equals(webConfig.getSiebelProperties().getProperty(SiebelManager.USER))) {
+        throw new IntegrityException("fail.delete.user.siebel", login);
+      }
       User user = usersManager.getUser(login);
       DeliveryFilter filter = new DeliveryFilter();
       filter.setUserIdFilter(new String[]{login});
+      filter.setResultFields(new DeliveryFields[]{DeliveryFields.Name});
       final boolean[] notExist = new boolean[]{true};
       deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
         public boolean visit(DeliveryInfo value) throws AdminException {
@@ -439,6 +508,10 @@ public class AdminContext {
     List<Daemon> ret = new LinkedList<Daemon>();
     ret.add(restrictionDaemon);
     return ret;
+  }
+
+  public boolean isSiebelDaemonStarted(){
+    return siebelManager.isStarted();
   }
 
   private Object getLock(int deliveryId) {
@@ -695,5 +768,140 @@ public class AdminContext {
 
   public void setSmsSenderAddress(Address addr) throws AdminException {
     webConfig.setSmsSenderAddress(addr);
+  }
+
+  public Properties getSiebelProperties() {
+    return webConfig.getSiebelProperties();
+  }
+
+  public void setSiebelProperties(Properties props) throws AdminException {
+    try{
+      integrityLock.lock();
+      String u = props.getProperty(SiebelManager.USER);
+      User user = usersManager.getUser(u);
+      if(u == null) {
+        throw new UserException("user_not_exist", u);
+      }
+
+      Properties old = webConfig.getSiebelProperties();
+      if(!old.getProperty(SiebelManager.USER).equals(props.getProperty(SiebelManager.USER))) {
+        DeliveryFilter filter = new DeliveryFilter();
+        filter.setUserIdFilter(new String[]{old.getProperty(SiebelManager.USER)});
+        filter.setResultFields(new DeliveryFields[]{DeliveryFields.Status, DeliveryFields.Name});
+        final boolean[] notExist = new boolean[]{true};
+        deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
+          public boolean visit(DeliveryInfo value) throws AdminException {
+            if(value.getStatus() != DeliveryStatus.Finished && value.getName().startsWith("siebel_")) {
+              notExist[0] = false;
+              return false;
+            }
+            return true;
+          }
+        });
+        if(!notExist[0]) {
+          throw new SiebelException("can_not_change_user", old.getProperty(SiebelManager.USER));
+        }
+      }
+
+      try{
+        siebelFinalStateListener.lock();
+        siebelManager.stop();
+        try{
+          siebelManager.start(user, props);
+        }catch (Exception e){
+          logger.error("Applying of new properties has failed. Siebel is down. Try to rollback old properties",e);
+          try{
+            siebelManager.stop();
+            siebelManager.start(usersManager.getUser(old.getProperty(SiebelManager.USER)), old);
+            logger.error("Old properties has rollbacked. Siebel's state has returned to 'Ok'");
+          }catch (Exception ex){
+            logger.error(e,e);
+          }
+          throw new SiebelException("internal_error");
+        }
+      }finally {
+        siebelFinalStateListener.unlock();
+      }
+      webConfig.setSiebelProperties(props);
+    }finally {
+      integrityLock.unlock();
+    }
+
+  }
+
+  protected static class SiebelUserManagerImpl implements SiebelUserManager {
+
+    private AdminContext context;
+
+    public SiebelUserManagerImpl(AdminContext context) {
+      this.context = context;
+    }
+
+    public User getUser(String login) throws AdminException {
+      User u = context.getUser(login);
+      if(u == null) {
+        throw new IntegrityException("user_not_exist", login);
+      }
+      return u;
+    }
+  }
+
+
+  protected static class SiebelRegionManagerImpl implements SiebelRegionManager {
+
+    private AdminContext context;
+
+    protected SiebelRegionManagerImpl(AdminContext context) {
+      this.context = context;
+    }
+
+    public Region getRegion(Address msisdn) throws AdminException {
+      return context.getRegion(msisdn);
+    }
+  }
+
+
+  protected static class SiebelDeliveriesImpl implements SiebelDeliveries {
+
+    private AdminContext context;
+
+    protected SiebelDeliveriesImpl(AdminContext context) {
+      this.context = context;
+    }
+
+    public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
+      context.createDelivery(login, password, delivery, msDataSource);
+    }
+
+    public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
+      context.dropDelivery(login, password, deliveryId);
+    }
+
+    public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
+      context.addMessages(login, password, msDataSource, deliveryId);
+    }
+
+    public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
+      return context.getDelivery(login, password, deliveryId);
+    }
+
+    public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
+      context.cancelDelivery(login, password, deliveryId);
+    }
+
+    public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
+      context.pauseDelivery(login, password, deliveryId);
+    }
+
+    public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
+      context.activateDelivery(login, password, deliveryId);
+    }
+    public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
+      context.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
+    }
+
+    public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
+      context.getDefaultDelivery(user, delivery);
+    }
   }
 }

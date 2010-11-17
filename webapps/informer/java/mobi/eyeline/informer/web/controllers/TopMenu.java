@@ -28,7 +28,7 @@ public class TopMenu {
           add(new MenuItem("informer.admin.users", "/users/index.faces")).
           add(new MenuItem("informer.admin.restrictions", "/restriction/index.faces")).
           add(new MenuItem("informer.admin.notifications", "/notifications/index.faces")).
-//          add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
+          add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
 //          add(new MenuItem("informer.admin.import", "/import/index.faces")).
 //          add(new MenuItem("informer.admin.archieve", "/archieve/index.faces")).
 //          add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).

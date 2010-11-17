@@ -41,4 +41,22 @@
     <param name="delivery.state.finished.email.template.line"   type="string">Delivery {0} finished  at {1}. </param>
   </section>
 
+  <section name="siebel">
+
+    <param name="jdbc.driver">com.mysql.jdbc.Driver</param>
+    <param name="jdbc.source">jdbc:mysql://mangal/summer_edu?useUnicode=true</param>
+    <param name="jdbc.user">student</param>
+    <param name="jdbc.password">student</param>
+    <param name="jdbc.autoCommit">true</param>
+    <param name="jdbc.check.connections">true</param>
+    <param name="jdbc.pool.type">mysql</param>
+
+
+    <param name="started">false</param>
+    <param name="timeout">20</param>
+    <param name="siebelUser">a</param>
+    <param name="removeOnStop">false</param>
+
+  </section>
+
 </config>

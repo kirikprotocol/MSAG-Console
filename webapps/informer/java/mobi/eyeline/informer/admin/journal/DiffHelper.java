@@ -212,7 +212,7 @@ class DiffHelper {
        Object oldVal = oldMap.get(key);
        Object newVal = newMap.get(key);
        if(newVal==null) {
-            journal.addRecord(JournalRecord.Type.CHANGE, subject, userName,"obj_property_removed",objectId,valueToString(key),valueToString(oldVal));
+            journal.addRecord(JournalRecord.Type.REMOVE, subject, userName,"obj_property_removed",objectId,valueToString(key),valueToString(oldVal));
        }
        else {
          if(!newVal.equals(oldVal)) {
@@ -224,7 +224,7 @@ class DiffHelper {
        Object oldVal = oldMap.get(key);
        if(oldVal==null) {
           Object newVal = newMap.get(key);
-          journal.addRecord(JournalRecord.Type.CHANGE, subject, userName,"obj_property_added",objectId, valueToString(key), valueToString(newVal));
+          journal.addRecord(JournalRecord.Type.ADD, subject, userName,"obj_property_added",objectId, valueToString(key), valueToString(newVal));
        }
     }
   }

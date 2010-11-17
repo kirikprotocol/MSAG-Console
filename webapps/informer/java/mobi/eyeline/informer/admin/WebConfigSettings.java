@@ -23,6 +23,7 @@ class WebConfigSettings {
   private Properties javaMailProperties;
   private Address smsSenderAddress;
   private Properties notificationTemplates;
+  private Properties siebelProperties;
 
   InstallationType getInstallationType() {
     return installationType;
@@ -113,6 +114,14 @@ class WebConfigSettings {
 
   Properties getNotificationTemplates() {
     return cloneProps(notificationTemplates);
+  }
+
+  void setSiebelProperties(Properties siebelProperties) {
+    this.siebelProperties =cloneProps(siebelProperties);
+  }
+
+  Properties getSiebelProperties() {
+    return cloneProps(siebelProperties);
   }
 
 

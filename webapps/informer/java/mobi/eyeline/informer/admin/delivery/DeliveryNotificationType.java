@@ -9,5 +9,5 @@ package mobi.eyeline.informer.admin.delivery;
 public enum DeliveryNotificationType {
   MESSAGE_FINISHED,
   DELIVERY_START,
-  DELIVERY_FINISHED;
+  DELIVERY_FINISHED
 }

@@ -335,4 +335,9 @@ public class Journal {
     webconfig.logUpdateSmsSenderAddress(this,addr,old,user);
 
   }
+
+  public void logUpdateSiebelProps(Properties props, Properties old, String user) throws AdminException {
+    webconfig.logUpdateSiebelProps(this, props, old, user);
+
+  }
 }

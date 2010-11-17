@@ -178,21 +178,23 @@ public class DeliveryManager {
     final DcpConnection conn = getDeliveryConnection(login, password);
     final int id = conn.createDelivery(delivery);
     delivery.setId(id);
-    try {
-      addMessages(msDataSource, conn, delivery);
-    } catch (Exception e) {
-      logger.error(e, e);
+    if(msDataSource != null) {
       try {
-        logger.warn("Try drop delivery: " + id);
-        conn.dropDelivery(id);
-        logger.warn("Delivery is removed: " + id);
-      } catch (Exception ex) {
-        logger.error(ex, ex);
+        addMessages(msDataSource, conn, delivery);
+      } catch (Exception e) {
+        logger.error(e, e);
+        try {
+          logger.warn("Try drop delivery: " + id);
+          conn.dropDelivery(id);
+          logger.warn("Delivery is removed: " + id);
+        } catch (Exception ex) {
+          logger.error(ex, ex);
+        }
+        if (logger.isDebugEnabled()) {
+          logger.debug("Delivery's processing failed: " + id);
+        }
+        throw new DeliveryException("internal_error");
       }
-      if (logger.isDebugEnabled()) {
-        logger.debug("Delivery's processing failed: " + id);
-      }
-      throw new DeliveryException("internal_error");
     }
     if (logger.isDebugEnabled()) {
       logger.debug("Delivery is proccessed: " + id);
@@ -204,10 +206,10 @@ public class DeliveryManager {
    * @param login        логин
    * @param password     пароль
    * @param delivery     рассылка
-   * @param dataSource адресаты рассылки
+   * @param dataSource адресаты рассылки (или null)
    * @throws mobi.eyeline.informer.admin.AdminException
    *          ошибка выполнения команды
-   * @return идентификаторы сообщений
+   * @return идентификаторы сообщений (или null, если спсико адресатов пуст)
    */
   public List<Long> createSingleTextDelivery(final String login, final String password, final Delivery delivery, final DataSource<Address> dataSource) throws AdminException {
     if(delivery.getType() == Delivery.Type.Common) {
@@ -220,22 +222,24 @@ public class DeliveryManager {
     final DcpConnection conn = getDeliveryConnection(login, password);
     final int id = conn.createDelivery(delivery);
     delivery.setId(id);
-    List<Long> res;
-    try {
-      res = addSingleTextMessages(dataSource, conn, delivery);
-    } catch (Exception e) {
-      logger.error(e, e);
+    List<Long> res = null;
+    if(dataSource != null) {
       try {
-        logger.warn("Try drop delivery: " + id);
-        conn.dropDelivery(id);
-        logger.warn("Delivery is removed: " + id);
-      } catch (Exception ex) {
-        logger.error(ex, ex);
+        res = addSingleTextMessages(dataSource, conn, delivery);
+      } catch (Exception e) {
+        logger.error(e, e);
+        try {
+          logger.warn("Try drop delivery: " + id);
+          conn.dropDelivery(id);
+          logger.warn("Delivery is removed: " + id);
+        } catch (Exception ex) {
+          logger.error(ex, ex);
+        }
+        if (logger.isDebugEnabled()) {
+          logger.debug("Delivery's processing failed: " + id);
+        }
+        throw new DeliveryException("internal_error");
       }
-      if (logger.isDebugEnabled()) {
-        logger.debug("Delivery's processing failed: " + id);
-      }
-      throw new DeliveryException("internal_error");
     }
     if (logger.isDebugEnabled()) {
       logger.debug("Delivery is proccessed: " + id);

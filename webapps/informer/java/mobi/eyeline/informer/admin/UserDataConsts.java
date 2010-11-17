@@ -11,4 +11,5 @@ public final class UserDataConsts {
   public static final String SECRET_FLASH = "secret_flash";
   public static final String RESTRICTION = "restriction";
   public static final String SIEBEL_MESSAGE_ID = "siebel_message_id";
+  public static final String SIEBEL_DELIVERY_ID = "siebel_delivery_id";
 }

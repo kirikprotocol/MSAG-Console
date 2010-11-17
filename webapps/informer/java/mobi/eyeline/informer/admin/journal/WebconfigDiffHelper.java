@@ -3,8 +3,6 @@ package mobi.eyeline.informer.admin.journal;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.Address;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -19,12 +17,16 @@ public class WebconfigDiffHelper extends DiffHelper {
   }
 
   public void logUpdateJavaMailProps(Journal journal, Properties props, Properties old, String user) throws AdminException {
-    logMapsDiff(journal,subject,"mail settings",props,old,user);
+    logMapsDiff(journal,subject,"mail settings",old,props,user);
   }
 
 
   public void logUpdateNotificationTemplates(Journal journal, Properties props, Properties old, String user) throws AdminException {
-    logMapsDiff(journal,subject,"notifivcation templates",props,old,user);
+    logMapsDiff(journal,subject,"notifivcation templates",old,props,user);
+  }
+
+  public void logUpdateSiebelProps(Journal journal, Properties props, Properties old, String user) throws AdminException {
+    logMapsDiff(journal,subject,"siebel", old, props, user);
   }
 
   public void logUpdateSmsSenderAddress(Journal journal, Address addr, Address old, String user) throws AdminException {

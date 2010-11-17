@@ -334,6 +334,13 @@
   </managed-bean>
 
 
+  <managed-bean>
+      <managed-bean-name>siebel</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.siebel.SiebelController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>

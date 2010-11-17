@@ -409,6 +409,20 @@ public class Configuration {
     journal.logUpdateSmsSenderAddress(addr,old,user);
   }
 
+  public boolean isSiebelDaemonStarted(){
+    return context.isSiebelDaemonStarted();
+  }
+
+  public void setSiebelProperties(Properties props, String user) throws AdminException {
+    Properties old = context.getSiebelProperties();
+    context.setSiebelProperties(props);
+    journal.logUpdateSiebelProps(props, old, user);
+  }
+
+  public Properties getSiebelProperties() {
+    return context.getSiebelProperties();
+  }
+
   private final Lock lock = new ReentrantLock();
 
   public void lock() {

@@ -1,0 +1,102 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.siebel']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:message level="error" rendered="#{siebel.error != null}">
+        <tr:outputText value="#{siebel.error}"/>
+      </eye:message>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{siebel.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="INDEX" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+
+      <h:panelGrid style="padding:10px" columns="1">
+
+        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
+
+          <tr:panelLabelAndMessage label="siebelUser" labelStyle="text-align:left">
+            <h:selectOneMenu value="#{siebel.siebelUser}">
+              <f:selectItems value="#{siebel.uniqueUsers}"/>
+            </h:selectOneMenu>
+          </tr:panelLabelAndMessage>
+
+
+          <tr:panelLabelAndMessage label="timeout" labelStyle="text-align:left">
+            <tr:inputText value="#{siebel.timeout}" required="true" simple="true">
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="removeOnStop" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{siebel.removeOnStop}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+
+        <eye:collapsingGroup label="#{msg['informer.siebel.jdbc']}">
+
+          <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
+
+            <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.driver']}" labelStyle="text-align:left">
+              <tr:inputText columns="50" value="#{siebel.jdbcDriver}" required="true" simple="true"/>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.source']}" labelStyle="text-align:left">
+              <tr:inputText columns="50" value="#{siebel.jdbcSource}" required="true" simple="true"/>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.login']}" labelStyle="text-align:left">
+              <tr:inputText value="#{siebel.jdbcLogin}" required="true" simple="true"/>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.password']}" labelStyle="text-align:left">
+              <tr:inputText value="#{siebel.jdbcPassword}" required="true" simple="true"/>
+            </tr:panelLabelAndMessage>
+
+          </tr:panelFormLayout>
+
+        </eye:collapsingGroup>
+
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{siebel.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" action="INDEX" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+
