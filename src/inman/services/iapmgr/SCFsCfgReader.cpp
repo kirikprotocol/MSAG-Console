@@ -88,12 +88,13 @@ SKAlgorithmAC *
 unsigned SCFsCfgReader::readSrvKeys(XConfigView & scf_cfg, SKAlgorithmsDb & sk_alg)
     throw(ConfigException)
 {
-  if (!scf_cfg.findSubSection("ServiceKeys"))
-    throw ConfigException("'ServiceKeys' subsection is missed");
-  std::auto_ptr<XConfigView> skeyCfg(scf_cfg.getSubConfig("ServiceKeys"));
+  if (!scf_cfg.findSubSection("ServiceKeys")) //Optional 
+    return 0;
 
-  std::auto_ptr<CStrSet> subs(skeyCfg->getStrParamNames());
-  for (CStrSet::iterator sit = subs->begin(); sit != subs->end(); ++sit) {
+  std::auto_ptr<XConfigView>  skeyCfg(scf_cfg.getSubConfig("ServiceKeys"));
+  std::auto_ptr<CStrSet>      subs(skeyCfg->getStrParamNames());
+
+  for (CStrSet::const_iterator sit = subs->begin(); sit != subs->end(); ++sit) {
     CSIUid_e csiType = UnifiedCSI::tdp2Id(sit->c_str());
 
     if (csiType != UnifiedCSI::csi_UNDEFINED) {
@@ -101,12 +102,12 @@ unsigned SCFsCfgReader::readSrvKeys(XConfigView & scf_cfg, SKAlgorithmsDb & sk_a
       std::auto_ptr<SKAlgorithmAC> pAlg(readSkeyAlg(scf_cfg, csiType, cstr));
 
       if (pAlg.get()) {
-        smsc_log_info(logger, "  skey %s %s", sit->c_str(), pAlg->toString().c_str());
+        smsc_log_info(logger, "  serviceKey(%s) %s", sit->c_str(), pAlg->toString().c_str());
         sk_alg.addAlgorithm(csiType, pAlg.release());
       } else
-        throw ConfigException("  %s service key value/algorithm is invalid", sit->c_str());
+        throw ConfigException("serviceKey(%s) value/algorithm is invalid", sit->c_str());
     } else
-      smsc_log_warn(logger, " %s service key is unknown/unsupported", sit->c_str());
+      smsc_log_warn(logger, " serviceKey(%s) is unknown/unsupported", sit->c_str());
   }
   return sk_alg.size();
 }
