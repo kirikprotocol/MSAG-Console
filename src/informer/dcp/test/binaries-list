@@ -1,0 +1,12 @@
+informer/DcpTest DcpTest \
+  -linformer-dcp-messages\
+  -linformer-dcp-client\
+  -leyeline-protogen-client\
+  -lcore-threads\
+  -lcore-network\
+  -llogger\
+  -lutil\
+  -lsocket -lnsl -lpthread
+
+informer/msgtest msgtest \
+  -linformer-dcp-messages
