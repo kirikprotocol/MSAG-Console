@@ -52,10 +52,8 @@ namespace informer {
 
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
-DeliveryInfo::DeliveryInfo( const CommonSettings&   cs,
-                            dlvid_type              dlvId,
+DeliveryInfo::DeliveryInfo( dlvid_type              dlvId,
                             const DeliveryInfoData& data ) :
-cs_(cs),
 dlvId_(dlvId),
 startDate_(0),
 endDate_(0),

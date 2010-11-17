@@ -3,6 +3,7 @@
 #include "informer/io/DirListing.h"
 #include "FinalLog.h"
 #include "Message.h"
+#include "CommonSettings.h"
 
 namespace {
 
@@ -33,8 +34,7 @@ private:
 namespace eyeline {
 namespace informer {
 
-FinalLog::FinalLog( const CommonSettings& cs ) :
-cs_(cs),
+FinalLog::FinalLog() :
 createTime_(0),
 period_(60)
 {
@@ -43,7 +43,7 @@ period_(60)
     std::vector< std::string > dummy;
     ::LogFileFilter lff(logfiles);
     try {
-        makeDirListing( lff, S_IFREG ).list( (cs_.getStorePath() + "final_log").c_str(),
+        makeDirListing( lff, S_IFREG ).list( (getCS()->getStorePath() + "final_log").c_str(),
                                              dummy );
     } catch ( ErrnoException& e ) {
         return;
@@ -148,7 +148,7 @@ void FinalLog::checkRollFile( msgtime_type currentTime )
         sprintf(filename_,"final_log/%04u%02u%02u%02u%02u.log",
                 now.tm_year+1900, now.tm_mon+1, now.tm_mday,
                 now.tm_hour, now.tm_min );
-        fg_.create((cs_.getStorePath()+filename_).c_str(), 0666, true );
+        fg_.create((getCS()->getStorePath()+filename_).c_str(), 0666, true );
         createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
         fg_.seek(0, SEEK_END);
         if (fg_.getPos() == 0) {
@@ -166,8 +166,8 @@ void FinalLog::rollFile( const char* fn )
     assert( stemlen < 90 );
     memcpy(fnbuf,fn,stemlen);
     memcpy(fnbuf+stemlen,"csv",4);
-    if (-1 == rename((cs_.getStorePath() + fn).c_str(),
-                     (cs_.getStorePath() + fnbuf).c_str())) {
+    if (-1 == rename((getCS()->getStorePath() + fn).c_str(),
+                     (getCS()->getStorePath() + fnbuf).c_str())) {
         throw ErrnoException(errno,"rename('%s','%s')",fn,fnbuf);
     }
 }

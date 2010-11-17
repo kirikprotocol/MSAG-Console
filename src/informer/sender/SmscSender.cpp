@@ -64,7 +64,7 @@ public:
             return rl;
         }
 
-        virtual void readRecordData( size_t filePos, FromBuf& fb ) {
+        virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
             ReceiptData rd;
             rd.drmId.dlvId = fb.get32();
             rd.drmId.regId = fb.get32();
@@ -78,7 +78,9 @@ public:
                 ++unique_;
                 sender_.receiptHash_.Insert(rd.rcptId.msgId,
                                             sender_.receiptList_.insert(sender_.receiptList_.end(),rd));
+                return true;
             }
+            return false;
         }
     public:
         SmscSender& sender_;
@@ -161,7 +163,7 @@ protected:
 
 
     std::string makePath() const {
-        return sender_.rproc_.getCS().getStorePath() + "journals/smsc" + sender_.smscId_ + ".journal";
+        return getCS()->getStorePath() + "journals/smsc" + sender_.smscId_ + ".journal";
     }
 
 
@@ -321,10 +323,8 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             break;
         }
 
-        const CommonSettings& cs = rproc_.getCS();
-
         // check the number of seqnums
-        if ( unsigned(seqnumHash_.Count()) > cs.getUnrespondedMessagesMax() ) {
+        if ( unsigned(seqnumHash_.Count()) > getCS()->getUnrespondedMessagesMax() ) {
             what = "too many unresp msgs";
             res = smsc::system::Status::MSGQFUL;
             break;
@@ -398,11 +398,11 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         drm->msgId = msg.msgId;
         drm->nchunks = 0;
         drm->trans = info.isTransactional();
-        drm->endTime = now + validityTime + cs.getExtraReceiptWaitTime();
+        drm->endTime = now + validityTime + getCS()->getExtraReceiptWaitTime();
 
         {
             ResponseTimer rt;
-            rt.endTime = now + cs.getResponseWaitTime();
+            rt.endTime = now + getCS()->getResponseWaitTime();
             rt.seqNum = seqNum;
             respWaitQueue_.Push(rt);
         }
@@ -435,8 +435,8 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                                 info.isReplaceIfPresent() ? 1 : 0 );
             sms.setEServiceType( (info.isReplaceIfPresent() && info.getSvcType()[0]) ?
-                                 info.getSvcType() : cs.getSvcType() );
-            sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID, cs.getProtocolId());
+                                 info.getSvcType() : getCS()->getSvcType() );
+            sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID, getCS()->getProtocolId());
             sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
                                info.isTransactional() ? 2 : 0);
             sms.setIntProperty(smsc::sms::Tag::SMPP_PRIORITY, 0);

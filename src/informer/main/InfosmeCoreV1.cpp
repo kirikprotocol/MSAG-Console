@@ -176,7 +176,7 @@ void InfosmeCoreV1::init()
         cs_.init( cfg->getString("storePath"),
                   cfg->getString("statPath") );
 
-        finalLog_ = new FinalLog(cs_);
+        finalLog_ = new FinalLog();
 
         if (!dlvMgr_) {
             smsc_log_info(log_,"--- creating delivery mgr ---");
@@ -213,7 +213,7 @@ void InfosmeCoreV1::init()
         if (!alm_) {
             alm::ActivityLogMiner* alm;
             alm_ = alm = new alm::ActivityLogMiner();
-            alm->init(cs_.getStorePath(),
+            alm->init(getCS()->getStorePath(),
                       cfg->getInt("almRequestTimeout"));
         }
 
@@ -722,7 +722,7 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
         const ulonglong ymd = msgTimeToYmd(currentTime,&now);
         sprintf(buf,"%04u.%02u.%02u/dlv%02u.log",
                 now.tm_year + 1900, now.tm_mon+1, now.tm_mday, now.tm_hour );
-        fg.create((cs_.getStatPath()+buf).c_str(),0666,true);
+        fg.create((getCS()->getStatPath()+buf).c_str(),0666,true);
         fg.seek(0,SEEK_END);
         if (fg.getPos()==0) {
             const char* header = "#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL\n";
@@ -745,7 +745,7 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
     for ( std::vector< UserInfoPtr >::iterator i = users.begin();
           i != users.end(); ++i ) {
         UserDlvStats ds;
-        (*i)->popIncrementalStats(cs_,ds);
+        (*i)->popIncrementalStats(ds);
         if ( ds.isEmpty() ) continue;
         char* p = bufpos + sprintf(bufpos,"%s,%u,%u,%u,%u,%u\n",
                                    (*i)->getUserId(),

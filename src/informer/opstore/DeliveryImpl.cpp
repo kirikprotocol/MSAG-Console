@@ -26,15 +26,14 @@ void* memrchr(const void* s, int c, size_t n)
 namespace eyeline {
 namespace informer {
 
-void DeliveryImpl::readDeliveryInfoData( const CommonSettings& cs,
-                                         dlvid_type            dlvId,
+void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
                                          DeliveryInfoData&     data )
 {
     try {
         char buf[100];
         sprintf(makeDeliveryPath(buf,dlvId),"/config.xml");
 
-        std::auto_ptr<Config> cfg(Config::createFromFile((cs.getStorePath()+buf).c_str()));
+        std::auto_ptr<Config> cfg(Config::createFromFile((getCS()->getStorePath()+buf).c_str()));
         const Config& config = *cfg.get();
 
         data.name = config.getString("name");
@@ -147,8 +146,7 @@ DeliveryImpl::~DeliveryImpl()
 }
 
 
-DlvState DeliveryImpl::readState( const CommonSettings& cs,
-                                  dlvid_type            dlvId,
+DlvState DeliveryImpl::readState( dlvid_type            dlvId,
                                   msgtime_type&         planTime )
 {
     planTime = 0;
@@ -156,7 +154,7 @@ DlvState DeliveryImpl::readState( const CommonSettings& cs,
     char buf[200];
     sprintf(makeDeliveryPath(buf,dlvId),"status.log");
     FileGuard fg;
-    fg.ropen((cs.getStorePath()+buf).c_str());
+    fg.ropen((getCS()->getStorePath()+buf).c_str());
     struct stat st;
     const size_t pos = fg.getStat(st).st_size > sizeof(buf) ?
         st.st_size - sizeof(buf) : 0;
@@ -271,7 +269,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         } else {
             planTime = 0;
         }
-        userInfo_->incStats(dlvInfo_->getCS(),newState,state_); // may throw
+        userInfo_->incStats(newState,state_); // may throw
         state_ = newState;
         planTime_ = planTime;
         int regId;
@@ -295,7 +293,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         char buf[200];
         sprintf(makeDeliveryPath(buf,dlvId),"status.log");
         FileGuard fg;
-        fg.create((dlvInfo_->getCS().getStorePath() + buf).c_str(),0666,true);
+        fg.create((getCS()->getStorePath() + buf).c_str(),0666,true);
         fg.seek(0,SEEK_END);
         if (fg.getPos()==0) {
             const char* header = "#1 TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
@@ -555,7 +553,7 @@ void DeliveryImpl::writeDeliveryInfoData()
     const dlvid_type dlvId = getDlvId();
     sprintf(makeDeliveryPath(buf,dlvId),"config.xml");
 
-    const std::string fpo = dlvInfo_->getCS().getStorePath() + buf;
+    const std::string fpo = getCS()->getStorePath() + buf;
     const std::string fpn = fpo + ".new";
     try {
         config.saveToFile( fpn.c_str(), "utf-8" );

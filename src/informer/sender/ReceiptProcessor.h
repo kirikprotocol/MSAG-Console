@@ -4,7 +4,6 @@
 namespace eyeline {
 namespace informer {
 
-class CommonSettings;
 struct DlvRegMsgId;
 class RetryPolicy;
 
@@ -12,8 +11,6 @@ class ReceiptProcessor
 {
 public:
     virtual ~ReceiptProcessor() {}
-
-    virtual const CommonSettings& getCS() const = 0;
 
     virtual void receiveReceipt( const DlvRegMsgId& drm,
                                  const RetryPolicy& policy,

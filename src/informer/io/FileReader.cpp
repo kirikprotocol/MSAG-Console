@@ -56,13 +56,14 @@ size_t FileReader::readRecords( Buf& buf, RecordReader& reader, size_t count )
                            unsigned(ptr-buf.get()),
                            ulonglong(filePos));
             fb.setLen(reclen);
-            reader.readRecordData(filePos,fb);
-            ++total;
+            if (reader.readRecordData(filePos,fb)) {
+                ++total;
+            }
             ptr += reclen;
             filePos += reclen;
-            if (--count == 0) break;
+            if (total >= count) break;
         }
-        if (count==0) break;
+        if (total >= count) break;
         if (ptr>buf.get()) {
             // shifting buffer back
             smsc_log_debug(log_,"shifting %u bytes from pos=%u to 0",

@@ -1,8 +1,11 @@
+#include <cassert>
 #include "CommonSettings.h"
 #include "informer/io/UTF8.h"
 
 namespace eyeline {
 namespace informer {
+
+CommonSettings* CommonSettings::instance_ = 0;
 
 CommonSettings::CommonSettings() :
 path_("./"),
@@ -15,12 +18,15 @@ protocolId_(1), // FIXME
 incStatBank_(0),
 utf8_(0)
 {
+    assert(instance_ == 0);
+    instance_ = this;
 }
 
 
 CommonSettings::~CommonSettings()
 {
     delete utf8_;
+    instance_ = 0;
 }
 
 

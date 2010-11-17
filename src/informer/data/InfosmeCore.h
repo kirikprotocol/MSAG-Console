@@ -11,7 +11,6 @@
 namespace eyeline {
 namespace informer {
 
-class CommonSettings;
 class RegionFinder;
 class InputTransferTask;
 class ResendTransferTask;
@@ -24,8 +23,6 @@ class InfosmeCore
 {
 public:
     virtual ~InfosmeCore() {}
-
-    virtual const CommonSettings& getCS() const = 0;
 
     /// check if stopping
     virtual bool isStopping() const = 0;

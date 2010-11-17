@@ -232,6 +232,8 @@ void MessageGlossary::getTexts( std::vector< std::string >& texts ) const
         for ( TextHash::Iterator i(hash_); i.Next(id,node); ) {
             Node* orig = node;
             int32_t origId = id;
+            // FIXME: check the glossary
+            if (origId<=0) continue;
             while (orig->repl != list_.end()) {
                 // this is a replacement node, try to find the original node
                 origId = (*orig->repl)->id_;

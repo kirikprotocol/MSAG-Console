@@ -14,6 +14,7 @@ namespace eyeline {
 namespace informer {
 
 class InfosmeCoreV1;
+class CommonSettings;
 
 class DeliveryMgr : public ReceiptProcessor, public smsc::core::threads::Thread
 {
@@ -32,9 +33,6 @@ public:
     void start();
     void stop();
     inline bool isCoreStopping() const;
-
-    // --- receipt processor iface
-    virtual const CommonSettings& getCS() const { return cs_; }
 
     /// final state response/receipt has been received
     virtual void receiveReceipt( const DlvRegMsgId& drmId,

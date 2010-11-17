@@ -11,12 +11,13 @@ struct InputRegionRecord
     regionid_type regionId;
     uint32_t      rfn;
     uint32_t      roff;
+    msgid_type    rlast;    // last read msgid
     uint32_t      wfn;      // current write file number
     uint32_t      woff;     // current write offset
     uint32_t      count;    // number of messages per region
 
     void clear() {
-        rfn = roff = wfn = woff = count = 0;
+        rlast = rfn = roff = wfn = woff = count = 0;
     }
 };
 

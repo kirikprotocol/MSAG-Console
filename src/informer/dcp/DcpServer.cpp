@@ -873,7 +873,7 @@ void DcpServer::handle(const messages::GetDeliveryHistory& inmsg)
 {
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
-  std::string path=dlv->getDlvInfo().getCS().getStorePath();
+  std::string path=getCS()->getStorePath();
   char buf[64];
   makeDeliveryPath(buf,inmsg.getDeliveryId());
   path+=buf;

@@ -123,8 +123,7 @@ void UserInfo::getDeliveries( DeliveryList& dlvs ) const
 }
 
 
-void UserInfo::incStats( const CommonSettings& cs,
-                         uint8_t state,
+void UserInfo::incStats( uint8_t state,
                          uint8_t fromState )
 {
     if (state == fromState ) return;
@@ -142,15 +141,15 @@ void UserInfo::incStats( const CommonSettings& cs,
                                total,
                                maxTotalDeliveries_ );
     }
-    const unsigned idx = cs.getStatBankIndex();
+    const unsigned idx = getCS()->getStatBankIndex();
     incstats_[idx].incStat(state,1);
 }
 
 
-void UserInfo::popIncrementalStats( const CommonSettings& cs, UserDlvStats& ds )
+void UserInfo::popIncrementalStats( UserDlvStats& ds )
 {
     MutexGuard mg(statLock_);
-    const unsigned idx = 1 - cs.getStatBankIndex();
+    const unsigned idx = 1 - getCS()->getStatBankIndex();
     ds = incstats_[idx];
     incstats_[idx].clear();
 }

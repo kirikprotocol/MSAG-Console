@@ -3,6 +3,8 @@
 #include "InfosmeCoreV1.h"
 #include "informer/newstore/InputStorage.h"
 #include "informer/io/DirListing.h"
+#include "informer/data/InputRegionRecord.h"
+#include "informer/data/CommonSettings.h"
 #include "system/status.h"
 
 namespace {
@@ -344,8 +346,8 @@ stopping_(true),
 inputRollingIter_(deliveryList_.end()),
 storeRollingIter_(deliveryList_.end()),
 statsDumpingIter_(deliveryList_.end()),
-storeJournal_( new StoreJournal(cs_)),
-inputJournal_( new InputJournal(cs_)),
+storeJournal_(new StoreJournal),
+inputJournal_(new InputJournal),
 inputRoller_(0),
 storeRoller_(0),
 statsDumper_(0),
@@ -419,7 +421,7 @@ void DeliveryMgr::init()
             try {
 
                 DeliveryInfoData data;
-                DeliveryImpl::readDeliveryInfoData( cs_, dlvId, data );
+                DeliveryImpl::readDeliveryInfoData(dlvId, data);
 
                 UserInfoPtr user(core_.getUserInfo(data.owner.c_str()));
                 if (!user.get()) {
@@ -429,13 +431,9 @@ void DeliveryMgr::init()
 
                 // read state
                 msgtime_type planTime = 0;
-                const DlvState state = DeliveryImpl::readState( cs_,
-                                                                dlvId,
-                                                                planTime );
+                const DlvState state = DeliveryImpl::readState(dlvId, planTime );
 
-                DeliveryInfo* info = new DeliveryInfo(cs_,
-                                                      dlvId,
-                                                      data );
+                DeliveryInfo* info = new DeliveryInfo(dlvId, data );
                 addDelivery(*user.get(), info, state, planTime );
 
             } catch (std::exception& e) {
@@ -598,7 +596,7 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
                                         const DeliveryInfoData& infoData )
 {
     const dlvid_type dlvId = getNextDlvId();
-    DeliveryInfo* info = new DeliveryInfo(cs_,dlvId,infoData);
+    DeliveryInfo* info = new DeliveryInfo(dlvId,infoData);
     DlvState state = DLVSTATE_PAUSED;
     msgtime_type planTime = 0;
     if (info->getStartDate()) {
@@ -790,7 +788,7 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
         throw InfosmeException(EXC_ALREADYEXIST,"D=%u already exists",dlvId);
     }
     try {
-        userInfo.incStats(cs_,state);
+        userInfo.incStats(state);
     } catch (std::exception& e) {
         // FIXME: move to paused?
         throw InfosmeException(EXC_DLVLIMITEXCEED,"D=%u cannot set state: %s",dlvId,e.what());

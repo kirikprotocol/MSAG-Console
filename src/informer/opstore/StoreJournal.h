@@ -10,7 +10,6 @@ namespace eyeline {
 namespace informer {
 
 class Message;
-class CommonSettings;
 
 /// two functionality:
 /// 1. journalling all activity on the working storage;
@@ -33,7 +32,7 @@ public:
     };
 
     /// @a path -- a path to the storage root.
-    StoreJournal( const CommonSettings& cs );
+    StoreJournal();
 
     /// journal messages.
     /// @a serial: input -- the serial number of the journal file at previous write,
@@ -60,7 +59,6 @@ private:
 private:
     smsc::logger::Logger*              log_;
     smsc::core::synchronization::Mutex lock_;
-    const CommonSettings&              cs_;
     uint32_t                           version_;
     FileGuard                          fg_;
     regionid_type                      serial_;

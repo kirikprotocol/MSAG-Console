@@ -127,7 +127,6 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     RelockMutexGuard mg(cacheMon_);
     const char* from;
     const DeliveryInfo& info = dlv_->getDlvInfo();
-    const CommonSettings& cs = info.getCS();
     const dlvid_type dlvId = info.getDlvId();
 
     if ( dlv_->getState() != DLVSTATE_ACTIVE ) return false;
@@ -137,7 +136,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
         /// check if we need to request new messages
         if ( !inputTransferTask_ &&
-             unsigned(newQueue_.Count()) <= cs.getMinInputQueueSize() ) {
+             unsigned(newQueue_.Count()) <= getCS()->getMinInputQueueSize() ) {
 
             const bool mayDetachRegion = ( newQueue_.Count()==0 &&
                                            resendQueue_.empty() &&
@@ -149,7 +148,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
                                newQueue_.Count());
                 InputTransferTask* task = 
                     dlv_->source_->createInputTransferTask(*this,
-                                                          cs.getInputUploadCount());
+                                                          getCS()->getInputUploadCount());
                 if (task) {
                     dlv_->source_->getDlvActivator().startInputTransfer(task);
                 }
@@ -177,7 +176,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
                     uploadNextResend = true;
                 } else {
                     if (nextResendFile_ && 
-                        v->first + cs.getMinTimeToUploadResendFile() > nextResendFile_) {
+                        v->first + getCS()->getMinTimeToUploadResendFile() > nextResendFile_) {
                         uploadNextResend = true;
                     }
                     if ( v->first <= currentTime ) {
@@ -193,7 +192,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
         } else {
             // resend queue is empty
             if (nextResendFile_ &&
-                currentTime + cs.getMinTimeToUploadResendFile() > nextResendFile_) {
+                currentTime + getCS()->getMinTimeToUploadResendFile() > nextResendFile_) {
                 uploadNextResend = true;
             }
         }
@@ -320,7 +319,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
 
     // fixing time left.
     m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
-    if ( m.timeLeft > info.getCS().getMinTimeLeftToRetry() ) {
+    if ( m.timeLeft > getCS()->getMinTimeLeftToRetry() ) {
         // there is enough validity time to try the next time
 
         MsgLock ml(iter,this);
@@ -419,7 +418,7 @@ unsigned RegionalStorage::evaluateNchunks( const char*     outText,
         UTF8::BufType ucstext;
         const bool hasHighBit = smsc::util::hasHighBit(out,outLen);
         if (hasHighBit) {
-            info.getCS().getUTF8().convertToUcs2(out,outLen,ucstext);
+            getCS()->getUTF8().convertToUcs2(out,outLen,ucstext);
             outLen = ucstext.GetPos();
             out = ucstext.get();
             if (sms) sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::UCS2);
@@ -451,7 +450,7 @@ unsigned RegionalStorage::evaluateNchunks( const char*     outText,
             }
         }
         
-        const unsigned chunkLen = info.getCS().getMaxMessageChunkSize();
+        const unsigned chunkLen = getCS()->getMaxMessageChunkSize();
         unsigned nchunks;
         if ( chunkLen > 0 && outLen > chunkLen ) {
             nchunks = unsigned(outLen-1) / chunkLen + 1;

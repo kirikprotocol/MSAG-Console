@@ -56,8 +56,6 @@ struct UserDlvStats
     }
 };
 
-class CommonSettings;
-
 class UserInfo
 {
     friend class EmbedRefPtr< UserInfo >;
@@ -103,9 +101,9 @@ public:
     void getDeliveries( DeliveryList& dlvs ) const;
 
     /// increment number of deliveries
-    void incStats( const CommonSettings& cs, uint8_t state, uint8_t fromState = 0 );
+    void incStats( uint8_t state, uint8_t fromState = 0 );
 
-    void popIncrementalStats( const CommonSettings& cs, UserDlvStats& ds );
+    void popIncrementalStats( UserDlvStats& ds );
 
     /// NOTE: service methods, do not invoke!
     void attachDelivery( const DeliveryPtr& dlv );

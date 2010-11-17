@@ -5,27 +5,112 @@
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
 #include "informer/data/Region.h"
+#include "informer/data/InputRegionRecord.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/FileReader.h"
 #include "informer/io/IOConverter.h"
 #include "informer/io/HexDump.h"
 #include "core/buffers/TmpBuf.hpp"
+#include "core/buffers/IntHash64.hpp"
 
 namespace {
-using namespace eyeline::informer;
 
 const unsigned LENSIZE = 2;
 const uint16_t defaultVersion = 1;
 
-class IReader : public FileReader::RecordReader
+}
+
+namespace eyeline {
+namespace informer {
+
+class InputStorage::BlackList
+{
+    static const size_t itemsize = 8;
+public:
+    BlackList( InputStorage& is ) : is_(is), dropFileOffset_(0) {}
+
+    void init( msgid_type minRlast )
+    {
+        if (minRlast == msgid_type(-1LL)) return;
+
+        smsc_log_debug(is_.log_,"D=%u minRlast=%llu, going to find this place in blacklist",
+                       is_.getDlvId(),ulonglong(minRlast));
+
+        /*
+        try {
+            FileGuard fg;
+            // open file and find position
+            off_t maxSize = openFile(fg,minRlast);
+            off_t left = 0;
+            off_t right = maxSize;
+            char buf[8];
+            FromBuf fb(buf,sizeof(buf));
+            while ( left < right ) {
+                off_t middle = (right + left) /itemsize /2 * itemsize;
+                fg.seek(middle);
+                fg.read(buf,sizeof(buf));
+                fb.setPos(0);
+                const msgid_type midVal = fb.get64();
+                if ( midVal > minRlast ) {
+                    right = middle;
+                } else if (midVal == minRlast) {
+                    // exact match
+                    left = middle+itemsize;
+                    break;
+                } else {
+                    left = middle;
+                }
+            }
+            if ( left >= maxSize ) {
+                left = size_t(-1);
+            }
+            dropFileOffset_ = left;
+        } catch ( ErrnoException& e ) {
+            smsc_log_info(log_,"D=%u blacklist exc: %s",getDlvId(),e.what());
+            dropFileOffset_ = off_t(-1);
+        }
+         */
+    }
+
+    bool isMessageDropped( msgid_type msgId ) { return false; }
+
+private:
+    /// a hash for dropped message, which are stored combined by 64.
+    typedef smsc::core::buffers::IntHash64<uint64_t> DropMsgHash;
+
+    off_t openFile( FileGuard& fg, msgid_type minRlast )
+    {
+        char fname[100];
+        sprintf(makeDeliveryPath(fname,is_.getDlvId()),"new/black.lst");
+        fg.ropen((getCS()->getStorePath() + fname).c_str());
+        struct stat st;
+        const off_t maxSize = fg.getStat(st).st_size;
+        if (maxSize % itemsize != 0) {
+            throw InfosmeException(EXC_BADFILE,"D=%u bad file '%s', size(%llu) %% %u != 0",
+                                   is_.getDlvId(), fname, ulonglong(maxSize),
+                                   unsigned(itemsize));
+        }
+        return maxSize;
+    }
+
+
+private:
+    InputStorage& is_;
+    smsc::core::synchronization::Mutex dropLock_;
+    DropMsgHash                        dropMsgHash_;
+    size_t                             dropFileOffset_;
+};
+
+
+class InputStorage::IReader : public FileReader::RecordReader
 {
 public:
-    IReader( DeliveryActivator& core, 
+    IReader( InputStorage& is,
              MessageList& ml,
-             InputRegionRecord& iro ) : core_(core), msglist_(ml), ro_(iro) {}
+             InputRegionRecord& iro ) : is_(is), msglist_(ml), ro_(iro) {}
 
     virtual bool isStopping() {
-        return core_.isStopping();
+        return is_.core_.isStopping();
     }
 
     /// return the size of record length in octets.
@@ -41,42 +126,47 @@ public:
     }
 
     /// read the record data (w/o length)
-    virtual void readRecordData( size_t filePos, FromBuf& fb ) {
-        msglist_.push_back(MessageLocker());
-        MessageLocker& mlk = msglist_.back();
-        mlk.serial = 0;
+    virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
+        ro_.roff += fb.getLen();
         const uint16_t version = fb.get16();
         if (version!=1) {
             throw InfosmeException(EXC_BADFILE,"unsupported version %u at %llu",
                                    version,ulonglong(filePos));
         }
-        Message& msg = mlk.msg;
-        msg.subscriber = fb.get64();
-        msg.msgId = fb.get64();
-        // msg.lastTime = fb.get32();
-        // msg.timeLeft = fb.get32();
-        msg.userData = fb.getCString();
-        msg.state = fb.get8();
-        if (msg.state & 0x80) {
-            msg.state &= 0x7f;
-            msg.text.reset(new MessageText(fb.getCString(),0));
+        const uint64_t msgId = fb.get64();
+        if (msgId>ro_.rlast) ro_.rlast = msgId;
+        if ( is_.blackList_->isMessageDropped(msgId) ) {
+            return false;
         } else {
-            // FIXME: optimize if textptr already has glossary!
-            msg.text.reset(new MessageText(0,fb.get32()));
+            msglist_.push_back(MessageLocker());
+            MessageLocker& mlk = msglist_.back();
+            mlk.serial = 0;
+            Message& msg = mlk.msg;
+            msg.msgId = msgid_type(msgId);
+            msg.subscriber = fb.get64();
+            // msg.lastTime = fb.get32();
+            // msg.timeLeft = fb.get32();
+            msg.userData = fb.getCString();
+            msg.state = fb.get8();
+            if (msg.state & 0x80) {
+                msg.state &= 0x7f;
+                msg.text.reset(new MessageText(fb.getCString(),0));
+            } else {
+                // FIXME: optimize if textptr already has glossary!
+                msg.text.reset(new MessageText(0,fb.get32()));
+            }
+            return true;
         }
-        ro_.roff += fb.getLen();
     }
 private:
-    DeliveryActivator& core_;
+    InputStorage&      is_;
     MessageList&       msglist_;
     InputRegionRecord& ro_;
 };
 
-}
 
+// =============================================================================
 
-namespace eyeline {
-namespace informer {
 
 InputStorage::InputStorage( DeliveryActivator& core,
                             InputJournal&      jnl ) :
@@ -86,13 +176,15 @@ rollingIter_(recordList_.end()),
 jnl_(jnl),
 lastfn_(0),
 activityLog_(0),
-lastMsgId_(0)
+lastMsgId_(0),
+blackList_(0)
 {
 }
 
 
 InputStorage::~InputStorage()
 {
+    if (blackList_) delete blackList_;
 }
 
 
@@ -100,7 +192,7 @@ void InputStorage::init( ActivityLog& actLog )
 {
     activityLog_ = &actLog;
     try {
-        glossary_.init( jnl_.getCS().getStorePath(), getDlvId());
+        glossary_.init( getCS()->getStorePath(), getDlvId());
     } catch ( std::exception& e ) {
         smsc_log_error(log_,"D=%u glossary init failed: %s",getDlvId(),e.what());
         throw;
@@ -137,7 +229,7 @@ void InputStorage::setRecordAtInit( const InputRegionRecord& ro,
     if (maxMsgId>lastMsgId_) lastMsgId_ = maxMsgId;
     InputRegionRecord& rec = **ptr;
     if (rec.wfn > lastfn_) lastfn_ = rec.wfn;
-    smsc_log_debug(log_,"set input record for R=%u/D=%u: RP=%u/%u, WP=%u/%u, count=%u, msgs=%llu, lastfn=%u",
+    smsc_log_debug(log_,"R=%u/D=%u set input record: RP=%u/%u, WP=%u/%u, count=%u, msgs=%llu, lastfn=%u",
                    unsigned(rec.regionId),
                    unsigned(getDlvId()),
                    unsigned(rec.rfn), unsigned(rec.roff),
@@ -151,12 +243,21 @@ void InputStorage::postInit( std::vector<regionid_type>& regs )
 {
     int regId;
     RecordList::iterator iter;
+    msgid_type minRlast = msgid_type(-1LL);
     for ( RecordHash::Iterator i(recordHash_); i.Next(regId,iter); ) {
+        if ( iter->rlast < minRlast ) {
+            minRlast = iter->rlast;
+        }
         if ( iter->rfn == iter->wfn && iter->roff == iter->woff ) {
+            // no more messages in region
             continue; 
         }
         regs.push_back(regionid_type(regId));
     }
+    if (!blackList_) {
+        blackList_ = new BlackList(*this);
+    }
+    blackList_->init(minRlast);
 }
 
 
@@ -195,7 +296,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
     RegionFinder& rf = core_.getRegionFinder();
     MutexGuard mg(wlock_);
     // preprocess
-    unsigned count = 0;
+    unsigned total = 0;
     for ( MsgIter i = begin; i != end; ++i ) {
         const regionid_type regId = rf.findRegion( i->msg.subscriber );
         Message& msg = i->msg;
@@ -215,10 +316,10 @@ void InputStorage::dispatchMessages( MsgIter begin,
         if ( std::find(regs.begin(),regs.end(),regId) == regs.end() ) {
             regs.push_back(regId);
         }
-        ++count;
+        ++total;
     }
     smsc_log_debug(log_,"D=%u add %u new messages, regions: [%s]",
-                   unsigned(getDlvId()),count,
+                   unsigned(getDlvId()),total,
                    formatRegionList(regs.begin(),regs.end()).c_str());
     // writing regions
     smsc::core::buffers::TmpBuf<unsigned char,200> msgbuf;
@@ -258,9 +359,8 @@ void InputStorage::dispatchMessages( MsgIter begin,
             ToBuf tb(msgbuf.get(),msgbuf.getSize());
             tb.skip(LENSIZE);
             tb.set16(::defaultVersion);
-            // i->msg.toBuf(::defaultVersion,tb);
-            tb.set64(msg.subscriber);
             tb.set64(msg.msgId);
+            tb.set64(msg.subscriber);
             // tb.set32(msg.lastTime);
             // tb.set32(msg.timeLeft);
             tb.setCString(msg.userData.c_str());
@@ -294,10 +394,10 @@ void InputStorage::dispatchMessages( MsgIter begin,
 }
 
 
-void InputStorage::doTransfer( TransferRequester& req, unsigned count )
+void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
 {
     const regionid_type regId = req.getRegionId();
-    smsc_log_debug(log_,"transfer R=%u/D=%u started, count=%u", regId, getDlvId(), count);
+    smsc_log_debug(log_,"transfer R=%u/D=%u started, reqCount=%u", regId, getDlvId(), reqCount);
     bool ok = false;
     try {
         InputRegionRecord ro;
@@ -307,7 +407,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
         FileGuard fg;
         MessageList msglist;
         smsc::core::buffers::TmpBuf<char,8192> buf;
-        while (count>0) {
+        while (reqCount>0) {
 
             if (!fg.isOpened()) {
                 // need new file
@@ -344,8 +444,8 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned count )
 
             try {
                 FileReader fileReader(fg);
-                IReader recordReader(core_,msglist,ro);
-                fileReader.readRecords(buf,recordReader,count);
+                IReader recordReader(*this,msglist,ro);
+                fileReader.readRecords(buf,recordReader,reqCount);
                 fg.close();
                 if (ro.rfn<ro.wfn) {
                     ++ro.rfn;
@@ -405,17 +505,18 @@ void InputStorage::getRecord( InputRegionRecord& ro )
         RecordList::iterator* ptr = recordHash_.GetPtr(ro.regionId);
         if (!ptr) {
             ro.clear();
+            ro.rlast = lastMsgId_;
             recordHash_.Insert(ro.regionId,recordList_.insert(recordList_.begin(),ro));
         } else {
             ro = **ptr;
         }
     }
-    smsc_log_debug(log_,"got record for R=%u/D=%u: RP=%u/%u, WP=%u/%u, count=%u",
+    smsc_log_debug(log_,"got record for R=%u/D=%u: RP=%u/%u, WP=%u/%u, count=%u, rlast=%llu",
                    unsigned(ro.regionId),
                    unsigned(getDlvId()),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
-                   unsigned(ro.count) );
+                   unsigned(ro.count), ulonglong(ro.rlast) );
 }
 
 
@@ -428,12 +529,12 @@ void InputStorage::setRecord( InputRegionRecord& ro, uint64_t maxMsgId )
         doSetRecord(*ptr,ro);
         ro = **ptr;
     }
-    smsc_log_debug(log_,"set record for R=%u/D=%u: RP=%u/%u, WP=%u/%u, count=%u",
+    smsc_log_debug(log_,"set record for R=%u/D=%u: RP=%u/%u, WP=%u/%u, count=%u, rlast=%llu",
                    unsigned(ro.regionId),
                    unsigned(getDlvId()),
                    unsigned(ro.rfn), unsigned(ro.roff),
                    unsigned(ro.wfn), unsigned(ro.woff),
-                   unsigned(ro.count) );
+                   unsigned(ro.count), ulonglong(ro.rlast) );
     jnl_.journalRecord(getDlvId(),ro,maxMsgId);
 }
 
@@ -457,6 +558,9 @@ void InputStorage::doSetRecord( RecordList::iterator to, const InputRegionRecord
     if (ro.count>to->count) {
         to->count = ro.count;
     }
+    if (ro.rlast>to->rlast) {
+        to->rlast = ro.rlast;
+    }
 }
 
 
@@ -469,7 +573,7 @@ std::string InputStorage::makeFilePath( regionid_type regId, uint32_t fn ) const
                    unsigned(regId),
                    unsigned(getDlvId()),
                    unsigned(fn),buf);
-    return jnl_.getCS().getStorePath() + buf;
+    return getCS()->getStorePath() + buf;
 }
 
 }

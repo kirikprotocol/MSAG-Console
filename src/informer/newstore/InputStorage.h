@@ -3,7 +3,6 @@
 
 #include "informer/data/InputMessageSource.h"
 #include "informer/data/MessageGlossary.h"
-#include "informer/data/CommonSettings.h"
 #include "informer/data/ActivityLog.h"
 #include "InputJournal.h"
 #include "logger/Logger.h"
@@ -18,6 +17,9 @@ class InfosmeCore;
 /// persistent input storage.
 class InputStorage : public InputMessageSource
 {
+    class BlackList;
+    class IReader;
+
     typedef std::list< InputRegionRecord >  RecordList;
     typedef smsc::core::buffers::IntHash< RecordList::iterator > RecordHash;
 
@@ -87,6 +89,12 @@ private:
     ActivityLog*                               activityLog_; // not owned
     msgid_type                                 lastMsgId_;
     MessageGlossary                            glossary_;
+
+    BlackList*                                 blackList_; // owned
+    // smsc::core::synchronization::Mutex         dropLock_;
+    // DropMsgHash                                dropMsgHash_;
+    // drop file offset: -1 - no file, 0 - at start.
+    // size_t                                     dropFileOffset_;
 };
 
 } // informer

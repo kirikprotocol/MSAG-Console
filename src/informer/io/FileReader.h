@@ -23,7 +23,8 @@ public:
         /// read record length from fb and checks its validity.
         virtual size_t readRecordLength( size_t filePos, FromBuf& fb ) = 0;
         /// read the record data (w/o length)
-        virtual void readRecordData( size_t filePos, FromBuf& fb ) = 0;
+        /// @return false if the record is filtered.
+        virtual bool readRecordData( size_t filePos, FromBuf& fb ) = 0;
     };
 
     typedef smsc::core::buffers::TmpBuf<char,8192> Buf;

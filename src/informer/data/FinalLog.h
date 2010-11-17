@@ -2,7 +2,6 @@
 #define _INFORMER_FINALLOG_H
 
 #include "informer/io/FileGuard.h"
-#include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryInfo.h"
 
 namespace eyeline {
@@ -14,7 +13,7 @@ class Message;
 class FinalLog
 {
 public:
-    FinalLog( const CommonSettings& cs );
+    FinalLog();
 
     void addMsgRecord( msgtime_type         currentTime,
                        dlvid_type           dlvId,
@@ -33,7 +32,6 @@ private:
 
 private:
     smsc::core::synchronization::Mutex lock_;
-    const CommonSettings&              cs_;
     FileGuard                          fg_;
     msgtime_type                       createTime_;
     msgtime_type                       period_;

@@ -10,8 +10,6 @@
 namespace eyeline {
 namespace informer {
 
-class CommonSettings;
-
 enum DlvMode{
     DLVMODE_SMS = 0,
     DLVMODE_USSDPUSH = 1,
@@ -51,11 +49,8 @@ class DeliveryInfo
 {
 public:
     // constructor from file system
-    DeliveryInfo( const CommonSettings&   cs,
-                  dlvid_type              dlvId,
+    DeliveryInfo( dlvid_type              dlvId,
                   const DeliveryInfoData& data );
-
-    const CommonSettings& getCS() const { return cs_; }
 
     dlvid_type getDlvId() const { return dlvId_; }
 
@@ -143,7 +138,6 @@ private:
     static smsc::logger::Logger* log_;
 
 private:
-    const CommonSettings& cs_;
     dlvid_type            dlvId_;
     DeliveryInfoData      data_;
 

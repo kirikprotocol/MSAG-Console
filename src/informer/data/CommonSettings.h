@@ -11,7 +11,10 @@ class UTF8;
 
 class CommonSettings
 {
+    static CommonSettings* instance_;
 public:
+    inline static const CommonSettings* getCS() { return instance_; }
+
     CommonSettings();
     ~CommonSettings();
 
@@ -95,6 +98,8 @@ private:
     unsigned    incStatBank_;
     UTF8*       utf8_;      // owned converter
 };
+
+inline const CommonSettings* getCS() { return CommonSettings::getCS(); }
 
 } // informer
 } // smsc

@@ -62,7 +62,7 @@ public:
         return rl;
     }
     /// read the record data (w/o length)
-    virtual void readRecordData( size_t filePos, FromBuf& fb ) {
+    virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
         const dlvid_type dlvId = fb.get32();
         const regionid_type regId = fb.get32();
         Message msg;
@@ -73,7 +73,7 @@ public:
                 throw InfosmeException(EXC_BADFILE,"next resend record at %llu has extra data", ulonglong(filePos));
             }
             reader_.setNextResendAtInit(dlvId,regId,nextResend);
-            return;
+            return false;
         }
         msg.state = readstate & 0x7f;
         msg.msgId = fb.get64();
@@ -96,6 +96,7 @@ public:
             throw InfosmeException(EXC_BADFILE,"record at %llu has extra data", ulonglong(filePos));
         }
         reader_.setRecordAtInit(dlvId,regId,msg,serial_);
+        return true;
     }
 public:
     StoreJournal::Reader& reader_;
@@ -110,9 +111,8 @@ public:
 namespace eyeline {
 namespace informer {
 
-StoreJournal::StoreJournal( const CommonSettings& cs ) :
+StoreJournal::StoreJournal() :
 log_(smsc::logger::Logger::getInstance("storejnl")),
-cs_(cs),
 version_(defaultVersion),
 serial_(1)
 {
@@ -230,7 +230,7 @@ size_t StoreJournal::journalNextResend( dlvid_type dlvId,
 
 void StoreJournal::init( Reader& jr )
 {
-    std::string jpath = makePath(cs_.getStorePath());
+    std::string jpath = makePath(getCS()->getStorePath());
     readRecordsFrom(jpath+".old",jr);
     readRecordsFrom(jpath,jr);
     if (jr.isStopping()) return;
@@ -253,7 +253,7 @@ void StoreJournal::init( Reader& jr )
 
 void StoreJournal::rollOver()
 {
-    std::string jpath = makePath(cs_.getStorePath());
+    std::string jpath = makePath(getCS()->getStorePath());
     smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
         throw ErrnoException(errno,"rename('%s')",jpath.c_str());

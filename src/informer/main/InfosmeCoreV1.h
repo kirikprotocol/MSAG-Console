@@ -52,7 +52,6 @@ public:
 
     // --- infosmecore iface
 
-    virtual const CommonSettings& getCS() const { return cs_; }
     virtual bool isStopping() const { return stopping_; }
 
     virtual void addUser( const char* user );

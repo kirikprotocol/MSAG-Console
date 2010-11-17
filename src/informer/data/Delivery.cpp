@@ -13,7 +13,7 @@ Delivery::Delivery( DeliveryInfo*               dlvInfo,
 log_(0),
 dlvInfo_(dlvInfo),
 userInfo_(&userInfo),
-activityLog_(*dlvInfo_.get()),
+activityLog_(dlvInfo_->getDlvId()),
 source_(source),
 ref_(0),
 state_(DlvState(0)),
@@ -67,7 +67,7 @@ void Delivery::setGlossary( const std::vector< std::string >& texts )
           i != texts.end(); ++i ) {
         tl.push_back( new MessageText( i->c_str(), ++id) );
     }
-    source_->getGlossary().setTexts( dlvInfo_->getCS().getStorePath(), dlvId, tl );
+    source_->getGlossary().setTexts( getCS()->getStorePath(), dlvId, tl );
 }
 
 }

@@ -1,6 +1,5 @@
 #include <ctime>
 #include "ActivityLog.h"
-#include "DeliveryInfo.h"
 #include "CommonSettings.h"
 #include "informer/io/TextEscaper.h"
 #include "informer/io/DirListing.h"
@@ -14,8 +13,8 @@ smsc::logger::Logger* log_ = 0;
 namespace eyeline {
 namespace informer {
 
-ActivityLog::ActivityLog( const DeliveryInfo& info ) :
-info_(info),
+ActivityLog::ActivityLog( dlvid_type dlvId ) :
+dlvId_(dlvId),
 createTime_(0)
 {
     if (!log_) {
@@ -24,7 +23,7 @@ createTime_(0)
     stats_.clear();
     incstats_[0].clear();
     incstats_[1].clear();
-    period_ = info.getCS().getActivityLogPeriod() / 60 * 60;
+    period_ = getCS()->getActivityLogPeriod() / 60 * 60;
     if (period_ > 3600) period_ = 3600;
     const int nslices = 3600 / period_;
     period_ = 3600 / nslices;
@@ -35,8 +34,8 @@ createTime_(0)
         DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
         std::vector< std::string > dirs;
         char fnbuf[150];
-        makeDeliveryPath(fnbuf,info.getDlvId());
-        const std::string actpath = info.getCS().getStorePath() + fnbuf + "activity_log/";
+        makeDeliveryPath(fnbuf,dlvId_);
+        const std::string actpath = getCS()->getStorePath() + fnbuf + "activity_log/";
         dl.list( actpath.c_str(), dirs );
         std::sort( dirs.begin(), dirs.end() );
         std::vector< std::string > subdirs;
@@ -66,7 +65,7 @@ createTime_(0)
                         }
                     } catch ( std::exception& e ) {
                         smsc_log_warn(log_,"D=%u, file '%s' exc: %s",
-                                      info_.getDlvId(), filename.c_str(), e.what());
+                                      dlvId_, filename.c_str(), e.what());
                     }
                 }
                 if (statsLoaded) break;
@@ -74,10 +73,10 @@ createTime_(0)
             if (statsLoaded) break;
         }
     } catch (std::exception& e) {
-        smsc_log_debug(log_,"D=%u actlog: %s", info_.getDlvId(), e.what());
+        smsc_log_debug(log_,"D=%u actlog: %s", dlvId_, e.what());
     }
     if (!statsLoaded) {
-        smsc_log_warn(log_,"D=%u statistics is not found", info_.getDlvId());
+        smsc_log_warn(log_,"D=%u statistics is not found", dlvId_);
     }
 }
 
@@ -201,7 +200,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
 
 
 dlvid_type ActivityLog::getDlvId() const {
-    return info_.getDlvId();
+    return dlvId_;
 }
 
 
@@ -251,11 +250,11 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             char fnbuf[100];
             const int oldmin = now.tm_min;
             now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
-            sprintf(makeDeliveryPath(fnbuf,info_.getDlvId()),
+            sprintf(makeDeliveryPath(fnbuf,dlvId_),
                     "activity_log/%04u.%02u.%02u/%02u/%02u.log",
                     now.tm_year+1900, now.tm_mon+1, now.tm_mday,
                     now.tm_hour, now.tm_min );
-            fg_.create((info_.getCS().getStorePath()+fnbuf).c_str(),
+            fg_.create((getCS()->getStorePath()+fnbuf).c_str(),
                        0666, true );
             createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
             fg_.seek(0, SEEK_END);
@@ -287,7 +286,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
         if ( currentTime < createTime_ ) {
             // a fix for delayed write
             smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
-                           info_.getDlvId(), unsigned(createTime_ - currentTime));
+                           dlvId_, unsigned(createTime_ - currentTime));
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
@@ -307,7 +306,7 @@ void ActivityLog::doIncStats( uint8_t state, int value, uint8_t fromState, int s
 {
     stats_.incStat(state,value,smsValue);
     if (fromState) {stats_.incStat(fromState,-value,0);}
-    const unsigned idx = info_.getCS().getStatBankIndex();
+    const unsigned idx = getCS()->getStatBankIndex();
     incstats_[idx].incStat(state,value,smsValue);
 }
 
@@ -315,7 +314,7 @@ void ActivityLog::doIncStats( uint8_t state, int value, uint8_t fromState, int s
 void ActivityLog::popIncrementalStats( DeliveryStats& ds )
 {
     MutexGuard mg(statLock_);
-    const unsigned idx = 1 - info_.getCS().getStatBankIndex();
+    const unsigned idx = 1 - getCS()->getStatBankIndex();
     ds = incstats_[idx];
     incstats_[idx].clear();
 }

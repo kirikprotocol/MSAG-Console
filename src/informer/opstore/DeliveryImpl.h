@@ -23,8 +23,7 @@ class DeliveryImpl : public Delivery
     friend class RegionalStorage;
 
 public:
-    static void readDeliveryInfoData( const CommonSettings& cs,
-                                      dlvid_type            dlvId,
+    static void readDeliveryInfoData( dlvid_type            dlvId,
                                       DeliveryInfoData&     data );
 
     DeliveryImpl( DeliveryInfo*               dlvInfo,
@@ -37,8 +36,7 @@ public:
     virtual ~DeliveryImpl();
 
     // init state, invoked from core init to get the last state of the delivery.
-    static DlvState readState( const CommonSettings& cs,
-                               dlvid_type            dlvId,
+    static DlvState readState( dlvid_type            dlvId,
                                msgtime_type&         planTime );
 
     virtual void updateDlvInfo( const DeliveryInfoData& info );

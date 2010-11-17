@@ -4,6 +4,7 @@
 #include "logger/Logger.h"
 #include "core/buffers/TmpBuf.hpp"
 #include "informer/io/FileReader.h"
+#include "informer/data/InputRegionRecord.h"
 
 namespace {
 
@@ -36,17 +37,19 @@ public:
         return rl;
     }
     /// read the record data (w/o length)
-    virtual void readRecordData( size_t filePos, FromBuf& fb ) {
+    virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
         const dlvid_type dlvId = fb.get32();
         InputRegionRecord rec;
         rec.regionId = fb.get32();
         rec.rfn = fb.get32();
         rec.roff = fb.get32();
+        rec.rlast = fb.get64();
         rec.wfn = fb.get32();
         rec.woff = fb.get32();
         rec.count = fb.get32();
         const uint64_t maxMsgId = fb.get64();
         reader_.setRecordAtInit(dlvId,rec,maxMsgId);
+        return true;
     }
 private:
     InputJournal::Reader& reader_;
@@ -58,8 +61,7 @@ private:
 namespace eyeline {
 namespace informer {
 
-InputJournal::InputJournal( const CommonSettings& cs ) :
-cs_(cs),
+InputJournal::InputJournal() :
 log_(smsc::logger::Logger::getInstance("injnl")),
 version_(defaultVersion)
 {
@@ -77,6 +79,7 @@ size_t InputJournal::journalRecord( dlvid_type dlvId,
     tb.set32(rec.regionId);
     tb.set32(rec.rfn);
     tb.set32(rec.roff);
+    tb.set64(rec.rlast);
     tb.set32(rec.wfn);
     tb.set32(rec.woff);
     tb.set32(rec.count);
@@ -99,7 +102,7 @@ size_t InputJournal::journalRecord( dlvid_type dlvId,
 
 void InputJournal::init( Reader& reader )
 {
-    std::string jpath = makePath(cs_.getStorePath());
+    std::string jpath = makePath(getCS()->getStorePath());
     readRecordsFrom(jpath+".old",reader);
     readRecordsFrom(jpath,reader);
     // reopen journal
@@ -121,7 +124,7 @@ void InputJournal::init( Reader& reader )
 
 void InputJournal::rollOver()
 {
-    std::string jpath = makePath(cs_.getStorePath());
+    std::string jpath = makePath(getCS()->getStorePath());
     smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
         throw ErrnoException(errno,"rename('%s')",jpath.c_str());

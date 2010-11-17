@@ -15,7 +15,7 @@ class DeliveryInfo;
 class ActivityLog
 {
 public:
-    ActivityLog( const DeliveryInfo& info );
+    ActivityLog( dlvid_type dlvId );
 
     dlvid_type getDlvId() const;
 
@@ -49,7 +49,7 @@ private:
 
 private:
     smsc::core::synchronization::Mutex lock_;
-    const DeliveryInfo&                info_;
+    dlvid_type                         dlvId_;
     FileGuard                          fg_;
     msgtime_type                       createTime_;
     msgtime_type                       period_;

@@ -3,13 +3,12 @@
 
 #include "informer/io/FileGuard.h"
 #include "informer/io/Typedefs.h"
-#include "informer/data/InputRegionRecord.h"
 #include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
 namespace informer {
 
-class CommonSettings;
+class InputRegionRecord;
 
 class InputJournal
 {
@@ -24,9 +23,7 @@ public:
         virtual void postInit() = 0;
     };
 
-    InputJournal( const CommonSettings& cs );
-
-    inline const CommonSettings& getCS() const { return cs_; }
+    InputJournal();
 
     // read journal at start
     void init( Reader& jr );
@@ -42,7 +39,6 @@ private:
     void readRecordsFrom( const std::string& jpath, Reader& jr );
 
 private:
-    const CommonSettings&              cs_;
     smsc::logger::Logger*              log_;
     smsc::core::synchronization::Mutex lock_;
     FileGuard                          jnl_;
