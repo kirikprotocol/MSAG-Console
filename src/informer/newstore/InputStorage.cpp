@@ -613,6 +613,9 @@ void InputStorage::init( ActivityLog& actLog )
         smsc_log_error(log_,"D=%u glossary init failed: %s",getDlvId(),e.what());
         throw;
     }
+    if (!blackList_) {
+        blackList_ = new BlackList(*this);
+    }
 }
 
 
@@ -679,9 +682,6 @@ void InputStorage::postInit( std::vector<regionid_type>& regs )
             continue; 
         }
         regs.push_back(regionid_type(regId));
-    }
-    if (!blackList_) {
-        blackList_ = new BlackList(*this);
     }
     blackList_->init(minRlast);
 }
