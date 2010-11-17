@@ -199,7 +199,7 @@ void ATIInterrogator::rlseMapDialog(void)
   if (mapDlg) {
     while (!mapDlg->Unbind()) //MAPDlg refers this query
       _sync.wait();
-    delete mapDlg;
+    mapDlg->destroy();
     mapDlg = NULL;
   }
   _active = false;
