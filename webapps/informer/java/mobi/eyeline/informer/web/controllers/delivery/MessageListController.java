@@ -7,6 +7,7 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -264,7 +265,7 @@ public class MessageListController extends InformerController{
 
   public DataTableModel getMessages() {
     if(state == 1) {
-      return new EmptyDataModel();
+      return new EmptyDataTableModel();
     }
 
     final MessageFilter filter;
@@ -272,7 +273,7 @@ public class MessageListController extends InformerController{
       filter = getModelFilter();
     } catch (AdminException e) {
       addError(e);
-      return new EmptyDataModel();
+      return new EmptyDataTableModel();
     }
     return new DataTableModel() {
       public List getRows(final int startPos, final int count, final DataTableSortOrder sortOrder) {
@@ -306,16 +307,6 @@ public class MessageListController extends InformerController{
         return 0;
       }
     };
-  }
-
-  private static class EmptyDataModel implements DataTableModel {
-    public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
-      return Collections.emptyList();
-    }
-
-    public int getRowsCount() {
-      return 0;
-    }
   }
 
   public static class ResendThread extends Thread{

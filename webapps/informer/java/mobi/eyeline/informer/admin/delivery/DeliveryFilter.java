@@ -23,7 +23,7 @@ public class DeliveryFilter {
     return userIdFilter;
   }
 
-  public void setUserIdFilter(String[] userIdFilter) {
+  public void setUserIdFilter(String... userIdFilter) {
     this.userIdFilter = userIdFilter;
   }
 
@@ -31,7 +31,7 @@ public class DeliveryFilter {
     return nameFilter;
   }
 
-  public void setNameFilter(String[] nameFilter) {
+  public void setNameFilter(String... nameFilter) {
     this.nameFilter = nameFilter;
   }
 
@@ -39,7 +39,7 @@ public class DeliveryFilter {
     return statusFilter;
   }
 
-  public void setStatusFilter(DeliveryStatus[] statusFilter) {
+  public void setStatusFilter(DeliveryStatus... statusFilter) {
     this.statusFilter = statusFilter;
   }
 
@@ -79,7 +79,7 @@ public class DeliveryFilter {
     return resultFields;
   }
 
-  public void setResultFields(DeliveryFields[] resultFields) {
+  public void setResultFields(DeliveryFields... resultFields) {
     this.resultFields = resultFields;
   }
 }

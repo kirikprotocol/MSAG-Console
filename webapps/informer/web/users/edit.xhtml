@@ -106,7 +106,7 @@
           <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
           <h:panelGroup>
             <h:selectBooleanCheckbox id="retryOnFail" value="#{userEdit.userToEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;"/>
-            <h:inputText id="retryPolicy" value="#{userEdit.userToEdit.policyId}"  disabled="#{!userEdit.userToEdit.retryOnFail}"/>
+            <h:inputText id="retryPolicy" value="#{userEdit.userToEdit.policyId}"/>
           </h:panelGroup>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
@@ -227,6 +227,10 @@
         </eye:button>
         <eye:space/>
       </eye:buttons>
+
+      <script type="text/javascript" language="javascript">
+        document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;
+      </script>
 
     </tr:form>
 

@@ -204,6 +204,10 @@ public class DeliveryEditController extends DeliveryController{
   }
 
 
+  public boolean isSmsMode() {
+    return delivery.getDeliveryMode() == DeliveryMode.SMS;
+  }
+
 
   public Delivery getDelivery() {
     return delivery;

@@ -90,6 +90,7 @@ public class User implements Serializable{
     this.reportsLifetime=user.reportsLifetime;
     this.allRegionsAllowed=user.allRegionsAllowed;
     this.importDeliveriesFromDir = user.importDeliveriesFromDir;
+    this.retryOnFail = user.retryOnFail;
   }
 
 

@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
 
 import javax.faces.model.SelectItem;
 import java.util.*;
@@ -28,8 +29,8 @@ public class DeliveryListController extends DeliveryController {
 
   public DeliveryListController() {
     String i = getRequestParameter("init");
-    if(i != null && i.length()>0) {
-      init = Boolean.valueOf(i);  
+    if (i != null && i.length() > 0) {
+      init = Boolean.valueOf(i);
     }
   }
 
@@ -89,26 +90,26 @@ public class DeliveryListController extends DeliveryController {
 
   @SuppressWarnings({"unchecked"})
   public void setSelected(List selected) {
-    if(selected != null) {
+    if (selected != null) {
       this.selected = new ArrayList<String>((List<String>) selected);
     }
   }
 
 
   public String activate() {
-    if(selected != null) {
+    if (selected != null) {
       User u = config.getUser(getUserName());
-      for(String r : selected) {
-        try{
-          int id =  Integer.parseInt(r);
+      for (String r : selected) {
+        try {
+          int id = Integer.parseInt(r);
           DeliveryStatistics d = config.getDeliveryStats(u.getLogin(), u.getPassword(), id);
-          if(d.getDeliveryState() != null) {
+          if (d.getDeliveryState() != null) {
             DeliveryStatus status = d.getDeliveryState().getStatus();
-            if(status == DeliveryStatus.Planned || status == DeliveryStatus.Paused) {
+            if (status == DeliveryStatus.Planned || status == DeliveryStatus.Paused) {
               config.activateDelivery(u.getLogin(), u.getPassword(), id);
             }
           }
-        }catch (AdminException e){
+        } catch (AdminException e) {
           addError(e);
         }
       }
@@ -117,19 +118,19 @@ public class DeliveryListController extends DeliveryController {
   }
 
   public String pause() {
-    if(selected != null) {
+    if (selected != null) {
       User u = config.getUser(getUserName());
-      for(String r : selected) {
-        try{
-          int id =  Integer.parseInt(r);
+      for (String r : selected) {
+        try {
+          int id = Integer.parseInt(r);
           DeliveryStatistics d = config.getDeliveryStats(u.getLogin(), u.getPassword(), id);
-          if(d.getDeliveryState() != null) {
+          if (d.getDeliveryState() != null) {
             DeliveryStatus status = d.getDeliveryState().getStatus();
-            if(status == DeliveryStatus.Active) {
+            if (status == DeliveryStatus.Active) {
               config.pauseDelivery(u.getLogin(), u.getPassword(), id);
             }
           }
-        }catch (AdminException e){
+        } catch (AdminException e) {
           addError(e);
         }
       }
@@ -137,139 +138,160 @@ public class DeliveryListController extends DeliveryController {
     return null;
   }
 
-  private int getDeliveryInfos(final Comparator<DeliveryInfo> comparator, final DeliveryInfo infimum, final int count, final List<DeliveryInfo> result) {
-    try{
-      User u = config.getUser(getUserName());
-      DeliveryFilter filter = new DeliveryFilter();
-      if(userFilter != null && (userFilter = userFilter.trim()).length() != 0) {
-        filter.setUserIdFilter(new String[]{userFilter});
-      }else if(!isUserInAdminRole()) {
-        filter.setUserIdFilter(new String[]{u.getLogin()});
+  /**
+   * Вставляет объект info в отсортированный массив infos.
+   * @param infos отсортированный массив
+   * @param info объект для вставки
+   * @param c компаратор, при помощи которого отсортирован массив
+   * @param <T> тип элементов массива
+   */
+  private static <T> void insert(T[] infos, T info, Comparator<T> c) {
+    int sRes = Arrays.binarySearch(infos, info, c);
+
+    if(sRes < 0)
+      sRes = -sRes - 1;
+
+    if (infos[sRes] != null)
+      System.arraycopy(infos, sRes, infos, sRes + 1, infos.length - sRes - 1);
+
+    infos[sRes] = info;
+  }
+
+  private DeliveryFilter createFilter(User u) {
+    DeliveryFilter filter = new DeliveryFilter();
+
+    if (userFilter != null && (userFilter = userFilter.trim()).length() != 0)
+      filter.setUserIdFilter(userFilter);
+    else if (!isUserInAdminRole())
+      filter.setUserIdFilter(u.getLogin());
+
+    if (namePrefix != null && (namePrefix = namePrefix.trim()).length() != 0)
+      filter.setNameFilter();
+
+    filter.setResultFields(DeliveryFields.Name, DeliveryFields.UserId, DeliveryFields.Status, DeliveryFields.StartDate, DeliveryFields.EndDate);
+
+    if (status != null && status.length() > 0)
+      filter.setStatusFilter(DeliveryStatus.valueOf(status));
+
+    return filter;
+  }
+
+  private List<DeliveryInfo> getSortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count, DataTableSortOrder sortOrder) throws AdminException {
+    final Comparator<DeliveryInfo> comparator = getComparator(sortOrder);
+
+    final DeliveryInfo infos[] = new DeliveryInfo[startPos + count];
+    final int lastIdx = infos.length - 1;
+    
+    config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<DeliveryInfo>() {
+      public boolean visit(DeliveryInfo value) throws AdminException {
+        if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
+          insert(infos, value, comparator);
+
+        return true;
       }
-      filter.setResultFields(new DeliveryFields[]{DeliveryFields.Name, DeliveryFields.UserId, DeliveryFields.Status,
-          DeliveryFields.StartDate, DeliveryFields.EndDate});
-      if(status != null && status.length() > 0) {
-        filter.setStatusFilter(new DeliveryStatus[]{DeliveryStatus.valueOf(status)});
+    });
+
+    return Arrays.asList(infos).subList(startPos, startPos + count);
+  }
+
+  private List<DeliveryInfo> getUnsortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count) throws AdminException {
+    final DeliveryInfo infos[] = new DeliveryInfo[count];
+    config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<DeliveryInfo>() {
+      int pos = 0;
+      public boolean visit(DeliveryInfo value) throws AdminException {
+        if (pos >= startPos + count)
+          return false;
+
+        if (pos >= startPos)
+          infos[pos - startPos] = value;
+
+        pos++;
+        return true;
       }
-      final int total[] = new int[]{0};
-      config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<DeliveryInfo>() {
-        public boolean visit(DeliveryInfo value) throws AdminException {
-          if(namePrefix != null && (namePrefix = namePrefix.trim()).length() != 0 &&
-              !value.getName().startsWith(namePrefix)) {
-            return true;
-          }
-          int compare;
-          if(infimum == null || (compare = comparator.compare(infimum, value)) < 0 ||
-              (compare == 0 && infimum.getDeliveryId() != value.getDeliveryId())) {
-            result.add(value);
-            total[0]++;
-          }
-          if(result.size() == MEMORY_LIMIT) {
-            Collections.sort(result, comparator);
-            if(count < result.size()) {
-              result.subList(count, result.size()).clear();
-            }
-          }
-          return true;
-        }
-      });
-      if(result.size() > count) {
-        Collections.sort(result, comparator);
-        result.subList(count, result.size()).clear();
-      }
-      return total[0];
-    }catch (AdminException e){
-      addError(e);
-      return 0;
-    }
+    });
+    return Arrays.asList(infos);
   }
 
   public DataTableModel getDeliviries() {
 
+    if (!init)
+      return new EmptyDataTableModel();
+
+    final User u = config.getUser(getUserName());
+    final DeliveryFilter filter = createFilter(u);
+
     return new DataTableModel() {
+      public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
+        try {
+          List<DeliveryInfo> list;
+          if (sortOrder != null)
+            list = getSortedDeliveriesList(u, filter, startPos, count, sortOrder);
+          else
+            list = getUnsortedDeliveriesList(u, filter, startPos, count);
 
-      private int count = 0;
-      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-        if(!init) {
-          return Collections.emptyList();
-        }
-        LinkedList<DeliveryInfo> list = new LinkedList<DeliveryInfo>();
-        int r = startPos/MEMORY_LIMIT;
-        int os = startPos%MEMORY_LIMIT;
-        DeliveryInfo last = null;
-        for (int i=1;i<=r;i++){
-          list.clear();
-          int c = getDeliveryInfos(getComparator(sortOrder), last, MEMORY_LIMIT, list);
-          if(this.count == 0) {
-            this.count = c;
-          }
-          if(list.isEmpty()) {
-            return Collections.emptyList();
-          }
-          last = list.getLast();
-        }
-        list.clear();
-        int c = getDeliveryInfos(getComparator(sortOrder), last, os+count, list);
-        if(list.isEmpty()) {
-          return Collections.emptyList();
-        }
-        if(this.count == 0) {
-          this.count = c;
-        }
-        if(os != 0) {
-          list.subList(0, os).clear();
-        }
-        List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
+          List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
+          for(DeliveryInfo di : list)
+            if (di != null)
+              rows.add(new DeliveryRow(di, config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), di.getDeliveryId())));
+          return rows;
 
-        User u = config.getUser(getUserName());
-        for(DeliveryInfo di : list) {
-          try{
-            rows.add(new DeliveryRow(di, config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), di.getDeliveryId())));
-          }catch (AdminException e){
-            addError(e);
-          }
+        } catch (AdminException e) {
+          addError(e);
         }
 
-        return rows;
+        return Collections.emptyList();
       }
 
       public int getRowsCount() {
-        return count;
+        try {
+          return config.countDeliveries(u.getLogin(), u.getPassword(), filter);
+        } catch (AdminException e) {
+          addError(e);
+          return 0;
+        }
       }
     };
-
-
   }
 
   private static Comparator<DeliveryInfo> getComparator(final DataTableSortOrder sortOrder) {
-    if(sortOrder == null || sortOrder.getColumnId().equals("name")) {
-      return  new Comparator<DeliveryInfo>() {
-        public int compare(DeliveryInfo o1, DeliveryInfo o2) {
-          return o1.getName().compareTo(o2.getName())*(sortOrder == null || sortOrder.isAsc() ? 1 : -1);
-        }
-      };
-    }else if (sortOrder.getColumnId().equals("userId")) {
+    if (sortOrder == null || sortOrder.getColumnId().equals("name")) {
       return new Comparator<DeliveryInfo>() {
         public int compare(DeliveryInfo o1, DeliveryInfo o2) {
-          return o1.getUserId().compareTo(o2.getUserId())*(sortOrder.isAsc() ? 1 : -1);
+          if (o1 == null) return 1;
+          if (o2 == null) return -1;
+          return o1.getName().compareTo(o2.getName()) * (sortOrder == null || sortOrder.isAsc() ? 1 : -1);
         }
       };
-    }else if (sortOrder.getColumnId().equals("status")) {
+    } else if (sortOrder.getColumnId().equals("userId")) {
       return new Comparator<DeliveryInfo>() {
         public int compare(DeliveryInfo o1, DeliveryInfo o2) {
-          return o1.getStatus().toString().compareTo(o2.getStatus().toString())*(sortOrder.isAsc() ? 1 : -1);
+          if (o1 == null) return 1;
+          if (o2 == null) return -1;
+          return o1.getUserId().compareTo(o2.getUserId()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
-    }else if (sortOrder.getColumnId().equals("startDate")) {
+    } else if (sortOrder.getColumnId().equals("status")) {
       return new Comparator<DeliveryInfo>() {
         public int compare(DeliveryInfo o1, DeliveryInfo o2) {
-          return o1.getStartDate().compareTo(o2.getStartDate())*(sortOrder.isAsc() ? 1 : -1);
+          if (o1 == null) return 1;
+          if (o2 == null) return -1;
+          return o1.getStatus().toString().compareTo(o2.getStatus().toString()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
-    }else  {
+    } else if (sortOrder.getColumnId().equals("startDate")) {
       return new Comparator<DeliveryInfo>() {
         public int compare(DeliveryInfo o1, DeliveryInfo o2) {
-          return o1.getEndDate().compareTo(o2.getEndDate())*(sortOrder.isAsc() ? 1 : -1);
+          if (o1 == null) return 1;
+          if (o2 == null) return -1;
+          return o1.getStartDate().compareTo(o2.getStartDate()) * (sortOrder.isAsc() ? 1 : -1);
+        }
+      };
+    } else {
+      return new Comparator<DeliveryInfo>() {
+        public int compare(DeliveryInfo o1, DeliveryInfo o2) {
+          if (o1 == null) return 1;
+          if (o2 == null) return -1;
+          return o1.getEndDate().compareTo(o2.getEndDate()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
     }
@@ -288,14 +310,14 @@ public class DeliveryListController extends DeliveryController {
     }
 
     public Date getEndDate() {
-      if(history == null) {
+      if (history == null) {
         return null;
       }
       List<DeliveryStatusHistory.Item> items = history.getHistoryItems();
-      if(!items.isEmpty()) {
-        DeliveryStatusHistory.Item i = items.get(items.size()-1);
+      if (!items.isEmpty()) {
+        DeliveryStatusHistory.Item i = items.get(items.size() - 1);
         DeliveryStatus st = i.getStatus();
-        if(st == DeliveryStatus.Finished || st == DeliveryStatus.Cancelled) {
+        if (st == DeliveryStatus.Finished || st == DeliveryStatus.Cancelled) {
           return i.getDate();
         }
       }
@@ -303,11 +325,11 @@ public class DeliveryListController extends DeliveryController {
     }
 
     public Date getStartDate() {
-      if(history == null) {
+      if (history == null) {
         return null;
       }
-      for(DeliveryStatusHistory.Item i : history.getHistoryItems() ) {
-        if(i.getStatus() == DeliveryStatus.Active) {
+      for (DeliveryStatusHistory.Item i : history.getHistoryItems()) {
+        if (i.getStatus() == DeliveryStatus.Active) {
           return i.getDate();
         }
       }

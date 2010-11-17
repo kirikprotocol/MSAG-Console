@@ -37,112 +37,94 @@
       <tr:inputHidden id="delivery" value="#{deliveryEdit.id}"/>
       <tr:inputHidden id="delivery_comeback" value="#{deliveryEdit.comeBackParam}"/>
 
-      <h:panelGrid style="padding:10px" columns="1">
+      <eye:delimiter/>
 
-        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
+      <h:panelGrid columns="2" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign">
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.name}" labelStyle="text-align:left">
-            <tr:inputText readOnly="true" value="#{deliveryEdit.delivery.name}" required="true" simple="true"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.name}"/>
+        <tr:inputText value="#{deliveryEdit.delivery.name}" required="true" simple="true"/>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.owner}" labelStyle="text-align:left">
-            <tr:inputText readOnly="true"  value="#{deliveryEdit.delivery.owner}" required="true" simple="true"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.owner}" rendered="#{deliveryEdit.userInAdminRole}"/>
+        <h:outputText value="#{deliveryEdit.delivery.owner}" rendered="#{deliveryEdit.userInAdminRole}"/>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.sourceAddress}" labelStyle="text-align:left">
-            <tr:inputText converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" required="true" simple="true"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
+        <tr:inputText converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" required="true" simple="true"/>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.activePeriodStart}" labelStyle="text-align:left">
-            <t:inputDate value="#{deliveryEdit.delivery.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
+        <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.startDate}" requiredMessage="#{msg['date.required']}" required="true" type="full" disabled="true"/>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.activePeriodEnd}" labelStyle="text-align:left">
-            <t:inputDate value="#{deliveryEdit.delivery.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
+        <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.endDate}" requiredMessage="#{msg['date.required']}" required="true" type="full"/>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.activeWeekDays}" labelStyle="text-align:left">
-            <h:selectManyCheckbox value="#{deliveryEdit.delivery.activeWeekDays}" required="true" requiredMessage="#{deliveryBundle.activeWeekDays}" converter="weekDaysConverter">
-              <f:selectItems value="#{deliveryEdit.allDays}"/>
-            </h:selectManyCheckbox>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
+        <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <h:selectManyCheckbox value="#{deliveryEdit.delivery.activeWeekDays}" required="true" requiredMessage="#{deliveryBundle.activeWeekDays}" converter="weekDaysConverter">
+            <f:selectItems value="#{deliveryEdit.allDays}"/>
+          </h:selectManyCheckbox>
+          <h:outputText value="&#160;"/>
+        </h:panelGrid>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.startDate}" labelStyle="text-align:left">
-            <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.startDate}" requiredMessage="#{msg['date.required']}" required="true" type="full"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
+        <h:panelGroup>
+          <t:inputDate value="#{deliveryEdit.delivery.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+          <h:outputText value=" - "/>
+          <t:inputDate value="#{deliveryEdit.delivery.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+        </h:panelGroup>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.endDate}" labelStyle="text-align:left">
-            <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.endDate}" requiredMessage="#{msg['date.required']}" required="true" type="full"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
+        <tr:inputText value="#{deliveryEdit.delivery.priority}" simple="true" required="true" columns="5">
+          <tr:validateLongRange minimum="1" maximum="1000"/>
+        </tr:inputText>
 
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryOnFail}"/>
+        <h:panelGroup>
+          <h:selectBooleanCheckbox id="retryOnFail" value="#{deliveryEdit.delivery.retryOnFail}"
+                                    style="position: relative; top: 2px; left: -3px;"
+                                    onchange="document.getElementById('retryPolicy1').disabled = !this.checked;"/>
+          <h:inputText value="#{deliveryEdit.delivery.retryPolicy}" id="retryPolicy1"/>
+        </h:panelGroup>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.validityPeriod}" labelStyle="text-align:left">
-            <tr:inputText id="vPeriod" value="#{deliveryEdit.delivery.validityPeriod}" simple="true">
-              <tr:validateLongRange minimum="1" maximum="100"/>
-            </tr:inputText>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
+        <tr:inputText converter="addressConverter" value="#{deliveryEdit.smsNotificationAddress}" simple="true"/>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.retryOnFail}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox id="retryOnFail" value="#{deliveryEdit.delivery.retryOnFail}" simple="true" onchange="
-              var e = document.getElementById('retryPolicy1');
-              if(this.checked) {
-                e.style.display = '';
-              }else {
-                e.style.display='none';
-              }
-            "/>
-            <h:inputText value="#{deliveryEdit.delivery.retryPolicy}" id="retryPolicy1"
-                         style="#{deliveryEdit.delivery.retryOnFail ? '' : 'display:none'}"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
+        <tr:inputText value="#{deliveryEdit.emailNotificationAddress}" simple="true"/>
 
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.singleText}" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}"/>
+        <h:panelGrid columns="1" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}">
+          <tr:inputText value="#{deliveryEdit.delivery.singleText}" rows="3" simple="true" required="true"/>
+          <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}"/>
+        </h:panelGrid>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.transactionMode}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"
-                                      onchange="if(document.getElementById('dMode').value != 'SMS') { this.checked = true; }"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretMessage}" rendered="#{deliveryEdit.secret}"/>
+        <tr:inputText rows="5" readOnly="true" value="#{deliveryEdit.secretMessage}"  simple="true" rendered="#{deliveryEdit.secret}"/>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.flash}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true"/>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretFlash}" rendered="#{deliveryEdit.secret}"/>
+        <tr:selectBooleanCheckbox readOnly="true" value="#{deliveryEdit.flashSecret}" simple="true" rendered="#{deliveryEdit.secret}"/>
+      
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.deliveryMode}"/>
+        <h:selectOneMenu id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter"
+                         onchange="var d = (this.value != 'SMS') ? 'none' : ''; document.getElementById('smsSettings').style.display = d;">
+          <f:selectItems value="#{deliveryEdit.uniqueDeliveryModes}"/>
+        </h:selectOneMenu>
+      </h:panelGrid>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.priority}" labelStyle="text-align:left">
-            <tr:inputText value="#{deliveryEdit.delivery.priority}" simple="true" required="true">
-              <tr:validateLongRange minimum="1" maximum="1000"/>
-            </tr:inputText>
-          </tr:panelLabelAndMessage>
+      <h:panelGrid id="smsSettings" columns="2" columnClasses="column100Width, columnTopLeftAlign" style="padding-left:10px; display: #{deliveryEdit.smsMode ? '' : 'none'}">
+      
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+        <tr:inputText id="vPeriod" value="#{deliveryEdit.delivery.validityPeriod}" simple="true" columns="5">
+          <tr:validateLongRange minimum="1" maximum="100"/>
+        </tr:inputText>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.deliveryMode}" labelStyle="text-align:left">
-            <h:selectOneMenu id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter"
-                             onchange="if(this.value != 'SMS') {document.getElementById('trMode').checked = true;}">
-              <f:selectItems value="#{deliveryEdit.uniqueDeliveryModes}"/>
-            </h:selectOneMenu>
-          </tr:panelLabelAndMessage>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+        <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
 
-          <tr:panelLabelAndMessage label="#{deliveryBundle.smsNotificationAddress}" labelStyle="text-align:left">
-            <tr:inputText converter="addressConverter" value="#{deliveryEdit.smsNotificationAddress}" simple="true"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{deliveryBundle.emailNotificationAddress}" labelStyle="text-align:left">
-            <tr:inputText value="#{deliveryEdit.emailNotificationAddress}" simple="true"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}">
-            <tr:inputText value="#{deliveryEdit.delivery.singleText}"  simple="true" required="true"/>
-            <tr:outputText value="&#160;"/>
-            <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{deliveryBundle.secretMessage}" labelStyle="text-align:left" rendered="#{deliveryEdit.secret}">
-            <tr:inputText rows="5" readOnly="true" value="#{deliveryEdit.secretMessage}"  simple="true"/>
-          </tr:panelLabelAndMessage>
-
-          <tr:panelLabelAndMessage label="#{deliveryBundle.secretFlash}" labelStyle="text-align:left" rendered="#{deliveryEdit.secret}">
-            <tr:selectBooleanCheckbox readOnly="true" value="#{deliveryEdit.flashSecret}" simple="true"/>
-          </tr:panelLabelAndMessage>
-
-        </tr:panelFormLayout>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
+        <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true"/>
 
       </h:panelGrid>
+
+      <eye:delimiter/>
 
       <eye:buttons>
         <eye:button>
@@ -163,6 +145,10 @@
           </tr:commandLink>
         </eye:button>
       </eye:buttons>
+
+      <script type="text/javascript" language="javascript">
+        document.getElementById('retryPolicy1').disabled = !document.getElementById('retryOnFail').checked;
+      </script>
 
     </tr:form>
 

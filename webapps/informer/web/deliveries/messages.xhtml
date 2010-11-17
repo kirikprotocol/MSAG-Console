@@ -20,42 +20,36 @@
 
       <h:panelGroup rendered="#{messages.state == 0}">
 
-        <h:panelGroup style="padding:10px 10px 10px 10px" rendered="#{messages.deliveryId!= null}">
+        <h:panelGroup  rendered="#{messages.deliveryId!= null}">
 
           <eye:dataTableFilter bean="#{messages}" clearAction="clear" applyAction="query">
-            <h:panelGrid columns="3" columnClasses="column400Width, column400Width, columnTopLeftAlign">
-              <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+            <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width, columnTopLeftAlign">
 
-                <h:outputText value="#{msg['informer.deliveries.message.abonent']}"/>
-                <h:inputText id="msisdn" value="#{messages.msgFilter.msisdn}"/>
-                <h:outputText value="#{msg['informer.deliveries.messages.from_date']}"/>
-                <t:inputDate id="fromDate" value="#{messages.msgFilter.fromDate}" popupCalendar="true" type="date" autocomplete="true"/>
+              <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.abonent']}"/>
+              <h:inputText id="msisdn" value="#{messages.msgFilter.msisdn}"/>
 
-              </h:panelGrid>
-              <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
+              <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.state']}"/>
+              <h:selectOneMenu id="state"  value="#{messages.msgFilter.state}">
+                <f:selectItem itemLabel="" itemValue=""/>
+                <f:selectItems value="#{messages.uniqueStates}"/>
+              </h:selectOneMenu>
 
-                <h:outputText value="#{msg['informer.deliveries.message.state']}"/>
-                <h:selectOneMenu id="state"  value="#{messages.msgFilter.state}">
-                  <f:selectItem itemLabel="" itemValue=""/>
-                  <f:selectItems value="#{messages.uniqueStates}"/>
-                </h:selectOneMenu>
+              <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.error']}"/>
+              <tr:inputText id="errorCode" value="#{messages.msgFilter.errorCode}" simple="true">
+                <tr:validateLongRange minimum="0"/>
+              </tr:inputText>
 
-                <h:outputText value="#{msg['informer.deliveries.messages.till_date']}"/>
-                <t:inputDate id="tillDate" value="#{messages.msgFilter.tillDate}" popupCalendar="true" type="date" autocomplete="true"/>
-              </h:panelGrid>
+              <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.from_date']}"/>
+              <t:inputDate id="fromDate" value="#{messages.msgFilter.fromDate}" popupCalendar="true" type="date" autocomplete="true"/>
 
-              <h:panelGrid columns="2" columnClasses="column50Width, column300Width">
-
-                <h:outputText value="#{msg['informer.deliveries.message.error']}"/>
-                <tr:inputText id="errorCode" value="#{messages.msgFilter.errorCode}" simple="true">
-                  <tr:validateLongRange minimum="0"/>
-                </tr:inputText>
-
-              </h:panelGrid>
+              <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.till_date']}"/>
+              <t:inputDate id="tillDate" value="#{messages.msgFilter.tillDate}" popupCalendar="true" type="date" autocomplete="true"/>
 
             </h:panelGrid>
           </eye:dataTableFilter>
         </h:panelGroup>
+
+        <eye:delimiter/>
 
         <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init}" selectedRows="#{messages.selected}">
           <eye:row rowId="#{m.id}">
@@ -81,9 +75,7 @@
           </eye:row>
         </eye:dataTable>
 
-        <h:panelGrid>
-          <h:outputText value="&#160;"/>
-        </h:panelGrid>
+        <eye:delimiter/>
 
 
         <h:panelGroup style="#{messages.init ? '' : 'display:none'}">
