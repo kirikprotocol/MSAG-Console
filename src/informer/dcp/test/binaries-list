@@ -6,7 +6,8 @@ informer/DcpTest DcpTest \
   -lcore-network\
   -llogger\
   -lutil\
-  -lsocket -lnsl -lpthread
+  $(SOCKETLIB) -lnsl \
+  -lpthread -lrt -ldl
 
 informer/msgtest msgtest \
   -linformer-dcp-messages

@@ -1,14 +1,19 @@
 #include "informer/dcp/client/InformerClient.hpp"
 #include "util/Timer.hpp"
 
-int main()
+int main( int argc, char** argv )
 {
+    int port = 9073;
+    if (argc>1) {
+        port = atoi(argv[1]);
+    }
+
   using namespace eyeline::informer::dcp::client;
   using namespace eyeline::informer::dcp;
   smsc::logger::Logger::Init();
   InformerClient ic;
   try{
-    ic.Init("localhost",9073);
+    ic.Init("localhost",port);
     while(!ic.isConnected())
     {
       printf("not connected\n");
