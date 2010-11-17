@@ -47,7 +47,9 @@ public:
         source_->addNewMessages(begin,end);
     }
 
-    void dropMessages( const std::vector< msgid_type >& msgid );
+    void dropMessages( const std::vector< msgid_type >& msgids ) {
+        source_->dropMessages(msgids);
+    }
 
     inline void getStats( DeliveryStats& ds ) { return activityLog_.getStats(ds); }
 

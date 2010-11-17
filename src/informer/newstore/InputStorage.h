@@ -50,6 +50,8 @@ public:
 
     virtual void addNewMessages( MsgIter begin, MsgIter end );
 
+    virtual void dropMessages( const std::vector<msgid_type>& msgids );
+
     virtual InputTransferTask* createInputTransferTask( TransferRequester& requester,
                                                         unsigned           count ) {
         return new InputTransferTaskImpl(requester,count,*this);
@@ -75,6 +77,7 @@ private:
     std::string makeFilePath(regionid_type regId,uint32_t fn) const;
 
     inline dlvid_type getDlvId() const { return activityLog_->getDlvId(); }
+    msgid_type getMinRlast();
 
 private:
     smsc::logger::Logger*                      log_;

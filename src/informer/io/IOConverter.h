@@ -21,6 +21,11 @@ struct FromBuf
     void setLen( size_t newlen );
     inline size_t getPos() const { return pos; }
     inline size_t getLen() const { return buflen; }
+    inline void setBuf( void* thebuf, size_t bufLen ) {
+        buf = reinterpret_cast<unsigned char*>(thebuf);
+        buflen = bufLen;
+        pos = 0;
+    }
 private:
     FromBuf();
 private:
@@ -48,6 +53,7 @@ struct ToBuf
         pos = 0;
     }
     inline size_t getPos() const { return pos; }
+    inline size_t getLen() const { return buflen; }
 public:
     unsigned char* buf;    // current pointer
     size_t         buflen;

@@ -48,7 +48,7 @@ public:
     /// get regional storage
     RegionalStoragePtr getRegionalStorage( regionid_type regId, bool create=false);
 
-    void getRegionList( std::vector<regionid_type>& regIds ) const;
+    virtual void getRegionList( std::vector<regionid_type>& regIds ) const;
 
     inline void popIncrementalStats( DeliveryStats& ds ) {
         activityLog_.popIncrementalStats(ds);

@@ -211,7 +211,12 @@ void ActivityLog::addRecord( msgtime_type currentTime,
                              uint8_t fromState )
 {
     struct ::tm now;
-    const ulonglong ymdTime = msgTimeToYmd(currentTime,&now);
+    {
+        const time_t tmnow(currentTime);
+        if ( !gmtime_r(&tmnow,&now) ) {
+            throw InfosmeException(EXC_SYSTEM,"D=%u gmtime_r",dlvId_);
+        }
+    }
 
     unsigned planTime = 0;
     char cstate;
@@ -232,7 +237,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
 
     smsc::core::buffers::TmpBuf<char,1024> buf;
     const int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,\"",
-                            unsigned(ymdTime % 100), cstate, regId,
+                            unsigned(now.tm_sec), cstate, regId,
                             msg.msgId, msg.retryCount, planTime, 
                             caddr,
                             msg.timeLeft, smppStatus,
@@ -246,41 +251,8 @@ void ActivityLog::addRecord( msgtime_type currentTime,
 
     {
         MutexGuard mg(lock_);
-        if ( !fg_.isOpened() || (createTime_ + period_) < currentTime ) {
-            char fnbuf[100];
-            const int oldmin = now.tm_min;
-            now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
-            sprintf(makeDeliveryPath(fnbuf,dlvId_),
-                    "activity_log/%04u.%02u.%02u/%02u/%02u.log",
-                    now.tm_year+1900, now.tm_mon+1, now.tm_mday,
-                    now.tm_hour, now.tm_min );
-            fg_.create((getCS()->getStorePath()+fnbuf).c_str(),
-                       0666, true );
-            createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
-            fg_.seek(0, SEEK_END);
-            if (fg_.getPos() == 0) {
-                const char* header = "#1 SEC,STATE,REGID,MSGID,RETRY/NSMS,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT\n";
-                fg_.write(header,strlen(header));
-                char headbuf[200];
-                int headlen;
-                {
-                    MutexGuard lmg(statLock_);
-                    int shift;
-                    headlen = sprintf(headbuf,
-                                      ::statsFormat,
-                                      stats_.totalMessages, stats_.procMessages,
-                                      stats_.sentMessages, stats_.retryMessages,
-                                      stats_.dlvdMessages, stats_.failedMessages,
-                                      stats_.expiredMessages, stats_.dlvdSms,
-                                      stats_.failedSms, stats_.expiredSms,
-                                      &shift );
-                    if (headlen<0) {
-                        throw InfosmeException(EXC_SYSTEM,"cannot sprintf header");
-                    }
-                    headbuf[headlen++] = '\n';
-                }
-                fg_.write(headbuf,size_t(headlen));
-            }
+        if ( !fg_.isOpened() || (createTime_+period_) < currentTime ) {
+            createFile(currentTime,now);
         }
 
         if ( currentTime < createTime_ ) {
@@ -291,6 +263,82 @@ void ActivityLog::addRecord( msgtime_type currentTime,
         }
         fg_.write(buf.get(),buf.GetPos());
         doIncStats(msg.state,1,fromState,msg.retryCount);
+    }
+}
+
+
+void ActivityLog::addDeleteRecords( msgtime_type currentTime,
+                                    const std::vector<msgid_type>& msgIds )
+{
+    struct ::tm now;
+    {
+        const time_t tmnow(currentTime);
+        if ( !gmtime_r(&tmnow,&now) ) {
+            throw InfosmeException(EXC_SYSTEM,"D=%u gmtime_r",dlvId_);
+        }
+    }
+    char buf[100];
+    int shift = 0;
+    sprintf(buf,"%02u,K,,%n",now.tm_sec,&shift);
+    if (!shift) {
+        throw InfosmeException(EXC_SYSTEM,"cannot printf delrec");
+    }
+    {
+        MutexGuard mg(lock_);
+        if ( !fg_.isOpened() || (createTime_+period_) < currentTime ) {
+            createFile(currentTime,now);
+        }
+
+        if ( currentTime < createTime_ ) {
+            // a fix for delayed write
+            smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
+                           dlvId_, unsigned(createTime_ - currentTime));
+            ::memcpy(buf,"00",2);
+        }
+        for ( std::vector<msgid_type>::const_iterator i = msgIds.begin();
+              i != msgIds.end(); ++i ) {
+            const int off = sprintf(buf+shift,"%llu,,,,,,,\n",ulonglong(*i));
+            fg_.write(buf,shift+off);
+        }
+    }
+}
+
+
+void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
+{
+    char fnbuf[100];
+    const int oldmin = now.tm_min;
+    now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
+    sprintf(makeDeliveryPath(fnbuf,dlvId_),
+            "activity_log/%04u.%02u.%02u/%02u/%02u.log",
+            now.tm_year+1900, now.tm_mon+1, now.tm_mday,
+            now.tm_hour, now.tm_min );
+    fg_.create((getCS()->getStorePath()+fnbuf).c_str(),
+               0666, true );
+    createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
+    fg_.seek(0, SEEK_END);
+    if (fg_.getPos() == 0) {
+        const char* header = "#1 SEC,STATE,REGID,MSGID,RETRY/NSMS,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT\n";
+        fg_.write(header,strlen(header));
+        char headbuf[200];
+        int headlen;
+        {
+            MutexGuard lmg(statLock_);
+            int shift;
+            headlen = sprintf(headbuf,
+                              ::statsFormat,
+                              stats_.totalMessages, stats_.procMessages,
+                              stats_.sentMessages, stats_.retryMessages,
+                              stats_.dlvdMessages, stats_.failedMessages,
+                              stats_.expiredMessages, stats_.dlvdSms,
+                              stats_.failedSms, stats_.expiredSms,
+                              &shift );
+            if (headlen<0) {
+                throw InfosmeException(EXC_SYSTEM,"cannot sprintf header");
+            }
+            headbuf[headlen++] = '\n';
+        }
+        fg_.write(headbuf,size_t(headlen));
     }
 }
 

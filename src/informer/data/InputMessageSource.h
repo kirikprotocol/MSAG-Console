@@ -115,6 +115,9 @@ public:
     /// and will contain msgids.
     virtual void addNewMessages( MsgIter begin, MsgIter end ) = 0;
 
+    /// mark the messages as dropped.
+    virtual void dropMessages( const std::vector<msgid_type>& msgids ) = 0;
+
     // request 'count' messages to be uploaded for 'requester'.
     // This method should create a ThreadedTask which will upload messages.
     // NOTE: throws exception if the task cannot be created/found.

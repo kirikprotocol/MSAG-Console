@@ -77,6 +77,14 @@ public:
         return 30;
     }
 
+    /// get minimum black list message count in cache
+    unsigned getBlacklistMinCacheSize() const {
+        return 10;
+    }
+    unsigned getBlacklistChunkSize() const {
+        return 256;
+    }
+
     /// incremental statistics bank index
     inline unsigned getStatBankIndex() const { return incStatBank_; }
 

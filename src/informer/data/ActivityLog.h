@@ -1,6 +1,7 @@
 #ifndef _INFORMER_ACTIVITYLOG_H
 #define _INFORMER_ACTIVITYLOG_H
 
+#include <vector>
 #include "informer/data/Message.h"
 #include "informer/io/FileGuard.h"
 #include "DeliveryStats.h"
@@ -25,6 +26,11 @@ public:
                     const Message&       msg,
                     int                  smppStatus,
                     uint8_t              fromState = 0 );
+    
+    /// add records about deletion of messages
+    void addDeleteRecords( msgtime_type                   currentTime,
+                           const std::vector<msgid_type>& msgIds );
+
 
     /// increment stats, optionally decrementing fromState
     void incStats( uint8_t state,
@@ -46,6 +52,8 @@ private:
 
     bool readStatistics( const std::string& filename,
                          smsc::core::buffers::TmpBuf<char, 8192 >& buf );
+
+    void createFile( msgtime_type currentTime, struct tm& now );
 
 private:
     smsc::core::synchronization::Mutex lock_;
