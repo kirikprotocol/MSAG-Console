@@ -80,7 +80,7 @@ int IAPQuerySRI::Execute(void)
     }
   }
   if (sriDlg) {
-    delete sriDlg;  //synchronization point, waits for sriDlg mutex
+    sriDlg->destroy();  //synchronization point, waits for sriDlg mutex
     sriDlg = NULL;
   }
   return _qStatus;

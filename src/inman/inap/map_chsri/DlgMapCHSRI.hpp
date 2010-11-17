@@ -56,8 +56,8 @@ class MapCHSRIDlg : TCDialogUserITF { // GMSC/SCF -> HLR
 public:
     MapCHSRIDlg(TCSessionMA * pSession, CHSRIhandlerITF * sri_handler,
                 Logger * uselog = NULL);
-    //May be called only after successfull Unbind() call
-    virtual ~MapCHSRIDlg();
+
+    void destroy(void);
 
     enum MapOperState  { operInited = 1, operFailed = 2, operDone = 3 };
 
@@ -92,12 +92,13 @@ protected:
     void Awake(void) { _sync.notify(); }
 
 private:
-    typedef smsc::core::synchronization::MTRefWrapper_T<CHSRIhandlerITF>    SRIUserRef;
+    typedef smsc::core::synchronization::MTRefWrapper_T<CHSRIhandlerITF>
+      SRIUserRef;
 
-    void endTCap(void); //ends TC dialog, releases Dialog()
-    void unRefHdl(void);
+    mutable EventMonitor  _sync;
+    volatile  unsigned    _selfRef;
+    volatile  bool        _dieing;
 
-    EventMonitor    _sync;
     TCDialogID      sriId;
     //prefix for logging info
     const char *    _logPfx; //"MapSRI"
@@ -108,6 +109,14 @@ private:
     SRIUserRef      sriHdl;
     CHSRIState      _sriState;  //current state of dialog
     CHSendRoutingInfoRes reqRes;
+
+    void endTCap(void); //ends TC dialog, releases Dialog()
+    bool doRefHdl(void);
+    void unRefHdl(void);
+    void resetMapDlg();
+
+    void dieIfRequested(void);
+    virtual ~MapCHSRIDlg();
 };
 
 } //chsri

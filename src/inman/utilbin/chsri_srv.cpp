@@ -200,7 +200,7 @@ void SRIInterrogator::rlseSRIDialog(void)
   if (sriDlg) {
     while (!sriDlg->Unbind()) //MAPDlg refers this query
       _sync.wait();
-    delete sriDlg;
+    sriDlg->destroy();
     sriDlg = NULL;
   }
   _active = false;
