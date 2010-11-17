@@ -16,7 +16,6 @@
     <tr:form>
       <c:set var="longOpState" value="#{messagesByDeliveries.state}"/>
 
-      <h:panelGroup>
 
         <eye:dataTableFilter bean="#{messagesByDeliveries}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="3" columnClasses="columnTopLeftAlign,columnTopLeftAlign, columnTopLeftAlign">
@@ -42,6 +41,7 @@
           </h:panelGrid>
         </eye:dataTableFilter>
 
+      <eye:delimiter/>
 
         <eye:updatableContent updatePeriod="1" enabled="#{longOpState == 1}" >
 
@@ -53,17 +53,13 @@
 
           <h:panelGroup rendered="#{longOpState == 1}">
             <tr:message id="upload_message"/>
-            <eye:buttons>
-              <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{messagesByDeliveries.cancel}"/>
-              </eye:button>
-              <eye:space/>
-            </eye:buttons>
 
             <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
               <h:outputText value="#{msg['processing.label']}"/>
               <eye:progressBar current="#{messagesByDeliveries.current}" maximum="#{messagesByDeliveries.total}" width="500" height="20" />
             </h:panelGrid>
+
+            <eye:delimiter/>
 
             <eye:buttons>
               <eye:button>
@@ -158,6 +154,7 @@
             </eye:row>
           </eye:dataTable>
 
+          <eye:delimiter/>
 
           <eye:buttons rendered="#{longOpState == 2}">
             <eye:space/>
@@ -169,10 +166,6 @@
           </eye:buttons>
 
         </eye:updatableContent>
-
-      </h:panelGroup>
-
-
 
 
     </tr:form>
