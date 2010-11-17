@@ -9,6 +9,7 @@ namespace alm{
 ActivityLogMiner::ActivityLogMiner():reqIdSeq(0)
 {
   requestTimeout=60*60;
+  log=smsc::logger::Logger::getInstance("alm");
 }
 
 void ActivityLogMiner::init(const std::string& argPath,time_t argRequestTimeout)
@@ -39,7 +40,9 @@ int ActivityLogMiner::createRequest(dlvid_type dlvId,const ALMRequestFilter& fil
     timeMap.erase(tit);
   }
   int rv=reqIdSeq++;
+  smsc_log_debug(log,"created request with id=%d, from %lld to %lld for delivery %d",rv,msgTimeToYmd(filter.startDate),msgTimeToYmd(filter.endDate));
   req->timeIt=timeMap.insert(TimeMap::value_type(now+requestTimeout,rv));
+  reqMap.insert(ReqMap::value_type(rv,req));
   return rv;
 }
 
@@ -58,7 +61,7 @@ std::string ActivityLogMiner::mkFilePath(dlvid_type dlvId,msgtime_type date)
 namespace {
 std::string::size_type skipField(const std::string& str,std::string::size_type pos)
 {
-  std::string::size_type rv=str.find(',');
+  std::string::size_type rv=str.find(',',pos);
   if(rv==std::string::npos || rv+1==str.length())
   {
     throw InfosmeException(EXC_BADFORMAT,"Expected field separator wasn't found in line '%s' at pos %lu",str.c_str(),pos);
@@ -109,8 +112,10 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
     if(!f.isOpened())
     {
       filePath=mkFilePath(req->dlvId,req->curDate);
+      smsc_log_debug(log,"probing file %s",filePath.c_str());
       if(nextFile || !smsc::core::buffers::File::Exists(filePath.c_str()))
       {
+        smsc_log_debug(log,"file %s not found",filePath.c_str());
         req->curDate+=60;
         if(req->curDate>req->filter.endDate)
         {
@@ -118,6 +123,7 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
         }
         continue;
       }
+      smsc_log_debug(log,"reading %s",filePath.c_str());
       f.ROpen(filePath.c_str());
       f.Seek(req->offset);
     }
@@ -134,11 +140,14 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
 
     //parse and push
     ALMResult rec;
+    rec.resultFields=req->filter.resultFields;
     int n;
     pos=0;
     if(req->filter.resultFields&rfDate)
     {
-      if(!sscanf(line.c_str(),"%d,%n",&sec,&n)!=1)
+      n=0;
+      sscanf(line.c_str(),"%d,%n",&sec,&n);
+      if(!n)
       {
         throw InfosmeException(EXC_BADFORMAT,"failed to parse seconds in line '%s'",line.c_str());
       }
@@ -166,17 +175,19 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
     }
     pos=skipField(line,pos);//skip state
     pos=skipField(line,pos);//skip regionId
-    if(sscanf(line.c_str(),"%lld,%n",&rec.id,&n)!=1)
+    n=0;
+    sscanf(line.c_str()+pos,"%lld,%n",&rec.id,&n);
+    if(!n)
     {
       throw InfosmeException(EXC_BADFORMAT,"failed to parse msgid in line '%s'",line.c_str());
     }
-    pos=n;
+    pos+=n;
     pos=skipField(line,pos);//skip retry
     pos=skipField(line,pos);//skip plan
     if((req->filter.resultFields&rfAbonent) || !req->filter.abonentFilter.empty())
     {
-      std::string::size_type np=line.find(',');
-      rec.abonent.assign(line.c_str()+pos,pos-np);
+      std::string::size_type np=line.find(',',pos);
+      rec.abonent.assign(line.c_str()+pos,np-pos);
       if(!req->filter.abonentFilter.empty() && req->filter.abonentFilter.find(rec.abonent.c_str())==req->filter.abonentFilter.end())
       {
         continue;
@@ -189,7 +200,9 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
     pos=skipField(line,pos);//skip ttl
     if((req->filter.resultFields&rfErrorCode) || !req->filter.codeFilter.empty())
     {
-      if(sscanf(line.c_str(),"%d,%n",&rec.code,&n)!=1)
+      n=0;
+      sscanf(line.c_str()+pos,"%d,%n",&rec.code,&n);
+      if(!n)
       {
         throw InfosmeException(EXC_BADFORMAT,"failed to parse smpp error code in line '%s'",line.c_str());
       }
@@ -197,15 +210,15 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
       {
         continue;
       }
-      pos=n;
+      pos+=n;
     }else
     {
       pos=skipField(line,pos);
     }
     if(req->filter.resultFields&rfUserData)
     {
-      std::string::size_type np=line.find(',');
-      rec.userData.assign(line.c_str()+pos,pos-np);
+      std::string::size_type np=line.find(',',pos);
+      rec.userData.assign(line.c_str()+pos,np-pos);
       pos=np+1;
     }else
     {
@@ -218,7 +231,7 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
         pos++;
       }else
       {
-        throw InfosmeException(EXC_BADFORMAT,"expected message text in line '%s'",line.c_str());
+        throw InfosmeException(EXC_BADFORMAT,"expected message text in line '%s' (%d)",line.c_str(),pos);
       }
       rec.text.reserve(line.length()-pos);
       for(;;pos++)

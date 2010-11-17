@@ -244,7 +244,8 @@ void MessageGlossary::getTexts( std::vector< std::string >& texts ) const
             }
             smsc_log_debug(log_,"got node=%d orig=%d",id,origId);
             if (origId<=0) {
-                throw InfosmeException(EXC_LOGICERROR,"invalid origId=%d",origId);
+              continue;
+                //throw InfosmeException(EXC_LOGICERROR,"invalid origId=%d",origId);
             }
             if (unsigned(origId) > texts.size()) {
                 texts.resize(origId);

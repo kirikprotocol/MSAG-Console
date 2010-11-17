@@ -5,6 +5,7 @@
 #include "core/threads/Thread.hpp"
 #include <map>
 #include "core/synchronization/Mutex.hpp"
+#include "logger/Logger.h"
 
 namespace eyeline{
 namespace informer{
@@ -28,6 +29,7 @@ protected:
 
   std::string path;
   time_t requestTimeout;
+  smsc::logger::Logger* log;
 
   typedef std::multimap<time_t,int> TimeMap;
 
