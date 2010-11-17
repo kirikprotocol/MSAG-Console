@@ -60,7 +60,8 @@ typedef union {
 class MapATSIDlg : TCDialogUserITF { // SCF -> HLR
 public:
   MapATSIDlg(TCSessionMA* pSession, ATSIhandlerITF * atsi_handler, Logger * uselog = NULL);
-  virtual ~MapATSIDlg();
+
+  void destroy(void);
 
   enum MapOperState { operInited = 1, operFailed = 2, operDone = 3 };
 
@@ -101,7 +102,10 @@ private:
   typedef smsc::core::synchronization::MTRefWrapper_T<ATSIhandlerITF>
     MapUserRef;
 
-  EventMonitor    _sync;
+  mutable EventMonitor  _sync;
+  volatile  unsigned    _selfRef;
+  volatile  bool        _dieing;
+
   TCDialogID      atsiId;
   //prefix for logging info
   const char *    _logPfx; //"MapATSI"
@@ -113,7 +117,12 @@ private:
   Logger *        logger;
 
   void endTCap(void); //ends TC dialog, releases Dialog()
+  bool doRefHdl(void);
   void unRefHdl(void);
+  void resetMapDlg();
+
+  void dieIfRequested(void);
+  virtual ~MapATSIDlg();
 };
 
 } //atih

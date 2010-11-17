@@ -24,7 +24,8 @@ namespace atih {
  * ************************************************************************** */
 MapATSIDlg::MapATSIDlg(TCSessionMA* pSession, ATSIhandlerITF * atsi_handler,
                         Logger * uselog/* = NULL*/)
-    : _logPfx("MapATSI"), dialog(NULL), session(pSession), atsiHdl(atsi_handler)
+    : _selfRef(1), _dieing(false)
+    , _logPfx("MapATSI"), dialog(NULL), session(pSession), atsiHdl(atsi_handler)
     , logger(uselog)
 {
   _atsiState.value = 0;
@@ -38,23 +39,45 @@ MapATSIDlg::~MapATSIDlg()
   endMapDlg();
 }
 
+void MapATSIDlg::destroy(void)
+{
+  bool doDel = false;
+  {
+    MutexGuard  grd(_sync);
+    if (_selfRef) {
+      if (!(--_selfRef))
+        doDel = (_dieing = true);
+    }
+  }
+  if (doDel)
+    delete this;
+}
+
+void MapATSIDlg::dieIfRequested(void)
+{
+  bool doDel = false;
+  {
+    MutexGuard  grd(_sync);
+    doDel = _dieing;
+  }
+  if (doDel)
+    delete this;
+}
+
 //Attempts to unbind TC User.
 //Returns true on succsess, false result means that this object has 
 //established references to handler.
 bool MapATSIDlg::Unbind(void)
 {
   MutexGuard  grd(_sync);
-  return atsiHdl.Unref();
+  return _dieing ? true : atsiHdl.Unref();
 }
 
 void MapATSIDlg::endMapDlg(void)
 {
   MutexGuard  grd(_sync);
-  if (atsiHdl.get()) {
-    smsc_log_warn(logger, "%s: endMapDlg(): reference to handler exists", _logId);
-  }
-  atsiHdl.Reset(NULL);
-  endTCap();
+  if (!_dieing)
+    resetMapDlg();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -118,14 +141,15 @@ void MapATSIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
     _atsiState.s.ctrInited = MapATSIDlg::operDone;
     if ((do_end = _atsiState.s.ctrFinished) != 0)
       endTCap();
-    if (!atsiHdl.Lock())
+    if (!doRefHdl())
       return;
   }
   if (resComp)
     atsiHdl->onATSIResult(*resComp);
   if (do_end)
-    atsiHdl->onEndATSI();
+    atsiHdl->onEndATSI(); //may call destroy()
   unRefHdl();
+  dieIfRequested();
 }
 
 //Called if Operation got ResultError
@@ -139,11 +163,13 @@ void MapATSIDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 
     _atsiState.s.ctrInited = MapATSIDlg::operDone;
     endTCap();
-    if (!atsiHdl.Lock())
+    if (!doRefHdl())
       return;
   }
+  //may call destroy()
   atsiHdl->onEndATSI(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
   unRefHdl();
+  dieIfRequested();
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -155,11 +181,13 @@ void MapATSIDlg::onInvokeLCancel(InvokeRFP pInv)
         _logId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
     _atsiState.s.ctrInited = MapATSIDlg::operFailed;
     endTCap();
-    if (!atsiHdl.Lock())
+    if (!doRefHdl())
       return;
   }
+//may call destroy()
   atsiHdl->onEndATSI(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
   unRefHdl();
+  dieIfRequested();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -186,11 +214,13 @@ void MapATSIDlg::onDialogPAbort(uint8_t abortCause)
     smsc_log_error(logger, "%s: state 0x%x, P_ABORT: '%s'", _logId,
                     _atsiState.value, _RCS_TC_PAbort->code2Txt(abortCause));
     endTCap();
-    if (!atsiHdl.Lock())
+    if (!doRefHdl())
       return;
   }
+  //may call destroy()
   atsiHdl->onEndATSI(_RCS_TC_PAbort->mkhash(abortCause));
   unRefHdl();
+  dieIfRequested();
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -205,11 +235,13 @@ void MapATSIDlg::onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
     smsc_log_error(logger, "%s: state 0x%x, U_ABORT: '%s'", _logId,
                     _atsiState.value, _RCS_TC_UAbort->code2Txt(abortCause));
     endTCap();
-    if (!atsiHdl.Lock())
+    if (!doRefHdl())
       return;
   }
+  //may call destroy()
   atsiHdl->onEndATSI(_RCS_TC_UAbort->mkhash(abortCause));
   unRefHdl();
+  dieIfRequested();
 }
 
 //Underlying layer unable to deliver message, just abort dialog
@@ -235,11 +267,13 @@ void MapATSIDlg::onDialogNotice(uint8_t reportCause,
                    _atsiState.value, _RCS_TC_Report->code2Txt(reportCause),
                    dstr.c_str());
     endTCap();
-    if (!atsiHdl.Lock())
+    if (!doRefHdl())
       return;
   }
+  //may call destroy()
   atsiHdl->onEndATSI(_RCS_TC_Report->mkhash(reportCause));
   unRefHdl();
+  dieIfRequested();
 }
 
 
@@ -259,23 +293,46 @@ void MapATSIDlg::onDialogREnd(bool compPresent)
       smsc_log_error(logger, "%s: T_END_IND, state 0x%x", _logId, _atsiState.value);
       errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
     }
-    if (!atsiHdl.Lock())
+    if (!doRefHdl())
       return;
   }
+  //may call destroy()
   atsiHdl->onEndATSI(errcode);
   unRefHdl();
+  dieIfRequested();
 }
 
 /* ------------------------------------------------------------------------ *
  * Private/protected methods
  * ------------------------------------------------------------------------ */
+//NOTE: _sync must be locked upon entry
+bool MapATSIDlg::doRefHdl(void)
+{
+  if (atsiHdl.Lock()) {
+    ++_selfRef;
+    return true;
+  }
+  return false;
+}
+
 void MapATSIDlg::unRefHdl(void)
 {
   MutexGuard tmp(_sync);
+  --_selfRef;
   atsiHdl.UnLock();
   if (atsiHdl.get())
     atsiHdl->Awake();
 }
+
+void MapATSIDlg::resetMapDlg(void)
+{
+  if (atsiHdl.get()) {
+    smsc_log_warn(logger, "%s: resetMapDlg(): reference to ATSI handler exists", _logId);
+  }
+  atsiHdl.Reset(NULL);
+  endTCap();
+}
+
 
 //ends TC dialog, releases Dialog()
 void MapATSIDlg::endTCap(void)

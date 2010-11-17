@@ -77,7 +77,7 @@ int IAPQueryATSI::Execute(void)
     }
   }
   if (_mapDlg) {
-    delete _mapDlg;  //synchronization point, waits for _mapDlg mutex
+    _mapDlg->destroy();  //synchronization point, waits for _mapDlg mutex
     _mapDlg = NULL;
   }
   return _qStatus;
