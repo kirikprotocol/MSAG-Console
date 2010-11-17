@@ -12,8 +12,6 @@
 
   <ui:define name="content">
 
-      <ui:include src="#{createDelivery.activePage.pageId == 'DELIVERY_CREATE' ? 'createStart.xhtml' : ''}"/>
-
       <ui:include src="#{createDelivery.activePage.pageId == 'DELIVERY_UPLOAD_FILE' ? 'createUpload.xhtml' : ''}"/>
 
       <ui:include src="#{createDelivery.activePage.pageId == 'DELIVERY_CREATE_EDIT' ? 'createEdit.xhtml' : ''}"/>

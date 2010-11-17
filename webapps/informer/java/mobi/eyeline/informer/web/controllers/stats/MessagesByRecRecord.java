@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 

@@ -328,8 +328,8 @@ public class AdminContext {
       }
       User user = usersManager.getUser(login);
       DeliveryFilter filter = new DeliveryFilter();
-      filter.setUserIdFilter(new String[]{login});
-      filter.setResultFields(new DeliveryFields[]{DeliveryFields.Name});
+      filter.setUserIdFilter(login);
+      filter.setResultFields(DeliveryFields.Name);
       final boolean[] notExist = new boolean[]{true};
       deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
         public boolean visit(DeliveryInfo value) throws AdminException {
@@ -651,13 +651,8 @@ public class AdminContext {
     }
   }
 
-  public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
-    User u = getUser(user);
-    if(u == null) {
-      throw new IntegrityException("user_not_exist", user);
-    }
-
-    delivery.setOwner(user);
+  public static void getDefaultDelivery(User u, Delivery delivery) throws AdminException {
+    delivery.setOwner(u.getLogin());
 
     if(u.getSourceAddr() != null) {
       delivery.setSourceAddress(u.getSourceAddr());
@@ -706,7 +701,14 @@ public class AdminContext {
       }
       delivery.setActiveWeekDays(days.toArray(new Delivery.Day[days.size()]));
     }
+  }
 
+  public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
+    User u = getUser(user);
+    if(u == null) {
+      throw new IntegrityException("user_not_exist", user);
+    }
+    getDefaultDelivery(u, delivery);
   }
 
   public Restriction getRestriction(int id) {
@@ -786,12 +788,12 @@ public class AdminContext {
       Properties old = webConfig.getSiebelProperties();
       if(!old.getProperty(SiebelManager.USER).equals(props.getProperty(SiebelManager.USER))) {
         DeliveryFilter filter = new DeliveryFilter();
-        filter.setUserIdFilter(new String[]{old.getProperty(SiebelManager.USER)});
-        filter.setResultFields(new DeliveryFields[]{DeliveryFields.Status, DeliveryFields.Name});
+        filter.setUserIdFilter(old.getProperty(SiebelManager.USER));
+        filter.setResultFields(DeliveryFields.Status);
         final boolean[] notExist = new boolean[]{true};
         deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
           public boolean visit(DeliveryInfo value) throws AdminException {
-            if(value.getStatus() != DeliveryStatus.Finished && value.getName().startsWith("siebel_")) {
+            if(value.getStatus() != DeliveryStatus.Finished && value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
               notExist[0] = false;
               return false;
             }
@@ -883,6 +885,10 @@ public class AdminContext {
 
     public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
       return context.getDelivery(login, password, deliveryId);
+    }
+
+    public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
+      context.modifyDelivery(login, password, delivery);
     }
 
     public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {

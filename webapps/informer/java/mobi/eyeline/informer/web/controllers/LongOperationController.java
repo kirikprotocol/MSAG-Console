@@ -3,15 +3,10 @@ package mobi.eyeline.informer.web.controllers;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.web.config.Configuration;
 import org.apache.log4j.Logger;
-import org.apache.myfaces.trinidad.model.UploadedFile;
 
-import javax.faces.context.FacesContext;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
 
 public abstract class LongOperationController extends InformerController {
 

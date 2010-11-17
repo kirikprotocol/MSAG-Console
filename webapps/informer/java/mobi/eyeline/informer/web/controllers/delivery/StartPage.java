@@ -1,10 +1,8 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.web.config.Configuration;
 
-import java.io.File;
 import java.util.Locale;
 
 /**
@@ -15,15 +13,16 @@ public class StartPage implements CreateDeliveryPage{
   private boolean singleText;
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException{
-    Delivery delivery;
-    if(singleText) {
-      delivery = Delivery.newSingleTextDelivery();
-    }else {
-      delivery = Delivery.newCommonDelivery();
-    }
-    config.getDefaultDelivery(user, delivery);
-
-    return new UploadFilePage(delivery, new File(config.getWorkDir(),"messages_"+user+System.currentTimeMillis()), config.getFileSystem());
+//    Delivery delivery;
+//    if(singleText) {
+//      delivery = Delivery.newSingleTextDelivery();
+//    }else {
+//      delivery = Delivery.newCommonDelivery();
+//    }
+//    config.getDefaultDelivery(user, delivery);
+//
+//    return new UploadFilePage(delivery, new File(config.getWorkDir(),"messages_"+user+System.currentTimeMillis()), config.getFileSystem());
+    return null;
   }
 
   public boolean isSingleText() {

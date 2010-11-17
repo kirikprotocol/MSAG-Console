@@ -101,7 +101,9 @@ public class DcpConverter {
     delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart()));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
-    delivery.setEndDate(convertDate(di.getEndDate()));
+    if(di.hasEndDate()) {
+      delivery.setEndDate(convertDate(di.getEndDate()));
+    }
     delivery.setFlash(di.getFlash());
     delivery.setName(di.getName());
     delivery.setOwner(di.getOwner());
@@ -256,7 +258,9 @@ public class DcpConverter {
     delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart()));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
-    delivery.setEndDate(convertDate(di.getEndDate()));
+    if(di.getEndDate() != null) {
+      delivery.setEndDate(convertDate(di.getEndDate()));
+    }
     delivery.setFlash(di.isFlash());
     delivery.setName(di.getName());
     delivery.setOwner(di.getOwner());

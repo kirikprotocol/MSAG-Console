@@ -32,9 +32,7 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener{
 
   private ScheduledExecutorService commiter;
 
-  private Lock messagesLock = new ReentrantLock();
-
-  private Map<String, SiebelMessage.DeliveryState> cache = new HashMap<String, SiebelMessage.DeliveryState>(1001);
+  private Map<String, SiebelMessage.DeliveryState> messageStatesCache = new HashMap<String, SiebelMessage.DeliveryState>(1001);      //todo?
 
   public SiebelFinalStateListener(SiebelManager siebelManager, SiebelDeliveries deliveries, SiebelUserManager users) {
     this.siebelManager = siebelManager;
@@ -43,17 +41,16 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener{
     this.commiter = Executors.newSingleThreadScheduledExecutor();
     this.commiter.scheduleAtFixedRate(new Runnable() {
       public void run() {
-        if(messagesLock.tryLock()) {
-          try{
-              setFinalStates();
-          }catch (Exception e){
-            logger.error(e,e);
-          }finally {
-            messagesLock.unlock();
-          }
+        try{
+          lock();
+          commitFinalStates();
+        }catch (Exception e){
+          logger.error(e,e);
+        }finally {
+          unlock();
         }
       }
-    }, 120, 120, TimeUnit.SECONDS); //todo
+    }, 120, 120, TimeUnit.SECONDS); //todo?
   }
 
   private Lock lock = new ReentrantLock();
@@ -66,16 +63,11 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener{
     lock.unlock();
   }
 
-  private void setFinalStates() throws AdminException{
+  private void commitFinalStates() throws AdminException{
     try{
-      lock();
-      try{
-        siebelManager.setMessageStates(cache);
-      }finally {
-        cache.clear();
-      }
+      siebelManager.setMessageStates(messageStatesCache);
     }finally {
-      unlock();
+      messageStatesCache.clear();
     }
   }
 
@@ -97,14 +89,14 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener{
     MessageState state = notification.getMessageState();
     int code = notification.getSmppStatus();
     try{
-      messagesLock.lock();
-      cache.put(clcId,
-          new SiebelMessage.DeliveryState(stateToSiebelState(state), Integer.toString(code), null));  //todo
-      if(cache.size() >= 1000) {
-        setFinalStates();
+      lock();
+      messageStatesCache.put(clcId,
+          new SiebelMessage.DeliveryState(stateToSiebelState(state), Integer.toString(code), null));  //todo description
+      if(messageStatesCache.size() >= 1000) {
+        commitFinalStates();
       }
     }finally {
-      messagesLock.unlock();
+      unlock();
     }
   }
 
@@ -115,11 +107,8 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener{
       return;
     }
     Delivery d = deliveries.getDelivery(u.getLogin(), u.getPassword(), notification.getDeliveryId());
-    if(d != null && d.getName().startsWith("siebel_")) {
-      String waveId = d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID);
-      if(waveId == null) {
-        logger.error("Can't find needed property in delivery: "+d.getName());
-      }
+    String waveId;
+    if(d != null && (waveId = d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID)) != null) {
       siebelManager.setDeliveryStatus(waveId, SiebelDelivery.Status.PROCESSED);
     }
   }

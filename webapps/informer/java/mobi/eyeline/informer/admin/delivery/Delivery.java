@@ -184,8 +184,7 @@ public class Delivery implements Serializable{
     return endDate;
   }
 
-  public void setEndDate(Date endDate) throws AdminException {
-    vh.checkNotNull("endDate", endDate);
+  public void setEndDate(Date endDate) {
     this.endDate = endDate;
   }
 

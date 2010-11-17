@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
-import mobi.eyeline.informer.web.controllers.InformerController;
 
 import java.util.*;
 

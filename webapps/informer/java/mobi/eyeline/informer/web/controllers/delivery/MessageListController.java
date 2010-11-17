@@ -95,7 +95,7 @@ public class MessageListController extends InformerController{
       try {
         Delivery delivery = config.getDelivery(u.getLogin(), u.getPassword(), deliveryId);
         msgFilter.setFromDate(delivery.getStartDate());
-        msgFilter.setTillDate(delivery.getEndDate());
+        msgFilter.setTillDate(delivery.getEndDate() == null ? new Date() : delivery.getEndDate());
         deliveryName = delivery.getName();
         deliveryType = delivery.getType();
       } catch (AdminException e) {

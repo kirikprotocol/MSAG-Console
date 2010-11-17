@@ -197,7 +197,7 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     if(regionNotFoundFile != null) {
       regionNotFoundFile.delete();
     }
-    return new StartPage();
+    return new UploadFilePage(config, user);
   }
 
   public String getPageId() {

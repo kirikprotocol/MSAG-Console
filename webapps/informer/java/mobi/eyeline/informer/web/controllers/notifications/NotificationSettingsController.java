@@ -6,7 +6,6 @@ import mobi.eyeline.informer.admin.delivery.DeliveryNotificationTemplatesConstan
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
-
 import java.util.Properties;
 
 /**

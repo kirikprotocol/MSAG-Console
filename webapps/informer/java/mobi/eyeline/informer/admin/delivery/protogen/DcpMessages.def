@@ -55,7 +55,7 @@ message DeliveryInfo
 // DD.MM.YY hh:mm:ss
   string startDate 5 
 // DD.MM.YY hh:mm:ss
-  string endDate 6
+  string endDate 6 opt
 // hh:mm
   string activePeriodEnd 7
 // hh:mm

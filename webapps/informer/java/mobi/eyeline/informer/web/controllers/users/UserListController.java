@@ -6,7 +6,6 @@ import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
-import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import java.util.*;
 

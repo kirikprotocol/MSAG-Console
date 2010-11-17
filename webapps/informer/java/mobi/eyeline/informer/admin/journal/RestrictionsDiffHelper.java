@@ -1,9 +1,7 @@
 package mobi.eyeline.informer.admin.journal;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.restriction.Restriction;
-import mobi.eyeline.informer.admin.users.User;
 
 import java.lang.reflect.Method;
 import java.util.List;

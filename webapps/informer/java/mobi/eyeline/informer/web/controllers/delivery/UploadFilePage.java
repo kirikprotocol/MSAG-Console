@@ -22,7 +22,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   private int maximum = Integer.MAX_VALUE;
 
-  private final Delivery delivery;
+  private Delivery delivery;
 
   private File tmpFile;
 
@@ -30,18 +30,48 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   private final FileSystem fs;
 
-  public UploadFilePage(Delivery delivery, File tmpFile, FileSystem fs) {
-    this.delivery = delivery;
-    this.tmpFile = tmpFile;
-    this.fs = fs;
+  private boolean singleText;
+
+  private Configuration config;
+  private String user;
+
+  public UploadFilePage(Configuration config, String user) {
+    this.config = config;
+    this.user = user;
+    fs = config.getFileSystem();
+    tmpFile = new File(config.getWorkDir(),"messages_"+user+System.currentTimeMillis());
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
     if(isStoped() || getError() != null) {
-      return new StartPage();
+      return new UploadFilePage(config, user);
     }
     next();
     return new DeliveryEditPage(delivery, tmpFile, config);
+  }
+
+  public boolean isSingleText() {
+    return singleText;
+  }
+
+  public void setSingleText(boolean singleText) {
+    this.singleText = singleText;
+  }
+
+  @Override
+  public String upload() {
+    if(singleText) {
+      delivery = Delivery.newSingleTextDelivery();
+    }else {
+      delivery = Delivery.newCommonDelivery();
+    }
+    try{
+      config.getDefaultDelivery(user, delivery);
+    }catch (AdminException e){
+      addError(e);
+      return null;
+    }
+    return super.upload();
   }
 
   public String getPageId() {

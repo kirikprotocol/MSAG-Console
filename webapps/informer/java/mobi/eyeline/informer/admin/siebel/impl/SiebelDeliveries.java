@@ -16,6 +16,8 @@ public interface SiebelDeliveries {
 
   public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException;
 
+  public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException;
+
   public void cancelDelivery(String login, String password, int deliveryId) throws AdminException;
 
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException;

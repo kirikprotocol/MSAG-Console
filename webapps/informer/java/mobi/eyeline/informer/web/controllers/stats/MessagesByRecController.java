@@ -115,7 +115,8 @@ public class MessagesByRecController extends LongOperationController {
             final String userId = deliveryInfo.getUserId();
             final User owner = config.getUser(userId);
 
-            MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate==null ? deliveryInfo.getStartDate() : fromDate, tillDate==null ? deliveryInfo.getEndDate() : tillDate);
+            MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate==null ? deliveryInfo.getStartDate() : fromDate,
+                tillDate!=null ? tillDate : deliveryInfo.getEndDate() != null ? deliveryInfo.getEndDate() : new Date());
             messageFilter.setMsisdnFilter(new String[]{msisdn});
             messageFilter.setFields(new MessageFields[]{MessageFields.Date,MessageFields.State,MessageFields.Text, MessageFields.ErrorCode});
 

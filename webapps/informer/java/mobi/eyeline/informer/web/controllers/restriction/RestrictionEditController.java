@@ -3,7 +3,6 @@ package mobi.eyeline.informer.web.controllers.restriction;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;

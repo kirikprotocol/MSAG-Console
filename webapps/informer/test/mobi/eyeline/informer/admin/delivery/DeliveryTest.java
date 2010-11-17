@@ -66,12 +66,9 @@ public class DeliveryTest {
 
 
   @Test
-  public void testEndDate() throws AdminException {
+  public void testEndDate() {
     Delivery d = Delivery.newCommonDelivery();
-    try{
-      d.setEndDate(null);
-      assertTrue(false);
-    }catch (AdminException e){}
+    d.setEndDate(null);
     d.setEndDate(new Date());
   }
 

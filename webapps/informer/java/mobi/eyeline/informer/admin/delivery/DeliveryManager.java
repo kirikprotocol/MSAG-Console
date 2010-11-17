@@ -146,8 +146,8 @@ public class DeliveryManager {
     if(delivery.getSourceAddress() == null) {
       throw new DeliveryException("source_address_empty");
     }
-    if(delivery.getStartDate() == null || delivery.getEndDate() == null) {
-      throw new DeliveryException("dates_empty");
+    if(delivery.getStartDate() == null) {
+      throw new DeliveryException("start_date_empty");
     }
     if(delivery.getOwner() == null) {
       throw new DeliveryException("owner_empty");

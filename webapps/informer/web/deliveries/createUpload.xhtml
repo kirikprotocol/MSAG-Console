@@ -21,9 +21,15 @@
       <h:panelGrid columns="1" style="padding:10px" cellspacing="0" cellpadding="0" columnClasses=",column0WidthRight">
 
         <tr:panelFormLayout>
+
+          <tr:panelLabelAndMessage label="#{deliveryBundle.singleText}" labelStyle="text-align:left">
+            <tr:selectBooleanCheckbox value="#{createDelivery.activePage.singleText}" simple="true"/>
+          </tr:panelLabelAndMessage>
+
           <tr:panelLabelAndMessage label="#{msg['informer.upload.label']}">
             <tr:inputFile columns="50" value="#{createDelivery.activePage.file}" simple="true" required="true"/>
           </tr:panelLabelAndMessage>
+
         </tr:panelFormLayout>
 
       </h:panelGrid>
@@ -31,10 +37,7 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" action="#{createDelivery.activePage.upload}"/>
-        </eye:button>
-        <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true"/>
+          <tr:commandLink text="#{msg['next.button']}" action="#{createDelivery.activePage.upload}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -51,7 +54,7 @@
 
 
       <eye:buttons>
-        <eye:button rendered="#{createDelivery.activePage.finished}">
+        <eye:button rendered="#{createDelivery.activePage.finished and createDelivery.activePage.error == null and !createDelivery.activePage.stoped}">
           <tr:commandLink text="#{msg['next.button']}" action="#{createDelivery.next}"/>
         </eye:button>
         <eye:button rendered="#{createDelivery.activePage.finished}">
@@ -73,9 +76,9 @@
         <h:outputText
             value="#{msg['informer.deliveries.create.abonetns.size']} #{createDelivery.activePage.abonentsSize}"/>
       </h:panelGrid>
-      
+
       <eye:buttons>
-        <eye:button rendered="#{createDelivery.activePage.finished}">
+        <eye:button rendered="#{createDelivery.activePage.finished and createDelivery.activePage.error == null and !createDelivery.activePage.stoped}">
           <tr:commandLink text="#{msg['next.button']}" action="#{createDelivery.next}"/>
         </eye:button>
         <eye:button rendered="#{createDelivery.activePage.finished}">

@@ -1,7 +1,5 @@
 package mobi.eyeline.informer.admin.delivery;
 
-import mobi.eyeline.informer.admin.AdminException;
-
 /**
  * Copyright Eyeline.mobi
  * User: vmax

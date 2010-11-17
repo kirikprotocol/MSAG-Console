@@ -5,15 +5,12 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.util.config.BaseManager;
-import mobi.eyeline.informer.admin.util.config.ConfigFileManager;
 import mobi.eyeline.informer.admin.util.config.SettingsReader;
 import mobi.eyeline.informer.admin.util.config.SettingsWriter;
 
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Управление настройками пользователей

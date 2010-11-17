@@ -8,7 +8,11 @@ import mobi.eyeline.informer.web.controllers.InformerController;
  */
 public class CreateDeliveryController extends InformerController {
 
-  private CreateDeliveryPage activePage = new StartPage();
+  private CreateDeliveryPage activePage;
+
+  public CreateDeliveryController() {
+    activePage = new UploadFilePage(getConfig(), getUserName());
+  }
 
   public String next() {
     try {
@@ -24,7 +28,7 @@ public class CreateDeliveryController extends InformerController {
 
   public String cancel() {
     activePage.cancel();
-    activePage = new StartPage();
+    activePage = new UploadFilePage(getConfig(), getUserName());
     return null;
   }
 

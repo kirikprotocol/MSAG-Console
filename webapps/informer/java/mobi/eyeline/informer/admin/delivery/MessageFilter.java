@@ -24,7 +24,7 @@ public class MessageFilter {
 
   public MessageFilter(Integer deliveryId, Date startDate, Date endDate) {
     if(deliveryId == null || startDate == null || endDate == null) {
-      throw new IllegalArgumentException("Some argumnets are null");
+      throw new IllegalArgumentException("Some arguments are null");
     }
     this.deliveryId = deliveryId;
     this.startDate = startDate;

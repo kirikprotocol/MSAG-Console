@@ -44,7 +44,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
-    TestUtils.exportResource(TestRestrictionsManager.class.getResourceAsStream("restrictions.csv"), new File(confDir, "restrictions.csv"), false);    
+    TestUtils.exportResource(TestRestrictionsManager.class.getResourceAsStream("restrictions.csv"), new File(confDir, "restrictions.csv"), false);
   }
 
   private void prepareStat(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
@@ -119,7 +119,9 @@ public class TestAdminContext extends AdminContext {
       }catch (ParseException ignored){}
       d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Mon, Delivery.Day.Thu, Delivery.Day.Wed, Delivery.Day.Thu,});
       d.setDeliveryMode(DeliveryMode.SMS);
-      d.setEndDate(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
+      if(i%5 == 1) {
+        d.setEndDate(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
+      }
       d.setName("Test delivery"+i);
       d.setOwner(u.getLogin());
       d.setPriority(i%100 + 1);
@@ -228,7 +230,7 @@ public class TestAdminContext extends AdminContext {
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
 
-      deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);       
+      deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
@@ -254,6 +256,13 @@ public class TestAdminContext extends AdminContext {
       add(new TestDaemon(i));
     }
   }};
+
+  @Override
+  protected void initSiebel() throws AdminException {
+//todo    super.initSiebel();
+
+
+  }
 
   @Override
   public List<Daemon> getDaemons() {

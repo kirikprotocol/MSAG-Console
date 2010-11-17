@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.web.controllers.restriction;
 
-import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 /**

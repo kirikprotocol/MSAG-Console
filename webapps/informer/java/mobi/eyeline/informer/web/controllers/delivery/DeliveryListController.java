@@ -291,7 +291,12 @@ public class DeliveryListController extends DeliveryController {
         public int compare(DeliveryInfo o1, DeliveryInfo o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
-          return o1.getEndDate().compareTo(o2.getEndDate()) * (sortOrder.isAsc() ? 1 : -1);
+          if(o1.getEndDate() == null) {
+            return o2.getEndDate() == null ? 0 : (sortOrder.isAsc() ? -1 : 1);
+          }else if(o2.getEndDate() == null) {
+            return (sortOrder.isAsc() ? 1 : -1);
+          }
+          return o1.getEndDate().compareTo(o2.getEndDate())*(sortOrder.isAsc() ? 1 : -1);
         }
       };
     }

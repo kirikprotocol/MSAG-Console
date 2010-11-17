@@ -39,7 +39,7 @@ public class SiebelManager {
 
   private final Lock lock = new ReentrantLock();
 
-  private SiebelDeliveries deliveries;
+  protected SiebelDeliveries deliveries;
 
   private User siebelUser;
 
@@ -60,7 +60,7 @@ public class SiebelManager {
 
   public SiebelManager(SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException{
     this.provider = new SiebelDataProviderImpl();
-    this.deliveries = deliveries;
+    this.deliveries = deliveries;          
     this.regionManager = regionManager;
     this.provider = new SiebelDataProviderImpl();
   }
@@ -221,18 +221,21 @@ public class SiebelManager {
 
   private void beginDelivery(SiebelDelivery st, DeliveryInfo info) throws AdminException {
 
+    String generationFlag = "message_generation_in_process";
+
     Delivery delivery = info == null ? null : deliveries.getDelivery(siebelUser.getLogin(), siebelUser.getPassword(), info.getDeliveryId());
 
     if (delivery != null) {
-      if (info.getStatus() != DeliveryStatus.Planned) {
+      if (info.getProperty("message_generation_in_process") == null) {
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: delivery already exists and has generated, waveId='" + st.getWaveId() + "'. Enable it");
         }
+        deliveries.activateDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
         _setDeliveryStatusInProcess(st);
         return;
       } else {
         if (logger.isDebugEnabled()) {
-          logger.debug("Siebel: delivery is damaged. Remove crached parts. WaveId=" + st.getWaveId());
+          logger.debug("Siebel: delivery is damaged. Recreate it. WaveId=" + st.getWaveId());
         }
         deliveries.dropDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
       }
@@ -241,6 +244,8 @@ public class SiebelManager {
     delivery = createDelivery(st, buildDeliveryName(st.getWaveId()));
 
     deliveries.createDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery, null);
+    delivery.setProperty(generationFlag,"true");
+    deliveries.modifyDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery);
 
     ResultSet<SiebelMessage> messages = null;
     boolean hasMessages;
@@ -250,6 +255,10 @@ public class SiebelManager {
       }
       messages = provider.getMessages(st.getWaveId());
       hasMessages = addMessages(delivery, messages) != 0;
+
+      delivery.removeProperty("message_generation_in_process");
+      deliveries.modifyDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery);
+
       deliveries.activateDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
     } finally {
       if (messages != null) {
@@ -489,16 +498,17 @@ public class SiebelManager {
     return new StringBuffer(7 + waveId.length()).append("siebel_").append(waveId).toString();
   }
 
-  private DeliveryInfo getExistingDelivery(String waveId) throws AdminException {
-    String deliveryName = buildDeliveryName(waveId);
+  private DeliveryInfo getExistingDelivery(final String waveId) throws AdminException {
     DeliveryFilter filter = new DeliveryFilter();
-    filter.setNameFilter(new String[]{deliveryName});
     final DeliveryInfo[] infos = new DeliveryInfo[1];
-    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1,
+    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,
         new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
           public boolean visit(DeliveryInfo value) throws AdminException {
-            infos[1] = value;
-            return false;
+            if(waveId.equals(value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID))) {
+              infos[0] = value;
+              return false;
+            }
+            return true;
           }
         });
     return infos[0];

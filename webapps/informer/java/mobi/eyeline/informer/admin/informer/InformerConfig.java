@@ -1,9 +1,7 @@
 package mobi.eyeline.informer.admin.informer;
 
-import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.config.ManagedConfigFile;
 import mobi.eyeline.informer.util.config.XmlConfig;
-import mobi.eyeline.informer.util.config.XmlConfigException;
 import mobi.eyeline.informer.util.config.XmlConfigSection;
 
 import java.io.InputStream;

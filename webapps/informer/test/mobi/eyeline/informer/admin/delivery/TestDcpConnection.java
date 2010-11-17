@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
@@ -119,10 +118,10 @@ public class TestDcpConnection extends DcpConnection{
   }
 
   private boolean accept(DeliveryWStatus delivery, DeliveryFilter filter) {
-    if(filter.getEndDateFrom()!= null && delivery.getEndDate().before(filter.getEndDateFrom())) {
+    if(filter.getEndDateFrom()!= null && delivery.getEndDate() != null && delivery.getEndDate().before(filter.getEndDateFrom())) {
       return false;
     }
-    if(filter.getEndDateTo()!= null && delivery.getEndDate().after(filter.getEndDateTo())) {
+    if(filter.getEndDateTo()!= null && delivery.getEndDate() != null && delivery.getEndDate().after(filter.getEndDateTo())) {
       return false;
     }
     if(filter.getNameFilter() != null) {
@@ -367,7 +366,9 @@ public class TestDcpConnection extends DcpConnection{
       info.setStartDate(d.getStartDate());
       info.setStatus(d.status);
       info.setUserId(d.getOwner());
-      info.setProperty(UserDataConsts.RESTRICTION, Boolean.valueOf(d.getProperty(UserDataConsts.RESTRICTION)).toString());
+      for(Map.Entry e : d.getProperties().entrySet()) {
+        info.setProperty(e.getKey().toString(), e.getValue().toString());
+      }
       deliveries.add(info);
     }
     return result.size() < pieceSize;
@@ -410,7 +411,6 @@ public class TestDcpConnection extends DcpConnection{
       }
       info.setState(d.state);
       info.setId(d.getId());
-      d.getProperties().propertyNames();
       for(Map.Entry e : d.getProperties().entrySet()) {
         info.setProperty(e.getKey().toString(), e.getValue().toString());
       }
@@ -430,7 +430,7 @@ public class TestDcpConnection extends DcpConnection{
         if(d.getStartDate().after(now)) {
           continue;
         }
-        if(d.getEndDate().before(now)) {
+        if(d.getEndDate() != null && d.getEndDate().before(now)) {
           d.status = DeliveryStatus.Finished;
           continue;
         }
@@ -620,7 +620,7 @@ public class TestDcpConnection extends DcpConnection{
     }
 
     @Override
-    public void setEndDate(Date endDate) throws AdminException {
+    public void setEndDate(Date endDate) {
       delivery.setEndDate(endDate);
     }
 
@@ -762,6 +762,10 @@ public class TestDcpConnection extends DcpConnection{
     @Override
     public boolean containsProperty(String name) {
       return delivery.containsProperty(name);
+    }
+
+    public String removeProperty(String name) {
+      return delivery.removeProperty(name);
     }
 
     @Override

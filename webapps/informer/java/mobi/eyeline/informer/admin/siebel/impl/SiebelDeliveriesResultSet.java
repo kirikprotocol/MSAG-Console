@@ -70,7 +70,7 @@ public class SiebelDeliveriesResultSet implements ResultSet<SiebelDelivery> {
       if (prepStatement != null)
         prepStatement.close();
     } catch (SQLException e) {
-      logger.error("Unable to close sql resultset ", e);
+      logger.error("Unable to close sql prep. statement ", e);
     }
     try {
       if (connection != null)
