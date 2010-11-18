@@ -18,8 +18,14 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   did.name=di.getName();
   did.priority=di.getPriority();
   did.transactionMode=di.getTransactionMode();
-  did.startDate=di.getStartDate();
-  did.endDate=di.getEndDate();
+  if(di.hasStartDate())
+  {
+    did.startDate=di.getStartDate();
+  }
+  if(di.hasEndDate())
+  {
+    did.endDate=di.getEndDate();
+  }
   did.activePeriodStart=di.getActivePeriodStart();
   did.activePeriodEnd=di.getActivePeriodEnd();
   did.activeWeekDays=di.getActiveWeekDays();
@@ -276,6 +282,13 @@ void DcpServer::handle(const messages::UserAuth& inmsg)
   int connId=inmsg.messageGetConnId();
   if(!ui.get() || inmsg.getPassword()!=ui->getPassword())
   {
+    if(!ui.get())
+    {
+      smsc_log_warn(log,"user '%s' not found",inmsg.getUserId().c_str());
+    }else
+    {
+      smsc_log_warn(log,"password mismatch for user '%s' ('%s'!='%s')",inmsg.getUserId().c_str(),ui->getPassword(),inmsg.getPassword().c_str());
+    }
     mkFailResponse(connId,inmsg.messageGetSeqNum(),DcpError::AuthFailed,"user not found or password mismatch");
     return;
   }
