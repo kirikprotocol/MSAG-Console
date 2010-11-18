@@ -190,6 +190,17 @@ public:
         // locked
         smsc_log_debug(is_.log_,"D=%u adding %u messages to black list",
                        is_.getDlvId(),unsigned(dropped.size()));
+        {
+            msgid_type maxId = is_.lastMsgId_;
+            std::vector<msgid_type>::iterator i =
+                std::upper_bound(dropped.begin(),dropped.end(), maxId);
+            if (i != dropped.end()) {
+                dropped.erase(i,dropped.end());
+                smsc_log_debug(is_.log_,"D=%u some messages have id>max, left=%u",
+                               is_.getDlvId(), unsigned(dropped.size()));
+            }
+            if (dropped.empty()) return false;
+        }
         msgid_type minRlast = is_.getMinRlast();
         {
             // skipping already dropped messages
@@ -726,6 +737,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
     MutexGuard mg(wlock_);
     // preprocess
     unsigned total = 0;
+    msgid_type minRlast = lastMsgId_;
     for ( MsgIter i = begin; i != end; ++i ) {
         const regionid_type regId = rf.findRegion( i->msg.subscriber );
         Message& msg = i->msg;
@@ -758,7 +770,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
         smsc_log_debug(log_,"processing R=%u",unsigned(regId));
         InputRegionRecord ro;
         ro.regionId = regId;
-        getRecord(ro);
+        getRecord(ro,minRlast);
         FileGuard fg;
         fg.create(makeFilePath(regId,ro.wfn).c_str(),0666);
         fg.seek(ro.woff);
@@ -928,14 +940,14 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
 }
 
 
-void InputStorage::getRecord( InputRegionRecord& ro )
+void InputStorage::getRecord( InputRegionRecord& ro, msgid_type minRlast )
 {
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
         RecordList::iterator* ptr = recordHash_.GetPtr(ro.regionId);
         if (!ptr) {
             ro.clear();
-            ro.rlast = lastMsgId_;
+            ro.rlast = minRlast;
             recordHash_.Insert(ro.regionId,recordList_.insert(recordList_.begin(),ro));
         } else {
             ro = **ptr;

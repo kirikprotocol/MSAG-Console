@@ -71,7 +71,7 @@ private:
     /// invoked from transfertask
     void doTransfer( TransferRequester& req, unsigned count );
 
-    void getRecord(InputRegionRecord& ro);
+    void getRecord(InputRegionRecord& ro, msgid_type minRlast = 0);
     void setRecord(InputRegionRecord& ro, msgid_type maxMsgId = 0);
     void doSetRecord( RecordList::iterator to, const InputRegionRecord& from );
     std::string makeFilePath(regionid_type regId,uint32_t fn) const;
