@@ -157,6 +157,11 @@
   </filter>
 
   <filter>
+    <filter-name>indexFilter</filter-name>
+    <filter-class>mobi.eyeline.informer.web.IndexFilter</filter-class>
+  </filter>
+
+  <filter>
     <filter-name>trinidad</filter-name>
     <filter-class>org.apache.myfaces.trinidad.webapp.TrinidadFilter</filter-class>
   </filter>
@@ -169,6 +174,11 @@
   <filter-mapping>
     <filter-name>localeFilter</filter-name>
     <servlet-name>faces</servlet-name>
+  </filter-mapping>
+
+  <filter-mapping>
+    <filter-name>indexFilter</filter-name>
+    <url-pattern>/index.faces</url-pattern>
   </filter-mapping>
 
   <filter-mapping>
@@ -214,6 +224,7 @@
   </listener>
 
   <welcome-file-list>
+
     <welcome-file>/index.html</welcome-file>
   </welcome-file-list>
 
@@ -233,6 +244,7 @@
       <web-resource-name>Создание/просмотр рассылок, просмотр статистики</web-resource-name>
       <url-pattern>/deliveries/*</url-pattern>
       <url-pattern>/stats/*</url-pattern>
+      <url-pattern>/index.faces</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>informer-admin</role-name>
@@ -246,7 +258,6 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>Администрирование Informer</web-resource-name>
-      <url-pattern>/index.faces</url-pattern>
       <url-pattern>/config/*</url-pattern>
       <url-pattern>/users/*</url-pattern>
       <url-pattern>/regions/*</url-pattern>

@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.web;
 
 import mobi.eyeline.informer.admin.users.User;
-import org.apache.log4j.Logger;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -16,8 +15,6 @@ import java.util.Locale;
 public class LocaleFilter implements Filter {
 
   public static final String LOCALE_PARAMETER = "informer_user_locale";
-
-  private static final Logger logger = Logger.getLogger(LocaleFilter.class);
 
   public void init(FilterConfig filterConfig) throws ServletException {
   }

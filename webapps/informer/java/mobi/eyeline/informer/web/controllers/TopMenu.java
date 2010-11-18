@@ -15,42 +15,45 @@ import java.util.LinkedList;
  * Контроллер для отображения главного меню
  * @author Aleksandr Khalitov
  */
-public class TopMenu {
+public class TopMenu extends InformerController{
 
-  private final Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3) {
-    {
-      add(new MenuBarItem("informer.admin", "informer.admin.width").
-          add(new MenuItem("informer.admin.status", "/index.faces")).
-          add(new MenuItem("informer.admin.config", "/config/index.faces")).
-          add(new MenuItem("informer.admin.regions", "/regions/index.faces")).
-          add(new MenuItem("informer.admin.smsc", "/smsc/index.faces")).
-          add(new MenuItem("informer.admin.blacklist", "/blacklist/index.faces")).
-          add(new MenuItem("informer.admin.users", "/users/index.faces")).
-          add(new MenuItem("informer.admin.restrictions", "/restriction/index.faces")).
-          add(new MenuItem("informer.admin.notifications", "/notifications/index.faces")).
-          add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
+  private final Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3);
+
+  public TopMenu() {
+    MenuBarItem i = new MenuBarItem("informer.admin", "informer.admin.width");
+    if(isUserhasRole("informer-admin")) {
+      i.add(new MenuItem("informer.admin.status", "/index.faces"));
+    }
+    i.add(new MenuItem("informer.admin.config", "/config/index.faces")).
+        add(new MenuItem("informer.admin.regions", "/regions/index.faces")).
+        add(new MenuItem("informer.admin.smsc", "/smsc/index.faces")).
+        add(new MenuItem("informer.admin.blacklist", "/blacklist/index.faces")).
+        add(new MenuItem("informer.admin.users", "/users/index.faces")).
+        add(new MenuItem("informer.admin.restrictions", "/restriction/index.faces")).
+        add(new MenuItem("informer.admin.notifications", "/notifications/index.faces")).
+        add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
 //          add(new MenuItem("informer.admin.import", "/import/index.faces")).
 //          add(new MenuItem("informer.admin.archieve", "/archieve/index.faces")).
 //          add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
-          add(new MenuItem("informer.admin.journal", "/journal/index.faces"))
-      );
-      add(new MenuBarItem("informer.deliveries", "informer.deliveries.width").
-          add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
-          add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
-          add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
-      );
-      add(new MenuBarItem("informer.stats", "informer.stats.width").
-          add(new MenuItem("informer.stats.common", "/stats/messagesByPeriod.faces")).
-          add(new MenuItem("informer.stats.deliveries", "/stats/deliveriesCountByPeriod.faces")).
-          //add(new MenuItem("informer.stats.messages", "/stats/messages.faces"))
-          add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDeliveries.faces")).
-          add(new MenuItem("informer.stats.messages.recipients", "/stats/messagesByRecs.faces")).
-          add(new MenuItem("informer.stats.messages.byUser", "/stats/messagesByUser.faces"))
+    add(new MenuItem("informer.admin.journal", "/journal/index.faces"));
 
-          //add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDels.faces"))
-      );
-    }
-  };
+    menuBarItems.add(i);
+    menuBarItems.add(new MenuBarItem("informer.deliveries", "informer.deliveries.width").
+        add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
+        add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
+        add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
+    );
+    menuBarItems.add(new MenuBarItem("informer.stats", "informer.stats.width").
+        add(new MenuItem("informer.stats.common", "/stats/messagesByPeriod.faces")).
+        add(new MenuItem("informer.stats.deliveries", "/stats/deliveriesCountByPeriod.faces")).
+        //add(new MenuItem("informer.stats.messages", "/stats/messages.faces"))
+            add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDeliveries.faces")).
+        add(new MenuItem("informer.stats.messages.recipients", "/stats/messagesByRecs.faces")).
+        add(new MenuItem("informer.stats.messages.byUser", "/stats/messagesByUser.faces"))
+
+        //add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDels.faces"))
+    );
+  }
 
   public Collection<MenuBarItem> getMenuBarItems() {
     Principal p = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
