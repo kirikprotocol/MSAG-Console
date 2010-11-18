@@ -179,10 +179,10 @@
           <h:outputText style="white-space:nowrap;" value="#{userBundle.directory}"/>
           <tr:inputText value="#{userEdit.userToEdit.directory}" required="true" simple="true" columns="100"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.directoryPoolPeriod}"/>
-          <tr:inputText value="#{userEdit.userToEdit.directoryPoolPeriod}" simple="true" required="true" columns="5">
-            <eye:validatePositive/>
-          </tr:inputText>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.fileEncoding}"/>
+          <h:selectOneMenu value="#{userEdit.userToEdit.fileEncoding}" style="align:left;" required="true" >
+          <f:selectItems value="#{userEdit.fileEncodings}"/>
+          </h:selectOneMenu>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.createReports}"/>
           <h:selectBooleanCheckbox id="createReports" value="#{userEdit.userToEdit.createReports}" onchange="document.getElementById('reportsExportSettings').style.display=this.checked ? '' : 'none';"/>

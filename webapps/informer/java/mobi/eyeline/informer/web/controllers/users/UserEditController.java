@@ -23,7 +23,7 @@ public class UserEditController extends UserController {
   private static final String USER_ID_PARAMETER = "userId";
   private boolean initError;
   private String passwordConfirm;
-
+  private Object fileEncodings;
 
 
   public UserEditController() {
@@ -195,5 +195,13 @@ public class UserEditController extends UserController {
 
   public  void setUserLocale(String l) {
     userToEdit.setLocale(new Locale(l));
+  }
+
+  public Object getFileEncodings() {
+    List<SelectItem> ret = new ArrayList<SelectItem>();
+    ret.add(new SelectItem("cp1251"));
+    ret.add(new SelectItem("UTF-8"));
+    ret.add(new SelectItem("ASCII"));
+    return ret;
   }
 }

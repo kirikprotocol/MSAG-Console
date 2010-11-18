@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
+import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
@@ -235,6 +236,7 @@ public class TestAdminContext extends AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
+      contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir,fileSystem);
 
       deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);

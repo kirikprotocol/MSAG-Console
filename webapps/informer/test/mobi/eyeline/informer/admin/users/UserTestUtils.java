@@ -37,8 +37,7 @@ public class UserTestUtils {
     assertEquals(o.isCreateArchive(),n.isCreateArchive());
     assertEquals(o.getDeliveryLifetime(),n.getDeliveryLifetime());
 
-    assertEquals(o.getDirectory(),n.getDirectory());
-    assertEquals(o.getDirectoryPoolPeriod(),n.getDirectoryPoolPeriod());
+    assertEquals(o.getDirectory(),n.getDirectory());    
     assertEquals(o.isCreateReports(),n.isCreateReports());
     assertEquals(o.getReportsLifetime(),n.getReportsLifetime());
   }

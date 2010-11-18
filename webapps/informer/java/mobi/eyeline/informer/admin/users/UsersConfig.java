@@ -79,10 +79,10 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
 
     u.setImportDeliveriesFromDir(section.getBool("importDeliveriesFromDir", false));
     u.setDirectory(section.getString("directory"));
-    u.setDirectoryPoolPeriod(section.getInt("directoryPoolPeriod"));
+
     u.setCreateReports(section.getBool("createReports",false));
     u.setReportsLifetime(section.getInt("reportsLifetime"));
-
+    u.setFileEncoding(section.getString("fileEncoding","UTF-8"));
     return u;
   }
 
@@ -204,12 +204,13 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     userSection.setInt("deliveryLifetime",user.getDeliveryLifetime());
     userSection.setBool("importDeliveriesFromDir", user.isImportDeliveriesFromDir());
     userSection.setString("directory",user.getDirectory());
-    userSection.setInt("directoryPoolPeriod",user.getDirectoryPoolPeriod());
     if(user.isCreateReports()) {
       userSection.setBool("createReports",true);
     }
     userSection.setInt("reportsLifetime",user.getReportsLifetime());
-
+    if(user.getFileEncoding()!=null) {
+      userSection.setString("fileEncoding",user.getFileEncoding());
+    }
     return userSection;
   }
 

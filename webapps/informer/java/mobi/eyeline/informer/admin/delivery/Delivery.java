@@ -66,7 +66,7 @@ public class Delivery implements Serializable{
   }
 
 
-  Delivery(Type type) {
+  public Delivery(Type type) {
     this.type = type;
   }
 

@@ -4,6 +4,7 @@ import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
+import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerManager;
@@ -93,6 +94,8 @@ public class AdminContext {
 
   protected DeliveryNotificationsDaemon deliveryNotificationsDaemon;
 
+  protected ContentProviderDaemon contentProviderDaemon;
+
 // delivery ->user ->region->smsc
 
   final private Lock integrityLock = new ReentrantLock();
@@ -163,6 +166,8 @@ public class AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
+      contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir,fileSystem);
+
 
       deliveryNotificationsProducer  = new DeliveryNotificationsProducer(new File(is.getStatusLogsDir()),fileSystem);
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
@@ -228,6 +233,11 @@ public class AdminContext {
   @SuppressWarnings({"EmptyCatchBlock"})
   public void shutdown() {
     shutdownSiebel();
+    if(contentProviderDaemon!= null) {
+      try{
+        contentProviderDaemon.stop();
+      }catch(Exception e){}
+    }
     if(restrictionDaemon != null) {
       try{
         restrictionDaemon.stop();
@@ -507,6 +517,7 @@ public class AdminContext {
   public List<Daemon> getDaemons() {
     List<Daemon> ret = new LinkedList<Daemon>();
     ret.add(restrictionDaemon);
+    ret.add(contentProviderDaemon);
     return ret;
   }
 

@@ -1,11 +1,14 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.util.validation.ValidationException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 
+import javax.resource.NotSupportedException;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -23,6 +26,7 @@ public class User implements Serializable{
   private String email;
   private String organization;
   private Locale locale;
+  private String fileEncoding;
   private Set<String> roles = new TreeSet<String>();
 
   private boolean retryOnFail;
@@ -46,7 +50,7 @@ public class User implements Serializable{
 
   private boolean importDeliveriesFromDir;
   private String directory;
-  private int directoryPoolPeriod;
+
   private boolean createReports;
   private int reportsLifetime;
 
@@ -85,12 +89,13 @@ public class User implements Serializable{
     this.createArchive=user.createArchive;
     this.deliveryLifetime=user.deliveryLifetime;
     this.directory=user.directory;
-    this.directoryPoolPeriod=user.directoryPoolPeriod;
+
     this.createReports=user.createReports;
     this.reportsLifetime=user.reportsLifetime;
     this.allRegionsAllowed=user.allRegionsAllowed;
     this.importDeliveriesFromDir = user.importDeliveriesFromDir;
     this.retryOnFail = user.retryOnFail;
+    this.fileEncoding = user.fileEncoding;
   }
 
 
@@ -351,13 +356,16 @@ public class User implements Serializable{
     this.directory = directory;
   }
 
-  public int getDirectoryPoolPeriod() {
-    return directoryPoolPeriod;
+
+  public String getFileEncoding() {
+    return fileEncoding;
   }
 
-  public void setDirectoryPoolPeriod(int directoryPoolPeriod) throws AdminException {
-    vh.checkPositive("directoryPoolPeriod",directoryPoolPeriod);
-    this.directoryPoolPeriod = directoryPoolPeriod;
+  public void setFileEncoding(String fileEncoding) throws ValidationException {
+    if(fileEncoding!=null) {
+      vh.checkSupportedEncoding("fileEncoding",fileEncoding);
+    }
+    this.fileEncoding = fileEncoding;
   }
 
   public boolean isCreateReports() {

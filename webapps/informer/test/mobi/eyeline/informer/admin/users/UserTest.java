@@ -341,18 +341,6 @@ public class UserTest {
     }
     catch (AdminException e){}
 
-    o.setDirectoryPoolPeriod(777);
-    assertEquals(o.getDirectoryPoolPeriod(),777);
-    try {
-      o.setDirectoryPoolPeriod(0);
-      assertTrue(false);
-    }
-    catch (AdminException e){}
-    try {
-      o.setDirectoryPoolPeriod(-1);
-      assertTrue(false);
-    }
-    catch (AdminException e){}
 
     o.setCreateReports(true);
     assertEquals(o.isCreateReports(),true);
@@ -367,6 +355,15 @@ public class UserTest {
 
     try {
       o.setReportsLifetime(-100);
+      assertTrue(false);
+    }
+    catch (AdminException e){}
+
+    o.setFileEncoding("cp1251");
+    assertEquals(o.getFileEncoding(),"cp1251");
+
+    try {
+      o.setFileEncoding("BLABLA");
       assertTrue(false);
     }
     catch (AdminException e){}
@@ -390,7 +387,7 @@ public class UserTest {
     o.setSmsPerSec(9);
     o.setCreateCDR(true);
     o.setSourceAddr(new Address("+79130000000"));
-
+    o.setFileEncoding("cp1251");
 
     User n = new User(o);
     UserTestUtils.compareUsers(o,n);

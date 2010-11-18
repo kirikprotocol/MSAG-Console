@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.util.validation;
 
 import mobi.eyeline.informer.admin.AdminException;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -167,5 +168,14 @@ public class ValidationHelper {
   public void checkSizeGreaterThan(String argName, Collection collection, int size) throws AdminException {
     if (collection == null || collection.size() <= size)
       throw new ValidationException(paramNameBundle, argName);
+  }
+
+  public void checkSupportedEncoding(String argName, String fileEncoding) throws ValidationException {
+    try {
+      argName.getBytes(fileEncoding);
+    }
+    catch (UnsupportedEncodingException e) {
+      throw new ValidationException(paramNameBundle, argName); 
+    }
   }
 }
