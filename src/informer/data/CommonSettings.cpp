@@ -57,7 +57,12 @@ struct ConfigWrap
         size_t len = strlen(val);
         if (strip) {
             for ( const char* p = val+len; len>0; ) {
-                if ( *--p == ' ' || *p == '\t' || *p == '\n' ) --len;
+                const char* v = p-1;
+                if ( *v == ' ' || *v == '\t' || *v == '\n' ) {
+                    --len;
+                    continue;
+                }
+                break;
             }
         }
         return std::string(val,len);
