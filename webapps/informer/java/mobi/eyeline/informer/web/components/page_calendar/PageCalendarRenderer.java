@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -55,11 +56,9 @@ public class PageCalendarRenderer extends Renderer {
     Calendar c1 = Calendar.getInstance();
     c1.setTime(c.getTime());
 
-    int date = c1.get(Calendar.DATE);
-
-    c1.set(Calendar.DATE, date - 3);
+    c1.add(Calendar.DATE, -1);
     long prevWeekDate = c1.getTimeInMillis();
-    c1.set(Calendar.DATE, date + 9);
+    c1.add(Calendar.DATE, 9);
     long nextWeekDate = c1.getTimeInMillis();
 
     String ctxPath = context.getExternalContext().getRequestContextPath();
