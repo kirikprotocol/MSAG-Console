@@ -51,10 +51,10 @@
         <tr:inputText converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" required="true" simple="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
-        <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.startDate}" requiredMessage="#{msg['date.required']}" required="true" type="full" disabled="true"/>
+        <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.startDate}" requiredMessage="#{msg['date.required']}" required="true" type="both" disabled="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
-        <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.endDate}" type="full"/>
+        <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.endDate}" type="both"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
@@ -66,9 +66,9 @@
 
         <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
         <h:panelGroup>
-          <t:inputDate value="#{deliveryEdit.delivery.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+          <t:inputDate value="#{deliveryEdit.delivery.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
           <h:outputText value=" - "/>
-          <t:inputDate value="#{deliveryEdit.delivery.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+          <t:inputDate value="#{deliveryEdit.delivery.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
         </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>

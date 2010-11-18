@@ -26,10 +26,10 @@
       <tr:inputText converter="addressConverter" value="#{createDelivery.activePage.delivery.sourceAddress}" required="true" simple="true"/>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.startDate}"/>
-      <t:inputDate popupCalendar="true" value="#{createDelivery.activePage.delivery.startDate}" requiredMessage="#{msg['date.required']}" required="true" type="full"/>
+      <t:inputDate popupCalendar="true" value="#{createDelivery.activePage.delivery.startDate}" requiredMessage="#{msg['date.required']}" required="true" type="both"/>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.endDate}"/>
-      <t:inputDate popupCalendar="true" value="#{createDelivery.activePage.delivery.endDate}" type="full" />
+      <t:inputDate popupCalendar="true" value="#{createDelivery.activePage.delivery.endDate}" type="both" />
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
       <h:panelGrid columns="2" columnClasses="column300Width, columnTopLeftAlign">
@@ -41,9 +41,9 @@
 
       <h:outputText style="white-space: nowrap;" value="#{msg['informer.deliveries.create.activePeriod']}"/>
       <h:panelGroup>
-        <t:inputDate value="#{createDelivery.activePage.delivery.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+        <t:inputDate value="#{createDelivery.activePage.delivery.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
         <h:outputText style="white-space: nowrap;" value=" - "/>
-        <t:inputDate value="#{createDelivery.activePage.delivery.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+        <t:inputDate value="#{createDelivery.activePage.delivery.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
       </h:panelGroup>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.retryOnFail}"/>

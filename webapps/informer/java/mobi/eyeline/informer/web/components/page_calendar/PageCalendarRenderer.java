@@ -55,18 +55,20 @@ public class PageCalendarRenderer extends Renderer {
     Calendar c1 = Calendar.getInstance();
     c1.setTime(c.getTime());
 
-    c1.set(Calendar.DATE, c1.get(Calendar.DATE) - 1);
+    int date = c1.get(Calendar.DATE);
+
+    c1.set(Calendar.DATE, date - 3);
     long prevWeekDate = c1.getTimeInMillis();
-    c1.set(Calendar.DATE, c1.get(Calendar.DATE) + 9);
+    c1.set(Calendar.DATE, date + 9);
     long nextWeekDate = c1.getTimeInMillis();
 
     String ctxPath = context.getExternalContext().getRequestContextPath();
     w.append("\n<table class=\"page_calendar_header\"><tr>");
-    w.append("\n<td class=\"prev\"><a href=\"#\" onclick=\"pageCal" + cal.getId() + ".setDate(" + prevWeekDate + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"></a>");
+    w.append("\n<td class=\"prev\"><a href=\"#\" onclick=\"pageCal" + cal.getId() + ".setDate(" + prevWeekDate + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"/></a>");
     w.append("\n<td class=\"header\">");
     w.append(c.get(Calendar.YEAR) + "").append("&#160;").append(c.get(Calendar.WEEK_OF_YEAR) + "");
     w.append("\n</td>");
-    w.append("\n<td class=\"next\"><a href=\"#\" onclick=\"pageCal" + cal.getId() + ".setDate(" + nextWeekDate + ")\"><img src=\"" + ctxPath + "/images/nav_next.gif\" width=\"12\" height=\"11\"></a>");
+    w.append("\n<td class=\"next\"><a href=\"#\" onclick=\"pageCal" + cal.getId() + ".setDate(" + nextWeekDate + ")\"><img src=\"" + ctxPath + "/images/nav_next.gif\" width=\"12\" height=\"11\"/></a>");
     w.append("\n</tr>\n</table>");
 
     w.append("\n<table class=\"page_calendar\">");

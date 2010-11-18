@@ -92,9 +92,9 @@
 
           <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.active.period']}"/>
           <h:panelGroup>
-            <t:inputDate value="#{userEdit.deliveryStartTime}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+            <t:inputDate value="#{userEdit.deliveryStartTime}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
             <h:outputText style="white-space:nowrap;" value=" - "/>
-            <t:inputDate value="#{userEdit.deliveryEndTime}" requiredMessage="#{msg['date.required']}" required="true" type="time"/>
+            <t:inputDate value="#{userEdit.deliveryEndTime}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
           </h:panelGroup>
 
 

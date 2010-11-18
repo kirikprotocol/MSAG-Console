@@ -61,19 +61,17 @@
 
           <h:selectBooleanCheckbox id="editDeliveryStartTime" value="#{userGroupEdit.editDeliveryStartTime}" onchange="
           document.getElementById('deliveryStartTime.hours').disabled=!this.checked;
-          document.getElementById('deliveryStartTime.seconds').disabled=!this.checked;
           document.getElementById('deliveryStartTime.minutes').disabled=!this.checked"
               />
           <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryStartTime}"/>
-          <t:inputDate id="deliveryStartTime" value="#{userGroupEdit.deliveryStartTime}" requiredMessage="#{msg['date.required']}" type="time"/>
+          <t:inputDate id="deliveryStartTime" value="#{userGroupEdit.deliveryStartTime}" requiredMessage="#{msg['date.required']}" type="short_time"/>
 
           <h:selectBooleanCheckbox id="editDeliveryEndTime" value="#{userGroupEdit.editDeliveryEndTime}" onchange="
           document.getElementById('deliveryEndTime.hours').disabled=!this.checked;
           document.getElementById('deliveryEndTime.minutes').disabled=!this.checked;
-          document.getElementById('deliveryEndTime.seconds').disabled=!this.checked;
           "/>
           <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryEndTime}"/>
-          <t:inputDate id="deliveryEndTime" value="#{userGroupEdit.deliveryEndTime}" requiredMessage="#{msg['date.required']}" type="time"/>
+          <t:inputDate id="deliveryEndTime" value="#{userGroupEdit.deliveryEndTime}" requiredMessage="#{msg['date.required']}" type="short_time"/>
 
           <h:selectBooleanCheckbox id="editPriority" value="#{userGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
           <h:outputText style="white-space:nowrap;" value="#{userBundle.priority}"/>
@@ -214,12 +212,10 @@
 
         var deliveryStartTimeDisabled = !document.getElementById('editDeliveryStartTime').checked;
         document.getElementById('deliveryStartTime.hours').disabled=deliveryStartTimeDisabled;
-        document.getElementById('deliveryStartTime.seconds').disabled=deliveryStartTimeDisabled;
         document.getElementById('deliveryStartTime.minutes').disabled=deliveryStartTimeDisabled;
 
         var deliveryEndTimeDisabled = !document.getElementById('editDeliveryEndTime').checked;
         document.getElementById('deliveryEndTime.hours').disabled=deliveryEndTimeDisabled;
-        document.getElementById('deliveryEndTime.seconds').disabled=deliveryEndTimeDisabled;
         document.getElementById('deliveryEndTime.minutes').disabled=deliveryEndTimeDisabled;
 
         document.getElementById('priority').disabled = !document.getElementById('editPriority').checked;
