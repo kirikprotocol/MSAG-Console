@@ -322,8 +322,10 @@ void TCAPDispatcher::onDisconnect(unsigned char inst_id)
   SS7UnitInstance * pInst = _unitCfg->instIds.getInstance(inst_id);
   if (pInst && (pInst->connStatus == SS7UnitInstance::uconnOk)) {
     pInst->connStatus = SS7UnitInstance::uconnError;
-    smsc_log_error(logger, "%s: connection broken userId=%u -> TCAP[instId = %u]",
-                    _logId, _cfg.mpUserId, inst_id);
+    logger->log((_dspState == dspRunning) ? Logger::LEVEL_ERROR : Logger::LEVEL_DEBUG,
+                "%s: disconnected userId=%u -> TCAP[instId = %u]",
+                _logId, _cfg.mpUserId, inst_id);
+
     for (SSNmap_T::iterator it = _sessions.begin(); it != _sessions.end(); ++it) {
       SSNSession * pSess = it->second;
       pSess->ResetUnit(inst_id, UNITStatus::unitError);
