@@ -1001,7 +1001,7 @@
     <section name="IN_Ksd_Ericcson">
       <param name="scfAddress" type="string">79184790295</param>  <!-- IN (gsmSCF) point address -->
       <section name="ServiceKeys">
-        <param name="MO-SM" type="string">map: MO-BC: mapMOBC-MOSM</param>
+        <param name="MO-SM" type="string">map: O-BC: mapMOBC-MOSM</param>
       </section>
       <param name="RPCList_retry" type="string">41:2</param>
       <param name="RPCList_reject" type="string"></param>     <!-- not supported -->
