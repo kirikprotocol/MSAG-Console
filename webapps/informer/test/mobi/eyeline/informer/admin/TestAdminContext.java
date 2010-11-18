@@ -240,7 +240,7 @@ public class TestAdminContext extends AdminContext {
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
-      initSiebel();
+//      initSiebel();
 
       deliveryNotificationsProducer.start();
 
