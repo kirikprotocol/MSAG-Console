@@ -35,7 +35,7 @@ using smsc::inman::interaction::SerializablePacketAC;
 using smsc::inman::tcpsrv::ConnectManagerT;
 
 using smsc::core::timers::TimeoutHDL;
-using smsc::util::TaskSchedulerFactoryITF;
+using smsc::inman::TaskSchedulerFactoryITF;
 
 using smsc::inman::inap::TCAPDispatcherITF;
 

@@ -5,7 +5,7 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/services/scheduler/TaskScheduler.hpp"
 
 namespace smsc {
-namespace util {
+namespace inman {
 
 using smsc::core::synchronization::MutexGuard;
 using smsc::core::synchronization::ReverseMutexGuard;
@@ -13,6 +13,29 @@ using smsc::core::synchronization::ReverseMutexGuard;
 /* ************************************************************************* *
  *  class TaskSchedulerAC implementation
  * ************************************************************************* */
+const char * TaskSchedulerAC::nmTAction(TaskAction cmd)
+{
+  switch (cmd) {
+  case taskAborting:      return "aborting";
+  case taskProcessing:    return "processing";
+  case taskReporting:     return "reporting";
+  default:;
+  }
+  return "ignoring";
+}
+
+TaskSchedulerAC::TaskAction
+  TaskSchedulerAC::signal2TAction(PGSignal use_sig)
+{
+  switch (use_sig) {
+  case TaskSchedulerITF::sigAbort:    return taskAborting;
+  case TaskSchedulerITF::sigProc:     return taskProcessing;
+  case TaskSchedulerITF::sigReport:   return taskReporting;
+  default:;
+  }
+  return taskIgnore;
+}
+
 TaskSchedulerAC::~TaskSchedulerAC()
 {
   Stop();
@@ -456,6 +479,6 @@ bool TaskSchedulerSEQ::Unqueue(TaskMap::iterator & tm_it)
     return false;
 }
 
-} //util
+} //inman
 } //smsc
 

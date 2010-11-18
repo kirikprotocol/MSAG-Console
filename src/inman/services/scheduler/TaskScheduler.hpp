@@ -15,11 +15,12 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "inman/services/scheduler/TaskSchedulerDefs.hpp"
+
 #include "logger/Logger.h"
 #include "util/strlcpy.h"   // for strlcpy on linux
 
 namespace smsc {
-namespace util {
+namespace inman {
 
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Event;
@@ -37,32 +38,12 @@ protected:
     enum SchedulerState { schdStopped = 0, schdStopping, schdRunning };
     enum TaskAction { taskIgnore = 0, taskAborting, taskProcessing, taskReporting };
 
-    static const char * nmTAction(TaskAction cmd)
-    {
-        switch (cmd) {
-        case taskAborting:      return "aborting";
-        case taskProcessing:    return "processing";
-        case taskReporting:     return "reporting";
-        default:;
-        }
-        return "ignoring";
-    }
-
-    static TaskAction signal2TAction(PGSignal use_sig)
-    {
-        switch (use_sig) {
-        case TaskSchedulerITF::sigAbort:    return taskAborting;
-        case TaskSchedulerITF::sigProc:     return taskProcessing;
-        case TaskSchedulerITF::sigReport:   return taskReporting;
-        default:;
-        }
-        return taskIgnore;
-    }
+    static const char * nmTAction(TaskAction cmd);
+    static TaskAction   signal2TAction(PGSignal use_sig);
     static const char * nmTActionBySignal(PGSignal use_sig)
     {
         return nmTAction(signal2TAction(use_sig));
     }
-
 
     // Task housekeeping data
     class TaskDataAC {
@@ -75,11 +56,13 @@ protected:
     public:
         ScheduledTaskAC * ptr;      //designated task
 
-        TaskDataAC(ScheduledTaskAC * p_task, TaskRefereeITF * use_ref = NULL)
+        explicit TaskDataAC(ScheduledTaskAC * p_task, TaskRefereeITF * use_ref = NULL)
             : referee(use_ref), targeted(false), cancelled(false), ptr(p_task)
         { }
         virtual ~TaskDataAC()
-        { cleanUp(); }
+        {
+          cleanUp();
+        }
 
         //Cleans extra resources associated with task
         virtual void cleanUp(void) { return; }
@@ -169,17 +152,18 @@ protected:
     //-- Thread interface methods
     int Execute(void);
 
-public:
-    static const unsigned _TIMEOUT_STEP = 100; //inactivity timeout, millisecs
-    static const unsigned _SHUTDOWN_TIMEOUT = (_TIMEOUT_STEP*4);
 
-    TaskSchedulerAC(const char * log_id, Logger * use_log = NULL)
+    explicit TaskSchedulerAC(const char * log_id, Logger * use_log = NULL)
         : _state(schdStopped), _lastId(0), logger(use_log)
     { 
         if (!logger)
             logger = Logger::getInstance("smsc.util.TSchedAC");
         strlcpy(_logId, log_id, sizeof(_logId));
     }
+
+public:
+    static const unsigned _TIMEOUT_STEP = 100; //inactivity timeout, millisecs
+    static const unsigned _SHUTDOWN_TIMEOUT = (_TIMEOUT_STEP*4);
 
     virtual ~TaskSchedulerAC();
 
@@ -188,30 +172,30 @@ public:
     // ---------------------------------------
     // -- TaskSchedulerITF interface methods
     // ---------------------------------------
-    bool Start(void);
+    virtual bool Start(void);
     //Stops scheduler: no new task will start, sigAbort is send to existing ones.
     //If timeout is not zero, then method blocks until scheduler thread will be completed.
-    void Stop(unsigned timeOut_ms = _SHUTDOWN_TIMEOUT);
+    virtual void Stop(unsigned timeOut_ms = _SHUTDOWN_TIMEOUT);
 
     //-- ***************************************************************
     //-- TaskSchedulerITF interface methods
     //-- ***************************************************************
 
     //Registers and schedules task. TaskId == 0 means failure.
-    TaskId StartTask(ScheduledTaskAC * use_task, TaskRefereeITF * use_ref = NULL);
+    virtual TaskId StartTask(ScheduledTaskAC * use_task, TaskRefereeITF * use_ref = NULL);
     //Enqueues signal for task scheduling, returns false if signal cann't be
     //scheduled for task (unknown id, scheduler is stopp[ed/ing], etc).
     //Note:
     // 1) not all signals accepts cmd_dat argument, rcBadArg is returned in that case
     // 2) in case of failure it's a caller responsibility to utilize cmd_dat
-    SchedulerRC SignalTask(TaskId task_id, PGSignal cmd = sigProc, UtilizableObjITF * cmd_dat = NULL);
+    virtual SchedulerRC SignalTask(TaskId task_id, PGSignal cmd = sigProc, UtilizableObjITF * cmd_dat = NULL);
     //Attempts to immediately abort given task
-    SchedulerRC AbortTask(TaskId task_id);
+    virtual SchedulerRC AbortTask(TaskId task_id);
     //Sets referee for task, returns rcBadArg if other referee is already set
-    SchedulerRC RefTask(TaskId task_id, TaskRefereeITF * use_ref);
+    virtual SchedulerRC RefTask(TaskId task_id, TaskRefereeITF * use_ref);
     //Cancels referee for task, returns false if given referee is already
     //targeted by task for reporting
-    bool   UnrefTask(TaskId task_id, TaskRefereeITF * use_ref);
+    virtual bool   UnrefTask(TaskId task_id, TaskRefereeITF * use_ref);
 };
 
 //shedMT (parallel mode) implementation of scheduler:
@@ -222,7 +206,7 @@ protected:
     void processSignal(void);
 
 public:
-    TaskSchedulerMT(Logger * use_log = NULL)
+    explicit TaskSchedulerMT(Logger * use_log = NULL)
         : TaskSchedulerAC("SchedMT", use_log)
     { }
     ~TaskSchedulerMT()
@@ -242,7 +226,7 @@ protected:
     public:
         TaskQueue * pQueue;     //assigned scheduling queue
 
-        TaskDataSEQ(ScheduledTaskAC * p_task, TaskRefereeITF * use_ref = NULL)
+        explicit TaskDataSEQ(ScheduledTaskAC * p_task, TaskRefereeITF * use_ref = NULL)
             : TaskDataAC(p_task, use_ref), pQueue(0)
         { }
 
@@ -296,14 +280,14 @@ protected:
     }
 
 public:
-    TaskSchedulerSEQ(Logger * use_log = NULL)
+    explicit TaskSchedulerSEQ(Logger * use_log = NULL)
         : TaskSchedulerAC("SchedSQ", use_log)
     { }
     ~TaskSchedulerSEQ()
     { }
 };
 
-} //util
+} //inman
 } //smsc
 #endif /* __SMSC_TASK_SCHEDULER_HPP */
 

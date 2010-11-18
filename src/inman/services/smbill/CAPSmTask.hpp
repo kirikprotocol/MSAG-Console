@@ -20,7 +20,7 @@ namespace smsc {
 namespace inman {
 namespace smbill {
 
-using smsc::util::ScheduledTaskAC;
+using smsc::inman::ScheduledTaskAC;
 
 using smsc::inman::iapmgr::INScfCFG;
 
