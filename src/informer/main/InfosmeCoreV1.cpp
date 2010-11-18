@@ -173,8 +173,10 @@ void InfosmeCoreV1::init()
         section = "informer";
         cfg.reset( cfg->getSubConfig(section,true) );
 
-        cs_.init( cfg->getString("storePath"),
-                  cfg->getString("statPath") );
+        cs_.init( *cfg );
+
+        itp_.setMaxThreads(cs_.getInputTransferThreadCount());
+        rtp_.setMaxThreads(cs_.getResendIOThreadCount());
 
         finalLog_ = new FinalLog();
 

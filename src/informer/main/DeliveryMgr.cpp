@@ -173,7 +173,7 @@ public:
             MutexGuard mg(mgr_.mon_);
             if (!mgr_.isCoreStopping()) {
                 mgr_.inputJournal_->rollOver(); // change files
-                mgr_.mon_.wait(10000);
+                mgr_.mon_.wait(getCS()->getInputJournalRollingPeriod()*1000);
             }
         }
         smsc_log_debug(log_,"input journal roller stopped");
@@ -218,7 +218,7 @@ public:
             MutexGuard mg(mgr_.mon_);
             if (!mgr_.isCoreStopping()) {
                 mgr_.storeJournal_->rollOver(); // change files
-                mgr_.mon_.wait(10000);
+                mgr_.mon_.wait(getCS()->getOpJournalRollingPeriod()*1000);
             }
         }
         smsc_log_debug(log_,"store journal roller stopped");
