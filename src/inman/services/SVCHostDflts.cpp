@@ -13,6 +13,7 @@ static char const ident[] = "@(#)$Id$";
 #define ICS_ABNTDTCR_LINKAGE_static
 #define ICS_SMBILLIING_LINKAGE_static
 #define ICS_IAPSRI_LINKAGE_static
+#define ICS_IAPATSI_LINKAGE_static
 #endif /* ICS_LINKAGE_static */
 
 #include "inman/services/ICSRegistry.hpp"
@@ -113,6 +114,13 @@ ICSLoadupsReg::ICSLoadupsReg()
                 "libinman_iap_sri.so", NULL));
 #endif /* ICS_IAPSRI_LINKAGE_static */
 
+#if defined(ICS_IAPATSI_LINKAGE_static)
+    insLoadUp(new ICSLoadupCFG(ICSIdent::icsIAPrvdATSI,
+                smsc::inman::ICSLoaderIAPrvdATSI, NULL));
+#else  /* ICS_IAPATSI_LINKAGE_static */
+    insLoadUp(new ICSLoadupCFG(ICSIdent::icsIAPrvdATSI,
+                "libinman_iap_atsi.so", NULL));
+#endif /* ICS_IAPSRI_LINKAGE_static */
 
     //Ids of services, which are loaded by default
     _dfltIds.insert(ICSIdent::icsIdTCPServer);
