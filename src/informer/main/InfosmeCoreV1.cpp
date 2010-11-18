@@ -289,6 +289,7 @@ void InfosmeCoreV1::stop()
 
 void InfosmeCoreV1::addUser( const char* user )
 {
+    smsc_log_debug(log_,"== addUser(%s)",user ? user : "");
     UserInfoPtr ptr = getUserInfo(user);
     if (ptr.get()) throw InfosmeException(EXC_ALREADYEXIST,"user '%s' already exists",user);
     loadUsers(user);
@@ -297,6 +298,7 @@ void InfosmeCoreV1::addUser( const char* user )
 
 void InfosmeCoreV1::deleteUser( const char* login )
 {
+    smsc_log_debug(log_,"== deleteUser(%s)",login ? login : "");
     if (!login) throw InfosmeException(EXC_LOGICERROR,"deluser NULL passed");
     UserInfoPtr user;
     {
@@ -317,6 +319,7 @@ void InfosmeCoreV1::deleteUser( const char* login )
 
 UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 {
+    smsc_log_debug(log_,"== getUserInfo(%s)",login ? login : "");
     if (!login) throw InfosmeException(EXC_LOGICERROR,"userid NULL passed");
     MutexGuard mg(userLock_);
     UserInfoPtr* ptr = users_.GetPtr(login);
@@ -327,6 +330,7 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 
 void InfosmeCoreV1::getUsers( std::vector< UserInfoPtr >& users )
 {
+    smsc_log_debug(log_,"== getUsers()");
     users.reserve( users.size() + users_.GetCount() + 2 );
     MutexGuard mg(userLock_);
     char* userId;
@@ -339,6 +343,7 @@ void InfosmeCoreV1::getUsers( std::vector< UserInfoPtr >& users )
 
 void InfosmeCoreV1::updateUserInfo( const char* login )
 {
+    smsc_log_debug(log_,"== updateUserInfo(%s)",login ? login : "");
     UserInfoPtr ptr = getUserInfo(login);
     if (!ptr.get()) throw InfosmeException(EXC_NOTFOUND,"user '%s' is not found",login);
     loadUsers(login);
@@ -509,6 +514,7 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
 
 void InfosmeCoreV1::addSmsc( const char* smscId )
 {
+    smsc_log_debug(log_,"== addSmsc(%s)",smscId ? smscId : "");
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
     {
         MutexGuard mg(startMon_);
@@ -526,6 +532,7 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
 
 void InfosmeCoreV1::updateSmsc(const char* smscId)
 {
+    smsc_log_debug(log_,"== updateSmsc(%s)",smscId ? smscId : "");
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
     {
         MutexGuard mg(startMon_);
@@ -543,6 +550,7 @@ void InfosmeCoreV1::updateSmsc(const char* smscId)
 
 void InfosmeCoreV1::deleteSmsc( const char* smscId )
 {
+    smsc_log_debug(log_,"== deleteSmsc(%s)",smscId ? smscId : "");
     MutexGuard mg(startMon_);
     updateSmsc(smscId,0);
 }
@@ -550,6 +558,7 @@ void InfosmeCoreV1::deleteSmsc( const char* smscId )
 
 void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 {
+    smsc_log_debug(log_,"== updateDefaultSmsc(%s)",smscId ? smscId : "");
     MutexGuard mg(startMon_);
     if (!smscId || !smscId[0] || !isGoodAsciiName(smscId)) {
         throw InfosmeException(EXC_BADNAME,"invalid default smsc name '%s'",smscId ? smscId : "");
@@ -570,18 +579,21 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 
 void InfosmeCoreV1::addRegion( regionid_type regionId )
 {
+    smsc_log_debug(log_,"== addRegion(R=%u)",regionId);
     throw InfosmeException(EXC_NOTIMPL,"FIXME: addRegion");
 }
 
 
 void InfosmeCoreV1::updateRegion( regionid_type regionId )
 {
+    smsc_log_debug(log_,"== updateRegion(R=%u)",regionId);
     throw InfosmeException(EXC_NOTIMPL,"FIXME: updateRegion");
 }
 
 
 void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 {
+    smsc_log_debug(log_,"== deleteRegion(R=%u)",regionId);
     throw InfosmeException(EXC_NOTIMPL,"FIXME: deleteRegion");
 }
 
@@ -589,6 +601,7 @@ void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 dlvid_type InfosmeCoreV1::addDelivery( UserInfo& userInfo,
                                        const DeliveryInfoData& info )
 {
+    smsc_log_debug(log_,"== addDelivery(U='%s')",userInfo.getUserId());
     return dlvMgr_->createDelivery(userInfo,info);
 }
 
@@ -596,6 +609,7 @@ dlvid_type InfosmeCoreV1::addDelivery( UserInfo& userInfo,
 void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
                                     dlvid_type      dlvId )
 {
+    smsc_log_debug(log_,"== deleteDelivery(U='%s',D=%u)",userInfo.getUserId(),dlvId);
     BindSignal bs;
     bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
@@ -608,6 +622,7 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
 DeliveryPtr InfosmeCoreV1::getDelivery( const UserInfo& userInfo,
                                         dlvid_type      dlvId )
 {
+    smsc_log_debug(log_,"== getDelivery(U='%s',D=%u)",userInfo.getUserId(),dlvId);
     DeliveryImplPtr ptr;
     if (!dlvMgr_->getDelivery(dlvId,ptr)) {
         throw InfosmeException(EXC_NOTFOUND,"no such delivery %u",dlvId);
