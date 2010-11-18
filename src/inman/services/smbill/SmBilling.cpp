@@ -339,7 +339,7 @@ unsigned Billing::writeCDR(void)
             smsc_log_warn(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
         }
         _cfg.bfs->bill(cdr); cnt++;
-        smsc_log_info(logger, "%s: CDR written: msgId: %llu, status: %u, IN billed: %s, charged: %s",
+        smsc_log_info(logger, "%s: TDR written: msgId: %llu, status: %u, IN billed: %s, charged: %s",
                     _logId, cdr._msgId, cdr._dlvrRes, cdr._inBilled ? "true": "false",
                     abNumber.toString().c_str());
     }
@@ -353,7 +353,7 @@ void Billing::doFinalize(void)
         cdrs = writeCDR();
 
     smsc_log_info(logger, "%s: %scomplete(%s, %s), %s --> %s(cause %u),"
-                          " abonent(%s), type %s, CDR(s) written: %u", _logId,
+                          " abonent(%s), type %s, TDR(s) written: %u", _logId,
             BillComplete() ? "" : "IN", cdr._chargeType ? "MT" : "MO",
             cdr.nmPolicy(), cdr.dpType().c_str(),
             cdr._inBilled ? _cfgScf->Ident() : _cfg.prm->billModeStr(billMode), billErr,
@@ -607,15 +607,18 @@ Billing::PGraphState Billing::onChargeSms(void)
     }
 
     //Here goes either abtPrepaid or abtUnknown ..
-    //check if AbonentProvider should be requested for contract type
+    if (abCsi.isPrepaid())
+      configureMOSM(); //check if cache data enough to determine gsmSCF params
+
+    //check if AbonentProvider should be requested for contract type/gsmSCF params
 
     /* **************************************************** */
     /* conditions which switch ON provider request         */
     /* **************************************************** */
     bool askProvider = ((_cfg.prm->cntrReq == ChargeParm::reqAlways)
                         || ( (billMode == ChargeParm::bill2IN) 
-                             && ( (abCsi.isUnknown())
-                                  || !abCsi.getSCFinfo(UnifiedCSI::csi_MO_SM) ) )
+                             && (abCsi.isUnknown() || !getServiceKey(UnifiedCSI::csi_MO_SM))
+                           )
                         );
 
     //check if AbonentProvider should be requested for current abonent location
@@ -634,17 +637,7 @@ Billing::PGraphState Billing::onChargeSms(void)
         askProvider = false;
 
     if (askProvider && _cfg.iapMgr) {
-      //determine policy rule
-      const IAPRule * pRule = _cfg.iapMgr->getPolicy(abNumber);
-      if (pRule) {
-        _iapRule = *pRule;
-      } else {
-        _iapRule._nmPool = "<default>";
-        _iapRule._iaPolicy = _cfg.iapMgr->getPolicy(_cfg.policyNm);
-      }
-      if (_iapRule._iaPolicy) {
-        smsc_log_debug(logger, "%s: using policy %s for %s", _logId, _iapRule.toString().c_str(),
-                        abNumber.toString().c_str());
+      if (determinePolicy()) {
         const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_lastIAPrvd);
         if (pPrvd) {
           _lastIAPrvd = pPrvd->_iface->getType();
@@ -662,7 +655,6 @@ Billing::PGraphState Billing::onChargeSms(void)
         }
       } else {
         billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
-        smsc_log_error(logger, "%s: no IAPolicy configured for %s", _logId, abNumber.getSignals());
       }
     }
     return ConfigureSCFandCharge();
@@ -706,32 +698,19 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
 
 INManErrorId::Code_e Billing::configureSCF(void)
 {
-  const GsmSCFinfo *  p_scf = abCsi.getSCFinfo(UnifiedCSI::csi_MO_SM);
-  uint32_t            recMOSM = 0;
+  configureMOSM();
+  const GsmSCFinfo * smScf = abCsi.getSCFinfo(UnifiedCSI::csi_MO_SM);
 
-  if (p_scf)
-    recMOSM = p_scf->serviceKey;
-  else //check if SCF for MO-BC may be used
-    p_scf = abCsi.getSCFinfo(UnifiedCSI::csi_O_BC);
-
-  //check if extra parameters are configuured for serving gsmSCF
-  if (p_scf && _iapRule._iaPolicy)
-    _cfgScf = _iapRule._iaPolicy->getSCFparms(p_scf->scfAddress);
-
-  //verify serviceKey
-  if (!recMOSM && _cfgScf) {
-    CSIRecord csiRec(IAPProperty::iapUnknown, UnifiedCSI::csi_MO_SM, *p_scf);
-    csiRec.scfInfo.serviceKey = _cfgScf->getSKey(UnifiedCSI::csi_MO_SM,
-                                    abCsi.csiSCF.empty() ? NULL : &abCsi.csiSCF);
-    //serviceKey from config.xml has a higher priority
-    if (csiRec.scfInfo.serviceKey && (csiRec.scfInfo.serviceKey != recMOSM)) {
-      abCsi.csiSCF.insertRecord(csiRec);
-      recMOSM = csiRec.scfInfo.serviceKey;
-    }
+  //verify gsmSCF & serviceKey
+  if (smScf && !smScf->serviceKey) {
+    smsc_log_error(logger, "%s: misconfigured serviceKey(%s) for gsmSCF(%s)", _logId,
+                   UnifiedCSI::nmTDP(UnifiedCSI::csi_MO_SM),
+                   smScf->scfAddress.toString().c_str());
+    return INManErrorId::cfgInconsistency;
   }
-  if (!recMOSM) {
-    smsc_log_error(logger, "%s: misconfigured serviceKey(MO-SM) for gsmSCF(%s)", _logId,
-                   p_scf->scfAddress.toString().c_str());
+  if (!smScf) {
+    smsc_log_error(logger, "%s: unable to determine gsmSCF for abonent(%s)", _logId,
+                   abNumber.toString().c_str());
     return INManErrorId::cfgInconsistency;
   }
 
@@ -753,6 +732,66 @@ INManErrorId::Code_e Billing::configureSCF(void)
   return INManErrorId::noErr;
 }
 
+//Adjusts the MO-SM gsmSCF parameters combining cache/IAProvider CSIs
+//and gsmSCF parameters from config.xml
+void Billing::configureMOSM(void)
+{
+  uint32_t          keyMOSM = 0;
+  const CSIRecord * pCsi = abCsi.csiSCF.getCSIRecord(UnifiedCSI::csi_MO_SM);
+
+  if (pCsi)
+    keyMOSM = pCsi->scfInfo.serviceKey;
+  else //check if SCF for MO-BC may be used
+    pCsi = abCsi.csiSCF.getCSIRecord(UnifiedCSI::csi_O_BC);
+
+  //check if MO_SM parameters are configured for serving gsmSCF
+  //serviceKey from config.xml has a higher priority
+  if (!_cfgScf && pCsi && determinePolicy())
+    _cfgScf = _iapRule._iaPolicy->getSCFparms(pCsi->scfInfo.scfAddress);
+
+  if (_cfgScf) {
+    uint32_t  keyCfg = _cfgScf->getSKey(UnifiedCSI::csi_MO_SM, &abCsi.csiSCF);
+
+    if (keyCfg && (keyCfg != keyMOSM)) { //update/create MO_SM record
+      CSIRecord & csiRec = abCsi.csiSCF[UnifiedCSI::csi_MO_SM];
+      csiRec.iapId = IAPProperty::iapUnknown;
+      csiRec.scfInfo.serviceKey = keyCfg;
+      if (pCsi->csiId != UnifiedCSI::csi_MO_SM)
+        csiRec.scfInfo.scfAddress = pCsi->scfInfo.scfAddress;
+    }
+  }
+}
+
+uint32_t Billing::getServiceKey(CSIUid_e csi_id) const
+{
+  if (_cfgScf) //serviceKey from config.xml has a higher priority
+    return _cfgScf->getSKey(csi_id, &abCsi.csiSCF);
+
+  const CSIRecord * pCsi = abCsi.csiSCF.getCSIRecord(csi_id);
+  return pCsi ? pCsi->scfInfo.serviceKey : 0;
+}
+
+const AbonentPolicy * Billing::determinePolicy(void)
+{
+  if (!_iapRule._iaPolicy && _cfg.iapMgr) {
+    //determine policy rule
+    const IAPRule * pRule = _cfg.iapMgr->getPolicy(abNumber);
+    if (pRule) {
+      _iapRule = *pRule;
+    } else {
+      _iapRule._nmPool = "<default>";
+      _iapRule._iaPolicy = _cfg.iapMgr->getPolicy(_cfg.policyNm);
+    }
+    if (_iapRule._iaPolicy) {
+      smsc_log_debug(logger, "%s: using policy %s for %s", _logId, _iapRule.toString().c_str(),
+                      abNumber.toString().c_str());
+    } else {
+      smsc_log_error(logger, "%s: no IAPolicy configured for %s", _logId, abNumber.getSignals());
+    }
+  }
+  return _iapRule._iaPolicy;
+}
+
 //NOTE: _sync should be locked upon entry
 //FSM switching:
 //  entry:  billContinued
@@ -764,14 +803,17 @@ Billing::PGraphState Billing::onDeliverySmsResult(void)
                     (!cdr._dlvrRes) ? "SUCCEEDED" : "FAILED", cdr._dlvrRes);
     
     if (capTask) { //report message submission to SCF
-        if (TaskSchedulerITF::rcOk == capSched->SignalTask(capTask,
-                TaskSchedulerITF::sigProc, !cdr._dlvrRes ? &_SMSubmitOK : &_SMSubmitNO)) {
+        TaskSchedulerITF::SchedulerRC
+          schedRc = capSched->SignalTask(capTask, TaskSchedulerITF::sigProc,
+                                         !cdr._dlvrRes ? &_SMSubmitOK : &_SMSubmitNO);
+        if (TaskSchedulerITF::rcOk == schedRc) {
             state = bilSubmitted;
             //execution will continue either in onTaskReport() or in onTimerEvent()
             StartTimer(_cfg.maxTimeout);
             return Billing::pgCont;
         } //else task cann't be interacted!
-        smsc_log_error(logger, "%s: failed to send signal to %s", _logId, capName.c_str());
+        smsc_log_error(logger, "%s: sending signal to %s is failed: %s(%u) ", _logId,
+                       capName.c_str(), capSched->nmRCode(schedRc), (unsigned)schedRc);
         unrefCAPSmTask(false);
         rval = _RCS_INManErrors->mkhash(INManErrorId::internalError);
     }
@@ -872,8 +914,10 @@ bool Billing::unrefCAPSmTask(bool wait_report/* = true */)
 
 void Billing::abortCAPSmTask(void)
 {
+  if (capTask) {
     capSched->AbortTask(capTask);
     capTask = 0;
+  }
 }
 
 /* -------------------------------------------------------------------------- *
@@ -1008,8 +1052,10 @@ void Billing::onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * tas
             billMode = ChargeParm::bill2CDR;
             doCharge = true;
         }
-        if (!scfCharge)
+        if (!scfCharge) { //CapSMS task will be released by itself
             unrefCAPSmTask(false);
+            capTask = 0;
+        }
         if (Billing::pgEnd == chargeResult(doCharge, capErr))
             doFinalize();
     } else if (state == bilSubmitted) {

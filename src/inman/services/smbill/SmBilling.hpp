@@ -40,8 +40,8 @@ using smsc::core::timers::TimeWatcherITF;
 using smsc::core::timers::TimerListenerITF;
 using smsc::core::timers::TimerHdl;
 using smsc::core::timers::OPAQUE_OBJ;
-using smsc::util::TaskRefereeITF;
-using smsc::util::ScheduledTaskAC;
+using smsc::inman::TaskRefereeITF;
+using smsc::inman::ScheduledTaskAC;
 
 using smsc::inman::iaprvd::IAPProperty;
 using smsc::inman::iaprvd::IAPType_e;
@@ -49,6 +49,7 @@ using smsc::inman::iaprvd::AbonentId;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
 using smsc::inman::iapmgr::IAPRule;
+using smsc::inman::comp::CSIUid_e;
 
 using smsc::inman::tcpsrv::WorkerAC;
 using smsc::inman::interaction::INPPacketAC;
@@ -117,6 +118,8 @@ private:
     std::string         capName;    //CapSMS task name for logging
     Condition           capEvent;
 
+    uint32_t getServiceKey(CSIUid_e csi_id) const;
+
     //Returns false if PDU contains invalid data preventing request processing
     bool verifyChargeSms(void);
     void cancelIAPQuery(void);
@@ -130,6 +133,8 @@ private:
     bool StartTimer(const TimeoutHDL & tmo_hdl);
     void StopTimer(BillingState bilState);
     PGraphState chargeResult(bool do_charge, RCHash last_err = 0);
+    const AbonentPolicy * determinePolicy(void);
+    void configureMOSM(void);
     INManErrorId::Code_e configureSCF(void);
     PGraphState ConfigureSCFandCharge(void);
     PGraphState onSubmitReport(RCHash scf_err, bool in_billed = false);
