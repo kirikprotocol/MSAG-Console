@@ -9,8 +9,8 @@
 switch INMAN_ICS_LINKAGE
 static: #no need for .so loader, service is statically linked into libinman
 staticSS7:\
-inman/ldlib/libinman_ics_smbill.so SmBillLoader $(SHARED_OPT) -linman-services-smbill -linman-services-iapmgr -linman-abprov -linman-interaction-msgbill -linman-storage -linman-inap-cap_sms -linman-comp-cap_sms -linman-comp -linman-common -linman-codec_inc-cap -linman-codec_inc-map -linman-codec_inc-in_cs -linman-codec_inc-ros -linman-asn1rt -lutil -ldl -lrt
+inman/ldlib/libinman_ics_smbill.so SmBillLoader $(SHARED_OPT) -linman-services-smbill -linman-abprov -linman-interaction-msgbill -linman-storage -linman-inap-cap_sms -linman-comp-cap_sms -linman-comp -linman-common -linman-codec_inc-cap -linman-codec_inc-map -linman-codec_inc-in_cs -linman-codec_inc-ros -linman-asn1rt -lutil  -linman_ics_sched @inman/ldlib/libinman_ics_sched.so -linman_ics_iapmgr @inman/ldlib/libinman_ics_iapmgr.so -ldl -lrt
 default:\
-inman/ldlib/libinman_ics_smbill.so SmBillLoader $(SHARED_OPT) -linman-services-smbill -linman-services-iapmgr -linman-abprov -linman-interaction-msgbill -linman-storage -linman-inap-cap_sms -linman-comp-cap_sms -linman-comp -linman-common -linman-codec_inc-cap -linman-codec_inc-map -linman-codec_inc-in_cs -linman-codec_inc-ros -linman-asn1rt -lutil -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_ics_tcapdsp @inman/ldlib/libinman_ics_tcapdsp.so -ldl -lrt
+inman/ldlib/libinman_ics_smbill.so SmBillLoader $(SHARED_OPT) -linman-services-smbill  -linman-abprov -linman-interaction-msgbill -linman-storage -linman-inap-cap_sms -linman-comp-cap_sms -linman-comp -linman-common -linman-codec_inc-cap -linman-codec_inc-map -linman-codec_inc-in_cs -linman-codec_inc-ros -linman-asn1rt -lutil -L$(SMSC_BUILDDIR)/bin/inman/ldlib -linman_ics_sched @inman/ldlib/libinman_ics_sched.so -linman_ics_iapmgr @inman/ldlib/libinman_ics_iapmgr.so -linman_ics_tcapdsp @inman/ldlib/libinman_ics_tcapdsp.so -ldl -lrt
 end switch
 
