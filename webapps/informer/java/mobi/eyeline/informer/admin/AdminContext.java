@@ -168,7 +168,7 @@ public class AdminContext {
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
-      initSiebel();
+//      initSiebel();
 
       deliveryNotificationsProducer.start();
 
