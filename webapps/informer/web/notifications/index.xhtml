@@ -17,13 +17,13 @@
 
 
       <eye:buttons>
-        <eye:space/>
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{notificationSettings.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="#{notificationSettings.reset}" immediate="true"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="NOTIFICATIONS" immediate="true"/>
         </eye:button>
+        <eye:space/>
       </eye:buttons>
 
       <eye:delimiter/>
@@ -93,13 +93,13 @@
       <eye:delimiter/>
 
       <eye:buttons>
-        <eye:space/>
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{notificationSettings.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="#{notificationSettings.reset}" immediate="true"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="NOTIFICATIONS" immediate="true"/>
         </eye:button>
+        <eye:space/>
       </eye:buttons>
 
     </tr:form>

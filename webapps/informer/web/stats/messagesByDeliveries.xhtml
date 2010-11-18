@@ -18,25 +18,27 @@
 
 
         <eye:dataTableFilter bean="#{messagesByDeliveries}" clearAction="clearFilter" applyAction="start">
-          <h:panelGrid columns="3" columnClasses="columnTopLeftAlign,columnTopLeftAlign, columnTopLeftAlign">
-            <h:panelGrid columns="2" columnClasses="column100WidthTopLeft, column300WidthTopLeft">
-              <h:outputText value="#{msg['stat.page.from_date']}"/>
-              <t:inputDate value="#{messagesByDeliveries.filter.fromDate}" popupCalendar="true" type="both" />
-              <h:outputText value="#{msg['stat.page.till_date']}"/>
-              <t:inputDate value="#{messagesByDeliveries.filter.tillDate}"  popupCalendar="true" type="both"/>
-            </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column100WidthTopLeft, columnTopLeftAlign">
-              <h:outputText value="#{msg['stat.page.deliveryName']}"/>
-              <t:inputText id="Name" value="#{messagesByDeliveries.nameFilter}"/>
-              <h:outputText value="#{msg['stat.page.user']}" rendered="#{messagesByDeliveries.admin}"/>
-              <h:selectOneMenu value="#{messagesByDeliveries.filter.user}" rendered="#{messagesByDeliveries.admin}" required="false">
-                <f:selectItems value="#{messagesByDeliveries.users}"/>
-              </h:selectOneMenu>
-            </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column100WidthTopLeft, columnTopLeftAlign">
-              <h:outputText value="#{msg['stat.page.detalised']}"/>
-              <h:selectBooleanCheckbox value="#{messagesByDeliveries.fullMode}"/>
-            </h:panelGrid>
+          <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width,column50Width, columnTopLeftAlign">
+
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.from_date']}"/>
+            <t:inputDate value="#{messagesByDeliveries.filter.fromDate}" popupCalendar="true" type="both" />
+
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.deliveryName']}"/>
+            <t:inputText id="Name" value="#{messagesByDeliveries.nameFilter}"/>
+
+            <h:outputText value="&#160;"/>
+            <h:outputText value="&#160;"/>
+
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.till_date']}"/>
+            <t:inputDate value="#{messagesByDeliveries.filter.tillDate}"  popupCalendar="true" type="both"/>
+
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.user']}" rendered="#{messagesByDeliveries.admin}"/>
+            <h:selectOneMenu value="#{messagesByDeliveries.filter.user}" rendered="#{messagesByDeliveries.admin}" required="false">
+              <f:selectItems value="#{messagesByDeliveries.users}"/>
+            </h:selectOneMenu>
+
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.detalised']}"/>
+            <h:selectBooleanCheckbox value="#{messagesByDeliveries.fullMode}"/>
 
           </h:panelGrid>
         </eye:dataTableFilter>

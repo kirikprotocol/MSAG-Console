@@ -43,10 +43,6 @@ public class NotificationSettingsController extends InformerController {
     return "INDEX";
   }
 
-  public String reset() {
-    return null;
-  }
-
   public String getSmsSenderAddress() {
     return smsSenderAddress.getSimpleAddress();
   }

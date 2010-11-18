@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.util.LocalizedException;
 import org.apache.log4j.Logger;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
@@ -155,7 +156,7 @@ public abstract class UploadController extends InformerController{
     public void run() {
       try{
         _process(file, user, requestParams);
-      }catch (AdminException e){
+      }catch (LocalizedException e){
         error = e.getMessage(locale);
         logger.warn(e,e);
       }catch (IllegalArgumentException e){

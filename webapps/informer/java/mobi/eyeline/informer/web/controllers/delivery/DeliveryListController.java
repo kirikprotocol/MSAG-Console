@@ -166,7 +166,7 @@ public class DeliveryListController extends DeliveryController {
       filter.setUserIdFilter(u.getLogin());
 
     if (namePrefix != null && (namePrefix = namePrefix.trim()).length() != 0)
-      filter.setNameFilter();
+      filter.setNameFilter(namePrefix);
 
     filter.setResultFields(DeliveryFields.Name, DeliveryFields.UserId, DeliveryFields.Status, DeliveryFields.StartDate, DeliveryFields.EndDate);
 

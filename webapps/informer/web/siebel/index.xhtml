@@ -24,45 +24,47 @@
           <tr:commandLink text="#{msg['submit.button']}" action="#{siebel.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="INDEX" immediate="true"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="SIEBEL" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
+      <eye:delimiter/>
 
-      <h:panelGrid style="padding:10px" columns="1">
 
-        <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
+        <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
 
-          <tr:panelLabelAndMessage label="siebelUser" labelStyle="text-align:left">
+          <tr:panelLabelAndMessage label="#{msg['informer.siebel.user']}" labelStyle="text-align:left">
             <h:selectOneMenu value="#{siebel.siebelUser}">
               <f:selectItems value="#{siebel.uniqueUsers}"/>
             </h:selectOneMenu>
           </tr:panelLabelAndMessage>
 
 
-          <tr:panelLabelAndMessage label="timeout" labelStyle="text-align:left">
+          <tr:panelLabelAndMessage label="#{msg['informes.siebel.timeout']}" labelStyle="text-align:left">
             <tr:inputText value="#{siebel.timeout}" required="true" simple="true">
               <eye:validatePositive/>
             </tr:inputText>
           </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="removeOnStop" labelStyle="text-align:left">
+          <tr:panelLabelAndMessage label="#{msg['informer.siebel.remove.on.stop']}" labelStyle="text-align:left">
             <tr:selectBooleanCheckbox value="#{siebel.removeOnStop}" simple="true"/>
           </tr:panelLabelAndMessage>
 
         </tr:panelFormLayout>
 
-        <eye:collapsingGroup label="#{msg['informer.siebel.jdbc']}">
+        <eye:delimiter/>
 
-          <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
+        <eye:collapsingGroup label="#{msg['informer.siebel.jdbc']}" opened="true">
+
+          <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
 
             <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.driver']}" labelStyle="text-align:left">
               <tr:inputText columns="50" value="#{siebel.jdbcDriver}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.source']}" labelStyle="text-align:left">
-              <tr:inputText columns="50" value="#{siebel.jdbcSource}" required="true" simple="true"/>
+              <tr:inputText columns="100" value="#{siebel.jdbcSource}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.login']}" labelStyle="text-align:left">
@@ -70,21 +72,21 @@
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.password']}" labelStyle="text-align:left">
-              <tr:inputText value="#{siebel.jdbcPassword}" required="true" simple="true"/>
+              <tr:inputText secret="true" value="#{siebel.jdbcPassword}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
           </tr:panelFormLayout>
 
         </eye:collapsingGroup>
 
-      </h:panelGrid>
+      <eye:delimiter/>
 
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{siebel.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="INDEX" immediate="true"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="SIEBEL" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

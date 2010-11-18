@@ -472,6 +472,18 @@
       <to-view-id>/restriction/edit.xhtml</to-view-id>
     </navigation-case>
 
+    <navigation-case>
+      <from-outcome>SIEBEL</from-outcome>
+      <to-view-id>/siebel/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>NOTIFICATIONS</from-outcome>
+      <to-view-id>/notifications/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
   </navigation-rule>
 
 </faces-config>

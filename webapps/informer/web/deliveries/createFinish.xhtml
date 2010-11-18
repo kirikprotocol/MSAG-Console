@@ -23,25 +23,6 @@
         <h:outputText value="#{createDelivery.activePage.error}"/>
       </eye:message>
 
-
-      <eye:buttons>
-        <eye:button rendered="#{createDelivery.activePage.finished and !createDelivery.activePage.stoped and createDelivery.activePage.error == null}">
-          <tr:commandLink text="#{msg['finish.button']}" action="#{createDelivery.next}"/>
-        </eye:button>
-        <eye:button rendered="#{createDelivery.activePage.finished}">
-          <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true"/>
-        </eye:button>
-        <eye:button rendered="#{!createDelivery.activePage.finished}">
-          <tr:commandLink text="#{msg['stop.button']}" action="#{createDelivery.activePage.stop}"/>
-        </eye:button>
-        <eye:space/>
-        <eye:button rendered="#{createDelivery.activePage.renderBL}" >
-          <h:commandLink value="#{msg['informer.deliveries.download.region.not.found']}">
-            <tr:fileDownloadActionListener method="#{createDelivery.activePage.download}" contentType="application/csv" filename="blacklist.csv"/>
-          </h:commandLink>
-        </eye:button>
-      </eye:buttons>
-
       <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
         <h:outputText value="#{msg['processing.label']}"/>
         <eye:progressBar current="#{createDelivery.activePage.current}" maximum="#{createDelivery.activePage.maximum}" width="500" height="20" />
@@ -50,31 +31,25 @@
       <h:panelGrid rendered="#{createDelivery.activePage.error == null and !createDelivery.activePage.stoped}" style="margin : 10px 10px 10px 10px">
         <h:outputText
             value="#{msg['informer.deliveries.create.abonetns.size']} #{createDelivery.activePage.processed}"/>
-        <h:outputText rendered="#{createDelivery.activePage.regionNotFound != 0}"
-            value="#{msg['informer.deliveries.create.abonetns.region.not.found']} #{createDelivery.activePage.regionNotFound}"/>
       </h:panelGrid>
 
+      <eye:delimiter/>
+
       <eye:buttons>
-        <eye:button rendered="#{createDelivery.activePage.finished and !createDelivery.activePage.stoped and createDelivery.activePage.error == null}">
-          <tr:commandLink text="#{msg['finish.button']}" action="#{createDelivery.next}"/>
-        </eye:button>
         <eye:button rendered="#{createDelivery.activePage.finished}">
           <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true"/>
         </eye:button>
+        <eye:button rendered="#{createDelivery.activePage.finished and !createDelivery.activePage.stoped and createDelivery.activePage.error == null}">
+          <tr:commandLink text="#{msg['finish.button']}" action="#{createDelivery.next}"/>
+        </eye:button>
+        
         <eye:button rendered="#{!createDelivery.activePage.finished}">
           <tr:commandLink text="#{msg['stop.button']}" action="#{createDelivery.activePage.stop}"/>
         </eye:button>
         <eye:space/>
-        <eye:button rendered="#{createDelivery.activePage.renderBL}" >
-          <h:commandLink value="#{msg['informer.deliveries.download.region.not.found']}">
-            <tr:fileDownloadActionListener method="#{createDelivery.activePage.download}" contentType="application/csv" filename="region_not_found.csv"/>
-          </h:commandLink>
-        </eye:button>
       </eye:buttons>
 
     </eye:updatableContent>
-
-
 
   </tr:form>
 

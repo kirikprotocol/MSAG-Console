@@ -4,12 +4,18 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.regions.Region;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.UploadController;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
+import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
 import java.io.*;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -30,16 +36,23 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   private final FileSystem fs;
 
-  private boolean singleText;
+  private int fileContentType = 1;
+  private String fileEncoding;
 
   private Configuration config;
   private String user;
+  private File rejectedAddressesFile;
+  private int rejectedAddressesCount;
 
   public UploadFilePage(Configuration config, String user) {
     this.config = config;
     this.user = user;
     fs = config.getFileSystem();
     tmpFile = new File(config.getWorkDir(),"messages_"+user+System.currentTimeMillis());
+    rejectedAddressesFile = new File(config.getWorkDir(), "rejected_addresses_" + user + System.currentTimeMillis());
+    rejectedAddressesFile.deleteOnExit();
+
+    fileEncoding="windows-1251";
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
@@ -50,27 +63,29 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     return new DeliveryEditPage(delivery, tmpFile, config);
   }
 
-  public boolean isSingleText() {
-    return singleText;
+  public int getFileContentType() {
+    return fileContentType;
   }
 
-  public void setSingleText(boolean singleText) {
-    this.singleText = singleText;
+  public void setFileContentType(int content) {
+    this.fileContentType = content;
   }
 
   @Override
   public String upload() {
-    if(singleText) {
+    if(fileContentType == 1) {
       delivery = Delivery.newSingleTextDelivery();
     }else {
       delivery = Delivery.newCommonDelivery();
     }
     try{
       config.getDefaultDelivery(user, delivery);
+      delivery.setStartDate(new Date());
     }catch (AdminException e){
       addError(e);
       return null;
     }
+
     return super.upload();
   }
 
@@ -106,39 +121,112 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     return super.isStoped();
   }
 
+  private String getAddressFromLine(String line, int lineNumber, boolean containsText) throws UploadFileException {
+    if (!containsText)
+      return line.trim();
+
+    int i = line.indexOf('|');
+    if (i<0)
+      throw new UploadFileException("invalid.string.format", String.valueOf(lineNumber), line);
+    return line.substring(0, i);
+  }
+
+  private boolean isAddressAllowed(Address address, User u) {
+    if (u.isAllRegionsAllowed())
+      return true;
+
+    Region r = config.getRegion(address);
+    return r != null && u.getRegions().contains(r.getRegionId());
+  }
+
+  public String getRejectedAddressesFile() {
+    return rejectedAddressesFile.getAbsolutePath();
+  }
+
+  public int getRejectedAddressesCount() {
+    return rejectedAddressesCount;
+  }
+
+  public String getFileEncoding() {
+    return fileEncoding;
+  }
+
+  public void setFileEncoding(String fileEncoding) {
+    this.fileEncoding = fileEncoding;
+  }
+
+  public void downloadRejectedLines(FacesContext context, OutputStream out) throws IOException {
+    if(!rejectedAddressesFile.exists())
+      return;
+
+    PrintWriter w = new PrintWriter(new OutputStreamWriter(out, fileEncoding));
+    BufferedReader r = null;
+    try{
+      try {
+        r = new BufferedReader(new InputStreamReader(fs.getInputStream(rejectedAddressesFile)));
+      } catch (AdminException e) {
+        logger.error(e,e);
+        throw new IOException(e.getMessage());
+      }
+      String line;
+      while((line = r.readLine()) != null)
+        w.println(line);
+
+    } finally {
+      if(r != null) {
+        try{
+          r.close();
+        }catch (IOException e){}
+      }
+    }
+    w.flush();
+  }
+
   @Override
   protected void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception {
+    User _user = config.getUser(user);
     maximum = (int)file.getLength();
     BufferedReader is = null;
     PrintWriter os = null;
+    PrintWriter rejectedAddresses = null;
     try{
-      is = new BufferedReader(new InputStreamReader(file.getInputStream()));
+      is = new BufferedReader(new InputStreamReader(file.getInputStream(), fileEncoding));
       os = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(tmpFile, false))));
+      rejectedAddresses = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(rejectedAddressesFile, false))));
+
+      int lineNumber = 0;
       String line;
       while((line = is.readLine()) != null && !isStoped()) {
-        String address;
-        if(delivery.getType() == Delivery.Type.SingleText) {
-          address = line;
-        }else {
-          String[] s = line.split(",",2);
-          if(s.length == 1) {
-            throw new IllegalArgumentException("Illegal file");
-          }
-          address = s[0];
-        }
-        if(!Address.validate(address)) {
-          throw new DeliveryException("illegal_address",address);
-        }
-        os.println(line);
+        lineNumber++;
         current+=line.length();
+
+        if (line.trim().length() == 0)
+          continue;
+
+        String addressStr = getAddressFromLine(line, lineNumber, delivery.getType() != Delivery.Type.SingleText);
+        Address address;
+        try {
+          address = new Address(addressStr);
+        } catch (IllegalArgumentException e) {
+          throw new UploadFileException("invalid.msisdn", String.valueOf(lineNumber), addressStr);
+        }
+
+        if (!isAddressAllowed(address, _user)) {
+          rejectedAddresses.println(line);
+          rejectedAddressesCount++;
+        } else
+          os.println(line);
+
         abonentsSize++;
       }
 
-      if(!isStoped()) {
+      if(!isStoped())
         current = maximum;
-      }
 
-    }finally {
+      if (rejectedAddressesCount == abonentsSize)
+        throw new UploadFileException("all.msisdns.rejected");
+
+    } finally {
       if(is != null) {
         try{
           is.close();
@@ -147,6 +235,8 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
       if(os != null) {
         os.close();
       }
+      if (rejectedAddresses!= null)
+        rejectedAddresses.close();
     }
   }
 }

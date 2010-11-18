@@ -127,7 +127,7 @@ public class TestDcpConnection extends DcpConnection{
     if(filter.getNameFilter() != null) {
       boolean accept = false;
       for(String s : filter.getNameFilter()) {
-        if(s.equals(delivery.getName())) {
+        if(delivery.getName().contains(s)) {
           accept = true;
           break;
         }

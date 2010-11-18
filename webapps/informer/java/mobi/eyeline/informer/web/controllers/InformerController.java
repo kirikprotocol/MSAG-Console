@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.smsc.Smsc;
+import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.web.LocaleFilter;
 import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.config.Configuration;
@@ -103,7 +104,7 @@ public abstract class InformerController implements Serializable {
    * Добавляет на страницу информацию об ошибке
    * @param e ошибка
    */
-  protected void addError(AdminException e) {
+  protected void addError(LocalizedException e) {
     logger.error(e,e);
     addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
   }
