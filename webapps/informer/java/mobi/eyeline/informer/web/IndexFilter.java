@@ -16,8 +16,6 @@ public class IndexFilter implements Filter{
   }
 
   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-    System.out.println("");
-
     if(!((HttpServletRequest)servletRequest).isUserInRole("informer-admin")){
       ((HttpServletResponse)servletResponse).sendRedirect(((HttpServletRequest) servletRequest).getContextPath()+"/deliveries/index.faces");
       return;
