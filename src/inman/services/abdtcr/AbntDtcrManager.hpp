@@ -47,7 +47,7 @@ struct AbonentDetectorCFG {
         , abtTimeout(0), maxRequests(0), cacheTmo(0)
     { }
     AbonentDetectorCFG(const AbntDetectorXCFG & use_xcfg)
-        : useCache(false), abCache(0), iapMgr(0), policyNm(use_xcfg.policyNm.c_str())
+        : useCache(use_xcfg.useCache), abCache(0), iapMgr(0), policyNm(use_xcfg.policyNm.c_str())
         , abtTimeout(use_xcfg.abtTimeout), maxRequests(use_xcfg.maxRequests)
         , cacheTmo(use_xcfg.cacheTmo)
     { }
