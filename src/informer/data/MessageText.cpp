@@ -1,3 +1,5 @@
+/*
+
 #include <cstdlib>
 #include "MessageText.h"
 #include "MessageGlossary.h"
@@ -116,3 +118,5 @@ void MessageTextPtr::unref( MessageText* ptr )
 
 }
 }
+
+ */

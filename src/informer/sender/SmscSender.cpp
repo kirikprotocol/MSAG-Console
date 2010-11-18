@@ -445,7 +445,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
                 sms.setIntProperty(smsc::sms::Tag::SMPP_DEST_ADDR_SUBUNIT,1);
             }
 
-            const char* out = msg.text->getText();
+            const char* out = msg.text.getText();
             try {
                 nchunks = ptr.evaluateNchunks(out,strlen(out),&sms);
             } catch ( std::exception& e ) {

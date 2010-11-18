@@ -380,7 +380,7 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
     mg.Unlock();
     Message& m = iter->msg;
     if (!nchunks) {
-        const char* text = m.text->getText();
+        const char* text = m.text.getText();
         nchunks = evaluateNchunks(text,strlen(text));
     }
     m.lastTime = currentTime;
@@ -568,7 +568,9 @@ bool RegionalStorage::postInit()
     for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
         Message& m = i->msg;
         // bind to glossary
-        dlv_->source_->getGlossary().bindText(m.text);
+        if ( !m.isTextUnique()) {
+            dlv_->source_->getGlossary().fetchText(m.text,false);
+        }
         switch (m.state) {
         case MSGSTATE_INPUT:
             throw InfosmeException(EXC_LOGICERROR,

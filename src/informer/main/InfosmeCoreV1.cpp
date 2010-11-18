@@ -408,22 +408,22 @@ void InfosmeCoreV1::selfTest()
         MessageList msgList;
         MessageLocker mlk;
         mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
-        mlk.msg.text.reset(new MessageText(0,1));
+        MessageText(0,1).swap(mlk.msg.text);
         mlk.msg.userData = "myfirstmsg";
         msgList.push_back(mlk);
         mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
-        mlk.msg.text.reset(new MessageText("the unbound message",0));
+        MessageText("the unbound message",0).swap(mlk.msg.text);
         mlk.msg.userData = "thesecondone";
         msgList.push_back(mlk);
         dlv->addNewMessages(msgList.begin(), msgList.end());
-        // smsc_log_debug(log_,"--- messages added, setting active state ---");
-        // dlv->setState(DLVSTATE_ACTIVE);
-        smsc_log_debug(log_,"--- messages added, dropping them ---");
-        std::vector<msgid_type> msgIds;
-        msgIds.push_back(1);
-        msgIds.push_back(2);
-        dlv->dropMessages(msgIds);
-        // smsc_log_debug(log_,"--- delivery activated ---");
+        smsc_log_debug(log_,"--- messages added, setting active state ---");
+        dlv->setState(DLVSTATE_ACTIVE);
+        // smsc_log_debug(log_,"--- messages added, dropping them ---");
+        // std::vector<msgid_type> msgIds;
+        // msgIds.push_back(1);
+        // msgIds.push_back(2);
+        // dlv->dropMessages(msgIds);
+        smsc_log_debug(log_,"--- delivery activated ---");
     }
     smsc_log_debug(log_,"--- selfTest finished ---");
 }

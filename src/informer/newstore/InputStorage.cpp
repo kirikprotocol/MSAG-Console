@@ -580,10 +580,9 @@ public:
             msg.state = fb.get8();
             if (msg.state & 0x80) {
                 msg.state &= 0x7f;
-                msg.text.reset(new MessageText(fb.getCString(),0));
+                MessageText(fb.getCString(),0).swap(msg.text);
             } else {
-                // FIXME: optimize if textptr already has glossary!
-                msg.text.reset(new MessageText(0,fb.get32()));
+                MessageText(0,fb.get32()).swap(msg.text);
             }
             return true;
         }
@@ -622,7 +621,7 @@ void InputStorage::init( ActivityLog& actLog )
 {
     activityLog_ = &actLog;
     try {
-        glossary_.init( getCS()->getStorePath(), getDlvId());
+        glossary_.init(getDlvId());
     } catch ( std::exception& e ) {
         smsc_log_error(log_,"D=%u glossary init failed: %s",getDlvId(),e.what());
         throw;
@@ -641,8 +640,11 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     msgtime_type currentTime(currentTimeSeconds());
     // binding to glossary (necessary to write texts to activity log)
     for ( MsgIter i = begin; i != end; ++i ) {
-        glossary_.bindText(i->msg.text);
-        activityLog_->addRecord( currentTime, i->serial, i->msg, 0);
+        if (!i->msg.isTextUnique()) {
+            // necessary to replace text ids with real texts
+            glossary_.fetchText(i->msg.text,true);
+        }
+        activityLog_->addRecord(currentTime, i->serial, i->msg, 0);
     }
     core_.deliveryRegions( getDlvId(), regs, true );
 }
@@ -792,7 +794,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
             // writing to a file
             Message& msg = i->msg;
             if (msg.isTextUnique()) {
-                msgbuf.setSize(90+strlen(msg.text->getText()));
+                msgbuf.setSize(90+strlen(msg.text.getText()));
             }
             // msg.lastTime = ro.wfn;
             // msg.timeLeft = ro.woff;
@@ -807,10 +809,10 @@ void InputStorage::dispatchMessages( MsgIter begin,
             tb.setCString(msg.userData.c_str());
             if (msg.isTextUnique()) {
                 tb.set8(msg.state | 0x80);
-                tb.setCString(msg.text->getText());
+                tb.setCString(msg.text.getText());
             } else {
                 tb.set8(msg.state & 0x7f);
-                tb.set32(msg.text->getTextId());
+                tb.set32(msg.text.getTextId());
             }
 
             const size_t buflen = tb.getPos();
@@ -913,7 +915,10 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
         if ( ! msglist.empty() ) {
             // write back record
             for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
-                glossary_.bindText( i->msg.text );
+                if (!i->msg.isTextUnique()) {
+                    // NOTE: replacing input ids with real ids here!
+                    glossary_.fetchText(i->msg.text,true,true);
+                }
             }
 
             const msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));

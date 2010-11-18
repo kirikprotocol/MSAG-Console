@@ -248,7 +248,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
         throw InfosmeException(EXC_SYSTEM,"cannot printf to activity.log: %d",off);
     }
     buf.SetPos(off);
-    escapeText(buf, msg.text->getText(), strlen(msg.text->getText()));
+    escapeText(buf, msg.text.getText(),strlen(msg.text.getText()));
     buf.Append("\"\n",2);
 
     {

@@ -57,17 +57,7 @@ void Delivery::getGlossary( std::vector< std::string >& texts ) const
 
 void Delivery::setGlossary( const std::vector< std::string >& texts )
 {
-    const dlvid_type dlvId = dlvInfo_->getDlvId();
-    if ( texts.size() > 300 ) {
-        throw InfosmeException(EXC_SYSTEM,"D=%u too long glossary requested",dlvId);
-    }
-    MessageGlossary::TextList tl;
-    int32_t id = 0;
-    for ( std::vector< std::string >::const_iterator i = texts.begin();
-          i != texts.end(); ++i ) {
-        tl.push_back( new MessageText( i->c_str(), ++id) );
-    }
-    source_->getGlossary().setTexts( getCS()->getStorePath(), dlvId, tl );
+    source_->getGlossary().setTexts( texts );
 }
 
 }

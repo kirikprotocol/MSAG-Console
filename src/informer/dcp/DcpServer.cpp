@@ -442,10 +442,10 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
     ml.msg.subscriber=parseAddress(it->getAbonent().c_str());
     if(it->getMsgType()==messages::MessageType::TextMessage)
     {
-      ml.msg.text=new MessageText(it->getText().c_str(),0);
+      MessageText(it->getText().c_str(),0).swap(ml.msg.text);
     }else
     {
-      ml.msg.text=new MessageText(0,it->getIndex());
+      MessageText(0,it->getIndex()).swap(ml.msg.text);
     }
     ml.msg.userData=it->getUserData().c_str();
   }

@@ -86,9 +86,9 @@ public:
             msg.subscriber = fb.get64();
             msg.userData = fb.getCString();
             if (readstate & 0x80) {
-                msg.text.reset( new MessageText(fb.getCString(),0) );
+                MessageText(fb.getCString(),0).swap(msg.text);
             } else {
-                msg.text.reset( new MessageText(0,fb.get32()));
+                MessageText(0,fb.get32()).swap(msg.text);
             }
         } while (false);
         
@@ -128,7 +128,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
     const bool equalSerials = (serial == serial_);
     if (!equalSerials && msg.isTextUnique()) {
         // need to write text
-        buf.setSize(90+strlen(msg.text->getText()));
+        buf.setSize(90+strlen(msg.text.getText()));
     }
     ToBuf tb(buf.get(),buf.getSize());
     do {
@@ -156,9 +156,9 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         tb.set64(msg.subscriber);
         tb.setCString(msg.userData.c_str());
         if (msg.isTextUnique()) {
-            tb.setCString(msg.text->getText());
+            tb.setCString(msg.text.getText());
         } else {
-            tb.set32(msg.text->getTextId());
+            tb.set32(msg.text.getTextId());
         }
     } while (false);
 
@@ -171,16 +171,16 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         equalSerials && serial != serial_ ) {
         // oops, the serial has changed while we were preparing the buffer
         if (msg.isTextUnique()) {
-            buf.reserve(90+strlen(msg.text->getText()));
+            buf.reserve(90+strlen(msg.text.getText()));
             tb.setBuf(buf.get(),buf.getSize());
         }
         tb.setPos(buflen);
         tb.set64(msg.subscriber);
         tb.setCString(msg.userData.c_str());
         if (msg.isTextUnique()) {
-            tb.setCString(msg.text->getText());
+            tb.setCString(msg.text.getText());
         } else {
-            tb.set32(msg.text->getTextId());
+            tb.set32(msg.text.getTextId());
         }
         buflen = tb.getPos();
         tb.setPos(0);

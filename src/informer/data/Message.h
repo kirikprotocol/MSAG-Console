@@ -9,7 +9,7 @@
 namespace eyeline {
 namespace informer {
 
-// 8+8+4+4+8+24+2+1 = 16+16+24+3 = 32+27 = 59 + (4bytes/locker) => 64 bytes
+// 8+8+4+4+8+4+24+2+1 = 16+16+24+3 = 32+27 = 59 + (4bytes/locker) => 64 bytes
 struct Message
 {
     static const size_t USERDATA_LENGTH = 24;
@@ -18,13 +18,13 @@ struct Message
     msgid_type       msgId;      // unique message id (constant)
     msgtime_type     lastTime;   // lasttime / filenumber (for new messages)
     timediff_type    timeLeft;   // ttl / filepos (for new messages)
-    MessageTextPtr   text;       // message text
     smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // (constant)
+    MessageText      text;       // message text
     uint16_t         retryCount;
     uint8_t          state;
 
     inline bool isTextUnique() const {
-        return (text->getTextId() <= 0);
+        return text.getTextId() <= 0;
     }
 };
 
