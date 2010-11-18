@@ -409,9 +409,14 @@ void InfosmeCoreV1::selfTest()
         mlk.msg.userData = "thesecondone";
         msgList.push_back(mlk);
         dlv->addNewMessages(msgList.begin(), msgList.end());
-        smsc_log_debug(log_,"--- messages added, setting active state ---");
-        dlv->setState(DLVSTATE_ACTIVE);
-        smsc_log_debug(log_,"--- delivery activated ---");
+        // smsc_log_debug(log_,"--- messages added, setting active state ---");
+        // dlv->setState(DLVSTATE_ACTIVE);
+        smsc_log_debug(log_,"--- messages added, dropping them ---");
+        std::vector<msgid_type> msgIds;
+        msgIds.push_back(1);
+        msgIds.push_back(2);
+        dlv->dropMessages(msgIds);
+        // smsc_log_debug(log_,"--- delivery activated ---");
     }
     smsc_log_debug(log_,"--- selfTest finished ---");
 }
