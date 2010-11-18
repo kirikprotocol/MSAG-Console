@@ -76,7 +76,7 @@
           <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>
       </h:panelGroup>
 
-      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.deliveryMode}"/>
+      <h:outputText style="white-space: nowrap;display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
       <h:selectOneMenu id="dMode" value="#{createDelivery.activePage.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter"
                        onchange="
                        var disp = this.options[0].selected ? '' : 'none';
@@ -85,10 +85,10 @@
                        document.getElementById('trModeLabel').style.display=disp;
                        document.getElementById('trMode').style.display=disp;
 
-                       disp = (this.options[0].selected &amp;&amp; document.getElementById('trMode').checked) ? '' : 'none';
+                       disp = (this.options[0].selected &amp;&amp; !document.getElementById('trMode').checked) ? '' : 'none';
                        document.getElementById('vPeriodLabel').style.display=disp;
                        document.getElementById('vPeriod').style.display=disp;
-                       ">
+                       " style="display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}">
         <f:selectItems value="#{createDelivery.activePage.uniqueDeliveryModes}"/>
       </h:selectOneMenu>
 
@@ -98,7 +98,7 @@
       <h:outputText id="trModeLabel" style="white-space: nowrap;" value="#{deliveryBundle.transactionMode}"/>
       <tr:selectBooleanCheckbox id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"
                                     onchange="
-                                    disp = (document.getElementById('dMode').options[0].selected &amp;&amp; this.checked) ? '' : 'none';
+                                    disp = (document.getElementById('dMode').options[0].selected &amp;&amp; this.checked) ? 'none' : '';
                                     document.getElementById('vPeriodLabel').style.display=disp;
                                     document.getElementById('vPeriod').style.display=disp;
                                     "/>
@@ -133,7 +133,7 @@
       document.getElementById('trModeLabel').style.display=disp;
       document.getElementById('trMode').style.display=disp;
 
-      disp = (document.getElementById('dMode').options[0].selected &amp;&amp; document.getElementById('trMode').checked) ? '' : 'none';  
+      disp = (document.getElementById('dMode').options[0].selected &amp;&amp; document.getElementById('trMode').checked) ? 'none' : '';  
       document.getElementById('vPeriodLabel').style.display=disp;
       document.getElementById('vPeriod').style.display=disp;
     </script>

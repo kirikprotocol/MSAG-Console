@@ -102,25 +102,31 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretFlash}" rendered="#{deliveryEdit.secret}"/>
         <tr:selectBooleanCheckbox readOnly="true" value="#{deliveryEdit.flashSecret}" simple="true" rendered="#{deliveryEdit.secret}"/>
       
-        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.deliveryMode}"/>
+        <h:outputText style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
         <h:selectOneMenu id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter"
-                         onchange="var d = (this.value != 'SMS') ? 'none' : ''; document.getElementById('smsSettings').style.display = d;">
+                         onchange="var d = (this.value != 'SMS') ? 'none' : ''; document.getElementById('smsSettings').style.display = d;"
+                         style="display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}">
           <f:selectItems value="#{deliveryEdit.uniqueDeliveryModes}"/>
         </h:selectOneMenu>
       </h:panelGrid>
 
       <h:panelGrid id="smsSettings" columns="2" columnClasses="column100Width, columnTopLeftAlign" style="padding-left:10px; display: #{deliveryEdit.smsMode ? '' : 'none'}">
-      
-        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-        <tr:inputText id="vPeriod" value="#{deliveryEdit.delivery.validityPeriod}" simple="true" columns="5">
-          <tr:validateLongRange minimum="1" maximum="100"/>
-        </tr:inputText>
-
-        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
-        <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
         <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true"/>
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+        <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"
+            onchange="
+                var d = this.checked ? 'none' : '';
+                document.getElementById('vPeriodLabel').style.display=d;
+                document.getElementById('vPeriod').style.display=d;
+            "/>
+
+        <h:outputText id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+        <tr:inputText id="vPeriod" value="#{deliveryEdit.delivery.validityPeriod}" simple="true" columns="5">
+          <tr:validateLongRange minimum="1" maximum="100"/>
+        </tr:inputText>
 
       </h:panelGrid>
 
@@ -148,6 +154,9 @@
 
       <script type="text/javascript" language="javascript">
         document.getElementById('retryPolicy1').disabled = !document.getElementById('retryOnFail').checked;
+        var d = document.getElementById().checked ? 'none' : '';
+        document.getElementById('vPeriodLabel').style.display=d;
+        document.getElementById('vPeriod').style.display=d;
       </script>
 
     </tr:form>

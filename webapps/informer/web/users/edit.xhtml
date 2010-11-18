@@ -115,12 +115,12 @@
           <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
           <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.emailNotification}" simple="true"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryType}"/>
-          <h:selectOneMenu id="deliveryType" value="#{userEdit.userToEdit.deliveryType}" style="align:left;" required="true" onchange="
+          <h:outputText style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}"/>
+          <h:selectOneMenu id="deliveryType" value="#{userEdit.userToEdit.deliveryType}" style="align:left; display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" required="true" onchange="
           var dt = document.getElementById('deliveryType');
           var disp = dt.options[0].selected ? '' : 'none';
           document.getElementById('smsSettings').style.display=disp;
-          ">
+          " >
             <f:selectItems value="#{userEdit.deliveryTypes}"/>
           </h:selectOneMenu>
 
@@ -128,9 +128,15 @@
 
         <h:panelGrid id="smsSettings" style="padding-left:10px; display: #{userEdit.smsDeliveryMode == true ? '' : 'none'}" columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{userBundle.transactionMode}"/>
-          <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.transactionMode}" simple="true"/>
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.validHours}"/>
-          <tr:inputText value="#{userEdit.userToEdit.validHours}" simple="true" required="true" columns="3">
+          <tr:selectBooleanCheckbox id="trMode" value="#{userEdit.userToEdit.transactionMode}" simple="true"
+                                    onchange="
+                                    var d = this.checked ? 'none' : '';
+                                    document.getElementById('validHoursLabel').style.display=d;
+                                    document.getElementById('validHours').style.display=d
+                                    "/>
+
+          <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validHours}"/>
+          <tr:inputText id="validHours" value="#{userEdit.userToEdit.validHours}" simple="true" required="true" columns="3">
             <eye:validatePositive/>
           </tr:inputText>
         </h:panelGrid>
@@ -230,6 +236,9 @@
 
       <script type="text/javascript" language="javascript">
         document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;
+        var d = document.getElementById('trMode').checked ? 'none' : '';
+        document.getElementById('validHoursLabel').style.display=d;
+        document.getElementById('validHours').style.display=d
       </script>
 
     </tr:form>

@@ -35,4 +35,8 @@ public class CreateDeliveryController extends InformerController {
   public CreateDeliveryPage getActivePage() {
     return activePage;
   }
+
+  public boolean isAllowUssdPushDelivery() {
+    return getConfig().isAllowUssdPushDeliveries();
+  }
 }

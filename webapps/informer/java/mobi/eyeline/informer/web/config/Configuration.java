@@ -423,6 +423,10 @@ public class Configuration {
     return context.getSiebelProperties();
   }
 
+  public boolean isAllowUssdPushDeliveries() {
+    return context.isAllowUssdPushDeliveries();
+  }
+
   private final Lock lock = new ReentrantLock();
 
   public void lock() {

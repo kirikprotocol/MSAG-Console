@@ -97,9 +97,9 @@
           <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
           <tr:selectBooleanCheckbox id="emailNotification" value="#{userGroupEdit.emailNotification}" simple="true" />
 
-          <h:selectBooleanCheckbox id="editDeliveryType" value="#{userGroupEdit.editDeliveryType}" onchange="document.getElementById('deliveryType').disabled=!this.checked"/>
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryType}"/>
-          <h:selectOneMenu id="deliveryType" value="#{userGroupEdit.deliveryType}" style="align:left;"  onchange="
+          <h:selectBooleanCheckbox id="editDeliveryType" value="#{userGroupEdit.editDeliveryType}" onchange="document.getElementById('deliveryType').disabled=!this.checked" rendered="#{userGroupEdit.allowUssdPushDeliveries}"/>
+          <h:outputText style="white-space:nowrap;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}" />
+          <h:selectOneMenu id="deliveryType" value="#{userGroupEdit.deliveryType}" style="align:left;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"  onchange="
           var dt = document.getElementById('deliveryType');
           var disp = dt.options[0].selected ? '' : 'none';
           document.getElementById('smsSettings').style.display=disp;
@@ -113,10 +113,16 @@
 
           <h:selectBooleanCheckbox id="editTransactionMode" value="#{userGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
           <h:outputText style="white-space:nowrap;" value="#{userBundle.transactionMode}"/>
-          <h:selectBooleanCheckbox id="transactionMode" value="#{userGroupEdit.transactionMode}" />
+          <h:selectBooleanCheckbox id="transactionMode" value="#{userGroupEdit.transactionMode}"
+             onchange="
+              var d = this.checked ? 'none' : '';
+              document.getElementById('editValidHours').style.display=d;
+              document.getElementById('validHoursLabel').style.display=d;
+              document.getElementById('validHours').style.display=d;
+             "/>
 
           <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidHours}" onchange="document.getElementById('validHours').disabled=!this.checked"/>
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.validHours}"/>
+          <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validHours}"/>
           <tr:inputText id="validHours" value="#{userGroupEdit.validHours}" simple="true" columns="3" />
 
         </h:panelGrid>
@@ -246,7 +252,11 @@
         document.getElementById('deliveryLifetime').disabled=archivateDeliveriesDisabled;
 
         document.getElementById('createCdr').disabled=!document.getElementById('editCreateCdr').checked;
-        
+
+        var d = document.getElementById('transactionMode').checked ? 'none' : '';
+        document.getElementById('editValidHours').style.display=d;
+        document.getElementById('validHoursLabel').style.display=d;
+        document.getElementById('validHours').style.display=d;
       </script>
 
     </tr:form>

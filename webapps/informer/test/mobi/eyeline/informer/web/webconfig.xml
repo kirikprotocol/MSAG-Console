@@ -33,6 +33,10 @@
     <param name="senderAddress" type="string">+79130000000</param>
   </section>
 
+  <section name="deliveries">
+    <param name="allowUssdPush" type="bool">false</param>
+  </section>
+
   <section name="notificationTemplates">
     <param name="delivery.state.activated.sms.template"         type="string">Delivery {0} activated {1} </param>
     <param name="delivery.state.finished.sms.template"          type="string">Delivery {0} finished  {1} </param>

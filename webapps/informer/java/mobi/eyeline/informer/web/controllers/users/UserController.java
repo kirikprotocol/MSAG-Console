@@ -52,4 +52,8 @@ public class UserController extends InformerController {
     return regions;
   }
 
+  public boolean isAllowUssdPushDeliveries() {
+    return getConfig().isAllowUssdPushDeliveries();
+  }
+
 }

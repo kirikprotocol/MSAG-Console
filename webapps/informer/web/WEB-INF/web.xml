@@ -242,7 +242,7 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>Создание/просмотр рассылок, просмотр статистики</web-resource-name>
-      <url-pattern>/deliveries/*</url-pattern>
+      <url-pattern>/deliveries/*</url-pattern>                   
       <url-pattern>/stats/*</url-pattern>
       <url-pattern>/index.faces</url-pattern>
     </web-resource-collection>

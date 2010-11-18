@@ -776,6 +776,10 @@ public class AdminContext {
     return webConfig.getSiebelProperties();
   }
 
+  public boolean isAllowUssdPushDeliveries() {
+    return webConfig.isAllowUssdPushDeliveries();
+  }
+
   public void setSiebelProperties(Properties props) throws AdminException {
     try{
       integrityLock.lock();

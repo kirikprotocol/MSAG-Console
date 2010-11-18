@@ -203,6 +203,10 @@ public class DeliveryEditController extends DeliveryController{
     return null;
   }
 
+  public boolean isAllowUssdPushDeliveries() {
+    return getConfig().isAllowUssdPushDeliveries();
+  }
+
 
   public boolean isSmsMode() {
     return delivery.getDeliveryMode() == DeliveryMode.SMS;

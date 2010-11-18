@@ -224,4 +224,23 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     });
   }
 
+  public boolean isAllowUssdPushDeliveries() {
+    return readSettings(new SettingsReader<WebConfigSettings,Boolean>(){
+      public Boolean executeRead(WebConfigSettings settings) {
+        return settings.isAllowUssdPushDeliveries();
+      }
+    });
+  }
+
+  public void setAllowUssdPushDeliveries(final boolean ussdPush) throws AdminException {
+    updateSettings(new SettingsWriter<WebConfigSettings>() {
+      public void changeSettings(WebConfigSettings settings) throws AdminException {
+        settings.setAllowUssdPushDeliveries(ussdPush);
+      }
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        //dummy
+      }
+    });
+  }
+
 }

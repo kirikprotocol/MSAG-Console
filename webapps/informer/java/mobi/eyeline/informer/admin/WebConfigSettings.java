@@ -24,6 +24,7 @@ class WebConfigSettings {
   private Address smsSenderAddress;
   private Properties notificationTemplates;
   private Properties siebelProperties;
+  private boolean allowUssdPushDeliveries;
 
   InstallationType getInstallationType() {
     return installationType;
@@ -124,6 +125,13 @@ class WebConfigSettings {
     return cloneProps(siebelProperties);
   }
 
+  boolean isAllowUssdPushDeliveries() {
+    return allowUssdPushDeliveries;
+  }
+
+  void setAllowUssdPushDeliveries(boolean allowUssdPushDeliveries) {
+    this.allowUssdPushDeliveries = allowUssdPushDeliveries;
+  }
 
   private void validateNotificationTemplates(Properties notificationTemplates) {
     //todo check required properties

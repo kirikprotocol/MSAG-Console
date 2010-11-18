@@ -49,8 +49,10 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     for(Object s : props.keySet()) {
       siebel.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
     }
-
     config.addSection(siebel);
+
+    XmlConfigSection deliveries = config.getOrCreateSection("deliveries");
+    deliveries.setBool("allowUssdPush", settings.isAllowUssdPushDeliveries());
 
     config.save(newFile);
   }
@@ -102,6 +104,9 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
       XmlConfigSection siebel = webconfig.getSection("siebel");
       settings.setSiebelProperties(siebel.toProperties("", null));
+
+      XmlConfigSection deliveries = webconfig.getSection("deliveries");
+      settings.setAllowUssdPushDeliveries(deliveries.getBool("allowUssdPush", false));
 
       return settings;
     }
