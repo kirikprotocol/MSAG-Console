@@ -7,12 +7,14 @@ import java.util.Properties;
 
 /**
  * Источник рассылок Siebel
+ *
  * @author Aleksandr Khalitov
  */
 public interface SiebelDataProvider {
 
   /**
    * Возвращает сообщение по его идентификатору
+   *
    * @param clcId идентификатор сообщения
    * @return сообщение
    * @throws SiebelException ошибка выполнения команды
@@ -21,14 +23,16 @@ public interface SiebelDataProvider {
 
   /**
    * Возвращает сообщения по идентификатору рассылки
+   *
    * @param waveId идентификатор рассылки
    * @return сообщения
    * @throws AdminException ошибка выполнения команды
    */
   public ResultSet<SiebelMessage> getMessages(String waveId) throws AdminException;
-  
+
   /**
    * Возвращает состояние сообщения
+   *
    * @param clcId идентификатор рассылки
    * @return состояние рассылки
    * @throws AdminException ошибка выполнения команды
@@ -37,6 +41,7 @@ public interface SiebelDataProvider {
 
   /**
    * Устанавливает состояние сообщений
+   *
    * @param deliveryStates состояния сообщений, ключ - идентификатор сообщения
    * @throws AdminException ошибка выполнения команды
    */
@@ -44,6 +49,7 @@ public interface SiebelDataProvider {
 
   /**
    * Возвращает рассылку по её идентификатору
+   *
    * @param waveId идентификатор рассылки
    * @return рассылка
    * @throws AdminException ошибка выполнения команды
@@ -52,6 +58,7 @@ public interface SiebelDataProvider {
 
   /**
    * Возвращает рассылки, статус которых был изменён извне
+   *
    * @return рассылки
    * @throws AdminException ошибка выполнения команды
    */
@@ -59,6 +66,7 @@ public interface SiebelDataProvider {
 
   /**
    * Возвращает все рассылки
+   *
    * @return рассылки
    * @throws AdminException ошибка выполнения команды
    */
@@ -66,6 +74,7 @@ public interface SiebelDataProvider {
 
   /**
    * Устанавливает статус рассылки
+   *
    * @param waveId идентификатор рассылки
    * @param status новый статус
    * @throws AdminException ошибка выполнения команды
@@ -73,7 +82,16 @@ public interface SiebelDataProvider {
   public void setDeliveryStatus(String waveId, SiebelDelivery.Status status) throws AdminException;
 
   /**
+   * Устанавливает статусы у рассылок
+   * 
+   * @param statuses статус (waveId => status)
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void setDeliveryStatuses(Map<String, SiebelDelivery.Status> statuses) throws AdminException;
+
+  /**
    * Возвращает статус рассылки
+   *
    * @param waveId идентифкатор рассылки
    * @return статус
    * @throws AdminException ошибка выполнения команды
@@ -82,6 +100,7 @@ public interface SiebelDataProvider {
 
   /**
    * Есть ли у рассылки сообщения, которые находятся в не заключительном состоянии
+   *
    * @param waveId идентификатор рассылки
    * @return true - да, false - нет
    * @throws AdminException ошибка выполнения команды
@@ -90,6 +109,7 @@ public interface SiebelDataProvider {
 
   /**
    * Устанавливает соединение с источником данных
+   *
    * @param props параметры соеддинения
    * @throws AdminException ошибка выполнения команды
    */
@@ -97,6 +117,7 @@ public interface SiebelDataProvider {
 
   /**
    * Было ли выполнено завершение работы с источником данных
+   *
    * @return true - да, false - нет
    */
   public boolean isShutdowned();

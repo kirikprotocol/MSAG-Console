@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class Daemon extends Proxy {
 
-  protected File daemonServicesFolder;
+  protected final File daemonServicesFolder;
 
   public Daemon(final String host, final int port, final File daemonServicesFolder) {
     super(host, port);
@@ -68,6 +68,7 @@ public class Daemon extends Proxy {
 
   /**
    * Запускает сервис с указанным Id
+   *
    * @param serviceId идентификатор сервиса
    * @throws AdminException ошибка выполнения команды
    */
@@ -79,9 +80,10 @@ public class Daemon extends Proxy {
 
   /**
    * Добавляет новый администрируемый сервис
-   * @param id идентификатор сервиса
-   * @param args список аргументов
-   * @param status статус
+   *
+   * @param id        идентификатор сервиса
+   * @param args      список аргументов
+   * @param status    статус
    * @param autostart надо ли автоматически запускать или нет
    * @throws AdminException ошибка выполнения команды
    */
@@ -93,6 +95,7 @@ public class Daemon extends Proxy {
 
   /**
    * Удаляет сервис с заданным идентификатором
+   *
    * @param serviceId идентификатор сервиса
    * @throws AdminException ошибка выполнения команды
    */
@@ -104,6 +107,7 @@ public class Daemon extends Proxy {
 
   /**
    * Останавливает сервис с заданным идентификатором
+   *
    * @param serviceId идентификатор сервиса
    * @throws AdminException ошибка выполнения команды
    */
@@ -137,7 +141,7 @@ public class Daemon extends Proxy {
     Map<String, ControlledService> services = refreshServices();
     final Set<String> serviceIds = new HashSet<String>(services.keySet());
     for (String serviceId : serviceIds)
-      removeService(serviceId);    
+      removeService(serviceId);
   }
 
 }

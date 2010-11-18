@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.config;
 
 /**
  * Структура, содержащая данные о последней ревизии конфига
+ *
  * @author Artem Snopkov
  */
 public class Revision {

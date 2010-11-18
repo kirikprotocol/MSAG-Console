@@ -4,8 +4,8 @@ import javax.el.ELContext;
 import javax.el.ValueExpression;
 
 /**
-* @author Artem Snopkov
-*/
+ * @author Artem Snopkov
+ */
 class ConstantExpression extends ValueExpression {
 
   Object value;

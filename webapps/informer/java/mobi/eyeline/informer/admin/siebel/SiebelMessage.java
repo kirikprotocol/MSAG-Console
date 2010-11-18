@@ -4,10 +4,11 @@ import java.util.Date;
 
 /**
  * Сообщение Siebel
+ *
  * @author Aleksandr Khalitov
  */
-public class SiebelMessage {    
-  
+public class SiebelMessage {
+
   private String clcId;  //unique
   private Date created;
   private Date lastUpd;
@@ -116,7 +117,6 @@ public class SiebelMessage {
     REJECTED,
     ERROR
   }
-
 
 
   public static class DeliveryState {

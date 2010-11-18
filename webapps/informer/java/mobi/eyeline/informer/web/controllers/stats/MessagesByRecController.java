@@ -22,7 +22,7 @@ import java.util.*;
  */
 public class MessagesByRecController extends LongOperationController {
   private User user;
-  private boolean initError=false;
+  private boolean initError = false;
   private List<MessagesByRecRecord> records;
 
 
@@ -39,11 +39,10 @@ public class MessagesByRecController extends LongOperationController {
 
   private void initUser() {
     user = getConfig().getUser(getUserName());
-    if(user==null) initError = true;
-    else if(!user.hasRole(User.INFORMER_ADMIN_ROLE)) {
+    if (user == null) initError = true;
+    else if (!user.hasRole(User.INFORMER_ADMIN_ROLE)) {
       allowedUser = user.getLogin();
-    }
-    else {
+    } else {
       allowedUser = null;
     }
   }
@@ -75,17 +74,15 @@ public class MessagesByRecController extends LongOperationController {
   }
 
 
-
   public boolean isAdmin() {
     return user.hasRole(User.INFORMER_ADMIN_ROLE);
   }
 
 
-
   public List<SelectItem> getUsers() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
     ret.add(new SelectItem(""));
-    for(User u : getConfig().getUsers()) {
+    for (User u : getConfig().getUsers()) {
       ret.add(new SelectItem(u.getLogin()));
     }
     return ret;
@@ -99,53 +96,52 @@ public class MessagesByRecController extends LongOperationController {
     DeliveryFilter deliveryFilter = new DeliveryFilter();
     deliveryFilter.setStartDateFrom(fromDate);
     deliveryFilter.setEndDateTo(tillDate);
-    if(allowedUser!=null) {
-      deliveryFilter.setUserIdFilter(new String[]{allowedUser});
+    if (allowedUser != null) {
+      deliveryFilter.setUserIdFilter(allowedUser);
     }
 
-    setCurrentAndTotal(0,config.countDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter));
+    setCurrentAndTotal(0, config.countDeliveries(getUser().getLogin(), getUser().getPassword(), deliveryFilter));
 
-    deliveryFilter.setResultFields(new DeliveryFields[]{DeliveryFields.Name,DeliveryFields.UserId,DeliveryFields.StartDate,DeliveryFields.EndDate});
+    deliveryFilter.setResultFields(DeliveryFields.Name, DeliveryFields.UserId, DeliveryFields.StartDate, DeliveryFields.EndDate);
 
-    config.getDeliveries(getUser().getLogin(),getUser().getPassword(),deliveryFilter,1000,
+    config.getDeliveries(getUser().getLogin(), getUser().getPassword(), deliveryFilter, 1000,
         new Visitor<DeliveryInfo>() {
-          public boolean visit(DeliveryInfo deliveryInfo ) throws AdminException {
+          public boolean visit(DeliveryInfo deliveryInfo) throws AdminException {
             final int deliveryId = deliveryInfo.getDeliveryId();
             final String name = deliveryInfo.getName();
             final String userId = deliveryInfo.getUserId();
             final User owner = config.getUser(userId);
 
-            MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate==null ? deliveryInfo.getStartDate() : fromDate,
-                tillDate!=null ? tillDate : deliveryInfo.getEndDate() != null ? deliveryInfo.getEndDate() : new Date());
+            MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate == null ? deliveryInfo.getStartDate() : fromDate,
+                tillDate != null ? tillDate : deliveryInfo.getEndDate() != null ? deliveryInfo.getEndDate() : new Date());
             messageFilter.setMsisdnFilter(new String[]{msisdn});
-            messageFilter.setFields(new MessageFields[]{MessageFields.Date,MessageFields.State,MessageFields.Text, MessageFields.ErrorCode});
+            messageFilter.setFields(new MessageFields[]{MessageFields.Date, MessageFields.State, MessageFields.Text, MessageFields.ErrorCode});
 
-            config.getMessagesStates(getUser().getLogin(),getUser().getPassword(),messageFilter,1000,
+            config.getMessagesStates(getUser().getLogin(), getUser().getPassword(), messageFilter, 1000,
                 new Visitor<MessageInfo>() {
                   public boolean visit(MessageInfo messageInfo) throws AdminException {
-                    String errString=null;
+                    String errString = null;
                     Integer errCode = messageInfo.getErrorCode();
-                    if(errCode!=null) {
+                    if (errCode != null) {
                       try {
-                        errString = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("informer.errcode."+errCode);
+                        errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode." + errCode);
                       }
                       catch (MissingResourceException ex) {
-                        errString = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("informer.errcode.unknown");
+                        errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode.unknown");
                       }
                     }
-                    MessagesByRecRecord rec = new MessagesByRecRecord(deliveryId,userId,owner,name,messageInfo.getText(),messageInfo.getDate(),messageInfo.getState(),errString);
+                    MessagesByRecRecord rec = new MessagesByRecRecord(deliveryId, userId, owner, name, messageInfo.getText(), messageInfo.getDate(), messageInfo.getState(), errString);
                     records.add(rec);
                     return !isCancelled();
                   }
                 }
             );
-            setCurrent(getCurrent()+1);
+            setCurrent(getCurrent() + 1);
             return !isCancelled();
           }
         }
     );
   }
-
 
 
   public synchronized DataTableModel getRecords() {
@@ -162,24 +158,24 @@ public class MessagesByRecController extends LongOperationController {
 
               final int mul = sortOrder.isAsc() ? 1 : -1;
               if (sortOrder.getColumnId().equals("name")) {
-                return mul*o1.getName().compareTo(o2.getName());
+                return mul * o1.getName().compareTo(o2.getName());
               }
               if (sortOrder.getColumnId().equals("userId")) {
-                return mul*o1.getUserId().compareTo(o2.getUserId());
+                return mul * o1.getUserId().compareTo(o2.getUserId());
               }
               if (sortOrder.getColumnId().equals("text")) {
-                if(o1.getText()==null && o1.getText()==null) return 0;
-                if(o1.getText()==null) return mul;
-                return mul*o1.getText().compareTo(o2.getText());
+                if (o1.getText() == null && o1.getText() == null) return 0;
+                if (o1.getText() == null) return mul;
+                return mul * o1.getText().compareTo(o2.getText());
               }
               if (sortOrder.getColumnId().equals("deliveryDate")) {
-                return mul*o1.getDeliveryDate().compareTo(o2.getDeliveryDate());
+                return mul * o1.getDeliveryDate().compareTo(o2.getDeliveryDate());
               }
               if (sortOrder.getColumnId().equals("state")) {
-                return mul*o1.getState().compareTo(o2.getState());
+                return mul * o1.getState().compareTo(o2.getState());
               }
               if (sortOrder.getColumnId().equals("errorString")) {
-                return mul*o1.getErrorString().compareTo(o2.getErrorString());
+                return mul * o1.getErrorString().compareTo(o2.getErrorString());
               }
               return 0;
             }
@@ -206,7 +202,7 @@ public class MessagesByRecController extends LongOperationController {
   @Override
   protected void _download(PrintWriter writer) throws IOException {
 
-    for(MessagesByRecRecord r : records) {
+    for (MessagesByRecRecord r : records) {
       r.printCSV(writer);
     }
   }

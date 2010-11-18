@@ -16,7 +16,7 @@ public class PageCalendar extends EyelineComponent {
   public PageCalendar() {
     date = System.currentTimeMillis();
     varExpressions = new ConstantExpression[7];
-    for (int i=0; i<varExpressions.length; i++)
+    for (int i = 0; i < varExpressions.length; i++)
       varExpressions[i] = new ConstantExpression(0);
   }
 
@@ -59,6 +59,6 @@ public class PageCalendar extends EyelineComponent {
     super.restoreState(context, values[0]);
     var = (String) values[1];
     date = (Long) values[2];
-    varExpressions = (ConstantExpression[])values[3];
+    varExpressions = (ConstantExpression[]) values[3];
   }
 }

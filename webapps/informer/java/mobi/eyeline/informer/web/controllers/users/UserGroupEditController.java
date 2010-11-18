@@ -82,46 +82,44 @@ public class UserGroupEditController extends UserController {
   private boolean createCdr;
 
 
-
-
 //Вкл/откл принудительную архивацию рассылок и макс. время жизни рассылки.
 //Настройки рассылок по-умолчанию (см. выше).
 
   public UserGroupEditController() throws AdminException {
     super();
-    HttpSession session =  getSession(false);
-    if(session!=null) {
+    HttpSession session = getSession(false);
+    if (session != null) {
       userIds = (List<String>) session.getAttribute("userIds");
     }
-    deliveryStartTime = new Time(9,0,0).getTimeDate();
-    deliveryEndTime = new Time(22,0,0).getTimeDate();
-    deliveryType=User.DeliveryType.SMS;
-    validHours=3;
-    smsPerSec=10;
-    priority=1;
-    deliveryLifetime=72;
-    deliveryDays=Arrays.asList(0,1,2,3,4,5,6);
+    deliveryStartTime = new Time(9, 0, 0).getTimeDate();
+    deliveryEndTime = new Time(22, 0, 0).getTimeDate();
+    deliveryType = User.DeliveryType.SMS;
+    validHours = 3;
+    smsPerSec = 10;
+    priority = 1;
+    deliveryLifetime = 72;
+    deliveryDays = Arrays.asList(0, 1, 2, 3, 4, 5, 6);
   }
 
 
   public String save() {
-    if(policyId != null && !Smsc.RETRY_POLICY_PATTERN.matcher(policyId).matches()) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN,"retry_policy_incorrect");
+    if (policyId != null && !Smsc.RETRY_POLICY_PATTERN.matcher(policyId).matches()) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "retry_policy_incorrect");
       return null;
     }
     Configuration config = getConfig();
     try {
       List<User> users = new ArrayList<User>();
-      for(String id : userIds) {
+      for (String id : userIds) {
         User u = config.getUser(id);
 
         if (editOrganization)
           u.setOrganization(organization);
 
         if (editAdmin) {
-          if(admin && !u.hasRole(User.INFORMER_ADMIN_ROLE))
+          if (admin && !u.hasRole(User.INFORMER_ADMIN_ROLE))
             u.getRoles().add(User.INFORMER_ADMIN_ROLE);
-          if(!admin && u.hasRole(User.INFORMER_ADMIN_ROLE))
+          if (!admin && u.hasRole(User.INFORMER_ADMIN_ROLE))
             u.getRoles().remove(User.INFORMER_ADMIN_ROLE);
         }
 
@@ -135,12 +133,12 @@ public class UserGroupEditController extends UserController {
           u.setDeliveryDays(new ArrayList<Integer>(deliveryDays));
 
         if (editDeliveryStartTime) {
-          if(deliveryStartTime==null) u.setDeliveryStartTime(null);
+          if (deliveryStartTime == null) u.setDeliveryStartTime(null);
           else u.setDeliveryStartTime(new Time(deliveryStartTime));
         }
 
         if (editDeliveryEndTime) {
-          if(deliveryEndTime==null) u.setDeliveryEndTime(null);
+          if (deliveryEndTime == null) u.setDeliveryEndTime(null);
           else u.setDeliveryEndTime(new Time(deliveryEndTime));
         }
 
@@ -186,8 +184,8 @@ public class UserGroupEditController extends UserController {
         users.add(u);
       }
 
-      for(User u : users) {
-        config.updateUser(u,getUserName());
+      for (User u : users) {
+        config.updateUser(u, getUserName());
       }
       return "USERS";
     }
@@ -231,13 +229,13 @@ public class UserGroupEditController extends UserController {
   }
 
   public void setSourceAddr(String sourceAddr) {
-    if(sourceAddr!=null && sourceAddr.trim().length() > 0) {
+    if (sourceAddr != null && sourceAddr.trim().length() > 0) {
       this.sourceAddr = new Address(sourceAddr);
     }
   }
 
   public String getSourceAddr() {
-    return sourceAddr==null ? null : sourceAddr.getSimpleAddress();
+    return sourceAddr == null ? null : sourceAddr.getSimpleAddress();
   }
 
   public Integer[] getDeliveryDays() {
@@ -245,7 +243,7 @@ public class UserGroupEditController extends UserController {
   }
 
   public void setDeliveryDays(Integer[] deliveryDays) {
-    this.deliveryDays = Arrays.<Integer>asList(deliveryDays);
+    this.deliveryDays = Arrays.asList(deliveryDays);
   }
 
   public Date getDeliveryEndTime() {
@@ -293,7 +291,7 @@ public class UserGroupEditController extends UserController {
   }
 
   public void setPolicyId(String policyId) {
-    if(policyId!=null && policyId.trim().length()==0) policyId=null;
+    if (policyId != null && policyId.trim().length() == 0) policyId = null;
     this.policyId = policyId;
   }
 

@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 /**
  * Helper для валидации параметров
+ *
  * @author Artem Snopkov
  */
 public class ValidationHelper {
@@ -128,18 +129,19 @@ public class ValidationHelper {
   }
 
   public void checkСontains(String argName, Collection collection, Object value) throws AdminException {
-    if(!collection.contains(value)){
+    if (!collection.contains(value)) {
       throw new ValidationException(paramNameBundle, argName);
     }
   }
+
   public void checkСontainsKey(String argName, Map map, Object value) throws AdminException {
-    if(!map.containsKey(value)){
+    if (!map.containsKey(value)) {
       throw new ValidationException(paramNameBundle, argName);
     }
   }
 
   public void checkNotСontainsKey(String argName, Map map, Object value) throws AdminException {
-    if(map.containsKey(value)){
+    if (map.containsKey(value)) {
       throw new ValidationException(paramNameBundle, argName);
     }
   }
@@ -160,7 +162,7 @@ public class ValidationHelper {
   }
 
   public void checkNotContains(String argName, Collection collection, Object value) throws AdminException {
-    if(collection.contains(value)){
+    if (collection.contains(value)) {
       throw new ValidationException(paramNameBundle, argName);
     }
   }

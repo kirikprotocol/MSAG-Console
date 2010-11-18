@@ -20,7 +20,7 @@ public class ErrorCodeConverter implements Converter {
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
-    if(o == null) {
+    if (o == null) {
       return null;
     }
     return getAsString(getLocale(facesContext), o.toString());
@@ -32,11 +32,11 @@ public class ErrorCodeConverter implements Converter {
   }
 
   public static String getAsString(Locale locale, String code) {
-    ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);
-    try{
-      return bundle.getString("informer.errcode."+code);
-    }catch (MissingResourceException e) {
-      return code;
+    ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale);
+    try {
+      return bundle.getString("informer.errcode." + code);
+    } catch (MissingResourceException e) {
+      return bundle.getString("informer.errcode.unknown");
     }
   }
 }

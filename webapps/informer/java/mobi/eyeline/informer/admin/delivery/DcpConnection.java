@@ -58,6 +58,7 @@ public class DcpConnection {
     auth.setPassword(password);
     client.send(auth);
   }
+
   /**
    * Соединение установлено
    *
@@ -91,7 +92,7 @@ public class DcpConnection {
     } finally {
       lock.unlock();
     }
-    if(delivery.getSingleText() != null) {
+    if (delivery.getSingleText() != null) {
       ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
       reqG.setDeliveryId(resp.getDeliveryId());
       DeliveryGlossary glossary = new DeliveryGlossary();
@@ -135,7 +136,7 @@ public class DcpConnection {
    * Добавляет сообщения в рассылку
    *
    * @param deliveryId идентификатор рассылки
-   * @param addresses   адресаты
+   * @param addresses  адресаты
    * @return идентификаторы сообщений
    * @throws AdminException ошибка выполнения команды
    */
@@ -169,7 +170,7 @@ public class DcpConnection {
     } finally {
       lock.unlock();
     }
-    if(delivery.getType() == Delivery.Type.SingleText) {
+    if (delivery.getType() == Delivery.Type.SingleText) {
       ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
       reqG.setDeliveryId(delivery.getId());
       DeliveryGlossary glossary = new DeliveryGlossary();
@@ -279,14 +280,14 @@ public class DcpConnection {
     } finally {
       lock.unlock();
     }
-    if(!resp.hasInfo()) {
+    if (!resp.hasInfo()) {
       return null;
     }
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo info = resp.getInfo();
     Map<String, String> userData = DcpConverter.convertUserData(info.getUserData());
-    if(!userData.containsKey("singleText")) {
+    if (!userData.containsKey("singleText")) {
       return DcpConverter.convert(deliveryId, info, null);
-    } else{
+    } else {
       GetDeliveryGlossary reqG = new GetDeliveryGlossary();
       GetDeliveryGlossaryResp respG;
       reqG.setDeliveryId(deliveryId);
@@ -446,7 +447,7 @@ public class DcpConnection {
       fs[0] = ReqField.UserData;
       System.arraycopy(fieldses, 0, fs, 1, fieldses.length);
       req.setFields(fs);
-      
+
       if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
         req.setMsisdnFilter(filter.getMsisdnFilter());
       }
@@ -540,6 +541,7 @@ public class DcpConnection {
 
   /**
    * Возвращает история статусов рассылки
+   *
    * @param deliveryId идентификатор рассылки
    * @return история статусов рассылки
    * @throws AdminException ошибка выполнения команды

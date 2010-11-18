@@ -5,8 +5,8 @@ import java.io.File;
 
 class ResourceGroupHAImpl extends ResourceGroupImpl {
 
-  protected long swigCPtr;
-  protected boolean swigCMemOwn;
+  protected final long swigCPtr;
+  protected final boolean swigCMemOwn;
   private final File baseDir;
 
   protected ResourceGroupHAImpl(String name, File baseDir, long cPtr, boolean cMemoryOwn) {

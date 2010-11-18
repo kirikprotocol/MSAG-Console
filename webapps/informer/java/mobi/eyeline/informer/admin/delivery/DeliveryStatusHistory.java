@@ -5,6 +5,7 @@ import java.util.List;
 
 /**
  * История изменения статуса рассылки
+ *
  * @author Aleksandr Khalitov
  */
 public class DeliveryStatusHistory {

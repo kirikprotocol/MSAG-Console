@@ -18,7 +18,7 @@ import java.util.Locale;
 public class MessagesByPeriodController extends DeliveryStatController implements DeliveryStatVisitor {
 
 
-  private Delivery delivery= null;
+  private Delivery delivery = null;
 
 
   public MessagesByPeriodController() {
@@ -26,23 +26,23 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   }
 
   public Integer getDeliveryId() {
-    return delivery!=null  ? delivery.getId() : null;
+    return delivery != null ? delivery.getId() : null;
   }
 
   public String getDeliveryName() {
     Delivery d = getDelivery();
-    return d==null ? null : d.getName();
+    return d == null ? null : d.getName();
   }
 
   public Delivery getDelivery() {
     String s = getRequestParameter("delivery");
-    if(s!=null) {
+    if (s != null) {
       try {
         int deliveryId = Integer.parseInt(s);
-        if(delivery!=null && delivery.getId()!=deliveryId) {
+        if (delivery != null && delivery.getId() != deliveryId) {
           reset();
         }
-        delivery = getConfig().getDelivery(getUser().getLogin(),getUser().getPassword(),deliveryId);
+        delivery = getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), deliveryId);
         getFilter().setTaskId(deliveryId);
       }
       catch (AdminException e) {
@@ -51,8 +51,6 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     }
     return delivery;
   }
-
-
 
 
   public void clearFilter() {
@@ -65,23 +63,22 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
 
 
-      DeliveryStatFilter filterCopy = new DeliveryStatFilter(getFilter());
-      if(delivery!=null && filterCopy.getFromDate()==null) {        
-        filterCopy.setFromDate(delivery.getStartDate());
-      }
-      config.statistics(filterCopy,this);
+    DeliveryStatFilter filterCopy = new DeliveryStatFilter(getFilter());
+    if (delivery != null && filterCopy.getFromDate() == null) {
+      filterCopy.setFromDate(delivery.getStartDate());
+    }
+    config.statistics(filterCopy, this);
 
   }
 
 
-  public boolean visit(DeliveryStatRecord rec, int total, int current) {    
-    setCurrentAndTotal(current,total);
-    AggregatedRecord newRecord = new MessagesByPeriodRecord(rec,getAggregation(),true);
+  public boolean visit(DeliveryStatRecord rec, int total, int current) {
+    setCurrentAndTotal(current, total);
+    AggregatedRecord newRecord = new MessagesByPeriodRecord(rec, getAggregation(), true);
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
-    if(oldRecord==null) {
+    if (oldRecord == null) {
       putRecord(newRecord);
-    }
-    else {
+    } else {
       oldRecord.add(newRecord);
     }
     return !isCancelled();

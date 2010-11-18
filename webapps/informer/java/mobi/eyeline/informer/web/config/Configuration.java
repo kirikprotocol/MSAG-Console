@@ -24,6 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Класс для управления конфигурациями
+ *
  * @author Aleksandr Khalitov
  */
 public class Configuration {
@@ -35,36 +36,35 @@ public class Configuration {
   private final AdminContext context;
 
 
-
   private InformerSettings informerSettings;
 
   public Configuration(AdminContext context) throws InitException {
     this.journal = context.getJournal();
     this.context = context;
-    try{
+    try {
 
       this.informerSettings = context.getConfigSettings();
-    }catch (AdminException e){
+    } catch (AdminException e) {
       throw new InitException(e);
     }
   }
 
 
-  public InformerSettings getConfigSettings() throws AdminException {
+  public InformerSettings getConfigSettings(){
     return informerSettings.cloneSettings();
   }
 
   private Revision buildNextRevision(String user, ConfigType type) {
     Revision revision = getLastRevision(type);
-    if(revision == null) {
+    if (revision == null) {
       revision = new Revision(user, 1);
-    }else {
+    } else {
       revision = new Revision(user, revision.getNumber() + 1);
     }
     return revision;
   }
 
-  public void setConfigSettings(InformerSettings newS, String user) throws AdminException{
+  public void setConfigSettings(InformerSettings newS, String user) throws AdminException {
     Revision revision = buildNextRevision(user, ConfigType.CONFIG);
     context.updateConfigSettings(newS);
     lastRevisions.put(ConfigType.CONFIG, revision);
@@ -78,7 +78,7 @@ public class Configuration {
 
   public void addInBlacklist(Collection<String> msisdns, String user) throws AdminException {
     context.addInBlacklist(msisdns);
-    for(String msisdn: msisdns) {
+    for (String msisdn : msisdns) {
       journal.logAddBlacklist(msisdn, user);
     }
   }
@@ -95,7 +95,7 @@ public class Configuration {
 
   public void removeFromBlacklist(Collection<String> msisdns, String user) throws AdminException {
     context.removeFromBlacklist(msisdns);
-    for(String msisdn : msisdns) {
+    for (String msisdn : msisdns) {
       journal.logRemoveBlacklist(msisdn, user);
     }
   }
@@ -110,7 +110,7 @@ public class Configuration {
 
   public void setDefaultSmsc(String newSmsc, String user) throws AdminException {
     String oldSmsc = context.getDefaultSmsc();
-    if(!oldSmsc.equals(newSmsc)) {
+    if (!oldSmsc.equals(newSmsc)) {
       context.setDefaultSmsc(newSmsc);
       journal.logSetDefaultSmsc(oldSmsc, newSmsc, user);
     }
@@ -143,7 +143,7 @@ public class Configuration {
 
   public void removeUser(String login, String user) throws AdminException {
     User u = context.getUser(login);
-    if(u != null) {
+    if (u != null) {
       context.removeUser(u.getLogin());
       journal.logRemoveUser(u.getLogin(), user);
     }
@@ -153,7 +153,7 @@ public class Configuration {
     return context.getUser(login);
   }
 
-  public List<User> getUsers()  {
+  public List<User> getUsers() {
     return context.getUsers();
   }
 
@@ -169,10 +169,9 @@ public class Configuration {
   }
 
 
-
   public void removeRegion(Integer regionId, String user) throws AdminException {
     Region r = getRegion(regionId);
-    if(r != null) {
+    if (r != null) {
       context.removeRegion(r.getRegionId());
       journal.logRemoveRegion(r.getName(), user);
     }
@@ -208,7 +207,7 @@ public class Configuration {
 
   public void setDefaultMaxPerSecond(int defMaxPerSecond, String user) throws AdminException {
     int old = context.getDefaultMaxPerSecond();
-    if(old != defMaxPerSecond) {
+    if (old != defMaxPerSecond) {
       context.setDefaultMaxPerSecond(defMaxPerSecond);
       journal.logSetDefaultSmsPerSecondRegion(old, defMaxPerSecond, user);
     }
@@ -258,7 +257,7 @@ public class Configuration {
 
   public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
     Delivery oldD = context.getDelivery(login, password, delivery.getId());
-    if(oldD == null) {
+    if (oldD == null) {
       throw new DeliveryException("delivery_not_found");
     }
     context.modifyDelivery(login, password, delivery);
@@ -301,19 +300,22 @@ public class Configuration {
     List<Daemon> ds = context.getDaemons();
     List<Daemon> result = new ArrayList<Daemon>(ds.size());
 
-    for(final Daemon d : ds) {
+    for (final Daemon d : ds) {
       result.add(new Daemon() {
         public String getName() {
           return d.getName();
         }
+
         public void start() throws AdminException {
           d.start();
           journal.logDaemonrStart(getName(), user);
         }
+
         public void stop() throws AdminException {
           d.stop();
           journal.logDaemonStop(getName(), user);
         }
+
         public boolean isStarted() {
           return d.isStarted();
         }
@@ -323,7 +325,7 @@ public class Configuration {
     return result;
   }
 
-  public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException{
+  public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     context.statistics(filter, visitor);
   }
 
@@ -331,7 +333,7 @@ public class Configuration {
     return context.getDeliveryStatusHistory(login, password, deliveryId);
   }
 
-   public Restriction getRestriction(int id) {
+  public Restriction getRestriction(int id) {
     return context.getRestriction(id);
   }
 
@@ -341,22 +343,22 @@ public class Configuration {
 
   public void addRestriction(Restriction r, String user) throws AdminException {
     context.addRestriction(r);
-    journal.logAddRestriction(r,user);
+    journal.logAddRestriction(r, user);
   }
 
   public void updateRestriction(Restriction r, String user) throws AdminException {
     Restriction oldr = context.getRestriction(r.getId());
-    if(oldr == null) {
+    if (oldr == null) {
       throw new RestrictionException("restriction.not.found");
     }
     context.updateRestriction(r);
-    journal.logUpdateRestriction(r,oldr,user);
+    journal.logUpdateRestriction(r, oldr, user);
   }
 
   public void deleteRestriction(int id, String user) throws AdminException {
     Restriction oldr = context.getRestriction(id);
     context.deleteRestriction(id);
-    journal.logDeleteRestriction(oldr,user);
+    journal.logDeleteRestriction(oldr, user);
   }
 
   public boolean isResctictionDaemonStarted() {
@@ -383,20 +385,20 @@ public class Configuration {
     return context.getJavaMailProperties();
   }
 
-  public void updateJavaMailProperties(Properties props,String user) throws AdminException {
+  public void updateJavaMailProperties(Properties props, String user) throws AdminException {
     Properties old = context.getJavaMailProperties();
     context.setJavaMailProperties(props);
-    journal.logUpdateJavaMailProps(props,old,user);
+    journal.logUpdateJavaMailProps(props, old, user);
   }
 
   public Properties getNotificationTemplates() {
     return context.getNotificationTemplates();
   }
 
-  public void updateNotificationTemplates(Properties props,String user) throws AdminException {
+  public void updateNotificationTemplates(Properties props, String user) throws AdminException {
     Properties old = context.getNotificationTemplates();
     context.setNotificationTemplates(props);
-    journal.logUpdateNotificationTemplates(props,old,user);
+    journal.logUpdateNotificationTemplates(props, old, user);
   }
 
   public Address getSmsSenderAddress() {
@@ -406,17 +408,18 @@ public class Configuration {
   public void setSmsSenderAddress(Address addr, String user) throws AdminException {
     Address old = getSmsSenderAddress();
     context.setSmsSenderAddress(addr);
-    journal.logUpdateSmsSenderAddress(addr,old,user);
+    journal.logUpdateSmsSenderAddress(addr, old, user);
   }
 
-  public boolean isSiebelDaemonStarted(){
+  public boolean isSiebelDaemonStarted() {
     return context.isSiebelDaemonStarted();
   }
 
-  public void setSiebelProperties(Properties props, String user) throws AdminException {
+  public boolean setSiebelProperties(Properties props, String user) throws AdminException {
     Properties old = context.getSiebelProperties();
-    context.setSiebelProperties(props);
+    boolean res =  context.setSiebelProperties(props);
     journal.logUpdateSiebelProps(props, old, user);
+    return res;
   }
 
   public Properties getSiebelProperties() {
@@ -432,6 +435,7 @@ public class Configuration {
   public void lock() {
     lock.lock();
   }
+
   public void unlock() {
     lock.unlock();
   }
@@ -443,7 +447,6 @@ public class Configuration {
   public Revision getLastRevision(ConfigType configType) {
     return lastRevisions.get(configType);
   }
-
 
 
   public File getWorkDir() {

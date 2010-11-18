@@ -10,7 +10,7 @@ import javax.faces.component.UIComponent;
 /**
  * @author Aleksandr Khalitov
  */
-public class UpdatableContentHandler extends ComponentHandler{
+public class UpdatableContentHandler extends ComponentHandler {
 
   private final TagAttribute updatePeriod;
   private final TagAttribute enabled;
@@ -26,12 +26,12 @@ public class UpdatableContentHandler extends ComponentHandler{
   }
 
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
-    UpdatableContent updatableContent = (UpdatableContent)c;
+    UpdatableContent updatableContent = (UpdatableContent) c;
     updatableContent.setUpdatePeriod(updatePeriod.getInt(ctx));
 
     if (enabled != null)
       updatableContent.setEnabled(enabled.getBoolean(ctx));
-    
+
     nextHandler.apply(ctx, c);
   }
 }

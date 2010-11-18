@@ -59,7 +59,7 @@ class InfosmeClient extends ClientConnection {
       log.debug("PDU received: tag=" + tag + ", seqNum=" + seqNum);
 
     ResponseListener l;
-    synchronized(listeners) {
+    synchronized (listeners) {
       l = listeners.get(seqNum);
     }
     if (l != null) {
@@ -116,19 +116,19 @@ class InfosmeClient extends ClientConnection {
     return connected;
   }
 
-  
-  protected ConfigOpResult send(ConfigOp req) throws AdminException{
-    return sendPdu(req, new ConfigOpResult());     
+
+  protected ConfigOpResult send(ConfigOp req) throws AdminException {
+    return sendPdu(req, new ConfigOpResult());
   }
-  
-  protected LoggerGetCategoriesResp send(LoggerGetCategories req) throws AdminException{
+
+  protected LoggerGetCategoriesResp send(LoggerGetCategories req) throws AdminException {
     return sendPdu(req, new LoggerGetCategoriesResp());
   }
-  
+
   protected LoggerSetCategoriesResp send(LoggerSetCategories req) throws AdminException {
     return sendPdu(req, new LoggerSetCategoriesResp());
   }
-  
+
   protected SetDefaultSmscResp send(SetDefaultSmsc req) throws AdminException {
     return sendPdu(req, new SetDefaultSmscResp());
   }
@@ -143,12 +143,11 @@ class InfosmeClient extends ClientConnection {
   }
 
 
-
   private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 
     private PDU response;
-    private PDU responseEx;
+    private final PDU responseEx;
 
     ResponseListener(PDU responseEx) {
       this.responseEx = responseEx;

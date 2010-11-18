@@ -16,10 +16,10 @@ public class RedirectServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     String query = req.getQueryString();
-    if (query.contains(URL_PREFIX) ) {
-      String url = query.substring(query.indexOf(URL_PREFIX)+URL_PREFIX.length());
+    if (query.contains(URL_PREFIX)) {
+      String url = query.substring(query.indexOf(URL_PREFIX) + URL_PREFIX.length());
       url = req.getContextPath() + url;
-      System.out.println("url: '"+url+'\'');
+      System.out.println("url: '" + url + '\'');
       resp.sendRedirect(url);
     }
   }

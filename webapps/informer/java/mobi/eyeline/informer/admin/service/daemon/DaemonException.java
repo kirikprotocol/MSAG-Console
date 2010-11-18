@@ -10,7 +10,7 @@ public class DaemonException extends AdminException {
     super(key, cause);
   }
 
-  protected DaemonException(String key, String ... args) {
+  protected DaemonException(String key, String... args) {
     super(key, args);
   }
 }

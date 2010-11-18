@@ -23,7 +23,7 @@ public class MessageFilter {
   private Integer[] errorCodes;
 
   public MessageFilter(Integer deliveryId, Date startDate, Date endDate) {
-    if(deliveryId == null || startDate == null || endDate == null) {
+    if (deliveryId == null || startDate == null || endDate == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     this.deliveryId = deliveryId;
@@ -35,7 +35,7 @@ public class MessageFilter {
     return deliveryId;
   }
 
-  public void setDeliveryId(Integer deliveryId) throws AdminException{
+  public void setDeliveryId(Integer deliveryId) throws AdminException {
     vh.checkNotNull("deliveryId", deliveryId);
     this.deliveryId = deliveryId;
   }

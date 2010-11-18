@@ -13,18 +13,18 @@ import javax.faces.convert.ConverterException;
 public class DeliveryTypeConverter implements Converter {
 
   public Object getAsObject(FacesContext facesContext, UIComponent uiComponent, String s) throws ConverterException {
-    if(s == null || (s = s.trim()).length() == 0) {
+    if (s == null || (s = s.trim()).length() == 0) {
       return null;
     }
-    try{
+    try {
       return DeliveryMode.valueOf(s);
-    }catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       throw new ConverterException(e);
     }
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
-    if(!(o instanceof DeliveryMode)) {
+    if (!(o instanceof DeliveryMode)) {
       return null;
     }
     return o.toString();

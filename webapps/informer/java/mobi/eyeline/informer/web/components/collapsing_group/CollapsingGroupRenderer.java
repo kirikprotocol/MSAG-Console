@@ -9,10 +9,10 @@ import java.io.IOException;
 /**
  * @author Artem Snopkov
  */
-public class  CollapsingGroupRenderer extends Renderer {
+public class CollapsingGroupRenderer extends Renderer {
 
   public void decode(FacesContext context, UIComponent component) {
-    CollapsingGroup cg = (CollapsingGroup)component;
+    CollapsingGroup cg = (CollapsingGroup) component;
     decodeGroup(context, cg);
   }
 
@@ -23,7 +23,7 @@ public class  CollapsingGroupRenderer extends Renderer {
 
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
 
-    CollapsingGroup cg = (CollapsingGroup)component;
+    CollapsingGroup cg = (CollapsingGroup) component;
     ResponseWriter writer = context.getResponseWriter();
 
     writer.
@@ -49,7 +49,7 @@ public class  CollapsingGroupRenderer extends Renderer {
     writer.append("')\">");
 
     writer.append("</td><td class=\"");
-    
+
     if (!cg.isOpened())
       writer.append("collapsing_group_closed");
     else
@@ -74,7 +74,7 @@ public class  CollapsingGroupRenderer extends Renderer {
 
     if (!cg.isOpened())
       writer.append("style=\"display:none\"");
-    writer.append(">");    
+    writer.append(">");
     writer.append("\n<td></td><td>");
   }
 

@@ -9,7 +9,7 @@ import java.util.Locale;
 /**
  * @author Aleksandr Khalitov
  */
-public interface CreateDeliveryPage extends Serializable{
+public interface CreateDeliveryPage extends Serializable {
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException;
 

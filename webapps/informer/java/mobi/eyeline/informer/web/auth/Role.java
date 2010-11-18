@@ -4,6 +4,7 @@ import java.security.Principal;
 
 /**
  * Класс роли для JAAS-аутенфикации
+ *
  * @author Aleksandr Khalitov
  */
 public class Role implements Principal {

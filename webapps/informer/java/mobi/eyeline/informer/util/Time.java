@@ -28,25 +28,24 @@ public class Time {
   }
 
   private void initFromString(String s) {
-    StringTokenizer st = new StringTokenizer(s,":");
-    if(st.countTokens()<2) throw new IllegalArgumentException("Invalid time string:'"+s+"'" );
-    hour = Integer.parseInt(st.nextToken(),10);
-    min  = Integer.parseInt(st.nextToken(),10);
-    if(st.hasMoreTokens())  {
-      sec  = Integer.parseInt(st.nextToken(),10);
+    StringTokenizer st = new StringTokenizer(s, ":");
+    if (st.countTokens() < 2) throw new IllegalArgumentException("Invalid time string:'" + s + "'");
+    hour = Integer.parseInt(st.nextToken(), 10);
+    min = Integer.parseInt(st.nextToken(), 10);
+    if (st.hasMoreTokens()) {
+      sec = Integer.parseInt(st.nextToken(), 10);
+    } else {
+      sec = 0;
     }
-    else {
-      sec=0;
-    }
-    if(!validate()) {
-      throw new IllegalArgumentException("Invalid time string:'"+s+"'");
+    if (!validate()) {
+      throw new IllegalArgumentException("Invalid time string:'" + s + "'");
     }
   }
 
   private boolean validate() {
-    return hour>=0 && hour<24
-        && min>=0 && min<60
-        && sec>=0 && sec<60;
+    return hour >= 0 && hour < 24
+        && min >= 0 && min < 60
+        && sec >= 0 && sec < 60;
   }
 
   public Time(int hour, int min, int sec) {
@@ -81,11 +80,11 @@ public class Time {
 
   public String getTimeString() {
     StringBuilder sb = new StringBuilder(8);
-    if(hour<10) sb.append('0');
+    if (hour < 10) sb.append('0');
     sb.append(hour).append(':');
-    if(min<10) sb.append('0');
+    if (min < 10) sb.append('0');
     sb.append(min).append(':');
-    if(sec<10) sb.append('0');
+    if (sec < 10) sb.append('0');
     sb.append(sec);
     return sb.toString();
   }

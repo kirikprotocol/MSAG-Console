@@ -14,18 +14,18 @@ import java.io.InputStream;
  * @author Aleksandr Khalitov
  */
 class XmlConfigReader {
-  
+
   static void loadConfig(InputStream is, XmlConfig config) throws XmlConfigException {
     try {
       final Document doc = XmlUtils.parse(is);
-      
+
       config.setEncoding(doc.getXmlEncoding());
-      
+
       final NodeList configs = doc.getElementsByTagName("config");
       if (configs == null || configs.getLength() == 0)
         throw new XmlConfigException("Invalid config file");
-      
-      readXmlConfigSection(config.getEncoding(), (Element)configs.item(0), config);
+
+      readXmlConfigSection(config.getEncoding(), (Element) configs.item(0), config);
     } catch (ParserConfigurationException ex) {
       throw new XmlConfigException(ex);
     } catch (SAXException e) {
@@ -34,7 +34,7 @@ class XmlConfigReader {
       throw new XmlConfigException(e);
     }
   }
-  
+
   private static String getNodeText(final Node node) {
     StringBuilder result = new StringBuilder(10);
     NodeList list = node.getChildNodes();
@@ -44,25 +44,25 @@ class XmlConfigReader {
     }
     return result.toString();
   }
-  
+
   private static String getAttributeValue(String encoding, String attValue) {
     return (encoding != null) ? attValue : StringEncoderDecoder.unicodeToString(attValue);
   }
-  
+
   private static void readXmlConfigSection(String encoding, Element el, XmlConfigSection sec) {
-    
+
     final NodeList childNodes = el.getChildNodes();
     Node childNode;
     Element childEl;
     XmlConfigParam confParam;
     XmlConfigSection confSection;
-    for (int i=0; i<childNodes.getLength(); i++) {
+    for (int i = 0; i < childNodes.getLength(); i++) {
       childNode = childNodes.item(i);
       if (childNode.getNodeName() == null)
         continue;
-      
+
       if (childNode.getNodeName().equals("param")) {
-        childEl = (Element)childNode;
+        childEl = (Element) childNode;
         String name = getAttributeValue(encoding, childEl.getAttribute("name"));
         String value = StringEncoderDecoder.unicodeToString(getNodeText(childEl));
         String typeStr = getAttributeValue(encoding, childEl.getAttribute("type"));
@@ -78,15 +78,15 @@ class XmlConfigReader {
 
         confParam = new XmlConfigParam(name, value, type);
         // Fill param attributes
-        final NamedNodeMap atts =childEl.getAttributes();
-        for (int j=0; j<atts.getLength();j++) {
+        final NamedNodeMap atts = childEl.getAttributes();
+        for (int j = 0; j < atts.getLength(); j++) {
           Node attr = atts.item(j);
           confParam.setAttribute(attr.getNodeName(), attr.getNodeValue());
         }
         sec.addParam(confParam);
-        
+
       } else if (childNode.getNodeName().equals("section")) {
-        childEl = (Element)childNode;
+        childEl = (Element) childNode;
         confSection = new XmlConfigSection(getAttributeValue(encoding, childEl.getAttribute("name")));
         sec.addSection(confSection);
         readXmlConfigSection(encoding, childEl, confSection);

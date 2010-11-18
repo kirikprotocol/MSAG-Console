@@ -25,7 +25,7 @@ class SelectColumn extends Column {
 
   public boolean isAllowEditAfterAdd() {
     return allowEditAfterAdd;
-  } 
+  }
 
   public boolean isUniqueValues() {
     return uniqueValues;

@@ -16,14 +16,14 @@ public class TimeZoneNameConverter implements Converter {
 
 
   public Object getAsObject(FacesContext facesContext, UIComponent uiComponent, String s) throws ConverterException {
-    if(s == null || (s = s.trim()).length() == 0) {
+    if (s == null || (s = s.trim()).length() == 0) {
       return null;
-    }    
+    }
     TimeZone t;
     Locale l = (Locale) FacesContext.getCurrentInstance().getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER);
-    for(String id : TimeZone.getAvailableIDs()) {
+    for (String id : TimeZone.getAvailableIDs()) {
       t = TimeZone.getTimeZone(id);
-      if(t.getDisplayName(l).equals(s)) {
+      if (t.getDisplayName(l).equals(s)) {
         return t;
       }
     }
@@ -33,10 +33,10 @@ public class TimeZoneNameConverter implements Converter {
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
-    if(!(o instanceof TimeZone)) {
+    if (!(o instanceof TimeZone)) {
       return null;
     }
     Locale l = (Locale) FacesContext.getCurrentInstance().getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER);
-    return ((TimeZone)o).getDisplayName(l == null ? new Locale("en") : l);
+    return ((TimeZone) o).getDisplayName(l == null ? new Locale("en") : l);
   }
 }

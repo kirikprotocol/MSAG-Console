@@ -10,7 +10,7 @@ public class ResourceGroupException extends AdminException {
     super(key, cause);
   }
 
-  protected ResourceGroupException(String key, String ... args) {
+  protected ResourceGroupException(String key, String... args) {
     super(key, args);
   }
 }

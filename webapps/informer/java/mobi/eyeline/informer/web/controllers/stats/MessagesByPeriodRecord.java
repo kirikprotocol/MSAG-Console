@@ -26,22 +26,21 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
   private long expiredMessagesSMS;
 
   public MessagesByPeriodRecord(DeliveryStatRecord dsr, TimeAggregationType type, boolean isParent) {
-    super(dsr.getDate(),type,isParent);
+    super(dsr.getDate(), type, isParent);
     this.newMessages = dsr.getNewmessages();
     this.processMessages = dsr.getProcessing();
     this.deliveredMessages = dsr.getDelivered();
     this.failedMessages = dsr.getFailed();
     this.expiredMessages = dsr.getExpired();
     this.deliveredMessagesSMS = dsr.getDeliveredSMS();
-    this.failedMessagesSMS= dsr.getFailedSMS();
-    this.expiredMessagesSMS= dsr.getExpiredSMS();
+    this.failedMessagesSMS = dsr.getFailedSMS();
+    this.expiredMessagesSMS = dsr.getExpiredSMS();
 
-    if(getChildAggregationType()!=null) {
-      MessagesByPeriodRecord child = new MessagesByPeriodRecord(dsr,getChildAggregationType(),false);
+    if (getChildAggregationType() != null) {
+      MessagesByPeriodRecord child = new MessagesByPeriodRecord(dsr, getChildAggregationType(), false);
       addChild(child);
     }
   }
-
 
 
   public void add(AggregatedRecord r) {
@@ -58,69 +57,58 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
   }
 
 
-
-
-  void printCSV(PrintWriter writer, boolean detalized ) {
-    if(detalized ) {
-      if(isParent()) {
-        writer.println(StringEncoderDecoder.toCSVString(new Object[]{getPeriodString(),"",
+  void printCSV(PrintWriter writer, boolean detalized) {
+    if (detalized) {
+      if (isParent()) {
+        writer.println(StringEncoderDecoder.toCSVString(
+            getPeriodString(), "",
             getNewMessages(),
             getProcessMessages(),
-            getDeliveredMessages(),getDeliveredMessagesSMS(),
-            getFailedMessages(),getFailedMessagesSMS(),
-            getExpiredMessages(),getExpiredMessagesSMS()
-        }
-        ));
-      }
-      else {
-        writer.println(StringEncoderDecoder.toCSVString(new Object[]{"",getPeriodString(),
+            getDeliveredMessages(), getDeliveredMessagesSMS(),
+            getFailedMessages(), getFailedMessagesSMS(),
+            getExpiredMessages(), getExpiredMessagesSMS()));
+      } else {
+        writer.println(StringEncoderDecoder.toCSVString(
+            "", getPeriodString(),
             getNewMessages(),
             getProcessMessages(),
-            getDeliveredMessages(),getDeliveredMessagesSMS(),
-            getFailedMessages(),getFailedMessagesSMS(),
-            getExpiredMessages(),getExpiredMessagesSMS()
-        }
-        ));
+            getDeliveredMessages(), getDeliveredMessagesSMS(),
+            getFailedMessages(), getFailedMessagesSMS(),
+            getExpiredMessages(), getExpiredMessagesSMS()));
       }
-    }
-    else {
-      if(isParent()) {
-        writer.println(StringEncoderDecoder.toCSVString(new Object[]{getPeriodString(),"",
-            getNewMessages()+getProcessMessages(),
-            getDeliveredMessages(),getDeliveredMessagesSMS(),
-            getFailedMessages()+getExpiredMessages(),getFailedMessagesSMS()+getExpiredMessagesSMS(),
-        }
-        ));
-      }
-      else {
-        writer.println(StringEncoderDecoder.toCSVString(new Object[]{"",getPeriodString(),
-            getNewMessages()+getProcessMessages(),
-            getDeliveredMessages(),getDeliveredMessagesSMS(),
-            getFailedMessages()+getExpiredMessages(),getFailedMessagesSMS()+getExpiredMessagesSMS()
-        }
-        ));
+    } else {
+      if (isParent()) {
+        writer.println(StringEncoderDecoder.toCSVString(
+            getPeriodString(), "",
+            getNewMessages() + getProcessMessages(),
+            getDeliveredMessages(), getDeliveredMessagesSMS(),
+            getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
+      } else {
+        writer.println(StringEncoderDecoder.toCSVString(
+            "", getPeriodString(),
+            getNewMessages() + getProcessMessages(),
+            getDeliveredMessages(), getDeliveredMessagesSMS(),
+            getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
       }
     }
   }
 
   @Override
   void printCSVheader(PrintWriter writer, boolean detalized) {
-    if(detalized) {
-      writer.println(StringEncoderDecoder.toCSVString(new Object[]{"PERIOD","",
-            "NEW",
-            "PROCESS",
-            "DELIVERED","DELIVERED SMS",
-            "FAILED","FAILED SMS",
-            "EXPIRED","EXPIRED SMS"}
-      ));
-    }
-    else {
-    writer.println(StringEncoderDecoder.toCSVString(new Object[]{"PERIOD","",
+    if (detalized) {
+      writer.println(StringEncoderDecoder.toCSVString(
+          "PERIOD", "",
+          "NEW",
+          "PROCESS",
+          "DELIVERED", "DELIVERED SMS",
+          "FAILED", "FAILED SMS",
+          "EXPIRED", "EXPIRED SMS"));
+    } else {
+      writer.println(StringEncoderDecoder.toCSVString(
+          "PERIOD", "",
           "WAIT",
-          "DELIVERED","DELIVERED SMS",
-          "NOT DELIVERED","NOT DELIVERED SMS",
-          }
-    ));
+          "DELIVERED", "DELIVERED SMS",
+          "NOT DELIVERED", "NOT DELIVERED SMS"));
     }
 
   }
@@ -132,28 +120,21 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
       public int compare(MessagesByPeriodRecord o1, MessagesByPeriodRecord o2) {
         final int mul = sortOrder.isAsc() ? 1 : -1;
         if (sortOrder.getColumnId().equals("period")) {
-          return mul*o1.getStartCalendar().compareTo(o2.getStartCalendar());
-        }
-        else if (sortOrder.getColumnId().equals("new")) {
+          return mul * o1.getStartCalendar().compareTo(o2.getStartCalendar());
+        } else if (sortOrder.getColumnId().equals("new")) {
           return o1.getNewMessages() >= o2.getNewMessages() ? mul : -mul;
-        }
-        else if (sortOrder.getColumnId().equals("process")) {
+        } else if (sortOrder.getColumnId().equals("process")) {
           return o1.getProcessMessages() >= o2.getProcessMessages() ? mul : -mul;
-        }
-        else if (sortOrder.getColumnId().equals("delivered")) {
+        } else if (sortOrder.getColumnId().equals("delivered")) {
           return o1.getDeliveredMessages() >= o2.getDeliveredMessages() ? mul : -mul;
-        }
-        else if (sortOrder.getColumnId().equals("failed")) {
+        } else if (sortOrder.getColumnId().equals("failed")) {
           return o1.getFailedMessages() >= o2.getFailedMessages() ? mul : -mul;
-        }
-        else if (sortOrder.getColumnId().equals("expired")) {
+        } else if (sortOrder.getColumnId().equals("expired")) {
           return o1.getExpiredMessages() >= o2.getExpiredMessages() ? mul : -mul;
-        }
-        else if (sortOrder.getColumnId().equals("wait")) {
-          return o1.getNewMessages()+o1.getProcessMessages() >= o2.getNewMessages()+o2.getProcessMessages() ? mul : -mul;
-        }
-        else if (sortOrder.getColumnId().equals("notDelivered")) {
-          return o1.getFailedMessages()+o1.getExpiredMessages() >= o2.getFailedMessages()+o2.getExpiredMessages() ? mul : -mul;
+        } else if (sortOrder.getColumnId().equals("wait")) {
+          return o1.getNewMessages() + o1.getProcessMessages() >= o2.getNewMessages() + o2.getProcessMessages() ? mul : -mul;
+        } else if (sortOrder.getColumnId().equals("notDelivered")) {
+          return o1.getFailedMessages() + o1.getExpiredMessages() >= o2.getFailedMessages() + o2.getExpiredMessages() ? mul : -mul;
         }
         return 0;
       }

@@ -20,7 +20,7 @@ public class Message {
   private String text;
   private Address abonent;
 
-  private Properties properties = new Properties();
+  private final Properties properties = new Properties();
 
   public static Message newMessage(String text) {
     return new Message(text);
@@ -61,10 +61,10 @@ public class Message {
   public void setAbonent(Address abonent) throws AdminException {
     vh.checkNotNull("msisdn", abonent);
     this.abonent = abonent;
-  }    
+  }
 
   public String removeProperty(String name) {
-    return (String)properties.remove(name);
+    return (String) properties.remove(name);
   }
 
   public void setProperty(String name, String value) {
@@ -111,16 +111,16 @@ public class Message {
     if (id != null ? !id.equals(message.id) : message.id != null) return false;
     if (abonent != null ? !abonent.equals(message.abonent) : message.abonent != null) return false;
     if (text != null ? !text.equals(message.text) : message.text != null) return false;
-    if((properties != null && message.properties == null) || (properties == null && message.properties != null)) {
+    if ((properties != null && message.properties == null) || (properties == null && message.properties != null)) {
       return false;
     }
-    if(properties != null) {
-      if(properties.size() != message.properties.size()) {
+    if (properties != null) {
+      if (properties.size() != message.properties.size()) {
         return false;
       }
-      for(Map.Entry e : properties.entrySet()) {
+      for (Map.Entry e : properties.entrySet()) {
         Object v;
-        if(((v = message.properties.get(e.getKey())) == null) || !v.equals(e.getValue())) {
+        if (((v = message.properties.get(e.getKey())) == null) || !v.equals(e.getValue())) {
           return false;
         }
       }

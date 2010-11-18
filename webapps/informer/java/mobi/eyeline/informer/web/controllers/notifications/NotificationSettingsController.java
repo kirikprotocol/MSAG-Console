@@ -16,8 +16,8 @@ import java.util.Properties;
  */
 public class NotificationSettingsController extends InformerController {
 
-  private Properties javaMailProps;
-  private Properties notificationTemplates;
+  private final Properties javaMailProps;
+  private final Properties notificationTemplates;
   private Address smsSenderAddress;
 
 
@@ -29,12 +29,11 @@ public class NotificationSettingsController extends InformerController {
   }
 
 
-
   public String save() {
     try {
-      getConfig().updateJavaMailProperties(javaMailProps,getUserName());
-      getConfig().updateNotificationTemplates(notificationTemplates,getUserName());
-      getConfig().setSmsSenderAddress(smsSenderAddress,getUserName());
+      getConfig().updateJavaMailProperties(javaMailProps, getUserName());
+      getConfig().updateNotificationTemplates(notificationTemplates, getUserName());
+      getConfig().setSmsSenderAddress(smsSenderAddress, getUserName());
     }
     catch (AdminException e) {
       addError(e);
@@ -46,42 +45,47 @@ public class NotificationSettingsController extends InformerController {
   public String getSmsSenderAddress() {
     return smsSenderAddress.getSimpleAddress();
   }
+
   public void setSmsSenderAddress(String sAddr) {
-    smsSenderAddress=new Address(sAddr);
+    smsSenderAddress = new Address(sAddr);
   }
 
 
   public void setSmsTemplateActivated(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED, smsTemplate);
   }
+
   public void setSmsTemplateFinished(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED, smsTemplate);
   }
 
   public String getSmsTemplateActivated() {
     return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED);
   }
+
   public String getSmsTemplateFinished() {
     return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED);
   }
 
 
   public void setEmailTemplateActivated(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED, smsTemplate);
   }
+
   public void setEmailTemplateFinished(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED, smsTemplate);
   }
 
   public String getEmailTemplateActivated() {
     return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED);
   }
+
   public String getEmailTemplateFinished() {
     return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED);
   }
 
   public void setEmailSubjectTemplate(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT,smsTemplate);
+    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT, smsTemplate);
   }
 
   public String getEmailSubjectTemplate() {
@@ -91,12 +95,13 @@ public class NotificationSettingsController extends InformerController {
   public String getMailFrom() {
     return (String) javaMailProps.get("mail.from");
   }
+
   public void setMailFrom(String from) {
-    javaMailProps.put("mail.from",from);
+    javaMailProps.put("mail.from", from);
   }
 
   public void setMailHost(String mailHost) {
-    javaMailProps.put("mail.host",mailHost);
+    javaMailProps.put("mail.host", mailHost);
   }
 
   public String getMailHost() {
@@ -104,7 +109,7 @@ public class NotificationSettingsController extends InformerController {
   }
 
   public void setMailUser(String mailUser) {
-    javaMailProps.put("mail.user",mailUser);
+    javaMailProps.put("mail.user", mailUser);
   }
 
   public String getMailUser() {
@@ -112,7 +117,7 @@ public class NotificationSettingsController extends InformerController {
   }
 
   public void setMailPassword(String mailPassword) {
-    javaMailProps.put("mail.password",mailPassword);
+    javaMailProps.put("mail.password", mailPassword);
   }
 
   public String getMailPassword() {

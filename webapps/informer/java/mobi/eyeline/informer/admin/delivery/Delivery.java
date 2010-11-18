@@ -13,15 +13,17 @@ import java.util.*;
  *
  * @author Aleksandr Khalitov
  */
-public class Delivery implements Serializable{
+public class Delivery implements Serializable {
 
   private static final ValidationHelper vh = new ValidationHelper(Delivery.class);
 
-  public static enum Type {SingleText, Common;
+  public static enum Type {
+    SingleText, Common;
+
     public String getValue() {
       return toString();
     }
-   }
+  }
 
   private Integer id;
 
@@ -51,11 +53,11 @@ public class Delivery implements Serializable{
 
   private Address sourceAddress;
 
-  private  String singleText;
+  private String singleText;
 
   private final Type type;
 
-  private Properties properties = new Properties();
+  private final Properties properties = new Properties();
 
   public static Delivery newSingleTextDelivery() {
     return new Delivery(Type.SingleText);
@@ -75,7 +77,7 @@ public class Delivery implements Serializable{
   }
 
   public String removeProperty(String name) {
-    return (String)properties.remove(name);
+    return (String) properties.remove(name);
   }
 
   public void addProperties(Map<String, String> props) {
@@ -104,7 +106,7 @@ public class Delivery implements Serializable{
     return sourceAddress;
   }
 
-  public void setSourceAddress(Address sourceAddress) throws AdminException{
+  public void setSourceAddress(Address sourceAddress) throws AdminException {
     vh.checkNotNull("sourceAddress", sourceAddress);
     this.sourceAddress = sourceAddress;
   }
@@ -129,8 +131,8 @@ public class Delivery implements Serializable{
     return singleText;
   }
 
-  public void setSingleText(String singleText) throws AdminException{
-    if(type == Type.Common) {
+  public void setSingleText(String singleText) throws AdminException {
+    if (type == Type.Common) {
       throw new DeliveryException("illegal_delivery_type");
     }
     vh.checkNotEmpty("singleText", singleText);
@@ -219,7 +221,7 @@ public class Delivery implements Serializable{
     return validityPeriod;
   }
 
-  public void setValidityPeriod(String validityPeriod) throws AdminException{
+  public void setValidityPeriod(String validityPeriod) throws AdminException {
     vh.checkNotEmpty("validityPeriod", validityPeriod);
     this.validityPeriod = validityPeriod;
   }
@@ -362,20 +364,20 @@ public class Delivery implements Serializable{
       return false;
     if (singleText != null ? !singleText.equals(delivery.singleText) : delivery.singleText != null)
       return false;
-    if(type != delivery.type) {
+    if (type != delivery.type) {
       return false;
     }
     if (sourceAddress != null ? !sourceAddress.getSimpleAddress().equals(delivery.sourceAddress.getSimpleAddress()) : delivery.sourceAddress != null)
       return false;
 
-    if(properties.size() != delivery.properties.size()) {
+    if (properties.size() != delivery.properties.size()) {
       return false;
     }
-    for(Map.Entry e : properties.entrySet()) {
-      if(!delivery.properties.containsKey(e.getKey())) {
+    for (Map.Entry e : properties.entrySet()) {
+      if (!delivery.properties.containsKey(e.getKey())) {
         return false;
       }
-      if(!delivery.properties.get(e.getKey()).equals(e.getValue())) {
+      if (!delivery.properties.get(e.getKey()).equals(e.getValue())) {
         return false;
       }
     }

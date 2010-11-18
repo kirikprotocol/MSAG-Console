@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.web.controllers;
 
-import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.LocalizedException;
 import org.apache.log4j.Logger;
 import org.apache.myfaces.trinidad.model.UploadedFile;
@@ -13,9 +12,10 @@ import java.util.ResourceBundle;
 
 /**
  * Контроллер для загрузки файлов на сервер в асинхронном режиме
+ *
  * @author Aleksandr Khalitov
  */
-public abstract class UploadController extends InformerController{
+public abstract class UploadController extends InformerController {
 
   protected static final Logger logger = Logger.getLogger(UploadController.class);
 
@@ -29,6 +29,7 @@ public abstract class UploadController extends InformerController{
 
   /**
    * Возвращает текст ощибки
+   *
    * @return текст ощибки
    */
   public String getError() {
@@ -37,30 +38,34 @@ public abstract class UploadController extends InformerController{
 
   /**
    * Возвращает текущее значение прогресса обработки файла (для отображения шкалы)
+   *
    * @return текущее значение прогресса
    */
   public abstract int getCurrent();
 
   /**
    * Возвращает максимальное значение прогресса обработки файла (для отображения шкалы)
+   *
    * @return максимальное значение прогресса
    */
   public abstract int getMaximum();
 
   /**
    * Действие выполняется при выходе со страницы загрузки
+   *
    * @return navigation rule's action
    */
   protected abstract String _next();
 
   /**
    * Обработка загруженного файла
-   * @param file файл
-   * @param user залогиненный пользователь
+   *
+   * @param file          файл
+   * @param user          залогиненный пользователь
    * @param requestParams параметры запроса
    * @throws Exception ошибка обработки. Если возникает AdminException, то показывается её локализованное сообщение.
-   * При возникновении IllegalArgumentException показывается сообщение "Неверный формат файл".
-   * В остальный случаях - "Внутрення ошибка"
+   *                   При возникновении IllegalArgumentException показывается сообщение "Неверный формат файл".
+   *                   В остальный случаях - "Внутрення ошибка"
    */
   protected abstract void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception;
 
@@ -75,6 +80,7 @@ public abstract class UploadController extends InformerController{
 
   /**
    * Возвращает флаг, Была ли прервана обработка файла пользователем (метод должен вызываться при обработки файл)
+   *
    * @return true - да, false - нет
    */
   protected boolean isStoped() {
@@ -89,19 +95,21 @@ public abstract class UploadController extends InformerController{
 
   /**
    * Action, вызываемый при начале обработки файла
+   *
    * @return null
    */
-  public String upload(){
-    if(file != null) {
+  public String upload() {
+    if (file != null) {
       thread = new UploadThread(file, getUserName(), getLocale(), FacesContext.getCurrentInstance());
       thread.start();
-      state=1;
+      state = 1;
     }
     return null;
   }
 
   /**
    * Action, вызываемый при уходе со страницы загрузки
+   *
    * @return navifgation rule's action
    */
   public String next() {
@@ -113,10 +121,11 @@ public abstract class UploadController extends InformerController{
 
   /**
    * Action, вызываемый при остановки обработки файла
+   *
    * @return тnull
    */
   public String stop() {
-    if(thread != null) {
+    if (thread != null) {
       thread.stop = true;
     }
     return null;
@@ -124,6 +133,7 @@ public abstract class UploadController extends InformerController{
 
   /**
    * Возвращает флаг, завершился ли поток обработки файла
+   *
    * @return true -да, false - нет, файл обрабатывается
    */
   public boolean isFinished() {
@@ -154,18 +164,18 @@ public abstract class UploadController extends InformerController{
 
     @Override
     public void run() {
-      try{
+      try {
         _process(file, user, requestParams);
-      }catch (LocalizedException e){
+      } catch (LocalizedException e) {
         error = e.getMessage(locale);
-        logger.warn(e,e);
-      }catch (IllegalArgumentException e){
+        logger.warn(e, e);
+      } catch (IllegalArgumentException e) {
         error = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("upload.illegal.file");
-        logger.warn(e,e);
-      } catch (Exception e){
+        logger.warn(e, e);
+      } catch (Exception e) {
         error = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale).getString("upload.error.text");
-        logger.error(e,e);
-      }finally {
+        logger.error(e, e);
+      } finally {
         finished = true;
       }
     }

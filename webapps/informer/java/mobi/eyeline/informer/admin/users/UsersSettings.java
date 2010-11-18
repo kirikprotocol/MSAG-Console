@@ -9,6 +9,7 @@ import java.util.Map;
 
 /**
  * Настройки пользователей
+ *
  * @author Aleksandr Khalitov
  */
 class UsersSettings {
@@ -51,7 +52,7 @@ class UsersSettings {
   }
 
   public User getUser(String login) {
-    return users.get(login);   
+    return users.get(login);
   }
 
   public UsersSettings cloneSettings() {
@@ -60,20 +61,20 @@ class UsersSettings {
 
   public void updateUser(User user) throws UserException {
     User old = users.remove(user.getLogin());
-    if(old == null) {
-      throw new UserException("user_not_exist",user.getLogin());
+    if (old == null) {
+      throw new UserException("user_not_exist", user.getLogin());
     }
     users.put(user.getLogin(), user);
   }
 
   public void removeUser(String login) throws UserException {
     User old = users.remove(login);
-    if(old == null) {
-      throw new UserException("user_not_exist",login);
+    if (old == null) {
+      throw new UserException("user_not_exist", login);
     }
   }
 
   public void addUser(User user) {
-    users.put(user.getLogin(),user); 
+    users.put(user.getLogin(), user);
   }
 }

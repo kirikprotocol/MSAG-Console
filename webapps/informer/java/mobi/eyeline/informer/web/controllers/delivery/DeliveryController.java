@@ -6,13 +6,13 @@ import mobi.eyeline.informer.web.controllers.InformerController;
 /**
  * @author Aleksandr Khalitov
  */
-public class DeliveryController extends InformerController{
+public class DeliveryController extends InformerController {
 
   public static final String DELIVERY_PARAM = "delivery";
 
   public static final String DELIVERY_COMEBACK_PARAM = "delivery_comeback";
 
-  protected Configuration config;
+  protected final Configuration config;
 
   public DeliveryController() {
     this.config = getConfig();

@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.components.data_table.model;
 
 /**
  * Класс, описывающий порядок сортировки в DataTable
+ *
  * @author Artem Snopkov
  */
 public class DataTableSortOrder {
@@ -16,6 +17,7 @@ public class DataTableSortOrder {
 
   /**
    * Возвращает название колонки, по которой требуется отсортировать данные
+   *
    * @return название колонки, по которой требуется отсортировать данные
    */
   public String getColumnId() {
@@ -24,6 +26,7 @@ public class DataTableSortOrder {
 
   /**
    * Порядок сортировки
+   *
    * @return true, если надо отсортировать по-возрастанию, false - по-убыванию
    */
   public boolean isAsc() {

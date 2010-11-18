@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 
 /**
  * Настройки Informer
+ *
  * @author Aleksandr Khalitov
  */
 public class InformerSettings {
@@ -27,7 +28,7 @@ public class InformerSettings {
     return adminHost;
   }
 
-  public void setAdminHost(String host) throws AdminException{
+  public void setAdminHost(String host) throws AdminException {
     vh.checkNotEmpty("adminHost", host);
     this.adminHost = host;
   }
@@ -63,7 +64,7 @@ public class InformerSettings {
     return persHost;
   }
 
-  public void setPersHost(String persHost) throws AdminException{
+  public void setPersHost(String persHost) throws AdminException {
     vh.checkNotEmpty("persHost", persHost);
     this.persHost = persHost;
   }
@@ -72,7 +73,7 @@ public class InformerSettings {
     return persPort;
   }
 
-  public void setPersPort(int persPort) throws AdminException{
+  public void setPersPort(int persPort) throws AdminException {
     vh.checkPort("persPort", persPort);
     this.persPort = persPort;
   }
@@ -81,7 +82,7 @@ public class InformerSettings {
     return statDir;
   }
 
-  public void setStatDir(String statDir) throws AdminException{
+  public void setStatDir(String statDir) throws AdminException {
     vh.checkNotEmpty("statDir", statDir);
     this.statDir = statDir;
   }
@@ -97,9 +98,10 @@ public class InformerSettings {
 
   /**
    * Копирует настройки
+   *
    * @return копия настроек
    */
-  public InformerSettings cloneSettings(){
+  public InformerSettings cloneSettings() {
     InformerSettings cs = new InformerSettings();
     cs.adminHost = adminHost;
     cs.adminPort = adminPort;

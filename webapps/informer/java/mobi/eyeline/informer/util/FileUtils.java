@@ -17,9 +17,9 @@ public class FileUtils {
    *
    * @param source      source file
    * @param destination destination file
-   * @throws java.io.IOException          if I/O problems occured
-   * @throws NullPointerException if source or destination is null
    * @return кол-во скопированных байт
+   * @throws java.io.IOException  if I/O problems occured
+   * @throws NullPointerException if source or destination is null
    */
   public static long copyFileTo(File source, File destination) throws IOException {
     FileInputStream src = null;
@@ -82,8 +82,8 @@ public class FileUtils {
   public static void unZipFileFromArchive(File folderUnpackTo, String name, ZipInputStream zin) throws IOException {
     File file = new File(folderUnpackTo, name);
     File p = file.getParentFile();
-    if(p != null && !p.exists() && !p.mkdirs()) {
-      throw new IOException("Can't create file: "+p.getAbsolutePath());
+    if (p != null && !p.exists() && !p.mkdirs()) {
+      throw new IOException("Can't create file: " + p.getAbsolutePath());
     }
     OutputStream out = null;
     try {

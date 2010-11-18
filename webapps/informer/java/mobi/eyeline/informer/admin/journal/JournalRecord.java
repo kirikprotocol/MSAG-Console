@@ -6,6 +6,7 @@ import java.util.ResourceBundle;
 
 /**
  * Структура, описывающая одну запись в журнале
+ *
  * @author Artem Snopkov
  */
 public class JournalRecord {
@@ -23,6 +24,7 @@ public class JournalRecord {
 
   /**
    * Возвращает время в миллисекундах, в которое произошло изменение
+   *
    * @return время в миллисекундах, в которое произошло изменение
    */
   public long getTime() {
@@ -36,6 +38,7 @@ public class JournalRecord {
 
   /**
    * Возвращает название сабжекта
+   *
    * @return название сабжекта в указанной локали
    */
   public Subject getSubject() {
@@ -49,6 +52,7 @@ public class JournalRecord {
 
   /**
    * Возвращает логин пользователь, произвевшего изменение
+   *
    * @return логин пользователь, произвевшего изменение
    */
   public String getUser() {
@@ -76,13 +80,14 @@ public class JournalRecord {
 
   /**
    * Возвращает описание изменения в заданной локали
+   *
    * @param locale локаль
    * @return описание изменения в заданной локали
    */
   public String getDescription(Locale locale) {
     String str = ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale).getString(descriptionKey);
     if (descriptionArgs != null) {
-      for (int i=0; i<descriptionArgs.length; i++)
+      for (int i = 0; i < descriptionArgs.length; i++)
         str = str.replaceAll("\\{" + i + "\\}", descriptionArgs[i]);
     }
     return str;
@@ -90,6 +95,7 @@ public class JournalRecord {
 
   /**
    * Возвращает тип изменения
+   *
    * @return тип изменения
    */
   public Type getType() {

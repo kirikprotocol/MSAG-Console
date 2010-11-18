@@ -15,26 +15,29 @@ import java.util.List;
 
 /**
  * Управление СМС-Центрами
+ *
  * @author Aleksandr Khalitov
  */
-public class SmscManager extends BaseManager<SmscSettings>{
+public class SmscManager extends BaseManager<SmscSettings> {
 
 
-  public SmscManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException{
-    super(infosme,  config, backup, fileSystem,new SmscConfig());
+  public SmscManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException {
+    super(infosme, config, backup, fileSystem, new SmscConfig());
   }
 
   /**
    * Добавляет новый СМСЦ
+   *
    * @param smsc СМСЦ
    * @throws AdminException ошибка сохранения
    */
-  public void addSmsc(final Smsc smsc) throws AdminException{
+  public void addSmsc(final Smsc smsc) throws AdminException {
     checkErrors(smsc);
     updateSettings(new SettingsWriter<SmscSettings>() {
-      public void changeSettings(SmscSettings settings) throws AdminException{
+      public void changeSettings(SmscSettings settings) throws AdminException {
         settings.addSmsc(smsc);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         infosme.addSmsc(smsc.getName());
       }
@@ -43,15 +46,17 @@ public class SmscManager extends BaseManager<SmscSettings>{
 
   /**
    * Обновляет существующий СМСЦ
+   *
    * @param smsc СМСЦ
    * @throws AdminException ошибка сохранения
    */
-  public void updateSmsc(final Smsc smsc) throws AdminException{
+  public void updateSmsc(final Smsc smsc) throws AdminException {
     checkErrors(smsc);
     updateSettings(new SettingsWriter<SmscSettings>() {
-      public void changeSettings(SmscSettings settings) throws AdminException{
+      public void changeSettings(SmscSettings settings) throws AdminException {
         settings.updateSmsc(smsc);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         infosme.updateSmsc(smsc.getName());
       }
@@ -60,19 +65,19 @@ public class SmscManager extends BaseManager<SmscSettings>{
 
   private static void checkErrors(Smsc smsc) throws AdminException {
     Collection<Collection<Integer>> tempErrors = smsc.getTemporaryErrors().values();
-    for(Integer a : smsc.getImmediateErrors()) {
-      for(Integer b : smsc.getPermanentErrors()) {
-        if(a.equals(b)) {
+    for (Integer a : smsc.getImmediateErrors()) {
+      for (Integer b : smsc.getPermanentErrors()) {
+        if (a.equals(b)) {
           throw new SmscException("error_codes_intersection", Integer.toString(a));
         }
-        for(Collection<Integer> cc1 : tempErrors) {
-          for(Integer c1 : cc1) {
-            if(a.equals(c1) || b.equals(c1)) {
+        for (Collection<Integer> cc1 : tempErrors) {
+          for (Integer c1 : cc1) {
+            if (a.equals(c1) || b.equals(c1)) {
               throw new SmscException("error_codes_intersection", Integer.toString(c1));
             }
-            for(Collection<Integer> cc2 : tempErrors) {
-              for(Integer c2 : cc2) {
-                if(c1.equals(c2) && c1 != c2) {
+            for (Collection<Integer> cc2 : tempErrors) {
+              for (Integer c2 : cc2) {
+                if (c1.equals(c2) && c1 != c2) {
                   throw new SmscException("error_codes_intersection", Integer.toString(c1));
                 }
               }
@@ -85,13 +90,14 @@ public class SmscManager extends BaseManager<SmscSettings>{
 
   /**
    * Возвращает список СМСЦ
+   *
    * @return список СМСЦ
    */
   public List<Smsc> getSmscs() {
-    return readSettings(new SettingsReader<SmscSettings,List<Smsc>>(){
-      public List<Smsc> executeRead(SmscSettings settings)  {
+    return readSettings(new SettingsReader<SmscSettings, List<Smsc>>() {
+      public List<Smsc> executeRead(SmscSettings settings) {
         List<Smsc> result = new LinkedList<Smsc>();
-        for(Smsc s : settings.getSmscs()) {
+        for (Smsc s : settings.getSmscs()) {
           result.add(s.cloneSmsc());
         }
         return result;
@@ -101,12 +107,13 @@ public class SmscManager extends BaseManager<SmscSettings>{
 
   /**
    * ВОзвращает СМСЦ имени
+   *
    * @param name имя СМСЦ
    * @return СМСЦ
    */
-  public Smsc getSmsc(final String name){
-    return readSettings(new SettingsReader<SmscSettings,Smsc>(){
-      public Smsc executeRead(SmscSettings settings)  {
+  public Smsc getSmsc(final String name) {
+    return readSettings(new SettingsReader<SmscSettings, Smsc>() {
+      public Smsc executeRead(SmscSettings settings) {
         Smsc smsc = settings.getSmsc(name);
         return smsc == null ? null : smsc.cloneSmsc();
       }
@@ -115,14 +122,16 @@ public class SmscManager extends BaseManager<SmscSettings>{
 
   /**
    * Удаляет СМСЦ
+   *
    * @param smscName имя СМСЦ
    * @throws AdminException ошибка сохранения
    */
-  public void removeSmsc(final String smscName) throws AdminException{
+  public void removeSmsc(final String smscName) throws AdminException {
     updateSettings(new SettingsWriter<SmscSettings>() {
-      public void changeSettings(SmscSettings settings) throws AdminException{
+      public void changeSettings(SmscSettings settings) throws AdminException {
         settings.removeSmsc(smscName);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         infosme.removeSmsc(smscName);
       }
@@ -131,14 +140,16 @@ public class SmscManager extends BaseManager<SmscSettings>{
 
   /**
    * Устанавливает СМСЦ по умолчанию
+   *
    * @param smsc имя СМСЦ
    * @throws AdminException ошибка сохранения
    */
   public void setDefaultSmsc(final String smsc) throws AdminException {
     updateSettings(new SettingsWriter<SmscSettings>() {
-      public void changeSettings(SmscSettings settings) throws AdminException{
+      public void changeSettings(SmscSettings settings) throws AdminException {
         settings.setDefaultSmsc(smsc);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         infosme.setDefaultSmsc(smsc);
       }
@@ -147,11 +158,12 @@ public class SmscManager extends BaseManager<SmscSettings>{
 
   /**
    * Возвращает СМСЦ по умолчанию
+   *
    * @return СМСЦ по умолчанию
    */
   public String getDefaultSmsc() {
-    return readSettings(new SettingsReader<SmscSettings,String>(){
-      public String executeRead(SmscSettings settings)  {
+    return readSettings(new SettingsReader<SmscSettings, String>() {
+      public String executeRead(SmscSettings settings) {
         return settings.getDefaultSmsc();
       }
     });

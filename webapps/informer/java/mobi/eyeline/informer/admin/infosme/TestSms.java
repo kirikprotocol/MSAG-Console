@@ -6,7 +6,7 @@ import mobi.eyeline.informer.util.Address;
  * @author Aleksandr Khalitov
  */
 public class TestSms {
-  
+
   private Address sourceAddr;
 
   private Address destAddr;
@@ -73,7 +73,6 @@ public class TestSms {
     USSD_PUSH,
     USSD_PUSH_VLR
   }
-
 
 
 }

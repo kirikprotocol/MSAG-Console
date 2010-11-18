@@ -21,7 +21,7 @@ public class UserController extends InformerController {
 
   public List<SelectItem> getStatuses() {
     ArrayList<SelectItem> ret = new ArrayList<SelectItem>();
-    for(User.Status s : User.Status.values()) {
+    for (User.Status s : User.Status.values()) {
       ret.add(new SelectItem(s));
     }
     return ret;
@@ -29,25 +29,25 @@ public class UserController extends InformerController {
 
   public List<SelectItem> getDaysItems() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    for(int i=1;i<=7;i++) {
-      ret.add(new SelectItem(new Integer(i%7),getLocalizedString("weekday."+i%7)));
+    for (int i = 1; i <= 7; i++) {
+      ret.add(new SelectItem(i % 7, getLocalizedString("weekday." + i % 7)));
     }
     return ret;
   }
 
   public List<SelectItem> getDeliveryTypes() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    ret.add(new SelectItem(User.DeliveryType.SMS,getLocalizedString("user.edit.deliveryType."+User.DeliveryType.SMS)));
-    ret.add(new SelectItem(User.DeliveryType.USSD_PUSH,getLocalizedString("user.edit.deliveryType."+User.DeliveryType.USSD_PUSH)));
-    ret.add(new SelectItem(User.DeliveryType.USSD_PUSH_VIA_VLR,getLocalizedString("user.edit.deliveryType."+User.DeliveryType.USSD_PUSH_VIA_VLR)));
+    ret.add(new SelectItem(User.DeliveryType.SMS, getLocalizedString("user.edit.deliveryType." + User.DeliveryType.SMS)));
+    ret.add(new SelectItem(User.DeliveryType.USSD_PUSH, getLocalizedString("user.edit.deliveryType." + User.DeliveryType.USSD_PUSH)));
+    ret.add(new SelectItem(User.DeliveryType.USSD_PUSH_VIA_VLR, getLocalizedString("user.edit.deliveryType." + User.DeliveryType.USSD_PUSH_VIA_VLR)));
     return ret;
   }
 
 
   public List<SelectItem> getRegionsList() {
     List<SelectItem> regions = new ArrayList<SelectItem>();
-    for(Region r : getConfig().getRegions()) {
-      regions.add(new SelectItem(r.getRegionId(),r.getName()));
+    for (Region r : getConfig().getRegions()) {
+      regions.add(new SelectItem(r.getRegionId(), r.getName()));
     }
     return regions;
   }

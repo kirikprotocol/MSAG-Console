@@ -8,9 +8,10 @@ import java.util.List;
 
 /**
  * Ищет и журналирует изменения в настройках Informer
+ *
  * @author Aleksandr Khalitov
  */
-class InformerSettingsDiffHelper extends DiffHelper{
+class InformerSettingsDiffHelper extends DiffHelper {
 
   InformerSettingsDiffHelper() {
     super(Subject.CONFIG);

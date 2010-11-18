@@ -12,7 +12,7 @@ import java.util.Collection;
  */
 class ServiceManagerSingle extends ServiceManager {
 
-  private final Daemon daemon ;
+  private final Daemon daemon;
 
   public ServiceManagerSingle(String host, int port, File servicesFolder) {
     daemon = new Daemon(host, port, servicesFolder);
@@ -28,7 +28,7 @@ class ServiceManagerSingle extends ServiceManager {
     ControlledService serv = daemon.getService(service);
     if (serv == null)
       return null;
-    return new ServiceInfo(serv.getId(), new String[] {daemon.getHost()}, serv.getHost(), serv.getBaseDir());
+    return new ServiceInfo(serv.getId(), new String[]{daemon.getHost()}, serv.getHost(), serv.getBaseDir());
   }
 
   @Override

@@ -242,11 +242,13 @@ public class TestAdminContext extends AdminContext {
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
-//      initSiebel();
-
+      try{
+        initSiebel(workDir);
+      }catch (AdminException e){
+        logger.error(e,e);
+      }
+      
       deliveryNotificationsProducer.start();
-
-
 
     } catch (IOException e) {
       throw new InitException(e);
@@ -266,7 +268,7 @@ public class TestAdminContext extends AdminContext {
   }};
 
   @Override
-  protected void initSiebel() throws AdminException {      
+  protected void initSiebel(File workFile) throws AdminException, InitException {
 
     SiebelDeliveries siebelDeliveries = new SiebelDeliveriesImpl(this);
     SiebelRegionManager siebelRegions = new SiebelRegionManagerImpl(this);
@@ -282,7 +284,7 @@ public class TestAdminContext extends AdminContext {
 
     siebelManager.start(siebelUser, webConfig.getSiebelProperties());
 
-    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager);
+    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager, workFile, 20);  //todo
 
     deliveryNotificationsProducer.addListener(siebelFinalStateListener);
 

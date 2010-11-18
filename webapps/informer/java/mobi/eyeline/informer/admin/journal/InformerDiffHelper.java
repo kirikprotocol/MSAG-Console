@@ -5,7 +5,7 @@ import mobi.eyeline.informer.admin.AdminException;
 /**
  * @author Aleksandr Khalitov
  */
-class InformerDiffHelper extends DiffHelper{
+class InformerDiffHelper extends DiffHelper {
 
   public InformerDiffHelper() {
     super(Subject.INFORMER);
@@ -21,7 +21,7 @@ class InformerDiffHelper extends DiffHelper{
   }
 
   public void logInformerSwitch(Journal j, String toHost, String user) throws AdminException {
-    j.addRecord(JournalRecord.Type.SERVICE_NODE_SWITCH, subject, user, "informer_switch", toHost); 
+    j.addRecord(JournalRecord.Type.SERVICE_NODE_SWITCH, subject, user, "informer_switch", toHost);
 
   }
 }

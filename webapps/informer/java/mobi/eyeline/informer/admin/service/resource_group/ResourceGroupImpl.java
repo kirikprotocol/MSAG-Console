@@ -4,9 +4,9 @@ import org.apache.log4j.Category;
 
 abstract class ResourceGroupImpl implements ResourceGroup {
 
-  protected String name;
+  protected final String name;
 
-  protected Category logger = Category.getInstance(this.getClass().getName());
+  protected final Category logger = Category.getInstance(this.getClass().getName());
 
   ResourceGroupImpl(String name) {
     this.name = name;

@@ -14,20 +14,19 @@ import java.util.List;
  * Date: 08.11.2010
  * Time: 14:49:06
  */
-public class RestrictionEditController extends RestrictionController{
+public class RestrictionEditController extends RestrictionController {
   private Integer restrictionId;
   private Restriction restriction;
   private static final String ID_PARAMETER = "restrictionId";
   private boolean initError;
 
 
-
   public RestrictionEditController() {
     try {
       String s = getRequestParameter(ID_PARAMETER);
-      setRestrictionId(s==null || s.length()==0 ? null :Integer.valueOf(s));
+      setRestrictionId(s == null || s.length() == 0 ? null : Integer.valueOf(s));
     }
-    catch (AdminException e){
+    catch (AdminException e) {
       initError = true;
     }
   }
@@ -38,10 +37,9 @@ public class RestrictionEditController extends RestrictionController{
   }
 
   private void setRestrictionId(Integer restrictionId) throws AdminException {
-    if(restrictionId==null ) {
+    if (restrictionId == null) {
       restriction = new Restriction();
-    }
-    else {
+    } else {
       restriction = getConfig().getRestriction(restrictionId);
     }
     this.restrictionId = restrictionId;
@@ -58,11 +56,10 @@ public class RestrictionEditController extends RestrictionController{
 
   public String save() {
     try {
-      if(restrictionId==null) {
-        getConfig().addRestriction(restriction,getUserName());
-      }
-      else {
-        getConfig().updateRestriction(restriction,getUserName());
+      if (restrictionId == null) {
+        getConfig().addRestriction(restriction, getUserName());
+      } else {
+        getConfig().updateRestriction(restriction, getUserName());
       }
     }
     catch (AdminException e) {
@@ -83,13 +80,13 @@ public class RestrictionEditController extends RestrictionController{
   }
 
   public List<String> getSelectedUsers() {
-    if(restriction.getUserIds()==null) restriction.setUserIds(new ArrayList<String>());
+    if (restriction.getUserIds() == null) restriction.setUserIds(new ArrayList<String>());
     return restriction.getUserIds();
   }
 
   public List<SelectItem> getUsers() {
-    List<SelectItem> ret = new ArrayList<SelectItem>();    
-    for(User u : getConfig().getUsers()) {
+    List<SelectItem> ret = new ArrayList<SelectItem>();
+    for (User u : getConfig().getUsers()) {
       ret.add(new SelectItem(u.getLogin()));
     }
     return ret;

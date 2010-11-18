@@ -27,75 +27,76 @@ import java.util.concurrent.TimeUnit;
  * Time: 13:46:28
  */
 public class DeliveryNotificationsDaemon implements DeliveryNotificationsListener {
-  private Logger log = Logger.getLogger(this.getClass());
+  private final Logger log = Logger.getLogger(this.getClass());
 
-  private AdminContext context;
+  private final AdminContext context;
   private final Map<String, AggregatedEmailNotificationTask> userEmailNotifications = new HashMap<String, AggregatedEmailNotificationTask>();
 
   private final Object lock = new Object();
 
-  private ScheduledThreadPoolExecutor scheduler;
+  private final ScheduledThreadPoolExecutor scheduler;
   private static final long AGGREGATE_TIME = 60000L;
   private static final long SHUTDOWN_WAIT_TIME = 120000L;
-  private static final int POOL_SIZE=1;
-  private static final int MAX_QUEUE_SIZE=10000;
+  private static final int POOL_SIZE = 1;
+  private static final int MAX_QUEUE_SIZE = 10000;
 
 
   public DeliveryNotificationsDaemon(AdminContext context) {
     this.context = context;
-    scheduler = new ScheduledThreadPoolExecutor(POOL_SIZE,new ThreadFactory(){
-      int n=0;
+    scheduler = new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactory() {
+      int n = 0;
+
       public Thread newThread(Runnable runnable) {
         n++;
-        return new Thread(runnable,"DeliveryNotificationDaemon-"+n);
+        return new Thread(runnable, "DeliveryNotificationDaemon-" + n);
       }
     });
   }
 
-  public void onDeliveryNotification(DeliveryNotification notification)  {
-    switch(notification.getType()) {
+  public void onDeliveryNotification(DeliveryNotification notification) {
+    switch (notification.getType()) {
       case DELIVERY_START:
       case DELIVERY_FINISHED:
         try {
           User user = context.getUser(notification.getUserId());
-          if(user!=null) {
-            Delivery delivery = context.getDelivery(user.getLogin(),user.getPassword(),notification.getDeliveryId());
+          if (user != null) {
+            Delivery delivery = context.getDelivery(user.getLogin(), user.getPassword(), notification.getDeliveryId());
             String sAddr = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
-            if(sAddr != null && sAddr.length()>0) {
+            if (sAddr != null && sAddr.length() > 0) {
               Address smsNotificationAddress = new Address(sAddr);
-              SMSNotificationTask task = new SMSNotificationTask(smsNotificationAddress, user,new DeliveryNotificationWrapper(notification,delivery.getName()));
+              SMSNotificationTask task = new SMSNotificationTask(smsNotificationAddress, user, new DeliveryNotificationWrapper(notification, delivery.getName()));
               synchronized (lock) {
-                scheduleOrWait(task,0, TimeUnit.MILLISECONDS);
+                scheduleOrWait(task, 0, TimeUnit.MILLISECONDS);
               }
             }
 
             String email = delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
-            if(email!=null && email.length()>0) {
+            if (email != null && email.length() > 0) {
               synchronized (lock) {
                 AggregatedEmailNotificationTask notificationTask = userEmailNotifications.get(email);
-                if(notificationTask==null) {
-                  notificationTask = new AggregatedEmailNotificationTask(email,user);
-                  userEmailNotifications.put(email,notificationTask);
-                  scheduleOrWait(notificationTask,AGGREGATE_TIME, TimeUnit.MICROSECONDS);
+                if (notificationTask == null) {
+                  notificationTask = new AggregatedEmailNotificationTask(email, user);
+                  userEmailNotifications.put(email, notificationTask);
+                  scheduleOrWait(notificationTask, AGGREGATE_TIME, TimeUnit.MICROSECONDS);
                 }
-                notificationTask.addNotification(new DeliveryNotificationWrapper(notification,delivery.getName()));
+                notificationTask.addNotification(new DeliveryNotificationWrapper(notification, delivery.getName()));
               }
             }
           }
         }
         catch (Exception e) {
           e.printStackTrace();
-          log.error("error ",e);
+          log.error("error ", e);
         }
         break;
 
 
-      default:return;
+      default:
     }
   }
 
   private void scheduleOrWait(Callable<Object> task, long time, TimeUnit units) {
-    while(scheduler.getTaskCount()-scheduler.getCompletedTaskCount() >= MAX_QUEUE_SIZE) {
+    while (scheduler.getTaskCount() - scheduler.getCompletedTaskCount() >= MAX_QUEUE_SIZE) {
       try {
         lock.wait(100);
       }
@@ -103,9 +104,8 @@ public class DeliveryNotificationsDaemon implements DeliveryNotificationsListene
         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       }
     }
-    scheduler.schedule(task,time, units);
+    scheduler.schedule(task, time, units);
   }
-
 
 
   public void shutdown() throws InterruptedException {
@@ -123,20 +123,20 @@ public class DeliveryNotificationsDaemon implements DeliveryNotificationsListene
   /*  ======================= */
 
   class SMSNotificationTask implements Callable<Object> {
-    Address address;
+    final Address address;
 
-    private User user;
-    private DeliveryNotificationWrapper notification;
+    private final User user;
+    private final DeliveryNotificationWrapper notification;
 
-    public SMSNotificationTask(Address address,User user, DeliveryNotificationWrapper notification) {
-      this.address=address;
+    public SMSNotificationTask(Address address, User user, DeliveryNotificationWrapper notification) {
+      this.address = address;
       this.user = user;
       this.notification = notification;
     }
 
     public Object call() throws Exception {
       try {
-        TestSms testSms  = new TestSms();
+        TestSms testSms = new TestSms();
         testSms.setDestAddr(address);
         testSms.setSourceAddr(context.getSmsSenderAddress());
         testSms.setFlash(false);
@@ -145,27 +145,28 @@ public class DeliveryNotificationsDaemon implements DeliveryNotificationsListene
         String template = (String) context.getNotificationTemplates().get(
             notification.getType() == DeliveryNotificationType.DELIVERY_START
                 ?
-            DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED
+                DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED
                 :
-            DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED
+                DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED
         );
 
-        String text = notification.formatTemplate(template,user);
+        String text = notification.formatTemplate(template, user);
         testSms.setText(text);
         context.sendTestSms(testSms);
       }
       catch (Exception e) {
-        log.error("Error sending notification sms to "+address,e);
+        log.error("Error sending notification sms to " + address, e);
       }
       return null;
     }
   }
 
   /*  ======================= */
+
   class AggregatedEmailNotificationTask implements Callable<Object> {
-    private String email;
-    private User user;
-    private LinkedList<DeliveryNotificationWrapper> notifications;
+    private final String email;
+    private final User user;
+    private final LinkedList<DeliveryNotificationWrapper> notifications;
 
     public AggregatedEmailNotificationTask(String email, User user) {
       this.email = email;
@@ -187,44 +188,45 @@ public class DeliveryNotificationsDaemon implements DeliveryNotificationsListene
         Properties templates = context.getNotificationTemplates();
 
         StringBuilder sb = new StringBuilder();
-        for(DeliveryNotificationWrapper n : notifications) {
-            String template = n.getType()==DeliveryNotificationType.DELIVERY_START
-                  ?
-                  templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED)
-                  :
-                  templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED);
+        for (DeliveryNotificationWrapper n : notifications) {
+          String template = n.getType() == DeliveryNotificationType.DELIVERY_START
+              ?
+              templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED)
+              :
+              templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED);
 
-            sb.append(n.formatTemplate(template,user)).append("\n");
+          sb.append(n.formatTemplate(template, user)).append("\n");
         }
 
 
-        Properties mailProps= context.getJavaMailProperties();
+        Properties mailProps = context.getJavaMailProperties();
         Session session = Session.getDefaultInstance(mailProps);
         MimeMessage message = new MimeMessage(session);
         message.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(email));
-        message.setSubject(templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT),"UTF-8");
-        message.setText(sb.toString(),"UTF-8");
+        message.setSubject(templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT), "UTF-8");
+        message.setText(sb.toString(), "UTF-8");
 
         Transport transport = session.getTransport();
         transport.connect();
-        transport.sendMessage(message,message.getRecipients(javax.mail.Message.RecipientType.TO));
+        transport.sendMessage(message, message.getRecipients(javax.mail.Message.RecipientType.TO));
         transport.close();
-        
+
       }
       catch (Exception e) {
-        log.error("unable to send email notification to "+email);
+        log.error("unable to send email notification to " + email);
       }
       return null;
     }
   }
 
   /*=======================*/
+
   class DeliveryNotificationWrapper {
-    private DeliveryNotification notification;
-    private String deliveryName;
+    private final DeliveryNotification notification;
+    private final String deliveryName;
 
     public DeliveryNotificationWrapper(DeliveryNotification notification, String deliveryName) {
-      this.deliveryName=deliveryName;
+      this.deliveryName = deliveryName;
       this.notification = notification;
     }
 
@@ -249,12 +251,12 @@ public class DeliveryNotificationsDaemon implements DeliveryNotificationsListene
     }
 
     public String formatTemplate(String template, User user) {
-    return MessageFormat.format(
-              template,
-              getDeliveryName(),
-              new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(getEventDate()),
-              user.getFirstName()+" "+user.getLastName()
-            );
+      return MessageFormat.format(
+          template,
+          getDeliveryName(),
+          new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(getEventDate()),
+          user.getFirstName() + " " + user.getLastName()
+      );
     }
   }
 

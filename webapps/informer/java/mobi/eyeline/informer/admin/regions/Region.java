@@ -8,6 +8,7 @@ import java.util.*;
 
 /**
  * Регион
+ *
  * @author Aleksandr Khalitov
  */
 public class Region {
@@ -24,7 +25,7 @@ public class Region {
 
   private final ValidationHelper vh = new ValidationHelper(Region.class);
 
-  private Collection<Address> masks = new LinkedList<Address>();
+  private final Collection<Address> masks = new LinkedList<Address>();
 
   void setRegionId(Integer regionId) {
     this.regionId = regionId;
@@ -34,7 +35,7 @@ public class Region {
     return name;
   }
 
-  public void setName(String name) throws AdminException{
+  public void setName(String name) throws AdminException {
     vh.checkNotEmpty("name", name);
     this.name = name;
   }
@@ -65,26 +66,26 @@ public class Region {
     return maxSmsPerSecond;
   }
 
-  public void setMaxSmsPerSecond(int maxSmsPerSecond) throws AdminException{
+  public void setMaxSmsPerSecond(int maxSmsPerSecond) throws AdminException {
     vh.checkGreaterThan("maxSmsPerSecond", maxSmsPerSecond, 0);
     this.maxSmsPerSecond = maxSmsPerSecond;
   }
 
-  public void addMask(Address a) throws AdminException{
+  public void addMask(Address a) throws AdminException {
     vh.checkNotNull("masks", a);
-    for(Address ad : masks) {
-      if(ad.getSimpleAddress().equals(a.getSimpleAddress())) {
+    for (Address ad : masks) {
+      if (ad.getSimpleAddress().equals(a.getSimpleAddress())) {
         return;
       }
     }
     masks.add(a);
   }
 
-  public void removeMask(Address r) throws AdminException{
+  public void removeMask(Address r) {
     Iterator<Address> i = masks.iterator();
-    while(i.hasNext()) {
+    while (i.hasNext()) {
       Address a = i.next();
-      if(a.getSimpleAddress().equals(r.getSimpleAddress())) {
+      if (a.getSimpleAddress().equals(r.getSimpleAddress())) {
         i.remove();
         break;
       }
@@ -106,10 +107,10 @@ public class Region {
     r.maxSmsPerSecond = maxSmsPerSecond;
     r.name = name;
     r.timeZone = timeZone == null ? null : TimeZone.getTimeZone(timeZone.getID());
-    for(Address a : masks) {
+    for (Address a : masks) {
       r.masks.add(new Address(a.getTone(), a.getNpi(), a.getAddress()));
     }
     return r;
   }
-  
+
 }

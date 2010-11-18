@@ -35,7 +35,7 @@ public class SiebelManager {
 
   private long timeout = 20;
 
-  private Set<String> processedDeliveries = new HashSet<String>();
+  private final Set<String> processedDeliveries = new HashSet<String>();
 
   private final Lock lock = new ReentrantLock();
 
@@ -53,14 +53,14 @@ public class SiebelManager {
   public static final String TIMEOUT = "timeout";
   public static final String USER = "siebelUser";
   public static final String REMOVE_ON_STOP_PARAM = "removeOnStop";
-  public static final String JDBC_SOURCE= "jdbc.source";
-  public static final String JDBC_USER= "jdbc.user";
-  public static final String JDBC_PASSWORD= "jdbc.password";
-  public static final String JDBC_DRIVER= "jdbc.driver";
+  public static final String JDBC_SOURCE = "jdbc.source";
+  public static final String JDBC_USER = "jdbc.user";
+  public static final String JDBC_PASSWORD = "jdbc.password";
+  public static final String JDBC_DRIVER = "jdbc.driver";
 
-  public SiebelManager(SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException{
+  public SiebelManager(SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
     this.provider = new SiebelDataProviderImpl();
-    this.deliveries = deliveries;          
+    this.deliveries = deliveries;
     this.regionManager = regionManager;
     this.provider = new SiebelDataProviderImpl();
   }
@@ -76,23 +76,23 @@ public class SiebelManager {
   }
 
 
-  public synchronized void stop() throws AdminException {
+  public synchronized void stop() {
     shutdown = true;
-    if(listenerThread != null) {
+    if (listenerThread != null) {
       listenerThread.interrupt();
     }
-    if(executor != null) {
+    if (executor != null) {
       executor.shutdown();
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: delivery manager has shutdowned");
       }
     }
-    try{
+    try {
       lockShutdown();
-    }finally {
+    } finally {
       unlockShutdown();
     }
-    if(provider != null) {
+    if (provider != null) {
       provider.shutdown();
     }
   }
@@ -102,15 +102,15 @@ public class SiebelManager {
   }
 
   public void setMessageStates(Map<String, SiebelMessage.DeliveryState> deliveryStates) throws AdminException {
-    if(isStarted()) {
+    if (isStarted()) {
       provider.setMessageStates(deliveryStates);
-    }else {
+    } else {
       throw new SiebelException("offline");
     }
   }
 
-  public void setDeliveryStatus(String waveId, SiebelDelivery.Status status) throws AdminException {
-    provider.setDeliveryStatus(waveId, status);
+  public void setDeliveryStatuses(Map<String, SiebelDelivery.Status> statuses) throws AdminException {
+    provider.setDeliveryStatuses(statuses);
   }
 
   public synchronized void start(User siebelUser, Properties ps) throws AdminException {
@@ -119,8 +119,8 @@ public class SiebelManager {
       timeout = Integer.parseInt(ps.getProperty(TIMEOUT));
       removeOnStop = Boolean.valueOf(ps.getProperty(REMOVE_ON_STOP_PARAM));
       provider.connect(ps);
-      executor = new ThreadPoolExecutor(5, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,   //todo
-          new LinkedBlockingQueue<Runnable>(), new ThreadFactoryWithCounter("Siebel-Delivery-Processor",0));
+      executor = new ThreadPoolExecutor(5, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,   //todo?
+          new LinkedBlockingQueue<Runnable>(), new ThreadFactoryWithCounter("Siebel-Delivery-Processor", 0));
       listenerThread = new Thread(new ProviderListener(), "SiebelProviderListener");
       listenerThread.start();
       if (logger.isDebugEnabled()) {
@@ -139,7 +139,7 @@ public class SiebelManager {
     try {
       lock.lock();
       processedDeliveries.add(st.getWaveId());
-    }finally {
+    } finally {
       lock.unlock();
     }
   }
@@ -148,12 +148,12 @@ public class SiebelManager {
     try {
       lock.lock();
       processedDeliveries.remove(st.getWaveId());
-    }finally {
+    } finally {
       lock.unlock();
     }
   }
 
-  private class ProviderListener implements Runnable{
+  private class ProviderListener implements Runnable {
 
     public void run() {
       try {
@@ -184,7 +184,7 @@ public class SiebelManager {
             }
           }
           try {
-            Thread.sleep(timeout*1000);
+            Thread.sleep(timeout * 1000);
           } catch (InterruptedException ignored) {
             return;
           }
@@ -244,7 +244,7 @@ public class SiebelManager {
     delivery = createDelivery(st, buildDeliveryName(st.getWaveId()));
 
     deliveries.createDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery, null);
-    delivery.setProperty(generationFlag,"true");
+    delivery.setProperty(generationFlag, "true");
     deliveries.modifyDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery);
 
     ResultSet<SiebelMessage> messages = null;
@@ -265,9 +265,9 @@ public class SiebelManager {
         messages.close();
       }
     }
-    if(hasMessages) {
+    if (hasMessages) {
       _setDeliveryStatusInProcess(st);
-    }else {
+    } else {
       _setDeliveryStatusInProcessed(st);
     }
   }
@@ -287,10 +287,10 @@ public class SiebelManager {
           }
         }
       }
-    } catch (AdminException e){
+    } catch (AdminException e) {
       throw e;
     } catch (Exception e) {
-      logger.error(e,e);
+      logger.error(e, e);
       throw new SiebelException("internal_error");
     }
   }
@@ -302,7 +302,7 @@ public class SiebelManager {
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: pause delivery " + delivery.getName());
       }
-    } catch (AdminException e){
+    } catch (AdminException e) {
       throw e;
     } catch (Exception e) {
       throw new SiebelException("internal_error");
@@ -382,7 +382,7 @@ public class SiebelManager {
       }
       executor.execute(thread);
     } catch (Exception e) {
-      logger.error(e,e);
+      logger.error(e, e);
       throw new SiebelException("internal_error");
     }
   }
@@ -391,16 +391,16 @@ public class SiebelManager {
   private static String convertMsisdn(String msisdn) {
     msisdn = msisdn.trim();
     if (msisdn.charAt(0) != '+') {
-      if(msisdn.charAt(0) == '8') {
+      if (msisdn.charAt(0) == '8') {
         msisdn = "+7" + msisdn.substring(1);
-      }else {
+      } else {
         msisdn = '+' + msisdn;
       }
     }
     return msisdn;
   }
 
-  private int addMessages(Delivery delivery, final ResultSet<SiebelMessage> messages) throws AdminException{
+  private int addMessages(Delivery delivery, final ResultSet<SiebelMessage> messages) throws AdminException {
     try {
 
       if (logger.isDebugEnabled()) {
@@ -413,7 +413,7 @@ public class SiebelManager {
       deliveries.addMessages(siebelUser.getLogin(), siebelUser.getPassword(), new DataSource<Message>() {
         public Message next() throws AdminException {
           Message msg;
-          while(messages.next()) {
+          while (messages.next()) {
             SiebelMessage sM = messages.get();
             String msisdn = sM.getMsisdn();
             if (msisdn != null && Address.validate(msisdn = convertMsisdn(msisdn))) {
@@ -445,13 +445,13 @@ public class SiebelManager {
       }
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Siebel: delivery generation ok: "+countMessages[0]+" messages");
+        logger.debug("Siebel: delivery generation ok: " + countMessages[0] + " messages");
       }
       return countMessages[0];
     } catch (AdminException e) {
       logger.error(e, e);
-      if(logger.isDebugEnabled()) {
-        logger.debug("Error during adding messages. Drop delivery: "+delivery.getName());
+      if (logger.isDebugEnabled()) {
+        logger.debug("Error during adding messages. Drop delivery: " + delivery.getName());
       }
       try {
         deliveries.dropDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
@@ -505,7 +505,7 @@ public class SiebelManager {
     deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,
         new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
           public boolean visit(DeliveryInfo value) throws AdminException {
-            if(waveId.equals(value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID))) {
+            if (waveId.equals(value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID))) {
               infos[0] = value;
               return false;
             }

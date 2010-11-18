@@ -13,11 +13,12 @@ import java.util.Map;
 
 /**
  * Контроллер для загрузки запрещённых номеров
+ *
  * @author Aleksandr Khalitov
  */
 
 @SuppressWarnings({"EmptyCatchBlock"})
-public class BlacklistUploadController extends UploadController{
+public class BlacklistUploadController extends UploadController {
 
   private int unrecognized;
 
@@ -51,8 +52,8 @@ public class BlacklistUploadController extends UploadController{
   protected String _next() {
     unrecognized = 0;
     uploaded = 0;
-    current=0;
-    maximum=Integer.MAX_VALUE;
+    current = 0;
+    maximum = Integer.MAX_VALUE;
     return "BLACKLIST";
   }
 
@@ -63,43 +64,44 @@ public class BlacklistUploadController extends UploadController{
     String line;
     List<String> list = new ArrayList<String>(1000);
     BufferedReader reader = null;
-    try{
+    try {
       reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
-      while((line = reader.readLine()) != null && !isStoped()) {
+      while ((line = reader.readLine()) != null && !isStoped()) {
         line = line.trim();
-        current+=line.length();
-        if(!Address.validate(line)) {
+        current += line.length();
+        if (!Address.validate(line)) {
           unrecognized++;
           continue;
         }
         list.add(line);
-        if(list.size() == 1000) {
-          if(add) {
-            getConfig().addInBlacklist(list,user);
-          }else {
+        if (list.size() == 1000) {
+          if (add) {
+            getConfig().addInBlacklist(list, user);
+          } else {
             getConfig().removeFromBlacklist(list, user);
           }
-          uploaded+=1000;
+          uploaded += 1000;
           list.clear();
         }
       }
-      if(!list.isEmpty() && !isStoped()) {
+      if (!list.isEmpty() && !isStoped()) {
         int s = list.size();
-        if(add) {
+        if (add) {
           getConfig().addInBlacklist(list, user);
-        }else {
-          getConfig().removeFromBlacklist(list,user);
+        } else {
+          getConfig().removeFromBlacklist(list, user);
         }
-        uploaded+=s;
+        uploaded += s;
       }
-      if(!isStoped()) {
+      if (!isStoped()) {
         current = maximum;
       }
-    }finally {
-      if(reader != null) {
-        try{
+    } finally {
+      if (reader != null) {
+        try {
           reader.close();
-        }catch (IOException e){}
+        } catch (IOException e) {
+        }
       }
     }
   }

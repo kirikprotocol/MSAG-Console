@@ -110,7 +110,7 @@ class WebConfigSettings {
 
   void setNotificationTemplates(Properties notificationTemplates) {
     validateNotificationTemplates(notificationTemplates);
-    this.notificationTemplates =cloneProps(notificationTemplates);
+    this.notificationTemplates = cloneProps(notificationTemplates);
   }
 
   Properties getNotificationTemplates() {
@@ -118,7 +118,7 @@ class WebConfigSettings {
   }
 
   void setSiebelProperties(Properties siebelProperties) {
-    this.siebelProperties =cloneProps(siebelProperties);
+    this.siebelProperties = cloneProps(siebelProperties);
   }
 
   Properties getSiebelProperties() {
@@ -136,14 +136,15 @@ class WebConfigSettings {
   private void validateNotificationTemplates(Properties notificationTemplates) {
     //todo check required properties
   }
+
   private void validateJavaMailProperties(Properties javaMailProperties) {
     //todo check required properties
   }
 
   private Properties cloneProps(Properties other) {
     Properties props = new Properties();
-    for(Object s : other.keySet()) {
-      props.put(s,other.get(s));
+    for (Object s : other.keySet()) {
+      props.put(s, other.get(s));
     }
     return props;
   }

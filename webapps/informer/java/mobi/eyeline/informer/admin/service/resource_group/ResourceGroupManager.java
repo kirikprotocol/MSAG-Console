@@ -83,7 +83,7 @@ public class ResourceGroupManager {
     refreshHAResGroupList();
   }
 
-  private void refreshHAResGroupList() throws AdminException {
+  private void refreshHAResGroupList() {
 
     if (logger.isDebugEnabled())
       logger.debug("ResourceGroup_listGroups calling");

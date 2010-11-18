@@ -5,6 +5,7 @@ import java.util.Set;
 
 /**
  * Информациях о правах доступа пользователя
+ *
  * @author Aleksandr Khalitov
  */
 public final class InformerPrincipal {

@@ -10,5 +10,5 @@ import mobi.eyeline.informer.util.Address;
 public interface SiebelRegionManager {
 
   public Region getRegion(Address msisdn) throws AdminException;
-  
+
 }

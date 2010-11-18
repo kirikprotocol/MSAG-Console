@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author Artem Snopkov
@@ -20,7 +18,7 @@ public class PageCalendarRenderer extends Renderer {
   private boolean ajax = false;
 
   public void decode(FacesContext context, UIComponent component) {
-    decodeCalendar(context, (PageCalendar)component);
+    decodeCalendar(context, (PageCalendar) component);
   }
 
   static void decodeCalendar(FacesContext context, PageCalendar cal) {
@@ -81,8 +79,6 @@ public class PageCalendarRenderer extends Renderer {
     }
 
     w.append("\n</thead>\n<tbody>\n<tr>");
-
-    List<UIComponent> childs = component.getChildren();
   }
 
   @Override
@@ -104,7 +100,7 @@ public class PageCalendarRenderer extends Renderer {
     PageCalendar cal = (PageCalendar) component;
     Writer w = context.getResponseWriter();
 
-    w.append("\n</tr>\n</thead>\n</table>");    
+    w.append("\n</tr>\n</thead>\n</table>");
 
     if (!ajax) {
       w.append("</div>");

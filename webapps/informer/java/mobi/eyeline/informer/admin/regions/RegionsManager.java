@@ -16,25 +16,28 @@ import java.util.List;
 
 /**
  * Управление конфигурацией регионов
+ *
  * @author Aleksandr Khalitov
  */
-public class RegionsManager extends BaseManager<RegionsSettings>{
+public class RegionsManager extends BaseManager<RegionsSettings> {
 
   public RegionsManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException {
-    super(infosme,  config, backup, fileSystem,new RegionsConfig());
+    super(infosme, config, backup, fileSystem, new RegionsConfig());
   }
 
   /**
    * Добавляет новый регион
+   *
    * @param r регион
    * @throws AdminException ошибка сохранения
    */
-  public void addRegion(final Region r) throws AdminException{
+  public void addRegion(final Region r) throws AdminException {
     final Region region = r.cloneRegion();
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
         settings.addRegion(region);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         infosme.addRegion(region.getRegionId());
       }
@@ -43,15 +46,17 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Обновляет существующий регион
+   *
    * @param r регион
    * @throws AdminException ошибка сохранения
    */
-  public void updateRegion(final Region r) throws AdminException{
+  public void updateRegion(final Region r) throws AdminException {
     final Region region = r.cloneRegion();
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
         settings.updateRegion(region);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         infosme.updateRegion(region.getRegionId());
       }
@@ -60,13 +65,14 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Возвращает список регионов
+   *
    * @return список регионов
    */
-  public List<Region> getRegions()  {
-    return readSettings(new SettingsReader<RegionsSettings, List<Region>>(){
-      public List<Region> executeRead(RegionsSettings settings)  {
+  public List<Region> getRegions() {
+    return readSettings(new SettingsReader<RegionsSettings, List<Region>>() {
+      public List<Region> executeRead(RegionsSettings settings) {
         List<Region> result = new LinkedList<Region>();
-        for(Region s : settings.getRegions()) {
+        for (Region s : settings.getRegions()) {
           result.add(s.cloneRegion());
         }
         return result;
@@ -76,12 +82,13 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Возвращает регион по id
+   *
    * @param id id региона
    * @return регион
    */
-  public Region getRegion(final Integer id)  {
-    return readSettings(new SettingsReader<RegionsSettings, Region>(){
-      public Region executeRead(RegionsSettings settings)  {
+  public Region getRegion(final Integer id) {
+    return readSettings(new SettingsReader<RegionsSettings, Region>() {
+      public Region executeRead(RegionsSettings settings) {
         Region region = settings.getRegion(id);
         return region == null ? null : region.cloneRegion();
       }
@@ -91,14 +98,16 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Удаляет регион
+   *
    * @param regionId id региона
    * @throws AdminException ошибка сохранения
    */
-  public void removeRegion(final Integer regionId) throws AdminException{
+  public void removeRegion(final Integer regionId) throws AdminException {
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
         settings.removeRegion(regionId);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         infosme.removeRegion(regionId);
       }
@@ -107,23 +116,28 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Установка максимального кол-ва смс по умолчанию
+   *
    * @param defMaxPerSecond максимального кол-ва смс по умолчанию
    * @throws AdminException ошибка сохранения
    */
-  public void setDefaultMaxPerSecond(final int defMaxPerSecond) throws AdminException{
+  public void setDefaultMaxPerSecond(final int defMaxPerSecond) throws AdminException {
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
         settings.setDefaultMaxPerSecond(defMaxPerSecond);
       }
-      public void infosmeCommand(Infosme infosme) throws AdminException {}
+
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+      }
     });
   }
+
   /**
    * Возвращает максимальное кол-во смс по умолчанию
+   *
    * @return максимального кол-ва смс по умолчанию
    */
-  public int getDefaultMaxPerSecond(){
-    return readSettings(new SettingsReader<RegionsSettings, Integer>(){
+  public int getDefaultMaxPerSecond() {
+    return readSettings(new SettingsReader<RegionsSettings, Integer>() {
       public Integer executeRead(RegionsSettings settings) {
         return settings.getDefaultMaxPerSecond();
       }
@@ -132,12 +146,13 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Возвращает регион по маске
+   *
    * @param address маска
    * @return регион
    */
   public Region getRegion(final Address address) {
-    return readSettings(new SettingsReader<RegionsSettings, Region>(){
-      public Region executeRead(RegionsSettings settings)  {
+    return readSettings(new SettingsReader<RegionsSettings, Region>() {
+      public Region executeRead(RegionsSettings settings) {
         Region region = settings.getRegionByAddress(address);
         return region == null ? null : region.cloneRegion();
       }
@@ -146,14 +161,15 @@ public class RegionsManager extends BaseManager<RegionsSettings>{
 
   /**
    * Возвращает список регионов по названию СМСЦ
+   *
    * @param smsc название СМСЦ
    * @return список регионов
    */
-  public Collection<Region> getRegionsBySmsc(final String smsc)  {
-    return readSettings(new SettingsReader<RegionsSettings, Collection<Region>>(){
-      public Collection<Region> executeRead(RegionsSettings settings)  {
+  public Collection<Region> getRegionsBySmsc(final String smsc) {
+    return readSettings(new SettingsReader<RegionsSettings, Collection<Region>>() {
+      public Collection<Region> executeRead(RegionsSettings settings) {
         Collection<Region> result = new LinkedList<Region>();
-        for(Region r : settings.getRegionsBySmsc(smsc)) {
+        for (Region r : settings.getRegionsBySmsc(smsc)) {
           result.add(r.cloneRegion());
         }
 

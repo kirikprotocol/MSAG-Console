@@ -7,6 +7,7 @@ import java.io.*;
 
 /**
  * Файловая система для HS-установки
+ *
  * @author Aleksandr Khalitov
  */
 class FileSystemHS extends FileSystem {
@@ -20,7 +21,7 @@ class FileSystemHS extends FileSystem {
   private String errStr;
 
   FileSystemHS(File baseDir, File... mirrorsDir) {
-    if(baseDir == null || mirrorsDir == null) {
+    if (baseDir == null || mirrorsDir == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     this.baseDir = baseDir;
@@ -29,7 +30,7 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public OutputStream getOutputStream(File file, boolean append) throws AdminException {
-    if(file == null) {
+    if (file == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     checkErrors();
@@ -51,7 +52,7 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public void rename(File file, File toFile) throws AdminException {
-    if(file == null || toFile == null) {
+    if (file == null || toFile == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     checkErrors();
@@ -75,7 +76,7 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public void copy(File file, File toFile) throws AdminException {
-    if(file == null || toFile == null) {
+    if (file == null || toFile == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     checkErrors();
@@ -102,7 +103,7 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public void delete(File file) throws AdminException {
-    if(file == null) {
+    if (file == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     checkErrors();
@@ -122,7 +123,7 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public void mkdirs(File file) throws AdminException {
-    if(file == null) {
+    if (file == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     checkErrors();
@@ -142,7 +143,7 @@ class FileSystemHS extends FileSystem {
 
   @Override
   public boolean exists(File file) throws AdminException {
-    if(file == null) {
+    if (file == null) {
       throw new IllegalArgumentException("Some arguments are null");
     }
     checkErrors();

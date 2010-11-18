@@ -8,6 +8,7 @@ import java.util.*;
 
 /**
  * Helper для поиска и журналирования изменений
+ *
  * @author Artem Snopkov
  */
 class DiffHelper {
@@ -20,24 +21,25 @@ class DiffHelper {
 
   /**
    * Возвращает все геттеры класса, за исключение excpet
-   * @param clazz класс
+   *
+   * @param clazz  класс
    * @param except геттеры, котрые нужно исключить из результата
    * @return геттеры класса, за исключение excpet
    */
-  protected static List<Method> getGetters(Class clazz, String ... except) {
+  protected static List<Method> getGetters(Class clazz, String... except) {
     List<Method> getters = new ArrayList<Method>();
     for (Method m : clazz.getMethods()) {
       String methodName = m.getName();
       if (methodName.startsWith("get") || methodName.startsWith("is")) {
-        if(except != null) {
+        if (except != null) {
           boolean accept = true;
-          for(String s : except) {
-            if(s.equals(methodName)) {
+          for (String s : except) {
+            if (s.equals(methodName)) {
               accept = false;
               break;
             }
           }
-          if(!accept) {
+          if (!accept) {
             continue;
           }
         }
@@ -49,7 +51,8 @@ class DiffHelper {
 
   /**
    * Возвращает значения по геттрем
-   * @param getters геттеры
+   *
+   * @param getters  геттеры
    * @param instance объект
    * @return список значений
    */
@@ -132,14 +135,16 @@ class DiffHelper {
 
   /**
    * Сравнивает списки значений и записывает в журнал различия
-   * @param j журнал
-   * @param oldValues список старых значений
-   * @param newValues список новых значений
-   * @param getters геттеры
-   * @param user пользователь, сделавший изменения
+   *
+   * @param j             журнал
+   * @param oldValues     список старых значений
+   * @param newValues     список новых значений
+   * @param getters       геттеры
+   * @param user          пользователь, сделавший изменения
    * @param bundleMessage ключ сообщения для журнала (возможно шаблон)
    * @param addParameters параметры для шаблона сообщения
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка записи в журнал
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка записи в журнал
    */
   protected void logChanges(Journal j, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user, String bundleMessage, String... addParameters) throws AdminException {
     for (int i = 0; i < getters.size(); i++) {
@@ -193,39 +198,41 @@ class DiffHelper {
     }
 
   }
+
   /**
    * Сравнивает списки значений и записывает в журнал различия с дефолтным сообщением
-   * @param j журнал
+   *
+   * @param j         журнал
    * @param oldValues список старых значений
    * @param newValues список новых значений
-   * @param getters геттеры
-   * @param user пользователь, сделавший изменения
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка записи в журнал
+   * @param getters   геттеры
+   * @param user      пользователь, сделавший изменения
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка записи в журнал
    */
   protected void logChanges(Journal j, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user) throws AdminException {
     logChanges(j, oldValues, newValues, getters, user, "property_changed");
   }
 
 
-  public void logMapsDiff(Journal journal,Subject subject, String objectId, Map oldMap,  Map newMap, String userName) throws AdminException {
-    for(Object key : oldMap.keySet()) {
-       Object oldVal = oldMap.get(key);
-       Object newVal = newMap.get(key);
-       if(newVal==null) {
-            journal.addRecord(JournalRecord.Type.REMOVE, subject, userName,"obj_property_removed",objectId,valueToString(key),valueToString(oldVal));
-       }
-       else {
-         if(!newVal.equals(oldVal)) {
-            journal.addRecord(JournalRecord.Type.CHANGE, subject, userName,"obj_property_changed",objectId,valueToString(key), valueToString(oldVal), valueToString(newVal));
-         }
-       }
+  public void logMapsDiff(Journal journal, Subject subject, String objectId, Map oldMap, Map newMap, String userName) throws AdminException {
+    for (Object key : oldMap.keySet()) {
+      Object oldVal = oldMap.get(key);
+      Object newVal = newMap.get(key);
+      if (newVal == null) {
+        journal.addRecord(JournalRecord.Type.REMOVE, subject, userName, "obj_property_removed", objectId, valueToString(key), valueToString(oldVal));
+      } else {
+        if (!newVal.equals(oldVal)) {
+          journal.addRecord(JournalRecord.Type.CHANGE, subject, userName, "obj_property_changed", objectId, valueToString(key), valueToString(oldVal), valueToString(newVal));
+        }
+      }
     }
-    for(Object key : newMap.keySet()) {
-       Object oldVal = oldMap.get(key);
-       if(oldVal==null) {
-          Object newVal = newMap.get(key);
-          journal.addRecord(JournalRecord.Type.ADD, subject, userName,"obj_property_added",objectId, valueToString(key), valueToString(newVal));
-       }
+    for (Object key : newMap.keySet()) {
+      Object oldVal = oldMap.get(key);
+      if (oldVal == null) {
+        Object newVal = newMap.get(key);
+        journal.addRecord(JournalRecord.Type.ADD, subject, userName, "obj_property_added", objectId, valueToString(key), valueToString(newVal));
+      }
     }
   }
 }

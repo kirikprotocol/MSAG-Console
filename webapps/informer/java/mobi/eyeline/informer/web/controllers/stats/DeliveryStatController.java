@@ -22,15 +22,15 @@ import java.util.*;
  */
 public abstract class DeliveryStatController extends LongOperationController {
   private User user;
-  private boolean initError=false;
+  private boolean initError = false;
   private DeliveryStatFilter filter;
   private TimeAggregationType aggregation;
 
-  private Map<Object, AggregatedRecord> recordsMap;
-  private List<AggregatedRecord> records;
+  private final Map<Object, AggregatedRecord> recordsMap;
+  private final List<AggregatedRecord> records;
 
 
-  boolean fullMode =false;
+  boolean fullMode = false;
 
   public DeliveryStatController() {
     super();
@@ -43,11 +43,10 @@ public abstract class DeliveryStatController extends LongOperationController {
 
   protected void initUser() {
     user = getConfig().getUser(getUserName());
-    if(user==null) initError = true;
-    else if(!user.hasRole(User.INFORMER_ADMIN_ROLE)) {
+    if (user == null) initError = true;
+    else if (!user.hasRole(User.INFORMER_ADMIN_ROLE)) {
       filter.setUser(getUserName());
-    }
-    else {
+    } else {
       filter.setUser(null);
     }
   }
@@ -60,7 +59,7 @@ public abstract class DeliveryStatController extends LongOperationController {
     filter.setTillDate(null);
     filter.setTaskId(null);
     setFullMode(false);
-    setAggregation(TimeAggregationType.DAY);  
+    setAggregation(TimeAggregationType.DAY);
   }
 
 
@@ -98,7 +97,7 @@ public abstract class DeliveryStatController extends LongOperationController {
 
   public List<SelectItem> getAggregations() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
-    for(TimeAggregationType a : TimeAggregationType.values()) {
+    for (TimeAggregationType a : TimeAggregationType.values()) {
       ret.add(new SelectItem(a));
     }
     return ret;
@@ -109,26 +108,27 @@ public abstract class DeliveryStatController extends LongOperationController {
   }
 
   protected void clearRecords() {
-      recordsMap.clear();
-      records.clear();
+    recordsMap.clear();
+    records.clear();
   }
 
   protected void loadFinished() {
-      records.addAll(recordsMap.values());
+    records.addAll(recordsMap.values());
   }
 
   protected AggregatedRecord getRecord(Object key) {
-     return recordsMap.get(key);
+    return recordsMap.get(key);
   }
+
   protected void putRecord(AggregatedRecord newRecord) {
-     recordsMap.put(newRecord.getAggregationKey(),newRecord);
+    recordsMap.put(newRecord.getAggregationKey(), newRecord);
   }
 
 
   public List<SelectItem> getUsers() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
     ret.add(new SelectItem(""));
-    for(User u : getConfig().getUsers()) {
+    for (User u : getConfig().getUsers()) {
       ret.add(new SelectItem(u.getLogin()));
     }
     return ret;
@@ -140,7 +140,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   public void execute(Configuration config, final Locale locale) throws Exception {
     clearRecords();
     try {
-      loadRecords(config,locale);
+      loadRecords(config, locale);
     }
     catch (Exception e) {
       clearRecords();
@@ -169,7 +169,7 @@ public abstract class DeliveryStatController extends LongOperationController {
           if (--startPos < 0) {
             result.add(r);
             List<AggregatedRecord> innerRecords = r.getInnerRows();
-            if(innerRecords!=null && !innerRecords.isEmpty() && sortOrder!=null) {
+            if (innerRecords != null && !innerRecords.isEmpty() && sortOrder != null) {
               Collections.sort(r.getInnerRows(), innerRecords.get(0).getRecordsComparator(sortOrder));
             }
             count--;
@@ -193,17 +193,15 @@ public abstract class DeliveryStatController extends LongOperationController {
   }
 
   @Override
-  protected void _download(PrintWriter writer) throws IOException {    
+  protected void _download(PrintWriter writer) throws IOException {
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       AggregatedRecord r = records.get(i);
-      if(i==0) {
+      if (i == 0) {
         r.printCSVheader(writer, fullMode);
       }
       r.printWithChildrenToCSV(writer, fullMode);
     }
   }
-
-
 
 
   @Override

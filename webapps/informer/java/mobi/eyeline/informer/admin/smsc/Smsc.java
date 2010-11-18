@@ -16,7 +16,7 @@ public class Smsc {
 
   private static final String LAST = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}|:\\*))";
   private static final String MEDIUM = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}))";
-  public static final Pattern RETRY_POLICY_PATTERN =Pattern.compile("(" + LAST + "|" +  MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
+  public static final Pattern RETRY_POLICY_PATTERN = Pattern.compile("(" + LAST + "|" + MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
 
   private final ValidationHelper vh = new ValidationHelper(Smsc.class);
 
@@ -57,7 +57,7 @@ public class Smsc {
   private Smsc() {
   }
 
-  public Smsc(String name) throws AdminException{
+  public Smsc(String name) throws AdminException {
     vh.checkNotEmpty("name", name);
     this.name = name;
   }
@@ -77,17 +77,17 @@ public class Smsc {
     maxValidityPeriod = s.getInt("maxValidityPeriod");
     minValidityPeriod = s.getInt("minValidityPeriod");
     s = s.getSection("retryPolicies");
-    for(String e : s.getStringList("immediate", ",") ) {
+    for (String e : s.getStringList("immediate", ",")) {
       immediateErrors.add(Integer.parseInt(e.trim()));
     }
-    for(String e : s.getStringList("permanent", ",") ) {
+    for (String e : s.getStringList("permanent", ",")) {
       permanentErrors.add(Integer.parseInt(e.trim()));
     }
     s = s.getSection("temporary");
-    for(XmlConfigParam p : s.params()) {
+    for (XmlConfigParam p : s.params()) {
       String interval = p.getName();
       Set<Integer> es = new HashSet<Integer>();
-      for(String e : p.getStringList(",")) {
+      for (String e : p.getStringList(",")) {
         es.add(Integer.parseInt(e.trim()));
       }
       temporaryErrors.put(interval, es);
@@ -113,7 +113,7 @@ public class Smsc {
     s.setStringList("permanent", permanentErrors, ",");
     s = s.getOrCreateSection("temporary");
     s.clear();
-    for(Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
+    for (Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
       s.setStringList(e.getKey(), e.getValue(), ",");
     }
   }
@@ -122,7 +122,7 @@ public class Smsc {
     return maxValidityPeriod;
   }
 
-  public void setMaxValidityPeriod(int maxValidityPeriod) throws AdminException{
+  public void setMaxValidityPeriod(int maxValidityPeriod) throws AdminException {
     vh.checkGreaterOrEqualsTo("maxValidityPeriod", maxValidityPeriod, 0);
     this.maxValidityPeriod = maxValidityPeriod;
   }
@@ -156,19 +156,19 @@ public class Smsc {
   public Map<String, Collection<Integer>> getTemporaryErrors() {
     Map<String, Collection<Integer>> result = new HashMap<String, Collection<Integer>>(temporaryErrors.size());
 
-    for(Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
+    for (Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
       result.put(e.getKey(), new HashSet<Integer>(e.getValue()));
     }
 
     return result;
   }
 
-  public void addImmediateError(int error) throws AdminException{
+  public void addImmediateError(int error) throws AdminException {
     vh.checkNotContains("immediateErrors", immediateErrors, error);
     immediateErrors.add(error);
   }
 
-  public void removeImmediateError(int error){
+  public void removeImmediateError(int error) {
     immediateErrors.remove(error);
   }
 
@@ -176,7 +176,7 @@ public class Smsc {
     immediateErrors.clear();
   }
 
-  public void addPermanentError(int error) throws AdminException{
+  public void addPermanentError(int error) throws AdminException {
     vh.checkNotContains("permanentErrors", permanentErrors, error);
     permanentErrors.add(error);
   }
@@ -185,11 +185,11 @@ public class Smsc {
     permanentErrors.clear();
   }
 
-  public void removePermanentError(int error){
+  public void removePermanentError(int error) {
     permanentErrors.remove(error);
   }
 
-  public void addTempError(String period, Set<Integer> errors) throws AdminException{
+  public void addTempError(String period, Set<Integer> errors) throws AdminException {
     vh.checkNotEmpty("temporaryErrors", period);
     vh.checkMaches("temporaryErrors", period, RETRY_POLICY_PATTERN);
     vh.checkNotContains("temporaryErrors", temporaryErrors.keySet(), period);
@@ -201,8 +201,8 @@ public class Smsc {
     temporaryErrors.clear();
   }
 
-  public void removeTempError(String period){
-    temporaryErrors.remove( period);
+  public void removeTempError(String period) {
+    temporaryErrors.remove(period);
   }
 
 
@@ -210,7 +210,7 @@ public class Smsc {
     return timeout;
   }
 
-  public void setTimeout(int timeout) throws AdminException{
+  public void setTimeout(int timeout) throws AdminException {
     vh.checkGreaterThan("timeout", timeout, 0);
     this.timeout = timeout;
   }
@@ -219,7 +219,7 @@ public class Smsc {
     return rangeOfAddress;
   }
 
-  public void setRangeOfAddress(int rangeOfAddress) throws AdminException{
+  public void setRangeOfAddress(int rangeOfAddress) throws AdminException {
     this.rangeOfAddress = rangeOfAddress;
   }
 
@@ -231,7 +231,7 @@ public class Smsc {
     return host;
   }
 
-  public void setHost(String host) throws AdminException{
+  public void setHost(String host) throws AdminException {
     vh.checkNotEmpty("host", host);
     this.host = host;
   }
@@ -245,11 +245,11 @@ public class Smsc {
     this.port = port;
   }
 
-  public String getSystemId()  {
+  public String getSystemId() {
     return systemId;
   }
 
-  public void setSystemId(String systemId) throws AdminException{
+  public void setSystemId(String systemId) throws AdminException {
     vh.checkNotEmpty("systemId", systemId);
     this.systemId = systemId;
   }
@@ -258,7 +258,7 @@ public class Smsc {
     return password;
   }
 
-  public void setPassword(String password) throws AdminException{
+  public void setPassword(String password) throws AdminException {
     vh.checkNotNull("password", password);
     this.password = password;
   }
@@ -267,7 +267,7 @@ public class Smsc {
     return systemType;
   }
 
-  public void setSystemType(String systemType) throws AdminException{
+  public void setSystemType(String systemType) throws AdminException {
     vh.checkNotEmpty("systemType", systemType);
     this.systemType = systemType;
   }
@@ -276,7 +276,7 @@ public class Smsc {
     return interfaceVersion;
   }
 
-  public void setInterfaceVersion(int interfaceVersion) throws AdminException{
+  public void setInterfaceVersion(int interfaceVersion) throws AdminException {
     vh.checkGreaterOrEqualsTo("interfaceVersion", interfaceVersion, 0);
     this.interfaceVersion = interfaceVersion;
   }
@@ -285,7 +285,7 @@ public class Smsc {
     return ussdServiceOp;
   }
 
-  public void setUssdServiceOp(int ussdServiceOp) throws AdminException{
+  public void setUssdServiceOp(int ussdServiceOp) throws AdminException {
     vh.checkGreaterOrEqualsTo("ussdServiceOp", ussdServiceOp, 0);
     this.ussdServiceOp = ussdServiceOp;
   }
@@ -294,7 +294,7 @@ public class Smsc {
     return vlrUssdServiceOp;
   }
 
-  public void setVlrUssdServiceOp(int vlrUssdServiceOp) throws AdminException{
+  public void setVlrUssdServiceOp(int vlrUssdServiceOp) throws AdminException {
     vh.checkGreaterOrEqualsTo("vlrUssdServiceOp", vlrUssdServiceOp, 0);
     this.vlrUssdServiceOp = vlrUssdServiceOp;
   }
@@ -321,55 +321,55 @@ public class Smsc {
     if (systemId != null ? !systemId.equals(smsc.systemId) : smsc.systemId != null) return false;
     if (systemType != null ? !systemType.equals(smsc.systemType) : smsc.systemType != null) return false;
 
-    if(permanentErrors.size() != smsc.permanentErrors.size()) {
+    if (permanentErrors.size() != smsc.permanentErrors.size()) {
       return false;
-    }else {
-      for(Integer e1 : permanentErrors) {
+    } else {
+      for (Integer e1 : permanentErrors) {
         boolean exist = false;
-        for(Integer e2 : smsc.permanentErrors) {
-          if(e1.equals(e2)) {
+        for (Integer e2 : smsc.permanentErrors) {
+          if (e1.equals(e2)) {
             exist = true;
             break;
           }
         }
-        if(!exist) {
+        if (!exist) {
           return false;
         }
       }
     }
-    if(immediateErrors.size() != smsc.immediateErrors.size()) {
+    if (immediateErrors.size() != smsc.immediateErrors.size()) {
       return false;
-    }else {
-      for(Integer e1 : immediateErrors) {
+    } else {
+      for (Integer e1 : immediateErrors) {
         boolean exist = false;
-        for(Integer e2 : smsc.immediateErrors) {
-          if(e1.equals(e2)) {
+        for (Integer e2 : smsc.immediateErrors) {
+          if (e1.equals(e2)) {
             exist = true;
             break;
           }
         }
-        if(!exist) {
+        if (!exist) {
           return false;
         }
       }
     }
-    if(temporaryErrors.size() != smsc.temporaryErrors.size()) {
+    if (temporaryErrors.size() != smsc.temporaryErrors.size()) {
       return false;
-    }else {
-      for(Map.Entry<String, Collection<Integer>> e1 : temporaryErrors.entrySet()) {
-        if(!smsc.temporaryErrors.containsKey(e1.getKey())) {
+    } else {
+      for (Map.Entry<String, Collection<Integer>> e1 : temporaryErrors.entrySet()) {
+        if (!smsc.temporaryErrors.containsKey(e1.getKey())) {
           return false;
         }
-        for(Integer ee1 : e1.getValue()) {
+        for (Integer ee1 : e1.getValue()) {
           boolean exist = false;
-          for(Integer ee2 : smsc.temporaryErrors.get(e1.getKey())) {
-            if(ee1.equals(ee2)) {
+          for (Integer ee2 : smsc.temporaryErrors.get(e1.getKey())) {
+            if (ee1.equals(ee2)) {
               exist = true;
               break;
             }
           }
-          if(!exist) {
-            return false; 
+          if (!exist) {
+            return false;
           }
         }
       }
@@ -385,22 +385,22 @@ public class Smsc {
   public Smsc cloneSmsc() {
     Smsc s = new Smsc();
     s.name = name;
-    s.host=host;
-    s.port=port;
-    s.systemId=systemId;
-    s.password=password;
-    s.systemType=systemType;
-    s.interfaceVersion=interfaceVersion;
-    s.ussdServiceOp=ussdServiceOp;
-    s.vlrUssdServiceOp=vlrUssdServiceOp;
-    s.timeout=timeout;
-    s.rangeOfAddress=rangeOfAddress;
+    s.host = host;
+    s.port = port;
+    s.systemId = systemId;
+    s.password = password;
+    s.systemType = systemType;
+    s.interfaceVersion = interfaceVersion;
+    s.ussdServiceOp = ussdServiceOp;
+    s.vlrUssdServiceOp = vlrUssdServiceOp;
+    s.timeout = timeout;
+    s.rangeOfAddress = rangeOfAddress;
     s.defaultValidityPeriod = defaultValidityPeriod;
     s.maxValidityPeriod = maxValidityPeriod;
     s.minValidityPeriod = minValidityPeriod;
     s.immediateErrors.addAll(immediateErrors);
     s.permanentErrors.addAll(permanentErrors);
-    for(Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
+    for (Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
       s.temporaryErrors.put(e.getKey(), new HashSet<Integer>(e.getValue()));
     }
     return s;

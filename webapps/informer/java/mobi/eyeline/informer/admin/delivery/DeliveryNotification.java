@@ -9,10 +9,10 @@ import java.util.Date;
  * Time: 18:29:04
  */
 public class DeliveryNotification {
-  private Date eventDate;
-  private int deliveryId;
-  private String userId;
-  private DeliveryNotificationType type;
+  private final Date eventDate;
+  private final int deliveryId;
+  private final String userId;
+  private final DeliveryNotificationType type;
 
 
   public DeliveryNotification(DeliveryNotificationType type, Date eventDate, int deliveryId, String userId) {

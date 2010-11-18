@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 
 /**
  * Ошибка чтения/записи конфига
+ *
  * @author Artem Snopkov
  */
 public class ConfigException extends AdminException {
@@ -11,7 +12,7 @@ public class ConfigException extends AdminException {
     super(key, cause);
   }
 
-  public ConfigException(String key, String ... args) {
+  public ConfigException(String key, String... args) {
     super(key, args);
   }
 }

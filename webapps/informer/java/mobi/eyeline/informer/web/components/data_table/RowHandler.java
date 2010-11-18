@@ -41,7 +41,7 @@ public class RowHandler extends ComponentHandler {
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
 
     Row r = (Row) c;
-    String tid = (String)ctx.getVariableMapper().resolveVariable("___tid").getValue(ctx);
+    String tid = (String) ctx.getVariableMapper().resolveVariable("___tid").getValue(ctx);
 
     if (ctx.getVariableMapper().resolveVariable(tid + "___currentRow") == null) {
       r.setHeader(true);
@@ -49,7 +49,7 @@ public class RowHandler extends ComponentHandler {
     } else {
 
       r.setInner(ctx.getVariableMapper().resolveVariable(tid + "___innerRow") != null);
-      String var = (String)ctx.getVariableMapper().resolveVariable(tid + "___var").getValue(ctx);
+      String var = (String) ctx.getVariableMapper().resolveVariable(tid + "___var").getValue(ctx);
 
       Object currentRow = ctx.getVariableMapper().resolveVariable(tid + "___currentRow").getValue(ctx);
       r.setVar(ctx, currentRow);

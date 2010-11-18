@@ -4,6 +4,7 @@ import java.util.Date;
 
 /**
  * Рассылка Siebel
+ *
  * @author Aleksandr Khalitov
  */
 public class SiebelDelivery {
@@ -14,8 +15,8 @@ public class SiebelDelivery {
   private Date lastUpdate;
   private int priority;
   private boolean flash;
-  private boolean save;    //todo
-  private boolean beep;    //todo
+  private boolean save;
+  private boolean beep;
   private Integer expPeriod;
   private Status status;
 

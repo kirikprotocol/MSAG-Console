@@ -4,6 +4,7 @@ import mobi.eyeline.informer.util.LocalizedException;
 
 /**
  * Ошибка web приложения
+ *
  * @author Aleksandr Khalitov
  */
 public abstract class AdminException extends LocalizedException {

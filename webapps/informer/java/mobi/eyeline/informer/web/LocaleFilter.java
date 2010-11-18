@@ -10,6 +10,7 @@ import java.util.Locale;
 
 /**
  * Вычисление и установка локали
+ *
  * @author Aleksandr Khalitov
  */
 public class LocaleFilter implements Filter {
@@ -20,11 +21,11 @@ public class LocaleFilter implements Filter {
   }
 
   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-   HttpServletRequest request = (HttpServletRequest)servletRequest;
+    HttpServletRequest request = (HttpServletRequest) servletRequest;
     Locale l;
     Principal p = request.getUserPrincipal();
     User u = null;
-    if(p != null) {
+    if (p != null) {
       u = WebContext.getInstance().getConfiguration().getUser(p.getName());
     }
 

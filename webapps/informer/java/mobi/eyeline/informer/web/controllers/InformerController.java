@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.web.controllers;
 
 
-import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.web.LocaleFilter;
@@ -24,6 +23,7 @@ import java.util.regex.Pattern;
 
 /**
  * Базовый контроллер
+ *
  * @author Aleksandr Khalitov
  */
 public abstract class InformerController implements Serializable {
@@ -32,6 +32,7 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Возвращает Configuration
+   *
    * @return Configuration
    */
   protected Configuration getConfig() {
@@ -40,8 +41,9 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Добавляет сообщение на страницу
+   *
    * @param severity severiry
-   * @param message сообщение
+   * @param message  сообщение
    */
   protected void addMessage(FacesMessage.Severity severity, String message) {
     addMessage(severity, message, "");
@@ -49,9 +51,10 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Добавляет сообщение на страницу. Все осталные методы по добавлению используют этот метод.
+   *
    * @param facesContext Faces Context
-   * @param message соббщение
-   * @param id id на странице
+   * @param message      соббщение
+   * @param id           id на странице
    */
   protected void addMessage(FacesContext facesContext, FacesMessage message, String id) {
     facesContext.addMessage(id, message);
@@ -59,9 +62,10 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Добавляет сообщение на страницу
+   *
    * @param severity severiry
-   * @param message сообщение
-   * @param detail подробности
+   * @param message  сообщение
+   * @param detail   подробности
    */
   protected void addMessage(FacesMessage.Severity severity, String message, String detail) {
     FacesMessage facesMessage = new FacesMessage(severity, message, detail);
@@ -70,17 +74,20 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Добавляет локализованное сообщение на страницу
-   * @param severity severiry
+   *
+   * @param severity  severiry
    * @param bundleKey ключ сообщения в ResourceBundle-е
    */
   protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey) {
     addMessage(severity, ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey), "");
   }
+
   /**
    * Добавляет локализованное сообщение на страницу с дополнительными параметрами шаблона
-   * @param severity severiry
+   *
+   * @param severity  severiry
    * @param bundleKey ключ шаблона в ResourceBundle-е
-   * @param args параметры шаблона
+   * @param args      параметры шаблона
    */
   protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey, Object... args) {
     String message = MessageFormat.format(
@@ -95,22 +102,25 @@ public abstract class InformerController implements Serializable {
 
   protected String getLocalizedString(String bundleKey, Object... args) {
     return MessageFormat.format(
-            ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey),
-            args
-           );
+        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale()).getString(bundleKey),
+        args
+    );
 
   }
+
   /**
    * Добавляет на страницу информацию об ошибке
+   *
    * @param e ошибка
    */
   protected void addError(LocalizedException e) {
-    logger.error(e,e);
+    logger.error(e, e);
     addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
   }
 
   /**
    * Возвращает параметр из запроса
+   *
    * @param name имя параметра
    * @return параметр из запроса
    */
@@ -120,6 +130,7 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Возвращает все параметры запроса
+   *
    * @return параметры запроса
    */
   protected Map<String, String> getRequestParameters() {
@@ -128,6 +139,7 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Возвращает все параметры запроса
+   *
    * @return параметры запроса
    */
   protected Map<String, Object> getRequest() {
@@ -136,6 +148,7 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Возвращает текущую сессию пользователя
+   *
    * @param createIfNeeded создать, если сессии не существует
    * @return сессия
    */
@@ -145,6 +158,7 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Возвращает текущую локаль
+   *
    * @return локаль
    */
   protected Locale getLocale() {
@@ -153,6 +167,7 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Возвращает залогиненного пользвателя
+   *
    * @return залогиненный пользователь
    */
   protected Principal getUserPrincipal() {
@@ -166,6 +181,7 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Имеет ли залогинненый пользователь роль 'Администратор'
+   *
    * @return true - да, false - нет
    */
   public boolean isUserInAdminRole() {
@@ -174,6 +190,7 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Возвращает имя залогиненного пользвателя
+   *
    * @return имяx залогиненный пользователь
    */
   public String getUserName() {
@@ -183,11 +200,12 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Метод для отдачи файлов
+   *
    * @param context Faces context
-   * @param out Output Stream
+   * @param out     Output Stream
    * @throws java.io.IOException ошибка записи
    */
-  public void download(FacesContext context, OutputStream out) throws IOException{
+  public void download(FacesContext context, OutputStream out) throws IOException {
     PrintWriter w = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
     _download(w);
     w.flush();
@@ -195,48 +213,53 @@ public abstract class InformerController implements Serializable {
 
   /**
    * Метод для отдачи файлов (требует переопределения в наследнике)
+   *
    * @param writer Print writer
    * @throws java.io.IOException ошибка записи
    */
-  protected void _download(PrintWriter writer) throws IOException{
+  protected void _download(PrintWriter writer) throws IOException {
   }
 
 
   /**
    * Метод для загрузки файла
+   *
    * @param e ValueChangeEvent
    */
   @SuppressWarnings({"EmptyCatchBlock"})
   public void uploaded(ValueChangeEvent e) {
-    UploadedFile file = (UploadedFile)e.getNewValue();
-    if(file == null) {
+    UploadedFile file = (UploadedFile) e.getNewValue();
+    if (file == null) {
       return;
     }
     BufferedReader is = null;
-    try{
+    try {
       is = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
       _uploaded(is);
-    }catch (IOException ex) {
+    } catch (IOException ex) {
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "informer.upload.error");
     } finally {
-      if(is != null) {
-        try{
+      if (is != null) {
+        try {
           is.close();
-        }catch (IOException ex){}
+        } catch (IOException ex) {
+        }
       }
     }
   }
 
   /**
    * Метод для загрузки файла (требует переопределения в наследнике)
+   *
    * @param reader BufferedReader
    * @throws java.io.IOException ошибка чтения
    */
-  protected void _uploaded(BufferedReader reader) throws IOException{
+  protected void _uploaded(BufferedReader reader) throws IOException {
   }
 
   /**
    * Паттерн для политик передостаки
+   *
    * @return паттерн
    */
   public Pattern getRetryPoliciesPattern() {

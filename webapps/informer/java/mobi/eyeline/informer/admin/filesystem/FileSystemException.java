@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 
 /**
  * Ошибка работы с файловой системой
+ *
  * @author Artem Snopkov
  */
 class FileSystemException extends AdminException {
@@ -15,7 +16,7 @@ class FileSystemException extends AdminException {
     super(key);
   }
 
-  FileSystemException(String key, String ... args) {
+  FileSystemException(String key, String... args) {
     super(key, args);
   }
 }

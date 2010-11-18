@@ -17,7 +17,7 @@ public class CreateDeliveryController extends InformerController {
   public String next() {
     try {
       CreateDeliveryPage page = activePage.process(getUserName(), getConfig(), getLocale());
-      if(page != null) {
+      if (page != null) {
         activePage = page;
       }
     } catch (AdminException e) {

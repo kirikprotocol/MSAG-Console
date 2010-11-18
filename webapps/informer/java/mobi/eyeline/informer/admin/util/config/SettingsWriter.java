@@ -11,8 +11,8 @@ import mobi.eyeline.informer.admin.infosme.Infosme;
  */
 public interface SettingsWriter<C> {
 
-    void changeSettings(C settings) throws AdminException ;
+  void changeSettings(C settings) throws AdminException;
 
-    void infosmeCommand(Infosme infosme) throws AdminException ;
+  void infosmeCommand(Infosme infosme) throws AdminException;
 
-  }
+}

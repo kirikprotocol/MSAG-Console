@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin;
 
 /**
  * Ошибка чтения web-конфига
+ *
  * @author Aleksandr Khalitov
  */
 class WebConfigException extends AdminException {
@@ -13,7 +14,7 @@ class WebConfigException extends AdminException {
     super(key);
   }
 
-  WebConfigException(String key, String ... args) {
+  WebConfigException(String key, String... args) {
     super(key, args);
   }
 }

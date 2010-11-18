@@ -16,15 +16,15 @@ import java.util.Date;
  */
 public class MessagesByRecRecord {
 
-  private  String  userId;
-  private  User user;
-  private  Integer deliveryId;
+  private final String userId;
+  private final User user;
+  private final Integer deliveryId;
 
-  private  String  name;
-  private  String  text;
-  private  Date    deliveryDate;
-  private  MessageState state;
-  private  String errorString;
+  private final String name;
+  private final String text;
+  private final Date deliveryDate;
+  private final MessageState state;
+  private final String errorString;
 
   public MessagesByRecRecord(Integer deliveryId, String userId, User user, String name, String text, Date deliveryDate, MessageState state, String errorString) {
     this.deliveryId = deliveryId;
@@ -58,7 +58,7 @@ public class MessagesByRecRecord {
   }
 
   public String getDeliveryDateString() {
-    if(deliveryDate==null) return null;
+    if (deliveryDate == null) return null;
     return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(deliveryDate);
   }
 
@@ -71,18 +71,16 @@ public class MessagesByRecRecord {
   }
 
   public String getUserDetails() {
-    return user==null ? "" : user.getFirstName()+" "+user.getLastName();
+    return user == null ? "" : user.getFirstName() + " " + user.getLastName();
   }
 
   public void printCSV(PrintWriter writer) {
-    writer.println(StringEncoderDecoder.toCSVString(new Object[]{
-      name,
-      userId,
-      text,
-      getDeliveryDateString(),
-      state.toString(),
-      errorString
-    }));
+    writer.println(StringEncoderDecoder.toCSVString(name,
+        userId,
+        text,
+        getDeliveryDateString(),
+        state.toString(),
+        errorString));
   }
 
 

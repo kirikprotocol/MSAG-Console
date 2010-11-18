@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * @author Aleksandr Khalitov
  */
-public class MsgFilter implements Serializable{
+public class MsgFilter implements Serializable {
 
   private String msisdn;
 

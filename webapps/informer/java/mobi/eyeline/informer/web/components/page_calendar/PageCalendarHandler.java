@@ -27,14 +27,14 @@ public class PageCalendarHandler extends ComponentHandler {
     value = getRequiredAttribute("value");
   }
 
-   protected UIComponent createComponent(FaceletContext ctx) {
-     PageCalendar r = new PageCalendar();
-     r.setVar(var.getValue(ctx));
-     return r;
-   }
+  protected UIComponent createComponent(FaceletContext ctx) {
+    PageCalendar r = new PageCalendar();
+    r.setVar(var.getValue(ctx));
+    return r;
+  }
 
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
-    PageCalendar cal = (PageCalendar)c;
+    PageCalendar cal = (PageCalendar) c;
 
     Calendar calendar = Calendar.getInstance();
     calendar.setTimeInMillis(cal.getDate());
@@ -44,12 +44,12 @@ public class PageCalendarHandler extends ComponentHandler {
     calendar.set(Calendar.DATE, calendar.get(Calendar.DATE) + 6);
     Date endDate = calendar.getTime();
 
-    PageCalendarModel model = (PageCalendarModel)value.getObject(ctx);
+    PageCalendarModel model = (PageCalendarModel) value.getObject(ctx);
     model.updateVisiblePeriod(startDate, endDate);
 
     calendar.setTimeInMillis(cal.getDate());
 
-    for (int i=2; i<=8; i++) {
+    for (int i = 2; i <= 8; i++) {
       calendar.set(Calendar.DAY_OF_WEEK, i % 7);
       ConstantExpression expr = cal.getVarExpression(i - 2);
       expr.setValue(ctx, model.getValue(calendar.getTime()));

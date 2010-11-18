@@ -17,19 +17,19 @@ public class WebconfigDiffHelper extends DiffHelper {
   }
 
   public void logUpdateJavaMailProps(Journal journal, Properties props, Properties old, String user) throws AdminException {
-    logMapsDiff(journal,subject,"mail settings",old,props,user);
+    logMapsDiff(journal, subject, "mail settings", old, props, user);
   }
 
 
   public void logUpdateNotificationTemplates(Journal journal, Properties props, Properties old, String user) throws AdminException {
-    logMapsDiff(journal,subject,"notifivcation templates",old,props,user);
+    logMapsDiff(journal, subject, "notifivcation templates", old, props, user);
   }
 
   public void logUpdateSiebelProps(Journal journal, Properties props, Properties old, String user) throws AdminException {
-    logMapsDiff(journal,subject,"siebel", old, props, user);
+    logMapsDiff(journal, subject, "siebel", old, props, user);
   }
 
   public void logUpdateSmsSenderAddress(Journal journal, Address addr, Address old, String user) throws AdminException {
-    journal.addRecord(JournalRecord.Type.CHANGE,subject,user,"sms_sender_addr_changed", addr.getSimpleAddress(),old.getSimpleAddress());
+    journal.addRecord(JournalRecord.Type.CHANGE, subject, user, "sms_sender_addr_changed", addr.getSimpleAddress(), old.getSimpleAddress());
   }
 }

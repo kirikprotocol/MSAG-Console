@@ -19,18 +19,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class BaseManager<C> {
   private static final Logger logger = Logger.getLogger(BaseManager.class);
 
-  private ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private C settings;
-  private Infosme infosme;
+  private final Infosme infosme;
   private final ConfigFileManager<C> cfgFileManager;
 
   public BaseManager(Infosme infosme, File config, File backup, FileSystem fileSystem, ManagedConfigFile<C> cfgFileImpl) throws InitException {
 
     this.infosme = infosme;
-    cfgFileManager = new ConfigFileManager<C>(config, backup, fileSystem,  cfgFileImpl  );
-    try{
+    cfgFileManager = new ConfigFileManager<C>(config, backup, fileSystem, cfgFileImpl);
+    try {
       this.settings = cfgFileManager.load();
-    }catch (AdminException e){
+    } catch (AdminException e) {
       throw new InitException(e);
     }
   }
@@ -40,41 +40,41 @@ public class BaseManager<C> {
   }
 
   private void rollback(File backupFile) {
-    try{
-      if(cfgFileManager.rollback(backupFile)) {
+    try {
+      if (cfgFileManager.rollback(backupFile)) {
         settings = cfgFileManager.load();
-      }else {
+      } else {
         logger.error("Can't rollback config file");
       }
-    }catch (Exception ex){
-      logger.error(ex,ex);
+    } catch (Exception ex) {
+      logger.error(ex, ex);
     }
   }
 
   protected void updateSettings(SettingsWriter<C> e) throws AdminException {
-    try{
+    try {
       lock.writeLock().lock();
       e.changeSettings(settings);
       File backup = save();
-      if(infosme!=null && infosme.isOnline()) {
+      if (infosme != null && infosme.isOnline()) {
         try {
           e.infosmeCommand(infosme);
         }
-        catch (AdminException ex){
+        catch (AdminException ex) {
           rollback(backup);
           throw ex;
         }
       }
-    }finally {
+    } finally {
       lock.writeLock().unlock();
     }
   }
 
-  protected <R> R readSettings(SettingsReader<C,R> e)  {
-    try{
+  protected <R> R readSettings(SettingsReader<C, R> e) {
+    try {
       lock.readLock().lock();
       return e.executeRead(settings);
-    }finally {
+    } finally {
       lock.readLock().unlock();
     }
   }

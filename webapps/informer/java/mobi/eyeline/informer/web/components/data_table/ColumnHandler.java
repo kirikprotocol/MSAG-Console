@@ -47,6 +47,5 @@ public class ColumnHandler extends ComponentHandler {
     return c;
   }
 
-  
-  
+
 }

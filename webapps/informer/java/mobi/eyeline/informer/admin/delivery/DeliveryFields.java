@@ -12,5 +12,5 @@ public enum DeliveryFields {
   StartDate,
   EndDate,
   ActivityPeriod;
-  public static DeliveryFields[] ALL = DeliveryFields.values();
+  public static final DeliveryFields[] ALL = DeliveryFields.values();
 }

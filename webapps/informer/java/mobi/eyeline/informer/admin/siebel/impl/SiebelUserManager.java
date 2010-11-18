@@ -9,5 +9,5 @@ import mobi.eyeline.informer.admin.users.User;
 public interface SiebelUserManager {
 
   public User getUser(String login) throws AdminException;
-  
+
 }

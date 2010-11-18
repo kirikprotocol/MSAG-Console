@@ -10,6 +10,7 @@ import javax.faces.application.FacesMessage;
 
 /**
  * Контроллер для конфигурации Informer
+ *
  * @author Aleksandr Khalitov
  */
 public class InformerConfigController extends SettingsController<InformerSettings> {
@@ -21,19 +22,15 @@ public class InformerConfigController extends SettingsController<InformerSetting
 
   public InformerConfigController() {
 
-    try{
+    try {
       super.init(Configuration.ConfigType.CONFIG);
-    }catch (AdminException e) {
+    } catch (AdminException e) {
       addError(e);
       return;
     }
 
-    if(getRequestParameter("revision") == null) {
-      try{
+    if (getRequestParameter("revision") == null) {
         settings = getConfig().getConfigSettings();
-      }catch (AdminException e){
-        addError(e);
-      }
     }
   }
 

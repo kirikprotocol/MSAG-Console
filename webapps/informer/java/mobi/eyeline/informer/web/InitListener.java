@@ -15,6 +15,7 @@ import java.util.jar.Manifest;
 
 /**
  * Инициализация web-приложения
+ *
  * @author Aleksandr Khalitov
  */
 public class InitListener implements ServletContextListener {
@@ -33,27 +34,28 @@ public class InitListener implements ServletContextListener {
 
 
       File appBaseDir = new File(System.getProperty("informer.base.dir"));
-      initLog4j(new File(new File(appBaseDir, "conf"),"log4j.properties").getAbsolutePath());
+      initLog4j(new File(new File(appBaseDir, "conf"), "log4j.properties").getAbsolutePath());
 
       WebXml webXml;
       InputStream is = null;
-      try{
+      try {
         is = servletContextEvent.getServletContext().getResourceAsStream("WEB-INF/web.xml");
         webXml = new WebXml(is);
-      }finally {
-        if(is != null) {
-          try{
+      } finally {
+        if (is != null) {
+          try {
             is.close();
-          }catch (IOException e){}
+          } catch (IOException e) {
+          }
         }
       }
 
-      if(System.getProperty("java.security.auth.login.config") == null) {
+      if (System.getProperty("java.security.auth.login.config") == null) {
         System.setProperty("java.security.auth.login.config",
             servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
       }
 
-      WebContext.init(webXml,  appBaseDir);
+      WebContext.init(webXml, appBaseDir);
 
       context = WebContext.getInstance();
 
@@ -68,7 +70,7 @@ public class InitListener implements ServletContextListener {
   }
 
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
-    if(context != null) {
+    if (context != null) {
       context.shutdown();
     }
   }
@@ -79,10 +81,10 @@ public class InitListener implements ServletContextListener {
     InputStream is = null;
     try {
       is = context.getResourceAsStream("META-INF/MANIFEST.MF");
-      if(is == null) {
+      if (is == null) {
         is = context.getResourceAsStream("META-INF/manifest.mf");
       }
-      if(is == null) {
+      if (is == null) {
         return null;
       }
       mf.read(is);

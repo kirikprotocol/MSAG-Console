@@ -13,9 +13,9 @@ import java.util.Map;
  */
 class SmscSettings {
 
-  private Map<String, Smsc> smscs = new LinkedHashMap<String, Smsc>();
+  private final Map<String, Smsc> smscs = new LinkedHashMap<String, Smsc>();
 
-  private ValidationHelper vh = new ValidationHelper(SmscSettings.class);
+  private final ValidationHelper vh = new ValidationHelper(SmscSettings.class);
 
   private String defaultSmsc;
 
@@ -49,7 +49,7 @@ class SmscSettings {
     smscs.put(smsc.getName(), smsc);
   }
 
-  void removeSmsc(String smsc) throws AdminException {
+  void removeSmsc(String smsc) {
     smscs.remove(smsc);
   }
 }

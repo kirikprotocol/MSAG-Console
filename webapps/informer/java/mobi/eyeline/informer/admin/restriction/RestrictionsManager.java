@@ -18,14 +18,14 @@ import java.util.List;
  * Date: 03.11.2010
  * Time: 17:56:17
  */
-public class RestrictionsManager extends BaseManager<RestrictionSettings>{
+public class RestrictionsManager extends BaseManager<RestrictionSettings> {
 
   public RestrictionsManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException {
-    super(infosme,  config, backup, fileSystem,new RestrictionsConfig());
+    super(infosme, config, backup, fileSystem, new RestrictionsConfig());
   }
 
   public Restriction getRestriction(final int id) {
-    return readSettings(new SettingsReader<RestrictionSettings,Restriction>(){
+    return readSettings(new SettingsReader<RestrictionSettings, Restriction>() {
       public Restriction executeRead(RestrictionSettings settings) {
         return settings.getRestriction(id);
       }
@@ -33,29 +33,31 @@ public class RestrictionsManager extends BaseManager<RestrictionSettings>{
   }
 
   public List<Restriction> getRestrictions(final RestrictionsFilter filter) {
-    return readSettings(new SettingsReader<RestrictionSettings,List<Restriction>>(){
+    return readSettings(new SettingsReader<RestrictionSettings, List<Restriction>>() {
       public List<Restriction> executeRead(RestrictionSettings settings) {
         return settings.getRestrictions(filter);
       }
     });
   }
 
-  public void addRestriction(final Restriction r) throws AdminException{
-    updateSettings(new SettingsWriter<RestrictionSettings>(){
+  public void addRestriction(final Restriction r) throws AdminException {
+    updateSettings(new SettingsWriter<RestrictionSettings>() {
       public void changeSettings(RestrictionSettings settings) throws AdminException {
         settings.addRestriction(r);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         //nothing to do
       }
     });
   }
 
-  public void updateRestriction(final Restriction r) throws AdminException{
-    updateSettings(new SettingsWriter<RestrictionSettings>(){
+  public void updateRestriction(final Restriction r) throws AdminException {
+    updateSettings(new SettingsWriter<RestrictionSettings>() {
       public void changeSettings(RestrictionSettings settings) throws AdminException {
         settings.updateRestriction(r);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         //nothing to do
       }
@@ -63,10 +65,11 @@ public class RestrictionsManager extends BaseManager<RestrictionSettings>{
   }
 
   public void deleteRestriction(final int id) throws AdminException {
-    updateSettings(new SettingsWriter<RestrictionSettings>(){
+    updateSettings(new SettingsWriter<RestrictionSettings>() {
       public void changeSettings(RestrictionSettings settings) throws AdminException {
         settings.deleteRestriction(id);
       }
+
       public void infosmeCommand(Infosme infosme) throws AdminException {
         //nothing to do
       }
@@ -79,7 +82,7 @@ public class RestrictionsManager extends BaseManager<RestrictionSettings>{
     filter.setStartDate(startDate);
     filter.setEndDate(startDate);
     filter.setUserId(userId);
-    return getRestrictions(filter).size()>0;
+    return getRestrictions(filter).size() > 0;
   }
 
 }

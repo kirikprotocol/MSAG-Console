@@ -4,6 +4,7 @@ import java.util.Date;
 
 /**
  * Фильтр извлечения записей журнала
+ *
  * @author Aleksandr Khalitov
  */
 public class JournalFilter {
@@ -54,23 +55,24 @@ public class JournalFilter {
 
   /**
    * Показывать запись или нет
+   *
    * @param r запись
    * @return true - показывать запись, false - нет
    */
   @SuppressWarnings({"RedundantIfStatement"})
   protected boolean accept(JournalRecord r) {
-    if(subject != null && !subject.equals(r.getSubject())){
-      return false;      
+    if (subject != null && !subject.equals(r.getSubject())) {
+      return false;
     }
-    if(user != null && !user.equals(r.getUser())){
-      return false;      
+    if (user != null && !user.equals(r.getUser())) {
+      return false;
     }
-    if(startDate != null && startDate.getTime()>r.getTime()){
-      return false;      
+    if (startDate != null && startDate.getTime() > r.getTime()) {
+      return false;
     }
-    if(endDate != null && endDate.getTime()<r.getTime()){
-      return false;      
+    if (endDate != null && endDate.getTime() < r.getTime()) {
+      return false;
     }
-    return true;    
+    return true;
   }
 }

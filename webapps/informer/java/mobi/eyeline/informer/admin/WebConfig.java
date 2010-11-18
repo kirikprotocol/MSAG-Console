@@ -26,28 +26,28 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     XmlConfig config = new XmlConfig();
     config.load(oldFile);
 
-    XmlConfigSection  javamail = config.getOrCreateSection("javamail");
+    XmlConfigSection javamail = config.getOrCreateSection("javamail");
 
     Properties props = settings.getJavaMailProperties();
-    for(Object s : props.keySet()) {
-      javamail.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
+    for (Object s : props.keySet()) {
+      javamail.addParam(new XmlConfigParam((String) s, (String) props.get(s), XmlConfigParam.Type.STRING));
     }
 
     XmlConfigSection sms = config.getSection("sms");
-    sms.addParam(new XmlConfigParam("senderAddress",settings.getSmsSenderAddress().getSimpleAddress(),XmlConfigParam.Type.STRING));
+    sms.addParam(new XmlConfigParam("senderAddress", settings.getSmsSenderAddress().getSimpleAddress(), XmlConfigParam.Type.STRING));
 
-    XmlConfigSection notificationTemplates=config.getSection("notificationTemplates");
+    XmlConfigSection notificationTemplates = config.getSection("notificationTemplates");
     props = settings.getNotificationTemplates();
-    for(Object s : props.keySet()) {
-      notificationTemplates.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
+    for (Object s : props.keySet()) {
+      notificationTemplates.addParam(new XmlConfigParam((String) s, (String) props.get(s), XmlConfigParam.Type.STRING));
     }
 
     config.addSection(javamail);
 
     XmlConfigSection siebel = config.getOrCreateSection("siebel");
     props = settings.getSiebelProperties();
-    for(Object s : props.keySet()) {
-      siebel.addParam(new XmlConfigParam((String)s,(String)props.get(s),XmlConfigParam.Type.STRING));
+    for (Object s : props.keySet()) {
+      siebel.addParam(new XmlConfigParam((String) s, (String) props.get(s), XmlConfigParam.Type.STRING));
     }
     config.addSection(siebel);
 
@@ -59,10 +59,10 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
   public WebConfigSettings load(InputStream is) throws Exception {
     try {
-    XmlConfig webconfig = new XmlConfig();
-    webconfig.load(is);
+      XmlConfig webconfig = new XmlConfig();
+      webconfig.load(is);
 
-    WebConfigSettings settings = new WebConfigSettings();
+      WebConfigSettings settings = new WebConfigSettings();
 
       String installationTypeStr = webconfig.getSection("installation").getString("type", "single");
       if (installationTypeStr.equalsIgnoreCase("hs"))
@@ -94,13 +94,13 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       settings.setJournalDir(system.getString("journal dir"));
 
       XmlConfigSection javamail = webconfig.getSection("javamail");
-      settings.setJavaMailProperties(javamail.toProperties("",null));
+      settings.setJavaMailProperties(javamail.toProperties("", null));
 
       XmlConfigSection sms = webconfig.getSection("sms");
       settings.setSmsSenderAddress(new Address(sms.getString("senderAddress")));
 
-      XmlConfigSection notificationTemplates =webconfig.getSection("notificationTemplates");
-      settings.setNotificationTemplates(notificationTemplates.toProperties("",null));
+      XmlConfigSection notificationTemplates = webconfig.getSection("notificationTemplates");
+      settings.setNotificationTemplates(notificationTemplates.toProperties("", null));
 
       XmlConfigSection siebel = webconfig.getSection("siebel");
       settings.setSiebelProperties(siebel.toProperties("", null));

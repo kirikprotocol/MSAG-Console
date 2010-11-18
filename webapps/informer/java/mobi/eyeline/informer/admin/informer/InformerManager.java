@@ -6,12 +6,14 @@ import java.util.List;
 
 /**
  * Управление Informer-ом
+ *
  * @author Aleksandr Khalitov
  */
-public interface InformerManager{
+public interface InformerManager {
 
   /**
    * Возвращает настройки Informer
+   *
    * @return настройки Informer
    * @throws AdminException ошибка чтения настроек
    */
@@ -19,6 +21,7 @@ public interface InformerManager{
 
   /**
    * Сохраняет настроки
+   *
    * @param informerSettings настройки
    * @throws AdminException ошибка сохранения
    */
@@ -27,18 +30,21 @@ public interface InformerManager{
 
   /**
    * Запуск Informer
+   *
    * @throws AdminException ошибка при запуске
    */
   public void startInformer() throws AdminException;
 
   /**
    * Остановка Informer
+   *
    * @throws AdminException ошибка при остановке
    */
   public void stopInformer() throws AdminException;
 
   /**
    * Переключение Infromer на другую ноду
+   *
    * @param toHost хост
    * @throws AdminException ошибка при переключении
    */
@@ -46,15 +52,17 @@ public interface InformerManager{
 
   /**
    * Возвращает хост, на котором запущен Informer
-   * @throws AdminException ошибка чтения статуса Informer
+   *
    * @return хост
+   * @throws AdminException ошибка чтения статуса Informer
    */
   public String getInformerOnlineHost() throws AdminException;
 
   /**
    * Возвращает список всех нод, на которых может быть запущен Informer
-   * @throws AdminException ошибка чтения статуса Informer
+   *
    * @return список нод
+   * @throws AdminException ошибка чтения статуса Informer
    */
   public List<String> getInformerHosts() throws AdminException;
 }

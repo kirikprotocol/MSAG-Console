@@ -171,7 +171,7 @@ public class DataTableRenderer extends Renderer {
     ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale());
 
     w.append("<td class=\"total\">" + b.getString("total") + ": " + m.getRowsCount() + "&nbsp;");
-    if(t.isPageSizeRendered()) {
+    if (t.isPageSizeRendered()) {
       w.append(b.getString("page") + ": ");
       w.append("<select id=\"" + t.getId() + "_pageSizeSelect\" name=\"" + t.getId() + "_pageSizeSelect\" onchange=\"pagedTable" + t.getId() + ".setPageSize(this.options[this.selectedIndex].value)\">");
       w.append("<option value=\"10\" " + (t.getPageSize() == 10 ? "selected" : "") + ">10</option>");

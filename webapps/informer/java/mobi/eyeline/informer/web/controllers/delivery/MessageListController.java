@@ -20,7 +20,7 @@ import java.util.*;
 /**
  * @author Aleksandr Khalitov
  */
-public class MessageListController extends InformerController{
+public class MessageListController extends InformerController {
 
   private MsgFilter msgFilter = new MsgFilter();
 
@@ -53,23 +53,23 @@ public class MessageListController extends InformerController{
     String s = getRequestParameter(DELIVERY_PARAM);
 
     HttpSession session = getSession(false);
-    thread = (ResendThread)session.getAttribute(THREAD_NAME);
+    thread = (ResendThread) session.getAttribute(THREAD_NAME);
 
-    if(s != null && s.length() > 0) {
+    if (s != null && s.length() > 0) {
       deliveryId = Integer.parseInt(s);
-    }else {
-      if(thread != null) {
+    } else {
+      if (thread != null) {
         deliveryId = thread.deliveryId;
       }
     }
-    if(thread != null) {
-      if(deliveryId != null && thread.deliveryId != deliveryId) {
+    if (thread != null) {
+      if (deliveryId != null && thread.deliveryId != deliveryId) {
         session.removeAttribute(THREAD_NAME);
-      }else {
+      } else {
         state = 1;
       }
     }
-    if(state == 0) {
+    if (state == 0) {
       loadDeliveryOptions();
     }
   }
@@ -91,11 +91,11 @@ public class MessageListController extends InformerController{
   }
 
   private void loadDeliveryOptions() {
-    if(deliveryId != null) {
+    if (deliveryId != null) {
       try {
         Delivery delivery = config.getDelivery(u.getLogin(), u.getPassword(), deliveryId);
         msgFilter.setFromDate(delivery.getStartDate());
-        msgFilter.setTillDate(delivery.getEndDate() == null ? new Date(System.currentTimeMillis()+(24*60*60*1000)) : delivery.getEndDate());
+        msgFilter.setTillDate(delivery.getEndDate() == null ? new Date(System.currentTimeMillis() + (24 * 60 * 60 * 1000)) : delivery.getEndDate());
         deliveryName = delivery.getName();
         deliveryType = delivery.getType();
       } catch (AdminException e) {
@@ -114,7 +114,7 @@ public class MessageListController extends InformerController{
 
   public String resendFinish() {
     HttpSession session = getSession(false);
-    if(session != null) {
+    if (session != null) {
       session.removeAttribute(THREAD_NAME);
       state = 0;
       loadDeliveryOptions();
@@ -123,12 +123,11 @@ public class MessageListController extends InformerController{
   }
 
   public String stop() {
-    if(thread != null) {
+    if (thread != null) {
       thread.stop = true;
     }
     return null;
   }
-
 
 
   public MsgFilter getMsgFilter() {
@@ -153,14 +152,14 @@ public class MessageListController extends InformerController{
 
   @SuppressWarnings({"unchecked"})
   public void setSelected(List selected) {
-    if(selected != null) {
+    if (selected != null) {
       this.selected = new ArrayList<String>((List<String>) selected);
     }
   }
 
   public List<SelectItem> getUniqueStates() {
     List<SelectItem> result = new LinkedList<SelectItem>();
-    for(MessageState st : MessageState.values()) {
+    for (MessageState st : MessageState.values()) {
       result.add(new SelectItem(st.toString(), MessageStateConverter.getAsString(getLocale(), st)));
     }
     return result;
@@ -189,38 +188,38 @@ public class MessageListController extends InformerController{
     return DELIVERY_PARAM;
   }
 
-  private static final int MEMORY_LIMIT = 100;    //todo
+  private static final int MEMORY_LIMIT = 1000;
 
   public String resendAll() {
-    try{
+    try {
       final MessageFilter filter = getModelFilter();
       HttpSession session = getSession(false);
-      if(session != null) {
+      if (session != null) {
         Thread thread = new ResendThread(deliveryType == Delivery.Type.SingleText, filter.getDeliveryId(), u, config, filter, null, getLocale());
         thread.start();
         session.setAttribute(THREAD_NAME, thread);
         state = 1;
       }
-    }catch (AdminException e) {
+    } catch (AdminException e) {
       addError(e);
     }
     return null;
   }
 
   public String resend() {
-    if(selected == null || selected.isEmpty()) {
+    if (selected == null || selected.isEmpty()) {
       return null;
     }
-    try{
+    try {
       final MessageFilter filter = getModelFilter();
       HttpSession session = getSession(false);
-      if(session != null) {
+      if (session != null) {
         ResendThread thread = new ResendThread(deliveryType == Delivery.Type.SingleText, filter.getDeliveryId(), u, config, filter, new ArrayList<String>(selected), getLocale());
         thread.start();
         session.setAttribute(THREAD_NAME, thread);
         state = 1;
       }
-    }catch (AdminException e) {
+    } catch (AdminException e) {
       addError(e);
     }
     return null;
@@ -229,13 +228,13 @@ public class MessageListController extends InformerController{
   private MessageFilter getModelFilter() throws AdminException {
     MessageFilter filter = new MessageFilter(deliveryId, new Date(msgFilter.getFromDate().getTime()), new Date(msgFilter.getTillDate().getTime()));
     filter.setFields(new MessageFields[]{MessageFields.Date, MessageFields.State, MessageFields.Text, MessageFields.ErrorCode, MessageFields.Abonent});
-    if(msgFilter.getState() != null && msgFilter.getState().length() > 0) {
+    if (msgFilter.getState() != null && msgFilter.getState().length() > 0) {
       filter.setStates(new MessageState[]{MessageState.valueOf(msgFilter.getState())});
     }
-    if(msgFilter.getMsisdn() != null && msgFilter.getMsisdn().length() > 0) {
+    if (msgFilter.getMsisdn() != null && msgFilter.getMsisdn().length() > 0) {
       filter.setMsisdnFilter(new String[]{msgFilter.getMsisdn()});
     }
-    if(msgFilter.getErrorCode() != null) {
+    if (msgFilter.getErrorCode() != null) {
       filter.setErrorCodes(new Integer[]{msgFilter.getErrorCode()});
     }
     return filter;
@@ -254,17 +253,17 @@ public class MessageListController extends InformerController{
           return true;
         }
       }, getModelFilter());
-    }catch (AdminException e) {
+    } catch (AdminException e) {
       addError(e);
     }
   }
 
-  private void visit(Visitor<MessageInfo> visitor, MessageFilter filter) throws AdminException{
+  private void visit(Visitor<MessageInfo> visitor, MessageFilter filter) throws AdminException {
     config.getMessagesStates(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, visitor);
   }
 
   public DataTableModel getMessages() {
-    if(state == 1) {
+    if (state == 1) {
       return new EmptyDataTableModel();
     }
 
@@ -277,22 +276,22 @@ public class MessageListController extends InformerController{
     }
     return new DataTableModel() {
       public List getRows(final int startPos, final int count, final DataTableSortOrder sortOrder) {
-        if(!init || state == 1) {
+        if (!init || state == 1) {
           return Collections.emptyList();
         }
         final LinkedList<MessageInfo> list = new LinkedList<MessageInfo>();
-        try{
+        try {
           final int[] c = new int[]{0};
           visit(new Visitor<MessageInfo>() {
             public boolean visit(MessageInfo value) throws AdminException {
               c[0]++;
-              if(c[0] > startPos) {
+              if (c[0] > startPos) {
                 list.add(value);
               }
               return list.size() < count;
             }
           }, filter);
-        }catch (AdminException e){
+        } catch (AdminException e) {
           addError(e);
         }
         return list;
@@ -309,7 +308,7 @@ public class MessageListController extends InformerController{
     };
   }
 
-  public static class ResendThread extends Thread{
+  public static class ResendThread extends Thread {
 
     private String error;
 
@@ -347,29 +346,32 @@ public class MessageListController extends InformerController{
       this.isSingleText = isSingleText;
     }
 
-    private int getAndSave(File workFile, final Set<Long> sld ) throws AdminException {
+    private int getAndSave(File workFile, final Set<Long> sld) throws AdminException {
       final PrintWriter[] w = new PrintWriter[]{null};
 
-      try{
+      try {
         w[0] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(config.getFileSystem().getOutputStream(workFile, false))));
 
         final int[] count = new int[]{0};
 
         config.getMessagesStates(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<MessageInfo>() {
           public boolean visit(MessageInfo value) throws AdminException {
-            if(stop) {
+            if (stop) {
               return false;
             }
-            if(sld != null && !sld.remove(value.getId())) {
+            if (sld != null && !sld.remove(value.getId())) {
               return true;
             }
             switch (value.getState()) {
               case Process:
-              case New: break;
+              case New:
+                break;
               default:
-                if(!isSingleText) {
-                  w[0].print(value.getAbonent());w[0].print(',');w[0].println(value.getText());
-                }else {
+                if (!isSingleText) {
+                  w[0].print(value.getAbonent());
+                  w[0].print(',');
+                  w[0].println(value.getText());
+                } else {
                   w[0].println(value.getAbonent());
                 }
                 count[0]++;
@@ -377,10 +379,10 @@ public class MessageListController extends InformerController{
             return sld == null || !sld.isEmpty();
           }
         });
-        resendTotal =  2*count[0];
+        resendTotal = 2 * count[0];
         return resendCurrent = count[0];
-      }finally {
-        if(w[0] != null) {
+      } finally {
+        if (w[0] != null) {
           w[0].close();
         }
       }
@@ -388,17 +390,17 @@ public class MessageListController extends InformerController{
 
     private void readAndProccess(File workFile) throws AdminException {
       final BufferedReader[] r = new BufferedReader[]{null};
-      try{
+      try {
         r[0] = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(workFile)));
-        if(!isSingleText) {
+        if (!isSingleText) {
           config.addMessages(u.getLogin(), u.getPassword(), new DataSource<Message>() {
             public Message next() throws AdminException {
-              if(stop) {
+              if (stop) {
                 return null;
               }
               try {
                 String line = r[0].readLine();
-                if(line == null) {
+                if (line == null) {
                   return null;
                 }
                 String[] s = line.split(",", 2);
@@ -411,15 +413,15 @@ public class MessageListController extends InformerController{
               }
             }
           }, filter.getDeliveryId());
-        }else {
+        } else {
           config.addSingleTextMessages(u.getLogin(), u.getPassword(), new DataSource<Address>() {
             public Address next() throws AdminException {
-              if(stop) {
+              if (stop) {
                 return null;
               }
               try {
                 String line = r[0].readLine();
-                if(line == null) {
+                if (line == null) {
                   return null;
                 }
                 resended++;
@@ -432,51 +434,53 @@ public class MessageListController extends InformerController{
             }
           }, filter.getDeliveryId());
         }
-      }finally {
-        if(r[0] != null) {
-          try{
+      } finally {
+        if (r[0] != null) {
+          try {
             r[0].close();
-          }catch (Exception ignored){}
+          } catch (Exception ignored) {
+          }
         }
       }
     }
 
     public void run() {
-      try{
+      try {
         final Set<Long> sld;
-        if(selected != null) {
+        if (selected != null) {
           sld = new HashSet<Long>(selected.size());
-          for(String s : selected){
+          for (String s : selected) {
             sld.add(Long.parseLong(s));
           }
-        }else {
+        } else {
           sld = null;
         }
 
-        File workFile = new File(config.getWorkDir(), "resend_"+u.getLogin()+System.currentTimeMillis());
+        File workFile = new File(config.getWorkDir(), "resend_" + u.getLogin() + System.currentTimeMillis());
 
-        try{
-          if(!stop) {
-            if(getAndSave(workFile, sld) != 0 && !stop) {
+        try {
+          if (!stop) {
+            if (getAndSave(workFile, sld) != 0 && !stop) {
               readAndProccess(workFile);
             }
           }
-          if(!stop) {
+          if (!stop) {
             resendCurrent = resendTotal;
           }
-        }finally {
-          try{
+        } finally {
+          try {
             config.getFileSystem().delete(workFile);
-          }catch (Exception ignored){}
+          } catch (Exception ignored) {
+          }
         }
 
-      }catch (AdminException e) {
+      } catch (AdminException e) {
         error = e.getMessage(locale);
-      }catch (Exception e){
-        logger.error(e,e);
+      } catch (Exception e) {
+        logger.error(e, e);
         ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);
         error = bundle.getString("internal.error");
-      }finally {
+      } finally {
         finished = true;
       }
     }

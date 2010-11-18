@@ -32,17 +32,17 @@ public class DeliveryNotificationsProducer implements Runnable {
   final List<DeliveryNotificationsListener> listeners = Collections.synchronizedList(new LinkedList<DeliveryNotificationsListener>());
 
 
-  public DeliveryNotificationsProducer(File directory,FileSystem fileSys) throws InitException {
+  public DeliveryNotificationsProducer(File directory, FileSystem fileSys) throws InitException {
     this.baseDir = directory;
     this.fileSys = fileSys;
-    backupDir = new File(baseDir,"processedFiles");
+    backupDir = new File(baseDir, "processedFiles");
     try {
-      if(!fileSys.exists(backupDir)) {
+      if (!fileSys.exists(backupDir)) {
         fileSys.mkdirs(backupDir);
       }
     }
     catch (AdminException e) {
-      throw new InitException("Can't create dir for processed files :"+backupDir, e);
+      throw new InitException("Can't create dir for processed files :" + backupDir, e);
     }
 
   }
@@ -61,21 +61,21 @@ public class DeliveryNotificationsProducer implements Runnable {
 
 
   public synchronized void start() {
-    if(scheduler!=null) return;
+    if (scheduler != null) return;
     scheduler = Executors.newSingleThreadScheduledExecutor();
-    scheduler.scheduleAtFixedRate(this,0,1000, TimeUnit.MILLISECONDS);
+    scheduler.scheduleAtFixedRate(this, 0, 1000, TimeUnit.MILLISECONDS);
   }
 
   public synchronized void shutdown() {
-    if(scheduler==null) return;
+    if (scheduler == null) return;
     scheduler.shutdown();
     try {
-      scheduler.awaitTermination(15,TimeUnit.SECONDS);
+      scheduler.awaitTermination(15, TimeUnit.SECONDS);
     }
     catch (InterruptedException e) {
       scheduler.shutdownNow();
     }
-    scheduler=null;
+    scheduler = null;
   }
 
 
@@ -83,8 +83,8 @@ public class DeliveryNotificationsProducer implements Runnable {
     try {
       String[] files = fileSys.list(baseDir);
       Arrays.sort(files);
-      for(String fileName : files) {
-        if(fileName.endsWith(".csv")) {
+      for (String fileName : files) {
+        if (fileName.endsWith(".csv")) {
           processFile(fileName);
         }
       }
@@ -96,24 +96,28 @@ public class DeliveryNotificationsProducer implements Runnable {
   }
 
   private synchronized void processFile(String fileName) throws Exception {
-    File f = new File(baseDir,fileName);
-    BufferedReader reader=null;
+    File f = new File(baseDir, fileName);
+    BufferedReader reader = null;
     try {
       Calendar c = Calendar.getInstance();
       c.setTime(new SimpleDateFormat("yyyyMMddHHmm'.csv'").parse(fileName));
       reader = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f)));
       String line;
-      while((line = reader.readLine())!=null) {
-        processLine(fileName, c,line);
+      while ((line = reader.readLine()) != null) {
+        processLine(fileName, c, line);
       }
     }
     catch (Exception e) {
-      log.error("Error parsing delivery states log : "+fileName, e);
+      log.error("Error parsing delivery states log : " + fileName, e);
     }
     finally {
-      if(reader!=null) try {reader.close();} catch (Exception e){log.error("",e);}
+      if (reader != null) try {
+        reader.close();
+      } catch (Exception e) {
+        log.error("", e);
+      }
       try {
-        fileSys.rename(f,new File(backupDir,fileName));
+        fileSys.rename(f, new File(backupDir, fileName));
       }
       catch (Exception e) {
         log.error("Error moving file to backup dir, EXITING! ", e);
@@ -126,68 +130,75 @@ public class DeliveryNotificationsProducer implements Runnable {
   private void processLine(String fileName, Calendar c, String line) {
     try {
       CSVTokenizer t = new CSVTokenizer(line);
-      if(t.hasMoreTokens()) {
+      if (t.hasMoreTokens()) {
         DeliveryNotification notification;
         int ss = Integer.valueOf(t.nextToken());
-        c.set(Calendar.SECOND,ss);
+        c.set(Calendar.SECOND, ss);
         int deliveryId = Integer.valueOf(t.nextToken());
         String userId = t.nextToken();
         DeliveryNotificationType type = getTypeByInt(Integer.valueOf(t.nextToken()));
-        if(type== DeliveryNotificationType.MESSAGE_FINISHED) {
+        if (type == DeliveryNotificationType.MESSAGE_FINISHED) {
           //MSG_ID, STATUS, SMPP_STATUS, ADDRESS, USER_DATA
           long msgId = Long.valueOf(t.nextToken());
           MessageState messageState = getMessageState(t.nextToken());
           int smpp_status = Integer.valueOf(t.nextToken());
           Address addr = new Address(t.nextToken());
           String userData = null;
-          if(t.hasMoreTokens()) userData = t.nextToken();
-          notification = new DeliveryMessageNotification(type,c.getTime(),deliveryId,userId,
-              msgId,messageState,smpp_status,addr,userData
+          if (t.hasMoreTokens()) userData = t.nextToken();
+          notification = new DeliveryMessageNotification(type, c.getTime(), deliveryId, userId,
+              msgId, messageState, smpp_status, addr, userData
           );
-        }
-        else {
-          notification = new DeliveryNotification(type,c.getTime(),deliveryId,userId);
+        } else {
+          notification = new DeliveryNotification(type, c.getTime(), deliveryId, userId);
         }
         notifyListeners(notification);
       }
     }
     catch (Exception e) {
-      log.error("Error processing log "+fileName+" line : "+line,e);
+      log.error("Error processing log " + fileName + " line : " + line, e);
     }
   }
 
   private void notifyListeners(DeliveryNotification notification) {
-    for(DeliveryNotificationsListener listener : listeners) {
+    for (DeliveryNotificationsListener listener : listeners) {
       try {
         listener.onDeliveryNotification(notification);
       }
       catch (Throwable e) {
-        log.error("error in listener",e);
+        log.error("error in listener", e);
       }
     }
   }
 
   private MessageState getMessageState(String s) {
     s = s.trim();
-    if(s.length()==1) {
+    if (s.length() == 1) {
       switch (s.charAt(0)) {
-        case 'E' : return MessageState.Expired;
-        case 'D' : return MessageState.Delivered;
-        case 'F' : return MessageState.Failed;
-        default  : break;
+        case 'E':
+          return MessageState.Expired;
+        case 'D':
+          return MessageState.Delivered;
+        case 'F':
+          return MessageState.Failed;
+        default:
+          break;
       }
     }
-    throw new IllegalArgumentException("invalid message event state ='"+s+"'");
+    throw new IllegalArgumentException("invalid message event state ='" + s + "'");
   }
 
   private DeliveryNotificationType getTypeByInt(int value) {
     switch (value) {
-      case 0 : return DeliveryNotificationType.MESSAGE_FINISHED;
-      case 1 : return DeliveryNotificationType.DELIVERY_START;
-      case 2 : return DeliveryNotificationType.DELIVERY_FINISHED;
-      default: break;
+      case 0:
+        return DeliveryNotificationType.MESSAGE_FINISHED;
+      case 1:
+        return DeliveryNotificationType.DELIVERY_START;
+      case 2:
+        return DeliveryNotificationType.DELIVERY_FINISHED;
+      default:
+        break;
     }
-    throw new IllegalArgumentException("Invalid event type = "+value);
+    throw new IllegalArgumentException("Invalid event type = " + value);
   }
 
 

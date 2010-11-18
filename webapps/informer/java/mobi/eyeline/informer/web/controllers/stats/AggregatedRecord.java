@@ -23,21 +23,19 @@ public abstract class AggregatedRecord implements DataTableRow {
 
   abstract Comparator getRecordsComparator(DataTableSortOrder sortOrder);
 
-  abstract void printCSVheader( PrintWriter writer, boolean detalised);
+  abstract void printCSVheader(PrintWriter writer, boolean detalised);
 
-  abstract void printWithChildrenToCSV( PrintWriter writer,boolean detalised);
-
+  abstract void printWithChildrenToCSV(PrintWriter writer, boolean detalised);
 
 
   protected void addChild(AggregatedRecord newChild) {
-      Object key = newChild.getAggregationKey();
-      AggregatedRecord oldChild = innerRowsMap.get(newChild.getAggregationKey());
-      if(oldChild==null) {
-        innerRowsMap.put(key,newChild);
-      }
-      else {
-        oldChild.add(newChild);
-      }
+    Object key = newChild.getAggregationKey();
+    AggregatedRecord oldChild = innerRowsMap.get(newChild.getAggregationKey());
+    if (oldChild == null) {
+      innerRowsMap.put(key, newChild);
+    } else {
+      oldChild.add(newChild);
+    }
   }
 
   public Map<Object, AggregatedRecord> getInnerRowsMap() {
@@ -45,8 +43,8 @@ public abstract class AggregatedRecord implements DataTableRow {
   }
 
   protected void addChildren(AggregatedRecord other) {
-    if(!isParent) return;
-    for( AggregatedRecord newChild :   other.getInnerRowsMap().values()) {
+    if (!isParent) return;
+    for (AggregatedRecord newChild : other.getInnerRowsMap().values()) {
       addChild(newChild);
     }
   }
@@ -64,8 +62,8 @@ public abstract class AggregatedRecord implements DataTableRow {
   }
 
   public List getInnerRows() {
-    if(!isParent) return null;
-    if(innerRows==null) {
+    if (!isParent) return null;
+    if (innerRows == null) {
       innerRows = new ArrayList(innerRowsMap.values());
     }
     return innerRows;

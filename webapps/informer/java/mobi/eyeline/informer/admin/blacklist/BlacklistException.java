@@ -4,9 +4,10 @@ import mobi.eyeline.informer.admin.AdminException;
 
 /**
  * Ошибка управления запрещенными номера
+ *
  * @author Aleksandr Khalitov
  */
-class BlacklistException extends AdminException{
+class BlacklistException extends AdminException {
 
   BlacklistException(String key, Throwable cause, String... args) {
     super(key, cause, args);

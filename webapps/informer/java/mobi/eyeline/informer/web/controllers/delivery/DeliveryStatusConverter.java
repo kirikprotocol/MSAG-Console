@@ -14,16 +14,16 @@ import java.util.ResourceBundle;
  * @author Aleksandr Khalitov
  */
 public class DeliveryStatusConverter implements Converter {
-  
+
   public Object getAsObject(FacesContext facesContext, UIComponent uiComponent, String s) throws ConverterException {
     return null;
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
-    if(o==null || !(o instanceof DeliveryStatus)) {
+    if (o == null || !(o instanceof DeliveryStatus)) {
       return null;
     }
-    DeliveryStatus status = (DeliveryStatus)o;
+    DeliveryStatus status = (DeliveryStatus) o;
     return getAsString(getLocale(facesContext), status);
   }
 
@@ -34,6 +34,6 @@ public class DeliveryStatusConverter implements Converter {
 
   public static String getAsString(Locale locale, DeliveryStatus status) {
     ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);
-    return bundle.getString("delivery.status."+status);
+    return bundle.getString("delivery.status." + status);
   }
 }

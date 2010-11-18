@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class Index1Controller {
 
-  private static int current=0;
+  private static int current = 0;
 
   public int getMaximum() {
     return 100;
@@ -24,7 +24,7 @@ public class Index1Controller {
 
 
   public int getCurrent() {
-    if(current < 1000) {
+    if (current < 1000) {
       current++;
     }
     return current;
@@ -51,7 +51,7 @@ public class Index1Controller {
 
     final ArrayList<Integer> list = new ArrayList<Integer>();
 
-    for (int i=0; i<100; i++)
+    for (int i = 0; i < 100; i++)
       list.add(i);
 
     return new DataTableModel() {
@@ -71,7 +71,7 @@ public class Index1Controller {
         }
 
         ArrayList<Integer> res = new ArrayList<Integer>();
-        for (int i=startPos; i<Math.min(startPos + count, list.size()); i++)
+        for (int i = startPos; i < Math.min(startPos + count, list.size()); i++)
           res.add(list.get(i));
 
         return res;

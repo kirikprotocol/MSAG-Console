@@ -11,6 +11,6 @@ public enum MessageFields {
   Abonent,
   Text,
   ErrorCode;
-  public static MessageFields[] ALL = MessageFields.values();
+  public static final MessageFields[] ALL = MessageFields.values();
 
 }

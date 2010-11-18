@@ -9,5 +9,5 @@ package mobi.eyeline.informer.admin.delivery;
 public interface DeliveryNotificationsListener {
 
   public void onDeliveryNotification(DeliveryNotification notification);
-  
+
 }

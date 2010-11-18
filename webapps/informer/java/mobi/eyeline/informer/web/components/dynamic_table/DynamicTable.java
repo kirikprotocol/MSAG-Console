@@ -68,6 +68,6 @@ public class DynamicTable extends EyelineComponent {
     Object[] values = (Object[]) state;
     super.restoreState(context, values[0]);
     model = (DynamicTableModel) values[1];
-    valueExpression = (ValueExpression)values[2];
+    valueExpression = (ValueExpression) values[2];
   }
 }

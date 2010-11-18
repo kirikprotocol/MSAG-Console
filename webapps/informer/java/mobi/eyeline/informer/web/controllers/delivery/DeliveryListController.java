@@ -25,7 +25,7 @@ public class DeliveryListController extends DeliveryController {
 
   private List<String> selected;
 
-  private final static int MEMORY_LIMIT = 100;     //todo
+  private final static int MEMORY_LIMIT = 1000;
 
   public DeliveryListController() {
     String i = getRequestParameter("init");
@@ -140,15 +140,16 @@ public class DeliveryListController extends DeliveryController {
 
   /**
    * Вставляет объект info в отсортированный массив infos.
+   *
    * @param infos отсортированный массив
-   * @param info объект для вставки
-   * @param c компаратор, при помощи которого отсортирован массив
-   * @param <T> тип элементов массива
+   * @param info  объект для вставки
+   * @param c     компаратор, при помощи которого отсортирован массив
+   * @param <T>   тип элементов массива
    */
   private static <T> void insert(T[] infos, T info, Comparator<T> c) {
     int sRes = Arrays.binarySearch(infos, info, c);
 
-    if(sRes < 0)
+    if (sRes < 0)
       sRes = -sRes - 1;
 
     if (infos[sRes] != null)
@@ -181,7 +182,7 @@ public class DeliveryListController extends DeliveryController {
 
     final DeliveryInfo infos[] = new DeliveryInfo[startPos + count];
     final int lastIdx = infos.length - 1;
-    
+
     config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
         if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
@@ -198,6 +199,7 @@ public class DeliveryListController extends DeliveryController {
     final DeliveryInfo infos[] = new DeliveryInfo[count];
     config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<DeliveryInfo>() {
       int pos = 0;
+
       public boolean visit(DeliveryInfo value) throws AdminException {
         if (pos >= startPos + count)
           return false;
@@ -230,7 +232,7 @@ public class DeliveryListController extends DeliveryController {
             list = getUnsortedDeliveriesList(u, filter, startPos, count);
 
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
-          for(DeliveryInfo di : list)
+          for (DeliveryInfo di : list)
             if (di != null)
               rows.add(new DeliveryRow(di, config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), di.getDeliveryId())));
           return rows;
@@ -291,12 +293,12 @@ public class DeliveryListController extends DeliveryController {
         public int compare(DeliveryInfo o1, DeliveryInfo o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
-          if(o1.getEndDate() == null) {
+          if (o1.getEndDate() == null) {
             return o2.getEndDate() == null ? 0 : (sortOrder.isAsc() ? -1 : 1);
-          }else if(o2.getEndDate() == null) {
+          } else if (o2.getEndDate() == null) {
             return (sortOrder.isAsc() ? 1 : -1);
           }
-          return o1.getEndDate().compareTo(o2.getEndDate())*(sortOrder.isAsc() ? 1 : -1);
+          return o1.getEndDate().compareTo(o2.getEndDate()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
     }
@@ -305,9 +307,9 @@ public class DeliveryListController extends DeliveryController {
 
   public class DeliveryRow {
 
-    private DeliveryInfo deliveryInfo;
+    private final DeliveryInfo deliveryInfo;
 
-    private DeliveryStatusHistory history;
+    private final DeliveryStatusHistory history;
 
     public DeliveryRow(DeliveryInfo deliveryInfo, DeliveryStatusHistory history) {
       this.deliveryInfo = deliveryInfo;

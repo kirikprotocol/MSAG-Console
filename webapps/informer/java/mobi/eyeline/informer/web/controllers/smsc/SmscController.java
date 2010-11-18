@@ -10,5 +10,4 @@ public class SmscController extends InformerController {
   protected static final String SMSC_PARAMETER = "smsc_name";
 
 
-  
 }

@@ -11,11 +11,12 @@ import java.util.List;
 /**
  * @author Aleksandr Khalitov
  */
-class RegionsDiffHelper extends DiffHelper{
+class RegionsDiffHelper extends DiffHelper {
 
   RegionsDiffHelper() {
     super(Subject.REGIONS);
   }
+
   void logChanges(Region oldRegion, Region newRegion, Journal journal, String userName) throws AdminException {
     List<Method> getters = getGetters(Region.class, "getMasks", "getTimeZone");
     List<Object> oldValues = callGetters(getters, oldRegion);
@@ -25,33 +26,33 @@ class RegionsDiffHelper extends DiffHelper{
     Collection<Address> oldMasks = oldRegion.getMasks();
     Collection<Address> newMasks = newRegion.getMasks();
 
-    for(Address o : oldMasks) {
+    for (Address o : oldMasks) {
       boolean removed = true;
-      for(Address n : newMasks) {
-        if(n.getSimpleAddress().equals(o.getSimpleAddress())) {
+      for (Address n : newMasks) {
+        if (n.getSimpleAddress().equals(o.getSimpleAddress())) {
           removed = false;
           break;
         }
       }
-      if(removed) {
+      if (removed) {
         journal.addRecord(JournalRecord.Type.REMOVE, subject, userName, "region_mask_removed", o.getSimpleAddress(), newRegion.getName());
       }
     }
 
-    for(Address n : newMasks) {
+    for (Address n : newMasks) {
       boolean added = true;
-      for(Address o : oldMasks) {
-        if(o.getSimpleAddress().equals(n.getSimpleAddress())) {
+      for (Address o : oldMasks) {
+        if (o.getSimpleAddress().equals(n.getSimpleAddress())) {
           added = false;
           break;
         }
       }
-      if(added) {
+      if (added) {
         journal.addRecord(JournalRecord.Type.ADD, subject, userName, "region_mask_added", n.getSimpleAddress(), newRegion.getName());
       }
     }
 
-    if(!oldRegion.getTimeZone().getID().equals(newRegion.getTimeZone().getID())) {
+    if (!oldRegion.getTimeZone().getID().equals(newRegion.getTimeZone().getID())) {
       journal.addRecord(JournalRecord.Type.CHANGE, subject, userName, "region_property_changed", "timezone", oldRegion.getTimeZone().getDisplayName(), newRegion.getTimeZone().getDisplayName(), newRegion.getName());
     }
   }

@@ -10,15 +10,15 @@ import java.util.*;
  */
 class RegionsSettings {
 
-  private Map<String, Region> regionsByMasks = new HashMap<String, Region>();
-  private Map<Integer, Region> regions = new LinkedHashMap<Integer, Region>();
+  private final Map<String, Region> regionsByMasks = new HashMap<String, Region>();
+  private final Map<Integer, Region> regions = new LinkedHashMap<Integer, Region>();
 
   private int defaultMaxPerSecond;
 
   RegionsSettings(Collection<Region> regions, int defaultMaxPerSecond) {
-    for(Region r : regions) {
+    for (Region r : regions) {
       this.regions.put(r.getRegionId(), r);
-      for(Address a : r.getMasks()) {
+      for (Address a : r.getMasks()) {
         regionsByMasks.put(a.getSimpleAddress(), r);
       }
     }
@@ -34,28 +34,28 @@ class RegionsSettings {
 
   }
 
-  private void checkMask(Region region) throws AdminException{
-    for(Address a : region.getMasks()) {
+  private void checkMask(Region region) throws AdminException {
+    for (Address a : region.getMasks()) {
       Region exist = regionsByMasks.get(a.getSimpleAddress());
-      if(exist != null && !exist.getRegionId().equals(region.getRegionId())) {
+      if (exist != null && !exist.getRegionId().equals(region.getRegionId())) {
         throw new RegionException("masks_intersection", a.getSimpleAddress());
       }
     }
   }
 
-  void addRegion(Region region) throws AdminException{
+  void addRegion(Region region) throws AdminException {
     checkMask(region);
     region.setRegionId(getNextId());
-    for(Address a : region.getMasks()) {
+    for (Address a : region.getMasks()) {
       regionsByMasks.put(a.getSimpleAddress(), region);
     }
     regions.put(region.getRegionId(), region);
   }
 
-  void removeRegion(Integer regionId) throws AdminException {
+  void removeRegion(Integer regionId) {
     Region r = regions.remove(regionId);
-    if(r != null) {
-      for(Address a : r.getMasks()) {
+    if (r != null) {
+      for (Address a : r.getMasks()) {
         regionsByMasks.remove(a.getSimpleAddress());
       }
     }
@@ -64,14 +64,14 @@ class RegionsSettings {
   void updateRegion(Region region) throws AdminException {
     checkMask(region);
     Region old = regions.remove(region.getRegionId());
-    if(old == null) {
-      throw new RegionException("region_not_exist",region.getName());
+    if (old == null) {
+      throw new RegionException("region_not_exist", region.getName());
     }
     regions.put(region.getRegionId(), region);
-    for(Address a : old.getMasks()) {
+    for (Address a : old.getMasks()) {
       regionsByMasks.remove(a.getSimpleAddress());
     }
-    for(Address a : region.getMasks()) {
+    for (Address a : region.getMasks()) {
       regionsByMasks.put(a.getSimpleAddress(), region);
     }
   }
@@ -84,12 +84,12 @@ class RegionsSettings {
   Region getRegionByAddress(Address address) {
     String mask = address.getSimpleAddress();
     Region r = regionsByMasks.get(mask);
-    while (r == null && !mask.startsWith("?")){
+    while (r == null && !mask.startsWith("?")) {
       int i = mask.indexOf("?");
-      if(i>0) {
-        mask = mask.substring(0, i-1)+'?'+mask.substring(i);
-      }else if(i == -1) {
-        mask = mask.substring(0, mask.length()-1)+'?';
+      if (i > 0) {
+        mask = mask.substring(0, i - 1) + '?' + mask.substring(i);
+      } else if (i == -1) {
+        mask = mask.substring(0, mask.length() - 1) + '?';
       }
       r = regionsByMasks.get(mask);
     }
@@ -104,8 +104,8 @@ class RegionsSettings {
 
   Collection<Region> getRegionsBySmsc(String smsc) {
     Collection<Region> result = new LinkedList<Region>();
-    for(Region r : regions.values()) {
-      if(r.getSmsc().equals(smsc)) {
+    for (Region r : regions.values()) {
+      if (r.getSmsc().equals(smsc)) {
         result.add(r);
       }
     }
@@ -117,8 +117,8 @@ class RegionsSettings {
     return defaultMaxPerSecond;
   }
 
-  void setDefaultMaxPerSecond(int defaultMaxPerSecond) throws AdminException{
-    if(defaultMaxPerSecond <= 0) {
+  void setDefaultMaxPerSecond(int defaultMaxPerSecond) throws AdminException {
+    if (defaultMaxPerSecond <= 0) {
       throw new RegionException("def_region_incorrect");
     }
     this.defaultMaxPerSecond = defaultMaxPerSecond;

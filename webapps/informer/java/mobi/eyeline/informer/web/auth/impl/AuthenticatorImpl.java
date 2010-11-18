@@ -19,24 +19,24 @@ public class AuthenticatorImpl implements Authenticator {
   }
 
   public synchronized InformerPrincipal authenticate(String login, String password) {
-    try{
+    try {
       User u = users.getUser(login);
-      if(u == null) {
+      if (u == null) {
         logger.warn("AuthenticatorImpl.authenticate('" + login + "', '" + password + "') FAILED - User not found.");
         return null;
       }
-      if(User.Status.ENABLED != u.getStatus()) {
+      if (User.Status.ENABLED != u.getStatus()) {
         logger.warn("AuthenticatorImpl.authenticate('" + login + "', '" + password + "') FAILED - User not ENABLED.");
         return null;
       }
-      if(!password.equals(u.getPassword())) {
+      if (!password.equals(u.getPassword())) {
         logger.warn("AuthenticatorImpl.authenticate('" + login + "', '" + password + "') FAILED - Incorrect password.");
         return null;
       }
       return new InformerPrincipal(login, password, u.getRoles());
 
-    }catch (Exception e){
-      logger.error(e,e);
+    } catch (Exception e) {
+      logger.error(e, e);
       e.printStackTrace();
       return null;
     }

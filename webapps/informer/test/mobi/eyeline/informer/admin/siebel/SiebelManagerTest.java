@@ -1,10 +1,11 @@
 package mobi.eyeline.informer.admin.siebel;
 
-import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
+import mobi.eyeline.informer.admin.delivery.DeliveryInfo;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
+import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelDeliveries;
 import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -39,11 +40,6 @@ public class SiebelManagerTest {
 
   @BeforeClass
   public static void init() throws Exception {
-    siebel = new TestSiebelManager(deliveries = new TestSiebelDeliveries(), new SiebelRegionManager() {
-      public Region getRegion(Address msisdn) throws AdminException {
-        return null;
-      }
-    });
 
     siebelUser = new User();
     siebelUser.setAllRegionsAllowed(true);
@@ -57,6 +53,12 @@ public class SiebelManagerTest {
     siebelUser.setDeliveryStartTime(new Time(8,0,0));
     siebelUser.setDeliveryEndTime(new Time(20,0,0));
     siebelUser.setDeliveryType(User.DeliveryType.SMS);
+    
+    siebel = new TestSiebelManager(deliveries = new TestSiebelDeliveries(siebelUser), new SiebelRegionManager() {
+      public Region getRegion(Address msisdn) throws AdminException {
+        return null;
+      }
+    });
 
     Properties props = readProps();
     props.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.FALSE.toString());
@@ -223,9 +225,7 @@ public class SiebelManagerTest {
   @AfterClass
   public static void shutdown() throws Exception{
     if(siebel != null) {
-      try {
-        siebel.stop();
-      } catch (AdminException ignored) {}
+      siebel.stop();
     }
 
     if(deliveries != null) {
@@ -307,52 +307,4 @@ public class SiebelManagerTest {
     }
   }
 
-  private static class TestSiebelDeliveries implements SiebelDeliveries {
-    private TestDeliveryManager deliveryManager = new TestDeliveryManager(null);
-
-    public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-      deliveryManager.addMessages(login, password, msDataSource, deliveryId);
-    }
-    public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
-      deliveryManager.createDelivery(login, password, delivery, msDataSource);
-    }
-
-    public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
-      deliveryManager.dropDelivery(login, password, deliveryId);
-    }
-
-
-    public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
-      return deliveryManager.getDelivery(login, password, deliveryId);
-    }
-
-    public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
-      deliveryManager.modifyDelivery(login, password, delivery);
-    }
-
-    public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
-      deliveryManager.cancelDelivery(login, password, deliveryId);
-    }
-
-    public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
-      deliveryManager.pauseDelivery(login, password, deliveryId);
-    }
-
-    public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
-      deliveryManager.activateDelivery(login, password, deliveryId);
-    }
-
-
-    public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
-      deliveryManager.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
-    }
-
-    public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
-      AdminContext.getDefaultDelivery(siebelUser, delivery);
-    }
-
-    public void shutdown() {
-      deliveryManager.shutdown();
-    }
-  }
 }

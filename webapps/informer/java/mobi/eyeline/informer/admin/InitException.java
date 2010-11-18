@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin;
 
 /**
  * Ошибка при инициализации приложения
+ *
  * @author Aleksandr Khalitov
  */
 public class InitException extends Exception {

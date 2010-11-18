@@ -17,8 +17,7 @@ import java.util.*;
  * Copyright Eyeline.mobi
  * User: vmax
  */
-class UsersConfig implements ManagedConfigFile<UsersSettings>{
-
+class UsersConfig implements ManagedConfigFile<UsersSettings> {
 
 
   public UsersSettings load(InputStream is) throws Exception {
@@ -26,12 +25,12 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     XmlConfig config = new XmlConfig();
     config.load(is);
     XmlConfigSection users = config.getSection("USERS");
-    Collection<XmlConfigSection> sections =  users.sections();
+    Collection<XmlConfigSection> sections = users.sections();
     List<User> result = new ArrayList<User>(sections.size());
 
-    for(XmlConfigSection section : sections) {
-        User u = loadUser(section);
-        result.add(u);
+    for (XmlConfigSection section : sections) {
+      User u = loadUser(section);
+      result.add(u);
     }
     us.setUsers(result);
     return us;
@@ -47,34 +46,34 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     u.setPhone(section.getString("phone"));
     u.setEmail(section.getString("email"));
     u.setOrganization(section.getString("organization"));
-    u.setCreateCDR(section.getBool("createCDR",false));
-    String lang = section.getString("locale","en");
-    if(lang!=null) {
-        u.setLocale(new Locale(lang));
+    u.setCreateCDR(section.getBool("createCDR", false));
+    String lang = section.getString("locale", "en");
+    if (lang != null) {
+      u.setLocale(new Locale(lang));
     }
-    String delivStart=section.getString("deliveryStartTime",null);
-    if(delivStart!=null) {
-        u.setDeliveryStartTime(new Time(delivStart));
+    String delivStart = section.getString("deliveryStartTime", null);
+    if (delivStart != null) {
+      u.setDeliveryStartTime(new Time(delivStart));
     }
-    String delivEnd=section.getString("deliveryEndTime",null);
-    if(delivEnd!=null) {
-        u.setDeliveryEndTime(new Time(delivEnd));
+    String delivEnd = section.getString("deliveryEndTime", null);
+    if (delivEnd != null) {
+      u.setDeliveryEndTime(new Time(delivEnd));
     }
-    u.setSmsPerSec(section.getInt("smsPerSec",u.getSmsPerSec()));
+    u.setSmsPerSec(section.getInt("smsPerSec", u.getSmsPerSec()));
     u.setSourceAddr(new Address(section.getString("sourceAddr")));
     u.setValidHours(section.getInt("validHours"));
     u.setRoles(loadUserRoles(section));
     u.setDeliveryDays(loadDeliveryDays(section));
     u.setDeliveryType(User.DeliveryType.valueOf(section.getString("deliveryType")));
-    u.setTransactionMode(section.getBool("transactionMode",false));
+    u.setTransactionMode(section.getBool("transactionMode", false));
     u.setRetryOnFail(section.getBool("retryOnFail", false));
-    u.setPolicyId(section.getString("policyId",null));
+    u.setPolicyId(section.getString("policyId", null));
     u.setAllRegionsAllowed(section.getBool("allRegionsAllowed", false));
     u.setRegions(loadUserRegions(section));
     u.setPriority(section.getInt("priority"));
-    u.setEmailNotification(section.getBool("emailNotification",false));
-    u.setSmsNotification(section.getBool("smsNotification",false));
-    u.setCreateArchive(section.getBool("createArchive",false));
+    u.setEmailNotification(section.getBool("emailNotification", false));
+    u.setSmsNotification(section.getBool("smsNotification", false));
+    u.setCreateArchive(section.getBool("createArchive", false));
     u.setDeliveryLifetime(section.getInt("deliveryLifetime"));
 
     u.setImportDeliveriesFromDir(section.getBool("importDeliveriesFromDir", false));
@@ -87,12 +86,12 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
   }
 
   private List<Integer> loadUserRegions(XmlConfigSection section) throws XmlConfigException {
-    if(section.containsSection("REGIONS")) {
+    if (section.containsSection("REGIONS")) {
       List<Integer> result = new ArrayList<Integer>();
       XmlConfigSection regions = section.getSection("REGIONS");
       Collection<XmlConfigParam> params = regions.params();
-      for(XmlConfigParam p : params) {
-        if(p.getBool()) {
+      for (XmlConfigParam p : params) {
+        if (p.getBool()) {
           result.add(Integer.parseInt(p.getName()));
         }
       }
@@ -104,12 +103,12 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
 
   private List<Integer> loadDeliveryDays(XmlConfigSection section) throws XmlConfigException {
     List<Integer> result = new ArrayList<Integer>();
-    if(section.containsSection("DELIVERY_DAYS")) {
-      XmlConfigSection daysSection = section.getSection("DELIVERY_DAYS");      
+    if (section.containsSection("DELIVERY_DAYS")) {
+      XmlConfigSection daysSection = section.getSection("DELIVERY_DAYS");
       Collection<XmlConfigParam> params = daysSection.params();
 
-      for(XmlConfigParam p : params) {
-        if(p.getBool()) {
+      for (XmlConfigParam p : params) {
+        if (p.getBool()) {
           result.add(Integer.valueOf(p.getName()));
         }
       }
@@ -122,8 +121,8 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     XmlConfigSection roles = section.getSection("ROLES");
     Collection<XmlConfigParam> params = roles.params();
     TreeSet<String> result = new TreeSet<String>();
-    for(XmlConfigParam p : params) {
-      if(p.getBool()) {
+    for (XmlConfigParam p : params) {
+      if (p.getBool()) {
         result.add(p.getName());
       }
     }
@@ -136,9 +135,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
     config.load(oldFile);
 
 
-    XmlConfigSection  users = new XmlConfigSection("USERS");
+    XmlConfigSection users = new XmlConfigSection("USERS");
 
-    for(User user : settings.getUsers() ) {
+    for (User user : settings.getUsers()) {
       XmlConfigSection section = createUserSection(user);
       users.addSection(section);
     }
@@ -148,60 +147,60 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
   }
 
   private XmlConfigSection createUserSection(User user) {
-    XmlConfigSection userSection = new XmlConfigSection(user.getLogin());    
-    userSection.setString("password",user.getPassword());
-    userSection.setString("status",user.getStatus().toString());
-    userSection.setString("firstName",user.getFirstName());
-    userSection.setString("lastName",user.getLastName());
-    userSection.setString("phone",user.getPhone());
-    userSection.setString("email",user.getEmail());
-    userSection.setString("organization",user.getOrganization());
-    if(user.isCreateCDR()) {
-      userSection.setBool("createCDR",true);
+    XmlConfigSection userSection = new XmlConfigSection(user.getLogin());
+    userSection.setString("password", user.getPassword());
+    userSection.setString("status", user.getStatus().toString());
+    userSection.setString("firstName", user.getFirstName());
+    userSection.setString("lastName", user.getLastName());
+    userSection.setString("phone", user.getPhone());
+    userSection.setString("email", user.getEmail());
+    userSection.setString("organization", user.getOrganization());
+    if (user.isCreateCDR()) {
+      userSection.setBool("createCDR", true);
     }
-    if(user.getLocale()!=null) {
-      userSection.setString("locale",user.getLocale().getLanguage());
+    if (user.getLocale() != null) {
+      userSection.setString("locale", user.getLocale().getLanguage());
     }
-    userSection.setInt("smsPerSec",user.getSmsPerSec());
-    userSection.setString("sourceAddr",user.getSourceAddr().getSimpleAddress());
-    userSection.setInt("validHours",user.getValidHours());
-    userSection.setString("deliveryType",user.getDeliveryType().toString());
-    if(user.isTransactionMode())  {
-      userSection.setBool("transactionMode",true);
+    userSection.setInt("smsPerSec", user.getSmsPerSec());
+    userSection.setString("sourceAddr", user.getSourceAddr().getSimpleAddress());
+    userSection.setInt("validHours", user.getValidHours());
+    userSection.setString("deliveryType", user.getDeliveryType().toString());
+    if (user.isTransactionMode()) {
+      userSection.setBool("transactionMode", true);
     }
     userSection.setBool("retryOnFail", user.isRetryOnFail());
-    if(user.getPolicyId()!=null) {
-      userSection.setString("policyId",user.getPolicyId());
+    if (user.getPolicyId() != null) {
+      userSection.setString("policyId", user.getPolicyId());
     }
-    if(user.getDeliveryStartTime()!=null) {
-      userSection.setString("deliveryStartTime",user.getDeliveryStartTime().getTimeString());
+    if (user.getDeliveryStartTime() != null) {
+      userSection.setString("deliveryStartTime", user.getDeliveryStartTime().getTimeString());
     }
-    if(user.getDeliveryEndTime()!=null) {
-      userSection.setString("deliveryEndTime",user.getDeliveryEndTime().getTimeString());
+    if (user.getDeliveryEndTime() != null) {
+      userSection.setString("deliveryEndTime", user.getDeliveryEndTime().getTimeString());
     }
 
     userSection.addSection(createUserRolesSection(user));
 
-    if(!user.getDeliveryDays().isEmpty()) {
+    if (!user.getDeliveryDays().isEmpty()) {
       userSection.addSection(createDeliveryDaysSection(user));
     }
     userSection.setBool("allRegionsAllowed", user.isAllRegionsAllowed());
-    if(user.getRegions()!=null && !user.getRegions().isEmpty()) {
+    if (user.getRegions() != null && !user.getRegions().isEmpty()) {
       userSection.addSection(createRegionsSection(user));
     }
 
-    userSection.setInt("priority",user.getPriority());
-    if(user.isEmailNotification()) {
-      userSection.setBool("emailNotification",true);
+    userSection.setInt("priority", user.getPriority());
+    if (user.isEmailNotification()) {
+      userSection.setBool("emailNotification", true);
     }
-    if(user.isSmsNotification()) {
-      userSection.setBool("smsNotification",true);
+    if (user.isSmsNotification()) {
+      userSection.setBool("smsNotification", true);
     }
-    if(user.isCreateArchive()) {
-      userSection.setBool("createArchive",true);
+    if (user.isCreateArchive()) {
+      userSection.setBool("createArchive", true);
     }
 
-    userSection.setInt("deliveryLifetime",user.getDeliveryLifetime());
+    userSection.setInt("deliveryLifetime", user.getDeliveryLifetime());
     userSection.setBool("importDeliveriesFromDir", user.isImportDeliveriesFromDir());
     userSection.setString("directory",user.getDirectory());
     if(user.isCreateReports()) {
@@ -217,8 +216,8 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
   private XmlConfigSection createRegionsSection(User user) {
     XmlConfigSection regionsSection = new XmlConfigSection("REGIONS");
     List<Integer> regions = user.getRegions();
-    for(Integer region : regions) {
-      regionsSection.setBool(region.toString(),true);
+    for (Integer region : regions) {
+      regionsSection.setBool(region.toString(), true);
     }
     return regionsSection;
   }
@@ -226,8 +225,8 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
   private XmlConfigSection createDeliveryDaysSection(User user) {
     XmlConfigSection deliveryDaysSection = new XmlConfigSection("DELIVERY_DAYS");
     List<Integer> days = user.getDeliveryDays();
-    for(Integer day : days) {
-      deliveryDaysSection.setBool(day.toString(),true);
+    for (Integer day : days) {
+      deliveryDaysSection.setBool(day.toString(), true);
     }
     return deliveryDaysSection;
   }
@@ -235,8 +234,8 @@ class UsersConfig implements ManagedConfigFile<UsersSettings>{
   private XmlConfigSection createUserRolesSection(User user) {
     XmlConfigSection rolesSection = new XmlConfigSection("ROLES");
     Set<String> roles = user.getRoles();
-    for(String role : roles) {
-      rolesSection.setBool(role,true);
+    for (String role : roles) {
+      rolesSection.setBool(role, true);
     }
     return rolesSection;
   }

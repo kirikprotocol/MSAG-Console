@@ -40,62 +40,51 @@ public class MessagesByDeliveriesRecord {
   }
 
   public void printCSVHeader(PrintWriter writer, boolean fullMode) {
-    if(fullMode) {
-      writer.println(StringEncoderDecoder.toCSVString(new Object[]{
-      "NAME",
-      "USER",
-      "STATUS",
-      "STARTDATE",
-      "ENDDATE",
-      "NEW",
-      "PROCESS",
-      "DELIVERED",
-      "FAILED",
-      "EXPIRED"
-      }));
-    }
-    else {
-      writer.println(StringEncoderDecoder.toCSVString(new Object[]{
-      "NAME",
-      "USER",
-      "STATUS",
-      "STARTDATE",
-      "ENDDATE",
-      "WAIT",
-      "DELIVERED",
-      "NOTDELIVERED"
-      }));
+    if (fullMode) {
+      writer.println(StringEncoderDecoder.toCSVString("NAME",
+          "USER",
+          "STATUS",
+          "STARTDATE",
+          "ENDDATE",
+          "NEW",
+          "PROCESS",
+          "DELIVERED",
+          "FAILED",
+          "EXPIRED"));
+    } else {
+      writer.println(StringEncoderDecoder.toCSVString("NAME",
+          "USER",
+          "STATUS",
+          "STARTDATE",
+          "ENDDATE",
+          "WAIT",
+          "DELIVERED",
+          "NOTDELIVERED"));
 
     }
   }
 
   public void printCSV(PrintWriter writer, boolean fullMode) {
-    if(fullMode) {
-     writer.println(StringEncoderDecoder.toCSVString(new Object[]{
-      info.getName(),
-      info.getUserId(),
-      stat.getDeliveryState().getStatus(),
-      getStartDateString(),
-      getEndDateString(),
-      stat.getNewMessages(),
-      stat.getProcessMessages(),
-      stat.getDeliveredMessages(),
-      stat.getFailedMessages(),
-      stat.getExpiredMessages()
-
-    }));
-    }
-    else {
-      writer.println(StringEncoderDecoder.toCSVString(new Object[]{
-       info.getName(),
-       info.getUserId(),
-       stat.getDeliveryState().getStatus(),
-       getStartDateString(),
-       getEndDateString(),
-       stat.getNewMessages()+stat.getProcessMessages(),
-       stat.getDeliveredMessages(),
-       stat.getFailedMessages()+stat.getExpiredMessages()       
-     }));      
+    if (fullMode) {
+      writer.println(StringEncoderDecoder.toCSVString(info.getName(),
+          info.getUserId(),
+          stat.getDeliveryState().getStatus(),
+          getStartDateString(),
+          getEndDateString(),
+          stat.getNewMessages(),
+          stat.getProcessMessages(),
+          stat.getDeliveredMessages(),
+          stat.getFailedMessages(),
+          stat.getExpiredMessages()));
+    } else {
+      writer.println(StringEncoderDecoder.toCSVString(info.getName(),
+          info.getUserId(),
+          stat.getDeliveryState().getStatus(),
+          getStartDateString(),
+          getEndDateString(),
+          stat.getNewMessages() + stat.getProcessMessages(),
+          stat.getDeliveredMessages(),
+          stat.getFailedMessages() + stat.getExpiredMessages()));
     }
   }
 
@@ -108,19 +97,19 @@ public class MessagesByDeliveriesRecord {
   }
 
   private String fmtDate(Date d) {
-    if(d==null) return "";
+    if (d == null) return "";
     return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(d);
   }
 
   public String getStartDateString() {
-    return startDate==null ? "": fmtDate(startDate);
+    return startDate == null ? "" : fmtDate(startDate);
   }
 
   public String getEndDateString() {
-    return endDate==null ? "": fmtDate(endDate);
+    return endDate == null ? "" : fmtDate(endDate);
   }
 
   public String getUserDetails() {
-    return user==null ? "" : user.getFirstName()+" "+user.getLastName();
+    return user == null ? "" : user.getFirstName() + " " + user.getLastName();
   }
 }

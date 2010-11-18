@@ -18,6 +18,7 @@ import java.util.Properties;
 
 /**
  * Журнал операций Informer
+ *
  * @author Aleksandr Khalitov
  */
 public class Journal {
@@ -43,12 +44,13 @@ public class Journal {
 
   private final JournalDataSource ds;
 
-  public Journal(File journalDir, FileSystem fs) throws AdminException{
+  public Journal(File journalDir, FileSystem fs) throws AdminException {
     this.ds = new JournalFileDataSource(journalDir, fs);
   }
 
   /**
    * Возвращает cписок всех возможных сабжектов
+   *
    * @return список всех возможных сабжектов
    */
   public List<Subject> getSubjects() {
@@ -57,16 +59,19 @@ public class Journal {
 
   /**
    * Возвращает все записи из журнала, удовлетворяющие фильтру (ограничение: 1000 записей)
+   *
    * @param filter фильтр записей
    * @return все записи из журнала, удовлетворяющие фильтру
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка при извлечении записей
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка при извлечении записей
    */
   public List<JournalRecord> getRecords(JournalFilter filter) throws AdminException {
     final LinkedList<JournalRecord> records = new LinkedList<JournalRecord>();
     ds.visit(filter, new JournalVisitor() {
       private static final int LIMIT = 1000;
+
       public boolean visit(JournalRecord r) {
-        if(records.size() == LIMIT) {
+        if (records.size() == LIMIT) {
           records.removeFirst();
         }
         records.addLast(r);
@@ -78,9 +83,11 @@ public class Journal {
 
   /**
    * Просматривает все записи из журнала, удовлетворяющие фильтру
-   * @param filter фильтр записей
+   *
+   * @param filter  фильтр записей
    * @param visitor посетитель
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка при извлечении записей
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка при извлечении записей
    */
   public void visit(JournalFilter filter, JournalVisitor visitor) throws AdminException {
     ds.visit(filter, visitor);
@@ -89,14 +96,16 @@ public class Journal {
 
   /**
    * Добавляет в журнал новую запись.
-   * @param type тип записи
-   * @param subject субъект
-   * @param user пользователь
+   *
+   * @param type        тип записи
+   * @param subject     субъект
+   * @param user        пользователь
    * @param description ключ описания
-   * @param args параметры описания
-   * @throws mobi.eyeline.informer.admin.AdminException Ошибка при сохранении записи
+   * @param args        параметры описания
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          Ошибка при сохранении записи
    */
-  void addRecord(JournalRecord.Type type, Subject subject, String user, String description, String ... args) throws AdminException {
+  void addRecord(JournalRecord.Type type, Subject subject, String user, String description, String... args) throws AdminException {
     ds.addRecords(new JournalRecord(type).
         setSubject(subject).setUser(user).setDescription(description, args));
   }
@@ -104,10 +113,12 @@ public class Journal {
 
   /**
    * Ищет различия между настройками Informer и записывает их в журнал
+   *
    * @param oldSettings старые настройки пользователей
    * @param newSettings новые настройки пользователей
-   * @param user пользователь, от имени которого надо формировать записи
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
+   * @param user        пользователь, от имени которого надо формировать записи
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка сохранения записи
    */
   public void logChanges(InformerSettings oldSettings, InformerSettings newSettings, String user) throws AdminException {
     informerSettings.logChanges(this, oldSettings, newSettings, user);
@@ -115,18 +126,23 @@ public class Journal {
 
   /**
    * Добавляет в журнал запись о новом запрещённом номере
+   *
    * @param address адрес
-   * @param user пользователь, от имени которого надо формировать записи
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
+   * @param user    пользователь, от имени которого надо формировать записи
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка сохранения записи
    */
   public void logAddBlacklist(String address, String user) throws AdminException {
     blacklist.logAddBlacklist(this, address, user);
   }
+
   /**
    * Добавляет в журнал запись об удалении из списка запрещённых номеров
+   *
    * @param address адрес
-   * @param user пользователь, от имени которого надо формировать записи
-   * @throws mobi.eyeline.informer.admin.AdminException ошибка сохранения записи
+   * @param user    пользователь, от имени которого надо формировать записи
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка сохранения записи
    */
   public void logRemoveBlacklist(String address, String user) throws AdminException {
     blacklist.logRemoveBlacklist(this, address, user);
@@ -135,91 +151,100 @@ public class Journal {
 
   /**
    * Добавляет в журнал запись о новом регионе
+   *
    * @param region регион
-   * @param user пользователь, от имени которого надо формировать записи
+   * @param user   пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logAddRegion(String region, String user) throws AdminException{
+  public void logAddRegion(String region, String user) throws AdminException {
     this.regions.logAddRegion(region, this, user);
   }
 
   /**
    * Добавляет в журнал запись об удалении региона
+   *
    * @param region регион
-   * @param user пользователь, от имени которого надо формировать записи
+   * @param user   пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logRemoveRegion(String region, String user) throws AdminException{
+  public void logRemoveRegion(String region, String user) throws AdminException {
     this.regions.logRemoveRegion(region, this, user);
   }
 
   /**
    * Добавляет в журнал запись об обновлении региона
+   *
    * @param oldRegion старый регион
    * @param newRegion новый регион
-   * @param user пользователь, от имени которого надо формировать записи
+   * @param user      пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logUpdateRegion(Region oldRegion, Region newRegion, String user) throws AdminException{
+  public void logUpdateRegion(Region oldRegion, Region newRegion, String user) throws AdminException {
     this.regions.logChanges(oldRegion, newRegion, this, user);
   }
 
   /**
    * Добавляет в журнал запись об изменении макс. кол-ва смс по умолчанию
+   *
    * @param oldValue старое значение
    * @param newValue новое значение
-   * @param user пользователь, от имени которого надо формировать записи
+   * @param user     пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logSetDefaultSmsPerSecondRegion(int oldValue, int newValue, String user) throws AdminException{
+  public void logSetDefaultSmsPerSecondRegion(int oldValue, int newValue, String user) throws AdminException {
     this.regions.logSetDefault(this, oldValue, newValue, user);
   }
 
   /**
    * Добавляет в журнал запись о новом СМСЦ
+   *
    * @param smsc СМСЦ
    * @param user пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logAddSmsc(String smsc, String user) throws AdminException{
+  public void logAddSmsc(String smsc, String user) throws AdminException {
     this.smsc.logAddSmsc(smsc, this, user);
   }
 
   /**
    * Добавляет в журнал запись об удалении СМСЦ
+   *
    * @param smsc СМСЦ
    * @param user пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logRemoveSmsc(String smsc, String user) throws AdminException{
+  public void logRemoveSmsc(String smsc, String user) throws AdminException {
     this.smsc.logRemoveSmsc(smsc, this, user);
   }
 
   /**
    * Добавляет в журнал запись об обновлении СМСЦ
+   *
    * @param oldSmsc старый СМСЦ
    * @param newSmsc новый СМСЦ
-   * @param user пользователь, от имени которого надо формировать записи
+   * @param user    пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logUpdateSmsc(Smsc oldSmsc, Smsc newSmsc, String user) throws AdminException{
+  public void logUpdateSmsc(Smsc oldSmsc, Smsc newSmsc, String user) throws AdminException {
     this.smsc.logChanges(oldSmsc, newSmsc, this, user);
   }
 
   /**
    * Добавляет в журнал запись об изменении СМСЦ по умолчанию СМСЦ
+   *
    * @param oldSmsc старый СМСЦ
    * @param newSmsc новый СМСЦ
-   * @param user пользователь, от имени которого надо формировать записи
+   * @param user    пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logSetDefaultSmsc(String oldSmsc, String newSmsc, String user) throws AdminException{
+  public void logSetDefaultSmsc(String oldSmsc, String newSmsc, String user) throws AdminException {
     this.smsc.logSetDefault(oldSmsc, newSmsc, this, user);
   }
 
 
   /**
    * Добавляет в журнал запись о старте Informer
+   *
    * @param user пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
@@ -229,6 +254,7 @@ public class Journal {
 
   /**
    * Добавляет в журнал запись об остановке Informer
+   *
    * @param user пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
@@ -238,8 +264,9 @@ public class Journal {
 
   /**
    * Добавляет в журнал запись о переключении Informer на другой хост
+   *
    * @param toHost новый хост
-   * @param user пользователь, от имени которого надо формировать записи
+   * @param user   пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
   public void logInformerSwitch(String toHost, String user) throws AdminException {
@@ -248,6 +275,7 @@ public class Journal {
 
   /**
    * Добавляет в журнал запись о старте демона
+   *
    * @param name имя демона
    * @param user пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
@@ -258,6 +286,7 @@ public class Journal {
 
   /**
    * Добавляет в журнал запись об остановке демона
+   *
    * @param name имя демона
    * @param user пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
@@ -269,32 +298,35 @@ public class Journal {
 
   /**
    * Добавляет в журнал запись о новом пользователе
-   * @param  login    login
-   * @param user пользователь, от имени которого надо формировать записи
+   *
+   * @param login login
+   * @param user  пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logAddUser(String login, String user) throws AdminException{
+  public void logAddUser(String login, String user) throws AdminException {
     this.users.logAddUser(login, this, user);
   }
 
   /**
    * Добавляет в журнал запись об удалении пользователя
-   * @param login  login
-   * @param user пользователь, от имени которого надо формировать записи
+   *
+   * @param login login
+   * @param user  пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logRemoveUser(String login, String user) throws AdminException{
+  public void logRemoveUser(String login, String user) throws AdminException {
     this.users.logRemoveUser(login, this, user);
   }
 
   /**
    * Добавляет в журнал запись об обновлении пользователя
+   *
    * @param oldUser старый регион
    * @param newUser новый регион
-   * @param user пользователь, от имени которого надо формировать записи
+   * @param user    пользователь, от имени которого надо формировать записи
    * @throws AdminException ошибка сохранения записи
    */
-  public void logUpdateUser(User oldUser, User newUser, String user) throws AdminException{
+  public void logUpdateUser(User oldUser, User newUser, String user) throws AdminException {
     this.users.logChanges(oldUser, newUser, this, user);
   }
 
@@ -312,27 +344,27 @@ public class Journal {
   }
 
   public void logAddRestriction(Restriction r, String user) throws AdminException {
-    restrictions.logRestrictionAdd(this,user,r);
+    restrictions.logRestrictionAdd(this, user, r);
   }
 
   public void logUpdateRestriction(Restriction r, Restriction oldR, String user) throws AdminException {
-    restrictions.logUpdateRestriction(this,user, r, oldR);
+    restrictions.logUpdateRestriction(this, user, r, oldR);
   }
 
   public void logDeleteRestriction(Restriction r, String user) throws AdminException {
-    restrictions.logDeleteRestriction(this,user, r);
+    restrictions.logDeleteRestriction(this, user, r);
   }
 
   public void logUpdateJavaMailProps(Properties props, Properties old, String user) throws AdminException {
-    webconfig.logUpdateJavaMailProps(this,props,old,user);
+    webconfig.logUpdateJavaMailProps(this, props, old, user);
   }
 
   public void logUpdateNotificationTemplates(Properties props, Properties old, String user) throws AdminException {
-    webconfig.logUpdateNotificationTemplates(this,props,old,user);
+    webconfig.logUpdateNotificationTemplates(this, props, old, user);
   }
 
   public void logUpdateSmsSenderAddress(Address addr, Address old, String user) throws AdminException {
-    webconfig.logUpdateSmsSenderAddress(this,addr,old,user);
+    webconfig.logUpdateSmsSenderAddress(this, addr, old, user);
 
   }
 

@@ -21,10 +21,10 @@ class XmlConfigWriter {
   private static final DocumentBuilder docBuilder;
 
   static {
-    try{
+    try {
       DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
       docBuilder = dbfac.newDocumentBuilder();
-    }catch (Exception e){
+    } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException(e);
     }
@@ -60,11 +60,11 @@ class XmlConfigWriter {
     Element root = doc.createElement("config");
     doc.appendChild(root);
 
-    for(XmlConfigParam p : config.params()) {
+    for (XmlConfigParam p : config.params()) {
       addParameter(doc, root, p);
     }
 
-    for(XmlConfigSection s : config.sections()) {
+    for (XmlConfigSection s : config.sections()) {
       addSection(doc, root, s);
     }
 
@@ -74,7 +74,7 @@ class XmlConfigWriter {
   private static void addSection(Document doc, Element parent, XmlConfigSection s) {
     Element sElement = doc.createElement("section");
     sElement.setAttribute("name", s.getName());
-    for(XmlConfigParam param: s.params()) {
+    for (XmlConfigParam param : s.params()) {
       addParameter(doc, sElement, param);
     }
     parent.appendChild(sElement);

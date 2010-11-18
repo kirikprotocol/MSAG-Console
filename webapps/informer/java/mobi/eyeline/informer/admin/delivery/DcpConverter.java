@@ -90,9 +90,9 @@ public class DcpConverter {
       return null;
     }
     Delivery delivery;
-    if(glossary == null) {
+    if (glossary == null) {
       delivery = Delivery.newCommonDelivery();
-    }else {
+    } else {
       delivery = Delivery.newSingleTextDelivery();
       delivery.setSingleText(glossary[0]);
     }
@@ -101,7 +101,7 @@ public class DcpConverter {
     delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart()));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
-    if(di.hasEndDate()) {
+    if (di.hasEndDate()) {
       delivery.setEndDate(convertDate(di.getEndDate()));
     }
     delivery.setFlash(di.getFlash());
@@ -113,7 +113,7 @@ public class DcpConverter {
     delivery.setRetryPolicy(di.getRetryPolicy());
     delivery.setSourceAddress(new Address(di.getSourceAddress()));
 
-    if(di.hasUserData()) {
+    if (di.hasUserData()) {
       Map<String, String> uD = convertUserData(di.getUserData());
       delivery.addProperties(uD);
     }
@@ -168,9 +168,9 @@ public class DcpConverter {
     if (mi.hasState()) {
       result.setState(convert(mi.getState()));
     }
-    if(text == null && mi.hasText()) {
+    if (text == null && mi.hasText()) {
       result.setText(mi.getText());
-    }else {
+    } else {
       result.setText(text);
     }
     if (mi.hasUserData()) {
@@ -242,7 +242,7 @@ public class DcpConverter {
     if (di.hasUserId()) {
       result.setUserId(di.getUserId());
     }
-    if(di.hasUserData()) {
+    if (di.hasUserData()) {
       Map<String, String> uD = convertUserData(di.getUserData());
       result.addProperties(uD);
     }
@@ -258,7 +258,7 @@ public class DcpConverter {
     delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart()));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
-    if(di.getEndDate() != null) {
+    if (di.getEndDate() != null) {
       delivery.setEndDate(convertDate(di.getEndDate()));
     }
     delivery.setFlash(di.isFlash());
@@ -399,24 +399,25 @@ public class DcpConverter {
   }
 
 
-  private static String convertUserData(Properties m) {
-    if(m == null || m.isEmpty()) {
+  public static String convertUserData(Map m) {
+    if (m == null || m.isEmpty()) {
       return null;
     }
     StringBuilder sb = new StringBuilder();
-    for(Map.Entry e : m.entrySet()) {
+    for (Object e1 : m.entrySet()) {
+      Map.Entry e = (Map.Entry)e1;      
       sb.append(';').append(e.getKey()).append('=').append(e.getValue());
     }
     return sb.substring(1);
   }
 
   public static Map<String, String> convertUserData(String s) {
-    if(s == null || (s = s.trim()).length() == 0) {
+    if (s == null || (s = s.trim()).length() == 0) {
       return null;
     }
     String[] entries = s.split(";");
     Map<String, String> r = new HashMap<String, String>(entries.length);
-    for(String e : entries) {
+    for (String e : entries) {
       String[] kv = e.split("=");
       r.put(kv[0], kv[1]);
     }
@@ -424,11 +425,11 @@ public class DcpConverter {
   }
 
   public static DeliveryStatusHistory convert(int deliveryId, DeliveryHistoryItem[] history) throws AdminException {
-    if(history == null) {
+    if (history == null) {
       return null;
     }
     List<DeliveryStatusHistory.Item> items = new ArrayList<DeliveryStatusHistory.Item>(history.length);
-    for(DeliveryHistoryItem i : history) {
+    for (DeliveryHistoryItem i : history) {
       items.add(new DeliveryStatusHistory.Item(convertDate(i.getDate()), convert(i.getStatus())));
     }
     return new DeliveryStatusHistory(deliveryId, items);

@@ -118,7 +118,7 @@ public class XmlUtils {
     Transformer xformer = TransformerFactory.newInstance().newTransformer();
     xformer.setOutputProperty(OutputKeys.INDENT, "yes");
     xformer.setOutputProperty(OutputKeys.ENCODING, encoding);
-    if(docType != null) {
+    if (docType != null) {
       xformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, docType);
     }
     xformer.transform(source, result);

@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * @author Aleksandr Khalitov
  */
 
-public class Address implements Serializable{
+public class Address implements Serializable {
 
   private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
   private static final Pattern pattern1 = Pattern.compile(pattern_header + "\\d{0,20}\\?{0,20}$");
@@ -47,8 +47,8 @@ public class Address implements Serializable{
    * @param address адрес
    */
   public Address(int tone, int npi, String address) {
-    this.tone = (byte)tone;
-    this.npi = (byte)npi;
+    this.tone = (byte) tone;
+    this.npi = (byte) npi;
     this.address = address;
   }
 
@@ -57,7 +57,7 @@ public class Address implements Serializable{
    *
    * @param address - адрес в виде строки
    */
-  public Address(String address)  {
+  public Address(String address) {
     address = address.trim();
     if (address == null)
       throw new NullPointerException("Address string is null");

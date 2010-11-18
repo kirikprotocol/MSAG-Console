@@ -13,6 +13,7 @@ public class Transliterator {
 
   /**
    * Переводит в транслит строку в кодировке windows-1251
+   *
    * @param s исходная строка
    * @return строка в транслите или null, если s == null
    */

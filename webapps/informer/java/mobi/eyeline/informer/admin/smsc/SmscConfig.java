@@ -18,18 +18,18 @@ class SmscConfig implements ManagedConfigFile<SmscSettings> {
     XmlConfig config = new XmlConfig();
     config.load(oldFile);
 
-    XmlConfigSection  smscConnectors = config.getOrCreateSection("SMSCConnectors");
+    XmlConfigSection smscConnectors = config.getOrCreateSection("SMSCConnectors");
 
     Set<String> newSections = new HashSet<String>();
 
-    for(Smsc s : conf.getSmscs()) {
+    for (Smsc s : conf.getSmscs()) {
       XmlConfigSection section = smscConnectors.getOrCreateSection(s.getName());
       s.save(section);
       newSections.add(section.getName());
     }
 
-    for(XmlConfigSection section : smscConnectors.sections()) {
-      if(!newSections.contains(section.getName())) {
+    for (XmlConfigSection section : smscConnectors.sections()) {
+      if (!newSections.contains(section.getName())) {
         smscConnectors.removeSection(section);
       }
     }
@@ -45,8 +45,8 @@ class SmscConfig implements ManagedConfigFile<SmscSettings> {
 
     XmlConfig config = new XmlConfig();
     config.load(is);
-    XmlConfigSection  smscConnectors = config.getSection("SMSCConnectors");
-    for(XmlConfigSection s : smscConnectors.sections()) {
+    XmlConfigSection smscConnectors = config.getSection("SMSCConnectors");
+    for (XmlConfigSection s : smscConnectors.sections()) {
       Smsc smsc = new Smsc(s.getName());
       smsc.load(s);
       result.addSmsc(smsc);

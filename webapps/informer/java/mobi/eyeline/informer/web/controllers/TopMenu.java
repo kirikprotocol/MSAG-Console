@@ -13,15 +13,16 @@ import java.util.LinkedList;
 
 /**
  * Контроллер для отображения главного меню
+ *
  * @author Aleksandr Khalitov
  */
-public class TopMenu extends InformerController{
+public class TopMenu extends InformerController {
 
   private final Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3);
 
   public TopMenu() {
     MenuBarItem i = new MenuBarItem("informer.admin", "informer.admin.width");
-    if(isUserhasRole("informer-admin")) {
+    if (isUserhasRole("informer-admin")) {
       i.add(new MenuItem("informer.admin.status", "/index.faces"));
     }
     i.add(new MenuItem("informer.admin.config", "/config/index.faces")).
@@ -31,7 +32,7 @@ public class TopMenu extends InformerController{
         add(new MenuItem("informer.admin.users", "/users/index.faces")).
         add(new MenuItem("informer.admin.restrictions", "/restriction/index.faces")).
         add(new MenuItem("informer.admin.notifications", "/notifications/index.faces")).
-//        add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
+        add(new MenuItem("informer.admin.siebel", "/siebel/index.faces")).
 //          add(new MenuItem("informer.admin.import", "/import/index.faces")).
 //          add(new MenuItem("informer.admin.archieve", "/archieve/index.faces")).
 //          add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
@@ -60,10 +61,10 @@ public class TopMenu extends InformerController{
     if (p == null) {
       return null;
     }
-    return getByUser(p.getName());
+    return getByUser();
   }
 
-  private Collection<MenuBarItem> getByUser(String userName) {
+  private Collection<MenuBarItem> getByUser() {
     WebXml webXml = WebContext.getInstance().getWebXml();
     Iterator<MenuBarItem> mbiIter = menuBarItems.iterator();
     while (mbiIter.hasNext()) {

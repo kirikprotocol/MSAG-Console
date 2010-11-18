@@ -19,12 +19,12 @@ import java.util.*;
 
 /**
  * Контроллер для просмотра журнала
+ *
  * @author Aleksandr Khalitov
  */
-public class JournalController extends InformerController{
+public class JournalController extends InformerController {
 
   private final Journal journal;
-
 
 
   private String filterByUser;
@@ -112,8 +112,8 @@ public class JournalController extends InformerController{
     this.filterByEndDate = filterByEndDate;
   }
 
-  private void loadRecord() throws AdminException{
-    if(records == null) {
+  private void loadRecord() throws AdminException {
+    if (records == null) {
       records = journal.getRecords(new JournalFilter().
           setStartDate(filterByStartDate).setEndDate(filterByEndDate).setUser(filterByUser).
           setSubject(Subject.getByKey(filterBySubject)));
@@ -121,17 +121,17 @@ public class JournalController extends InformerController{
   }
 
   public DataTableModel getRecords() {
-    if(!init) {
+    if (!init) {
       records = Collections.emptyList();
-    }else {
-      try{
+    } else {
+      try {
         loadRecord();
-      }catch (AdminException e){
+      } catch (AdminException e) {
         addError(e);
         records = Collections.emptyList();
       }
     }
-    
+
     return new DataTableModel() {
 
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
@@ -142,10 +142,10 @@ public class JournalController extends InformerController{
           Collections.sort(records, new Comparator<JournalRecord>() {
             public int compare(JournalRecord o1, JournalRecord o2) {
               if (sortOrder.getColumnId().equals("user")) {
-                return mul*o1.getUser().compareTo(o2.getUser());
+                return mul * o1.getUser().compareTo(o2.getUser());
               } else if (sortOrder.getColumnId().equals("subject")) {
                 Locale l = getLocale();
-                return mul*o1.getSubject().getSubject(l).compareTo(o2.getSubject().getSubject(l));
+                return mul * o1.getSubject().getSubject(l).compareTo(o2.getSubject().getSubject(l));
               } else if (sortOrder.getColumnId().equals("time")) {
                 return o1.getTime() >= o2.getTime() ? mul : -mul;
               }
@@ -156,7 +156,7 @@ public class JournalController extends InformerController{
 
         List<JournalTableRow> result = new ArrayList<JournalTableRow>(records.size());
         Locale l = getLocale();
-        for (int i=startPos; i < Math.min(records.size(), startPos + count); i++) {
+        for (int i = startPos; i < Math.min(records.size(), startPos + count); i++) {
           JournalRecord r = records.get(i);
           JournalTableRow row = new JournalTableRow();
           row.setDate(new Date(r.getTime()));
@@ -165,7 +165,7 @@ public class JournalController extends InformerController{
           row.setDescription(r.getDescription(l));
 
           User u = getConfig().getUser(r.getUser());
-          row.setUserDetails(u != null ? u.getLastName() + " " + u.getFirstName()  : r.getUser());
+          row.setUserDetails(u != null ? u.getLastName() + " " + u.getFirstName() : r.getUser());
           result.add(row);
         }
 
@@ -180,21 +180,20 @@ public class JournalController extends InformerController{
 
   @Override
   protected void _download(PrintWriter writer) throws IOException {
-    try{
+    try {
       loadRecord();
-    }catch (AdminException e){
+    } catch (AdminException e) {
       addError(e);
       records = Collections.emptyList();
     }
     super._download(writer);
-    String tmp;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-    Locale locale =  getLocale();
-    for(JournalRecord r : records) {
+    Locale locale = getLocale();
+    for (JournalRecord r : records) {
       writer.println(StringEncoderDecoder.toCSVString(
-          new Object[]{r.getUser(), sdf.format(new Date(r.getTime())),
-              r.getSubject() == null ? "" : r.getSubject().getSubject(locale),
-              r.getType(), r.getDescription(locale)}));
+          r.getUser(), sdf.format(new Date(r.getTime())),
+          r.getSubject() == null ? "" : r.getSubject().getSubject(locale),
+          r.getType(), r.getDescription(locale)));
     }
   }
 

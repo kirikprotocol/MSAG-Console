@@ -84,6 +84,6 @@ public class Column extends EyelineComponent {
     width = (String) values[3];
     align = (String) values[4];
     sortable = (Boolean) values[5];
-    defaultSortOrder = (String)values[6];
+    defaultSortOrder = (String) values[6];
   }
 }

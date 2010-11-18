@@ -19,8 +19,6 @@ import java.util.Locale;
 public class MessagesByUserStatsController extends DeliveryStatController {
 
 
-
-
   public MessagesByUserStatsController() {
     super();
   }
@@ -28,26 +26,24 @@ public class MessagesByUserStatsController extends DeliveryStatController {
 
   @Override
   public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
-     DeliveryStatFilter filterCopy = new DeliveryStatFilter(getFilter());
+    DeliveryStatFilter filterCopy = new DeliveryStatFilter(getFilter());
 
-     config.statistics(filterCopy,new DeliveryStatVisitor() {
+    config.statistics(filterCopy, new DeliveryStatVisitor() {
 
-       public boolean visit(DeliveryStatRecord rec, int total, int current) {
-         setCurrentAndTotal(current,total);
-         User owner = config.getUser(rec.getUser());
-         AggregatedRecord newRecord = new MessagesByUserStatRecord(rec.getUser(),owner, rec);
-         AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
-         if(oldRecord==null) {
+      public boolean visit(DeliveryStatRecord rec, int total, int current) {
+        setCurrentAndTotal(current, total);
+        User owner = config.getUser(rec.getUser());
+        AggregatedRecord newRecord = new MessagesByUserStatRecord(rec.getUser(), owner, rec);
+        AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
+        if (oldRecord == null) {
           putRecord(newRecord);
-         }
-         else {
-           oldRecord.add(newRecord);
-         }
-         return !isCancelled();
-       }
-     });
+        } else {
+          oldRecord.add(newRecord);
+        }
+        return !isCancelled();
+      }
+    });
   }
-
 
 
 }

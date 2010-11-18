@@ -21,7 +21,7 @@ public class ColumnRenderer extends Renderer {
   public void encodeChildren(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) throws java.io.IOException {
     if (component instanceof Column) {
       Column c = (Column) component;
-      Row row = (Row)c.getParent();
+      Row row = (Row) c.getParent();
 
       if (!row.isInner())
         super.encodeChildren(context, component);

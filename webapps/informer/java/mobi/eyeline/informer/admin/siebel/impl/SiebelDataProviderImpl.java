@@ -26,7 +26,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
   private ConnectionPool pool;
 
-  private final Properties sql; 
+  private final Properties sql;
 
 
   public SiebelDataProviderImpl() throws AdminException {
@@ -44,7 +44,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
         }
       }
     } catch (Exception e) {
-      logger.error(e,e);
+      logger.error(e, e);
       throw new SiebelException("internal_error");
     }
   }
@@ -63,7 +63,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       pool = new ConnectionPool(props);
       shutdowned = false;
     } catch (Exception e) {
-      logger.error(e,e);
+      logger.error(e, e);
       throw new SiebelException("internal_error");
     }
   }
@@ -225,7 +225,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     return siebelTask;
   }
 
-  public ResultSet<SiebelDelivery> getDeliveriesToUpdate() throws AdminException{
+  public ResultSet<SiebelDelivery> getDeliveriesToUpdate() throws AdminException {
 
     Connection connection = null;
     PreparedStatement prepStatement = null;
@@ -291,7 +291,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       int rowsUpdated = prepStatement.executeUpdate();
 
       if (rowsUpdated == 0) {
-        throw new SiebelException("delivery_not_found",waveId);
+        throw new SiebelException("delivery_not_found", waveId);
       }
 
       if (logger.isDebugEnabled()) {
@@ -302,6 +302,64 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       throw new SiebelException("unable_get_data");
     } finally {
       closeConn(connection, prepStatement, null);
+    }
+  }
+
+
+
+  @SuppressWarnings({"EmptyCatchBlock"})
+  public void setDeliveryStatuses(Map<String, SiebelDelivery.Status> statuses) throws AdminException {
+    if (statuses == null || statuses.isEmpty()) {
+      return;
+    }
+    Connection connection = null;
+    PreparedStatement prepStatement = null;
+
+    try {
+      connection = pool.getConnection();
+      boolean autoCommit = connection.getAutoCommit();
+      connection.setAutoCommit(false);
+      try {
+        int count = 0;
+        for (Map.Entry<String, SiebelDelivery.Status> stringDeliveryStateEntry : statuses.entrySet()) {
+          if (prepStatement == null) {
+            prepStatement = connection.prepareStatement(getSql("task.set.status"));
+          }
+          String waveId = stringDeliveryStateEntry.getKey();
+          SiebelDelivery.Status deliverySt = stringDeliveryStateEntry.getValue();
+          prepStatement.setString(1, deliverySt.toString());
+          prepStatement.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+          prepStatement.setString(3, waveId);
+          prepStatement.addBatch();
+          count++;
+          if (count == 1000) {
+            count = 0;
+            prepStatement.executeBatch();
+            closeConn(null, prepStatement, null);
+            prepStatement = null;
+          }
+        }
+        if (count != 0 && prepStatement != null) {
+          prepStatement.executeBatch();
+        }
+        connection.commit();
+      } catch (Exception e) {
+        try {
+          connection.rollback();
+        } catch (Exception ex) {
+        }
+        throw e;
+      } finally {
+        try {
+          connection.setAutoCommit(autoCommit);
+        } catch (Exception exc) {
+        }
+        closeConn(null, prepStatement, null);
+      }
+    } catch (Exception exc) {
+      throw new SiebelException("unable_get_data");
+    } finally {
+      closeConn(connection, null, null);
     }
   }
 

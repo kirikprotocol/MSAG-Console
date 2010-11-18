@@ -11,11 +11,11 @@ import java.util.Date;
  * Time: 18:34:34
  */
 public class DeliveryMessageNotification extends DeliveryNotification {
-  private long messageId;
-  private MessageState messageState;
-  private int smppStatus;
-  private Address address;
-  private String userData;
+  private final long messageId;
+  private final MessageState messageState;
+  private final int smppStatus;
+  private final Address address;
+  private final String userData;
 
   public DeliveryMessageNotification(DeliveryNotificationType type, Date eventDate, int deliveryId, String userId, long messageId, MessageState messageState, int smppStatus, Address address, String userData) {
     super(type, eventDate, deliveryId, userId);

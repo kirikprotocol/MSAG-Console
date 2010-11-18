@@ -19,7 +19,7 @@ public class MessageInfo {
   private String text;
   private Integer errorCode;
 
-  private Properties properties = new Properties();
+  private final Properties properties = new Properties();
 
   MessageInfo() {
   }
@@ -73,7 +73,7 @@ public class MessageInfo {
   }
 
   public String removeProperty(String name) {
-    return (String)properties.remove(name);
+    return (String) properties.remove(name);
   }
 
   public void setProperty(String name, String value) {
@@ -115,16 +115,16 @@ public class MessageInfo {
     if (errorCode != null ? !errorCode.equals(that.errorCode) : that.errorCode != null) return false;
     if (state != that.state) return false;
     if (text != null ? !text.equals(that.text) : that.text != null) return false;
-    if((properties != null && that.properties == null) || (properties == null && that.properties != null)) {
+    if ((properties != null && that.properties == null) || (properties == null && that.properties != null)) {
       return false;
     }
-    if(properties != null) {
-      if(properties.size() != that.properties.size()) {
+    if (properties != null) {
+      if (properties.size() != that.properties.size()) {
         return false;
       }
-      for(Map.Entry e : properties.entrySet()) {
+      for (Map.Entry e : properties.entrySet()) {
         Object v;
-        if(((v = that.properties.get(e.getKey())) == null) || !v.equals(e.getValue())) {
+        if (((v = that.properties.get(e.getKey())) == null) || !v.equals(e.getValue())) {
           return false;
         }
       }

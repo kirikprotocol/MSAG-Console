@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * @author Aleksandr Khalitov
  */
-public class BlackListManagerImpl implements BlacklistManager{
+public class BlackListManagerImpl implements BlacklistManager {
 
   private static final String INFOSME_BLACK_LIST = "infosme_black_list";
 
@@ -27,17 +27,17 @@ public class BlackListManagerImpl implements BlacklistManager{
   }
 
   public void add(String msisdn) throws AdminException {
-    if(msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
-      throw new IllegalArgumentException("Argument is empty: "+msisdn);
+    if (msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
+      throw new IllegalArgumentException("Argument is empty: " + msisdn);
     }
     msisdn = convertNumber(msisdn);
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
-      try{
+      try {
         lock.writeLock().lock();
         client.setProperty(msisdn, new Property(INFOSME_BLACK_LIST, true, new InfinitTimePolicy()));
-      }finally {
+      } finally {
         lock.writeLock().unlock();
       }
     } catch (PersonalizationClientException e) {
@@ -49,21 +49,21 @@ public class BlackListManagerImpl implements BlacklistManager{
 
 
   public void add(Collection<String> msisdns) throws AdminException {
-    if(msisdns == null) {
+    if (msisdns == null) {
       throw new IllegalArgumentException("Argument is null");
     }
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
-      try{
+      try {
         lock.writeLock().lock();
-        for(String msisdn: msisdns) {
-          if(msisdn != null && (msisdn = msisdn.trim()).length() != 0) {
+        for (String msisdn : msisdns) {
+          if (msisdn != null && (msisdn = msisdn.trim()).length() != 0) {
             msisdn = convertNumber(msisdn);
             client.setProperty(msisdn, new Property(INFOSME_BLACK_LIST, true, new InfinitTimePolicy()));
           }
         }
-      }finally {
+      } finally {
         lock.writeLock().unlock();
       }
     } catch (PersonalizationClientException e) {
@@ -74,18 +74,18 @@ public class BlackListManagerImpl implements BlacklistManager{
   }
 
   public void remove(String msisdn) throws AdminException {
-    if(msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
-      throw new IllegalArgumentException("Argument is empty: "+msisdn);
+    if (msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
+      throw new IllegalArgumentException("Argument is empty: " + msisdn);
     }
     msisdn = convertNumber(msisdn);
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
 
-      try{
+      try {
         lock.writeLock().lock();
         client.deleteProperty(msisdn, INFOSME_BLACK_LIST);
-      }finally {
+      } finally {
         lock.writeLock().unlock();
 
       }
@@ -97,22 +97,22 @@ public class BlackListManagerImpl implements BlacklistManager{
   }
 
   public void remove(Collection<String> msisdns) throws AdminException {
-    if(msisdns == null) {
+    if (msisdns == null) {
       throw new IllegalArgumentException("Argument is null");
     }
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
 
-      try{
+      try {
         lock.writeLock().lock();
-        for(String msisdn: msisdns) {
-          if(msisdn != null && (msisdn = msisdn.trim()).length() != 0) {
+        for (String msisdn : msisdns) {
+          if (msisdn != null && (msisdn = msisdn.trim()).length() != 0) {
             msisdn = convertNumber(msisdn);
             client.deleteProperty(msisdn, INFOSME_BLACK_LIST);
           }
         }
-      }finally {
+      } finally {
         lock.writeLock().unlock();
 
       }
@@ -124,17 +124,17 @@ public class BlackListManagerImpl implements BlacklistManager{
   }
 
   public boolean contains(String msisdn) throws AdminException {
-    if(msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
-      throw new IllegalArgumentException("Arguemnt is empty: "+msisdn);
+    if (msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
+      throw new IllegalArgumentException("Arguemnt is empty: " + msisdn);
     }
     msisdn = convertNumber(msisdn);
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
-      try{
+      try {
         lock.readLock().lock();
         return client.getProperty(msisdn, INFOSME_BLACK_LIST) != null;
-      }finally {
+      } finally {
         lock.readLock().unlock();
       }
     } catch (PersonalizationClientException e) {
@@ -149,16 +149,20 @@ public class BlackListManagerImpl implements BlacklistManager{
     if (client != null) {
       try {
         client.close();
-      } catch (PersonalizationClientException e) {}
+      } catch (PersonalizationClientException e) {
+      }
     }
   }
 
   private static String convertNumber(String ms) {
     char c = ms.charAt(0);
     switch (c) {
-      case '7': return '+'+ms;
-      case '8': return "+7"+ms.substring(1);
-      default: return ms;
+      case '7':
+        return '+' + ms;
+      case '8':
+        return "+7" + ms.substring(1);
+      default:
+        return ms;
     }
   }
 

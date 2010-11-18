@@ -7,13 +7,13 @@ import javax.faces.context.FacesContext;
 /**
  * @author Aleksandr Khalitov
  */
-public class UpdatableContent extends EyelineComponent{
+public class UpdatableContent extends EyelineComponent {
 
   private int updatePeriod;
   private boolean enabled = true;
 
   public int getUpdatePeriod() {
-    return updatePeriod;  
+    return updatePeriod;
   }
 
   public void setUpdatePeriod(int updatePeriod) {

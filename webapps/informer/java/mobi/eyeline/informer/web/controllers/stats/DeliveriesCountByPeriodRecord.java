@@ -19,14 +19,13 @@ public class DeliveriesCountByPeriodRecord extends TimeAggregatedStatRecord {
 
 
   public DeliveriesCountByPeriodRecord(Calendar periodStart, TimeAggregationType type, int counter, boolean isParent) {
-    super(periodStart,type,isParent);
+    super(periodStart, type, isParent);
     this.counter = counter;
-    if(getChildAggregationType()!=null) {
-      DeliveriesCountByPeriodRecord child = new DeliveriesCountByPeriodRecord(periodStart,getChildAggregationType(),counter,false);
+    if (getChildAggregationType() != null) {
+      DeliveriesCountByPeriodRecord child = new DeliveriesCountByPeriodRecord(periodStart, getChildAggregationType(), counter, false);
       addChild(child);
     }
   }
-
 
 
   public void add(AggregatedRecord r) {
@@ -42,16 +41,15 @@ public class DeliveriesCountByPeriodRecord extends TimeAggregatedStatRecord {
 
   @Override
   void printCSVheader(PrintWriter writer, boolean dtalized) {
-    writer.println(StringEncoderDecoder.toCSVString(new Object[]{"PERIOD","","COUNT"}));
+    writer.println(StringEncoderDecoder.toCSVString("PERIOD", "", "COUNT"));
   }
 
   @Override
   void printCSV(PrintWriter writer, boolean detalized) {
-    if(isParent()) {
-      writer.println(StringEncoderDecoder.toCSVString(new Object[]{getPeriodString(),"",getCounter()}));
-    }
-    else {
-      writer.println(StringEncoderDecoder.toCSVString(new Object[]{"",getPeriodString(),getCounter()}));
+    if (isParent()) {
+      writer.println(StringEncoderDecoder.toCSVString(getPeriodString(), "", getCounter()));
+    } else {
+      writer.println(StringEncoderDecoder.toCSVString("", getPeriodString(), getCounter()));
     }
   }
 
@@ -62,11 +60,10 @@ public class DeliveriesCountByPeriodRecord extends TimeAggregatedStatRecord {
       public int compare(DeliveriesCountByPeriodRecord o1, DeliveriesCountByPeriodRecord o2) {
         final int mul = sortOrder.isAsc() ? 1 : -1;
         if (sortOrder.getColumnId().equals("period")) {
-          return mul*o1.getStartCalendar().compareTo(o2.getStartCalendar());
-        }
-        else if (sortOrder.getColumnId().equals("counter")) {
+          return mul * o1.getStartCalendar().compareTo(o2.getStartCalendar());
+        } else if (sortOrder.getColumnId().equals("counter")) {
           return o1.getCounter() >= o2.getCounter() ? mul : -mul;
-        }        
+        }
         return 0;
       }
     };

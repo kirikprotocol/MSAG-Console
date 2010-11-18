@@ -8,11 +8,12 @@ import mobi.eyeline.informer.admin.infosme.protogen.protocol.*;
 
 /**
  * Администрирование Informer
+ *
  * @author Aleksandr Khalitov
  */
 public class InfosmeImpl implements Infosme {
 
-  private InfosmeClient client;
+  private final InfosmeClient client;
 
   public InfosmeImpl(String host, int port) {
     this.client = new InfosmeClient(host, port);
@@ -24,8 +25,8 @@ public class InfosmeImpl implements Infosme {
     }
   }
 
-  public void addSmsc(String smscId) throws AdminException{
-    if(smscId == null) {
+  public void addSmsc(String smscId) throws AdminException {
+    if (smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
@@ -36,7 +37,7 @@ public class InfosmeImpl implements Infosme {
   }
 
   public void removeSmsc(String smscId) throws AdminException {
-    if(smscId == null) {
+    if (smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
@@ -79,7 +80,7 @@ public class InfosmeImpl implements Infosme {
   }
 
   public void addUser(String userId) throws AdminException {
-    if(userId == null) {
+    if (userId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
@@ -90,7 +91,7 @@ public class InfosmeImpl implements Infosme {
   }
 
   public void updateUser(String userId) throws AdminException {
-    if(userId == null) {
+    if (userId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
@@ -101,7 +102,7 @@ public class InfosmeImpl implements Infosme {
   }
 
   public void removeUser(String userId) throws AdminException {
-    if(userId == null) {
+    if (userId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     ConfigOp configOp = new ConfigOp();
@@ -112,7 +113,7 @@ public class InfosmeImpl implements Infosme {
   }
 
   public void setDefaultSmsc(String smscId) throws AdminException {
-    if(smscId == null) {
+    if (smscId == null) {
       throw new IllegalArgumentException("Id is null");
     }
     SetDefaultSmsc s = new SetDefaultSmsc();
@@ -136,13 +137,13 @@ public class InfosmeImpl implements Infosme {
 
   @SuppressWarnings({"EmptyCatchBlock"})
   public void shutdown() {
-    if(client != null) {
-      try{         
+    if (client != null) {
+      try {
         client.shutdown();
-      }catch (Exception e){}
+      } catch (Exception e) {
+      }
     }
   }
-
 
 
 }

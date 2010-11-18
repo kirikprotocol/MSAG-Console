@@ -4,8 +4,8 @@ import java.io.*;
 
 /**
  * @author Aleksandr Khalitov
- *
- * Config based on xml file
+ *         <p/>
+ *         Config based on xml file
  */
 
 @SuppressWarnings({"EmptyCatchBlock"})
@@ -22,6 +22,7 @@ public class XmlConfig extends XmlConfigSection {
 
   /**
    * Creates new instance of xml config and load it from input stream
+   *
    * @param is input stream
    * @throws XmlConfigException If can't load
    */
@@ -32,17 +33,18 @@ public class XmlConfig extends XmlConfigSection {
 
   /**
    * Creates new instance of xml config and load it from other
+   *
    * @param c XmlConfig
    * @throws XmlConfigException If can't load
    */
   public XmlConfig(XmlConfig c) throws XmlConfigException {
-    try{
-      XmlConfigSection s =  (XmlConfigSection)clone();
+    try {
+      XmlConfigSection s = (XmlConfigSection) clone();
       sections = s.sections;
       params = s.params;
       name = s.name;
       encoding = c.encoding;
-    }catch (CloneNotSupportedException e){
+    } catch (CloneNotSupportedException e) {
       throw new XmlConfigException(e);
     }
 
@@ -50,6 +52,7 @@ public class XmlConfig extends XmlConfigSection {
 
   /**
    * Load config from file
+   *
    * @param file file
    * @throws XmlConfigException If can't load
    */
@@ -67,12 +70,14 @@ public class XmlConfig extends XmlConfigSection {
       try {
         if (is != null)
           is.close();
-      } catch (IOException e) {}
+      } catch (IOException e) {
+      }
     }
   }
 
   /**
    * Load config from input stream
+   *
    * @param is input stream
    * @throws XmlConfigException If can't load
    */
@@ -83,19 +88,21 @@ public class XmlConfig extends XmlConfigSection {
 
   /**
    * Save config
+   *
    * @param os output stream
    * @throws XmlConfigException if cant save
    */
   public void save(OutputStream os) throws XmlConfigException {
-    try{
-      XmlConfigWriter.writeConfig(this, os, encoding == null ? "utf-8" : encoding ,"configuration.dtd");
-    }catch (Exception e) {
+    try {
+      XmlConfigWriter.writeConfig(this, os, encoding == null ? "utf-8" : encoding, "configuration.dtd");
+    } catch (Exception e) {
       throw new XmlConfigException(e);
     }
   }
 
   /**
    * Returns config encoding
+   *
    * @return config encoding
    */
   public String getEncoding() {
@@ -104,6 +111,7 @@ public class XmlConfig extends XmlConfigSection {
 
   /**
    * Set config encoding
+   *
    * @param encoding new encoding
    */
   public void setEncoding(String encoding) {

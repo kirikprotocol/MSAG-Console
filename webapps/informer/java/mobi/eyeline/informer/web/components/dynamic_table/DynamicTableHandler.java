@@ -29,7 +29,7 @@ public class DynamicTableHandler extends ComponentHandler {
   }
 
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
-    DynamicTable dt = (DynamicTable)c;
+    DynamicTable dt = (DynamicTable) c;
     dt.setModel((DynamicTableModel) value.getObject(ctx, DynamicTableModel.class));
     nextHandler.apply(ctx, c);
   }

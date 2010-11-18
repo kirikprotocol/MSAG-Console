@@ -4,9 +4,10 @@ import mobi.eyeline.informer.admin.AdminException;
 
 /**
  * Логирует изменения в запрещенных номерах
+ *
  * @author Aleksandr Khalitov
  */
-class BlackListDiffHelper extends DiffHelper{
+class BlackListDiffHelper extends DiffHelper {
 
   BlackListDiffHelper() {
     super(Subject.BLACKLIST);

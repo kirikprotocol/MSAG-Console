@@ -10,9 +10,9 @@ import java.util.*;
 /**
  * @author Aleksandr Khalitov
  */
-public class SmscListController extends SmscController{
+public class SmscListController extends SmscController {
 
-  private List<RadioSmsc> smscs;
+  private final List<RadioSmsc> smscs;
 
   private String defaultSmsc;
 
@@ -20,7 +20,7 @@ public class SmscListController extends SmscController{
   public SmscListController() {
     defaultSmsc = getConfig().getDefaultSmsc();
     smscs = new LinkedList<RadioSmsc>();
-    for(Smsc s : getConfig().getSmscs()) {
+    for (Smsc s : getConfig().getSmscs()) {
       smscs.add(new RadioSmsc(s, defaultSmsc.equals(s.getName())));
     }
 
@@ -40,11 +40,11 @@ public class SmscListController extends SmscController{
   }
 
   public void change(ValueChangeEvent e) {
-    Boolean newV = (Boolean)e.getNewValue();
-    if(newV) {
-      UIComponent c = (UIComponent)e.getSource();
+    Boolean newV = (Boolean) e.getNewValue();
+    if (newV) {
+      UIComponent c = (UIComponent) e.getSource();
       try {
-        String smsc = (String)c.getAttributes().get(SMSC_PARAMETER);
+        String smsc = (String) c.getAttributes().get(SMSC_PARAMETER);
         getConfig().setDefaultSmsc(smsc, getUserName());
         defaultSmsc = smsc;
       } catch (AdminException e1) {
@@ -55,16 +55,16 @@ public class SmscListController extends SmscController{
 
   public String remove() {
     String smsc = getRequestParameter(SMSC_PARAMETER);
-    if(smsc != null) {
-      try{
+    if (smsc != null) {
+      try {
         getConfig().removeSmsc(smsc, getUserName());
-      }catch (AdminException e){
+      } catch (AdminException e) {
         addError(e);
         return null;
       }
       Iterator<RadioSmsc> i = smscs.iterator();
-      while(i.hasNext()) {
-        if(i.next().getName().equals(smsc)) {
+      while (i.hasNext()) {
+        if (i.next().getName().equals(smsc)) {
           i.remove();
           break;
         }
@@ -75,7 +75,7 @@ public class SmscListController extends SmscController{
 
   public static class RadioSmsc {
 
-    private Smsc smsc;
+    private final Smsc smsc;
 
     private boolean def;
 

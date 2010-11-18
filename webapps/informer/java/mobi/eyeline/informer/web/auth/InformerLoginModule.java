@@ -14,6 +14,7 @@ import java.util.Map;
 
 /**
  * JAAS Login module
+ *
  * @author Aleksandr Khalitov
  */
 public class InformerLoginModule implements LoginModule {
@@ -27,6 +28,7 @@ public class InformerLoginModule implements LoginModule {
   public boolean abort() throws LoginException {
     return true;
   }
+
   public boolean commit() throws LoginException {
     InformerPrincipal p = WebContext.getInstance().getAuthenticator().authenticate(name, password);
     if (p == null) {

@@ -4,6 +4,7 @@ import java.io.File;
 
 /**
  * Сервис, управляемый демоном
+ *
  * @author Artem Snopkov
  */
 public class ControlledService {

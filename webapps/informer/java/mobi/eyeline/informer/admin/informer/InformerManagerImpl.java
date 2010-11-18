@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * @author Aleksandr Khalitov
  */
-public class InformerManagerImpl implements InformerManager{
+public class InformerManagerImpl implements InformerManager {
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -26,9 +26,10 @@ public class InformerManagerImpl implements InformerManager{
 
   /**
    * Конструктор
-   * @param configFile файл с конфигурацией
-   * @param backupDir директория для бэкапа
-   * @param fs файловая система
+   *
+   * @param configFile     файл с конфигурацией
+   * @param backupDir      директория для бэкапа
+   * @param fs             файловая система
    * @param serviceManager service manager
    */
   public InformerManagerImpl(File configFile, File backupDir, FileSystem fs, ServiceManager serviceManager) {
@@ -38,20 +39,20 @@ public class InformerManagerImpl implements InformerManager{
 
 
   public InformerSettings getConfigSettings() throws AdminException {
-    try{
+    try {
       lock.readLock().lock();
       return cfgFileManager.load();
-    }finally {
+    } finally {
       lock.readLock().unlock();
     }
   }
 
 
-  public void updateSettings(InformerSettings informerSettings) throws AdminException{
-    try{
+  public void updateSettings(InformerSettings informerSettings) throws AdminException {
+    try {
       lock.writeLock().lock();
       cfgFileManager.save(informerSettings);
-    }finally {
+    } finally {
       lock.writeLock().unlock();
     }
 

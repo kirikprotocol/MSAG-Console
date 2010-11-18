@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 
 /**
  * Класс для управления конфигурациями, авторизацией, демонами и др.
+ *
  * @author Aleksandr Khalitov
  */
 public class WebContext {
@@ -23,7 +24,7 @@ public class WebContext {
 
   private static WebContext instance;
 
-  protected WebXml webXml;
+  protected final WebXml webXml;
 
   protected Authenticator authenticator;
 
@@ -33,7 +34,7 @@ public class WebContext {
 
   protected Configuration configuration;
 
-  public static void init(WebXml webXml,  File baseDir) throws InitException {
+  public static void init(WebXml webXml, File baseDir) throws InitException {
     if (instance == null) {
       instance = new WebContext(webXml, baseDir);
       initLatch.countDown();
@@ -49,36 +50,35 @@ public class WebContext {
     }
   }
 
-  private WebContext(WebXml webXml,  File baseDir) throws InitException {
+  private WebContext(WebXml webXml, File baseDir) throws InitException {
     this.webXml = webXml;
-    try{
+    try {
 
 
-
-      if(Mode.testMode) {
-        if(logger.isInfoEnabled()) {
+      if (Mode.testMode) {
+        if (logger.isInfoEnabled()) {
           logger.info(" -- TEST MODE -- TEST MODE -- TEST MODE -- TEST MODE -- ");
-        }                
-        this.adminContext = (AdminContext)Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
+        }
+        this.adminContext = (AdminContext) Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
             getConstructor(File.class).newInstance(baseDir);
-      }else {
+      } else {
         this.adminContext = new AdminContext(baseDir);
       }
 
       this.authenticator = new AuthenticatorImpl(new Users() {
         public User getUser(String login) {
-          try{
+          try {
             return adminContext.getUser(login);
-          }catch (Exception e){
-            logger.error(e,e);
+          } catch (Exception e) {
+            logger.error(e, e);
             return null;
           }
         }
       });
       configuration = new Configuration(adminContext);
-    }catch (InitException e) {
+    } catch (InitException e) {
       throw e;
-    }catch (Exception e) {
+    } catch (Exception e) {
       throw new InitException(e);
     }
   }
@@ -96,7 +96,7 @@ public class WebContext {
   }
 
   void shutdown() {
-    if(adminContext != null) {
+    if (adminContext != null) {
       adminContext.shutdown();
     }
   }

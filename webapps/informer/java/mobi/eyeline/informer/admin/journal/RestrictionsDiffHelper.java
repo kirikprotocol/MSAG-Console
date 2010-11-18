@@ -29,6 +29,6 @@ public class RestrictionsDiffHelper extends DiffHelper {
   }
 
   public void logDeleteRestriction(Journal journal, String user, Restriction r) throws AdminException {
-    journal.addRecord(JournalRecord.Type.REMOVE, subject, user,"restriction_removed",r.getName(),r.getId()+"");
+    journal.addRecord(JournalRecord.Type.REMOVE, subject, user, "restriction_removed", r.getName(), r.getId() + "");
   }
 }

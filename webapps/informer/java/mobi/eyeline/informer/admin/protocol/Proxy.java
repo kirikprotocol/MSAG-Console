@@ -22,7 +22,7 @@ public class Proxy {
 
   protected String host = "localhost";
   protected int port = 1024;
-  protected Category logger = Category.getInstance(this.getClass().getName());
+  protected final Category logger = Category.getInstance(this.getClass().getName());
   private byte status = StatusDisconnected;
   private byte statusTime = StatusTimeEnabled;
   private Socket socket = null;
@@ -61,7 +61,7 @@ public class Proxy {
   }
 
   public byte getStatus() {
-      return status;
+    return status;
   }
 
   public byte getStatusTime() {
@@ -71,7 +71,7 @@ public class Proxy {
   public synchronized Response runCommand(Command command) throws AdminException {
     logger.debug("runCommand(@" + command.getClass().getName() + ")");
     logger.debug("  status = " + getStatus()
-      + " (" + (getStatus() != StatusConnected ? "disconnected" : "connected") + ")");
+        + " (" + (getStatus() != StatusConnected ? "disconnected" : "connected") + ")");
     if (getStatus() != StatusConnected)
       connect(host, port);
 
@@ -102,7 +102,7 @@ public class Proxy {
   }
 
   protected void reconnect()
-    throws AdminException {
+      throws AdminException {
     logger.debug("reconnect()");
     disconnect();
     connect(host, port);
@@ -135,7 +135,7 @@ public class Proxy {
       logger.debug("connecting to \"" + host + ':' + port + "\" ...");
       socket = new Socket(host, port);
       if (timeMode)
-        socket.setSoTimeout(timeout*3);
+        socket.setSoTimeout(timeout * 3);
       out = socket.getOutputStream();
       in = socket.getInputStream();
       writer = new CommandWriter(out);

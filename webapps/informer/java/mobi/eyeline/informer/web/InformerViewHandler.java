@@ -51,12 +51,12 @@ public class InformerViewHandler extends FaceletViewHandler {
 
   @Override
   public Locale calculateLocale(FacesContext context) {
-    Locale l = (Locale)context.getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER);
-    if(l != null) {
+    Locale l = (Locale) context.getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER);
+    if (l != null) {
       return l;
-    }else {
+    } else {
       return super.calculateLocale(context);
     }
   }
-  
+
 }

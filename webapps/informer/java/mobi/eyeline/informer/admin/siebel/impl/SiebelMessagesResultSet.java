@@ -13,11 +13,11 @@ import java.util.Properties;
 /**
  * @author Aleksandr Khalitov
  */
-class SiebelMessagesResultSet implements ResultSet<SiebelMessage>{
+class SiebelMessagesResultSet implements ResultSet<SiebelMessage> {
   private static final Logger logger = Logger.getLogger(SiebelMessagesResultSet.class);
-  private java.sql.ResultSet sqlResult;
-  private Connection connection;
-  private PreparedStatement prepStatement;
+  private final java.sql.ResultSet sqlResult;
+  private final Connection connection;
+  private final PreparedStatement prepStatement;
   private final Properties sql;
 
   SiebelMessagesResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql) {
@@ -51,7 +51,7 @@ class SiebelMessagesResultSet implements ResultSet<SiebelMessage>{
       siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("message.smsc.stat.val")));
       siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("message.wave.id")));
     } catch (Throwable e) {
-      logger.error(e,e);
+      logger.error(e, e);
       throw new SiebelException("unable_get_data");
     }
     return siebelMessage;

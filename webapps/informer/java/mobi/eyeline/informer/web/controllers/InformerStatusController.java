@@ -13,10 +13,11 @@ import java.util.List;
 
 /**
  * Котроллер для остановки/запуска сервисов
+ *
  * @author Aleksandr Khalitov
  */
 
-public class InformerStatusController extends InformerController{
+public class InformerStatusController extends InformerController {
 
   private String informerOnlineHost;
   private List<String> informerHosts;
@@ -25,14 +26,14 @@ public class InformerStatusController extends InformerController{
   private List<Daemon> daemons;
 
   public InformerStatusController() {
-    try{
+    try {
       reload();
-    }catch (AdminException e) {
+    } catch (AdminException e) {
       addError(e);
     }
   }
 
-  private void reload() throws AdminException{
+  private void reload() throws AdminException {
     Configuration c = getConfig();
     this.informerOnlineHost = c.getInformerOnlineHost();
     this.informerHosts = c.getInformerHosts();
@@ -40,11 +41,11 @@ public class InformerStatusController extends InformerController{
   }
 
   public String startInformer() {
-    if(informerOnlineHost == null) {
-      try{
+    if (informerOnlineHost == null) {
+      try {
         getConfig().startInformer(getUserName());
         reload();
-      }catch (AdminException e){
+      } catch (AdminException e) {
         addError(e);
       }
     }
@@ -52,11 +53,11 @@ public class InformerStatusController extends InformerController{
   }
 
   public String stopInformer() {
-    if(informerOnlineHost != null) {
-      try{
+    if (informerOnlineHost != null) {
+      try {
         getConfig().stopInformer(getUserName());
         reload();
-      }catch (AdminException e){
+      } catch (AdminException e) {
         addError(e);
       }
     }
@@ -65,12 +66,12 @@ public class InformerStatusController extends InformerController{
 
   public String startDaemon() {
     String daemon = getRequestParameter("daemon");
-    for(Daemon d : daemons) {
-      if(d.getName().equals(daemon)) {
-        try{
+    for (Daemon d : daemons) {
+      if (d.getName().equals(daemon)) {
+        try {
           d.start();
           reload();
-        }catch (AdminException e){
+        } catch (AdminException e) {
           addError(e);
           break;
         }
@@ -82,12 +83,12 @@ public class InformerStatusController extends InformerController{
 
   public String stopDaemon() {
     String daemon = getRequestParameter("daemon");
-    for(Daemon d : daemons) {
-      if(d.getName().equals(daemon)) {
-        try{
+    for (Daemon d : daemons) {
+      if (d.getName().equals(daemon)) {
+        try {
           d.stop();
           reload();
-        }catch (AdminException e){
+        } catch (AdminException e) {
           addError(e);
           break;
         }
@@ -98,10 +99,10 @@ public class InformerStatusController extends InformerController{
   }
 
   public String switchInformerHost() {
-    try{
+    try {
       getConfig().switchInformer(informerSwitchTo, getUserName());
       reload();
-    }catch (AdminException e){
+    } catch (AdminException e) {
       addError(e);
     }
     return null;

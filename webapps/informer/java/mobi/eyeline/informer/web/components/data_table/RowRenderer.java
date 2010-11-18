@@ -20,7 +20,7 @@ public class RowRenderer extends Renderer {
 
     if (t.getFirstRow() == r)
       rowNumber = 0;
-    
+
     Writer w = context.getResponseWriter();
 
     if (r.isHeader())
@@ -36,7 +36,7 @@ public class RowRenderer extends Renderer {
       w.append("\n<td>&nbsp;</td>");
 
     } else {
-      
+
       w.append("\n<tr class=\"row" + (rowNumber & 1) + "\" id=\"" + t.getId() + rowId + "\">");
       if (t.isRowSelection())
         w.append("\n  <td><input class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");

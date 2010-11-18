@@ -4,26 +4,26 @@ import java.util.Date;
 
 /**
  * Запись в файле со статистикой
+ *
  * @author Artem Snopkov
  */
 public class DeliveryStatRecord {
-  private Date date;
+  private final Date date;
 
-  private int taskId;
-  private long newmessages;
-  private long processing;
-  private long delivered;
-  private long failed;
-  private long expired;
-  private long deliveredSMS;
-  private long failedSMS;
-  private long expiredSMS;
-  private String user;
-
+  private final int taskId;
+  private final long newmessages;
+  private final long processing;
+  private final long delivered;
+  private final long failed;
+  private final long expired;
+  private final long deliveredSMS;
+  private final long failedSMS;
+  private final long expiredSMS;
+  private final String user;
 
 
   public DeliveryStatRecord(String user, Date date, int taskId, int newmessages, int processing, int delivered, int failed, int expired, int deliveredSMS, int failedSMS, int expiredSMS) {
-    this.user=user;
+    this.user = user;
     this.date = date;
     this.taskId = taskId;
     this.newmessages = newmessages;

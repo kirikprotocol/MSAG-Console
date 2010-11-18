@@ -13,9 +13,10 @@ import java.util.*;
 
 /**
  * Контроллер для загрузки файла с регионами
+ *
  * @author Aleksandr Khalitov
  */
-public class RegionsUploadController extends UploadController{
+public class RegionsUploadController extends UploadController {
 
   private int uploaded;
 
@@ -51,25 +52,25 @@ public class RegionsUploadController extends UploadController{
 
   private static String readProperty(StringTokenizer t) {
     String tmp = t.nextToken().trim();
-    while(tmp.endsWith("\\")) {
-      tmp = tmp.substring(0,tmp.length()-1);
-      tmp+=t.nextToken();
+    while (tmp.endsWith("\\")) {
+      tmp = tmp.substring(0, tmp.length() - 1);
+      tmp += t.nextToken();
     }
     return tmp;
   }
 
 
-  private static Region readRegion(String line) throws Exception{
+  private static Region readRegion(String line) throws Exception {
     Region r = new Region();
-    StringTokenizer t = new StringTokenizer(line,",");
-    try{
+    StringTokenizer t = new StringTokenizer(line, ",");
+    try {
       r.setName(readProperty(t));
       r.setSmsc(readProperty(t));
       r.setMaxSmsPerSecond(Integer.parseInt(readProperty(t)));
       r.setTimeZone(TimeZone.getTimeZone(readProperty(t)));
-    }catch (NumberFormatException ex){
+    } catch (NumberFormatException ex) {
       throw new IllegalArgumentException(ex);
-    }catch (NoSuchElementException ex) {
+    } catch (NoSuchElementException ex) {
       throw new IllegalArgumentException(ex);
     }
     return r;
@@ -79,64 +80,65 @@ public class RegionsUploadController extends UploadController{
   @Override
   protected void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception {
 
-    maximum = 3*((int)file.getLength());
+    maximum = 3 * ((int) file.getLength());
     BufferedReader is = null;
-    try{
+    try {
       is = new BufferedReader(new InputStreamReader(file.getInputStream()));
       String line;
       Region r = null;
-      while((line = is.readLine()) != null && !isStoped()) {
+      while ((line = is.readLine()) != null && !isStoped()) {
         line = line.trim();
-        if(line.indexOf(',') != -1) {
+        if (line.indexOf(',') != -1) {
           r = readRegion(line);
-          if(getConfig().getSmsc(r.getSmsc()) == null) {
+          if (getConfig().getSmsc(r.getSmsc()) == null) {
             throw new RegionException("smsc_not_exist", r.getSmsc());
           }
-        }else {
-          if(r == null) {
+        } else {
+          if (r == null) {
             throw new IllegalArgumentException("Illegal file format");
           }
-          if(!Address.validate(line)) {
-            throw new IllegalArgumentException("Illegal mask: "+line);
+          if (!Address.validate(line)) {
+            throw new IllegalArgumentException("Illegal mask: " + line);
           }
           r.addMask(new Address(line));
 
-          if(regions.containsKey(line)) {
+          if (regions.containsKey(line)) {
             throw new RegionException("masks_intersection", line);
           }
-          regions.put(line,r);
+          regions.put(line, r);
         }
-        current+=line.length();
+        current += line.length();
       }
       Collection<Region> oldRegions = getConfig().getRegions();
-      for(Region region : oldRegions) {
-        if(!isStoped()) {
+      for (Region region : oldRegions) {
+        if (!isStoped()) {
           getConfig().removeRegion(region.getRegionId(), user);
-          current+=maximum/3/oldRegions.size();
-        }else {
+          current += maximum / 3 / oldRegions.size();
+        } else {
           break;
         }
       }
 
       Set<Region> newRegions = new HashSet<Region>(regions.values());
-      for(Region region : newRegions) {
-        if(!isStoped()) {
+      for (Region region : newRegions) {
+        if (!isStoped()) {
           getConfig().addRegion(region, user);
-          current+=maximum/3/newRegions.size();
+          current += maximum / 3 / newRegions.size();
           uploaded++;
-        }else {
+        } else {
           break;
         }
       }
-      if(!isStoped()) {
+      if (!isStoped()) {
         current = maximum;
       }
 
-    }finally {
-      if(is != null) {
-        try{
+    } finally {
+      if (is != null) {
+        try {
           is.close();
-        }catch (IOException e){}
+        } catch (IOException e) {
+        }
       }
     }
 

@@ -57,10 +57,10 @@ public class DeliveryManager {
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
     DcpConnection conn = getDeliveryConnection(login, password);
     Delivery d = conn.getDelivery(deliveryId);
-    if(d == null) {
+    if (d == null) {
       throw new DeliveryException("delivery_not_found");
     }
-    if(d.getType() == Delivery.Type.SingleText) {
+    if (d.getType() == Delivery.Type.SingleText) {
       throw new DeliveryException("illegal_delivery_type");
     }
     addMessages(msDataSource, conn, d);
@@ -69,10 +69,10 @@ public class DeliveryManager {
   public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
     DcpConnection conn = getDeliveryConnection(login, password);
     Delivery d = conn.getDelivery(deliveryId);
-    if(d == null) {
+    if (d == null) {
       throw new DeliveryException("delivery_not_found");
     }
-    if(d.getType() == Delivery.Type.Common) {
+    if (d.getType() == Delivery.Type.Common) {
       throw new DeliveryException("illegal_delivery_type");
     }
     return addSingleTextMessages(msDataSource, conn, d);
@@ -119,7 +119,7 @@ public class DeliveryManager {
       if (count == 1000) {
         Collections.shuffle(addresses);
         long[] ids = conn.addDeliveryAddresses(delivery.getId(), addresses);
-        for(long id : ids) {
+        for (long id : ids) {
           results.add(id);
         }
         addresses.clear();
@@ -129,7 +129,7 @@ public class DeliveryManager {
     if (!addresses.isEmpty()) {
       Collections.shuffle(addresses);
       long[] ids = conn.addDeliveryAddresses(delivery.getId(), addresses);
-      for(long id : ids) {
+      for (long id : ids) {
         results.add(id);
       }
     }
@@ -143,16 +143,16 @@ public class DeliveryManager {
     if ((delivery.getActivePeriodStart() == null || delivery.getActivePeriodEnd() == null)) {
       throw new DeliveryException("active_period_illegal");
     }
-    if(delivery.getSourceAddress() == null) {
+    if (delivery.getSourceAddress() == null) {
       throw new DeliveryException("source_address_empty");
     }
-    if(delivery.getStartDate() == null) {
+    if (delivery.getStartDate() == null) {
       throw new DeliveryException("start_date_empty");
     }
-    if(delivery.getOwner() == null) {
+    if (delivery.getOwner() == null) {
       throw new DeliveryException("owner_empty");
     }
-    if(delivery.getName() == null) {
+    if (delivery.getName() == null) {
       throw new DeliveryException("name_empty");
     }
   }
@@ -168,7 +168,7 @@ public class DeliveryManager {
    *          ошибка выполнения команды
    */
   public void createDelivery(final String login, final String password, final Delivery delivery, final DataSource<Message> msDataSource) throws AdminException {
-    if(delivery.getType() == Delivery.Type.SingleText) {
+    if (delivery.getType() == Delivery.Type.SingleText) {
       throw new DeliveryException("illegal_delivery_type");
     }
     if (logger.isDebugEnabled()) {
@@ -178,7 +178,7 @@ public class DeliveryManager {
     final DcpConnection conn = getDeliveryConnection(login, password);
     final int id = conn.createDelivery(delivery);
     delivery.setId(id);
-    if(msDataSource != null) {
+    if (msDataSource != null) {
       try {
         addMessages(msDataSource, conn, delivery);
       } catch (Exception e) {
@@ -200,19 +200,20 @@ public class DeliveryManager {
       logger.debug("Delivery is proccessed: " + id);
     }
   }
+
   /**
    * Создание рассылки
    *
-   * @param login        логин
-   * @param password     пароль
-   * @param delivery     рассылка
+   * @param login      логин
+   * @param password   пароль
+   * @param delivery   рассылка
    * @param dataSource адресаты рассылки (или null)
+   * @return идентификаторы сообщений (или null, если спсико адресатов пуст)
    * @throws mobi.eyeline.informer.admin.AdminException
    *          ошибка выполнения команды
-   * @return идентификаторы сообщений (или null, если спсико адресатов пуст)
    */
   public List<Long> createSingleTextDelivery(final String login, final String password, final Delivery delivery, final DataSource<Address> dataSource) throws AdminException {
-    if(delivery.getType() == Delivery.Type.Common) {
+    if (delivery.getType() == Delivery.Type.Common) {
       throw new DeliveryException("illegal_delivery_type");
     }
     if (logger.isDebugEnabled()) {
@@ -223,7 +224,7 @@ public class DeliveryManager {
     final int id = conn.createDelivery(delivery);
     delivery.setId(id);
     List<Long> res = null;
-    if(dataSource != null) {
+    if (dataSource != null) {
       try {
         res = addSingleTextMessages(dataSource, conn, delivery);
       } catch (Exception e) {
@@ -311,13 +312,13 @@ public class DeliveryManager {
     dropMessages(conn, deliveryId, messageIds);
   }
 
-  private  void dropMessages(DcpConnection conn, int deliveryId, Collection<Long> messageIds) throws AdminException {
+  private void dropMessages(DcpConnection conn, int deliveryId, Collection<Long> messageIds) throws AdminException {
     if (logger.isDebugEnabled()) {
       logger.debug("Drop Messages");
     }
     long[] ids = new long[messageIds.size()];
-    int i=0;
-    for(Long l : messageIds) {
+    int i = 0;
+    for (Long l : messageIds) {
       ids[i] = l;
       i++;
     }
@@ -418,7 +419,7 @@ public class DeliveryManager {
    * @param password       пароль
    * @param deliveryFilter фильтр
    * @param _pieceSize     сколько рассылок извлекать за одну транзакцию
-   * @param visitor визитер извлечения рассылок
+   * @param visitor        визитер извлечения рассылок
    * @throws AdminException ошибка выполнения команды
    */
   public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
@@ -441,7 +442,7 @@ public class DeliveryManager {
    * @param password   пароль
    * @param filter     фильтр
    * @param _pieceSize сколько рассылок извлекать за одну транзакцию
-   * @param visitor визитер извлечения сообщений
+   * @param visitor    визитер извлечения сообщений
    * @throws AdminException ошибка выполнения команды
    */
   public void getMessages(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
@@ -480,8 +481,9 @@ public class DeliveryManager {
 
   /**
    * Возвращает историю изменения статусов рассылки
-   * @param login         логин
-   * @param password      пароль
+   *
+   * @param login      логин
+   * @param password   пароль
    * @param deliveryId идентификатор рассылки
    * @return история изменения статусов рассылки
    * @throws AdminException ошибка выполнения команды
@@ -495,7 +497,8 @@ public class DeliveryManager {
    * Поочередно передает в visitor все записи статистики, удовлетворяющие условиям, накладываемыми в filter.
    * Процесс продолжается до тех пор, пока метод visit в visitor возвращает true, либо записи не закончатся.
    * Если filter == null, то провайдер перебирает все записи.
-   * @param filter фильтр, описывающий ограничения на записи
+   *
+   * @param filter  фильтр, описывающий ограничения на записи
    * @param visitor визитор, обрабатывающий найденные записи
    * @throws AdminException если произошла ошибка при обращении к стораджу статистики
    */
@@ -506,17 +509,18 @@ public class DeliveryManager {
 
   /**
    * Устанавливает у рассылки флаг в поле userData попадает она под запрет или нет
-   * @param login         логин
-   * @param password      пароль
-   * @param deliveryId идентификатор рассылки
+   *
+   * @param login       логин
+   * @param password    пароль
+   * @param deliveryId  идентификатор рассылки
    * @param restriction флаг
-   * @throws AdminException ошибка выполнения команды
    * @return рассылка
+   * @throws AdminException ошибка выполнения команды
    */
   public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
     DcpConnection conn = getDeliveryConnection(login, password);
     Delivery d = conn.getDelivery(deliveryId);
-    if(d == null) {
+    if (d == null) {
       throw new DeliveryException("delivery_not_found");
     }
     d.setProperty(UserDataConsts.RESTRICTION, Boolean.toString(restriction));

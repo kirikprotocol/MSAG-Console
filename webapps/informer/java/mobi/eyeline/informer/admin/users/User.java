@@ -6,16 +6,15 @@ import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 
-import javax.resource.NotSupportedException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
  * Настройки пользователя
+ *
  * @author Aleksandr Khalitov
  */
-public class User implements Serializable{
+public class User implements Serializable {
 
   private String login;
   private String password;
@@ -31,11 +30,11 @@ public class User implements Serializable{
 
   private boolean retryOnFail;
   private String policyId;
-  private boolean createCDR=true;
-  private int smsPerSec=1;
+  private boolean createCDR = true;
+  private int smsPerSec = 1;
   private Address sourceAddr;
-  private Time   deliveryStartTime;
-  private Time   deliveryEndTime;
+  private Time deliveryStartTime;
+  private Time deliveryEndTime;
   private List<Integer> deliveryDays = new ArrayList<Integer>();
   private int validHours;
   private DeliveryType deliveryType;
@@ -70,17 +69,17 @@ public class User implements Serializable{
     this.phone = user.phone;
     this.email = user.email;
     this.status = user.status;
-    this.organization=user.organization;
+    this.organization = user.organization;
     this.locale = user.locale == null ? null : new Locale(user.locale.getLanguage());
-    this.smsPerSec=user.smsPerSec;
+    this.smsPerSec = user.smsPerSec;
     this.createCDR = user.createCDR;
     this.sourceAddr = new Address(user.sourceAddr);
     this.deliveryStartTime = user.deliveryStartTime == null ? null : new Time(user.getDeliveryStartTime());
-    this.deliveryEndTime   = user.deliveryEndTime == null ? null : new Time(user.getDeliveryEndTime());
+    this.deliveryEndTime = user.deliveryEndTime == null ? null : new Time(user.getDeliveryEndTime());
     this.deliveryDays = new ArrayList<Integer>(user.getDeliveryDays());
     this.validHours = user.validHours;
     this.deliveryType = user.deliveryType;
-    this.transactionMode=user.transactionMode;
+    this.transactionMode = user.transactionMode;
     this.policyId = user.policyId;
     this.allowedRegions = user.getRegions() == null ? null : new ArrayList<Integer>(user.getRegions());
     this.priority = user.priority;
@@ -112,7 +111,7 @@ public class User implements Serializable{
     return password;
   }
 
-  public void setPassword(String password) throws AdminException{
+  public void setPassword(String password) throws AdminException {
     vh.checkNotEmpty("password", password);
     this.password = password;
   }
@@ -206,7 +205,7 @@ public class User implements Serializable{
   }
 
   public void setSmsPerSec(int smsPerSec) throws AdminException {
-    vh.checkPositive("smsPerSec",smsPerSec);
+    vh.checkPositive("smsPerSec", smsPerSec);
     this.smsPerSec = smsPerSec;
   }
 
@@ -215,7 +214,7 @@ public class User implements Serializable{
   }
 
   public void setSourceAddr(Address sourceAddr) throws AdminException {
-    vh.checkNotNull("sourceAddr",sourceAddr);
+    vh.checkNotNull("sourceAddr", sourceAddr);
     this.sourceAddr = sourceAddr;
   }
 
@@ -244,16 +243,16 @@ public class User implements Serializable{
   }
 
   public void setValidHours(int validHours) throws AdminException {
-    vh.checkPositive("validHours",validHours);
+    vh.checkPositive("validHours", validHours);
     this.validHours = validHours;
   }
 
   public void setDeliveryDays(List<Integer> deliveryDays) throws AdminException {
     List<Integer> deliveryDaysOut = new ArrayList<Integer>();
-    if(deliveryDays!=null) {
-      for(Integer day : deliveryDays) {
-        vh.checkNotContains("deliveryDays",deliveryDaysOut,day);
-        vh.checkBetween("deliveryDays",day, 0, 6);
+    if (deliveryDays != null) {
+      for (Integer day : deliveryDays) {
+        vh.checkNotContains("deliveryDays", deliveryDaysOut, day);
+        vh.checkBetween("deliveryDays", day, 0, 6);
         deliveryDaysOut.add(day);
       }
     }
@@ -265,7 +264,7 @@ public class User implements Serializable{
   }
 
   public void setDeliveryType(DeliveryType deliveryType) throws AdminException {
-    vh.checkNotNull("deliveryType",deliveryType);
+    vh.checkNotNull("deliveryType", deliveryType);
     this.deliveryType = deliveryType;
   }
 
@@ -282,7 +281,7 @@ public class User implements Serializable{
   }
 
   public void setPolicyId(String policyId) throws AdminException {
-    if(policyId!=null && policyId.trim().length()==0) policyId=null;
+    if (policyId != null && policyId.trim().length() == 0) policyId = null;
     this.policyId = policyId;
   }
 
@@ -291,14 +290,14 @@ public class User implements Serializable{
   }
 
   public void setRegions(List<Integer> regions) throws AdminException {
-    if(regions==null) {
+    if (regions == null) {
       this.allowedRegions = null;
       return;
     }
     List<Integer> regionsIds = new ArrayList<Integer>();
-    for(Integer r : regions) {
-      vh.checkNotContains("regions",regionsIds,r);
-      vh.checkNotNull("regions",r);
+    for (Integer r : regions) {
+      vh.checkNotContains("regions", regionsIds, r);
+      vh.checkNotNull("regions", r);
       regionsIds.add(r);
     }
 
@@ -310,7 +309,7 @@ public class User implements Serializable{
   }
 
   public void setPriority(int priority) throws AdminException {
-    vh.checkPositive("priority",priority);
+    vh.checkPositive("priority", priority);
     this.priority = priority;
   }
 
@@ -343,7 +342,7 @@ public class User implements Serializable{
   }
 
   public void setDeliveryLifetime(int deliveryLifetime) throws AdminException {
-    vh.checkPositive("deliveryLifetime",deliveryLifetime);
+    vh.checkPositive("deliveryLifetime", deliveryLifetime);
     this.deliveryLifetime = deliveryLifetime;
   }
 
@@ -352,7 +351,7 @@ public class User implements Serializable{
   }
 
   public void setDirectory(String directory) throws AdminException {
-    vh.checkNotEmpty("directory",directory);
+    vh.checkNotEmpty("directory", directory);
     this.directory = directory;
   }
 
@@ -381,7 +380,7 @@ public class User implements Serializable{
   }
 
   public void setReportsLifetime(int reportsLifetime) throws AdminException {
-    vh.checkPositive("reportsLifetime",reportsLifetime);
+    vh.checkPositive("reportsLifetime", reportsLifetime);
     this.reportsLifetime = reportsLifetime;
   }
 

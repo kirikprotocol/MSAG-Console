@@ -9,8 +9,6 @@ import java.util.*;
 public class Functions {
 
 
-  
-
   /**
    * Returns string contains all emenetns of collection with specified delimeter
    *

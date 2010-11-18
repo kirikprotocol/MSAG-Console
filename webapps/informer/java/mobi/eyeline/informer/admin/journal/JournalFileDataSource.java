@@ -15,11 +15,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * Файловый сторадж журнала
  * Возвращает записи, созданные не более 1 недели назад
+ *
  * @author Aleksandr Khalitov
  */
-class JournalFileDataSource implements JournalDataSource{
+class JournalFileDataSource implements JournalDataSource {
 
-  private static final long SHOW_PERIOD = 7*24*60*60*1000;
+  private static final long SHOW_PERIOD = 7 * 24 * 60 * 60 * 1000;
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -29,63 +30,64 @@ class JournalFileDataSource implements JournalDataSource{
 
   private final FileSystem fileSystem;
 
-  public JournalFileDataSource(File journalDir, FileSystem fileSystem) throws AdminException{
+  public JournalFileDataSource(File journalDir, FileSystem fileSystem) throws AdminException {
     this.journalDir = journalDir;
     this.fileSystem = fileSystem;
-    if(!journalDir.exists() && !journalDir.mkdirs()) {
-      throw new IllegalArgumentException("Can't create dir: "+journalDir.getAbsolutePath());
+    if (!journalDir.exists() && !journalDir.mkdirs()) {
+      throw new IllegalArgumentException("Can't create dir: " + journalDir.getAbsolutePath());
     }
 
-    try{
+    try {
       long time = System.currentTimeMillis();
       Collection<File> files = getFiles(null);
-      for(File f : files) {
-        if(FileUtils.truncateFile(f, System.getProperty("line.separator").getBytes()[0], 30)) {
-          if(logger.isInfoEnabled()) {
-            logger.info("Journal file was repaired: "+f.getAbsolutePath());
+      for (File f : files) {
+        if (FileUtils.truncateFile(f, System.getProperty("line.separator").getBytes()[0], 30)) {
+          if (logger.isInfoEnabled()) {
+            logger.info("Journal file was repaired: " + f.getAbsolutePath());
           }
         }
       }
-      if(logger.isInfoEnabled()) {
-        logger.info("Journal is loaded: "+(System.currentTimeMillis() - time)+" millis");
+      if (logger.isInfoEnabled()) {
+        logger.info("Journal is loaded: " + (System.currentTimeMillis() - time) + " millis");
       }
-    }catch (IOException e){
-      logger.error(e,e);
+    } catch (IOException e) {
+      logger.error(e, e);
       throw new IllegalArgumentException(e);
-    }catch (ParseException e){
-      logger.error(e,e);
+    } catch (ParseException e) {
+      logger.error(e, e);
       throw new IllegalArgumentException(e);
     }
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
-  public void addRecords(JournalRecord ... records) throws AdminException {
-    if(records == null || records.length == 0) {
+  public void addRecords(JournalRecord... records) throws AdminException {
+    if (records == null || records.length == 0) {
       return;
     }
     Date date = new Date();
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy"+File.separatorChar+"MM"+File.separator+"dd");
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy" + File.separatorChar + "MM" + File.separator + "dd");
     File d = new File(journalDir, sdf.format(date));
-    if(!d.exists() && !d.mkdirs()) {
+    if (!d.exists() && !d.mkdirs()) {
       throw new JournalException("cant_add_record");
     }
-    File file = new File(d, new SimpleDateFormat("HH").format(date) + ".csv");     
+    File file = new File(d, new SimpleDateFormat("HH").format(date) + ".csv");
 
     long dateL = date.getTime();
 
     PrintWriter writer = null;
-    try{
+    try {
       lock.writeLock().lock();
       writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fileSystem.getOutputStream(file, true))));
-      for(JournalRecord record : records) {
+      for (JournalRecord record : records) {
         record.setTime(dateL);
         write(record, writer);
       }
-    }finally {
-      if(writer != null) {
-        try{
+    } finally {
+      if (writer != null) {
+        try {
           writer.close();
-        }catch (Exception ex) {}
+        } catch (Exception ex) {
+        }
       }
       lock.writeLock().unlock();
     }
@@ -93,46 +95,47 @@ class JournalFileDataSource implements JournalDataSource{
 
   @SuppressWarnings({"EmptyCatchBlock"})
   public void visit(JournalFilter filter, JournalVisitor v) throws AdminException {
-    try{
+    try {
       Collection<File> files = getFiles(filter);
-      try{
+      try {
         lock.readLock().lock();
-        for(File f : files) {
+        for (File f : files) {
           BufferedReader reader = null;
-          try{
+          try {
             reader = new BufferedReader(new InputStreamReader(fileSystem.getInputStream(f)));
             String line;
-            while((line = reader.readLine()) != null) {
-              if(line.length() == 0) {
+            while ((line = reader.readLine()) != null) {
+              if (line.length() == 0) {
                 continue;                   // may happens in repaired file
               }
               JournalRecord record = convert(line);
-              if(!filter.accept(record)) {
+              if (!filter.accept(record)) {
                 continue;
               }
-              if(!v.visit(record)) {
+              if (!v.visit(record)) {
                 return;
               }
             }
-          }finally {
-            if(reader != null) {
-              try{
+          } finally {
+            if (reader != null) {
+              try {
                 reader.close();
-              }catch (IOException e){}
+              } catch (IOException e) {
+              }
             }
           }
         }
-      }finally {
+      } finally {
         lock.readLock().unlock();
       }
-    }catch (IOException e){
-      logger.error(e,e);
+    } catch (IOException e) {
+      logger.error(e, e);
       throw new JournalException("cant_read_journal", e);
-    }catch (ParseException e) {
-      logger.error(e,e);
+    } catch (ParseException e) {
+      logger.error(e, e);
       throw new JournalException("cant_read_journal", e);
-    }catch (NumberFormatException e) {
-      logger.error(e,e);
+    } catch (NumberFormatException e) {
+      logger.error(e, e);
       throw new JournalException("cant_read_journal", e);
     }
   }
@@ -160,15 +163,15 @@ class JournalFileDataSource implements JournalDataSource{
   protected void write(JournalRecord r, PrintWriter w) {
     w.write(Long.toString(r.getTime()));
     w.write(sepChar);
-    writeStr(r.getUser(),w);
+    writeStr(r.getUser(), w);
     w.write(sepChar);
     writeStr(r.getSubject().getKey(), w);
     w.write(sepChar);
     w.write(r.getType() == null ? null : r.getType().toString());
     w.write(sepChar);
     writeStr(r.getDescriptionKey(), w);
-    if(r.getDescriptionArgs() != null) {
-      for(String a : r.getDescriptionArgs()) {
+    if (r.getDescriptionArgs() != null) {
+      for (String a : r.getDescriptionArgs()) {
         w.write(sepChar);
         writeStr(a, w);
       }
@@ -202,7 +205,7 @@ class JournalFileDataSource implements JournalDataSource{
     }
 
     List<String> args = new LinkedList<String>();
-    while(t.hasMoreTokens()) {
+    while (t.hasMoreTokens()) {
       String arg = t.nextToken();
       if (arg != null) {
         while (arg.indexOf("\\") != -1) {
@@ -235,41 +238,41 @@ class JournalFileDataSource implements JournalDataSource{
 
     long showFrom = System.currentTimeMillis() - SHOW_PERIOD;
 
-    for(File y : journalDir.listFiles()) {
+    for (File y : journalDir.listFiles()) {
       Date yd = ydf.parse(y.getName());
-      if(toDate != null && yd.after(ydf.parse(ydf.format(toDate))))  {
+      if (toDate != null && yd.after(ydf.parse(ydf.format(toDate)))) {
         continue;
       }
-      if(fromDate != null && yd.before(ydf.parse(ydf.format(fromDate))))  {
+      if (fromDate != null && yd.before(ydf.parse(ydf.format(fromDate)))) {
         continue;
       }
-      for(File m : y.listFiles()) {
-        Date md = mdf.parse(y.getName()+m.getName());
-        if(toDate != null && md.after(mdf.parse(mdf.format(toDate))))  {
+      for (File m : y.listFiles()) {
+        Date md = mdf.parse(y.getName() + m.getName());
+        if (toDate != null && md.after(mdf.parse(mdf.format(toDate)))) {
           continue;
         }
-        if(fromDate != null && md.before(mdf.parse(mdf.format(fromDate)))) {
+        if (fromDate != null && md.before(mdf.parse(mdf.format(fromDate)))) {
           continue;
         }
-        for(File d : m.listFiles()) {
-          Date dd = ddf.parse(y.getName()+m.getName()+d.getName());
-          if(toDate != null && dd.after(ddf.parse(ddf.format(toDate))))  {
+        for (File d : m.listFiles()) {
+          Date dd = ddf.parse(y.getName() + m.getName() + d.getName());
+          if (toDate != null && dd.after(ddf.parse(ddf.format(toDate)))) {
             continue;
           }
-          if(fromDate != null && dd.before(ddf.parse(ddf.format(fromDate))))  {
+          if (fromDate != null && dd.before(ddf.parse(ddf.format(fromDate)))) {
             continue;
           }
-          for(File h : d.listFiles()) {
-            Date hd = hdf.parse(y.getName()+m.getName()+d.getName()+h.getName().substring(0, h.getName().indexOf(".")));
+          for (File h : d.listFiles()) {
+            Date hd = hdf.parse(y.getName() + m.getName() + d.getName() + h.getName().substring(0, h.getName().indexOf(".")));
 
-            if(hd.getTime() < showFrom) {
+            if (hd.getTime() < showFrom) {
               continue;
             }
 
-            if(toDate != null && hd.after(hdf.parse(hdf.format(toDate))))  {
+            if (toDate != null && hd.after(hdf.parse(hdf.format(toDate)))) {
               continue;
             }
-            if(fromDate != null && hd.before(hdf.parse(hdf.format(fromDate))))  {
+            if (fromDate != null && hd.before(hdf.parse(hdf.format(fromDate)))) {
               continue;
             }
             results.add(h);
@@ -277,7 +280,7 @@ class JournalFileDataSource implements JournalDataSource{
         }
       }
     }
-    if(!results.isEmpty()) {
+    if (!results.isEmpty()) {
       Collections.sort(results);
     }
     return results;

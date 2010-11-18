@@ -66,7 +66,7 @@ public class DynamicTableRenderer extends Renderer {
     w.append("\n<table class=\"properties_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\"></table>\n");
 
     w.append("<script language=\"javascript\" type=\"text/javascript\">\n");
-    
+
     int i = 0;
     for (Column c : table.getColumns()) {
       if (c instanceof TextColumn) {

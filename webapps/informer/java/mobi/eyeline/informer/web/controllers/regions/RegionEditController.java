@@ -16,7 +16,7 @@ import java.util.*;
 /**
  * @author Aleksandr Khalitov
  */
-public class RegionEditController extends RegionsController{
+public class RegionEditController extends RegionsController {
 
 
   private static final Logger logger = Logger.getLogger(RegionEditController.class);
@@ -27,7 +27,7 @@ public class RegionEditController extends RegionsController{
 
   private DynamicTableModel dynamicModel = new DynamicTableModel();
 
-  private List<SelectItem> timeZones = new LinkedList<SelectItem>();
+  private final List<SelectItem> timeZones = new LinkedList<SelectItem>();
 
   private static final List<TimeZone> tZones = new LinkedList<TimeZone>();
 
@@ -50,7 +50,7 @@ public class RegionEditController extends RegionsController{
     tZones.add(TimeZone.getTimeZone("Asia/Anadyr"));
   }
 
-  private Collection<Smsc> ss;
+  private final Collection<Smsc> ss;
 
   public RegionEditController() {
     super();
@@ -60,16 +60,12 @@ public class RegionEditController extends RegionsController{
 
     ss = getConfig().getSmscs();
 
-    if(id != null && id.length() > 0) {
+    if (id != null && id.length() > 0) {
       this.id = Integer.parseInt(id);
-      try{
-        reload();
-      }catch (AdminException e){
-        addError(e);
-      }
-    }else {
+      reload();
+    } else {
       region = new Region();
-      if(!ss.isEmpty()) {
+      if (!ss.isEmpty()) {
         try {
           region.setSmsc(ss.iterator().next().getName());
         } catch (AdminException e) {
@@ -80,27 +76,27 @@ public class RegionEditController extends RegionsController{
 
 
     Locale l = getLocale();
-    for(TimeZone t : tZones) {
+    for (TimeZone t : tZones) {
       timeZones.add(new SelectItem(t, t.getDisplayName(l)));
     }
   }
 
-  private void reload() throws AdminException{
+  private void reload() {
     region = getConfig().getRegion(id);
-    if(region == null) {
-      logger.warn("REGION is not found with id="+id);
+    if (region == null) {
+      logger.warn("REGION is not found with id=" + id);
       id = null;
       region = new Region();
-      if(!ss.isEmpty()) {
+      if (!ss.isEmpty()) {
         try {
           region.setSmsc(ss.iterator().next().getName());
         } catch (AdminException e) {
           addError(e);
         }
       }
-    }else {
+    } else {
       dynamicModel = new DynamicTableModel();
-      for(Address a : region.getMasks()) {
+      for (Address a : region.getMasks()) {
         DynamicTableRow row = new DynamicTableRow();
         row.setValue("mask", a.getSimpleAddress());
         dynamicModel.addRow(row);
@@ -110,7 +106,7 @@ public class RegionEditController extends RegionsController{
 
 
   public String save() {
-    if(dynamicModel.getRowCount() == 0) {
+    if (dynamicModel.getRowCount() == 0) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "region.masks.empty");
       return null;
     }
@@ -118,34 +114,34 @@ public class RegionEditController extends RegionsController{
     String user = getUserName();
 
     List<Address> newMasks = new LinkedList<Address>();
-    for(DynamicTableRow row : dynamicModel.getRows()) {
+    for (DynamicTableRow row : dynamicModel.getRows()) {
       String mask = (String) row.getValue("mask");
-      if(!Address.validate(mask)) {
+      if (!Address.validate(mask)) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "validation.msisdn");
         return null;
       }
       newMasks.add(new Address(mask));
     }
 
-    try{
+    try {
       region.clearMasks();
-      for(Address a : newMasks) {
+      for (Address a : newMasks) {
         region.addMask(a);
       }
-    }catch (AdminException e) {
+    } catch (AdminException e) {
       addError(e);
-      return  null;
+      return null;
     }
 
-    try{
-      if(region.getRegionId() != null) {
+    try {
+      if (region.getRegionId() != null) {
         config.updateRegion(region, user);
-      }else {
+      } else {
         config.addRegion(region, user);
       }
 
       return "REGION";
-    }catch (AdminException e){
+    } catch (AdminException e) {
       addError(e);
       return null;
     }
@@ -158,7 +154,7 @@ public class RegionEditController extends RegionsController{
 
   public List<SelectItem> getSmscs() {
     List<SelectItem> smscs = new ArrayList<SelectItem>(ss.size());
-    for(Smsc s : ss) {
+    for (Smsc s : ss) {
       smscs.add(new SelectItem(s.getName(), s.getName()));
     }
     return smscs;

@@ -19,8 +19,8 @@ public class GSM7CharSet {
    *
    * @param msg string to convert
    * @return array of bytes containing text in GSM coding
-   * @throws java.io.UnsupportedEncodingException locale is not supported
-   *
+   * @throws java.io.UnsupportedEncodingException
+   *          locale is not supported
    */
   public static byte[] encode(String msg) throws UnsupportedEncodingException {
     byte b[] = msg.getBytes("ISO8859_1");
@@ -83,8 +83,8 @@ public class GSM7CharSet {
    *
    * @param in byte array with GSM symbols
    * @return string containung unicode text
-   * @throws java.io.UnsupportedEncodingException locale is not supported
-   *
+   * @throws java.io.UnsupportedEncodingException
+   *          locale is not supported
    */
   public static String decode(byte in[]) throws UnsupportedEncodingException {
     int k = 0;

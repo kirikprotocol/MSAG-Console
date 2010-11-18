@@ -29,9 +29,9 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     settings.setPersPort(s.getInt("port"));
 
     s = config.getSection("stat");
-    settings.setStatDir(s.getString("directory",null));
+    settings.setStatDir(s.getString("directory", null));
     s = config.getSection("statuslogs");
-    settings.setStatusLogsDir(s.getString("directory",null));
+    settings.setStatusLogsDir(s.getString("directory", null));
     return settings;
   }
 
@@ -46,9 +46,9 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     s.setString("host", settings.getPersHost());
     s.setInt("port", settings.getPersPort());
     s = config.getOrCreateSection("stat");
-    s.setString("directory",settings.getStatDir());
+    s.setString("directory", settings.getStatDir());
     s = config.getOrCreateSection("statuslogs");
-    s.setString("directory",settings.getStatusLogsDir());
+    s.setString("directory", settings.getStatusLogsDir());
     config.save(os);
   }
 }

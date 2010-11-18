@@ -14,18 +14,18 @@ import java.util.ResourceBundle;
 /**
  * @author Aleksandr Khalitov
  */
-public class MessageStateConverter implements Converter{
+public class MessageStateConverter implements Converter {
 
   public Object getAsObject(FacesContext facesContext, UIComponent uiComponent, String s) throws ConverterException {
     return null;
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
-    if(o == null || !(o instanceof MessageState)) {
+    if (o == null || !(o instanceof MessageState)) {
       return null;
     }
 
-    return getAsString(getLocale(facesContext),(MessageState)o);
+    return getAsString(getLocale(facesContext), (MessageState) o);
 
   }
 
@@ -36,9 +36,9 @@ public class MessageStateConverter implements Converter{
 
   public static String getAsString(Locale locale, MessageState state) {
     ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);
-    try{
-      return bundle.getString("message.state."+state.toString());
-    }catch (MissingResourceException e) {
+    try {
+      return bundle.getString("message.state." + state.toString());
+    } catch (MissingResourceException e) {
       return state.toString();
     }
   }

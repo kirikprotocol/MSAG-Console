@@ -5,8 +5,8 @@ import mobi.eyeline.informer.admin.AdminException;
 /**
  * @author Aleksandr Khalitov
  */
-public class RegionException extends AdminException{
-  
+public class RegionException extends AdminException {
+
   public RegionException(String key, Throwable cause, String... args) {
     super(key, cause, args);
   }

@@ -11,7 +11,7 @@ import java.io.*;
  */
 public abstract class FileSystem {
 
-  public static FileSystem getFSForSingleInst() throws AdminException{
+  public static FileSystem getFSForSingleInst() {
     return new FileSystemSingleHA();
   }
 
@@ -42,7 +42,7 @@ public abstract class FileSystem {
   /**
    * По названию файла, возвращает выходной поток
    *
-   * @param file файл
+   * @param file   файл
    * @param append Добавлять в файл или переписать
    * @return поток
    * @throws AdminException ошибка ввода/вывода
@@ -94,6 +94,7 @@ public abstract class FileSystem {
 
   /**
    * Возвращает список имён файлов в данной директории
+   *
    * @param file директория
    * @return список имён файлов
    */
@@ -103,6 +104,7 @@ public abstract class FileSystem {
 
   /**
    * Возвращает список файлов в данной директории
+   *
    * @param file директория
    * @return список файлов
    */
@@ -112,10 +114,11 @@ public abstract class FileSystem {
 
   /**
    * Является ли данный File директорией
+   *
    * @param file File
    * @return true - да, false - нет
    */
-  public boolean isDirectory(File file){
+  public boolean isDirectory(File file) {
     return file.isDirectory();
   }
 

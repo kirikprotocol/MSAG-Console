@@ -8,8 +8,8 @@ import java.util.*;
  * Список ресурс-групп
  */
 class ResourceGroupList {
-  
-  private Map<String, ResourceGroup> resourceGroups = new HashMap<String, ResourceGroup>();
+
+  private final Map<String, ResourceGroup> resourceGroups = new HashMap<String, ResourceGroup>();
 
   public void add(ResourceGroup d) {
     if (!resourceGroups.containsKey(d.getName()))

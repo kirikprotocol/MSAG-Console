@@ -30,7 +30,7 @@ public class SiebelController extends InformerController {
 
   private String jdbcDriver;
 
-  private Configuration config;
+  private final Configuration config;
 
   private boolean removeOnStop;
 
@@ -50,7 +50,7 @@ public class SiebelController extends InformerController {
     siebelUser = ps.getProperty(SiebelManager.USER);
     removeOnStop = Boolean.valueOf(ps.getProperty(SiebelManager.REMOVE_ON_STOP_PARAM));
 
-    if(!config.isSiebelDaemonStarted()) {
+    if (!config.isSiebelDaemonStarted()) {
       ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
       error = bundle.getString("informer.siebel.daemon.offline");
     }
@@ -62,8 +62,8 @@ public class SiebelController extends InformerController {
 
   public List<SelectItem> getUniqueUsers() {
     List<SelectItem> res = new LinkedList<SelectItem>();
-    for(User u : config.getUsers()) {
-      if(u.hasRole("informer-admin")){
+    for (User u : config.getUsers()) {
+      if (u.hasRole("informer-admin")) {
         res.add(new SelectItem(u.getLogin(), u.getLogin()));
       }
     }
@@ -75,12 +75,12 @@ public class SiebelController extends InformerController {
     try {
       Class.forName(jdbcDriver);
     } catch (Exception e) {
-      logger.warn(e,e);
+      logger.warn(e, e);
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.jdbc.driver.illegal", jdbcDriver);
       return null;
     }
 
-    try{
+    try {
       Properties ps = config.getSiebelProperties();
       ps.setProperty(SiebelManager.TIMEOUT, Integer.toString(timeout));
       ps.setProperty(SiebelManager.JDBC_SOURCE, jdbcSource);
@@ -89,12 +89,15 @@ public class SiebelController extends InformerController {
       ps.setProperty(SiebelManager.JDBC_DRIVER, jdbcDriver);
       ps.setProperty(SiebelManager.USER, siebelUser);
       ps.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.toString(removeOnStop));
-      config.setSiebelProperties(ps, getUserName());
-    }catch (AdminException e){
+      if(!config.setSiebelProperties(ps, getUserName())) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.applying.not.started");
+        return null;
+      }
+      return "INDEX";
+    } catch (AdminException e) {
       addError(e);
       return null;
     }
-    return "INDEX";
   }
 
   public String getJdbcDriver() {

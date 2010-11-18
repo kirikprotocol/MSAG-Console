@@ -29,29 +29,29 @@ public class UserListController extends InformerController {
   }
 
   public void clearFilter() {
-    firstNamePrefix=null;
-    lastNamePrefix=null;
-    loginPrefix=null;
-    statusFilter=null;
-    organizationPrefix=null;
+    firstNamePrefix = null;
+    lastNamePrefix = null;
+    loginPrefix = null;
+    statusFilter = null;
+    organizationPrefix = null;
   }
 
   public DataTableModel getUsersModel() throws AdminException {
     final List<User> users = new ArrayList<User>();
-    for(User u : getConfig().getUsers()) {
-      if(loginPrefix!=null && u.getLogin().indexOf(loginPrefix)<0) {
+    for (User u : getConfig().getUsers()) {
+      if (loginPrefix != null && u.getLogin().indexOf(loginPrefix) < 0) {
         continue;
       }
-      if(firstNamePrefix!=null && u.getFirstName().indexOf(firstNamePrefix)<0) {
+      if (firstNamePrefix != null && u.getFirstName().indexOf(firstNamePrefix) < 0) {
         continue;
       }
-      if(lastNamePrefix!=null && u.getLastName().indexOf(lastNamePrefix)<0) {
+      if (lastNamePrefix != null && u.getLastName().indexOf(lastNamePrefix) < 0) {
         continue;
       }
-      if(statusFilter!=null && u.getStatus()!=statusFilter) {
+      if (statusFilter != null && u.getStatus() != statusFilter) {
         continue;
       }
-      if(organizationPrefix!=null && u.getOrganization().indexOf(organizationPrefix)<0) {
+      if (organizationPrefix != null && u.getOrganization().indexOf(organizationPrefix) < 0) {
         continue;
       }
       users.add(u);
@@ -111,11 +111,10 @@ public class UserListController extends InformerController {
   }
 
 
-
   public String removeSelected() throws AdminException {
-    for(String id : selectedRows) {
+    for (String id : selectedRows) {
       try {
-        getConfig().removeUser(id,getUserName());
+        getConfig().removeUser(id, getUserName());
       }
       catch (AdminException e) {
         addError(e);
@@ -125,9 +124,8 @@ public class UserListController extends InformerController {
   }
 
 
-
   public void setFirstNamePrefix(String firstNamePrefix) {
-    if(firstNamePrefix==null || firstNamePrefix.trim().length()==0) firstNamePrefix=null;
+    if (firstNamePrefix == null || firstNamePrefix.trim().length() == 0) firstNamePrefix = null;
     this.firstNamePrefix = firstNamePrefix;
   }
 
@@ -136,7 +134,7 @@ public class UserListController extends InformerController {
   }
 
   public void setLastNamePrefix(String lastNamePrefix) {
-    if(lastNamePrefix==null || lastNamePrefix.trim().length()==0) lastNamePrefix=null;
+    if (lastNamePrefix == null || lastNamePrefix.trim().length() == 0) lastNamePrefix = null;
     this.lastNamePrefix = lastNamePrefix;
   }
 
@@ -145,7 +143,7 @@ public class UserListController extends InformerController {
   }
 
   public void setLoginPrefix(String loginPrefix) {
-    if(loginPrefix==null || loginPrefix.trim().length()==0) loginPrefix=null;
+    if (loginPrefix == null || loginPrefix.trim().length() == 0) loginPrefix = null;
     this.loginPrefix = loginPrefix;
   }
 
@@ -154,16 +152,15 @@ public class UserListController extends InformerController {
   }
 
   public void setStatusFilter(String statusFilter) {
-    if(statusFilter==null || statusFilter.length()==0) {
-      this.statusFilter=null;
-    }
-    else {
+    if (statusFilter == null || statusFilter.length() == 0) {
+      this.statusFilter = null;
+    } else {
       this.statusFilter = User.Status.valueOf(statusFilter);
     }
   }
 
   public String getStatusFilter() {
-    return statusFilter==null ? "" : statusFilter.toString();
+    return statusFilter == null ? "" : statusFilter.toString();
   }
 
   public List<SelectItem> getStatusItems() {
@@ -174,7 +171,7 @@ public class UserListController extends InformerController {
   }
 
   public void setOrganizationPrefix(String organizationPrefix) {
-    if(organizationPrefix==null || organizationPrefix.trim().length()==0) organizationPrefix=null;
+    if (organizationPrefix == null || organizationPrefix.trim().length() == 0) organizationPrefix = null;
     this.organizationPrefix = organizationPrefix;
   }
 
@@ -183,9 +180,9 @@ public class UserListController extends InformerController {
   }
 
   public String editSelected() {
-    if(selectedRows!=null) {
-      if(selectedRows.size()>=1) {
-        getSession(true).setAttribute("userIds",selectedRows);
+    if (selectedRows != null) {
+      if (selectedRows.size() >= 1) {
+        getSession(true).setAttribute("userIds", selectedRows);
         return "USER_EDIT_GROUP";
       }
     }

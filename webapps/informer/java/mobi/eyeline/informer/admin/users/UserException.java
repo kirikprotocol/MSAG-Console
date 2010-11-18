@@ -8,7 +8,7 @@ import mobi.eyeline.informer.admin.AdminException;
  * Date: 15.10.2010
  * Time: 12:41:32
  */
-public class UserException extends AdminException{
+public class UserException extends AdminException {
 
   public UserException(String key, String... args) {
     super(key, args);

@@ -41,14 +41,15 @@ public class WebXml {
   @SuppressWarnings({"EmptyCatchBlock"})
   public WebXml(File webXmlFile) throws TransformerConfigurationException, ParserConfigurationException, SAXException, IOException {
     InputStream is = null;
-    try{
+    try {
       is = new FileInputStream(webXmlFile);
       load(is);
-    }finally {
-      if(is != null) {
-        try{
-        is.close();
-        }catch (IOException e){}
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException e) {
+        }
       }
     }
   }
@@ -84,7 +85,7 @@ public class WebXml {
         NodeList rs = ac.getElementsByTagName("role-name");
         for (int k = 0; k < rs.getLength(); k++) {
           Element role = (Element) rs.item(k);
-          if(role.getTextContent().equals("*")) {
+          if (role.getTextContent().equals("*")) {
             roles.addAll(this.roles);
             break;
           }
@@ -124,7 +125,6 @@ public class WebXml {
     XmlUtils.createTextChild(document, roleNameElement, roleName);
     return securityRoleElement;
   }
-
 
 
   private static class UrlPattern {
@@ -183,7 +183,7 @@ public class WebXml {
           break;
         }
       }
-      if(roles == null) {
+      if (roles == null) {
         UrlPattern pattern = null;
         for (UrlPattern p : pathPatterns.values()) {
           if (p.matches(url)) {
@@ -194,7 +194,7 @@ public class WebXml {
         }
         if (pattern != null) {
           roles = new ArrayList<String>(pattern.roles);
-        }else {
+        } else {
           for (UrlPattern p : extensionsPatterns.values()) {
             if (p.matches(url)) {
               roles = new ArrayList<String>(p.roles);

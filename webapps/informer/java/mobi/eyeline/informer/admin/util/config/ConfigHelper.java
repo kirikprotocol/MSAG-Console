@@ -13,6 +13,7 @@ import java.util.Date;
 
 /**
  * Класс, содержащие вспомогательные методы для роботы с XmlConfig
+ *
  * @author Artem Snopkov
  */
 public class ConfigHelper {
@@ -23,12 +24,13 @@ public class ConfigHelper {
    * Сохраняет экземпляр XmlConfig в указанный файл. Перед сохранением создается бекап старой версии конфига в
    * директорию backupDir.
    *
-   * @param config экземпляр XmlConfig, который надо сохранить.
-   * @param toFile файл, в который надо сохранить конфиг
-   * @param backupDir директория, в которую сохраняется бекап старого конфига или null, если бекап создавать не надо.
+   * @param config     экземпляр XmlConfig, который надо сохранить.
+   * @param toFile     файл, в который надо сохранить конфиг
+   * @param backupDir  директория, в которую сохраняется бекап старого конфига или null, если бекап создавать не надо.
    * @param fileSystem экземпляр FileSystem
    * @throws AdminException если сохранить конфиг не удалось.
-   * @throws mobi.eyeline.informer.util.config.XmlConfigException ошибка записи в конфиг
+   * @throws mobi.eyeline.informer.util.config.XmlConfigException
+   *                        ошибка записи в конфиг
    */
   @SuppressWarnings({"EmptyCatchBlock"})
   public static void saveXmlConfig(XmlConfig config, File toFile, File backupDir, FileSystem fileSystem) throws AdminException, XmlConfigException {
@@ -58,8 +60,9 @@ public class ConfigHelper {
 
   /**
    * Создаёт бэкап файла
-   * @param file имя файла
-   * @param backupDir директория для бэкапа
+   *
+   * @param file       имя файла
+   * @param backupDir  директория для бэкапа
    * @param fileSystem файловая система
    * @return файл бэкапа
    * @throws AdminException ошибка при создании файла
@@ -77,11 +80,12 @@ public class ConfigHelper {
 
   /**
    * Восстанавливает файл из бэкапа
-   * @param file имя файла
+   *
+   * @param file       имя файла
    * @param configFile файл конфига
    * @param fileSystem файловая система
-   * @throws AdminException ошибка при создании файла
    * @return true - восстановление прошло успешно, false - иначе
+   * @throws AdminException ошибка при создании файла
    */
   public static boolean rollbackConfig(File file, File configFile, FileSystem fileSystem) throws AdminException {
     if (fileSystem.exists(file)) {

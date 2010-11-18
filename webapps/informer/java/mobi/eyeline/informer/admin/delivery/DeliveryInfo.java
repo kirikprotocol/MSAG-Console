@@ -20,7 +20,7 @@ public class DeliveryInfo {
   private Date activityPeriodStart;
   private Date activityPeriodEnd;
 
-  private Properties properties = new Properties();
+  private final Properties properties = new Properties();
 
 
   public void setProperty(String name, String value) {
@@ -33,10 +33,10 @@ public class DeliveryInfo {
 
   public String getProperty(String name) {
     return properties.getProperty(name);
-  }            
+  }
 
   public String removeProperty(String name) {
-    return (String)properties.remove(name);
+    return (String) properties.remove(name);
   }
 
   public boolean containsProperty(String name) {

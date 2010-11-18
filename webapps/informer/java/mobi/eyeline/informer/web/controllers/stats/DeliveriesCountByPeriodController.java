@@ -20,42 +20,37 @@ import java.util.Locale;
 public class DeliveriesCountByPeriodController extends DeliveryStatController implements Visitor<DeliveryInfo> {
 
 
-
-
   public DeliveriesCountByPeriodController() {
     super();
   }
 
 
-
-
   @Override
-  public void loadRecords(Configuration config, final Locale locale) throws AdminException{
-      DeliveryFilter f = new DeliveryFilter();
-      String filterUser = getFilter().getUser();
-      if(filterUser!=null) {
-        f.setUserIdFilter(new String[]{filterUser});
-      }
-      f.setStartDateFrom(getFilter().getFromDate());
-      f.setStartDateTo(getFilter().getTillDate());
-      f.setResultFields(new DeliveryFields[]{DeliveryFields.StartDate});
+  public void loadRecords(Configuration config, final Locale locale) throws AdminException {
+    DeliveryFilter f = new DeliveryFilter();
+    String filterUser = getFilter().getUser();
+    if (filterUser != null) {
+      f.setUserIdFilter(filterUser);
+    }
+    f.setStartDateFrom(getFilter().getFromDate());
+    f.setStartDateTo(getFilter().getTillDate());
+    f.setResultFields(DeliveryFields.StartDate);
 
-      config.getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);
+    config.getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);
   }
 
   public boolean visit(DeliveryInfo di) throws AdminException {
     Calendar c = Calendar.getInstance();
     c.setTime(di.getStartDate());
-    AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c,getAggregation(),1,true);
+    AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c, getAggregation(), 1, true);
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
-    if(oldRecord==null) {
+    if (oldRecord == null) {
       putRecord(newRecord);
-    }
-    else {
+    } else {
       oldRecord.add(newRecord);
     }
-    setCurrent(getCurrent()+1);
+    setCurrent(getCurrent() + 1);
     return !isCancelled();
   }
-  
+
 }

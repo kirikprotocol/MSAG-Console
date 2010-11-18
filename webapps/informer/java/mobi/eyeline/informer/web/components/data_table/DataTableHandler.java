@@ -69,7 +69,7 @@ public class DataTableHandler extends ComponentHandler {
     if (t.getSortOrder() == null) {
       for (UIComponent col : t.getFirstRow().getChildren()) {
         if (col instanceof Column) {
-          Column column = (Column)col;
+          Column column = (Column) col;
           if (column.getDefaultSortOrder() != null) {
             if (column.getDefaultSortOrder().equalsIgnoreCase("asc"))
               t.setSortOrder("-" + column.getName());

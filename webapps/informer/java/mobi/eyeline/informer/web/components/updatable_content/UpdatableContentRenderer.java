@@ -14,41 +14,41 @@ import java.io.IOException;
 public class UpdatableContentRenderer extends Renderer {
 
   protected void encodeAjaxPart(FacesContext context, ResponseWriter w, UIComponent component) throws IOException {
-    try{
-      if(context instanceof AjaxFacesContext) {
+    try {
+      if (context instanceof AjaxFacesContext) {
       }
       encodeChildren(context, component);
-    }finally {
-      if(context instanceof AjaxFacesContext) {
-        ((AjaxFacesContext)context).setSkipContent(true);
+    } finally {
+      if (context instanceof AjaxFacesContext) {
+        ((AjaxFacesContext) context).setSkipContent(true);
       }
     }
   }
 
 
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
-    if(context instanceof AjaxFacesContext) {
+    if (context instanceof AjaxFacesContext) {
       AjaxFacesContext ctx = (AjaxFacesContext) context;
       if (ctx.getAjaxComponentId().equals(component.getId())) {
-        ((AjaxFacesContext)context).setSkipContent(false);
+        ((AjaxFacesContext) context).setSkipContent(false);
         return;
       }
     }
-    UpdatableContent pb = (UpdatableContent)component;
+    UpdatableContent pb = (UpdatableContent) component;
     ResponseWriter w = context.getResponseWriter();
     w.append("\n<div id=\"").append(pb.getId()).append("\">");
   }
 
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
-    UpdatableContent pb = (UpdatableContent)component;
+    UpdatableContent pb = (UpdatableContent) component;
     ResponseWriter w = context.getResponseWriter();
 
     w.append("\n <div id=\"enabled").append(pb.getId()).append("\" enabledVal=\"").append(pb.isEnabled() + "\"></div>");
 
-    if(context instanceof AjaxFacesContext) {
+    if (context instanceof AjaxFacesContext) {
       AjaxFacesContext ctx = (AjaxFacesContext) context;
       if (ctx.getAjaxComponentId().equals(component.getId())) {
-        ((AjaxFacesContext)context).setSkipContent(true);
+        ((AjaxFacesContext) context).setSkipContent(true);
         return;
       }
     }

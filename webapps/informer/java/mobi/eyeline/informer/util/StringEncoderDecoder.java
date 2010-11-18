@@ -30,10 +30,10 @@ public class StringEncoderDecoder {
   }
 
   public static Object decode(String str) {
-    str = str.replaceAll("&quot;","\"");
-    str = str.replaceAll("&lt;","<");
-    str = str.replaceAll("&gt;",">");
-    str = str.replaceAll("&amp;","&");
+    str = str.replaceAll("&quot;", "\"");
+    str = str.replaceAll("&lt;", "<");
+    str = str.replaceAll("&gt;", ">");
+    str = str.replaceAll("&amp;", "&");
     return str;
   }
 
@@ -146,7 +146,7 @@ public class StringEncoderDecoder {
   private static final String specialSaveChars = "=: \t\r\n\f#!";
 
   private static final char[] hexDigit = {
-      '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
   };
 
   private static char toHex(int nibble) {
@@ -158,33 +158,43 @@ public class StringEncoderDecoder {
     int len = theString.length();
     StringBuilder outBuffer = new StringBuilder(len << 1);
 
-    for(int x=0; x<len; x++) {
+    for (int x = 0; x < len; x++) {
       char aChar = theString.charAt(x);
-      switch(aChar) {
+      switch (aChar) {
         case ' ':
           if (x == 0 || escapeSpace)
             outBuffer.append('\\');
 
           outBuffer.append(' ');
           break;
-        case '\\':outBuffer.append('\\'); outBuffer.append('\\');
+        case '\\':
+          outBuffer.append('\\');
+          outBuffer.append('\\');
           break;
-        case '\t':outBuffer.append('\\'); outBuffer.append('t');
+        case '\t':
+          outBuffer.append('\\');
+          outBuffer.append('t');
           break;
-        case '\n':outBuffer.append('\\'); outBuffer.append('n');
+        case '\n':
+          outBuffer.append('\\');
+          outBuffer.append('n');
           break;
-        case '\r':outBuffer.append('\\'); outBuffer.append('r');
+        case '\r':
+          outBuffer.append('\\');
+          outBuffer.append('r');
           break;
-        case '\f':outBuffer.append('\\'); outBuffer.append('f');
+        case '\f':
+          outBuffer.append('\\');
+          outBuffer.append('f');
           break;
         default:
           if ((aChar < 0x0020) || (aChar > 0x007e)) {
             outBuffer.append('\\');
             outBuffer.append('u');
             outBuffer.append(toHex((aChar >> 12) & 0xF));
-            outBuffer.append(toHex((aChar >>  8) & 0xF));
-            outBuffer.append(toHex((aChar >>  4) & 0xF));
-            outBuffer.append(toHex( aChar        & 0xF));
+            outBuffer.append(toHex((aChar >> 8) & 0xF));
+            outBuffer.append(toHex((aChar >> 4) & 0xF));
+            outBuffer.append(toHex(aChar & 0xF));
           } else {
             if (specialSaveChars.indexOf(aChar) != -1)
               outBuffer.append('\\');
@@ -200,26 +210,42 @@ public class StringEncoderDecoder {
     int len = theString.length();
     StringBuilder outBuffer = new StringBuilder(len);
 
-    for (int x=0; x<len; ) {
+    for (int x = 0; x < len;) {
       aChar = theString.charAt(x++);
       if (aChar == '\\') {
         aChar = theString.charAt(x++);
         if (aChar == 'u') {
           // Read the xxxx
-          int value=0;
-          for (int i=0; i<4; i++) {
+          int value = 0;
+          for (int i = 0; i < 4; i++) {
             aChar = theString.charAt(x++);
             switch (aChar) {
-              case '0': case '1': case '2': case '3': case '4':
-              case '5': case '6': case '7': case '8': case '9':
+              case '0':
+              case '1':
+              case '2':
+              case '3':
+              case '4':
+              case '5':
+              case '6':
+              case '7':
+              case '8':
+              case '9':
                 value = (value << 4) + aChar - '0';
                 break;
-              case 'a': case 'b': case 'c':
-              case 'd': case 'e': case 'f':
+              case 'a':
+              case 'b':
+              case 'c':
+              case 'd':
+              case 'e':
+              case 'f':
                 value = (value << 4) + 10 + aChar - 'a';
                 break;
-              case 'A': case 'B': case 'C':
-              case 'D': case 'E': case 'F':
+              case 'A':
+              case 'B':
+              case 'C':
+              case 'D':
+              case 'E':
+              case 'F':
                 value = (value << 4) + 10 + aChar - 'A';
                 break;
               default:
@@ -227,7 +253,7 @@ public class StringEncoderDecoder {
                     "Malformed \\uxxxx encoding.");
             }
           }
-          outBuffer.append((char)value);
+          outBuffer.append((char) value);
         } else {
           if (aChar == 't') aChar = '\t';
           else if (aChar == 'r') aChar = '\r';
@@ -242,11 +268,11 @@ public class StringEncoderDecoder {
   }
 
   public static String csvEscape(Object obj) {
-    if(obj==null) return "";
+    if (obj == null) return "";
     String s = obj.toString();
-    if(s.indexOf(",") != -1 || s.indexOf("\"") != -1) {
-      s=s.replace("\"","\"\"");
-      s="\""+s+"\"";
+    if (s.indexOf(",") != -1 || s.indexOf("\"") != -1) {
+      s = s.replace("\"", "\"\"");
+      s = "\"" + s + "\"";
     }
     return s;
   }
@@ -255,38 +281,37 @@ public class StringEncoderDecoder {
     List<String> out = csvSplit(line);
     for (int i = 0; i < out.size(); i++) {
       String s = out.get(i);
-      if(s.startsWith("\"") && s.endsWith("\""))
-        s=s.substring(1,s.length()-1);
-      s=s.replace("\"\"","\"");
-      out.set(i,s);
+      if (s.startsWith("\"") && s.endsWith("\""))
+        s = s.substring(1, s.length() - 1);
+      s = s.replace("\"\"", "\"");
+      out.set(i, s);
     }
     return out;
   }
 
   public static List<String> csvSplit(String line) {
     List<String> out = new ArrayList<String>();
-    int start=0;
-    boolean inQuot=false;
-    for(int i=0;i<line.length();i++) {
+    int start = 0;
+    boolean inQuot = false;
+    for (int i = 0; i < line.length(); i++) {
       char c = line.charAt(i);
-      if(c=='\"') {
-        inQuot=!inQuot;
-      }
-      else {
-        if(!inQuot && c==',') {
-          out.add(line.substring(start,i));
-          start=i+1;
+      if (c == '\"') {
+        inQuot = !inQuot;
+      } else {
+        if (!inQuot && c == ',') {
+          out.add(line.substring(start, i));
+          start = i + 1;
         }
       }
     }
-    out.add(line.substring(start,line.length()));
+    out.add(line.substring(start, line.length()));
     return out;
   }
 
-  public static String toCSVString(Object[] args) {
+  public static String toCSVString(Object... args) {
     StringBuilder sb = new StringBuilder();
     String sep = "";
-    for(Object s : args) {
+    for (Object s : args) {
       sb.append(sep).append(csvEscape(s));
       sep = ",";
     }
@@ -296,7 +321,7 @@ public class StringEncoderDecoder {
   public static String toCSVString(List<Object> args) {
     StringBuilder sb = new StringBuilder();
     String sep = "";
-    for(Object s : args) {
+    for (Object s : args) {
       sb.append(sep).append(csvEscape(s));
       sep = ",";
     }

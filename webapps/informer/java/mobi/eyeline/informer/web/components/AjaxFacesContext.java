@@ -14,7 +14,7 @@ import java.io.Writer;
 public class AjaxFacesContext extends FacesContextWrapper {
 
   private final String ajaxComponentId;
-  private boolean skipContent=true;
+  private boolean skipContent = true;
 
   public AjaxFacesContext(FacesContext facesContext, String ajaxComponentId) {
     super(facesContext);
@@ -38,7 +38,7 @@ public class AjaxFacesContext extends FacesContextWrapper {
 
   public String getAjaxComponentId() {
     return ajaxComponentId;
-  }    
+  }
 
   private static class BulkResponseWriter extends ResponseWriter {
 

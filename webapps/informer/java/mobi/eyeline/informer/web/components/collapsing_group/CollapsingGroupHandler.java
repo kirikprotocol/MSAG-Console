@@ -35,7 +35,7 @@ public class CollapsingGroupHandler extends ComponentHandler {
 
   @Override
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
-    CollapsingGroup g = (CollapsingGroup)c;
+    CollapsingGroup g = (CollapsingGroup) c;
 
     g.setLabel(label.getValue(ctx));
     if (opened != null)

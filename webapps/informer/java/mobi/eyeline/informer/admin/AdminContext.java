@@ -105,22 +105,22 @@ public class AdminContext {
   protected AdminContext() {
   }
 
-  public AdminContext(File appBaseDir) throws InitException{
+  public AdminContext(File appBaseDir) throws InitException {
 
     try {
       this.appBaseDir = appBaseDir;
-      File webConfDir = new File(appBaseDir,"conf");
-      this.webConfig = new  WebConfigManager(new File(webConfDir,"webconfig.xml") ,new File(webConfDir, "backup"), FileSystem.getFSForSingleInst()) ;
+      File webConfDir = new File(appBaseDir, "conf");
+      this.webConfig = new WebConfigManager(new File(webConfDir, "webconfig.xml"), new File(webConfDir, "backup"), FileSystem.getFSForSingleInst());
 
       this.instType = webConfig.getInstallationType();
 
       File servicesDir = new File(appBaseDir, "services");
 
-      File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
+      File confDir = new File(servicesDir, "Informer" + File.separatorChar + "conf");
 
       workDir = new File(appBaseDir, "work");
-      if(!workDir.exists() && !workDir.mkdirs()) {
-        throw new InitException("Can't create work dir: "+workDir.getAbsolutePath());
+      if (!workDir.exists() && !workDir.mkdirs()) {
+        throw new InitException("Can't create work dir: " + workDir.getAbsolutePath());
       }
 
       switch (this.instType) {
@@ -139,17 +139,17 @@ public class AdminContext {
 
 
       journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
-      informerManager = new InformerManagerImpl(new File(confDir,"config.xml"),
+      informerManager = new InformerManagerImpl(new File(confDir, "config.xml"),
           new File(confDir, "backup"), fileSystem, serviceManager);
 
       InformerSettings is = informerManager.getConfigSettings();
       infosme = new InfosmeImpl(is.getAdminHost(), is.getAdminPort());
 
-      usersManager = new UsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
+      usersManager = new UsersManager(infosme, new File(confDir, "users.xml"), new File(confDir, "backup"), fileSystem);
 
       Properties pers = new Properties();
-      pers.setProperty("personalization.host",is.getPersHost());
-      pers.setProperty("personalization.port",Integer.toString(is.getPersPort()));
+      pers.setProperty("personalization.host", is.getPersHost());
+      pers.setProperty("personalization.port", Integer.toString(is.getPersPort()));
 
       personalizationClientPool = new PersonalizationClientPool(pers);
 
@@ -169,30 +169,34 @@ public class AdminContext {
       contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir,fileSystem);
 
 
-      deliveryNotificationsProducer  = new DeliveryNotificationsProducer(new File(is.getStatusLogsDir()),fileSystem);
-      deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
+      deliveryNotificationsProducer = new DeliveryNotificationsProducer(new File(is.getStatusLogsDir()), fileSystem);
+      deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(this);
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
-//      initSiebel();
+      try{
+        initSiebel(workDir);
+      }catch (Exception e){
+        logger.error(e,e);
+      }
 
       deliveryNotificationsProducer.start();
 
 
-    }catch (AdminException e) {
+    } catch (AdminException e) {
       throw new InitException(e);
-    }catch (PersonalizationClientException e) {
+    } catch (PersonalizationClientException e) {
       throw new InitException(e);
     }
   }
 
-  protected void initSiebel() throws AdminException {
+  protected void initSiebel(File workDir) throws AdminException, InitException {
     SiebelDeliveries siebelDeliveries = new SiebelDeliveriesImpl(this);
     SiebelRegionManager siebelRegions = new SiebelRegionManagerImpl(this);
     SiebelUserManager userManager = new SiebelUserManagerImpl(this);
 
     User siebelUser = usersManager.getUser(webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
 
-    if(siebelUser == null) {
+    if (siebelUser == null) {
       throw new IntegrityException("user_not_exist", webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
     }
 
@@ -200,29 +204,32 @@ public class AdminContext {
 
     siebelManager.start(siebelUser, webConfig.getSiebelProperties());
 
-    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager);
+    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager, workDir, 120); //todo
 
     deliveryNotificationsProducer.addListener(siebelFinalStateListener);
 
   }
 
   private void shutdownSiebel() {
-    if(siebelFinalStateListener != null) {
-      if(deliveryNotificationsProducer != null) {
-        try{
+    if (siebelFinalStateListener != null) {
+      if (deliveryNotificationsProducer != null) {
+        try {
           deliveryNotificationsProducer.removeListener(siebelFinalStateListener);
-        }catch (Exception ignored){}
+        } catch (Exception ignored) {
+        }
       }
 
-      try{
+      try {
         siebelFinalStateListener.shutdown();
-      }catch (Exception ignored){}
+      } catch (Exception ignored) {
+      }
     }
 
-    if(siebelManager != null) {
-      try{
+    if (siebelManager != null) {
+      try {
         siebelManager.stop();
-      }catch (Exception ignored){}
+      } catch (Exception ignored) {
+      }
     }
   }
 
@@ -241,34 +248,40 @@ public class AdminContext {
     if(restrictionDaemon != null) {
       try{
         restrictionDaemon.stop();
-      }catch(Exception e){}
+      } catch (Exception e) {
+      }
     }
-    if(deliveryNotificationsProducer != null) {
-      try{
+    if (deliveryNotificationsProducer != null) {
+      try {
         deliveryNotificationsProducer.shutdown();
-      }catch (Exception e){}
+      } catch (Exception e) {
+      }
     }
-    if(deliveryNotificationsDaemon != null) {
-      try{
+    if (deliveryNotificationsDaemon != null) {
+      try {
         deliveryNotificationsDaemon.shutdown();
-      }catch (Exception e){}
+      } catch (Exception e) {
+      }
 
     }
 
-    if(personalizationClientPool != null) {
-      try{
+    if (personalizationClientPool != null) {
+      try {
         personalizationClientPool.shutdown();
-      }catch (Exception e){}
+      } catch (Exception e) {
+      }
     }
-    if(infosme != null) {
-      try{
+    if (infosme != null) {
+      try {
         infosme.shutdown();
-      }catch (Exception e){}
+      } catch (Exception e) {
+      }
     }
-    if(deliveryManager != null) {
-      try{
+    if (deliveryManager != null) {
+      try {
         deliveryManager.shutdown();
-      }catch (Exception e){}
+      } catch (Exception e) {
+      }
     }
   }
 
@@ -284,27 +297,27 @@ public class AdminContext {
     return instType;
   }
 
-  public User getUser(String login)  {
+  public User getUser(String login) {
     return usersManager.getUser(login);
   }
 
-  public List<User> getUsers()  {
+  public List<User> getUsers() {
     return usersManager.getUsers();
   }
 
   public void updateUser(User u) throws AdminException {
-    try{
+    try {
       integrityLock.lock();
-      if(u.getRegions()!=null) {
-        for(Integer rId : u.getRegions()) {
-          if(null == regionsManager.getRegion(rId)) {
-            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId.toString());
+      if (u.getRegions() != null) {
+        for (Integer rId : u.getRegions()) {
+          if (null == regionsManager.getRegion(rId)) {
+            throw new IntegrityException("user.region.not.exists", u.getLogin(), rId.toString());
           }
         }
       }
       User oldUser = usersManager.getUser(u.getLogin());
       usersManager.updateUser(u);
-      if(oldUser.getStatus()!=u.getStatus()) {
+      if (oldUser.getStatus() != u.getStatus()) {
         restrictionDaemon.rebuildSchedule();
       }
     }
@@ -314,12 +327,12 @@ public class AdminContext {
   }
 
   public void addUser(User u) throws AdminException {
-    try{
+    try {
       integrityLock.lock();
-      if(u.getRegions()!=null) {
-        for(Integer rId : u.getRegions()) {
-          if(null == regionsManager.getRegion(rId)) {
-            throw new IntegrityException("user.region.not.exists",u.getLogin(),rId.toString());
+      if (u.getRegions() != null) {
+        for (Integer rId : u.getRegions()) {
+          if (null == regionsManager.getRegion(rId)) {
+            throw new IntegrityException("user.region.not.exists", u.getLogin(), rId.toString());
           }
         }
       }
@@ -331,9 +344,9 @@ public class AdminContext {
   }
 
   public void removeUser(String login) throws AdminException {
-    try{
+    try {
       integrityLock.lock();
-      if(login.equals(webConfig.getSiebelProperties().getProperty(SiebelManager.USER))) {
+      if (login.equals(webConfig.getSiebelProperties().getProperty(SiebelManager.USER))) {
         throw new IntegrityException("fail.delete.user.siebel", login);
       }
       User user = usersManager.getUser(login);
@@ -341,13 +354,13 @@ public class AdminContext {
       filter.setUserIdFilter(login);
       filter.setResultFields(DeliveryFields.Name);
       final String[] exist = new String[]{null};
-      deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
+      deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter, 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
         public boolean visit(DeliveryInfo value) throws AdminException {
           exist[0] = value.getName();
           return false;
         }
       });
-      if(exist[0] != null) {
+      if (exist[0] != null) {
         throw new IntegrityException("fail.delete.user.by.delivery", login, exist[0]);
       }
       usersManager.removeUser(login);
@@ -365,23 +378,23 @@ public class AdminContext {
     informerManager.updateSettings(informerSettings);
   }
 
-  public void addInBlacklist(String msisdn) throws AdminException{
+  public void addInBlacklist(String msisdn) throws AdminException {
     blacklistManager.add(msisdn);
   }
 
-  public void addInBlacklist(Collection<String> msisdn) throws AdminException{
+  public void addInBlacklist(Collection<String> msisdn) throws AdminException {
     blacklistManager.add(msisdn);
   }
 
-  public void removeFromBlacklist(String msisdn) throws AdminException{
+  public void removeFromBlacklist(String msisdn) throws AdminException {
     blacklistManager.remove(msisdn);
   }
 
-  public void removeFromBlacklist(Collection<String> msisdns) throws AdminException{
+  public void removeFromBlacklist(Collection<String> msisdns) throws AdminException {
     blacklistManager.remove(msisdns);
   }
 
-  public boolean blacklistContains(String msisdn) throws AdminException{
+  public boolean blacklistContains(String msisdn) throws AdminException {
     return blacklistManager.contains(msisdn);
   }
 
@@ -403,13 +416,13 @@ public class AdminContext {
   }
 
   public void removeSmsc(String smscName) throws AdminException {
-    try{
+    try {
       integrityLock.lock();
-      if(!regionsManager.getRegionsBySmsc(smscName).isEmpty()) {
+      if (!regionsManager.getRegionsBySmsc(smscName).isEmpty()) {
         throw new SmscException("smsc_used_in_regions", smscName);
       }
       smscManager.removeSmsc(smscName);
-    }finally {
+    } finally {
       integrityLock.unlock();
     }
   }
@@ -422,26 +435,26 @@ public class AdminContext {
     return smscManager.getDefaultSmsc();
   }
 
-  public void addRegion(Region region) throws AdminException{
-    try{
+  public void addRegion(Region region) throws AdminException {
+    try {
       integrityLock.lock();
-      if(smscManager.getSmsc(region.getSmsc()) == null) {
+      if (smscManager.getSmsc(region.getSmsc()) == null) {
         throw new IntegrityException("smsc_not_exist", region.getSmsc());
       }
       regionsManager.addRegion(region);
-    }finally {
+    } finally {
       integrityLock.unlock();
     }
   }
 
-  public void updateRegion(Region region) throws AdminException{
-    try{
+  public void updateRegion(Region region) throws AdminException {
+    try {
       integrityLock.lock();
-      if(smscManager.getSmsc(region.getSmsc()) == null) {
+      if (smscManager.getSmsc(region.getSmsc()) == null) {
         throw new IntegrityException("smsc_not_exist", region.getSmsc());
       }
       regionsManager.updateRegion(region);
-    }finally {
+    } finally {
       integrityLock.unlock();
     }
   }
@@ -454,15 +467,15 @@ public class AdminContext {
     regionsManager.setDefaultMaxPerSecond(defMaxPerSecond);
   }
 
-  public void removeRegion(Integer regionId) throws AdminException{
-    try{
+  public void removeRegion(Integer regionId) throws AdminException {
+    try {
       integrityLock.lock();
-      for(User u : usersManager.getUsers()) {
+      for (User u : usersManager.getUsers()) {
         if (u.getRegions() == null)
           continue;
         List<Integer> regions = u.getRegions();
-        for(Iterator<Integer> iter = regions.iterator(); iter.hasNext();) {
-          if(iter.next().equals(regionId)) {
+        for (Iterator<Integer> iter = regions.iterator(); iter.hasNext();) {
+          if (iter.next().equals(regionId)) {
             iter.remove();
             u.setRegions(regions);
             usersManager.updateUser(u);
@@ -477,11 +490,11 @@ public class AdminContext {
     }
   }
 
-  public Region getRegion(Integer regionId){
+  public Region getRegion(Integer regionId) {
     return regionsManager.getRegion(regionId);
   }
 
-  public Region getRegion(Address address){
+  public Region getRegion(Address address) {
     return regionsManager.getRegion(address);
   }
 
@@ -521,15 +534,15 @@ public class AdminContext {
     return ret;
   }
 
-  public boolean isSiebelDaemonStarted(){
+  public boolean isSiebelDaemonStarted() {
     return siebelManager.isStarted();
   }
 
   private Object getLock(int deliveryId) {
     Object lock = deliveriesLock.get(deliveryId);
-    if(lock == null) {
+    if (lock == null) {
       Object l = deliveriesLock.putIfAbsent(deliveryId, lock = new Object());
-      if(l != null) {
+      if (l != null) {
         lock = l;
       }
     }
@@ -537,42 +550,42 @@ public class AdminContext {
   }
 
   public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
-    if(restrictionsManager.hasActiveRestriction(login)) {
+    if (restrictionsManager.hasActiveRestriction(login)) {
       throw new DeliveryException("creation_restricted");
     }
-    try{
+    try {
       integrityLock.lock();
-      if(usersManager.getUser(delivery.getOwner()) == null) {
+      if (usersManager.getUser(delivery.getOwner()) == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
       }
       deliveryManager.createDelivery(login, password, delivery, msDataSource);
-    }finally {
+    } finally {
       integrityLock.unlock();
     }
   }
 
   public void createSingleTextDelivery(String login, String password, Delivery delivery, DataSource<Address> msDataSource) throws AdminException {
-    try{
+    try {
       integrityLock.lock();
-      if(usersManager.getUser(delivery.getOwner()) == null) {
+      if (usersManager.getUser(delivery.getOwner()) == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
       }
       deliveryManager.createSingleTextDelivery(login, password, delivery, msDataSource);
-    }finally {
+    } finally {
       integrityLock.unlock();
     }
   }
 
   public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
-    try{
+    try {
       integrityLock.lock();
-      if(usersManager.getUser(delivery.getOwner()) == null) {
+      if (usersManager.getUser(delivery.getOwner()) == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
       }
       synchronized (getLock(delivery.getId())) {
         deliveryManager.modifyDelivery(login, password, delivery);
       }
-    }finally {
+    } finally {
       integrityLock.unlock();
     }
   }
@@ -627,7 +640,7 @@ public class AdminContext {
 
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
-      if(restrictionsManager.hasActiveRestriction(login)) {
+      if (restrictionsManager.hasActiveRestriction(login)) {
         throw new DeliveryException("activation_restricted");
       }
       deliveryManager.activateDelivery(login, password, deliveryId);
@@ -665,16 +678,16 @@ public class AdminContext {
   public static void getDefaultDelivery(User u, Delivery delivery) throws AdminException {
     delivery.setOwner(u.getLogin());
 
-    if(u.getSourceAddr() != null) {
+    if (u.getSourceAddr() != null) {
       delivery.setSourceAddress(u.getSourceAddr());
     }
-    if(u.getEmail() != null) {
+    if (u.getEmail() != null) {
       delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, u.getEmail());
     }
-    if(u.getPhone() != null) {
+    if (u.getPhone() != null) {
       delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, u.getPhone());
     }
-    if(u.getDeliveryType() != null) {
+    if (u.getDeliveryType() != null) {
       switch (u.getDeliveryType()) {
         case SMS:
           delivery.setDeliveryMode(DeliveryMode.SMS);
@@ -689,25 +702,26 @@ public class AdminContext {
           break;
       }
     }
-    if(u.isRetryOnFail()) {
+    if (u.isRetryOnFail()) {
       delivery.setRetryPolicy(u.getPolicyId());
       delivery.setRetryOnFail(true);
     }
-    try{
+    try {
       delivery.setPriority(u.getPriority());
-    }catch (AdminException ignored){}
+    } catch (AdminException ignored) {
+    }
 
     Time t;
-    if((t = u.getDeliveryStartTime()) != null) {
+    if ((t = u.getDeliveryStartTime()) != null) {
       delivery.setActivePeriodStart(t.getTimeDate());
     }
-    if((t = u.getDeliveryEndTime()) != null) {
+    if ((t = u.getDeliveryEndTime()) != null) {
       delivery.setActivePeriodEnd(t.getTimeDate());
     }
     delivery.setValidityPeriod(Integer.toString(u.getValidHours()));
-    if(u.getDeliveryDays() != null && !u.getDeliveryDays().isEmpty()) {
+    if (u.getDeliveryDays() != null && !u.getDeliveryDays().isEmpty()) {
       List<Delivery.Day> days = new ArrayList<Delivery.Day>(7);
-      for(Integer i : u.getDeliveryDays()) {
+      for (Integer i : u.getDeliveryDays()) {
         days.add(Delivery.Day.valueOf(i == 0 ? 7 : i));
       }
       delivery.setActiveWeekDays(days.toArray(new Delivery.Day[days.size()]));
@@ -716,7 +730,7 @@ public class AdminContext {
 
   public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
     User u = getUser(user);
-    if(u == null) {
+    if (u == null) {
       throw new IntegrityException("user_not_exist", user);
     }
     getDefaultDelivery(u, delivery);
@@ -791,56 +805,57 @@ public class AdminContext {
     return webConfig.isAllowUssdPushDeliveries();
   }
 
-  public void setSiebelProperties(Properties props) throws AdminException {
-    try{
+  /**
+   * Сохраняет настройки Siebel
+   * @param props настройик Siebel
+   * @return стартовал ли SiebelManager на новых настройках
+   * @throws AdminException ошибка валидации или сохранения
+   */
+  public boolean setSiebelProperties(Properties props) throws AdminException {
+    try {
       integrityLock.lock();
       String u = props.getProperty(SiebelManager.USER);
       User user = usersManager.getUser(u);
-      if(u == null) {
+      if (u == null) {
         throw new UserException("user_not_exist", u);
       }
 
       Properties old = webConfig.getSiebelProperties();
-      if(!old.getProperty(SiebelManager.USER).equals(props.getProperty(SiebelManager.USER))) {
+      if (!old.getProperty(SiebelManager.USER).equals(props.getProperty(SiebelManager.USER))) {
         DeliveryFilter filter = new DeliveryFilter();
         filter.setUserIdFilter(old.getProperty(SiebelManager.USER));
         filter.setResultFields(DeliveryFields.Status);
         final boolean[] notExist = new boolean[]{true};
-        deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter , 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
+        deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter, 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
           public boolean visit(DeliveryInfo value) throws AdminException {
-            if(value.getStatus() != DeliveryStatus.Finished && value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
+            if (value.getStatus() != DeliveryStatus.Finished && value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
               notExist[0] = false;
               return false;
             }
             return true;
           }
         });
-        if(!notExist[0]) {
+        if (!notExist[0]) {
           throw new SiebelException("can_not_change_user", old.getProperty(SiebelManager.USER));
         }
       }
 
-      try{
-        siebelFinalStateListener.lock();
+      boolean siebelStarted = false;
+      try {
+        siebelFinalStateListener.externalLock();
         siebelManager.stop();
-        try{
+        try {
           siebelManager.start(user, props);
-        }catch (Exception e){
-          logger.error("Applying of new properties has failed. Siebel is down. Try to rollback old properties",e);
-          try{
-            siebelManager.stop();
-            siebelManager.start(usersManager.getUser(old.getProperty(SiebelManager.USER)), old);
-            logger.error("Old properties has rollbacked. Siebel's state has returned to 'Ok'");
-          }catch (Exception ex){
-            logger.error(e,e);
-          }
-          throw new SiebelException("internal_error");
+          siebelStarted = true;
+        } catch (Exception e) {
+          logger.error("Applying of new properties has failed. Siebel is down.", e);
         }
-      }finally {
-        siebelFinalStateListener.unlock();
+      } finally {
+        siebelFinalStateListener.externalUnlock();
       }
       webConfig.setSiebelProperties(props);
-    }finally {
+      return siebelStarted;
+    } finally {
       integrityLock.unlock();
     }
 
@@ -856,7 +871,7 @@ public class AdminContext {
 
     public User getUser(String login) throws AdminException {
       User u = context.getUser(login);
-      if(u == null) {
+      if (u == null) {
         throw new IntegrityException("user_not_exist", login);
       }
       return u;
@@ -917,6 +932,7 @@ public class AdminContext {
     public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
       context.activateDelivery(login, password, deliveryId);
     }
+
     public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
       context.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
     }

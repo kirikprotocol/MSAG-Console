@@ -47,7 +47,7 @@ public class RestrictionListController extends RestrictionController {
     return selectedRows;
   }
 
-  public DataTableModel getRestrictionsModel() throws AdminException {
+  public DataTableModel getRestrictionsModel() {
     final List<Restriction> restrictions = getConfig().getRestrictions(filter);
 
 
@@ -93,10 +93,10 @@ public class RestrictionListController extends RestrictionController {
   }
 
 
-  public String removeSelected() throws AdminException {
-    for(String id : selectedRows) {
+  public String removeSelected() {
+    for (String id : selectedRows) {
       try {
-        getConfig().deleteRestriction(Integer.valueOf(id),getUserName());
+        getConfig().deleteRestriction(Integer.valueOf(id), getUserName());
       }
       catch (AdminException e) {
         addError(e);

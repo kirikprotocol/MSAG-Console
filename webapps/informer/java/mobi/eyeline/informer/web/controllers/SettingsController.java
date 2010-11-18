@@ -22,7 +22,7 @@ public abstract class SettingsController<T> extends InformerController {
 
   protected Configuration configuration;
 
-  protected void init(Configuration.ConfigType configType) throws AdminException{
+  protected void init(Configuration.ConfigType configType) throws AdminException {
     configuration = getConfig();
     this.configType = configType;
     this.settingsAttr = configType + "_settings";
@@ -81,6 +81,7 @@ public abstract class SettingsController<T> extends InformerController {
 
   /**
    * Создает копию конфига
+   *
    * @param settings конфиг, который надо скопировать
    * @return копия
    */
@@ -88,6 +89,7 @@ public abstract class SettingsController<T> extends InformerController {
 
   /**
    * Задает новую версию конфига для данного пользователя
+   *
    * @param settings новая версия  конфига для данного пользователя
    */
   protected void setSettings(T settings) {
@@ -100,6 +102,7 @@ public abstract class SettingsController<T> extends InformerController {
 
   /**
    * Возвращает текущую версию конфига для данного пользователя
+   *
    * @return текущую версию конфига для данного пользователя
    */
   @SuppressWarnings({"unchecked"})
@@ -115,9 +118,9 @@ public abstract class SettingsController<T> extends InformerController {
 
   /**
    * Расшаривает изменения, сделанные пользователем
-   * @return null, если изменения успешно разшарены. Если же произошел конфиг с изменениями, сделанными другим пользователем,
-   * то вернется объект Revision, содержащий данные о последнем изменении конфига.
    *
+   * @return null, если изменения успешно разшарены. Если же произошел конфиг с изменениями, сделанными другим пользователем,
+   *         то вернется объект Revision, содержащий данные о последнем изменении конфига.
    * @throws AdminException если произошла ошибка
    */
   protected Revision submitSettings() throws AdminException {
@@ -140,6 +143,7 @@ public abstract class SettingsController<T> extends InformerController {
 
   /**
    * Откатывает все изменения, сделанные пользователем
+   *
    * @throws AdminException если произошла ошибка
    */
   protected void resetSettings() throws AdminException {
@@ -149,7 +153,8 @@ public abstract class SettingsController<T> extends InformerController {
 
   /**
    * Возвращает true, если пользователь произвел ккакие-то изменения в конфиге
-   * @return  true, если пользователь произвел ккакие-то изменения в конфиге
+   *
+   * @return true, если пользователь произвел ккакие-то изменения в конфиге
    */
   protected boolean isSettingsChanged() {
     return getSessionAttr(revisionAttr) != null;

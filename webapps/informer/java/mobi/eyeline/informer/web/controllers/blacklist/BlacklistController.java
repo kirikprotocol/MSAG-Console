@@ -9,7 +9,7 @@ import javax.faces.application.FacesMessage;
 /**
  * @author Aleksandr Khalitov
  */
-public class BlacklistController extends InformerController{
+public class BlacklistController extends InformerController {
 
   private String msisdn;
 
@@ -18,7 +18,7 @@ public class BlacklistController extends InformerController{
   private boolean contains;
 
   public String lookup() {
-    if(validateMsisdn()) {
+    if (validateMsisdn()) {
       init = true;
       try {
         contains = getConfig().blacklistContains(msisdn);
@@ -30,7 +30,7 @@ public class BlacklistController extends InformerController{
   }
 
   public String add() {
-    if(validateMsisdn()) {
+    if (validateMsisdn()) {
       try {
         getConfig().addInBlacklist(msisdn, getUserName());
         contains = true;
@@ -42,7 +42,7 @@ public class BlacklistController extends InformerController{
   }
 
   public String remove() {
-    if(validateMsisdn()) {
+    if (validateMsisdn()) {
       try {
         getConfig().removeFromBlacklist(msisdn, getUserName());
         contains = false;
@@ -65,12 +65,12 @@ public class BlacklistController extends InformerController{
     return msisdn;
   }
 
-  public void setMsisdn(String msisdn) throws AdminException{
+  public void setMsisdn(String msisdn){
     this.msisdn = msisdn;
   }
 
   private boolean validateMsisdn() {
-    if(msisdn == null || !Address.validate(msisdn)) {
+    if (msisdn == null || !Address.validate(msisdn)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "validation.msisdn");
       return false;
     }

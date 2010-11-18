@@ -1,7 +1,5 @@
 package mobi.eyeline.informer.admin.restriction;
 
-import mobi.eyeline.informer.admin.AdminException;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,13 +19,13 @@ public class Restriction {
   private List<String> userIds;
 
 
-  public Restriction() {    
+  public Restriction() {
   }
 
 
   public Restriction(Restriction other) {
-    this.id=other.id;
-    this.name=other.name;
+    this.id = other.id;
+    this.name = other.name;
     this.startDate = other.getStartDate();
     this.endDate = other.getEndDate();
     this.userIds = other.userIds == null ? null : new ArrayList<String>(other.getUserIds());
@@ -46,7 +44,7 @@ public class Restriction {
     return startDate;
   }
 
-  public void setStartDate(Date startDate) throws AdminException {
+  public void setStartDate(Date startDate) {
 
     this.startDate = startDate;
   }
@@ -55,7 +53,7 @@ public class Restriction {
     return endDate;
   }
 
-  public void setEndDate(Date endDate) throws AdminException {
+  public void setEndDate(Date endDate) {
 
     this.endDate = endDate;
   }
@@ -80,7 +78,7 @@ public class Restriction {
     return name;
   }
 
-  public void setName(String name) throws AdminException {
+  public void setName(String name) {
     this.name = name;
   }
 }

@@ -16,7 +16,7 @@ public class CollapsingGroup extends EyelineComponent {
     return label;
   }
 
-  public void setLabel(String label) {    
+  public void setLabel(String label) {
     this.label = label;
   }
 
