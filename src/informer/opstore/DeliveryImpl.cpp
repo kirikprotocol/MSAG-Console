@@ -548,6 +548,8 @@ void DeliveryImpl::writeDeliveryInfoData()
     if (!data.sourceAddress.empty()) {
         config.setString("sourceAddress",data.sourceAddress.c_str());
     }
+    config.setBool("finalDlvRecords",data.finalDlvRecords);
+    config.setBool("finalMsgRecords",data.finalMsgRecords);
 
     char buf[100];
     const dlvid_type dlvId = getDlvId();
