@@ -23,11 +23,13 @@ createTime_(0)
     stats_.clear();
     incstats_[0].clear();
     incstats_[1].clear();
-    period_ = getCS()->getActivityLogPeriod() / 60 * 60;
-    if (period_ > 3600) period_ = 3600;
-    const int nslices = 3600 / period_;
-    period_ = 3600 / nslices;
-    if (period_ < 60) period_ = 60;
+    period_ = 60;
+    {
+        if (period_ > 3600) period_ = 3600;
+        const int nslices = 3600 / period_;
+        period_ = 3600 / nslices;
+        if (period_ < 60) period_ = 60;
+    }
     // reading the last file in activity logs subdirs
     bool statsLoaded = false;
     try {

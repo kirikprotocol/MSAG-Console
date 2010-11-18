@@ -27,61 +27,63 @@ public:
         return statpath_;
     }
 
-    msgtime_type getActivityLogPeriod() const { return 60; }
+    // msgtime_type getActivityLogPeriod() const { return 60; }
 
     // maximum number of unresponded messages per SMSC
     inline unsigned getUnrespondedMessagesMax() const { return unrespondedMessagesMax_; }
 
     inline unsigned getResponseWaitTime() const { return responseWaitTime_; }
 
-    inline unsigned getReceiptWaitTime() const { return receiptWaitTime_; }
+    // inline unsigned getReceiptWaitTime() const { return receiptWaitTime_; }
 
     const char* getSvcType() const { return svcType_.c_str(); }
 
     unsigned getProtocolId() const { return protocolId_; }
 
-    unsigned getMaxMessageChunkSize() const { return 160; /* FIXME */ }
+    unsigned getSlicedMessageSize() const { return 160; /* FIXME */ }
 
     /// a number of messages (low mark) when input upload should start.
-    unsigned getMinInputQueueSize() const {
+    unsigned getInputMinQueueSize() const {
         return 10;
     }
 
     /// how many messages to upload from input storage in one chunk.
-    unsigned getInputUploadCount() const {
+    unsigned getInputTransferChunkSize() const {
         return 100;
     }
 
     /// how many seconds to keep waiting receipt after its validity period expired.
-    timediff_type getExtraReceiptWaitTime() const {
+    timediff_type getReceiptExtraWaitTime() const {
         return 60;
     }
 
     /// return a length of period (second) to split resend messages into.
     /// must state: assert(3600%ret==0), assert(ret%60==0).
+    /// NOTE: not configurable.
     msgtime_type getResendUploadPeriod() const {
         return 600;
     }
 
     /// upload next resend file if less than this time remains.
-    msgtime_type getMinTimeToUploadResendFile() const {
+    /// NOTE: not configurable.
+    msgtime_type getResendMinTimeToUpload() const {
         return 60;
     }
 
-    msgtime_type getStatDumpPeriod() const {
-        return 60;
-    }
+    // msgtime_type getStatDumpPeriod() const {
+    // return 60;
+    // }
 
     /// minimal retry interval allowed to 
-    timediff_type getMinTimeLeftToRetry() const {
+    timediff_type getRetryMinTimeToLive() const {
         return 30;
     }
 
     /// get minimum black list message count in cache
-    unsigned getBlacklistMinCacheSize() const {
+    unsigned getSkippedIdsMinCacheSize() const {
         return 10;
     }
-    unsigned getBlacklistChunkSize() const {
+    unsigned getSkippedIdsChunkSize() const {
         return 256;
     }
 

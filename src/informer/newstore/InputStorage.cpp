@@ -79,7 +79,7 @@ public:
             }
 
             if ((msgId > maxMsgId_ ||
-                 unsigned(dropMsgHash_.Count()) < getCS()->getBlacklistMinCacheSize()) &&
+                 unsigned(dropMsgHash_.Count()) < getCS()->getSkippedIdsMinCacheSize()) &&
                 dropFileOffset_!=size_t(-1)) {
 
                 if (dropMsgHash_.Count()==0) {
@@ -368,7 +368,7 @@ private:
 
     size_t readBuf( FileGuard& fg, smsc::core::buffers::TmpBuf<char,2048>& buf )
     {
-        const size_t requested = itemsize * getCS()->getBlacklistChunkSize();
+        const size_t requested = itemsize * getCS()->getSkippedIdsChunkSize();
         buf.setSize( requested );
         const size_t wasread = fg.read( buf.get(), requested );
         if ( wasread % itemsize != 0 ) {

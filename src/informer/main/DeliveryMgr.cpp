@@ -241,7 +241,7 @@ public:
     {
         smsc_log_debug(log_,"stats dumper started");
 
-        const msgtime_type delta = mgr_.cs_.getStatDumpPeriod();
+        const msgtime_type delta = 60; // mgr_.cs_.getStatDumpPeriod();
         assert( ( delta > 3600 && delta % 3600 == 0 ) ||
                 ( delta < 3600 && 3600 % delta == 0 && delta % 60 == 0 ) );
         typedef ulonglong msectime_type;

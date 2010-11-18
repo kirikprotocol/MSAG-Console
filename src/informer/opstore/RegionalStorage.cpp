@@ -136,7 +136,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
         /// check if we need to request new messages
         if ( !inputTransferTask_ &&
-             unsigned(newQueue_.Count()) <= getCS()->getMinInputQueueSize() ) {
+             unsigned(newQueue_.Count()) <= getCS()->getInputMinQueueSize() ) {
 
             const bool mayDetachRegion = ( newQueue_.Count()==0 &&
                                            resendQueue_.empty() &&
@@ -148,7 +148,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
                                newQueue_.Count());
                 InputTransferTask* task = 
                     dlv_->source_->createInputTransferTask(*this,
-                                                          getCS()->getInputUploadCount());
+                                                           getCS()->getInputTransferChunkSize());
                 if (task) {
                     dlv_->source_->getDlvActivator().startInputTransfer(task);
                 }
@@ -176,7 +176,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
                     uploadNextResend = true;
                 } else {
                     if (nextResendFile_ && 
-                        v->first + getCS()->getMinTimeToUploadResendFile() > nextResendFile_) {
+                        v->first + getCS()->getResendMinTimeToUpload() > nextResendFile_) {
                         uploadNextResend = true;
                     }
                     if ( v->first <= currentTime ) {
@@ -192,7 +192,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
         } else {
             // resend queue is empty
             if (nextResendFile_ &&
-                currentTime + getCS()->getMinTimeToUploadResendFile() > nextResendFile_) {
+                currentTime + getCS()->getResendMinTimeToUpload() > nextResendFile_) {
                 uploadNextResend = true;
             }
         }
@@ -319,7 +319,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
 
     // fixing time left.
     m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
-    if ( m.timeLeft > getCS()->getMinTimeLeftToRetry() ) {
+    if ( m.timeLeft > getCS()->getRetryMinTimeToLive() ) {
         // there is enough validity time to try the next time
 
         MsgLock ml(iter,this);
@@ -450,7 +450,7 @@ unsigned RegionalStorage::evaluateNchunks( const char*     outText,
             }
         }
         
-        const unsigned chunkLen = getCS()->getMaxMessageChunkSize();
+        const unsigned chunkLen = getCS()->getSlicedMessageSize();
         unsigned nchunks;
         if ( chunkLen > 0 && outLen > chunkLen ) {
             nchunks = unsigned(outLen-1) / chunkLen + 1;
