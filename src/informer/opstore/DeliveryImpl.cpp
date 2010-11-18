@@ -117,6 +117,8 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         data.svcType = config.getString("svcType");
         data.userData = config.getString("userData");
         data.sourceAddress = config.getString("sourceAddress");
+        data.finalDlvRecords = config.getBool("finalDlvRecords");
+        data.finalMsgRecords = config.getBool("finalMsgRecords");
 
     } catch (std::exception& e) {
         throw InfosmeException(EXC_CONFIG,"D=%u config: %s",dlvId,e.what());
