@@ -222,6 +222,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, int weekTime, Me
     if (!m.timeLeft) {
         /// this one is a new message, set its TTL initially
         m.timeLeft  = info.getValidityPeriod();
+        if (m.timeLeft <= 0) m.timeLeft = getCS()->getValidityPeriod();
     }
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_PROCESS;

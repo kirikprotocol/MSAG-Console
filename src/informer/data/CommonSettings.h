@@ -103,6 +103,11 @@ public:
         return unrespondedMessagesMax_; 
     }
 
+    /// default validity period for each message (initial TTL)
+    inline timediff_type getValidityPeriod() const {
+        return 3600; // fixme
+    }
+
     // --- non-configurable parameters
 
     /// return a length of period (second) to split resend messages into.
