@@ -21,13 +21,14 @@ public:
     uint32_t     dlvdSms;
     uint32_t     failedSms;
     uint32_t     expiredSms;
+    uint32_t     killedMessages;
 
     void clear() {
         memset(this,0,sizeof(*this));
     }
 
     int32_t getNewMessagesCount()const{
-      return totalMessages-procMessages-sentMessages-retryMessages-dlvdMessages-failedMessages-expiredMessages;
+        return totalMessages-procMessages-sentMessages-retryMessages-dlvdMessages-failedMessages-expiredMessages-killedMessages;
     }
 
     bool isEmpty() const {
@@ -41,11 +42,12 @@ public:
             expiredMessages == 0 &&
             dlvdSms == 0 &&
             failedSms == 0 &&
-            expiredSms == 0;
+            expiredSms == 0 &&
+            killedMessages == 0;
     }
 
     bool isFinished() const {
-        return totalMessages == dlvdMessages + failedMessages + expiredMessages;
+        return totalMessages == dlvdMessages + failedMessages + expiredMessages + killedMessages;
     }
 
     bool operator != ( const DeliveryStats& ds ) const {
@@ -59,7 +61,9 @@ public:
             ( expiredMessages != ds.expiredMessages ) ||
             ( dlvdSms         != ds.dlvdSms         ) ||
             ( failedSms       != ds.failedSms       ) ||
-            ( expiredSms      != ds.expiredSms      );
+            ( expiredSms      != ds.expiredSms      ) ||
+            ( killedMessages  != ds.killedMessages  );
+            
     }
 
     void incStat( uint8_t state, int value, int smsValue ) {
@@ -85,6 +89,9 @@ public:
             case MSGSTATE_FAILED   :
                 failedMessages += value;
                 failedSms += smsValue;
+                break;
+            case MSGSTATE_KILLED :
+                killedMessages += value;
                 break;
             default:
                 throw InfosmeException(EXC_LOGICERROR,"unknown state %d",state);

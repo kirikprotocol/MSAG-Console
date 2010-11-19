@@ -4,8 +4,10 @@
 #include "InputStorage.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
+#include "informer/data/FinalLog.h"
 #include "informer/data/Region.h"
 #include "informer/data/InputRegionRecord.h"
+#include "informer/data/UserInfo.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/FileReader.h"
 #include "informer/io/IOConverter.h"
@@ -537,7 +539,11 @@ class InputStorage::IReader : public FileReader::RecordReader
 public:
     IReader( InputStorage& is,
              MessageList& ml,
-             InputRegionRecord& iro ) : is_(is), msglist_(ml), ro_(iro) {}
+             InputRegionRecord& iro,
+             regionid_type regId ) :
+    is_(is), msglist_(ml), ro_(iro),
+    regId_(regId),
+    currentTime_(currentTimeSeconds()) {}
 
     virtual bool isStopping() {
         return is_.core_.isStopping();
@@ -564,33 +570,48 @@ public:
                                    version,ulonglong(filePos));
         }
         const uint64_t msgId = fb.get64();
+        const uint8_t  state = fb.get8();
         if (msgId>ro_.rlast) ro_.rlast = msgId;
-        if ( is_.blackList_->isMessageDropped(msgId) ) {
-            return false;
+        const bool isDropped = is_.blackList_->isMessageDropped(msgId);
+        MessageLocker* mlk;
+        MessageLocker mlk2;
+        if ( isDropped ) {
+            mlk = &mlk2;
+            mlk->msg.state = MSGSTATE_KILLED;
         } else {
             msglist_.push_back(MessageLocker());
-            MessageLocker& mlk = msglist_.back();
-            mlk.serial = 0;
-            Message& msg = mlk.msg;
-            msg.msgId = msgid_type(msgId);
-            msg.subscriber = fb.get64();
-            // msg.lastTime = fb.get32();
-            // msg.timeLeft = fb.get32();
-            msg.userData = fb.getCString();
-            msg.state = fb.get8();
-            if (msg.state & 0x80) {
-                msg.state &= 0x7f;
-                MessageText(fb.getCString(),0).swap(msg.text);
-            } else {
-                MessageText(0,fb.get32()).swap(msg.text);
-            }
-            return true;
+            mlk = &msglist_.back();
+            mlk->msg.state = state & 0x7f;
         }
+        mlk->serial = 0;
+        Message& msg = mlk->msg;
+        msg.msgId = msgid_type(msgId);
+        msg.subscriber = fb.get64();
+        // msg.lastTime = fb.get32();
+        // msg.timeLeft = fb.get32();
+        msg.userData = fb.getCString();
+        if (state & 0x80) {
+            MessageText(fb.getCString(),0).swap(msg.text);
+        } else {
+            MessageText(0,fb.get32()).swap(msg.text);
+        }
+        if (isDropped) {
+            // we have to add kill record in activity log
+            is_.activityLog_->addRecord(currentTime_,regId_,msg,0);
+            is_.getDlvActivator().getFinalLog().addMsgRecord(currentTime_,
+                                                             is_.getDlvId(),
+                                                             is_.activityLog_->getUserInfo().getUserId(),
+                                                             msg,
+                                                             0 );
+        }
+        return !isDropped;
     }
 private:
     InputStorage&      is_;
     MessageList&       msglist_;
     InputRegionRecord& ro_;
+    regionid_type      regId_;
+    msgtime_type       currentTime_;
 };
 
 
@@ -765,6 +786,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
                    unsigned(getDlvId()),total,
                    formatRegionList(regs.begin(),regs.end()).c_str());
     // writing regions
+    // fixme: optimize (write via big buffer)
     smsc::core::buffers::TmpBuf<unsigned char,200> msgbuf;
     for ( std::vector<regionid_type>::const_iterator ir = regs.begin();
           ir != regs.end(); ++ir ) {
@@ -802,16 +824,17 @@ void InputStorage::dispatchMessages( MsgIter begin,
             ToBuf tb(msgbuf.get(),msgbuf.getSize());
             tb.skip(LENSIZE);
             tb.set16(::defaultVersion);
+            uint8_t state = msg.state & 0x7f;
+            if (msg.isTextUnique()) { state |= 0x80; }
             tb.set64(msg.msgId);
+            tb.set8(state);
             tb.set64(msg.subscriber);
             // tb.set32(msg.lastTime);
             // tb.set32(msg.timeLeft);
             tb.setCString(msg.userData.c_str());
-            if (msg.isTextUnique()) {
-                tb.set8(msg.state | 0x80);
+            if (state >= 0x80) {
                 tb.setCString(msg.text.getText());
             } else {
-                tb.set8(msg.state & 0x7f);
                 tb.set32(msg.text.getTextId());
             }
 
@@ -888,7 +911,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
             try {
                 // FIXME: limit the number of reads in deleted storage!
                 FileReader fileReader(fg);
-                IReader recordReader(*this,msglist,ro);
+                IReader recordReader(*this,msglist,ro,regId);
                 fileReader.readRecords(buf,recordReader,reqCount);
                 fg.close();
                 if (ro.rfn<ro.wfn) {
@@ -905,9 +928,10 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
                                regId, getDlvId(), ro.rfn, ro.roff );
                 break;
             } catch ( std::exception& e ) {
-                smsc_log_error(log_,"R=%u/D=%u RP=%u/%u: %s",
+                smsc_log_error(log_,"R=%u/D=%u RP=%u/%u exc: %s",
                                regId, getDlvId(), ro.rfn, ro.roff, e.what());
             }
+            buf.SetPos(0);
 
         } // while we need more messages
 

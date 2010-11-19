@@ -96,7 +96,8 @@ typedef enum {
     MSGSTATE_FINAL = MSGSTATE_DELIVERED,
     MSGSTATE_EXPIRED = 6,
     MSGSTATE_FAILED = 7,
-    MSGSTATE_MAX = MSGSTATE_FAILED
+    MSGSTATE_KILLED = 8,    // deleted by user
+    MSGSTATE_MAX = MSGSTATE_KILLED
 } MsgState;
 const char* msgStateToString( MsgState state );
 

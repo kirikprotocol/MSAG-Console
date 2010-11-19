@@ -247,7 +247,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         } else {
             planTime = 0;
         }
-        userInfo_->incStats(newState,state_); // may throw
+        activityLog_.getUserInfo().incStats(newState,state_); // may throw
         state_ = newState;
         planTime_ = planTime;
         int regId;
@@ -430,7 +430,7 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 void DeliveryImpl::detachEverything()
 {
     smsc_log_debug(log_,"D=%u detaching everything",dlvInfo_->getDlvId());
-    userInfo_->detachDelivery(dlvInfo_->getDlvId());
+    activityLog_.getUserInfo().detachDelivery(dlvInfo_->getDlvId());
     storages_.Empty();
     smsc_log_debug(log_,"D=%u detached",dlvInfo_->getDlvId());
 }
@@ -511,7 +511,7 @@ void DeliveryImpl::writeDeliveryInfoData()
         }
         config.setString("deliveryMode",what);
     }
-    config.setString("owner",userInfo_->getUserId());
+    config.setString("owner",activityLog_.getUserInfo().getUserId());
     config.setBool("retryOnFail",data.retryOnFail);
     if (!data.retryPolicy.empty()) {
         config.setString("retryPolicy",data.retryPolicy.c_str());

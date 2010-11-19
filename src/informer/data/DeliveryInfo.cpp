@@ -243,6 +243,10 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     }
 
     /// post-parsing check & fill
+    if (data.priority < 1 || data.priority > 100 ) {
+        throw InfosmeException(EXC_CONFIG,"invalid priority %d",data.priority);
+    }
+
     if ( ( activePeriodStart < 0 && activePeriodEnd >= 0 ) ||
          ( activePeriodStart >= 0 && activePeriodEnd < 0 ) ) {
         throw InfosmeException(EXC_CONFIG,"invalid active period start/end");

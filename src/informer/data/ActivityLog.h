@@ -4,6 +4,7 @@
 #include <vector>
 #include "informer/data/Message.h"
 #include "informer/io/FileGuard.h"
+#include "informer/io/EmbedRefPtr.h"
 #include "DeliveryStats.h"
 #include "core/buffers/TmpBuf.hpp"
 
@@ -11,14 +12,18 @@ namespace eyeline {
 namespace informer {
 
 class DeliveryInfo;
+class UserInfo;
 
 /// this class also holds statistics data.
 class ActivityLog
 {
 public:
-    ActivityLog( dlvid_type dlvId );
+    ActivityLog( UserInfo& userInfo, dlvid_type dlvId );
 
     dlvid_type getDlvId() const;
+
+    UserInfo& getUserInfo() { return *userInfo_; }
+    const UserInfo& getUserInfo() const { return *userInfo_; }
 
     /// this will automatically increment stats
     void addRecord( msgtime_type         currentTime,
@@ -26,7 +31,7 @@ public:
                     const Message&       msg,
                     int                  smppStatus,
                     uint8_t              fromState = 0 );
-    
+
     /// add records about deletion of messages
     void addDeleteRecords( msgtime_type                   currentTime,
                            const std::vector<msgid_type>& msgIds );
@@ -57,6 +62,7 @@ private:
 
 private:
     smsc::core::synchronization::Mutex lock_;
+    EmbedRefPtr< UserInfo >            userInfo_;
     dlvid_type                         dlvId_;
     FileGuard                          fg_;
     msgtime_type                       createTime_;

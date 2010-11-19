@@ -76,9 +76,11 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
 {
     char cstate;
     switch (msg.state) {
-    case MSGSTATE_DELIVERED: cstate = 'D'; break;
-    case MSGSTATE_FAILED:    cstate = 'F'; break;
-    case MSGSTATE_EXPIRED:   cstate = 'E'; break;
+    case MSGSTATE_DELIVERED:
+    case MSGSTATE_FAILED:
+    case MSGSTATE_EXPIRED:
+    case MSGSTATE_KILLED:
+        cstate = msgStateToString(MsgState(msg.state))[0]; break;
     default: return;
     }
     char caddr[30];

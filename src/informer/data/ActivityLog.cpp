@@ -4,16 +4,18 @@
 #include "informer/io/TextEscaper.h"
 #include "informer/io/DirListing.h"
 #include "core/buffers/TmpBuf.hpp"
+#include "UserInfo.h"
 
 namespace {
-const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u%n";
+const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u,KILL=%u%n";
 smsc::logger::Logger* log_ = 0;
 }
 
 namespace eyeline {
 namespace informer {
 
-ActivityLog::ActivityLog( dlvid_type dlvId ) :
+ActivityLog::ActivityLog( UserInfo& userInfo, dlvid_type dlvId ) :
+userInfo_(&userInfo),
 dlvId_(dlvId),
 createTime_(0)
 {
@@ -123,6 +125,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                        &ds.dlvdMessages, &ds.failedMessages,
                        &ds.expiredMessages, &ds.dlvdSms,
                        &ds.failedSms, &ds.expiredSms,
+                       &ds.killedMessages,
                        &shift );
                 if (shift==0) {
                     // not a stat line
@@ -151,10 +154,11 @@ bool ActivityLog::readStatistics( const std::string& filename,
             case 'N' : ++ds.totalMessages;   break;
             case 'P' : ++ds.procMessages;    break;
             case 'R' : ++ds.retryMessages;   break;
-            case 'S' : break; // skip record - do nothing
+            case 'B' : break; // skip record - do nothing
             case 'D' :
             case 'E' :
-            case 'F' : {
+            case 'F' :
+            case 'K': {
                 unsigned regId;
                 ulonglong msgId;
                 unsigned nchunks;
@@ -167,6 +171,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 case 'D': ++ds.dlvdMessages; ds.dlvdSms += nchunks; break;
                 case 'E': ++ds.failedMessages; ds.failedSms += nchunks; break;
                 case 'F': ++ds.expiredMessages; ds.expiredSms += nchunks; break;
+                case 'K': ++ds.killedMessages; break;
                 default: break;
                 }
             }
@@ -222,16 +227,18 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     }
 
     unsigned planTime = 0;
-    char cstate;
+    char cstate = msgStateToString(MsgState(msg.state))[0];
     switch (msg.state) {
-    case MSGSTATE_INPUT:     cstate = 'N'; break;
-    case MSGSTATE_PROCESS:   cstate = 'P'; break;
-    case MSGSTATE_RETRY:     cstate = 'R';
+    case MSGSTATE_INPUT:
+    case MSGSTATE_PROCESS:
+    case MSGSTATE_DELIVERED:
+    case MSGSTATE_FAILED:
+    case MSGSTATE_EXPIRED:
+    case MSGSTATE_KILLED:
+        break;
+    case MSGSTATE_RETRY:
         planTime = unsigned(msg.lastTime - currentTime);
         break;
-    case MSGSTATE_DELIVERED: cstate = 'D'; break;
-    case MSGSTATE_FAILED:    cstate = 'F'; break;
-    case MSGSTATE_EXPIRED:   cstate = 'E'; break;
     default: throw InfosmeException(EXC_LOGICERROR,"actlog unknown state %u",msg.state);
     }
 
@@ -282,7 +289,7 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
     }
     char buf[100];
     int shift = 0;
-    sprintf(buf,"%02u,S,,%n",now.tm_sec,&shift);
+    sprintf(buf,"%02u,B,,%n",now.tm_sec,&shift); // banned
     if (!shift) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf delrec");
     }
@@ -335,6 +342,7 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
                               stats_.dlvdMessages, stats_.failedMessages,
                               stats_.expiredMessages, stats_.dlvdSms,
                               stats_.failedSms, stats_.expiredSms,
+                              stats_.killedMessages,
                               &shift );
             if (headlen<0) {
                 throw InfosmeException(EXC_SYSTEM,"cannot sprintf header");

@@ -198,14 +198,14 @@ personid_type parseAddress( const char* isdn )
 const char* msgStateToString( MsgState state )
 {
     switch (state) {
-    case MSGSTATE_INPUT     : return "inpt";
-    case MSGSTATE_PROCESS   : return "proc";
-    // case MSGSTATE_TAKEN     : return "takn";
-    case MSGSTATE_SENT      : return "sent";
-    case MSGSTATE_DELIVERED : return "dlvd";
-    case MSGSTATE_EXPIRED   : return "xprd";
-    case MSGSTATE_FAILED    : return "fail";
-    case MSGSTATE_RETRY     : return "rtry";
+    case MSGSTATE_INPUT     : return "NEW";
+    case MSGSTATE_PROCESS   : return "PROC";
+    case MSGSTATE_SENT      : return "SENT";
+    case MSGSTATE_RETRY     : return "RTRY";
+    case MSGSTATE_DELIVERED : return "DLVD";
+    case MSGSTATE_EXPIRED   : return "EXPD";
+    case MSGSTATE_FAILED    : return "FAIL";
+    case MSGSTATE_KILLED    : return "KILL";
     default                 : return "????";
     }
 }
