@@ -33,12 +33,6 @@ private:
   //of fields encoding if possible.
   TSLength calculateElements(bool calc_indef = false) /*throw(std::exception)*/;
 
-  //allocates (if necessary) and initializes encoder for field with given index
-  TLVLayoutEncoder & reserveElement(uint16_t fld_idx) /*throw(std::exception)*/
-  { //allocate (if necessary) and initialize field
-    _elmArray->reserve(fld_idx + 1);
-    return _elmArray->at(fld_idx);
-  }
   //Returns address of FieldEncoder if associated field is initialized
   const TLVLayoutEncoder * hasElement(uint16_t fld_idx) const /*throw()*/
   {
@@ -71,11 +65,13 @@ protected:
   //Initialization method for successors
   void initElement(uint16_t fld_idx, const ASTagging * fld_tags, ValueEncoderIface & val_enc)
   {
-    reserveElement(fld_idx).init(val_enc, fld_tags, getVALRule());
+    _elmArray->reserve(fld_idx + 1);
+    _elmArray->at(fld_idx).init(val_enc, fld_tags, getVALRule());
   }
   void initElement(const ASTagging * fld_tags, ValueEncoderIface & val_enc)
   {
-    reserveElement(_elmArray->size()).init(val_enc, fld_tags, getVALRule());
+    _elmArray->reserve(_elmArray->size() + 1);
+    _elmArray->at(_elmArray->size() + 1).init(val_enc, fld_tags, getVALRule());
   }
   void clearElement(uint16_t fld_idx)
   {
@@ -90,7 +86,7 @@ protected:
   void reserveElements(uint16_t num_elems)
   {
     if (num_elems)
-      reserveElement(num_elems - 1);
+      _elmArray->reserve(num_elems);
   }
 
   ElementsArray * getElementsStorage(void) const { return _elmArray; }
