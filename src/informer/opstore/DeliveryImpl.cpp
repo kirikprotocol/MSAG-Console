@@ -95,7 +95,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         data.finalMsgRecords = config.getBool("finalMsgRecords",false);
 
     } catch (std::exception& e) {
-        throw InfosmeException(EXC_CONFIG,"D=%u config: %s",dlvId,e.what());
+        throw InfosmeException(EXC_CONFIG,"D=%u config, exc: %s",dlvId,e.what());
     }
 }
 
@@ -168,13 +168,13 @@ DlvState DeliveryImpl::readState( dlvid_type            dlvId,
     ulonglong ymdTime;
     unsigned offset;
     int shift = 0;
-    sscanf(ptr,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u%n",
+    sscanf(ptr,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u%n",
            &ymdTime, &cstate,
            &offset,
            &ds.totalMessages, &ds.procMessages, &ds.sentMessages,
            &ds.retryMessages, &ds.dlvdMessages, &ds.failedMessages,
            &ds.expiredMessages, &ds.dlvdSms, &ds.failedSms,
-           &ds.expiredSms, &shift );
+           &ds.expiredSms, &ds.killedMessages, &shift );
     if (!shift) {
         throw InfosmeException(EXC_BADFILE,"D=%u bad last status record",dlvId);
     }
@@ -274,12 +274,12 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         fg.create((getCS()->getStorePath() + buf).c_str(),0666,true);
         fg.seek(0,SEEK_END);
         if (fg.getPos()==0) {
-            const char* header = "#1 TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
+            const char* header = "#1 TIME,STATE,PLANTIME,TOTAL,PROC,SENT,RETRY,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL\n";
             fg.write(header,strlen(header));
         }
         DeliveryStats ds;
         activityLog_.getStats(ds);
-        int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
+        int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                              ymd,
                              dlvStateToString(newState)[0],
                              planTime ? planTime-now : 0,
@@ -292,7 +292,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                              ds.expiredMessages,
                              ds.dlvdSms,
                              ds.failedSms,
-                             ds.expiredSms );
+                             ds.expiredSms,
+                             ds.killedMessages );
         assert(buflen>0);
         fg.write(buf,buflen);
         smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
@@ -418,12 +419,12 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
     }
     DeliveryStats ds;
     activityLog_.getStats(ds);
-    smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u retry=%u dlvd=%u fail=%u expd=%u",
+    smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u retry=%u dlvd=%u fail=%u expd=%u kill=%u",
                   dlvInfo_->getDlvId(),
                   ds.totalMessages, ds.procMessages,
                   ds.sentMessages, ds.retryMessages,
                   ds.dlvdMessages, ds.failedMessages,
-                  ds.expiredMessages );
+                  ds.expiredMessages, ds.killedMessages );
 }
 
 

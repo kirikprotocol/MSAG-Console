@@ -203,7 +203,7 @@ int main( int argc, char** argv )
             try {
                 core->selfTest();
             } catch (std::exception& e ) {
-                smsc_log_error(mainlog,"self test failed: %s",e.what());
+                smsc_log_error(mainlog,"self test failed, exc: %s",e.what());
                 // isStarted = false;
             }
 
@@ -215,7 +215,7 @@ int main( int argc, char** argv )
             core->stop();
             
         } catch ( std::exception& e ) {
-            smsc_log_error(mainlog,"EXCEPTION: %s",e.what());
+            smsc_log_error(mainlog,"EXCEPTION, exc: %s",e.what());
             throw;
         }
 

@@ -5,7 +5,7 @@
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/opstore/RegionalStorage.h"
 #include "ScoredPtrList.h"
-#include "SpeedControl.h"
+#include "informer/data/SpeedControl.h"
 #include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
@@ -43,15 +43,17 @@ public:
 
     inline unsigned isReady(usectime_type currentTime)
     {
-        return speedControl_.isReady(unsigned(currentTime % flipTimePeriod));
+        return speedControl_.isReady(currentTime % flipTimePeriod, maxSnailDelay);
     }
 
+    /*
     inline void suspend(usectime_type currentTime)
     {
         speedControl_.suspend(unsigned(currentTime % flipTimePeriod));
     }
+     */
 
-    unsigned processRegion(usectime_type currentTime);
+    void processRegion(usectime_type currentTime);
 
     void addDelivery( RegionalStorage& ptr );
     void removeDelivery( dlvid_type dlvId );
@@ -96,9 +98,10 @@ private:
     RegionPtr                          region_;   // shared ownership
     ScoredPtrList< RegionSender >      taskList_; // dlvs are not owned
 
-    SpeedControl<tuPerSec,uint64_t>    speedControl_;
-    Message                            msg_;    // a cache
-    msgtime_type                       currentTime_;
+    SpeedControl<usectime_type,tuPerSec> speedControl_; // lock is not needed
+    Message                              msg_;    // a cache
+
+    usectime_type                      currentTime_;
     int                                weekTime_;  // local weektime (seconds since monday midnight)
 };
 

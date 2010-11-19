@@ -38,9 +38,9 @@ UserInfo::UserInfo( const char* id,
                     unsigned    speed,
                     unsigned    totaldlv ) :
 ref_(0),
+speedControl_(speed),
 roles_(0),
 maxTotalDeliveries_(totaldlv),
-speed_(speed),
 priority_(priority)
 {
     getlog();
@@ -67,9 +67,9 @@ priority_(priority)
         priority_ = maxprio;
     }
     static const unsigned maxspeed = 1000;
-    if (speed_ > maxspeed) {
-        smsc_log_warn(log_,"U='%s' too big speed %u replaced with %u",id,speed_,maxspeed);
-        speed_ = maxspeed;
+    if (speed > maxspeed) {
+        smsc_log_warn(log_,"U='%s' too big speed %u replaced with %u",id,speed,maxspeed);
+        speedControl_.setSpeed(maxspeed,currentTimeMicro() % flipTimePeriod);
     }
     static const unsigned maxdlv = 1000000;
     if (maxTotalDeliveries_ > maxdlv) {
@@ -95,6 +95,20 @@ bool UserInfo::hasRole( UserRole role ) const
 }
 
 
+unsigned UserInfo::isReady( usectime_type currentTime )
+{
+    MutexGuard mg(lock_);
+    return speedControl_.isReady( currentTime % flipTimePeriod, maxSnailDelay );
+}
+
+
+void UserInfo::consumeQuant()
+{
+    MutexGuard mg(lock_);
+    speedControl_.consumeQuant();
+}
+
+
 void UserInfo::addRole( UserRole role )
 {
     if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
@@ -110,7 +124,8 @@ void UserInfo::update( const UserInfo& user )
     password_ = user.password_;
     roles_ = user.roles_;
     maxTotalDeliveries_ = user.maxTotalDeliveries_;
-    speed_ = user.speed_;
+    speedControl_.setSpeed( user.speedControl_.getSpeed(),
+                            currentTimeMicro() % flipTimePeriod );
     priority_ = user.priority_;
 }
 

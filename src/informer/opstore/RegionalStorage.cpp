@@ -121,7 +121,8 @@ bool RegionalStorage::isFinished()
 }
 
 
-bool RegionalStorage::getNextMessage( msgtime_type currentTime, int weekTime, Message& msg )
+usectime_type RegionalStorage::getNextMessage( usectime_type usecTime,
+                                               int weekTime, Message& msg )
 {
     MsgIter iter;
     RelockMutexGuard mg(cacheMon_);
@@ -129,8 +130,14 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, int weekTime, Me
     const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
 
-    if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return false; }
-    if ( !info.checkActiveTime(weekTime) ) { return false; }
+    if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return 5*tuPerSec; }
+    if ( !info.checkActiveTime(weekTime) ) { return 5*tuPerSec; }
+
+    /// check speed control
+    usectime_type ret = dlv_->activityLog_.getUserInfo().isReady(usecTime);
+    if (ret>0) { return ret; }
+
+    const msgtime_type currentTime(usecTime/tuPerSec);
 
     bool uploadNextResend = false;
     do { // fake loop
@@ -155,7 +162,7 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, int weekTime, Me
                 }
                 inputTransferTask_ = task;
             } catch (std::exception& e ) {
-                smsc_log_warn(log_,"exception requesting input msgs in R=%u/D=%u: %s",
+                smsc_log_warn(log_,"R=%u/D=%u request input msgs, exc: %s",
                               unsigned(regionId_),
                               dlvId,
                               e.what());
@@ -206,7 +213,8 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, int weekTime, Me
             break;
         }
 
-        return false;
+        // message is not found, please try in a second
+        return tuPerSec;
 
     } while ( false );
 
@@ -235,7 +243,8 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, int weekTime, Me
         dlv_->storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
         dlv_->activityLog_.incStats(m.state,1,prevState);
     }
-    return true;
+    dlv_->activityLog_.getUserInfo().consumeQuant();
+    return 0;
 }
 
 

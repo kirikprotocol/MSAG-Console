@@ -58,7 +58,8 @@ personid_type parseAddress( const char* isdn );
 /// some constants
 static const unsigned tuPerSec = 1000000U;
 static const unsigned maxScoreIncrement = 10000U;
-static const unsigned flipTimePeriod = 1000*tuPerSec;
+static const usectime_type flipTimePeriod = 24*3600*tuPerSec;
+static const usectime_type maxSnailDelay = 5*tuPerSec;
 
 inline msgtime_type currentTimeSeconds() { return msgtime_type(currentTimeMicro()/tuPerSec); }
 

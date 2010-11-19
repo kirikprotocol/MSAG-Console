@@ -77,7 +77,7 @@ createTime_(0)
             if (statsLoaded) break;
         }
     } catch (std::exception& e) {
-        smsc_log_debug(log_,"D=%u actlog: %s", dlvId_, e.what());
+        smsc_log_debug(log_,"D=%u actlog, exc: %s", dlvId_, e.what());
     }
     if (!statsLoaded) {
         smsc_log_warn(log_,"D=%u statistics is not found", dlvId_);

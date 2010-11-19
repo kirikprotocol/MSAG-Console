@@ -50,26 +50,37 @@ std::string RegionSender::toString() const
 }
 
 
-unsigned RegionSender::processRegion( usectime_type currentTime )
+void RegionSender::processRegion( usectime_type currentTime )
 {
-    smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
-    static const unsigned sleepTime = unsigned(1*tuPerSec);
-    currentTime_ = msgtime_type(currentTime/tuPerSec);
-    // FIXME: calculation of local time and week day
-    struct tm tmnow;
-    {
-        const time_t tmp = time_t(currentTime_);
-        if ( !gmtime_r(&tmp,&tmnow) ) {
-            throw InfosmeException(EXC_SYSTEM,"R=%u gmtime_r()",getRegionId());
+    try {
+        smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
+        currentTime_ = currentTime;
+        struct tm tmnow;
+        {
+            const time_t tmp = time_t(currentTime_/tuPerSec);
+            if ( !gmtime_r(&tmp,&tmnow) ) {
+                throw InfosmeException(EXC_SYSTEM,"R=%u gmtime_r()",getRegionId());
+            }
         }
+        static const int daynight = 24*3600;
+        static const int aweek = 7*daynight;
+        // monday is 0..daynight-1, tue is daynight..daynight*2-1, etc.
+        weekTime_ = ((tmnow.tm_wday+6)*daynight +
+                     (currentTime_ % daynight) + region_->getTimezone()) % aweek;
+        MutexGuard mg(lock_);
+        const unsigned ret = taskList_.processOnce(0/*not used*/,tuPerSec);
+        if (ret>0) {
+            smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
+                           getRegionId(),ret);
+            speedControl_.suspend((currentTime + ret) % flipTimePeriod);
+        } else {
+            smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
+            speedControl_.consumeQuant();
+        }
+    } catch ( std::exception& e ) {
+        smsc_log_debug(log_,"R=%u send exc: %s",getRegionId(),e.what());
+        speedControl_.suspend( (currentTime + tuPerSec) % flipTimePeriod);
     }
-    static const int daynight = 24*3600;
-    static const int aweek = 7*daynight;
-    // monday is 0..daynight-1, tue is daynight..daynight*2-1, etc.
-    weekTime_ = ((tmnow.tm_wday+6)*daynight +
-                 (currentTime_ % 86400) + region_->getTimezone()) % aweek;
-    MutexGuard mg(lock_);
-    return taskList_.processOnce(0/*not used*/,sleepTime);
 }
 
 
@@ -103,20 +114,22 @@ void RegionSender::removeDelivery( dlvid_type dlvId )
 
 unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
 {
-    static const unsigned sleepTimeNotReady = unsigned(1*tuPerSec);
     static const unsigned sleepTimeException = unsigned(5*tuPerSec);
     if (!ptr) return sleepTimeException;
     try {
         if ( ptr->getState() == DLVSTATE_ACTIVE ) {
             // delivery is active
-            if ( ptr->getNextMessage(currentTime_,weekTime_,msg_) ) {
+            const unsigned sleepTimeNotReady = ptr->getNextMessage(currentTime_,
+                                                                   weekTime_,
+                                                                   msg_);
+            if (sleepTimeNotReady == 0) {
                 smsc_log_debug(log_,"R=%u/D=%u/M=%llu is ready to be sent",
                                unsigned(getRegionId()),
                                unsigned(ptr->getDlvId()),
                                ulonglong(msg_.msgId));
                 return 0;
             } else {
-                smsc_log_debug(log_,"R=%u/D=%u: is not ready, going to sleep %llu usec",
+                smsc_log_debug(log_,"R=%u/D=%u: is not ready, going to sleep %u usec",
                                unsigned(getRegionId()),
                                unsigned(ptr->getDlvId()),
                                ulonglong(sleepTimeNotReady));
@@ -124,9 +137,9 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
             }
         }
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"R=%u/D=%u exc in isReady: %s",
+        smsc_log_warn(log_,"R=%u/D=%u isReady exc: %s",
                       unsigned(getRegionId()),
-                      unsigned(ptr->getDlvId()));
+                      unsigned(ptr->getDlvId()), e.what());
     }
     return sleepTimeException;  // wait 5 seconds
 }
@@ -136,6 +149,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
 {
     int nchunks = 0;
     int res;
+    const unsigned inc = maxScoreIncrement / ptr->getDlvInfo().getPriority();
     assert(!ptr == false);
     try {
 
@@ -149,7 +163,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
                            ulonglong(msg_.msgId), nchunks);
             // message is considered to be sent only on response
             // ptr.messageSent(msg_.msgId, msgtime_type(currentTime_/tuPerSec));
-            return maxScoreIncrement / nchunks / ptr->getDlvInfo().getPriority();
+            return inc * nchunks;
         } else {
             smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed, res=%d, nchunks=%d",
                           unsigned(getRegionId()),
@@ -165,7 +179,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
         res = smsc::system::Status::UNKNOWNERR;
     }
     ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(), currentTime_, res, nchunks);
-    return -maxScoreIncrement;
+    return inc;
 }
 
 }

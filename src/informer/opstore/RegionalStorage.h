@@ -66,8 +66,11 @@ public:
     /// @param currentTime - current GMT;
     /// @param weekTime - the local time (seconds) since monday midnight.
     /// SIDEEFFECT: request more messages into the new queue if needed.
-    /// @return true if the message is received.
-    bool getNextMessage( msgtime_type currentTime, int weekTime, Message& msg );
+    /// @return how many microseconds to wait until message will be ready:
+    ///   =0 message is ready and returned in msg;
+    ///   >0 message is not ready
+    usectime_type getNextMessage( usectime_type currentTime,
+                                  int weekTime, Message& msg );
 
     /// change message state when non-transaction response has come.
     /// message is left in the cache.

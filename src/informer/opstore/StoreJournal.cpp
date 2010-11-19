@@ -287,7 +287,7 @@ void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
     try {
         sjreader.readHeader(fg, jpath);
     } catch (std::exception& e) {
-        smsc_log_warn(log_,"cannot read '%s': %s",jpath.c_str(),e.what());
+        smsc_log_warn(log_,"cannot read '%s', exc: %s",jpath.c_str(),e.what());
         return;
     }
     smsc::core::buffers::TmpBuf<char,8192> buf;
@@ -298,11 +298,11 @@ void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
         version_ = sjreader.version_;
         serial_ = sjreader.serial_;
     } catch ( FileDataException& e ) {
-        smsc_log_warn(log_,"file '%s': %s", jpath.c_str(), e.what());
+        smsc_log_warn(log_,"file '%s', exc: %s", jpath.c_str(), e.what());
         // FIXME: the journal is corrupted, should we trunk the file?
         throw;
     } catch ( std::exception& e ) {
-        smsc_log_error(log_,"file '%s': %s", jpath.c_str(), e.what());
+        smsc_log_error(log_,"file '%s', exc: %s", jpath.c_str(), e.what());
         throw;
     }
 }

@@ -50,7 +50,7 @@ void readSmscConfig( const char*   name,
         cfg.minValidityTime = config.getInt("minValidityTime",10*60,60,2*3600);
         cfg.maxValidityTime = config.getInt("maxValidityTime",2*3600,cfg.minValidityTime,3*3600);
     } catch ( std::exception& e ) {
-        throw InfosmeException(EXC_CONFIG,"exc in smsc '%s': %s", name, e.what());
+        throw InfosmeException(EXC_CONFIG,"S='%s' config exc: %s", name, e.what());
     }
 }
 
@@ -200,7 +200,7 @@ void InfosmeCoreV1::init()
         throw InfosmeException(EXC_CONFIG,"exc reading '%s', section '%s': param '%s' not found",
                                filename, section, e.getKey() );
     } catch ( std::exception& e ) {
-        throw InfosmeException(EXC_CONFIG,"exc in core init: %s", e.what());
+        throw InfosmeException(EXC_CONFIG,"core init exc: %s", e.what());
     }
 }
 
@@ -407,7 +407,7 @@ void InfosmeCoreV1::selfTest()
         }
 
     } catch ( std::exception& e ) {
-        smsc_log_debug(log_,"--- selftest failed: %s",e.what());
+        smsc_log_debug(log_,"--- selftest failed, exc: %s",e.what());
     }
     smsc_log_debug(log_,"--- selfTest finished ---");
 }
@@ -833,7 +833,7 @@ void InfosmeCoreV1::loadUsers( const char* userId )
     } catch ( InfosmeException& ) {
         throw;
     } catch (std::exception& e) {
-        throw InfosmeException(EXC_CONFIG,"loadUsers: %s",e.what());
+        throw InfosmeException(EXC_CONFIG,"loadUsers('%s'), exc: %s",userId,e.what());
     }
 
     smsc_log_info(log_,"users.xml has been read (%u users), applying",unsigned(uservec.size()));
@@ -889,7 +889,7 @@ void InfosmeCoreV1::loadSmscs( const char* smscId )
     } catch ( InfosmeException& e ) {
         throw;
     } catch ( std::exception& e ) {
-        throw InfosmeException(EXC_CONFIG,"exc loading smsc: %s",e.what());
+        throw InfosmeException(EXC_CONFIG,"loadSmsc('%s') exc: %s",smscId,e.what());
     }
 }
 

@@ -292,7 +292,7 @@ public:
             fg.create((mgr_.cs_.getStatPath()+buf).c_str(),0666,true);
             fg.seek(0,SEEK_END);
             if (fg.getPos() == 0) {
-                const char* header = "#1 MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD\n";
+                const char* header = "#1 MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL\n";
                 fg.write(header,strlen(header));
             }
             bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
@@ -317,7 +317,7 @@ public:
                 ++iter;
             }
             if ( ds.isEmpty() ) continue;
-            char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u\n",
+            char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                                        dlvId, userId.c_str(),
                                        ds.totalMessages,
                                        ds.procMessages,
@@ -326,7 +326,8 @@ public:
                                        ds.expiredMessages,
                                        ds.dlvdSms,
                                        ds.failedSms,
-                                       ds.expiredSms );
+                                       ds.expiredSms,
+                                       ds.killedMessages );
             fg.write(buf,p-buf);
         } while (true);
     }
@@ -437,7 +438,7 @@ void DeliveryMgr::init()
                 addDelivery(*user.get(), info, state, planTime );
 
             } catch (std::exception& e) {
-                smsc_log_error(log_,"cannot read/add dlvInfo D=%u: %s",dlvId,e.what());
+                smsc_log_error(log_,"D=%u cannot read/add dlvInfo, exc: %s",dlvId,e.what());
                 continue;
             }
         }
@@ -532,7 +533,7 @@ void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
                                  status, nchunks );
         }
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt processing failed: %s",
+        smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt process failed, exc: %s",
                       drmId.regId,
                       drmId.dlvId,
                       drmId.msgId, e.what() );
@@ -571,7 +572,7 @@ bool DeliveryMgr::receiveResponse( const DlvRegMsgId& drmId )
         return true;
 
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp processing failed: %s",
+        smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp process failed, exc: %s",
                       drmId.regId,
                       drmId.dlvId,
                       drmId.msgId, e.what() );
@@ -798,7 +799,8 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
         userInfo.incStats(state);
     } catch (std::exception& e) {
         // FIXME: move to paused?
-        throw InfosmeException(EXC_DLVLIMITEXCEED,"D=%u cannot set state: %s",dlvId,e.what());
+        throw InfosmeException(EXC_DLVLIMITEXCEED,"D=%u cannot set state, exc: %s",
+                               dlvId,e.what());
     }
     InputMessageSource* ims = new InputStorage(core_,*inputJournal_);
     dlv.reset( new DeliveryImpl(infoptr.release(),

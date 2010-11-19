@@ -173,7 +173,7 @@ protected:
         try {
             fg.ropen(jpath.c_str());
         } catch ( std::exception& e ) {
-            smsc_log_warn(sender_.log_,"cannot read '%s': %s", jpath.c_str(), e.what());
+            smsc_log_warn(sender_.log_,"cannot read '%s', exc: %s", jpath.c_str(), e.what());
             return;
         }
         SJReader sjreader(sender_);
@@ -184,10 +184,10 @@ protected:
             smsc_log_info(sender_.log_,"journal '%s' has been read, %u/%u total/unique records",jpath.c_str(),
                           unsigned(total), unsigned(sjreader.unique_) );
         } catch ( FileDataException& e ) {
-            smsc_log_warn(sender_.log_,"file '%s': %s", jpath.c_str(), e.what());
+            smsc_log_warn(sender_.log_,"file '%s', exc: %s", jpath.c_str(), e.what());
             // FIXME: should we trunk the file?
         } catch ( std::exception& e ) {
-            smsc_log_error(sender_.log_,"file '%s': %s", jpath.c_str(), e.what());
+            smsc_log_error(sender_.log_,"file '%s', exc: %s", jpath.c_str(), e.what());
         }
     }
 
@@ -946,14 +946,14 @@ int SmscSender::Execute()
         try {
             connectLoop();
         } catch ( std::exception& e ) {
-            smsc_log_warn(log_,"exc in connectLoop: %s", e.what());
+            smsc_log_warn(log_,"S='%s' connectLoop exc: %s", smscId_.c_str(), e.what());
         }
         if (isStopping_) break;
         journal_->start();
         try {
             sendLoop();
         } catch ( std::exception& e ) {
-            smsc_log_warn(log_,"exc in sendLoop: %s", e.what());
+            smsc_log_warn(log_,"S='%s' sendLoop exc: %s", smscId_.c_str(), e.what());
         }
         journal_->stop();
     }
@@ -981,7 +981,7 @@ void SmscSender::connectLoop()
                 session_->connect();
                 if (!session_->isClosed()) break;
             } catch ( std::exception& e ) {
-                smsc_log_error(log_,"connection failed: %s", e.what());
+                smsc_log_error(log_,"session connect exc: %s", e.what());
             }
         }
         // connection failed, waiting
@@ -1004,7 +1004,6 @@ void SmscSender::sendLoop()
     const unsigned sleepTime = 5000000U; // 5 sec
 
     currentTime_ = currentTimeMicro();
-    // usectime_type movingStart = currentTime_;
     usectime_type nextWakeTime = currentTime_;
     std::auto_ptr<DataQueue> rQueue(new DataQueue);
     while ( !isStopping_ ) {
@@ -1070,14 +1069,20 @@ unsigned SmscSender::scoredObjIsReady( unsigned, ScoredObjType& regionSender )
 
 int SmscSender::processScoredObj( unsigned, ScoredObjType& regionSender )
 {
-    unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
-    try {
-        const unsigned wantToSleep = regionSender.processRegion(currentTime_);
+    // unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
+    regionSender.processRegion(currentTime_);
+    return maxScoreIncrement / regionSender.getBandwidth();
+}
+/*
         smsc_log_debug(log_,"R=%u processRegion finished, sleep=%u", regionSender.getRegionId(), wantToSleep);
         if (wantToSleep>0) {
             // all deliveries want to sleep
             regionSender.suspend(currentTime_ + wantToSleep);
             return -inc;
+        } else {
+            // success
+            regionSender.consumeQuant();
+            return inc;
         }
     } catch ( std::exception& e ) {
         smsc_log_debug(log_,"R=%u send exc: %s", regionSender.getRegionId(), e.what());
@@ -1085,6 +1090,7 @@ int SmscSender::processScoredObj( unsigned, ScoredObjType& regionSender )
     }
     return inc;
 }
+ */
 
 
 void SmscSender::scoredObjToString( std::string& s, ScoredObjType& regionSender )

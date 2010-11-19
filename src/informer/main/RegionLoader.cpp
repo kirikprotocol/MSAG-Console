@@ -111,12 +111,12 @@ log_(smsc::logger::Logger::getInstance("regloader"))
         }
 
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"cannot load regions: %s",e.what());
+        smsc_log_warn(log_,"cannot load regions, exc: %s",e.what());
         for ( std::vector< Region* >::reverse_iterator i = regions_.rbegin();
               i != regions_.rend(); ++i ) {
             delete *i;
         }
-        throw InfosmeException(EXC_CONFIG,"regions from '%s': %s",xmlfile,e.what());
+        throw InfosmeException(EXC_CONFIG,"regions from '%s', exc: %s",xmlfile,e.what());
     }
     smsc_log_info(log_,"%u regions are loaded", unsigned(regions_.size()));
 }

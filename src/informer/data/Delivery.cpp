@@ -24,7 +24,7 @@ planTime_(0)
     try {
         source_->init(activityLog_);
     } catch ( std::exception& e ) {
-        smsc_log_error(log_,"D=%u inputstorage init failed: %s",
+        smsc_log_error(log_,"D=%u inputstorage init failed, exc: %s",
                        dlvInfo_->getDlvId(), e.what());
         delete source_;
         throw;

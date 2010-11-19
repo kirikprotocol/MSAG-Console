@@ -60,7 +60,7 @@ public:
                 writeActLog(0);
             }
         } catch ( ErrnoException& e ) {
-            smsc_log_debug(is_.log_,"D=%u blacklist exc: %s",is_.getDlvId(),e.what());
+            smsc_log_debug(is_.log_,"D=%u blacklist init exc: %s",is_.getDlvId(),e.what());
             dropFileOffset_ = size_t(-1);
         }
     }
@@ -226,7 +226,7 @@ public:
                 ofg.close();
             }
         } catch (ErrnoException& e) {
-            smsc_log_debug(is_.log_,"D=%u blklist not read: %s",is_.getDlvId(),e.what());
+            smsc_log_debug(is_.log_,"D=%u blklist read exc: %s",is_.getDlvId(),e.what());
             maxSize = 0;
             ofg.close();
         }
@@ -644,7 +644,7 @@ void InputStorage::init( ActivityLog& actLog )
     try {
         glossary_.init(getDlvId());
     } catch ( std::exception& e ) {
-        smsc_log_error(log_,"D=%u glossary init failed: %s",getDlvId(),e.what());
+        smsc_log_error(log_,"D=%u glossary init exc: %s",getDlvId(),e.what());
         throw;
     }
     if (!blackList_) {
@@ -920,11 +920,11 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
                 }
             } catch ( FileDataException& e ) {
                 if (ro.rfn < ro.wfn) {
-                    smsc_log_error(log_,"R=%u/D=%u RP=%u/%u: garbled intermediate file: %s",
+                    smsc_log_error(log_,"R=%u/D=%u RP=%u/%u intermediate file exc: %s",
                                    regId, getDlvId(), ro.rfn, ro.roff, e.what());
                     throw;
                 }
-                smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u: last record garbled, wait until write finish",
+                smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u last record garbled, wait until write finish",
                                regId, getDlvId(), ro.rfn, ro.roff );
                 break;
             } catch ( std::exception& e ) {
@@ -955,12 +955,12 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
         }
 
     } catch (std::exception& e) {
-        smsc_log_error(log_,"transfer failed R=%u/D=%u: %s",
+        smsc_log_error(log_,"R=%u/D=%u transfer exc: %s",
                        regId, getDlvId(), e.what());
     }
-    smsc_log_debug(log_,"transfer task R=%u/D=%u finished%s",
+    smsc_log_debug(log_,"R=%u/D=%u transfer task finished, %s",
                    regId, getDlvId(), ok ?
-                   ", notifying core" : ", no msgs passed" );
+                   "notifying core" : "no msgs passed" );
     if ( ok ) {
         std::vector< regionid_type > regs;
         regs.push_back(regId);
