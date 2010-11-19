@@ -121,7 +121,7 @@ bool RegionalStorage::isFinished()
 }
 
 
-bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
+bool RegionalStorage::getNextMessage( msgtime_type currentTime, int weekTime, Message& msg )
 {
     MsgIter iter;
     RelockMutexGuard mg(cacheMon_);
@@ -129,7 +129,8 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
     const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
 
-    if ( dlv_->getState() != DLVSTATE_ACTIVE ) return false;
+    if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return false; }
+    if ( !info.checkActiveTime(weekTime) ) { return false; }
 
     bool uploadNextResend = false;
     do { // fake loop

@@ -2,6 +2,7 @@
 #include "SmscSender.h"
 #include "system/status.h"
 #include "informer/data/DeliveryInfo.h"
+#include "informer/io/InfosmeException.h"
 
 namespace {
 using namespace eyeline::informer;
@@ -53,7 +54,20 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
 {
     smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
     static const unsigned sleepTime = unsigned(1*tuPerSec);
-    currentTime_ = currentTime;
+    currentTime_ = msgtime_type(currentTime/tuPerSec);
+    // FIXME: calculation of local time and week day
+    struct tm tmnow;
+    {
+        const time_t tmp = time_t(currentTime_);
+        if ( !gmtime_r(&tmp,&tmnow) ) {
+            throw InfosmeException(EXC_SYSTEM,"R=%u gmtime_r()",getRegionId());
+        }
+    }
+    static const int daynight = 24*3600;
+    static const int aweek = 7*daynight;
+    // monday is 0..daynight-1, tue is daynight..daynight*2-1, etc.
+    weekTime_ = ((tmnow.tm_wday+6)*daynight +
+                 (currentTime_ % 86400) + region_->getTimezone()) % aweek;
     MutexGuard mg(lock_);
     return taskList_.processOnce(0/*not used*/,sleepTime);
 }
@@ -95,7 +109,7 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
     try {
         if ( ptr->getState() == DLVSTATE_ACTIVE ) {
             // delivery is active
-            if ( ptr->getNextMessage(msgtime_type(currentTime_/tuPerSec),msg_) ) {
+            if ( ptr->getNextMessage(currentTime_,weekTime_,msg_) ) {
                 smsc_log_debug(log_,"R=%u/D=%u/M=%llu is ready to be sent",
                                unsigned(getRegionId()),
                                unsigned(ptr->getDlvId()),
@@ -150,8 +164,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
                       ulonglong(msg_.msgId), e.what());
         res = smsc::system::Status::UNKNOWNERR;
     }
-    ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(), 
-                       msgtime_type(currentTime_/tuPerSec), res, nchunks);
+    ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(), currentTime_, res, nchunks);
     return -maxScoreIncrement;
 }
 

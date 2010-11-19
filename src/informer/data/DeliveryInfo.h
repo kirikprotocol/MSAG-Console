@@ -26,9 +26,9 @@ struct DeliveryInfoData
   // DD.MM.YY hh:mm:ss (gmt)
   std::string startDate;
   std::string endDate;
-  std::string activePeriodStart;
-  std::string activePeriodEnd;
-  std::vector<std::string> activeWeekDays;
+  std::string activePeriodStart; // local time! HH:MM:SS or empty
+  std::string activePeriodEnd;   // local time! HH:MM:SS or empty
+  std::vector<std::string> activeWeekDays; // local time!
   std::string validityPeriod;
   bool flash;
   bool useDataSm;
@@ -78,15 +78,19 @@ public:
     /// return end date or 0
     msgtime_type getEndDate() const { return endDate_; }
 
-    /// return active period start or -1
+    /// return active period start in seconds since midnight (localtime) or -1
     timediff_type getActivePeriodStart() const { return activePeriodStart_; }
 
-    /// return active period end or -1
+    /// return active period end in seconds since midnight (localtime) or -1
     timediff_type getActivePeriodEnd() const { return activePeriodEnd_; }
 
-    /// return active week days or -1
-    int getActiveWeekDays() const { return activeWeekDays_; }
+    // return active week days or -1
+    // int getActiveWeekDays() const { return activeWeekDays_; }
 
+    /// check activity time
+    bool checkActiveTime( int weekTime ) const;
+
+    /*
     /// the method calculates the next activation time for the delivery.
     /// @param tm_wday - the value of the field of the struct tm.
     /// @param now - current gm time.
@@ -103,6 +107,7 @@ public:
     ///   =0 if already in the stop period;
     ///   <0 if there is no active period/active weekdays limits.
     timediff_type nextStopTime( int tm_wday, msgtime_type now ) const;
+     */
 
     /// get validity period or -1
     timediff_type getValidityPeriod() const { return validityPeriod_; }

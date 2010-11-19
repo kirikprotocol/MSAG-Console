@@ -635,7 +635,7 @@ int DeliveryMgr::Execute()
     typedef int64_t msectime_type;
 
     DeliveryWakeQueue wakeList;
-    DeliveryWakeQueue stopList;
+    // DeliveryWakeQueue stopList;
     while ( !stopping_ ) {
 
         const msectime_type curTime = msectime_type(currentTimeMicro() / 1000);
@@ -655,6 +655,7 @@ int DeliveryMgr::Execute()
             }
             wakeList.clear();
         }
+        /*
         if ( !stopList.empty() ) {
             struct ::tm tmnow;
             const time_t tmp(now);
@@ -678,7 +679,7 @@ int DeliveryMgr::Execute()
             }
             stopList.clear();
         }
-
+         */
 
         MutexGuard mg(mon_);
         DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
@@ -686,12 +687,14 @@ int DeliveryMgr::Execute()
             wakeList.insert(deliveryWakeQueue_.begin(),uptoNow);
             deliveryWakeQueue_.erase(deliveryWakeQueue_.begin(), uptoNow);
         }
+        /*
         uptoNow = deliveryStopQueue_.upper_bound(now);
         if ( uptoNow != deliveryStopQueue_.begin() ) {
             stopList.insert(deliveryStopQueue_.begin(),uptoNow);
             deliveryStopQueue_.erase(deliveryStopQueue_.begin(), uptoNow);
         }
-        if (!wakeList.empty() || !stopList.empty()) continue;
+         */
+        if (!wakeList.empty() /*|| !stopList.empty()*/) continue;
 
         msectime_type wakeTime = 10000;
         if (!deliveryWakeQueue_.empty()) {
@@ -699,11 +702,13 @@ int DeliveryMgr::Execute()
                 msectime_type(deliveryWakeQueue_.begin()->first)*1000 - curTime;
             if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
         }
+        /*
         if (!deliveryStopQueue_.empty()) {
             msectime_type thisWakeTime =
                 msectime_type(deliveryStopQueue_.begin()->first)*1000 - curTime;
             if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
         }
+         */
         if (wakeTime>0) { mon_.wait(int(wakeTime)); }
     }
     return 0;
@@ -763,11 +768,13 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
         mon_.notify();
     }
+    /*
     if (newState == DLVSTATE_ACTIVE && planTime != 0) {
         MutexGuard mg(mon_);
         deliveryStopQueue_.insert(std::make_pair(planTime,dlvId));
         mon_.notify();
     }
+     */
     // return true if we need to activate delivery regions
     return newState == DLVSTATE_ACTIVE;
 }
@@ -806,9 +813,11 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
     if (state == DLVSTATE_PLANNED && planTime) {
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
     }
+    /*
     if (state == DLVSTATE_ACTIVE && planTime) {
         deliveryStopQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
     }
+     */
     mon_.notify();
 }
 

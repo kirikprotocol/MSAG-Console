@@ -230,6 +230,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                                        dlvId,msgTimeToYmd(planTime));
             }
             planTime -= now;
+            /*
         } else if (newState == DLVSTATE_ACTIVE) {
             timediff_type diff = dlvInfo_->nextStopTime(tmnow.tm_mday,now);
             if (diff>0) {
@@ -242,6 +243,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                 if (oldState == newState) return;
                 planTime = 0;
             }
+             */
         } else {
             planTime = 0;
         }

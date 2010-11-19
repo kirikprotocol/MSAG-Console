@@ -98,7 +98,8 @@ private:
 
     SpeedControl<tuPerSec,uint64_t>    speedControl_;
     Message                            msg_;    // a cache
-    usectime_type                      currentTime_;
+    msgtime_type                       currentTime_;
+    int                                weekTime_;  // local weektime (seconds since monday midnight)
 };
 
 typedef EmbedRefPtr< RegionSender > RegionSenderPtr;

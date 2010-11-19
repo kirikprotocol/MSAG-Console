@@ -76,6 +76,28 @@ void DeliveryInfo::update( const DeliveryInfoData& data )
 }
 
 
+bool DeliveryInfo::checkActiveTime( int weekTime ) const
+{
+    if (activeWeekDays_ != -1) {
+        const unsigned weekDay = unsigned(weekTime / daynight);
+        if ( weekDay>= 7 ) {
+            throw InfosmeException(EXC_LOGICERROR,"D=%u wrong weekTime=%d -> day=%u",dlvId_,weekTime,weekDay);
+        }
+        if ( (activeWeekDays_ & weekBits[weekDay]) == 0 ) return false;
+    }
+    if ( activePeriodStart_ >= 0 ) {
+        const timediff_type dayTime = weekTime % daynight;
+        if ( activePeriodStart_ < activePeriodEnd_ ) {
+            if (dayTime < activePeriodStart_ || dayTime >= activePeriodEnd_ ) return false;
+        } else {
+            if (dayTime < activePeriodStart_ && dayTime >= activePeriodEnd_ ) return false;
+        }
+    }
+    return true;
+}
+
+
+/*
 timediff_type DeliveryInfo::nextActiveTime( int tm_wday, msgtime_type now ) const
 {
     if ((activeWeekDays_ & 0x6f) == 0) {
@@ -173,6 +195,7 @@ timediff_type DeliveryInfo::nextStopTime( int tm_wday, msgtime_type now ) const
     smsc_log_debug(log_,"D=%u stoptime final (%s) res=%u",dlvId_,what,res);
     return res;
 }
+ */
 
 
 void DeliveryInfo::updateData( const DeliveryInfoData& data,
