@@ -108,7 +108,7 @@ private:
     smsc::core::synchronization::Mutex            logStateLock_;
     ulonglong                                     logStateTime_;
     FileGuard                                     logStateFile_;
-    dlvid_type                                    nextDlvId_;
+    dlvid_type                                    lastDlvId_;
 };
 
 } // informer

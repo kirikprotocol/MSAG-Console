@@ -11,6 +11,7 @@
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/sender/RegionSender.h"
 #include "informer/sender/SmscSender.h"
+#include "informer/io/ConfigWrapper.h"
 #include "util/config/Config.h"
 
 using namespace smsc::util::config;
@@ -29,59 +30,25 @@ struct SortUserById
 
 void readSmscConfig( const char*   name,
                      SmscConfig&   cfg,
-                     const Config& config )
+                     const Config& conf )
 {
+    std::string logname = std::string("s.") + name;
+    const ConfigWrapper config(conf,smsc::logger::Logger::getInstance(logname.c_str()));
     try {
         smsc::sme::SmeConfig& rv = cfg.smeConfig;
-        rv.host = config.getString("host");
+        rv.host = config.getString("host","localhost");
         rv.sid = config.getString("sid");
-        rv.port = config.getInt("port");
-        rv.timeOut = config.getInt("timeout");
-        if ( rv.timeOut < 1 || rv.timeOut > 10 ) {
-            throw InfosmeException(EXC_CONFIG, "smsc '%s' has invalid value of timeout, should be [1..10]",name);
-        }
-        cfg.interConnectPeriod = config.getInt("interConnectPeriod");
-        if (cfg.interConnectPeriod<20) {
-            throw InfosmeException(EXC_CONFIG,"smsc '%s' has invalid value of interConnectPeriod, should be greater than 20",name);
-        }
-        try {
-            rv.password = config.getString("password");
-        } catch (HashInvalidKeyException&) {}
-        try {
-            const std::string systemType = config.getString("systemType");
-            rv.setSystemType(systemType);
-        } catch (HashInvalidKeyException&) {}
-        try {
-            rv.interfaceVersion = config.getInt("interfaceVersion");
-        } catch (HashInvalidKeyException&) {}
-        try {
-            const std::string ar = config.getString("rangeOfAddress");
-            rv.setAddressRange(ar);
-        } catch (HashInvalidKeyException&) {}
-        try {
-            cfg.ussdPushOp = config.getInt("ussdPushTag");
-        } catch (HashInvalidKeyException&) {
-            cfg.ussdPushOp = -1;
-        }
-        try {
-            cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
-        } catch (HashInvalidKeyException&) {
-            cfg.ussdPushVlrOp = -1;
-        }
-        try {
-            cfg.minValidityTime = config.getInt("minValidityTime");
-        } catch (HashInvalidKeyException&) {
-            cfg.minValidityTime = 10*60;
-        }
-        try {
-            cfg.maxValidityTime = config.getInt("maxValidityTime");
-        } catch (HashInvalidKeyException&) {
-            cfg.maxValidityTime = 120*60;
-        }
-    } catch ( InfosmeException& e ) {
-        throw;
-    } catch ( HashInvalidKeyException& e ) {
-        throw InfosmeException(EXC_CONFIG,"exc in smsc '%s': param '%s' not found", name, e.getKey());
+        rv.port = config.getInt("port",0,1,0,false);
+        rv.timeOut = config.getInt("timeout",3,1,10);
+        cfg.interConnectPeriod = config.getInt("interConnectPeriod",30,10,120);
+        rv.password = config.getString("password");
+        rv.setSystemType(config.getString("systemType",""));
+        rv.interfaceVersion = config.getInt("interfaceVersion",rv.interfaceVersion,1,0);
+        rv.setAddressRange(config.getString("rangeOfAddress",""));
+        cfg.ussdPushOp = config.getInt("ussdPushTag",-1,1,0);
+        cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag",-1,1,0);
+        cfg.minValidityTime = config.getInt("minValidityTime",10*60,60,2*3600);
+        cfg.maxValidityTime = config.getInt("maxValidityTime",2*3600,cfg.minValidityTime,3*3600);
     } catch ( std::exception& e ) {
         throw InfosmeException(EXC_CONFIG,"exc in smsc '%s': %s", name, e.what());
     }
@@ -353,77 +320,94 @@ void InfosmeCoreV1::updateUserInfo( const char* login )
 void InfosmeCoreV1::selfTest()
 {
     smsc_log_debug(log_,"--- selfTest started ---");
+    try {
 
-    const char* userId = "bukind";
-    smsc_log_debug(log_,"--- getting user '%s' ---",userId);
-    UserInfoPtr user = getUserInfo(userId);
-    if (!user.get()) {
-        throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
-    }
-    smsc_log_debug(log_,"--- user '%s' got ---",userId);
+        const char* userId = "selftestuser";
+        smsc_log_debug(log_,"--- getting user '%s' ---",userId);
+        UserInfoPtr user = getUserInfo(userId);
+        if (!user.get()) {
+            throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
+        }
 
-    DeliveryInfoData data;
-    {
-        data.name = "testdlv";
-        data.priority = 1;
-        data.transactionMode = false;
-        data.startDate = "";
-        data.endDate = "";
-        data.activePeriodStart = "";
-        data.activePeriodEnd = "";
-        //data.validityDate = "";
-        data.validityPeriod = "01:00:00";
-        data.flash = false;
-        data.useDataSm = false;
-        data.deliveryMode = DLVMODE_SMS;
-        data.owner = userId;
-        data.retryOnFail = true;
-        data.retryPolicy = "";
-        data.replaceMessage = false;
-        data.svcType = "info";
-        data.userData = "0xdeadbeef";
-        data.sourceAddress = "10000";
-        data.finalDlvRecords = true;
-        data.finalMsgRecords = true;
-    }
-    smsc_log_debug(log_,"--- adding new delivery ---");
-    const dlvid_type dlvId = addDelivery(*user, data);
-    smsc_log_debug(log_,"--- delivery D=%u added ---", dlvId);
+        DeliveryInfoData data;
+        {
+            data.name = "testdlv";
+            data.priority = 1;
+            data.transactionMode = false;
+            data.startDate = "";
+            data.endDate = "";
+            data.activePeriodStart = "";
+            data.activePeriodEnd = "";
+            //data.validityDate = "";
+            data.validityPeriod = "01:00:00";
+            data.flash = false;
+            data.useDataSm = false;
+            data.deliveryMode = DLVMODE_SMS;
+            data.owner = userId;
+            data.retryOnFail = true;
+            data.retryPolicy = "";
+            data.replaceMessage = false;
+            data.svcType = "info";
+            data.userData = "0xdeadbeef";
+            data.sourceAddress = "10000";
+            data.finalDlvRecords = true;
+            data.finalMsgRecords = true;
+        }
+        smsc_log_debug(log_,"--- adding new delivery for U='%s' ---",userId);
 
-    DeliveryPtr dlv = getDelivery(*user,dlvId);
-    if (!dlv.get()) {
-        throw InfosmeException(EXC_NOTFOUND,"D=%u is not found",dlvId);
-    }
-    smsc_log_debug(log_,"--- delivery D=%u got, setting delivery texts ---", dlvId);
+        const dlvid_type dlvId = addDelivery(*user, data);
+        smsc_log_debug(log_,"--- delivery added, D=%u ---", dlvId);
 
-    // adding glossary messages
-    {
-        std::vector< std::string > glotexts;
-        glotexts.push_back("the first message");
-        glotexts.push_back("the second message");
-        dlv->setGlossary( glotexts );
-    }
-    smsc_log_debug(log_,"--- glossary updated, adding messages ---");
-    {
-        MessageList msgList;
-        MessageLocker mlk;
-        mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
-        MessageText(0,1).swap(mlk.msg.text);
-        mlk.msg.userData = "myfirstmsg";
-        msgList.push_back(mlk);
-        mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
-        MessageText("the unbound message",0).swap(mlk.msg.text);
-        mlk.msg.userData = "thesecondone";
-        msgList.push_back(mlk);
-        dlv->addNewMessages(msgList.begin(), msgList.end());
-        smsc_log_debug(log_,"--- messages added, setting active state ---");
-        dlv->setState(DLVSTATE_ACTIVE);
-        // smsc_log_debug(log_,"--- messages added, dropping them ---");
-        // std::vector<msgid_type> msgIds;
-        // msgIds.push_back(1);
-        // msgIds.push_back(2);
-        // dlv->dropMessages(msgIds);
-        smsc_log_debug(log_,"--- delivery activated ---");
+        smsc_log_debug(log_,"--- getting delivery D=%u ---", dlvId);
+        DeliveryPtr dlv = getDelivery(*user,dlvId);
+        if (!dlv.get()) {
+            throw InfosmeException(EXC_NOTFOUND,"D=%u is not found",dlvId);
+        }
+
+        // adding glossary messages
+        {
+            smsc_log_debug(log_,"--- setting text glossary for D=%u ---", dlvId);
+            std::vector< std::string > glotexts;
+            glotexts.push_back("the first message");
+            glotexts.push_back("the second message");
+            dlv->setGlossary( glotexts );
+        }
+
+        {
+            smsc_log_debug(log_,"--- adding messages to D=%u ---",dlvId);
+            MessageList msgList;
+            MessageLocker mlk;
+            mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
+            MessageText(0,1).swap(mlk.msg.text);
+            mlk.msg.userData = "myfirstmsg";
+            msgList.push_back(mlk);
+            mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
+            MessageText("the unbound message",0).swap(mlk.msg.text);
+            mlk.msg.userData = "thesecondone";
+            msgList.push_back(mlk);
+            dlv->addNewMessages(msgList.begin(), msgList.end());
+        }
+
+        {
+            smsc_log_debug(log_,"--- changing delivery D=%u state ---", dlvId);
+            dlv->setState(DLVSTATE_ACTIVE);
+            // smsc_log_debug(log_,"--- messages added, dropping them ---");
+            // std::vector<msgid_type> msgIds;
+            // msgIds.push_back(1);
+            // msgIds.push_back(2);
+            // dlv->dropMessages(msgIds);
+            smsc_log_debug(log_,"--- delivery activated ---");
+            // destroying smsc
+        }
+
+        {
+            const char* smscId = "selftestsmsc";
+            smsc_log_debug(log_,"--- destroying smsc '%s' ---", smscId);
+            this->deleteSmsc(smscId);
+        }
+
+    } catch ( std::exception& e ) {
+        smsc_log_debug(log_,"--- selftest failed: %s",e.what());
     }
     smsc_log_debug(log_,"--- selfTest finished ---");
 }
@@ -551,7 +535,6 @@ void InfosmeCoreV1::updateSmsc(const char* smscId)
 void InfosmeCoreV1::deleteSmsc( const char* smscId )
 {
     smsc_log_debug(log_,"== deleteSmsc(%s)",smscId ? smscId : "");
-    MutexGuard mg(startMon_);
     updateSmsc(smscId,0);
 }
 

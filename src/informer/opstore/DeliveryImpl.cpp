@@ -5,6 +5,7 @@
 #include "informer/data/UserInfo.h"
 #include "informer/data/BindSignal.h"
 #include "util/config/Config.h"
+#include "informer/io/ConfigWrapper.h"
 
 using smsc::util::config::Config;
 
@@ -34,38 +35,20 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         sprintf(makeDeliveryPath(buf,dlvId),"/config.xml");
 
         std::auto_ptr<Config> cfg(Config::createFromFile((getCS()->getStorePath()+buf).c_str()));
-        const Config& config = *cfg.get();
+        char logname[20];
+        sprintf(logname,"dlcf.%05u",dlvId % 10000);
+        const ConfigWrapper config(*cfg.get(),smsc::logger::Logger::getInstance(logname));
 
         data.name = config.getString("name");
-        data.priority = config.getInt("priority");
-        try {
-            data.transactionMode = config.getBool("transactionMode");
-        } catch (std::exception& ) {
-            data.transactionMode = false;
-        }
-        try {
-            data.startDate = config.getString("startDate");
-        } catch (std::exception&) {
-            data.startDate = "";
-        }
-        try {
-            data.endDate = config.getString("endDate");
-        } catch (std::exception&) {
-            data.endDate = "";
-        }
-        try {
-            data.activePeriodStart = config.getString("activePeriodStart");
-        } catch (std::exception& ) {
-            data.activePeriodStart = "";
-        }
-        try {
-            data.activePeriodEnd = config.getString("activePeriodEnd");
-        } catch (std::exception&) {
-            data.activePeriodEnd = "";
-        }
+        data.priority = config.getInt("priority",1,1,100,false);
+        data.transactionMode = config.getBool("transactionMode",false);
+        data.startDate = config.getString("startDate","");
+        data.endDate = config.getString("endDate","");
+        data.activePeriodStart = config.getString("activePeriodStart","");
+        data.activePeriodEnd = config.getString("activePeriodEnd","");
         data.activeWeekDays.clear();
-        try {
-            std::string awd = config.getString("activeWeekDays");
+        {
+            std::string awd = config.getString("activeWeekDays","mon,tue,wed,thu,fri");
             std::vector< std::string > res;
             for ( size_t start = 0; start < awd.size(); ++start ) {
                 while ( start < awd.size() && awd[start] == ' ' ) {
@@ -86,17 +69,12 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
                 start = comma + 1;
             }
             data.activeWeekDays = res;
-        } catch (std::exception&) {
         }
 
-        try {
-            data.validityPeriod = config.getString("validityPeriod");
-        } catch (std::exception&) {
-            data.validityPeriod = "";
-        }
-        data.flash = config.getBool("flash");
-        data.useDataSm = config.getBool("useDataSm");
-        const std::string dlvMode = config.getString("deliveryMode");
+        data.validityPeriod = config.getString("validityPeriod","");
+        data.flash = config.getBool("flash",false);
+        data.useDataSm = config.getBool("useDataSm",false);
+        const std::string dlvMode = config.getString("deliveryMode","sms");
         if ( dlvMode == "sms" ) {
             data.deliveryMode = DLVMODE_SMS;
         } else if ( dlvMode == "ussdpush" ) {
@@ -107,18 +85,14 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
             throw InfosmeException(EXC_CONFIG,"unknown delivery mode: '%s'",dlvMode.c_str());
         }
         data.owner = config.getString("owner");
-        data.retryOnFail = config.getBool("retryOnFail");
-        try {
-            data.retryPolicy = config.getString("retryPolicy");
-        } catch (std::exception&) {
-            data.retryPolicy = "";
-        }
-        data.replaceMessage = config.getBool("replaceMessage");
+        data.retryOnFail = config.getBool("retryOnFail",true);
+        data.retryPolicy = config.getString("retryPolicy","");
+        data.replaceMessage = config.getBool("replaceMessage",false,false);
         data.svcType = config.getString("svcType");
         data.userData = config.getString("userData");
         data.sourceAddress = config.getString("sourceAddress");
-        data.finalDlvRecords = config.getBool("finalDlvRecords");
-        data.finalMsgRecords = config.getBool("finalMsgRecords");
+        data.finalDlvRecords = config.getBool("finalDlvRecords",false);
+        data.finalMsgRecords = config.getBool("finalMsgRecords",false);
 
     } catch (std::exception& e) {
         throw InfosmeException(EXC_CONFIG,"D=%u config: %s",dlvId,e.what());

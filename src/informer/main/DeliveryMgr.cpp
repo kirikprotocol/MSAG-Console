@@ -352,7 +352,7 @@ inputRoller_(0),
 storeRoller_(0),
 statsDumper_(0),
 logStateTime_(0),
-nextDlvId_(1)
+lastDlvId_(0)
 {
     smsc_log_debug(log_,"ctor");
 }
@@ -817,9 +817,9 @@ dlvid_type DeliveryMgr::getNextDlvId()
 {
     MutexGuard mg(mon_);
     for ( int i = 0; i < 1000; ++i ) {
-        while ( !++nextDlvId_ ) {}
-        DeliveryList::iterator* iter = deliveryHash_.GetPtr(nextDlvId_);
-        if (!iter) return nextDlvId_;
+        while ( !++lastDlvId_ ) {}
+        DeliveryList::iterator* iter = deliveryHash_.GetPtr(lastDlvId_);
+        if (!iter) return lastDlvId_;
     }
     throw InfosmeException(EXC_SYSTEM,"no more free delivery ids, try again");
 }

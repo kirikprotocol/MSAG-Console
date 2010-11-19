@@ -2,79 +2,8 @@
 #include "CommonSettings.h"
 #include "informer/io/UTF8.h"
 #include "informer/io/InfosmeException.h"
-#include "util/config/Config.h"
-
-namespace {
-using namespace eyeline::informer;
-using namespace smsc::util::config;
-
-struct ConfigWrap
-{
-    ConfigWrap( Config& cfg, smsc::logger::Logger* thelog ) : cfg_(cfg), log_(thelog) {}
-    unsigned getInt(const char* name, unsigned def, unsigned min, unsigned max) const {
-        unsigned val;
-        try {
-            val = cfg_.getInt(name);
-        } catch ( HashInvalidKeyException& e ) {
-            smsc_log_warn(log_,"the parameter '%s' is not found, using %u", name, def);
-            val = def;
-        }
-        if (max>=min) {
-            if (val<min) {
-                smsc_log_warn(log_,"the parameter '%s' (%u) is less than %u, using %u",
-                              name, val, min, min);
-                val = min;
-            } else if (val>max) {
-                smsc_log_warn(log_,"the parameter '%s' (%u) is greater than %u, using %u",
-                              name, val, max, max);
-                val = max;
-            }
-        }
-        return val;
-    }
-
-    std::string getString( const char* name,
-                           const char* def = 0,
-                           bool strip = true )
-    {
-        if (!name) {
-            throw InfosmeException(EXC_LOGICERROR,"NULL passed in getString()");
-        }
-        const char* val;
-        try {
-            val = cfg_.getString(name);
-        } catch (HashInvalidKeyException&) {
-            if (!def) {
-                throw InfosmeException(EXC_CONFIG,"mandatory parameter '%s' is not found",name);
-            }
-            smsc_log_warn(log_,"the parameter '%s' is not found, using '%s'",
-                          name, def);
-            val = def;
-        }
-        if (strip) {
-            while (*val == ' ' || *val == '\t' || *val == '\n') ++val;
-        }
-        size_t len = strlen(val);
-        if (strip) {
-            for ( const char* p = val+len; len>0; ) {
-                const char* v = p-1;
-                if ( *v == ' ' || *v == '\t' || *v == '\n' ) {
-                    --len;
-                    continue;
-                }
-                break;
-            }
-        }
-        return std::string(val,len);
-    }
-    
-private:
-    Config&               cfg_;
-    smsc::logger::Logger* log_;
-};
-
-}
-
+#include "informer/io/ConfigWrapper.h"
+#include "logger/Logger.h"
 
 namespace eyeline {
 namespace informer {
@@ -102,7 +31,7 @@ void CommonSettings::init( smsc::util::config::Config& cfg )
 {
     utf8_ = new UTF8();
 
-    ::ConfigWrap conf(cfg, smsc::logger::Logger::getInstance("config"));
+    const ConfigWrapper conf(cfg, smsc::logger::Logger::getInstance("config"));
     path_ = conf.getString("storePath");
     if (path_.empty()) path_ = "./";
     else if (path_[path_.size()-1] != '/') path_ += '/';
