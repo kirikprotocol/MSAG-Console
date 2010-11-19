@@ -60,8 +60,8 @@ protected:
   { }
 
 public:
+  IAPType_e           getType(void) const { return _iapProp._iapKind; }
   const IAPProperty & getProperty(void) const { return _iapProp; }
-  const IAPType_e &   getType(void) const { return _iapProp._iapKind; }
   const char *        getIdent(void) const { return _iapProp._iapIdent.c_str(); }
   const IAPAbility &  getAbility(void) const { return _iapProp._iapAbility; }
 
