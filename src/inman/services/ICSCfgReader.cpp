@@ -40,6 +40,73 @@ ICSUId processICSLoadUp(const char * nm_sec, const char * value, Logger * use_lo
 }
 
 /* ************************************************************************** *
+ * class ICSrvCfgReaderAC implementation:
+ * ************************************************************************** */
+//Adds arguments which customize config parsing
+//NOTE: argument '*' is a reserved one.
+void ICSrvCfgReaderAC::addArgument(const std::string & use_arg)
+{
+  if (icsArg.empty() || icsArg.begin()->compare("*")) {
+    if (!use_arg.compare("*"))
+      icsArg.clear();
+    icsArg.insert(use_arg);
+  }
+}
+//Adds arguments which customize config parsing
+void ICSrvCfgReaderAC::addArguments(const CStrList & use_args)
+{
+  if (use_args.empty())
+    return;
+  if (!icsArg.empty() && !icsArg.begin()->compare("*"))
+    return;
+  //first search for "*"
+  for (CStrList::const_iterator
+       it = use_args.begin(); it != use_args.end(); ++it) {
+    if (!it->compare("*")) {
+      addArgument(*it);
+      return;
+    }
+  }
+  for (CStrList::const_iterator
+       it = use_args.begin(); it != use_args.end(); ++it ) {
+    icsArg.insert(*it);
+  }
+}
+
+//Adds arguments which customize config parsing
+void ICSrvCfgReaderAC::addArguments(const CStrSet & use_args)
+{
+  if (use_args.empty())
+    return;
+  if (!icsArg.empty() && !icsArg.begin()->compare("*"))
+    return;
+  if (use_args.find("*") == use_args.end())
+    icsArg.insert(use_args.begin(), use_args.end());
+  else
+    addArgument(std::string("*"));
+}
+
+
+//Returns true if service depends on other ones
+//Clears arguments upon return
+bool ICSrvCfgReaderAC::readConfig(void * opaque_arg/* = NULL*/)
+  throw(ConfigException)
+{
+  if (cfgState != ICSrvCfgReaderAC::cfgComplete) {
+    if (!cfgState) {
+      if (!icsSec.empty() && !rootSec.findSection(nmCfgSection()))
+        throw ConfigException("section is missed: %s", nmCfgSection());
+    }
+    smsc_log_info(logger, "Reading settings from '%s' ..", nmCfgSection());
+    cfgState = parseConfig(opaque_arg);
+  } else
+    smsc_log_info(logger, "Processed settings of '%s'", nmCfgSection());
+  icsArg.clear();
+  return !icsDeps.empty();
+}
+
+
+/* ************************************************************************** *
  * class ICSMultiSectionCfgReaderAC implementation:
  * ************************************************************************** */
 //Returns true if service depends on other ones
