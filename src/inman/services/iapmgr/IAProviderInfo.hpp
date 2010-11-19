@@ -16,6 +16,8 @@ namespace iapmgr {
 
 using smsc::inman::ICSUId;
 using smsc::inman::iaprvd::IAProviderAC;
+using smsc::inman::iaprvd::IAPType_e;
+using smsc::inman::iaprvd::IAPProperty;
 
 struct IAProviderInfo {
   static const size_t _maxProviderNameSZ = 64;
@@ -29,6 +31,14 @@ struct IAProviderInfo {
                           ICSUId ics_uid = ICSIdent::icsIdUnknown)
     : _ident(use_name), _icsUId(ics_uid), _iface(NULL)
   { }
+
+  bool empty(void) const { return _ident.empty(); }
+
+  IAPType_e getIAPType(void) const
+  {
+    return _iface ? _iface->getType() : IAPProperty::iapUnknown;
+  }
+
 };
 typedef IAProviderInfo::NameString_t IAProviderName_t;
 
