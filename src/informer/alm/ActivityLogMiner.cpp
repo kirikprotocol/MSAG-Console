@@ -157,9 +157,14 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
     {
       pos=skipField(line,pos);
     }
+    char st=line[pos];
+    if(st=='B')
+    {
+      continue;
+    }
     if((req->filter.resultFields&rfState) || !req->filter.stateFilter.empty())
     {
-      switch(line[pos])
+      switch(st)
       {
         case 'N': rec.state=MSGSTATE_INPUT;break;
         case 'P': rec.state=MSGSTATE_PROCESS;break;
@@ -167,6 +172,7 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
         case 'D': rec.state=MSGSTATE_DELIVERED;break;
         case 'F': rec.state=MSGSTATE_FAILED;break;
         case 'E': rec.state=MSGSTATE_EXPIRED;break;
+        case 'K': rec.state=MSGSTATE_KILLED;break;
       }
       if(!req->filter.stateFilter.empty() && req->filter.stateFilter.find(rec.state)==req->filter.stateFilter.end())
       {
