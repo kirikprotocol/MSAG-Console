@@ -47,9 +47,12 @@ void AdminServer::handle(const messages::ConfigOp& cmd)
       }break;
       case messages::ConfigId::ciUser:
       {
-        //case messages::ConfigOpId::coAdd:core->addUser(cmd.getObjName().c_str());break;
-        //case messages::ConfigOpId::coRemove:core->deleteUser(cmd.getObjName().c_str());break;
-        //case messages::ConfigOpId::coUpdate:core->updateUser(cmd.getObjName().c_str());break;
+        switch(cmd.getOp().getValue())
+        {
+          case messages::ConfigOpId::coAdd:core->addUser(cmd.getObjName().c_str());break;
+          case messages::ConfigOpId::coRemove:core->deleteUser(cmd.getObjName().c_str());break;
+          case messages::ConfigOpId::coUpdate:core->updateUserInfo(cmd.getObjName().c_str());break;
+        }
       }break;
     }
     resp.setStatus(0);
