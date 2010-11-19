@@ -104,7 +104,7 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
  * class AbonentDetector implementation:
  * ************************************************************************** */
 AbonentDetector::AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Logger * uselog/* = NULL*/)
-  : WorkerAC(w_id, owner, uselog), _state(adIdle), _lastIAPrvd(IAPProperty::iapUnknown)
+  : WorkerAC(w_id, owner, uselog), _state(adIdle), _curIAPrvd(AbonentPolicy::iapNone)
   , providerQueried(false), _cfgScf(NULL), _wErr(0)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman");
@@ -198,8 +198,8 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
                   req->subscrAddr().c_str(), req->cacheMode() ? "true" : "false");
 
     if (req->cacheMode() && _cfg.abCache) {
-      _cfg.abCache->getAbonentInfo(abNumber, &abRec, _cfg.cacheTmo);
-      if (!abRec.isUnknown()) {
+      _cfg.abCache->getAbonentInfo(abNumber, &abCsi, _cfg.cacheTmo);
+      if (!abCsi.isUnknown()) {
         _state = adDetermined;
         return true;
       }
@@ -216,30 +216,55 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
       _iapRule._nmPool = "<default>";
       _iapRule._iaPolicy = _cfg.iapMgr->getPolicy(_cfg.policyNm);
     }
-            
-    if (_iapRule._iaPolicy) {
-        smsc_log_debug(logger, "%s: using policy: %s", _logId, _iapRule.toString().c_str());
 
-        const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_lastIAPrvd);
-        if (pPrvd) {
-          _lastIAPrvd = pPrvd->_iface->getType();
-          if (StartTimer() && (providerQueried = pPrvd->_iface->startQuery(abNumber, this))) {
-              _state = adIAPQuering;
-              //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
-              return false;
-          }
-          _wErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
-          smsc_log_error(logger, "%s: startQuery(%s) failed!", _logId,
-                         abNumber.getSignals());
-
-        }
+    if (!_iapRule._iaPolicy) {
+      smsc_log_error(logger, "%s: no IAPolicy configured for %s", _logId, abNumber.getSignals());
+    } else {
+      smsc_log_debug(logger, "%s: using policy: %s", _logId, _iapRule.toString().c_str());
+      if (_iapRule._iaPolicy->_prvdPrio.first.empty()) {
+        _wErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
+        smsc_log_error(logger, "%s: no IAProvider configured for %s", _logId, abNumber.getSignals());
+      } else if (startIAPQuery()) {
+        _state = adIAPQuering;
+        //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
+        return false;
+      }
     }
-    //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
-    if (abRec.isPrepaid())
+    //lookup config.xml for extra SCF parms (serviceKey, ...)
+    if (abCsi.isPrepaid())
       ConfigureSCF();
     _state = adDetermined;
     return true;
 }
+
+//Returns true if qyery is started, so execution will continue in another thread.
+bool AbonentDetector::startIAPQuery(void)
+{
+  unsigned i = _curIAPrvd;
+
+  while (i < AbonentPolicy::iapSecondary) {
+    const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(static_cast<IAPPrio_e>(++i));
+    if (pPrvd) {
+      _curIAPrvd = static_cast<IAPPrio_e>(i);
+
+      if ((providerQueried = pPrvd->_iface->startQuery(abNumber, this))) {
+        if ((providerQueried = StartTimer()))
+          return true;
+        //problems with timer facility
+        pPrvd->_iface->cancelQuery(abNumber, this);
+        _wErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
+        break;
+        /* */
+      } else {
+        _wErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
+        smsc_log_error(logger, "%s: %s.startQuery(%s) failed!", _logId, pPrvd->_ident.c_str(),
+                       abNumber.getSignals());
+      }
+    }
+  }
+  return false;
+}
+
 
 /* -------------------------------------------------------------------------- *
  * IAPQueryListenerITF interface implementation:
@@ -248,25 +273,28 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
 void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                                     RCHash qry_status)
 {
-    MutexGuard grd(_mutex);
-    if (_state != adIAPQuering) {
-        smsc_log_warn(logger, "%s: IAPQueried() at state: %s", State2Str());
-        return;
-    }
-    providerQueried = false;
-    StopTimer();
+  MutexGuard grd(_mutex);
 
-    abRec.Merge(ab_info); //merge known abonent info
-    if (qry_status)
-      _wErr = qry_status;
-    else if (_cfg.abCache)
-      _cfg.abCache->setAbonentInfo(abNumber, abRec);
+  providerQueried = false;
+  if (_state != adIAPQuering) {
+    smsc_log_warn(logger, "%s: IAPQueried() at state: %s", State2Str());
+    return;
+  }
+  StopTimer();
 
-    if (abRec.isPrepaid())
-      //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
-      ConfigureSCF();
-    _state = adDetermined;
-    reportAndExit();
+  if (qry_status) {
+    _wErr = qry_status;
+    if (startIAPQuery()) //check if next IAProvider may ne requested
+      return;            //keep adIAPQuering state
+  } else {
+    abCsi.Merge(ab_info); //merge known abonent info
+    if (_cfg.abCache)
+      _cfg.abCache->setAbonentInfo(abNumber, abCsi);
+  }
+  _state = adDetermined;
+  if (abCsi.isPrepaid())
+    ConfigureSCF(); //lookup config.xml for extra SCF parms (serviceKey, ...)
+  reportAndExit();
 }
 
 /* -------------------------------------------------------------------------- *
@@ -276,21 +304,24 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
 TimeWatcherITF::SignalResult
     AbonentDetector::onTimerEvent(const TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
 {
-    MutexTryGuard grd(_mutex);
-    if (!grd.tgtLocked()) //detector is busy, request resignalling
-        return TimeWatcherITF::evtResignal;
+  MutexTryGuard grd(_mutex);
+  if (!grd.tgtLocked()) //detector is busy, request resignalling
+    return TimeWatcherITF::evtResignal;
 
-    smsc_log_debug(logger, "%s: timer[%s] signaled at state %s", _logId,
-                   tm_hdl.IdStr(), State2Str());
-    if (_state > adIAPQuering)
-        return TimeWatcherITF::evtOk;
-
-    iapTimer.reset();
-    _state = adTimedOut;
-    abRec.clear(); //abtUnknown
-    _wErr = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
-    reportAndExit();
+  smsc_log_debug(logger, "%s: timer[%s] signaled at state %s", _logId,
+                 tm_hdl.IdStr(), State2Str());
+  if (_state > adIAPQuering)
     return TimeWatcherITF::evtOk;
+
+  if (startIAPQuery())              //check if next IAProvider may ne requested
+    return TimeWatcherITF::evtOk;   //keep adIAPQuering state
+
+  _iapTimer.clear();
+  _state = adTimedOut;
+  abCsi.clear(); //abtUnknown
+  _wErr = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
+  reportAndExit();
+  return TimeWatcherITF::evtOk;
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -302,58 +333,67 @@ TimeWatcherITF::SignalResult
 //attempts to determine it from IAPManager configuration
 void AbonentDetector::ConfigureSCF(void)
 {
-    const GsmSCFinfo * p_scf = abRec.getSCFinfo(UnifiedCSI::csi_MO_SM);
-    uint32_t           recMOSM = 0;
-
-    if (p_scf)
-      recMOSM = p_scf->serviceKey;
-    else //check if SCF for MO-BC may be used
-      p_scf = abRec.getSCFinfo(UnifiedCSI::csi_O_BC);
-
-    //check if extra parameters are configuured for serving gsmSCF
-    if (p_scf && _iapRule._iaPolicy)
-      _cfgScf = _iapRule._iaPolicy->getSCFparms(p_scf->scfAddress);
-
-    //verify serviceKey
-    if (!recMOSM && _cfgScf) {
-      CSIRecord csiRec(IAPProperty::iapUnknown, UnifiedCSI::csi_MO_SM, *p_scf);
-      csiRec.scfInfo.serviceKey = _cfgScf->getSKey(UnifiedCSI::csi_MO_SM,
-                                      abRec.csiSCF.empty() ? NULL : &abRec.csiSCF);
-      //serviceKey from config.xml has a higher priority
-      if (csiRec.scfInfo.serviceKey && (csiRec.scfInfo.serviceKey != recMOSM)) {
-        abRec.csiSCF.insertRecord(csiRec);
-        recMOSM = csiRec.scfInfo.serviceKey;
-      }
-    }
-
+    configureMOSM();
     //verify IMSI
-    if (!abRec.getImsi() && _cfgScf && !_cfgScf->_dfltImsi.empty())
-      abRec.setImsi(_cfgScf->_dfltImsi.c_str());
-    if (!abRec.getImsi()) {
+    if (!abCsi.getImsi() && _cfgScf && !_cfgScf->_dfltImsi.empty())
+      abCsi.setImsi(_cfgScf->_dfltImsi.c_str());
+    if (!abCsi.getImsi()) {
       smsc_log_warn(logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
                      abNumber.toString().c_str());
     }
 }
 
+//Adjusts the MO-SM gsmSCF parameters combining cache/IAProvider CSIs
+//and gsmSCF parameters from config.xml
+void AbonentDetector::configureMOSM(void)
+{
+  uint32_t          keyMOSM = 0;
+  const CSIRecord * pCsi = abCsi.csiSCF.getCSIRecord(UnifiedCSI::csi_MO_SM);
+
+  if (pCsi)
+    keyMOSM = pCsi->scfInfo.serviceKey;
+  else //check if SCF for MO-BC may be used
+    pCsi = abCsi.csiSCF.getCSIRecord(UnifiedCSI::csi_O_BC);
+
+  //check if MO_SM parameters are configured for serving gsmSCF
+  //serviceKey from config.xml has a higher priority
+  if (!_cfgScf && pCsi && _iapRule._iaPolicy)
+    _cfgScf = _iapRule._iaPolicy->getSCFparms(pCsi->scfInfo.scfAddress);
+
+  if (_cfgScf) {
+    uint32_t  keyCfg = _cfgScf->getSKey(UnifiedCSI::csi_MO_SM, &abCsi.csiSCF);
+
+    if (keyCfg && (keyCfg != keyMOSM)) { //update/create MO_SM record
+      CSIRecord & csiRec = abCsi.csiSCF[UnifiedCSI::csi_MO_SM];
+      csiRec.iapId = IAPProperty::iapUnknown;
+      csiRec.scfInfo.serviceKey = keyCfg;
+      if (pCsi->csiId != UnifiedCSI::csi_MO_SM)
+        csiRec.scfInfo.scfAddress = pCsi->scfInfo.scfAddress;
+    }
+  }
+}
+
+
 bool AbonentDetector::StartTimer(void)
 {
-    iapTimer.reset(new TimerHdl(_cfg.abtTimeout.CreateTimer(this)));
-    TimeWatcherITF::Error tErr = TimeWatcherITF::errBadTimer;
-    if (iapTimer->Id() && ((tErr = iapTimer->Start()) == TimeWatcherITF::errOk)) {
-        smsc_log_debug(logger, "%s: started timer[%s]", _logId, iapTimer->IdStr());
-        return true;
-    }
-    smsc_log_error(logger, "%s: failed to start timer[%s], code: %u",
-                   _logId, iapTimer->IdStr(), tErr);
-    return false;
+  TimeWatcherITF::Error tErr = TimeWatcherITF::errBadTimer;
+
+  _iapTimer.init(_cfg.abtTimeout.CreateTimer(this));
+  if (_iapTimer->Id() && ((tErr = _iapTimer->Start()) == TimeWatcherITF::errOk)) {
+    smsc_log_debug(logger, "%s: started timer[%s]", _logId, _iapTimer->IdStr());
+    return true;
+  }
+  smsc_log_error(logger, "%s: failed to start timer[%s], code: %u",
+                 _logId, _iapTimer->IdStr(), tErr);
+  return false;
 }
 void AbonentDetector::StopTimer(void)
 {
-    if (iapTimer.get()) {
-        smsc_log_debug(logger, "%s: releasing timer[%s]", _logId, iapTimer->IdStr());
-        iapTimer->Stop();
-        iapTimer.reset();
-    }
+  if (_iapTimer.get()) {
+    smsc_log_debug(logger, "%s: releasing timer[%s]", _logId, _iapTimer->IdStr());
+    _iapTimer->Stop();
+    _iapTimer.clear();
+  }
 }
 
 bool AbonentDetector::sendResult(void)
@@ -361,39 +401,39 @@ bool AbonentDetector::sendResult(void)
   GsmSCFinfo  smScf;
   std::string dstr;
   format(dstr, "%s: <-- RESULT, abonent(%s) type %s", _logId,
-         abNumber.getSignals(), abRec.type2Str());
+         abNumber.getSignals(), abCsi.type2Str());
 
-  if (abRec.isUnknown()) {
-      format(dstr, ", errCode %u", _wErr);
-      if (_wErr) {
-          dstr += ": "; dstr += URCRegistry::explainHash(_wErr);
-      }
+  if (abCsi.isUnknown()) {
+    format(dstr, ", errCode %u", _wErr);
+    if (_wErr) {
+      dstr += ": "; dstr += URCRegistry::explainHash(_wErr);
+    }
   } else {
-      if (abRec.isPrepaid()) {
-          const GsmSCFinfo * pScf = abRec.getSCFinfo(UnifiedCSI::csi_MO_SM);
+    if (abCsi.isPrepaid()) {
+      const GsmSCFinfo * pScf = abCsi.getSCFinfo(UnifiedCSI::csi_MO_SM);
 
-          if (!pScf) { //check if SCF for MO-BC may be used
-              pScf = abRec.getSCFinfo(UnifiedCSI::csi_O_BC);
-              smScf.scfAddress = pScf->scfAddress;
-          } else 
-              smScf = *pScf;
-          format(dstr, ", SCF %s", smScf.toString().c_str());
-      }
-      if (abRec.getImsi()) {
-          dstr += ", IMSI: "; dstr += abRec.getImsi();
-      }
+      if (!pScf) { //check if SCF for MO-BC may be used
+        pScf = abCsi.getSCFinfo(UnifiedCSI::csi_O_BC);
+        smScf.scfAddress = pScf->scfAddress;
+      } else 
+        smScf = *pScf;
+      format(dstr, ", SCF %s", smScf.toString().c_str());
+    }
+    if (abCsi.getImsi()) {
+      dstr += ", IMSI: "; dstr += abCsi.getImsi();
+    }
   }
   smsc_log_info(logger, dstr.c_str());
   SPckContractResult spck;
   spck.Hdr().dlgId = _wId;
   if (_wErr)
-      spck.Cmd().setError(_wErr, URCRegistry::explainHash(_wErr).c_str());
+    spck.Cmd().setError(_wErr, URCRegistry::explainHash(_wErr).c_str());
   else {
-      spck.Cmd().setContractInfo(abRec.abType, abRec.getImsi());
-      if (!smScf.empty())
-        spck.Cmd().setGsmSCF(smScf);
-      if (_iapRule._iaPolicy)
-          spck.Cmd().setPolicy(_iapRule._iaPolicy->getIdent());
+    spck.Cmd().setContractInfo(abCsi.abType, abCsi.getImsi());
+    if (!smScf.empty())
+      spck.Cmd().setGsmSCF(smScf);
+    if (_iapRule._iaPolicy)
+      spck.Cmd().setPolicy(_iapRule._iaPolicy->getIdent());
   }
   return _mgr->sendCmd(&spck);
 }
@@ -401,7 +441,7 @@ bool AbonentDetector::sendResult(void)
 void AbonentDetector::doCleanUp(void)
 {
     if (providerQueried) {  //check for pending query to AbonentProvider
-      const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_lastIAPrvd);
+      const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_curIAPrvd);
       if (pPrvd)
         pPrvd->_iface->cancelQuery(abNumber, this);
       providerQueried = false;

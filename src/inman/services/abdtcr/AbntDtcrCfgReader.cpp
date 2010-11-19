@@ -23,10 +23,10 @@ ICSrvCfgReaderAC::CfgState
   try { cstr = cfgSec.getString("abonentPolicy");
   } catch (const ConfigException & exc) { }
   if (!cstr || !cstr[0])
-    throw ConfigException("abonent contract determination policy is not set!");
+    throw ConfigException("default abonent policy is not set!");
   smsc_log_info(logger, "  abonent policy %s", cstr);
   icsCfg->policyNm = cstr;
-  icsDeps.insert(ICSIdent::icsIdIAPManager, icsCfg->policyNm);
+  icsDeps.insert(ICSIdent::icsIdIAPManager, "*"); //icsCfg->policyNm
 
   tmo = 0;    //abtTimeout
   try { tmo = (uint32_t)cfgSec.getInt("abonentTypeTimeout");

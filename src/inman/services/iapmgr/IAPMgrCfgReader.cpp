@@ -14,8 +14,8 @@ namespace smsc {
 namespace inman {
 namespace iapmgr {
 
-//PolicyValue ::= "[ProvidersList] : INs_List"
-//  ProvidersList ::= "Prvd_1, ... , Prvd_n"
+//PolicyValue ::= "[ProvidersPair] : INs_List"
+//  ProvidersPair ::= "Prvd_1 [,Prvd_2]"
 //  INs_List ::= "*" | "IN_1, ..., IN_n"
 struct IAPolicyParser {
   const char *  nmPol;
@@ -30,10 +30,14 @@ struct IAPolicyParser {
   {
     CSVArrayOfStr vPart((CSVArrayOfStr::size_type)2, ':');
     if (!vPart.fromStr(str) || vPart.size() != 2)
-      throw ConfigException("%s: valie is invalid", nmPol);
+      throw ConfigException("%s: value is invalid", nmPol);
 
-    //Parse ProvidersList, NOTE it may be empty!
-    prvdNms.fromStr(vPart[0].c_str());
+    //Parse ProvidersPair, NOTE secondary provider is optional
+    if (!prvdNms.fromStr(vPart[0].c_str()))
+      throw ConfigException("%s: IAProvidersPair value is invalid", nmPol);
+    if (prvdNms.size() > 2)
+      throw ConfigException("^s: too much IAProviders in IAProvidersPair element", nmPol);
+    
     //verify lengths
     for (CSVListOfStr::const_iterator
          cit = prvdNms.begin(); cit != prvdNms.end(); ++cit) {
@@ -152,9 +156,8 @@ ICSrvCfgReaderAC::CfgState
         polDat->_poolsSet.insert(itPool);
       }
     }
-    if (!poolsSet.get()) {
-      smsc_log_warn(logger, "  'AddressPools' subsection is missed/empty");
-    }
+    if (polDat->_poolsSet.empty())
+      throw ConfigException("\'%s.AddressPools\' subsection is missed/empty", nm_cfg);
   }
     
   if (!polXCFG.scfNms.empty()) {  //lookup IN platforms configs

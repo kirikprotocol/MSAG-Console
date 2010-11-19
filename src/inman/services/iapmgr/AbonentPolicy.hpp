@@ -51,33 +51,30 @@ struct AddressPool {
 };
 typedef AddressPool::PoolName_t AddressPoolName_t;
 
-typedef std::set<AddressPool>  AddressPoolsSet;
-
 typedef std::list<std::string>  CStrList;
-typedef std::list<IAProviderInfo>  IAPrvdsLIST;
+typedef std::set<AddressPool>   AddressPoolsSet;
+typedef std::pair<IAProviderInfo, IAProviderInfo> IAPrvdsPrio;
 
-using smsc::inman::iaprvd::IAPProperty;
-using smsc::inman::iaprvd::IAPType_e;
-using smsc::inman::iaprvd::IAPAbility;
 
 struct AbonentPolicy {
   static const size_t _maxPolicyNameSZ = 64;
   typedef smsc::core::buffers::FixedLengthString<_maxPolicyNameSZ+1> NameString_t;
 
+  enum IAPrvdPrio_e  {
+    iapNone = 0, iapPrimary, iapSecondary
+  };
+
   NameString_t      _ident;
-  IAPrvdsLIST       _prvdList; //prioritized list of allowed IAProviders
+  IAPrvdsPrio       _prvdPrio; //prioritized pair of allowed IAProviders
   INScfsMAP         _scfMap;
   AddressPoolsSet   _poolsSet;
 
   explicit AbonentPolicy(const char * use_id = NULL) : _ident(use_id)
   { }
-  AbonentPolicy(const char * use_id, const CStrList & nm_prvds) : _ident(use_id)
-  {
-    for (CStrList::const_iterator
-         cit = nm_prvds.begin(); cit != nm_prvds.end(); ++cit) {
-      _prvdList.push_back(IAProviderInfo(cit->c_str()));
-    }
-  }
+  AbonentPolicy(const char * use_id, const CStrList & nm_prvds);
+  //
+  ~AbonentPolicy()
+  { }
 
   //Returns true if at least one AbonentProvider is initialized
   bool bindProviders(const IAPrvdsRegistry & prvd_reg);
@@ -91,12 +88,11 @@ struct AbonentPolicy {
     return (it != _scfMap.end()) ? it->second : NULL;
   }
 
-  //Returns frist initialized IAProvider in prioritized list that supports requested option.
-  const IAProviderInfo * hasAbility(IAPAbility::Option_e op_val) const;
-  //Returns next initialized IAProvider following the given one in prioritized list.
-  const IAProviderInfo * getIAProvider(IAPType_e prev_prvd = IAPProperty::iapUnknown) const;
+  //Returns initialized IAProvider with given priority
+  const IAProviderInfo * getIAProvider(IAPrvdPrio_e prvd_prio) const;
 };
 typedef AbonentPolicy::NameString_t  AbonentPolicyName_t;
+typedef AbonentPolicy::IAPrvdPrio_e  IAPPrio_e;
 
 
 typedef smsc::core::buffers::FixedLengthString <

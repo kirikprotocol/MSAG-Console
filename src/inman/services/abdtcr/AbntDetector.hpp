@@ -10,6 +10,7 @@
 #endif
 #define __INMAN_ABNT_DETECTOR_HPP
 
+#include "inman/common/OptionalObjT.hpp"
 #include "inman/abprov/IAProvider.hpp"
 #include "inman/interaction/msgdtcr/MsgContract.hpp"
 #include "inman/services/abdtcr/AbntDtcrManager.hpp"
@@ -18,6 +19,8 @@ namespace smsc {
 namespace inman {
 namespace abdtcr {
 
+using smsc::util::OptionalObj_T;
+
 using smsc::inman::tcpsrv::WorkerAC;
 
 using smsc::core::timers::TimerListenerITF;
@@ -25,7 +28,6 @@ using smsc::core::timers::TimeWatcherITF;
 using smsc::core::timers::TimerHdl;
 using smsc::core::timers::OPAQUE_OBJ;
 
-using smsc::inman::iaprvd::IAPType_e;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentId;
 using smsc::inman::iaprvd::AbonentSubscription;
@@ -35,6 +37,7 @@ using smsc::inman::interaction::AbntContractReqHandlerITF;
 using smsc::inman::interaction::AbntContractRequest;
 
 using smsc::inman::iapmgr::IAPRule;
+using smsc::inman::iapmgr::IAPPrio_e;
 using smsc::inman::iapmgr::INScfCFG;
 
 class AbonentDetector : public WorkerAC, IAPQueryListenerITF,
@@ -75,21 +78,26 @@ private:
                     //prefix for logging info
     char            _logId[sizeof("AbntDet[%u:%u]") + sizeof(unsigned int)*3 + 1];
 
-    AbonentSubscription   abRec;      //
+    AbonentSubscription   abCsi;      //
     TonNpiAddress         abNumber;   //calling abonent ISDN number
     IAPRule               _iapRule;   //abonent policy rule
-    IAPType_e             _lastIAPrvd;  //UId of last IAProvider asked
+    IAPPrio_e             _curIAPrvd;  //UId of last IAProvider asked
     volatile bool         providerQueried;
     const INScfCFG *      _cfgScf;    //serving gsmSCF(IN-point) configuration
     uint32_t              _wErr;
-    std::auto_ptr<TimerHdl> iapTimer;   //timer for InAbonentProvider quering
+    OptionalObj_T<TimerHdl> _iapTimer;   //timer for InAbonentProvider quering
 
     bool verifyReq(AbntContractRequest* req);
     //-- AbntContractReqHandlerITF interface methods:
     bool onContractReq(AbntContractRequest* req, uint32_t req_id);
 
     bool sendResult(void);
+    //Returns true if qyery is started, so execution will continue in another thread.
+    bool startIAPQuery(void);
     void doCleanUp(void);
+    //Adjusts the MO-SM gsmSCF parameters combining cache/IAProvider CSIs
+    //and gsmSCF parameters from config.xml
+    void configureMOSM(void);
     void ConfigureSCF(void);
     void reportAndExit(void);
 

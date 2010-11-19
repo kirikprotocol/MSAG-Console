@@ -43,12 +43,11 @@ using smsc::core::timers::OPAQUE_OBJ;
 using smsc::inman::TaskRefereeITF;
 using smsc::inman::ScheduledTaskAC;
 
-using smsc::inman::iaprvd::IAPProperty;
-using smsc::inman::iaprvd::IAPType_e;
 using smsc::inman::iaprvd::AbonentId;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
 using smsc::inman::iapmgr::IAPRule;
+using smsc::inman::iapmgr::IAPPrio_e;
 using smsc::inman::comp::CSIUid_e;
 
 using smsc::inman::tcpsrv::WorkerAC;
@@ -61,7 +60,7 @@ class Billing : public WorkerAC, TaskRefereeITF,
                 IAPQueryListenerITF, TimerListenerITF {
 public:
     enum BillingState {
-        bilIdle,
+        bilIdle = 0,
         bilStarted,     // SSF <- SMSC : CHARGE_SMS_TAG
                         //   [Timer] SSF -> IAProvider
         bilQueried,     // SSF <- IAProvider: query result
@@ -106,7 +105,7 @@ private:
     AbonentSubscription abCsi;      //CAMEL subscription info of abonent is to charge
     TonNpiAddress       abNumber;   //ISDN number of abonent is to charge
     IAPRule             _iapRule;   //abonent policy rule
-    IAPType_e           _lastIAPrvd;  //UId of last IAProvider asked
+    IAPPrio_e           _curIAPrvd;  //UId of last IAProvider asked
     volatile bool       providerQueried;
     // ...
     const INScfCFG *    _cfgScf;    //serving gsmSCF(IN-point) configuration
@@ -122,6 +121,8 @@ private:
 
     //Returns false if PDU contains invalid data preventing request processing
     bool verifyChargeSms(void);
+    //Returns true if qyery is started, so execution will continue in another thread.
+    bool startIAPQuery(void);
     void cancelIAPQuery(void);
     void doCleanUp(void);
     unsigned writeCDR(void);
@@ -159,7 +160,7 @@ public:
         : WorkerAC(b_id, owner, uselog), _cfg(owner->getConfig())
         , state(bilIdle), chrgFlags(0), billPrio(0)
         , msgType(ChargeParm::msgUnknown), billMode(ChargeParm::billOFF)
-        , _lastIAPrvd(IAPProperty::iapUnknown), providerQueried(false)
+        , _curIAPrvd(AbonentPolicy::iapNone), providerQueried(false)
         , _cfgScf(0), xsmsSrv(0), billErr(0), capTask(0), capSched(0)
     {
         logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");

@@ -22,57 +22,48 @@ bool ISDNAddressMask::fromText(const char * in_text, char * out_str)
 /* ************************************************************************** *
  * class AbonentPolicy implementation:
  * ************************************************************************** */
+AbonentPolicy::AbonentPolicy(const char * use_id, const CStrList & nm_prvds)
+  : _ident(use_id)
+{
+  if (!nm_prvds.empty()) {
+    CStrList::const_iterator  cit = nm_prvds.begin();
+    _prvdPrio.first._ident = cit->c_str();
+    if ((++cit) != nm_prvds.end())
+      _prvdPrio.second._ident = cit->c_str();
+  }
+}
+
 
 //Returns true if at least one AbonentProvider is initialized
 bool AbonentPolicy::bindProviders(const IAPrvdsRegistry & prvd_reg)
 {
-  bool rval = false;
-  for (IAPrvdsLIST::iterator it = _prvdList.begin(); it != _prvdList.end(); ++it) {
-    const IAProviderInfo * pInfo = prvd_reg.find(it->_ident);
-    if (pInfo) {
-      it->_icsUId = pInfo->_icsUId;
-      it->_iface = pInfo->_iface;
+  bool  rval = false;
+  const IAProviderInfo * pInfo = prvd_reg.find(_prvdPrio.first._ident);
+
+  if (pInfo) {
+    _prvdPrio.first._icsUId = pInfo->_icsUId;
+    _prvdPrio.first._iface = pInfo->_iface;
+    rval = true;
+  }
+  if (!_prvdPrio.first.empty()) {
+    if ((pInfo = prvd_reg.find(_prvdPrio.second._ident))) {
+      _prvdPrio.second._icsUId = pInfo->_icsUId;
+      _prvdPrio.second._iface = pInfo->_iface;
       rval = true;
     }
   }
   return rval;
 }
 
-//Returns frist initialized IAProvider in prioritized list that supports requested option.
-const IAProviderInfo * 
-  AbonentPolicy::hasAbility(IAPAbility::Option_e op_val) const
+
+const IAProviderInfo * AbonentPolicy::getIAProvider(IAPPrio_e prvd_prio) const
 {
-  for (IAPrvdsLIST::const_iterator cit = _prvdList.begin(); cit != _prvdList.end(); ++cit) {
-    if (cit->_iface && cit->_iface->getAbility().hasOption(op_val)) {
-      return cit.operator->();
-    }
-  }
+  if (prvd_prio == AbonentPolicy::iapPrimary)
+    return (_prvdPrio.first.empty() ? NULL : &_prvdPrio.first);
+  if (prvd_prio == AbonentPolicy::iapSecondary)
+    return (_prvdPrio.second.empty() ? NULL : &_prvdPrio.second);
   return NULL;
 }
-
-//Returns next initialized IAProvider following the given one in prioritized list.
-const IAProviderInfo *
-  AbonentPolicy::getIAProvider(IAPType_e prev_prvd/* = IAPType::iapUnknown*/) const
-{
-  const IAProviderInfo * iapInfo = NULL;
-  if (prev_prvd != IAPProperty::iapUnknown) {
-    //search specified IAProvider first
-    for (IAPrvdsLIST::const_iterator cit = _prvdList.begin(); cit != _prvdList.end(); ++cit) {
-      if (cit->_iface && cit->_iface->getProperty().isEqual(prev_prvd)) {
-        IAPrvdsLIST::const_iterator tmpIt = cit;
-        return ((++tmpIt) != _prvdList.end()) ? tmpIt.operator->() : NULL;
-      }
-    }
-  }
-  if (!iapInfo) { //search first initialized IAProvider
-    for (IAPrvdsLIST::const_iterator cit = _prvdList.begin(); cit != _prvdList.end(); ++cit) {
-      if (cit->_iface)
-        return cit.operator->();
-    }
-  }
-  return NULL; //all are uninitialized
-}
-
 
 } //iapmgr
 } //inman

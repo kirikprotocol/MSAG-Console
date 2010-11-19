@@ -5,6 +5,8 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/services/smbill/SmBilling.hpp"
 using smsc::inman::iaprvd::IAProviderAC;
 using smsc::inman::iaprvd::CSIRecord;
+using smsc::inman::iaprvd::IAPProperty;
+
 using smsc::inman::iapmgr::IAProviderInfo;
 using smsc::inman::iapmgr::INParmsCapSms;
 
@@ -284,10 +286,37 @@ void Billing::Abort(const char * reason/* = NULL*/)
  * NOTE: these methods are not the processing graph entries, so never lock _sync,
  *       it's a caller responsibility to lock _sync !!!
  * ---------------------------------------------------------------------------------- */
+//Returns true if qyery is started, so execution will continue in another thread.
+bool Billing::startIAPQuery(void)
+{
+  unsigned i = _curIAPrvd;
+
+  while (i < AbonentPolicy::iapSecondary) {
+    const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(static_cast<IAPPrio_e>(++i));
+    if (pPrvd) {
+      _curIAPrvd = static_cast<IAPPrio_e>(i);
+
+      if ((providerQueried = pPrvd->_iface->startQuery(abNumber, this))) {
+        if ((providerQueried = StartTimer(_cfg.abtTimeout)))
+          return true;
+        //problems with timer facility
+        pPrvd->_iface->cancelQuery(abNumber, this);
+        billErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
+        break;
+        /* */
+      } else {
+        billErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
+        smsc_log_error(logger, "%s: %s.startQuery(%s) failed!", _logId, pPrvd->_ident.c_str(),
+                       abNumber.getSignals());
+      }
+    }
+  }
+  return false;
+}
 
 void Billing::cancelIAPQuery(void)
 {
-  const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_lastIAPrvd);
+  const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_curIAPrvd);
   if (pPrvd)
     pPrvd->_iface->cancelQuery(abNumber, this);
   providerQueried = false;
@@ -638,23 +667,14 @@ Billing::PGraphState Billing::onChargeSms(void)
 
     if (askProvider && _cfg.iapMgr) {
       if (determinePolicy()) {
-        const IAProviderInfo * pPrvd = _iapRule._iaPolicy->getIAProvider(_lastIAPrvd);
-        if (pPrvd) {
-          _lastIAPrvd = pPrvd->_iface->getType();
-          if (StartTimer(_cfg.abtTimeout)
-              && (providerQueried = pPrvd->_iface->startQuery(abNumber, this))) {
-              state = bilStarted;
-              //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
-              return Billing::pgCont;
-          }
-          billErr = _RCS_INManErrors->mkhash(INManErrorId::internalError);
-          smsc_log_error(logger, "%s: startIAPQuery(%s) failed!", _logId, abNumber.getSignals());
-        } else {
+        if (_iapRule._iaPolicy->_prvdPrio.first.empty()) {
           billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
-          smsc_log_warn(logger, "%s: no IAProvider configured for %s", _logId, abNumber.getSignals());
+          smsc_log_error(logger, "%s: no IAProvider configured for %s", _logId, abNumber.getSignals());
+        } else  if (startIAPQuery()) {
+          state = bilStarted;
+          //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
+          return Billing::pgCont;
         }
-      } else {
-        billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
       }
     }
     return ConfigureSCFandCharge();
@@ -943,8 +963,11 @@ TimeWatcherITF::SignalResult
         if (state == Billing::bilStarted) {
             //abonent provider query is expired
             cancelIAPQuery();
+            if (startIAPQuery())              //check if next IAProvider may ne requested
+              return TimeWatcherITF::evtOk;   //keep bilStarted state
+
             if (Billing::pgEnd == ConfigureSCFandCharge())
-                doFinalize();
+              doFinalize();
             return TimeWatcherITF::evtOk;
         }
         if (state == Billing::bilInited) { //CapSMTask lasts too long
@@ -995,23 +1018,27 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
       return;
     }
     StopTimer(state);
-    state = bilQueried;
 
-#ifdef SMSEXTRA
-    //TMP_PATCH: Keep MSC address in case of special one reserved for SMSX WEB gateway
-    if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)) {
-      TonNpiAddress orgVLR = abCsi.vlrNum;
-      abCsi.Merge(ab_info); //merge known abonent info
-      abCsi.vlrNum = orgVLR;
-    } else
-#endif /* SMSEXTRA */
-      abCsi.Merge(ab_info); //merge known abonent info
-
-    if (qry_status)
+    if (qry_status) {
       billErr = qry_status;
-    else if (_cfg.abCache)
-      _cfg.abCache->setAbonentInfo(abNumber, abCsi);
+      if (startIAPQuery()) //check if next IAProvider may ne requested
+        return;            //keep bilStarted state
+    } else  {
+#ifdef SMSEXTRA
+      //TMP_PATCH: Keep MSC address in case of special value reserved for SMSX WEB gateway
+      if (!ab_info.vlrNum.empty()
+          && !strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)) {
+        TonNpiAddress orgVLR = abCsi.vlrNum;
+        abCsi.Merge(ab_info); //merge known abonent info
+        abCsi.vlrNum = orgVLR;
+      } else
+#endif /* SMSEXTRA */
+        abCsi.Merge(ab_info); //merge known abonent info
 
+      if (_cfg.abCache)
+        _cfg.abCache->setAbonentInfo(abNumber, abCsi);
+    }
+    state = bilQueried;
     if (ConfigureSCFandCharge() == Billing::pgEnd)
       doFinalize();
     return;
