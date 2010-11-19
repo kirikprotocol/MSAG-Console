@@ -93,7 +93,7 @@ public:
                     uint64_t* item;
                     minMsgId_ = msgid_type(-1);
                     maxMsgId_ = 0;
-                    for ( DropMsgHash::Iterator i(dropMsgHash_); i.Next(idx,item); ) {
+                    for ( DropMsgHash::Iterator it(dropMsgHash_); it.Next(idx,item); ) {
                         if (*item==0) {
                             dropMsgHash_.Delete(idx);
                             continue;
@@ -392,7 +392,7 @@ private:
             return;
         }
         FromBuf fb(buf.get(),wasread);
-        uint64_t prevIdx;
+        uint64_t prevIdx = 0;
         uint64_t* item = 0;
         for ( size_t i = 0; i < wasread; i += itemsize ) {
             msgid_type msgId = fb.get64();

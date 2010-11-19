@@ -151,6 +151,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
             case 'N' : ++ds.totalMessages;   break;
             case 'P' : ++ds.procMessages;    break;
             case 'R' : ++ds.retryMessages;   break;
+            case 'S' : break; // skip record - do nothing
             case 'D' :
             case 'E' :
             case 'F' : {
@@ -281,7 +282,7 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
     }
     char buf[100];
     int shift = 0;
-    sprintf(buf,"%02u,K,,%n",now.tm_sec,&shift);
+    sprintf(buf,"%02u,S,,%n",now.tm_sec,&shift);
     if (!shift) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf delrec");
     }
