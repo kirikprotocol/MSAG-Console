@@ -15,7 +15,9 @@ class RegionsSettings {
 
   private int defaultMaxPerSecond;
 
-  RegionsSettings(Collection<Region> regions, int defaultMaxPerSecond) {
+  private int lastId;
+
+  RegionsSettings(Collection<Region> regions, int defaultMaxPerSecond, int lastId) {
     for (Region r : regions) {
       this.regions.put(r.getRegionId(), r);
       for (Address a : r.getMasks()) {
@@ -23,15 +25,11 @@ class RegionsSettings {
       }
     }
     this.defaultMaxPerSecond = defaultMaxPerSecond;
-
+    this.lastId = lastId;
   }
 
   private synchronized Integer getNextId() {
-    int maxId = -1;
-    for (Region r : regions.values())
-      maxId = Math.max(maxId, r.getRegionId());
-    return maxId + 1;
-
+    return lastId = lastId + 1;
   }
 
   private void checkMask(Region region) throws AdminException {
@@ -99,6 +97,9 @@ class RegionsSettings {
 
   List<Region> getRegions() {
     return new ArrayList<Region>(regions.values());
+  }
+  Map<Integer, Region> getRegionsMap() {
+    return new HashMap<Integer, Region>(regions);
   }
 
 

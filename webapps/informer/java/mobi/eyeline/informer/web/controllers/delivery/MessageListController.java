@@ -246,9 +246,8 @@ public class MessageListController extends InformerController {
       final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
       visit(new Visitor<MessageInfo>() {
         public boolean visit(MessageInfo value) throws AdminException {
-          writer.println(StringEncoderDecoder.toCSVString(
-              new String[]{value.getAbonent(), sdf.format(value.getDate()), value.getText(),
-                  value.getState().toString(), value.getErrorCode() == null ? "" : value.getErrorCode().toString()}
+          writer.println(StringEncoderDecoder.toCSVString(value.getAbonent(), sdf.format(value.getDate()), value.getText(),
+                  value.getState().toString(), value.getErrorCode() == null ? "" : value.getErrorCode().toString()
           ));
           return true;
         }

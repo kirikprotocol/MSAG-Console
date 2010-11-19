@@ -7,17 +7,14 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.TimeZone;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Aleksandr Khalitov
  */
 public class RegionsSettingTest {
 
-  private Region region;
-
-  private RegionsSettings settings = new RegionsSettings(Collections.<Region>emptyList(), 100);
+  private RegionsSettings settings = new RegionsSettings(Collections.<Region>emptyList(), 100, 0);
 
 
   private static Region buildRegion() throws AdminException{
@@ -44,7 +41,7 @@ public class RegionsSettingTest {
   public void addGetRemove() throws AdminException{
     Region r = buildRegion();
     settings.addRegion(r);
-    assertEquals(r.getRegionId(), new Integer(0));
+    assertNotNull(r.getRegionId());
     Region r2 = buildRegion();
     try{
       settings.addRegion(r2);
