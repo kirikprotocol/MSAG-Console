@@ -669,7 +669,7 @@ public class TestDcpConnection extends DcpConnection{
     }
 
     @Override
-    public void setValidityPeriod(String validityPeriod) throws AdminException{
+    public void setValidityPeriod(String validityPeriod) {
       delivery.setValidityPeriod(validityPeriod);
     }
 

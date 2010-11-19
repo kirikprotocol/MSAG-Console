@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.siebel;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.siebel.SiebelManager;
+import mobi.eyeline.informer.admin.siebel.impl.SiebelFinalStateListener;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -36,6 +37,8 @@ public class SiebelController extends InformerController {
 
   private String error;
 
+  private int statsPeriod;
+
   public SiebelController() {
 
     config = getConfig();
@@ -49,6 +52,7 @@ public class SiebelController extends InformerController {
     jdbcDriver = ps.getProperty(SiebelManager.JDBC_DRIVER);
     siebelUser = ps.getProperty(SiebelManager.USER);
     removeOnStop = Boolean.valueOf(ps.getProperty(SiebelManager.REMOVE_ON_STOP_PARAM));
+    statsPeriod = Integer.parseInt(ps.getProperty(SiebelFinalStateListener.PERIOD_PARAM));
 
     if (!config.isSiebelDaemonStarted()) {
       ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
@@ -70,6 +74,14 @@ public class SiebelController extends InformerController {
     return res;
   }
 
+  public int getStatsPeriod() {
+    return statsPeriod;
+  }
+
+  public void setStatsPeriod(int statsPeriod) {
+    this.statsPeriod = statsPeriod;
+  }
+
   public String save() {
 
     try {
@@ -89,6 +101,7 @@ public class SiebelController extends InformerController {
       ps.setProperty(SiebelManager.JDBC_DRIVER, jdbcDriver);
       ps.setProperty(SiebelManager.USER, siebelUser);
       ps.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.toString(removeOnStop));
+      ps.setProperty(SiebelFinalStateListener.PERIOD_PARAM, Integer.toString(statsPeriod));
       if(!config.setSiebelProperties(ps, getUserName())) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.applying.not.started");
         return null;
