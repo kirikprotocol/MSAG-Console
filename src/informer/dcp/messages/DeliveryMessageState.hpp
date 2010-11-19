@@ -59,9 +59,11 @@ public:
  
   static const type New=1;
   static const type Process=2;
+  static const type Retry=6;
   static const type Delivered=3;
   static const type Failed=4;
   static const type Expired=5;
+  static const type Killed=7;
   static bool isValidValue(const type& value)
   {
     return nameByValue.find(value)!=nameByValue.end();
@@ -111,12 +113,16 @@ protected:
       valueByName.insert(std::map<std::string,type>::value_type("New",1));
       nameByValue.insert(std::map<type,std::string>::value_type(2,"Process"));
       valueByName.insert(std::map<std::string,type>::value_type("Process",2));
+      nameByValue.insert(std::map<type,std::string>::value_type(6,"Retry"));
+      valueByName.insert(std::map<std::string,type>::value_type("Retry",6));
       nameByValue.insert(std::map<type,std::string>::value_type(3,"Delivered"));
       valueByName.insert(std::map<std::string,type>::value_type("Delivered",3));
       nameByValue.insert(std::map<type,std::string>::value_type(4,"Failed"));
       valueByName.insert(std::map<std::string,type>::value_type("Failed",4));
       nameByValue.insert(std::map<type,std::string>::value_type(5,"Expired"));
       valueByName.insert(std::map<std::string,type>::value_type("Expired",5));
+      nameByValue.insert(std::map<type,std::string>::value_type(7,"Killed"));
+      valueByName.insert(std::map<std::string,type>::value_type("Killed",7));
     }
   };
   static StaticInitializer staticInitializer;

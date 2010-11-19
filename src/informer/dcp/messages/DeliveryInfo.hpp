@@ -915,14 +915,6 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("transactionMode");
     }
-    if(!startDateFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("startDate");
-    }
-    if(!endDateFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("endDate");
-    }
     if(!activePeriodEndFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("activePeriodEnd");
@@ -980,10 +972,6 @@ public:
     ds.writeInt32LV(priority); 
     ds.writeTag(transactionModeTag);
     ds.writeBoolLV(transactionMode); 
-    ds.writeTag(startDateTag);
-    ds.writeStrLV(startDate); 
-    ds.writeTag(endDateTag);
-    ds.writeStrLV(endDate); 
     ds.writeTag(activePeriodEndTag);
     ds.writeStrLV(activePeriodEnd); 
     ds.writeTag(activePeriodStartTag);
@@ -1017,6 +1005,16 @@ public:
     {
       ds.writeTag(userIdTag);
     ds.writeStrLV(userId); 
+    }
+    if(startDateFlag)
+    {
+      ds.writeTag(startDateTag);
+    ds.writeStrLV(startDate); 
+    }
+    if(endDateFlag)
+    {
+      ds.writeTag(endDateTag);
+    ds.writeStrLV(endDate); 
     }
     if(validityPeriodFlag)
     {
@@ -1284,14 +1282,6 @@ public:
     if(!transactionModeFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("transactionMode");
-    }
-    if(!startDateFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("startDate");
-    }
-    if(!endDateFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("endDate");
     }
     if(!activePeriodEndFlag)
     {

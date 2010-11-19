@@ -31,7 +31,6 @@ public:
     dateFlag=false;
     abonentFlag=false;
     textFlag=false;
-    indexFlag=false;
     errorCodeFlag=false;
     userDataFlag=false;
   }
@@ -92,16 +91,6 @@ public:
       rv+="text=";
       rv+=text;
     }
-    if(indexFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="index=";
-      sprintf(buf,"%d",index);
-      rv+=buf;
-    }
     if(errorCodeFlag)
     {
       if(rv.length()>0)
@@ -158,12 +147,6 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(text);
-    }
-    if(indexFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(index);
     }
     if(errorCodeFlag)
     {
@@ -290,28 +273,6 @@ public:
   {
     return textFlag;
   }
-  int32_t getIndex()const
-  {
-    if(!indexFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("index");
-    }
-    return index;
-  }
-  void setIndex(int32_t argValue)
-  {
-    index=argValue;
-    indexFlag=true;
-  }
-  int32_t& getIndexRef()
-  {
-    indexFlag=true;
-    return index;
-  }
-  bool hasIndex()const
-  {
-    return indexFlag;
-  }
   int32_t getErrorCode()const
   {
     if(!errorCodeFlag)
@@ -389,11 +350,6 @@ public:
       ds.writeTag(textTag);
     ds.writeStrLV(text); 
     }
-    if(indexFlag)
-    {
-      ds.writeTag(indexTag);
-    ds.writeInt32LV(index); 
-    }
     if(errorCodeFlag)
     {
       ds.writeTag(errorCodeTag);
@@ -469,15 +425,6 @@ public:
           text=ds.readStrLV();
           textFlag=true;
         }break;
-        case indexTag:
-        {
-          if(indexFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("index");
-          }
-          index=ds.readInt32LV();
-          indexFlag=true;
-        }break;
         case errorCodeTag:
         {
           if(errorCodeFlag)
@@ -535,7 +482,6 @@ protected:
   static const int32_t dateTag=3;
   static const int32_t abonentTag=4;
   static const int32_t textTag=5;
-  static const int32_t indexTag=8;
   static const int32_t errorCodeTag=6;
   static const int32_t userDataTag=7;
 
@@ -546,7 +492,6 @@ protected:
   std::string date;
   std::string abonent;
   std::string text;
-  int32_t index;
   int32_t errorCode;
   std::string userData;
 
@@ -555,7 +500,6 @@ protected:
   bool dateFlag;
   bool abonentFlag;
   bool textFlag;
-  bool indexFlag;
   bool errorCodeFlag;
   bool userDataFlag;
 };
