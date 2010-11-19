@@ -234,6 +234,7 @@ void DcpServer::onHandleCommand(eyeline::protogen::ProtocolSocketBase::Packet& p
       case EXC_ACCESSDENIED:err=DcpError::AdminRoleRequired;break;
       case EXC_DLVLIMITEXCEED:err=DcpError::TooManyDeliveries;break;
       case EXC_EXPIRED:err=DcpError::Expired;break;
+      default:break;
     }
     mkFailResponse(pkt.connId,sb.readInt32(),err,e.what());
   }
@@ -490,7 +491,7 @@ void DcpServer::handle(const messages::GetDeliveryState& inmsg)
 {
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
-  const DeliveryInfo& di=dlv->getDlvInfo();
+  //const DeliveryInfo& di=dlv->getDlvInfo();
   messages::GetDeliveryStateResp resp;
   messages::DeliveryState& respState=resp.getStateRef();
   messages::DeliveryStatistics& respStats=resp.getStatsRef();
@@ -686,6 +687,16 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
       mkFailResponse(inmsg,DcpError::RequestNotFound,"request for given id do not belong to this connection");
       return;
     }
+    if(req->last==req->dlvLst.end())
+    {
+      resp.setMoreDeliveries(false);
+      resp.getInfoRef();
+      dlvListReqTimeMap.erase(req->timeMapIt);
+      delete req;
+      dlvListReqMap.erase(it);
+      enqueueResp(resp,inmsg);
+      return;
+    }
     dlvListReqTimeMap.erase(req->timeMapIt);
     req->timeMapIt=dlvListReqTimeMap.insert(DlvListReqTimeMap::value_type(time(0)+dlvListReqExpirationTime,inmsg.getReqId()));
     std::vector<messages::DeliveryListInfo>& info=resp.getInfoRef();
@@ -818,6 +829,7 @@ void fillFilter(const MSG& inmsg,alm::ALMRequestFilter& filter)
         case messages::DeliveryMessageState::Delivered:st=MSGSTATE_DELIVERED;break;
         case messages::DeliveryMessageState::Failed:st=MSGSTATE_FAILED;break;
         case messages::DeliveryMessageState::Expired:st=MSGSTATE_EXPIRED;break;
+        case messages::DeliveryMessageState::Killed:st=MSGSTATE_KILLED;break;
       }
       filter.stateFilter.insert(st);
     }
@@ -890,6 +902,9 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
         case MSGSTATE_DELIVERED:mi.setState(messages::DeliveryMessageState::Delivered);break;
         case MSGSTATE_FAILED:mi.setState(messages::DeliveryMessageState::Failed);break;
         case MSGSTATE_EXPIRED:mi.setState(messages::DeliveryMessageState::Expired);break;
+        case MSGSTATE_RETRY:mi.setState(messages::DeliveryMessageState::Retry);break;
+        case MSGSTATE_KILLED:mi.setState(messages::DeliveryMessageState::Killed);break;
+        default:break;
       }
     }
     if(it->resultFields&alm::rfText)
