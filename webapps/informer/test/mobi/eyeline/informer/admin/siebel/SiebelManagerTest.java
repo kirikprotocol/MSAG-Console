@@ -40,6 +40,14 @@ public class SiebelManagerTest {
 
   @BeforeClass
   public static void init() throws Exception {
+    try{
+      ConnectionPool p = ConnectionPool.getPool("default");
+      if(p != null) {
+        p.shutdown();
+      }
+    }catch (Exception e){
+      e.printStackTrace();
+    }
 
     siebelUser = new User();
     siebelUser.setAllRegionsAllowed(true);
@@ -53,7 +61,7 @@ public class SiebelManagerTest {
     siebelUser.setDeliveryStartTime(new Time(8,0,0));
     siebelUser.setDeliveryEndTime(new Time(20,0,0));
     siebelUser.setDeliveryType(User.DeliveryType.SMS);
-    
+
     siebel = new TestSiebelManager(deliveries = new TestSiebelDeliveries(siebelUser), new SiebelRegionManager() {
       public Region getRegion(Address msisdn) throws AdminException {
         return null;

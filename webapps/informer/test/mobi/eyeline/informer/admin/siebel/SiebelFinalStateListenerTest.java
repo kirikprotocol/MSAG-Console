@@ -54,7 +54,7 @@ public class SiebelFinalStateListenerTest {
     final Delivery d = Delivery.newCommonDelivery();
     d.setProperty(UserDataConsts.SIEBEL_DELIVERY_ID, "123");
 
-    TestSiebelManager siebelManager = new TestSiebelManager(deliveries = new SiebelDeliveries() {
+    siebelManager = new TestSiebelManager(deliveries = new SiebelDeliveries() {
       public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {}
       public void dropDelivery(String login, String password, int deliveryId) throws AdminException {}
       public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {}
@@ -108,6 +108,9 @@ public class SiebelFinalStateListenerTest {
   public static void after() throws Exception{
     if(listener != null) {
       listener.shutdown();
+    }
+    if(siebelManager != null) {
+      siebelManager.stop();
     }
   }
 }
