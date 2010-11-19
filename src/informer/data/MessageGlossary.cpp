@@ -142,6 +142,9 @@ void MessageGlossary::fetchText( MessageText& p, bool input, bool returnRealId )
         smsc_log_debug(log_,"D=%u fetch %s text id=%u",
                        dlvId_, input ? "input": "real", id);
         MutexGuard mg(lock_);
+        if (!hash_) {
+            throw InfosmeException(EXC_LOGICERROR,"D=%u glossary is not loaded",dlvId_);
+        }
         TextList::iterator* iter = hash_->GetPtr(input ? -id : id);
         if (!iter) {
             throw InfosmeException(EXC_NOTFOUND,"D=%u %s text with id=%u is not found",
@@ -232,6 +235,7 @@ void MessageGlossary::setTexts( const std::vector< std::string >& texts )
 void MessageGlossary::getTexts( std::vector< std::string >& texts ) const
 {
     ChangeGuard cg(*this);
+    if (!hash_) return;
 
     int id;
     TextList::iterator* node;
