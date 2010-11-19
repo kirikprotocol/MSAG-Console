@@ -20,7 +20,7 @@ public class MessagesByUserStatsController extends DeliveryStatController {
 
 
   public MessagesByUserStatsController() {
-    super();
+    super(new MessagesByUserStatTotals());
   }
 
 
@@ -40,6 +40,7 @@ public class MessagesByUserStatsController extends DeliveryStatController {
         } else {
           oldRecord.add(newRecord);
         }
+        totals.add(newRecord);
         return !isCancelled();
       }
     });

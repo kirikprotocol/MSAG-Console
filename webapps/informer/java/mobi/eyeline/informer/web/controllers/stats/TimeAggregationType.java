@@ -7,5 +7,5 @@ package mobi.eyeline.informer.web.controllers.stats;
  * Time: 14:13:05
  */
 enum TimeAggregationType {
-  HOUR, DAY, WEEK, MONTH
+  HOUR, DAY, WEEK, MONTH, YEAR
 }

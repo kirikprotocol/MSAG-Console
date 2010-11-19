@@ -16,8 +16,8 @@ import java.util.TreeMap;
 public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
 
   private TimeAggregationType type;
-  private Calendar startCalendar;
-  private Calendar endCalendar;
+  protected Calendar startCalendar;
+  protected Calendar endCalendar;
   private TimeAggregationType childAggreagtionType;
 
 
@@ -42,8 +42,15 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
     this.type = type;
     this.isParent = isParent;
     childAggreagtionType = null;
-
-    if (type == TimeAggregationType.MONTH) {
+    if (type == TimeAggregationType.YEAR) {
+      startCalendar.set(Calendar.MONTH, 0);
+      startCalendar.set(Calendar.DAY_OF_MONTH, 1);
+      startCalendar.set(Calendar.HOUR_OF_DAY, 0);
+      startCalendar.set(Calendar.MINUTE, 0);
+      endCalendar = (Calendar) startCalendar.clone();
+      endCalendar.add(Calendar.YEAR, 1);
+      if (isParent) childAggreagtionType = TimeAggregationType.MONTH;
+    } else  if (type == TimeAggregationType.MONTH) {
       startCalendar.set(Calendar.DAY_OF_MONTH, 1);
       startCalendar.set(Calendar.HOUR_OF_DAY, 0);
       startCalendar.set(Calendar.MINUTE, 0);
@@ -130,12 +137,21 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
 
         }
 
-      default: //MONTH
+      case MONTH:
         if (isParent) {
           return new SimpleDateFormat("yyyy.MM").format(startCalendar.getTime());
         } else {
           return new SimpleDateFormat("MM").format(startCalendar.getTime());
         }
+
+      default: // YEAR:
+        if (isParent) {
+          return new SimpleDateFormat("yyyy").format(startCalendar.getTime());
+        } else {
+          return new SimpleDateFormat("yyyy").format(startCalendar.getTime());
+        }
+
+      
 
     }
   }

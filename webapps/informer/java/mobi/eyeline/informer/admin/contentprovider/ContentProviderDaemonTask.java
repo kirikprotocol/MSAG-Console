@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.delivery.DataSource;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
@@ -69,35 +70,46 @@ public class ContentProviderDaemonTask implements Runnable {
 
     try {
       if(ext.startsWith("csv.")) {
-        int deliveryId = Integer.valueOf(ext.substring(5));
+        int deliveryId = Integer.valueOf(ext.substring(4));
         context.dropDelivery(u.getLogin(),u.getPassword(),deliveryId);
         //rename .csv.<id> to .csv
         File newFile = new File(userDir,baseName+".csv");
         fileSys.rename(f,newFile);
+        File reportFile = new File(userDir,baseName+".rep."+deliveryId);
+        fileSys.delete(reportFile);
         f=newFile;
-        ext=".csv";
+        ext="csv";
       }
 
       if(ext.equals("csv")) {
         Delivery delivery = new Delivery(Delivery.Type.Common);
         delivery.setName(baseName);
-        delivery.setStartDate(new Date(System.currentTimeMillis()+1000));
+        delivery.setStartDate(new Date(System.currentTimeMillis()));
         context.getDefaultDelivery(u.getLogin(),delivery);
         context.createDelivery(u.getLogin(),u.getPassword(),delivery,null);
         int deliveryId=delivery.getId();
         //rename to .csv.<id>
         File newFile = new File(userDir,baseName+".csv."+deliveryId);
+        File reportFile = new File(userDir,baseName+".rep."+deliveryId);
         fileSys.rename(f,newFile);
         f=newFile;
         BufferedReader is=null;
+        PrintStream reportWriter = null;
         try {
           String encoding = u.getFileEncoding();
           if(encoding==null) encoding="UTF-8";
           is = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f),encoding));
-          context.addMessages(u.getLogin(),u.getPassword(),new CPMessageSource(is),deliveryId);
+          reportWriter = new PrintStream(fileSys.getOutputStream(reportFile,true),true,encoding);
+          context.addMessages(u.getLogin(),u.getPassword(),new CPMessageSource(
+              u.isAllRegionsAllowed() ? null : u.getRegions(),
+              is,
+              reportWriter
+          ),deliveryId);
+          context.activateDelivery(u.getLogin(),u.getPassword(),deliveryId);
         }
         finally {
           if(is!=null) try {is.close();} catch (Exception e){}
+          if(reportWriter!=null) try {reportWriter.close();} catch (Exception e){}
         }
         //rename to .bak.<id>
         newFile = new File(userDir,baseName+".bak."+deliveryId);
@@ -123,10 +135,10 @@ public class ContentProviderDaemonTask implements Runnable {
       //rename to err
       File newFile = new File(userDir,baseName+".err");
       try {
-          fileSys.rename(f,newFile);
+        fileSys.rename(f,newFile);
       }
       catch (AdminException ex) {
-          log.error("Error renaming file to bak "+f.getAbsolutePath(),ex);
+        log.error("Error renaming file to bak "+f.getAbsolutePath(),ex);
       }
     }
   }
@@ -135,10 +147,16 @@ public class ContentProviderDaemonTask implements Runnable {
 
   private class CPMessageSource implements DataSource<Message> {
     private BufferedReader reader;
+    List<Integer> regions;
+    PrintStream reportWriter;
 
-    public CPMessageSource(BufferedReader reader) {
+    public CPMessageSource(List<Integer> regions, BufferedReader reader, PrintStream reportWriter) {
+      this.regions = regions;
       this.reader=reader;
+      this.reportWriter=reportWriter;
     }
+
+
 
     public Message next() throws AdminException {
       try {
@@ -146,13 +164,28 @@ public class ContentProviderDaemonTask implements Runnable {
         String line;
         while( (line = reader.readLine())!=null ) {
           line = line.trim();
-          if(line.length()>0) {
-            inx = line.indexOf('|');
-            if(inx>0) {
-              Address ab   = new Address(line.substring(0,inx).trim());
+          String abonent="";
+          if(line.length()==0) continue;
+          try {
+              inx = line.indexOf('|');
+              abonent = line.substring(0,inx).trim();
+              Address ab = new Address(abonent);
+              boolean skip = false;
+              if(regions!=null) {
+                Region r = context.getRegion(ab);
+                if(r==null || !regions.contains(r.getRegionId())) {
+                  skip = true;
+                }
+              }
+              if(skip) {
+                ContentProviderDaemon.writeReportLine(reportWriter,ab.getSimpleAddress(),new Date(),"NOT ALLOWED REGION");
+                continue;
+              }
               String  text = line.substring(inx+1).trim();
               return Message.newMessage(ab,text);
-            }
+          }
+          catch(Exception e) {
+            ContentProviderDaemon.writeReportLine(reportWriter,abonent,new Date(),"ERROR PARSING LINE :"+line);
           }
         }
       }
@@ -162,4 +195,6 @@ public class ContentProviderDaemonTask implements Runnable {
       return null;
     }
   }
+
+
 }

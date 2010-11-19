@@ -22,7 +22,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
 
   public MessagesByPeriodController() {
-    super();
+    super(new MessagesByPeriodTotals());
   }
 
   public Integer getDeliveryId() {
@@ -81,6 +81,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     } else {
       oldRecord.add(newRecord);
     }
+    totals.add(newRecord);
     return !isCancelled();
   }
 

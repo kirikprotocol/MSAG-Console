@@ -23,6 +23,7 @@ import java.util.*;
 public class MessagesByDeliveriesController extends LongOperationController {
   private User currentUser;
   private boolean initError = false;
+  private MessagesByDeliveriesTotals totals;
   private List<MessagesByDeliveriesRecord> records;
   private DeliveryStatFilter filter;
   boolean fullMode = false;
@@ -31,9 +32,10 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public MessagesByDeliveriesController() {
     super();
+    totals = new MessagesByDeliveriesTotals();
     records = Collections.synchronizedList(new ArrayList<MessagesByDeliveriesRecord>());
     filter = new DeliveryStatFilter();
-    initUser();
+    initUser();    
   }
 
   private void initUser() {
@@ -52,6 +54,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   public void clearFilter() {
     reset();
+    totals.reset();
     records.clear();
     initUser();
     filter.setFromDate(null);
@@ -98,6 +101,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
   @Override
   public void execute(final Configuration config, final Locale locale) throws InterruptedException, AdminException {
+    totals.reset();
     records.clear();
 
     DeliveryFilter deliveryFilter = new DeliveryFilter();
@@ -133,8 +137,9 @@ public class MessagesByDeliveriesController extends LongOperationController {
             }
 
             User owner = config.getUser(deliveryInfo.getUserId());
-            records.add(new MessagesByDeliveriesRecord(owner, deliveryInfo, stat, startDate, endDate));
-
+            MessagesByDeliveriesRecord r = new MessagesByDeliveriesRecord(owner, deliveryInfo, stat, startDate, endDate);
+            records.add(r);
+            totals.add(r);
             setCurrent(getCurrent() + 1);
             return !isCancelled();
           }
@@ -150,41 +155,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
         // Сортируем записи
         if (sortOrder != null && !records.isEmpty()) {
-          Collections.sort(records, new Comparator<MessagesByDeliveriesRecord>() {
-
-            public int compare(MessagesByDeliveriesRecord o1, MessagesByDeliveriesRecord o2) {
-
-              final int mul = sortOrder.isAsc() ? 1 : -1;
-              if (sortOrder.getColumnId().equals("name")) {
-                return mul * o1.getInfo().getName().compareTo(o2.getInfo().getName());
-              } else if (sortOrder.getColumnId().equals("userId")) {
-                return mul * o1.getInfo().getUserId().compareTo(o2.getInfo().getUserId());
-              } else if (sortOrder.getColumnId().equals("status")) {
-                return mul * o1.getStat().getDeliveryState().getStatus().compareTo(o2.getStat().getDeliveryState().getStatus());
-              } else if (sortOrder.getColumnId().equals("new")) {
-                return o1.getStat().getNewMessages() >= o2.getStat().getNewMessages() ? mul : -mul;
-              } else if (sortOrder.getColumnId().equals("process")) {
-                return o1.getStat().getProcessMessages() >= o2.getStat().getProcessMessages() ? mul : -mul;
-              } else if (sortOrder.getColumnId().equals("delivered")) {
-                return o1.getStat().getDeliveredMessages() >= o2.getStat().getDeliveredMessages() ? mul : -mul;
-              } else if (sortOrder.getColumnId().equals("failed")) {
-                return o1.getStat().getFailedMessages() >= o2.getStat().getFailedMessages() ? mul : -mul;
-              } else if (sortOrder.getColumnId().equals("expired")) {
-                return o1.getStat().getExpiredMessages() >= o2.getStat().getExpiredMessages() ? mul : -mul;
-              } else if (sortOrder.getColumnId().equals("startDate")) {
-                if (o1.getStartDate() == null) return (o2.getStartDate() == null ? 0 : mul);
-                return mul * o1.getStartDate().compareTo(o2.getStartDate());
-              } else if (sortOrder.getColumnId().equals("endDate")) {
-                if (o1.getEndDate() == null) return (o2.getEndDate() == null ? 0 : mul);
-                return mul * o1.getEndDate().compareTo(o2.getEndDate());
-              } else if (sortOrder.getColumnId().equals("wait")) {
-                return o1.getStat().getNewMessages() + o1.getStat().getProcessMessages() >= o2.getStat().getNewMessages() + o2.getStat().getProcessMessages() ? mul : -mul;
-              } else if (sortOrder.getColumnId().equals("notdelivered")) {
-                return o1.getStat().getFailedMessages() + o1.getStat().getExpiredMessages() >= o2.getStat().getFailedMessages() + o2.getStat().getExpiredMessages() ? mul : -mul;
-              }
-              return 0;
-            }
-          });
+          Collections.sort(records, records.get(0).getRecordsComparator(sortOrder));
         }
 
         List<MessagesByDeliveriesRecord> result = new LinkedList<MessagesByDeliveriesRecord>();
@@ -217,10 +188,12 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
     for (int i = 0, recordsSize = records.size(); i < recordsSize; i++) {
       MessagesByDeliveriesRecord r = records.get(i);
-      if (i == 0) r.printCSVHeader(writer, fullMode);
-      r.printCSV(writer, fullMode);
+      if (i == 0) r.printCSVheader(writer, fullMode);
+      r.printWithChildrenToCSV(writer, fullMode);
     }
   }
 
-
+  public MessagesByDeliveriesTotals getTotals() {
+    return totals;
+  }
 }

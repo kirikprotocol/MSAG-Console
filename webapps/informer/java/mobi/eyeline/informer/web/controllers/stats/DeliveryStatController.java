@@ -26,17 +26,19 @@ public abstract class DeliveryStatController extends LongOperationController {
   private DeliveryStatFilter filter;
   private TimeAggregationType aggregation;
 
+  protected final DeliveryStatTotals totals;
   private final Map<Object, AggregatedRecord> recordsMap;
   private final List<AggregatedRecord> records;
 
 
   boolean fullMode = false;
 
-  public DeliveryStatController() {
+  public DeliveryStatController(DeliveryStatTotals totals) {
     super();
     aggregation = TimeAggregationType.DAY;
     filter = new DeliveryStatFilter();
     initUser();
+    this.totals = totals;
     records = Collections.synchronizedList(new ArrayList<AggregatedRecord>());
     recordsMap = Collections.synchronizedMap(new TreeMap<Object, AggregatedRecord>());
   }
@@ -98,7 +100,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   public List<SelectItem> getAggregations() {
     List<SelectItem> ret = new ArrayList<SelectItem>();
     for (TimeAggregationType a : TimeAggregationType.values()) {
-      ret.add(new SelectItem(a));
+        ret.add(new SelectItem(a));    
     }
     return ret;
   }
@@ -110,6 +112,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   protected void clearRecords() {
     recordsMap.clear();
     records.clear();
+    totals.reset();
   }
 
   protected void loadFinished() {
@@ -210,4 +213,7 @@ public abstract class DeliveryStatController extends LongOperationController {
     clearRecords();
   }
 
+  public DeliveryStatTotals getTotals() {
+    return totals;
+  }
 }

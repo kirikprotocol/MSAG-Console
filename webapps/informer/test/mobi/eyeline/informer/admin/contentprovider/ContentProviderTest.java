@@ -3,12 +3,15 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.*;
 
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.TestUtils;
+
 
 import java.io.File;
 import java.io.PrintStream;
@@ -41,15 +44,24 @@ public class ContentProviderTest {
     u.setFileEncoding("cp1251");
     u.setImportDeliveriesFromDir(true);
     u.setDirectory("userDir");
+    u.setAllRegionsAllowed(false);
+    u.setCreateReports(true);
+    List<Integer> regions = new ArrayList<Integer>();
+    regions.add(0);
+    u.setRegions(regions);
+    Region r = context.getRegion(0);
+    r.addMask(new Address("+7913???????"));
+    context.updateRegion(r);
+    
     List<Integer> days= new ArrayList<Integer>();
-    days.add(1);
-    days.add(2);
-    days.add(3);
+    for(int i=0;i<7;i++) {
+      days.add(i);      
+    }
     u.setDeliveryDays(days);
     context.updateUser(u);
 
     u.setDeliveryStartTime(new Time(0,0,0));
-    u.setDeliveryEndTime(new Time(22,0,0));
+    u.setDeliveryEndTime(new Time(23,59,0));
   }
 
   @Test
@@ -77,6 +89,7 @@ public class ContentProviderTest {
       String sn = ""+i;
       while(sn.length()<4) sn='0'+sn;
       ps.println("+7913000"+sn+"| Привет с большого бодуна "+i);
+
     }
     ps.flush();
     ps.close();

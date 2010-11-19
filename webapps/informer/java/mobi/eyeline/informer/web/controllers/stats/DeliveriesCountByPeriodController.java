@@ -21,7 +21,7 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
 
 
   public DeliveriesCountByPeriodController() {
-    super();
+    super(new DeliveriesCountByPeriodTotals());
   }
 
 
@@ -49,6 +49,7 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
     } else {
       oldRecord.add(newRecord);
     }
+    totals.add(newRecord);
     setCurrent(getCurrent() + 1);
     return !isCancelled();
   }

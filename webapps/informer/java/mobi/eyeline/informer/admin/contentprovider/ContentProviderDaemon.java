@@ -3,10 +3,16 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -18,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 17.11.2010
  * Time: 16:21:41
  */
-public class ContentProviderDaemon implements Daemon {
+public class ContentProviderDaemon implements Daemon, DeliveryNotificationsListener {
   Logger log = Logger.getLogger(this.getClass());
   private ScheduledExecutorService scheduler;
   static final String NAME = "ContentProviderDaemon";
@@ -68,4 +74,65 @@ public class ContentProviderDaemon implements Daemon {
     return scheduler!=null;
   }
 
+
+
+
+  public static void writeReportLine(PrintStream reportWriter, String abonent, Date date, String s) {
+    reportWriter.print(abonent);
+    reportWriter.print(" | ");
+    reportWriter.print(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(date));
+    reportWriter.print(" | ");
+    reportWriter.println(s);
+  }
+
+  public void onDeliveryNotification(DeliveryNotification notification) {
+    switch (notification.getType()) {
+      case DELIVERY_FINISHED:
+        try {
+          String userId = notification.getUserId();
+          User user = context.getUser(userId);
+          createReport(notification,user);
+        }
+        catch (Exception e) {
+          log.error("Error processing delivery finished report for delivery "+notification.getDeliveryId(),e);
+        }
+        break;
+      default:
+    }
+  }
+
+  private void createReport(DeliveryNotification notification, User user) throws AdminException, UnsupportedEncodingException {
+    if(user!=null && user.isCreateReports() && user.getDirectory()!=null) {
+
+      File userDir = new File(informerBase,user.getDirectory());
+      if(!fileSys.exists(userDir)) throw new ContentProviderException("userDirNotFound",userDir.toString());
+
+      int deliveryId = notification.getDeliveryId();
+      Delivery d = context.getDelivery(user.getLogin(),user.getPassword(),deliveryId);
+
+      //check was imported
+      File reportFile = new File(userDir,d.getName()+".rep."+deliveryId);
+      if(!fileSys.exists(reportFile)) return;
+
+      PrintStream ps = null;
+      try {
+        ps = new PrintStream(fileSys.getOutputStream(reportFile,true),true,user.getFileEncoding());
+        final PrintStream psFinal = ps;
+        MessageFilter filter = new MessageFilter(deliveryId,d.getStartDate(),new Date());
+        context.getMessagesStates(user.getLogin(),user.getPassword(),filter,1000,new Visitor<MessageInfo>(){
+          public boolean visit(MessageInfo mi) throws AdminException {
+            String result="";
+            result = mi.getState().toString() + (mi.getErrorCode())!=null ? (" errCode="+mi.getErrorCode()) : "";
+            writeReportLine(psFinal,mi.getAbonent(),mi.getDate(),result);
+            return true;
+          }
+        });
+      }
+      finally {
+        if(ps!=null) try {ps.close();} catch (Exception e){}
+        File finReportFile = new File(userDir,d.getName()+".report");
+        fileSys.rename(reportFile,finReportFile);
+      }
+    }
+  }
 }

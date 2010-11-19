@@ -40,7 +40,7 @@ public class DeliveriesCountByPeriodRecord extends TimeAggregatedStatRecord {
 
 
   @Override
-  void printCSVheader(PrintWriter writer, boolean dtalized) {
+  void printCSVheader(PrintWriter writer, boolean detalized) {
     writer.println(StringEncoderDecoder.toCSVString("PERIOD", "", "COUNT"));
   }
 
