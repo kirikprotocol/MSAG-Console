@@ -23,11 +23,11 @@ int main( int argc, char** argv )
     printf("auth ok\n");
     messages::DeliveryInfo di;
     di.setName("test1");
-    di.setPriority(0);
+    di.setPriority(1);
     di.setTransactionMode(false);
     di.setStartDate("15.11.2010 10:00:00");
     di.setEndDate("15.12.2010 10:00:00");
-    di.setActivePeriodStart("10:00:00");
+    di.setActivePeriodStart("02:00:00");
     di.setActivePeriodEnd("20:00:00");
     di.getActiveWeekDaysRef().push_back("Mon");
     di.getActiveWeekDaysRef().push_back("Tue");
@@ -43,8 +43,8 @@ int main( int argc, char** argv )
     di.setSvcType("TEST");
     di.setUserData("test1");
     di.setSourceAddress("123321");
-    di.setFinalDlvRecords(false);
-    di.setFinalMsgRecords(false);
+    di.setFinalDlvRecords(true);
+    di.setFinalMsgRecords(true);
     int did=ic.createDelivery(di);
     printf("delivery created, did=%d\n",did);
     try{
@@ -54,10 +54,10 @@ int main( int argc, char** argv )
       printf("ic.modifyDelivery exception:%s\n",e.what());
     }
 
-    TIMETHIS("getdlvinfo",1000)
-    {
-      messages::DeliveryInfo di3=ic.getDeliveryInfo(did);
-    }
+//    TIMETHIS("getdlvinfo",1000)
+//    {
+//      messages::DeliveryInfo di3=ic.getDeliveryInfo(did);
+//    }
 
     messages::DeliveryInfo di2=ic.getDeliveryInfo(did);
     printf("deliveryInfo=%s\n",di2.toString().c_str());
@@ -131,8 +131,8 @@ int main( int argc, char** argv )
     ic.modifyDeliveryGlossary(did,dg);
 
     messages::RequestMessagesState rmsReq;
-    rmsReq.setStartDate("15.11.2010 10:00:00");
-    rmsReq.setEndDate("17.11.2010 20:00:00");
+    rmsReq.setStartDate("18.11.2010 05:00:00");
+    rmsReq.setEndDate("18.11.2010 20:00:00");
     std::vector<messages::ReqField> flds;
     flds.push_back(messages::ReqField::Abonent);
     flds.push_back(messages::ReqField::Date);
@@ -156,14 +156,25 @@ int main( int argc, char** argv )
       rmsResult.empty();
     }
     messages::CountMessages cm;
-    cm.setStartDate("15.11.2010 05:00:00");
-    cm.setEndDate("17.11.2010 20:00:00");
+    cm.setStartDate("18.11.2010 05:00:00");
+    cm.setEndDate("18.11.2010 20:00:00");
     cm.setDeliveryId(did);
     printf("messages count=%d\n",ic.countMessages(cm));
 
+    allMsgids.erase(allMsgids.begin()+allMsgids.size()/2,allMsgids.end());
     ic.dropDeliveryMessages(did,allMsgids);
 
-    ic.dropDelivery(did);
+    //ic.dropDelivery(did);
+
+    messages::DeliveryState nds;
+    nds.setStatus(messages::DeliveryStatus::Active);
+    printf("changing delivery state to %s\n",nds.toString().c_str());
+    ic.changeDeliveryState(did,nds);
+    printf("waiting\n");
+    sleep(1);
+    messages::GetDeliveryStateResp ds2=ic.getDeliveryState(did);
+    printf("new delivery state:%s\n",ds2.toString().c_str());
+
 
   }catch(std::exception& e)
   {
