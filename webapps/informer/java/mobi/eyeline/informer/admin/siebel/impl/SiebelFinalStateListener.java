@@ -13,10 +13,8 @@ import mobi.eyeline.informer.util.StringEncoderDecoder;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -33,36 +31,39 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener {
 
   private final SiebelUserManager users;
 
-  private final ScheduledExecutorService commiter;
+  private final Thread processor;
 
   private final ResourceBundle smppStatuses;
 
-  private final File cache;
-
-  private final File cacheTmp;
-
-  private final File toProccess;
+  private final File dir;
 
   private PrintWriter writer;
 
+  private static final SimpleDateFormat df = new SimpleDateFormat("ddMMyyyy_HHmmss");
+
+  private int periodSec;
+
+  public static final String PERIOD_PARAM = "statsPeriod";
+
   public SiebelFinalStateListener(SiebelManager siebelManager, SiebelDeliveries deliveries,
                                   SiebelUserManager users, File workDir, int periodSec) throws InitException{
-    this.cache = new File(workDir, "siebelFinalStates.csv");
-    this.cacheTmp = new File(workDir, "siebelFinalStates.tmp.csv");
-    this.toProccess = new File(workDir, "siebelFinalStates.process.csv");
+    this.dir = new File(workDir, "siebel");
+    if(!dir.exists() && !dir.mkdirs()) {
+      throw new InitException("Can't create file: "+dir.getAbsolutePath());
+    }
     this.siebelManager = siebelManager;
     this.deliveries = deliveries;
     this.users = users;
     this.smppStatuses = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", Locale.ENGLISH);
-    repair();
     try {
-      writer = new PrintWriter(new FileWriter(cache));
+      writer = new PrintWriter(new FileWriter(new File(dir, df.format(new Date())+".csv")));
     } catch (IOException e) {
       logger.error(e,e);
       throw new InitException(e);
     }
-    this.commiter = Executors.newSingleThreadScheduledExecutor();
-    this.commiter.scheduleAtFixedRate(new Processor(), periodSec, periodSec, TimeUnit.SECONDS); //todo?
+    this.periodSec = periodSec;
+    processor =  new Thread(new Processor(), "SiebelFinalStateFileProcessor");
+    processor.start();
   }
 
   private final Lock lockSiebelManager = new ReentrantLock();
@@ -83,6 +84,17 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener {
 
   private void writeUnlock() {
     writeLock.unlock();
+  }
+
+  public int getPeriodSec() {
+    return periodSec;
+  }
+
+  public void setPeriodSec(int periodSec) {
+    if(logger.isDebugEnabled()) {
+      logger.debug("Set Siebel Final state listeners period to: "+periodSec);
+    }
+    this.periodSec = periodSec;
   }
 
   private void messageFinished(DeliveryMessageNotification notification) throws AdminException {
@@ -146,9 +158,8 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener {
   }
 
   public void shutdown() {
-    if (commiter != null) {
-      commiter.shutdown();
-    }
+    stop = true;
+    processor.interrupt();
   }
 
 
@@ -179,6 +190,10 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener {
   }
 
   private void processFile(File f) throws Exception {
+
+    byte c = System.getProperty("line.separator").getBytes()[0];
+    FileUtils.truncateFile(f, c, 2);
+
     BufferedReader reader = null;
     Map<String, SiebelMessage.DeliveryState> states = new HashMap<String, SiebelMessage.DeliveryState>(1001);
     Map<String, SiebelDelivery.Status> deliveries = new HashMap<String, SiebelDelivery.Status>(1001);
@@ -242,130 +257,53 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener {
     }
   }
 
-  private void copy(File f, PrintWriter to) throws IOException{
-    BufferedReader r = null;
-    try{
-      r = new BufferedReader(new FileReader(f));
-      String l;
-      while((l = r.readLine()) != null) {
-        to.println(l);
-        to.flush();
-      }
-    }finally {
-      if(r != null) {
-        try{
-          r.close();
-        }catch (IOException ignored){}
-      }
-    }
-  }
-
-
-
-  private void repair() throws InitException{
-    try{
-
-      byte c = System.getProperty("line.separator").getBytes()[0];
-
-      if(toProccess.exists()) {
-        FileUtils.truncateFile(toProccess, c, 2);
-      }
-
-      if(cache.exists()) {
-        FileUtils.truncateFile(cache, c, 2);
-        PrintWriter w = null;
-        try{
-          w = new PrintWriter(new BufferedWriter(new FileWriter(toProccess, true)));
-          copy(cache, w);
-        }finally {
-          if(w != null) {
-            w.close();
-          }
-        }
-        if(!cache.delete()) {
-          logger.error("Can't delete a file: "+cache.getAbsolutePath());
-        }
-      }
-
-      if(cacheTmp.exists()) {
-        FileUtils.truncateFile(cacheTmp, c, 2);
-        PrintWriter w = null;
-        try{
-          w = new PrintWriter(new BufferedWriter(new FileWriter(toProccess, true)));
-          copy(cacheTmp, w);
-        }finally {
-          if(w != null) {
-            w.close();
-          }
-        }
-        if(!cacheTmp.delete()) {
-          logger.error("Can't delete a file: "+cacheTmp.getAbsolutePath());
-        }
-      }
-      if(toProccess.exists()) {
-        processFile(toProccess);
-      }
-      if(!toProccess.delete()) {
-        logger.error("Can't delete a file: "+toProccess.getAbsolutePath());
-      }
-    }catch (Exception e){
-      logger.error(e,e);
-      throw new InitException(e);
-    }
-  }
+  private boolean stop = false;
 
   private class Processor implements Runnable {
 
     public void run() {
       try{
-        try{
-          writeLock();
-          writer.close();
-          writer = new PrintWriter(cacheTmp);
-        }finally {
-          writeUnlock();
-        }
-        PrintWriter w = null;
-        try{
-          w = new PrintWriter(new BufferedWriter(new FileWriter(toProccess, true)));
-
-          copy(cache, w);
-
-          if(!cache.delete()) {
-            logger.error("Can't delete a file: "+cache.getAbsolutePath());
+        while(!stop) {
+          if(logger.isDebugEnabled()) {
+            logger.debug("Siebel final state processor has been started...");
           }
-
           try{
-            writeLock();
-            writer.close();
-            writer = new PrintWriter(cache);
-          }finally {
-            writeUnlock();
-          }
+            try{
+              writeLock();
+              writer.close();
+              writer = new PrintWriter(new FileWriter(new File(dir, df.format(new Date())+".csv")));
+            }finally {
+              writeUnlock();
+            }
 
-          copy(cacheTmp, w);
+            File[] files = dir.listFiles();
+            Arrays.sort(files, new Comparator<File>() {
+              public int compare(File o1, File o2) {
+                return o1.getName().compareTo(o2.getName());
+              }});
 
-          if(!cacheTmp.delete()) {
-            logger.error("Can't delete a file: "+cacheTmp.getAbsolutePath());
+            for(int i=0;i<files.length-1;i++) {
+              File toProccess = files[i];
+              if(toProccess.length()>0){
+                processFile(toProccess);
+              }
+              if(!toProccess.delete()) {
+                logger.error("Can't delete a file: "+toProccess.getAbsolutePath());
+              }
+            }
+          }catch (Exception e){
+            logger.error(e,e);
           }
-
-        }finally {
-          if(w != null) {
-            w.close();
+          if(logger.isDebugEnabled()) {
+            logger.debug("Siebel final state processor has been finished");
           }
+          Thread.sleep(1000*periodSec);
         }
-        if(toProccess.length()>0){
-          processFile(toProccess);
-        }
-        if(!toProccess.delete()) {
-          logger.error("Can't delete a file: "+toProccess.getAbsolutePath());
-        }
-      }catch (Exception e){
-        logger.error(e,e);
+      }catch (InterruptedException ignored){
       }
     }
 
-  }
 
+  }
 
 }

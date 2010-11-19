@@ -14,6 +14,7 @@ import mobi.eyeline.informer.util.Time;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import testutils.TestUtils;
 
 import java.io.File;
 import java.util.*;
@@ -34,6 +35,8 @@ public class SiebelFinalStateListenerTest {
 
   private static Map<String, SiebelMessage.DeliveryState> messagesState = new HashMap<String, SiebelMessage.DeliveryState>();
   private static Set<String> processedDeliveries = new HashSet<String>();
+
+  private static File workDir = new File("siebel"+System.currentTimeMillis());
 
   @BeforeClass
   public static void before() throws Exception{
@@ -82,7 +85,7 @@ public class SiebelFinalStateListenerTest {
       public User getUser(String login) throws AdminException {
         return siebelUser;
       }
-    }, new File("../"), 20);
+    }, workDir, 20);
 
   }
 
@@ -112,5 +115,6 @@ public class SiebelFinalStateListenerTest {
     if(siebelManager != null) {
       siebelManager.stop();
     }
+    TestUtils.recursiveDeleteFolder(workDir);
   }
 }

@@ -1,0 +1,132 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['delivery.edit.group']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <h:panelGroup rendered="#{deliveryGroupEdit.ids != null}">
+
+        <eye:buttons>
+          <eye:button>
+            <tr:commandLink text="#{msg['done.button']}" action="#{deliveryGroupEdit.save}"/>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
+          </eye:button>
+          <eye:space/>
+        </eye:buttons>
+
+        <t:saveState value="#{deliveryGroupEdit.ids}"/>
+
+        <eye:delimiter/>
+
+        <h:panelGrid columns="2" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign">
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
+          <tr:inputText converter="addressConverter" value="#{deliveryGroupEdit.sourceAddress}" required="true" simple="true"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
+          <t:inputDate popupCalendar="true" value="#{deliveryGroupEdit.endDate}" type="both"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
+          <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
+            <h:selectManyCheckbox value="#{deliveryGroupEdit.activeWeekDays}" required="true" requiredMessage="#{deliveryBundle.activeWeekDays}" converter="weekDaysConverter">
+              <f:selectItems value="#{deliveryGroupEdit.allDays}"/>
+            </h:selectManyCheckbox>
+            <h:outputText value="&#160;"/>
+          </h:panelGrid>
+
+          <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
+          <h:panelGroup>
+            <t:inputDate value="#{deliveryGroupEdit.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
+            <h:outputText value=" - "/>
+            <t:inputDate value="#{deliveryGroupEdit.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
+          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
+          <tr:inputText value="#{deliveryGroupEdit.priority}" simple="true" required="true" columns="5">
+            <tr:validateLongRange minimum="1" maximum="1000"/>
+          </tr:inputText>
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryOnFail}"/>
+          <h:panelGroup>
+            <h:selectBooleanCheckbox id="retryOnFail" value="#{deliveryGroupEdit.retryOnFail}"
+                                     style="position: relative; top: 2px; left: -3px;"
+                                     onchange="document.getElementById('retryPolicy1').disabled = !this.checked;"/>
+            <h:inputText value="#{deliveryGroupEdit.retryPolicy}" id="retryPolicy1"/>
+          </h:panelGroup>
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
+          <tr:inputText converter="addressConverter" value="#{deliveryGroupEdit.smsNotification}" simple="true"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
+          <tr:inputText value="#{deliveryGroupEdit.emailNotification}" simple="true"/>
+
+          <h:outputText style="white-space:nowrap; display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
+          <h:selectOneMenu id="dMode" value="#{deliveryGroupEdit.deliveryMode}" required="true" converter="deliveryTypeConverter"
+                           onchange="var d = (this.value != 'SMS') ? 'none' : ''; document.getElementById('smsSettings').style.display = d;"
+                           style="display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}">
+            <f:selectItems value="#{deliveryGroupEdit.uniqueDeliveryModes}"/>
+          </h:selectOneMenu>
+        </h:panelGrid>
+
+        <h:panelGrid id="smsSettings" columns="2" columnClasses="column100Width, columnTopLeftAlign" style="padding-left:10px; display: #{deliveryGroupEdit.smsMode ? '' : 'none'}">
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
+          <tr:selectBooleanCheckbox value="#{deliveryGroupEdit.flash}" simple="true"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+          <tr:selectBooleanCheckbox id="trMode" value="#{deliveryGroupEdit.transactionMode}" simple="true"
+                                    onchange="
+                var d = this.checked ? 'none' : '';
+                document.getElementById('vPeriodLabel').style.display=d;
+                document.getElementById('vPeriod').style.display=d;
+            "/>
+
+          <h:outputText id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+          <tr:inputText id="vPeriod" value="#{deliveryGroupEdit.validityPeriod}" simple="true" columns="5">
+            <tr:validateLongRange minimum="1" maximum="100"/>
+          </tr:inputText>
+
+        </h:panelGrid>
+
+        <eye:delimiter/>
+
+        <eye:buttons>
+          <eye:button>
+            <tr:commandLink text="#{msg['done.button']}" action="#{deliveryGroupEdit.save}"/>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
+          </eye:button>
+          <eye:space/>
+        </eye:buttons>
+
+        <script type="text/javascript" language="javascript">
+          document.getElementById('retryPolicy1').disabled = !document.getElementById('retryOnFail').checked;
+          var d = document.getElementById().checked ? 'none' : '';
+          document.getElementById('vPeriodLabel').style.display=d;
+          document.getElementById('vPeriod').style.display=d;
+        </script>
+
+      </h:panelGroup>
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

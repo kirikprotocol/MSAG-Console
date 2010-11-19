@@ -341,6 +341,13 @@
   </managed-bean>
 
 
+  <managed-bean>
+      <managed-bean-name>deliveryGroupEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.DeliveryEditGroupController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -467,9 +474,15 @@
       <to-view-id>/restriction/index.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+    
     <navigation-case>
       <from-outcome>RESTRICTION_EDIT</from-outcome>
       <to-view-id>/restriction/edit.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>DELIVERY_EDIT_GROUP</from-outcome>
+      <to-view-id>/deliveries/editGroup.xhtml</to-view-id>
     </navigation-case>
 
     <navigation-case>

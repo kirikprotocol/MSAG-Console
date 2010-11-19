@@ -117,6 +117,14 @@ public class DeliveryListController extends DeliveryController {
     return null;
   }
 
+  public String editGroup() {
+    if(selected == null) {
+      return null;
+    }
+    getRequest().put(DELIVERY_IDS_PARAM, selected);
+    return "DELIVERY_EDIT_GROUP";
+  }
+
   public String pause() {
     if (selected != null) {
       User u = config.getUser(getUserName());

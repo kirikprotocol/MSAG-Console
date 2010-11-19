@@ -47,6 +47,12 @@
             </tr:inputText>
           </tr:panelLabelAndMessage>
 
+          <tr:panelLabelAndMessage label="#{msg['informer.siebel.statsPeriod']}" labelStyle="text-align:left">
+            <tr:inputText value="#{siebel.statsPeriod}" required="true" simple="true">
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
           <tr:panelLabelAndMessage label="#{msg['informer.siebel.remove.on.stop']}" labelStyle="text-align:left">
             <tr:selectBooleanCheckbox value="#{siebel.removeOnStop}" simple="true"/>
           </tr:panelLabelAndMessage>

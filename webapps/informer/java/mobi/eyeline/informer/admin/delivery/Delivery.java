@@ -221,8 +221,7 @@ public class Delivery implements Serializable {
     return validityPeriod;
   }
 
-  public void setValidityPeriod(String validityPeriod) throws AdminException {
-    vh.checkNotEmpty("validityPeriod", validityPeriod);
+  public void setValidityPeriod(String validityPeriod) {
     this.validityPeriod = validityPeriod;
   }
 

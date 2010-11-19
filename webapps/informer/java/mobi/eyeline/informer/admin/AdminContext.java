@@ -204,7 +204,9 @@ public class AdminContext {
 
     siebelManager.start(siebelUser, webConfig.getSiebelProperties());
 
-    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager, workDir, 120); //todo
+    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries,
+        userManager, workDir,
+        Integer.parseInt(webConfig.getSiebelProperties().getProperty(SiebelFinalStateListener.PERIOD_PARAM))); 
 
     deliveryNotificationsProducer.addListener(siebelFinalStateListener);
 
@@ -843,6 +845,7 @@ public class AdminContext {
       boolean siebelStarted = false;
       try {
         siebelFinalStateListener.externalLock();
+        siebelFinalStateListener.setPeriodSec(Integer.parseInt(props.getProperty(SiebelFinalStateListener.PERIOD_PARAM)));
         siebelManager.stop();
         try {
           siebelManager.start(user, props);

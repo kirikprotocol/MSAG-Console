@@ -58,6 +58,7 @@
 
     <param name="started">false</param>
     <param name="timeout">20</param>
+    <param name="statsPeriod">20</param>
     <param name="siebelUser">a</param>
     <param name="removeOnStop">false</param>
 

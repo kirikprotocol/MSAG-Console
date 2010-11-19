@@ -108,14 +108,8 @@ public class DeliveryTest {
   @Test
   public void testValidity() throws AdminException{
     Delivery d = Delivery.newCommonDelivery();
-    try{
-      d.setValidityPeriod(null);
-      assertTrue(false);
-    }catch (AdminException e){}
-    try{
-      d.setValidityPeriod("");
-      assertTrue(false);
-    }catch (AdminException e){}
+    d.setValidityPeriod(null);
+    d.setValidityPeriod("");
     d.setValidityPeriod("23");
   }
 

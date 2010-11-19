@@ -5,15 +5,10 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.infosme.TestSms;
-import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.model.SelectItem;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * @author Aleksandr Khalitov
@@ -56,8 +51,7 @@ public class DeliveryEditController extends DeliveryController {
   }
 
   private void reload() throws AdminException {
-    User u = config.getUser(getUserName());
-    if (id == null || (delivery = config.getDelivery(u.getLogin(), u.getPassword(), id)) == null) {
+    if (id == null || (delivery = config.getDelivery(user.getLogin(), user.getPassword(), id)) == null) {
       logger.error("Delivery is not found with id=" + id);
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "delivery.not.found", id);
       return;
@@ -70,24 +64,6 @@ public class DeliveryEditController extends DeliveryController {
     secret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET));
     flashSecret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET_FLASH));
     secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
-  }
-
-  public List<SelectItem> getUniqueDeliveryModes() {
-    List<SelectItem> sIs = new LinkedList<SelectItem>();
-    for (DeliveryMode m : DeliveryMode.values()) {
-      sIs.add(new SelectItem(m, m.toString()));
-    }
-    return sIs;
-  }
-
-  public List<SelectItem> getAllDays() {
-    List<SelectItem> result = new ArrayList<SelectItem>(7);
-    int i = 1;
-    for (Delivery.Day d : Delivery.Day.values()) {
-      result.add(new SelectItem(d, getLocalizedString("weekday." + i % 7)));
-      i++;
-    }
-    return result;
   }
 
   private String emailNotificationAddress;
@@ -164,8 +140,7 @@ public class DeliveryEditController extends DeliveryController {
     }
 
     try {
-      User u = config.getUser(getUserName());
-      config.modifyDelivery(u.getLogin(), u.getPassword(), delivery);
+      config.modifyDelivery(user.getLogin(), user.getPassword(), delivery);
     } catch (AdminException e) {
       addError(e);
       return null;
@@ -184,9 +159,8 @@ public class DeliveryEditController extends DeliveryController {
       return null;
     }
     try {
-      User u = config.getUser(getUserName());
       TestSms sms = new TestSms();
-      sms.setDestAddr(new Address(u.getPhone()));
+      sms.setDestAddr(new Address(user.getPhone()));
       sms.setFlash(delivery.isFlash());
       switch (delivery.getDeliveryMode()) {
         case USSD_PUSH:
@@ -202,17 +176,12 @@ public class DeliveryEditController extends DeliveryController {
       sms.setSourceAddr(delivery.getSourceAddress());
       sms.setText(delivery.getSingleText());
       config.sendTestSms(sms);
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", u.getPhone());
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", user.getPhone());
     } catch (AdminException e) {
       addError(e);
     }
     return null;
   }
-
-  public boolean isAllowUssdPushDeliveries() {
-    return getConfig().isAllowUssdPushDeliveries();
-  }
-
 
   public boolean isSmsMode() {
     return delivery.getDeliveryMode() == DeliveryMode.SMS;
