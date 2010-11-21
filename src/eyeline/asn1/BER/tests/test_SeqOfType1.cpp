@@ -19,7 +19,8 @@ namespace tests {
 bool
 test_SeqOfType1(char* err_msg)
 {
-  SeqOfType1_t value={0};
+  SeqOfType1_t value;
+  memset(&value, 0, sizeof(value));
   asn_enc_rval_t retVal;
   char patternTrSyntax[MAX_PATTERN_LEN]={0};
 
