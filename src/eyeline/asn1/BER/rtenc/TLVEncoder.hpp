@@ -112,6 +112,9 @@ private:
   TLComposersArray  _tlws;
   TSLength          _szoBOC;  //overall length of 'begin-of-content' octets of TLV
                               //encoding, also serves as a 'calculation-performed' flag
+
+//  TLVLayoutEncoder(const TLVLayoutEncoder&);
+//  TLVLayoutEncoder& operator=(const TLVLayoutEncoder&);
 protected:
   const ASTagging *   _effTags; //complete tagging of value type
   ValueEncoderIface * _valEnc;  //addressed value encoder, zero means layout isn't initialized
@@ -143,9 +146,6 @@ public:
     if (_effTags)
       _tlws.enlarge(_effTags->size());
   }
-  //
-  ~TLVLayoutEncoder()
-  { }
 
   //
   bool isCalculated(void) const { return _szoBOC != 0; }
