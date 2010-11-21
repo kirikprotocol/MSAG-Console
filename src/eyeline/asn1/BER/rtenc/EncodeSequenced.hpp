@@ -27,27 +27,29 @@ namespace ber {
 template <
   class _TArg
   //must have tagged & untagged type constructors
-  , class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>*/ 
+  , class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>*/
+  , uint16_t _NumElemsTArg //estimated number of element values
 >
 class EncoderOfSequencedAC_T : public EncoderOfConstructedAC {
 public:
   typedef EncoderProducer_T<_EncoderOfTArg> EncoderProducer;
-  typedef eyeline::util::LWArrayExtension_T<EncoderProducer, uint16_t> ProducersArray;
 
-  typedef EncoderOfConstructedAC::ElementsArray ElementsArray;
-
+  typedef eyeline::util::LWArray_T<TLVLayoutEncoder, uint16_t, _NumElemsTArg> ElementsStore;
+  typedef eyeline::util::LWArray_T<EncoderProducer, uint16_t, _NumElemsTArg> ProducersStore;
 private:
-  ProducersArray *  _prdArray;  //NOTE: actually it's a reference to storage,
-                                //that is a successor member.
+
+  ElementsStore   _elmStore;
+  ProducersStore  _prdStore;
+
   uint16_t          _maxElems;  //maximum possible number of elements
   ASTagging         _elmTags;   //optional tagging of SE[Q|T] OF element
 
 protected:
   _EncoderOfTArg * allocElementEncoder(void)
   {
-    _prdArray->reserve(_prdArray->size() + 1);
-    return _elmTags.empty() ? &(_prdArray->at(_prdArray->size()).init(getTSRule()))
-                              : &(_prdArray->at(_prdArray->size()).init(_elmTags[0],
+    _prdStore.reserve(_prdStore.size() + 1);
+    return _elmTags.empty() ? &(_prdStore.at(_prdStore.size()).init(getTSRule()))
+                              : &(_prdStore.at(_prdStore.size()).init(_elmTags[0],
                                           _elmTags.getEnvironment(), getTSRule()));
   }
   //
@@ -56,34 +58,33 @@ protected:
     if (_maxElems && (num_elems >= _maxElems))
       throw smsc::util::Exception("asn1::ber::EncoderOfSequencedAC_T<%u>::reserveElements() - too much elements %u", _maxElems, num_elems);
 
-    _prdArray->reserve(num_elems);
+    _prdStore.reserve(num_elems);
     EncoderOfConstructedAC::reserveElements(num_elems);
   }
 
   //NOTE: the copying constructor of successsor MUST properly set _prdArray
   EncoderOfSequencedAC_T(const EncoderOfSequencedAC_T & use_obj)
-    : EncoderOfConstructedAC(use_obj), _prdArray(0), _maxElems(use_obj._maxElems)
-  { }
+    : EncoderOfConstructedAC(use_obj), _elmStore(use_obj._elmStore),
+      _prdStore(use_obj._prdStore), _maxElems(use_obj._maxElems), _elmTags(use_obj._elmTags)
+  {
+    setElementsStorage(_elmStore);
+  }
   //
-  void setProducersStorage(ProducersArray & prd_store) { _prdArray = &prd_store; }
-
 
   //'Generic sequenced type encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
-  EncoderOfSequencedAC_T(ProducersArray & prd_store, ElementsArray & elm_store,
-                         const ASTagging & eff_tags,
+  EncoderOfSequencedAC_T(const ASTagging & eff_tags,
                          TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfConstructedAC(elm_store, eff_tags, use_rule)
-    , _prdArray(&prd_store), _maxElems(0)
+    : EncoderOfConstructedAC(_elmStore, eff_tags, use_rule)
+    , _maxElems(0)
   { }
   //'Generic tagged sequenced type encoder' constructor
   //NOTE: base_tags must be a complete tagging of base type!
-  EncoderOfSequencedAC_T(ProducersArray & prd_store, ElementsArray & elm_store,
-                         const ASTag & use_tag, ASTagging::Environment_e tag_env,
+  EncoderOfSequencedAC_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                          const ASTagging & base_tags,
                          TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfConstructedAC(elm_store, use_tag, tag_env, base_tags, use_rule)
-    , _prdArray(&prd_store), _maxElems(0)
+    : EncoderOfConstructedAC(_elmStore, use_tag, tag_env, base_tags, use_rule)
+    , _maxElems(0)
   { }
 
 public:
@@ -107,56 +108,13 @@ public:
   //Adds a value of an element is to encode
   void addElementValue(const _TArg & use_val) /*throw(std::exception)*/
   {
-    if (_maxElems && (_prdArray->size() >= _maxElems))
+    if (_maxElems && (_prdStore.size() >= _maxElems))
       throw smsc::util::Exception("asn1::ber::EncoderOfSequencedAC_T<%u>::addElementValue() - too much elements", _maxElems);
 
     _EncoderOfTArg * valEnc = allocElementEncoder();
     valEnc->setValue(use_val);
     initElement(valEnc->getTagging(), *(valEnc->getVALEncoder()));
   }
-};
-
-template <
-  class _TArg
-  //must have tagged & untagged type constructors
-  , class _EncoderOfTArg /*: public TypeValueEncoder_T<_TArg>*/
-  , uint16_t _NumElemsTArg //estimated number of element values
->
-class EncoderOfSequenced_T : public EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg> {
-private:
-  typedef EncoderProducer_T<_EncoderOfTArg> EncoderProducer;
-
-  typedef eyeline::util::LWArray_T<TLVLayoutEncoder, uint16_t, _NumElemsTArg> ElementsStore;
-  typedef eyeline::util::LWArray_T<EncoderProducer, uint16_t, _NumElemsTArg> ProducersStore;
-
-  ElementsStore   _elmStore;
-  ProducersStore  _prdStore;
-
-protected:
-  //'Generic sequenced type encoder' constructor
-  //NOTE: eff_tags must be a complete tagging of type!
-  EncoderOfSequenced_T(const ASTagging & eff_tags,
-                       TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg>(_prdStore, _elmStore, eff_tags, use_rule)
-  { }
-  //'Generic tagged sequenced type encoder' constructor
-  //NOTE: base_tags must be a complete tagging of base type!
-  EncoderOfSequenced_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
-                       const ASTagging & base_tags,
-                       TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg>(_prdStore, _elmStore, use_tag, tag_env, base_tags, use_rule)
-  { }
-  EncoderOfSequenced_T(const EncoderOfSequenced_T & use_obj)
-    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg>(use_obj)
-  {
-    setProducersStorage(_prdStore);
-    setElementsStorage(_elmStore);
-  }
-
-public:
-  //
-  virtual ~EncoderOfSequenced_T()
-  { }
 };
 
 } //ber
