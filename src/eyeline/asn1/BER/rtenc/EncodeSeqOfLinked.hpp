@@ -8,7 +8,7 @@
 #define __ASN1_BER_ENCODER_SEQUENCE_OF_LINKED
 
 #include <list>
-#include "eyeline/asn1/BER/rtenc/EncodeSeqOf.hpp"
+#include "eyeline/asn1/BER/rtenc/EncodeSequenced.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -25,12 +25,12 @@ template <
   , class _EncoderOfTArg /* : public TypeValueEncoder_T<_TArg>*/
   , uint16_t _NumElemsTArg = 2 //estimated number of element values
 >
-class EncoderOfSeqOfLinked_T : public EncoderOfSeqOfAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg> {
+class EncoderOfSeqOfLinked_T : public EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg> {
 protected:
   //constructor for types defined as SEQUENCE OF with own tagging
   EncoderOfSeqOfLinked_T(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : EncoderOfSeqOfAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(eff_tags, use_rule)
+    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(eff_tags, use_rule)
   { }
 
 public:
@@ -39,18 +39,12 @@ public:
 
   // constructor for untagged SEQUENCE OF
   explicit EncoderOfSeqOfLinked_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : EncoderOfSeqOfAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(use_rule)
+    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(asn1::_tagsSEQOF, use_rule)
   { }
   // constructor for tagged SEQUENCE OF
   EncoderOfSeqOfLinked_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : EncoderOfSeqOfAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(use_tag, tag_env, use_rule)
-  { }
-  EncoderOfSeqOfLinked_T(const EncoderOfSeqOfLinked_T & use_obj)
-    : EncoderOfSeqOfAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(use_obj)
-  { }
-  //
-  virtual ~EncoderOfSeqOfLinked_T()
+    : EncoderOfSequencedAC_T<_TArg, _EncoderOfTArg, _NumElemsTArg>(use_tag, tag_env, asn1::_tagsSEQOF, use_rule)
   { }
 
   // ----------------------------------------------------------
