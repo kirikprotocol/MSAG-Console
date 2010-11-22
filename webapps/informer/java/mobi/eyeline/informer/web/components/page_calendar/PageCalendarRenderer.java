@@ -54,7 +54,7 @@ public class PageCalendarRenderer extends Renderer {
     Calendar c1 = Calendar.getInstance();
     c1.setTime(c.getTime());
 
-    c1.add(Calendar.DATE, -1);
+    c1.add(Calendar.DATE, -2);
     long prevWeekDate = c1.getTimeInMillis();
     c1.add(Calendar.DATE, 9);
     long nextWeekDate = c1.getTimeInMillis();
