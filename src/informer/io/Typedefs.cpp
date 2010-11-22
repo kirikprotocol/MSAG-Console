@@ -244,11 +244,11 @@ bool isGoodAsciiName( const char* str, char* badchar )
     assert(str);
     for ( const char* p = str; *p != '\0'; ++p ) {
         register const char c = *p;
-        if ( c >= '-' && c <= '9' && c != '/' ) {
+        if ( c >= '-' && c <= ';' && c != '/' ) {
             // ok
         } else if ( c >= '@' && c <= 'Z' ) {
             // ok
-        } else if ( c == '_' ) {
+        } else if ( c == '_' || c == '#' || c == '^' ) {
             // ok
         } else if ( c >= 'a' && c <= 'z' ) {
             // ok
