@@ -43,6 +43,7 @@ public class ContentProviderDaemonTask implements Runnable {
           String dir = u.getDirectory();
           if(dir!=null && dir.length()>0) {
             File userDir = new File(informerBase,dir);
+            // todo Если директория не найдена, стоит просто перейти к следующему пользователю.
             if(!fileSys.exists(userDir)) throw new IllegalArgumentException("Not found source directory for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
             processUserDirectory(u,userDir);
           }
@@ -56,14 +57,14 @@ public class ContentProviderDaemonTask implements Runnable {
 
   private void processUserDirectory(User u, File userDir) {
     File[] files = fileSys.listFiles(userDir);
-
+    // todo listFiles может вернуть null (например, если админ не даст прав на чтение/запись директории). Надо это отлавливать и корректно в лог писать.
     for(File f : files) {
       processUserFile(u, userDir, f);
     }
   }
 
-  private void processUserFile(User u, File userDir, File f)  {
-    int inx = f.getName().indexOf('.');
+  private void processUserFile(User u, File userDir, File f)  { // todo лишний параметр userDir. Может быть получен из f.getParent(). Надо выкинуть.
+    int inx = f.getName().indexOf('.'); //todo нужен более умный алгоритм поиска расширения. Этот не позволяет ставить точку в имени файла.
     if(inx<0) return;
     String baseName = f.getName().substring(0,inx);
     String ext      = f.getName().substring(inx+1);
@@ -133,7 +134,7 @@ public class ContentProviderDaemonTask implements Runnable {
       }
 
       //rename to err
-      File newFile = new File(userDir,baseName+".err");
+      File newFile = new File(userDir,baseName+".err"); //todo кажется, забыл удалить файл с отчетом
       try {
         fileSys.rename(f,newFile);
       }
@@ -142,6 +143,11 @@ public class ContentProviderDaemonTask implements Runnable {
       }
     }
   }
+
+  // todo Предлагаю провести вот такой рефакторинг:
+  // todo 1. Метод processUserDirectory сначала ищет все файлы, чье расширение начинается на 'csv.'.
+  // todo    Для каждого такого файла он удаляет рассылку и статистику, после чего переименовывает его в csv.
+  // todo 2. Далее метод processUserDirectory ищет все файлы с расширением 'csv' и создает по ним рассылки.
 
 
 
@@ -169,7 +175,7 @@ public class ContentProviderDaemonTask implements Runnable {
           try {
               inx = line.indexOf('|');
               abonent = line.substring(0,inx).trim();
-              Address ab = new Address(abonent);
+              Address ab = new Address(abonent);  //todo Надо аккуратно отловить и записать в отчет, что адрес абонента некорректен
               boolean skip = false;
               if(regions!=null) {
                 Region r = context.getRegion(ab);
@@ -184,7 +190,7 @@ public class ContentProviderDaemonTask implements Runnable {
               String  text = line.substring(inx+1).trim();
               return Message.newMessage(ab,text);
           }
-          catch(Exception e) {
+          catch(Exception e) { //todo просто переходим к следующей строке...
             ContentProviderDaemon.writeReportLine(reportWriter,abonent,new Date(),"ERROR PARSING LINE :"+line);
           }
         }

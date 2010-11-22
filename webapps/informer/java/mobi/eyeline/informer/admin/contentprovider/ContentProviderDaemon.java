@@ -75,23 +75,21 @@ public class ContentProviderDaemon implements Daemon, DeliveryNotificationsListe
   }
 
 
-
-
   public static void writeReportLine(PrintStream reportWriter, String abonent, Date date, String s) {
     reportWriter.print(abonent);
     reportWriter.print(" | ");
-    reportWriter.print(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(date));
+    reportWriter.print(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(date)); // todo вынести SimpleDateFormat в отдельное поле
     reportWriter.print(" | ");
     reportWriter.println(s);
   }
 
   public void onDeliveryNotification(DeliveryNotification notification) {
-    switch (notification.getType()) {
+    switch (notification.getType()) { // todo Упростить до if
       case DELIVERY_FINISHED:
         try {
           String userId = notification.getUserId();
           User user = context.getUser(userId);
-          createReport(notification,user);
+          createReport(notification,user); // todo генерация отчетов может существенно затормозить основной поток. Надо использовать собственный сторадж и поток.
         }
         catch (Exception e) {
           log.error("Error processing delivery finished report for delivery "+notification.getDeliveryId(),e);
@@ -104,7 +102,7 @@ public class ContentProviderDaemon implements Daemon, DeliveryNotificationsListe
   private void createReport(DeliveryNotification notification, User user) throws AdminException, UnsupportedEncodingException {
     if(user!=null && user.isCreateReports() && user.getDirectory()!=null) {
 
-      File userDir = new File(informerBase,user.getDirectory());
+      File userDir = new File(informerBase,user.getDirectory()); // todo А если в user.getDirectory() абсолютный путь?
       if(!fileSys.exists(userDir)) throw new ContentProviderException("userDirNotFound",userDir.toString());
 
       int deliveryId = notification.getDeliveryId();
