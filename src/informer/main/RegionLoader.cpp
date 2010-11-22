@@ -39,11 +39,11 @@ log_(smsc::logger::Logger::getInstance("regloader"))
                 throw InfosmeException(EXC_CONFIG,"default region is not found!");
             }
             DOMElement* region = static_cast<DOMElement*>(regions->item(0));
-            const XmlStr sbandwidth = region->getAttribute(XmlStr("max_per_second"));
+            const XmlStr sbandwidth = region->getAttribute(XmlStr("bandwidth"));
             char* endptr;
             const unsigned bandwidth(unsigned(strtoul(sbandwidth.c_str(),&endptr,10)));
             if (*endptr != '\0') {
-                throw InfosmeException(EXC_CONFIG,"invalid max_per_second='%s' for region id=%u",
+                throw InfosmeException(EXC_CONFIG,"invalid bandwidth='%s' for region id=%u",
                                        sbandwidth.c_str(),rid);
             }
             Region* r = new Region(rid,"default",defaultSmscId,bandwidth,0);
@@ -90,10 +90,10 @@ log_(smsc::logger::Logger::getInstance("regloader"))
 
             const XmlStr name = region->getAttribute(XmlStr("name"));
             const XmlStr smscId = region->getAttribute(XmlStr("infosme_smsc"));
-            const XmlStr sbandwidth = region->getAttribute(XmlStr("max_per_second"));
+            const XmlStr sbandwidth = region->getAttribute(XmlStr("bandwidth"));
             const unsigned bandwidth(unsigned(strtoul(sbandwidth.c_str(),&endptr,10)));
             if (*endptr != '\0') {
-                throw InfosmeException(EXC_CONFIG,"invalid max_per_second='%s' for region id=%u",
+                throw InfosmeException(EXC_CONFIG,"invalid bandwidth='%s' for region id=%u",
                                        sbandwidth.c_str(),rid);
             }
             const XmlStr stimezone = region->getAttribute(XmlStr("timezone"));
