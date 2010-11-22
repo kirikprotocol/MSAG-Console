@@ -5,12 +5,13 @@
 #include "DeliveryInfo.h"
 #include "CommonSettings.h"
 
+namespace eyeline {
+namespace informer {
+
 namespace {
 
-using namespace eyeline::informer;
-
-/// bit value corresponding to the weekday from tm_wday.
-static const int weekBits[] = { 0x40, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 };
+/// bit values for week days
+static const int weekBits[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40 };
 
 static const timediff_type daynight = 24*3600;
 
@@ -45,10 +46,7 @@ int parseWeekDays( const std::vector< std::string >& wd )
     return res;
 }
 
-}
-
-namespace eyeline {
-namespace informer {
+} // namespace
 
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
