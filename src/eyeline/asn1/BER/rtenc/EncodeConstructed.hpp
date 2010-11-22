@@ -71,7 +71,7 @@ protected:
   void initElement(const ASTagging * fld_tags, ValueEncoderIface & val_enc)
   {
     _elmArray->reserve(_elmArray->size() + 1);
-    _elmArray->at(_elmArray->size() + 1).init(val_enc, fld_tags, getVALRule());
+    _elmArray->at(_elmArray->size()).init(val_enc, fld_tags, getVALRule());
   }
   void clearElement(uint16_t fld_idx)
   {
