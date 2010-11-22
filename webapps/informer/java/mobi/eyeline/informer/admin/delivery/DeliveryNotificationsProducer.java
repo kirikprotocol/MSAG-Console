@@ -81,7 +81,7 @@ public class DeliveryNotificationsProducer implements Runnable {
 
   public void run() {
     try {
-      String[] files = fileSys.list(baseDir);
+      String[] files = fileSys.list(baseDir);  //todo метод list может вернуть null, надо это корректно обработать.
       Arrays.sort(files);
       for (String fileName : files) {
         if (fileName.endsWith(".csv")) {

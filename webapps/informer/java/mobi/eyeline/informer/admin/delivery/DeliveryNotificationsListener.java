@@ -8,6 +8,8 @@ package mobi.eyeline.informer.admin.delivery;
  */
 public interface DeliveryNotificationsListener {
 
+  //todo Почему бы не сделать по 1 методу на каждый тип нотификации?
+  // todo Данная реализация обрекает клиентов на проверку типа нотификации в каждом листенере.
   public void onDeliveryNotification(DeliveryNotification notification);
 
 }
