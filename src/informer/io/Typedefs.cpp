@@ -248,7 +248,7 @@ bool isGoodAsciiName( const char* str, char* badchar )
             // ok
         } else if ( c >= '@' && c <= 'Z' ) {
             // ok
-        } else if ( c == '_' || c == '#' || c == '^' ) {
+        } else if ( c == '_' || c == '#' || c == '^' || c == '=' ) {
             // ok
         } else if ( c >= 'a' && c <= 'z' ) {
             // ok
