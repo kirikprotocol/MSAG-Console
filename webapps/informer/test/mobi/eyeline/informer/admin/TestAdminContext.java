@@ -35,7 +35,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -235,7 +234,7 @@ public class TestAdminContext extends AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
-      contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir,fileSystem);
+      contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir, workDir, fileSystem);
 
       deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);

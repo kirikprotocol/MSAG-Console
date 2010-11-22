@@ -13,10 +13,7 @@ import org.junit.Test;
 import testutils.TestUtils;
 
 
-import java.io.File;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -76,7 +73,7 @@ public class ContentProviderTest {
   }
 
   @Test
-  public void testImport() throws AdminException, UnsupportedEncodingException {
+  public void testImport() throws AdminException, UnsupportedEncodingException, InterruptedException {
     ContentProviderDaemon cpDaemon = getCPDaemon();
     cpDaemon.start();
     Date startDate = new Date();
@@ -130,6 +127,31 @@ public class ContentProviderTest {
       }
     });
     assertEquals(cnt.getN(),2000);
+
+
+    cpDaemon.stop();
+
+
+    //pahse 2 test report creation
+
+
+
+
+    DeliveryNotification notification = new DeliveryNotification(DeliveryNotificationType.DELIVERY_FINISHED,new Date(),100,"a");
+    cpDaemon.onDeliveryNotification(notification);
+
+    File workDir = new File(context.getWorkDir(),"contentProvider");
+    assertTrue(context.getFileSystem().exists(workDir));
+
+    File notificationFile = new File(workDir,"100.notification");
+    assertTrue(context.getFileSystem().exists(notificationFile));
+
+    cpDaemon.start();
+
+    synchronized (this) {wait(1000);}
+
+    assertTrue(context.getFileSystem().exists(new File(userDir,"test.report"))) ;
+
   }
 
 

@@ -166,7 +166,7 @@ public class AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
-      contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir,fileSystem);
+      contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir,workDir,fileSystem);
 
 
       deliveryNotificationsProducer = new DeliveryNotificationsProducer(new File(is.getStatusLogsDir()), fileSystem);

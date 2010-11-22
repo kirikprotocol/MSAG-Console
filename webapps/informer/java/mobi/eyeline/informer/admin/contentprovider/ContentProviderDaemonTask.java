@@ -14,6 +14,8 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -27,6 +29,8 @@ public class ContentProviderDaemonTask implements Runnable {
   private AdminContext context;
   private File informerBase;
   private FileSystem fileSys;
+
+  Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
 
   public ContentProviderDaemonTask(AdminContext context, File informerBase, FileSystem fileSys) {
     this.informerBase = informerBase;
@@ -43,9 +47,12 @@ public class ContentProviderDaemonTask implements Runnable {
           String dir = u.getDirectory();
           if(dir!=null && dir.length()>0) {
             File userDir = new File(informerBase,dir);
-            // todo Если директория не найдена, стоит просто перейти к следующему пользователю.
-            if(!fileSys.exists(userDir)) throw new IllegalArgumentException("Not found source directory for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
-            processUserDirectory(u,userDir);
+            if(!fileSys.exists(userDir)) {
+              log.error("Not found source directory for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
+            }
+            else {
+              processUserDirectory(u,userDir);
+            }
           }
         }
       }
@@ -57,32 +64,86 @@ public class ContentProviderDaemonTask implements Runnable {
 
   private void processUserDirectory(User u, File userDir) {
     File[] files = fileSys.listFiles(userDir);
-    // todo listFiles может вернуть null (например, если админ не даст прав на чтение/запись директории). Надо это отлавливать и корректно в лог писать.
+    if(files==null) {
+      log.error("Can't get directory listing for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
+      return;
+    }
     for(File f : files) {
-      processUserFile(u, userDir, f);
+      processUnfinished(u,f);
+    }
+    for(File f : files) {
+      processUserFile(u,f);
     }
   }
 
-  private void processUserFile(User u, File userDir, File f)  { // todo лишний параметр userDir. Может быть получен из f.getParent(). Надо выкинуть.
-    int inx = f.getName().indexOf('.'); //todo нужен более умный алгоритм поиска расширения. Этот не позволяет ставить точку в имени файла.
-    if(inx<0) return;
-    String baseName = f.getName().substring(0,inx);
-    String ext      = f.getName().substring(inx+1);
 
+  private void handleErrorProccessingFile(Exception e, File userDir, File f, String baseName) {
     try {
-      if(ext.startsWith("csv.")) {
-        int deliveryId = Integer.valueOf(ext.substring(4));
-        context.dropDelivery(u.getLogin(),u.getPassword(),deliveryId);
-        //rename .csv.<id> to .csv
-        File newFile = new File(userDir,baseName+".csv");
-        fileSys.rename(f,newFile);
-        File reportFile = new File(userDir,baseName+".rep."+deliveryId);
-        fileSys.delete(reportFile);
-        f=newFile;
-        ext="csv";
+      PrintWriter pw = null;
+      try {
+        pw = new PrintWriter(fileSys.getOutputStream(new File(userDir,baseName+".errLog"),true));
+        e.printStackTrace(pw);
       }
+      finally {
+        if(pw!=null) pw.close();
+      }
+    }
+    catch (AdminException e1) {
+      log.error("error creating error report",e);
+    }
 
-      if(ext.equals("csv")) {
+    //rename to err
+    File newFile = new File(userDir,baseName+".err");
+    try {
+      fileSys.rename(f,newFile);
+    }
+    catch (AdminException ex) {
+      log.error("Error renaming file to bak "+f.getAbsolutePath(),ex);
+    }
+    //delete report
+    File reportFile = new File(userDir,baseName+".rep");
+    try {
+      if(fileSys.exists(reportFile)) {
+        fileSys.delete(newFile);
+      }
+    }
+    catch (AdminException ex) {
+      log.error("Error renaming file to bak "+f.getAbsolutePath(),ex);
+    }
+  }
+
+  private void processUnfinished(User u, File f) {
+
+
+    Matcher unfinishedMatcher = unfinishedFileName.matcher(f.getName());
+
+    if(unfinishedMatcher.matches()) {
+      File userDir = f.getParentFile();
+      String ext = unfinishedMatcher.group();
+      String baseName = f.getName().substring(0,f.getName().length()-ext.length());
+      try {
+          int deliveryId = Integer.valueOf(ext.substring(5));
+          context.dropDelivery(u.getLogin(),u.getPassword(),deliveryId);
+          //rename .csv.<id> to .csv
+          File newFile = new File(userDir,baseName+".csv");
+          fileSys.rename(f,newFile);
+          File reportFile = new File(userDir,baseName+".rep."+deliveryId);
+          fileSys.delete(reportFile);
+      }
+      catch (Exception e) {
+        handleErrorProccessingFile(e, userDir, f, baseName);
+      }
+    }
+  }
+
+
+  private void processUserFile(User u, File f)  {
+
+    String fileName = f.getName();
+    if(fileName.endsWith(".csv")) {
+      File userDir = f.getParentFile();
+      String baseName = fileName.substring(0,fileName.length()-4);
+      try {
         Delivery delivery = new Delivery(Delivery.Type.Common);
         delivery.setName(baseName);
         delivery.setStartDate(new Date(System.currentTimeMillis()));
@@ -115,39 +176,13 @@ public class ContentProviderDaemonTask implements Runnable {
         //rename to .bak.<id>
         newFile = new File(userDir,baseName+".bak."+deliveryId);
         fileSys.rename(f,newFile);
-        f=newFile;
       }
-    }
-    catch (Exception e) {
-      try {
-        PrintWriter pw = null;
-        try {
-          pw = new PrintWriter(fileSys.getOutputStream(new File(userDir,baseName+".errLog"),true));
-          e.printStackTrace(pw);
-        }
-        finally {
-          if(pw!=null) pw.close();
-        }
-      }
-      catch (AdminException e1) {
-        log.error("error creating error report",e);
-      }
-
-      //rename to err
-      File newFile = new File(userDir,baseName+".err"); //todo кажется, забыл удалить файл с отчетом
-      try {
-        fileSys.rename(f,newFile);
-      }
-      catch (AdminException ex) {
-        log.error("Error renaming file to bak "+f.getAbsolutePath(),ex);
+      catch (Exception e) {
+        handleErrorProccessingFile(e, userDir, f, baseName);
       }
     }
   }
 
-  // todo Предлагаю провести вот такой рефакторинг:
-  // todo 1. Метод processUserDirectory сначала ищет все файлы, чье расширение начинается на 'csv.'.
-  // todo    Для каждого такого файла он удаляет рассылку и статистику, после чего переименовывает его в csv.
-  // todo 2. Далее метод processUserDirectory ищет все файлы с расширением 'csv' и создает по ним рассылки.
 
 
 
@@ -175,7 +210,14 @@ public class ContentProviderDaemonTask implements Runnable {
           try {
               inx = line.indexOf('|');
               abonent = line.substring(0,inx).trim();
-              Address ab = new Address(abonent);  //todo Надо аккуратно отловить и записать в отчет, что адрес абонента некорректен
+              Address ab = null;
+              try {
+                  ab = new Address(abonent);
+              }
+              catch (Exception e) {
+                ContentProviderDaemon.writeReportLine(reportWriter,abonent,new Date(),"INVALID ABONENT");
+                continue;
+              }
               boolean skip = false;
               if(regions!=null) {
                 Region r = context.getRegion(ab);
@@ -184,7 +226,7 @@ public class ContentProviderDaemonTask implements Runnable {
                 }
               }
               if(skip) {
-                ContentProviderDaemon.writeReportLine(reportWriter,ab.getSimpleAddress(),new Date(),"NOT ALLOWED REGION");
+                ContentProviderDaemon.writeReportLine(reportWriter,abonent,new Date(),"NOT ALLOWED REGION");
                 continue;
               }
               String  text = line.substring(inx+1).trim();
