@@ -73,7 +73,7 @@ protected:
 
     _TArg * hbuf = (_TArg *)(new uint8_t[sizeof(_TArg) * new_sz]);
     //copy initialized elements
-    LWArrayTraits<_TArg>::copy(hbuf, _buf, _numElem);
+    LWArrayTraits<_TArg>::construct(hbuf, _buf, _numElem);
     LWArrayTraits<_TArg>::destroy(_buf, _numElem);
     if (_heapBufSz)
       delete [] (uint8_t*)_buf;
