@@ -132,7 +132,7 @@ void FinalLog::addDlvRecord( msgtime_type         currentTime,
 
 void FinalLog::checkRollFile( msgtime_type currentTime )
 {
-    if (fg_.isOpened() && (createTime_ + period_) < currentTime ) {
+    if (fg_.isOpened() && (createTime_ + period_) <= currentTime ) {
         fg_.close();
         rollFile( filename_ );
     }

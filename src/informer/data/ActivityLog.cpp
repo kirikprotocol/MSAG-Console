@@ -261,7 +261,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
 
     {
         MutexGuard mg(lock_);
-        if ( !fg_.isOpened() || (createTime_+period_) < currentTime ) {
+        if ( !fg_.isOpened() || (createTime_+period_) <= currentTime ) {
             createFile(currentTime,now);
         }
 
@@ -295,7 +295,7 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
     }
     {
         MutexGuard mg(lock_);
-        if ( !fg_.isOpened() || (createTime_+period_) < currentTime ) {
+        if ( !fg_.isOpened() || (createTime_+period_) <= currentTime ) {
             createFile(currentTime,now);
         }
 
