@@ -7,6 +7,10 @@ import mobi.eyeline.informer.admin.AdminException;
  */
 public class DeliveryException extends AdminException {
 
+  public DeliveryException(String key, Throwable cause, String... args) {
+    super(key, cause, args);
+  }
+
   public DeliveryException(String key, Throwable cause) {
     super(key, cause);
   }

@@ -4,9 +4,11 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields;
+import mobi.eyeline.informer.admin.protogen.SyncProtogenConnection;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +29,7 @@ public class DcpConnection {
   private Lock lock;
 
   public DcpConnection(String host, int port, final String login, String password) throws AdminException {
-    this.client = new DcpClient(host, port);
-    connect(login, password);
+    this.client = new DcpClient(host, port, login, password);
 
     lock = new ReentrantLock() {
       @Override
@@ -52,27 +53,20 @@ public class DcpConnection {
   protected DcpConnection() {
   }
 
-  private void connect(String login, String password) throws AdminException {
-    UserAuth auth = new UserAuth();
-    auth.setUserId(login);
-    auth.setPassword(password);
-    client.send(auth);
-  }
-
   /**
    * Соединение установлено
    *
    * @return true - да, false - нет
    */
-  public boolean isConnected() {
-    return client.isConnected();
-  }
+//  public boolean isConnected() {
+//    return client.isConnected();
+//  }
 
   /**
    * Закрывает соединение
    */
   public void close() {
-    client.shutdown();
+    client.close();
   }
 
   /**
@@ -211,29 +205,31 @@ public class DcpConnection {
    */
   public int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
     CountDeliveries req = new CountDeliveries();
+    DeliveriesFilter f = new DeliveriesFilter();
     if (deliveryFilter != null) {
       if (deliveryFilter.getEndDateFrom() != null) {
-        req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+        f.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
       }
       if (deliveryFilter.getEndDateTo() != null) {
-        req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+        f.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
       }
       if (deliveryFilter.getStartDateFrom() != null) {
-        req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+        f.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
       }
       if (deliveryFilter.getStartDateTo() != null) {
-        req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+        f.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
       }
       if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
-        req.setNameFilter(deliveryFilter.getNameFilter());
+        f.setNameFilter(deliveryFilter.getNameFilter());
       }
       if (deliveryFilter.getUserIdFilter() != null && deliveryFilter.getUserIdFilter().length > 0) {
-        req.setUserIdFilter(deliveryFilter.getUserIdFilter());
+        f.setUserIdFilter(deliveryFilter.getUserIdFilter());
       }
       if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
-        req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
+        f.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
       }
     }
+    req.setFilter(f);
     CountDeliveriesResp resp;
     try {
       lock.lock();
@@ -349,44 +345,46 @@ public class DcpConnection {
    */
   public int getDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
     GetDeliveriesList req = new GetDeliveriesList();
+    DeliveriesFilter f = new DeliveriesFilter();
     if (deliveryFilter.getEndDateFrom() != null) {
-      req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+      f.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
     }
     if (deliveryFilter.getStartDateFrom() != null) {
-      req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+      f.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
     }
     if (deliveryFilter.getEndDateTo() != null) {
-      req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+      f.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
     }
     if (deliveryFilter.getStartDateTo() != null) {
-      req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+      f.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
     }
     if (deliveryFilter.getEndDateFrom() != null) {
-      req.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+      f.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
     }
     if (deliveryFilter.getEndDateTo() != null) {
-      req.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+      f.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
     }
     if (deliveryFilter.getStartDateFrom() != null) {
-      req.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+      f.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
     }
     if (deliveryFilter.getStartDateTo() != null) {
-      req.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+      f.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
     }
     if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
-      req.setNameFilter(deliveryFilter.getNameFilter());
+      f.setNameFilter(deliveryFilter.getNameFilter());
     }
     if (deliveryFilter.getUserIdFilter() != null && deliveryFilter.getUserIdFilter().length > 0) {
-      req.setUserIdFilter(deliveryFilter.getUserIdFilter());
+      f.setUserIdFilter(deliveryFilter.getUserIdFilter());
     }
     if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
-      req.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
+      f.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
     }
     DeliveryFields[] fieldses = DcpConverter.convert(deliveryFilter.getResultFields());
     DeliveryFields[] fs = new DeliveryFields[fieldses.length + 1];
     fs[0] = DeliveryFields.UserData;
     System.arraycopy(fieldses, 0, fs, 1, fieldses.length);
     req.setResultFields(fs);
+    req.setFilter(f);
 
     GetDeliveriesListResp resp;
     try {

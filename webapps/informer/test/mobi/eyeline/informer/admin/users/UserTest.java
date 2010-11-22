@@ -231,10 +231,10 @@ public class UserTest {
   @Test
   public void testValidHours() throws AdminException {
     User o = new User();
-    o.setValidHours(10);
-    assertEquals(o.getValidHours(),10);
+    o.setValidityPeriod(new Time(9,0,0));
+    assertEquals(o.getValidityPeriod(), new Time(9,0,0));
     try {
-      o.setValidHours(0);
+      o.setValidityPeriod(new Time(0,50,30));
       assertTrue(false);
     }
     catch (AdminException e){}
@@ -330,16 +330,7 @@ public class UserTest {
     User o = new User();
     o.setDirectory("aaaaaa");
     assertEquals(o.getDirectory(),"aaaaaa");
-    try {
-      o.setDirectory("");
-      assertTrue(false);
-    }
-    catch (AdminException e){}
-    try {
-      o.setDirectory(null);
-      assertTrue(false);
-    }
-    catch (AdminException e){}
+
 
 
     o.setCreateReports(true);

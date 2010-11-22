@@ -49,12 +49,14 @@ public class UserEditController extends UserController {
     if (userId == null || userId.length() == 0) {
       userId = null;
       userToEdit = new User();
-      userToEdit.setDeliveryStartTime(new Time(9, 0, 0));
-      userToEdit.setDeliveryEndTime(new Time(22, 0, 0));
-      userToEdit.setDeliveryDays(Arrays.<Integer>asList(0, 1, 2, 3, 4, 5, 6));
-      userToEdit.setValidHours(3);
+      userToEdit.setDeliveryStartTime(new Time(9,0,0));
+      userToEdit.setDeliveryEndTime(new Time(22,0,0));
+      userToEdit.setDeliveryDays(Arrays.<Integer>asList(0,1,2,3,4,5,6));
+      userToEdit.setValidityPeriod(new Time(1,0,0));
       userToEdit.setPriority(1);
       userToEdit.setAllRegionsAllowed(true);
+      userToEdit.setReportsLifetime(72);
+      userToEdit.setDeliveryLifetime(72);
     } else {
       userToEdit = getConfig().getUser(userId);
     }
@@ -159,6 +161,19 @@ public class UserEditController extends UserController {
   public Date getDeliveryStartTime() {
     if (userToEdit.getDeliveryStartTime() == null) return null;
     return userToEdit.getDeliveryStartTime().getTimeDate();
+  }
+
+  public void setValidityPeriod(Date period) throws AdminException {
+    if (period == null)
+      userToEdit.setValidityPeriod(null);
+    else
+      userToEdit.setValidityPeriod(new Time(period));
+  }
+
+  public Date getValidityPeriod() {
+    if (userToEdit.getValidityPeriod() == null)
+      return null;
+    return userToEdit.getValidityPeriod().getTimeDate();
   }
 
   public boolean isBlocked() {

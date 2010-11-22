@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryListInfo;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMessage;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -26,7 +27,7 @@ public class DcpConverterTest {
 
   @Test
   public void testDate() throws AdminException {
-    String date = "12:11:2007 10:00:09";
+    String date = "12.11.2007 10:00:09";
     assertEquals(DcpConverter.convertDate(DcpConverter.convertDate(date)), date);
   }
 
@@ -47,8 +48,8 @@ public class DcpConverterTest {
   public void testConvertDelivery() throws AdminException {
     Delivery d = Delivery.newCommonDelivery();
     d.setSourceAddress(new Address("+791394"));
-    d.setActivePeriodEnd(new Date());
-    d.setActivePeriodStart(new Date(0));
+    d.setActivePeriodEnd(new Time(22,0,0));
+    d.setActivePeriodStart(new Time(0,0,0));
     d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
     d.setDeliveryMode(DeliveryMode.SMS);
     d.setEndDate(new Date(System.currentTimeMillis() + 1000000));
@@ -61,7 +62,7 @@ public class DcpConverterTest {
     d.setRetryPolicy("policy1");
     d.setStartDate(new Date());
     d.setSvcType("svc1");
-    d.setValidityPeriod("1");
+    d.setValidityPeriod(new Time(1,0,0));
     d.setProperty(UserDataConsts.RESTRICTION, "true");
     assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d), null));
   }
@@ -83,7 +84,6 @@ public class DcpConverterTest {
     mi.setDate(DcpConverter.convertDate(date));
     mi.setErrorCode(1179);
     mi.setId(1);
-    mi.setIndex(13);
     mi.setText("sms_text");
     mi.setState(mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMessageState.Failed);
     mi.setUserData("user=data");
@@ -129,8 +129,8 @@ public class DcpConverterTest {
     di.setStatus(DcpConverter.convert(DeliveryStatus.Cancelled));
     di.setUserId("user2");
     DeliveryInfo info = DcpConverter.convert(di);
-    assertEquals(DcpConverter.convertTime(info.getActivityPeriodEnd()), di.getActivityPeriodEnd());
-    assertEquals(DcpConverter.convertTime(info.getActivityPeriodStart()), di.getActivityPeriodStart());
+    assertEquals(DcpConverter.convertTime(info.getActivityPeriodEnd().getTimeDate()), di.getActivityPeriodEnd());
+    assertEquals(DcpConverter.convertTime(info.getActivityPeriodStart().getTimeDate()), di.getActivityPeriodStart());
     assertEquals(DcpConverter.convertDate(info.getStartDate()), di.getStartDate());
     assertEquals(DcpConverter.convertDate(info.getEndDate()), di.getEndDate());
     assertEquals(DcpConverter.convert(info.getStatus()), di.getStatus());

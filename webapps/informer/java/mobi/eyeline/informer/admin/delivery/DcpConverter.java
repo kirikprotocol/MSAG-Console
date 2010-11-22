@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryStatus;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,7 +20,7 @@ public class DcpConverter {
 
   private static final String TIME_FORMAT = "HH:mm:ss";
 
-  private static final String DATE_FORMAT = "dd:MM:yyyy HH:mm:ss";
+  private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
   public static Date convertTime(String time) throws AdminException {
     SimpleDateFormat format = new SimpleDateFormat(TIME_FORMAT);
@@ -97,8 +98,8 @@ public class DcpConverter {
       delivery.setSingleText(glossary[0]);
     }
     delivery.setId(id);
-    delivery.setActivePeriodEnd(convertTime(di.getActivePeriodEnd()));
-    delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart()));
+    delivery.setActivePeriodEnd(new Time(convertTime(di.getActivePeriodEnd())));
+    delivery.setActivePeriodStart(new Time(convertTime(di.getActivePeriodStart())));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
     if (di.hasEndDate()) {
@@ -125,8 +126,11 @@ public class DcpConverter {
     delivery.setUseDataSm(di.getUseDataSm());
 
     if (di.hasValidityPeriod()) {
-      delivery.setValidityPeriod(di.getValidityPeriod());
+      delivery.setValidityPeriod(new Time(convertTime(di.getValidityPeriod())));
     }
+
+    delivery.setEnableMsgFinalizationLogging(di.getFinalMsgRecords());
+    delivery.setEnableStateChangeLogging(di.getFinalDlvRecords());
     return delivery;
   }
 
@@ -222,10 +226,10 @@ public class DcpConverter {
     DeliveryInfo result = new DeliveryInfo();
     result.setDeliveryId(di.getDeliveryId());
     if (di.hasActivityPeriodEnd()) {
-      result.setActivityPeriodEnd(convertTime(di.getActivityPeriodEnd()));
+      result.setActivityPeriodEnd(new Time(convertTime(di.getActivityPeriodEnd())));
     }
     if (di.hasActivityPeriodStart()) {
-      result.setActivityPeriodStart(convertTime(di.getActivityPeriodStart()));
+      result.setActivityPeriodStart(new Time(convertTime(di.getActivityPeriodStart())));
     }
     if (di.hasEndDate()) {
       result.setEndDate(convertDate(di.getEndDate()));
@@ -254,8 +258,8 @@ public class DcpConverter {
       return null;
     }
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo delivery = new mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo();
-    delivery.setActivePeriodEnd(convertTime(di.getActivePeriodEnd()));
-    delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart()));
+    delivery.setActivePeriodEnd(convertTime(di.getActivePeriodEnd().getTimeDate()));
+    delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart().getTimeDate()));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
     if (di.getEndDate() != null) {
@@ -267,9 +271,11 @@ public class DcpConverter {
     delivery.setPriority(di.getPriority());
     delivery.setReplaceMessage(di.isReplaceMessage());
     delivery.setRetryOnFail(di.isRetryOnFail());
-    delivery.setRetryPolicy(di.getRetryPolicy());
+    if (di.getRetryPolicy() != null)
+      delivery.setRetryPolicy(di.getRetryPolicy());
     delivery.setSourceAddress(di.getSourceAddress().getSimpleAddress());
-    delivery.setUserData(convertUserData(di.getProperties()));
+    if (di.getProperties() != null)
+      delivery.setUserData(convertUserData(di.getProperties()));
     delivery.setStartDate(convertDate(di.getStartDate()));
     if (di.getSvcType() != null) {
       delivery.setSvcType(di.getSvcType());
@@ -277,9 +283,12 @@ public class DcpConverter {
     delivery.setTransactionMode(di.isTransactionMode());
     delivery.setUseDataSm(di.isUseDataSm());
 
-    if (di.getValidityPeriod() != null) {
-      delivery.setValidityPeriod(di.getValidityPeriod());
-    }
+    if (di.getValidityPeriod() != null)
+      delivery.setValidityPeriod(convertTime(di.getValidityPeriod().getTimeDate()));
+
+    delivery.setFinalDlvRecords(di.isEnableStateChangeLogging());
+    delivery.setFinalMsgRecords(di.isEnableMsgFinalizationLogging());
+
     return delivery;
   }
 

@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
+import mobi.eyeline.informer.admin.infosme.OfflineException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -56,15 +57,17 @@ public class BaseManager<C> {
       lock.writeLock().lock();
       e.changeSettings(settings);
       File backup = save();
-      if (infosme != null && infosme.isOnline()) {
         try {
           e.infosmeCommand(infosme);
         }
-        catch (AdminException ex) {
+        catch (OfflineException ex) {
+          // nothing to do
+        }
+        catch (AdminException ex){
           rollback(backup);
           throw ex;
         }
-      }
+
     } finally {
       lock.writeLock().unlock();
     }

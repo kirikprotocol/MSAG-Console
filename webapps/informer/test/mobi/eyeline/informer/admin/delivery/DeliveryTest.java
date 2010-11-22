@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import org.junit.Test;
 
 import java.util.Date;
@@ -80,13 +81,13 @@ public class DeliveryTest {
       assertTrue(false);
     }catch (AdminException e){}
 
-    d.setActivePeriodStart(new Date());
+    d.setActivePeriodStart(new Time(1,0,0));
 
     try{
       d.setActivePeriodEnd(null);
       assertTrue(false);
     }catch (AdminException e){}
-    d.setActivePeriodEnd(new Date(32132231));
+    d.setActivePeriodEnd(new Time(1,0,0));
   }
 
   @Test
@@ -107,10 +108,12 @@ public class DeliveryTest {
 
   @Test
   public void testValidity() throws AdminException{
-    Delivery d = Delivery.newCommonDelivery();
-    d.setValidityPeriod(null);
-    d.setValidityPeriod("");
-    d.setValidityPeriod("23");
+    Delivery d = Delivery.newCommonDelivery();    
+    try{
+      d.setValidityPeriod(new Time(0,0,0));
+      assertTrue(false);
+    }catch (AdminException e){}
+    d.setValidityPeriod(new Time(23,0,0));
   }
 
   @Test

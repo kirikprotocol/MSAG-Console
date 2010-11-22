@@ -6,9 +6,11 @@ import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
+import java.util.Date;
 
 /**
  * @author Aleksandr Khalitov
@@ -199,4 +201,37 @@ public class DeliveryEditController extends DeliveryController {
   public void setId(Integer id) {
     this.id = id;
   }
+  
+  public void setActivePeriodEnd(Date t) throws AdminException {
+    if(t==null) delivery.setActivePeriodEnd(null);
+    else delivery.setActivePeriodEnd(new Time(t));
+  }
+  public void setActivePeriodStart(Date t) throws AdminException {
+    if(t==null) delivery.setActivePeriodStart(null);
+    else delivery.setActivePeriodStart(new Time(t));
+  }
+
+  public Date getActivePeriodEnd() {
+    if(delivery.getActivePeriodEnd()==null) return null;
+    return delivery.getActivePeriodEnd().getTimeDate();
+  }
+
+  public Date getActivePeriodStart() {
+    if(delivery.getActivePeriodStart()==null) return null;
+    return delivery.getActivePeriodStart().getTimeDate();
+  }
+
+  public void setValidityPeriod(Date period) throws AdminException {
+    if (period == null)
+      delivery.setValidityPeriod(null);
+    else
+      delivery.setValidityPeriod(new Time(period));
+  }
+  
+  public Date getValidityPeriod() {
+    if (delivery.getValidityPeriod() == null)
+      return null;
+    return delivery.getValidityPeriod().getTimeDate();
+  }
+  
 }

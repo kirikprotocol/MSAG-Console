@@ -32,8 +32,6 @@ public interface Infosme {
 
   public void sendTestSms(TestSms sms) throws AdminException;
 
-  public boolean isOnline() throws AdminException;
-
   public void shutdown();
 
 }

@@ -34,13 +34,13 @@ class DeliveriesDiffHelper extends DiffHelper {
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     String temp1, temp2;
     if (oldDelivery.getActivePeriodEnd() != null && newDelivery.getActivePeriodEnd() != null &&
-        !(temp1 = timeFormat.format(oldDelivery.getActivePeriodEnd())).equals((temp2 = timeFormat.format(newDelivery.getActivePeriodEnd())))) {
+        !((temp1 = oldDelivery.getActivePeriodEnd().toString())).equals((temp2 = newDelivery.getActivePeriodEnd().toString()))) {
 
       j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "activePeriodEnd", temp1, temp2, oldDelivery.getName());
 
     }
     if (oldDelivery.getActivePeriodStart() != null && newDelivery.getActivePeriodStart() != null &&
-        !(temp1 = timeFormat.format(oldDelivery.getActivePeriodStart())).equals((temp2 = timeFormat.format(newDelivery.getActivePeriodStart())))) {
+        !(temp1 = oldDelivery.getActivePeriodStart().toString()).equals((temp2 = newDelivery.getActivePeriodStart().toString()))) {
 
       j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "activePeriodStart", temp1, temp2, oldDelivery.getName());
 

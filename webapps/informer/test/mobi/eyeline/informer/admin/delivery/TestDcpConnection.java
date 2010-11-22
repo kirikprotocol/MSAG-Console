@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
 import java.text.ParseException;
@@ -451,14 +452,12 @@ public class TestDcpConnection extends DcpConnection{
         if(!send) {
           continue;
         }
-        try{
-          if(sdf.parse(sdf.format(d.getActivePeriodStart())).after(sdf.parse(sdf.format(now)))) {
+          if(d.getActivePeriodStart().getTimeDate().after(now)) {
             continue;
           }
-          if(sdf.parse(sdf.format(d.getActivePeriodEnd())).before(sdf.parse(sdf.format(now)))) {
+          if(d.getActivePeriodEnd().getTimeDate().before(now)) {
             continue;
           }
-        }catch (ParseException e){}
         List<MessageWState> ms = messages.get(d.getId());
         if(ms == null) {
           continue;
@@ -634,22 +633,22 @@ public class TestDcpConnection extends DcpConnection{
     }
 
     @Override
-    public Date getActivePeriodEnd() {
+    public Time getActivePeriodEnd() {
       return delivery.getActivePeriodEnd();
     }
 
     @Override
-    public void setActivePeriodEnd(Date activePeriodEnd) throws AdminException {
+    public void setActivePeriodEnd(Time activePeriodEnd) throws AdminException {
       delivery.setActivePeriodEnd(activePeriodEnd);
     }
 
     @Override
-    public Date getActivePeriodStart() {
+    public Time getActivePeriodStart() {
       return delivery.getActivePeriodStart();
     }
 
     @Override
-    public void setActivePeriodStart(Date activePeriodStart) throws AdminException {
+    public void setActivePeriodStart(Time activePeriodStart) throws AdminException {
       delivery.setActivePeriodStart(activePeriodStart);
     }
 
@@ -664,12 +663,12 @@ public class TestDcpConnection extends DcpConnection{
     }
 
     @Override
-    public String getValidityPeriod() {
+    public Time getValidityPeriod() {
       return delivery.getValidityPeriod();
     }
 
     @Override
-    public void setValidityPeriod(String validityPeriod) {
+    public void setValidityPeriod(Time validityPeriod) throws AdminException{
       delivery.setValidityPeriod(validityPeriod);
     }
 

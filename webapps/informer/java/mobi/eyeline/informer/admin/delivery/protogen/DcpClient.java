@@ -3,124 +3,64 @@ package mobi.eyeline.informer.admin.delivery.protogen;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
+import mobi.eyeline.informer.admin.protogen.SyncProtogenConnection;
 import mobi.eyeline.protogen.framework.BufferReader;
-import mobi.eyeline.protogen.framework.BufferWriter;
-import mobi.eyeline.protogen.framework.ClientConnection;
 import mobi.eyeline.protogen.framework.PDU;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Aleksandr Khalitov
  */
-public class DcpClient extends ClientConnection {
+public class DcpClient extends SyncProtogenConnection {
 
   private static final Logger log = Logger.getLogger(DcpClient.class);
 
   private static final int RESPONSE_TIMEOUT = 5000;
 
-  private final Map<Integer, ResponseListener> listeners = new HashMap<Integer, ResponseListener>();
-  private boolean connected;
 
-  public DcpClient(String host, int port) {
-    Properties initProps = new Properties();
-    initProps.setProperty("informer.host", host);
-    initProps.setProperty("informer.port", port + "");
-    init("informer", initProps);
+  private final String login;
+  private final String password;
+
+  public DcpClient(String host, int port, String login, String password) {
+    super(host, port, RESPONSE_TIMEOUT);
+    this.login = login;
+    this.password = password;
   }
 
   @Override
   protected void onConnect() throws IOException {
-    connected = true;
-  }
-
-  @Override
-  protected void onSend(BufferWriter writer, PDU pdu) throws IOException {
-    int pos = writer.getLength();
-    writer.writeInt(0); // write 4 bytes for future length
-    writer.writeInt(pdu.getTag());
-    writer.writeInt(pdu.getSeqNum());
-    pdu.encode(writer);
-    writer.replaceInt(pos, writer.getLength() - pos - 4);
-  }
-
-  @Override
-  protected PDU onReceive(BufferReader bufferReader) throws IOException {
-    int tag = bufferReader.readInt();
-    int seqNum = bufferReader.readInt();
-
-    if (log.isDebugEnabled())
-      log.debug("PDU received: tag=" + tag + ", seqNum=" + seqNum);
-
-    ResponseListener l;
-    synchronized (listeners) {
-      l = listeners.get(seqNum);
-    }
-    if (l != null) {
-      return l.receive(bufferReader, tag);
-    } else {
-      log.error("Unexpected seqNum=" + seqNum);
-      throw new IOException("Unexpected seqNum=" + seqNum);
-    }
-  }
-
-  @Override
-  protected void handle(PDU pdu) {
-  }
-
-  <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
-    ResponseListener l = new ResponseListener(response);
-    int seq = request.assignSeqNum();
-    if (response != null) {
-      synchronized (listeners) {
-        listeners.put(seq, l);
-      }
-    }
+    UserAuth auth = new UserAuth();
+    auth.setUserId(login);
+    auth.setPassword(password);
     try {
-      send(request);
-      if (log.isDebugEnabled())
-        log.debug("Request sent: " + request);
-
-      if (response != null) {
-        PDU resp = l.getResponse(RESPONSE_TIMEOUT);
-        if (resp != null) {
-          if (log.isDebugEnabled())
-            log.debug("Response received: " + response);
-          if (resp.getTag() == DcpClientTag.FailResponse.getValue()) {
-            FailResponse failResponse = (FailResponse) resp;
-            log.error("Interaction error: " + failResponse.getStatus() + ", " + failResponse.getStatusMessage());
-            throw new DeliveryException("interaction_error", failResponse.getStatus() + "");
-          }
-          return (T) resp;
-        } else
-          throw new DeliveryException("response_timeout");
-      }
-
-      return null;
-    } catch (InterruptedException e) {
-      throw new DeliveryException("request_interrupted");
-    } catch (IOException e) {
-      connected = false;
-      throw new DeliveryException("interaction_error", e);
+      send(auth);
+    } catch (AdminException e) {
+      log.error(e, e);
+      throw new IOException(e.getMessage());
     }
   }
 
-
-  public boolean isConnected() {
-    return connected;
+//  public boolean isConnected() {
+//    return true;
+//  }
+  
+  private <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
+    FailResponse fail = new FailResponse();
+    try {
+      PDU resp;
+      resp = request(request, response, fail);
+      
+      if (resp == fail)
+        throw new DeliveryException("interaction_error", fail.getStatus() + "");
+      return response;
+    } catch (IOException e) {
+      throw new DeliveryException("interaction_error", e, e.getMessage());
+    }
   }
-
-  public void shutdown() {
-    connected = false;
-    super.shutdown();
-  }
-
 
   public AddDeliveryMessagesResp send(AddDeliveryMessages req) throws AdminException {
     return sendPdu(req, new AddDeliveryMessagesResp());

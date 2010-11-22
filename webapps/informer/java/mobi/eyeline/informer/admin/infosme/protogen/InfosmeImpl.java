@@ -131,10 +131,6 @@ public class InfosmeImpl implements Infosme {
     checkResponse(client.send(req).getRespCode());
   }
 
-  public boolean isOnline() throws AdminException {
-    return client.isConnected();
-  }
-
   @SuppressWarnings({"EmptyCatchBlock"})
   public void shutdown() {
     if (client != null) {

@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -157,8 +158,8 @@ public class TestDeliveryManagerTest {
 
   private Delivery _createDelivery() throws AdminException{
     Delivery d = Delivery.newCommonDelivery();
-    d.setActivePeriodStart(new Date(System.currentTimeMillis() - 300000));
-    d.setActivePeriodEnd(new Date(System.currentTimeMillis() + 300000));
+    d.setActivePeriodStart(new Time(1,0,0));
+    d.setActivePeriodEnd(new Time(22,0,0));
     d.setActiveWeekDays(Delivery.Day.values());
     d.setDeliveryMode(DeliveryMode.SMS);
     d.setEndDate(new Date(System.currentTimeMillis() + 300000));
@@ -170,7 +171,7 @@ public class TestDeliveryManagerTest {
     d.setRetryOnFail(true);
     d.setRetryPolicy("policy1");
     d.setSvcType("svc1");
-    d.setValidityPeriod("1");
+    d.setValidityPeriod(new Time(1,0,0));
     d.setSourceAddress(new Address("+79123942341"));
 
     manager.createDelivery("","", d, new DataSource<Message>() {

@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 
 import javax.faces.application.FacesMessage;
 import java.util.Date;
@@ -59,11 +60,11 @@ public class DeliveryEditGroupController extends DeliveryController{
           d.setPriority(priority);
           d.setTransactionMode(transactionMode);
           d.setEndDate(endDate);
-          d.setActivePeriodStart(activePeriodStart);
-          d.setActivePeriodEnd(activePeriodEnd);
+          d.setActivePeriodStart(new Time(activePeriodStart));
+          d.setActivePeriodEnd(new Time(activePeriodEnd));
           d.setActiveWeekDays(activeWeekDays);
           if(validityPeriod == null || (validityPeriod = validityPeriod.trim()).length() !=0) {
-            d.setValidityPeriod(validityPeriod);
+//            d.setValidityPeriod(validityPeriod); todo
           }else {
             d.setValidityPeriod(null);
           }

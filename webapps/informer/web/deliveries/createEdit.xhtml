@@ -41,9 +41,9 @@
 
       <h:outputText style="white-space: nowrap;" value="#{msg['informer.deliveries.create.activePeriod']}"/>
       <h:panelGroup>
-        <t:inputDate value="#{createDelivery.activePage.delivery.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
+        <t:inputDate value="#{createDelivery.activePage.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
         <h:outputText style="white-space: nowrap;" value=" - "/>
-        <t:inputDate value="#{createDelivery.activePage.delivery.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
+        <t:inputDate value="#{createDelivery.activePage.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
       </h:panelGroup>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.retryOnFail}"/>
@@ -104,9 +104,7 @@
                                     "/>
 
       <h:outputText id="vPeriodLabel" style="white-space: nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <tr:inputText id="vPeriod" value="#{createDelivery.activePage.delivery.validityPeriod}" simple="true">
-        <tr:validateLongRange minimum="1" maximum="100"/>
-      </tr:inputText>
+      <t:inputDate id="vPeriod" value="#{createDelivery.activePage.validityPeriod}" requiredMessage="#{msg['date.required']}" required="false" type="short_time"/>
 
     </h:panelGrid>
 

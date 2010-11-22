@@ -58,8 +58,8 @@ public class UserGroupEditController extends UserController {
   private boolean editTransactionMode;
   private boolean transactionMode;
 
-  private boolean editValidHours;
-  private int validHours;
+  private boolean editValidityPeriod;
+  private Date validityPeriod;
 
   private boolean editSmsPerSec;
   private int smsPerSec;
@@ -91,10 +91,14 @@ public class UserGroupEditController extends UserController {
     if (session != null) {
       userIds = (List<String>) session.getAttribute("userIds");
     }
-    deliveryStartTime = new Time(9, 0, 0).getTimeDate();
-    deliveryEndTime = new Time(22, 0, 0).getTimeDate();
-    deliveryType = User.DeliveryType.SMS;
-    validHours = 3;
+    deliveryStartTime = new Time(9,0,0).getTimeDate();
+    deliveryEndTime = new Time(22,0,0).getTimeDate();
+    deliveryType=User.DeliveryType.SMS;
+    validityPeriod=new Time(1,0,0).getTimeDate();
+    smsPerSec=10;
+    priority=1;
+    deliveryLifetime=72;
+    deliveryDays=Arrays.asList(0,1,2,3,4,5,6);
     smsPerSec = 10;
     priority = 1;
     deliveryLifetime = 72;
@@ -156,8 +160,8 @@ public class UserGroupEditController extends UserController {
         if (editTransactionMode)
           u.setTransactionMode(transactionMode);
 
-        if (editValidHours)
-          u.setValidHours(validHours);
+        if (editValidityPeriod)
+          u.setValidityPeriod(new Time(validityPeriod));
 
         if (editSmsPerSec)
           u.setSmsPerSec(smsPerSec);
@@ -262,12 +266,12 @@ public class UserGroupEditController extends UserController {
     this.deliveryStartTime = deliveryStartTime;
   }
 
-  public int getValidHours() {
-    return validHours;
+  public Date getValidityPeriod() {
+    return validityPeriod;
   }
 
-  public void setValidHours(int validHours) {
-    this.validHours = validHours;
+  public void setValidityPeriod(Date validHours) {
+    this.validityPeriod = validHours;
   }
 
   public User.DeliveryType getDeliveryType() {
@@ -459,12 +463,12 @@ public class UserGroupEditController extends UserController {
     this.editTransactionMode = editTransactionMode;
   }
 
-  public boolean isEditValidHours() {
-    return editValidHours;
+  public boolean isEditValidityPeriod() {
+    return editValidityPeriod;
   }
 
-  public void setEditValidHours(boolean editValidHours) {
-    this.editValidHours = editValidHours;
+  public void setEditValidityPeriod(boolean editValidityPeriod) {
+    this.editValidityPeriod = editValidityPeriod;
   }
 
   public boolean isEditSmsPerSec() {

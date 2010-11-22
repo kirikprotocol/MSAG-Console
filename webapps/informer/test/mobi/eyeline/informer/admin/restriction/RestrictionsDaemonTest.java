@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UsersManagerTest;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -274,8 +275,8 @@ public class RestrictionsDaemonTest {
 
   private Delivery _createDelivery(String userId) throws AdminException{
     Delivery d = Delivery.newCommonDelivery();
-    d.setActivePeriodEnd(new Date());
-    d.setActivePeriodStart(new Date(0));
+    d.setActivePeriodEnd(new Time(22,0,0));
+    d.setActivePeriodStart(new Time(1,0,0));
     Calendar c = Calendar.getInstance();
     int weekDay = c.get(Calendar.DAY_OF_WEEK);
     Delivery.Day[] days = {
@@ -303,7 +304,7 @@ public class RestrictionsDaemonTest {
     d.setRetryPolicy("policy1");
 
     d.setSvcType("svc1");
-    d.setValidityPeriod("1");
+    d.setValidityPeriod(new Time(1,0,0));
     d.setSourceAddress(new Address("+79123942341"));
 
     deliveryManager.createDelivery(userId,"1", d, new DataSource<Message>() {

@@ -37,6 +37,15 @@ public class SmscEditController extends SmscController {
       } catch (AdminException e) {
         addError(e);
       }
+    } else {
+      smsc.setVlrUssdServiceOp(153);
+      smsc.setUssdServiceOp(131);
+      smsc.setInterfaceVersion(34);
+      smsc.setMaxValidityPeriod(10);
+      smsc.setMinValidityPeriod(1);
+      smsc.setDefaultValidityPeriod(3);
+      smsc.setInterConnectTimeout(60);
+      smsc.setTimeout(10);
     }
   }
 
@@ -96,6 +105,7 @@ public class SmscEditController extends SmscController {
     smsc.defaultValidityPeriod = s.getDefaultValidityPeriod();
     smsc.maxValidityPeriod = s.getMaxValidityPeriod();
     smsc.minValidityPeriod = s.getMinValidityPeriod();
+    smsc.interConnectTimeout = s.getInterConnectTimeout();
     return s;
   }
 
@@ -115,8 +125,9 @@ public class SmscEditController extends SmscController {
     s.setDefaultValidityPeriod(smsc.defaultValidityPeriod);
     s.setMaxValidityPeriod(smsc.maxValidityPeriod);
     s.setMinValidityPeriod(smsc.minValidityPeriod);
-    if (smsc.immedErrors != null && (smsc.immedErrors = smsc.immedErrors.trim()).length() != 0) {
-      for (Integer i : parseFromCSV(smsc.immedErrors)) {
+    s.setInterConnectTimeout(smsc.interConnectTimeout);
+    if(smsc.immedErrors != null && (smsc.immedErrors = smsc.immedErrors.trim()).length() != 0) {
+      for(Integer i : parseFromCSV(smsc.immedErrors)) {
         s.addImmediateError(i);
       }
     }
@@ -229,6 +240,8 @@ public class SmscEditController extends SmscController {
     private int minValidityPeriod;
 
     private int maxValidityPeriod;
+
+    private int interConnectTimeout;
 
     public int getDefaultValidityPeriod() {
       return defaultValidityPeriod;
@@ -356,6 +369,14 @@ public class SmscEditController extends SmscController {
 
     public void setVlrUssdServiceOp(int vlrUssdServiceOp) {
       this.vlrUssdServiceOp = vlrUssdServiceOp;
+    }
+
+    public int getInterConnectTimeout() {
+      return interConnectTimeout;
+    }
+
+    public void setInterConnectTimeout(int interConnectTimeout) {
+      this.interConnectTimeout = interConnectTimeout;
     }
   }
 

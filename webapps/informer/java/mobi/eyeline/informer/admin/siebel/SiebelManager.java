@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.siebel.impl.SiebelDeliveries;
 import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -485,9 +486,9 @@ public class SiebelManager {
     delivery.setFlash(siebelDelivery.isFlash());
 //      delivery.setReplaceMessage(cfg.isSiebelTReplaceMessage()); todo
     if (siebelDelivery.getExpPeriod() != null && siebelDelivery.getExpPeriod() != 0) {
-      delivery.setValidityPeriod(siebelDelivery.getExpPeriod().toString());
+      delivery.setValidityPeriod(new Time(siebelDelivery.getExpPeriod(), 0 ,0));
     } else {
-      delivery.setValidityPeriod("1");
+      delivery.setValidityPeriod(new Time(1,0,0));
     }
 
     delivery.setStartDate(new Date());

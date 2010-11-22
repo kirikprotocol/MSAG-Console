@@ -48,9 +48,9 @@ public class DeliveryManager {
       connection = createConnection(host, port, login, password);
       pool.put(u, connection);
     }
-    if (!connection.isConnected()) {
-      throw new DeliveryException("connection_lost");
-    }
+//    if (!connection.isConnected()) {
+//      throw new DeliveryException("connection_lost");
+//    }
     return connection;
   }
 

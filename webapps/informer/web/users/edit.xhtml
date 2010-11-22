@@ -37,12 +37,12 @@
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.password']}"/>
         <tr:inputText secret="true" value="#{userEdit.userToEdit.password}" simple="true">
-          <tr:validateLength minimum="6" maximum="15"/>
+          <tr:validateLength minimum="3" maximum="15"/>
         </tr:inputText>
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.passwordConfirm']}"/>
         <tr:inputText secret="true" value="#{userEdit.passwordConfirm}"  simple="true">
-          <tr:validateLength minimum="6" maximum="15"/>
+          <tr:validateLength minimum="3" maximum="15"/>
         </tr:inputText>
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.firstName}"/>
@@ -112,7 +112,7 @@
           <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
           <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" simple="true"/>
           
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>                              
           <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.emailNotification}" simple="true"/>
 
           <h:outputText style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}"/>
@@ -132,13 +132,11 @@
                                     onchange="
                                     var d = this.checked ? 'none' : '';
                                     document.getElementById('validHoursLabel').style.display=d;
-                                    document.getElementById('validHours').style.display=d
+                                    document.getElementById('validityPeriod').style.display=d;
                                     "/>
 
-          <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validHours}"/>
-          <tr:inputText id="validHours" value="#{userEdit.userToEdit.validHours}" simple="true" required="true" columns="3">
-            <eye:validatePositive/>
-          </tr:inputText>
+          <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
+          <t:inputDate id="validityPeriod" value="#{userEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
         </h:panelGrid>
 
       </eye:collapsingGroup>
@@ -177,7 +175,7 @@
 
         <h:panelGrid id="importDeliveriesSettings" style="padding-left:10px; display: #{userEdit.userToEdit.importDeliveriesFromDir ? '':'none'};" columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{userBundle.directory}"/>
-          <tr:inputText value="#{userEdit.userToEdit.directory}" required="true" simple="true" columns="100"/>
+          <tr:inputText value="#{userEdit.userToEdit.directory}" simple="true" columns="100"/>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.fileEncoding}"/>
           <h:selectOneMenu value="#{userEdit.userToEdit.fileEncoding}" style="align:left;" required="true" >
@@ -238,7 +236,7 @@
         document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;
         var d = document.getElementById('trMode').checked ? 'none' : '';
         document.getElementById('validHoursLabel').style.display=d;
-        document.getElementById('validHours').style.display=d
+        document.getElementById('validityPeriod').style.display=d;
       </script>
 
     </tr:form>

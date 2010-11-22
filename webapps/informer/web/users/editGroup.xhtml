@@ -95,7 +95,7 @@
           <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
           <tr:selectBooleanCheckbox id="emailNotification" value="#{userGroupEdit.emailNotification}" simple="true" />
 
-          <h:selectBooleanCheckbox id="editDeliveryType" value="#{userGroupEdit.editDeliveryType}" onchange="document.getElementById('deliveryType').disabled=!this.checked" rendered="#{userGroupEdit.allowUssdPushDeliveries}"/>
+          <h:selectBooleanCheckbox id="editDeliveryType" value="#{userGroupEdit.editDeliveryType}" onchange="document.getElementById('deliveryType').disabled=!this.checked" style="display:#{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
           <h:outputText style="white-space:nowrap;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}" />
           <h:selectOneMenu id="deliveryType" value="#{userGroupEdit.deliveryType}" style="align:left;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"  onchange="
           var dt = document.getElementById('deliveryType');
@@ -116,12 +116,12 @@
               var d = this.checked ? 'none' : '';
               document.getElementById('editValidHours').style.display=d;
               document.getElementById('validHoursLabel').style.display=d;
-              document.getElementById('validHours').style.display=d;
+              document.getElementById('validityPeriod').style.display=d;
              "/>
 
-          <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidHours}" onchange="document.getElementById('validHours').disabled=!this.checked"/>
-          <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validHours}"/>
-          <tr:inputText id="validHours" value="#{userGroupEdit.validHours}" simple="true" columns="3" />
+          <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidityPeriod}" onchange="document.getElementById('validHours').disabled=!this.checked"/>
+          <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
+          <t:inputDate id="validityPeriod" value="#{userGroupEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" type="short_time"/>
 
         </h:panelGrid>
       </eye:collapsingGroup>
@@ -226,6 +226,7 @@
 
         document.getElementById('smsNotification').disabled = !document.getElementById('editSmsNotification').checked;
         document.getElementById('emailNotification').disabled = !document.getElementById('editEmailNotification').checked;
+
         document.getElementById('deliveryType').disabled=!document.getElementById('editDeliveryType').checked;
         document.getElementById('transactionMode').disabled=!document.getElementById('editTransactionMode').checked;
         document.getElementById('validHours').disabled=!document.getElementById('editValidHours').checked;
@@ -252,7 +253,7 @@
         var d = document.getElementById('transactionMode').checked ? 'none' : '';
         document.getElementById('editValidHours').style.display=d;
         document.getElementById('validHoursLabel').style.display=d;
-        document.getElementById('validHours').style.display=d;
+        document.getElementById('validityPeriod').style.display=d;
       </script>
 
     </tr:form>

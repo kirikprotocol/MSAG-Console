@@ -25,6 +25,7 @@ import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.TestWebConfigManager;
 import testutils.TestUtils;
 
@@ -120,10 +121,8 @@ public class TestAdminContext extends AdminContext {
       User u = users.get((i-1)%users.size());
       Delivery d = (i%2 == 1) ? Delivery.newCommonDelivery() : Delivery.newSingleTextDelivery();
       d.setSourceAddress(new Address("+7901111"+i));
-      try{
-        d.setActivePeriodEnd(df.parse("200000"));
-        d.setActivePeriodStart(df.parse("090000"));
-      }catch (ParseException ignored){}
+      d.setActivePeriodEnd(new Time(20,0,0));
+      d.setActivePeriodStart(new Time(9,0,0));
       d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Mon, Delivery.Day.Thu, Delivery.Day.Wed, Delivery.Day.Thu,});
       d.setDeliveryMode(DeliveryMode.SMS);
       if(i%5 == 1) {
@@ -134,7 +133,7 @@ public class TestAdminContext extends AdminContext {
       d.setPriority(i%100 + 1);
       d.setStartDate(new Date(System.currentTimeMillis() - (r1.nextInt(6)+1)*86400000L*i));
       d.setSvcType("svc1");
-      d.setValidityPeriod("1");
+      d.setValidityPeriod(new Time(1,0,0));
       if(d.getType() == Delivery.Type.Common) {
         deliveryManager.createDelivery(u.getLogin(),u.getPassword(), d, new DataSource<Message>() {
           private LinkedList<Message> ms = new LinkedList<Message>() {

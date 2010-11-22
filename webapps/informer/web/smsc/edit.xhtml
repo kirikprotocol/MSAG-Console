@@ -72,6 +72,11 @@
 
           <tr:inputText value="#{smscEdit.smsc.password}" required="true" simple="true"/>
 
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.rangeOfAddress}"/>
+
+          <tr:inputText value="#{smscEdit.smsc.rangeOfAddress}" required="true" simple="true" columns="6">
+            <tr:validateLongRange/>
+          </tr:inputText>
 
           <h:outputText style="white-space:nowrap;" value="#{smscBundle.timeout}"/>
 
@@ -79,12 +84,12 @@
             <eye:validatePositive/>
           </tr:inputText>
 
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.interConnectTimeout}"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{smscBundle.rangeOfAddress}"/>
-
-          <tr:inputText value="#{smscEdit.smsc.rangeOfAddress}" required="true" simple="true" columns="6">
-            <tr:validateLongRange/>
+          <tr:inputText value="#{smscEdit.smsc.interConnectTimeout}" required="true" simple="true" columns="6">
+            <eye:validatePositive/>
           </tr:inputText>
+
         </h:panelGrid>
       </eye:collapsingGroup>
 

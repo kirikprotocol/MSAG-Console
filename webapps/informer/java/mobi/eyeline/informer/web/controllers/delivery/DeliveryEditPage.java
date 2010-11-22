@@ -6,16 +6,14 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -110,6 +108,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
         return null;
       } else {
         delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotificationAddress.getSimpleAddress());
+        delivery.setEnableStateChangeLogging(true);
       }
     }
     if (emailNotificationCheck) {
@@ -118,11 +117,12 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
         return null;
       } else {
         delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotificationAddress);
+        delivery.setEnableStateChangeLogging(true);
       }
     }
     if (!delivery.isRetryOnFail()) {
       delivery.setRetryPolicy(null);
-    } else if (delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
+    } else if(delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
       return null;
     }
@@ -197,6 +197,38 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   public void setSmsNotificationCheck(boolean smsNotificationCheck) {
     this.smsNotificationCheck = smsNotificationCheck;
+  }
+
+  public void setActivePeriodEnd(Date t) throws AdminException {
+    if(t==null) delivery.setActivePeriodEnd(null);
+    else delivery.setActivePeriodEnd(new Time(t));
+  }
+  public void setActivePeriodStart(Date t) throws AdminException {
+    if(t==null) delivery.setActivePeriodStart(null);
+    else delivery.setActivePeriodStart(new Time(t));
+  }
+
+  public Date getActivePeriodEnd() {
+    if(delivery.getActivePeriodEnd()==null) return null;
+    return delivery.getActivePeriodEnd().getTimeDate();
+  }
+
+  public Date getActivePeriodStart() {
+    if(delivery.getActivePeriodStart()==null) return null;
+    return delivery.getActivePeriodStart().getTimeDate();
+  }
+
+  public void setValidityPeriod(Date period) throws AdminException {
+    if (period == null)
+      delivery.setValidityPeriod(null);
+    else
+      delivery.setValidityPeriod(new Time(period));
+  }
+
+  public Date getValidityPeriod() {
+    if (delivery.getValidityPeriod() == null)
+      return null;
+    return delivery.getValidityPeriod().getTimeDate();
   }
 
   @SuppressWarnings({"ResultOfMethodCallIgnored"})

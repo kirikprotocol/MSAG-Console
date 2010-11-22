@@ -714,14 +714,16 @@ public class AdminContext {
     }
 
     Time t;
-    if ((t = u.getDeliveryStartTime()) != null) {
-      delivery.setActivePeriodStart(t.getTimeDate());
+    if((t = u.getDeliveryStartTime()) != null) {
+      delivery.setActivePeriodStart(t);
     }
-    if ((t = u.getDeliveryEndTime()) != null) {
-      delivery.setActivePeriodEnd(t.getTimeDate());
+
+    if((t = u.getDeliveryEndTime()) != null) {
+      delivery.setActivePeriodEnd(t);
     }
-    delivery.setValidityPeriod(Integer.toString(u.getValidHours()));
-    if (u.getDeliveryDays() != null && !u.getDeliveryDays().isEmpty()) {
+
+    delivery.setValidityPeriod(u.getValidityPeriod());
+    if(u.getDeliveryDays() != null && !u.getDeliveryDays().isEmpty()) {
       List<Delivery.Day> days = new ArrayList<Delivery.Day>(7);
       for (Integer i : u.getDeliveryDays()) {
         days.add(Delivery.Day.valueOf(i == 0 ? 7 : i));

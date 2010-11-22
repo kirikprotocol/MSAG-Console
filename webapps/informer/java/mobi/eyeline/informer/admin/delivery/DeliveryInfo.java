@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
+import mobi.eyeline.informer.util.Time;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -17,8 +19,8 @@ public class DeliveryInfo {
   private DeliveryStatus status;
   private Date startDate;
   private Date endDate;
-  private Date activityPeriodStart;
-  private Date activityPeriodEnd;
+  private Time activityPeriodStart;
+  private Time activityPeriodEnd;
 
   private final Properties properties = new Properties();
 
@@ -98,19 +100,19 @@ public class DeliveryInfo {
     this.endDate = endDate;
   }
 
-  public Date getActivityPeriodStart() {
+  public Time getActivityPeriodStart() {
     return activityPeriodStart;
   }
 
-  void setActivityPeriodStart(Date activityPeriodStart) {
+  void setActivityPeriodStart(Time activityPeriodStart) {
     this.activityPeriodStart = activityPeriodStart;
   }
 
-  public Date getActivityPeriodEnd() {
+  public Time getActivityPeriodEnd() {
     return activityPeriodEnd;
   }
 
-  void setActivityPeriodEnd(Date activityPeriodEnd) {
+  void setActivityPeriodEnd(Time activityPeriodEnd) {
     this.activityPeriodEnd = activityPeriodEnd;
   }
 }

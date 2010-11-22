@@ -54,6 +54,8 @@ public class Smsc {
 
   private int maxValidityPeriod;
 
+  private int interConnectTimeout;
+
   private Smsc() {
   }
 
@@ -76,6 +78,7 @@ public class Smsc {
     defaultValidityPeriod = s.getInt("defaultValidityPeriod");
     maxValidityPeriod = s.getInt("maxValidityPeriod");
     minValidityPeriod = s.getInt("minValidityPeriod");
+    interConnectTimeout = s.getInt("interConnectPeriod", 60);
     s = s.getSection("retryPolicies");
     for (String e : s.getStringList("immediate", ",")) {
       immediateErrors.add(Integer.parseInt(e.trim()));
@@ -108,6 +111,7 @@ public class Smsc {
     s.setInt("defaultValidityPeriod", defaultValidityPeriod);
     s.setInt("maxValidityPeriod", maxValidityPeriod);
     s.setInt("minValidityPeriod", minValidityPeriod);
+    s.setInt("interConnectPeriod", interConnectTimeout);
     s = s.getOrCreateSection("retryPolicies");
     s.setStringList("immediate", immediateErrors, ",");
     s.setStringList("permanent", permanentErrors, ",");
@@ -299,6 +303,14 @@ public class Smsc {
     this.vlrUssdServiceOp = vlrUssdServiceOp;
   }
 
+  public int getInterConnectTimeout() {
+    return interConnectTimeout;
+  }
+
+  public void setInterConnectTimeout(int interConnectTimeout) {
+    this.interConnectTimeout = interConnectTimeout;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -320,6 +332,7 @@ public class Smsc {
     if (password != null ? !password.equals(smsc.password) : smsc.password != null) return false;
     if (systemId != null ? !systemId.equals(smsc.systemId) : smsc.systemId != null) return false;
     if (systemType != null ? !systemType.equals(smsc.systemType) : smsc.systemType != null) return false;
+    if (interConnectTimeout != smsc.interConnectTimeout) return false;
 
     if (permanentErrors.size() != smsc.permanentErrors.size()) {
       return false;
@@ -400,7 +413,8 @@ public class Smsc {
     s.minValidityPeriod = minValidityPeriod;
     s.immediateErrors.addAll(immediateErrors);
     s.permanentErrors.addAll(permanentErrors);
-    for (Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
+    s.interConnectTimeout = interConnectTimeout;
+    for(Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
       s.temporaryErrors.put(e.getKey(), new HashSet<Integer>(e.getValue()));
     }
     return s;

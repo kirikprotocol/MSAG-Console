@@ -25,7 +25,7 @@ public class UserTestUtils {
     assertEquals(o.getSmsPerSec(), n.getSmsPerSec());
     assertEquals(o.getDeliveryStartTime(), n.getDeliveryStartTime());
     assertEquals(o.getDeliveryEndTime(), n.getDeliveryEndTime());
-    assertEquals(o.getValidHours(), n.getValidHours());
+    assertEquals(o.getValidityPeriod(), n.getValidityPeriod());
     assertTrue(o.getRoles().equals(n.getRoles()));
     assertTrue(o.getDeliveryDays().equals(n.getDeliveryDays()));
     assertEquals(o.getDeliveryType(),n.getDeliveryType());

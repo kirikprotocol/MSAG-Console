@@ -61,7 +61,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     }
     u.setSmsPerSec(section.getInt("smsPerSec", u.getSmsPerSec()));
     u.setSourceAddr(new Address(section.getString("sourceAddr")));
-    u.setValidHours(section.getInt("validHours"));
+    u.setValidityPeriod(new Time(section.getString("validityPeriod", "01:00:00")));
     u.setRoles(loadUserRoles(section));
     u.setDeliveryDays(loadDeliveryDays(section));
     u.setDeliveryType(User.DeliveryType.valueOf(section.getString("deliveryType")));
@@ -77,7 +77,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setDeliveryLifetime(section.getInt("deliveryLifetime"));
 
     u.setImportDeliveriesFromDir(section.getBool("importDeliveriesFromDir", false));
-    u.setDirectory(section.getString("directory"));
+    u.setDirectory(section.getString("directory", null));
 
     u.setCreateReports(section.getBool("createReports",false));
     u.setReportsLifetime(section.getInt("reportsLifetime"));
@@ -148,25 +148,25 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
 
   private XmlConfigSection createUserSection(User user) {
     XmlConfigSection userSection = new XmlConfigSection(user.getLogin());
-    userSection.setString("password", user.getPassword());
-    userSection.setString("status", user.getStatus().toString());
-    userSection.setString("firstName", user.getFirstName());
-    userSection.setString("lastName", user.getLastName());
-    userSection.setString("phone", user.getPhone());
-    userSection.setString("email", user.getEmail());
-    userSection.setString("organization", user.getOrganization());
-    if (user.isCreateCDR()) {
-      userSection.setBool("createCDR", true);
+    userSection.setString("password",user.getPassword());
+    userSection.setString("status",user.getStatus().toString());
+    userSection.setString("firstName",user.getFirstName());
+    userSection.setString("lastName",user.getLastName());
+    userSection.setString("phone",user.getPhone());
+    userSection.setString("email",user.getEmail());
+    userSection.setString("organization",user.getOrganization());
+    if(user.isCreateCDR()) {
+      userSection.setBool("createCDR",true);
     }
-    if (user.getLocale() != null) {
-      userSection.setString("locale", user.getLocale().getLanguage());
+    if(user.getLocale()!=null) {
+      userSection.setString("locale",user.getLocale().getLanguage());
     }
-    userSection.setInt("smsPerSec", user.getSmsPerSec());
-    userSection.setString("sourceAddr", user.getSourceAddr().getSimpleAddress());
-    userSection.setInt("validHours", user.getValidHours());
-    userSection.setString("deliveryType", user.getDeliveryType().toString());
-    if (user.isTransactionMode()) {
-      userSection.setBool("transactionMode", true);
+    userSection.setInt("smsPerSec",user.getSmsPerSec());
+    userSection.setString("sourceAddr",user.getSourceAddr().getSimpleAddress());
+    userSection.setString("validDityPeriod",user.getValidityPeriod().getTimeString());
+    userSection.setString("deliveryType",user.getDeliveryType().toString());
+    if(user.isTransactionMode())  {
+      userSection.setBool("transactionMode",true);
     }
     userSection.setBool("retryOnFail", user.isRetryOnFail());
     if (user.getPolicyId() != null) {
@@ -202,7 +202,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
 
     userSection.setInt("deliveryLifetime", user.getDeliveryLifetime());
     userSection.setBool("importDeliveriesFromDir", user.isImportDeliveriesFromDir());
-    userSection.setString("directory",user.getDirectory());
+
+    if (user.getDirectory() != null)
+      userSection.setString("directory",user.getDirectory());
     if(user.isCreateReports()) {
       userSection.setBool("createReports",true);
     }

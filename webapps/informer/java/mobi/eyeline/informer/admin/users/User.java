@@ -36,7 +36,7 @@ public class User implements Serializable {
   private Time deliveryStartTime;
   private Time deliveryEndTime;
   private List<Integer> deliveryDays = new ArrayList<Integer>();
-  private int validHours;
+  private Time validityPeriod;
   private DeliveryType deliveryType;
   private boolean transactionMode;
   private boolean allRegionsAllowed;
@@ -77,7 +77,7 @@ public class User implements Serializable {
     this.deliveryStartTime = user.deliveryStartTime == null ? null : new Time(user.getDeliveryStartTime());
     this.deliveryEndTime = user.deliveryEndTime == null ? null : new Time(user.getDeliveryEndTime());
     this.deliveryDays = new ArrayList<Integer>(user.getDeliveryDays());
-    this.validHours = user.validHours;
+    this.validityPeriod = user.validityPeriod;
     this.deliveryType = user.deliveryType;
     this.transactionMode = user.transactionMode;
     this.policyId = user.policyId;
@@ -238,13 +238,15 @@ public class User implements Serializable {
     return deliveryDays;
   }
 
-  public int getValidHours() {
-    return validHours;
+  public Time getValidityPeriod() {
+    return validityPeriod;
   }
 
-  public void setValidHours(int validHours) throws AdminException {
-    vh.checkPositive("validHours", validHours);
-    this.validHours = validHours;
+
+  public void setValidityPeriod(Time validityPeriod) throws AdminException {
+    if (validityPeriod != null)
+      vh.checkPositive("validityPeriod", validityPeriod.getHour());
+    this.validityPeriod = validityPeriod;
   }
 
   public void setDeliveryDays(List<Integer> deliveryDays) throws AdminException {
@@ -351,7 +353,8 @@ public class User implements Serializable {
   }
 
   public void setDirectory(String directory) throws AdminException {
-    vh.checkNotEmpty("directory", directory);
+    if (directory == null || directory.trim().length() == 0)
+      this.directory = null;
     this.directory = directory;
   }
 
