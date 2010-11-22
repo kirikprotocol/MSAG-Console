@@ -12,39 +12,44 @@
 
   <ui:define name="content">
 
-    <!--<eye:message level="error" rendered="true">-->
-    <!--<h:panelGrid columns="1">-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--<h:outputText value="Description"/>-->
-    <!--</h:panelGrid>-->
-    <!--</eye:message>-->
-
     <h:form>
 
-      <!--<eye:updatableContent updatePeriod="1" enabled="#{index1.continueUpdate}">-->
-      <!---->
-      <!--<h:outputText value="#{index1.current}" rendered="#{index1.continueUpdate}"/>-->
+      <eye:dataTable value="#{index1.model}" var="r" selectedRows="#{index1.selected}">
+        <eye:row>
 
-      <eye:pageCalendar value="#{index1.calendarModel}" var="m">
-        <h:outputText value="#{m}"/>
-      </eye:pageCalendar>
+          <eye:column name="mycolumn" title="e1" width="33%" sortable="true">
+
+            <h:outputText value="#{r}"/>
+
+            <f:facet name="footer">
+              <h:outputText value="e1 footer"/>
+            </f:facet>
+
+          </eye:column>
+
+          <eye:column name="e2" title="e2" width="33%" sortable="true">
+            <h:outputText value="#{r%2}"/>
+          </eye:column>
 
 
-      <!--</eye:updatableContent>-->
+          <eye:column name="e3" title="e3" width="33%" sortable="true">
 
-      <!--<eye:updatableContent updatePeriod="1" enabled="#{index1.continueUpdate}">-->
-      <!--<h:outputText value="#{index1.current}" rendered="#{index1.continueUpdate}"/>-->
+            <h:outputText value="#{r%3}"/>
 
+            <f:facet name="footer">
+              <h:outputText value="e3 footer"/>
+            </f:facet>
+            
+          </eye:column>
 
-      <!--</eye:updatableContent>-->
+        </eye:row>
+
+        <f:facet name="footer">
+          <h:outputText value="sdfgjkadfgdsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasadasdasdasadsadsadasdadasdsaddddddddddsssssssadsdsaasdasd"/>
+        </f:facet>
+        
+      </eye:dataTable>
+
 
 
     </h:form>

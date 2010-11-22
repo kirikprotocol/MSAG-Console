@@ -137,6 +137,53 @@ public class DataTableRenderer extends Renderer {
 
     Writer w = context.getResponseWriter();
 
+    boolean columnFooter = false;
+    for (UIComponent ch : t.getFirstRow().getChildren()) {
+      if (ch.getFacet("footer") != null) {
+        columnFooter = true;
+        break;
+      }
+    }
+    if(columnFooter) {
+      int currentRow = t.getChildCount() + 1;
+      w.append("\n<tr class=\"row" + (currentRow & 1) + "\">");
+      if(t.isRowSelection()) {
+        w.append("\n<td>&nbsp;</td>");
+      }
+      for (UIComponent ch : t.getFirstRow().getChildren()) {
+        UIComponent footer = ch.getFacet("footer");
+        w.append("\n<td>");
+        if (footer != null) {
+          footer.encodeBegin(context);
+          footer.encodeEnd(context);
+        }else {
+          w.append("&nbsp;");
+        }
+        w.append("</td>");
+      }
+
+      w.append("\n</tr>");
+
+    }else {
+      UIComponent footer = t.getFacet("footer");
+      int currentRow = t.getChildCount()+1;
+      if(footer != null) {
+        int colspan = t.getFirstRow().getChildCount();
+        if(colspan == 0) {
+          colspan = 1;
+        }
+        w.append("\n<tr  class=\"row" + (currentRow & 1) + "\">");
+        if(t.isRowSelection()) {
+          w.append("\n<td>&nbsp;</td>");
+        }
+        w.append("\n<td colspan=\""+colspan+"\">");
+        footer.encodeBegin(context);
+        footer.encodeEnd(context);
+        w.append("</td>");
+        w.append("\n</tr>");
+      }
+    }
+
     w.append("\n</tbody>");
     w.append("\n</table>");
 

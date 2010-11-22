@@ -45,6 +45,10 @@ public class Index1Controller {
     };
   }
 
+  public void setSelected(List selected) {
+
+  }
+
   public DataTableModel getModel() {
 
     System.out.println("GET MODEL CALLED");
