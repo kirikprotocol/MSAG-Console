@@ -3,18 +3,20 @@ package mobi.eyeline.mcaia;
 import mobi.eyeline.mcaia.protocol.*;
 import mobi.eyeline.mcaia.protocol.Status;
 import mobi.eyeline.protogen.framework.*;
-import mobi.eyeline.smpp.api.pdu.DeliverSM;
-import mobi.eyeline.smpp.api.pdu.Message;
-import mobi.eyeline.smpp.api.pdu.SubmitSM;
+import mobi.eyeline.protogen.framework.PDU;
+import mobi.eyeline.smpp.api.MessageResponseListener;
+import mobi.eyeline.smpp.api.SmppClient;
+import mobi.eyeline.smpp.api.SmppException;
+import mobi.eyeline.smpp.api.pdu.*;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import mobi.eyeline.smpp.api.processing.IncomingQueue;
 import mobi.eyeline.smpp.api.types.*;
-import mobi.eyeline.smpp.api.util.WatchDog;
 import mobi.eyeline.smpp.appgw.APPGWRequestProcessor;
 import mobi.eyeline.smpp.appgw.scenario.ExecutingException;
 import mobi.eyeline.smpp.sme.*;
-import mobi.eyeline.smpp.sme.network.OutgoingObject;
+import mobi.eyeline.smpp.sme.Response;
+import mobi.eyeline.utils.WatchDog;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -28,11 +30,11 @@ import java.util.Properties;
  * Date: May 18, 2010
  * Time: 1:59:26 PM
  */
-public class MCAClient extends ClientConnection implements ExtendedRequestProcessor, StatusHandler, MessageStatusListener {
+public class MCAClient extends ClientConnection implements ExtendedRequestProcessor, StatusHandler, MessageResponseListener {
   private static Logger logger = Logger.getLogger(MCAClient.class);
   Address         serviceAddress;
   APPGWRequestProcessor appgw;
-  OutgoingQueue outgoingQueue;
+  SmppClient smppClient;
   HashSet<Integer> requests = new HashSet<Integer>(100);
   ReqWatchdog watchdog;
 
@@ -46,7 +48,8 @@ public class MCAClient extends ClientConnection implements ExtendedRequestProces
       msg.setDestinationAddress(serviceAddress);
       msg.setAppInfo("mcaReq", req);
       msg.setAppInfo("mcaReqHandler", this);
-      if( !vlr ) msg.setAppInfo(MessageStatusListener.APP_INFO_NAME, this);
+      // todo handle every time NI message delivery
+      if( !vlr ) msg.setAppInfo(MessageResponseListener.APP_INFO_NAME, this);
       else msg.setAppInfo("ussdvlr", true);
       synchronized (requests) {
         requests.add( req.getSeqNum() );
@@ -83,24 +86,28 @@ public class MCAClient extends ClientConnection implements ExtendedRequestProces
           releaseReq.setSourceAddress(serviceAddress);
           releaseReq.setDestinationAddress(req.getCalled());
           releaseReq.setUssdServiceOp(UssdServiceOp.USSRelReq);
-          outgoingQueue.addOutgoingObject(new OutgoingObject(releaseReq));
+          smppClient.send(releaseReq);
         } catch (InvalidAddressFormatException e) {
           logger.error("", e);
+        } catch (SmppException e) {
+          logger.error("Could not send release request", e);
         }
       }
     }
   }
 
-  public void statusChanged(Message message, mobi.eyeline.smpp.api.types.Status status, OutgoingQueue outgoingQueue) {
-    if( status == mobi.eyeline.smpp.api.types.Status.OK ) {
+  public void responseReceived(Message msg, mobi.eyeline.smpp.api.pdu.Response resp, boolean lastAttempt) {
+    if( resp.getStatus() == mobi.eyeline.smpp.api.types.Status.OK ) {
       // in this case status will be set by executors
-    } else if( status == mobi.eyeline.smpp.api.types.Status.MAPPE_NO_RESPONSE_FROM_PEER) {
-      // try to deliver thru VLR, just example
-      BusyRequest req = (BusyRequest) message.getAppInfo("mcaReq");
-      doRequest(req, true);
-    } else {
-      BusyRequest req = (BusyRequest) message.getAppInfo("mcaReq");
-      handleStatus(req, Status.Rejected); // todo - think about separate status
+    } else if(lastAttempt) {
+      if( resp.getStatus() == mobi.eyeline.smpp.api.types.Status.MAPPE_NO_RESPONSE_FROM_PEER) {
+        // try to deliver thru VLR, just example
+        BusyRequest req = (BusyRequest) msg.getAppInfo("mcaReq");
+        doRequest(req, true);
+      } else {
+        BusyRequest req = (BusyRequest) msg.getAppInfo("mcaReq");
+        handleStatus(req, Status.Rejected); // todo - think about separate status
+      }
     }
   }
 
@@ -128,9 +135,9 @@ public class MCAClient extends ClientConnection implements ExtendedRequestProces
     if( logger.isDebugEnabled() ) logger.debug("Send "+pdu);  
   }
 
-  public void setEnvironment(IncomingQueue incomingQueue, OutgoingQueue outgoingQueue) {
-    appgw.setEnvironment(incomingQueue, outgoingQueue);
-    this.outgoingQueue = outgoingQueue;
+  public void setEnvironment(IncomingQueue incomingQueue, SmppClient smppClient) {
+    appgw.setEnvironment(incomingQueue, smppClient);
+    this.smppClient = smppClient;
   }
 
   @Override

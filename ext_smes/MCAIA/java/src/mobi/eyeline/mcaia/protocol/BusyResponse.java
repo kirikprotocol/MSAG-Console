@@ -65,17 +65,17 @@ public class BusyResponse extends BusyRequest {
   public void encode(BufferWriter writer) throws IOException {
     super.encode(writer);
     if(statusFlag) {
-      writer.writeShort((short)4); // tag id
+      writer.writeTag(4); // tag id
       writer.writeByteLV(status.getValue());
     }  else throw new MissingMandatoryFieldException("status");
-    writer.writeShort((short)0xFFFF); // end message tag
+    writer.writeTag(0xFF); // end message tag
   }
 
   public void decode(BufferReader reader) throws IOException {
     super.decode(reader);
     while( true ) {
-      int tag = reader.readShort();
-      if( tag == (short)0xFFFF ) break;
+      int tag = reader.readTag();
+      if( tag == 0xFF ) break;
       switch( tag ) {
         case 4: {
           status = Status.valueOf(reader.readByteLV());

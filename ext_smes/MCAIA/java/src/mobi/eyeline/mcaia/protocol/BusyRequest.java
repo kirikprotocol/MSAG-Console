@@ -164,32 +164,32 @@ public class BusyRequest implements PDU {
 
   public void encode(BufferWriter writer) throws IOException {
     if(callerFlag) {
-      writer.writeShort((short)1); // tag id
+      writer.writeTag(1); // tag id
       writer.writeStringLV(caller);
     }  else throw new MissingMandatoryFieldException("caller");
     if(calledFlag) {
-      writer.writeShort((short)2); // tag id
+      writer.writeTag(2); // tag id
       writer.writeStringLV(called);
     }  else throw new MissingMandatoryFieldException("called");
     if(dateFlag) {
-      writer.writeShort((short)3); // tag id
+      writer.writeTag(3); // tag id
       writer.writeLongLV(date);
     }  else throw new MissingMandatoryFieldException("date");
     if(causeFlag) {
-      writer.writeShort((short)4); // tag id
+      writer.writeTag(4); // tag id
       writer.writeByteLV(cause);
     }  else throw new MissingMandatoryFieldException("cause");
     if(flagsFlag) {
-      writer.writeShort((short)5); // tag id
+      writer.writeTag(5); // tag id
       writer.writeByteLV(flags);
     }  else throw new MissingMandatoryFieldException("flags");
-    writer.writeShort((short)0xFFFF); // end message tag
+    writer.writeTag(0xFF); // end message tag
   }
 
   public void decode(BufferReader reader) throws IOException {
     while( true ) {
-      int tag = reader.readShort();
-      if( tag == (short)0xFFFF ) break;
+      int tag = reader.readTag();
+      if( tag == 0xFF ) break;
       switch( tag ) {
         case 1: {
           caller = reader.readStringLV();
