@@ -22,6 +22,11 @@ void test_runtime()
   } else
     printf("ok\n");
 
+  if (!eyeline::asn1::ber::tests::test_INT_edgeValue(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
   if (!eyeline::asn1::ber::tests::test_OCTET_STRING(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
@@ -37,6 +42,11 @@ void test_runtime()
   } else
     printf("ok\n");
 
+  if (!eyeline::asn1::ber::tests::test_SeqTypeExplicit1(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
   if (!eyeline::asn1::ber::tests::test_SeqType2(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
@@ -48,6 +58,11 @@ void test_runtime()
     printf("ok\n");
 
   if (!eyeline::asn1::ber::tests::test_SeqType4(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqType4_minPrealloc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");

@@ -18,12 +18,15 @@ namespace tests {
 
 bool test_BOOL(char* err_msg);
 bool test_INT(char* err_msg);
+bool test_INT_edgeValue(char* err_msg);
 bool test_OCTET_STRING(char* err_msg);
 bool test_BIT_STRING(char* err_msg);
 bool test_SeqType1(char* err_msg);
+bool test_SeqTypeExplicit1(char* err_msg);
 bool test_SeqType2(char* err_msg);
 bool test_SeqType3(char* err_msg);
 bool test_SeqType4(char* err_msg);
+bool test_SeqType4_minPrealloc(char* err_msg);
 bool test_SeqOfType1(char* err_msg);
 
 int
