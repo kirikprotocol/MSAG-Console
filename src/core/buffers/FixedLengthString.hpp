@@ -74,8 +74,7 @@ struct FixedLengthString{
     return *this;
   }
 
-  template <class StdString>
-  FixedLengthString& operator=(const StdString& argStr)
+  FixedLengthString& operator=(const std::string& argStr)
   {
     *this=argStr.c_str();
     return *this;
