@@ -147,9 +147,10 @@ public class DataTableRenderer extends Renderer {
     if(columnFooter) {
       int currentRow = t.getChildCount() + 1;
       w.append("\n<tr class=\"row" + (currentRow & 1) + "\">");
-      if(t.isRowSelection()) {
+      if(t.isRowSelection())
         w.append("\n<td>&nbsp;</td>");
-      }
+      if (t.hasInnerData())
+        w.append("\n<td>&nbsp;</td>");
       for (UIComponent ch : t.getFirstRow().getChildren()) {
         UIComponent footer = ch.getFacet("footer");
         w.append("\n<td>");
