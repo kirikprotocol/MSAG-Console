@@ -95,17 +95,13 @@ bool UserInfo::hasRole( UserRole role ) const
 }
 
 
-unsigned UserInfo::isReady( usectime_type currentTime )
+usectime_type UserInfo::isReadyAndConsumeQuant( usectime_type currentTime )
 {
     MutexGuard mg(lock_);
-    return speedControl_.isReady( currentTime % flipTimePeriod, maxSnailDelay );
-}
-
-
-void UserInfo::consumeQuant()
-{
-    MutexGuard mg(lock_);
+    usectime_type ret = speedControl_.isReady( currentTime % flipTimePeriod, maxSnailDelay );
+    if (ret) return ret;
     speedControl_.consumeQuant();
+    return 0;
 }
 
 

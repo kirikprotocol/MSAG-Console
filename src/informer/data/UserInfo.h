@@ -80,8 +80,9 @@ public:
     /// max number of deliveries or (-1==unlimited).
     unsigned getMaxTotalDeliveries() const { return maxTotalDeliveries_; }
 
-    unsigned isReady( usectime_type currentTime );
-    void consumeQuant();
+    /// return the number of microsecond to sleep
+    usectime_type isReadyAndConsumeQuant( usectime_type currentTime );
+    // void consumeQuant();
 
     // a limit of sms per second
     // unsigned getSpeed() const { return unsigned(speedControl_.getSpeed()); }

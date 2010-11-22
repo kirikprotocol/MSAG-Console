@@ -377,13 +377,17 @@ void InfosmeCoreV1::selfTest()
             smsc_log_debug(log_,"--- adding messages to D=%u ---",dlvId);
             MessageList msgList;
             MessageLocker mlk;
-            for ( int i = 0; i < 1000; ++i ) {
+            for ( int i = 0; i < 10000; ++i ) {
                 mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654000ULL + i);
                 char userdata[30];
-                MessageText(0,1).swap(mlk.msg.text);
-                sprintf(userdata,"msg#%d0",i);
+                char msgtext[50];
+                sprintf(msgtext,"the unbound text #%u",i);
+                MessageText(msgtext).swap(mlk.msg.text);
+                // MessageText(0,1).swap(mlk.msg.text);
+                sprintf(userdata,"msg#%d",i);
                 mlk.msg.userData = userdata;
                 msgList.push_back(mlk);
+                /*
                 mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
                 char msgtext[50];
                 sprintf(msgtext,"the unbound text #%u",i);
@@ -391,20 +395,24 @@ void InfosmeCoreV1::selfTest()
                 sprintf(userdata,"msg#%d1",i);
                 mlk.msg.userData = userdata;
                 msgList.push_back(mlk);
+                 */
             }
             dlv->addNewMessages(msgList.begin(), msgList.end());
         }
 
         {
+            smsc_log_debug(log_,"--- dropping messages for D=%u ---", dlvId);
+            std::vector<msgid_type> msgIds;
+            for ( int i = 0; i < 5000; ++i ) {
+                msgIds.push_back(i+1);
+            }
+            dlv->dropMessages(msgIds);
+        }
+
+        {
             smsc_log_debug(log_,"--- changing delivery D=%u state ---", dlvId);
             dlv->setState(DLVSTATE_ACTIVE);
-            // smsc_log_debug(log_,"--- messages added, dropping them ---");
-            // std::vector<msgid_type> msgIds;
-            // msgIds.push_back(1);
-            // msgIds.push_back(2);
-            // dlv->dropMessages(msgIds);
             smsc_log_debug(log_,"--- delivery activated ---");
-            // destroying smsc
         }
 
         /*

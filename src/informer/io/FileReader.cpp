@@ -51,7 +51,8 @@ size_t FileReader::readRecords( Buf& buf, RecordReader& reader, size_t count )
             if (ptr+reclen > buf.GetCurPtr()) {
                 break; // need more data
             }
-            smsc_log_debug(log_,"processing record len=%u at pos=%u, fpos=%llu",
+            smsc_log_debug(log_,"processing record=%u len=%u at pos=%u, fpos=%llu",
+                           unsigned(total),
                            unsigned(reclen),
                            unsigned(ptr-buf.get()),
                            ulonglong(filePos));

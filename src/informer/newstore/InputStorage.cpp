@@ -148,7 +148,9 @@ public:
                 if (!item) {
                     res = false;
                     what = "not in cache";
+                    break;
                 }
+
                 const uint64_t bit = packbits[msgId % packsize];
                 if ( *item & bit ) {
                     *item -= bit;
@@ -158,11 +160,13 @@ public:
                         what = "found in cache, cleaned";
                         dropMsgHash_.Delete(idx);
                     }
-                } else {
-                    res = false;
-                    what = "found, but bit not set";
+                    break;
                 }
+
+                res = false;
+                what = "found, but bit not set";
             }
+
         } while (false);
         smsc_log_debug(is_.log_,"D=%u/M=%llu is %sin blk list: %s",
                        is_.getDlvId(), msgId, res ? "" : "NOT ", what);
@@ -301,6 +305,7 @@ public:
                 throw ErrnoException(errno,"rename(%s)",fname);
             }
             dropFileOffset_ = 0;
+            if ( minRlast < minMsgId_ ) { minMsgId_ = minRlast; }
             dropMon_.notify();
         }
         writeActLog(100);
@@ -596,6 +601,9 @@ public:
             MessageText(0,int32_t(fb.get32())).swap(msg.text);
         }
         if (isDropped) {
+            msg.lastTime = currentTime_;
+            msg.timeLeft = 0;
+            msg.retryCount = 0;
             // we have to add kill record in activity log
             is_.activityLog_->addRecord(currentTime_,regId_,msg,0);
             is_.getDlvActivator().getFinalLog().addMsgRecord(currentTime_,

@@ -130,11 +130,11 @@ usectime_type RegionalStorage::getNextMessage( usectime_type usecTime,
     const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
 
-    if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return 5*tuPerSec; }
+    if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return 6*tuPerSec; }
     if ( !info.checkActiveTime(weekTime) ) { return 5*tuPerSec; }
 
     /// check speed control
-    usectime_type ret = dlv_->activityLog_.getUserInfo().isReady(usecTime);
+    usectime_type ret = dlv_->activityLog_.getUserInfo().isReadyAndConsumeQuant(usecTime);
     if (ret>0) { return ret; }
 
     const msgtime_type currentTime(usecTime/tuPerSec);
@@ -243,7 +243,6 @@ usectime_type RegionalStorage::getNextMessage( usectime_type usecTime,
         dlv_->storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
         dlv_->activityLog_.incStats(m.state,1,prevState);
     }
-    dlv_->activityLog_.getUserInfo().consumeQuant();
     return 0;
 }
 
