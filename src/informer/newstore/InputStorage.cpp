@@ -931,7 +931,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
                 // FIXME: limit the number of reads in deleted storage!
                 FileReader fileReader(fg);
                 IReader recordReader(*this,msglist,ro,regId);
-                fileReader.readRecords(buf,recordReader,reqCount);
+                reqCount -= fileReader.readRecords(buf,recordReader,reqCount);
                 fg.close();
                 if (ro.rfn<ro.wfn) {
                     ++ro.rfn;
