@@ -49,7 +49,7 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
     } else {
       oldRecord.add(newRecord);
     }
-    totals.add(newRecord);
+    getTotals().add(newRecord);
     setCurrent(getCurrent() + 1);
     return !isCancelled();
   }

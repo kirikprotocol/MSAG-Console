@@ -81,7 +81,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     } else {
       oldRecord.add(newRecord);
     }
-    totals.add(newRecord);
+    getTotals().add(newRecord);
     return !isCancelled();
   }
 

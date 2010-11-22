@@ -78,13 +78,22 @@
                   <f:facet name="inner">
                     <h:outputText value="#{row.periodString}" style="color:GREEN"/>
                   </f:facet>
+                  <f:facet name="footer">
+                        <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
+                  </f:facet>
+
                 </eye:column>
                 <eye:column name="counter" title="#{msg['stat.page.deliveriesCount']}" sortable="true" width="50%" align="center">
                   <h:outputText value="#{row.data.counter}"/>
                   <f:facet name="inner">
                     <h:outputText value="#{row.counter}" style="color:GREEN"/>
                   </f:facet>
+                  <f:facet name="footer">
+                      <h:outputText value="#{deliveriesCountByPeriod.totals.counter}" style="font-weight:bold;"/>
+                  </f:facet>
                 </eye:column>
+
+
               </eye:row>
             </eye:dataTable>
 

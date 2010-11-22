@@ -26,6 +26,8 @@ public abstract class DeliveryStatController extends LongOperationController {
   private DeliveryStatFilter filter;
   private TimeAggregationType aggregation;
 
+
+
   protected final DeliveryStatTotals totals;
   private final Map<Object, AggregatedRecord> recordsMap;
   private final List<AggregatedRecord> records;
@@ -112,7 +114,7 @@ public abstract class DeliveryStatController extends LongOperationController {
   protected void clearRecords() {
     recordsMap.clear();
     records.clear();
-    totals.reset();
+    getTotals().reset();
   }
 
   protected void loadFinished() {

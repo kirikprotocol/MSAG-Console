@@ -139,7 +139,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
             User owner = config.getUser(deliveryInfo.getUserId());
             MessagesByDeliveriesRecord r = new MessagesByDeliveriesRecord(owner, deliveryInfo, stat, startDate, endDate);
             records.add(r);
-            totals.add(r);
+            getTotals().add(r);
             setCurrent(getCurrent() + 1);
             return !isCancelled();
           }

@@ -40,7 +40,7 @@ public class MessagesByUserStatsController extends DeliveryStatController {
         } else {
           oldRecord.add(newRecord);
         }
-        totals.add(newRecord);
+        getTotals().add(newRecord);
         return !isCancelled();
       }
     });

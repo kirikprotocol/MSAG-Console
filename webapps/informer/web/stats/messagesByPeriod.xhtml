@@ -87,17 +87,26 @@
                 <f:facet name="inner">
                   <h:outputText value="#{row.periodString}" style="color:GREEN"/>
                 </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
+                </f:facet>
               </eye:column>
               <eye:column name="new" title="#{msg['stat.page.newMessages']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.data.newMessages}"/>
                 <f:facet name="inner">
                   <h:outputText value="#{row.newMessages}" style="color:GREEN"/>
                 </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.newMessages}" style="font-weight:bold;"/>
+                </f:facet>
               </eye:column>
               <eye:column name="process" title="#{msg['stat.page.processMessages']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.data.processMessages}"/>
                 <f:facet name="inner">
                   <h:outputText value="#{row.processMessages}" style="color:GREEN"/>
+                </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.processMessages}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
 
@@ -106,17 +115,26 @@
                 <f:facet name="inner">
                   <h:outputText value="#{row.deliveredMessages}(#{row.deliveredMessagesSMS})" style="color:GREEN"/>
                 </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.deliveredMessages}(#{messagesByPeriod.totals.deliveredMessagesSMS})" style="font-weight:bold;"/>
+                </f:facet>
               </eye:column>
               <eye:column name="failed" title="#{msg['stat.page.failed']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.data.failedMessages}(#{row.data.failedMessagesSMS})"/>
                 <f:facet name="inner">
                   <h:outputText value="#{row.failedMessages}(#{row.failedMessagesSMS})" style="color:GREEN"/>
                 </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.failedMessages}(#{messagesByPeriod.totals.failedMessagesSMS})" style="font-weight:bold;"/>
+                </f:facet>
               </eye:column>
               <eye:column name="expired" title="#{msg['stat.page.expiredMessages']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.data.expiredMessages}(#{row.data.expiredMessagesSMS})"/>
                 <f:facet name="inner">
                   <h:outputText value="#{row.expiredMessages}(#{row.expiredMessagesSMS})" style="color:GREEN"/>
+                </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.expiredMessages}(#{messagesByPeriod.totals.expiredMessagesSMS})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
             </eye:row>
@@ -130,11 +148,18 @@
                 <f:facet name="inner">
                   <h:outputText value="#{row.periodString}" style="color:GREEN"/>
                 </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
+                </f:facet>
+
               </eye:column>
               <eye:column name="wait" title="#{msg['stat.page.wait']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.data.newMessages + row.data.processMessages}"/>
                 <f:facet name="inner">
                   <h:outputText value="#{row.newMessages + row.processMessages}" style="color:GREEN"/>
+                </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.newMessages + messagesByPeriod.totals.processMessages}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
 
@@ -143,11 +168,17 @@
                 <f:facet name="inner">
                   <h:outputText value="#{row.deliveredMessages}(#{row.deliveredMessagesSMS})" style="color:GREEN"/>
                 </f:facet>
+               <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.deliveredMessages}(#{messagesByPeriod.totals.deliveredMessagesSMS})" style="font-weight:bold;"/>
+                </f:facet>
               </eye:column>
               <eye:column name="notDelivered" title="#{msg['stat.page.notDelivered']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.data.failedMessages+row.data.expiredMessages}(#{row.data.failedMessagesSMS+row.data.expiredMessagesSMS})"/>
                 <f:facet name="inner">
                   <h:outputText value="#{row.failedMessages+row.expiredMessages}(#{row.failedMessagesSMS+row.expiredMessagesSMS})" style="color:GREEN"/>
+                </f:facet>
+                <f:facet name="footer">
+                  <h:outputText value="#{messagesByPeriod.totals.failedMessages+messagesByPeriod.totals.expiredMessages}(#{messagesByPeriod.totals.failedMessagesSMS+messagesByPeriod.totals.expiredMessagesSMS})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
 
