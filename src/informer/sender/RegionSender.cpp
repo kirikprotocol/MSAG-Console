@@ -192,7 +192,9 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
                       ulonglong(msg_.msgId), e.what());
         res = smsc::system::Status::UNKNOWNERR;
     }
-    ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(), currentTime_, res, nchunks);
+    ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(),
+                       msgtime_type(currentTime_/tuPerSec),
+                       res, nchunks);
     return -inc;
 }
 

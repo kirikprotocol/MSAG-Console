@@ -879,7 +879,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
 }
 
 
-void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
+void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
 {
     const regionid_type regId = req.getRegionId();
     smsc_log_debug(log_,"transfer R=%u/D=%u started, reqCount=%u", regId, getDlvId(), reqCount);
@@ -931,7 +931,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
                 // FIXME: limit the number of reads in deleted storage!
                 FileReader fileReader(fg);
                 IReader recordReader(*this,msglist,ro,regId);
-                reqCount -= fileReader.readRecords(buf,recordReader,unsigned(reqCount));
+                reqCount -= fileReader.readRecords(buf,recordReader,reqCount);
                 fg.close();
                 if (ro.rfn<ro.wfn) {
                     ++ro.rfn;

@@ -69,7 +69,7 @@ private:
     void dispatchMessages( MsgIter begin, MsgIter end, std::vector<regionid_type>& regs);
 
     /// invoked from transfertask
-    void doTransfer( TransferRequester& req, unsigned count );
+    void doTransfer( TransferRequester& req, size_t count );
 
     void getRecord(InputRegionRecord& ro, msgid_type minRlast = 0);
     void setRecord(InputRegionRecord& ro, msgid_type maxMsgId = 0);

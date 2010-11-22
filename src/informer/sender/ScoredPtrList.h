@@ -120,9 +120,9 @@ public:
                 const int increment = proc_.processScoredObj( deltaTime, i->second );
                 ScoreUnit score;
                 if ( increment < 0 ) {
-                    score = i->first - increment;
+                    score = i->first + ScoreUnit(-increment);
                 } else if ( increment > 0 ) {
-                    score = i->first + increment;
+                    score = i->first + ScoreUnit(increment);
                 } else {
                     score = i->first + 1;
                 }
