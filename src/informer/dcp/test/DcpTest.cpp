@@ -1,12 +1,20 @@
 #include "informer/dcp/client/InformerClient.hpp"
 #include "util/Timer.hpp"
 
+bool interrupted=false;
+
+extern "C" void sigint(int sig)
+{
+  interrupted=true;
+}
+
 int main( int argc, char** argv )
 {
-    int port = 9073;
-    if (argc>1) {
-        port = atoi(argv[1]);
-    }
+  sigset(SIGINT,sigint);
+  int port = 9073;
+  if (argc>1) {
+    port = atoi(argv[1]);
+  }
 
   using namespace eyeline::informer::dcp::client;
   using namespace eyeline::informer::dcp;
@@ -26,7 +34,7 @@ int main( int argc, char** argv )
     di.setPriority(1);
     di.setTransactionMode(false);
     di.setStartDate("15.11.2010 10:00:00");
-    di.setEndDate("15.12.2010 10:00:00");
+    //di.setEndDate("15.12.2010 10:00:00");
     di.setActivePeriodStart("02:00:00");
     di.setActivePeriodEnd("20:00:00");
     di.getActiveWeekDaysRef().push_back("Mon");
@@ -171,9 +179,12 @@ int main( int argc, char** argv )
     printf("changing delivery state to %s\n",nds.toString().c_str());
     ic.changeDeliveryState(did,nds);
     printf("waiting\n");
-    sleep(1);
-    messages::GetDeliveryStateResp ds2=ic.getDeliveryState(did);
-    printf("new delivery state:%s\n",ds2.toString().c_str());
+    while(!interrupted)
+    {
+      sleep(1);
+      messages::GetDeliveryStateResp ds2=ic.getDeliveryState(did);
+      printf("new delivery state:%s\n",ds2.toString().c_str());
+    }
 
 
   }catch(std::exception& e)
