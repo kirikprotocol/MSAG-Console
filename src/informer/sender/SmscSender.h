@@ -3,7 +3,7 @@
 
 #include <memory>
 #include "ResponseData.h"
-#include "ScoredList.h"
+#include "ScoredPtrList.h"
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
@@ -40,7 +40,7 @@ struct SmscConfig
 /// sending messages to one smsc
 class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPduEventListener
 {
-    friend class ScoredList< SmscSender >;
+    friend class ScoredPtrList< SmscSender >;
     typedef smsc::core::buffers::CyclicQueue< ResponseData > DataQueue;
     typedef std::list< ReceiptData > ReceiptList;
 
@@ -99,11 +99,12 @@ private:
     void connectLoop();
     void sendLoop();
 
-    typedef RegionSender ScoredObjType;
+    typedef RegionSender* ScoredPtrType;
 
-    unsigned scoredObjIsReady( unsigned unused, ScoredObjType& regionSender );
-    int processScoredObj( unsigned unused, ScoredObjType& regionSender );
-    void scoredObjToString( std::string& s, ScoredObjType& regionSender );
+    unsigned scoredObjIsReady( unsigned unused, ScoredPtrType regionSender );
+    int processScoredObj( unsigned unused, ScoredPtrType regionSender );
+    void scoredObjToString( std::string& s, ScoredPtrType regionSender );
+
     void processExpiredTimers();
     void journalReceiptData( const ReceiptData& rd );
 
@@ -117,7 +118,7 @@ private:
 
     smsc::core::synchronization::Mutex                reconfLock_;
     std::auto_ptr<smsc::sme::SmppSession>             session_;
-    ScoredList< SmscSender >                          scoredList_; // not owned
+    ScoredPtrList< SmscSender >                       scoredList_; // not owned
     usectime_type                                     currentTime_;
 
     smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;

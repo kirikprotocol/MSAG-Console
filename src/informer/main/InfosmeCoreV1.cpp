@@ -377,14 +377,21 @@ void InfosmeCoreV1::selfTest()
             smsc_log_debug(log_,"--- adding messages to D=%u ---",dlvId);
             MessageList msgList;
             MessageLocker mlk;
-            mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654079ULL);
-            MessageText(0,1).swap(mlk.msg.text);
-            mlk.msg.userData = "myfirstmsg";
-            msgList.push_back(mlk);
-            mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
-            MessageText("the unbound message",0).swap(mlk.msg.text);
-            mlk.msg.userData = "thesecondone";
-            msgList.push_back(mlk);
+            for ( int i = 0; i < 1000; ++i ) {
+                mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654000ULL + i);
+                char userdata[30];
+                MessageText(0,1).swap(mlk.msg.text);
+                sprintf(userdata,"msg#%d0",i);
+                mlk.msg.userData = userdata;
+                msgList.push_back(mlk);
+                mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
+                char msgtext[50];
+                sprintf(msgtext,"the unbound text #%u",i);
+                MessageText(msgtext,0).swap(mlk.msg.text);
+                sprintf(userdata,"msg#%d1",i);
+                mlk.msg.userData = userdata;
+                msgList.push_back(mlk);
+            }
             dlv->addNewMessages(msgList.begin(), msgList.end());
         }
 
@@ -400,11 +407,13 @@ void InfosmeCoreV1::selfTest()
             // destroying smsc
         }
 
+        /*
         {
             const char* smscId = "selftestsmsc";
             smsc_log_debug(log_,"--- destroying smsc '%s' ---", smscId);
             this->deleteSmsc(smscId);
         }
+         */
 
     } catch ( std::exception& e ) {
         smsc_log_debug(log_,"--- selftest failed, exc: %s",e.what());

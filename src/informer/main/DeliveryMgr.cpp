@@ -626,6 +626,7 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& 
         if (statsDumpingIter_ == iter) ++statsDumpingIter_;
         tokill.splice(tokill.begin(),deliveryList_,iter);
     }
+    (*iter)->setState(DLVSTATE_CANCELLED);
     (*iter)->getRegionList(regIds);
     (*iter)->detachEverything();
 }

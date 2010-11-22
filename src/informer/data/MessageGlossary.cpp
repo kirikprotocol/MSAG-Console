@@ -99,7 +99,7 @@ void MessageGlossary::init( dlvid_type dlvId )
             if (!shift) {
                 readGlossaryFailed(realId,"glossary record is broken");
             }
-            if (inputId<=0 || inputId>=maxInputId+1) {
+            if (inputId<=0 || inputId>maxInputId+1) {
                 readGlossaryFailed(realId,"glossary record has invalid replacement id");
             }
             // scanning text

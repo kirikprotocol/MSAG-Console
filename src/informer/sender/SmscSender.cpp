@@ -555,7 +555,7 @@ void SmscSender::detachRegionSender( RegionSender& rs )
 {
     smsc_log_debug(log_,"S='%s' detaching regsend R=%u",smscId_.c_str(),unsigned(rs.getRegionId()));
     MutexGuard mg(reconfLock_);
-    scoredList_.remove(ScoredList<SmscSender>::isEqual(&rs));
+    scoredList_.remove(ScoredPtrList<SmscSender>::isEqual(&rs));
 }
 
 
@@ -1059,19 +1059,20 @@ void SmscSender::sendLoop()
 }
 
 
-unsigned SmscSender::scoredObjIsReady( unsigned, ScoredObjType& regionSender )
+unsigned SmscSender::scoredObjIsReady( unsigned, ScoredPtrType regionSender )
 {
-    const unsigned ret = regionSender.isReady(currentTime_);
-    smsc_log_debug(log_,"R=%u waits %u usec until ready()", regionSender.getRegionId(), ret);
+    const usectime_type ret = regionSender->isReady(currentTime_);
+    smsc_log_debug(log_,"R=%u waits %llu usec until ready()",
+                   regionSender->getRegionId(), ulonglong(ret));
     return ret;
 }
 
 
-int SmscSender::processScoredObj( unsigned, ScoredObjType& regionSender )
+int SmscSender::processScoredObj( unsigned, ScoredPtrType regionSender )
 {
     // unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
-    regionSender.processRegion(currentTime_);
-    return maxScoreIncrement / regionSender.getBandwidth();
+    regionSender->processRegion(currentTime_);
+    return maxScoreIncrement / regionSender->getBandwidth();
 }
 /*
         smsc_log_debug(log_,"R=%u processRegion finished, sleep=%u", regionSender.getRegionId(), wantToSleep);
@@ -1093,9 +1094,9 @@ int SmscSender::processScoredObj( unsigned, ScoredObjType& regionSender )
  */
 
 
-void SmscSender::scoredObjToString( std::string& s, ScoredObjType& regionSender )
+void SmscSender::scoredObjToString( std::string& s, ScoredPtrType regionSender )
 {
-    s += regionSender.toString();
+    s += regionSender->toString();
 }
 
 

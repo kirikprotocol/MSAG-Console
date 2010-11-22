@@ -43,7 +43,7 @@ public:
 
     inline unsigned isReady(usectime_type currentTime)
     {
-        return speedControl_.isReady(currentTime % flipTimePeriod, maxSnailDelay);
+        return unsigned(speedControl_.isReady(currentTime % flipTimePeriod, maxSnailDelay));
     }
 
     /*
@@ -61,7 +61,7 @@ public:
 private:
     typedef RegionalStoragePtr ScoredPtrType;
 
-    void scoredObjToString( std::string& s, const ScoredPtrType& dlv )
+    void scoredObjToString( std::string& s, const ScoredPtrType dlv )
     {
         if (!dlv) return;
         char buf[20];
