@@ -66,17 +66,17 @@ bool RegionSender::processRegion( usectime_type currentTime )
         static const int daynight = 24*3600;
         static const int aweek = 7*daynight;
         // monday is 0..daynight-1, tue is daynight..daynight*2-1, etc.
-        weekTime_ = ((tmnow.tm_wday+6)*daynight +
-                     (currentTime_ % daynight) + region_->getTimezone()) % aweek;
+        weekTime_ = int( ((tmnow.tm_wday+6)*daynight +
+                          (currentTime_ % daynight) + 
+                          region_->getTimezone()) % aweek );
         MutexGuard mg(lock_);
         // check speed control
-        unsigned toSleep = speedControl_.isReady( currentTime % flipTimePeriod,
-                                                  maxSnailDelay );
-        if ( toSleep > 0 ) {
+        if ( speedControl_.isReady( currentTime % flipTimePeriod,
+                                    maxSnailDelay ) > 0 ) {
             return false;
         }
         
-        toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
+        const unsigned toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
         if (toSleep>0) {
             smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
                            getRegionId(),toSleep);
@@ -128,7 +128,7 @@ void RegionSender::removeDelivery( dlvid_type dlvId )
 
 unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
 {
-    static const unsigned sleepTimeException = unsigned(5*tuPerSec);
+    static const unsigned sleepTimeException = unsigned(4*tuPerSec);
     if (!ptr) return sleepTimeException;
     try {
         if ( ptr->getState() == DLVSTATE_ACTIVE ) {
@@ -163,7 +163,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
 {
     int nchunks = 0;
     int res;
-    const unsigned inc = maxScoreIncrement / ptr->getDlvInfo().getPriority();
+    const int inc = maxScoreIncrement / ptr->getDlvInfo().getPriority();
     assert(!ptr == false);
     try {
 
@@ -193,7 +193,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
         res = smsc::system::Status::UNKNOWNERR;
     }
     ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(), currentTime_, res, nchunks);
-    return inc;
+    return -inc;
 }
 
 }

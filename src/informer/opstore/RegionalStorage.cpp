@@ -121,8 +121,8 @@ bool RegionalStorage::isFinished()
 }
 
 
-usectime_type RegionalStorage::getNextMessage( usectime_type usecTime,
-                                               int weekTime, Message& msg )
+unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
+                                          int weekTime, Message& msg )
 {
     MsgIter iter;
     RelockMutexGuard mg(cacheMon_);
@@ -131,13 +131,18 @@ usectime_type RegionalStorage::getNextMessage( usectime_type usecTime,
     const dlvid_type dlvId = info.getDlvId();
 
     if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return 6*tuPerSec; }
+
+    // fixme: return this date as next time.
     if ( !info.checkActiveTime(weekTime) ) { return 5*tuPerSec; }
 
     /// check speed control
     usectime_type ret = dlv_->activityLog_.getUserInfo().isReadyAndConsumeQuant(usecTime);
-    if (ret>0) { return ret; }
+    if (ret>0) {
+        if (ret > 1*tuPerSec) ret = 1*tuPerSec;
+        return unsigned(ret);
+    }
 
-    const msgtime_type currentTime(usecTime/tuPerSec);
+    const msgtime_type currentTime(msgtime_type(usecTime/tuPerSec));
 
     bool uploadNextResend = false;
     do { // fake loop
