@@ -1,5 +1,5 @@
-#ifndef __GENERATED_ENUM_STATUS__
-#define __GENERATED_ENUM_STATUS__
+#ifndef __GENERATED_ENUM_SMSC_MCISME_MCAIA_STATUS__
+#define __GENERATED_ENUM_SMSC_MCISME_MCAIA_STATUS__
 
 #include <map>
 #include <string>
@@ -14,14 +14,66 @@ namespace mcaia{
 class Status{
 public:
   typedef int8_t type;
-  static const type OK;
-  static const type InvalidCalledAddress;
-  static const type ExecutingError;
-  static const type Timedout;
-  static const type Rejected;
+ 
+  Status()
+  {
+    isNull=true;
+  }
+  Status(const type& argValue):value(argValue)
+  {
+    if(!isValidValue(value))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("Status",value);
+    }
+    isNull=false;
+  }
+ 
+  Status(const Status& argRhs):value(argRhs.value),isNull(argRhs.isNull)
+  {
+  }
+ 
+  const type& getValue()const
+  {
+    return value;
+  }
+  bool isNullValue()const
+  {
+    return isNull;
+  }
+ 
+  void setValue(const type& argValue)
+  {
+    if(!isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("Status",argValue);
+    }
+    value=argValue;
+    isNull=false;
+  }
+ 
+  bool operator==(const Status& rhs)const
+  {
+    return isNull==rhs.isNull && value==rhs.value;
+  }
+ 
+  static const type OK=0;
+  static const type InvalidCalledAddress=1;
+  static const type ExecutingError=2;
+  static const type Timedout=3;
+  static const type Rejected=4;
   static bool isValidValue(const type& value)
   {
     return nameByValue.find(value)!=nameByValue.end();
+  }
+
+  static std::string getNameByValue(const Status& value)
+  {
+    std::map<type,std::string>::iterator it=nameByValue.find(value.value);
+    if(it!=nameByValue.end())
+    {
+      return it->second;
+    }
+    return "";
   }
  
   static std::string getNameByValue(const type& value)
@@ -46,6 +98,9 @@ public:
  
  
 protected:
+  type value;
+  bool isNull;
+
   static std::map<type,std::string> nameByValue;
   static std::map<std::string,type> valueByName;
   struct StaticInitializer{

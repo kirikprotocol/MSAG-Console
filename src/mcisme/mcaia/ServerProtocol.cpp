@@ -27,8 +27,8 @@ void ServerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Serial
     {
       BusyResponse msg;
       msg.deserialize(ss);
-      msg.setSeqNum(seq);
-            handler->handle(msg);
+      msg.messageSetSeqNum(seq);
+      handler->handle(msg);
     }break;
     default:
       throw eyeline::protogen::framework::UnhandledMessage(tag);

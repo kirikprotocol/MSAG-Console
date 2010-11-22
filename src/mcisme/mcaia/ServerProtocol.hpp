@@ -28,8 +28,8 @@ public:
   void encodeMessage(const MsgType& msg,eyeline::protogen::framework::SerializerBuffer* ss)
   {
     ss->writeInt32(4+4+msg.template length<eyeline::protogen::framework::SerializerBuffer>());
-    ss->writeInt32(msg.getTag());
-    ss->writeInt32(msg.getSeqNum());
+    ss->writeInt32(msg.messageGetTag());
+    ss->writeInt32(msg.messageGetSeqNum());
     msg.serialize(*ss);
   }
 

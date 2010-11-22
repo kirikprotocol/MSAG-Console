@@ -30,9 +30,14 @@ public:
     statusFlag=false;
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 2;
+  }
+
+  static std::string messageGetName()
+  {
+    return "BusyResponse";
   }
 
   std::string toString()const
@@ -60,12 +65,13 @@ public:
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(status);
+      rv+=DataStream::fieldSize(status.getValue());
+ 
     }
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  const Status::type& getStatus()const
+  const Status& getStatus()const
   {
     if(!statusFlag)
     {
@@ -73,16 +79,12 @@ public:
     }
     return status;
   }
-  void setStatus(const Status::type& argValue)
+  void setStatus(const Status& argValue)
   {
-    if(!Status::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("Status",argValue);
-    }
     status=argValue;
     statusFlag=true;
   }
-  Status::type& getStatusRef()
+  Status& getStatusRef()
   {
     statusFlag=true;
     return status;
@@ -103,7 +105,7 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(statusTag);
-    ds.writeByteLV(status);
+    ds.writeByteLV(status.getValue());
  
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -123,7 +125,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case statusTag:
@@ -163,7 +165,7 @@ protected:
   static const int32_t statusTag=4;
 
 
-  Status::type status;
+  Status status;
 
   bool statusFlag;
 };
