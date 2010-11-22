@@ -63,6 +63,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setSourceAddr(new Address(section.getString("sourceAddr")));
     u.setValidityPeriod(new Time(section.getString("validityPeriod", "01:00:00")));
     u.setRoles(loadUserRoles(section));
+    if (u.getRoles().isEmpty())
+      u.getRoles().add(User.INFORMER_USER_ROLE);
+
     u.setDeliveryDays(loadDeliveryDays(section));
     u.setDeliveryType(User.DeliveryType.valueOf(section.getString("deliveryType")));
     u.setTransactionMode(section.getBool("transactionMode", false));

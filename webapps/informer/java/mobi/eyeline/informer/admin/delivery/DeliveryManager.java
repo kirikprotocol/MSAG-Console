@@ -181,23 +181,29 @@ public class DeliveryManager {
     if (msDataSource != null) {
       try {
         addMessages(msDataSource, conn, delivery);
+      } catch (AdminException e) {
+        logger.error("Delivery creation failed.", e);
+        silentDropDelivery(conn, id);
+        throw e;
+
       } catch (Exception e) {
-        logger.error(e, e);
-        try {
-          logger.warn("Try drop delivery: " + id);
-          conn.dropDelivery(id);
-          logger.warn("Delivery is removed: " + id);
-        } catch (Exception ex) {
-          logger.error(ex, ex);
-        }
-        if (logger.isDebugEnabled()) {
-          logger.debug("Delivery's processing failed: " + id);
-        }
+        logger.error("Delivery creation failed.", e);
+        silentDropDelivery(conn, id);
         throw new DeliveryException("internal_error");
       }
     }
     if (logger.isDebugEnabled()) {
       logger.debug("Delivery is proccessed: " + id);
+    }
+  }
+
+  private void silentDropDelivery(DcpConnection conn, int id) {
+    try {
+      logger.warn("Try drop delivery: " + id);
+      conn.dropDelivery(id);
+      logger.warn("Delivery is removed: " + id);
+    } catch (Exception ex) {
+      logger.error(ex, ex);
     }
   }
 
@@ -227,18 +233,14 @@ public class DeliveryManager {
     if (dataSource != null) {
       try {
         res = addSingleTextMessages(dataSource, conn, delivery);
+      } catch (AdminException e) {
+        logger.error("Delivery creation failed.", e);
+        silentDropDelivery(conn, id);
+        throw e;
+
       } catch (Exception e) {
-        logger.error(e, e);
-        try {
-          logger.warn("Try drop delivery: " + id);
-          conn.dropDelivery(id);
-          logger.warn("Delivery is removed: " + id);
-        } catch (Exception ex) {
-          logger.error(ex, ex);
-        }
-        if (logger.isDebugEnabled()) {
-          logger.debug("Delivery's processing failed: " + id);
-        }
+        logger.error("Delivery creation failed.", e);
+        silentDropDelivery(conn, id);
         throw new DeliveryException("internal_error");
       }
     }

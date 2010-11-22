@@ -57,6 +57,7 @@ public class UserEditController extends UserController {
       userToEdit.setAllRegionsAllowed(true);
       userToEdit.setReportsLifetime(72);
       userToEdit.setDeliveryLifetime(72);
+      userToEdit.setDeliveryType(User.DeliveryType.SMS);
     } else {
       userToEdit = getConfig().getUser(userId);
     }
@@ -119,9 +120,13 @@ public class UserEditController extends UserController {
       userToEdit.getRoles().add(User.INFORMER_ADMIN_ROLE);
       return;
     }
-    if (!inRole && userToEdit.hasRole(User.INFORMER_ADMIN_ROLE)) {
-      userToEdit.getRoles().remove(User.INFORMER_ADMIN_ROLE);
+    if (!inRole) {
+      if (userToEdit.hasRole(User.INFORMER_ADMIN_ROLE))
+        userToEdit.getRoles().remove(User.INFORMER_ADMIN_ROLE);
+      if (!userToEdit.hasRole(User.INFORMER_USER_ROLE))
+        userToEdit.getRoles().add(User.INFORMER_USER_ROLE);
     }
+
   }
 
 
