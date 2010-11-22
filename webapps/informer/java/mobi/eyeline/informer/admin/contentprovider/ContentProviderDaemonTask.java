@@ -190,7 +190,7 @@ public class ContentProviderDaemonTask implements Runnable {
               String  text = line.substring(inx+1).trim();
               return Message.newMessage(ab,text);
           }
-          catch(Exception e) { //todo просто переходим к следующей строке...
+          catch(Exception e) {
             ContentProviderDaemon.writeReportLine(reportWriter,abonent,new Date(),"ERROR PARSING LINE :"+line);
           }
         }
