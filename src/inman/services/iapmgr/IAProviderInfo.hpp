@@ -18,6 +18,7 @@ using smsc::inman::ICSUId;
 using smsc::inman::iaprvd::IAProviderAC;
 using smsc::inman::iaprvd::IAPType_e;
 using smsc::inman::iaprvd::IAPProperty;
+using smsc::inman::iaprvd::IAPAbility;
 
 struct IAProviderInfo {
   static const size_t _maxProviderNameSZ = 64;
@@ -39,6 +40,10 @@ struct IAProviderInfo {
     return _iface ? _iface->getType() : IAPProperty::iapUnknown;
   }
 
+  bool hasAbility(IAPAbility::Option_e op_val) const
+  {
+    return _iface ? _iface->getAbility().hasOption(op_val) : false;
+  }
 };
 typedef IAProviderInfo::NameString_t IAProviderName_t;
 
