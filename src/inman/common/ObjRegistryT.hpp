@@ -1,5 +1,5 @@
 /* ************************************************************************** *
- * Object Registry templates.
+ * Object Registry templates (objects addressed by a pointer).
  * ************************************************************************** */
 #ifndef __UTIL_PTROBJ_REGISTRY_HPP__
 #ifndef __GNUC__
@@ -31,8 +31,10 @@ public:
     ~POBJRegistry_T()
     {
 //	smsc_log_debug(Logger::getInstance("smsc.util"), "~POBJRegistry_T(): %p", this);
-        for (typename TRegistry::iterator sit = registry.begin(); sit != registry.end(); ++sit)
-            delete sit->second;
+      for (typename TRegistry::iterator sit = registry.begin(); sit != registry.end(); ++sit) {
+        delete sit->second;
+        sit->second = NULL;
+      }
     }
 
     class const_iterator {
