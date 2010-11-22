@@ -73,8 +73,14 @@ void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoDa
   di.setName(did.name);
   di.setPriority(did.priority);
   di.setTransactionMode(did.transactionMode);
-  di.setStartDate(did.startDate);
-  di.setEndDate(did.endDate);
+  if(!did.startDate.empty())
+  {
+    di.setStartDate(did.startDate);
+  }
+  if(!did.endDate.empty())
+  {
+    di.setEndDate(did.endDate);
+  }
   di.setActivePeriodStart(did.activePeriodEnd);
   di.setActivePeriodEnd(did.activePeriodStart);
   di.setActiveWeekDays(did.activeWeekDays);
@@ -443,12 +449,15 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
     ml.msg.subscriber=parseAddress(it->getAbonent().c_str());
     if(it->getMsgType()==messages::MessageType::TextMessage)
     {
-      MessageText(it->getText().c_str(),0).swap(ml.msg.text);
+      MessageText(it->getText().c_str()).swap(ml.msg.text);
     }else
     {
       MessageText(0,it->getIndex()).swap(ml.msg.text);
     }
-    ml.msg.userData=it->getUserData().c_str();
+    if(it->hasUserData())
+    {
+      ml.msg.userData=it->getUserData().c_str();
+    }
   }
   dlv->addNewMessages(lst.begin(),lst.end());
   messages::AddDeliveryMessagesResp resp;
