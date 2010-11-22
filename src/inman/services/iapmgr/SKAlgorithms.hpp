@@ -110,31 +110,9 @@ public:
   // -- SKAlgorithmAC interface methods
   // ----------------------------------------
   //arg is type of uint32_t
-  virtual uint32_t  getSKey(const void * use_arg = NULL) const
-  {
-    if (!use_arg)
-      return 0;
-
-    uint32_t arg = *(uint32_t*)use_arg;
-    SRVKeyMAP::const_iterator it = _skMap.find(arg);
-    return it != _skMap.end() ? it->second : 0;
-  }
+  virtual uint32_t  getSKey(const void * use_arg = NULL) const;
   //
-  virtual void      print(std::string & out_str) const
-  {
-    out_str += "map{";
-    out_str += UnifiedCSI::nmTDP(_argCSI); out_str += ",";
-    out_str += UnifiedCSI::nmTDP(csiType()); out_str += "}: {";
-
-    unsigned i = 0;
-    for (SRVKeyMAP::const_iterator
-         it = _skMap.begin(); it != _skMap.end(); ++it, ++i) {
-      char buf[sizeof("%s{%u,%u}, ") + 2*sizeof(uint32_t)*3];
-      snprintf(buf, sizeof(buf)-1, "%s{%u,%u}", i ? ", ":"",  it->first, it->second);
-      out_str += buf;
-    }
-    out_str += "}";
-  }
+  virtual void      print(std::string & out_str) const;
 };
 
 /* --------------------------------------------------------------------- *
@@ -163,25 +141,7 @@ public:
     _algMap.insert(SKAlgorithmMAP::value_type(csi_id, sk_alg));
   }
 
-  uint32_t getSKey(CSIUid_e tgt_csi, const CSIRecordsMap * org_csis = NULL) const
-  {
-    SKAlgorithmMAP::const_iterator acit = _algMap.find(tgt_csi);
-    if (acit != _algMap.end()) {
-      if (acit->second->algId() == SKAlgorithmAC::algSKVal)
-        return acit->second->getSKey(NULL);
-
-      if ((acit->second->algId() == SKAlgorithmAC::algSKMap)
-          && org_csis && !org_csis->empty()) {
-        SKAlgorithm_SKMap * alg = static_cast<SKAlgorithm_SKMap *>(acit->second);
-
-        CSIRecordsMap::const_iterator tcit = org_csis->find(alg->argType());
-        if (tcit != org_csis->end())
-          return alg->getSKey((void*)&(tcit->second.scfInfo.serviceKey));
-      }
-    }
-    return 0;
-
-  }
+  uint32_t getSKey(CSIUid_e tgt_csi, const CSIRecordsMap * org_csis = NULL) const;
 };
 
 
