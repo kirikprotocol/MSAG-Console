@@ -37,7 +37,7 @@ MessageGlossary::MessageGlossary() :
 log_(smsc::logger::Logger::getInstance("glossary")),
 dlvId_(0),
 hash_(0),
-maxRealId_(0),
+lastRealId_(MessageText::uniqueId),
 changing_(false)
 {
     smsc_log_debug(log_,"ctor");
@@ -71,8 +71,9 @@ void MessageGlossary::init( dlvid_type dlvId )
         return;
     }
     // reading glossary
-    unsigned realId = 1;
-    int maxInputId = 0;
+    int32_t realId = MessageText::uniqueId;
+    int32_t lastInputId = MessageText::uniqueId;
+    unsigned linenumber = 0;
     std::auto_ptr<TextHash> hash(new TextHash);
     do {
         char* ptr = buf.get();
@@ -81,7 +82,7 @@ void MessageGlossary::init( dlvid_type dlvId )
             // EOF
             if (ptr<buf.GetCurPtr()) {
                 // const size_t trunc = fg.getPos() - (buf.GetCurPtr()-ptr);
-                readGlossaryFailed(realId,"glossary record is not terminated");
+                readGlossaryFailed(linenumber,"glossary record is not terminated");
             }
             break;
         }
@@ -97,19 +98,27 @@ void MessageGlossary::init( dlvid_type dlvId )
             int inputId;
             sscanf(ptr,"%d,%n",&inputId,&shift);
             if (!shift) {
-                readGlossaryFailed(realId,"glossary record is broken");
+                readGlossaryFailed(linenumber,"glossary record is broken");
             }
-            if (inputId<=0 || inputId>maxInputId+1) {
-                readGlossaryFailed(realId,"glossary record has invalid replacement id");
+            if (inputId<=MessageText::uniqueId || inputId>lastInputId+1) {
+                readGlossaryFailed(linenumber,"glossary record has invalid replacement id");
             }
             // scanning text
             const char* text = unescapeText(ptr+shift,0,end-ptr-shift);
+            --realId;
             TextList::iterator i = list_.insert(list_.end(),Node(text,realId));
             hash->Insert(realId,i);
-            hash->Insert(-inputId,i);
-            if (inputId>maxInputId) { maxInputId = inputId; }
-            maxRealId_ = realId;
-            ++realId;
+            {
+                TextList::iterator* p = hash->GetPtr(inputId);
+                if (!p) {
+                    hash->Insert(inputId,i);
+                } else {
+                    *p = i;
+                }
+            }
+            if (inputId>lastInputId) { lastInputId = inputId; }
+            lastRealId_ = realId;
+            ++linenumber;
             ptr = end+1;
         }
         if ( ptr > buf.get() ) {
@@ -130,25 +139,24 @@ void MessageGlossary::init( dlvid_type dlvId )
 }
 
 
-void MessageGlossary::fetchText( MessageText& p, bool input, bool returnRealId )
+void MessageGlossary::fetchText( MessageText& p, bool returnRealId )
 {
     int32_t id = p.getTextId();
-    if (id<=0) {
-        throw InfosmeException(EXC_LOGICERROR,"D=%u cannot fetch text for negative id=%d",dlvId_,id);
+    if ( id == MessageText::uniqueId ) {
+        throw InfosmeException(EXC_LOGICERROR,"D=%u cannot fetch text for unique id=%d",dlvId_,id);
     } else if (p.getText()) {
         throw InfosmeException(EXC_LOGICERROR,"D=%u text is already bound",dlvId_);
     }
     {
-        smsc_log_debug(log_,"D=%u fetch %s text id=%u",
-                       dlvId_, input ? "input": "real", id);
+        smsc_log_debug(log_,"D=%u fetch text id=%d", dlvId_, id);
         MutexGuard mg(lock_);
         if (!hash_) {
             throw InfosmeException(EXC_LOGICERROR,"D=%u glossary is not loaded",dlvId_);
         }
-        TextList::iterator* iter = hash_->GetPtr(input ? -id : id);
+        TextList::iterator* iter = hash_->GetPtr(id);
         if (!iter) {
-            throw InfosmeException(EXC_NOTFOUND,"D=%u %s text with id=%u is not found",
-                                   dlvId_,input ? "input" : "real", id);
+            throw InfosmeException(EXC_NOTFOUND,"D=%u text with id=%d is not found",
+                                   dlvId_, id );
         }
         MessageText mt( (*iter)->getText(),
                         returnRealId ? (*iter)->getTextId() : p.getTextId() );
@@ -170,7 +178,7 @@ void MessageGlossary::setTexts( const std::vector< std::string >& texts )
     } else {
         newhash.reset(new TextHash);
     }
-    int32_t maxRealId = maxRealId_;
+    int32_t lastRealId = lastRealId_;
 
     char fname[100];
     strcat(makeDeliveryPath(fname,dlvId_),"glossary.txt");
@@ -188,24 +196,24 @@ void MessageGlossary::setTexts( const std::vector< std::string >& texts )
     }
 
     smsc::core::buffers::TmpBuf<char,2048> textbuf;
-    int32_t inputId = 1;
+    int32_t inputId = MessageText::uniqueId + 1;
     for ( std::vector<std::string>::const_iterator i = texts.begin();
           i != texts.end(); ++i ) {
         
-        TextList::iterator* iter = newhash->GetPtr(-inputId);
+        TextList::iterator* iter = newhash->GetPtr(inputId);
         if ( iter && *i == (*iter)->getText() ) {
             // the same text, skip it
             ++inputId;
             continue;
         }
         // new text
-        const int32_t newId = ++maxRealId;
+        const int32_t newId = --lastRealId;
         TextList::iterator node = newlist.insert(newlist.end(),Node(i->c_str(),newId));
         newhash->Insert(newId,node);
         if (iter) {
             *iter = node;
         } else {
-            newhash->Insert(-inputId,node);
+            newhash->Insert(inputId,node);
         }
         // writing the record
         int off = sprintf(textbuf.get(),"%u,",inputId);
@@ -227,7 +235,7 @@ void MessageGlossary::setTexts( const std::vector< std::string >& texts )
         TextHash* tmp = hash_;
         hash_ = newhash.release();
         newhash.reset(tmp);
-        maxRealId_ = maxRealId;
+        lastRealId_ = lastRealId;
     }
 }
 
@@ -242,18 +250,17 @@ void MessageGlossary::getTexts( std::vector< std::string >& texts ) const
     texts.reserve(hash_->Count()/2);
     std::string empty("\0",1);
     for ( TextHash::Iterator i(*hash_); i.Next(id,node); ) {
-        if (id>=0) continue;
-        id = -id;
-        if (texts.size() < unsigned(id)) {
+        if ( id <= MessageText::uniqueId ) continue;
+        if ( texts.size() <= unsigned(id) ) {
             texts.resize(id,empty);
         }
-        texts[id-1] = (*node)->getText();
+        texts[id] = (*node)->getText();
     }
 
-    id = 0;
+    id = MessageText::uniqueId;
     for ( std::vector< std::string >::const_iterator i = texts.begin();
           i != texts.end(); ++i ) {
-        ++i;
+        ++id;
         if ( i->c_str()[0] == '\0' && i->size() > 0 ) {
             throw InfosmeException(EXC_LOGICERROR,"D=%u input index %d is not filled",dlvId_,id);
         }
@@ -261,11 +268,11 @@ void MessageGlossary::getTexts( std::vector< std::string >& texts ) const
 }
 
 
-void MessageGlossary::readGlossaryFailed( unsigned           txtId,
+void MessageGlossary::readGlossaryFailed( unsigned           line,
                                           const char*        msg )
 {
-    smsc_log_warn(log_,"D=%u %s at line %u",dlvId_,msg,txtId);
-    throw InfosmeException(EXC_BADFILE,"D=%u %s at line %u",dlvId_,msg,txtId);
+    smsc_log_warn(log_,"D=%u %s at line %u",dlvId_,msg,line);
+    throw InfosmeException(EXC_BADFILE,"D=%u %s at line %u",dlvId_,msg,line);
 }
 
 }

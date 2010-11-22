@@ -25,7 +25,8 @@ ref_(0),
 conn_(0),
 region_(r),
 taskList_(*this,2*maxScoreIncrement,
-          smsc::logger::Logger::getInstance("dlvlist"))
+          smsc::logger::Logger::getInstance("dlvlist")),
+speedControl_(region_->getBandwidth())
 {
     smsc_log_debug(log_,"ctor S='%s' R=%u",conn.getSmscId().c_str(),unsigned(r->getRegionId()));
     assignSender(&conn);
@@ -50,7 +51,7 @@ std::string RegionSender::toString() const
 }
 
 
-void RegionSender::processRegion( usectime_type currentTime )
+bool RegionSender::processRegion( usectime_type currentTime )
 {
     try {
         smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
@@ -68,19 +69,29 @@ void RegionSender::processRegion( usectime_type currentTime )
         weekTime_ = ((tmnow.tm_wday+6)*daynight +
                      (currentTime_ % daynight) + region_->getTimezone()) % aweek;
         MutexGuard mg(lock_);
-        const unsigned ret = taskList_.processOnce(0/*not used*/,tuPerSec);
-        if (ret>0) {
+        // check speed control
+        unsigned toSleep = speedControl_.isReady( currentTime % flipTimePeriod,
+                                                  maxSnailDelay );
+        if ( toSleep > 0 ) {
+            return false;
+        }
+        
+        toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
+        if (toSleep>0) {
             smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
-                           getRegionId(),ret);
-            speedControl_.suspend((currentTime + ret) % flipTimePeriod);
+                           getRegionId(),toSleep);
+            speedControl_.suspend((currentTime + toSleep) % flipTimePeriod);
+            return false;
         } else {
             smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
             speedControl_.consumeQuant();
+            return true;
         }
     } catch ( std::exception& e ) {
         smsc_log_debug(log_,"R=%u send exc: %s",getRegionId(),e.what());
         speedControl_.suspend( (currentTime + tuPerSec) % flipTimePeriod);
     }
+    return false;
 }
 
 
@@ -90,8 +101,11 @@ void RegionSender::addDelivery( RegionalStorage& ptr )
     {
         MutexGuard mg(lock_);
         taskList_.add(RegionalStoragePtr(&ptr));
+        usectime_type currentTime = (currentTimeMicro() + 1000) % flipTimePeriod;
+        if ( speedControl_.getNextTime() > currentTime ) {
+            speedControl_.suspend( currentTime );
+        }
     }
-    // FIXME: reset speed control
     if (conn_) conn_->wakeUp();
 }
 

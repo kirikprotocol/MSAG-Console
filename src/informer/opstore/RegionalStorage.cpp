@@ -580,7 +580,7 @@ bool RegionalStorage::postInit()
         Message& m = i->msg;
         // bind to glossary
         if ( !m.isTextUnique()) {
-            dlv_->source_->getGlossary().fetchText(m.text,false);
+            dlv_->source_->getGlossary().fetchText(m.text);
         }
         switch (m.state) {
         case MSGSTATE_INPUT:

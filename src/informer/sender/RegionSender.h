@@ -53,7 +53,7 @@ public:
     }
      */
 
-    void processRegion(usectime_type currentTime);
+    bool processRegion(usectime_type currentTime);
 
     void addDelivery( RegionalStorage& ptr );
     void removeDelivery( dlvid_type dlvId );

@@ -591,9 +591,9 @@ public:
         // msg.timeLeft = fb.get32();
         msg.userData = fb.getCString();
         if (state & 0x80) {
-            MessageText(fb.getCString(),0).swap(msg.text);
+            MessageText(fb.getCString()).swap(msg.text);
         } else {
-            MessageText(0,fb.get32()).swap(msg.text);
+            MessageText(0,int32_t(fb.get32())).swap(msg.text);
         }
         if (isDropped) {
             // we have to add kill record in activity log
@@ -663,7 +663,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     for ( MsgIter i = begin; i != end; ++i ) {
         if (!i->msg.isTextUnique()) {
             // necessary to replace text ids with real texts
-            glossary_.fetchText(i->msg.text,true);
+            glossary_.fetchText(i->msg.text);
         }
         activityLog_->addRecord(currentTime, i->serial, i->msg, 0);
     }
@@ -764,6 +764,17 @@ void InputStorage::dispatchMessages( MsgIter begin,
     for ( MsgIter i = begin; i != end; ++i ) {
         const regionid_type regId = rf.findRegion( i->msg.subscriber );
         Message& msg = i->msg;
+        if ( msg.text.getTextId() < MessageText::uniqueId ) {
+            throw InfosmeException(EXC_IOERROR,"invalid input glossary index %d",msg.text.getTextId());
+        } else if ( msg.text.getTextId() == MessageText::uniqueId ) {
+            if ( ! msg.text.getText() ) {
+                throw InfosmeException(EXC_IOERROR,"invalid text: both glossary index and text are absent");
+            }
+        } else {
+            if ( msg.text.getText() ) {
+                throw InfosmeException(EXC_IOERROR,"invalid text: both glossary index and text are present");
+            }
+        }
         msg.msgId = ++lastMsgId_;
         msg.lastTime = 0;
         msg.timeLeft = 0;
@@ -941,7 +952,7 @@ void InputStorage::doTransfer( TransferRequester& req, unsigned reqCount )
             for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
                 if (!i->msg.isTextUnique()) {
                     // NOTE: replacing input ids with real ids here!
-                    glossary_.fetchText(i->msg.text,true,true);
+                    glossary_.fetchText(i->msg.text,true);
                 }
             }
 

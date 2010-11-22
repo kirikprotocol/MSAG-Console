@@ -387,7 +387,7 @@ void InfosmeCoreV1::selfTest()
                 mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
                 char msgtext[50];
                 sprintf(msgtext,"the unbound text #%u",i);
-                MessageText(msgtext,0).swap(mlk.msg.text);
+                MessageText(msgtext).swap(mlk.msg.text);
                 sprintf(userdata,"msg#%d1",i);
                 mlk.msg.userData = userdata;
                 msgList.push_back(mlk);

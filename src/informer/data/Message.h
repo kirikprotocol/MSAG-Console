@@ -24,7 +24,7 @@ struct Message
     uint8_t          state;
 
     inline bool isTextUnique() const {
-        return text.getTextId() <= 0;
+        return text.getTextId() == MessageText::uniqueId;
     }
 };
 

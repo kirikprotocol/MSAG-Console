@@ -17,7 +17,7 @@ class MessageGlossary
     class ChangeGuard;
     struct Node : public MessageText {
         Node( const char* text, unsigned id ) :
-        MessageText(text,0 /*to copy text*/) {
+        MessageText(text) {
             id_ = id;
         }
     };
@@ -32,9 +32,8 @@ public:
     void init( dlvid_type dlvId );
 
     /// fetch message text from glossary.
-    /// @param input - what kind of message index to use: input/real.
     /// @param returnRealId - return with id replaced with real id.
-    void fetchText( MessageText& text, bool input, bool returnRealId = false );
+    void fetchText( MessageText& text, bool returnRealId = false );
 
     /// NOTE: texts will be empty on exit
     void setTexts( const std::vector< std::string >& texts );
@@ -51,7 +50,7 @@ private:
     dlvid_type                                         dlvId_;
     TextList                                           list_; // owned
     TextHash*                                          hash_; // owned
-    int32_t                                            maxRealId_;
+    int32_t                                            lastRealId_;
     mutable bool                                       changing_;
 };
 

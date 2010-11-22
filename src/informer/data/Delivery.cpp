@@ -19,7 +19,7 @@ state_(DlvState(0)),
 planTime_(0)
 {
     char buf[20];
-    sprintf(buf,"dl.%u",dlvInfo_->getDlvId() % 10000);
+    sprintf(buf,"d.%u",dlvInfo_->getDlvId() % 10000);
     log_ = smsc::logger::Logger::getInstance(buf);
     try {
         source_->init(activityLog_);

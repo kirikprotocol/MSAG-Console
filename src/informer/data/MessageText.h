@@ -14,22 +14,28 @@ static const unsigned MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 class MessageText
 {
 public:
+    /// a special text id which delimits input ids and real ids.
+    /// >uniqueId are glossary text ids visible to users/clients;
+    /// =uniqueId - non-glossary text id, i.e. the text is unique;
+    /// <uniqueId are internal glossary text ids not visible to users/clients.
+    static const int32_t uniqueId = -1;
+
     /// text is owned
-    inline MessageText( const char* text = 0, int32_t id = 0 ) :
-    text_( id>0 ? text : copyText(text)), id_(id) {}
+    inline explicit MessageText( const char* text = 0, int32_t id = uniqueId ) :
+    text_( id != uniqueId ? text : copyText(text)), id_(id) {}
 
     inline ~MessageText() {
-        if (id_<=0 && text_) delete [] text_;
+        if (id_ == uniqueId && text_) delete [] text_;
     }
 
     inline MessageText( const MessageText& txt ) :
-    text_( txt.id_>0 ? txt.text_ : copyText(txt.text_)), id_(txt.id_) {}
+    text_( txt.id_ != uniqueId ? txt.text_ : copyText(txt.text_)), id_(txt.id_) {}
 
     inline MessageText& operator = ( const MessageText& t ) {
         if (t.text_ != text_) {
-            if (id_<=0 && text_) delete [] text_;
+            if (id_ == uniqueId && text_) delete [] text_;
             id_ = t.id_;
-            text_ = t.id_>0 ? t.text_ : copyText(t.text_);
+            text_ = t.id_ != uniqueId ? t.text_ : copyText(t.text_);
         }
         return *this;
     }

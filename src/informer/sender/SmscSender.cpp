@@ -241,7 +241,7 @@ private:
 SmscSender::SmscSender( ReceiptProcessor&  core,
                         const std::string& smscId,
                         const SmscConfig&  cfg ) :
-log_(smsc::logger::Logger::getInstance("smscsend")),
+log_(0),
 rproc_(core),
 parser_(0),
 smscId_(smscId),
@@ -253,13 +253,18 @@ awaken_(false),
 isStopping_(true)
 {
     {
+        if ( smscId_.size() > 64 ) {
+            throw InfosmeException(EXC_BADNAME,
+                                   "SMSC id '%s' is too long", smscId_.c_str());
+        }
         char c;
         if ( ! isGoodAsciiName(smscId_.c_str(),&c) ) {
-            smsc_log_error(log_,"SMSC id '%s' contains forbidden character '%c'",
-                           smscId_.c_str(), c );
-            abort();
+            throw InfosmeException(EXC_BADNAME,
+                                   "SMSC id '%s' contains forbidden character '%c'",
+                                   smscId_.c_str(), c );
         }
     }
+    log_ = smsc::logger::Logger::getInstance( ("s." + smscId).c_str());
 
     journal_ = new SmscJournal(*this);
     // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
@@ -1024,7 +1029,7 @@ void SmscSender::sendLoop()
                 // sleeping until next wake time
                 int waitTime = int((nextWakeTime - currentTime_ + 1000)/1000U); // in msec
                 if (waitTime>0) {
-                    if (waitTime < 10) waitTime = 10;
+                    if (waitTime < 5) waitTime = 5;
                     smsc_log_debug(log_,"S='%s' is going to sleep %d msec",
                                    smscId_.c_str(),waitTime);
                     queueMon_.wait(waitTime);
@@ -1061,9 +1066,9 @@ void SmscSender::sendLoop()
 
 unsigned SmscSender::scoredObjIsReady( unsigned, ScoredPtrType regionSender )
 {
-    const usectime_type ret = regionSender->isReady(currentTime_);
-    smsc_log_debug(log_,"R=%u waits %llu usec until ready()",
-                   regionSender->getRegionId(), ulonglong(ret));
+    const unsigned ret = regionSender->isReady(currentTime_);
+    smsc_log_debug(log_,"R=%u waits %u usec until ready()",
+                   regionSender->getRegionId(), ret);
     return ret;
 }
 
@@ -1071,8 +1076,11 @@ unsigned SmscSender::scoredObjIsReady( unsigned, ScoredPtrType regionSender )
 int SmscSender::processScoredObj( unsigned, ScoredPtrType regionSender )
 {
     // unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
-    regionSender->processRegion(currentTime_);
-    return maxScoreIncrement / regionSender->getBandwidth();
+    if ( regionSender->processRegion(currentTime_) ) {
+        return maxScoreIncrement / regionSender->getBandwidth();
+    } else {
+        return -maxScoreIncrement / regionSender->getBandwidth();
+    }
 }
 /*
         smsc_log_debug(log_,"R=%u processRegion finished, sleep=%u", regionSender.getRegionId(), wantToSleep);
