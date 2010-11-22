@@ -152,8 +152,9 @@ public class DataTableRenderer extends Renderer {
       if (t.hasInnerData())
         w.append("\n<td>&nbsp;</td>");
       for (UIComponent ch : t.getFirstRow().getChildren()) {
+        Column col = (Column)ch;
         UIComponent footer = ch.getFacet("footer");
-        w.append("\n<td>");
+        w.append("\n<td align=\"").append(col.getAlign()).append("\">");
         if (footer != null) {
           footer.encodeBegin(context);
           footer.encodeEnd(context);
