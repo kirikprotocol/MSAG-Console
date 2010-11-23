@@ -49,7 +49,7 @@ void CommonSettings::init( smsc::util::config::Config& cfg )
     inputTransferChunkSize_ = conf.getInt("inputTransferChunkSize",1000,100,10000);
     receiptExtraWaitTime_ = conf.getInt("receiptExtraWaitTime",30,5,120);
     retryMinTimeToLive_ = conf.getInt("retryMinTimeToLive",30,10,120);
-    skippedIdsMinCacheSize_ = conf.getInt("skippedIdsMinCacheSize",10,0,1000);
+    skippedIdsMinCacheSize_ = conf.getInt("skippedIdsMinCacheSize",5,0,1000);
     skippedIdsChunkSize_ = conf.getInt("skippedIdsChunkSize",256,100,10000);
     inputJournalRollingPeriod_ = conf.getInt("inputJournalRollingPeriod",300,30,1200);
     operationalJournalRollingPeriod_ = conf.getInt("operationalJournalRollingPeriod",300,30,1200);

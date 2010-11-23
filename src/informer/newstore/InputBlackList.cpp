@@ -81,7 +81,7 @@ const uint64_t InputStorage::BlackList::packbits[packsize] =
 InputStorage::BlackList::BlackList( InputStorage& is ) :
 is_(is),
 dropFileOffset_(0),
-minMsgId_(0),
+minMsgId_(1),
 maxMsgId_(0),
 changing_(false)
 {
@@ -93,7 +93,8 @@ void InputStorage::BlackList::init( msgid_type minRlast )
     smsc_log_debug(is_.log_,"D=%u blklist init(minRlast=%llu)",
                    is_.getDlvId(),ulonglong(minRlast));
 
-    maxMsgId_ = minMsgId_ = minRlast;
+    maxMsgId_ = minRlast;
+    minMsgId_ = maxMsgId_ + 1;
 
     try {
         FileGuard fg;
@@ -140,9 +141,10 @@ bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
             smsc_log_debug(is_.log_,"D=%u need to upload blklist",is_.getDlvId());
             
             if (dropMsgHash_.Count()==0) {
-                maxMsgId_ = minMsgId_ = is_.getMinRlast();
-                smsc_log_debug(is_.log_,"D=%u blklist has empty hash, using min=max=%llu",
-                               is_.getDlvId(), ulonglong(minMsgId_));
+                maxMsgId_ = is_.getMinRlast();
+                minMsgId_ = maxMsgId_ + 1;
+                smsc_log_debug(is_.log_,"D=%u blklist has empty hash, using min=%llu max=%llu",
+                               is_.getDlvId(), ulonglong(minMsgId_), ulonglong(minMsgId_));
             } else if (dropMsgHash_.Count() < 20) {
 
                 // we may scan the hash to find out real numbers
