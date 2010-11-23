@@ -166,7 +166,9 @@
 
         <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.enable.import']}"/>
-          <h:selectBooleanCheckbox value="#{userEdit.userToEdit.importDeliveriesFromDir}" onchange="
+          <h:selectBooleanCheckbox value="#{userEdit.userToEdit.importDeliveriesFromDir}"
+                                   id="importDeliveriesFromDir"
+            onchange="
             document.getElementById('importDeliveriesSettings').style.display=this.checked ? '' : 'none';
             var createReports = document.getElementById('createReports').checked &amp;&amp; this.checked;
             document.getElementById('reportsExportSettings').style.display=createReports ? '' : 'none';
@@ -237,6 +239,9 @@
         var d = document.getElementById('trMode').checked ? 'none' : '';
         document.getElementById('validHoursLabel').style.display=d;
         document.getElementById('validityPeriod').style.display=d;
+
+        d = document.getElementById('importDeliveriesFromDir').checked ? '':'none';
+        document.getElementById('importDeliveriesSettings').style.display=d;
       </script>
 
     </tr:form>
