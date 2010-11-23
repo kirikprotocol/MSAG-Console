@@ -88,8 +88,8 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         data.retryOnFail = config.getBool("retryOnFail",true);
         data.retryPolicy = config.getString("retryPolicy","");
         data.replaceMessage = config.getBool("replaceMessage",false,false);
-        data.svcType = config.getString("svcType");
-        data.userData = config.getString("userData");
+        data.svcType = config.getString("svcType","");
+        data.userData = config.getString("userData","");
         data.sourceAddress = config.getString("sourceAddress");
         data.finalDlvRecords = config.getBool("finalDlvRecords",false);
         data.finalMsgRecords = config.getBool("finalMsgRecords",false);
