@@ -11,7 +11,7 @@ import java.util.Iterator;
 /**
  * alkhal: alkhal
  */
-public class TaskArchiveDaemon implements Runnable{
+public class TaskArchiveDaemon implements Runnable {
 
   private Category logger = Category.getInstance(TaskArchiveDaemon.class);
 
@@ -22,7 +22,7 @@ public class TaskArchiveDaemon implements Runnable{
   private boolean shutdown = true;
   private Thread currentThread;
 
-  private static final long TIMEOUT =  60000;
+  private static final long TIMEOUT = 60000;
 
   public TaskArchiveDaemon(InfoSmeContext infoSmeContext, SMSCAppContext smscAppContext) {
     this.infoSmeContext = infoSmeContext;
@@ -40,7 +40,7 @@ public class TaskArchiveDaemon implements Runnable{
   }
 
   public synchronized void start() {
-    if(shutdown) {
+    if (shutdown) {
       currentThread = new Thread(this, "TaskArchiveDaemon");
       currentThread.start();
     }
@@ -56,28 +56,33 @@ public class TaskArchiveDaemon implements Runnable{
       while (!shutdown) {
         try {
           Iterator taskIterator = infoSmeContext.getInfoSmeConfig().getTasks(null).iterator();
-          while(taskIterator.hasNext() && !shutdown) {
-            Task t = (Task)taskIterator.next();
+          while (taskIterator.hasNext() && !shutdown) {
+            Task t = (Task) taskIterator.next();
             User owner = smscAppContext.getUserManager().getUser(t.getOwner());
+            if (owner == null)
+              continue;
             UserPreferences prefs = owner.getPrefs();
-            if(prefs.isInfosmeArchive() &&
-                (t.getStartDate().getTime() + (60*60*1000*prefs.getInfosmeArchiveTimeout()) <  System.currentTimeMillis())) {
+            if (prefs.isInfosmeArchive() &&
+                (t.getStartDate().getTime() + (60 * 60 * 1000 * prefs.getInfosmeArchiveTimeout()) < System.currentTimeMillis())) {
 
               if (logger.isDebugEnabled())
-                logger.debug("Moving task to archive: "+t.getId()+" ("+t.getName()+")...");
+                logger.debug("Moving task to archive: " + t.getId() + " (" + t.getName() + ")...");
 
               infoSmeContext.getInfoSmeConfig().archivateAndApplyTask(t.getOwner(), t.getId());
               infoSmeContext.getInfoSme().removeTask(t.getId());
 
               if (logger.isDebugEnabled())
                 logger.debug("Task was successfully moved to archive: " + t.getId() + '(' + t.getName() + ").");
+
+              if (!shutdown) {
+                try {
+                  Thread.sleep(1000);
+                } catch (InterruptedException ignored) {
+                }
+              }
             }
 
-            if (!shutdown) {
-              try {
-                Thread.sleep(1000);
-              }catch (InterruptedException ignored) {}
-            }
+
           }
 
         } catch (Throwable e) {

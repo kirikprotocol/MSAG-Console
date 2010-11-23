@@ -42,7 +42,6 @@ public class StatisticsDataSource extends AbstractDataSource {
 
       for (Iterator iter = files.iterator(); iter.hasNext();) {
         File f = (File)iter.next();
-        System.out.println("Handle file: "+f);
 
         Date fileDate = fileDateFormat.parse(f.getParentFile().getName() + '/' + f.getName());
 
@@ -162,5 +161,68 @@ public class StatisticsDataSource extends AbstractDataSource {
       }
     }
     return files;
+  }
+
+  public static void main(String[] args) throws ParseException, IOException {
+    final Set tasks = new HashSet();
+    BufferedReader r = new BufferedReader(new FileReader(args[1]));
+    String line = null;
+
+    while((line = r.readLine()) != null) {
+      tasks.add(line);
+    }
+
+
+    StatisticsDataSource ds = new StatisticsDataSource(args[0]);
+    StatQuery sq = new StatQuery();
+    final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    sq.setFromDate(dateFormat.parse("2010-10-11"));
+
+    final Map stats = new LinkedHashMap();
+
+
+    StatVisitor sv = new StatVisitor(){
+      public boolean visit(StatisticDataItem item) {
+        String taskName = (String)item.getValue("taskName");
+        if (taskName != null && taskName.startsWith("121010POCCTAT") && tasks.contains(taskName)) {
+          Date period =(Date) item.getValue("period");
+          String periodStr = dateFormat.format(period);
+          Stat st = (Stat)stats.get(periodStr);
+          if (st == null) {
+            st = new Stat();
+            stats.put(periodStr, st);
+          }
+          st.generated = st.generated + ((Integer)item.getValue("generated")).intValue();
+          st.delivered = st.delivered + ((Integer)item.getValue("delivered")).intValue();
+          st.failed = st.failed + ((Integer)item.getValue("failed")).intValue();
+        }
+
+        return true;
+      }
+    };
+
+    ds.visit(sv, sq);
+
+    System.out.println("DATE, GENERATED, DELIVERED, FAILED");
+    int tgenerated = 0;
+    int tdelivered = 0;
+    int tfailed = 0;
+    for (Iterator iter = stats.entrySet().iterator(); iter.hasNext();) {
+      Map.Entry e = (Map.Entry)iter.next();
+      System.out.print(e.getKey() + ", ");
+      System.out.print(((Stat)e.getValue()).generated + ", ");
+      tgenerated += ((Stat)e.getValue()).generated;
+      System.out.print(((Stat)e.getValue()).delivered + ", ");
+      tdelivered += ((Stat)e.getValue()).delivered;
+      System.out.println(((Stat)e.getValue()).failed);
+      tfailed += ((Stat)e.getValue()).failed;
+    }
+    System.out.println("Total, " + tgenerated + ", " + tdelivered + ", " + tfailed);
+  }
+
+  static class Stat {
+    private int generated;
+    private int delivered;
+    private int failed;
   }
 }

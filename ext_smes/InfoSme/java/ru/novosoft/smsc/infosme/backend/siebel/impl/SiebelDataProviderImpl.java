@@ -529,9 +529,12 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     System.out.println("Connecting...");
     d.connect(props);
     System.out.println("Connected. Fetching tasks...");
-    long start = System.currentTimeMillis();
-      SiebelMessage m = d.getMessage("1-3964199480");
-    System.out.println((System.currentTimeMillis() - start) /  1000);
+    ResultSet rs = d.getTasks();
+    while(rs.next()) {
+      System.out.println(rs.get());
+    }
+//    System.out.println(d.containsUnfinished("1-7952345793"));
+    rs.close();
     d.shutdown();
   }
 

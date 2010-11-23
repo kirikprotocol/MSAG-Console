@@ -98,8 +98,8 @@ public class StatQuery implements Filter
     if (taskId != null && !taskId.equals(tId))
       return false;
 
-    if (active && !config.containsTaskWithId(tId))
-      return false;
+//    if (active && !config.containsTaskWithId(tId))
+//      return false;
 
 
     if (owner != null && (taskId == null || active)) {      
