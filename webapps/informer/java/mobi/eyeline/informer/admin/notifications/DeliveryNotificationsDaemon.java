@@ -4,10 +4,6 @@ import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.infosme.TestSms;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationTemplatesConstants;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListener;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
@@ -31,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 13.11.2010
  * Time: 13:46:28
  */
-public class DeliveryNotificationsDaemon implements DeliveryNotificationsListener {
+public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
   private final Logger log = Logger.getLogger(this.getClass());
 
   private final AdminContext context;
@@ -58,10 +54,17 @@ public class DeliveryNotificationsDaemon implements DeliveryNotificationsListene
     });
   }
 
-  public void onDeliveryNotification(DeliveryNotification notification) {
-    switch (notification.getType()) {
-      case DELIVERY_START:
-      case DELIVERY_FINISHED:
+  @Override
+  public void onDeliveryStartNotification(DeliveryNotification notification) {
+    processDeliveryNotification(notification);
+  }
+
+  @Override
+  public void onDeliveryFinishNotification(DeliveryNotification notification) {
+    processDeliveryNotification(notification);
+  }
+
+  public void processDeliveryNotification(DeliveryNotification notification) {
         try {
           User user = context.getUser(notification.getUserId());
           if (user != null) {
@@ -93,12 +96,9 @@ public class DeliveryNotificationsDaemon implements DeliveryNotificationsListene
           e.printStackTrace();
           log.error("error ", e);
         }
-        break;
-
-
-      default:
-    }
   }
+
+
 
   private void scheduleOrWait(Callable<Object> task, long time, TimeUnit units) {
     while (scheduler.getTaskCount() - scheduler.getCompletedTaskCount() >= MAX_QUEUE_SIZE) {

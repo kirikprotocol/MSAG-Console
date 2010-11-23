@@ -149,13 +149,14 @@ public class DeliveryNotificationsProducer implements Runnable {
           Address addr = new Address(t.nextToken());
           String userData = null;
           if (t.hasMoreTokens()) userData = t.nextToken();
-          notification = new DeliveryMessageNotification(type, c.getTime(), deliveryId, userId,
+          notifyListenersOnMessage(new DeliveryMessageNotification(type, c.getTime(), deliveryId, userId,
               msgId, messageState, smpp_status, addr, userData
-          );
-        } else {
-          notification = new DeliveryNotification(type, c.getTime(), deliveryId, userId);
+          ));
         }
-        notifyListeners(notification);
+        else {
+          notification = new DeliveryNotification(type, c.getTime(), deliveryId, userId);
+          notifyListeners(notification);
+        }
       }
     }
     catch (Exception e) {
@@ -163,10 +164,26 @@ public class DeliveryNotificationsProducer implements Runnable {
     }
   }
 
+  private void notifyListenersOnMessage(DeliveryMessageNotification notification) {
+    for (DeliveryNotificationsListener listener : listeners) {
+      try {
+        listener.onMessageNotification(notification);
+      }
+      catch (Throwable e) {
+        log.error("error in listener", e);
+      }
+    }
+  }
+
   private void notifyListeners(DeliveryNotification notification) {
     for (DeliveryNotificationsListener listener : listeners) {
       try {
-        listener.onDeliveryNotification(notification);
+        if(notification.getType()==DeliveryNotificationType.DELIVERY_START) {
+          listener.onDeliveryStartNotification(notification);
+        }
+        else {
+          listener.onDeliveryFinishNotification(notification);
+        }
       }
       catch (Throwable e) {
         log.error("error in listener", e);

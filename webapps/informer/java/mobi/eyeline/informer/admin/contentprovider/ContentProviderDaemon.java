@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsAdapter;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListener;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 17.11.2010
  * Time: 16:21:41
  */
-public class ContentProviderDaemon implements Daemon, DeliveryNotificationsListener {
+public class ContentProviderDaemon extends DeliveryNotificationsAdapter implements Daemon  {
   Logger log = Logger.getLogger(this.getClass());
   private ScheduledExecutorService scheduler;
   private ScheduledExecutorService reportScheduler;
@@ -118,21 +119,22 @@ public class ContentProviderDaemon implements Daemon, DeliveryNotificationsListe
     reportWriter.println(s);
   }
 
-  public void onDeliveryNotification(DeliveryNotification notification) {
-    if(notification.getType()== DeliveryNotificationType.DELIVERY_FINISHED) {
-      PrintStream ps = null;
-      try {
-        File notificationFile = new File(workDir,notification.getDeliveryId()+".notification");
-        ps = new PrintStream(fileSys.getOutputStream(notificationFile,false),true,"utf-8");
-        ps.println(notification.getUserId());
-      }
-      catch (Exception e) {
-        log.error("Error processing delivery finished report for delivery "+notification.getDeliveryId(),e);
-      }
-      finally {
-        if(ps!=null) try {ps.close();} catch (Exception e){}
-      }
+  @Override
+  public void onDeliveryFinishNotification(DeliveryNotification notification) {
+
+    PrintStream ps = null;
+    try {
+      File notificationFile = new File(workDir,notification.getDeliveryId()+".notification");
+      ps = new PrintStream(fileSys.getOutputStream(notificationFile,false),true,"utf-8");
+      ps.println(notification.getUserId());
     }
+    catch (Exception e) {
+      log.error("Error processing delivery finished report for delivery "+notification.getDeliveryId(),e);
+    }
+    finally {
+      if(ps!=null) try {ps.close();} catch (Exception e){}
+    }
+
     synchronized (this) {
       if(isStarted()) {
         reportScheduler.schedule(new Runnable(){
@@ -164,7 +166,7 @@ public class ContentProviderDaemon implements Daemon, DeliveryNotificationsListe
         catch (Exception e){
           log.error("error processing file "+f.getAbsolutePath());
           try {
-            f.renameTo(new File(workDir,sId+".err"));
+            fileSys.rename(f,new File(workDir,sId+".err"));
           }
           catch (Exception ex){
             log.error("unable to rename file to "+sId+".err",ex);
@@ -189,7 +191,7 @@ public class ContentProviderDaemon implements Daemon, DeliveryNotificationsListe
 
     if(user!=null && user.isCreateReports() && user.getDirectory()!=null) {
 
-      File userDir = new File(informerBase,user.getDirectory()); 
+      File userDir = new File(informerBase,user.getDirectory());
       if(!fileSys.exists(userDir)) {
         userDir=new File(user.getDirectory());
         if(!fileSys.exists(userDir)) {

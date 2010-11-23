@@ -89,7 +89,8 @@ public class ContentProviderDaemonTask implements Runnable {
       }
     }
     catch (AdminException e1) {
-      log.error("error creating error report",e);
+      log.error("error creating error report",e1);
+      log.error("unsaved exception ",e);
     }
 
     //rename to err
@@ -104,7 +105,7 @@ public class ContentProviderDaemonTask implements Runnable {
     File reportFile = new File(userDir,baseName+".rep");
     try {
       if(fileSys.exists(reportFile)) {
-        fileSys.delete(newFile);
+        fileSys.delete(reportFile);
       }
     }
     catch (AdminException ex) {

@@ -140,7 +140,7 @@ public class ContentProviderTest {
 
 
     DeliveryNotification notification = new DeliveryNotification(DeliveryNotificationType.DELIVERY_FINISHED,new Date(),100,"a");
-    cpDaemon.onDeliveryNotification(notification);
+    cpDaemon.onDeliveryFinishNotification(notification);
 
     File workDir = new File(context.getWorkDir(),"contentProvider");
     assertTrue(context.getFileSystem().exists(workDir));

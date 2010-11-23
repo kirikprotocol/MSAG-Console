@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin.notifications;
 
+import mobi.eyeline.informer.admin.AdminException;
+
 /**
  * Copyright Eyeline.mobi
  * User: vmax
@@ -8,8 +10,8 @@ package mobi.eyeline.informer.admin.notifications;
  */
 public interface DeliveryNotificationsListener {
 
-  //todo Почему бы не сделать по 1 методу на каждый тип нотификации?
-  // todo Данная реализация обрекает клиентов на проверку типа нотификации в каждом листенере.
-  public void onDeliveryNotification(DeliveryNotification notification);
+  public void onDeliveryStartNotification(DeliveryNotification notification)  throws Exception;
+  public void onDeliveryFinishNotification(DeliveryNotification notification) throws Exception;
+  public void onMessageNotification(DeliveryMessageNotification notification) throws Exception;
 
 }

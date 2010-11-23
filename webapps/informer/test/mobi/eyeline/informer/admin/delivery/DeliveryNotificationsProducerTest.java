@@ -155,7 +155,17 @@ public class DeliveryNotificationsProducerTest implements DeliveryNotificationsL
     }
   }
 
-  public void onDeliveryNotification(DeliveryNotification notification) {
+  public void onDeliveryStartNotification(DeliveryNotification notification) {
     notifications.add(notification);
   }
+
+  public void onDeliveryFinishNotification(DeliveryNotification notification) {
+    notifications.add(notification);
+  }
+
+  public void onMessageNotification(DeliveryMessageNotification notification) {
+    notifications.add(notification);
+  }
+
+  
 }

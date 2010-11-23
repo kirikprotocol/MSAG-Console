@@ -94,8 +94,8 @@ public class SiebelFinalStateListenerTest {
 
   @Test
   public void test() throws Exception{
-    listener.onDeliveryNotification(new DeliveryNotification(DeliveryNotificationType.DELIVERY_FINISHED, new Date(), 1, "siebel"));
-    listener.onDeliveryNotification(
+    listener.onDeliveryFinishNotification(new DeliveryNotification(DeliveryNotificationType.DELIVERY_FINISHED, new Date(), 1, "siebel"));
+    listener.onMessageNotification(
         new DeliveryMessageNotification(DeliveryNotificationType.MESSAGE_FINISHED,
             new Date(), 1, "siebel", 1234567l, MessageState.Failed, 1179, new Address("+79139489906"),
             DcpConverter.convertUserData(new HashMap<String, String>(1){{put(UserDataConsts.SIEBEL_MESSAGE_ID, "321");}}))

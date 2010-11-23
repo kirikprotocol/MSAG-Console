@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.notifications.DeliveryMessageNotification;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsAdapter;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListener;
 import mobi.eyeline.informer.admin.siebel.SiebelDelivery;
 import mobi.eyeline.informer.admin.siebel.SiebelManager;
@@ -24,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Aleksandr Khalitov
  */
-public class SiebelFinalStateListener implements DeliveryNotificationsListener {
+public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
 
   private static final Logger logger = Logger.getLogger(SiebelFinalStateListener.class);
 
@@ -146,19 +147,16 @@ public class SiebelFinalStateListener implements DeliveryNotificationsListener {
     }
   }
 
-  public void onDeliveryNotification(DeliveryNotification notification) {
-    try {
-      switch (notification.getType()) {
-        case DELIVERY_FINISHED:
-          deliveryFinished(notification);
-          break;
-        case MESSAGE_FINISHED:
-          messageFinished((DeliveryMessageNotification) notification);
-      }
-    } catch (Exception e) {
-      logger.error(e, e);
-    }
+  @Override
+  public void onDeliveryFinishNotification(DeliveryNotification notification) throws AdminException {
+    deliveryFinished(notification);
   }
+
+  @Override
+  public void onMessageNotification(DeliveryMessageNotification notification) throws AdminException {
+    messageFinished(notification);
+  }
+
 
   public void shutdown() {
     stop = true;
