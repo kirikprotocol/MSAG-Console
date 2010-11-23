@@ -33,9 +33,14 @@ public:
     status.clear();
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 1021;
+  }
+
+  static std::string messageGetName()
+  {
+    return "SmeStatusResp";
   }
 
   std::string toString()const
@@ -64,7 +69,7 @@ public:
       rv+="status=";
       rv+="[";
       bool first=true;
-      for(std::vector<SmeStatusInfo>::const_iterator it=status.begin(),end=status.end();it!=end;it++)
+      for(std::vector<SmeStatusInfo>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
       {
         if(first)
         {
@@ -96,7 +101,7 @@ public:
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      for(std::vector<SmeStatusInfo>::const_iterator it=status.begin(),end=status.end();it!=end;it++)
+      for(std::vector<SmeStatusInfo>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
       {
         rv+=it->length<DataStream>();
       }
@@ -167,12 +172,12 @@ public:
     resp.serialize(ds);
     ds.writeTag(statusTag);
     typename DataStream::LengthType len=0;
-    for(std::vector<SmeStatusInfo>::const_iterator it=status.begin(),end=status.end();it!=end;it++)
+    for(std::vector<SmeStatusInfo>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
     {
       len+=it->length<DataStream>();
     }
     ds.writeLength(len);
-    for(std::vector<SmeStatusInfo>::const_iterator it=status.begin(),end=status.end();it!=end;it++)
+    for(std::vector<SmeStatusInfo>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
     {
       it->serialize(ds);
     }
@@ -193,7 +198,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case respTag:
@@ -244,12 +249,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }

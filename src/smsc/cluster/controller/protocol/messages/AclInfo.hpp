@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
-#include "AclCacheType.hpp"
 
 
 #ident "@(#) AclInfo version 1.0"
@@ -30,9 +29,13 @@ public:
     idFlag=false;
     nameFlag=false;
     descriptionFlag=false;
-    cacheTypeFlag=false;
   }
  
+
+  static std::string messageGetName()
+  {
+    return "AclInfo";
+  }
 
   std::string toString()const
   {
@@ -66,15 +69,6 @@ public:
       rv+="description=";
       rv+=description;
     }
-    if(cacheTypeFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="cacheType=";
-      rv+=AclCacheType::getNameByValue(cacheType);
-    }
     return rv;
   }
 
@@ -99,12 +93,6 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(description);
-    }
-    if(cacheTypeFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(cacheType);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -175,32 +163,6 @@ public:
   {
     return descriptionFlag;
   }
-  const AclCacheType::type& getCacheType()const
-  {
-    if(!cacheTypeFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("cacheType");
-    }
-    return cacheType;
-  }
-  void setCacheType(const AclCacheType::type& argValue)
-  {
-    if(!AclCacheType::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("AclCacheType",argValue);
-    }
-    cacheType=argValue;
-    cacheTypeFlag=true;
-  }
-  AclCacheType::type& getCacheTypeRef()
-  {
-    cacheTypeFlag=true;
-    return cacheType;
-  }
-  bool hasCacheType()const
-  {
-    return cacheTypeFlag;
-  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -216,22 +178,15 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("description");
     }
-    if(!cacheTypeFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("cacheType");
-    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(idTag);
-    ds.writeInt32LV(id);
+    ds.writeInt32LV(id); 
     ds.writeTag(nameTag);
-    ds.writeStrLV(name);
+    ds.writeStrLV(name); 
     ds.writeTag(descriptionTag);
-    ds.writeStrLV(description);
-    ds.writeTag(cacheTypeTag);
-    ds.writeByteLV(cacheType);
- 
+    ds.writeStrLV(description); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -249,7 +204,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case idTag:
@@ -279,15 +234,6 @@ public:
           description=ds.readStrLV();
           descriptionFlag=true;
         }break;
-        case cacheTypeTag:
-        {
-          if(cacheTypeFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("cacheType");
-          }
-          cacheType=ds.readByteLV();
-          cacheTypeFlag=true;
-        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -311,10 +257,6 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("description");
     }
-    if(!cacheTypeFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("cacheType");
-    }
 
   }
 
@@ -328,18 +270,15 @@ protected:
   static const int32_t idTag=1;
   static const int32_t nameTag=2;
   static const int32_t descriptionTag=3;
-  static const int32_t cacheTypeTag=4;
 
 
   int32_t id;
   std::string name;
   std::string description;
-  AclCacheType::type cacheType;
 
   bool idFlag;
   bool nameFlag;
   bool descriptionFlag;
-  bool cacheTypeFlag;
 };
 
 }

@@ -32,6 +32,11 @@ public:
   }
  
 
+  static std::string messageGetName()
+  {
+    return "MultiResponse";
+  }
+
   std::string toString()const
   {
     std::string rv;
@@ -45,7 +50,7 @@ public:
       rv+="status=";
       rv+="[";
       bool first=true;
-      for(std::vector<int32_t>::const_iterator it=status.begin(),end=status.end();it!=end;it++)
+      for(std::vector<int32_t>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
       {
         if(first)
         {
@@ -68,7 +73,7 @@ public:
       rv+="ids=";
       rv+="[";
       bool first=true;
-      for(std::vector<int8_t>::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
+      for(std::vector<int8_t>::const_iterator it=ids.begin(),end=ids.end();it!=end;++it)
       {
         if(first)
         {
@@ -164,16 +169,16 @@ public:
     //ds.writeInt32(seqNum);
     ds.writeTag(statusTag);
     ds.writeLength(DataStream::fieldSize(status));
-    for(std::vector<int32_t>::const_iterator it=status.begin(),end=status.end();it!=end;it++)
+    for(std::vector<int32_t>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
     {
       ds.writeInt32(*it);
-    }
+          }
     ds.writeTag(idsTag);
     ds.writeLength(DataStream::fieldSize(ids));
-    for(std::vector<int8_t>::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
+    for(std::vector<int8_t>::const_iterator it=ids.begin(),end=ids.end();it!=end;++it)
     {
       ds.writeByte(*it);
-    }
+          }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -191,7 +196,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case statusTag:

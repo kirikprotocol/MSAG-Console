@@ -237,7 +237,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }
 
-
+  if((GET_STATUS_CODE(t.command->get_resp()->get_status())==Status::MAP_NO_RESPONSE_FROM_PEER ||
+     GET_STATUS_CODE(t.command->get_resp()->get_status())==Status::BLOCKEDMSC) &&
+     sms.hasStrProperty(Tag::SMSC_BACKUP_SME)
+  )
+  {
+    t.command->get_resp()->set_status(MAKE_COMMAND_STATUS(CMD_ERR_TEMP,Status::BACKUPSMERESCHEDULE));
+  }
 
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
@@ -361,18 +367,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           smsc->getScheduler()->InvalidSms(t.msgId);
         }
 
-#ifdef SMSEXTRA
-        if((sms.billingRecord!=BILLING_NONE && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==BILLING_FINALREP)
-        {
-          smsc->FullReportDelivery(t.msgId,sms);
-        }
-#else
-        if(sms.billingRecord==BILLING_FINALREP || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
-        {
-          smsc->FullReportDelivery(t.msgId,sms);
-        }
-#endif
-
+        fullReport(t.msgId,sms);
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
@@ -388,7 +383,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO) ||
      (sms.hasBinProperty(Tag::SMSC_CONCATINFO) && sms.getConcatSeqNum()==0))
   {
-    if(createCopyOnNickUsage && (sms.getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK))
+    if(createCopyOnNickUsage && sms.getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK)
     {
       SMS newsms=sms;
       newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,EXTRA_FAKE);
@@ -495,6 +490,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
     info2(smsLog, "DLVRSP: sms has concatinfo, csn=%d/%d;Id=%lld",sms.getConcatSeqNum(),ci->num,t.msgId);
     if(sms.getConcatSeqNum()<ci->num-1)
     {
+      if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+      {
+        fullReport(t.msgId,sms);
+      }
       {
         sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
         if(!dgortr)
@@ -538,9 +537,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       //  send concatenated
       //
 
-      SmeProxy *dest_proxy=0;
-      int dest_proxy_index;
-
       Address dst=sms.getDealiasedDestinationAddress();
 
       // for interfaceVersion==0x50
@@ -552,10 +548,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
       }
 
-      smsc::router::RouteInfo ri;
+      smsc::router::RoutingResult rr;
       bool has_route = false;
       try{
-        has_route=smsc->routeSms(sms.getOriginatingAddress(),dst,dest_proxy_index,dest_proxy,&ri,smsc->getSmeIndex(sms.getSourceSmeId()));
+        has_route=smsc->routeSms(smsc->getSmeIndex(sms.getSourceSmeId()),sms.getOriginatingAddress(),dst,rr);
       }catch(std::exception& e)
       {
         warn2(smsLog,"Routing %s->%s failed:%s",sms.getOriginatingAddress().toString().c_str(),
@@ -587,11 +583,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
          sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
       {
         smsc_log_debug(smsLog,"CONCAT: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
-        dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
-        dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+        rr.destSmeIdx=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+        rr.destProxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
       }
 
-      if(!dest_proxy)
+      if(!rr.destProxy)
       {
         smsc_log_info(smsLog,"CONCAT: dest sme %s not connected msgId=%lld;oa=%s;da=%s",sms.getDestinationSmeId(),t.msgId,
             sms.getOriginatingAddress().toString().c_str(),
@@ -616,21 +612,21 @@ StateType StateMachine::deliveryResp(Tuple& t)
       // create task
 
       uint32_t dialogId2;
-      uint32_t uniqueId=dest_proxy->getUniqueId();
+      uint32_t uniqueId=rr.destProxy->getUniqueId();
 
       TaskGuard tg;
       tg.smsc=smsc;
       tg.uniqueId=uniqueId;
 
       try{
-        dialogId2 = dest_proxy->getNextSequenceNumber();
+        dialogId2 = rr.destProxy->getNextSequenceNumber();
         tg.dialogId=dialogId2;
 
         Task task(uniqueId,dialogId2,dgortr?new SMS(sms):0);
         task.messageId=t.msgId;
         task.inDlgId=t.command->get_resp()->get_inDlgId();
         task.diverted=t.command->get_resp()->get_diverted();
-        if ( smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
+        if ( smsc->tasks.createTask(task,rr.destProxy->getPreferredTimeout()) )
         {
           tg.active=true;
         }
@@ -658,9 +654,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
       try{
         // send delivery
         Address src;
-        if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
+        if(smsc->getSmeInfo(rr.destProxy->getIndex()).wantAlias &&
            sms.getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
-           ri.hide &&
+           rr.info.hide &&
            smsc->AddressToAlias(sms.getOriginatingAddress(),src))
         {
           sms.setOriginatingAddress(src);
@@ -688,17 +684,17 @@ StateType StateMachine::deliveryResp(Tuple& t)
             sms.getMessageBody().dropIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND);
           }
         }
-        if(ri.replyPath==smsc::router::ReplyPathForce)
+        if(rr.info.replyPath==smsc::router::ReplyPathForce)
         {
           sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
-        }else if(ri.replyPath==smsc::router::ReplyPathSuppress)
+        }else if(rr.info.replyPath==smsc::router::ReplyPathSuppress)
         {
           sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
         }
 
         smsc_log_debug(smsLog,"CONCAT: Id=%lld;esm_class=%x",t.msgId,sms.getIntProperty(Tag::SMPP_ESM_CLASS));
         SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
-        dest_proxy->putCommand(delivery);
+        rr.destProxy->putCommand(delivery);
         tg.active=false;
       }
       catch(ExtractPartFailedException& e)
@@ -805,10 +801,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
       }
     }
-    if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
-    {
-      smsc->FullReportDelivery(t.msgId,sms);
-    }
+    fullReport(t.msgId,sms);
     try{
       store->createFinalizedSms(t.msgId,sms);
     }catch(...)
@@ -838,17 +831,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
   debug2(smsLog, "DLVRSP: DELIVERED, Id=%lld",t.msgId);
 
-#ifdef SMSEXTRA
-  if((sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==BILLING_FINALREP)
-  {
-    smsc->FullReportDelivery(t.msgId,sms);
-  }
-#else
-  if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
-  {
-    smsc->FullReportDelivery(t.msgId,sms);
-  }
-#endif
+  fullReport(t.msgId,sms);
 
 
 

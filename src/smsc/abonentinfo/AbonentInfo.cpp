@@ -156,7 +156,7 @@ int AbonentInfoSme::Execute()
         {
           d=a;
         }
-        smsc::router::RouteInfo ri;
+        smsc::router::RoutingResult rr;
         int dest_proxy_index;
         SmeProxy *dest_proxy=NULL;
         int src_proxy_index=-1;
@@ -164,7 +164,7 @@ int AbonentInfoSme::Execute()
         {
           src_proxy_index=smsc->getSmeIndex(sms->getSourceSmeId());
         }
-        bool has_route = smsc->routeSms(sms->getOriginatingAddress(),d,dest_proxy_index,dest_proxy,&ri,src_proxy_index);
+        bool has_route = smsc->routeSms(src_proxy_index,sms->getOriginatingAddress(),d,rr);
 
         Address oa=sms->getOriginatingAddress();
         Address da=sms->getDestinationAddress();
@@ -183,7 +183,7 @@ int AbonentInfoSme::Execute()
         }
         else
         {
-          if(ri.smeSystemId!="MAP_PROXY")status=AbonentStatus::ONLINE;
+          if(rr.info.destSmeSystemId!="MAP_PROXY")status=AbonentStatus::ONLINE;
         }
 
         char a1[32];

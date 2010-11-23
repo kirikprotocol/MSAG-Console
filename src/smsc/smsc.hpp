@@ -10,7 +10,7 @@
 #include "util/crc32.h"
 #include "config/smeman/SmeManConfig.h"
 #include "smppio/SmppSocketsManager.hpp"
-#include "router/route_manager.h"
+#include "router/Router.hpp"
 #include "alias/AliasMan.hpp"
 #include "scheduler/scheduler.hpp"
 #include "profiler/profiler.hpp"
@@ -27,7 +27,7 @@
 #include "smsc/snmp/smestattable/SmeStatTableSubAgent.hpp"
 #endif
 #include "smsc/smeman/smeman.h"
-#include "smsc/acls/interfaces.h"
+#include "smsc/acls/AclManager.hpp"
 //#include "smsc/distrlist/DistrListManager.h"
 //#include "smsc/distrlist/DistrListProcess.h"
 #include "smsc/stat/StatisticsManager.h"
@@ -36,6 +36,7 @@
 #include "event_queue.h"
 #include "mrcache.hpp"
 #include "task_container.h"
+#include "NullSme.hpp"
 
 
 namespace smsc{
@@ -43,64 +44,9 @@ namespace smsc{
 using smsc::sms::SMS;
 using smsc::smeman::SmeProxy;
 using smsc::alias::AliasManager;
-using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
-//using smsc::distrlist::DistrListManager;
-//using smsc::distrlist::DistrListProcess;
 using smsc::config::route::RouteConfig;
-using smsc::acls::AclAbstractMgr;
-//class smsc::store::MessageStore;
 
-template<class T>
-class Reffer
-{
-  Mutex sync_;
-  T* manager_;
-  unsigned refCounter_;
-public:
-  T* operator->() { return manager_;}
-  Reffer(T* manager)
-  {
-    refCounter_ = 1;
-    manager_ = manager;
-  }
-  void Release()
-  {
-    unsigned counter;
-    {
-      MutexGuard g(sync_);
-      counter = --refCounter_;
-    }
-    if ( counter == 0 )
-    {
-      delete this;
-    }
-  }
-  Reffer* AddRef(){
-    MutexGuard g(sync_);
-    ++refCounter_;
-    return this;
-  }
-  static Reffer* Create(T* t) {return new Reffer(t);}
-protected:
-  virtual ~Reffer() {delete manager_;}
-private:
-  Reffer& operator = (const Reffer&);
-  Reffer(const Reffer&);
-};
-
-template<class T>
-class RefferGuard
-{
-  mutable Reffer<T>* reffer_;
-public:
-  RefferGuard(Reffer<T>* reffer) : reffer_(reffer) { reffer_->AddRef(); }
-  RefferGuard(const RefferGuard& g) : reffer_(g.reffer_){g.reffer_=0;}
-  ~RefferGuard() { if ( reffer_ != 0 ) reffer_->Release(); reffer_ = 0; }
-  Reffer<T>& operator->() { return *reffer_; }
-private:
-  RefferGuard& operator = (const RefferGuard&);
-};
 
 namespace StatEvents{
   const int etSubmitOk     =1;
@@ -121,7 +67,7 @@ struct SmscConfigs{
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser(0),testRouter_(0),mergeCacheTimeouts(4096)
+  Smsc():ssockman(&tp,&smeman),stopFlag(false),aliaser(0),mergeCacheTimeouts(4096)
   {
     submitOkCounter=0;
     submitErrCounter=0;
@@ -180,7 +126,7 @@ public:
   void mainLoop(int);
   void shutdown();
   TaskContainer tasks;
-  bool routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
+  bool routeSms(SmeIndex srcSme,const Address& org,const Address& dst,smsc::router::RoutingResult& rr);
 
   bool AliasToAddress(const Address& alias,Address& addr)
   {
@@ -227,6 +173,12 @@ public:
     if(idx==-1)return 0;
     return smeman.getSmeProxy(idx);
   }
+
+  SmeProxy* getSmeProxy(smsc::smeman::SmeIndex idx)
+  {
+    return smeman.getSmeProxy(idx);
+  }
+
 
   void submitMrKill(const Address& org,const Address& dst,uint16_t mr)
   {
@@ -360,58 +312,13 @@ public:
     schedsize=scnts.timeLineCount+scnts.firstTimeCount;
   }
 
-  RefferGuard<RouteManager> getRouterInstance()
-  {
-    MutexGuard g(routerSwitchMutex);
-    return RefferGuard<RouteManager>(router_);
-  }
-
-  RefferGuard<RouteManager> getTestRouterInstance()
-  {
-    MutexGuard g(routerSwitchMutex);
-    return RefferGuard<RouteManager>(testRouter_);
-  }
-
-
   AliasManager* getAliaserInstance()
   {
     return aliaser;
   }
 
-
-  void ResetRouteManager(RouteManager* manager)
-  {
-    Reffer<RouteManager>* refToKill=router_;
-    {
-      MutexGuard g(routerSwitchMutex);
-      router_ = new Reffer<RouteManager>(manager);
-    }
-    if ( refToKill ) refToKill->Release();
-  }
-
-  void ResetTestRouteManager(RouteManager* manager)
-  {
-    Reffer<RouteManager>* refToKill=testRouter_;
-    {
-      MutexGuard g(routerSwitchMutex);
-      testRouter_ = new Reffer<RouteManager>(manager);
-    }
-    if ( refToKill ) refToKill->Release();
-
-  }
-
-  /*
-  void ResetAliases(AliasManager* manager)
-  {
-    MutexGuard g(aliasesSwitchMutex);
-    if ( aliaser_ ) aliaser_->Release();
-    aliaser_ = new Reffer<AliasManager>(manager);
-  }
-  */
-
   void reloadRoutes();
   void reloadTestRoutes(const RouteConfig& rcfg);
-  //void reloadAliases(const SmscConfigs& cfg);
   void reloadReschedule();
 
   void flushStatistics()
@@ -437,11 +344,6 @@ public:
 
   static void InitLicense();
 
-
-  AclAbstractMgr   *getAclMgr()
-  {
-    return aclmgr;
-  }
 
   /*
    * smsc::distrlist::DistrListAdmin* getDlAdmin()
@@ -574,8 +476,6 @@ protected:
   smsc::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
   Mutex routerSwitchMutex;
-  Reffer<RouteManager>* router_;
-  Reffer<RouteManager>* testRouter_;
 
   AliasManager* aliaser;
 
@@ -590,6 +490,8 @@ protected:
   agents::CancelAgent *cancelAgent;
   PerformanceDataDispatcher perfDataDisp;
   PerformanceDataDispatcher perfSmeDataDisp;
+
+  NullSme nullSme;
 
   IntTimeSlotCounter* totalCounter;
   IntTimeSlotCounter* statCounter;
@@ -627,7 +529,6 @@ protected:
   MessageReferenceCache mrCache;
 
 
-  AclAbstractMgr   *aclmgr;
   //DistrListManager *distlstman;
   //DistrListProcess *distlstsme;
 

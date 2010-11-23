@@ -35,9 +35,14 @@ public:
     dsts.clear();
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 15;
+  }
+
+  static std::string messageGetName()
+  {
+    return "CancelSms";
   }
 
   std::string toString()const
@@ -55,7 +60,7 @@ public:
       rv+="ids=";
       rv+="[";
       bool first=true;
-      for(std::vector<std::string>::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=ids.begin(),end=ids.end();it!=end;++it)
       {
         if(first)
         {
@@ -77,7 +82,7 @@ public:
       rv+="srcs=";
       rv+="[";
       bool first=true;
-      for(std::vector<std::string>::const_iterator it=srcs.begin(),end=srcs.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=srcs.begin(),end=srcs.end();it!=end;++it)
       {
         if(first)
         {
@@ -99,7 +104,7 @@ public:
       rv+="dsts=";
       rv+="[";
       bool first=true;
-      for(std::vector<std::string>::const_iterator it=dsts.begin(),end=dsts.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=dsts.begin(),end=dsts.end();it!=end;++it)
       {
         if(first)
         {
@@ -226,22 +231,22 @@ public:
     //ds.writeInt32(seqNum);
     ds.writeTag(idsTag);
     ds.writeLength(DataStream::fieldSize(ids));
-    for(std::vector<std::string>::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=ids.begin(),end=ids.end();it!=end;++it)
     {
       ds.writeStr(*it);
-    }
+          }
     ds.writeTag(srcsTag);
     ds.writeLength(DataStream::fieldSize(srcs));
-    for(std::vector<std::string>::const_iterator it=srcs.begin(),end=srcs.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=srcs.begin(),end=srcs.end();it!=end;++it)
     {
       ds.writeStr(*it);
-    }
+          }
     ds.writeTag(dstsTag);
     ds.writeLength(DataStream::fieldSize(dsts));
-    for(std::vector<std::string>::const_iterator it=dsts.begin(),end=dsts.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=dsts.begin(),end=dsts.end();it!=end;++it)
     {
       ds.writeStr(*it);
-    }
+          }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -259,7 +264,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case idsTag:
@@ -273,6 +278,7 @@ public:
           {
             ids.push_back(ds.readStr());
             rd+=DataStream::fieldSize(ids.back());
+            rd+=DataStream::lengthTypeSize;
           }
           idsFlag=true;
         }break;
@@ -287,6 +293,7 @@ public:
           {
             srcs.push_back(ds.readStr());
             rd+=DataStream::fieldSize(srcs.back());
+            rd+=DataStream::lengthTypeSize;
           }
           srcsFlag=true;
         }break;
@@ -301,6 +308,7 @@ public:
           {
             dsts.push_back(ds.readStr());
             rd+=DataStream::fieldSize(dsts.back());
+            rd+=DataStream::lengthTypeSize;
           }
           dstsFlag=true;
         }break;
@@ -330,12 +338,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }

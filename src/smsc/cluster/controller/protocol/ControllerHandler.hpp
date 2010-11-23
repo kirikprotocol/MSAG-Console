@@ -145,7 +145,8 @@ namespace controller {
 namespace protocol {
 class ControllerHandler{
 public:
-  ControllerHandler():log(smsc::logger::Logger::getInstance("cp.hnd")),isTempRouterLoaded(false)
+  ControllerHandler():log(smsc::logger::Logger::getInstance("cp.hnd")),
+    logDump(smsc::logger::Logger::getInstance("cp.dump.in")),isTempRouterLoaded(false)
   {
 
   }
@@ -236,7 +237,7 @@ protected:
   template <class MSG_T,class MSG_RESP_T>
   void prepareResp(MSG_T& msg,MSG_RESP_T& respMsg,uint32_t status)
   {
-    respMsg.setSeqNum(msg.getSeqNum());
+    respMsg.messageSetSeqNum(msg.messageGetSeqNum());
     messages::Response resp;
     resp.setStatus(status);
     respMsg.setResp(resp);
@@ -244,7 +245,7 @@ protected:
   template <class MSG_T,class MSG_RESP_T>
   void prepareMultiResp(MSG_T& msg,MSG_RESP_T& respMsg,uint32_t status)
   {
-    respMsg.setSeqNum(msg.getSeqNum());
+    respMsg.messageSetSeqNum(msg.messageGetSeqNum());
     messages::MultiResponse resp;
     std::vector<int32_t> st;
     st.push_back(status);
@@ -255,6 +256,7 @@ protected:
     respMsg.setResp(resp);
   }
   smsc::logger::Logger* log;
+  smsc::logger::Logger* logDump;
   bool isTempRouterLoaded;
   int nodeIdx;
 };

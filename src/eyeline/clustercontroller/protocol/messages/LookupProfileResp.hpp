@@ -6,6 +6,7 @@
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
 #include "Response.hpp"
+#include "ProfileMatchType.hpp"
 #include "Profile.hpp"
 
 
@@ -29,12 +30,18 @@ public:
   {
     seqNum=0;
     respFlag=false;
+    matchTypeFlag=false;
     profFlag=false;
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
-    return 1010;
+    return 1011;
+  }
+
+  static std::string messageGetName()
+  {
+    return "LookupProfileResp";
   }
 
   std::string toString()const
@@ -53,6 +60,15 @@ public:
       rv+='(';
       rv+=resp.toString();
       rv+=')';
+    }
+    if(matchTypeFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="matchType=";
+      rv+=ProfileMatchType::getNameByValue(matchType);
     }
     if(profFlag)
     {
@@ -77,6 +93,13 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=resp.length<DataStream>();
+    }
+    if(matchTypeFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(matchType.getValue());
+ 
     }
     if(profFlag)
     {
@@ -109,6 +132,28 @@ public:
   {
     return respFlag;
   }
+  const ProfileMatchType& getMatchType()const
+  {
+    if(!matchTypeFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("matchType");
+    }
+    return matchType;
+  }
+  void setMatchType(const ProfileMatchType& argValue)
+  {
+    matchType=argValue;
+    matchTypeFlag=true;
+  }
+  ProfileMatchType& getMatchTypeRef()
+  {
+    matchTypeFlag=true;
+    return matchType;
+  }
+  bool hasMatchType()const
+  {
+    return matchTypeFlag;
+  }
   const Profile& getProf()const
   {
     if(!profFlag)
@@ -138,6 +183,10 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
+    if(!matchTypeFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("matchType");
+    }
     if(!profFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("prof");
@@ -148,6 +197,9 @@ public:
     ds.writeTag(respTag);
     ds.writeLength(resp.length<DataStream>());
     resp.serialize(ds);
+    ds.writeTag(matchTypeTag);
+    ds.writeByteLV(matchType.getValue());
+ 
     ds.writeTag(profTag);
     ds.writeLength(prof.length<DataStream>());
     prof.serialize(ds);
@@ -168,7 +220,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case respTag:
@@ -180,6 +232,15 @@ public:
 
           ds.readLength();resp.deserialize(ds);
           respFlag=true;
+        }break;
+        case matchTypeTag:
+        {
+          if(matchTypeFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("matchType");
+          }
+          matchType=ds.readByteLV();
+          matchTypeFlag=true;
         }break;
         case profTag:
         {
@@ -206,6 +267,10 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
+    if(!matchTypeFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("matchType");
+    }
     if(!profFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("prof");
@@ -213,12 +278,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }
@@ -230,14 +295,17 @@ protected:
   //static const int8_t versionMinor=0;
 
   static const int32_t respTag=1;
-  static const int32_t profTag=2;
+  static const int32_t matchTypeTag=2;
+  static const int32_t profTag=3;
 
   int32_t seqNum;
 
   Response resp;
+  ProfileMatchType matchType;
   Profile prof;
 
   bool respFlag;
+  bool matchTypeFlag;
   bool profFlag;
 };
 

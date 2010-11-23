@@ -32,9 +32,14 @@ public:
     addrs.clear();
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 31;
+  }
+
+  static std::string messageGetName()
+  {
+    return "AclRemoveAddresses";
   }
 
   std::string toString()const
@@ -62,7 +67,7 @@ public:
       rv+="addrs=";
       rv+="[";
       bool first=true;
-      for(std::vector<std::string>::const_iterator it=addrs.begin(),end=addrs.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=addrs.begin(),end=addrs.end();it!=end;++it)
       {
         if(first)
         {
@@ -156,13 +161,13 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(aclIdTag);
-    ds.writeInt32LV(aclId);
+    ds.writeInt32LV(aclId); 
     ds.writeTag(addrsTag);
     ds.writeLength(DataStream::fieldSize(addrs));
-    for(std::vector<std::string>::const_iterator it=addrs.begin(),end=addrs.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=addrs.begin(),end=addrs.end();it!=end;++it)
     {
       ds.writeStr(*it);
-    }
+          }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -180,7 +185,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case aclIdTag:
@@ -203,6 +208,7 @@ public:
           {
             addrs.push_back(ds.readStr());
             rd+=DataStream::fieldSize(addrs.back());
+            rd+=DataStream::lengthTypeSize;
           }
           addrsFlag=true;
         }break;
@@ -228,12 +234,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }

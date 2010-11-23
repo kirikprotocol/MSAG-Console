@@ -30,6 +30,11 @@ public:
   }
  
 
+  static std::string messageGetName()
+  {
+    return "Response";
+  }
+
   std::string toString()const
   {
     std::string rv;
@@ -93,7 +98,7 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(statusTag);
-    ds.writeInt32LV(status);
+    ds.writeInt32LV(status); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -111,7 +116,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case statusTag:

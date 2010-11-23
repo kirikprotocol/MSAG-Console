@@ -35,9 +35,15 @@ public:
   }
  
 
+  static std::string messageGetName()
+  {
+    return "ServiceStatus";
+  }
+
   std::string toString()const
   {
     std::string rv;
+    char buf[32];
     if(serviceNameFlag)
     {
       if(rv.length()>0)
@@ -56,7 +62,7 @@ public:
       rv+="peerAddress=";
       rv+="[";
       bool first=true;
-      for(std::vector<std::string>::const_iterator it=peerAddress.begin(),end=peerAddress.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=peerAddress.begin(),end=peerAddress.end();it!=end;++it)
       {
         if(first)
         {
@@ -87,7 +93,7 @@ public:
       rv+="boundSmsc=";
       rv+="[";
       bool first=true;
-      for(std::vector<bool>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;it++)
+      for(std::vector<int8_t>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;++it)
       {
         if(first)
         {
@@ -96,7 +102,8 @@ public:
         {
           rv+=",";
         }
-        rv+=*it?"true":"false";
+        sprintf(buf,"%d",(int)*it);
+        rv+=buf;
       }
       rv+="]";
     }
@@ -123,7 +130,8 @@ public:
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(bindMode);
+      rv+=DataStream::fieldSize(bindMode.getValue());
+ 
     }
     if(boundSmscFlag)
     {
@@ -178,7 +186,7 @@ public:
   {
     return peerAddressFlag;
   }
-  const SmeBindMode::type& getBindMode()const
+  const SmeBindMode& getBindMode()const
   {
     if(!bindModeFlag)
     {
@@ -186,16 +194,12 @@ public:
     }
     return bindMode;
   }
-  void setBindMode(const SmeBindMode::type& argValue)
+  void setBindMode(const SmeBindMode& argValue)
   {
-    if(!SmeBindMode::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("SmeBindMode",argValue);
-    }
     bindMode=argValue;
     bindModeFlag=true;
   }
-  SmeBindMode::type& getBindModeRef()
+  SmeBindMode& getBindModeRef()
   {
     bindModeFlag=true;
     return bindMode;
@@ -204,7 +208,7 @@ public:
   {
     return bindModeFlag;
   }
-  const std::vector<bool>& getBoundSmsc()const
+  const std::vector<int8_t>& getBoundSmsc()const
   {
     if(!boundSmscFlag)
     {
@@ -212,12 +216,12 @@ public:
     }
     return boundSmsc;
   }
-  void setBoundSmsc(const std::vector<bool>& argValue)
+  void setBoundSmsc(const std::vector<int8_t>& argValue)
   {
     boundSmsc=argValue;
     boundSmscFlag=true;
   }
-  std::vector<bool>& getBoundSmscRef()
+  std::vector<int8_t>& getBoundSmscRef()
   {
     boundSmscFlag=true;
     return boundSmsc;
@@ -249,22 +253,22 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(serviceNameTag);
-    ds.writeStrLV(serviceName);
+    ds.writeStrLV(serviceName); 
     ds.writeTag(peerAddressTag);
     ds.writeLength(DataStream::fieldSize(peerAddress));
-    for(std::vector<std::string>::const_iterator it=peerAddress.begin(),end=peerAddress.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=peerAddress.begin(),end=peerAddress.end();it!=end;++it)
     {
       ds.writeStr(*it);
-    }
+          }
     ds.writeTag(bindModeTag);
-    ds.writeByteLV(bindMode);
+    ds.writeByteLV(bindMode.getValue());
  
     ds.writeTag(boundSmscTag);
     ds.writeLength(DataStream::fieldSize(boundSmsc));
-    for(std::vector<bool>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;it++)
+    for(std::vector<int8_t>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;++it)
     {
-      ds.writeBool(*it);
-    }
+      ds.writeByte(*it);
+          }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -282,7 +286,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case serviceNameTag:
@@ -305,6 +309,7 @@ public:
           {
             peerAddress.push_back(ds.readStr());
             rd+=DataStream::fieldSize(peerAddress.back());
+            rd+=DataStream::lengthTypeSize;
           }
           peerAddressFlag=true;
         }break;
@@ -326,7 +331,7 @@ public:
           typename DataStream::LengthType len=ds.readLength(),rd=0;
           while(rd<len)
           {
-            boundSmsc.push_back(ds.readBool());
+            boundSmsc.push_back(ds.readByte());
             rd+=DataStream::fieldSize(boundSmsc.back());
           }
           boundSmscFlag=true;
@@ -376,8 +381,8 @@ protected:
 
   std::string serviceName;
   std::vector<std::string> peerAddress;
-  SmeBindMode::type bindMode;
-  std::vector<bool> boundSmsc;
+  SmeBindMode bindMode;
+  std::vector<int8_t> boundSmsc;
 
   bool serviceNameFlag;
   bool peerAddressFlag;

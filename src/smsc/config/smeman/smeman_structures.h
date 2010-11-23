@@ -57,56 +57,39 @@ struct SmppSmeRecord
   uint32_t flags;
 };
 
-struct Ss7SmeRecord
-{
-  // ... nothing, now
-};
 
 struct SmeRecord
 {
   RecordType rectype;
   int priority;
   char* smeUid;
-  union
-  {
-    SmppSmeRecord smppSme;
-    Ss7SmeRecord ss7Sme;
-  }recdata;
+
+  SmppSmeRecord smppSme;
 
   SmeRecord()
   {
     ::memset(this, 0, sizeof(*this));
     rectype = SMPP_SME;
-    recdata.smppSme.accessMask=1;
+    smppSme.accessMask=1;
   }
 
   SmeRecord(const SmeRecord & copy)
   {
     ::memcpy(this, &copy, sizeof(copy));
     smeUid = cStringCopy(copy.smeUid);
-    if (rectype == SMPP_SME)
-    {
-      recdata.smppSme.systemType        = cStringCopy(copy.recdata.smppSme.systemType);
-      recdata.smppSme.password          = cStringCopy(copy.recdata.smppSme.password);
-      recdata.smppSme.addrRange         = cStringCopy(copy.recdata.smppSme.addrRange);
-      recdata.smppSme.receiptSchemeName = cStringCopy(copy.recdata.smppSme.receiptSchemeName);
-    } else {
-      // !!! not yet implemented
-    }
+    smppSme.systemType        = cStringCopy(copy.smppSme.systemType);
+    smppSme.password          = cStringCopy(copy.smppSme.password);
+    smppSme.addrRange         = cStringCopy(copy.smppSme.addrRange);
+    smppSme.receiptSchemeName = cStringCopy(copy.smppSme.receiptSchemeName);
   }
 
   ~SmeRecord()
   {
     if (smeUid != 0) delete[] smeUid;
-    if (rectype == SMPP_SME)
-    {
-      if (recdata.smppSme.systemType        != 0)  delete[] recdata.smppSme.systemType;
-      if (recdata.smppSme.password          != 0)  delete[] recdata.smppSme.password;
-      if (recdata.smppSme.addrRange         != 0)  delete[] recdata.smppSme.addrRange;
-      if (recdata.smppSme.receiptSchemeName != 0)  delete[] recdata.smppSme.receiptSchemeName;
-    } else {
-      // !!! not yet implemented
-    }
+      if (smppSme.systemType        != 0)  delete[] smppSme.systemType;
+      if (smppSme.password          != 0)  delete[] smppSme.password;
+      if (smppSme.addrRange         != 0)  delete[] smppSme.addrRange;
+      if (smppSme.receiptSchemeName != 0)  delete[] smppSme.receiptSchemeName;
     ::memset(this, 0, sizeof(*this));
   }
 };

@@ -35,9 +35,14 @@ public:
     smscConfigs.clear();
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 1203;
+  }
+
+  static std::string messageGetName()
+  {
+    return "GetConfigsStateResp";
   }
 
   std::string toString()const
@@ -66,7 +71,7 @@ public:
       rv+="ccConfigUpdateTime=";
       rv+="[";
       bool first=true;
-      for(std::vector<int64_t>::const_iterator it=ccConfigUpdateTime.begin(),end=ccConfigUpdateTime.end();it!=end;it++)
+      for(std::vector<int64_t>::const_iterator it=ccConfigUpdateTime.begin(),end=ccConfigUpdateTime.end();it!=end;++it)
       {
         if(first)
         {
@@ -89,7 +94,7 @@ public:
       rv+="smscConfigs=";
       rv+="[";
       bool first=true;
-      for(std::vector<SmscConfigsState>::const_iterator it=smscConfigs.begin(),end=smscConfigs.end();it!=end;it++)
+      for(std::vector<SmscConfigsState>::const_iterator it=smscConfigs.begin(),end=smscConfigs.end();it!=end;++it)
       {
         if(first)
         {
@@ -127,7 +132,7 @@ public:
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      for(std::vector<SmscConfigsState>::const_iterator it=smscConfigs.begin(),end=smscConfigs.end();it!=end;it++)
+      for(std::vector<SmscConfigsState>::const_iterator it=smscConfigs.begin(),end=smscConfigs.end();it!=end;++it)
       {
         rv+=it->length<DataStream>();
       }
@@ -220,20 +225,20 @@ public:
     resp.serialize(ds);
     ds.writeTag(ccConfigUpdateTimeTag);
     ds.writeLength(DataStream::fieldSize(ccConfigUpdateTime));
-    for(std::vector<int64_t>::const_iterator it=ccConfigUpdateTime.begin(),end=ccConfigUpdateTime.end();it!=end;it++)
+    for(std::vector<int64_t>::const_iterator it=ccConfigUpdateTime.begin(),end=ccConfigUpdateTime.end();it!=end;++it)
     {
       ds.writeInt64(*it);
-    }
+          }
     if(smscConfigsFlag)
     {
       ds.writeTag(smscConfigsTag);
     typename DataStream::LengthType len=0;
-    for(std::vector<SmscConfigsState>::const_iterator it=smscConfigs.begin(),end=smscConfigs.end();it!=end;it++)
+    for(std::vector<SmscConfigsState>::const_iterator it=smscConfigs.begin(),end=smscConfigs.end();it!=end;++it)
     {
       len+=it->length<DataStream>();
     }
     ds.writeLength(len);
-    for(std::vector<SmscConfigsState>::const_iterator it=smscConfigs.begin(),end=smscConfigs.end();it!=end;it++)
+    for(std::vector<SmscConfigsState>::const_iterator it=smscConfigs.begin(),end=smscConfigs.end();it!=end;++it)
     {
       it->serialize(ds);
     }
@@ -255,7 +260,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case respTag:
@@ -320,12 +325,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }

@@ -1,5 +1,5 @@
-#ifndef __GENERATED_ENUM_SMEBINDMODE__
-#define __GENERATED_ENUM_SMEBINDMODE__
+#ifndef __GENERATED_ENUM_EYELINE_CLUSTERCONTROLLER_PROTOCOL_MESSAGES_SMEBINDMODE__
+#define __GENERATED_ENUM_EYELINE_CLUSTERCONTROLLER_PROTOCOL_MESSAGES_SMEBINDMODE__
 
 #include <map>
 #include <string>
@@ -15,13 +15,65 @@ namespace messages{
 class SmeBindMode{
 public:
   typedef int8_t type;
-  static const type modeTx;
-  static const type modeRx;
-  static const type modeTrx;
-  static const type modeUnknown;
+ 
+  SmeBindMode()
+  {
+    isNull=true;
+  }
+  SmeBindMode(const type& argValue):value(argValue)
+  {
+    if(!isValidValue(value))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("SmeBindMode",value);
+    }
+    isNull=false;
+  }
+ 
+  SmeBindMode(const SmeBindMode& argRhs):value(argRhs.value),isNull(argRhs.isNull)
+  {
+  }
+ 
+  const type& getValue()const
+  {
+    return value;
+  }
+  bool isNullValue()const
+  {
+    return isNull;
+  }
+ 
+  void setValue(const type& argValue)
+  {
+    if(!isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("SmeBindMode",argValue);
+    }
+    value=argValue;
+    isNull=false;
+  }
+ 
+  bool operator==(const SmeBindMode& rhs)const
+  {
+    return isNull==rhs.isNull && value==rhs.value;
+  }
+ 
+  static const type modeTx=0;
+  static const type modeRx=1;
+  static const type modeTrx=2;
+  static const type modeUnknown=3;
   static bool isValidValue(const type& value)
   {
     return nameByValue.find(value)!=nameByValue.end();
+  }
+
+  static std::string getNameByValue(const SmeBindMode& value)
+  {
+    std::map<type,std::string>::iterator it=nameByValue.find(value.value);
+    if(it!=nameByValue.end())
+    {
+      return it->second;
+    }
+    return "";
   }
  
   static std::string getNameByValue(const type& value)
@@ -46,6 +98,9 @@ public:
  
  
 protected:
+  type value;
+  bool isNull;
+
   static std::map<type,std::string> nameByValue;
   static std::map<std::string,type> valueByName;
   struct StaticInitializer{

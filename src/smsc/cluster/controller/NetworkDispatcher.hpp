@@ -110,6 +110,7 @@ public:
   template <class MSG_T>
   void enqueueMessage(const MSG_T& msg)
   {
+    smsc_log_debug(logDump,"%s:%s",msg.messageGetName().c_str(),msg.toString().c_str());
     eyeline::protogen::framework::SerializerBuffer buf(1024);
     smscProto.encodeMessage(msg,&buf);
     Buffer b;
@@ -133,7 +134,7 @@ public:
     sync::MutexGuard mg(sendMsgMtx);
     int seq=seqNum++;
     smsc_log_debug(log,"send msg with seq=%d",seq);
-    msg.setSeqNum(seq);
+    msg.messageSetSeqNum(seq);
     enqueueMessage(msg);
     SentMsgInfo smi;
     sentMsgs.Insert(seq,&smi);
@@ -205,6 +206,7 @@ protected:
   };
   friend class CmdHandler;
   thr::ThreadPool tp;
+  smsc::logger::Logger* logDump;
 };
 
 }

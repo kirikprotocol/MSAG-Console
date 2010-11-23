@@ -29,9 +29,14 @@ public:
     aclIdFlag=false;
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 27;
+  }
+
+  static std::string messageGetName()
+  {
+    return "AclRemove";
   }
 
   std::string toString()const
@@ -99,7 +104,7 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(aclIdTag);
-    ds.writeInt32LV(aclId);
+    ds.writeInt32LV(aclId); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -117,7 +122,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case aclIdTag:
@@ -147,12 +152,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }

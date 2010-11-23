@@ -31,6 +31,11 @@ public:
   }
  
 
+  static std::string messageGetName()
+  {
+    return "CategoryInfo";
+  }
+
   std::string toString()const
   {
     std::string rv;
@@ -133,9 +138,9 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(nameTag);
-    ds.writeStrLV(name);
+    ds.writeStrLV(name); 
     ds.writeTag(levelTag);
-    ds.writeStrLV(level);
+    ds.writeStrLV(level); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -153,7 +158,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case nameTag:

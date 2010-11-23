@@ -32,9 +32,14 @@ public:
     configUpdateTimes.clear();
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 303;
+  }
+
+  static std::string messageGetName()
+  {
+    return "RegisterAsSmsc";
   }
 
   std::string toString()const
@@ -72,7 +77,7 @@ public:
       rv+="configUpdateTimes=";
       rv+="[";
       bool first=true;
-      for(std::vector<int64_t>::const_iterator it=configUpdateTimes.begin(),end=configUpdateTimes.end();it!=end;it++)
+      for(std::vector<int64_t>::const_iterator it=configUpdateTimes.begin(),end=configUpdateTimes.end();it!=end;++it)
       {
         if(first)
         {
@@ -199,15 +204,15 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(magicTag);
-    ds.writeInt32LV(magic);
+    ds.writeInt32LV(magic); 
     ds.writeTag(nodeIndexTag);
-    ds.writeByteLV(nodeIndex);
+    ds.writeByteLV(nodeIndex); 
     ds.writeTag(configUpdateTimesTag);
     ds.writeLength(DataStream::fieldSize(configUpdateTimes));
-    for(std::vector<int64_t>::const_iterator it=configUpdateTimes.begin(),end=configUpdateTimes.end();it!=end;it++)
+    for(std::vector<int64_t>::const_iterator it=configUpdateTimes.begin(),end=configUpdateTimes.end();it!=end;++it)
     {
       ds.writeInt64(*it);
-    }
+          }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -225,7 +230,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case magicTag:
@@ -286,12 +291,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }

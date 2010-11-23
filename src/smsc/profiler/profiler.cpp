@@ -262,6 +262,9 @@ int Profiler::update(const Address& address,const Profile& profile)
 
   if(notifier)notifier->AddChange(address,profile);
   uint32_t oldClGroupId=prof.closedGroupId;
+  uint32_t newClGroupId=profile.closedGroupId;
+
+  smsc_log_debug(log,"oldCGId=%d, newCGId=%d",oldClGroupId,newClGroupId);
 
   try{
     int rv;
@@ -283,11 +286,11 @@ int Profiler::update(const Address& address,const Profile& profile)
       debug2(log,"insert %s/%#llx",address.toString().c_str(),profRef.offset);
       rv=pusInserted;
     }
-    if(prof.closedGroupId!=oldClGroupId)
+    if(newClGroupId!=oldClGroupId)
     {
       smsc::closedgroups::ClosedGroupsInterface *cgi=smsc::closedgroups::ClosedGroupsInterface::getInstance();
       if(oldClGroupId!=0)cgi->RemoveAbonent(oldClGroupId,address);
-      if(prof.closedGroupId!=0)cgi->AddAbonent(prof.closedGroupId,address);
+      if(newClGroupId!=0)cgi->AddAbonent(newClGroupId,address);
     }
     return rv;
   }catch(std::exception& e)
@@ -1061,9 +1064,9 @@ int Profiler::Execute()
 #endif
           up.setAddress(addr.toString());
           up.setProf(prof);
-          up.setSeqNum(nd.getNextSeq());
+          up.messageSetSeqNum(nd.getNextSeq());
           nd.enqueueMessage(up);
-          updateRequests.insert(ProfileUpdateMap::value_type(up.getSeqNum(),pui));
+          updateRequests.insert(ProfileUpdateMap::value_type(up.messageGetSeqNum(),pui));
         }else
         {
           updateRequests.insert(ProfileUpdateMap::value_type(0xffffffff,pui));

@@ -1,6 +1,7 @@
 #include <string>
 #include <stdexcept>
 
+#if 0
 #include "smsc/config/route/RouteConfig.h"
 #include "smsc/router/route_manager.h"
 #include "smsc/smeman/smeman.h"
@@ -91,7 +92,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               rinfo.billing = route->isBilling();
               //rinfo.paid =
               rinfo.archived=route->isArchiving();
-              rinfo.enabling = route->isEnabling();
+              rinfo.enabled = route->isEnabling();
               rinfo.routeId=route->getId();
               rinfo.serviceId=route->getServiceId();
               rinfo.priority=route->getPriority();
@@ -100,12 +101,12 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               rinfo.replyPath=route->getReplyPath();
               rinfo.deliveryMode = route->getDeliveryMode();
               rinfo.forwardTo = route->getForwardTo();
-              rinfo.trafRules=TrafficRules(route->getTrafRules());
+              //rinfo.trafRules=TrafficRules(route->getTrafRules());
               rinfo.forceDelivery=route->isForceDelivery();
               rinfo.aclId=route->getAclId();
               rinfo.allowBlocked=route->isAllowBlocked();
               rinfo.providerId=(int32_t)route->getProviderId();
-              rinfo.billingId=route->getBillingRuleId();
+              //rinfo.billingId=route->getBillingRuleId();
               rinfo.categoryId=(int32_t)route->getCategoryId();
               rinfo.transit=route->isTransit();
 //              __trace2__("dest mask: %s",dest_mask_it->c_str());
@@ -133,6 +134,8 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
   }
 }
 
+
 } // namespace system
 } // namespace smsc
 
+#endif

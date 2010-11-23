@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
-#include "AclCacheType.hpp"
 
 
 #ident "@(#) AclCreate version 1.0"
@@ -27,16 +26,21 @@ public:
   void Clear()
   {
     seqNum=0;
+    idFlag=false;
     nameFlag=false;
     descriptionFlag=false;
-    cacheTypeFlag=false;
     addressesFlag=false;
     addresses.clear();
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 28;
+  }
+
+  static std::string messageGetName()
+  {
+    return "AclCreate";
   }
 
   std::string toString()const
@@ -45,6 +49,16 @@ public:
     char buf[32];
     sprintf(buf,"seqNum=%d",seqNum);
     rv+=buf;
+    if(idFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="id=";
+      sprintf(buf,"%d",id);
+      rv+=buf;
+    }
     if(nameFlag)
     {
       if(rv.length()>0)
@@ -63,15 +77,6 @@ public:
       rv+="description=";
       rv+=description;
     }
-    if(cacheTypeFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="cacheType=";
-      rv+=AclCacheType::getNameByValue(cacheType);
-    }
     if(addressesFlag)
     {
       if(rv.length()>0)
@@ -81,7 +86,7 @@ public:
       rv+="addresses=";
       rv+="[";
       bool first=true;
-      for(std::vector<std::string>::const_iterator it=addresses.begin(),end=addresses.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=addresses.begin(),end=addresses.end();it!=end;++it)
       {
         if(first)
         {
@@ -101,6 +106,12 @@ public:
   int32_t length()const
   {
     int32_t rv=0;
+    if(idFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(id);
+    }
     if(nameFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -113,12 +124,6 @@ public:
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(description);
     }
-    if(cacheTypeFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(cacheType);
-    }
     if(addressesFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -127,6 +132,28 @@ public:
     }
     rv+=DataStream::tagTypeSize;
     return rv;
+  }
+  int32_t getId()const
+  {
+    if(!idFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("id");
+    }
+    return id;
+  }
+  void setId(int32_t argValue)
+  {
+    id=argValue;
+    idFlag=true;
+  }
+  int32_t& getIdRef()
+  {
+    idFlag=true;
+    return id;
+  }
+  bool hasId()const
+  {
+    return idFlag;
   }
   const std::string& getName()const
   {
@@ -172,32 +199,6 @@ public:
   {
     return descriptionFlag;
   }
-  const AclCacheType::type& getCacheType()const
-  {
-    if(!cacheTypeFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("cacheType");
-    }
-    return cacheType;
-  }
-  void setCacheType(const AclCacheType::type& argValue)
-  {
-    if(!AclCacheType::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("AclCacheType",argValue);
-    }
-    cacheType=argValue;
-    cacheTypeFlag=true;
-  }
-  AclCacheType::type& getCacheTypeRef()
-  {
-    cacheTypeFlag=true;
-    return cacheType;
-  }
-  bool hasCacheType()const
-  {
-    return cacheTypeFlag;
-  }
   const std::vector<std::string>& getAddresses()const
   {
     if(!addressesFlag)
@@ -231,10 +232,6 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("description");
     }
-    if(!cacheTypeFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("cacheType");
-    }
     if(!addressesFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("addresses");
@@ -243,17 +240,19 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(nameTag);
-    ds.writeStrLV(name);
+    ds.writeStrLV(name); 
     ds.writeTag(descriptionTag);
-    ds.writeStrLV(description);
-    ds.writeTag(cacheTypeTag);
-    ds.writeByteLV(cacheType);
- 
+    ds.writeStrLV(description); 
     ds.writeTag(addressesTag);
     ds.writeLength(DataStream::fieldSize(addresses));
-    for(std::vector<std::string>::const_iterator it=addresses.begin(),end=addresses.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=addresses.begin(),end=addresses.end();it!=end;++it)
     {
       ds.writeStr(*it);
+          }
+    if(idFlag)
+    {
+      ds.writeTag(idTag);
+    ds.writeInt32LV(id); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -272,9 +271,18 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
+        case idTag:
+        {
+          if(idFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("id");
+          }
+          id=ds.readInt32LV();
+          idFlag=true;
+        }break;
         case nameTag:
         {
           if(nameFlag)
@@ -293,15 +301,6 @@ public:
           description=ds.readStrLV();
           descriptionFlag=true;
         }break;
-        case cacheTypeTag:
-        {
-          if(cacheTypeFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("cacheType");
-          }
-          cacheType=ds.readByteLV();
-          cacheTypeFlag=true;
-        }break;
         case addressesTag:
         {
           if(addressesFlag)
@@ -313,6 +312,7 @@ public:
           {
             addresses.push_back(ds.readStr());
             rd+=DataStream::fieldSize(addresses.back());
+            rd+=DataStream::lengthTypeSize;
           }
           addressesFlag=true;
         }break;
@@ -335,10 +335,6 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("description");
     }
-    if(!cacheTypeFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("cacheType");
-    }
     if(!addressesFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("addresses");
@@ -346,12 +342,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }
@@ -362,21 +358,21 @@ protected:
   //static const int8_t versionMajor=1;
   //static const int8_t versionMinor=0;
 
+  static const int32_t idTag=5;
   static const int32_t nameTag=1;
   static const int32_t descriptionTag=2;
-  static const int32_t cacheTypeTag=3;
   static const int32_t addressesTag=4;
 
   int32_t seqNum;
 
+  int32_t id;
   std::string name;
   std::string description;
-  AclCacheType::type cacheType;
   std::vector<std::string> addresses;
 
+  bool idFlag;
   bool nameFlag;
   bool descriptionFlag;
-  bool cacheTypeFlag;
   bool addressesFlag;
 };
 

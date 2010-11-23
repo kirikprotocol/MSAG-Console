@@ -41,7 +41,7 @@ public:
 
   status reload();
 
-  status store(const char * const filename) const;
+//  status store(const char * const filename) const;
 
   RouteIterator getRouteIterator() const;
 

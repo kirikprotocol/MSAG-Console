@@ -389,16 +389,14 @@ StateType StateMachine::submit(Tuple& t)
       debug2(smsLog, "Divert address dealiased:%s->%s",divDst.toString().c_str(),tmp.toString().c_str());
       divDst=tmp;
     }
-    smsc::router::RouteInfo ri2;
-    SmeProxy* prx;
-    int idx;
+    smsc::router::RoutingResult rr2;
     try{
-      if(smsc->routeSms(sms->getOriginatingAddress(),divDst,idx,prx,&ri2,c.src_proxy->getSmeIndex()))
+      if(smsc->routeSms(c.src_proxy->getSmeIndex(),sms->getOriginatingAddress(),divDst,rr2))
       {
-        if(ri2.smeSystemId!="MAP_PROXY")
+        if(rr2.info.destSmeSystemId!="MAP_PROXY")
         {
           warn2(smsLog,"attempt to divert to non-map address(sysId=%s):%s->%s",
-            ri2.smeSystemId.c_str(),
+            rr2.info.destSmeSystemId.c_str(),
             sms->getOriginatingAddress().toString().c_str(),divDst.toString().c_str());
           goto divert_failed;
         }
@@ -446,9 +444,7 @@ StateType StateMachine::submit(Tuple& t)
   c.has_route = false;
 
   try{
-    c.has_route=smsc->routeSms(sms->getOriginatingAddress(),
-                            c.dst,
-                            c.dest_proxy_index,c.dest_proxy,&c.ri,c.src_proxy->getSmeIndex());
+    c.has_route=smsc->routeSms(c.src_proxy->getSmeIndex(),sms->getOriginatingAddress(),c.dst,c.rr);
   }catch(std::exception& e)
   {
     warn2(smsLog,"Routing %s->%s failed:%s",sms->getOriginatingAddress().toString().c_str(),
@@ -467,6 +463,11 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  if(!c.rr.info.backupSme.empty())
+  {
+    sms->setStrProperty(Tag::SMSC_BACKUP_SME,c.rr.info.backupSme.c_str());
+  }
+
   c.generateDeliver=true; // do not generate in case of merge-concat
   c.createSms=scsCreate;
 
@@ -474,11 +475,12 @@ StateType StateMachine::submit(Tuple& t)
 
   c.noPartitionSms=false; // do not call partitionSms if true!
 
+  SmeInfo dstSmeInfo=smsc->getSmeInfo(c.rr.destSmeIdx);
+
   c.fromMap=c.src_proxy && !strcmp(c.src_proxy->getSystemId(),"MAP_PROXY");
-  c.toMap=c.dest_proxy && !strcmp(c.dest_proxy->getSystemId(),"MAP_PROXY");
+  c.toMap=dstSmeInfo.systemId=="MAP_PROXY";
   c.fromDistrList=c.src_proxy && !strcmp(c.src_proxy->getSystemId(),"DSTRLST");
 
-  SmeInfo dstSmeInfo=smsc->getSmeInfo(c.dest_proxy_index);
 
   if(c.toMap && ((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3c)==0x08 ||
       (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3c)==0x10))
@@ -529,7 +531,7 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
-  sms->setArchivationRequested(c.ri.archived);
+  sms->setArchivationRequested(c.rr.info.archived);
 
 #ifdef SMSEXTRA
   /*
@@ -562,15 +564,15 @@ StateType StateMachine::submit(Tuple& t)
 
   bool dropMergeConcat=false;
 
-  if(c.ri.transit)
+  if(c.rr.info.transit)
   {
     dropMergeConcat=true;
   }
 
   c.isForwardTo = false;
-  if( c.ri.forwardTo.length() > 0 && c.toMap )
+  if( c.rr.info.forwardTo.length() > 0 && c.toMap )
   {
-    sms->setStrProperty( Tag::SMSC_FORWARD_MO_TO, c.ri.forwardTo.c_str());
+    sms->setStrProperty( Tag::SMSC_FORWARD_MO_TO, c.rr.info.forwardTo.c_str());
 
     // force forward(transaction) mode
     sms->setIntProperty( Tag::SMPP_ESM_CLASS, sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x02 );
@@ -605,7 +607,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
 
-  if(!c.ri.transit)
+  if(!c.rr.info.transit)
   {
     if(!extactConcatInfoToSar(*sms))
     {
@@ -639,38 +641,21 @@ StateType StateMachine::submit(Tuple& t)
       return ERROR_STATE;
     };
   }
-  ////
-  //
-  //  Merging
-  //
 
-  if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
-  {
-    if(!processMerge(c))
-    {
-      return c.rvstate;
-    }
-  }
-
-  //
-  //  End of merging
-  //
-  ////
-
-  sms->setRouteId(c.ri.routeId.c_str());
-  if(c.ri.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
-  int prio=sms->getPriority()+c.ri.priority;
+  sms->setRouteId(c.rr.info.routeId.c_str());
+  if(c.rr.info.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
+  int prio=sms->getPriority()+c.rr.info.priority;
   if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
   sms->setPriority(prio);
 
   debug2(smsLog,"SBM: route %s->%s found:%s",
       sms->getOriginatingAddress().toString().c_str(),
       AddrPair("da",sms->getDestinationAddress(),"dda",c.dst).c_str(),
-      c.ri.routeId.c_str());
+      c.rr.info.routeId.c_str());
 
 
-  sms->setIntProperty(Tag::SMSC_PROVIDERID,c.ri.providerId);
-  sms->setIntProperty(Tag::SMSC_CATEGORYID,c.ri.categoryId);
+  sms->setIntProperty(Tag::SMSC_PROVIDERID,c.rr.info.providerId);
+  sms->setIntProperty(Tag::SMSC_CATEGORYID,c.rr.info.categoryId);
 
   bool aclCheck=false;
   smsc::core::buffers::FixedLengthString<32> aclAddr;
@@ -702,7 +687,7 @@ StateType StateMachine::submit(Tuple& t)
     aclCheck=true;
   }
 
-  if(c.ri.billing==smsc::sms::BILLING_ONSUBMIT || c.ri.billing==smsc::sms::BILLING_CDR)
+  if(c.rr.info.billing==smsc::sms::BILLING_ONSUBMIT || c.rr.info.billing==smsc::sms::BILLING_CDR)
   {
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnSubmit);
   }else
@@ -715,20 +700,43 @@ StateType StateMachine::submit(Tuple& t)
   }
 
 #ifdef SMSEXTRA
-  if(c.ri.billing==smsc::sms::BILLING_MT)
+  if(c.rr.info.billing==smsc::sms::BILLING_MT)
   {
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnSubmit);
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_INCHARGE);
   }
 #endif
-  if(c.ri.deliveryMode==SMSC_TRANSACTION_MSG_MODE || (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
+  if(c.rr.info.deliveryMode==SMSC_TRANSACTION_MSG_MODE || (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
   {
     // set charge on delivery to avoid charging of sms that could be undelivered
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnDelivery);
   }
 
+  ////
+  //
+  //  Merging
+  //
 
-  if(aclCheck && c.ri.aclId!=-1 && !smsc->getAclMgr()->isGranted(c.ri.aclId,aclAddr.c_str()))
+  if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    if(!processMerge(c))
+    {
+      if(sms->getIntProperty(Tag::SMSC_CHARGINGPOLICY)!=Smsc::chargeOnSubmit)
+      {
+        return c.rvstate;
+      }
+      c.generateDeliver=false;
+      c.createSms=scsDoNotCreate;
+    }
+  }
+
+  //
+  //  End of merging
+  //
+  ////
+
+
+  if(aclCheck && c.rr.info.aclId!=-1 && !smsc::acl::AclStore::getInstance()->isGranted(c.rr.info.aclId,aclAddr.c_str()))
   {
     submitResp(t,sms,Status::NOROUTE);
     char buf1[32];
@@ -736,7 +744,7 @@ StateType StateMachine::submit(Tuple& t)
     sms->getOriginatingAddress().toString(buf1,sizeof(buf1));
     c.dst.toString(buf2,sizeof(buf2));
     warn2(smsLog, "SBM: acl access denied (aclId=%d) Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
-      c.ri.aclId,
+      c.rr.info.aclId,
       t.msgId,c.dialogId,
       sms->getOriginatingAddress().toString().c_str(),
       AddrPair("da",sms->getDestinationAddress(),"dda",c.dst).c_str(),
@@ -756,7 +764,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if(toMap)
   {
-    if(c.ri.forceDelivery)
+    if(c.rr.info.forceDelivery)
     {
       sms->setIntProperty(Tag::SMPP_PRIORITY,3);
     }
@@ -765,7 +773,7 @@ StateType StateMachine::submit(Tuple& t)
   if(fromMap && ( sms->getOriginatingDescriptor().mscLength==0 ||
                   sms->getOriginatingDescriptor().imsiLength==0 ))
   {
-    if(!c.ri.allowBlocked)
+    if(!c.rr.info.allowBlocked)
     {
       submitResp(t,sms,Status::CALLBARRED);
       char buf1[32];
@@ -793,9 +801,16 @@ StateType StateMachine::submit(Tuple& t)
 
   smsc_log_debug(smsLog,"dst sme '%s', flags=%x",dstSmeInfo.systemId.c_str(),dstSmeInfo.flags);
 
+  SmeInfo srcSmeInfo=smsc->getSmeInfo(c.src_proxy->getSystemId());
+
+  if(srcSmeInfo.hasFlag(smsc::smeman::sfDefaultDcLatin1) &&
+     sms->getIntProperty(Tag::SMPP_DATA_CODING)==smsc::smpp::DataCoding::SMSC7BIT)
+  {
+    sms->setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
+  }
+
 #ifdef SMSEXTRA
 
-  SmeInfo srcSmeInfo=smsc->getSmeInfo(c.src_proxy->getSystemId());
 
   if(srcSmeInfo.SME_N==EXTRA_GROUPS)
   {
@@ -908,11 +923,11 @@ StateType StateMachine::submit(Tuple& t)
 #endif
 
 
-  sms->setDestinationSmeId(c.ri.smeSystemId.c_str());
-  sms->setServiceId(c.ri.serviceId);
+  sms->setDestinationSmeId(c.rr.info.destSmeSystemId.c_str());
+  sms->setServiceId(c.rr.info.serviceId);
 
 
-  smsc_log_debug(smsLog,"SUBMIT: archivation request for Id=%lld;seq=%d is %s",t.msgId,c.dialogId,c.ri.archived?"true":"false");
+  smsc_log_debug(smsLog,"SUBMIT: archivation request for Id=%lld;seq=%d is %s",t.msgId,c.dialogId,c.rr.info.archived?"true":"false");
 
 #ifdef SMSEXTRA
   if(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_FAKE)
@@ -921,16 +936,16 @@ StateType StateMachine::submit(Tuple& t)
   }
   if(!(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK))
   {
-    sms->setBillingRecord(c.ri.billing);
+    sms->setBillingRecord(c.rr.info.billing);
   }
 #else
-  sms->setBillingRecord(c.ri.billing);
+  sms->setBillingRecord(c.rr.info.billing);
 #endif
 
 
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
 
-  if(c.ri.smeSystemId=="MAP_PROXY" && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  if(c.rr.info.destSmeSystemId=="MAP_PROXY" && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     sms->setIntProperty(Tag::SMSC_TRANSLIT,1);
     if(profile.codepage&smsc::profiler::ProfileCharsetOptions::UssdIn7Bit)
@@ -989,7 +1004,7 @@ StateType StateMachine::submit(Tuple& t)
   bool isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
 
 
-  if( !c.isForwardTo && !c.ri.transit)
+  if( !c.isForwardTo && !c.rr.info.transit)
   {
 
     sms->getMessageBody().dropProperty(Tag::SMSC_MO_PDU);
@@ -999,11 +1014,11 @@ StateType StateMachine::submit(Tuple& t)
     // Override delivery mode if specified in config and default mode in sms
     //
 
-    if( c.ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE)
+    if( c.rr.info.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE)
     {
-      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO) && c.ri.deliveryMode!=smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE)
+      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO) && c.rr.info.deliveryMode!=smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE)
       {
-        smsc_log_warn(smsLog,"Attempt to send multipart message in forward mode with route '%s'",c.ri.routeId.c_str());
+        smsc_log_warn(smsLog,"Attempt to send multipart message in forward mode with route '%s'",c.rr.info.routeId.c_str());
       }else
       {
         int esmcls = sms->getIntProperty( Tag::SMPP_ESM_CLASS );
@@ -1011,7 +1026,7 @@ StateType StateMachine::submit(Tuple& t)
         //if( (esmcls&0x3) == smsc::sms::SMSC_DEFAULT_MSG_MODE )
         {
           // allow override
-          sms->setIntProperty( Tag::SMPP_ESM_CLASS, (esmcls&~0x03)|(c.ri.deliveryMode&0x03) );
+          sms->setIntProperty( Tag::SMPP_ESM_CLASS, (esmcls&~0x03)|(c.rr.info.deliveryMode&0x03) );
           isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
           isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
         }
@@ -1076,7 +1091,7 @@ StateType StateMachine::submit(Tuple& t)
 
     smsc_log_debug(smsLog,"SUBMIT_SM: after processDirectives - delrep=%d, sdt=%d",(int)sms->getDeliveryReport(),sms->getNextTime());
 
-    if(c.ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
+    if(c.rr.info.destSmeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
     {
       sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,DataCoding::UCS2|DataCoding::LATIN1);
       sms->setIntProperty(Tag::SMSC_UDH_CONCAT,1);
@@ -1084,7 +1099,7 @@ StateType StateMachine::submit(Tuple& t)
 
 
 
-    if(c.ri.smeSystemId=="MAP_PROXY" &&
+    if(c.rr.info.destSmeSystemId=="MAP_PROXY" &&
        !sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT)&&
        !sms->hasBinProperty(Tag::SMSC_CONCATINFO) &&
        !c.noPartitionSms
@@ -1103,7 +1118,7 @@ StateType StateMachine::submit(Tuple& t)
         sms->getOriginatingAddress().toString().c_str(),
         sms->getDestinationAddress().toString().c_str(),
         c.src_proxy->getSystemId(),
-        c.ri.smeSystemId.c_str()
+        c.rr.info.destSmeSystemId.c_str()
       );
       if(c.createSms==scsReplace)
       {
@@ -1125,7 +1140,7 @@ StateType StateMachine::submit(Tuple& t)
         sms->getOriginatingAddress().toString().c_str(),
         sms->getDestinationAddress().toString().c_str(),
         c.src_proxy->getSystemId(),
-        c.ri.smeSystemId.c_str()
+        c.rr.info.destSmeSystemId.c_str()
       );
       if(c.createSms==scsReplace)
       {
@@ -1173,21 +1188,19 @@ StateType StateMachine::submit(Tuple& t)
 
   INSmsChargeResponse::SubmitContext ctx;
   ctx.srcProxy=c.src_proxy;
-  ctx.dstProxy=c.dest_proxy;
+  ctx.dstProxy=c.rr.destProxy;
   ctx.createSms=c.createSms;
   ctx.needToSendResp=c.needToSendResp;
   ctx.dialogId=c.dialogId;
-  ctx.dest_proxy_index=c.dest_proxy_index;
+  ctx.dest_proxy_index=c.rr.destSmeIdx;
   ctx.isForwardTo=c.isForwardTo;
   ctx.diverted=diverted;
-  ctx.routeHide=c.ri.hide;
+  ctx.routeHide=c.rr.info.hide;
   ctx.dst=c.dst;
-  ctx.transit=c.ri.transit;
-  ctx.replyPath=c.ri.replyPath;
-  ctx.priority=c.ri.priority;
+  ctx.transit=c.rr.info.transit;
+  ctx.replyPath=c.rr.info.replyPath;
+  ctx.priority=c.rr.info.priority;
   ctx.generateDeliver=c.generateDeliver;
-  ctx.dstDlgIdx=t.command->dstNodeIdx;
-  ctx.sourceId=t.command->sourceId;
 #ifdef SMSEXTRA
   ctx.noDestChange=c.noDestChange;
 #endif
@@ -1232,8 +1245,6 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   bool transit=resp->cntx.transit;
   smsc::router::ReplyPath replyPath=resp->cntx.replyPath;
   int priority=resp->cntx.priority;
-  t.command->dstNodeIdx=resp->cntx.dstDlgIdx;
-  t.command->sourceId=resp->cntx.sourceId;
 #ifdef SMSEXTRA
   bool noDestChange=resp->cntx.noDestChange;
 #endif
@@ -1342,8 +1353,6 @@ StateType StateMachine::submitChargeResp(Tuple& t)
                            Status::OK,
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
-    response->dstNodeIdx=t.command->dstNodeIdx;
-    response->sourceId=t.command->sourceId;
     try{
       src_proxy->putCommand(response);
     }catch(...)
@@ -1382,8 +1391,6 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     SmeProxy* prx;
     StateMachine* sm;
     SMSId msgId;
-    int dstNodeIndex;
-    SmeSystemId smeSysId;
     /*ResponseGuard():sms(0),prx(0),sm(0){}
     ResponseGuard(const ResponseGuard& rg)
     {
@@ -1396,6 +1403,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     {
       if(sms)
       {
+
         if(sms->lastResult!=Status::OK)
         {
           sm->onDeliveryFail(msgId,*sms);
@@ -1403,18 +1411,25 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
         bool sandf=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
             (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3;
+        bool isDg=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1;
 
-        if(!sandf && sms->lastResult!=Status::OK)
+        if((!sandf && sms->lastResult!=Status::OK) || isDg)
         {
+          char msgIdBuf[64];
+          if(sms->lastResult!=Status::OK)
+          {
+            sprintf(msgIdBuf,"0");
+          }else
+          {
+            sprintf(msgIdBuf,"%lld",msgId);
+          }
           SmscCommand resp = SmscCommand::makeSubmitSmResp
               (
-                  "0",
+                  msgIdBuf,
                   sms->dialogId,
                   sms->lastResult,
                   sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
               );
-          resp->dstNodeIdx=dstNodeIndex;
-          resp->sourceId=smeSysId;
           try{
             prx->putCommand(resp);
           }catch(...)
@@ -1427,8 +1442,6 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   };
 
   ResponseGuard respguard(sms,src_proxy,this,t.msgId);
-  respguard.dstNodeIndex=t.command->dstNodeIdx;
-  respguard.smeSysId=t.command->sourceId;
 
   struct DeliveryReportGuard{
     Smsc* smsc;
@@ -1613,6 +1626,35 @@ StateType StateMachine::submitChargeResp(Tuple& t)
           }catch(exception& e)
           {
             smsc_log_warn(smsLog,"SUBMIT:Failed to transliterate: %s",e.what());
+          }
+        }else if(dstSmeInfo.hasFlag(sfDefaultDcLatin1) && sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::SMSC7BIT)
+        {
+          const char* body;
+          unsigned len;
+          bool payload=false;
+          if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+          {
+            body=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+            payload=true;
+          }else
+          {
+            body=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+          }
+          TmpBuf<char,2048> buf(len+1);
+          unsigned msgstart=0;
+          if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+          {
+            msgstart=1+*((unsigned char*)body);
+            memcpy(buf.get(),body,msgstart);
+          }
+          unsigned newlen=ConvertSMSC7BitToLatin1(body+msgstart,len-msgstart,buf.get()+msgstart)+msgstart;
+          if(payload)
+          {
+            sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buf.get(),newlen);
+          }else
+          {
+            sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buf.get(),newlen);
+            sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
           }
         }
       }

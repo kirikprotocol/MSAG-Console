@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
+#include "SmeBindMode.hpp"
 
 
 #ident "@(#) SmeParams version 1.0"
@@ -28,24 +29,32 @@ public:
   {
     idFlag=false;
     priorityFlag=false;
-    typeOfNumberFlag=false;
-    numberingPlanFlag=false;
-    interfaceVersionFlag=false;
     systemTypeFlag=false;
     passwordFlag=false;
     addrRangeFlag=false;
     smeNFlag=false;
     wantAliasFlag=false;
+    disabledFlag=false;
     timeoutFlag=false;
     receiptSchemeFlag=false;
-    disabledFlag=false;
     modeFlag=false;
     procLimitFlag=false;
     schedLimitFlag=false;
     accessMaskFlag=false;
-    flagsFlag=false;
+    flagCarryOrgDescriptorFlag=false;
+    flagCarryOrgAbonentInfoFlag=false;
+    flagCarrySccpInfoFlag=false;
+    flagFillExtraDescriptorFlag=false;
+    flagForceReceiptToSmeFlag=false;
+    flagForceGsmDatacodingFlag=false;
+    flagSmppPlusFlag=false;
   }
  
+
+  static std::string messageGetName()
+  {
+    return "SmeParams";
+  }
 
   std::string toString()const
   {
@@ -68,36 +77,6 @@ public:
       }
       rv+="priority=";
       sprintf(buf,"%d",priority);
-      rv+=buf;
-    }
-    if(typeOfNumberFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="typeOfNumber=";
-      sprintf(buf,"%d",typeOfNumber);
-      rv+=buf;
-    }
-    if(numberingPlanFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="numberingPlan=";
-      sprintf(buf,"%d",numberingPlan);
-      rv+=buf;
-    }
-    if(interfaceVersionFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="interfaceVersion=";
-      sprintf(buf,"%d",interfaceVersion);
       rv+=buf;
     }
     if(systemTypeFlag)
@@ -146,6 +125,15 @@ public:
       rv+="wantAlias=";
       rv+=wantAlias?"true":"false";
     }
+    if(disabledFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="disabled=";
+      rv+=disabled?"true":"false";
+    }
     if(timeoutFlag)
     {
       if(rv.length()>0)
@@ -165,15 +153,6 @@ public:
       rv+="receiptScheme=";
       rv+=receiptScheme;
     }
-    if(disabledFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="disabled=";
-      rv+=disabled?"true":"false";
-    }
     if(modeFlag)
     {
       if(rv.length()>0)
@@ -181,7 +160,7 @@ public:
         rv+=";";
       }
       rv+="mode=";
-      rv+=mode;
+      rv+=SmeBindMode::getNameByValue(mode);
     }
     if(procLimitFlag)
     {
@@ -213,15 +192,68 @@ public:
       sprintf(buf,"%d",accessMask);
       rv+=buf;
     }
-    if(flagsFlag)
+    if(flagCarryOrgDescriptorFlag)
     {
       if(rv.length()>0)
       {
         rv+=";";
       }
-      rv+="flags=";
-      sprintf(buf,"%d",flags);
-      rv+=buf;
+      rv+="flagCarryOrgDescriptor=";
+      rv+=flagCarryOrgDescriptor?"true":"false";
+    }
+    if(flagCarryOrgAbonentInfoFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="flagCarryOrgAbonentInfo=";
+      rv+=flagCarryOrgAbonentInfo?"true":"false";
+    }
+    if(flagCarrySccpInfoFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="flagCarrySccpInfo=";
+      rv+=flagCarrySccpInfo?"true":"false";
+    }
+    if(flagFillExtraDescriptorFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="flagFillExtraDescriptor=";
+      rv+=flagFillExtraDescriptor?"true":"false";
+    }
+    if(flagForceReceiptToSmeFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="flagForceReceiptToSme=";
+      rv+=flagForceReceiptToSme?"true":"false";
+    }
+    if(flagForceGsmDatacodingFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="flagForceGsmDatacoding=";
+      rv+=flagForceGsmDatacoding?"true":"false";
+    }
+    if(flagSmppPlusFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="flagSmppPlus=";
+      rv+=flagSmppPlus?"true":"false";
     }
     return rv;
   }
@@ -241,24 +273,6 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(priority);
-    }
-    if(typeOfNumberFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(typeOfNumber);
-    }
-    if(numberingPlanFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(numberingPlan);
-    }
-    if(interfaceVersionFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(interfaceVersion);
     }
     if(systemTypeFlag)
     {
@@ -290,6 +304,12 @@ public:
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(wantAlias);
     }
+    if(disabledFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(disabled);
+    }
     if(timeoutFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -302,17 +322,12 @@ public:
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(receiptScheme);
     }
-    if(disabledFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(disabled);
-    }
     if(modeFlag)
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(mode);
+      rv+=DataStream::fieldSize(mode.getValue());
+ 
     }
     if(procLimitFlag)
     {
@@ -332,11 +347,47 @@ public:
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(accessMask);
     }
-    if(flagsFlag)
+    if(flagCarryOrgDescriptorFlag)
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(flags);
+      rv+=DataStream::fieldSize(flagCarryOrgDescriptor);
+    }
+    if(flagCarryOrgAbonentInfoFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(flagCarryOrgAbonentInfo);
+    }
+    if(flagCarrySccpInfoFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(flagCarrySccpInfo);
+    }
+    if(flagFillExtraDescriptorFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(flagFillExtraDescriptor);
+    }
+    if(flagForceReceiptToSmeFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(flagForceReceiptToSme);
+    }
+    if(flagForceGsmDatacodingFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(flagForceGsmDatacoding);
+    }
+    if(flagSmppPlusFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(flagSmppPlus);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -384,72 +435,6 @@ public:
   bool hasPriority()const
   {
     return priorityFlag;
-  }
-  int32_t getTypeOfNumber()const
-  {
-    if(!typeOfNumberFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("typeOfNumber");
-    }
-    return typeOfNumber;
-  }
-  void setTypeOfNumber(int32_t argValue)
-  {
-    typeOfNumber=argValue;
-    typeOfNumberFlag=true;
-  }
-  int32_t& getTypeOfNumberRef()
-  {
-    typeOfNumberFlag=true;
-    return typeOfNumber;
-  }
-  bool hasTypeOfNumber()const
-  {
-    return typeOfNumberFlag;
-  }
-  int32_t getNumberingPlan()const
-  {
-    if(!numberingPlanFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("numberingPlan");
-    }
-    return numberingPlan;
-  }
-  void setNumberingPlan(int32_t argValue)
-  {
-    numberingPlan=argValue;
-    numberingPlanFlag=true;
-  }
-  int32_t& getNumberingPlanRef()
-  {
-    numberingPlanFlag=true;
-    return numberingPlan;
-  }
-  bool hasNumberingPlan()const
-  {
-    return numberingPlanFlag;
-  }
-  int32_t getInterfaceVersion()const
-  {
-    if(!interfaceVersionFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("interfaceVersion");
-    }
-    return interfaceVersion;
-  }
-  void setInterfaceVersion(int32_t argValue)
-  {
-    interfaceVersion=argValue;
-    interfaceVersionFlag=true;
-  }
-  int32_t& getInterfaceVersionRef()
-  {
-    interfaceVersionFlag=true;
-    return interfaceVersion;
-  }
-  bool hasInterfaceVersion()const
-  {
-    return interfaceVersionFlag;
   }
   const std::string& getSystemType()const
   {
@@ -561,6 +546,28 @@ public:
   {
     return wantAliasFlag;
   }
+  bool getDisabled()const
+  {
+    if(!disabledFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("disabled");
+    }
+    return disabled;
+  }
+  void setDisabled(bool argValue)
+  {
+    disabled=argValue;
+    disabledFlag=true;
+  }
+  bool& getDisabledRef()
+  {
+    disabledFlag=true;
+    return disabled;
+  }
+  bool hasDisabled()const
+  {
+    return disabledFlag;
+  }
   int32_t getTimeout()const
   {
     if(!timeoutFlag)
@@ -605,29 +612,7 @@ public:
   {
     return receiptSchemeFlag;
   }
-  bool getDisabled()const
-  {
-    if(!disabledFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("disabled");
-    }
-    return disabled;
-  }
-  void setDisabled(bool argValue)
-  {
-    disabled=argValue;
-    disabledFlag=true;
-  }
-  bool& getDisabledRef()
-  {
-    disabledFlag=true;
-    return disabled;
-  }
-  bool hasDisabled()const
-  {
-    return disabledFlag;
-  }
-  const std::string& getMode()const
+  const SmeBindMode& getMode()const
   {
     if(!modeFlag)
     {
@@ -635,12 +620,12 @@ public:
     }
     return mode;
   }
-  void setMode(const std::string& argValue)
+  void setMode(const SmeBindMode& argValue)
   {
     mode=argValue;
     modeFlag=true;
   }
-  std::string& getModeRef()
+  SmeBindMode& getModeRef()
   {
     modeFlag=true;
     return mode;
@@ -715,27 +700,159 @@ public:
   {
     return accessMaskFlag;
   }
-  int32_t getFlags()const
+  bool getFlagCarryOrgDescriptor()const
   {
-    if(!flagsFlag)
+    if(!flagCarryOrgDescriptorFlag)
     {
-      throw eyeline::protogen::framework::FieldIsNullException("flags");
+      throw eyeline::protogen::framework::FieldIsNullException("flagCarryOrgDescriptor");
     }
-    return flags;
+    return flagCarryOrgDescriptor;
   }
-  void setFlags(int32_t argValue)
+  void setFlagCarryOrgDescriptor(bool argValue)
   {
-    flags=argValue;
-    flagsFlag=true;
+    flagCarryOrgDescriptor=argValue;
+    flagCarryOrgDescriptorFlag=true;
   }
-  int32_t& getFlagsRef()
+  bool& getFlagCarryOrgDescriptorRef()
   {
-    flagsFlag=true;
-    return flags;
+    flagCarryOrgDescriptorFlag=true;
+    return flagCarryOrgDescriptor;
   }
-  bool hasFlags()const
+  bool hasFlagCarryOrgDescriptor()const
   {
-    return flagsFlag;
+    return flagCarryOrgDescriptorFlag;
+  }
+  bool getFlagCarryOrgAbonentInfo()const
+  {
+    if(!flagCarryOrgAbonentInfoFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("flagCarryOrgAbonentInfo");
+    }
+    return flagCarryOrgAbonentInfo;
+  }
+  void setFlagCarryOrgAbonentInfo(bool argValue)
+  {
+    flagCarryOrgAbonentInfo=argValue;
+    flagCarryOrgAbonentInfoFlag=true;
+  }
+  bool& getFlagCarryOrgAbonentInfoRef()
+  {
+    flagCarryOrgAbonentInfoFlag=true;
+    return flagCarryOrgAbonentInfo;
+  }
+  bool hasFlagCarryOrgAbonentInfo()const
+  {
+    return flagCarryOrgAbonentInfoFlag;
+  }
+  bool getFlagCarrySccpInfo()const
+  {
+    if(!flagCarrySccpInfoFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("flagCarrySccpInfo");
+    }
+    return flagCarrySccpInfo;
+  }
+  void setFlagCarrySccpInfo(bool argValue)
+  {
+    flagCarrySccpInfo=argValue;
+    flagCarrySccpInfoFlag=true;
+  }
+  bool& getFlagCarrySccpInfoRef()
+  {
+    flagCarrySccpInfoFlag=true;
+    return flagCarrySccpInfo;
+  }
+  bool hasFlagCarrySccpInfo()const
+  {
+    return flagCarrySccpInfoFlag;
+  }
+  bool getFlagFillExtraDescriptor()const
+  {
+    if(!flagFillExtraDescriptorFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("flagFillExtraDescriptor");
+    }
+    return flagFillExtraDescriptor;
+  }
+  void setFlagFillExtraDescriptor(bool argValue)
+  {
+    flagFillExtraDescriptor=argValue;
+    flagFillExtraDescriptorFlag=true;
+  }
+  bool& getFlagFillExtraDescriptorRef()
+  {
+    flagFillExtraDescriptorFlag=true;
+    return flagFillExtraDescriptor;
+  }
+  bool hasFlagFillExtraDescriptor()const
+  {
+    return flagFillExtraDescriptorFlag;
+  }
+  bool getFlagForceReceiptToSme()const
+  {
+    if(!flagForceReceiptToSmeFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("flagForceReceiptToSme");
+    }
+    return flagForceReceiptToSme;
+  }
+  void setFlagForceReceiptToSme(bool argValue)
+  {
+    flagForceReceiptToSme=argValue;
+    flagForceReceiptToSmeFlag=true;
+  }
+  bool& getFlagForceReceiptToSmeRef()
+  {
+    flagForceReceiptToSmeFlag=true;
+    return flagForceReceiptToSme;
+  }
+  bool hasFlagForceReceiptToSme()const
+  {
+    return flagForceReceiptToSmeFlag;
+  }
+  bool getFlagForceGsmDatacoding()const
+  {
+    if(!flagForceGsmDatacodingFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("flagForceGsmDatacoding");
+    }
+    return flagForceGsmDatacoding;
+  }
+  void setFlagForceGsmDatacoding(bool argValue)
+  {
+    flagForceGsmDatacoding=argValue;
+    flagForceGsmDatacodingFlag=true;
+  }
+  bool& getFlagForceGsmDatacodingRef()
+  {
+    flagForceGsmDatacodingFlag=true;
+    return flagForceGsmDatacoding;
+  }
+  bool hasFlagForceGsmDatacoding()const
+  {
+    return flagForceGsmDatacodingFlag;
+  }
+  bool getFlagSmppPlus()const
+  {
+    if(!flagSmppPlusFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("flagSmppPlus");
+    }
+    return flagSmppPlus;
+  }
+  void setFlagSmppPlus(bool argValue)
+  {
+    flagSmppPlus=argValue;
+    flagSmppPlusFlag=true;
+  }
+  bool& getFlagSmppPlusRef()
+  {
+    flagSmppPlusFlag=true;
+    return flagSmppPlus;
+  }
+  bool hasFlagSmppPlus()const
+  {
+    return flagSmppPlusFlag;
   }
   template <class DataStream>
   void serialize(DataStream& ds)const
@@ -747,18 +864,6 @@ public:
     if(!priorityFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("priority");
-    }
-    if(!typeOfNumberFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("typeOfNumber");
-    }
-    if(!numberingPlanFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("numberingPlan");
-    }
-    if(!interfaceVersionFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("interfaceVersion");
     }
     if(!systemTypeFlag)
     {
@@ -780,6 +885,10 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("wantAlias");
     }
+    if(!disabledFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("disabled");
+    }
     if(!timeoutFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("timeout");
@@ -787,10 +896,6 @@ public:
     if(!receiptSchemeFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("receiptScheme");
-    }
-    if(!disabledFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("disabled");
     }
     if(!modeFlag)
     {
@@ -808,49 +913,80 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("accessMask");
     }
-    if(!flagsFlag)
+    if(!flagCarryOrgDescriptorFlag)
     {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("flags");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagCarryOrgDescriptor");
+    }
+    if(!flagCarryOrgAbonentInfoFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagCarryOrgAbonentInfo");
+    }
+    if(!flagCarrySccpInfoFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagCarrySccpInfo");
+    }
+    if(!flagFillExtraDescriptorFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagFillExtraDescriptor");
+    }
+    if(!flagForceReceiptToSmeFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagForceReceiptToSme");
+    }
+    if(!flagForceGsmDatacodingFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagForceGsmDatacoding");
+    }
+    if(!flagSmppPlusFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagSmppPlus");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(idTag);
-    ds.writeStrLV(id);
+    ds.writeStrLV(id); 
     ds.writeTag(priorityTag);
-    ds.writeInt32LV(priority);
-    ds.writeTag(typeOfNumberTag);
-    ds.writeInt32LV(typeOfNumber);
-    ds.writeTag(numberingPlanTag);
-    ds.writeInt32LV(numberingPlan);
-    ds.writeTag(interfaceVersionTag);
-    ds.writeInt32LV(interfaceVersion);
+    ds.writeInt32LV(priority); 
     ds.writeTag(systemTypeTag);
-    ds.writeStrLV(systemType);
+    ds.writeStrLV(systemType); 
     ds.writeTag(passwordTag);
-    ds.writeStrLV(password);
+    ds.writeStrLV(password); 
     ds.writeTag(addrRangeTag);
-    ds.writeStrLV(addrRange);
+    ds.writeStrLV(addrRange); 
     ds.writeTag(smeNTag);
-    ds.writeInt32LV(smeN);
+    ds.writeInt32LV(smeN); 
     ds.writeTag(wantAliasTag);
-    ds.writeBoolLV(wantAlias);
-    ds.writeTag(timeoutTag);
-    ds.writeInt32LV(timeout);
-    ds.writeTag(receiptSchemeTag);
-    ds.writeStrLV(receiptScheme);
+    ds.writeBoolLV(wantAlias); 
     ds.writeTag(disabledTag);
-    ds.writeBoolLV(disabled);
+    ds.writeBoolLV(disabled); 
+    ds.writeTag(timeoutTag);
+    ds.writeInt32LV(timeout); 
+    ds.writeTag(receiptSchemeTag);
+    ds.writeStrLV(receiptScheme); 
     ds.writeTag(modeTag);
-    ds.writeStrLV(mode);
+    ds.writeByteLV(mode.getValue());
+ 
     ds.writeTag(procLimitTag);
-    ds.writeInt32LV(procLimit);
+    ds.writeInt32LV(procLimit); 
     ds.writeTag(schedLimitTag);
-    ds.writeInt32LV(schedLimit);
+    ds.writeInt32LV(schedLimit); 
     ds.writeTag(accessMaskTag);
-    ds.writeInt32LV(accessMask);
-    ds.writeTag(flagsTag);
-    ds.writeInt32LV(flags);
+    ds.writeInt32LV(accessMask); 
+    ds.writeTag(flagCarryOrgDescriptorTag);
+    ds.writeBoolLV(flagCarryOrgDescriptor); 
+    ds.writeTag(flagCarryOrgAbonentInfoTag);
+    ds.writeBoolLV(flagCarryOrgAbonentInfo); 
+    ds.writeTag(flagCarrySccpInfoTag);
+    ds.writeBoolLV(flagCarrySccpInfo); 
+    ds.writeTag(flagFillExtraDescriptorTag);
+    ds.writeBoolLV(flagFillExtraDescriptor); 
+    ds.writeTag(flagForceReceiptToSmeTag);
+    ds.writeBoolLV(flagForceReceiptToSme); 
+    ds.writeTag(flagForceGsmDatacodingTag);
+    ds.writeBoolLV(flagForceGsmDatacoding); 
+    ds.writeTag(flagSmppPlusTag);
+    ds.writeBoolLV(flagSmppPlus); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -868,7 +1004,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case idTag:
@@ -888,33 +1024,6 @@ public:
           }
           priority=ds.readInt32LV();
           priorityFlag=true;
-        }break;
-        case typeOfNumberTag:
-        {
-          if(typeOfNumberFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("typeOfNumber");
-          }
-          typeOfNumber=ds.readInt32LV();
-          typeOfNumberFlag=true;
-        }break;
-        case numberingPlanTag:
-        {
-          if(numberingPlanFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("numberingPlan");
-          }
-          numberingPlan=ds.readInt32LV();
-          numberingPlanFlag=true;
-        }break;
-        case interfaceVersionTag:
-        {
-          if(interfaceVersionFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("interfaceVersion");
-          }
-          interfaceVersion=ds.readInt32LV();
-          interfaceVersionFlag=true;
         }break;
         case systemTypeTag:
         {
@@ -961,6 +1070,15 @@ public:
           wantAlias=ds.readBoolLV();
           wantAliasFlag=true;
         }break;
+        case disabledTag:
+        {
+          if(disabledFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("disabled");
+          }
+          disabled=ds.readBoolLV();
+          disabledFlag=true;
+        }break;
         case timeoutTag:
         {
           if(timeoutFlag)
@@ -979,22 +1097,13 @@ public:
           receiptScheme=ds.readStrLV();
           receiptSchemeFlag=true;
         }break;
-        case disabledTag:
-        {
-          if(disabledFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("disabled");
-          }
-          disabled=ds.readBoolLV();
-          disabledFlag=true;
-        }break;
         case modeTag:
         {
           if(modeFlag)
           {
             throw eyeline::protogen::framework::DuplicateFieldException("mode");
           }
-          mode=ds.readStrLV();
+          mode=ds.readByteLV();
           modeFlag=true;
         }break;
         case procLimitTag:
@@ -1024,14 +1133,68 @@ public:
           accessMask=ds.readInt32LV();
           accessMaskFlag=true;
         }break;
-        case flagsTag:
+        case flagCarryOrgDescriptorTag:
         {
-          if(flagsFlag)
+          if(flagCarryOrgDescriptorFlag)
           {
-            throw eyeline::protogen::framework::DuplicateFieldException("flags");
+            throw eyeline::protogen::framework::DuplicateFieldException("flagCarryOrgDescriptor");
           }
-          flags=ds.readInt32LV();
-          flagsFlag=true;
+          flagCarryOrgDescriptor=ds.readBoolLV();
+          flagCarryOrgDescriptorFlag=true;
+        }break;
+        case flagCarryOrgAbonentInfoTag:
+        {
+          if(flagCarryOrgAbonentInfoFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("flagCarryOrgAbonentInfo");
+          }
+          flagCarryOrgAbonentInfo=ds.readBoolLV();
+          flagCarryOrgAbonentInfoFlag=true;
+        }break;
+        case flagCarrySccpInfoTag:
+        {
+          if(flagCarrySccpInfoFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("flagCarrySccpInfo");
+          }
+          flagCarrySccpInfo=ds.readBoolLV();
+          flagCarrySccpInfoFlag=true;
+        }break;
+        case flagFillExtraDescriptorTag:
+        {
+          if(flagFillExtraDescriptorFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("flagFillExtraDescriptor");
+          }
+          flagFillExtraDescriptor=ds.readBoolLV();
+          flagFillExtraDescriptorFlag=true;
+        }break;
+        case flagForceReceiptToSmeTag:
+        {
+          if(flagForceReceiptToSmeFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("flagForceReceiptToSme");
+          }
+          flagForceReceiptToSme=ds.readBoolLV();
+          flagForceReceiptToSmeFlag=true;
+        }break;
+        case flagForceGsmDatacodingTag:
+        {
+          if(flagForceGsmDatacodingFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("flagForceGsmDatacoding");
+          }
+          flagForceGsmDatacoding=ds.readBoolLV();
+          flagForceGsmDatacodingFlag=true;
+        }break;
+        case flagSmppPlusTag:
+        {
+          if(flagSmppPlusFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("flagSmppPlus");
+          }
+          flagSmppPlus=ds.readBoolLV();
+          flagSmppPlusFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -1051,18 +1214,6 @@ public:
     if(!priorityFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("priority");
-    }
-    if(!typeOfNumberFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("typeOfNumber");
-    }
-    if(!numberingPlanFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("numberingPlan");
-    }
-    if(!interfaceVersionFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("interfaceVersion");
     }
     if(!systemTypeFlag)
     {
@@ -1084,6 +1235,10 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("wantAlias");
     }
+    if(!disabledFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("disabled");
+    }
     if(!timeoutFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("timeout");
@@ -1091,10 +1246,6 @@ public:
     if(!receiptSchemeFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("receiptScheme");
-    }
-    if(!disabledFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("disabled");
     }
     if(!modeFlag)
     {
@@ -1112,9 +1263,33 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("accessMask");
     }
-    if(!flagsFlag)
+    if(!flagCarryOrgDescriptorFlag)
     {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("flags");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagCarryOrgDescriptor");
+    }
+    if(!flagCarryOrgAbonentInfoFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagCarryOrgAbonentInfo");
+    }
+    if(!flagCarrySccpInfoFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagCarrySccpInfo");
+    }
+    if(!flagFillExtraDescriptorFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagFillExtraDescriptor");
+    }
+    if(!flagForceReceiptToSmeFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagForceReceiptToSme");
+    }
+    if(!flagForceGsmDatacodingFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagForceGsmDatacoding");
+    }
+    if(!flagSmppPlusFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flagSmppPlus");
     }
 
   }
@@ -1128,61 +1303,70 @@ protected:
 
   static const int32_t idTag=1;
   static const int32_t priorityTag=2;
-  static const int32_t typeOfNumberTag=3;
-  static const int32_t numberingPlanTag=4;
-  static const int32_t interfaceVersionTag=5;
   static const int32_t systemTypeTag=6;
   static const int32_t passwordTag=7;
   static const int32_t addrRangeTag=8;
   static const int32_t smeNTag=9;
   static const int32_t wantAliasTag=10;
+  static const int32_t disabledTag=14;
   static const int32_t timeoutTag=12;
   static const int32_t receiptSchemeTag=13;
-  static const int32_t disabledTag=14;
   static const int32_t modeTag=15;
   static const int32_t procLimitTag=16;
   static const int32_t schedLimitTag=17;
   static const int32_t accessMaskTag=18;
-  static const int32_t flagsTag=19;
+  static const int32_t flagCarryOrgDescriptorTag=19;
+  static const int32_t flagCarryOrgAbonentInfoTag=20;
+  static const int32_t flagCarrySccpInfoTag=21;
+  static const int32_t flagFillExtraDescriptorTag=22;
+  static const int32_t flagForceReceiptToSmeTag=23;
+  static const int32_t flagForceGsmDatacodingTag=24;
+  static const int32_t flagSmppPlusTag=25;
 
 
   std::string id;
   int32_t priority;
-  int32_t typeOfNumber;
-  int32_t numberingPlan;
-  int32_t interfaceVersion;
   std::string systemType;
   std::string password;
   std::string addrRange;
   int32_t smeN;
   bool wantAlias;
+  bool disabled;
   int32_t timeout;
   std::string receiptScheme;
-  bool disabled;
-  std::string mode;
+  SmeBindMode mode;
   int32_t procLimit;
   int32_t schedLimit;
   int32_t accessMask;
-  int32_t flags;
+  bool flagCarryOrgDescriptor;
+  bool flagCarryOrgAbonentInfo;
+  bool flagCarrySccpInfo;
+  bool flagFillExtraDescriptor;
+  bool flagForceReceiptToSme;
+  bool flagForceGsmDatacoding;
+  bool flagSmppPlus;
 
   bool idFlag;
   bool priorityFlag;
-  bool typeOfNumberFlag;
-  bool numberingPlanFlag;
-  bool interfaceVersionFlag;
   bool systemTypeFlag;
   bool passwordFlag;
   bool addrRangeFlag;
   bool smeNFlag;
   bool wantAliasFlag;
+  bool disabledFlag;
   bool timeoutFlag;
   bool receiptSchemeFlag;
-  bool disabledFlag;
   bool modeFlag;
   bool procLimitFlag;
   bool schedLimitFlag;
   bool accessMaskFlag;
-  bool flagsFlag;
+  bool flagCarryOrgDescriptorFlag;
+  bool flagCarryOrgAbonentInfoFlag;
+  bool flagCarrySccpInfoFlag;
+  bool flagFillExtraDescriptorFlag;
+  bool flagForceReceiptToSmeFlag;
+  bool flagForceGsmDatacodingFlag;
+  bool flagSmppPlusFlag;
 };
 
 }

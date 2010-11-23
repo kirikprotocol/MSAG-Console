@@ -27,8 +27,11 @@ namespace proto=smsc::cluster::controller::protocol::messages;
 
 NetworkDispatcher::NetworkDispatcher()
 {
+  seqNum=1;
   connected=false;
   log=smsc::logger::Logger::getInstance("cc.net");
+  logDump=smsc::logger::Logger::getInstance("cp.dump.out");
+
   stopReq=false;
   smscProto.assignHandler(&ctrlHandler);
   reader.disp=this;
@@ -73,7 +76,7 @@ void NetworkDispatcher::Init(int argNodeIndex,const char* host,int port)
 void NetworkDispatcher::enqueueReg()
 {
   proto::RegisterAsSmsc msg;
-  msg.setSeqNum(getNextSeq());
+  msg.messageSetSeqNum(getNextSeq());
   msg.setNodeIndex(nodeIndex);
   msg.setMagic(eyeline::clustercontroller::protocol::pmSmsc);
   smsc::configregistry::ConfigRegistry::getInstance()->get(msg.getConfigUpdateTimesRef());
@@ -118,7 +121,7 @@ void NetworkDispatcher::ReadLoop()
       continue;
     }
     packetLen=htonl(packetLen);
-    if(packetLen>1024*1024)
+    if(packetLen>16*1024*1024)
     {
       smsc_log_warn(log,"packetLen too big:%u",packetLen);
       Disconnect();
@@ -131,7 +134,7 @@ void NetworkDispatcher::ReadLoop()
       Disconnect();
       continue;
     }
-    smsc_log_warn(log,"packetLen=%u",packetLen);
+    smsc_log_debug(log,"read packetLen=%u",packetLen);
     CmdHandler* ch=new CmdHandler;
     ch->buf.assign(buf.get(),packetLen);
     ch->disp=this;

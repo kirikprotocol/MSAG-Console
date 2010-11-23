@@ -56,7 +56,6 @@ using namespace smsc::snmp;
 using namespace smsc::core::synchronization;
 using namespace smsc::profiler;
 using util::Exception;
-using smsc::acls::AclAbstractMgr;
 
 
 Smsc* Smsc::instance=0;
@@ -223,10 +222,6 @@ protected:
 
 Smsc* SpeedMonitor::smsc=NULL;
 
-namespace common{
-extern void loadRoutes(smsc::router::RouteManager* rm,const smsc::config::route::RouteConfig& rc,bool traceit=false);
-}
-
 void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
 {
   configs=&cfg;
@@ -287,36 +282,33 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
         {
           si.priority=rec->priority;
 
-          si.typeOfNumber=rec->recdata.smppSme.typeOfNumber;
-          si.numberingPlan=rec->recdata.smppSme.numberingPlan;
-          si.interfaceVersion=rec->recdata.smppSme.interfaceVersion;
-          si.rangeOfAddress=rec->recdata.smppSme.addrRange;
-          si.systemType=rec->recdata.smppSme.systemType;
-          si.password=rec->recdata.smppSme.password;
+          si.rangeOfAddress=rec->smppSme.addrRange;
+          si.systemType=rec->smppSme.systemType;
+          si.password=rec->smppSme.password;
           si.systemId=rec->smeUid;
-          si.SME_N=rec->recdata.smppSme.smeN;
-          si.timeout = rec->recdata.smppSme.timeout;
-          si.wantAlias = rec->recdata.smppSme.wantAlias;
-          //si.forceDC = rec->recdata.smppSme.forceDC;
-          si.proclimit=rec->recdata.smppSme.proclimit;
-          si.schedlimit=rec->recdata.smppSme.schedlimit;
-          si.receiptSchemeName= rec->recdata.smppSme.receiptSchemeName;
+          si.SME_N=rec->smppSme.smeN;
+          si.timeout = rec->smppSme.timeout;
+          si.wantAlias = rec->smppSme.wantAlias;
+          //si.forceDC = rec->smppSme.forceDC;
+          si.proclimit=rec->smppSme.proclimit;
+          si.schedlimit=rec->smppSme.schedlimit;
+          si.receiptSchemeName= rec->smppSme.receiptSchemeName;
           if(si.rangeOfAddress.length() && !re.Compile(si.rangeOfAddress.c_str(),OP_OPTIMIZE|OP_STRICT))
           {
             smsc_log_error(log, "Failed to compile rangeOfAddress for sme %s",si.systemId.c_str());
           }
           __trace2__("INIT: addSme %s(to=%d,wa=%s)",si.systemId.c_str(),si.timeout,si.wantAlias?"true":"false");
-          si.disabled=rec->recdata.smppSme.disabled;
+          si.disabled=rec->smppSme.disabled;
           using namespace smsc::config::smeman;
-          switch(rec->recdata.smppSme.mode)
+          switch(rec->smppSme.mode)
           {
             case MODE_TX:si.bindMode=smeTX;break;
             case MODE_RX:si.bindMode=smeRX;break;
             case MODE_TRX:si.bindMode=smeTRX;break;
           };
 
-          si.accessMask=rec->recdata.smppSme.accessMask;
-          si.flags=rec->recdata.smppSme.flags;
+          si.accessMask=rec->smppSme.accessMask;
+          si.flags=rec->smppSme.flags;
 
           try{
             smeman.addSme(si);
@@ -349,13 +341,6 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       smsc_log_warn(log,"noDivertSme init exception:%s",e.what());
     }
 
-    try{
-      RouteManager::EnableSmeRouters(cfg.cfgman->getBool("core.srcSmeSeparateRouting"));
-    }catch(...)
-    {
-      __warning__("src sme routing disabled by default");
-    }
-
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctAliases);
       aliaser=new smsc::alias::AliasManImpl(cfg.cfgman->getString("aliasman.storeFile"));
@@ -364,6 +349,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
     }
     smsc_log_info(log, "Aliases loaded" );
 
+    router::Router::Init();
     reloadRoutes();
     smsc_log_info(log, "Routes loaded" );
 
@@ -413,6 +399,12 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
     scheduler->DelayInit(this,cfg.cfgman);
 
     smeman.registerInternallSmeProxy("scheduler",scheduler);
+    try{
+      smeman.registerInternallSmeProxy("NULLSME",&nullSme);
+    }catch(std::exception& e)
+    {
+      smsc_log_info(log, "NULLSME not registered" );
+    }
 
     smeman.registerInternallSmeProxy("CLSTRICON",smsc::interconnect::ClusterInterconnect::getInstance());
 
@@ -508,9 +500,12 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       smsc_log_info(log, "Statistics manager started" );
     }
 
-    aclmgr = AclAbstractMgr::Create2();
-    aclmgr->LoadUp(cfg.cfgman->getString("acl.storeDir"),cfg.cfgman->getInt("acl.preCreateSize"));
-    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAcl);
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctAcl);
+      acl::AclStore::Init();
+      acl::AclStore::getInstance()->Load(cfg.cfgman->getString("acl.storeDir"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAcl);
+    }
 
     /*distlstman=new DistrListManager(*cfg.cfgman);
 
@@ -525,6 +520,8 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       distlstman->init();
     }
     */
+
+
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMsc);
       smsc::mscman::MscManager::startup();
@@ -1151,6 +1148,12 @@ void Smsc::shutdown()
 #endif
 
   smeman.unregisterSmeProxy(scheduler);
+  try{
+    smeman.unregisterSmeProxy(&nullSme);
+  }catch(...)
+  {
+
+  }
   smeman.unregisterSmeProxy(smsc::interconnect::ClusterInterconnect::getInstance());
 
   tp2.shutdown();
@@ -1170,7 +1173,7 @@ void Smsc::shutdown()
 
 
   //delete distlstman;
-  delete aclmgr;
+  smsc::acl::AclStore::Shutdown();
 
   smsc::mscman::MscManager::shutdown();
 
@@ -1197,23 +1200,7 @@ void Smsc::shutdown()
 
 void Smsc::reloadRoutes()
 {
-  auto_ptr<RouteManager> router(new RouteManager());
-  router->assign(&smeman);
-  try{
-    common::loadRoutes(router.get(),*configs->routesconfig);
-  }catch(...)
-  {
-    __warning__("Failed to load routes");
-  }
-  ResetRouteManager(router.release());
-}
-
-void Smsc::reloadTestRoutes(const RouteConfig& rcfg)
-{
-  auto_ptr<RouteManager> router(new RouteManager());
-  router->assign(&smeman);
-  common::loadRoutes(router.get(),rcfg,true);
-  ResetTestRouteManager(router.release());
+  smsc::router::Router::getInstance()->Load(&smeman,*configs->routesconfig);
 }
 
 

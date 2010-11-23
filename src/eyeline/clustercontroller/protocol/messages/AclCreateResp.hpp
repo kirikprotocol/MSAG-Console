@@ -28,12 +28,16 @@ public:
   {
     seqNum=0;
     respFlag=false;
-    idFlag=false;
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 1028;
+  }
+
+  static std::string messageGetName()
+  {
+    return "AclCreateResp";
   }
 
   std::string toString()const
@@ -53,16 +57,6 @@ public:
       rv+=resp.toString();
       rv+=')';
     }
-    if(idFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="id=";
-      sprintf(buf,"%d",id);
-      rv+=buf;
-    }
     return rv;
   }
 
@@ -75,12 +69,6 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=resp.length<DataStream>();
-    }
-    if(idFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(id);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -107,28 +95,6 @@ public:
   {
     return respFlag;
   }
-  int32_t getId()const
-  {
-    if(!idFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("id");
-    }
-    return id;
-  }
-  void setId(int32_t argValue)
-  {
-    id=argValue;
-    idFlag=true;
-  }
-  int32_t& getIdRef()
-  {
-    idFlag=true;
-    return id;
-  }
-  bool hasId()const
-  {
-    return idFlag;
-  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -142,11 +108,6 @@ public:
     ds.writeTag(respTag);
     ds.writeLength(resp.length<DataStream>());
     resp.serialize(ds);
-    if(idFlag)
-    {
-      ds.writeTag(idTag);
-    ds.writeInt32LV(id);
-    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -164,7 +125,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case respTag:
@@ -176,15 +137,6 @@ public:
 
           ds.readLength();resp.deserialize(ds);
           respFlag=true;
-        }break;
-        case idTag:
-        {
-          if(idFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("id");
-          }
-          id=ds.readInt32LV();
-          idFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -204,12 +156,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }
@@ -221,15 +173,12 @@ protected:
   //static const int8_t versionMinor=0;
 
   static const int32_t respTag=1;
-  static const int32_t idTag=2;
 
   int32_t seqNum;
 
   MultiResponse resp;
-  int32_t id;
 
   bool respFlag;
-  bool idFlag;
 };
 
 }

@@ -30,9 +30,14 @@ public:
     configTypeFlag=false;
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 202;
+  }
+
+  static std::string messageGetName()
+  {
+    return "UnlockConfig";
   }
 
   std::string toString()const
@@ -61,12 +66,13 @@ public:
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(configType);
+      rv+=DataStream::fieldSize(configType.getValue());
+ 
     }
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  const ConfigType::type& getConfigType()const
+  const ConfigType& getConfigType()const
   {
     if(!configTypeFlag)
     {
@@ -74,16 +80,12 @@ public:
     }
     return configType;
   }
-  void setConfigType(const ConfigType::type& argValue)
+  void setConfigType(const ConfigType& argValue)
   {
-    if(!ConfigType::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("ConfigType",argValue);
-    }
     configType=argValue;
     configTypeFlag=true;
   }
-  ConfigType::type& getConfigTypeRef()
+  ConfigType& getConfigTypeRef()
   {
     configTypeFlag=true;
     return configType;
@@ -103,7 +105,7 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(configTypeTag);
-    ds.writeByteLV(configType);
+    ds.writeByteLV(configType.getValue());
  
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -122,7 +124,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case configTypeTag:
@@ -152,12 +154,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }
@@ -172,7 +174,7 @@ protected:
 
   int32_t seqNum;
 
-  ConfigType::type configType;
+  ConfigType configType;
 
   bool configTypeFlag;
 };

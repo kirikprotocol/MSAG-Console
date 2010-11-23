@@ -6,7 +6,7 @@
 #include "core/buffers/Hash.hpp"
 #include "util/cstrings.h"
 #include "sms/sms_const.h"
-#include "smsc/acls/interfaces.h"
+#include "smsc/acls/AclManager.hpp"
 #include "smsc/router/route_types.h"
 
 namespace smsc {
@@ -15,7 +15,7 @@ namespace route {
 
 using smsc::util::cStringCopy;
 using smsc::core::buffers::Hash;
-using namespace smsc::acls;
+using namespace smsc::acl;
 
 typedef std::string Mask;
 typedef std::vector<Mask> MaskVector;
@@ -131,7 +131,7 @@ private:
   DestinationHash destinations;
   uint8_t billing;
   bool archiving;
-  bool enabling;
+  smsc::router::TrafficMode trafMode;
   bool suppressDeliveryReports;
   bool active;
   bool hide;
@@ -140,13 +140,11 @@ private:
   std::string srcSmeSystemId;
   const uint8_t deliveryMode;
   std::string forwardTo;
-  std::string trafrules;
   const AclIdent aclId;
   const bool forceDelivery;
   const bool allowBlocked;
   const signed long providerId;
   const signed long categoryId;
-  std::string billingRuleId;
   bool transit;
 
 
@@ -154,18 +152,24 @@ private:
 
 public:
   Route()
-    : id(), priority(0), sources(), destinations(), billing(0), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), replyPath(smsc::router::ReplyPathPass), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId((AclIdent)-1), forceDelivery(false), allowBlocked(false), providerId(-1),categoryId(-1),transit(false)
+    : id(), priority(0), sources(), destinations(), billing(0), archiving(false), trafMode(smsc::router::tmAll),
+      suppressDeliveryReports(false), hide(true), replyPath(smsc::router::ReplyPathPass),
+      serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE),
+      forwardTo(), aclId((AclIdent)-1), forceDelivery(false), allowBlocked(false),
+      providerId(-1),categoryId(-1),transit(false)
   {}
-  Route(const Route &r)
-    : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
-    billing(r.billing), archiving(r.archiving), enabling(r.enabling),suppressDeliveryReports(r.suppressDeliveryReports), serviceId(r.serviceId),
-    active(r.active),hide(r.hide),replyPath(r.replyPath),
-    srcSmeSystemId(r.srcSmeSystemId), deliveryMode(r.deliveryMode), forwardTo(r.forwardTo),trafrules(r.trafrules), aclId(r.aclId), forceDelivery(r.forceDelivery), allowBlocked(r.allowBlocked), providerId(r.providerId), billingRuleId(r.billingRuleId),categoryId(r.categoryId)
-  {}
-  Route(const std::string & rid, const int prior, uint8_t isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,smsc::router::ReplyPath replyPath, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo,const std::string& _trafrules, const AclIdent aclId, const bool forceDelivery, const bool allowBlocked, const signed long providerId, const std::string billingRuleId,const signed long categoryId,bool transit)
+  Route(const std::string & rid, const int prior, uint8_t billingMode, bool isArchiving,
+      smsc::router::TrafficMode argTrafMode, bool isSuppressDR, bool isActive,bool isHide,smsc::router::ReplyPath replyPath,
+      int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode,
+      const std::string & _forwardTo,const AclIdent aclId,
+      const bool forceDelivery, const bool allowBlocked, const signed long providerId,
+      const signed long categoryId,bool transit)
     : id(rid), priority(prior), sources(), destinations(),
-    billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR), active(isActive), hide(isHide),replyPath(replyPath),serviceId(_serviceId),
-    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),trafrules(_trafrules), aclId(aclId), forceDelivery(forceDelivery), allowBlocked(allowBlocked), providerId(providerId), billingRuleId(billingRuleId),categoryId(categoryId),transit(transit)
+    billing(billingMode), archiving(isArchiving), trafMode(argTrafMode), suppressDeliveryReports(isSuppressDR),
+    active(isActive), hide(isHide),replyPath(replyPath),serviceId(_serviceId),
+    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),
+    aclId(aclId), forceDelivery(forceDelivery), allowBlocked(allowBlocked),
+    providerId(providerId), categoryId(categoryId),transit(transit)
   {}
 
   ~Route()
@@ -176,9 +180,9 @@ public:
 
   const SourceHash &getSources() const {return sources;}
   const DestinationHash &getDestinations() const {return destinations;}
-  const uint8_t isBilling() const {return billing;}
+  const uint8_t getBilling() const {return billing;}
   const bool isArchiving() const {return archiving;}
-  const bool isEnabling() const {return enabling;}
+  const smsc::router::TrafficMode getTrafMode() const {return trafMode;}
   const bool isSuppressDeliveryReports(){return suppressDeliveryReports;}
   const bool isActive(){return active;}
   const bool isHide()const{return hide;}
@@ -190,12 +194,10 @@ public:
   const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }
   const uint8_t getDeliveryMode() const {return this->deliveryMode;}
   const std::string & getForwardTo() const {return this->forwardTo;}
-  const std::string& getTrafRules()const{return this->trafrules;}
   const AclIdent getAclId() const { return this->aclId; }
   const bool isForceDelivery() const { return this->forceDelivery; }
   const bool isAllowBlocked() const { return this->allowBlocked; }
   const signed long getProviderId() const {return this->providerId;}
-  const std::string getBillingRuleId() const {return this->billingRuleId;}
   const signed long getCategoryId()const{return this->categoryId;}
   const bool isTransit(){return this->transit;}
 };

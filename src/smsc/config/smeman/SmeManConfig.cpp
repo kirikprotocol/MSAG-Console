@@ -67,32 +67,7 @@ SmeManConfig::status SmeManConfig::putRecord(SmeRecord *record)
   return success;
 }
 
-void fillFlag(uint32_t& flags,const std::string& val)
-{
-  using namespace smsc::smeman;
-  if(val=="carryOrgDescriptor")
-  {
-    flags|=sfCarryOrgDescriptor;
-  }else if(val=="carryOrgUserInfo")
-  {
-    flags|=sfCarryOrgAbonentInfo;
-  }else if(val=="carrySccpInfo")
-  {
-    flags|=sfCarrySccpInfo;
-  }else if(val=="fillExtraDescriptor")
-  {
-    flags|=sfFillExtraDescriptor;
-  }else if(val=="forceSmeReceipt")
-  {
-    flags|=sfForceReceiptToSme;
-  }else if(val=="forceGsmDataCoding")
-  {
-    flags|=sfForceGsmDatacoding;
-  }else if(val=="smppPlus")
-  {
-    flags|=sfSmppPlus;
-  }
-}
+
 
 SmeManConfig::status SmeManConfig::load(const char * const filename)
 {
@@ -108,135 +83,97 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
     {
       DOMNode *node = list->item(i);
       DOMNamedNodeMap *attrs = node->getAttributes();
-      XmlStr type(attrs->getNamedItem(XmlStr("type").x_str())->getNodeValue());
       SmeRecord * record = new SmeRecord();
       record->smeUid = XmlStr(attrs->getNamedItem(XmlStr("uid").x_str())->getNodeValue()).c_release();
-      if (strcmp(type, "smpp") == 0)
+      record->rectype = SMPP_SME;
+      DOMNodeList *childs = node->getChildNodes();
+      size_t childsLength = childs->getLength();
+      for (size_t j=0; j<childsLength; j++)
       {
-        record->rectype = SMPP_SME;
-        DOMNodeList *childs = node->getChildNodes();
-        size_t childsLength = childs->getLength();
-        for (size_t j=0; j<childsLength; j++)
+        DOMNode *child = childs->item(j);
+        if (child->getNodeType() == DOMNode::ELEMENT_NODE)
         {
-          DOMNode *child = childs->item(j);
-          if (child->getNodeType() == DOMNode::ELEMENT_NODE)
+          DOMNamedNodeMap *childAttrs = child->getAttributes();
+          XmlStr name(childAttrs->getNamedItem(XmlStr("name").x_str())->getNodeValue());
+          XmlStr value(childAttrs->getNamedItem(XmlStr("value").x_str())->getNodeValue());
+          if (strcmp(name.c_str(), "interfaceVersion") == 0)
           {
-            DOMNamedNodeMap *childAttrs = child->getAttributes();
-            XmlStr name(childAttrs->getNamedItem(XmlStr("name").x_str())->getNodeValue());
-            XmlStr value(childAttrs->getNamedItem(XmlStr("value").x_str())->getNodeValue());
-            if (strcmp(name, "typeOfNumber") == 0) {
-              record->recdata.smppSme.typeOfNumber = atoi(value.c_str());
-            } else if (strcmp(name.c_str(), "priority") == 0) {
-              record->priority = atoi(value.c_str());
-            } else if (strcmp(name.c_str(), "numberingPlan") == 0) {
-              record->recdata.smppSme.numberingPlan = atoi(value.c_str());
-            } else if (strcmp(name.c_str(), "interfaceVersion") == 0) {
-              record->recdata.smppSme.interfaceVersion = atoi(value.c_str());
-              using namespace smsc::smeman;
-              if((record->recdata.smppSme.interfaceVersion&0x0f)==0x09)
-              {
-                record->recdata.smppSme.flags=sfCarryOrgAbonentInfo|sfCarryOrgDescriptor|sfCarrySccpInfo|sfFillExtraDescriptor;
-              }
-              if((record->recdata.smppSme.interfaceVersion&0xf0)==0x50)
-              {
-                record->recdata.smppSme.flags|=sfForceReceiptToSme;
-              }
-
-            } else if (strcmp(name.c_str(), "systemType") == 0) {
-              record->recdata.smppSme.systemType = value.c_release();
-            } else if (strcmp(name.c_str(), "password") == 0) {
-              record->recdata.smppSme.password = value.c_release();
-            } else if (strcmp(name.c_str(), "addrRange") == 0) {
-              record->recdata.smppSme.addrRange = value.c_release();
-            } else if (strcmp(name.c_str(), "smeN") == 0) {
-              record->recdata.smppSme.smeN = atoi(value.c_str());
-            } else if (strcmp(name.c_str(), "timeout") == 0) {
-              record->recdata.smppSme.timeout = atoi(value.c_str());
-            } else if (strcmp(name.c_str(), "proclimit") == 0) {
-              record->recdata.smppSme.proclimit = atoi(value.c_str());
-            } else if (strcmp(name.c_str(), "schedlimit") == 0) {
-              record->recdata.smppSme.schedlimit = atoi(value.c_str());
-            } else if (strcmp(name.c_str(),"forceDC") == 0) {
-              record->recdata.smppSme.flags|=!strcmp(value.c_str(),"true")?smsc::smeman::sfForceGsmDatacoding:0;
-            } else if (strcmp(name.c_str(),"wantAlias") == 0) {
-              record->recdata.smppSme.wantAlias=!strcmp(value.c_str(),"yes");
-            } else if (strcmp(name.c_str(), "receiptSchemeName") == 0) {
-              record->recdata.smppSme.receiptSchemeName = value.c_release();
-            } else if (strcmp(name.c_str(), "disabled") == 0) {
-              record->recdata.smppSme.disabled = !strcmp(value.c_str(),"true");
-            } else if (strcmp(name.c_str(), "mode") == 0) {
-              if (strcmp(value.c_str(),"tx") == 0) {
-                record->recdata.smppSme.mode = MODE_TX;
-              } else if (strcmp(value.c_str(),"rx") == 0) {
-                record->recdata.smppSme.mode = MODE_RX;
-              } else if (strcmp(value.c_str(),"trx") == 0) {
-                record->recdata.smppSme.mode = MODE_TRX;
-              } else {
-                smsc_log_warn(logger, "unknown mode value \"%s\"", value.c_str());
-              }
-            } else if (strcmp(name.c_str(), "providerId") == 0) {
-              record->recdata.smppSme.providerId = strtoll(value.c_str(), (char**)0, 0);
-            } else if (strcmp(name.c_str(), "accessMask") == 0) {
-              if(sscanf(value.c_str(),"0x%x",&record->recdata.smppSme.accessMask)!=1)
-              {
-                record->recdata.smppSme.accessMask = atoi(value.c_str());
-              }
-            } else
-            if(strcmp(name.c_str(),"flags")==0)
+            record->smppSme.interfaceVersion = atoi(value.c_str());
+            using namespace smsc::smeman;
+            if((record->smppSme.interfaceVersion&0x0f)==0x09)
             {
-              std::string v=value.c_str();
-              std::string::size_type oldPos=0,commaPos=0;
-              while((commaPos=v.find(',',oldPos))!=std::string::npos)
-              {
-                fillFlag(record->recdata.smppSme.flags,v.substr(oldPos,commaPos-oldPos));
-                oldPos=commaPos+1;
-              }
-              fillFlag(record->recdata.smppSme.flags,v.substr(oldPos));
-            }else
-            {
-              smsc_log_warn(logger, "unknown param name \"%s\"", name.c_str());
+              record->smppSme.flags=sfCarryOrgAbonentInfo|sfCarryOrgDescriptor|sfCarrySccpInfo|sfFillExtraDescriptor;
             }
+            if((record->smppSme.interfaceVersion&0xf0)==0x50)
+            {
+              record->smppSme.flags|=sfForceReceiptToSme;
+            }
+
+          } else if (strcmp(name.c_str(), "systemType") == 0) {
+            record->smppSme.systemType = value.c_release();
+          } else if (strcmp(name.c_str(), "password") == 0) {
+            record->smppSme.password = value.c_release();
+          } else if (strcmp(name.c_str(), "addrRange") == 0) {
+            record->smppSme.addrRange = value.c_release();
+          } else if (strcmp(name.c_str(), "smeN") == 0) {
+            record->smppSme.smeN = atoi(value.c_str());
+          } else if (strcmp(name.c_str(), "priority") == 0) {
+            record->priority = atoi(value.c_str());
+          } else if (strcmp(name.c_str(), "timeout") == 0) {
+            record->smppSme.timeout = atoi(value.c_str());
+          } else if (strcmp(name.c_str(), "proclimit") == 0) {
+            record->smppSme.proclimit = atoi(value.c_str());
+          } else if (strcmp(name.c_str(), "schedlimit") == 0) {
+            record->smppSme.schedlimit = atoi(value.c_str());
+          } else if (strcmp(name.c_str(),"forceDC") == 0) {
+            record->smppSme.flags|=!strcmp(value.c_str(),"true")?smsc::smeman::sfForceGsmDatacoding:0;
+          } else if (strcmp(name.c_str(),"wantAlias") == 0) {
+            record->smppSme.wantAlias=!strcmp(value.c_str(),"yes");
+          } else if (strcmp(name.c_str(), "receiptSchemeName") == 0) {
+            record->smppSme.receiptSchemeName = value.c_release();
+          } else if (strcmp(name.c_str(), "disabled") == 0) {
+            record->smppSme.disabled = !strcmp(value.c_str(),"true");
+          } else if (strcmp(name.c_str(), "mode") == 0)
+          {
+            if (strcmp(value.c_str(),"tx") == 0)
+            {
+              record->smppSme.mode = MODE_TX;
+            } else if (strcmp(value.c_str(),"rx") == 0)
+            {
+              record->smppSme.mode = MODE_RX;
+            } else if (strcmp(value.c_str(),"trx") == 0)
+            {
+              record->smppSme.mode = MODE_TRX;
+            } else
+            {
+              smsc_log_warn(logger, "unknown mode value \"%s\"", value.c_str());
+            }
+          } else if (strcmp(name.c_str(), "providerId") == 0) {
+            record->smppSme.providerId = strtoll(value.c_str(), (char**)0, 0);
+          } else if (strcmp(name.c_str(), "accessMask") == 0) {
+            if(sscanf(value.c_str(),"0x%x",&record->smppSme.accessMask)!=1)
+            {
+              record->smppSme.accessMask = atoi(value.c_str());
+            }
+          } else if(strcmp(name.c_str(),"flags")==0)
+          {
+
+            record->smppSme.flags=smsc::smeman::parseSmeFlags(value.c_str());
+          }else
+          {
+            smsc_log_warn(logger, "unknown param name \"%s\"", name.c_str());
           }
         }
+      }
 
-        if (record->recdata.smppSme.systemType == 0)
-          record->recdata.smppSme.systemType = cStringCopy("");
-        if (record->recdata.smppSme.password == 0)
-          record->recdata.smppSme.password = cStringCopy("");
-        if (record->recdata.smppSme.addrRange == 0)
-          record->recdata.smppSme.addrRange = cStringCopy("");
-        if (record->recdata.smppSme.receiptSchemeName == 0)
-          record->recdata.smppSme.receiptSchemeName = cStringCopy("default");
-      }
-      else if (strcmp(type.c_str(), "ss7"))
-      {
-        record->rectype = SS7_SME;
-        smsc_log_warn(logger, "record type SS7_SME is not yet implemented. (UID = \"%s\"", record->smeUid);
-        /*DOM_NodeList childs = node.getChildNodes();
-        for (int j=0; j<childs.getLength(); j++)
-        {
-          DOM_Node child = childs.item(i);
-          if (child.getNodeType == DOM_Node::ELEMENT_NODE)
-          {
-            DOM_NamedNodeMap childAttrs = child.getAttributes();
-            std::auto_ptr<char> name = childAttrs.getNamedItem("name").getNodeValue().transcode();
-            std::auto_ptr<char> value = childAttrs.getNamedItem("value").getNodeValue().transcode();
-            if (strcmp(name.get(), ""))
-            {
-            } else if
-          }
-        }*/
-        delete record;
-        record = 0;
-        continue;
-      }
-      else
-      {
-        smsc_log_warn(logger, "Unknown record type \"%s\", record skipped", type.c_str());
-        delete record;
-        record = 0;
-        continue;
-      }
+      if (record->smppSme.systemType == 0)
+        record->smppSme.systemType = cStringCopy("");
+      if (record->smppSme.password == 0)
+        record->smppSme.password = cStringCopy("");
+      if (record->smppSme.addrRange == 0)
+        record->smppSme.addrRange = cStringCopy("");
+      if (record->smppSme.receiptSchemeName == 0)
+        record->smppSme.receiptSchemeName = cStringCopy("default");
       if (record != 0)
       {
         records.push_back(record);
@@ -282,16 +219,16 @@ SmeManConfig::status SmeManConfig::store(std::ostream &out)
       {
         out << "  <smerecord type=\"smpp\" uid=\"" << rec->smeUid << "\">" << std::endl;
         out << "    <param name=\"priority\"          value=\"" << (uint16_t)rec->priority                              << "\"/>" << std::endl;
-        out << "    <param name=\"typeOfNumber\"      value=\"" << (uint32_t)rec->recdata.smppSme.typeOfNumber          << "\"/>" << std::endl;
-        out << "    <param name=\"numberingPlan\"     value=\"" << (uint32_t)rec->recdata.smppSme.numberingPlan         << "\"/>" << std::endl;
-        out << "    <param name=\"interfaceVersion\"  value=\"" << (uint32_t)rec->recdata.smppSme.interfaceVersion      << "\"/>" << std::endl;
-        out << "    <param name=\"systemType\"        value=\"" <<           rec->recdata.smppSme.systemType            << "\"/>" << std::endl;
-        out << "    <param name=\"password\"          value=\"" <<           rec->recdata.smppSme.password              << "\"/>" << std::endl;
-        out << "    <param name=\"addrRange\"         value=\"" <<           rec->recdata.smppSme.addrRange             << "\"/>" << std::endl;
-        out << "    <param name=\"smeN\"              value=\"" << (uint32_t)rec->recdata.smppSme.smeN                  << "\"/>" << std::endl;
-        out << "    <param name=\"timeout\"           value=\"" << (uint32_t)rec->recdata.smppSme.timeout               << "\"/>" << std::endl;
-        out << "    <param name=\"wantAlias\"         value=\"" <<          (rec->recdata.smppSme.wantAlias?"yes":"no") << "\"/>" << std::endl;
-        out << "    <param name=\"receiptSchemeName\" value=\"" <<           rec->recdata.smppSme.receiptSchemeName     << "\"/>" << std::endl;
+        out << "    <param name=\"typeOfNumber\"      value=\"" << (uint32_t)rec->smppSme.typeOfNumber          << "\"/>" << std::endl;
+        out << "    <param name=\"numberingPlan\"     value=\"" << (uint32_t)rec->smppSme.numberingPlan         << "\"/>" << std::endl;
+        out << "    <param name=\"interfaceVersion\"  value=\"" << (uint32_t)rec->smppSme.interfaceVersion      << "\"/>" << std::endl;
+        out << "    <param name=\"systemType\"        value=\"" <<           rec->smppSme.systemType            << "\"/>" << std::endl;
+        out << "    <param name=\"password\"          value=\"" <<           rec->smppSme.password              << "\"/>" << std::endl;
+        out << "    <param name=\"addrRange\"         value=\"" <<           rec->smppSme.addrRange             << "\"/>" << std::endl;
+        out << "    <param name=\"smeN\"              value=\"" << (uint32_t)rec->smppSme.smeN                  << "\"/>" << std::endl;
+        out << "    <param name=\"timeout\"           value=\"" << (uint32_t)rec->smppSme.timeout               << "\"/>" << std::endl;
+        out << "    <param name=\"wantAlias\"         value=\"" <<          (rec->smppSme.wantAlias?"yes":"no") << "\"/>" << std::endl;
+        out << "    <param name=\"receiptSchemeName\" value=\"" <<           rec->smppSme.receiptSchemeName     << "\"/>" << std::endl;
         out << "  </smerecord>" << std::endl;
       } else {
         out << "  <smerecord type=\"ss7\" uid=\"" << rec->smeUid << "\">" << std::endl;

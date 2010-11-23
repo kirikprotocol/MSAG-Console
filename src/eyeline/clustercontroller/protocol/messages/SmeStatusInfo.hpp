@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
-#include "SmeBindMode.hpp"
 #include "SmeConnectType.hpp"
+#include "SmeConnectStatus.hpp"
 
 
 #ident "@(#) SmeStatusInfo version 1.0"
@@ -28,13 +28,16 @@ public:
   void Clear()
   {
     systemIdFlag=false;
-    statusFlag=false;
-    bindModeFlag=false;
-    peerInFlag=false;
-    peerOutFlag=false;
     connTypeFlag=false;
+    statusFlag=false;
+    status.clear();
   }
  
+
+  static std::string messageGetName()
+  {
+    return "SmeStatusInfo";
+  }
 
   std::string toString()const
   {
@@ -48,42 +51,6 @@ public:
       rv+="systemId=";
       rv+=systemId;
     }
-    if(statusFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="status=";
-      rv+=status;
-    }
-    if(bindModeFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="bindMode=";
-      rv+=SmeBindMode::getNameByValue(bindMode);
-    }
-    if(peerInFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="peerIn=";
-      rv+=peerIn;
-    }
-    if(peerOutFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="peerOut=";
-      rv+=peerOut;
-    }
     if(connTypeFlag)
     {
       if(rv.length()>0)
@@ -92,6 +59,30 @@ public:
       }
       rv+="connType=";
       rv+=SmeConnectType::getNameByValue(connType);
+    }
+    if(statusFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="status=";
+      rv+="[";
+      bool first=true;
+      for(std::vector<SmeConnectStatus>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
+      {
+        if(first)
+        {
+          first=false;
+        }else
+        {
+          rv+=",";
+        }
+        rv+="(";
+        rv+=it->toString();
+        rv+=")";
+      }
+      rv+="]";
     }
     return rv;
   }
@@ -106,35 +97,21 @@ public:
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(systemId);
     }
-    if(statusFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(status);
-    }
-    if(bindModeFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(bindMode);
-    }
-    if(peerInFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(peerIn);
-    }
-    if(peerOutFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(peerOut);
-    }
     if(connTypeFlag)
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(connType);
+      rv+=DataStream::fieldSize(connType.getValue());
+ 
+    }
+    if(statusFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      for(std::vector<SmeConnectStatus>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
+      {
+        rv+=it->length<DataStream>();
+      }
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -161,99 +138,7 @@ public:
   {
     return systemIdFlag;
   }
-  const std::string& getStatus()const
-  {
-    if(!statusFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("status");
-    }
-    return status;
-  }
-  void setStatus(const std::string& argValue)
-  {
-    status=argValue;
-    statusFlag=true;
-  }
-  std::string& getStatusRef()
-  {
-    statusFlag=true;
-    return status;
-  }
-  bool hasStatus()const
-  {
-    return statusFlag;
-  }
-  const SmeBindMode::type& getBindMode()const
-  {
-    if(!bindModeFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("bindMode");
-    }
-    return bindMode;
-  }
-  void setBindMode(const SmeBindMode::type& argValue)
-  {
-    if(!SmeBindMode::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("SmeBindMode",argValue);
-    }
-    bindMode=argValue;
-    bindModeFlag=true;
-  }
-  SmeBindMode::type& getBindModeRef()
-  {
-    bindModeFlag=true;
-    return bindMode;
-  }
-  bool hasBindMode()const
-  {
-    return bindModeFlag;
-  }
-  const std::string& getPeerIn()const
-  {
-    if(!peerInFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("peerIn");
-    }
-    return peerIn;
-  }
-  void setPeerIn(const std::string& argValue)
-  {
-    peerIn=argValue;
-    peerInFlag=true;
-  }
-  std::string& getPeerInRef()
-  {
-    peerInFlag=true;
-    return peerIn;
-  }
-  bool hasPeerIn()const
-  {
-    return peerInFlag;
-  }
-  const std::string& getPeerOut()const
-  {
-    if(!peerOutFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("peerOut");
-    }
-    return peerOut;
-  }
-  void setPeerOut(const std::string& argValue)
-  {
-    peerOut=argValue;
-    peerOutFlag=true;
-  }
-  std::string& getPeerOutRef()
-  {
-    peerOutFlag=true;
-    return peerOut;
-  }
-  bool hasPeerOut()const
-  {
-    return peerOutFlag;
-  }
-  const SmeConnectType::type& getConnType()const
+  const SmeConnectType& getConnType()const
   {
     if(!connTypeFlag)
     {
@@ -261,16 +146,12 @@ public:
     }
     return connType;
   }
-  void setConnType(const SmeConnectType::type& argValue)
+  void setConnType(const SmeConnectType& argValue)
   {
-    if(!SmeConnectType::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("SmeConnectType",argValue);
-    }
     connType=argValue;
     connTypeFlag=true;
   }
-  SmeConnectType::type& getConnTypeRef()
+  SmeConnectType& getConnTypeRef()
   {
     connTypeFlag=true;
     return connType;
@@ -279,6 +160,28 @@ public:
   {
     return connTypeFlag;
   }
+  const std::vector<SmeConnectStatus>& getStatus()const
+  {
+    if(!statusFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("status");
+    }
+    return status;
+  }
+  void setStatus(const std::vector<SmeConnectStatus>& argValue)
+  {
+    status=argValue;
+    statusFlag=true;
+  }
+  std::vector<SmeConnectStatus>& getStatusRef()
+  {
+    statusFlag=true;
+    return status;
+  }
+  bool hasStatus()const
+  {
+    return statusFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -286,36 +189,30 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("systemId");
     }
+    if(!statusFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("status");
+    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(systemIdTag);
-    ds.writeStrLV(systemId);
-    if(statusFlag)
+    ds.writeStrLV(systemId); 
+    ds.writeTag(statusTag);
+    typename DataStream::LengthType len=0;
+    for(std::vector<SmeConnectStatus>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
     {
-      ds.writeTag(statusTag);
-    ds.writeStrLV(status);
+      len+=it->length<DataStream>();
     }
-    if(bindModeFlag)
+    ds.writeLength(len);
+    for(std::vector<SmeConnectStatus>::const_iterator it=status.begin(),end=status.end();it!=end;++it)
     {
-      ds.writeTag(bindModeTag);
-    ds.writeByteLV(bindMode);
- 
-    }
-    if(peerInFlag)
-    {
-      ds.writeTag(peerInTag);
-    ds.writeStrLV(peerIn);
-    }
-    if(peerOutFlag)
-    {
-      ds.writeTag(peerOutTag);
-    ds.writeStrLV(peerOut);
+      it->serialize(ds);
     }
     if(connTypeFlag)
     {
       ds.writeTag(connTypeTag);
-    ds.writeByteLV(connType);
+    ds.writeByteLV(connType.getValue());
  
     }
     ds.writeTag(DataStream::endOfMessage_tag);
@@ -335,7 +232,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case systemIdTag:
@@ -347,42 +244,6 @@ public:
           systemId=ds.readStrLV();
           systemIdFlag=true;
         }break;
-        case statusTag:
-        {
-          if(statusFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("status");
-          }
-          status=ds.readStrLV();
-          statusFlag=true;
-        }break;
-        case bindModeTag:
-        {
-          if(bindModeFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("bindMode");
-          }
-          bindMode=ds.readByteLV();
-          bindModeFlag=true;
-        }break;
-        case peerInTag:
-        {
-          if(peerInFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("peerIn");
-          }
-          peerIn=ds.readStrLV();
-          peerInFlag=true;
-        }break;
-        case peerOutTag:
-        {
-          if(peerOutFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("peerOut");
-          }
-          peerOut=ds.readStrLV();
-          peerOutFlag=true;
-        }break;
         case connTypeTag:
         {
           if(connTypeFlag)
@@ -391,6 +252,22 @@ public:
           }
           connType=ds.readByteLV();
           connTypeFlag=true;
+        }break;
+        case statusTag:
+        {
+          if(statusFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("status");
+          }
+
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            status.push_back(SmeConnectStatus());
+            status.back().deserialize(ds);
+            rd+=status.back().length<DataStream>();
+          }
+          statusFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -407,6 +284,10 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("systemId");
     }
+    if(!statusFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("status");
+    }
 
   }
 
@@ -418,26 +299,17 @@ protected:
   //static const int8_t versionMinor=0;
 
   static const int32_t systemIdTag=1;
-  static const int32_t statusTag=2;
-  static const int32_t bindModeTag=3;
-  static const int32_t peerInTag=4;
-  static const int32_t peerOutTag=5;
-  static const int32_t connTypeTag=6;
+  static const int32_t connTypeTag=2;
+  static const int32_t statusTag=3;
 
 
   std::string systemId;
-  std::string status;
-  SmeBindMode::type bindMode;
-  std::string peerIn;
-  std::string peerOut;
-  SmeConnectType::type connType;
+  SmeConnectType connType;
+  std::vector<SmeConnectStatus> status;
 
   bool systemIdFlag;
-  bool statusFlag;
-  bool bindModeFlag;
-  bool peerInFlag;
-  bool peerOutFlag;
   bool connTypeFlag;
+  bool statusFlag;
 };
 
 }

@@ -9,6 +9,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "util/Exception.hpp"
 #include "ClosedGroupsInterface.hpp"
+#include "logger/Logger.h"
 
 namespace smsc{
 namespace closedgroups{
@@ -21,6 +22,7 @@ public:
   ClosedGroupsManager()
   {
     allowFileModification=false;
+    log=smsc::logger::Logger::getInstance("cgm");
   }
   static void Init()
   {
@@ -42,6 +44,7 @@ public:
   virtual void AddGroup(int id,const char* name)
   {
     sync::MutexGuard mg(mtx);
+    smsc_log_debug(log,"add group %d,%s",id,name);
     GroupsMap::iterator it=groups.lower_bound(id);
     if(it->first==id)
     {
@@ -60,6 +63,7 @@ public:
     {
       throw smsc::util::Exception("DeleteGroup: Group with id=%d doesn't exists",id);
     }
+    smsc_log_debug(log,"delete group %d, abonents.size=%lu",id,it->second->abonents.size());
     if(it->second->abonents.size()!=0)
     {
       throw smsc::util::Exception("DeleteGroup: cannot delete group with id=%d(%s), group is not empty",id,it->second->name.c_str());
@@ -75,6 +79,7 @@ public:
     {
       throw smsc::util::Exception("AddAddrToGroup: Group with id=%d doesn't exists",id);
     }
+    smsc_log_debug(log,"add addr to group %d (%s)",id,addr.toString().c_str());
     it->second->addresses.insert(addr);
   }
   virtual void RemoveAddrFromGroup(int id,const smsc::sms::Address& addr)
@@ -90,6 +95,7 @@ public:
     {
       throw smsc::util::Exception("RemoveAddrFromGroup: address %s doesn't exists in group wityh id=%d(%s)",addr.toString().c_str(),id,it->second->name.c_str());
     }
+    smsc_log_debug(log,"remove addr from group %d (%s)",id,addr.toString().c_str());
     it->second->addresses.erase(mit);
   }
 
@@ -122,6 +128,7 @@ public:
     {
       throw smsc::util::Exception("AddAbonent: address %s already exists in group wityh id=%d(%s)",addr.toString().c_str(),id,it->second->name.c_str());
     }
+    smsc_log_debug(log,"add abonent to group %d (%s)",id,addr.toString().c_str());
     it->second->abonents.insert(addr);
   }
   virtual void RemoveAbonent(int id,const smsc::sms::Address& addr)
@@ -137,6 +144,7 @@ public:
     {
       throw smsc::util::Exception("RemoveAbonent: address %s doesn't exists in group wityh id=%d(%s)",addr.toString().c_str(),id,it->second->name.c_str());
     }
+    smsc_log_debug(log,"remove abonent from group %d (%s)",id,addr.toString().c_str());
     it->second->abonents.erase(ait);
   }
   virtual void ListAbonents(int id,std::vector<smsc::sms::Address>& list)
@@ -163,6 +171,7 @@ protected:
       {
         if(*a=='?' || *b=='?')return addra.length<addrb.length;//strlen(a)<strlen(b);
         if(*a<*b)return true;
+        if(*a>*b)return false;
         a++;
         b++;
       }
@@ -183,6 +192,7 @@ protected:
   GroupsMap groups;
   mutable sync::Mutex mtx;
   bool allowFileModification;
+  smsc::logger::Logger* log;
 
 };
 

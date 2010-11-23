@@ -15,15 +15,10 @@ namespace smeman {
 
 struct SmeInfo
 {
-  uint8_t typeOfNumber;
-  uint8_t numberingPlan;
-  uint8_t interfaceVersion;
+  SmeSystemId systemId;
   std::string rangeOfAddress;
   std::string systemType;
   SmePassword password;
-  std::string hostname;
-  int port;
-  SmeSystemId systemId;
   SmeProxyPriority priority;
   SmeNType SME_N;
   bool  disabled;

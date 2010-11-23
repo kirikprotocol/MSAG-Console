@@ -30,9 +30,14 @@ public:
     sysIds.clear();
   }
  
-  static int32_t getTag()
+  static int32_t messageGetTag()
   {
     return 22;
+  }
+
+  static std::string messageGetName()
+  {
+    return "SmeDisconnect";
   }
 
   std::string toString()const
@@ -50,7 +55,7 @@ public:
       rv+="sysIds=";
       rv+="[";
       bool first=true;
-      for(std::vector<std::string>::const_iterator it=sysIds.begin(),end=sysIds.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=sysIds.begin(),end=sysIds.end();it!=end;++it)
       {
         if(first)
         {
@@ -113,10 +118,10 @@ public:
     //ds.writeInt32(seqNum);
     ds.writeTag(sysIdsTag);
     ds.writeLength(DataStream::fieldSize(sysIds));
-    for(std::vector<std::string>::const_iterator it=sysIds.begin(),end=sysIds.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=sysIds.begin(),end=sysIds.end();it!=end;++it)
     {
       ds.writeStr(*it);
-    }
+          }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -134,7 +139,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case sysIdsTag:
@@ -148,6 +153,7 @@ public:
           {
             sysIds.push_back(ds.readStr());
             rd+=DataStream::fieldSize(sysIds.back());
+            rd+=DataStream::lengthTypeSize;
           }
           sysIdsFlag=true;
         }break;
@@ -169,12 +175,12 @@ public:
 
   }
 
-  int32_t getSeqNum()const
+  int32_t messageGetSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(int32_t argValue)
+  void messageSetSeqNum(int32_t argValue)
   {
     seqNum=argValue;
   }

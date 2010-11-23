@@ -1,5 +1,5 @@
-#ifndef __SMSC_SYSTEM_STATE_MACHINE_HPP__
-#define __SMSC_SYSTEM_STATE_MACHINE_HPP__
+#ifndef __SMSC_STATEMACHINE_STATE_MACHINE_HPP__
+#define __SMSC_STATEMACHINE_STATE_MACHINE_HPP__
 
 #include <exception>
 #include <string>
@@ -12,6 +12,7 @@
 #include "util/templates/Formatters.h"
 #include "util/regexp/RegExp.hpp"
 #include "store/MessageStore.h"
+#include "smsc/router/Router.hpp"
 
 namespace smsc{
 
@@ -30,6 +31,25 @@ public:
     return "failed to compile directive processing regexp in state machine";
   }
 };
+
+inline FixedLengthString<64> AddrPair(const char* s1,const Address& a1,const char* s2,const Address& a2)
+{
+  char buf[64];
+  char buf1[32];
+  char buf2[32];
+  if(a1==a2)
+  {
+    a1.toString(buf1,sizeof(buf1));
+    sprintf(buf,"%s=%s",s1,buf1);
+  }else
+  {
+    a1.toString(buf1,sizeof(buf1));
+    a2.toString(buf2,sizeof(buf2));
+    sprintf(buf,"%s=%s;%s=%s",s1,buf1,s2,buf2);
+  }
+  return buf;
+}
+
 
 class StateMachine:public smsc::core::threads::ThreadedTask{
 public:
@@ -110,6 +130,9 @@ protected:
   int protocolId;
   SmeSystemId smscSmeId;
 
+  static bool StateMachine::checkSourceAddress(const std::string& pattern,const Address& src);
+
+
   static Hash<std::list<std::string> > directiveAliases;
 
   smsc::util::regexp::RegExp dreAck;
@@ -150,6 +173,10 @@ protected:
 
   void finalizeSms(SMSId id,SMS& sms);
 
+  void fullReport(SMSId msgid,SMS& sms);
+
+  StateType DivertProcessing(Tuple& t,SMS& sms);
+
   void onSubmitOk(SMSId id,SMS& sms);
   void onSubmitFail(SMSId id,SMS& sms);
   void onDeliveryOk(SMSId id,SMS& sms);
@@ -157,24 +184,11 @@ protected:
   void onUndeliverable(SMSId id,SMS& sms);
   void onForwardOk(SMSId id,SMS& sms);
 
-
-#ifdef SNMP
-  void incSnmpCounterForError(int code,const char* sme);
-#endif
-
-  static FixedLengthString<64> AddrPair(const char* s1,const Address& a1,const char* s2,const Address& a2);
-  static bool checkSourceAddress(const std::string& pattern,const Address& src);
-
-
-  StateType DivertProcessing(Tuple& t,SMS& sms);
-
   struct SbmContext
   {
     SbmContext(Tuple& argT):t(argT)
     {
       sms=0;
-      dest_proxy=0;
-      dest_proxy_index=-1;
       fromMap=false;
       toMap=false;
       fromDistrList=false;
@@ -187,8 +201,7 @@ protected:
       createSms=scsCreate;
     }
     SMS* sms;
-    SmeProxy* dest_proxy;
-    int dest_proxy_index;
+    smsc::router::RoutingResult rr;
     SmeProxy* src_proxy;
     Tuple& t;
     bool fromMap;
@@ -199,7 +212,6 @@ protected:
     bool noDestChange;
     Address dst;
     bool has_route;
-    router::RouteInfo ri;
     StateType rvstate;
     bool isForwardTo;
     bool generateDeliver;

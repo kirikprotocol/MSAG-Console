@@ -241,9 +241,6 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     return ENROUTE_STATE;
   }
 
-  SmeProxy *dest_proxy=0;
-  int dest_proxy_index;
-
   Address dst=sms.getDealiasedDestinationAddress();
 
   bool diverted=false;
@@ -283,8 +280,8 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_UNCOND))
     {
       dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
-      diverted=true;
       Address newdst;
+      diverted=true;
       if(smsc->AliasToAddress(dst,newdst))
       {
         dst=newdst;
@@ -292,18 +289,10 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     }
   }
 
-  smsc::router::RouteInfo ri;
+  smsc::router::RoutingResult rr;
   bool has_route = false;
   try{
-    has_route=smsc->routeSms
-                    (
-                      sms.getOriginatingAddress(),
-                      dst,
-                      dest_proxy_index,
-                      dest_proxy,
-                      &ri,
-                      smsc->getSmeIndex(sms.getSourceSmeId())
-                    );
+    has_route=smsc->routeSms(smsc->getSmeIndex(sms.getSourceSmeId()),sms.getOriginatingAddress(),dst,rr);
   }catch(std::exception& e)
   {
     warn2(smsLog,"Routing %s->%s failed:%s",sms.getOriginatingAddress().toString().c_str(),
@@ -317,27 +306,49 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc_log_warn(smsLog, "FWD: No route Id=%lld;oa=%s;da=%s",t.msgId,from,to);
     sms.setLastResult(Status::NOROUTE);
     sendNotifyReport(sms,t.msgId,"destination unavailable");
-    Descriptor d;
-    changeSmsStateToEnroute(sms,t.msgId,d,Status::NOROUTE,rescheduleSms(sms));
-    onDeliveryFail(t.msgId,sms);
+    time_t ntt=rescheduleSms(sms);
+    if(ntt==sms.getValidTime())
+    {
+      try{
+        store->changeSmsStateToExpired(t.msgId);
+      }catch(...)
+      {
+        smsc_log_warn(smsLog,"FORWARD: Failed to change state of USSD request to undeliverable. Id=%lld",t.msgId);
+      }
+      smsc->getScheduler()->InvalidSms(t.msgId);
+      sms.setLastResult(Status::EXPIRED);
+      onUndeliverable(t.msgId,sms);
+    }else
+    {
+      Descriptor d;
+      changeSmsStateToEnroute(sms,t.msgId,d,Status::NOROUTE,ntt);
+      onDeliveryFail(t.msgId,sms);
+    }
     smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
     return ERROR_STATE;
   }
 
+  smsc_log_debug(smsLog,"FWD: last result=%d",sms.getLastResult());
   if(sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) &&
      sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
   {
     smsc_log_debug(smsLog,"FWD: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
-    dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
-    dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+    rr.destSmeIdx=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+    rr.destProxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+  }else if(sms.getLastResult()==Status::BACKUPSMERESCHEDULE && sms.hasStrProperty(Tag::SMSC_BACKUP_SME))
+  {
+    smsc_log_debug(smsLog,"FWD: reroute to backup sme %s",sms.getStrProperty(Tag::SMSC_BACKUP_SME).c_str());
+    rr.destSmeIdx=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_BACKUP_SME).c_str());
+    rr.destProxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_BACKUP_SME).c_str());
   }
 
-  if(!dest_proxy)
+
+  if(!rr.destProxy)
   {
     char bufsrc[64],bufdst[64];
     sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
     sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
-    smsc_log_warn(smsLog, "FWD: sme is not connected Id=%lld;oa=%s;da=%s;dstSme=%s",t.msgId,bufsrc,bufdst,ri.smeSystemId.c_str());
+    smsc_log_warn(smsLog, "FWD: sme is not connected Id=%lld;oa=%s;da=%s;dstSme=%s",t.msgId,bufsrc,bufdst,rr.info.destSmeSystemId.c_str());
     sms.setLastResult(Status::SMENOTCONNECTED);
     onDeliveryFail(t.msgId,sms);
     sendNotifyReport(sms,t.msgId,"destination unavailable");
@@ -349,7 +360,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   // create task
 
 
-  if(doRepartition && ri.smeSystemId=="MAP_PROXY")
+  if(doRepartition && rr.info.destSmeSystemId=="MAP_PROXY")
   {
     debug2(smsLog,"FWD: sms repartition Id=%lld",t.msgId);
     int pres=partitionSms(&sms);
@@ -365,12 +376,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     debug2(smsLog,"Id=%lld after repartition: %s",t.msgId,pres==psSingle?"single":"multiple");
   }
 
-  SmeInfo dstSmeInfo=smsc->getSmeInfo(dest_proxy_index);
+  SmeInfo dstSmeInfo=smsc->getSmeInfo(rr.destSmeIdx);
 
-  if(dstSmeInfo.systemId!=sms.getDestinationSmeId() || ri.routeId!=sms.getRouteId())
+  if(dstSmeInfo.systemId!=sms.getDestinationSmeId() || rr.info.routeId!=sms.getRouteId())
   {
     sms.setDestinationSmeId(dstSmeInfo.systemId.c_str());
-    sms.setRouteId(ri.routeId.c_str());
+    sms.setRouteId(rr.info.routeId.c_str());
     try{
       store->replaceSms(t.msgId,sms);
     }catch(...)
@@ -389,10 +400,10 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
 
 
   uint32_t dialogId2;
-  uint32_t uniqueId=dest_proxy->getUniqueId();
+  uint32_t uniqueId=rr.destProxy->getUniqueId();
   bool taskCreated=false;
   try{
-    dialogId2 = dest_proxy->getNextSequenceNumber();
+    dialogId2 = rr.destProxy->getNextSequenceNumber();
     tg.dialogId=dialogId2;
     tg.uniqueId=uniqueId;
     debug2(smsLog, "FWDDLV: Id=%lld;seq=%d",t.msgId,dialogId2);
@@ -401,7 +412,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     task.diverted=diverted;
     task.messageId=t.msgId;
     task.inDlgId=inDlgId;
-    if ( smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
+    if ( smsc->tasks.createTask(task,rr.destProxy->getPreferredTimeout()) )
     {
       taskCreated=true;
       tg.active=true;
@@ -427,9 +438,9 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     // send delivery
     Address src;
     if(
-        smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
+        smsc->getSmeInfo(rr.destProxy->getIndex()).wantAlias &&
         sms.getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
-        ri.hide &&
+        rr.info.hide &&
         smsc->AddressToAlias(sms.getOriginatingAddress(),src)
       )
     {
@@ -439,7 +450,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     sms.setDestinationAddress(dst);
     if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO))
     {
-      if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && !ri.transit)
+      if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && !rr.info.transit)
       {
         using namespace smsc::profiler::ProfileCharsetOptions;
         if(
@@ -475,6 +486,35 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
           }catch(exception& e)
           {
             smsc_log_warn(smsLog,"SUBMIT:Failed to transliterate: %s",e.what());
+          }
+        }else if(dstSmeInfo.hasFlag(sfDefaultDcLatin1) && sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::SMSC7BIT)
+        {
+          const char* body;
+          unsigned len;
+          bool payload=false;
+          if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+          {
+            body=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+            payload=true;
+          }else
+          {
+            body=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+          }
+          TmpBuf<char,2048> buf(len+1);
+          unsigned msgstart=0;
+          if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+          {
+            msgstart=1+*((unsigned char*)body);
+            memcpy(buf.get(),body,msgstart);
+          }
+          unsigned newlen=ConvertSMSC7BitToLatin1(body+msgstart,len-msgstart,buf.get()+msgstart)+msgstart;
+          if(payload)
+          {
+            sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buf.get(),newlen);
+          }else
+          {
+            sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,buf.get(),newlen);
+            sms.setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
           }
         }
       }
@@ -517,16 +557,16 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
         sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
       }
     }
-    if(ri.replyPath==smsc::router::ReplyPathForce)
+    if(rr.info.replyPath==smsc::router::ReplyPathForce)
     {
       sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x80);
-    }else if(ri.replyPath==smsc::router::ReplyPathSuppress)
+    }else if(rr.info.replyPath==smsc::router::ReplyPathSuppress)
     {
       sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
     }
     smsc_log_debug(smsLog,"FWD: Id=%lld, esm_class=%x",t.msgId,sms.getIntProperty(Tag::SMPP_ESM_CLASS));
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
-    dest_proxy->putCommand(delivery);
+    rr.destProxy->putCommand(delivery);
     tg.active=false;
   }
   catch(ExtractPartFailedException& e)
@@ -586,7 +626,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       sms.getDealiasedDestinationAddress().toString().c_str(),
       sms.getSourceSmeId(),
       sms.getDestinationSmeId(),
-      ri.routeId.c_str());
+      rr.info.routeId.c_str());
 
   return DELIVERING_STATE;
 }

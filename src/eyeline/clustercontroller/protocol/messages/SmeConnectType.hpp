@@ -1,5 +1,5 @@
-#ifndef __GENERATED_ENUM_SMECONNECTTYPE__
-#define __GENERATED_ENUM_SMECONNECTTYPE__
+#ifndef __GENERATED_ENUM_EYELINE_CLUSTERCONTROLLER_PROTOCOL_MESSAGES_SMECONNECTTYPE__
+#define __GENERATED_ENUM_EYELINE_CLUSTERCONTROLLER_PROTOCOL_MESSAGES_SMECONNECTTYPE__
 
 #include <map>
 #include <string>
@@ -15,11 +15,63 @@ namespace messages{
 class SmeConnectType{
 public:
   typedef int8_t type;
-  static const type loadBalancer;
-  static const type directConnect;
+ 
+  SmeConnectType()
+  {
+    isNull=true;
+  }
+  SmeConnectType(const type& argValue):value(argValue)
+  {
+    if(!isValidValue(value))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("SmeConnectType",value);
+    }
+    isNull=false;
+  }
+ 
+  SmeConnectType(const SmeConnectType& argRhs):value(argRhs.value),isNull(argRhs.isNull)
+  {
+  }
+ 
+  const type& getValue()const
+  {
+    return value;
+  }
+  bool isNullValue()const
+  {
+    return isNull;
+  }
+ 
+  void setValue(const type& argValue)
+  {
+    if(!isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("SmeConnectType",argValue);
+    }
+    value=argValue;
+    isNull=false;
+  }
+ 
+  bool operator==(const SmeConnectType& rhs)const
+  {
+    return isNull==rhs.isNull && value==rhs.value;
+  }
+ 
+  static const type loadBalancer=1;
+  static const type directConnect=2;
   static bool isValidValue(const type& value)
   {
     return nameByValue.find(value)!=nameByValue.end();
+  }
+
+  static std::string getNameByValue(const SmeConnectType& value)
+  {
+    std::map<type,std::string>::iterator it=nameByValue.find(value.value);
+    if(it!=nameByValue.end())
+    {
+      return it->second;
+    }
+    return "";
   }
  
   static std::string getNameByValue(const type& value)
@@ -44,6 +96,9 @@ public:
  
  
 protected:
+  type value;
+  bool isNull;
+
   static std::map<type,std::string> nameByValue;
   static std::map<std::string,type> valueByName;
   struct StaticInitializer{

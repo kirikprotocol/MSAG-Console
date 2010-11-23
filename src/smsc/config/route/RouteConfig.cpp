@@ -199,10 +199,11 @@ uint8_t StrToBill(const char* str)
 Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
+  XMLCh null=0;
   XmlStr id(elem.getAttribute(XmlStr("id")));
   XmlStr billing(elem.getAttribute(XmlStr("billing")));
   XmlStr archiving(elem.getAttribute(XmlStr("archiving")));
-  XmlStr enabling(elem.getAttribute(XmlStr("enabling")));
+  XmlStr trafMode(elem.hasAttribute(XmlStr("trafficMode"))?(elem.getAttribute(XmlStr("trafficMode"))):&null);
   XmlStr suppressDeliveryReports(elem.getAttribute(XmlStr("suppressDeliveryReports")));
   XmlStr active(elem.getAttribute(XmlStr("active")));
   XmlStr hide(elem.getAttribute(XmlStr("hide")));
@@ -214,12 +215,11 @@ throw (SubjectNotFoundException)
   XmlStr srcSmeSystemId(elem.getAttribute(XmlStr("srcSmeId")));
   XmlStr deliveryModeStr(elem.getAttribute(XmlStr("deliveryMode")));
   XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
-  XmlStr trafRulesStr(elem.getAttribute(XmlStr("trafficRules")));
   const AclIdent aclId(atoi(XmlStr(elem.getAttribute(XmlStr("aclId")))));
   XmlStr forceDelivery(elem.getAttribute(XmlStr("forceDelivery")));
   XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
   const signed long providerId = atol(XmlStr(elem.getAttribute(XmlStr("providerId"))));
-  XmlStr billingRuleId(elem.getAttribute(XmlStr("billingId")));
+  //XmlStr billingRuleId(elem.getAttribute(XmlStr("billingId")));
   const signed long categoryId = atol(XmlStr(elem.getAttribute(XmlStr("categoryId"))));
   XmlStr transit(elem.getAttribute(XmlStr("transit")));
 
@@ -230,11 +230,31 @@ throw (SubjectNotFoundException)
     routeid.erase(32);
   }
 
+  smsc::router::TrafficMode tm=smsc::router::tmNone;
+
+  if(strcmp("none", trafMode) == 0)
+  {
+    tm=smsc::router::tmNone;
+  }else if(strcmp("smsOnly", trafMode) == 0)
+  {
+    tm=smsc::router::tmSmsOnly;
+  }else if(strcmp("ussdOnly", trafMode) == 0)
+  {
+    tm=smsc::router::tmUssdOnly;
+  }else if(strcmp("all", trafMode) == 0)
+  {
+    tm=smsc::router::tmAll;
+  }else
+  {
+    __warning2__("Unrecognized trafficMode='%s' in route='%s'",trafMode.c_str(),routeid.c_str());
+  }
+
+
   std::auto_ptr<Route> r(new Route(routeid,
                                    priority,
                                    StrToBill(billing),
                                    strcmp("true", archiving) == 0,
-                                   strcmp("true", enabling) == 0,
+                                   tm,
                                    strcmp("true", suppressDeliveryReports) == 0,
                                    strcmp("true", active) == 0,
                                    strcmp("false", hide) != 0,
@@ -243,12 +263,11 @@ throw (SubjectNotFoundException)
                                    std::string(srcSmeSystemId),
                                    strToDeliveryMode(deliveryModeStr),
                                    std::string(forwardToStr),
-                                   std::string(trafRulesStr),
                                    aclId,
                                    strcmp("true", forceDelivery) == 0,
                                    strcmp("true", allowBlocked) == 0,
                                    providerId,
-                                   (const char * const)billingRuleId,
+                                   //(const char * const)billingRuleId,
                                    categoryId,
                                    strcmp("true",transit)==0)
                          );
@@ -382,6 +401,7 @@ RouteConfig::status RouteConfig::reload()
   return result;
 }
 
+/*
 RouteConfig::status RouteConfig::store(const char * const filename) const
 {
   try
@@ -406,9 +426,9 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
     {
       Route *r = *i;
       out << "  <route id=\""  << encode(r->getId())
-      << "\" billing=\""       << (r->isBilling() ? "true" : "false")
+      << "\" billing=\""       << (r->getBilling() ? "true" : "false")
       << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
-      << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")
+      //<< "\" enabling=\""      << (r->isEnabled() ? "true" : "false")
       << "\" priority=\""      << r->getPriority()
       << "\" serviceId=\""     << r->getServiceId()
       << "\" deliveryMode=\""  << deliveryModeToStr(r->getDeliveryMode())
@@ -417,7 +437,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" forceDelivery=\"" << (r->isForceDelivery() ? "true" : "false")
       << "\" replyPath=\""     << replyPathToStr(r->getReplyPath())
       << "\" allowBlocked=\""  << (r->isAllowBlocked() ? "true" : "false")
-      << "\" billingId=\""     << encode(r->getBillingRuleId().c_str())
+      //<< "\" billingId=\""     << encode(r->getBillingRuleId().c_str())
       << "\">" << std::endl;
 
       Source src;
@@ -448,6 +468,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
   }
   return success;
 }
+*/
 
 RouteConfig::RouteIterator RouteConfig::getRouteIterator() const
 {

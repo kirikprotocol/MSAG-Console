@@ -27,9 +27,11 @@
 #include "util.hpp"
 #include "state_machine.hpp"
 
+using smsc::snmp::SnmpCounter;
+using smsc::common::RescheduleCalculator;
+
 
 #ident "@(#)$Id$"
-
 
 
 namespace smsc{
@@ -40,20 +42,18 @@ using namespace smsc::sms;
 using namespace StateTypeValue;
 using namespace smsc::smpp;
 using namespace util;
-using namespace smsc::common;
 using namespace smsc::resourcemanager;
-using namespace smsc::profiler;
 using std::exception;
 using smsc::util::regexp::RegExp;
 using smsc::util::regexp::SMatch;
 using smsc::core::synchronization::Mutex;
 
+
 Hash<std::list<std::string> > StateMachine::directiveAliases;
 
 #ifdef SNMP
-void StateMachine::incSnmpCounterForError(int code,const char* sme)
+static void incSnmpCounterForError(int code,const char* sme)
 {
-  using namespace smsc::snmp;
   switch(code)
   {
     case 0x14:
@@ -221,8 +221,8 @@ StateMachine::StateMachine(EventQueue& q,
 
 {
   using namespace smsc::util::regexp;
-  smsLog = smsc::logger::Logger::getInstance("sms.trace");
-  perfLog = smsc::logger::Logger::getInstance("sms.perf");
+  smsLog=smsc::logger::Logger::getInstance("sms.trace");
+  perfLog=smsc::logger::Logger::getInstance("sm.perf");
   dreNoTrans.Compile(AltConcat("notrans",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreNoTrans.LastError()==regexp::errNone,RegExpCompilationException);
   dreAck.Compile(AltConcat("ack",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
@@ -381,24 +381,6 @@ void StateMachine::formatNotify(const FormatData& fd,std::string& out)
 }
 
 
-FixedLengthString<64> StateMachine::AddrPair(const char* s1,const Address& a1,const char* s2,const Address& a2)
-{
-  char buf[64];
-  char buf1[32];
-  char buf2[32];
-  if(a1==a2)
-  {
-    a1.toString(buf1,sizeof(buf1));
-    sprintf(buf,"%s=%s",s1,buf1);
-  }else
-  {
-    a1.toString(buf1,sizeof(buf1));
-    a2.toString(buf2,sizeof(buf2));
-    sprintf(buf,"%s=%s;%s=%s",s1,buf1,s2,buf2);
-  }
-  return buf;
-}
-
 
 int StateMachine::Execute()
 {
@@ -409,34 +391,48 @@ int StateMachine::Execute()
     eq.selectAndDequeue(t,&isStopping);
     if(isStopping)break;
     try{
+      const char* op="unknown";
+      hrtime_t opStart;
+      if(perfLog->isInfoEnabled())
+      {
+        opStart=gethrtime();
+      }
       switch(t.command->cmdid)
       {
-        case SUBMIT:st=submit(t);break;
-        case INSMSCHARGERESPONSE:st=submitChargeResp(t);break;
-        case DELIVERY_RESP:st=deliveryResp(t);break;
-        case FORWARD:st=forward(t);break;
-        case INFWDSMSCHARGERESPONSE:st=forwardChargeResp(t);break;
-        case ALERT:st=alert(t);break;
-        case REPLACE:st=replace(t);break;
-        case QUERY:st=query(t);break;
-        case CANCEL:st=cancel(t);break;
+        case SUBMIT:st=submit(t);op="submit";break;
+        case INSMSCHARGERESPONSE:st=submitChargeResp(t);op="insmschargeresp";break;
+        case DELIVERY_RESP:st=deliveryResp(t);op="deliveryresp";break;
+        case FORWARD:st=forward(t);op="forward";break;
+        case INFWDSMSCHARGERESPONSE:st=forwardChargeResp(t);op="infwdchargereso";break;
+        case ALERT:st=alert(t);op="alert";break;
+        case REPLACE:st=replace(t);op="replace";break;
+        case QUERY:st=query(t);op="query";break;
+        case CANCEL:st=cancel(t);op="cancel";break;
         default:
-          __warning2__("UNKNOWN COMMAND:%d",t.command->cmdid);
+          smsc_log_warn(smsLog,"UNKNOWN COMMAND:%d",t.command->cmdid);
           st=ERROR_STATE;
           break;
       }
-      __trace2__("change state for %lld to %d",t.msgId,st);
+      if(perfLog->isInfoEnabled())
+      {
+        opStart=(gethrtime()-opStart)/1000000;
+        if(opStart>50)
+        {
+          smsc_log_info(perfLog,"command %s processing takes %lldms",op,opStart);
+        }
+      }
+      smsc_log_debug(smsLog,"change state for Id=%lld to %d",t.msgId,st);
       eq.changeState(t.msgId,st);
     }catch(exception& e)
     {
-      __warning2__("StateMachine::exception %s",e.what());
+      smsc_log_warn(smsLog,"StateMachine::exception %s",e.what());
     }
     catch(...)
     {
-      __warning__("StateMachine::unknown exception");
+      smsc_log_warn(smsLog,"StateMachine::unknown exception");
     }
   }
-  __trace__("exit state machine");
+  smsc_log_info(smsLog,"exit state machine");
   return 0;
 }
 
@@ -629,7 +625,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         sms.setIntProperty(Tag::SMSC_HIDE,0);
       else
       {
-        __trace__("DIRECT: error, hide is not modifiable");
+        smsc_log_info(smsLog,"DIRECT: error, hide is not modifiable");
       }
       lastDirectiveSymbol=m[0].end;
       i=m[0].end;
@@ -659,7 +655,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       if(t>999)t=999;
       t*=60;
       t+=mnts;
-      __trace2__("DIRECT: %*s, t=%d",m[0].end-m[0].start,buf+m[0].start,t);
+      smsc_log_debug(smsLog,"DIRECT: %*s, t=%d",m[0].end-m[0].start,buf+m[0].start,t);
       sms.setNextTime(time(NULL)+t*60);
       lastDirectiveSymbol=m[0].end;
       i=m[0].end;
@@ -723,7 +719,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       }
       if(j!=len)
       {
-        __warning2__("tail of template '%s' arguments wasn't parsed:'%s'",tmplname.c_str(),buf+j);
+        smsc_log_warn(smsLog,"tail of template '%s' arguments wasn't parsed:'%s'",tmplname.c_str(),buf+j);
       }
       lastDirectiveSymbol=j;
       tmplstart=i;
@@ -766,7 +762,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     OutputFormatter *f=ResourceManager::getInstance()->getFormatter(p.locale,tmplname);
     if(!f)
     {
-      __warning2__("template %s not found for locale %s",tmplname.c_str(),p.locale.c_str());
+      smsc_log_warn(smsLog,"template %s not found for locale %s",tmplname.c_str(),p.locale.c_str());
       newtext.assign(buf+tmplstart,tmpllen);
     }else
     {
@@ -774,7 +770,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         f->format(newtext,ga,ce);
       }catch(exception& e)
       {
-        __warning2__("failed to format template %s for locale %s: %s",tmplname.c_str(),p.locale.c_str(),e.what());
+        smsc_log_warn(smsLog,"failed to format template %s for locale %s: %s",tmplname.c_str(),p.locale.c_str(),e.what());
         newtext.assign(buf+tmplstart,tmpllen);
       }
     }
@@ -828,7 +824,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     if(hb || dc==DataCoding::UCS2)
     {
       auto_ptr<short> nt(new short[newtext.length()+1]);
-      __trace2__("DIRECT: newtext=%s, newtext.length=%d, nt.get()=%p",newtext.c_str(),newtext.length(),nt.get());
+      smsc_log_debug(smsLog,"DIRECT: newtext=%s, newtext.length=%d, nt.get()=%p",newtext.c_str(),newtext.length(),nt.get());
       ConvertMultibyteToUCS2
       (
         newtext.c_str(),
@@ -875,6 +871,22 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     }
   }
 }
+
+static time_t parseReceiptTime(const std::string& txt,SMatch* m,int idx)
+{
+  int YY,MM,DD,hh,mm;
+  sscanf(txt.c_str()+m[idx].start,"%02d%02d%02d%02d%02d",&YY,&MM,&DD,&hh,&mm);
+  YY+=2000;
+  tm t={0,};
+  t.tm_year=YY-1900;
+  t.tm_mon=MM-1;
+  t.tm_mday=DD;
+  t.tm_hour=hh;
+  t.tm_min=mm;
+  return mktime(&t);
+}
+
+
 
 
 StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
@@ -925,6 +937,39 @@ StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
   t2.msgId=t.msgId;
   t2.state=t.state;
   return forward(t2);
+}
+
+
+void StateMachine::fullReport(SMSId msgId,SMS& sms)
+{
+  if(sms.billingRecord==BILLING_FINALREP)
+  {
+    smsc->FullReportDelivery(msgId,sms);
+  }else if(sms.billingRequired() && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+  {
+    int reportsToSend=1;
+    if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+    {
+      ConcatInfo* ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
+      if(sms.getConcatSeqNum()>=sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM))
+      {
+        reportsToSend=0;
+      }else
+      if(sms.getConcatSeqNum()==ci->num-1)
+      {
+        if(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM)>ci->num)
+        {
+          reportsToSend=sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM)-ci->num+1;
+        }
+      }
+      smsc_log_debug(smsLog,"sending fullreport for msgId=%lld, concatSeq=%d, ci->num=%d, orgparts=%d, repstosend=%d",
+          msgId,sms.getConcatSeqNum(),(int)ci->num,sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM),reportsToSend);
+    }
+    for(int i=0;i<reportsToSend;i++)
+    {
+      smsc->FullReportDelivery(msgId,sms);
+    }
+  }
 }
 
 
@@ -1009,8 +1054,7 @@ StateType StateMachine::alert(Tuple& t)
                              Status::DELIVERYTIMEDOUT,
                              sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                            );
-      resp->dstNodeIdx=t.command->dstNodeIdx;
-      resp->sourceId=t.command->sourceId;
+
       SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
       if(src_proxy)
       {
@@ -1391,6 +1435,7 @@ StateType StateMachine::cancel(Tuple& t)
   return t.state;
 }
 
+
 void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason)
 {
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
@@ -1495,7 +1540,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   try{
     if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
        sms.getDeliveryReport()==REPORT_NOACK ||
-       sms.getDeliveryReport()==ProfileReportOptions::ReportFinal ||
+       sms.getDeliveryReport()==smsc::profiler::ProfileReportOptions::ReportFinal ||
        sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
     bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0x10 ||
                 sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
@@ -1653,13 +1698,11 @@ void StateMachine::submitReceipt(SMS& sms,int type)
   }
 
   try{
-    int dest_proxy_index;
-    SmeProxy *dest_proxy;
-    smsc::router::RouteInfo ri;
+    smsc::router::RoutingResult rr;
     bool has_route=false;
     sms.setSourceSmeId(smscSmeId.c_str());
     try{
-      has_route=smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri,smsc->getSmeIndex(smscSmeId));
+      has_route=smsc->routeSms(smsc->getSmeIndex(smscSmeId),sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),rr);
     }catch(std::exception& e)
     {
       warn2(smsLog,"Routing %s->%s failed:%s",sms.getOriginatingAddress().toString().c_str(),
@@ -1670,15 +1713,15 @@ void StateMachine::submitReceipt(SMS& sms,int type)
 
     if(has_route)
     {
-      sms.setRouteId(ri.routeId.c_str());
-      int prio=sms.getPriority()+ri.priority;
+      sms.setRouteId(rr.info.routeId.c_str());
+      int prio=sms.getPriority()+rr.info.priority;
       if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
       sms.setPriority(prio);
 
-      sms.setDestinationSmeId(ri.smeSystemId.c_str());
-      sms.setServiceId(ri.serviceId);
-      sms.setArchivationRequested(ri.archived);
-      sms.setBillingRecord(ri.billing);
+      sms.setDestinationSmeId(rr.info.destSmeSystemId.c_str());
+      sms.setServiceId(rr.info.serviceId);
+      sms.setArchivationRequested(rr.info.archived);
+      sms.setBillingRecord(rr.info.billing);
 
       sms.setEServiceType(serviceType.c_str());
       sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
@@ -1687,7 +1730,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
       sms.setIntProperty(Tag::SMSC_UDH_CONCAT,profile.udhconcat);
 
-      if(ri.smeSystemId!="MAP_PROXY")
+      if(rr.info.destSmeSystemId!="MAP_PROXY")
       {
         sms.setIntProperty(Tag::SMPP_ESM_CLASS,
           (
@@ -1696,7 +1739,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
       }
 
       int pres=psSingle;
-      if(ri.smeSystemId=="MAP_PROXY")
+      if(rr.info.destSmeSystemId=="MAP_PROXY")
       {
         pres=partitionSms(&sms);
       }
@@ -1739,8 +1782,6 @@ void StateMachine::submitResp(Tuple& t,SMS* sms,int status)
                          status,
                          sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                        );
-  resp->dstNodeIdx=t.command->dstNodeIdx;
-  resp->sourceId=t.command->sourceId;
   if(sms->hasIntProperty(Tag::SMPP_SET_DPF))
   {
     resp->get_resp()->haveDpf=true;
@@ -1801,8 +1842,7 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 #ifdef SMSEXTRA
 bool StateMachine::ExtraProcessing(SbmContext& c)
 {
-  using namespace smsc::extra;
-  bool toSmsx=c.dest_proxy && !strcmp(c.dest_proxy->getSystemId(),"smsx");
+  bool toSmsx=c.rr.destProxy && !strcmp(c.rr.destProxy->getSystemId(),"smsx");
   bool isMultipart=c.sms->hasBinProperty(Tag::SMSC_CONCATINFO) || c.sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT);
 
   if((((c.fromMap || c.fromDistrList) && c.toMap) || (c.fromMap && toSmsx))&& !isMultipart)
@@ -1880,9 +1920,7 @@ bool StateMachine::ExtraProcessing(SbmContext& c)
       c.createSms=scsDoNotCreate;
       c.noPartitionSms=true;
       try{
-        c.has_route=smsc->routeSms(c.sms->getOriginatingAddress(),
-                                c.dst,
-                                c.dest_proxy_index,c.dest_proxy,&c.ri,c.src_proxy->getSmeIndex());
+        c.has_route=smsc->routeSms(c.src_proxy->getSmeIndex(),c.sms->getOriginatingAddress(),c.dst,c.rr);
       }catch(std::exception& e)
       {
         warn2(smsLog,"Routing %s->%s failed:%s",c.sms->getOriginatingAddress().toString().c_str(),
@@ -1998,8 +2036,6 @@ bool StateMachine::processMerge(SbmContext& c)
                            Status::OK,
                            c.sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
-    resp->dstNodeIdx=c.t.command->dstNodeIdx;
-    resp->sourceId=c.t.command->sourceId;
     try{
       c.src_proxy->putCommand(resp);
     }catch(...)
@@ -2009,7 +2045,7 @@ bool StateMachine::processMerge(SbmContext& c)
         c.sms->getOriginatingAddress().toString().c_str(),
         c.sms->getDestinationAddress().toString().c_str(),
         c.src_proxy->getSystemId(),
-        c.ri.smeSystemId.c_str()
+        c.rr.info.destSmeSystemId.c_str()
       );
     }
     c.needToSendResp=false;
@@ -2070,8 +2106,6 @@ bool StateMachine::processMerge(SbmContext& c)
                                  Status::OK,
                                  c.sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                                );
-          resp->dstNodeIdx=c.t.command->dstNodeIdx;
-          resp->sourceId=c.t.command->sourceId;
           try{
             c.t.command.getProxy()->putCommand(resp);
           }catch(...)
@@ -2243,7 +2277,7 @@ bool StateMachine::processMerge(SbmContext& c)
           return false;
         }
         /*
-        if(c.ri.smeSystemId=="MAP_PROXY")
+        if(c.rr.info.destSmeSystemId=="MAP_PROXY")
         {
           if(!newsms.hasIntProperty(Tag::SMSC_DSTCODEPAGE))
           {
@@ -2302,8 +2336,6 @@ bool StateMachine::processMerge(SbmContext& c)
                              Status::OK,
                              c.sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                            );
-      resp->dstNodeIdx=c.t.command->dstNodeIdx;
-      resp->sourceId=c.t.command->sourceId;
       try{
         c.src_proxy->putCommand(resp);
       }catch(...)
@@ -2313,7 +2345,7 @@ bool StateMachine::processMerge(SbmContext& c)
           c.sms->getOriginatingAddress().toString().c_str(),
           AddrPair("da",c.sms->getDestinationAddress(),"dda",c.dst).c_str(),
           c.src_proxy->getSystemId(),
-          c.ri.smeSystemId.c_str()
+          c.rr.info.destSmeSystemId.c_str()
         );
       }
       c.rvstate=ENROUTE_STATE;
@@ -2351,7 +2383,6 @@ void StateMachine::onSubmitOk(SMSId id,SMS& sms)
     smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms,true);
   }
 #ifdef SNMP
-  using namespace smsc::snmp;
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms.getSourceSmeId());
 #endif
 }
@@ -2360,7 +2391,6 @@ void StateMachine::onSubmitFail(SMSId id,SMS& sms)
 {
   smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
 #ifdef SNMP
-  using namespace smsc::snmp;
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms.getSourceSmeId());
 #endif
 }
@@ -2369,7 +2399,6 @@ void StateMachine::onForwardOk(SMSId id,SMS& sms)
 {
   smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
 #ifdef SNMP
-  using namespace smsc::snmp;
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntRetried,sms.getDestinationSmeId());
 #endif
 }
@@ -2377,6 +2406,7 @@ void StateMachine::onForwardOk(SMSId id,SMS& sms)
 void StateMachine::onDeliveryOk(SMSId id,SMS& sms)
 {
   bool msuOnly=false;
+  bool ignoreEvent=false;
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     ConcatInfo* ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
@@ -2384,10 +2414,19 @@ void StateMachine::onDeliveryOk(SMSId id,SMS& sms)
     {
       msuOnly=true;
     }
+    if(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM)==1 &&
+      strcmp(sms.getSourceSmeId(),"MAP_PROXY")!=0 &&
+      strcmp(sms.getDestinationSmeId(),"MAP_PROXY")==0 &&
+      msuOnly)
+    {
+      ignoreEvent=true;
+    }
   }
-  smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms,msuOnly);
+  if(!ignoreEvent)
+  {
+    smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms,msuOnly);
+  }
 #ifdef SNMP
-  using namespace smsc::snmp;
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntDelivered,sms.getDestinationSmeId());
 #endif
 }
@@ -2398,7 +2437,6 @@ void StateMachine::onDeliveryFail(SMSId id,SMS& sms)
 #ifdef SNMP
   if(Status::isErrorPermanent(sms.getLastResult()))
   {
-    using namespace smsc::snmp;
     SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
   }else
   {
@@ -2411,11 +2449,9 @@ void StateMachine::onUndeliverable(SMSId id,SMS& sms)
 {
   smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
 #ifdef SNMP
-  using namespace smsc::snmp;
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
 #endif
 }
-
 
 }//system
 }//smsc

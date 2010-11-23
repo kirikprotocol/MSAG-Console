@@ -32,6 +32,11 @@ public:
   }
  
 
+  static std::string messageGetName()
+  {
+    return "SmscConfigsState";
+  }
+
   std::string toString()const
   {
     std::string rv;
@@ -55,7 +60,7 @@ public:
       rv+="updateTime=";
       rv+="[";
       bool first=true;
-      for(std::vector<int64_t>::const_iterator it=updateTime.begin(),end=updateTime.end();it!=end;it++)
+      for(std::vector<int64_t>::const_iterator it=updateTime.begin(),end=updateTime.end();it!=end;++it)
       {
         if(first)
         {
@@ -150,13 +155,13 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(nodeIdexTag);
-    ds.writeByteLV(nodeIdex);
+    ds.writeByteLV(nodeIdex); 
     ds.writeTag(updateTimeTag);
     ds.writeLength(DataStream::fieldSize(updateTime));
-    for(std::vector<int64_t>::const_iterator it=updateTime.begin(),end=updateTime.end();it!=end;it++)
+    for(std::vector<int64_t>::const_iterator it=updateTime.begin(),end=updateTime.end();it!=end;++it)
     {
       ds.writeInt64(*it);
-    }
+          }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -174,7 +179,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case nodeIdexTag:

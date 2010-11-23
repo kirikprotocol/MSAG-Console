@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
-#include "ProfileCharset.hpp"
 #include "ReportOptions.hpp"
 #include "HideOptions.hpp"
 
@@ -51,6 +50,11 @@ public:
   }
  
 
+  static std::string messageGetName()
+  {
+    return "Profile";
+  }
+
   std::string toString()const
   {
     std::string rv;
@@ -80,7 +84,8 @@ public:
         rv+=";";
       }
       rv+="codepage=";
-      rv+=ProfileCharset::getNameByValue(codepage);
+      sprintf(buf,"%d",(int)codepage);
+      rv+=buf;
     }
     if(reportOptionsFlag)
     {
@@ -269,13 +274,15 @@ public:
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(reportOptions);
+      rv+=DataStream::fieldSize(reportOptions.getValue());
+ 
     }
     if(hideFlag)
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(hide);
+      rv+=DataStream::fieldSize(hide.getValue());
+ 
     }
     if(hideModifiableFlag)
     {
@@ -414,7 +421,7 @@ public:
   {
     return localeFlag;
   }
-  const ProfileCharset::type& getCodepage()const
+  int8_t getCodepage()const
   {
     if(!codepageFlag)
     {
@@ -422,16 +429,12 @@ public:
     }
     return codepage;
   }
-  void setCodepage(const ProfileCharset::type& argValue)
+  void setCodepage(int8_t argValue)
   {
-    if(!ProfileCharset::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("ProfileCharset",argValue);
-    }
     codepage=argValue;
     codepageFlag=true;
   }
-  ProfileCharset::type& getCodepageRef()
+  int8_t& getCodepageRef()
   {
     codepageFlag=true;
     return codepage;
@@ -440,7 +443,7 @@ public:
   {
     return codepageFlag;
   }
-  const ReportOptions::type& getReportOptions()const
+  const ReportOptions& getReportOptions()const
   {
     if(!reportOptionsFlag)
     {
@@ -448,16 +451,12 @@ public:
     }
     return reportOptions;
   }
-  void setReportOptions(const ReportOptions::type& argValue)
+  void setReportOptions(const ReportOptions& argValue)
   {
-    if(!ReportOptions::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("ReportOptions",argValue);
-    }
     reportOptions=argValue;
     reportOptionsFlag=true;
   }
-  ReportOptions::type& getReportOptionsRef()
+  ReportOptions& getReportOptionsRef()
   {
     reportOptionsFlag=true;
     return reportOptions;
@@ -466,7 +465,7 @@ public:
   {
     return reportOptionsFlag;
   }
-  const HideOptions::type& getHide()const
+  const HideOptions& getHide()const
   {
     if(!hideFlag)
     {
@@ -474,16 +473,12 @@ public:
     }
     return hide;
   }
-  void setHide(const HideOptions::type& argValue)
+  void setHide(const HideOptions& argValue)
   {
-    if(!HideOptions::isValidValue(argValue))
-    {
-      throw eyeline::protogen::framework::InvalidEnumValue("HideOptions",argValue);
-    }
     hide=argValue;
     hideFlag=true;
   }
-  HideOptions::type& getHideRef()
+  HideOptions& getHideRef()
   {
     hideFlag=true;
     return hide;
@@ -897,56 +892,55 @@ public:
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(divertTag);
-    ds.writeStrLV(divert);
+    ds.writeStrLV(divert); 
     ds.writeTag(localeTag);
-    ds.writeStrLV(locale);
+    ds.writeStrLV(locale); 
     ds.writeTag(codepageTag);
-    ds.writeByteLV(codepage);
- 
+    ds.writeByteLV(codepage); 
     ds.writeTag(reportOptionsTag);
-    ds.writeByteLV(reportOptions);
+    ds.writeByteLV(reportOptions.getValue());
  
     ds.writeTag(hideTag);
-    ds.writeByteLV(hide);
+    ds.writeByteLV(hide.getValue());
  
     ds.writeTag(hideModifiableTag);
-    ds.writeBoolLV(hideModifiable);
+    ds.writeBoolLV(hideModifiable); 
     ds.writeTag(divertActiveTag);
-    ds.writeBoolLV(divertActive);
+    ds.writeBoolLV(divertActive); 
     ds.writeTag(divertActiveAbsentTag);
-    ds.writeBoolLV(divertActiveAbsent);
+    ds.writeBoolLV(divertActiveAbsent); 
     ds.writeTag(divertActiveBlockedTag);
-    ds.writeBoolLV(divertActiveBlocked);
+    ds.writeBoolLV(divertActiveBlocked); 
     ds.writeTag(divertActiveBarredTag);
-    ds.writeBoolLV(divertActiveBarred);
+    ds.writeBoolLV(divertActiveBarred); 
     ds.writeTag(divertActiveCapacityTag);
-    ds.writeBoolLV(divertActiveCapacity);
+    ds.writeBoolLV(divertActiveCapacity); 
     ds.writeTag(divertModifiableTag);
-    ds.writeBoolLV(divertModifiable);
+    ds.writeBoolLV(divertModifiable); 
     ds.writeTag(udhConcatTag);
-    ds.writeBoolLV(udhConcat);
+    ds.writeBoolLV(udhConcat); 
     ds.writeTag(translitTag);
-    ds.writeBoolLV(translit);
+    ds.writeBoolLV(translit); 
     ds.writeTag(closedGroupIdTag);
-    ds.writeInt32LV(closedGroupId);
+    ds.writeInt32LV(closedGroupId); 
     ds.writeTag(accessMaskInTag);
-    ds.writeInt32LV(accessMaskIn);
+    ds.writeInt32LV(accessMaskIn); 
     ds.writeTag(accessMaskOutTag);
-    ds.writeInt32LV(accessMaskOut);
+    ds.writeInt32LV(accessMaskOut); 
     if(subscriptionFlag)
     {
       ds.writeTag(subscriptionTag);
-    ds.writeInt32LV(subscription);
+    ds.writeInt32LV(subscription); 
     }
     if(sponsoredFlag)
     {
       ds.writeTag(sponsoredTag);
-    ds.writeByteLV(sponsored);
+    ds.writeByteLV(sponsored); 
     }
     if(nickFlag)
     {
       ds.writeTag(nickTag);
-    ds.writeStrLV(nick);
+    ds.writeStrLV(nick); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -965,7 +959,7 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      DataStream::TagType tag=ds.readTag();
+      typename DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case divertTag:
@@ -1261,9 +1255,9 @@ protected:
 
   std::string divert;
   std::string locale;
-  ProfileCharset::type codepage;
-  ReportOptions::type reportOptions;
-  HideOptions::type hide;
+  int8_t codepage;
+  ReportOptions reportOptions;
+  HideOptions hide;
   bool hideModifiable;
   bool divertActive;
   bool divertActiveAbsent;

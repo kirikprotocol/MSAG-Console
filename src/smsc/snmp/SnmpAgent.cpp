@@ -1,4 +1,3 @@
-static char const ident[] = "$Id$";
 #include <signal.h>
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
@@ -10,7 +9,9 @@ static char const ident[] = "$Id$";
 #include "smsc/smscsignalhandlers.h"
 #include "smsc/smsc.hpp"
 #include "smsc/version.h"
+#ifdef USE_MAP
 #include "smsc/mapio/MapIoTask.h"
+#endif
 #include "util/config/Manager.h"
 
 #include "smestattable/SmeStatTableSubAgent.hpp"
@@ -18,6 +19,8 @@ static char const ident[] = "$Id$";
 #include "SnmpAgent.hpp"
 #include "SnmpAppender.hpp"
 #include "TrapRecordLog.hpp"
+
+static char const ident[] = "$Id$";
 
   extern "C" {
     void init_smsc(void);
@@ -567,8 +570,10 @@ using smsc::snmp::SnmpAgent;
     uint64_t perf[smsc::performanceCounters];
     ((smsc::Smsc*)smscptr)->getPerfData(perf);
 
-    int mapDlgStat[6];
+    int mapDlgStat[6]={0,};
+#ifdef USE_MAP
     MapDialogContainer::getInstance()->getDlgStats(mapDlgStat);
+#endif
 
     const int perfBase=6;
 
