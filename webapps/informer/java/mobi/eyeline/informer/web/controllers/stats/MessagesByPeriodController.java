@@ -23,6 +23,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public MessagesByPeriodController() {
     super(new MessagesByPeriodTotals());
+    
   }
 
   public Integer getDeliveryId() {
