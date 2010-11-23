@@ -66,7 +66,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
                 if (start < end) {
                     res.push_back( std::string(awd, start, end-start+1) );
                 }
-                start = comma + 1;
+                start = comma;
             }
             data.activeWeekDays = res;
         }

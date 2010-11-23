@@ -17,27 +17,25 @@ static const timediff_type daynight = 24*3600;
 
 int parseWeekDays( const std::vector< std::string >& wd )
 {
-    static const char* fulldays[7] = {
-        "Monday", "Tuesday", "Wednesday", "Thursday",
-        "Friday", "Saturday", "Sunday"
-    };
-    static const char* shortdays[7] = {
-        "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+    static const char* days[] = {
+        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+        "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+        "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",
+        "mon", "tue", "wed", "thu", "fri", "sat", "sun",
+        0
     };
 
     int res = 0;
     for ( std::vector< std::string >::const_iterator i = wd.begin();
           i != wd.end(); ++i ) {
         bool ok = false;
-        int x = 1;
-        for ( int j = 0; j < 7; ++j ) {
-            if ( 0 == strcmp(fulldays[j],i->c_str()) ||
-                 0 == strcmp(shortdays[j],i->c_str()) ) {
+        for ( const char** p = days; *p != 0; ++p ) {
+            if ( 0 == strcmp(*p,i->c_str()) ) {
+                const unsigned idx = (p - days) % 7;
                 ok = true;
-                res |= x;
+                res |= weekBits[idx];
                 break;
             }
-            x *= 2;
         }
         if (!ok) {
             throw InfosmeException(EXC_IOERROR,"wrong weekday '%s'",i->c_str());
