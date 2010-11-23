@@ -164,7 +164,7 @@ class ICSMultiSectionCfgReaderAC : public ICSrvCfgReaderAC {
 protected:
     struct CfgParsingResult {
       ICSrvCfgReaderAC::CfgState  cfgState;
-      void *                      opaqueRes; //some public result of section parsing
+      const void *                opaqueRes; //some public result of section parsing
 
       explicit CfgParsingResult(ICSrvCfgReaderAC::CfgState parsing_state = cfgNone)
         : cfgState(parsing_state), opaqueRes(0)
@@ -233,6 +233,8 @@ public:
     virtual ~ICSrvCfgReaderAC_T()
     { }
 
+    const _CfgTArg * getConfig(void) const { return icsCfg.get(); }
+
     virtual _CfgTArg * rlseConfig(void) { return icsCfg.release(); }
 };
 
@@ -248,6 +250,8 @@ public:
     { }
     virtual ~ICSMultiSectionCfgReaderAC_T()
     { }
+
+    const _CfgTArg * getConfig(void) const { return icsCfg.get(); }
 
     virtual _CfgTArg * rlseConfig(void) { return icsCfg.release(); }
 };
