@@ -34,16 +34,23 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     return d == null ? null : d.getName();
   }
 
+
+
   public Delivery getDelivery() {
     String s = getRequestParameter("delivery");
     if (s != null) {
       try {
         int deliveryId = Integer.parseInt(s);
-        if (delivery != null && delivery.getId() != deliveryId) {
-          reset();
-        }
+        boolean firstTime= (delivery == null || delivery.getId() != deliveryId);
         delivery = getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), deliveryId);
+        getFilter().setFromDate(delivery.getStartDate());
         getFilter().setTaskId(deliveryId);
+        if(firstTime) {
+          reset();
+          getFilter().setFromDate(delivery.getStartDate());
+          getFilter().setTaskId(deliveryId);
+          start();
+        }
       }
       catch (AdminException e) {
         addError(e);
