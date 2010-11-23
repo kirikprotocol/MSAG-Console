@@ -35,8 +35,7 @@ void InBillingFileStorage::bill(const CDRRecord & cdr)
 {
     std::string rec;
     CDRRecord::csvEncode(cdr, rec);
-    //smsc_log_debug( logger, "BFS: Writing rec sz=%d data: %s", rec.size(), rec.c_str());
-    smsc_log_debug(logger, "BFS: Writing CDR: msgId = %llu, rec sz = %d", cdr._msgId,  rec.size());
+    smsc_log_debug(logger, "BFS: Writing TDR: msgId = %llu, rec sz = %d", cdr._msgId,  rec.size());
     RFSWrite(rec.c_str(), rec.size());
     RFSFlush();
 }
