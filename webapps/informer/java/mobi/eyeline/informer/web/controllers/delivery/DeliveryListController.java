@@ -7,7 +7,6 @@ import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
 
-import javax.faces.model.SelectItem;
 import java.util.*;
 
 /**
@@ -72,6 +71,10 @@ public class DeliveryListController extends DeliveryController {
     startDateTo = new Date();
   }
 
+  public void query() {
+    init = true;
+  }
+
   public Date getStartDateFrom() {
     return startDateFrom;
   }
@@ -88,26 +91,12 @@ public class DeliveryListController extends DeliveryController {
     this.startDateTo = startDateTo;
   }
 
-  public void query() {
-    init = true;
-  }
-
   public boolean isInit() {
     return init;
   }
 
   public void setInit(boolean init) {
     this.init = init;
-  }
-
-  public List<SelectItem> getUniqueStatuses() {
-    ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
-    List<SelectItem> result = new ArrayList<SelectItem>();
-    result.add(new SelectItem(null));
-    for (DeliveryStatus s : DeliveryStatus.values()) {
-      result.add(new SelectItem(s.toString(), bundle.getString("delivery.status." + s)));
-    }
-    return result;
   }
 
 

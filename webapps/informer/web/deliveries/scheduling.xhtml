@@ -14,6 +14,24 @@
     <tr:form>
 
 
+      <eye:dataTableFilter bean="#{deliveriesWeekly}" clearAction="clearFilter" applyAction="query">
+        <h:panelGrid columns="4" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, columnTopLeftAlign">
+
+          <h:outputText value="#{deliveryBundle.owner}" rendered="#{deliveries.userInAdminRole}"/>
+          <h:selectOneMenu value="#{deliveriesWeekly.user}" rendered="#{deliveries.userInAdminRole}">
+            <f:selectItems value="#{deliveriesWeekly.uniqueUsers}"/>
+          </h:selectOneMenu>
+
+          <h:outputText value="#{msg['delivery.status']}"/>
+          <h:selectOneMenu value="#{deliveriesWeekly.status}">
+            <f:selectItems value="#{deliveriesWeekly.uniqueStatuses}"/>
+          </h:selectOneMenu>
+
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <eye:delimiter/>
+
       <eye:pageCalendar var="list" value="#{deliveriesWeekly.calendarModel}">
         <h:panelGroup>
           <h:outputText value="&#160;"/>
@@ -26,7 +44,7 @@
           </tr:iterator>
         </h:panelGroup>
       </eye:pageCalendar>
-        
+
 
     </tr:form>
   </ui:define>

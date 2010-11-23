@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -10,6 +11,7 @@ import javax.faces.model.SelectItem;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 /**
  * @author Aleksandr Khalitov
@@ -37,6 +39,25 @@ public class DeliveryController extends InformerController {
 
   public String getDeliveryComeBackParam() {
     return DELIVERY_COMEBACK_PARAM;
+  }
+
+  public List<SelectItem> getUniqueStatuses() {
+    ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
+    List<SelectItem> result = new ArrayList<SelectItem>();
+    result.add(new SelectItem(null));
+    for (DeliveryStatus s : DeliveryStatus.values()) {
+      result.add(new SelectItem(s.toString(), bundle.getString("delivery.status." + s)));
+    }
+    return result;
+  }
+
+  public List<SelectItem> getUniqueUsers() {
+    List<SelectItem> ss = new LinkedList<SelectItem>();
+    ss.add(new SelectItem("",""));
+    for(User u : config.getUsers()) {
+      ss.add(new SelectItem(u.getLogin(), u.getLogin()));
+    }
+    return ss;
   }
 
   public List<SelectItem> getAllDays() {

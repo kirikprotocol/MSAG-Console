@@ -1,10 +1,7 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DeliveryFields;
-import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryInfo;
-import mobi.eyeline.informer.admin.delivery.Visitor;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.page_calendar.PageCalendarModel;
 
@@ -16,27 +13,59 @@ import java.util.*;
  */
 public class DeliveryWeeklyController extends DeliveryController {
 
-  private final User u;
+  private final User logined;
+
+  private String user;
+
+  private String status;
 
   public DeliveryWeeklyController() {
     super();
-    this.u = config.getUser(getUserName());
+    this.logined = config.getUser(getUserName());
   }
+
+  public void clearFilter() {
+    user = null;
+    status = null;
+  }
+
+  public void query() {}
 
   private void getDeliveries(Date start, Date end, final Collection<DeliveryInfo> result) throws AdminException {
     DeliveryFilter filter = new DeliveryFilter();
     if (!isUserInAdminRole()) {
-      filter.setUserIdFilter(u.getLogin());
+      filter.setUserIdFilter(logined.getLogin());
+    }else if(user != null && user.length() > 0) {
+      filter.setUserIdFilter(user);      
+    }
+    if(status != null && status.length()>0) {
+      filter.setStatusFilter(DeliveryStatus.valueOf(status));
     }
     filter.setResultFields(DeliveryFields.Name, DeliveryFields.StartDate);
     filter.setStartDateFrom(start);
     filter.setStartDateTo(end);
-    config.getDeliveries(u.getLogin(), u.getPassword(), filter, 1000, new Visitor<DeliveryInfo>() {
+    config.getDeliveries(logined.getLogin(), logined.getPassword(), filter, 1000, new Visitor<DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
         result.add(value);
         return true;
       }
     });
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public String getUser() {
+    return user;
+  }
+
+  public void setUser(String user) {
+    this.user = user;
   }
 
 

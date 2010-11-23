@@ -87,6 +87,16 @@ public class JournalController extends InformerController {
     }
   }
 
+
+  public List<SelectItem> getUniqueUsers() {
+    List<SelectItem> ss = new LinkedList<SelectItem>();
+    ss.add(new SelectItem("",""));
+    for(User u : getConfig().getUsers()) {
+      ss.add(new SelectItem(u.getLogin(), u.getLogin()));
+    }
+    return ss;
+  }
+
   public List<SelectItem> getUniqueSubjectNamesFromJournal() {
     List<SelectItem> result = new ArrayList<SelectItem>();
     result.add(new SelectItem(null));

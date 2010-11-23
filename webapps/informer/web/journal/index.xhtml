@@ -17,8 +17,13 @@
 
       <eye:dataTableFilter bean="#{journal}" clearAction="clearFilter" applyAction="query">
         <h:panelGrid columns="4" columnClasses="column50WidthNoWrap, column400Width, column50WidthNoWrap, columnTopLeftAlign">
+
+
           <h:outputText value="#{msg['journal.page.user']}"/>
-          <h:inputText value="#{journal.filterByUser}"/>
+          <h:selectOneMenu value="#{journal.filterByUser}">
+            <f:selectItems value="#{journal.uniqueUsers}"/>
+          </h:selectOneMenu>
+
           <h:outputText value="#{msg['journal.page.subject']}"/>
           <h:selectOneMenu value="#{journal.filterBySubject}" >
             <f:selectItems value="#{journal.uniqueSubjectNamesFromJournal}"/>
