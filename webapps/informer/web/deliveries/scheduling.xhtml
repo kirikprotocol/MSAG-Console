@@ -17,8 +17,8 @@
       <eye:dataTableFilter bean="#{deliveriesWeekly}" clearAction="clearFilter" applyAction="query">
         <h:panelGrid columns="4" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, columnTopLeftAlign">
 
-          <h:outputText value="#{deliveryBundle.owner}" rendered="#{deliveries.userInAdminRole}"/>
-          <h:selectOneMenu value="#{deliveriesWeekly.user}" rendered="#{deliveries.userInAdminRole}">
+          <h:outputText value="#{deliveryBundle.owner}" rendered="#{deliveriesWeekly.userInAdminRole}"/>
+          <h:selectOneMenu value="#{deliveriesWeekly.user}" rendered="#{deliveriesWeekly.userInAdminRole}">
             <f:selectItems value="#{deliveriesWeekly.uniqueUsers}"/>
           </h:selectOneMenu>
 

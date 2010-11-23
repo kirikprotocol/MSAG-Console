@@ -16,30 +16,32 @@
       <h:inputHidden value="#{deliveries.init}"/>
 
 
-        <eye:dataTableFilter bean="#{deliveries}" clearAction="clearFilter" applyAction="query">
-          <h:panelGrid columns="6" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, columnTopLeftAlign">
+      <eye:dataTableFilter bean="#{deliveries}" clearAction="clearFilter" applyAction="query">
+        <h:panelGrid columns="6" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, column300Width,column50WidthNoWrap, column300Width">
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <t:inputDate value="#{deliveries.startDateFrom}" popupCalendar="true" type="both" />
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
+          <t:inputDate value="#{deliveries.startDateFrom}" popupCalendar="true" type="both" />
 
-            <h:outputText value="#{deliveryBundle.name}"/>
-            <h:inputText value="#{deliveries.namePrefix}"/>
+          <h:outputText value="#{deliveryBundle.name}"/>
+          <h:inputText value="#{deliveries.namePrefix}"/>
 
-            <h:outputText value="#{deliveryBundle.owner}" rendered="#{deliveries.userInAdminRole}"/>
-            <h:inputText value="#{deliveries.userFilter}" rendered="#{deliveries.userInAdminRole}"/>
-            <h:outputText value="&#160;" rendered="#{!deliveries.userInAdminRole}"/>
-            <h:inputText value="&#160;" rendered="#{!deliveries.userInAdminRole}"/>
+          <h:outputText value="#{deliveryBundle.owner}" rendered="#{deliveries.userInAdminRole}"/>
+          <h:selectOneMenu value="#{deliveries.userFilter}" rendered="#{deliveries.userInAdminRole}">
+            <f:selectItems value="#{deliveries.uniqueUsers}"/>
+          </h:selectOneMenu>
+          <h:outputText value="&#160;" rendered="#{!deliveries.userInAdminRole}"/>
+          <h:outputText value="&#160;" rendered="#{!deliveries.userInAdminRole}"/>
 
-            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <t:inputDate value="#{deliveries.startDateTo}" popupCalendar="true" type="both"/>
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
+          <t:inputDate value="#{deliveries.startDateTo}" popupCalendar="true" type="both"/>
 
-            <h:outputText value="#{msg['delivery.status']}"/>
-            <h:selectOneMenu value="#{deliveries.status}" >
-              <f:selectItems value="#{deliveries.uniqueStatuses}"/>
-            </h:selectOneMenu>
+          <h:outputText value="#{msg['delivery.status']}"/>
+          <h:selectOneMenu value="#{deliveries.status}" >
+            <f:selectItems value="#{deliveries.uniqueStatuses}"/>
+          </h:selectOneMenu>
 
-          </h:panelGrid>
-        </eye:dataTableFilter>
+        </h:panelGrid>
+      </eye:dataTableFilter>
 
       <h:panelGroup style="display: #{deliveries.init ? '' : 'none'}">
         <eye:delimiter/>
@@ -49,7 +51,7 @@
           </eye:button>
           <eye:button>
             <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
-          </eye:button>  
+          </eye:button>
           <eye:space/>
           <eye:button>
             <tr:commandLink text="#{msg['edit.selected.button']}" action="#{deliveries.editGroup}"/>
