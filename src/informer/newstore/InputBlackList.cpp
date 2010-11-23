@@ -183,25 +183,31 @@ bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
                                unsigned(dropMsgHash_.Count()));
             }
             
-            FileGuard fg;
-            const size_t maxSize = openFile(fg, dropFileOffset_ ? 0 : maxMsgId_);
-            if (dropFileOffset_) {
-                smsc_log_debug(is_.log_,"D=%u blklist seek to %llu",is_.getDlvId(),ulonglong(dropFileOffset_));
-                fg.seek(dropFileOffset_);
-            }
-            Buf buf;
-            while ( !is_.core_.isStopping() ) {
-                if (!readChunk(fg,buf)) { break; }
-                if (dropFileOffset_ >= maxSize) {
-                    dropFileOffset_ = size_t(-1);
-                    break;
+            try {
+                FileGuard fg;
+                const size_t maxSize = openFile(fg, dropFileOffset_ ? 0 : maxMsgId_);
+                if (dropFileOffset_) {
+                    smsc_log_debug(is_.log_,"D=%u blklist seek to %llu",
+                                   is_.getDlvId(),ulonglong(dropFileOffset_));
+                    fg.seek(dropFileOffset_);
                 }
-                if (msgId <= maxMsgId_) {
-                    smsc_log_debug(is_.log_,"D=%u we have loaded requested id=%llu min=%llu max=%llu",
-                                   is_.getDlvId(), ulonglong(msgId),
-                                   ulonglong(minMsgId_), ulonglong(maxMsgId_) );
-                    break;
+                Buf buf;
+                while ( !is_.core_.isStopping() ) {
+                    if (!readChunk(fg,buf)) { break; }
+                    if (dropFileOffset_ >= maxSize) {
+                        dropFileOffset_ = size_t(-1);
+                        break;
+                    }
+                    if (msgId <= maxMsgId_) {
+                        smsc_log_debug(is_.log_,"D=%u we have loaded requested id=%llu min=%llu max=%llu",
+                                       is_.getDlvId(), ulonglong(msgId),
+                                       ulonglong(minMsgId_), ulonglong(maxMsgId_) );
+                        break;
+                    }
                 }
+            } catch ( ErrnoException& e ) {
+                smsc_log_debug(is_.log_,"D=%u blklist exc: %s",is_.getDlvId(),e.what());
+                dropFileOffset_ = size_t(-1);
             }
             if (msgId>maxMsgId_) {
                 what = "more than max";

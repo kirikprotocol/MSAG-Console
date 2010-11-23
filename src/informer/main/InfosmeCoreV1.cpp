@@ -402,6 +402,7 @@ void InfosmeCoreV1::selfTest()
             dlv->getGlossary( glotexts );
         }
 
+        /*
         {
             smsc_log_debug(log_,"--- dropping messages for D=%u ---", dlvId);
             std::vector<msgid_type> msgIds;
@@ -410,6 +411,7 @@ void InfosmeCoreV1::selfTest()
             }
             dlv->dropMessages(msgIds);
         }
+         */
 
         {
             smsc_log_debug(log_,"--- changing delivery D=%u state ---", dlvId);
