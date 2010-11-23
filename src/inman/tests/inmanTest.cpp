@@ -31,25 +31,15 @@ using smsc::inman::test::AbonentsDB;
 using smsc::inman::interaction::ConnectSrv;
 //using smsc::inman::cdr::CDRRecord;
 
+#include "inman/tests/AbonentsPreset.hpp"
+using smsc::inman::test::_knownAbonents;
+using smsc::inman::test::_knownAbonentsNum;
+
+
 using smsc::logger::Logger;
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
-static const AbonentPreset  _abonents[] = {
-  //Nezhinsky phone(prepaid):
-    AbonentPreset(AbonentContractInfo::abtPrepaid, ".1.1.79139343290", "250013900405871")
-  //tst phone (prepaid):
-  , AbonentPreset(AbonentContractInfo::abtPrepaid, ".1.1.79133821781", "250013903368782")
-  //Ryzhkov phone(postpaid):
-  , AbonentPreset(AbonentContractInfo::abtPostpaid, ".1.1.79139859489", "250013901464251")
-  //Stupnik phone(postpaid):
-  , AbonentPreset(AbonentContractInfo::abtPostpaid, ".1.1.79139033669", "250013901464251")
-  //
-  , AbonentPreset(AbonentContractInfo::abtUnknown,  ".5.0.smsx:201", 0)
-  , AbonentPreset(AbonentContractInfo::abtUnknown,  ".5.0.ussd:448", 0)
-};
-#define PRE_ABONENTS_NUM (sizeof(_abonents)/sizeof(AbonentPreset))
-
 class ConnectionClosedException : public std::exception {
 public:
   ConnectionClosedException() : std::exception()
@@ -591,7 +581,7 @@ int main(int argc, char** argv)
   smsc_log_info(_logger, "* INMan testing console");
   smsc_log_info(_logger, "********************************************************");
 
-  AbonentsDB::Init((unsigned)PRE_ABONENTS_NUM, _abonents);
+  AbonentsDB::Init(smsc::inman::test::_knownAbonentsNum, smsc::inman::test::_knownAbonents);
 
   std::auto_ptr<ConnectSrv> _connServ(new ConnectSrv(ConnectSrv::POLL_TIMEOUT_ms, _logger));
   try {
