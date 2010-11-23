@@ -1,6 +1,10 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.notifications.DeliveryMessageNotification;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListener;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -102,7 +106,7 @@ public class DeliveryNotificationsProducerTest implements DeliveryNotificationsL
     assertTrue(m.getEventDate().equals(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083018")));
     assertTrue(m.getDeliveryId()==1);
     assertTrue(m.getUserId().equals("a"));
-    assertTrue(m.getType()==DeliveryNotificationType.MESSAGE_FINISHED);
+    assertTrue(m.getType()== DeliveryNotificationType.MESSAGE_FINISHED);
     assertTrue(m.getMessageId()==1);
     assertTrue(m.getMessageState()==MessageState.Delivered);
     assertTrue(m.getSmppStatus()==0);

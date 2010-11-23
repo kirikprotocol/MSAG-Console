@@ -14,6 +14,7 @@ import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
 import mobi.eyeline.informer.admin.restriction.Restriction;

@@ -5,6 +5,9 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListener;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 
@@ -186,8 +189,13 @@ public class ContentProviderDaemon implements Daemon, DeliveryNotificationsListe
 
     if(user!=null && user.isCreateReports() && user.getDirectory()!=null) {
 
-      File userDir = new File(informerBase,user.getDirectory()); // todo А если в user.getDirectory() абсолютный путь?
-      if(!fileSys.exists(userDir)) throw new ContentProviderException("userDirNotFound",userDir.toString());
+      File userDir = new File(informerBase,user.getDirectory()); 
+      if(!fileSys.exists(userDir)) {
+        userDir=new File(user.getDirectory());
+        if(!fileSys.exists(userDir)) {
+          throw new ContentProviderException("userDirNotFound",userDir.toString());
+        }
+      }
 
       Delivery d = context.getDelivery(user.getLogin(),user.getPassword(),deliveryId);
 

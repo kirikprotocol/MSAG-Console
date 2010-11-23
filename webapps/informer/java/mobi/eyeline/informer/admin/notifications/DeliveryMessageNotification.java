@@ -1,5 +1,8 @@
-package mobi.eyeline.informer.admin.delivery;
+package mobi.eyeline.informer.admin.notifications;
 
+import mobi.eyeline.informer.admin.delivery.MessageState;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
 import mobi.eyeline.informer.util.Address;
 
 import java.util.Date;

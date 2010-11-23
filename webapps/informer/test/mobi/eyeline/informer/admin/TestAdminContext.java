@@ -8,6 +8,7 @@ import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.informer.TestInformerManager;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
 import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;

@@ -2,7 +2,7 @@ package mobi.eyeline.informer.web.controllers.notifications;
 
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotificationTemplatesConstants;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationTemplatesConstants;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
