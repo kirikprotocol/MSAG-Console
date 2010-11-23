@@ -79,14 +79,25 @@ bool DeliveryInfo::checkActiveTime( int weekTime ) const
         if ( weekDay>= 7 ) {
             throw InfosmeException(EXC_LOGICERROR,"D=%u wrong weekTime=%d -> day=%u",dlvId_,weekTime,weekDay);
         }
-        if ( (activeWeekDays_ & weekBits[weekDay]) == 0 ) return false;
+        if ( (activeWeekDays_ & weekBits[weekDay]) == 0 ) {
+            smsc_log_debug(log_,"D=%u checkActive(%u): weekday=%u disabled",dlvId_,weekTime,weekDay);
+            return false;
+        }
     }
     if ( activePeriodStart_ >= 0 ) {
         const timediff_type dayTime = weekTime % daynight;
         if ( activePeriodStart_ < activePeriodEnd_ ) {
-            if (dayTime < activePeriodStart_ || dayTime >= activePeriodEnd_ ) return false;
+            if (dayTime < activePeriodStart_ || dayTime >= activePeriodEnd_ ) {
+                smsc_log_debug(log_,"D=%u checkActive(%u): daytime=%u as=%u ae=%u",
+                               dlvId_, weekTime, dayTime, activePeriodStart_, activePeriodEnd_);
+                return false;
+            }
         } else {
-            if (dayTime < activePeriodStart_ && dayTime >= activePeriodEnd_ ) return false;
+            if (dayTime < activePeriodStart_ && dayTime >= activePeriodEnd_ ) {
+                smsc_log_debug(log_,"D=%u checkActive(%u): daytime=%u as=%u ae=%u",
+                               dlvId_, weekTime, dayTime, activePeriodStart_, activePeriodEnd_);
+                return false;
+            }
         }
     }
     return true;
