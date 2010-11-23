@@ -7,7 +7,7 @@ import mobi.eyeline.informer.web.controllers.InformerController;
  */
 public class SmscController extends InformerController {
 
-  protected static final String SMSC_PARAMETER = "smsc_name";
+  static final String SMSC_PARAMETER = "smsc_name";
 
 
 }

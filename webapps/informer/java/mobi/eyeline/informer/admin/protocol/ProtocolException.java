@@ -5,12 +5,12 @@ import mobi.eyeline.informer.admin.AdminException;
 /**
  * @author Artem Snopkov
  */
-public class ProtocolException extends AdminException {
-  protected ProtocolException(String key, Throwable cause) {
+class ProtocolException extends AdminException {
+  ProtocolException(String key, Throwable cause) {
     super(key, cause);
   }
 
-  protected ProtocolException(String key) {
+  ProtocolException(String key) {
     super(key);
   }
 }

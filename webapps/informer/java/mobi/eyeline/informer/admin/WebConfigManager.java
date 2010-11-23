@@ -34,7 +34,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
    * Возвращает тип установки Informer: SINGLE, HA или HS
    *
    * @return тип установки
-   * @throws AdminException ошибка чтения конфига
    */
   public InstallationType getInstallationType() {
     return readSettings(new SettingsReader<WebConfigSettings, InstallationType>() {
@@ -48,7 +47,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
    * Возвращает хост для демона при Single-установке
    *
    * @return хост для демона при Single-установке
-   * @throws AdminException ошибка чтения конфига
    */
   public String getSingleDaemonHost() {
     return readSettings(new SettingsReader<WebConfigSettings, String>() {
@@ -63,7 +61,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
    * Возвращает порт для демона при Single-установке
    *
    * @return порт для демона при Single-установке
-   * @throws AdminException ошибка чтения конфига
    */
   public int getSingleDaemonPort() {
     return readSettings(new SettingsReader<WebConfigSettings, Integer>() {
@@ -78,7 +75,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
    * Возвращает директории-зеркала (HS-установка)
    *
    * @return директории-зеркала
-   * @throws AdminException ошибка чтения конфига
    */
   public File[] getAppMirrorDirs() {
     return readSettings(new SettingsReader<WebConfigSettings, File[]>() {
@@ -92,7 +88,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
    * Возвращает хост для демона при HS-установке
    *
    * @return хост для демона при HS-установке
-   * @throws AdminException ошибка чтения конфига
    */
   public String getHSDaemonHost() {
     return readSettings(new SettingsReader<WebConfigSettings, String>() {
@@ -106,7 +101,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
    * Возвращает порт для демона при HS-установке
    *
    * @return порт для демона при HS-установке
-   * @throws AdminException ошибка чтения конфига
    */
   public int getHSDaemonPort() {
     return readSettings(new SettingsReader<WebConfigSettings, Integer>() {
@@ -120,7 +114,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
    * Возвращает список нод
    *
    * @return список нод
-   * @throws AdminException ошибка чтения конфига
    */
   public Collection<String> getHSDaemonHosts() {
     return readSettings(new SettingsReader<WebConfigSettings, Collection<String>>() {
@@ -135,7 +128,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
    * Возвращает директория журнала
    *
    * @return директория журнала
-   * @throws AdminException ошибка чтения конфига
    */
   public String getJournalDir() {
     return readSettings(new SettingsReader<WebConfigSettings, String>() {

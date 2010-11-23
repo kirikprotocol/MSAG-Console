@@ -356,7 +356,6 @@ public class Delivery implements Serializable {
 
     Delivery delivery = (Delivery) o;
 
-    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
     if (flash != delivery.flash) return false;

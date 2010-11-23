@@ -480,11 +480,9 @@ public class SiebelManager {
     Delivery delivery = Delivery.newCommonDelivery();
     deliveries.getDefaultDelivery(siebelUser.getLogin(), delivery);
     delivery.setName(deliveryName);
-    //todo beep, save
 
     delivery.setPriority(siebelDelivery.getPriority());
     delivery.setFlash(siebelDelivery.isFlash());
-//      delivery.setReplaceMessage(cfg.isSiebelTReplaceMessage()); todo
     if (siebelDelivery.getExpPeriod() != null && siebelDelivery.getExpPeriod() != 0) {
       delivery.setValidityPeriod(new Time(siebelDelivery.getExpPeriod(), 0 ,0));
     } else {

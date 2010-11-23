@@ -30,7 +30,6 @@ class DeliveriesDiffHelper extends DiffHelper {
     List<Object> oldValues = callGetters(getters, oldDelivery);
     List<Object> newValues = callGetters(getters, newDelivery);
     logChanges(j, oldValues, newValues, getters, user, "delivery_property_changed", newDelivery.getName());
-    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     String temp1, temp2;
     if (oldDelivery.getActivePeriodEnd() != null && newDelivery.getActivePeriodEnd() != null &&

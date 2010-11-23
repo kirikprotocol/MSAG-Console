@@ -22,7 +22,7 @@ public class DaemonsConverter implements Converter {
     return getAsString(facesContext, o);
   }
 
-  public String getAsString(FacesContext facesContext, Object o) throws ConverterException {
+  String getAsString(FacesContext facesContext, Object o) throws ConverterException {
     if (o == null || o.toString().equals("")) {
       return null;
     }

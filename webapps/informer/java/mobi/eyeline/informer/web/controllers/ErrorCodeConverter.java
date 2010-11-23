@@ -31,7 +31,7 @@ public class ErrorCodeConverter implements Converter {
     return l == null ? Locale.ENGLISH : l;
   }
 
-  public static String getAsString(Locale locale, String code) {
+  private static String getAsString(Locale locale, String code) {
     ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale);
     try {
       return bundle.getString("informer.errcode." + code);

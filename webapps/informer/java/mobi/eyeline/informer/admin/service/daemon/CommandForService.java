@@ -8,7 +8,7 @@ import mobi.eyeline.informer.util.StringEncoderDecoder;
  */
 abstract class CommandForService extends Command {
 
-  protected CommandForService(String commandName, String serviceId) {
+  CommandForService(String commandName, String serviceId) {
     super(commandName);
 
     document.getDocumentElement().setAttribute("service", StringEncoderDecoder.encode(serviceId));

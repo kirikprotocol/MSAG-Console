@@ -172,6 +172,7 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
+  @SuppressWarnings({"ResultOfMethodCallIgnored"})
   public void checkSupportedEncoding(String argName, String fileEncoding) throws ValidationException {
     try {
       argName.getBytes(fileEncoding);

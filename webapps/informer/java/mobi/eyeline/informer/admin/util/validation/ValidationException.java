@@ -9,7 +9,7 @@ import mobi.eyeline.informer.admin.AdminException;
  */
 public class ValidationException extends AdminException {
 
-  protected ValidationException(String bundleName, String key, String... args) {
+  ValidationException(String bundleName, String key, String... args) {
     super(bundleName, key, args);
   }
 

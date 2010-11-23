@@ -74,7 +74,7 @@ public class DcpClient extends SyncProtogenConnection {
     return sendPdu(req, new CountMessagesResp());
   }
 
-  public void send(UserAuth req) throws AdminException {
+  void send(UserAuth req) throws AdminException {
     sendPdu(req, new OkResponse());
   }
 

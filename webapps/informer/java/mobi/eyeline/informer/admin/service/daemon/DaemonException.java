@@ -5,12 +5,12 @@ import mobi.eyeline.informer.admin.AdminException;
 /**
  * @author Artem Snopkov
  */
-public class DaemonException extends AdminException {
+class DaemonException extends AdminException {
   protected DaemonException(String key, Throwable cause) {
     super(key, cause);
   }
 
-  protected DaemonException(String key, String... args) {
+  DaemonException(String key, String... args) {
     super(key, args);
   }
 }

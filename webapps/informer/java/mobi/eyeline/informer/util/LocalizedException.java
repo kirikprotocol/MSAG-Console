@@ -10,10 +10,10 @@ import java.util.ResourceBundle;
 public class LocalizedException extends Exception {
 
 
-  protected final String bundleName;
-  protected final String key;
+  private final String bundleName;
+  private final String key;
 
-  protected final String[] args;
+  private final String[] args;
 
   protected LocalizedException(String bundleName, String key, String... args) {
     this.bundleName = bundleName;

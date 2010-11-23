@@ -11,7 +11,7 @@ public class ServiceManagerException extends AdminException {
     super(key, cause);
   }
 
-  protected ServiceManagerException(String key, String... args) {
+  ServiceManagerException(String key, String... args) {
     super(key, args);
   }
 

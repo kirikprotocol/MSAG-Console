@@ -177,7 +177,9 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
-    tmpFile.delete();
+    if(tmpFile.delete()) {
+      logger.error("Can't delete: "+tmpFile.getAbsolutePath());
+    }
     return new UploadFilePage(config, user);
   }
 
@@ -186,7 +188,9 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
   }
 
   public void cancel() {
-    tmpFile.delete();
+    if(tmpFile.delete()) {
+      logger.error("Can't delete: "+tmpFile.getAbsolutePath());
+    }
     try {
       if (delivery.getId() != null) {
         User u = config.getUser(user);

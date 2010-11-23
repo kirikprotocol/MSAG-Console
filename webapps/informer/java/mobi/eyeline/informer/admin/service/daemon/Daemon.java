@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class Daemon extends Proxy {
 
-  protected final File daemonServicesFolder;
+  final File daemonServicesFolder;
 
   public Daemon(final String host, final int port, final File daemonServicesFolder) {
     super(host, port);
@@ -38,7 +38,7 @@ public class Daemon extends Proxy {
     return refreshServices().get(serviceId);
   }
 
-  protected synchronized Map<String, ControlledService> refreshServices() throws AdminException {
+  synchronized Map<String, ControlledService> refreshServices() throws AdminException {
     if (super.getStatus() == StatusDisconnected) connect(host, port);
     if (super.getStatus() == StatusConnected) {
       final Response r = runCommand(new CommandListServices());
@@ -99,7 +99,7 @@ public class Daemon extends Proxy {
    * @param serviceId идентификатор сервиса
    * @throws AdminException ошибка выполнения команды
    */
-  public void removeService(final String serviceId) throws AdminException {
+  void removeService(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandRemoveService(serviceId));
     if (Response.StatusOk != r.getStatus())
       throw new DaemonException("error_returned", r.getDataAsString());

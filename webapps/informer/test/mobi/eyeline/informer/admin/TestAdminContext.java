@@ -282,7 +282,7 @@ public class TestAdminContext extends AdminContext {
 
     siebelManager.start(siebelUser, webConfig.getSiebelProperties());
 
-    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager, workFile, 20);  //todo
+    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries, userManager, workFile, 20);  
 
     deliveryNotificationsProducer.addListener(siebelFinalStateListener);
 

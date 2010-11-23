@@ -24,15 +24,15 @@ public class WebContext {
 
   private static WebContext instance;
 
-  protected final WebXml webXml;
+  private final WebXml webXml;
 
-  protected Authenticator authenticator;
+  private Authenticator authenticator;
 
-  protected AdminContext adminContext;
+  private AdminContext adminContext;
 
   private static final CountDownLatch initLatch = new CountDownLatch(1);
 
-  protected Configuration configuration;
+  private Configuration configuration;
 
   public static void init(WebXml webXml, File baseDir) throws InitException {
     if (instance == null) {

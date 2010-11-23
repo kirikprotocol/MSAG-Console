@@ -23,7 +23,7 @@ public abstract class UploadController extends InformerController {
 
   private UploadedFile file;
 
-  protected UploadThread thread;
+  private UploadThread thread;
 
   private String error;
 
@@ -147,9 +147,9 @@ public abstract class UploadController extends InformerController {
 
     private boolean finished = false;
 
-    protected final String user;
+    final String user;
 
-    protected final Locale locale;
+    final Locale locale;
 
     private boolean stop = false;
 

@@ -243,7 +243,7 @@ public class UserGroupEditController extends UserController {
   }
 
   public Integer[] getDeliveryDays() {
-    return deliveryDays.toArray(new Integer[0]);
+    return deliveryDays.toArray(new Integer[deliveryDays.size()]);
   }
 
   public void setDeliveryDays(Integer[] deliveryDays) {

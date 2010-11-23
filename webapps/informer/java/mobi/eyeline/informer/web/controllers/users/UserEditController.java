@@ -70,7 +70,7 @@ public class UserEditController extends UserController {
   }
 
   public Integer[] getActiveWeekDays() {
-    return userToEdit.getDeliveryDays().toArray(new Integer[0]);
+    return userToEdit.getDeliveryDays().toArray(new Integer[userToEdit.getDeliveryDays().size()]);
   }
 
   public boolean isInitError() {

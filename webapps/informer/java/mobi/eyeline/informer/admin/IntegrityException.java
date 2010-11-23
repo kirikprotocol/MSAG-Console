@@ -8,7 +8,7 @@ package mobi.eyeline.informer.admin;
  */
 public class IntegrityException extends AdminException {
 
-  protected IntegrityException(String key, String... args) {
+  IntegrityException(String key, String... args) {
     super(key, args);
   }
 }
