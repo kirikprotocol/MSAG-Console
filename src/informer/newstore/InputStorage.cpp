@@ -372,15 +372,17 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
     const regionid_type regId = req.getRegionId();
     smsc_log_debug(log_,"transfer R=%u/D=%u started, reqCount=%u", regId, getDlvId(), reqCount);
     bool ok = false;
-    try {
-        InputRegionRecord ro;
-        ro.regionId = regId;
-        getRecord(ro);
-        if (ro.rfn==0) { ro.rfn=1; ro.roff=0; }
-        FileGuard fg;
-        MessageList msglist;
-        smsc::core::buffers::TmpBuf<char,8192> buf;
-        while (reqCount>0) {
+
+    InputRegionRecord ro;
+    ro.regionId = regId;
+    getRecord(ro);
+    if (ro.rfn==0) { ro.rfn=1; ro.roff=0; }
+    FileGuard fg;
+    MessageList msglist;
+    smsc::core::buffers::TmpBuf<char,8192> buf;
+    while (reqCount>0) {
+
+        try {
 
             if (!fg.isOpened()) {
                 // need new file
@@ -440,31 +442,34 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
             }
             buf.SetPos(0);
 
-        } // while we need more messages
+            // we have read things
+            if ( ! msglist.empty() ) {
 
-        // we have read things
-        if ( ! msglist.empty() ) {
-            // write back record
-            for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
-                if (!i->msg.isTextUnique()) {
-                    // NOTE: replacing input ids with real ids here!
-                    glossary_.fetchText(i->msg.text,true);
+                // write back record
+                for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
+                    if (!i->msg.isTextUnique()) {
+                        // NOTE: replacing input ids with real ids here!
+                        glossary_.fetchText(i->msg.text,true);
+                    }
                 }
-            }
 
-            const msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
-            req.addNewMessages( currentTime,
-                                msglist,
-                                msglist.begin(),
-                                msglist.end() );
+                const msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
+                req.addNewMessages( currentTime,
+                                    msglist,
+                                    msglist.begin(),
+                                    msglist.end() );
+                ok = true;
+            }
             setRecord(ro,0);
-            ok = true;
+
+        } catch (std::exception& e) {
+            smsc_log_error(log_,"R=%u/D=%u transfer exc: %s",
+                           regId, getDlvId(), e.what());
+            break;
         }
 
-    } catch (std::exception& e) {
-        smsc_log_error(log_,"R=%u/D=%u transfer exc: %s",
-                       regId, getDlvId(), e.what());
-    }
+    } // while we need more messages
+
     smsc_log_debug(log_,"R=%u/D=%u transfer task finished, %s",
                    regId, getDlvId(), ok ?
                    "notifying core" : "no msgs passed" );

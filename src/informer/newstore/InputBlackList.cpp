@@ -144,7 +144,7 @@ bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
                 maxMsgId_ = is_.getMinRlast();
                 minMsgId_ = maxMsgId_ + 1;
                 smsc_log_debug(is_.log_,"D=%u blklist has empty hash, using min=%llu max=%llu",
-                               is_.getDlvId(), ulonglong(minMsgId_), ulonglong(minMsgId_));
+                               is_.getDlvId(), ulonglong(minMsgId_), ulonglong(maxMsgId_));
             } else if (dropMsgHash_.Count() < 20) {
 
                 // we may scan the hash to find out real numbers
