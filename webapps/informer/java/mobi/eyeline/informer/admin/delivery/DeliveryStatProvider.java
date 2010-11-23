@@ -25,7 +25,7 @@ class DeliveryStatProvider {
   private String filePathFormat;
 
   DeliveryStatProvider(File directory, FileSystem fileSys) {
-    this(directory, fileSys, "yyyyMMdd");
+    this(directory, fileSys, "yyyy.MM.dd");
   }
 
   DeliveryStatProvider(File directory, FileSystem fileSys, String subDirNamePattern) {

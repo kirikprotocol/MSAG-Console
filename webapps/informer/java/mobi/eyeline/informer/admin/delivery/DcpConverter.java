@@ -22,6 +22,8 @@ public class DcpConverter {
 
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
+  private static final String DATE_FORMAT_YY = "dd.MM.yy HH:mm:ss";
+
   public static Date convertTime(String time) throws AdminException {
     SimpleDateFormat format = new SimpleDateFormat(TIME_FORMAT);
     try {
@@ -38,6 +40,15 @@ public class DcpConverter {
 
   public static Date convertDate(String date) throws AdminException {
     SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
+    try {
+      return format.parse(date);
+    } catch (ParseException e) {
+      throw new DeliveryException("unparsable_date", date);
+    }
+  }
+
+  public static Date convertDateYY(String date) throws AdminException {
+    SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT_YY);
     try {
       return format.parse(date);
     } catch (ParseException e) {
@@ -111,7 +122,8 @@ public class DcpConverter {
     delivery.setPriority(di.getPriority());
     delivery.setReplaceMessage(di.getReplaceMessage());
     delivery.setRetryOnFail(di.getRetryOnFail());
-    delivery.setRetryPolicy(di.getRetryPolicy());
+    if (di.hasRetryPolicy())
+      delivery.setRetryPolicy(di.getRetryPolicy());
     delivery.setSourceAddress(new Address(di.getSourceAddress()));
 
     if (di.hasUserData()) {
@@ -149,7 +161,8 @@ public class DcpConverter {
       return null;
     }
     mobi.eyeline.informer.admin.delivery.DeliveryState result = new mobi.eyeline.informer.admin.delivery.DeliveryState();
-    result.setDate(convertDate(ds.getDate()));
+    if (ds.hasDate())
+      result.setDate(convertDate(ds.getDate()));
     result.setStatus(convert(ds.getStatus()));
     return result;
   }
@@ -232,13 +245,13 @@ public class DcpConverter {
       result.setActivityPeriodStart(new Time(convertTime(di.getActivityPeriodStart())));
     }
     if (di.hasEndDate()) {
-      result.setEndDate(convertDate(di.getEndDate()));
+      result.setEndDate(convertDateYY(di.getEndDate()));
     }
     if (di.hasName()) {
       result.setName(di.getName());
     }
     if (di.hasStartDate()) {
-      result.setStartDate(convertDate(di.getStartDate()));
+      result.setStartDate(convertDateYY(di.getStartDate()));
     }
     if (di.hasStatus()) {
       result.setStatus(convert(di.getStatus()));

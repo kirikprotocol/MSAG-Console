@@ -4,6 +4,7 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
       xmlns:eye="http://taglib.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
@@ -14,10 +15,14 @@
 
     <h:form>
 
-      <eye:dataTable value="#{index1.model}" var="r" selectedRows="#{index1.selected}">
-        <eye:row>
+      <c:set var="i" value="1"/>
 
-          <eye:column name="mycolumn" title="e1" width="33%" sortable="true">
+      <eye:dataTable value="#{index1.model}" var="r" selectedRows="#{index1.selected}">
+        <eye:row innerData="#{i == 15}">
+
+          <c:set var="i" value="#{i+1}"/>
+
+          <eye:column name="mycolumn" title="e1" width="33%" sortable="true" align="center">
 
             <h:outputText value="#{r}"/>
 
@@ -46,6 +51,10 @@
 
         <f:facet name="footer">
           <h:outputText value="sdfgjkadfgdsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasadasdasdasadsadsadasdadasdsaddddddddddsssssssadsdsaasdasd"/>
+        </f:facet>
+
+        <f:facet name="innerData">
+          <h:outputText value="inner data"/>
         </f:facet>
         
       </eye:dataTable>

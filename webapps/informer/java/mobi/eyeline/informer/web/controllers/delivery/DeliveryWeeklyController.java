@@ -75,8 +75,10 @@ public class DeliveryWeeklyController extends DeliveryController {
 
       public Object getValue(Date date) {
         String d = df.format(date);
+        System.out.println("DATE: " + d);
         List<DeliveryInfo> toReturn = new LinkedList<DeliveryInfo>();
         for (DeliveryInfo di : ds) {
+          System.out.println("CMP: " + df.format(di.getStartDate()));
           if (df.format(di.getStartDate()).equals(d)) {
             toReturn.add(di);
           }

@@ -23,15 +23,14 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
 
     settings.setDcpHost(s.getString("dcpHost"));
     settings.setDcpPort(s.getInt("dcpPort"));
+    
+    settings.setStatDir(s.getString("statPath", null));
+    settings.setStoreDir(s.getString("storePath"));
 
     s = config.getSection("pvss");
     settings.setPersHost(s.getString("host"));
     settings.setPersPort(s.getInt("port"));
 
-    s = config.getSection("stat");
-    settings.setStatDir(s.getString("directory", null));
-    s = config.getSection("statuslogs");
-    settings.setStatusLogsDir(s.getString("directory", null));
     return settings;
   }
 
@@ -42,13 +41,13 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     s.setInt("adminPort", settings.getAdminPort());
     s.setString("dcpHost", settings.getDcpHost());
     s.setInt("dcpPort", settings.getDcpPort());
+    s.setString("statPath", settings.getStatDir());
+    s.setString("storePath", settings.getStoreDir());
+
     s = config.getOrCreateSection("pvss");
     s.setString("host", settings.getPersHost());
     s.setInt("port", settings.getPersPort());
-    s = config.getOrCreateSection("stat");
-    s.setString("directory", settings.getStatDir());
-    s = config.getOrCreateSection("statuslogs");
-    s.setString("directory", settings.getStatusLogsDir());
+
     config.save(os);
   }
 }

@@ -81,12 +81,13 @@ public class MessageInfo {
   }
 
   public void addProperties(Map<String, String> props) {
-    properties.putAll(props);
+    if (props != null)
+      properties.putAll(props);
   }
 
   public String getProperty(String name) {
     return properties.getProperty(name);
-  }
+  }                                                              
 
   public boolean containsProperty(String name) {
     return properties.containsKey(name);

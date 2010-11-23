@@ -47,6 +47,7 @@ public class InformerConfigTest {
     assertEquals("pvssHost", s.getPersHost());
     assertEquals(25403, s.getPersPort());
     assertEquals("stat", s.getStatDir());
+    assertEquals("store", s.getStoreDir());
   }
 
   @Test

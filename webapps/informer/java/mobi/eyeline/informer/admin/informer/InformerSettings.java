@@ -22,7 +22,7 @@ public class InformerSettings {
   private int persPort;
 
   private String statDir;
-  private String statusLogsDir;
+  private String storeDir;
 
   public String getAdminHost() {
     return adminHost;
@@ -87,13 +87,13 @@ public class InformerSettings {
     this.statDir = statDir;
   }
 
-  public String getStatusLogsDir() {
-    return statusLogsDir;
+  public String getStoreDir() {
+    return storeDir;
   }
 
-  public void setStatusLogsDir(String statusLogsDir) throws AdminException {
-    vh.checkNotEmpty("statusLogsDir", statDir);
-    this.statusLogsDir = statusLogsDir;
+  public void setStoreDir(String storeDir) throws AdminException {
+    vh.checkNotEmpty("storeDir", storeDir);
+    this.storeDir = storeDir;
   }
 
   /**
@@ -110,7 +110,7 @@ public class InformerSettings {
     cs.persHost = persHost;
     cs.persPort = persPort;
     cs.statDir = statDir;
-    cs.statusLogsDir = statusLogsDir;
+    cs.storeDir = storeDir;
     return cs;
   }
 

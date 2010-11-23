@@ -17,24 +17,22 @@
 
       <h:panelGroup rendered="#{regionsUpload.state == 0}">
 
-        <h:panelGrid style="padding-bottom:10px">
-          <eye:message level="warn"><h:outputText value="#{msg['regions.upload.warning']}"/></eye:message>
-        </h:panelGrid>
+        <eye:message level="warn"><h:outputText value="#{msg['regions.upload.warning']}"/></eye:message>
 
-        <h:panelGrid columns="1" style="padding:10px" cellspacing="0" cellpadding="0" columnClasses=",column0WidthRight">
+        <eye:delimiter/>
 
-          <tr:panelFormLayout>
-            <tr:panelLabelAndMessage label="#{msg['informer.upload.label']}">
-              <tr:inputFile columns="50" value="#{regionsUpload.file}" simple="true" required="true"/>
-            </tr:panelLabelAndMessage>
-          </tr:panelFormLayout>
+        <h:panelGrid columns="2" style="padding-left:10px" columnClasses="column50Width,columnTopLeftAlign">
+
+          <h:outputText style="white-space:nowrap;" value="#{msg['informer.upload.label']}"/>
+          <tr:inputFile columns="50" value="#{regionsUpload.file}" simple="true" required="true"/>
 
         </h:panelGrid>
 
+        <eye:delimiter/>
 
         <eye:buttons>
           <eye:button>
-            <tr:commandLink text="#{msg['submit.button']}" action="#{regionsUpload.upload}"/>
+            <tr:commandLink text="#{msg['region.upload']}" shortDesc="#{msg['region.upload.desc']}" action="#{regionsUpload.upload}"/>
           </eye:button>
           <eye:button>
             <tr:commandLink text="#{msg['cancel.button']}" action="REGION" immediate="true"/>
@@ -52,23 +50,24 @@
           <h:outputText value="#{regionsUpload.error}"/>
         </eye:message>
 
-        <eye:buttons>
-          <eye:button rendered="#{regionsUpload.finished}">
-            <tr:commandLink text="#{msg['next.button']}" action="#{regionsUpload.next}"/>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
+        <eye:delimiter rendered="#{regionsUpload.error != null}"/>
 
-        <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+        <h:panelGrid columns="2" columnClasses="column50Width, columnTopLeftAlign" style="padding-left:10px">
           <h:outputText value="#{msg['processing.label']}"/>
           <eye:progressBar current="#{regionsUpload.current}" maximum="#{regionsUpload.maximum}" width="500" height="20" />
         </h:panelGrid>
-        <h:panelGrid columns="1" style="padding:15px">
+
+        <eye:delimiter/>
+
+        <h:panelGrid columns="1" style="padding-left:10px">
           <tr:outputText value="#{msg['regions.uploaded']} #{regionsUpload.uploaded}"/>
         </h:panelGrid>
+
+        <eye:delimiter/>
+
         <eye:buttons>
           <eye:button rendered="#{regionsUpload.finished}">
-            <tr:commandLink text="#{msg['next.button']}" action="#{regionsUpload.next}"/>
+            <tr:commandLink text="#{msg['finish.button']}" action="#{regionsUpload.next}"/>
           </eye:button>
           <eye:button rendered="#{!regionsUpload.finished}">
             <tr:commandLink text="#{msg['stop.button']}" action="#{regionsUpload.stop}"/>

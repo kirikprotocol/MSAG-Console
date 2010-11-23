@@ -169,7 +169,7 @@ public class AdminContext {
       contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir,workDir,fileSystem);
 
 
-      deliveryNotificationsProducer = new DeliveryNotificationsProducer(new File(is.getStatusLogsDir()), fileSystem);
+      deliveryNotificationsProducer = new DeliveryNotificationsProducer(new File(is.getStoreDir(), "final_log"), fileSystem);
       deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(this);
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 

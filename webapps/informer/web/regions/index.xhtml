@@ -23,7 +23,7 @@
           <tr:inputText columns="8" value="#{regions.defaultMax}" required="true">
             <eye:validatePositive/>
           </tr:inputText>
-          <tr:commandLink text="#{msg['apply.button']}" action="#{regions.submitDefault}"/>
+          <tr:commandLink text="#{msg['apply.button']}" shortDesc="#{msg['region.apply.default.max.desc']}" action="#{regions.submitDefault}"/>
           <h:outputText/>
         </h:panelGrid>
       </tr:subform>
@@ -55,24 +55,24 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
+          <tr:commandLink text="#{msg['add.button']}" shortDesc="#{msg['region.add.desc']}" action="REGION_EDIT"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+          <tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['region.delete.desc']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['upload.button']}" action="REGION_UPLOAD"/>
+          <tr:commandLink text="#{msg['upload.button']}" shortDesc="#{msg['region.upload.desc']}" action="REGION_UPLOAD"/>
         </eye:button>
       </eye:buttons>
 
       <eye:delimiter/>
 
       <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="r">
-        <eye:row rowId="#{r.regionId}">
+        <eye:row rowId="#{r.regionId}" innerData="#{!(empty r.masks)}">
 
           <eye:column name="name" title="#{regionBundle.name}" sortable="true" width="25%" align="center">
-            <h:commandLink value="#{r.name}" action="REGION_EDIT">
+            <h:commandLink value="#{r.name}" action="REGION_EDIT" title="#{msg['region.details']}">
               <f:param name="REGION_ID" value="#{r.regionId}"/>
             </h:commandLink>
           </eye:column>
@@ -89,6 +89,18 @@
             <h:outputText value="#{r.maxSmsPerSecond}"/>
           </eye:column>
 
+          <f:facet name="innerData">
+            <h:panelGroup>
+            <h:dataTable value="#{r.masks}" var="mask" >
+              <h:column>
+
+                  <h:outputText value="#{mask}" converter="addressConverter"/>
+
+              </h:column>
+            </h:dataTable>
+            </h:panelGroup>
+          </f:facet>
+
         </eye:row>
       </eye:dataTable>
 
@@ -96,14 +108,14 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="REGION_EDIT"/>
+          <tr:commandLink text="#{msg['add.button']}" shortDesc="#{msg['region.add.desc']}" action="REGION_EDIT"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+          <tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['region.delete.desc']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['upload.button']}" action="REGION_UPLOAD"/>
+          <tr:commandLink text="#{msg['upload.button']}" shortDesc="#{msg['region.upload.desc']}" action="REGION_UPLOAD"/>
         </eye:button>
       </eye:buttons>
 

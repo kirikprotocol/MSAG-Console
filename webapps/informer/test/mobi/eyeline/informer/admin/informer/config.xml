@@ -5,19 +5,13 @@
     <param name="adminPort" type="int">8080</param>
     <param name="dcpHost" type="string">dcpHost</param>
     <param name="dcpPort" type="int">8088</param>
+    <param name="statPath" type="string">stat</param>
+    <param name="storePath" type="string">store</param>
   </section>
 
   <section name="pvss">
     <param name="host" type="string">pvssHost</param>
     <param name="port" type="int">25403</param>
-  </section>
-
-  <section name="stat">
-    <param name="directory" type="string">stat</param>
-  </section>
-
-  <section name="statuslogs">
-    <param name="directory" type="string">statuslogs</param>
-  </section>
+  </section>  
 
 </config>

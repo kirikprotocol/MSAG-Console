@@ -16,10 +16,10 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{regionEdit.save}"/>
+          <tr:commandLink text="#{msg['done.button']}" shortDesc="#{msg['region.done.desc']}" action="#{regionEdit.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="REGION" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" shortDesc="#{msg['region.cancel.desc']}" action="REGION" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -52,7 +52,7 @@
               <f:selectItems value="#{regionEdit.smscs}"/>
             </h:selectOneMenu>
             <tr:outputText value="&#160;"/>
-            <tr:commandLink text=">>" action="SMSC_EDIT" immediate="true">
+            <tr:commandLink text=">>" action="SMSC_EDIT" immediate="true" shortDesc="#{msg['region.show.smsc.details']}">
               <f:param value="#{regionEdit.region.smsc}" name="smsc_name"/>
             </tr:commandLink>
           </tr:panelLabelAndMessage>
@@ -77,10 +77,10 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{regionEdit.save}"/>
+          <tr:commandLink text="#{msg['done.button']}" shortDesc="#{msg['region.done.desc']}" action="#{regionEdit.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="REGION" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" shortDesc="#{msg['region.cancel.desc']}" action="REGION" immediate="true"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

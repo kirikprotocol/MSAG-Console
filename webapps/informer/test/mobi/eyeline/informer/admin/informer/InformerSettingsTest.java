@@ -120,7 +120,7 @@ public class InformerSettingsTest {
     cs.setPersHost("persHost");
     cs.setPersPort(3);
     cs.setStatDir("statDir");
-    cs.setStatusLogsDir("statusLogsDir");
+    cs.setStoreDir("storeDir");
 
     InformerSettings cs1 = cs.cloneSettings();
 
@@ -132,6 +132,6 @@ public class InformerSettingsTest {
     assertEquals(cs.getPersHost(), cs1.getPersHost());
     assertEquals(cs.getPersPort(), cs1.getPersPort());
     assertEquals(cs.getStatDir(), cs1.getStatDir());
-    assertEquals(cs.getStatusLogsDir(), cs1.getStatusLogsDir());
+    assertEquals(cs.getStoreDir(), cs1.getStoreDir());
   }
 }

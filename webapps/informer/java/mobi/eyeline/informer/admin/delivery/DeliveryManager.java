@@ -392,6 +392,7 @@ public class DeliveryManager {
     }
     DeliveryState state = new DeliveryState();
     state.setStatus(DeliveryStatus.Active);
+    state.setDate(new Date());
     changeDeliveryState(login, password, deliveryId, state);
   }
 

@@ -18,8 +18,6 @@
     <tr:form id="smsc" rendered="#{!deliveryMessagesByPeriod.initError and deliveryMessagesByPeriod.delivery!=null}">
       <c:set var="longOpState" value="#{deliveryMessagesByPeriod.state}"/>
 
-      <h:panelGroup style="padding:10px">
-
         <eye:dataTableFilter bean="#{deliveryMessagesByPeriod}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
             <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
@@ -39,15 +37,15 @@
           </h:panelGrid>
         </eye:dataTableFilter>
 
+      <eye:delimiter/>
+
 
         <eye:updatableContent updatePeriod="1"  enabled="#{longOpState == 1}">
 
 
 
           <eye:message level="error" rendered="#{longOpState == 3}">
-            <p/>
             <h:outputText value="#{deliveryMessagesByPeriod.error}"/>
-            <p/>
           </eye:message>
 
 
@@ -55,12 +53,8 @@
 
           <h:panelGroup rendered="#{longOpState == 1}">
             <tr:message id="upload_message"/>
-            <eye:buttons>
-              <eye:button>
-                <tr:commandLink text="#{msg['stop.button']}" action="#{deliveryMessagesByPeriod.cancel}"/>
-              </eye:button>
-              <eye:space/>
-            </eye:buttons>
+
+            <eye:delimiter/>
 
             <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
               <h:outputText value="#{msg['processing.label']}  #{deliveryMessagesByPeriod.current}"/>
@@ -177,7 +171,8 @@
 
             </eye:row>
           </eye:dataTable>
-          
+
+          <eye:delimiter/>
           
           <eye:buttons rendered="#{longOpState == 2}">
             <eye:space/>
@@ -191,10 +186,6 @@
 
 
         </eye:updatableContent>
-
-      </h:panelGroup>
-
-
 
     </tr:form>
 
