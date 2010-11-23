@@ -15,10 +15,10 @@ import java.io.OutputStream;
  */
 public class ConfigFileManager<C> {
 
-  protected final File configFile;
-  protected final File backupDir;
-  protected final FileSystem fileSystem;
-  protected final ManagedConfigFile<C> config;
+  private final File configFile;
+  private final File backupDir;
+  private final FileSystem fileSystem;
+  private final ManagedConfigFile<C> config;
 
   public ConfigFileManager(File configFile, File backupDir, FileSystem fileSystem, ManagedConfigFile<C> cfgFileImpl) {
     this.configFile = configFile;

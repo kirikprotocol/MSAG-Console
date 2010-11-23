@@ -7,6 +7,6 @@ import mobi.eyeline.informer.web.controllers.InformerController;
  */
 class RegionsController extends InformerController {
 
-  protected final static String REGION_ID_PARAMETER = "REGION_ID";
+  final static String REGION_ID_PARAMETER = "REGION_ID";
 
 }

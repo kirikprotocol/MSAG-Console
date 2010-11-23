@@ -7,7 +7,7 @@ import mobi.eyeline.informer.admin.AdminException;
  *
  * @author Artem Snopkov
  */
-public class ConfigException extends AdminException {
+class ConfigException extends AdminException {
   public ConfigException(String key, Throwable cause) {
     super(key, cause);
   }

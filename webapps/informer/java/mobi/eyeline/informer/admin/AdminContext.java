@@ -53,11 +53,11 @@ public class AdminContext {
 
   protected static final Logger logger = Logger.getLogger(AdminContext.class);
 
-  protected File appBaseDir;
+  private File appBaseDir;
 
   protected FileSystem fileSystem;
 
-  protected InstallationType instType;
+  private InstallationType instType;
 
   protected Journal journal;
 
@@ -71,7 +71,7 @@ public class AdminContext {
 
   protected BlacklistManager blacklistManager;
 
-  protected PersonalizationClientPool personalizationClientPool;
+  private PersonalizationClientPool personalizationClientPool;
 
   protected SmscManager smscManager;
 
@@ -889,7 +889,7 @@ public class AdminContext {
 
     private AdminContext context;
 
-    protected SiebelRegionManagerImpl(AdminContext context) {
+    SiebelRegionManagerImpl(AdminContext context) {
       this.context = context;
     }
 
@@ -903,7 +903,7 @@ public class AdminContext {
 
     private AdminContext context;
 
-    protected SiebelDeliveriesImpl(AdminContext context) {
+    SiebelDeliveriesImpl(AdminContext context) {
       this.context = context;
     }
 

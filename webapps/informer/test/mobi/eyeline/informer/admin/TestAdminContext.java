@@ -182,7 +182,6 @@ public class TestAdminContext extends AdminContext {
 
   @SuppressWarnings({"ResultOfMethodCallIgnored"})
   public TestAdminContext(File appBaseDir) throws InitException {
-
     try {
       File webConfDir = new File(appBaseDir,"conf");
       TestUtils.exportResource(TestWebConfigManager.class.getResourceAsStream("webconfig.xml"), new File(webConfDir, "webconfig.xml"), false);

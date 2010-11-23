@@ -27,11 +27,16 @@ public class DeliveryListController extends DeliveryController {
 
   private final static int MEMORY_LIMIT = 1000;
 
+  private Date startDateFrom;
+  private Date startDateTo;
+
   public DeliveryListController() {
     String i = getRequestParameter("init");
     if (i != null && i.length() > 0) {
       init = Boolean.valueOf(i);
     }
+    startDateFrom = new Date(System.currentTimeMillis() - (7*24*60*60*1000));
+    startDateTo = new Date();
   }
 
   public String getNamePrefix() {
@@ -63,6 +68,24 @@ public class DeliveryListController extends DeliveryController {
     status = null;
     namePrefix = null;
     init = false;
+    startDateFrom = new Date(System.currentTimeMillis() - (7*24*60*60*1000));
+    startDateTo = new Date();
+  }
+
+  public Date getStartDateFrom() {
+    return startDateFrom;
+  }
+
+  public void setStartDateFrom(Date startDateFrom) {
+    this.startDateFrom = startDateFrom;
+  }
+
+  public Date getStartDateTo() {
+    return startDateTo;
+  }
+
+  public void setStartDateTo(Date startDateTo) {
+    this.startDateTo = startDateTo;
   }
 
   public void query() {
@@ -182,8 +205,18 @@ public class DeliveryListController extends DeliveryController {
     if (status != null && status.length() > 0)
       filter.setStatusFilter(DeliveryStatus.valueOf(status));
 
+    if(startDateFrom != null) {
+      filter.setStartDateFrom(startDateFrom);
+    }
+
+    if(startDateTo != null) {
+      filter.setStartDateTo(startDateTo);
+    }
+
     return filter;
   }
+
+
 
   private List<DeliveryInfo> getSortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count, DataTableSortOrder sortOrder) throws AdminException {
     final Comparator<DeliveryInfo> comparator = getComparator(sortOrder);
@@ -242,7 +275,7 @@ public class DeliveryListController extends DeliveryController {
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
           for (DeliveryInfo di : list)
             if (di != null)
-              rows.add(new DeliveryRow(di, config.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), di.getDeliveryId())));
+              rows.add(new DeliveryRow(di));
           return rows;
 
         } catch (AdminException e) {
@@ -317,38 +350,16 @@ public class DeliveryListController extends DeliveryController {
 
     private final DeliveryInfo deliveryInfo;
 
-    private final DeliveryStatusHistory history;
-
-    public DeliveryRow(DeliveryInfo deliveryInfo, DeliveryStatusHistory history) {
+    public DeliveryRow(DeliveryInfo deliveryInfo) {
       this.deliveryInfo = deliveryInfo;
-      this.history = history;
     }
 
     public Date getEndDate() {
-      if (history == null) {
-        return null;
-      }
-      List<DeliveryStatusHistory.Item> items = history.getHistoryItems();
-      if (!items.isEmpty()) {
-        DeliveryStatusHistory.Item i = items.get(items.size() - 1);
-        DeliveryStatus st = i.getStatus();
-        if (st == DeliveryStatus.Finished || st == DeliveryStatus.Cancelled) {
-          return i.getDate();
-        }
-      }
-      return null;
+      return deliveryInfo.getEndDate();
     }
 
     public Date getStartDate() {
-      if (history == null) {
-        return null;
-      }
-      for (DeliveryStatusHistory.Item i : history.getHistoryItems()) {
-        if (i.getStatus() == DeliveryStatus.Active) {
-          return i.getDate();
-        }
-      }
-      return null;
+      return deliveryInfo.getStartDate();
     }
 
     public DeliveryStatus getStatus() {
