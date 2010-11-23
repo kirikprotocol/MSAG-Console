@@ -3,12 +3,13 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.MessageFilter;
+import mobi.eyeline.informer.admin.delivery.MessageInfo;
+import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsAdapter;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListener;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 
@@ -70,7 +71,7 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
     });
 
     scheduler.scheduleAtFixedRate(
-        new ContentProviderDaemonTask(context,informerBase,fileSys),
+        new ContentProviderDaemonTask(context,this,fileSys),
         0,
         PERIOD_MSEC,
         TimeUnit.MILLISECONDS
@@ -127,6 +128,15 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
       File notificationFile = new File(workDir,notification.getDeliveryId()+".notification");
       ps = new PrintStream(fileSys.getOutputStream(notificationFile,false),true,"utf-8");
       ps.println(notification.getUserId());
+      synchronized (this) {
+        if(isStarted()) {
+          reportScheduler.schedule(new Runnable(){
+            public void run() {
+              processNotifications();
+            }
+          },0,TimeUnit.MILLISECONDS);
+        }
+      }
     }
     catch (Exception e) {
       log.error("Error processing delivery finished report for delivery "+notification.getDeliveryId(),e);
@@ -135,22 +145,14 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
       if(ps!=null) try {ps.close();} catch (Exception e){}
     }
 
-    synchronized (this) {
-      if(isStarted()) {
-        reportScheduler.schedule(new Runnable(){
-          public void run() {
-            processNotifications();
-          }
-        },0,TimeUnit.MILLISECONDS);
-      }
-    }
+
   }
 
 
   private void processNotifications() {
     File[] files = fileSys.listFiles(workDir);
     if(files==null) {
-      log.error("Error listing of working directory");
+      log.error("Error listing of working directory "+workDir.getAbsolutePath());
       return;
     }
     for(File f : files) {
@@ -191,13 +193,7 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
 
     if(user!=null && user.isCreateReports() && user.getDirectory()!=null) {
 
-      File userDir = new File(informerBase,user.getDirectory());
-      if(!fileSys.exists(userDir)) {
-        userDir=new File(user.getDirectory());
-        if(!fileSys.exists(userDir)) {
-          throw new ContentProviderException("userDirNotFound",userDir.toString());
-        }
-      }
+      File userDir = getUserDirectory(user);
 
       Delivery d = context.getDelivery(user.getLogin(),user.getPassword(),deliveryId);
 
@@ -214,7 +210,7 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
         context.getMessagesStates(user.getLogin(),user.getPassword(),filter,1000,new Visitor<MessageInfo>(){
           public boolean visit(MessageInfo mi) throws AdminException {
             String result="";
-            result = mi.getState().toString() + (mi.getErrorCode())!=null ? (" errCode="+mi.getErrorCode()) : "";
+            result = mi.getState().toString() + ((mi.getErrorCode())!=null ? (" errCode="+mi.getErrorCode()) : "");
             writeReportLine(psFinal,mi.getAbonent(),mi.getDate(),result);
             return true;
           }
@@ -226,6 +222,22 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
         fileSys.rename(reportFile,finReportFile);
       }
     }
+  }
+
+  public File getUserDirectory(User user) throws AdminException {
+    String sDir = user.getDirectory();
+    if(sDir==null || sDir.length()==0) {
+      throw new ContentProviderException("userDirNotFound",user.getLogin(),sDir);
+    }
+
+    File userDir = new File(informerBase,sDir);
+    if(fileSys.exists(userDir)) return userDir;
+
+    userDir=new File(user.getDirectory());
+    if(!fileSys.exists(userDir)) {
+      throw new ContentProviderException("userDirNotFound",user.getLogin(),sDir);
+    }
+    return userDir;
   }
 
 

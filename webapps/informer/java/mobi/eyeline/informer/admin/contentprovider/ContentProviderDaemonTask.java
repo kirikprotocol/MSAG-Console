@@ -27,13 +27,13 @@ import java.util.regex.Pattern;
 public class ContentProviderDaemonTask implements Runnable {
   Logger log = Logger.getLogger(this.getClass());
   private AdminContext context;
-  private File informerBase;
+  ContentProviderDaemon daemon;
   private FileSystem fileSys;
 
   Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
 
-  public ContentProviderDaemonTask(AdminContext context, File informerBase, FileSystem fileSys) {
-    this.informerBase = informerBase;
+  public ContentProviderDaemonTask(AdminContext context,ContentProviderDaemon daemon, FileSystem fileSys) {
+    this.daemon = daemon;
     this.context = context;
     this.fileSys=fileSys;
   }
@@ -44,15 +44,12 @@ public class ContentProviderDaemonTask implements Runnable {
       List<User> users = context.getUsers();
       for(User u : users ) {
         if(u.getStatus()==User.Status.ENABLED && u.isImportDeliveriesFromDir()) {
-          String dir = u.getDirectory();
-          if(dir!=null && dir.length()>0) {
-            File userDir = new File(informerBase,dir);
-            if(!fileSys.exists(userDir)) {
-              log.error("Not found source directory for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
-            }
-            else {
-              processUserDirectory(u,userDir);
-            }
+          try {
+            File userDir = daemon.getUserDirectory(u);
+            processUserDirectory(u,userDir);
+          }
+          catch (Exception e) {
+            log.error("Error processing ",e);
           }
         }
       }
