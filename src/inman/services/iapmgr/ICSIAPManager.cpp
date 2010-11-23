@@ -18,9 +18,9 @@ ICServiceAC::RCode ICSIAPManager::_icsInit(void)
   if (!_cfg->poolsReg.Count())
     _cfg->initPoolsRegistry();
 
-  //initailize all required IAProviders and store their interfaces
-  IAPrvdsRegistry::const_iterator it = _cfg->prvdReg->begin();
-  for (; it != _cfg->prvdReg->end(); ++it) {
+  //initialize all required IAProviders and store their interfaces
+  for (IAPrvdsRegistry::const_iterator
+       it = _cfg->prvdReg->begin(); it != _cfg->prvdReg->end(); ++it) {
     ICServiceAC * pSrv = _icsHost->getICService(it.pValue()->_icsUId);
     if (!pSrv || (pSrv->icsState() < ICServiceAC::icsStInited))
       return ICServiceAC::icsRcError;
@@ -29,6 +29,7 @@ ICServiceAC::RCode ICSIAPManager::_icsInit(void)
     smsc_log_info(logger, "%s: AbonentProvider '%s': type %s",
                   _logId, it->first.c_str(), iface->getProperty().toString().c_str());
   }
+
   //bind IAProviders and associated policies
   return  _cfg->policiesReg.bindProviders(*(_cfg->prvdReg.get())) ?
             ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
