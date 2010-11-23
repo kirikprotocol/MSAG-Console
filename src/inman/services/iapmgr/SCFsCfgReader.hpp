@@ -34,17 +34,16 @@ protected:
   unsigned readSrvKeys(XConfigView & scf_cfg, SKAlgorithmsDb & sk_alg)
       throw(ConfigException);
 
-  //Reads IN-platform configuration (not 'aliasFor' form)
-  INScfCFG * readSCFCfg(XConfigView & cfg_sec,
-                        const TonNpiAddress & scf_adr, const char * nm_scf)
+  //Reads IN-platform configuration parameters
+  void readSCFParms(const char * nm_sec, XConfigView & cfg_sec, INScfParams & in_cfg)
       throw(ConfigException);
 
   // -- ----------------------------------------------
   // -- ICSMultiSectionCfgReaderAC_T interface methods
   // -- ----------------------------------------------
-  CfgState parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
-                        void * opaque_arg = NULL)
-      throw(ConfigException);
+  virtual CfgState
+    parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
+                 void * opaque_arg = NULL) throw(ConfigException);
 
 public:
   SCFsCfgReader(Config & root_sec, Logger * use_log, const char * ics_sec = NULL)
@@ -53,8 +52,6 @@ public:
   { }
   ~SCFsCfgReader()
   { }
-  //NOTE: opaque_arg type is: INScfsMAP *
-  //NOTE: CfgParsingResult.opaqueRes type is: INScfCFG *
 };
 
 

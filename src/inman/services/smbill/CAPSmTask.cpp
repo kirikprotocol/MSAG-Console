@@ -29,8 +29,86 @@ CAPSmSubmit  _SMSubmitOK(true);
 CAPSmSubmit  _SMSubmitNO(false);
 
 /* ************************************************************************* *
+ * class CAPSmResult implementation
+ * ************************************************************************* */
+//Scans all dialogs and adjusts the charging result, SCF error and rejectRPC status
+//Returns true if all enqueued dialogs responded.
+bool CAPSmResult::Adjust(void)
+{
+  doCharge = true;
+  for (CAPSmDPList::const_iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
+    if (!it->doCharge) {
+      doCharge = false; break;
+    }
+  }
+  scfErr = 0;
+  for (CAPSmDPList::const_iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
+    if (it->scfErr) {
+      scfErr = it->scfErr; break;
+    }
+  }
+  rejectRPC = false;
+  CAPSmDPList::size_type cnt = 0;
+  for (CAPSmDPList::const_iterator it = dpRes.begin();
+      (it != dpRes.end()) && it->dlgRes && it->dlgRes->answered; ++it) {
+    ++cnt;
+    if (abScf->_prm->_capSms.rejectRPC.exist(it->dlgRes->rpCause))
+      rejectRPC = true;
+  }
+  return(allReplied = (cnt == dpRes.size()) ? true : false);
+}
+
+//Returns true if all enqueued dialogs completed
+bool CAPSmResult::Completed(void) const
+{
+  for (CAPSmDPList::const_iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
+    if (!it->dlgRes || !it->dlgRes->completed)
+      return false;
+  }
+  return true;
+}
+
+
+/* ************************************************************************* *
  * class CAPSmTaskAC partial implementation
  * ************************************************************************* */
+CAPSmTaskAC::CAPSmTaskAC(const TonNpiAddress & use_abn,
+              const CAPSmTaskCFG & cfg_ss7,
+              uint32_t serv_key, CAPSmMode idp_mode/* = idpMO*/,
+              const char * log_pfx/* = "CAPSm"*/, Logger * use_log/* = NULL*/)
+  : CAPSmResult(cfg_ss7.abScf), logPfx(log_pfx), cfgSS7(cfg_ss7)
+  , abNumber(use_abn), _pMode(pmIdle), capSess(0), logger(use_log)
+{
+  if (!logger)
+      logger = Logger::getInstance("smsc.inman.CAPSm");
+
+  _arg.reset(new SMSInitialDPArg(logger));
+  _arg->setIDPParms(!idp_mode ? smsc::inman::comp::DeliveryMode_Originating :
+                  smsc::inman::comp::DeliveryMode_Terminating , serv_key);
+  _arg->setCallingPartyNumber(use_abn);
+  snprintf(_logId, sizeof(_logId)-1, "%s[0x%lX]", logPfx, _Id);
+}
+
+CAPSmTaskAC::~CAPSmTaskAC()
+{
+  MutexGuard tmp(_sync);
+  corpses.cleanUp();
+}
+
+const char * CAPSmTaskAC::nmPMode(CAPSmTaskAC::ProcMode p_mode)
+{
+  switch (p_mode) {
+  case pmInit:            return "pmInit";
+  case pmWaitingInstr:    return "pmWaitingInstr";
+  case pmInstructing:     return "pmInstructing";
+  case pmMonitoring:      return "pmMonitoring";
+  case pmReportingEvent:  return "pmReportingEvent";
+  case pmAcknowledging:   return "pmAcknowledging";
+  case pmIdle:            return "pmIdle";
+  }
+  return "pmUnknown";
+}
+
 //requires the _CAPSmsArg to be inited
 RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
 {
@@ -67,6 +145,48 @@ RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
     smsc_log_debug(logger, "%s: Initiation(#%u) of %s: %s -> %s", _logId, use_da->attNum,
         pDlg->Ident(), abNumber.toString().c_str(), use_da->dstAdr.toString().c_str());
     return (use_da->scfErr = pDlg->initialDPSMS(_arg.get())); //begins TCAP dialog
+}
+
+void CAPSmTaskAC::abortDialogs(CAPSmDPList::iterator * it_exclude/* = NULL*/)
+{
+  for (CAPSmDPList::iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
+    if (!it_exclude || (it != *it_exclude)) {
+      if (!it->dlgRes) {
+        it->resetRes(new CAPSmDlgResult());
+      } else {
+        if (it->dlgRes->pDlg) //dialog still active ?
+          it->dlgRes->pDlg->abortSMS();
+      }
+      it->dlgRes->completed = true;
+    }
+  }
+}
+
+CAPSmDPList::iterator CAPSmTaskAC::lookUp(const TCDialogID & dlg_id)
+{
+  CAPSmDPList::iterator it = dpRes.begin();
+  for (; it != dpRes.end(); ++it) {
+    if (it->dlgRes && it->dlgRes->pDlg
+        && (it->dlgRes->pDlg->getId() == dlg_id))
+      break;
+  }
+  return it;
+}
+
+RCHash CAPSmTaskAC::reportSMSubmission(bool submitted)
+{
+  RCHash repErr = 0;
+  for (CAPSmDPList::iterator it = dpRes.begin();
+      (it != dpRes.end()) && it->dlgRes && it->dlgRes->pDlg; ++it) {
+    RCHash err = it->dlgRes->pDlg->reportSubmission(submitted);
+    if (err) {
+      if (!it->scfErr)
+        it->scfErr = err;
+      if (!repErr)
+        repErr = err;
+    }
+  }
+  return repErr;
 }
 
 // -- --------------------------------------
@@ -114,7 +234,7 @@ void CAPSmTaskAC::onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
         } else {            //ReleaseSMS
             res->doCharge = false;
             //check first for RPCause that forces interaction retrying
-            const RPCauseATT * rAtt = abScf->_capSms.retryRPC.exist(rp_cause);
+            const RPCauseATT * rAtt = abScf->_prm->_capSms.retryRPC.exist(rp_cause);
             if (rAtt && (res->attNum < (rAtt->_att + 1U))) {
                 daList.push_front(res);
                 corpses.push_back(res->dlgRes->releaseDlg());
@@ -333,6 +453,44 @@ ScheduledTaskAC::PGState CAPSmTaskAC::Report(auto_ptr_utl<UtilizableObjITF> & us
         log_warn("Report", use_dat.get(), use_ref ? ", referee(ON)" : ", referee(OFF)");
     } //eosw
     return _fsmState;
+}
+
+
+/* ************************************************************************* *
+ * class CAPSmTaskMT implementation
+ * ************************************************************************* */
+bool  CAPSmTaskMT::doNextInit(void)
+{ //Start all required CapSMS dialogs at once
+  do {
+    if (startDialog(daList.front()))
+      break;
+    daList.pop_front();
+  } while (!daList.empty());
+
+  if (daList.empty()) {
+    //all dialogs are succesfully started, waiting for SCF response
+    _pMode = pmWaitingInstr;
+    _fsmState = ScheduledTaskAC::pgCont;
+    return true;
+  }
+  return false;
+}
+
+/* ************************************************************************* *
+ * class CAPSmTaskSQ implementation
+ * ************************************************************************* */
+bool CAPSmTaskSQ::doNextInit(void)
+{ //Starts first one of enqueued dialog(s)
+  if (!startDialog(daList.front())) {
+    //dialog succesfully started, wait for SCF response
+    //before starting next one.
+    daList.pop_front();
+    _pMode = pmWaitingInstr;
+    //preserve task at top of scheduling queue
+    _fsmState = ScheduledTaskAC::pgCont;
+    return true;
+  }
+  return false;
 }
 
 } //smbill

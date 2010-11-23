@@ -112,24 +112,19 @@ unsigned SCFsCfgReader::readSrvKeys(XConfigView & scf_cfg, SKAlgorithmsDb & sk_a
   return sk_alg.size();
 }
 
-//Reads IN-platform configuration (not 'aliasFor' form)
-INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
-                                     const TonNpiAddress & scf_adr,
-                                     const char * nm_scf)
-    throw(ConfigException)
+//Reads optional IN-platform parameters
+void SCFsCfgReader::readSCFParms(const char * nm_sec, XConfigView & cfg_sec,
+                                 INScfParams & in_parms)
+  throw(ConfigException)
 {
   // according to INScfCFG::IDPLocationAddr
   static const char * const _IDPLIAddr[] = { "MSC", "SMSC", "SSF" };
   static const char * const _IDPReqMode[] = { "MT", "SEQ" };
 
-  std::auto_ptr<INScfCFG> pin(new INScfCFG(nm_scf));
-  pin->_scfAdr = scf_adr;
   //Read service keys
-  if (!readSrvKeys(cfg_sec, pin->_skDb)) {
-    smsc_log_warn(logger, "%s: no service keys is specified", scf_adr.getSignals());
+  if (!readSrvKeys(cfg_sec, in_parms._skDb)) {
+    smsc_log_warn(logger, "%s: no service keys is specified", nm_sec);
   }
-
-  // -- OPTIONAL parameters --//
 
   //list of RP causes forcing charging denial because of low balance
   const char * cstr = NULL;
@@ -137,13 +132,13 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
   try { cstr = cfg_sec.getString("RPCList_reject");
   } catch (const ConfigException & exc) { }
   if (cstr) {
-    try { pin->_capSms.rejectRPC.fromStr(cstr);
+    try { in_parms._capSms.rejectRPC.fromStr(cstr);
     } catch (const std::exception & exc) {
       throw ConfigException("RPCList_reject: %s", exc.what());
     }
   }
-  if ((pin->_capSms.rejectRPC.size() <= 1)
-      || !pin->_capSms.rejectRPC.toString(cppStr))
+  if ((in_parms._capSms.rejectRPC.size() <= 1)
+      || !in_parms._capSms.rejectRPC.toString(cppStr))
     cppStr += "<none>";
   smsc_log_info(logger, cppStr.c_str());
 
@@ -153,18 +148,18 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
   try { cstr = cfg_sec.getString("RPCList_retry");
   } catch (const ConfigException & exc) { }
   if (cstr) {
-    try { pin->_capSms.retryRPC.fromStr(cstr); }
+    try { in_parms._capSms.retryRPC.fromStr(cstr); }
     catch (const std::exception & exc) {
       throw ConfigException("RPCList_retry: %s", exc.what());
     }
   }
   //adjust default attempt setings for given RPCauses
-  for (RPCListATT::iterator it = pin->_capSms.retryRPC.begin();
-                          it != pin->_capSms.retryRPC.end(); ++it) {
+  for (RPCListATT::iterator it = in_parms._capSms.retryRPC.begin();
+                          it != in_parms._capSms.retryRPC.end(); ++it) {
     if (!it->_att)
       ++(it->_att);
   }
-  if (!pin->_capSms.retryRPC.toString(cppStr))
+  if (!in_parms._capSms.retryRPC.toString(cppStr))
     cppStr += "<none>";
   smsc_log_info(logger, cppStr.c_str());
 
@@ -174,9 +169,9 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
 
   if (cstr && cstr[0]) {
     if (!strcmp(cstr, _IDPLIAddr[INParmsCapSms::idpLiSSF]))
-      pin->_capSms.idpLiAddr = INParmsCapSms::idpLiSSF;
+      in_parms._capSms.idpLiAddr = INParmsCapSms::idpLiSSF;
     else if (!strcmp(cstr, _IDPLIAddr[INParmsCapSms::idpLiSMSC]))
-      pin->_capSms.idpLiAddr = INParmsCapSms::idpLiSMSC;
+      in_parms._capSms.idpLiAddr = INParmsCapSms::idpLiSMSC;
     else if (strcmp(cstr, _IDPLIAddr[INParmsCapSms::idpLiMSC]))
       throw ConfigException("IDPLocationInfo: invalid value");
   } else
@@ -189,7 +184,7 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
 
   if (cstr && cstr[0]) {
     if (!strcmp(cstr, _IDPReqMode[INParmsCapSms::idpReqSEQ]))
-      pin->_capSms.idpReqMode = INParmsCapSms::idpReqSEQ;
+      in_parms._capSms.idpReqMode = INParmsCapSms::idpReqSEQ;
     else if (strcmp(cstr, _IDPReqMode[INParmsCapSms::idpReqMT]))
       throw ConfigException("IDPReqMode: invalid value");
   } else
@@ -202,52 +197,53 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
 
   //IMSI: "%[5-15][0-9]s"
   if (cstr && cstr[0]) {
-    if (!pin->_dfltImsi.fromText(cstr))
+    if (!in_parms._dfltImsi.fromText(cstr))
       throw ConfigException("defaultIMSI: invalid value \'%s\'", cstr);
-    smsc_log_info(logger, "  defaultIMSI: %s", pin->_dfltImsi.c_str());
+    smsc_log_info(logger, "  defaultIMSI: %s", in_parms._dfltImsi.c_str());
   } else
     smsc_log_info(logger, "  defaultIMSI: <none>", cstr);
   /**/
-  return pin.release();
 }
 
 // -- ----------------------------------------------
 // -- ICSMultiSectionCfgReaderAC_T interface methods
 // -- ----------------------------------------------
-ICSrvCfgReaderAC::CfgState SCFsCfgReader::parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
-                      void * opaque_arg/* = NULL*/)
+ICSrvCfgReaderAC::CfgState
+  SCFsCfgReader::parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
+                              void * opaque_arg/* = NULL*/)
     throw(ConfigException)
 {
-  const char * nm_cfg = nm_sec.c_str();
-  CfgParsingResult state(sectionState(nm_sec));
+  const char *      nmCfg = nm_sec.c_str();
+  CfgParsingResult  state(sectionState(nm_sec));
+
   if (state.cfgState == ICSrvCfgReaderAC::cfgComplete) {
-    smsc_log_info(logger, "Already read '%s' configuration ..", nm_cfg);
+    smsc_log_info(logger, "Already read '%s' configuration ..", nmCfg);
     return ICSrvCfgReaderAC::cfgComplete;
   }
+  smsc_log_info(logger, "reading '%s' configuration ..", nmCfg);
 
-  smsc_log_info(logger, "reading '%s' configuration ..", nm_cfg);
+  std::auto_ptr<INScfCFG> pin(new INScfCFG(nmCfg));
 
   const char * cstr = NULL;
   try { cstr = cfg_sec->getString("scfAddress"); //throws
   } catch (const ConfigException & exc) { }
   if (!cstr || !cstr[0])
-    throw ConfigException("%s.scfAddress is invalid or missing", nm_cfg);
+    throw ConfigException("%s.scfAddress is invalid or missing", nmCfg);
 
-  TonNpiAddress scfAdr;
-  if (!scfAdr.fromText(cstr) || !scfAdr.fixISDN())
-    throw ConfigException("%s.scfAddress is invalid: %s", nm_cfg, cstr);
+  if (!pin->_scfAdr.fromText(cstr) || !pin->_scfAdr.fixISDN())
+    throw ConfigException("%s.scfAddress is invalid: %s", nmCfg, cstr);
 
-  {   //check uniqueness
-    const INScfCFG * pScf = icsCfg->find(scfAdr.toString());
-    if (pScf)
-      throw ConfigException("Multiple settings for SCF '%s' (%s vs %s)",
-                            scfAdr.getSignals(), nm_cfg, pScf->_ident.c_str());
+  { //check gsmSCF address uniqueness
+    const INScfCFG * pCfg = icsCfg->getScfParms(pin->_scfAdr);
+    if (pCfg)
+      throw ConfigException("Multiple settings for gsmSCF '%s' (%s vs %s)",
+                            pin->_scfAdr.toString().c_str(), nmCfg, pCfg->_ident.c_str());
   }
-  smsc_log_info(logger, "IN-platform '%s' config ..", nm_cfg);
-  smsc_log_info(logger, "  ISDN: %s", scfAdr.toString().c_str());
+  smsc_log_info(logger, "IN-platform '%s' config ..", nmCfg);
+  smsc_log_info(logger, "  ISDN: %s", pin->_scfAdr.toString().c_str());
 
-  //read configuration
-  INScfCFG *  pInCfg = NULL;
+  //parameters configuration
+  const INScfCFG *  pInCfg = NULL;
 
   cstr = NULL;
   try { cstr = cfg_sec->getString("aliasFor");
@@ -255,28 +251,29 @@ ICSrvCfgReaderAC::CfgState SCFsCfgReader::parseSection(XConfigView * cfg_sec, co
   if (cstr && cstr[0]) {
     //read configuration of targeted IN-platform
     smsc_log_info(logger, "  aliasFor: %s", cstr);
-    std::string refNm(cstr);
-    std::auto_ptr<XConfigView> refCfg(_cfgXCV->getSubConfig(cstr));
-    parseSection(refCfg.get(), refNm, opaque_arg); //throws if not a cfgComplete
-    const CfgParsingResult * refState = sectionState(refNm);
-    pInCfg = (INScfCFG *)(refState->opaqueRes);
-  } else {
-    //insert configuration into registry
-    state.opaqueRes = pInCfg = readSCFCfg(*cfg_sec, scfAdr, nm_cfg);
-    icsCfg->insert(scfAdr.toString(), pInCfg);
-  }
+    std::auto_ptr<XConfigView>  refCfg(_cfgXCV->getSubConfig(cstr)); //throws
 
-  //export configuration pointer if required
-  INScfsMAP * pCRefMap = (INScfsMAP *)opaque_arg;
-  if (pCRefMap) {
-    smsc_log_debug(logger, "INScfsMAP: linking '%s'-> {%s, %s}",
-                   scfAdr.toString().c_str(), pInCfg->_ident.c_str(),
-                   pInCfg->_scfAdr.toString().c_str());
-    pCRefMap->insert(INScfsMAP::value_type(scfAdr.toString(), (const INScfCFG *)pInCfg));
+    //read aliased configuration & insert into registry
+    std::string refSec(cstr);
+    parseSection(refCfg.get(), refSec, opaque_arg); //throws if not a cfgComplete
+
+    INScfIdent_t  nmAlias(cstr);
+    pInCfg = icsCfg->insertAlias(pin.get(), nmAlias);
+    /* */
+  } else {
+    //read parameters & insert into registry
+    readSCFParms(nmCfg, *cfg_sec, pin->_prm.init());
+    icsCfg->insertParms(pin.get());
+    pInCfg = pin.get();
   }
+  smsc_log_debug(logger, "INScfsMAP: linking '%s'-> {%s, %s}",
+                 pin->_scfAdr.toString().c_str(), pInCfg->_ident.c_str(),
+                 pInCfg->_scfAdr.toString().c_str());
+  pin.release();
 
   //mark section as completely parsed
   state.cfgState = ICSrvCfgReaderAC::cfgComplete;
+//  state.opaqueRes = (const void *)pInCfg;
   return registerSection(nm_sec, state);
 }
 

@@ -82,6 +82,11 @@ struct IAPolicyParser {
     print(pstr);
     return pstr;
   }
+
+  bool isScfMask(void) const
+  {
+    return ((scfNms.size() == 1)  && (!scfNms.begin()->compare("*")));
+  }
 };
 
 /* ************************************************************************** *
@@ -160,11 +165,24 @@ ICSrvCfgReaderAC::CfgState
       throw ConfigException("\'%s.AddressPools\' subsection is missed/empty", nm_cfg);
   }
     
-  if (!polXCFG.scfNms.empty()) {  //lookup IN platforms configs
-    scfReader.addArguments(polXCFG.scfNms);
-    scfReader.readConfig(&(polDat->_scfMap)); //throws
-    icsDeps.insert(ICSIdent::icsIdTCAPDisp);
+  //read referenced IN platforms configs
+  scfReader.addArguments(polXCFG.scfNms);
+  scfReader.readConfig(); //throws
+
+  //compose gsmSCFs map for this policy
+  if (polXCFG.isScfMask()) {
+    scfReader.getConfig()->exportScfParms(polDat->_scfMap);
+  } else {
+    for (CSVListOfStr::const_iterator 
+         it = polXCFG.scfNms.begin(); it != polXCFG.scfNms.end(); ++it) {
+      INScfIdent_t idScf(it->c_str());
+      scfReader.getConfig()->exportScfParms(idScf, polDat->_scfMap);
+    }
   }
+  icsDeps.insert(ICSIdent::icsIdTCAPDisp);
+  smsc_log_info(logger, "  '%s': %u gsmSCFs configured", polDat->_ident.c_str(),
+                (unsigned)polDat->_scfMap.size());
+
   if (!polXCFG.prvdNms.empty()) {      //add Abonent Provider in dependencies
     prvdReader.addArguments(polXCFG.prvdNms);
     if (prvdReader.readConfig()) //throws

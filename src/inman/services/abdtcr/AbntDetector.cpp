@@ -335,8 +335,8 @@ void AbonentDetector::ConfigureSCF(void)
 {
     configureMOSM();
     //verify IMSI
-    if (!abCsi.getImsi() && _cfgScf && !_cfgScf->_dfltImsi.empty())
-      abCsi.setImsi(_cfgScf->_dfltImsi.c_str());
+    if (!abCsi.getImsi() && _cfgScf && !_cfgScf->_prm->_dfltImsi.empty())
+      abCsi.setImsi(_cfgScf->_prm->_dfltImsi.c_str());
     if (!abCsi.getImsi()) {
       smsc_log_warn(logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
                      abNumber.toString().c_str());
@@ -426,7 +426,8 @@ bool AbonentDetector::sendResult(void)
   smsc_log_info(logger, dstr.c_str());
   SPckContractResult spck;
   spck.Hdr().dlgId = _wId;
-  if (_wErr)
+  
+  if (abCsi.isUnknown() && _wErr)
     spck.Cmd().setError(_wErr, URCRegistry::explainHash(_wErr).c_str());
   else {
     spck.Cmd().setContractInfo(abCsi.abType, abCsi.getImsi());

@@ -6,6 +6,7 @@ static char const ident[] = "@(#)$Id$";
 using smsc::inman::iaprvd::IAProviderAC;
 using smsc::inman::iaprvd::CSIRecord;
 using smsc::inman::iaprvd::IAPProperty;
+using smsc::inman::iaprvd::IAPAbility;
 
 using smsc::inman::iapmgr::IAProviderInfo;
 using smsc::inman::iapmgr::INParmsCapSms;
@@ -353,6 +354,11 @@ unsigned Billing::writeCDR(void)
         if (!abCsi.vlrNum.empty())
             cdr._srcMSC = abCsi.vlrNum.toString();
     }
+    //separate undetermined IMSI of known abonent from empty IMSI of unknown abonent
+    if (abCsi.abImsi.empty() && !abCsi.isUnknown()) {
+      memset(cdr._srcIMSI.str, '0', IMSIString::MAX_SZ-1);
+      cdr._srcIMSI.str[IMSIString::MAX_SZ-1] = 0;
+    }
     if (!cdr._inBilled || (_cfg.prm->cdrMode == ChargeParm::cdrALL)) {
         //remove TonNpi for MSCs ids
         TonNpiAddress tna;
@@ -413,7 +419,13 @@ void Billing::abortThis(const char * reason/* = NULL*/)
 
 RCHash Billing::startCAPSmTask(void)
 {
-    capSched = _cfg.schedMgr->getScheduler((_cfgScf->_capSms.idpReqMode == INParmsCapSms::idpReqMT) ? 
+    if (msgType == ChargeParm::msgSMS) { // billMode == ChargeParm::bill2IN
+        smsc_log_warn(logger, "%s: %s(%s, %s): double CDR is previously created by'%s' for %s",
+                      _logId, cdr.dpType().c_str(), cdr._chargeType ? "MT" : "MO",
+                      cdr.nmPolicy(), _cfgScf->_ident.c_str(), cdr._srcAdr.c_str());
+    }
+
+    capSched = _cfg.schedMgr->getScheduler((_cfgScf->_prm->_capSms.idpReqMode == INParmsCapSms::idpReqMT) ? 
                         TaskSchedulerITF::schedMT : TaskSchedulerITF::schedSEQ);
     if (!capSched) {
         smsc_log_error(logger, "%s: TaskScheduler is not srarted", _logId);
@@ -423,7 +435,7 @@ RCHash Billing::startCAPSmTask(void)
     const GsmSCFinfo * smScf = abCsi.getSCFinfo(UnifiedCSI::csi_MO_SM);
     std::auto_ptr<CAPSmTaskAC> smTask;
 
-    if (_cfgScf->_capSms.idpReqMode == INParmsCapSms::idpReqMT) {
+    if (_cfgScf->_prm->_capSms.idpReqMode == INParmsCapSms::idpReqMT) {
         smTask.reset(new CAPSmTaskMT(abNumber, cfgSS7, smScf->serviceKey, CAPSmTaskAC::idpMO, logger));
     } else
         smTask.reset(new CAPSmTaskSQ(abNumber, cfgSS7, smScf->serviceKey, CAPSmTaskAC::idpMO, logger));
@@ -450,15 +462,17 @@ RCHash Billing::startCAPSmTask(void)
     
     RCHash rval = 0;
     try { //compose InitialDPSMS argument
-        switch (_cfgScf->_capSms.idpLiAddr) {
+        switch (_cfgScf->_prm->_capSms.idpLiAddr) {
         case INParmsCapSms::idpLiSSF:
             smTask->Arg().setLocationInformationMSC(cfgSS7.ownAddr); break;
         case INParmsCapSms::idpLiSMSC:
             smTask->Arg().setLocationInformationMSC(csInfo.smscAddress.c_str()); break;
         default:
+          if (!abCsi.vlrNum.empty())
             smTask->Arg().setLocationInformationMSC(abCsi.vlrNum);
         }
-        smTask->Arg().setIMSI(abCsi.abImsi);
+        if (!abCsi.abImsi.empty())
+          smTask->Arg().setIMSI(abCsi.abImsi);
         smTask->Arg().setSMSCAddress(csInfo.smscAddress.c_str());
         smTask->Arg().setTimeAndTimezone(cdr._submitTime);
         smTask->Arg().setTPShortMessageSpecificInfo(csInfo.tpShortMessageSpecificInfo);
@@ -550,7 +564,7 @@ bool Billing::verifyChargeSms(void)
             smsc_log_error(logger, "%s: SMS Extra services are not configured!", _logId);
             return false;
         }
-        SmsXServiceMap::iterator it = _cfg.prm->smsXMap->find(smsXMask);
+        SmsXServiceMap::const_iterator it = _cfg.prm->smsXMap->find(smsXMask);
         if (it != _cfg.prm->smsXMap->end()) {
             xsmsSrv = &(it->second);
             cdr._serviceId = xsmsSrv->svcCode;
@@ -576,6 +590,7 @@ bool Billing::verifyChargeSms(void)
     billMode = billPrio->first;
 
     //according to #B2501:
+/*
     if (msgType == ChargeParm::msgSMS) {
       //only bill2CDR & billOFF allowed for ordinary SMS
       cdr._smsXMask &= ~SMSX_INCHARGE_SRV;
@@ -584,6 +599,7 @@ bool Billing::verifyChargeSms(void)
         return false; 
       }
     }
+*/
     return true;
 }
 
@@ -625,33 +641,39 @@ Billing::PGraphState Billing::onChargeSms(void)
         _cfg.abCache->getAbonentInfo(abNumber, &cacheRec);
         abCsi.Merge(cacheRec);     //merge available abonent info
     }
-    //check for IMSI being defined
-    if (!abCsi.getImsi())
-        abCsi.abType = AbonentContractInfo::abtUnknown;
 
-    if (abCsi.isPostpaid()) {
+    if (abCsi.isPostpaid() && abCsi.getImsi()) {
         billMode = ChargeParm::bill2CDR;
         //do not interact IN platform, just create CDR
         return chargeResult(true);
     }
 
-    //Here goes either abtPrepaid or abtUnknown ..
-    if (abCsi.isPrepaid())
-      configureMOSM(); //check if cache data enough to determine gsmSCF params
+    bool askProvider = false;
+    const AbonentPolicy * iapPolicy = determinePolicy();
+    const IAProviderInfo *
+      prmPrvd = iapPolicy ? iapPolicy->getIAProvider(AbonentPolicy::iapPrimary) : NULL;
 
+    if (!abCsi.isUnknown()) {
+      //check for IMSI being defined
+      if (!abCsi.getImsi() && prmPrvd && prmPrvd->hasAbility(IAPAbility::abIMSI))
+        askProvider = true;
+
+      if (abCsi.isPrepaid())
+        configureMOSM(); //check if cache data enough to determine gsmSCF params
+    }
     //check if AbonentProvider should be requested for contract type/gsmSCF params
 
     /* **************************************************** */
     /* conditions which switch ON provider request         */
     /* **************************************************** */
-    bool askProvider = ((_cfg.prm->cntrReq == ChargeParm::reqAlways)
+    askProvider |= ((_cfg.prm->cntrReq == ChargeParm::reqAlways)
                         || ( (billMode == ChargeParm::bill2IN) 
                              && (abCsi.isUnknown() || !getServiceKey(UnifiedCSI::csi_MO_SM))
                            )
                         );
 
     //check if AbonentProvider should be requested for current abonent location
-    if (abCsi.vlrNum.empty() && _cfg.iapMgr)
+    if (abCsi.vlrNum.empty() && prmPrvd && prmPrvd->hasAbility(IAPAbility::abVLR))
         askProvider = true;
 
     /* **************************************************** */
@@ -665,16 +687,14 @@ Billing::PGraphState Billing::onChargeSms(void)
     if (chrgFlags & ChargeSms::chrgCDR)
         askProvider = false;
 
-    if (askProvider && _cfg.iapMgr) {
-      if (determinePolicy()) {
-        if (_iapRule._iaPolicy->_prvdPrio.first.empty()) {
-          billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
-          smsc_log_error(logger, "%s: no IAProvider configured for %s", _logId, abNumber.getSignals());
-        } else  if (startIAPQuery()) {
-          state = bilStarted;
-          //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
-          return Billing::pgCont;
-        }
+    if (askProvider) {
+      if (!prmPrvd) {
+        billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
+        smsc_log_error(logger, "%s: no IAProvider configured for %s", _logId, abNumber.getSignals());
+      } else  if (startIAPQuery()) {
+        state = bilStarted;
+        //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
+        return Billing::pgCont;
       }
     }
     return ConfigureSCFandCharge();
@@ -735,19 +755,25 @@ INManErrorId::Code_e Billing::configureSCF(void)
   }
 
   //verify IMSI
-  if (!abCsi.getImsi() && _cfgScf && !_cfgScf->_dfltImsi.empty())
-    abCsi.setImsi(_cfgScf->_dfltImsi.c_str());
+  if (!abCsi.getImsi() && _cfgScf && !_cfgScf->_prm->_dfltImsi.empty())
+    abCsi.setImsi(_cfgScf->_prm->_dfltImsi.c_str());
   if (!abCsi.getImsi()) {
-    smsc_log_error(logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
+    smsc_log_warn(logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
                    abNumber.toString().c_str());
-    return INManErrorId::cfgInconsistency;
+//    smsc_log_error(logger, "%s: unable to determine IMSI for abonent(%s)", _logId,
+//                   abNumber.toString().c_str());
+//    return INManErrorId::cfgInconsistency;
   }
 
   //verify abonent location MSC
-  if (abCsi.vlrNum.empty()) { 
+  if (abCsi.vlrNum.empty()) {
+    smsc_log_warn(logger, "%s: unable to determine location MSC for abonent(%s)",
+                   _logId, abNumber.toString().c_str());
+/*
     smsc_log_error(logger, "%s: unable to determine location MSC for abonent(%s)",
                    _logId, abNumber.toString().c_str());
     return INManErrorId::cfgInconsistency;
+*/
   }
   return INManErrorId::noErr;
 }

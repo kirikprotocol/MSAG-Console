@@ -109,7 +109,7 @@ private:
     volatile bool       providerQueried;
     // ...
     const INScfCFG *    _cfgScf;    //serving gsmSCF(IN-point) configuration
-    XSmsService *       xsmsSrv;    //optional SMS Extra service config.
+    const XSmsService * xsmsSrv;    //optional SMS Extra service config.
     RCHash              billErr;    //global error code made by URCRegistry
     // ...
     TaskId              capTask;    //id of started CapSMS task

@@ -66,7 +66,7 @@ struct AbonentPolicy {
 
   NameString_t      _ident;
   IAPrvdsPrio       _prvdPrio; //prioritized pair of allowed IAProviders
-  INScfsMAP         _scfMap;
+  SCFParmsMap       _scfMap;
   AddressPoolsSet   _poolsSet;
 
   explicit AbonentPolicy(const char * use_id = NULL) : _ident(use_id)
@@ -80,11 +80,11 @@ struct AbonentPolicy {
   bool bindProviders(const IAPrvdsRegistry & prvd_reg);
 
   const char * getIdent(void) const { return _ident.c_str(); }
-  const INScfsMAP & getScfMap(void) const { return _scfMap; }
+  const SCFParmsMap & getScfMap(void) const { return _scfMap; }
   //
   const INScfCFG * getSCFparms(const TonNpiAddress & scf_adr) const
   {
-    INScfsMAP::const_iterator it = _scfMap.find(scf_adr.toString());
+    SCFParmsMap::const_iterator it = _scfMap.find(scf_adr);
     return (it != _scfMap.end()) ? it->second : NULL;
   }
 

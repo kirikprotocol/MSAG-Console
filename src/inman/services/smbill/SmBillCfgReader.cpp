@@ -285,9 +285,13 @@ void ICSSmBillingCfgReader::readBillMode(ChargeParm::MSG_TYPE msg_type,
 
   //according to #B2501:
   if ((msg_type == ChargeParm::msgSMS) && (pbm[0] == ChargeParm::bill2IN)) {
-    throw ConfigException("Forbidden billMode '%s' for messageType '%s'",
+    smsc_log_warn(logger, "Unsafe billMode '%s' for messageType '%s'",
                           _BILLmodes[ChargeParm::bill2IN],
                           _MSGtypes[ChargeParm::msgSMS]);
+    smsc_log_warn(logger, "  consider double CDR creation for prepaid abonents by serving IN-point");
+/*    throw ConfigException("Forbidden billMode '%s' for messageType '%s'",
+                          _BILLmodes[ChargeParm::bill2IN],
+                          _MSGtypes[ChargeParm::msgSMS]);*/
   }
   b_map->assign(msg_type, pbm[0], pbm[1]);
   smsc_log_info(logger, "    %s -> %s, %s", mt_bill ? "MT" : "MO",

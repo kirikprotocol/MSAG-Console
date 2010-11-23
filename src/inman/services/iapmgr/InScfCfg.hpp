@@ -8,6 +8,7 @@
 #define __INMAN_ICS_IAPMGR_INSCF_HPP
 
 #include "inman/common/RPCList.hpp"
+#include "inman/common/OptionalObjT.hpp"
 #include "inman/services/iapmgr/SKAlgorithms.hpp"
 
 namespace smsc  {
@@ -46,20 +47,25 @@ struct INParmsCapSms {
 /* ************************************************************************** *
  * Complete gsmSCF interaction parameters.
  * ************************************************************************** */
+struct INScfParams {
+  SKAlgorithmsDb  _skDb;      //registry of translation algoritms for various service keys
+  //optional params:
+  IMSIString      _dfltImsi;  //default IMSI for abonents served by this gsmSCF
+  INParmsCapSms   _capSms;    //Cap3Sms parameters
+};
+
 class INScfCFG {
 public:
   static const size_t _maxIdentSZ = 80;
   typedef smsc::core::buffers::FixedLengthString<_maxIdentSZ> IdentString_t;
 
-  IdentString_t   _ident;     //INPlatform ident
-  TonNpiAddress   _scfAdr;    //gsmSCF address always has ISDN international format
-  SKAlgorithmsDb  _skDb;      //database of translation algoritms for various service keys 
-  //optional params:
-  IMSIString      _dfltImsi;  //default IMSI for abonents served by this gsmSCF
-  INParmsCapSms   _capSms;    //Cap3Sms parameters
+  IdentString_t     _ident;     //INPlatform ident
+  TonNpiAddress     _scfAdr;    //gsmSCF address always has ISDN international format
+  const INScfCFG *  _isAlias;   //cfg is an alias form
+  smsc::util::OptionalObj_T<INScfParams> _prm;
 
-
-  explicit INScfCFG(const char * name = NULL) : _ident(name)
+  explicit INScfCFG(const char * name = NULL)
+    : _ident(name), _isAlias(NULL)
   { }
   ~INScfCFG()
   { }
@@ -71,7 +77,8 @@ public:
 
   uint32_t getSKey(CSIUid_e tgt_csi, const CSIRecordsMap * org_csis) const
   {
-    return _skDb.getSKey(tgt_csi, org_csis);
+    return _isAlias ? _isAlias->getSKey(tgt_csi, org_csis)
+                    : _prm->_skDb.getSKey(tgt_csi, org_csis);
   }
 };
 typedef INScfCFG::IdentString_t INScfIdent_t;
