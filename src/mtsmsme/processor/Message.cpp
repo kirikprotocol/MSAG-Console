@@ -300,9 +300,13 @@ vector<unsigned char> Message::getComponent()
   vector<unsigned char> buf;
   TCMessage_t* pmsg = (TCMessage_t*)structure;
   ComponentPortion_t *comps = 0;
-  if(pmsg->present == TCMessage_PR_begin) comps = pmsg->choice.begin.components;
-  if(pmsg->present == TCMessage_PR_contiinue) comps = pmsg->choice.contiinue.components;
-  if(pmsg->present == TCMessage_PR_end) comps = pmsg->choice.end.components;
+  if(pmsg->present == TCMessage_PR_begin)
+    comps = pmsg->choice.begin.components;
+  if(pmsg->present == TCMessage_PR_contiinue)
+    comps = pmsg->choice.contiinue.components;
+  if(pmsg->present == TCMessage_PR_end)
+    comps = pmsg->choice.end.components;
+
   if (comps)
   {
     /* obtain first component */
@@ -324,6 +328,22 @@ vector<unsigned char> Message::getComponent()
           buf.insert(buf.end(),pdu.buf, pdu.buf + pdu.size);
         }
        }
+      if (comp->present = Component_PR_returnResultNotLast)
+      {
+        if (comp->choice.returnResultNotLast.result)
+        {
+          ANY_t& pdu = comp->choice.returnResultNotLast.result->result;
+          buf.insert(buf.end(),pdu.buf, pdu.buf + pdu.size);
+        }
+      }
+      if (comp->present = Component_PR_returnError)
+      {
+        if (comp->choice.returnError.parameter)
+        {
+          ANY_t& pdu = *(comp->choice.returnError.parameter);
+          buf.insert(buf.end(),pdu.buf, pdu.buf + pdu.size);
+        }
+      }
     }
   }
   return buf;
