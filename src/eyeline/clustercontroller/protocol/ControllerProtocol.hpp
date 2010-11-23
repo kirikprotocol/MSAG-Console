@@ -46,9 +46,8 @@
 #include "messages/ApplyMapLimitsResp.hpp"
 #include "messages/ApplySnmpResp.hpp"
 #include "messages/TraceRouteResp.hpp"
-#include "messages/LoadTestRoutesResp.hpp"
+#include "messages/CheckRoutesResp.hpp"
 #include "messages/LookupProfileResp.hpp"
-#include "messages/LookupProfileExResp.hpp"
 #include "messages/UpdateProfileResp.hpp"
 #include "messages/DeleteProfileResp.hpp"
 #include "messages/CancelSmsResp.hpp"
@@ -99,9 +98,8 @@ public:
     tag_ApplyMapLimits=6,
     tag_ApplySnmp=7,
     tag_TraceRoute=8,
-    tag_LoadTestRoutes=9,
-    tag_LookupProfile=10,
-    tag_LookupProfileEx=11,
+    tag_CheckRoutes=9,
+    tag_LookupProfile=11,
     tag_UpdateProfile=12,
     tag_DeleteProfile=14,
     tag_CancelSms=15,
@@ -150,9 +148,8 @@ public:
     tag_ApplyMapLimitsResp=1006,
     tag_ApplySnmpResp=1007,
     tag_TraceRouteResp=1008,
-    tag_LoadTestRoutesResp=1009,
-    tag_LookupProfileResp=1010,
-    tag_LookupProfileExResp=1011,
+    tag_CheckRoutesResp=1009,
+    tag_LookupProfileResp=1011,
     tag_UpdateProfileResp=1012,
     tag_DeleteProfileResp=1014,
     tag_CancelSmsResp=1015,
@@ -203,8 +200,8 @@ public:
   void encodeMessage(const MsgType& msg,eyeline::protogen::framework::SerializerBuffer* ss)
   {
     ss->writeInt32(4+4+msg.template length<eyeline::protogen::framework::SerializerBuffer>());
-    ss->writeInt32(msg.getTag());
-    ss->writeInt32(msg.getSeqNum());
+    ss->writeInt32(msg.messageGetTag());
+    ss->writeInt32(msg.messageGetSeqNum());
     msg.serialize(*ss);
   }
 

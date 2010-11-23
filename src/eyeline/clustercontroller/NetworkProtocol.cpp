@@ -333,7 +333,7 @@ void NetworkProtocol::handleCommands(int idx)
     }
     Packet p;
     handlers[idx].queue.Pop(p);
-    protocol::ControllerProtocolHandler cph(p.connId,log);
+    protocol::ControllerProtocolHandler cph(p.connId,log,logDumpIn);
     protocol::ControllerProtocol cp;
     cp.assignHandler(&cph);
     try{
@@ -421,7 +421,7 @@ bool ProtocolSocket::Read()
   static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("ps.rd");
   if(!havePacketSize)
   {
-    int rd=sck->Read(rdBuffer+rdDataSize,4);
+    int rd=sck->Read(rdBuffer+rdDataSize,(int)(4-rdDataSize));
     if(rd<=0)
     {
       throw smsc::util::Exception("socket read failed");
@@ -433,6 +433,10 @@ bool ProtocolSocket::Read()
       memcpy(&pckSz,rdBuffer,4);
       pckSz=ntohl(pckSz);
       smsc_log_debug(log,"received packet with size %d",pckSz);
+      if(pckSz>100000)
+      {
+        throw smsc::util::Exception("packet size too big(%d)",pckSz);
+      }
       rdPacketSize=pckSz;
       if(rdBufferSize<rdPacketSize)
       {
@@ -461,7 +465,9 @@ bool ProtocolSocket::Read()
 
 bool ProtocolSocket::Write()
 {
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("ps.wr");
   int wr=sck->Write(wrBuffer+wrDataWritten,(int)(wrBufferSize-wrDataWritten));
+  smsc_log_debug(log,"sent %d out of %d bytes to connId=%d",wr,(int)(wrBufferSize-wrDataWritten),connId);
   if(wr==0)
   {
     throw smsc::util::Exception("socket closed");

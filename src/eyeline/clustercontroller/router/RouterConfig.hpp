@@ -10,15 +10,9 @@
 
 #include "smsc/smeman/smetable.h"
 #include "smsc/smeman/smeadmin.h"
-#include "core/buffers/RefPtr.hpp"
-#include "core/synchronization/Mutex.hpp"
+#include "smsc/router/Router.hpp"
 #include <string>
 
-namespace smsc{
-namespace router{
-class RouteManager;
-}
-}
 
 namespace eyeline {
 namespace clustercontroller {
@@ -26,10 +20,7 @@ namespace router {
 
 class RouterConfig
 {
-public:
-  typedef smsc::core::buffers::RefPtr<smsc::router::RouteManager,smsc::core::synchronization::Mutex> RouterRef;
 protected:
-  static RouterRef instance;
   static std::string routerConfig;
   static std::string smeConfig;
 
@@ -92,9 +83,9 @@ protected:
 public:
   static void Init(const char* routeConfigPath,const char* smeConfigPath);
   static void Reload();
-  static RouterRef getInstance()
+  static smsc::router::Router* getInstance()
   {
-    return instance;
+    return smsc::router::Router::getInstance();
   }
   static smsc::smeman::SmeAdministrator* getSmeAdm()
   {

@@ -11,13 +11,12 @@ namespace eyeline{
 namespace clustercontroller{
 namespace acl{
 
-smsc::acls::AclAbstractMgr* AclConfig::instance;
 
-void AclConfig::Init(const char* storePath,int preCreate)
+void AclConfig::Init(const char* storePath)
 {
-  instance=smsc::acls::AclAbstractMgr::Create2();
-  instance->LoadUp(storePath,preCreate);
-  instance->enableControllerMode();
+  smsc::acl::AclStore::Init();
+  smsc::acl::AclStore::getInstance()->enableControllerMode();
+  smsc::acl::AclStore::getInstance()->Load(storePath);
 }
 
 

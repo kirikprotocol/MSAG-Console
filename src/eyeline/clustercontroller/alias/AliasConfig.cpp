@@ -17,8 +17,8 @@ smsc::alias::AliasManager* AliasConfig::instance=0;
 void AliasConfig::Init(const char* path)
 {
   instance=new smsc::alias::AliasManImpl(path);
-  instance->Load();
   instance->enableControllerMode();
+  instance->Load();
 }
 
 }

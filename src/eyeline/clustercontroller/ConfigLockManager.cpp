@@ -155,6 +155,10 @@ void ConfigLockManager::UnlockByConn(int connId)
         }
         locks[i].erase(it);
         it--;
+        if(locks[i].empty())
+        {
+          break;
+        }
       }
     }
   }

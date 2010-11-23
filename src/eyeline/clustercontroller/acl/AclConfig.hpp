@@ -8,7 +8,7 @@
 #ifndef __EYELINE_CLUSTERCONTROLLER_ACL_ACLCONFIG_HPP__
 #define __EYELINE_CLUSTERCONTROLLER_ACL_ACLCONFIG_HPP__
 
-#include "smsc/acls/interfaces.h"
+#include "smsc/acls/AclManager.hpp"
 
 namespace eyeline{
 namespace clustercontroller{
@@ -16,15 +16,13 @@ namespace acl{
 
 class AclConfig
 {
-protected:
-  static smsc::acls::AclAbstractMgr* instance;
 public:
 
-  static void Init(const char* storePath,int preCreate);
+  static void Init(const char* storePath);
 
-  static smsc::acls::AclAbstractMgr* getInstance()
+  static smsc::acl::AclStore* getInstance()
   {
-    return instance;
+    return smsc::acl::AclStore::getInstance();
   }
 };
 

@@ -8,9 +8,7 @@
 #include "messages/ApplyMapLimits.hpp"
 #include "messages/ApplySnmp.hpp"
 #include "messages/TraceRoute.hpp"
-#include "messages/LoadTestRoutes.hpp"
 #include "messages/LookupProfile.hpp"
-#include "messages/LookupProfileEx.hpp"
 #include "messages/UpdateProfile.hpp"
 #include "messages/DeleteProfile.hpp"
 #include "messages/CancelSms.hpp"
@@ -88,13 +86,15 @@
 #include "logger/Logger.h"
 #include "messages/GetConfigsState.hpp"
 #include "messages/GetSmscConfigsStateResp.hpp"
+#include "messages/CheckRoutes.hpp"
 
 namespace eyeline {
 namespace clustercontroller {
 namespace protocol {
 class ControllerProtocolHandler{
 public:
-  ControllerProtocolHandler(int argConnId,smsc::logger::Logger* argLog):connId(argConnId),log(argLog)
+  ControllerProtocolHandler(int argConnId,smsc::logger::Logger* argLog,smsc::logger::Logger* argLogDump):
+    connId(argConnId),log(argLog),logDump(argLogDump)
   {
 
   }
@@ -106,9 +106,8 @@ public:
   void handle(messages::ApplyMapLimits& msg);
   void handle(messages::ApplySnmp& msg);
   void handle(const messages::TraceRoute& msg);
-  void handle(const messages::LoadTestRoutes& msg);
+  void handle(const messages::CheckRoutes& msg);
   void handle(const messages::LookupProfile& msg);
-  void handle(const messages::LookupProfileEx& msg);
   void handle(messages::UpdateProfile& msg);
   void handle(messages::DeleteProfile& msg);
   void handle(messages::CancelSms& msg);
@@ -187,12 +186,21 @@ public:
 protected:
   int connId;
   smsc::logger::Logger* log;
+  smsc::logger::Logger* logDump;
   template <class MSG_T,class MSG_RESP_T>
   void prepareResp(MSG_T& msg,MSG_RESP_T& respMsg,uint32_t status)
   {
-    respMsg.setSeqNum(msg.getSeqNum());
+    respMsg.messageSetSeqNum(msg.messageGetSeqNum());
     messages::Response resp;
     resp.setStatus(status);
+    respMsg.setResp(resp);
+  }
+  template <class MSG_T,class MSG_RESP_T>
+  void prepareMultiResp(MSG_T& msg,MSG_RESP_T& respMsg,uint32_t status)
+  {
+    respMsg.messageSetSeqNum(msg.messageGetSeqNum());
+    messages::MultiResponse resp;
+    resp.getStatusRef().push_back(status);
     respMsg.setResp(resp);
   }
 };
