@@ -22,6 +22,9 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
 
   public DeliveriesCountByPeriodController() {
     super(new DeliveriesCountByPeriodTotals());
+    Calendar c = getLastWeekStart();
+    getFilter().setFromDate(c.getTime());
+    start();
   }
 
 

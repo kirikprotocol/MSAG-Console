@@ -218,4 +218,14 @@ public abstract class DeliveryStatController extends LongOperationController {
   public DeliveryStatTotals getTotals() {
     return totals;
   }
+
+  protected Calendar getLastWeekStart() {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.HOUR,0);
+    c.set(Calendar.MINUTE,0);
+    c.set(Calendar.SECOND,0);
+    c.set(Calendar.MILLISECOND,0);
+    c.add(Calendar.DATE,-7);
+    return c;
+  }
 }
