@@ -31,7 +31,7 @@ int parseWeekDays( const std::vector< std::string >& wd )
         bool ok = false;
         for ( const char** p = days; *p != 0; ++p ) {
             if ( 0 == strcmp(*p,i->c_str()) ) {
-                const unsigned idx = (p - days) % 7;
+                const unsigned idx = unsigned(p - days) % 7;
                 ok = true;
                 res |= weekBits[idx];
                 break;
