@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
 import mobi.eyeline.informer.web.config.Configuration;
 
+import java.util.Calendar;
 import java.util.Locale;
 
 /**
@@ -23,7 +24,12 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public MessagesByPeriodController() {
     super(new MessagesByPeriodTotals());
-    
+    String s = getRequestParameter("delivery");
+    if(s==null) {
+      Calendar c = getLastWeekStart();
+      getFilter().setFromDate(c.getTime());
+      start();
+    }
   }
 
   public Integer getDeliveryId() {
