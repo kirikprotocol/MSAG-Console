@@ -380,9 +380,9 @@ void InfosmeCoreV1::selfTest()
             for ( int i = 0; i < 10000; ++i ) {
                 ulonglong address;
                 if ( i % 2 ) {
-                    address = 79137654000ULL + i;
+                    address = 79137650000ULL + i;
                 } else {
-                    address = 79537699000ULL + i;
+                    address = 79537690000ULL + i;
                 }
                 mlk.msg.subscriber = addressToSubscriber(11,1,1,address);
                 char userdata[30];
