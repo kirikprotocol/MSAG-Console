@@ -46,7 +46,7 @@ void RegionSender::assignSender( SmscSender* conn )
 std::string RegionSender::toString() const
 {
     char buf[30];
-    sprintf(buf,"R=%u",getRegionId());
+    sprintf(buf,"R=%u bw=%u",getRegionId(),getBandwidth());
     return buf;
 }
 

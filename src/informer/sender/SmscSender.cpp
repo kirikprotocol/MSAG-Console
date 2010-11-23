@@ -246,7 +246,7 @@ rproc_(core),
 parser_(0),
 smscId_(smscId),
 smscConfig_(cfg),
-scoredList_(*this,2*maxScoreIncrement,
+scoredList_(*this, 2*maxScoreIncrement,
             smsc::logger::Logger::getInstance("reglist")),
 journal_(0),
 awaken_(false),
@@ -1076,10 +1076,11 @@ unsigned SmscSender::scoredObjIsReady( unsigned, ScoredPtrType regionSender )
 int SmscSender::processScoredObj( unsigned, ScoredPtrType regionSender )
 {
     // unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
+    const int ret = int(maxScoreIncrement / regionSender->getBandwidth());
     if ( regionSender->processRegion(currentTime_) ) {
-        return maxScoreIncrement / regionSender->getBandwidth();
+        return ret;
     } else {
-        return -maxScoreIncrement / regionSender->getBandwidth();
+        return -ret;
     }
 }
 /*
