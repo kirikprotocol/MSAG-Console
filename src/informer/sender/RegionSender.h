@@ -96,6 +96,7 @@ private:
     smsc::core::synchronization::Mutex lock_;
     SmscSender*                        conn_;     // not owned
     RegionPtr                          region_;   // shared ownership
+    // fixme: optimize keep ptr not in the list
     ScoredPtrList< RegionSender >      taskList_; // dlvs are not owned
 
     SpeedControl<usectime_type,tuPerSec> speedControl_; // lock is not needed

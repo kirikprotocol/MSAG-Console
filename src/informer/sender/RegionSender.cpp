@@ -56,9 +56,10 @@ bool RegionSender::processRegion( usectime_type currentTime )
     try {
         smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
         currentTime_ = currentTime;
+        const msgtime_type now = msgtime_type(currentTime_ / tuPerSec);
         struct tm tmnow;
         {
-            const time_t tmp = time_t(currentTime_/tuPerSec);
+            const time_t tmp = time_t(now);
             if ( !gmtime_r(&tmp,&tmnow) ) {
                 throw InfosmeException(EXC_SYSTEM,"R=%u gmtime_r()",getRegionId());
             }
@@ -67,7 +68,7 @@ bool RegionSender::processRegion( usectime_type currentTime )
         static const int aweek = 7*daynight;
         // monday is 0..daynight-1, tue is daynight..daynight*2-1, etc.
         weekTime_ = int( ((tmnow.tm_wday+6)*daynight +
-                          (currentTime_ % daynight) + 
+                          (now % daynight) + 
                           region_->getTimezone()) % aweek );
         MutexGuard mg(lock_);
         // check speed control
