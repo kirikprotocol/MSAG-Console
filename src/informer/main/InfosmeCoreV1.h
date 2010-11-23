@@ -113,9 +113,6 @@ public:
     // smsc has just been stopped
     // virtual void notifySmscFinished( const std::string& smscId );
 
-    /// reload all regions
-    void reloadRegions();
-
     void bindDeliveryRegions( const BindSignal& bs );
 
     /// invoked from stats dumper
@@ -127,6 +124,7 @@ protected:
 
     void loadUsers( const char* userId );
     void loadSmscs( const char* smscId );
+    void loadRegions( regionid_type regionId );
 
     /// this methods has several functions:
     /// 1. create smsc: new smscId, valid cfg;

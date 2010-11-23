@@ -20,6 +20,7 @@ public:
             const char*   smscId,
             unsigned      bw,
             int           timezone,
+            bool          deleted,    // may be set to true, disabling the region
             std::vector<std::string>* masks = 0 );
 
     ~Region();
@@ -28,17 +29,23 @@ public:
     unsigned      getBandwidth() const { return bw_; }
     const std::string& getSmscId() const { return smscId_; }
     const std::string& getName() const { return name_; }
-    const int getTimezone() const { return timezone_; }
+    int getTimezone() const { return timezone_; }
+    bool isDeleted() const { return deleted_; }
     const std::vector<std::string>& getMasks() const { return masks_; }
+
+    void setDeleted( bool del ) { deleted_ = del; }
 
     void swap( Region& r ) {
         std::swap(regionId_,r.regionId_);
         name_.swap(r.name_);
         smscId_.swap(r.smscId_);
         std::swap(bw_,r.bw_);
+        std::swap(deleted_, r.deleted_ );
         std::swap(timezone_,r.timezone_);
         masks_.swap(r.masks_);
     }
+
+    bool hasEqualMasks( const Region& r ) const;
 
 private:
     void ref() {
@@ -65,7 +72,8 @@ private:
     std::string              smscId_;
     unsigned                 bw_;          //  sms/sec
     int                      timezone_;
-    std::vector<std::string> masks_;
+    bool                     deleted_;
+    std::vector<std::string> masks_;       //  sorted masks
     smsc::core::synchronization::Mutex lock_;
     unsigned                           ref_;
 };

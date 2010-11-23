@@ -46,7 +46,7 @@ log_(smsc::logger::Logger::getInstance("regloader"))
                 throw InfosmeException(EXC_CONFIG,"invalid bandwidth='%s' for region id=%u",
                                        sbandwidth.c_str(),rid);
             }
-            Region* r = new Region(rid,"default",defaultSmscId,bandwidth,0);
+            Region* r = new Region(rid,"default",defaultSmscId,bandwidth,false,0);
             regions_.push_back(r);
         }
 
@@ -105,8 +105,10 @@ log_(smsc::logger::Logger::getInstance("regloader"))
             } else if ( timezone/3600*3600 != timezone ) {
                 throw InfosmeException(EXC_CONFIG,"invalid timezone=%d, it does not divisable by 3600 w/o remainder");
             }
+            const XmlStr sdeleted = region->getAttribute(XmlStr("deleted"));
+            const bool deleted = ( sdeleted.c_str() == std::string("true") );
 
-            Region* r = new Region(rid,name.c_str(),smscId.c_str(),bandwidth,timezone,&masks);
+            Region* r = new Region(rid,name.c_str(),smscId.c_str(),bandwidth,timezone,deleted,&masks);
             regions_.push_back(r);
         }
 
