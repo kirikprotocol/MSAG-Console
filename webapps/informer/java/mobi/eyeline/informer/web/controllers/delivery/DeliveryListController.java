@@ -78,11 +78,11 @@ public class DeliveryListController extends DeliveryController {
   }
 
   public List<SelectItem> getUniqueStatuses() {
+    ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
     List<SelectItem> result = new ArrayList<SelectItem>();
     result.add(new SelectItem(null));
-    Locale l = getLocale();
     for (DeliveryStatus s : DeliveryStatus.values()) {
-      result.add(new SelectItem(s.toString(), DeliveryStatusConverter.getAsString(l, s)));
+      result.add(new SelectItem(s.toString(), bundle.getString("delivery.status." + s)));
     }
     return result;
   }
@@ -118,7 +118,7 @@ public class DeliveryListController extends DeliveryController {
   }
 
   public String editGroup() {
-    if(selected == null) {
+    if(selected == null || selected.isEmpty()) {
       return null;
     }
     getRequest().put(DELIVERY_IDS_PARAM, selected);

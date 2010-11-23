@@ -36,7 +36,7 @@ public class SiebelManagerTest {
 
   private static TestSiebelDeliveries deliveries;
 
-  private static final int TIMEOUT = 10;
+  private static final int TIMEOUT = 5;
 
   @BeforeClass
   public static void init() throws Exception {
@@ -45,9 +45,7 @@ public class SiebelManagerTest {
       if(p != null) {
         p.shutdown();
       }
-    }catch (Exception e){
-      e.printStackTrace();
-    }
+    }catch (Exception e){}
 
     siebelUser = new User();
     siebelUser.setAllRegionsAllowed(true);
@@ -95,7 +93,7 @@ public class SiebelManagerTest {
   private void testCreation(int wid) throws Exception{
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
-    filter.setStatusFilter(DeliveryStatus.Active);
+    filter.setStatusFilter(DeliveryStatus.Active, DeliveryStatus.Finished);
     final boolean[] exist = new boolean[]{false};
     deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
@@ -132,7 +130,7 @@ public class SiebelManagerTest {
     final boolean[] exist = new boolean[]{false};
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
-    filter.setStatusFilter(DeliveryStatus.Active);
+    filter.setStatusFilter(DeliveryStatus.Active, DeliveryStatus.Finished);
     deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
         if(value.getName().startsWith("siebel_")) {
@@ -142,7 +140,7 @@ public class SiebelManagerTest {
         return true;
       }
     });
-    assertTrue("Delivery's status is not PAUSED", exist[0]);
+    assertTrue("Delivery's status is not ACTIVATED", exist[0]);
     assertEquals(SiebelDelivery.Status.IN_PROCESS, getSiebelState(wid));
   }
 
@@ -185,31 +183,31 @@ public class SiebelManagerTest {
     int wid = 10000;
     try{
       CreateDelivery.createDelivery(wid);
-      Thread.sleep(1000*TIMEOUT+5000);
+      Thread.sleep(3000*TIMEOUT);
 
       testCreation(wid);
 
       setSiebelState(wid, SiebelDelivery.Status.PAUSED);
 
-      Thread.sleep(1000*TIMEOUT+5000);
+      Thread.sleep(3000*TIMEOUT);
 
       testPaused(wid);
 
       setSiebelState(wid, SiebelDelivery.Status.ENQUEUED);
 
-      Thread.sleep(1000*TIMEOUT+5000);
+      Thread.sleep(3000*TIMEOUT);
 
       testActivated(wid);
 
       setSiebelState(wid, SiebelDelivery.Status.STOPPED);
 
-      Thread.sleep(1000*TIMEOUT+5000);
+      Thread.sleep(3000*TIMEOUT);
 
       testStopped(wid);
 
       setSiebelState(wid, SiebelDelivery.Status.ENQUEUED);
 
-      Thread.sleep(1000*TIMEOUT+5000);
+      Thread.sleep(3000*TIMEOUT);
 
       siebel.stop();
 
@@ -221,7 +219,7 @@ public class SiebelManagerTest {
 
       setSiebelState(wid, SiebelDelivery.Status.STOPPED);
 
-      Thread.sleep(1000*TIMEOUT+5000);
+      Thread.sleep(3000*TIMEOUT);
 
       testDeleted(wid);
 

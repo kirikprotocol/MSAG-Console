@@ -8,123 +8,214 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="#{msg['delivery.edit.group']}"/>
+<ui:param name="pageTitle" value="#{msg['delivery.edit.group']}"/>
 
-  <ui:define name="content">
+<ui:define name="content">
 
-    <tr:form>
+<tr:form>
 
-      <h:panelGroup rendered="#{deliveryGroupEdit.ids != null}">
+  <h:panelGroup rendered="#{deliveryGroupEdit.ids != null}">
 
-        <eye:buttons>
-          <eye:button>
-            <tr:commandLink text="#{msg['done.button']}" action="#{deliveryGroupEdit.save}"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
+    <eye:buttons>
+      <eye:button>
+        <tr:commandLink text="#{msg['done.button']}" action="#{deliveryGroupEdit.save}"/>
+      </eye:button>
+      <eye:button>
+        <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
+      </eye:button>
+      <eye:space/>
+    </eye:buttons>
 
-        <t:saveState value="#{deliveryGroupEdit.ids}"/>
+    <t:saveState value="#{deliveryGroupEdit.ids}"/>
 
-        <eye:delimiter/>
+    <eye:delimiter/>
 
-        <h:panelGrid columns="2" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign">
+    <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
-          <tr:inputText converter="addressConverter" value="#{deliveryGroupEdit.sourceAddress}" required="true" simple="true"/>
+      <h:selectBooleanCheckbox id="editSourceAddr" value="#{deliveryGroupEdit.editSourceAddress}" onchange="document.getElementById('sourceAddr').disabled=!this.checked"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
+      <tr:inputText id="sourceAddr" value="#{deliveryGroupEdit.sourceAddress}" simple="true" columns="15" converter="addressConverter"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
-          <t:inputDate popupCalendar="true" value="#{deliveryGroupEdit.endDate}" type="both"/>
+      <h:selectBooleanCheckbox id="editDeliveryDays" value="#{deliveryGroupEdit.editActiveWeekDays}" onchange="
+          for (var i = 0; i&lt;7; i++)
+            document.getElementById('deliveryDays:' + i).disabled=!this.checked
+          "/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
+      <h:selectManyCheckbox id="deliveryDays" value="#{deliveryGroupEdit.activeWeekDays}" style="width: 100px" >
+        <f:selectItems value="#{deliveryGroupEdit.allDays}"/>
+      </h:selectManyCheckbox>
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
-          <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-            <h:selectManyCheckbox value="#{deliveryGroupEdit.activeWeekDays}" required="true" requiredMessage="#{deliveryBundle.activeWeekDays}" converter="weekDaysConverter">
-              <f:selectItems value="#{deliveryGroupEdit.allDays}"/>
-            </h:selectManyCheckbox>
-            <h:outputText value="&#160;"/>
-          </h:panelGrid>
+      <h:selectBooleanCheckbox id="editDeliveryStartTime" value="#{deliveryGroupEdit.editActivePeriodStart}" onchange="
+          document.getElementById('deliveryStartTime.hours').disabled=!this.checked;
+          document.getElementById('deliveryStartTime.minutes').disabled=!this.checked"
+          />
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodStart}"/>
+      <t:inputDate id="deliveryStartTime" value="#{deliveryGroupEdit.activePeriodStart}" requiredMessage="#{msg['date.required']}" type="short_time"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
-          <h:panelGroup>
-            <t:inputDate value="#{deliveryGroupEdit.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
-            <h:outputText value=" - "/>
-            <t:inputDate value="#{deliveryGroupEdit.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
-          </h:panelGroup>
+      <h:selectBooleanCheckbox id="editDeliveryEndTime" value="#{deliveryGroupEdit.editActivePeriodEnd}" onchange="
+          document.getElementById('deliveryEndTime.hours').disabled=!this.checked;
+          document.getElementById('deliveryEndTime.minutes').disabled=!this.checked;
+          "/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodEnd}"/>
+      <t:inputDate id="deliveryEndTime" value="#{deliveryGroupEdit.activePeriodEnd}" requiredMessage="#{msg['date.required']}" type="short_time"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
-          <tr:inputText value="#{deliveryGroupEdit.priority}" simple="true" required="true" columns="5">
-            <tr:validateLongRange minimum="1" maximum="1000"/>
-          </tr:inputText>
+      <h:selectBooleanCheckbox id="editEndDate" value="#{deliveryGroupEdit.editEndDate}" onchange="
+          document.getElementById('endDate.day').disabled=!this.checked;
+          document.getElementById('endDate.month').disabled=!this.checked;
+          document.getElementById('endDate.year').disabled=!this.checked;
+          document.getElementById('endDate.hours').disabled=!this.checked;
+          document.getElementById('endDate.minutes').disabled=!this.checked;
+          "/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
+      <t:inputDate popupCalendar="true" id="endDate" value="#{deliveryGroupEdit.endDate}" requiredMessage="#{msg['date.required']}" type="both"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryOnFail}"/>
-          <h:panelGroup>
-            <h:selectBooleanCheckbox id="retryOnFail" value="#{deliveryGroupEdit.retryOnFail}"
-                                     style="position: relative; top: 2px; left: -3px;"
-                                     onchange="document.getElementById('retryPolicy1').disabled = !this.checked;"/>
-            <h:inputText value="#{deliveryGroupEdit.retryPolicy}" id="retryPolicy1"/>
-          </h:panelGroup>
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
-          <tr:inputText converter="addressConverter" value="#{deliveryGroupEdit.smsNotification}" simple="true"/>
+      <h:selectBooleanCheckbox id="editPriority" value="#{deliveryGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
+      <tr:inputText id="priority" value="#{deliveryGroupEdit.priority}" simple="true"  columns="3"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
-          <tr:inputText value="#{deliveryGroupEdit.emailNotification}" simple="true"/>
-
-          <h:outputText style="white-space:nowrap; display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
-          <h:selectOneMenu id="dMode" value="#{deliveryGroupEdit.deliveryMode}" required="true" converter="deliveryTypeConverter"
-                           onchange="var d = (this.value != 'SMS') ? 'none' : ''; document.getElementById('smsSettings').style.display = d;"
-                           style="display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}">
-            <f:selectItems value="#{deliveryGroupEdit.uniqueDeliveryModes}"/>
-          </h:selectOneMenu>
-        </h:panelGrid>
-
-        <h:panelGrid id="smsSettings" columns="2" columnClasses="column100Width, columnTopLeftAlign" style="padding-left:10px; display: #{deliveryGroupEdit.smsMode ? '' : 'none'}">
-
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
-          <tr:selectBooleanCheckbox value="#{deliveryGroupEdit.flash}" simple="true"/>
-
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
-          <tr:selectBooleanCheckbox id="trMode" value="#{deliveryGroupEdit.transactionMode}" simple="true"
-                                    onchange="
-                var d = this.checked ? 'none' : '';
-                document.getElementById('vPeriodLabel').style.display=d;
-                document.getElementById('vPeriod').style.display=d;
-            "/>
-
-          <h:outputText id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-          <tr:inputText id="vPeriod" value="#{deliveryGroupEdit.validityPeriod}" simple="true" columns="5">
-            <tr:validateLongRange minimum="1" maximum="100"/>
-          </tr:inputText>
-
-        </h:panelGrid>
-
-        <eye:delimiter/>
-
-        <eye:buttons>
-          <eye:button>
-            <tr:commandLink text="#{msg['done.button']}" action="#{deliveryGroupEdit.save}"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
-
-        <script type="text/javascript" language="javascript">
-          document.getElementById('retryPolicy1').disabled = !document.getElementById('retryOnFail').checked;
-          var d = document.getElementById().checked ? 'none' : '';
-          document.getElementById('vPeriodLabel').style.display=d;
-          document.getElementById('vPeriod').style.display=d;
-        </script>
-
+      <h:selectBooleanCheckbox id="editRetryPolicy" value="#{deliveryGroupEdit.editRetryPolicy}" onchange="
+          document.getElementById('retryPolicy').disabled=!this.checked || !document.getElementById('retryOnFail').checked;
+          document.getElementById('retryOnFail').disabled=!this.checked;
+          "/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
+      <h:panelGroup>
+        <h:selectBooleanCheckbox id="retryOnFail" value="#{deliveryGroupEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;"/>
+        <h:inputText id="retryPolicy" value="#{deliveryGroupEdit.retryPolicy}" />
       </h:panelGroup>
 
 
-    </tr:form>
+      <h:selectBooleanCheckbox id="editSmsNotification" value="#{deliveryGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
+      <tr:inputText id="smsNotification" value="#{deliveryGroupEdit.smsNotification}" simple="true" converter="addressConverter"/>
 
-  </ui:define>
+      <h:selectBooleanCheckbox id="editEmailNotification" value="#{deliveryGroupEdit.editEmailNotification}" onchange="document.getElementById('emailNotification').disabled=!this.checked"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
+      <tr:inputText id="emailNotification" value="#{deliveryGroupEdit.emailNotification}" simple="true" />
+
+      <h:selectBooleanCheckbox id="editDeliveryType" value="#{deliveryGroupEdit.editDeliveryMode}" onchange="document.getElementById('deliveryType').disabled=!this.checked" style="display:#{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
+      <h:outputText style="white-space:nowrap;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}" />
+      <h:selectOneMenu id="deliveryType" value="#{deliveryGroupEdit.deliveryMode}" style="align:left;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"  onchange="
+          var dt = document.getElementById('deliveryType');
+          var disp = dt.options[0].selected ? '' : 'none';
+          document.getElementById('smsSettings').style.display=disp;
+          if(!dt.options[0].selected ) {
+            document.getElementById('editFlash').checked = false;
+            document.getElementById('editTransactionMode').checked = false;
+            document.getElementById('editValidHours').checked = false;
+            document.getElementById('validityPeriod.hours').disabled=true;
+            document.getElementById('validityPeriod.minutes').disabled=true;
+            document.getElementById('flash').disabled=true;
+            document.getElementById('transactionMode').disabled=true;
+          }
+          ">
+        <f:selectItems value="#{deliveryGroupEdit.uniqueDeliveryModes}"/>
+      </h:selectOneMenu>
+
+    </h:panelGrid>
+
+    <h:panelGrid id="smsSettings" style="padding-left:10px; display: #{deliveryGroupEdit.smsDeliveryMode == true ? '' : 'none'}" columns="3" columnClasses="column20Width, column100Width, columnTopLeftAlign">
+
+
+      <h:selectBooleanCheckbox id="editFlash" value="#{deliveryGroupEdit.editFlash}" onchange="
+          document.getElementById('flash').disabled=!this.checked;
+          "/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
+      <tr:selectBooleanCheckbox id="flash" value="#{deliveryGroupEdit.flash}" simple="true"/>
+
+      <h:selectBooleanCheckbox id="editTransactionMode" value="#{deliveryGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+      <h:selectBooleanCheckbox id="transactionMode" value="#{deliveryGroupEdit.transactionMode}"
+                               onchange="
+              var d = this.checked ? 'none' : '';
+              document.getElementById('editValidHours').style.display=d;
+              document.getElementById('validHoursLabel').style.display=d;
+              document.getElementById('validityPeriod').style.display=d;
+              document.getElementById('validityPeriod.hours').disabled=!this.checked;
+              document.getElementById('validityPeriod.minutes').disabled=!this.checked;
+              if(this.checked) {
+                document.getElementById('editValidHours').checked=false;
+                document.getElementById('validityPeriod.hours').value = '';  
+                document.getElementById('validityPeriod.minutes').value = '';
+              }
+             "/>
+
+      <h:selectBooleanCheckbox id="editValidHours" value="#{deliveryGroupEdit.editValidityPeriod}"
+                               onchange="
+                                   document.getElementById('validityPeriod.hours').disabled=!this.checked;
+                                   document.getElementById('validityPeriod.minutes').disabled=!this.checked;
+                                   "/>
+      <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+      <t:inputDate id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" type="short_time"/>
+
+
+    </h:panelGrid>
+
+    <eye:delimiter/>
+
+    <eye:buttons>
+      <eye:button>
+        <tr:commandLink text="#{msg['done.button']}" action="#{deliveryGroupEdit.save}"/>
+      </eye:button>
+      <eye:button>
+        <tr:commandLink text="#{msg['cancel.button']}" action="DELIVERIES" immediate="true"/>
+      </eye:button>
+      <eye:space/>
+    </eye:buttons>
+
+    <script type="text/javascript" language="javascript">
+      document.getElementById('sourceAddr').disabled = !document.getElementById('editSourceAddr').checked;
+
+      var deliveryDaysDisabled = !document.getElementById('editDeliveryDays').checked;
+      for (var i = 0; i&lt;7; i++)
+        document.getElementById('deliveryDays:' + i).disabled=deliveryDaysDisabled;
+
+      var deliveryStartTimeDisabled = !document.getElementById('editDeliveryStartTime').checked;
+      document.getElementById('deliveryStartTime.hours').disabled=deliveryStartTimeDisabled;
+      document.getElementById('deliveryStartTime.minutes').disabled=deliveryStartTimeDisabled;
+
+      var endDateDisabled = !document.getElementById('editEndDate').checked;
+      document.getElementById('endDate.day').disabled=endDateDisabled;
+      document.getElementById('endDate.month').disabled=endDateDisabled;
+      document.getElementById('endDate.year').disabled=endDateDisabled;
+      document.getElementById('endDate.hours').disabled=endDateDisabled;
+      document.getElementById('endDate.minutes').disabled=endDateDisabled;
+
+      var deliveryEndTimeDisabled = !document.getElementById('editDeliveryEndTime').checked;
+      document.getElementById('deliveryEndTime.hours').disabled=deliveryEndTimeDisabled;
+      document.getElementById('deliveryEndTime.minutes').disabled=deliveryEndTimeDisabled;
+
+      document.getElementById('priority').disabled = !document.getElementById('editPriority').checked;
+
+      var retryPolicyDisabled = !document.getElementById('editRetryPolicy').checked;
+      document.getElementById('retryPolicy').disabled=retryPolicyDisabled || !document.getElementById('retryOnFail').checked;
+      document.getElementById('retryOnFail').disabled=retryPolicyDisabled;
+
+      document.getElementById('smsNotification').disabled = !document.getElementById('editSmsNotification').checked;
+      document.getElementById('emailNotification').disabled = !document.getElementById('editEmailNotification').checked;
+      document.getElementById('flash').disabled = !document.getElementById('editFlash').checked;
+
+      document.getElementById('deliveryType').disabled=!document.getElementById('editDeliveryType').checked;
+      document.getElementById('transactionMode').disabled=!document.getElementById('editTransactionMode').checked;
+      document.getElementById('validityPeriod.hours').disabled=!document.getElementById('editValidHours').checked;
+      document.getElementById('validityPeriod.minutes').disabled=!document.getElementById('editValidHours').checked;
+
+      var d = document.getElementById('transactionMode').checked ? 'none' : '';
+      document.getElementById('editValidHours').style.display=d;
+      document.getElementById('validHoursLabel').style.display=d;
+      document.getElementById('validityPeriod').style.display=d;
+
+      var dt = document.getElementById('deliveryType');
+      var disp = dt.options[0].selected ? '' : 'none';
+      document.getElementById('smsSettings').style.display=disp;
+    </script>
+
+  </h:panelGroup>
+
+
+</tr:form>
+
+</ui:define>
 
 </ui:composition>
 

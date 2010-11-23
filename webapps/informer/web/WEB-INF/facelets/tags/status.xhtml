@@ -1,0 +1,21 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad">
+
+<ui:composition>
+
+  <h:outputText rendered="#{status == 'Planned'}" style="font-size:15px" value="&#9723;"/>
+  <h:outputText rendered="#{status == 'Finished'}" style="font-size:20px" value="&#10003;"/>
+  <h:outputText rendered="#{status == 'Active'}" style="font-size:15px" value="&#10132;"/>
+  <h:outputText rendered="#{status == 'Paused'}" style="font-size:10px; font-weight:bold" value="||"/>
+  <h:outputText rendered="#{status == 'Cancelled'}" style="font-size:15px"  value="&#10007;"/>
+
+</ui:composition>
+
+</html>

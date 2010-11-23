@@ -9,6 +9,11 @@
   <namespace>http://taglib.eyeline.mobi</namespace>
 
   <tag>
+    <tag-name>status</tag-name>
+    <source>status.xhtml</source>
+  </tag>
+
+  <tag>
     <tag-name>delimiter</tag-name>
     <source>delimiter.xhtml</source>
   </tag>

@@ -124,7 +124,7 @@
             "/>
 
         <h:outputText id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-        <t:inputDate id="vPeriod" value="#{deliveryEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" required="false" type="short_time"/>
+        <t:inputDate id="vPeriod" value="#{deliveryEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" type="short_time"/>
 
       </h:panelGrid>
 
@@ -152,8 +152,8 @@
 
       <script type="text/javascript" language="javascript">
         document.getElementById('retryPolicy1').disabled = !document.getElementById('retryOnFail').checked;
-        var d = document.getElementById().checked ? 'none' : '';
-        document.getElementById('vPeriodLabel').style.display=d;
+        var d = document.getElementById('trMode').checked ? 'none' : '';
+        document.getElementById('vPeriodLabel').style.display=d;        
         document.getElementById('vPeriod').style.display=d;
       </script>
 

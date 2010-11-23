@@ -17,72 +17,143 @@ import java.util.List;
 @SuppressWarnings({"unchecked"})
 public class DeliveryEditGroupController extends DeliveryController{
 
-  private List<Integer> ids;
+  private List<String> ids;
 
   private int priority;
+  private boolean editPriority;
+
   private boolean transactionMode;
+  private boolean editTransactionMode;
 
 
   private Date endDate;
+  private boolean editEndDate;
+
   private Date activePeriodEnd;
+  private boolean editActivePeriodEnd;
+
   private Date activePeriodStart;
+  private boolean editActivePeriodStart;
+
   private Delivery.Day[] activeWeekDays;
-  private String validityPeriod;
+  private boolean editActiveWeekDays;
+
+  private Date validityPeriod;
+  private boolean editValidityPeriod;
 
   private boolean flash;
+  private boolean editFlash;
+
   private DeliveryMode deliveryMode;
+  private boolean editDeliveryMode;
 
   private boolean retryOnFail;
+
   private String retryPolicy;
+  private boolean editRetryPolicy;
 
   private Address smsNotification;
+  private boolean editSmsNotification;
 
   private String emailNotification;
+  private boolean editEmailNotification;
 
   private Address sourceAddress;
+  private boolean editSourceAddress;
 
 
   public DeliveryEditGroupController() {
     super();
     Object o = getRequest().get(DELIVERY_IDS_PARAM);
     if(o != null) {
-      ids =  (List<Integer>)o;
+      ids =  (List<String>)o;
     }
   }
 
   public String save() {
     try{
-      for(Integer i : ids) {
-        Delivery d = config.getDelivery(user.getLogin(), user.getPassword(), i);
+      for(String i : ids) {
+        Delivery d = config.getDelivery(user.getLogin(), user.getPassword(), Integer.parseInt(i));
         if(d == null) {
           addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.deliveries.delivery.not.found", i);
         } else {
-          d.setPriority(priority);
-          d.setTransactionMode(transactionMode);
-          d.setEndDate(endDate);
-          d.setActivePeriodStart(new Time(activePeriodStart));
-          d.setActivePeriodEnd(new Time(activePeriodEnd));
-          d.setActiveWeekDays(activeWeekDays);
-          if(validityPeriod == null || (validityPeriod = validityPeriod.trim()).length() !=0) {
-//            d.setValidityPeriod(validityPeriod); todo
-          }else {
-            d.setValidityPeriod(null);
+          if(editSourceAddress) {
+            if(sourceAddress == null) {
+              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.source_address.required");
+              return null;
+            }else {
+              d.setSourceAddress(sourceAddress);
+            }
           }
-          d.setFlash(flash);
-          if(deliveryMode != null) {
+          if(editPriority) {
+            d.setPriority(priority);
+          }
+          if(editEndDate) {
+            d.setEndDate(endDate);
+          }
+          if(editActivePeriodStart) {
+            if(activePeriodStart == null) {
+              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.active.period.start.required");
+              return null;
+            }
+            d.setActivePeriodStart(new Time(activePeriodStart));
+          }
+          if(editActivePeriodEnd) {
+            if(activePeriodEnd == null) {
+              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.active.period.end.required");
+              return null;
+            }
+            d.setActivePeriodEnd(new Time(activePeriodEnd));
+          }
+          if(editActiveWeekDays) {
+            d.setActiveWeekDays(activeWeekDays);
+          }
+
+          if(editDeliveryMode) {
             d.setDeliveryMode(deliveryMode);
           }
-          d.setRetryOnFail(retryOnFail);
-          d.setRetryPolicy(retryPolicy);
-          if(smsNotification != null) {
-            d.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotification.getSimpleAddress());
-          }else{
-            d.removeProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
+
+          if(editFlash) {
+            d.setFlash(flash);
           }
-          if(emailNotification != null && (emailNotification = emailNotification.trim()).length() != 0) {
-            d.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotification);
-          }else {
-            d.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
+
+          if(editTransactionMode) {
+            d.setTransactionMode(transactionMode);
+          }
+
+          if(editValidityPeriod) {
+            if(validityPeriod != null ) {
+              d.setValidityPeriod(new Time(validityPeriod));
+            }else {
+              d.setValidityPeriod(null);
+            }
+          }
+          
+          if(editRetryPolicy) {
+            if (!retryOnFail) {
+              d.setRetryPolicy(null);
+              d.setRetryOnFail(false);
+            } else if (retryPolicy == null || !getRetryPoliciesPattern().matcher(retryPolicy).matches()) {
+              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", retryPolicy == null ? "" : retryPolicy);
+              return null;
+            } else {
+              d.setRetryOnFail(true);
+              d.setRetryPolicy(retryPolicy);
+            }
+          }
+          if(editSmsNotification) {
+            if(smsNotification != null) {
+              d.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotification.getSimpleAddress());
+            }else{
+              d.removeProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
+            }
+          }
+          if(editEmailNotification) {
+            if(emailNotification != null && (emailNotification = emailNotification.trim()).length() != 0) {
+              d.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotification);
+            }else {
+              d.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
+            }
           }
           config.modifyDelivery(user.getLogin(), user.getPassword(), d);
         }
@@ -92,6 +163,114 @@ public class DeliveryEditGroupController extends DeliveryController{
       addError(e);
     }
     return null;
+  }
+
+  public boolean isSmsDeliveryMode() {
+    return deliveryMode == DeliveryMode.SMS;
+  }
+
+  public boolean isEditPriority() {
+    return editPriority;
+  }
+
+  public void setEditPriority(boolean editPriority) {
+    this.editPriority = editPriority;
+  }
+
+  public boolean isEditTransactionMode() {
+    return editTransactionMode;
+  }
+
+  public void setEditTransactionMode(boolean editTransactionMode) {
+    this.editTransactionMode = editTransactionMode;
+  }
+
+  public boolean isEditEndDate() {
+    return editEndDate;
+  }
+
+  public void setEditEndDate(boolean editEndDate) {
+    this.editEndDate = editEndDate;
+  }
+
+  public boolean isEditActivePeriodEnd() {
+    return editActivePeriodEnd;
+  }
+
+  public void setEditActivePeriodEnd(boolean editActivePeriodEnd) {
+    this.editActivePeriodEnd = editActivePeriodEnd;
+  }
+
+  public boolean isEditActivePeriodStart() {
+    return editActivePeriodStart;
+  }
+
+  public void setEditActivePeriodStart(boolean editActivePeriodStart) {
+    this.editActivePeriodStart = editActivePeriodStart;
+  }
+
+  public boolean isEditActiveWeekDays() {
+    return editActiveWeekDays;
+  }
+
+  public void setEditActiveWeekDays(boolean editActiveWeekDays) {
+    this.editActiveWeekDays = editActiveWeekDays;
+  }
+
+  public boolean isEditValidityPeriod() {
+    return editValidityPeriod;
+  }
+
+  public void setEditValidityPeriod(boolean editValidityPeriod) {
+    this.editValidityPeriod = editValidityPeriod;
+  }
+
+  public boolean isEditFlash() {
+    return editFlash;
+  }
+
+  public void setEditFlash(boolean editFlash) {
+    this.editFlash = editFlash;
+  }
+
+  public boolean isEditDeliveryMode() {
+    return editDeliveryMode;
+  }
+
+  public void setEditDeliveryMode(boolean editDeliveryMode) {
+    this.editDeliveryMode = editDeliveryMode;
+  }
+
+  public boolean isEditRetryPolicy() {
+    return editRetryPolicy;
+  }
+
+  public void setEditRetryPolicy(boolean editRetryPolicy) {
+    this.editRetryPolicy = editRetryPolicy;
+  }
+
+  public boolean isEditSmsNotification() {
+    return editSmsNotification;
+  }
+
+  public void setEditSmsNotification(boolean editSmsNotification) {
+    this.editSmsNotification = editSmsNotification;
+  }
+
+  public boolean isEditEmailNotification() {
+    return editEmailNotification;
+  }
+
+  public void setEditEmailNotification(boolean editEmailNotification) {
+    this.editEmailNotification = editEmailNotification;
+  }
+
+  public boolean isEditSourceAddress() {
+    return editSourceAddress;
+  }
+
+  public void setEditSourceAddress(boolean editSourceAddress) {
+    this.editSourceAddress = editSourceAddress;
   }
 
   public int getPriority() {
@@ -142,11 +321,11 @@ public class DeliveryEditGroupController extends DeliveryController{
     this.activeWeekDays = activeWeekDays;
   }
 
-  public String getValidityPeriod() {
+  public Date getValidityPeriod() {
     return validityPeriod;
   }
 
-  public void setValidityPeriod(String validityPeriod) {
+  public void setValidityPeriod(Date validityPeriod) {
     this.validityPeriod = validityPeriod;
   }
 
@@ -206,11 +385,11 @@ public class DeliveryEditGroupController extends DeliveryController{
     this.sourceAddress = sourceAddress;
   }
 
-  public List<Integer> getIds() {
+  public List<String> getIds() {
     return ids;
   }
 
-  public void setIds(List<Integer> ids) {
+  public void setIds(List<String> ids) {
     this.ids = ids;
   }
 }

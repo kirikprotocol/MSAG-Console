@@ -6,6 +6,19 @@
   <description>
   </description>
 
+  <!-- STATUS -->
+  <tag>
+    <name>status</name>
+    <description>Значок статуса</description>
+
+    <attribute>
+      <name>status</name>
+      <description>Статус ('Planned',  'Active', 'Paused', 'Cancelled' либо 'Finished')</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
   <!-- DELIMITER -->
   <tag>
     <name>delimiter</name>

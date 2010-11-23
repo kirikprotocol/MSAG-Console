@@ -111,7 +111,7 @@ public class DeliveryNotificationsProducerTest implements DeliveryNotificationsL
     assertTrue(m.getMessageState()==MessageState.Delivered);
     assertTrue(m.getSmppStatus()==0);
     assertTrue(m.getAddress().getSimpleAddress().equals("+79130000001"));
-    assertTrue(m.getUserData().equals("userdata1"));
+    assertTrue(m.getUserData().equals("userdata1=1"));
 
     //18,1,"a",0,2,F,1,+79130000002,userdata2
     m = (DeliveryMessageNotification) notifications.get(2);
@@ -123,7 +123,7 @@ public class DeliveryNotificationsProducerTest implements DeliveryNotificationsL
     assertTrue(m.getMessageState()==MessageState.Failed);
     assertTrue(m.getSmppStatus()==1);
     assertTrue(m.getAddress().getSimpleAddress().equals("+79130000002"));
-    assertTrue(m.getUserData().equals("userdata2"));
+    assertTrue(m.getUserData().equals("userdata2=2"));
 
     //20,1,"a",0,3,E,2,+79130000003
     m = (DeliveryMessageNotification) notifications.get(3);

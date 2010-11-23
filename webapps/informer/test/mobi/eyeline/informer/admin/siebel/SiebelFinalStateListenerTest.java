@@ -100,7 +100,7 @@ public class SiebelFinalStateListenerTest {
             new Date(), 1, "siebel", 1234567l, MessageState.Failed, 1179, new Address("+79139489906"),
             DcpConverter.convertUserData(new HashMap<String, String>(1){{put(UserDataConsts.SIEBEL_MESSAGE_ID, "321");}}))
     );
-    Thread.sleep(90000);
+    Thread.sleep(30000);
     assertTrue(processedDeliveries.contains("123"));
     assertTrue(messagesState.containsKey("321"));
     SiebelMessage.DeliveryState s = messagesState.get("321");

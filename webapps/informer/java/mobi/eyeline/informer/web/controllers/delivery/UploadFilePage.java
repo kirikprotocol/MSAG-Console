@@ -133,7 +133,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
       return true;
 
     Region r = config.getRegion(address);
-    return r != null && u.getRegions().contains(r.getRegionId());
+    return r != null && u.getRegions() != null && u.getRegions().contains(r.getRegionId());
   }
 
   public String getRejectedAddressesFile() {

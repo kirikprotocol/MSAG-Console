@@ -10,5 +10,9 @@ public enum DeliveryStatus {
   Active,
   Paused,
   Cancelled,
-  Finished
+  Finished;
+
+  public String getStringValue() {
+    return toString();
+  }
 }

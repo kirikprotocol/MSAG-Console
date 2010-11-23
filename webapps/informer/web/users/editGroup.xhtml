@@ -83,7 +83,7 @@
           "/>
           <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
           <h:panelGroup>
-            <h:selectBooleanCheckbox id="retryOnFail" value="#{userGroupEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;" disabled="#{!userGroupEdit.editRetryPolicy}"/>
+            <h:selectBooleanCheckbox id="retryOnFail" value="#{userGroupEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;"/>
             <h:inputText id="retryPolicy" value="#{userGroupEdit.policyId}" />
           </h:panelGroup>
 
@@ -117,9 +117,19 @@
               document.getElementById('editValidHours').style.display=d;
               document.getElementById('validHoursLabel').style.display=d;
               document.getElementById('validityPeriod').style.display=d;
+              document.getElementById('validityPeriod.hours').disabled=!this.checked;
+              document.getElementById('validityPeriod.minutes').disabled=!this.checked;
+              if(this.checked) {
+                document.getElementById('editValidHours').checked=false;
+                document.getElementById('validityPeriod.hours').value = '';
+                document.getElementById('validityPeriod.minutes').value = '';
+              }
              "/>
 
-          <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidityPeriod}" onchange="document.getElementById('validHours').disabled=!this.checked"/>
+          <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidityPeriod}" onchange="
+          document.getElementById('validityPeriod.hours').disabled=!this.checked;
+          document.getElementById('validityPeriod.minutes').disabled=!this.checked;
+          "/>
           <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
           <t:inputDate id="validityPeriod" value="#{userGroupEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" type="short_time"/>
 
@@ -229,7 +239,8 @@
 
         document.getElementById('deliveryType').disabled=!document.getElementById('editDeliveryType').checked;
         document.getElementById('transactionMode').disabled=!document.getElementById('editTransactionMode').checked;
-        document.getElementById('validHours').disabled=!document.getElementById('editValidHours').checked;
+        document.getElementById('validityPeriod.hours').disabled=!document.getElementById('editValidHours').checked;
+        document.getElementById('validityPeriod.minutes').disabled=!document.getElementById('editValidHours').checked;
         document.getElementById('smsPerSec').disabled=!document.getElementById('editSmsPerSec').checked;
 
         var allowedRegionsDisabled=!document.getElementById('editAllowedRegions').checked;

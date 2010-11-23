@@ -421,7 +421,7 @@ public class SiebelManager {
               Address abonent = new Address(msisdn);
               Region r;
               if (siebelUser.isAllRegionsAllowed() || ((r = regionManager.getRegion(abonent)) != null
-                  && siebelUser.getRegions().contains(r.getRegionId()))) {
+                  && siebelUser.getRegions() != null && siebelUser.getRegions().contains(r.getRegionId()))) {
                 msg = Message.newMessage(abonent, sM.getMessage());
                 msg.setProperty(UserDataConsts.SIEBEL_MESSAGE_ID, sM.getClcId());
                 countMessages[0]++;
