@@ -48,7 +48,9 @@ public class Deliveries extends InfoSmeBean {
     pageData.owner = pageData.getAppContext().getUserManager().getUser(request.getRemoteUser());
     
     setTransactionMode(request.getParameter("transactionMode") != null );
-    setUseDataSm(request.getParameter("useDataSm") != null) ;    
+    setUseDataSm(request.getParameter("useDataSm") != null) ;
+    setStartDateInLocalTime(request.getParameter("startDateInLocalTime") != null);
+    setEndDateInLocalTime(request.getParameter("endDateInLocalTime") != null);
 
     try {
       if (mbNext != null) {
@@ -416,5 +418,19 @@ public class Deliveries extends InfoSmeBean {
     }
   }
 
+  public boolean isStartDateInLocalTime() {
+    return pageData.startDateInLocalTime;
+  }
 
+  public void setStartDateInLocalTime(boolean value) {
+    pageData.startDateInLocalTime = value;
+  }
+
+  public boolean isEndDateInLocalTime() {
+    return pageData.endDateInLocalTime;
+  }
+
+  public void setEndDateInLocalTime(boolean value) {
+    pageData.endDateInLocalTime = value;
+  }
 }

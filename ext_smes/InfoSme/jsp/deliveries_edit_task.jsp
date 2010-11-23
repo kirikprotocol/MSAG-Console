@@ -94,12 +94,22 @@
       <th><%= getLocString("infosme.label.start_date")%></th>
       <td nowrap>
         <input class=calendarField id=startDate name=startDate value="<%=StringEncoderDecoder.encode(deliveries_bean.getStartDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(startDate, false, true);">...</button>
+        <% if (deliveries_bean.isUseSameSettingsForAllRegions()) { %>
+        &nbsp;
+        <input type="checkbox" name="startDateInLocalTime" id="startDateInLocalTime" <%=deliveries_bean.isStartDateInLocalTime() ? "checked" : ""%>/>
+        <%= getLocString("infosme.label.start_date_in_local_time")%>
+        <% } %>
       </td>
     </tr>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.end_date")%></th>
       <td nowrap>
         <input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(deliveries_bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button>
+        <% if (deliveries_bean.isUseSameSettingsForAllRegions()) { %>
+        &nbsp;
+        <input type="checkbox" name="endDateInLocalTime" id="endDateInLocalTime" <%=deliveries_bean.isEndDateInLocalTime() ? "checked" : ""%>/>
+        <%= getLocString("infosme.label.end_date_in_local_time")%>
+        <% } %>
       </td>
     </tr>
     <tr class=row<%=rowN++&1%>>

@@ -73,6 +73,8 @@ public class DeliveriesPageData {
   public boolean splitDeliveriesFile = true;
   public boolean useSameSettingsForAllRegions = true;
   public boolean deliveriesFileContainsText = true;
+  public boolean startDateInLocalTime = false;
+  public boolean endDateInLocalTime = false;
 
   // process file progress attributes
   public int recordsProcessed;
@@ -123,6 +125,8 @@ public class DeliveriesPageData {
     secret = false;
     secretFlash = false;
     secretText = null;
+    startDateInLocalTime = false;
+    endDateInLocalTime = false;
 
     deliveriesGenProgr = null;
     deliveriesGenStatus = STATUS_INITIALIZATION;
