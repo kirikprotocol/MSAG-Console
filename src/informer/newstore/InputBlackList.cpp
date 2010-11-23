@@ -81,7 +81,8 @@ const uint64_t InputStorage::BlackList::packbits[packsize] =
 InputStorage::BlackList::BlackList( InputStorage& is ) :
 is_(is),
 dropFileOffset_(0),
-minMsgId_(msgid_type(-1)), maxMsgId_(0),
+minMsgId_(0),
+maxMsgId_(0),
 changing_(false)
 {
 }
@@ -89,10 +90,10 @@ changing_(false)
 
 void InputStorage::BlackList::init( msgid_type minRlast )
 {
-    if (minRlast == msgid_type(-1)) return;
-
-    smsc_log_debug(is_.log_,"D=%u blk list init(minRlast=%llu)",
+    smsc_log_debug(is_.log_,"D=%u blklist init(minRlast=%llu)",
                    is_.getDlvId(),ulonglong(minRlast));
+
+    maxMsgId_ = minMsgId_ = minRlast;
 
     try {
         FileGuard fg;
@@ -100,17 +101,18 @@ void InputStorage::BlackList::init( msgid_type minRlast )
         const size_t maxSize = openFile(fg,minRlast,&isNew);
         dropFileOffset_ = fg.getPos();
         if (dropFileOffset_ < maxSize) {
-            readChunk(fg);
+            Buf buf;
+            readChunk(fg,buf);
+            if (dropFileOffset_>=maxSize) {
+                dropFileOffset_ = size_t(-1);
+            }
         }
         fg.close();
-        if (dropFileOffset_ >= maxSize) { 
-            dropFileOffset_ = size_t(-1);
-        }
         if (isNew) {
             writeActLog(0);
         }
     } catch ( ErrnoException& e ) {
-        smsc_log_debug(is_.log_,"D=%u blacklist init exc: %s",is_.getDlvId(),e.what());
+        smsc_log_debug(is_.log_,"D=%u blklist init exc: %s",is_.getDlvId(),e.what());
         dropFileOffset_ = size_t(-1);
     }
 }
@@ -131,15 +133,17 @@ bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
             ++minMsgId_;
         }
 
-        if ((msgId > maxMsgId_ ||
-             unsigned(dropMsgHash_.Count()) < getCS()->getSkippedIdsMinCacheSize()) &&
-            dropFileOffset_!=size_t(-1)) {
-
+        if (dropFileOffset_ == size_t(-1)) {
+            smsc_log_debug(is_.log_,"D=%u blklist not uploaded as offset=-1",is_.getDlvId());
+        } else if ( msgId > maxMsgId_ ||
+                    unsigned(dropMsgHash_.Count()) < getCS()->getSkippedIdsMinCacheSize() ) {
+            smsc_log_debug(is_.log_,"D=%u need to upload blklist",is_.getDlvId());
+            
             if (dropMsgHash_.Count()==0) {
-                minMsgId_ = msgid_type(-1);
-                smsc_log_debug(is_.log_,"D=%u blklist has empty hash",is_.getDlvId());
-                maxMsgId_ = is_.getMinRlast();
-            } else if (dropMsgHash_.Count() < 30) {
+                maxMsgId_ = minMsgId_ = is_.getMinRlast();
+                smsc_log_debug(is_.log_,"D=%u blklist has empty hash, using min=max=%llu",
+                               is_.getDlvId(), ulonglong(minMsgId_));
+            } else if (dropMsgHash_.Count() < 20) {
 
                 // we may scan the hash to find out real numbers
                 int64_t idx;
@@ -168,23 +172,34 @@ bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
                         }
                     }
                 }
-                smsc_log_debug(is_.log_,"D=%u blklist after hash scan: min=%llu max=%llu",
-                               is_.getDlvId(), ulonglong(minMsgId_), ulonglong(maxMsgId_) );
+                smsc_log_debug(is_.log_,"D=%u blklist after hash scan: min=%llu max=%llu count=%u",
+                               is_.getDlvId(), ulonglong(minMsgId_), ulonglong(maxMsgId_),
+                               unsigned(dropMsgHash_.Count()) );
+            } else {
+                smsc_log_debug(is_.log_,"D=%u using current blklist hash range: min=%llu max=%llu count=%u",
+                               is_.getDlvId(), ulonglong(minMsgId_), ulonglong(maxMsgId_),
+                               unsigned(dropMsgHash_.Count()));
             }
             
             FileGuard fg;
             const size_t maxSize = openFile(fg, dropFileOffset_ ? 0 : maxMsgId_);
             if (dropFileOffset_) {
-                smsc_log_debug(is_.log_,"D=%u seek to %llu",is_.getDlvId(),ulonglong(dropFileOffset_));
+                smsc_log_debug(is_.log_,"D=%u blklist seek to %llu",is_.getDlvId(),ulonglong(dropFileOffset_));
                 fg.seek(dropFileOffset_);
             }
+            Buf buf;
             while ( !is_.core_.isStopping() ) {
-                readChunk(fg);
-                if (dropFileOffset_>=maxSize) {
+                if (!readChunk(fg,buf)) { break; }
+                if (dropFileOffset_ >= maxSize) {
                     dropFileOffset_ = size_t(-1);
                     break;
                 }
-                if (msgId <= maxMsgId_ || dropFileOffset_ == size_t(-1)) break;
+                if (msgId <= maxMsgId_) {
+                    smsc_log_debug(is_.log_,"D=%u we have loaded requested id=%llu min=%llu max=%llu",
+                                   is_.getDlvId(), ulonglong(msgId),
+                                   ulonglong(minMsgId_), ulonglong(maxMsgId_) );
+                    break;
+                }
             }
             if (msgId>maxMsgId_) {
                 what = "more than max";
@@ -194,6 +209,7 @@ bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
         }
 
         if (res) {
+            // trying to get bits
             const uint64_t idx = msgId / packsize;
             uint64_t* item = dropMsgHash_.GetPtr(idx);
             if (!item) {
@@ -219,7 +235,7 @@ bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
         }
 
     } while (false);
-    smsc_log_debug(is_.log_,"D=%u/M=%llu is %sin blk list: %s",
+    smsc_log_debug(is_.log_,"D=%u/M=%llu is %sin blklist: %s",
                    is_.getDlvId(), msgId, res ? "" : "NOT ", what);
     return res;
 }
@@ -244,16 +260,21 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
         }
         dropMon_.wait(300);
     }
+    if (is_.core_.isStopping()) {
+        return false;
+    }
     // locked
-    smsc_log_debug(is_.log_,"D=%u adding %u messages to black list",
-                   is_.getDlvId(),unsigned(dropped.size()));
+    smsc_log_debug(is_.log_,"D=%u adding %u messages to blklist min=%llu max=%llu count=%u",
+                   is_.getDlvId(),unsigned(dropped.size()),
+                   ulonglong(minMsgId_), ulonglong(maxMsgId_),
+                   unsigned(dropMsgHash_.Count()));
     {
         msgid_type maxId = is_.lastMsgId_;
         std::vector<msgid_type>::iterator i =
             std::upper_bound(dropped.begin(),dropped.end(), maxId);
         if (i != dropped.end()) {
             dropped.erase(i,dropped.end());
-            smsc_log_debug(is_.log_,"D=%u some messages have id>max, left=%u",
+            smsc_log_debug(is_.log_,"D=%u some blklist messages have id>max, left=%u",
                            is_.getDlvId(), unsigned(dropped.size()));
         }
         if (dropped.empty()) return false;
@@ -265,12 +286,12 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
             std::upper_bound(dropped.begin(), dropped.end(), minRlast);
         if (i != dropped.begin()) {
             dropped.erase(dropped.begin(),i);
-            smsc_log_debug(is_.log_,"D=%u some messages already passed, left=%u",
+            smsc_log_debug(is_.log_,"D=%u some blklist messages already passed, left=%u",
                            is_.getDlvId(), unsigned(dropped.size()));
         }
         if (dropped.empty()) return false;
     }
-    // smsc_log_debug(log_,"D=%u adding %u messages to black list",
+    // smsc_log_debug(log_,"D=%u adding %u messages to blklist",
     // is_.getDlvId(),unsigned(dropped.size()));
 
     FileGuard ofg;
@@ -282,7 +303,6 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
         }
     } catch (ErrnoException& e) {
         smsc_log_debug(is_.log_,"D=%u blklist read exc: %s",is_.getDlvId(),e.what());
-        maxSize = 0;
         ofg.close();
     }
     FileGuard nfg;
@@ -290,14 +310,14 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
     sprintf(makeDeliveryPath(fname,is_.getDlvId()),"new/black.lst");
     nfg.create((getCS()->getStorePath() + fname + ".tmp").c_str(),0666,true,true);
 
-    smsc::core::buffers::TmpBuf<char,2048> buf;
-    smsc::core::buffers::TmpBuf<char,2048> tobuf;
+    Buf buf;
+    Buf tobuf;
     FromBuf fb(buf.get(),0);
     ToBuf tb(tobuf.get(),tobuf.getSize());
     std::vector<msgid_type>::iterator it = dropped.begin();
     while (true) {
         if (is_.core_.isStopping()) { return false; }
-        if (fb.getPos() >= fb.getLen() && ofg.isOpened()) {
+        if (ofg.isOpened() && fb.getPos() >= fb.getLen()) {
             const size_t wasread = readBuf(ofg,buf);
             if (ofg.getPos() >= maxSize) {
                 ofg.close();
@@ -349,22 +369,29 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
     nfg.close();
 
     {
-        smsc_log_debug(is_.log_,"D=%u new black list file is written, renaming",is_.getDlvId());
+        smsc_log_debug(is_.log_,"D=%u new blklist file is written, renaming",is_.getDlvId());
         MutexGuard mg(dropMon_);
         if ( -1 == rename( (getCS()->getStorePath() + fname + ".tmp").c_str(),
                            (getCS()->getStorePath() + fname + ".new").c_str() ) ) {
             throw ErrnoException(errno,"rename(%s)",fname);
         }
         dropFileOffset_ = 0;
-        if ( minRlast < minMsgId_ ) { minMsgId_ = minRlast; }
+        // if ( minRlast < minMsgId_ ) { minMsgId_ = minRlast; }
         dropMon_.notify();
+
+        smsc_log_debug(is_.log_,"D=%u after new blklist msgs added: dropFileOffset=%u min=%llu max=%llu count=%u",
+                       is_.getDlvId(), unsigned(dropFileOffset_),
+                       ulonglong(minMsgId_), ulonglong(maxMsgId_),
+                       unsigned(dropMsgHash_.Count()) );
     }
     writeActLog(100);
     return true;
 }
 
 
-size_t InputStorage::BlackList::openFile( FileGuard& fg, msgid_type minRlast, bool* isNew )
+size_t InputStorage::BlackList::openFile( FileGuard& fg,
+                                          msgid_type minRlast,
+                                          bool* isNew )
 {
     char fname[100];
     sprintf(makeDeliveryPath(fname,is_.getDlvId()),"new/black.lst");
@@ -399,35 +426,35 @@ size_t InputStorage::BlackList::openFile( FileGuard& fg, msgid_type minRlast, bo
         fg.read(buf,sizeof(buf));
         fb.setPos(0);
         const msgid_type midVal = fb.get64();
-        smsc_log_debug(is_.log_,"D=%u blklist pos=%llu val=%llu",
-                       is_.getDlvId(),ulonglong(middle),ulonglong(midVal));
+        smsc_log_debug(is_.log_,"D=%u blklist l=%llu m=%llu r=%llu mval=%llu",
+                       is_.getDlvId(),
+                       ulonglong(left), ulonglong(middle), ulonglong(right),
+                       ulonglong(midVal));
         if (midVal > minRlast) {
             right = middle;
-        } else if (midVal == minRlast) {
-            left = middle+itemsize;
-            break;
         } else {
-            left = middle;
+            left = middle+itemsize;
+            if (midVal == minRlast) { break; }
         }
     }
     if (left>maxSize) {
-        throw InfosmeException(EXC_LOGICERROR,"blacklist algo failed, left=%llu, maxSize=%llu",
+        throw InfosmeException(EXC_LOGICERROR,"blklist algo failed, left=%llu, maxSize=%llu",
                                ulonglong(left),ulonglong(maxSize));
     }
     fg.seek(left);
-    smsc_log_debug(is_.log_,"D=%u position for M=%llu found: %u",
+    smsc_log_debug(is_.log_,"D=%u blklist position for M=%llu found: %u",
                    is_.getDlvId(), ulonglong(minRlast),unsigned(left));
     return size_t(maxSize);
 }
 
 
-size_t InputStorage::BlackList::readBuf( FileGuard& fg, smsc::core::buffers::TmpBuf<char,2048>& buf )
+size_t InputStorage::BlackList::readBuf( FileGuard& fg, Buf& buf )
 {
     const size_t requested = itemsize * getCS()->getSkippedIdsChunkSize();
     buf.setSize( requested );
     const size_t wasread = fg.read( buf.get(), requested );
     if ( wasread % itemsize != 0 ) {
-        throw InfosmeException(EXC_BADFILE, "blacklist wasread=%llu, not divided by %u",
+        throw InfosmeException(EXC_BADFILE, "blklist wasread=%llu, not divided by %u",
                                ulonglong(wasread), unsigned(itemsize));
     }
     return wasread;
@@ -435,16 +462,16 @@ size_t InputStorage::BlackList::readBuf( FileGuard& fg, smsc::core::buffers::Tmp
 
 
 /// read the next chunk from blacklist file
-void InputStorage::BlackList::readChunk( FileGuard& fg )
+bool InputStorage::BlackList::readChunk( FileGuard& fg, Buf& buf )
 {
-    smsc::core::buffers::TmpBuf<char,2048> buf;
     const size_t wasread = readBuf(fg,buf);
-    smsc_log_debug(is_.log_,"D=%u reading chunk at pos %llu, size=%u",
+    smsc_log_debug(is_.log_,"D=%u read blklist chunk at pos %llu, size=%u",
                    is_.getDlvId(), ulonglong(fg.getPos()-wasread),unsigned(wasread));
     dropFileOffset_ += wasread;
     if (wasread==0) {
+        smsc_log_debug(is_.log_,"D=%u blklist file is processed, offset=-1",is_.getDlvId());
         dropFileOffset_ = size_t(-1);
-        return;
+        return false;
     }
     FromBuf fb(buf.get(),wasread);
     uint64_t prevIdx = 0;
@@ -462,13 +489,15 @@ void InputStorage::BlackList::readChunk( FileGuard& fg )
             minMsgId_ = msgId;
         }
         if (msgId <= maxMsgId_) {
-            throw InfosmeException(EXC_LOGICERROR,"D=%u blacklist not sorted",is_.getDlvId());
+            throw InfosmeException(EXC_LOGICERROR,"D=%u blklist not sorted",is_.getDlvId());
         }
         maxMsgId_ = msgId;
     }
-    smsc_log_debug(is_.log_,"D=%u after chunk read: min=%llu max=%llu offset=%u",
-                   is_.getDlvId(), ulonglong(minMsgId_),
-                   ulonglong(maxMsgId_), ulonglong(dropFileOffset_));
+    smsc_log_debug(is_.log_,"D=%u after blklist chunk read: min=%llu max=%llu count=%u offset=%u",
+                   is_.getDlvId(), ulonglong(minMsgId_), ulonglong(maxMsgId_),
+                   unsigned(dropMsgHash_.Count()),
+                   unsigned(dropFileOffset_));
+    return true;
 }
 
 

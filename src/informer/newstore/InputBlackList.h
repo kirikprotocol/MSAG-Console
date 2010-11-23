@@ -16,17 +16,36 @@ class InputStorage::BlackList
 
 public:
     BlackList( InputStorage& is );
+
+    /// initialize with given minimal read msgid.
     void init( msgid_type minRlast );
+
+    /// check if message is dropped.
+    /// the message id is removed from hash.
     bool isMessageDropped( msgid_type msgid );
+
+    /// add messages to dropped list.
     bool addMessages( std::vector<msgid_type>& dropped );
 
 private:
     typedef smsc::core::buffers::IntHash64<uint64_t> DropMsgHash;
     typedef smsc::core::buffers::TmpBuf<char, 2048> Buf;
 
+    /// open black list file and position it after given message id.
+    /// @param minRlast - msgid after which file should be seeked.
+    /// @param isNew - fills with true if filename .new was opened.
+    /// @return the size of the file.
     size_t openFile( FileGuard& fg, msgid_type minRlast, bool* isNew = 0 );
+
+    /// read a chunk of items into buffer.
+    /// @param return the number of bytes read.
     size_t readBuf( FileGuard& fg, Buf& buf );
-    void readChunk( FileGuard& fg );
+
+    /// read the next chunk from the file and fills the hash.
+    /// @return true if the chunk has been read.
+    bool readChunk( FileGuard& fg, Buf& buf );
+
+    /// writing activity log 'skip' records
     void writeActLog( unsigned sleepTime );
 
 private:
