@@ -168,6 +168,7 @@ void MessageGlossary::fetchText( MessageText& p, bool returnRealId )
 void MessageGlossary::setTexts( const std::vector< std::string >& texts )
 {
     if (texts.empty()) return;
+    smsc_log_debug(log_,"== setGlossary(%u) D=%u",unsigned(texts.size()),dlvId_);
 
     ChangeGuard cg(*this);
 
@@ -244,6 +245,7 @@ void MessageGlossary::getTexts( std::vector< std::string >& texts ) const
 {
     ChangeGuard cg(*this);
     if (!hash_) return;
+    smsc_log_debug(log_,"== getGlossary() D=%u", dlvId_);
 
     int id;
     TextList::iterator* node;
@@ -252,7 +254,7 @@ void MessageGlossary::getTexts( std::vector< std::string >& texts ) const
     for ( TextHash::Iterator i(*hash_); i.Next(id,node); ) {
         if ( id <= MessageText::uniqueId ) continue;
         if ( texts.size() <= unsigned(id) ) {
-            texts.resize(id,empty);
+            texts.resize(id+1,empty);
         }
         texts[id] = (*node)->getText();
     }

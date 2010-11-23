@@ -397,6 +397,12 @@ void InfosmeCoreV1::selfTest()
         }
 
         {
+            smsc_log_debug(log_,"--- getting text glossary for D=%u ---", dlvId);
+            std::vector< std::string > glotexts;
+            dlv->getGlossary( glotexts );
+        }
+
+        {
             smsc_log_debug(log_,"--- dropping messages for D=%u ---", dlvId);
             std::vector<msgid_type> msgIds;
             for ( int i = 0; i < 5000; ++i ) {
