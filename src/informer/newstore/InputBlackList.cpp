@@ -526,7 +526,7 @@ void InputStorage::BlackList::writeActLog( unsigned sleepTime )
             break;
         }
         FromBuf fb(buf.get(),wasread);
-        for ( unsigned i = 0; i < wasread; i += itemsize ) {
+        for ( size_t i = 0; i < wasread; i += itemsize ) {
             msgIds.push_back(fb.get64());
         }
         is_.activityLog_->addDeleteRecords(currentTimeSeconds(),msgIds);
