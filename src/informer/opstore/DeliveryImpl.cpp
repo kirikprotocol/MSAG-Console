@@ -64,7 +64,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
                     --end;
                 }
                 if (start < end) {
-                    res.push_back( std::string(awd, start, end-start) );
+                    res.push_back( std::string(awd, start, end-start+1) );
                 }
                 start = comma + 1;
             }
