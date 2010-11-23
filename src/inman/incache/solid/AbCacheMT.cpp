@@ -495,17 +495,16 @@ int AbonentCacheMTR::FSCacheMonitor::Execute(void)
                 try {
                     uint32_t r_num = fsCache->Insert(AbonentHashKey(abNum), &abRec, true);
                     if (r_num) {
-                        smsc_log_debug(logger, "FSCache: rcd[%u.%u]: %s, %s, %s",
+                        smsc_log_debug(logger, "FSCache: rcd[%u.%u]: %s, %s",
                                            fsCache->Size(), r_num, abNum.getSignals(),
-                                           abRec.type2Str(), abRec.csiSCF.toString().c_str());
+                                           abRec.toString().c_str());
                     } else if (!r_num && _rehashMode) {
                         _rehashMode = fsCache->rehashAllowed();
                         if (!_rehashMode) {
                             smsc_log_info(logger, "FSCache: rehash mode is OFF for %s",
                                             fsCache->Details().c_str());
-                            smsc_log_debug(logger, "FSCache: ignored: %s, %s, %s",
-                                            abNum.getSignals(), abRec.type2Str(),
-                                            abRec.csiSCF.toString().c_str());
+                            smsc_log_debug(logger, "FSCache: ignored: %s, %s",
+                                            abNum.getSignals(), abRec.toString().c_str());
                         } else {
                             ramCache->Mark(abNum); //mark back abonent
                             _rehashOn = true;
@@ -517,9 +516,8 @@ int AbonentCacheMTR::FSCacheMonitor::Execute(void)
                             break; //sleep and wait for onRehashDone()
                         }
                     } else
-                        smsc_log_debug(logger, "FSCache: ignored: %s, %s, %s",
-                                        abNum.getSignals(), abRec.type2Str(),
-                                        abRec.csiSCF.toString().c_str());
+                        smsc_log_debug(logger, "FSCache: ignored: %s, %s",
+                                        abNum.getSignals(), abRec.toString().c_str());
                 } catch (const std::exception& exc) {
                     smsc_log_error(logger, "FSCache: exception on abonent(%s): %s",
                                    abNum.getSignals(), exc.what());
