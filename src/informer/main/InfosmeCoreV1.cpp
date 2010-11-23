@@ -378,24 +378,20 @@ void InfosmeCoreV1::selfTest()
             MessageList msgList;
             MessageLocker mlk;
             for ( int i = 0; i < 10000; ++i ) {
-                mlk.msg.subscriber = addressToSubscriber(11,1,1,79137654000ULL + i);
+                ulonglong address;
+                if ( i % 2 ) {
+                    address = 79137654000ULL + i;
+                } else {
+                    address = 79537699000ULL + i;
+                }
+                mlk.msg.subscriber = addressToSubscriber(11,1,1,address);
                 char userdata[30];
                 char msgtext[50];
                 sprintf(msgtext,"the unbound text #%u",i);
                 MessageText(msgtext).swap(mlk.msg.text);
-                // MessageText(0,1).swap(mlk.msg.text);
                 sprintf(userdata,"msg#%d",i);
                 mlk.msg.userData = userdata;
                 msgList.push_back(mlk);
-                /*
-                mlk.msg.subscriber = addressToSubscriber(11,1,1,79537699490ULL);
-                char msgtext[50];
-                sprintf(msgtext,"the unbound text #%u",i);
-                MessageText(msgtext).swap(mlk.msg.text);
-                sprintf(userdata,"msg#%d1",i);
-                mlk.msg.userData = userdata;
-                msgList.push_back(mlk);
-                 */
             }
             dlv->addNewMessages(msgList.begin(), msgList.end());
         }
