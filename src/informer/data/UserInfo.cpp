@@ -76,7 +76,9 @@ priority_(priority)
         smsc_log_warn(log_,"U='%s' too many maxdlvs %u replaced with %u",id,maxTotalDeliveries_,maxdlv);
         maxTotalDeliveries_ = maxdlv;
     }
-    smsc_log_debug(log_,"U='%s' ctor done",id);
+    smsc_log_info(log_,"U='%s' ctor done: roles=%llu maxTotalDlv=%u speed=%u prio=%u",
+                  userId_.c_str(), ulonglong(roles_), unsigned(maxTotalDeliveries_),
+                  unsigned(speedControl_.getSpeed()), unsigned(priority_) );
 }
 
 
@@ -123,6 +125,9 @@ void UserInfo::update( const UserInfo& user )
     speedControl_.setSpeed( user.speedControl_.getSpeed(),
                             currentTimeMicro() % flipTimePeriod );
     priority_ = user.priority_;
+    smsc_log_info(log_,"U='%s' updated: roles=%llu maxTotalDlv=%u speed=%u prio=%u",
+                  userId_.c_str(), ulonglong(roles_), unsigned(maxTotalDeliveries_),
+                  unsigned(speedControl_.getSpeed()), unsigned(priority_) );
 }
 
 
