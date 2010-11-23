@@ -808,11 +808,11 @@ bool RouteManager::lookup(int srcidx, const Address& source, const Address& dest
   {
     *info = rec->info;
   }
-  if ( idx && rec->info.enabling )
+  if ( idx && rec->info.enabled )
   {
     *idx = rec->proxyIdx;
   }
-  if (!rec->info.enabling)
+  if (!rec->info.enabled)
   {
     if(trace_enabled_)
     {
