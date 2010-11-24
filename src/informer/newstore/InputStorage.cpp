@@ -241,7 +241,7 @@ size_t InputStorage::rollOver()
             maxMsgId = lastMsgId_;
         }
         written += jnl_.journalRecord(getDlvId(),ro,maxMsgId);
-    } while ( false );
+    } while ( true );
     smsc_log_debug(log_,"roll over finished D=%u, written=%u",getDlvId(),unsigned(written));
     return written;
 }

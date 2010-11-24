@@ -231,36 +231,20 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                                        dlvId,msgTimeToYmd(planTime));
             }
             planTime -= now;
-            /*
-        } else if (newState == DLVSTATE_ACTIVE) {
-            timediff_type diff = dlvInfo_->nextStopTime(tmnow.tm_mday,now);
-            if (diff>0) {
-                planTime = now + diff;
-            } else if (diff<0) {
-                planTime = 0;
-            } else {
-                smsc_log_warn(log_,"FIXME: D=%u cannot activate (by active period), going to pause");
-                newState = DLVSTATE_PAUSED;
-                if (oldState == newState) return;
-                planTime = 0;
-            }
-             */
         } else {
             planTime = 0;
         }
         activityLog_.getUserInfo().incStats(newState,state_); // may throw
         state_ = newState;
         planTime_ = planTime;
-        int regId;
-        RegionalStoragePtr regPtr;
         switch (newState) {
         case DLVSTATE_PLANNED: 
         case DLVSTATE_PAUSED:
         case DLVSTATE_FINISHED:
         case DLVSTATE_CANCELLED: {
             MutexGuard mg(cacheLock_);
-            for ( StoreHash::Iterator i(storages_); i.Next(regId,regPtr); ) {
-                regPtr->stopTransfer(newState == DLVSTATE_CANCELLED);
+            for ( StoreList::iterator i = storeList_.begin(); i != storeList_.end(); ++i ) {
+                (*i)->stopTransfer(newState == DLVSTATE_CANCELLED);
             }
             break;
         }
@@ -302,16 +286,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
         bs.dlvId = dlvId;
         bs.bind = (newState == DLVSTATE_ACTIVE);
-        {
-            MutexGuard mg(cacheLock_);
-            bs.regIds.reserve(storages_.Count());
-            int ri;
-            RegionalStoragePtr* ptr;
-            for (smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
-                 i.Next(ri,ptr); ) {
-                bs.regIds.push_back(regionid_type(ri));
-            }
-        }
+        getRegionList(bs.regIds);
         source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
     }
 }
@@ -320,27 +295,31 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 RegionalStoragePtr DeliveryImpl::getRegionalStorage( regionid_type regId, bool create )
 {
     MutexGuard mg(cacheLock_);
-    RegionalStoragePtr* ptr = storages_.GetPtr(regId);
+    StoreList::iterator* ptr = storeHash_.GetPtr(regId);
     if (!ptr) {
         if (!create) {
             return RegionalStoragePtr();
         }
-        return storages_.Insert(regId,
-                                RegionalStoragePtr(new RegionalStorage(*this,
-                                                                       regId)));
+        ptr = createRegionalStorage( regId );
+        /*
+        StoreList::iterator iter = 
+            storeList_.insert(storeList_.begin(),
+                              RegionalStoragePtr(new RegionalStorage(*this,
+                                                                     regId )));
+        ptr = storeHash_.Insert(regId,iter);
+         */
     }
-    return *ptr;
+    return **ptr;
 }
 
 
 void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
 {
     MutexGuard mg(cacheLock_);
-    regIds.reserve(storages_.Count());
+    regIds.reserve(storeHash_.Count());
     int regId;
-    RegionalStoragePtr* ptr;
-    for (smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
-         i.Next(regId,ptr); ) {
+    StoreList::iterator ptr;
+    for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
         regIds.push_back(regionid_type(regId));
     }
 }
@@ -349,25 +328,23 @@ void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
 size_t DeliveryImpl::rollOverStore()
 {
     size_t written = 0;
-    // FIXME: refactor to use list for rolling over
     smsc_log_debug(log_,"D=%u rolling store",dlvInfo_->getDlvId());
-    std::vector<RegionalStoragePtr> ptrs;
-    {
-        MutexGuard mg(cacheLock_);
-        ptrs.reserve(storages_.Count());
-        int id;
-        RegionalStoragePtr* ptr;
-        for ( smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
-              i.Next(id,ptr); ) {
-            if (ptr->get()) ptrs.push_back(*ptr);
+    bool firstPass = true;
+    do {
+        RegionalStoragePtr ptr;
+        {
+            MutexGuard mg(cacheLock_);
+            if ( firstPass ) {
+                rollingIter_ = storeList_.begin();
+                firstPass = false;
+            }
+            if ( rollingIter_ == storeList_.end() ) { break; }
+            ptr = *rollingIter_;
+            ++rollingIter_;
         }
-    }
-    for ( std::vector< RegionalStoragePtr >::iterator i = ptrs.begin();
-          i != ptrs.end();
-          ++i ) {
-        written += (*i)->rollOver();
+        written += ptr->rollOver();
         if (source_->getDlvActivator().isStopping()) { break; }
-    }
+    } while ( true );
     smsc_log_debug(log_,"D=%u rolling store done, written=%u",dlvInfo_->getDlvId(),written);
     return written;
 }
@@ -384,26 +361,34 @@ void DeliveryImpl::setRecordAtInit( regionid_type            regionId,
                                     Message&                 msg,
                                     regionid_type            serial )
 {
-    RegionalStoragePtr* ptr = storages_.GetPtr(regionId);
+    StoreList::iterator* ptr = storeHash_.GetPtr(regionId);
     if (!ptr) {
-        ptr = &storages_.Insert(regionId,
-                                RegionalStoragePtr(new RegionalStorage(*this,
-                                                                       regionId)));
+        ptr = createRegionalStorage(regionId);
+        /*
+        StoreList::iterator iter =
+            storeList_.insert( storeList_.begin(),
+                               RegionalStoragePtr(new RegionalStorage(*this,
+                                                                      regionId)) );
+        ptr = storeHash_.Insert(regionId,iter);
+         */
     }
-    (*ptr)->setRecordAtInit(msg,serial);
+    (**ptr)->setRecordAtInit(msg,serial);
 }
 
 
 void DeliveryImpl::setNextResendAtInit( regionid_type       regionId,
                                         msgtime_type        nextResend )
 {
-    RegionalStoragePtr* ptr = storages_.GetPtr(regionId);
+    StoreList::iterator* ptr = storeHash_.GetPtr(regionId);
     if (!ptr) {
+        /*
         ptr = &storages_.Insert(regionId,
                                 RegionalStoragePtr(new RegionalStorage(*this,
                                                                        regionId)));
+         */
+        ptr = createRegionalStorage(regionId);
     }
-    (*ptr)->setNextResendAtInit(nextResend);
+    (**ptr)->setNextResendAtInit(nextResend);
 }
 
 
@@ -411,14 +396,14 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
                                       std::vector<regionid_type>& emptyRegs )
 {
     int regId;
-    RegionalStoragePtr* ptr;
-    for ( smsc::core::buffers::IntHash< RegionalStoragePtr >::Iterator i(storages_);
-          i.Next(regId,ptr); ) {
+    StoreList::iterator ptr;
+    for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
         if ( (*ptr)->postInit() ) {
             filledRegs.push_back(regionid_type(regId));
         } else {
             emptyRegs.push_back(regionid_type(regId));
-            storages_.Delete(regId);
+            storeList_.erase(ptr);
+            storeHash_.Delete(regId);
         }
     }
     DeliveryStats ds;
@@ -435,8 +420,13 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 void DeliveryImpl::detachEverything()
 {
     smsc_log_debug(log_,"D=%u detaching everything",dlvInfo_->getDlvId());
-    activityLog_.getUserInfo().detachDelivery(dlvInfo_->getDlvId());
-    storages_.Empty();
+    {
+        activityLog_.getUserInfo().detachDelivery(dlvInfo_->getDlvId());
+        MutexGuard mg(cacheLock_);
+        storeHash_.Empty();
+        storeList_.clear();
+        rollingIter_ = storeList_.end();
+    }
     smsc_log_debug(log_,"D=%u detached",dlvInfo_->getDlvId());
 }
 
@@ -450,8 +440,8 @@ void DeliveryImpl::checkFinalize()
     {
         MutexGuard mg(cacheLock_);
         int regId;
-        RegionalStoragePtr* ptr;
-        for ( StoreHash::Iterator i(storages_); i.Next(regId,ptr); ) {
+        StoreList::iterator ptr;
+        for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
             if (! (*ptr)->isFinished()) {
                 finalize = false;
                 smsc_log_debug(log_,"R=%u/D=%u is still active",regId,dlvId);
@@ -553,6 +543,15 @@ void DeliveryImpl::writeDeliveryInfoData()
     }
 }
 
+
+DeliveryImpl::StoreList::iterator* 
+    DeliveryImpl::createRegionalStorage( regionid_type regId )
+{
+    StoreList::iterator iter = 
+        storeList_.insert( storeList_.begin(),
+                           RegionalStoragePtr( new RegionalStorage(*this,regId)) );
+    return &storeHash_.Insert(regId,iter);
+}
 
 }
 }

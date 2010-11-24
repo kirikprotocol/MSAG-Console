@@ -1,6 +1,8 @@
 #ifndef _INFORMER_DELIVERYIMPL_H
 #define _INFORMER_DELIVERYIMPL_H
 
+#include <list>
+#include <vector>
 #include "informer/data/Delivery.h"
 #include "RegionalStorage.h"
 #include "core/buffers/IntHash.hpp"
@@ -87,15 +89,22 @@ public:
     void detachEverything();
 
 private:
+    typedef std::list< RegionalStoragePtr >            StoreList;
+    typedef smsc::core::buffers::IntHash< StoreList::iterator > StoreHash;
+
     /// check if all regional storages is empty, and no messages in retries.
     void checkFinalize();
 
     void writeDeliveryInfoData();
 
+    /// cacheLock must be locked
+    StoreList::iterator* createRegionalStorage(regionid_type regId);
+
 private:
-    typedef smsc::core::buffers::IntHash< RegionalStoragePtr > StoreHash;
     mutable smsc::core::synchronization::Mutex         cacheLock_;
-    StoreHash                                          storages_;
+    StoreList                                          storeList_;
+    StoreHash                                          storeHash_;
+    StoreList::iterator                                rollingIter_;
 
     StoreJournal&                                      storeJournal_;
 };
