@@ -3,41 +3,52 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:eye="http://taglib.eyeline.mobi"
       xmlns:ui="http://java.sun.com/jsf/facelets">
 
 <ui:composition>
 
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menu/jsdomenu.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menu/jsdomenubar.js"></script>
-
-  <SCRIPT type="text/javascript">
-    function createjsDOMenu() {
-    menuBar = new jsDOMenuBar();
-    <ui:repeat value="#{topMenu.menuBarItems}" var="barItem">
-      menu_0=new jsDOMenu("<tr:outputText escape="false" value="#{msg[barItem.width]}"/>");
-      <ui:repeat value="#{barItem.items}" var="menuItem">
-        menu_0.addMenuItem(new menuItem("<tr:outputText escape="false" value="#{msg[menuItem.name]}"/>", "", "<tr:outputText
-          value="#{facesContext.externalContext.requestContextPath}#{menuItem.url}"/>"));
-      </ui:repeat>
-      menuBar.addMenuBarItem(new menuBarItem("<tr:outputText escape="false" value="#{msg[barItem.name]}"/>", menu_0));
-    </ui:repeat>
-    }
-  </SCRIPT>
-
   <h:form>
     <table width="100%" id="MAIN_MENU_TABLE" border="0" cellspacing="0" cellpadding="0" class="main_menu">
       <tr>
-        <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_14.jpg" style="white-space:nowrap;">
-          &#160;
+        <td width="26">&#160;</td>
+        <td width="1%">
+          <eye:menubar label="#{msg['informer.admin']}" rendered="#{userSession.logined and userSession.userInAdminRole}">
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.status']}" action="INDEX"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.config']}" action="CONFIG"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.regions']}" action="REGION"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.smsc']}" action="SMSC"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.blacklist']}" action="BLACKLIST"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.users']}" action="USERS"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.restrictions']}" action="RESTRICTIONS"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.notifications']}" action="NOTIFICATIONS"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.siebel']}" action="SIEBEL"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.journal']}" action="JOURNAL"/></eye:menubaritem>
+           </eye:menubar>
         </td>
-        <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_14.jpg" width="100%">&#160;</td>
-        <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_14.jpg" style="white-space:nowrap">
-          <h:commandLink id="MENU0_LOGOUT" style="text-decoration: none;color: #F2E275;cursor: pointer;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                         rendered="#{logout.userName != null}" value="#{msg['informer.logout']} &quot;#{logout.userName}&quot;"
-                         action="#{logout.logout}"/>
+        <td width="1%">
+          <eye:menubar label="#{msg['informer.deliveries']}" rendered="#{userSession.logined}">
+            <eye:menubaritem><h:commandLink value="#{msg['informer.deliveries.list']}" action="DELIVERIES"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.deliveries.scheduling']}" action="DELIVERIES_WEEKLY"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.deliveries.create']}" action="DELIVERY_CREATE"/></eye:menubaritem>
+          </eye:menubar>
         </td>
-
-        <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_14.jpg" width="52"></td>
+        <td width="1%">
+          <eye:menubar label="#{msg['informer.stats']}" rendered="#{userSession.logined}">
+            <eye:menubaritem><h:commandLink value="#{msg['informer.stats.common']}" action="STATS_MESSAGES_BY_PERIOD"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.stats.deliveries']}" action="STATS_DELIVERIES_COUNTS_BY_PERIOD"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.deliveries']}" action="STATS_MESSAGES_BY_DELIVERIES"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.recipients']}" action="STATS_MESSAGES_BY_REC"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.byUser']}" action="STATS_DELIVERY_MESSAGES_BY_USER"/></eye:menubaritem>
+          </eye:menubar>
+        </td>
+        <td width="100%">&#160;</td>
+        <td style="white-space:nowrap">
+          <div>
+          <h:commandLink id="MENU0_LOGOUT" rendered="#{userSession.userName != null}" value="#{msg['informer.logout']} &quot;#{userSession.userName}&quot;" action="#{userSession.logout}"/>
+          </div>
+        </td>
+        <td width="52">&#160;</td>
       </tr>
     </table>
   </h:form>

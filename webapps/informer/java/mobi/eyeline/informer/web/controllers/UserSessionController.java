@@ -3,11 +3,15 @@ package mobi.eyeline.informer.web.controllers;
 import javax.servlet.http.HttpSession;
 
 /**
- * Контроллер для прекращения сеанса пользователя
+ * Контроллер сеанса пользователя
  *
  * @author Aleksandr Khalitov
  */
-public class LogoutController extends InformerController {
+public class UserSessionController extends InformerController {
+
+  public boolean isLogined() {
+    return getUserPrincipal() != null;
+  }
 
   public String logout() {
     HttpSession session = getSession(false);

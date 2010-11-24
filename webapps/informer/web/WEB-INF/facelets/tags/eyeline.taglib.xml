@@ -158,4 +158,23 @@
     </component>
   </tag>
 
+
+  <tag>
+    <tag-name>menubar</tag-name>
+     <component>
+      <component-type>menubar</component-type>
+      <renderer-type>menuBar</renderer-type>
+      <handler-class>mobi.eyeline.informer.web.components.menubar.MenuBarHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>menubaritem</tag-name>
+     <component>
+      <component-type>menubaritem</component-type>
+      <renderer-type>menuBar</renderer-type>
+      <handler-class>mobi.eyeline.informer.web.components.menubar.MenuBarItemHandler</handler-class>
+    </component>
+  </tag>
+
 </facelet-taglib>

@@ -113,6 +113,12 @@
 
     <renderer>
       <component-family>Eyeline</component-family>
+      <renderer-type>menuBar</renderer-type>
+      <renderer-class>mobi.eyeline.informer.web.components.menubar.MenuBarRenderer</renderer-class>
+    </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
       <renderer-type>buttonsPanel</renderer-type>
       <renderer-class>mobi.eyeline.informer.web.components.buttons_panel.ButtonsPanelRenderer</renderer-class>
     </renderer>
@@ -148,17 +154,9 @@
     </renderer>
   </render-kit>
 
-
-
   <managed-bean>
-    <managed-bean-name>topMenu</managed-bean-name>
-    <managed-bean-class>mobi.eyeline.informer.web.controllers.TopMenu</managed-bean-class>
-    <managed-bean-scope>request</managed-bean-scope>
-  </managed-bean>
-
-  <managed-bean>
-    <managed-bean-name>logout</managed-bean-name>
-    <managed-bean-class>mobi.eyeline.informer.web.controllers.LogoutController</managed-bean-class>
+    <managed-bean-name>userSession</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.UserSessionController</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
@@ -427,6 +425,12 @@
     <navigation-case>
       <from-outcome>STATS_MESSAGES_BY_DELIVERIES</from-outcome>
       <to-view-id>/stats/messagesByDeliveries.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>STATS_MESSAGES_BY_REC</from-outcome>
+      <to-view-id>/stats/messagesByRecs.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
