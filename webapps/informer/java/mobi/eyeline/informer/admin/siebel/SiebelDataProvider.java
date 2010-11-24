@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.siebel;
 
 import mobi.eyeline.informer.admin.AdminException;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
@@ -59,10 +60,11 @@ public interface SiebelDataProvider {
   /**
    * Возвращает рассылки, статус которых был изменён извне
    *
+   * @param from дата, начиная с которой следует извлечь рассылки
    * @return рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public ResultSet<SiebelDelivery> getDeliveriesToUpdate() throws AdminException;
+  public ResultSet<SiebelDelivery> getDeliveriesToUpdate(Date from) throws AdminException;
 
   /**
    * Возвращает все рассылки

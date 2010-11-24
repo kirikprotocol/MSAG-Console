@@ -16,7 +16,7 @@ import java.util.Properties;
  */
 public class SiebelDeliveriesResultSet implements ResultSet<SiebelDelivery> {
 
-  private static final Logger logger = Logger.getLogger(SiebelMessagesResultSet.class);
+  private static final Logger logger = Logger.getLogger("SIEBEL");
   private final java.sql.ResultSet sqlResult;
   private final Connection connection;
   private final PreparedStatement prepStatement;
@@ -52,7 +52,7 @@ public class SiebelDeliveriesResultSet implements ResultSet<SiebelDelivery> {
       delivery.setPriority(sqlResult.getInt(sql.getProperty("task.priority")));
       delivery.setSave(sqlResult.getString(sql.getProperty("task.save")).equals("Y"));
       delivery.setWaveId(sqlResult.getString(sql.getProperty("task.wave.id")));
-    } catch (Throwable e) {
+    } catch (SQLException e) {
       logger.error(e, e);
       throw new SiebelException("unable_get_data");
     }

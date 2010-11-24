@@ -9,10 +9,7 @@ import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.ResourceBundle;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -29,7 +26,7 @@ public class SiebelController extends InformerController {
 
   private String jdbcPassword;
 
-  private String jdbcDriver;
+  private String dbType;
 
   private final Configuration config;
 
@@ -49,7 +46,7 @@ public class SiebelController extends InformerController {
     jdbcSource = ps.getProperty(SiebelManager.JDBC_SOURCE);
     jdbcLogin = ps.getProperty(SiebelManager.JDBC_USER);
     jdbcPassword = ps.getProperty(SiebelManager.JDBC_PASSWORD);
-    jdbcDriver = ps.getProperty(SiebelManager.JDBC_DRIVER);
+    dbType = ps.getProperty(SiebelManager.DB_TYPE);
     siebelUser = ps.getProperty(SiebelManager.USER);
     removeOnStop = Boolean.valueOf(ps.getProperty(SiebelManager.REMOVE_ON_STOP_PARAM));
     statsPeriod = Integer.parseInt(ps.getProperty(SiebelFinalStateListener.PERIOD_PARAM));
@@ -58,6 +55,13 @@ public class SiebelController extends InformerController {
       ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
       error = bundle.getString("informer.siebel.daemon.offline");
     }
+  }
+
+  public List<SelectItem> getUniqueDBTypes() {
+    List<SelectItem> result = new ArrayList<SelectItem>(2);
+    result.add(new SelectItem("mysql", "mysql"));
+    result.add(new SelectItem("oracle", "oracle"));
+    return result;
   }
 
   public String getError() {
@@ -83,22 +87,13 @@ public class SiebelController extends InformerController {
   }
 
   public String save() {
-
-    try {
-      Class.forName(jdbcDriver);
-    } catch (Exception e) {
-      logger.warn(e, e);
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.jdbc.driver.illegal", jdbcDriver);
-      return null;
-    }
-
     try {
       Properties ps = config.getSiebelProperties();
       ps.setProperty(SiebelManager.TIMEOUT, Integer.toString(timeout));
       ps.setProperty(SiebelManager.JDBC_SOURCE, jdbcSource);
       ps.setProperty(SiebelManager.JDBC_USER, jdbcLogin);
       ps.setProperty(SiebelManager.JDBC_PASSWORD, jdbcPassword);
-      ps.setProperty(SiebelManager.JDBC_DRIVER, jdbcDriver);
+      ps.setProperty(SiebelManager.DB_TYPE, dbType);
       ps.setProperty(SiebelManager.USER, siebelUser);
       ps.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.toString(removeOnStop));
       ps.setProperty(SiebelFinalStateListener.PERIOD_PARAM, Integer.toString(statsPeriod));
@@ -113,12 +108,12 @@ public class SiebelController extends InformerController {
     }
   }
 
-  public String getJdbcDriver() {
-    return jdbcDriver;
+  public String getDbType() {
+    return dbType;
   }
 
-  public void setJdbcDriver(String jdbcDriver) {
-    this.jdbcDriver = jdbcDriver;
+  public void setDbType(String dbType) {
+    this.dbType = dbType;
   }
 
   public int getTimeout() {

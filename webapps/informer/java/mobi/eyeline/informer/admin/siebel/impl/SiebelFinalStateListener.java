@@ -5,10 +5,8 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.delivery.DeliveryMessageNotification;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotification;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotificationsAdapter;
 import mobi.eyeline.informer.admin.siebel.SiebelDelivery;
+import mobi.eyeline.informer.admin.siebel.SiebelException;
 import mobi.eyeline.informer.admin.siebel.SiebelManager;
 import mobi.eyeline.informer.admin.siebel.SiebelMessage;
 import mobi.eyeline.informer.admin.users.User;
@@ -26,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
 
-  private static final Logger logger = Logger.getLogger(SiebelFinalStateListener.class);
+  private static final Logger logger = Logger.getLogger("SIEBEL");
 
   private final SiebelManager siebelManager;
 
@@ -34,7 +32,7 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
 
   private final SiebelUserManager users;
 
-  private final Thread processor;
+  private Thread processor;
 
   private final ResourceBundle smppStatuses;
 
@@ -48,6 +46,8 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
 
   public static final String PERIOD_PARAM = "statsPeriod";
 
+  private boolean stop = true;
+
   public SiebelFinalStateListener(SiebelManager siebelManager, SiebelDeliveries deliveries,
                                   SiebelUserManager users, File workDir, int periodSec) throws InitException{
     this.dir = new File(workDir, "siebel");
@@ -58,15 +58,7 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
     this.deliveries = deliveries;
     this.users = users;
     this.smppStatuses = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", Locale.ENGLISH);
-    try {
-      writer = new PrintWriter(new FileWriter(new File(dir, df.format(new Date())+".csv")));
-    } catch (IOException e) {
-      logger.error(e,e);
-      throw new InitException(e);
-    }
     this.periodSec = periodSec;
-    processor =  new Thread(new Processor(), "SiebelFinalStateFileProcessor");
-    processor.start();
   }
 
   private final Lock lockSiebelManager = new ReentrantLock();
@@ -101,6 +93,9 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
   }
 
   private void messageFinished(DeliveryMessageNotification notification) throws AdminException {
+    if(stop) {
+      return;
+    }
     if (notification.getUserData() == null) {
       return;
     }
@@ -120,14 +115,19 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
     int errCode = notification.getSmppStatus();
     try {
       writeLock();
-      writer.println(StringEncoderDecoder.toCSVString(0, clcId, state, errCode));
-      writer.flush();
+      if(!stop) {
+        writer.println(StringEncoderDecoder.toCSVString(0, clcId, state, errCode));
+        writer.flush();
+      }
     } finally {
       writeUnlock();
     }
   }
 
   private void deliveryFinished(DeliveryNotification notification) throws AdminException {
+    if(stop) {
+      return;
+    }
     User u = users.getUser(notification.getUserId());
     if (u == null) {
       logger.error("Can't find user with id: " + notification.getUserId());
@@ -138,8 +138,10 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
     if (d != null && (waveId = d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID)) != null) {
       try {
         writeLock();
-        writer.println(StringEncoderDecoder.toCSVString(1, waveId));
-        writer.flush();
+        if(!stop) {
+          writer.println(StringEncoderDecoder.toCSVString(1, waveId));
+          writer.flush();
+        }
       } finally {
         writeUnlock();
       }
@@ -156,10 +158,36 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
     messageFinished(notification);
   }
 
+  public synchronized void start() throws AdminException{
+    if(stop) {
+      try {
+        writer = new PrintWriter(new FileWriter(new File(dir, df.format(new Date())+".csv")));
+      } catch (IOException e) {
+        logger.error(e,e);
+        throw new SiebelException("internal_error");
+      }
+      processor =  new Thread(new Processor(), "SiebelFinalStateFileProcessor");
+      processor.start();
+      stop = false;
+    }
+  }
 
-  public void shutdown() {
-    stop = true;
-    processor.interrupt();
+  public synchronized boolean isStarted() {
+    return !stop;
+  }
+
+
+  public synchronized void shutdown() {
+    if(!stop) {
+      stop = true;
+      processor.interrupt();
+      try{
+        writeLock();
+        writer.close();
+      }finally {
+        writeUnlock();
+      }
+    }
   }
 
 
@@ -199,14 +227,21 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
     Map<String, SiebelDelivery.Status> deliveries = new HashMap<String, SiebelDelivery.Status>(1001);
     try{
       reader = new BufferedReader(new FileReader(f));
+      int countDeliveries = 0;
+      int countMessages = 0;
       String line;
       while((line = reader.readLine()) != null) {
         List<String> list = StringEncoderDecoder.csvDecode(line);
         if(list.get(0).equals("0")) {
           states.put(list.get(1),
               new SiebelMessage.DeliveryState(getState(list.get(2)), list.get(3), getErrorDescr(list.get(3))));
+          countMessages++;
         }else{
           deliveries.put(list.get(1), SiebelDelivery.Status.PROCESSED);
+          countDeliveries++;
+          if(logger.isDebugEnabled()) {
+            logger.debug("Siebel delivery had been finished: waveId="+list.get(1));
+          }
         }
         if(states.size() == 1000 || deliveries.size() == 1000) {
           if(!states.isEmpty()) {
@@ -228,6 +263,10 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
             deliveries.clear();
           }
         }
+      }
+      if(logger.isDebugEnabled()) {
+        logger.debug("Deliveries finished had been processed: "+countDeliveries);
+        logger.debug("Messages with final state had been processed: "+countMessages);
       }
     }finally {
       if(reader != null) {
@@ -256,8 +295,6 @@ public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
       deliveries.clear();
     }
   }
-
-  private boolean stop = false;
 
   private class Processor implements Runnable {
 

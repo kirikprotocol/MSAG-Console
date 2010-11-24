@@ -52,6 +52,9 @@
           <eye:button>
             <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
           </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+          </eye:button>
           <eye:space/>
           <eye:button>
             <tr:commandLink text="#{msg['edit.selected.button']}" action="#{deliveries.editGroup}"/>
@@ -97,6 +100,9 @@
           </eye:button>
           <eye:button>
             <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
           </eye:button>
           <eye:space/>
           <eye:button>

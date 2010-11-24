@@ -47,7 +47,6 @@
 
   <section name="siebel">
 
-    <param name="jdbc.driver">com.mysql.jdbc.Driver</param>
     <param name="jdbc.source">jdbc:mysql://mangal/summer_edu?useUnicode=true</param>
     <param name="jdbc.user">student</param>
     <param name="jdbc.password">student</param>

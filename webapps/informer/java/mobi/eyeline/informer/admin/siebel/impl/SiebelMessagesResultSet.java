@@ -14,7 +14,7 @@ import java.util.Properties;
  * @author Aleksandr Khalitov
  */
 class SiebelMessagesResultSet implements ResultSet<SiebelMessage> {
-  private static final Logger logger = Logger.getLogger(SiebelMessagesResultSet.class);
+  private static final Logger logger = Logger.getLogger("SIEBEL");
   private final java.sql.ResultSet sqlResult;
   private final Connection connection;
   private final PreparedStatement prepStatement;
@@ -50,7 +50,7 @@ class SiebelMessagesResultSet implements ResultSet<SiebelMessage> {
       siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("message.smsc.stat.code")));
       siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("message.smsc.stat.val")));
       siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("message.wave.id")));
-    } catch (Throwable e) {
+    } catch (SQLException e) {
       logger.error(e, e);
       throw new SiebelException("unable_get_data");
     }

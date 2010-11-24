@@ -248,7 +248,7 @@ public class SiebelManagerTest {
 
       PreparedStatement prepStatement = null;
       try{
-        prepStatement = connection.prepareStatement("update SMS_MAIL_PARAMS set CTRL_STATUS=? where WAVE_INT_ID=?");
+        prepStatement = connection.prepareStatement("update SMS_MAIL_PARAMS set CTRL_STATUS=?, LAST_UPD=CURRENT_TIMESTAMP where WAVE_INT_ID=?");
         prepStatement.setString(1, status.toString());
         prepStatement.setString(2, Integer.toString(wid));
 

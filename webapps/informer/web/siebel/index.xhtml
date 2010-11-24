@@ -65,8 +65,10 @@
 
           <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
 
-            <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.driver']}" labelStyle="text-align:left">
-              <tr:inputText columns="50" value="#{siebel.jdbcDriver}" required="true" simple="true"/>
+            <tr:panelLabelAndMessage label="#{msg['informer.siebel.db.type']}" labelStyle="text-align:left">
+              <h:selectOneMenu value="#{siebel.dbType}">
+                <f:selectItems value="#{siebel.uniqueDBTypes}"/>
+              </h:selectOneMenu>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.source']}" labelStyle="text-align:left">

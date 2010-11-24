@@ -203,13 +203,15 @@ public class AdminContext {
 
     siebelManager = new SiebelManager(siebelDeliveries, siebelRegions);
 
-    siebelManager.start(siebelUser, webConfig.getSiebelProperties());
-
     siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries,
         userManager, workDir,
-        Integer.parseInt(webConfig.getSiebelProperties().getProperty(SiebelFinalStateListener.PERIOD_PARAM))); 
+        Integer.parseInt(webConfig.getSiebelProperties().getProperty(SiebelFinalStateListener.PERIOD_PARAM)));
 
     deliveryNotificationsProducer.addListener(siebelFinalStateListener);
+
+    siebelManager.start(siebelUser, webConfig.getSiebelProperties());
+
+    siebelFinalStateListener.start();
 
   }
 
@@ -852,6 +854,9 @@ public class AdminContext {
         siebelManager.stop();
         try {
           siebelManager.start(user, props);
+          if(!siebelFinalStateListener.isStarted()) {
+            siebelFinalStateListener.start();
+          }
           siebelStarted = true;
         } catch (Exception e) {
           logger.error("Applying of new properties has failed. Siebel is down.", e);

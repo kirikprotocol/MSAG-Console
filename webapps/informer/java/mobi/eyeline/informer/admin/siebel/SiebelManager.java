@@ -26,7 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class SiebelManager {
 
-  private static final Logger logger = Logger.getLogger(SiebelManager.class);
+  private static final Logger logger = Logger.getLogger("SIEBEL");
 
   private SiebelDataProvider provider;
 
@@ -50,6 +50,7 @@ public class SiebelManager {
 
   private boolean removeOnStop = false;
 
+  private Date lastUpdate;
 
   public static final String TIMEOUT = "timeout";
   public static final String USER = "siebelUser";
@@ -57,7 +58,7 @@ public class SiebelManager {
   public static final String JDBC_SOURCE = "jdbc.source";
   public static final String JDBC_USER = "jdbc.user";
   public static final String JDBC_PASSWORD = "jdbc.password";
-  public static final String JDBC_DRIVER = "jdbc.driver";
+  public static final String DB_TYPE = "jdbc.pool.type";
 
   public SiebelManager(SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
     this.provider = new SiebelDataProviderImpl();
@@ -116,6 +117,7 @@ public class SiebelManager {
 
   public synchronized void start(User siebelUser, Properties ps) throws AdminException {
     if (shutdown) {
+      lastUpdate = new Date(0);
       this.siebelUser = siebelUser;
       timeout = Integer.parseInt(ps.getProperty(TIMEOUT));
       removeOnStop = Boolean.valueOf(ps.getProperty(REMOVE_ON_STOP_PARAM));
@@ -163,18 +165,21 @@ public class SiebelManager {
         while (!shutdown) {
           ResultSet<SiebelDelivery> rs = null;
           try {
-            rs = provider.getDeliveriesToUpdate();
+            rs = provider.getDeliveriesToUpdate(lastUpdate);
             while (rs.next()) {
               final SiebelDelivery st = rs.get();
 
               if (logger.isDebugEnabled())
-                logger.debug("Siebel: found delivery to update: " + st.getWaveId());
+                logger.debug("Siebel: found delivery to update: waveId=" + st.getWaveId());
 
               if (!isInProcessing(st)) {
                 process(st);
+                if(st.getLastUpdate().after(lastUpdate)) {
+                  lastUpdate = new Date(st.getLastUpdate().getTime());
+                }
               } else {
                 if (logger.isDebugEnabled())
-                  logger.debug("Siebel: delivery: " + st.getWaveId() + " already in processing...");
+                  logger.debug("Siebel: delivery (waveId=" + st.getWaveId() + ") is already in processing...");
               }
             }
           } catch (Exception e) {
@@ -191,10 +196,6 @@ public class SiebelManager {
           }
         }
 
-        if (logger.isDebugEnabled()) {
-          logger.debug("Siebel: delivery manager stopped");
-        }
-
       } catch (Exception e) {
         logger.error(e, e);
       } finally {
@@ -207,7 +208,7 @@ public class SiebelManager {
     if (provider.getDeliveryStatus(st.getWaveId()) == SiebelDelivery.Status.ENQUEUED) {
       provider.setDeliveryStatus(st.getWaveId(), SiebelDelivery.Status.IN_PROCESS);
       if (logger.isDebugEnabled())
-        logger.debug("Siebel: set delivery status to " + SiebelDelivery.Status.IN_PROCESS);
+        logger.debug("Siebel: set wave status to " + SiebelDelivery.Status.IN_PROCESS);
     }
   }
 
@@ -215,12 +216,19 @@ public class SiebelManager {
     if (provider.getDeliveryStatus(st.getWaveId()) == SiebelDelivery.Status.ENQUEUED) {
       provider.setDeliveryStatus(st.getWaveId(), SiebelDelivery.Status.PROCESSED);
       if (logger.isDebugEnabled())
-        logger.debug("Siebel: set tasK status to " + SiebelDelivery.Status.PROCESSED);
+        logger.debug("Siebel: set wave status to " + SiebelDelivery.Status.PROCESSED);
     }
 
   }
 
-  private void beginDelivery(SiebelDelivery st, DeliveryInfo info) throws AdminException {
+  private void beginDelivery(SiebelDelivery st) throws AdminException {
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("Siebel: Found wave in state=" + SiebelDelivery.Status.ENQUEUED +
+          "; waveId=" + st.getWaveId());
+    }
+
+    final DeliveryInfo info = getExistingDelivery(st.getWaveId());
 
     String generationFlag = "message_generation_in_process";
 
@@ -229,7 +237,7 @@ public class SiebelManager {
     if (delivery != null) {
       if (info.getProperty("message_generation_in_process") == null) {
         if (logger.isDebugEnabled()) {
-          logger.debug("Siebel: delivery already exists and has generated, waveId='" + st.getWaveId() + "'. Enable it");
+          logger.debug("Siebel: delivery already exists and has generated, waveId='" + st.getWaveId() + "'. Activate it");
         }
         deliveries.activateDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
         _setDeliveryStatusInProcess(st);
@@ -252,7 +260,7 @@ public class SiebelManager {
     boolean hasMessages;
     try {
       if (logger.isDebugEnabled()) {
-        logger.debug("Siebel: delivery is new or doesn't contain some parts. Generate it. WaveId=" + st.getWaveId());
+        logger.debug("Siebel: Create delivery: waveId=" + st.getWaveId());
       }
       messages = provider.getMessages(st.getWaveId());
       hasMessages = addMessages(delivery, messages) != 0;
@@ -261,6 +269,9 @@ public class SiebelManager {
       deliveries.modifyDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery);
 
       deliveries.activateDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
+      if (logger.isDebugEnabled()) {
+        logger.debug("Siebel: Delivery has been created: waveId=" + st.getWaveId()+" informerId="+delivery.getId()+" name="+delivery.getName());
+      }
     } finally {
       if (messages != null) {
         messages.close();
@@ -273,19 +284,31 @@ public class SiebelManager {
     }
   }
 
-  private void stopDelivery(DeliveryInfo delivery, boolean remove) throws AdminException {
+  private void stopDelivery(SiebelDelivery st, boolean remove) throws AdminException {
+    if (logger.isDebugEnabled()) {
+      logger.debug("Siebel: Found wave in state=" + SiebelDelivery.Status.STOPPED +
+          "; waveId=" + st.getWaveId());
+    }
+
+    final DeliveryInfo delivery = getExistingDelivery(st.getWaveId());
+
+    if (delivery == null) {
+      if (logger.isDebugEnabled()) {
+        logger.warn("Siebel: delivery found isn't exist: waveId=" + st.getWaveId());
+      }
+      return;
+    }
+
     try {
-      if (delivery != null) {
-        if (remove) {
-          deliveries.dropDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getDeliveryId());
-          if (logger.isDebugEnabled()) {
-            logger.debug("Siebel: remove delivery " + delivery.getName());
-          }
-        } else {
-          deliveries.cancelDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getDeliveryId());
-          if (logger.isDebugEnabled()) {
-            logger.debug("Siebel: stop tasK " + delivery.getName());
-          }
+      if (remove) {
+        deliveries.dropDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getDeliveryId());
+        if (logger.isDebugEnabled()) {
+          logger.debug("Siebel: delivery has been removed name=" + delivery.getName()+" waveId="+st.getWaveId()+" informerId="+delivery.getDeliveryId());
+        }
+      } else {
+        deliveries.cancelDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getDeliveryId());
+        if (logger.isDebugEnabled()) {
+          logger.debug("Siebel: delivery has been canceled name=" + delivery.getName()+" waveId="+st.getWaveId()+" informerId="+delivery.getDeliveryId());
         }
       }
     } catch (AdminException e) {
@@ -297,11 +320,26 @@ public class SiebelManager {
   }
 
 
-  private void pauseDelivery(DeliveryInfo delivery) throws AdminException {
+  private void pauseDelivery(SiebelDelivery st) throws AdminException {
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("Siebel: Found wave in state=" + SiebelDelivery.Status.PAUSED +
+          "; waveId=" + st.getWaveId());
+    }
+
+    final DeliveryInfo delivery = getExistingDelivery(st.getWaveId());
+
+    if (delivery == null) {
+      if (logger.isDebugEnabled()) {
+        logger.warn("Siebel: delivery found isn't exist: waveId=" + st.getWaveId());
+      }
+      return;
+    }
+
     try {
       deliveries.pauseDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getDeliveryId());
       if (logger.isDebugEnabled()) {
-        logger.debug("Siebel: pause delivery " + delivery.getName());
+        logger.debug("Siebel: delivery has been paused=" + delivery.getName()+" waveId="+st.getWaveId()+" informerId="+delivery.getDeliveryId());
       }
     } catch (AdminException e) {
       throw e;
@@ -313,18 +351,13 @@ public class SiebelManager {
   private void process(final SiebelDelivery st) throws AdminException {
     try {
 
-      final DeliveryInfo deliveryInfo = getExistingDelivery(st.getWaveId());
-
       final Runnable thread;
 
       if (st.getStatus() == SiebelDelivery.Status.ENQUEUED) {
         thread = new Runnable() {
           public void run() {
             try {
-              if (logger.isDebugEnabled()) {
-                logger.debug("Siebel: Found delivery in state=" + SiebelDelivery.Status.ENQUEUED + " WaveId=" + st.getWaveId());
-              }
-              beginDelivery(st, deliveryInfo);
+              beginDelivery(st);
             } catch (Exception e) {
               logger.error(e, e);
             } finally {
@@ -333,20 +366,10 @@ public class SiebelManager {
           }
         };
       } else if (st.getStatus() == SiebelDelivery.Status.STOPPED) {
-        if (deliveryInfo == null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("Siebel: Found delivery in state=" + SiebelDelivery.Status.STOPPED +
-                ". It doesn't exist.  WaveId=" + st.getWaveId());
-          }
-          return;
-        }
         thread = new Runnable() {
           public void run() {
             try {
-              if (logger.isDebugEnabled()) {
-                logger.debug("Siebel: Found delivery in state=" + SiebelDelivery.Status.STOPPED + " WaveId=" + st.getWaveId());
-              }
-              stopDelivery(deliveryInfo, removeOnStop);
+              stopDelivery(st, removeOnStop);
             } catch (Exception e) {
               logger.error(e, e);
             } finally {
@@ -355,17 +378,10 @@ public class SiebelManager {
           }
         };
       } else if (st.getStatus() == SiebelDelivery.Status.PAUSED) {
-        if (deliveryInfo == null) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("Siebel: Found delivery in state=" + SiebelDelivery.Status.PAUSED +
-                ". It doesn't exist. WaveId=" + st.getWaveId());
-          }
-          return;
-        }
         thread = new Runnable() {
           public void run() {
             try {
-              pauseDelivery(deliveryInfo);
+              pauseDelivery(st);
             } catch (Exception e) {
               logger.error(e, e);
             } finally {
@@ -479,6 +495,8 @@ public class SiebelManager {
   private Delivery createDelivery(SiebelDelivery siebelDelivery, String deliveryName) throws AdminException {
     Delivery delivery = Delivery.newCommonDelivery();
     deliveries.getDefaultDelivery(siebelUser.getLogin(), delivery);
+    delivery.setEnableMsgFinalizationLogging(true);
+    delivery.setEnableStateChangeLogging(true);
     delivery.setName(deliveryName);
 
     delivery.setPriority(siebelDelivery.getPriority());

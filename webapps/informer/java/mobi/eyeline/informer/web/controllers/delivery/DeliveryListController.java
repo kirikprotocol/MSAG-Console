@@ -35,7 +35,7 @@ public class DeliveryListController extends DeliveryController {
       init = Boolean.valueOf(i);
     }
     startDateFrom = new Date(System.currentTimeMillis() - (7*24*60*60*1000));
-    startDateTo = new Date();
+    startDateTo = null;
   }
 
   public String getNamePrefix() {
@@ -68,7 +68,7 @@ public class DeliveryListController extends DeliveryController {
     namePrefix = null;
     init = false;
     startDateFrom = new Date(System.currentTimeMillis() - (7*24*60*60*1000));
-    startDateTo = new Date();
+    startDateTo = null;
   }
 
   public void query() {
@@ -114,13 +114,22 @@ public class DeliveryListController extends DeliveryController {
       for (String r : selected) {
         try {
           int id = Integer.parseInt(r);
-          DeliveryStatistics d = config.getDeliveryStats(u.getLogin(), u.getPassword(), id);
-          if (d.getDeliveryState() != null) {
-            DeliveryStatus status = d.getDeliveryState().getStatus();
-            if (status == DeliveryStatus.Planned || status == DeliveryStatus.Paused) {
-              config.activateDelivery(u.getLogin(), u.getPassword(), id);
-            }
-          }
+          config.activateDelivery(u.getLogin(), u.getPassword(), id);
+        } catch (AdminException e) {
+          addError(e);
+        }
+      }
+    }
+    return null;
+  }
+
+  public String delete() {
+    if (selected != null) {
+      User u = config.getUser(getUserName());
+      for (String r : selected) {
+        try {
+          int id = Integer.parseInt(r);
+          config.dropDelivery(u.getLogin(), u.getPassword(), id);
         } catch (AdminException e) {
           addError(e);
         }
@@ -143,13 +152,7 @@ public class DeliveryListController extends DeliveryController {
       for (String r : selected) {
         try {
           int id = Integer.parseInt(r);
-          DeliveryStatistics d = config.getDeliveryStats(u.getLogin(), u.getPassword(), id);
-          if (d.getDeliveryState() != null) {
-            DeliveryStatus status = d.getDeliveryState().getStatus();
-            if (status == DeliveryStatus.Active) {
-              config.pauseDelivery(u.getLogin(), u.getPassword(), id);
-            }
-          }
+          config.pauseDelivery(u.getLogin(), u.getPassword(), id);
         } catch (AdminException e) {
           addError(e);
         }
