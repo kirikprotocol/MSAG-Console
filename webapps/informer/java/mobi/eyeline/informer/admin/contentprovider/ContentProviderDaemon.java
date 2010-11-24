@@ -9,7 +9,7 @@ import mobi.eyeline.informer.admin.delivery.MessageInfo;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsAdapter;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotificationsAdapter;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 

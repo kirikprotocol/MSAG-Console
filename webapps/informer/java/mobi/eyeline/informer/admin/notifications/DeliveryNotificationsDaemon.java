@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.notifications;
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotificationsAdapter;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
