@@ -36,7 +36,8 @@ protected:
 
     void assignTask(ThreadedTask* newtask)
     {
-      task=newtask;
+        task=newtask;
+        if (task) { task->onThreadPoolStartTask(); }
     }
     void processTask()
     {
