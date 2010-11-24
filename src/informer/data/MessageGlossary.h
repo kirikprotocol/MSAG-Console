@@ -43,6 +43,7 @@ public:
 private:
     typedef smsc::core::buffers::IntHash< TextList::iterator > TextHash;
     void readGlossaryFailed( unsigned txtId, const char* msg );
+    void cleanList( TextList& list );
 
 private:
     smsc::logger::Logger*                              log_;

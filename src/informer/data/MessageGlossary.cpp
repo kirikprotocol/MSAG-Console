@@ -48,10 +48,7 @@ MessageGlossary::~MessageGlossary()
 {
     // destroying all messages
     delete hash_; hash_ = 0;
-    for ( TextList::iterator i = list_.begin(); i != list_.end(); ++i ) {
-        delete i->getText();
-    }
-    list_.clear();
+    cleanList( list_ );
     smsc_log_debug(log_,"D=%u dtor done",dlvId_);
 }
 
@@ -228,7 +225,7 @@ void MessageGlossary::setTexts( const std::vector< std::string >& texts )
     {
         if ( -1 == rename( (getCS()->getStorePath() + fname + ".tmp").c_str(),
                            (getCS()->getStorePath() + fname).c_str()) ) {
-            // FIXME: cleanup newList
+            cleanList( newlist );
             throw InfosmeException(EXC_SYSTEM,"D=%u rename('%s')",dlvId_,fname);
         }
         MutexGuard mg(lock_);
@@ -275,6 +272,15 @@ void MessageGlossary::readGlossaryFailed( unsigned           line,
 {
     smsc_log_warn(log_,"D=%u %s at line %u",dlvId_,msg,line);
     throw InfosmeException(EXC_BADFILE,"D=%u %s at line %u",dlvId_,msg,line);
+}
+
+
+void MessageGlossary::cleanList( TextList& list )
+{
+    for ( TextList::iterator i = list.begin(); i != list.end(); ++i ) {
+        delete i->getText();
+    }
+    list.clear();
 }
 
 }
