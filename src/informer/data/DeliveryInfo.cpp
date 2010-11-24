@@ -236,7 +236,6 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if ((!old || old->validityPeriod != data.validityPeriod) && !data.validityPeriod.empty() ) {
         validityPeriod = parseTime(data.validityPeriod.c_str());
     }
-    // FIXME: update retry policy: data.retryPolicy
     if (!old || old->retryPolicy != data.retryPolicy) {
         retryPolicy.init(data.retryPolicy.c_str());
         newRetryPolicy = true;
@@ -288,19 +287,6 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (sourceAddress != 0) { sourceAddress_ = sourceAddress; }
     if (newRetryPolicy) { retryPolicy_ = retryPolicy; }
     data_ = data;
-    /*
-    if (startDate_ == 0) {
-        startDate_ = currentTimeSeconds();
-        char buf[30];
-        const time_t tmp(startDate_);
-        struct tm tmnow;
-        gmtime_r(&tmp,&tmnow);
-        sprintf(buf,"%02u.%02u.%04u %02u:%02u:%02u",
-                tmnow.tm_mday, tmnow.tm_mon+1, tmnow.tm_year+1900,
-                tmnow.tm_hour, tmnow.tm_min, tmnow.tm_sec);
-        data_.startDate = buf;
-    }
-     */
 }
 
 }

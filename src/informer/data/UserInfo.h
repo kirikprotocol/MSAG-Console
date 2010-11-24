@@ -80,16 +80,14 @@ public:
     /// max number of deliveries or (-1==unlimited).
     unsigned getMaxTotalDeliveries() const { return maxTotalDeliveries_; }
 
-    /// return the number of microsecond to sleep
+    /// return the number of microsecond to sleep.
+    /// if ready return 0 and consume a quant of time.
     usectime_type isReadyAndConsumeQuant( usectime_type currentTime );
-    // void consumeQuant();
 
     // a limit of sms per second
     // unsigned getSpeed() const { return unsigned(speedControl_.getSpeed()); }
     /// priority -- the more the better
     unsigned getPriority() const { return priority_; }
-
-    // FIXME: we'll need the list of regions here
 
     void addRole( UserRole role );
 

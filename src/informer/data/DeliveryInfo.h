@@ -90,25 +90,6 @@ public:
     /// check activity time
     bool checkActiveTime( int weekTime ) const;
 
-    /*
-    /// the method calculates the next activation time for the delivery.
-    /// @param tm_wday - the value of the field of the struct tm.
-    /// @param now - current gm time.
-    /// @return the activation time, values:
-    ///  >0 how many seconds to wait until activation;
-    ///  =0 if already in the active period;
-    timediff_type nextActiveTime( int tm_wday, msgtime_type now ) const;
-
-    /// the method calculates the next stop time for the delivery.
-    /// @param tm_wday - the value of the field of the struct tm.
-    /// @param now - current gm time.
-    /// @return the stop time, values:
-    ///   >0 how many seconds to wait until stop;
-    ///   =0 if already in the stop period;
-    ///   <0 if there is no active period/active weekdays limits.
-    timediff_type nextStopTime( int tm_wday, msgtime_type now ) const;
-     */
-
     /// get validity period or -1
     timediff_type getValidityPeriod() const { return validityPeriod_; }
 
