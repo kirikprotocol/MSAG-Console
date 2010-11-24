@@ -11,13 +11,11 @@
 namespace eyeline {
 namespace informer {
 
-class DeliveryImpl;
 class UserInfo;
 
 class Delivery
 {
     friend class EmbedRefPtr< Delivery >;
-    friend class EmbedRefPtr< DeliveryImpl >;
 protected:
     Delivery( DeliveryInfo*               dlvInfo,
               UserInfo&                   userInfo,
@@ -56,7 +54,7 @@ public:
     void getGlossary( std::vector< std::string >& texts ) const;
     void setGlossary( const std::vector< std::string >& texts );
 
-private:
+protected:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);
         smsc_log_debug(log_,"D=%u ref=%u +1",dlvInfo_->getDlvId(),ref_);

@@ -69,7 +69,6 @@ dlv_(&dlv),
 inputTransferTask_(0),
 resendTransferTask_(0),
 regionId_(regionId),
-ref_(0),
 newOrResend_(0),
 nextResendFile_(0)
 {
@@ -82,6 +81,7 @@ RegionalStorage::~RegionalStorage()
 {
     smsc_log_debug(log_,"dtor R=%u/D=%u",unsigned(regionId_),unsigned(getDlvId()));
     {
+        /*
         MutexGuard mg(cacheMon_);
         if (inputTransferTask_) { inputTransferTask_->stop(); }
         if (resendTransferTask_) { resendTransferTask_->stop(); }
@@ -91,6 +91,7 @@ RegionalStorage::~RegionalStorage()
         while (resendTransferTask_) {
             cacheMon_.wait(100);
         }
+         */
     }
     smsc_log_debug(log_,"dtor @%p R=%u/D=%u done, list=%p",
                    this, unsigned(regionId_),unsigned(getDlvId()),&messageList_);
@@ -329,11 +330,16 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
 
     Message& m = iter->msg;
 
-    // FIXME: incrementing retry count, should we check here?
-    ++m.retryCount;
-
     // fixing time left.
     m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
+
+    if ( m.retryCount < Message::maxRetryCount ) {
+        ++m.retryCount;
+    } else {
+        // no more retries, failed
+        m.timeLeft = 0;
+    }
+
     if ( m.timeLeft > getCS()->getRetryMinTimeToLive() ) {
         // there is enough validity time to try the next time
 
@@ -485,8 +491,12 @@ void RegionalStorage::stopTransfer( bool finalizeAll )
     MutexGuard mg(cacheMon_);
     if ( inputTransferTask_ ) {
         inputTransferTask_->stop();
-        smsc_log_warn(log_,"R=%u/D=%u FIXME should we wait until input transfer task stops?",
-                      regionId_, dlv_->getDlvId() );
+    }
+    if ( resendTransferTask_ ) {
+        resendTransferTask_->stop();
+    }
+    while ( inputTransferTask_ || resendTransferTask_ ) {
+        cacheMon_.wait(100);
     }
     if ( finalizeAll ) {
         smsc_log_warn(log_,"R=%u/D=%u FIXME make all messages fail (state=cancel?)",
@@ -625,11 +635,6 @@ void RegionalStorage::transferFinished( InputTransferTask* task )
     MutexGuard mg(cacheMon_);
     if ( task == inputTransferTask_ ) {
         inputTransferTask_ = 0;
-    } else {
-        task = 0;
-    }
-    if (task) {
-        delete task;
     }
     cacheMon_.notify();
     smsc_log_debug(log_,"input transfer has been finished");
@@ -641,11 +646,6 @@ void RegionalStorage::transferFinished( ResendTransferTask* task )
     MutexGuard mg(cacheMon_);
     if ( task == resendTransferTask_ ) {
         resendTransferTask_ = 0;
-    } else {
-        task = 0;
-    }
-    if (task) {
-        delete task;
     }
     cacheMon_.notify();
     smsc_log_debug(log_,"resend transfer has been finished");

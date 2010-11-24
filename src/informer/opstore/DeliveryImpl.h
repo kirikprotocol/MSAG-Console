@@ -22,6 +22,7 @@ class StoreJournal;
 
 class DeliveryImpl : public Delivery
 {
+    friend class EmbedRefPtr< DeliveryImpl >;
     friend class RegionalStorage;
 
 public:

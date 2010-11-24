@@ -146,20 +146,6 @@ private:
     inline smsc::core::synchronization::Condition& getCnd( MsgIter iter ) {
         return conds_[unsigned(reinterpret_cast<uint64_t>(reinterpret_cast<const void*>(&(*iter))) / 7) % CONDITION_COUNT];
     }
-    void ref() {
-        smsc::core::synchronization::MutexGuard mg(refLock_);
-        ++ref_;
-    }
-    void unref() {
-        {
-            smsc::core::synchronization::MutexGuard mg(refLock_);
-            if (ref_>1) {
-                --ref_;
-                return;
-            }
-        }
-        delete this;
-    }
 
 private:
     smsc::logger::Logger*                     log_;
@@ -183,8 +169,6 @@ private:
     ResendTransferTask*               resendTransferTask_;  // owned
     regionid_type                     regionId_;
 
-    smsc::core::synchronization::Mutex refLock_;
-    unsigned                           ref_;
     unsigned                           newOrResend_; // if <3 then new, otherwise resend
 
     /// the next resend file starting time or 0 (if there is no files).

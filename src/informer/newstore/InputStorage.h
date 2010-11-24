@@ -31,7 +31,9 @@ class InputStorage : public InputMessageSource
         InputTransferTask(req,count), store_(store) {}
         virtual const char* taskName() { return "transtask"; }
         virtual int Execute() {
-            store_.doTransfer(requester_,count_);
+            if (!stopping()) {
+                store_.doTransfer(*requester_,count_);
+            }
             return 0;
         }
     private:

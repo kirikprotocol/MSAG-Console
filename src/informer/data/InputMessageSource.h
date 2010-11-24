@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "informer/data/Message.h"
+#include "informer/io/EmbedRefPtr.h"
 #include "core/threads/ThreadedTask.hpp"
 
 namespace eyeline {
@@ -19,7 +20,10 @@ class DeliveryActivator;
 /// from instore into opstore.
 class TransferRequester
 {
+    friend class EmbedRefPtr< TransferRequester >;
 public:    
+    TransferRequester() : ref_(0) {}
+
     virtual ~TransferRequester() {}
 
     // identification
@@ -38,6 +42,26 @@ public:
 
     /// resend file input/output
     virtual void resendIO( bool isInputDirection ) = 0;
+
+protected:
+    void ref() {
+        smsc::core::synchronization::MutexGuard mg(refLock_);
+        ++ref_;
+    }
+    void unref() {
+        {
+            smsc::core::synchronization::MutexGuard mg(refLock_);
+            if (ref_>1) {
+                --ref_;
+                return;
+            }
+        }
+        delete this;
+    }
+
+protected:
+    smsc::core::synchronization::Mutex refLock_;
+    unsigned                           ref_;
 };
 
 
@@ -48,19 +72,20 @@ public:
 protected:
     InputTransferTask( TransferRequester& req, unsigned count ) :
     smsc::core::threads::ThreadedTask(false),
-    requester_(req), count_(count) {}
+    requester_(&req), count_(count) {}
 
     virtual void onRelease() {
         smsc::core::threads::ThreadedTask::onRelease();
-        TransferRequester* r = &requester_;
-        if (r) r->transferFinished(this);
+        requester_->transferFinished(this);
+        requester_.reset(0);
+        delete this;
     }
 
 private:
     InputTransferTask( const InputTransferTask& );
 
 protected:
-    TransferRequester& requester_;
+    EmbedRefPtr<TransferRequester> requester_;
     unsigned count_;
 };
 
@@ -72,12 +97,13 @@ public:
 protected:
     ResendTransferTask( TransferRequester& req, bool isInputDir ) :
     smsc::core::threads::ThreadedTask(false),
-    requester_(req), isInputDir_(isInputDir) {}
+    requester_(&req), isInputDir_(isInputDir) {}
 
     virtual void onRelease() {
         smsc::core::threads::ThreadedTask::onRelease();
-        TransferRequester* r = &requester_;
-        if (r) r->transferFinished(this);
+        requester_->transferFinished(this);
+        requester_.reset(0);
+        delete this;
     }
 
     // the direction of task (true -- load from disk, false -- flush to disk).
@@ -86,7 +112,7 @@ protected:
     virtual const char* taskName() { return "resendIO"; }
 
     virtual int Execute() {
-        requester_.resendIO(isInputDir_);
+        requester_->resendIO(isInputDir_);
         return 0;
     }
 
@@ -94,8 +120,8 @@ private:
     ResendTransferTask( const ResendTransferTask& );
 
 protected:
-    TransferRequester& requester_;
-    bool               isInputDir_;
+    EmbedRefPtr<TransferRequester> requester_;
+    bool                           isInputDir_;
 };
 
 

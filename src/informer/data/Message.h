@@ -26,6 +26,8 @@ struct Message
     inline bool isTextUnique() const {
         return text.getTextId() == MessageText::uniqueId;
     }
+
+    static const uint16_t maxRetryCount = 0xffff;
 };
 
 
