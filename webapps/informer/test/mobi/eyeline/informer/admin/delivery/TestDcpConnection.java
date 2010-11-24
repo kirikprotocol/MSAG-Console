@@ -383,20 +383,21 @@ public class TestDcpConnection extends DcpConnection{
     return r;
   }
 
-  public synchronized boolean getNextMessages(int reqId, int pieceSize, Delivery delivery, Collection<MessageInfo> messages) throws AdminException {
-    if(!messReqs.containsKey(reqId) || pieceSize == 0) {
+  public synchronized boolean getNextMessages(int reqId, int pieceSize, Collection<MessageInfo> messages) throws AdminException {
+    MessageRequest req = messReqs.get(reqId);
+    if(req == null || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
     }
     MessageRequest r = messReqs.get(reqId);
     int count = 0;
     List<MessageWState> result = new LinkedList<MessageWState>();
-    int deliveryId = delivery.getId();
+    int deliveryId = req.filter.getDeliveryId();
 
-    if(this.messages.get(delivery.getId()) == null) {
+    if(this.messages.get(deliveryId) == null) {
       return false;
     }
     
-    for(MessageWState m : this.messages.get(delivery.getId())) {
+    for(MessageWState m : this.messages.get(deliveryId)) {
       if(accept(deliveryId, m, r.filter) && ++count > r.position) {
         result.add(m);
         if(result.size() == pieceSize) {
@@ -404,6 +405,8 @@ public class TestDcpConnection extends DcpConnection{
         }
       }
     }
+
+    Delivery delivery = getDelivery(deliveryId);
 
     r.position+=result.size();
     for(MessageWState d : result) {

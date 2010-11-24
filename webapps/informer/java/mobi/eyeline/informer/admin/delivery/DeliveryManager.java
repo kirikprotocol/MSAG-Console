@@ -41,7 +41,7 @@ public class DeliveryManager {
     return new DcpConnection(host, port, login, password);
   }
 
-  private synchronized DcpConnection getDeliveryConnection(String login, String password) throws AdminException {
+  private synchronized DcpConnection getDcpConnection(String login, String password) throws AdminException {
     User u = new User(login, password);
     DcpConnection connection = pool.get(u);
     if (connection == null) {
@@ -52,7 +52,7 @@ public class DeliveryManager {
   }
 
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     Delivery d = conn.getDelivery(deliveryId);
     if (d == null) {
       throw new DeliveryException("delivery_not_found");
@@ -64,7 +64,7 @@ public class DeliveryManager {
   }
 
   public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     Delivery d = conn.getDelivery(deliveryId);
     if (d == null) {
       throw new DeliveryException("delivery_not_found");
@@ -172,7 +172,7 @@ public class DeliveryManager {
       logger.debug("Create delivery: " + delivery.getName());
     }
     validateDelivery(delivery);
-    final DcpConnection conn = getDeliveryConnection(login, password);
+    final DcpConnection conn = getDcpConnection(login, password);
     final int id = conn.createDelivery(delivery);
     delivery.setId(id);
     if (msDataSource != null) {
@@ -223,7 +223,7 @@ public class DeliveryManager {
       logger.debug("Create delivery: " + delivery.getName());
     }
     validateDelivery(delivery);
-    final DcpConnection conn = getDeliveryConnection(login, password);
+    final DcpConnection conn = getDcpConnection(login, password);
     final int id = conn.createDelivery(delivery);
     delivery.setId(id);
     List<Long> res = null;
@@ -260,7 +260,7 @@ public class DeliveryManager {
       logger.debug("Modify delivery: " + delivery.getName());
     }
     validateDelivery(delivery);
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     conn.modifyDelivery(delivery);
   }
 
@@ -276,7 +276,7 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Drop delivery with id: " + deliveryId);
     }
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     conn.dropDelivery(deliveryId);
   }
 
@@ -293,7 +293,7 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Count deliveries");
     }
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     return conn.countDeliveries(deliveryFilter);
   }
 
@@ -307,7 +307,7 @@ public class DeliveryManager {
    * @throws AdminException ошибка выполнения команды
    */
   public void dropMessages(String login, String password, int deliveryId, Collection<Long> messageIds) throws AdminException {
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     dropMessages(conn, deliveryId, messageIds);
   }
 
@@ -337,7 +337,7 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Get delivery: " + deliveryId);
     }
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     return conn.getDelivery(deliveryId);
   }
 
@@ -394,7 +394,7 @@ public class DeliveryManager {
   }
 
   private void changeDeliveryState(String login, String password, int deliveryId, DeliveryState state) throws AdminException {
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     conn.changeDeliveryState(deliveryId, state);
   }
 
@@ -408,7 +408,7 @@ public class DeliveryManager {
    * @throws AdminException ошибка выполнения команды
    */
   public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException {
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     return conn.getDeliveryState(deliveryId);
   }
 
@@ -426,7 +426,7 @@ public class DeliveryManager {
     if (deliveryFilter == null || deliveryFilter.getResultFields() == null || deliveryFilter.getResultFields().length == 0) {
       throw new DeliveryException("resultFields");
     }
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     int _reqId = conn.getDeliveries(deliveryFilter);
     new DeliveryDataSource<DeliveryInfo>(_pieceSize, _reqId, conn) {
       protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<DeliveryInfo> result) throws AdminException {
@@ -452,7 +452,7 @@ public class DeliveryManager {
     if (filter.getStartDate() == null || filter.getEndDate() == null) {
       throw new DeliveryException("date_start_end_empty");
     }
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     int _reqId = conn.getMessages(filter);
 
     new DeliveryDataSource<MessageInfo>(_pieceSize, _reqId, conn) {
@@ -475,7 +475,7 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Count deliveries");
     }
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     return conn.countMessages(messageFilter);
   }
 
@@ -489,7 +489,7 @@ public class DeliveryManager {
    * @throws AdminException ошибка выполнения команды
    */
   public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     return conn.getDeliveryHistory(deliveryId);
   }
 
@@ -518,7 +518,7 @@ public class DeliveryManager {
    * @throws AdminException ошибка выполнения команды
    */
   public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
-    DcpConnection conn = getDeliveryConnection(login, password);
+    DcpConnection conn = getDcpConnection(login, password);
     Delivery d = conn.getDelivery(deliveryId);
     if (d == null) {
       throw new DeliveryException("delivery_not_found");
