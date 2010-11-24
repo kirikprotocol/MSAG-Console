@@ -17,22 +17,28 @@ void CapSmDialogCfg::printConfig(FILE * use_stream/* = stdout*/) const
   if (_orgAb) {
     const char * orgImsi = getOrgIMSI();
     fprintf(use_stream, 
-            "  OrigAdr[%u]: %s (%s), IMSI %s\n",
+            "  OrigAbnt[%u]: %s (%s), IMSI %s\n",
             _orgAbId, _orgAb->msIsdn.toString().c_str(), _orgAb->type2Str(),
             orgImsi ? orgImsi : "<none>");
   } else {
     fprintf(use_stream,
-            "  OrigAdr[%u]: unknown (unknown), IMSI <none>\n", _orgAbId);
+            "  OrigAbnt[%u]: unknown (unknown), IMSI <none>\n", _orgAbId);
   }
-  const TonNpiAddress * orgMSC = getOrgMSC();
+  const TonNpiAddress * adrMSC = getOrgMSC();
   fprintf(use_stream, 
-          "  LocationMSC: %s\n", orgMSC ? orgMSC->toString().c_str() : "<none>");
+          "  OrigMSC: %s\n", adrMSC ? adrMSC->toString().c_str() : "<none>");
 
-  if (_dstAb)
-    fprintf(use_stream, "  DestAdr[%u]: %s (%s)\n", _dstAbId,
-            _dstAb->msIsdn.toString().c_str(), _dstAb->type2Str());
-  else
-    fprintf(use_stream, "  DestAdr[%u]: unknown (unknown)\n", _dstAbId);
+  if (_dstAb) {
+    const char * abImsi = getDstIMSI();
+    fprintf(use_stream, "  DestAbnt[%u]: %s (%s), IMSI %s\n", _dstAbId,
+            _dstAb->msIsdn.toString().c_str(), _dstAb->type2Str(),
+            abImsi ? abImsi : "<none>");
+  } else
+    fprintf(use_stream, "  DestAbnt[%u]: unknown (unknown), IMSI <none>\n", _dstAbId);
+
+  adrMSC = getDstMSC();
+  fprintf(use_stream, 
+          "  DestMSC: %s\n", adrMSC ? adrMSC->toString().c_str() : "<none>");
 
   fprintf(use_stream, 
           "  chargePol  : %s\n"

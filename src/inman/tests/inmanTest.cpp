@@ -297,40 +297,49 @@ void cmd_use_dabn(Console&, const std::vector<std::string> &args)
   _billFacade->printDlgConfig();
 }
 
-//USAGE: use_imsi [?|help | abn_NN]
-static const char hlp_use_imsi[] = "USAGE: %s [?|help | abn_NN] [IMSI_NUM]\n";
-
-void cmd_use_imsi(Console&, const std::vector<std::string> &args)
+static const char hlp_set_imsi[] =
+"%s:  sets %s abonent's IMSI\n"
+"USAGE: %s [?|help | IMSIString | db|DB]\n"
+"       IMSIString - substitute as IMSI\n"
+"       [db|DB]    - use abonent IMSI from AbonentsDB\n"
+;
+void utl_set_imsi(const std::vector<std::string> &args, bool is_org)
 {
-  if (args.size() == 1) {
-    fprintf(stdout, hlp_use_imsi, args[0].c_str());
+  if ((args.size() < 2)
+      || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+    fprintf(stdout, hlp_set_imsi, args[0].c_str(), is_org ? "source" : "destination",
+            args[0].c_str());
     return;
   }
 
-  unsigned abId = 0;
+  if (!strcmp("db", args[1].c_str()) || !strcmp("DB", args[1].c_str())) {
+    if (is_org)
+      _billFacade->getDlgConfig().setOrgMSC(true);
+    else
+      _billFacade->getDlgConfig().setDstMSC(true);
+  } else {
+    IMSIString oImsi;
 
-  if (args.size() > 1) {
-    if (!strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
-      fprintf(stdout, hlp_use_imsi, args[0].c_str());
+    if (!oImsi.fromText(args[1].c_str())) {
+      fprintf(stdout, "ERR: invalid IMSI number: %s!", args[1].c_str());
       return;
     }
-    abId = (unsigned)atoi(args[1].c_str());
-    if (!abId) {
-      fprintf(stdout, "ERR: invalid abonent number: %s\n", args[1].c_str());
-      return;
-    }
+    if (is_org)
+      _billFacade->getDlgConfig().setOrgIMSI(false, &oImsi);
+    else
+      _billFacade->getDlgConfig().setDstIMSI(false, &oImsi);
+  }
+  _billFacade->printDlgConfig();
+}
 
-  }
-  if (args.size() > 2) {
-    AbonentInfo * abInfo = _abonentsReg->getAbnInfo(abId);
-    TonNpiAddress   abImsi;
-    if (!abImsi.fromText(args[2].c_str())
-        || (abImsi.typeOfNumber || (abImsi.numPlanInd != NUMBERING_ISDN))) {
-      fprintf(stdout, "ERR: invalid abonent IMSI: %s\n", args[2].c_str());
-    }
-    abInfo->setImsi(abImsi.getSignals());
-  }
-  _abonentsReg->printAbnInfo(stdout, abId);
+void cmd_org_imsi(Console&, const std::vector<std::string> &args)
+{
+  utl_set_imsi(args, true);
+}
+
+void cmd_dst_imsi(Console&, const std::vector<std::string> &args)
+{
+  utl_set_imsi(args, false);
 }
 
 
@@ -462,29 +471,55 @@ void cmd_cdr_charge(Console&, const std::vector<std::string> &args)
   _billFacade->printDlgConfig();
 }
 
-//USAGE: chg_mode_abn [?|help | submit | delivery | alldata]
-static const char hlp_org_msc[] = "USAGE: %s [?|help | .Ton.Npi.Adr | string]\n";
 
-void cmd_org_msc(Console&, const std::vector<std::string> &args)
+static const char hlp_set_msc[] = 
+"%s:  sets %s abonent's MSC\n"
+"USAGE: %s [?|help | .Ton.Npi.Address | db|DB]\n"
+"       .Ton.Npi.Address - substitute as MSC\n"
+"       [db|DB]          - use abonent VLR from AbonentsDB\n"
+;
+void utl_set_msc(const std::vector<std::string> &args, bool is_org)
 {
   if ((args.size() < 2)
       || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
-    fprintf(stdout, hlp_org_msc, args[0].c_str());
+    fprintf(stdout, hlp_set_msc, args[0].c_str(), is_org ? "source" : "destination",
+            args[0].c_str());
     return;
   }
-
+  //collect all args if alphaNum address contains SPACEs
   std::string adrStr = args[1];
   for (unsigned i = 2; i < args.size(); ++i) {
     adrStr += ' '; adrStr += args[i];
   }
-  TonNpiAddress tadr;
-  if (!tadr.fromText(adrStr.c_str())) {
-    fprintf(stdout, "ERR: invalid MSC address: %s!", adrStr.c_str());
-    return;
-  }
 
-  _billFacade->getDlgConfig().setOrgMSC(false, &tadr);
+  if (!strcmp("db", adrStr.c_str()) || !strcmp("DB", adrStr.c_str())) {
+    if (is_org)
+      _billFacade->getDlgConfig().setOrgMSC(true);
+    else
+      _billFacade->getDlgConfig().setDstMSC(true);
+  } else {
+    TonNpiAddress tadr;
+
+    if (!tadr.fromText(adrStr.c_str())) {
+      fprintf(stdout, "ERR: invalid MSC address: %s!", adrStr.c_str());
+      return;
+    }
+    if (is_org)
+      _billFacade->getDlgConfig().setOrgMSC(false, &tadr);
+    else
+      _billFacade->getDlgConfig().setDstMSC(false, &tadr);
+  }
   _billFacade->printDlgConfig();
+}
+
+//
+void cmd_org_msc(Console&, const std::vector<std::string> &args)
+{
+  utl_set_msc(args, true);
+}
+void cmd_dst_msc(Console&, const std::vector<std::string> &args)
+{
+  utl_set_msc(args, false);
 }
 
 
@@ -617,12 +652,14 @@ int main(int argc, char** argv)
     console.addItem("postpaid",  cmd_postpaid);
     /**/
     console.addItem("use_xsms",  cmd_use_xsms);
-    console.addItem("use_imsi",  cmd_use_imsi);
+    console.addItem("org_imsi",  cmd_org_imsi);
+    console.addItem("dst_imsi",  cmd_dst_imsi);
     /**/
     console.addItem("chg_policy",  cmd_charge_policy);
     console.addItem("mo_charge",  cmd_charge_type_MO);
     console.addItem("mt_charge",  cmd_charge_type_MT);
     console.addItem("org_msc", cmd_org_msc);
+    console.addItem("dst_msc", cmd_dst_msc);
     console.addItem("cdr_charge",  cmd_cdr_charge);
 /* ************************************************************************** *
  * Console commands: sending INMan AbonentDetector commands 
