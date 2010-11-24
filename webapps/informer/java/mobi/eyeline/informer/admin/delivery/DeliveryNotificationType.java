@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.notifications;
+package mobi.eyeline.informer.admin.delivery;
 
 /**
  * Copyright Eyeline.mobi

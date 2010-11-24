@@ -1,9 +1,5 @@
 package mobi.eyeline.informer.admin.delivery;
 
-import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.notifications.DeliveryMessageNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-
 /**
  * Copyright Eyeline.mobi
  * User: vmax

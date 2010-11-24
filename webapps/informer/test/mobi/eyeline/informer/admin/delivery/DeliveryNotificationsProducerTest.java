@@ -1,9 +1,6 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.notifications.DeliveryMessageNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

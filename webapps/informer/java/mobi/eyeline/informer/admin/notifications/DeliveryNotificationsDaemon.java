@@ -3,6 +3,8 @@ package mobi.eyeline.informer.admin.notifications;
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotification;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotificationType;
 import mobi.eyeline.informer.admin.delivery.DeliveryNotificationsAdapter;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
@@ -16,10 +18,7 @@ import javax.mail.internet.MimeMessage;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 /**
@@ -29,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * Time: 13:46:28
  */
 public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
-  private final Logger log = Logger.getLogger(this.getClass());
+  private final Logger log = Logger.getLogger("NOTIFICATION_DAEMON");
 
   private final AdminContext context;
   private final Map<String, AggregatedEmailNotificationTask> userEmailNotifications = new HashMap<String, AggregatedEmailNotificationTask>();
@@ -37,13 +36,13 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
   private final Object lock = new Object();
 
   private final ScheduledThreadPoolExecutor scheduler;
-  private static final long AGGREGATE_TIME = 60000L;
-  private static final long SHUTDOWN_WAIT_TIME = 120000L;
+  private static final long AGGREGATE_TIME = 60;
+  private static final long SHUTDOWN_WAIT_TIME = 120;
   private static final int POOL_SIZE = 1;
   private static final int MAX_QUEUE_SIZE = 10000;
 
 
-  public DeliveryNotificationsDaemon(AdminContext context) {
+  public DeliveryNotificationsDaemon(AdminContext context) {  // todo Плохая зависимость от AdminContext. Надо придумать как от нее избавиться. Можно использовать пример Siebel.
     this.context = context;
     scheduler = new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactory() {
       int n = 0;
@@ -73,7 +72,7 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
             String sAddr = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
             if (sAddr != null && sAddr.length() > 0) {
               Address smsNotificationAddress = new Address(sAddr);
-              SMSNotificationTask task = new SMSNotificationTask(smsNotificationAddress, user, new DeliveryNotificationWrapper(notification, delivery.getName()));
+              SMSNotificationTask task = new SMSNotificationTask(smsNotificationAddress, user, notification, delivery.getName());
               synchronized (lock) {
                 scheduleOrWait(task, 0, TimeUnit.MILLISECONDS);
               }
@@ -86,15 +85,14 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
                 if (notificationTask == null) {
                   notificationTask = new AggregatedEmailNotificationTask(email, user);
                   userEmailNotifications.put(email, notificationTask);
-                  scheduleOrWait(notificationTask, AGGREGATE_TIME, TimeUnit.MICROSECONDS);
+                  scheduleOrWait(notificationTask, AGGREGATE_TIME, TimeUnit.SECONDS);
                 }
-                notificationTask.addNotification(new DeliveryNotificationWrapper(notification, delivery.getName()));
+                notificationTask.addNotification(notification, delivery.getName());
               }
             }
           }
         }
         catch (Exception e) {
-          e.printStackTrace();
           log.error("error ", e);
         }
   }
@@ -107,7 +105,6 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
         lock.wait(100);
       }
       catch (InterruptedException e) {
-        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       }
     }
     scheduler.schedule(task, time, units);
@@ -118,11 +115,20 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
     scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(true);
     scheduler.shutdown();
     try {
-      scheduler.awaitTermination(SHUTDOWN_WAIT_TIME, TimeUnit.MILLISECONDS);
+      scheduler.awaitTermination(SHUTDOWN_WAIT_TIME, TimeUnit.SECONDS);
     }
     catch (InterruptedException e) {
       scheduler.shutdownNow();
     }
+  }
+
+  private static String formatTemplate(String template, DeliveryNotification n, String deliveryName, User user) {
+    return MessageFormat.format(
+          template,
+          deliveryName,
+          new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(n.getEventDate()),
+          user.getFirstName() + " " + user.getLastName()
+      );
   }
 
 
@@ -132,12 +138,14 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
     final Address address;
 
     private final User user;
-    private final DeliveryNotificationWrapper notification;
+    private final DeliveryNotification notification;
+    private final String deliveryName;
 
-    public SMSNotificationTask(Address address, User user, DeliveryNotificationWrapper notification) {
+    public SMSNotificationTask(Address address, User user, DeliveryNotification notification, String deliveryName) {
       this.address = address;
       this.user = user;
       this.notification = notification;
+      this.deliveryName = deliveryName;
     }
 
     public Object call() throws Exception {
@@ -156,7 +164,7 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
                 DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED
         );
 
-        String text = notification.formatTemplate(template, user);
+        String text = formatTemplate(template, notification, deliveryName, user);
         testSms.setText(text);
         context.sendTestSms(testSms);
       }
@@ -172,17 +180,25 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
   class AggregatedEmailNotificationTask implements Callable<Object> {
     private final String email;
     private final User user;
-    private final LinkedList<DeliveryNotificationWrapper> notifications;
+    private final LinkedList<String> notifications;
 
     public AggregatedEmailNotificationTask(String email, User user) {
       this.email = email;
       this.user = user;
-      this.notifications = new LinkedList<DeliveryNotificationWrapper>();
+      this.notifications = new LinkedList<String>();
     }
 
-    public void addNotification(DeliveryNotificationWrapper n) {
+    public void addNotification(DeliveryNotification n, String deliveryName) {
+      Properties templates = context.getNotificationTemplates();
+
+      String template = n.getType() == DeliveryNotificationType.DELIVERY_START
+          ?
+          templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED)
+          :
+          templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED);
+
       synchronized (notifications) {
-        notifications.add(n);
+        notifications.add(formatTemplate(template, n, deliveryName, user));
       }
     }
 
@@ -194,16 +210,8 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
         Properties templates = context.getNotificationTemplates();
 
         StringBuilder sb = new StringBuilder();
-        for (DeliveryNotificationWrapper n : notifications) {
-          String template = n.getType() == DeliveryNotificationType.DELIVERY_START
-              ?
-              templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED)
-              :
-              templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED);
-
-          sb.append(n.formatTemplate(template, user)).append("\n");
-        }
-
+        for (String n : notifications)
+          sb.append(n).append("\n");
 
         Properties mailProps = context.getJavaMailProperties();
         Session session = Session.getDefaultInstance(mailProps);
@@ -219,52 +227,10 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
 
       }
       catch (Exception e) {
-        log.error("unable to send email notification to " + email);
+        log.error("Unable to send email notification to " + email, e);
       }
       return null;
     }
   }
-
-  /*=======================*/
-
-  class DeliveryNotificationWrapper {
-    private final DeliveryNotification notification;
-    private final String deliveryName;
-
-    public DeliveryNotificationWrapper(DeliveryNotification notification, String deliveryName) {
-      this.deliveryName = deliveryName;
-      this.notification = notification;
-    }
-
-    public String getDeliveryName() {
-      return deliveryName;
-    }
-
-    public Date getEventDate() {
-      return notification.getEventDate();
-    }
-
-    public int getDeliveryId() {
-      return notification.getDeliveryId();
-    }
-
-    public String getUserId() {
-      return notification.getUserId();
-    }
-
-    public DeliveryNotificationType getType() {
-      return notification.getType();
-    }
-
-    public String formatTemplate(String template, User user) {
-      return MessageFormat.format(
-          template,
-          getDeliveryName(),
-          new SimpleDateFormat("yyyy.MM.dd HH:mm:ss").format(getEventDate()),
-          user.getFirstName() + " " + user.getLastName()
-      );
-    }
-  }
-
 
 }

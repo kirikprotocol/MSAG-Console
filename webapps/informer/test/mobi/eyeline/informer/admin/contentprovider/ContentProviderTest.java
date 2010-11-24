@@ -3,8 +3,8 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.*;
 
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotification;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotificationType;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;

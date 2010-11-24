@@ -3,13 +3,9 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.MessageFilter;
-import mobi.eyeline.informer.admin.delivery.MessageInfo;
-import mobi.eyeline.informer.admin.delivery.Visitor;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotificationsAdapter;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotification;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 
