@@ -31,8 +31,6 @@ public class SiebelFinalStateListenerTest {
 
   private static SiebelManager siebelManager;
 
-  private static SiebelDeliveries deliveries;
-
   private static Map<String, SiebelMessage.DeliveryState> messagesState = new HashMap<String, SiebelMessage.DeliveryState>();
   private static Set<String> processedDeliveries = new HashSet<String>();
 
@@ -57,6 +55,7 @@ public class SiebelFinalStateListenerTest {
     final Delivery d = Delivery.newCommonDelivery();
     d.setProperty(UserDataConsts.SIEBEL_DELIVERY_ID, "123");
 
+    SiebelDeliveries deliveries;
     siebelManager = new TestSiebelManager(deliveries = new SiebelDeliveries() {
       public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {}
       public void dropDelivery(String login, String password, int deliveryId) throws AdminException {}
@@ -85,7 +84,7 @@ public class SiebelFinalStateListenerTest {
       public User getUser(String login) throws AdminException {
         return siebelUser;
       }
-    }, workDir, 20);
+    }, workDir, 5);
     listener.start();
     Thread.sleep(1000);
 
@@ -99,7 +98,7 @@ public class SiebelFinalStateListenerTest {
             new Date(), 1, "siebel", 1234567l, MessageState.Failed, 1179, new Address("+79139489906"),
             DcpConverter.convertUserData(new HashMap<String, String>(1){{put(UserDataConsts.SIEBEL_MESSAGE_ID, "321");}}))
     );
-    Thread.sleep(30000);
+    Thread.sleep(10000);
     assertTrue(processedDeliveries.contains("123"));
     assertTrue(messagesState.containsKey("321"));
     SiebelMessage.DeliveryState s = messagesState.get("321");

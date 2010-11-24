@@ -6,10 +6,15 @@ import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
 /**
  * @author Aleksandr Khalitov
  */
-public class TestSiebelManager extends SiebelManager{
+class TestSiebelManager extends SiebelManager{
 
-  public TestSiebelManager(SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
-    super(deliveries, regionManager);
+  TestSiebelManager(TestSiebelDataProvider pv, SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
+    super(pv, deliveries, regionManager);
   }
+
+  TestSiebelManager(SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
+    super(new TestSiebelDataProvider(), deliveries, regionManager);
+  }
+
 
 }

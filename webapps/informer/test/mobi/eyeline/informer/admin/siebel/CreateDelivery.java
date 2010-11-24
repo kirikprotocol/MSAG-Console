@@ -110,7 +110,7 @@ public class CreateDelivery {
       prepStatement.setString(5,"Y");
       prepStatement.setString(6,"Y");
       prepStatement.setString(7,"N");
-      prepStatement.setString(8, "48");
+      prepStatement.setString(8, "12");
       prepStatement.setString(9, SiebelDelivery.Status.ENQUEUED.toString());
 
       prepStatement.execute();

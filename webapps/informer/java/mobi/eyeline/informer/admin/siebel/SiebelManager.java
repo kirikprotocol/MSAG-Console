@@ -64,7 +64,12 @@ public class SiebelManager {
     this.provider = new SiebelDataProviderImpl();
     this.deliveries = deliveries;
     this.regionManager = regionManager;
-    this.provider = new SiebelDataProviderImpl();
+  }
+
+  SiebelManager(SiebelDataProvider provider, SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
+    this.provider = provider;
+    this.deliveries = deliveries;
+    this.regionManager = regionManager;
   }
 
   private final Lock shutdownLock = new ReentrantLock();

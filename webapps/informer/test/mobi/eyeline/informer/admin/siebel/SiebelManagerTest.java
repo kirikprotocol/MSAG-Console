@@ -13,17 +13,12 @@ import mobi.eyeline.informer.util.Time;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import ru.sibinco.util.conpool.ConnectionPool;
 
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -36,17 +31,13 @@ public class SiebelManagerTest {
 
   private static TestSiebelDeliveries deliveries;
 
-  private static final int TIMEOUT = 5;
+  private static final int TIMEOUT = 3;
+
+
+  private static TestSiebelDataProvider dataProvider = new TestSiebelDataProvider();
 
   @BeforeClass
   public static void init() throws Exception {
-    try{
-      ConnectionPool p = ConnectionPool.getPool("default");
-      if(p != null) {
-        p.shutdown();
-      }
-    }catch (Exception e){}
-
     siebelUser = new User();
     siebelUser.setAllRegionsAllowed(true);
     siebelUser.setLogin("siebel");
@@ -60,13 +51,13 @@ public class SiebelManagerTest {
     siebelUser.setDeliveryEndTime(new Time(20,0,0));
     siebelUser.setDeliveryType(User.DeliveryType.SMS);
 
-    siebel = new TestSiebelManager(deliveries = new TestSiebelDeliveries(siebelUser), new SiebelRegionManager() {
+    siebel = new TestSiebelManager(dataProvider, deliveries = new TestSiebelDeliveries(siebelUser), new SiebelRegionManager() {
       public Region getRegion(Address msisdn) throws AdminException {
         return null;
       }
     });
 
-    Properties props = readProps();
+    Properties props = new Properties();
     props.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.FALSE.toString());
     props.setProperty(SiebelManager.TIMEOUT, Integer.toString(TIMEOUT));
 
@@ -74,23 +65,8 @@ public class SiebelManagerTest {
     siebel.start(siebelUser, props);
   }
 
-  private static Properties readProps() throws Exception{
-    Properties props = new Properties();
-    InputStream is = null;
-    try{
-      is = SiebelManagerTest.class.getResourceAsStream("jdbc.properties");
-      props.load(is);
-    }finally {
-      if(is != null) {
-        try{
-          is.close();
-        }catch (Exception ignored){}
-      }
-    }
-    return props;
-  }
 
-  private void testCreation(int wid) throws Exception{
+  private void testCreation() throws Exception{
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
     filter.setStatusFilter(DeliveryStatus.Active, DeliveryStatus.Finished);
@@ -105,10 +81,9 @@ public class SiebelManagerTest {
       }
     });
     assertTrue("Delivery hasn't been created", exist[0]);
-    assertEquals(SiebelDelivery.Status.IN_PROCESS, getSiebelState(wid));
   }
 
-  private void testPaused(int wid) throws Exception{
+  private void testPaused() throws Exception{
     final boolean[] exist = new boolean[]{false};
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
@@ -123,10 +98,9 @@ public class SiebelManagerTest {
       }
     });
     assertTrue("Delivery's status is not PAUSED", exist[0]);
-    assertEquals(SiebelDelivery.Status.PAUSED, getSiebelState(wid));
   }
 
-  private void testActivated(int wid) throws Exception{
+  private void testActivated() throws Exception{
     final boolean[] exist = new boolean[]{false};
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
@@ -141,10 +115,9 @@ public class SiebelManagerTest {
       }
     });
     assertTrue("Delivery's status is not ACTIVATED", exist[0]);
-    assertEquals(SiebelDelivery.Status.IN_PROCESS, getSiebelState(wid));
   }
 
-  private void testStopped(int wid) throws Exception{
+  private void testStopped() throws Exception{
     final boolean[] exist = new boolean[]{false};
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
@@ -159,10 +132,9 @@ public class SiebelManagerTest {
       }
     });
     assertTrue("Delivery's status is not STOPPED", exist[0]);
-    assertEquals(SiebelDelivery.Status.STOPPED, getSiebelState(wid));
   }
 
-  private void testDeleted(int wid) throws Exception {
+  private void testDeleted() throws Exception {
     final boolean[] exist = new boolean[]{false};
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
@@ -178,54 +150,85 @@ public class SiebelManagerTest {
     assertTrue("Delivery's status hasn't been removed", !exist[0]);
   }
 
+  private void createDelivery(String wid) {
+    int i=0;
+    SiebelMessage
+        sm = new SiebelMessage();
+    sm.setClcId(Integer.toString(++i));
+    sm.setCreated(new Date());
+    sm.setLastUpd(new Date());
+    sm.setMsisdn("+79529223755");
+    dataProvider.addMessage(wid, sm);
+        sm = new SiebelMessage();
+    sm.setClcId(Integer.toString(++i));
+    sm.setCreated(new Date());
+    sm.setLastUpd(new Date());
+    sm.setMsisdn("+79139489906");
+    dataProvider.addMessage(wid, sm);
+        sm = new SiebelMessage();
+    sm.setClcId(Integer.toString(++i));
+    sm.setCreated(new Date());
+    sm.setLastUpd(new Date());
+    sm.setMsisdn("+79167543243");
+    dataProvider.addMessage(wid, sm);
+
+    SiebelDelivery sd = new SiebelDelivery();
+    sd.setStatus(SiebelDelivery.Status.ENQUEUED);
+    sd.setCreated(new Date());
+    sd.setLastUpdate(new Date());
+    sd.setExpPeriod(1);
+    sd.setPriority(10);
+    sd.setWaveId(wid);
+
+    dataProvider.addDelivery(sd);
+  }
+
   @Test
   public void testDelivery() throws Exception{
-    int wid = 10000;
-    try{
-      CreateDelivery.createDelivery(wid);
-      Thread.sleep(3000*TIMEOUT);
+    String wid = "10000";
 
-      testCreation(wid);
+    createDelivery(wid);
 
-      setSiebelState(wid, SiebelDelivery.Status.PAUSED);
+    Thread.sleep(TIMEOUT*1500);
 
-      Thread.sleep(3000*TIMEOUT);
+    testCreation();
 
-      testPaused(wid);
+    dataProvider.setDeliveryStatus(wid, SiebelDelivery.Status.PAUSED);
 
-      setSiebelState(wid, SiebelDelivery.Status.ENQUEUED);
+    Thread.sleep(TIMEOUT*1500);
 
-      Thread.sleep(3000*TIMEOUT);
+    testPaused();
 
-      testActivated(wid);
+    dataProvider.setDeliveryStatus(wid, SiebelDelivery.Status.ENQUEUED);
 
-      setSiebelState(wid, SiebelDelivery.Status.STOPPED);
+    Thread.sleep(TIMEOUT*1500);
 
-      Thread.sleep(3000*TIMEOUT);
+    testActivated();
 
-      testStopped(wid);
+    dataProvider.setDeliveryStatus(wid, SiebelDelivery.Status.STOPPED);
 
-      setSiebelState(wid, SiebelDelivery.Status.ENQUEUED);
+    Thread.sleep(TIMEOUT*1500);
 
-      Thread.sleep(3000*TIMEOUT);
+    testStopped();
 
-      siebel.stop();
+    dataProvider.setDeliveryStatus(wid, SiebelDelivery.Status.ENQUEUED);
 
-      Properties props = readProps();
-      props.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.TRUE.toString());
-      props.setProperty(SiebelManager.TIMEOUT, Integer.toString(TIMEOUT));
+    Thread.sleep(TIMEOUT*1500);
 
-      siebel.start(siebelUser, props);
+    siebel.stop();
 
-      setSiebelState(wid, SiebelDelivery.Status.STOPPED);
+    Properties props = new Properties();
+    props.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.TRUE.toString());
+    props.setProperty(SiebelManager.TIMEOUT, Integer.toString(TIMEOUT));
 
-      Thread.sleep(3000*TIMEOUT);
+    siebel.start(siebelUser, props);
 
-      testDeleted(wid);
+    dataProvider.setDeliveryStatus(wid, SiebelDelivery.Status.STOPPED);
 
-    }finally {
-      CreateDelivery.removeDelivery(wid);
-    }
+    Thread.sleep(TIMEOUT*1500);
+
+    testDeleted();
+
   }
 
   @AfterClass
@@ -239,78 +242,5 @@ public class SiebelManagerTest {
     }
   }
 
-
-  private static void setSiebelState(int wid, SiebelDelivery.Status status) throws SQLException {
-    Connection connection = null;
-
-    try {
-      connection = ConnectionPool.getPool("default").getConnection();
-
-      PreparedStatement prepStatement = null;
-      try{
-        prepStatement = connection.prepareStatement("update SMS_MAIL_PARAMS set CTRL_STATUS=?, LAST_UPD=CURRENT_TIMESTAMP where WAVE_INT_ID=?");
-        prepStatement.setString(1, status.toString());
-        prepStatement.setString(2, Integer.toString(wid));
-
-        prepStatement.executeUpdate();
-
-      }finally {
-        if(prepStatement != null) {
-          prepStatement.close();
-        }
-      }
-
-
-    } finally {
-      if(connection != null) {
-        try{
-          connection.close();
-        }catch (SQLException ignored){}
-      }
-    }
-  }
-
-  private static SiebelDelivery.Status getSiebelState(int wid) throws SQLException {
-    Connection connection = null;
-
-    try {
-      connection = ConnectionPool.getPool("default").getConnection();
-
-      PreparedStatement prepStatement = null;
-      try{
-        prepStatement = connection.prepareStatement("select CTRL_STATUS from  SMS_MAIL_PARAMS where WAVE_INT_ID=?");
-        prepStatement.setString(1, Integer.toString(wid));
-
-        java.sql.ResultSet rs = null;
-        try{
-          rs = prepStatement.executeQuery();
-          if(rs.next()) {
-            return SiebelDelivery.Status.valueOf(rs.getString(1));
-          }else {
-            return null;
-          }
-
-        }finally {
-          if(rs != null) {
-            try{
-              rs.close();
-            }catch (SQLException ignored){}
-          }
-        }
-      }finally {
-        if(prepStatement != null) {
-          prepStatement.close();
-        }
-      }
-
-
-    } finally {
-      if(connection != null) {
-        try{
-          connection.close();
-        }catch (SQLException ignored){}
-      }
-    }
-  }
 
 }
