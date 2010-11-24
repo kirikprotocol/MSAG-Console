@@ -16,7 +16,7 @@ using smsc::inman::common::Console;
 
 #include "inman/tests/TstSmBill.hpp"
 using smsc::inman::test::BillFacade;
-using smsc::inman::test::INDialogCfg;
+using smsc::inman::test::CapSmDialogCfg;
 
 #include "inman/tests/TstAbDtcr.hpp"
 using smsc::inman::test::DtcrFacade;
@@ -29,7 +29,7 @@ using smsc::inman::test::AbonentInfo;
 using smsc::inman::test::AbonentsDB;
 
 using smsc::inman::interaction::ConnectSrv;
-//using smsc::inman::cdr::CDRRecord;
+using smsc::inman::cdr::CDRRecord;
 
 #include "inman/tests/AbonentsPreset.hpp"
 using smsc::inman::test::_knownAbonents;
@@ -55,6 +55,7 @@ public:
 
 static BillFacade * _billFacade = 0;
 static DtcrFacade * _dtcrFacade = 0;
+static AbonentsDB * _abonentsReg = 0;
 
 /* ************************************************************************** *
  * Console commands: sending INMan commands
@@ -62,20 +63,20 @@ static DtcrFacade * _dtcrFacade = 0;
 
 static void utl_multi_charge(const std::vector<std::string> &args, uint32_t delivery = 0)
 {
-  if (_billFacade->isActive()) {
-    unsigned int dnum = 10;
-    if ((args.size() > 1) && !(dnum = (unsigned int)atoi(args[1].c_str()))) {
-      fprintf(stdout, "USAGE: %s num_of_dialogs!\n", args[0].c_str());
-      return;
-    }
-    AbonentsDB * abDb = AbonentsDB::getInstance();
-    INDialogCfg  cfg = *(_billFacade->getDlgConfig());
-    for (; dnum > 0; dnum--, cfg.abId = abDb->nextId(cfg.abId)) {
-      unsigned int did = _billFacade->initDialog(0, true, delivery, &cfg);
-      _billFacade->sendChargeSms(did);
-    }
-  } else
+  if (_billFacade->isActive())
     throw ConnectionClosedException();
+
+  unsigned int dnum = 10;
+  if ((args.size() > 1) && !(dnum = (unsigned int)atoi(args[1].c_str()))) {
+    fprintf(stdout, "USAGE: %s num_of_dialogs!\n", args[0].c_str());
+    return;
+  }
+  CapSmDialogCfg  dlgCfg = _billFacade->getDlgConfig();
+
+  for (; dnum > 0; dnum--, dlgCfg.nextOrgAbnt()) {
+    unsigned int did = _billFacade->initDialog(0, true, delivery, &dlgCfg);
+    _billFacade->sendChargeSms(did);
+  }
 }
 //USAGE: m_chargeOk [num_dialogs [dflt = 10]]
 //sends specified number of ChargeSMS requests with successfull delivery, iterating over abonentsDB.
@@ -216,13 +217,13 @@ void cmd_config(Console&, const std::vector<std::string> &args)
 
 void cmd_dpsms(Console&, const std::vector<std::string> &args)
 {
-  _billFacade->setUssdOp(false);
+  _billFacade->getDlgConfig().setUssdOp(false);
   _billFacade->printDlgConfig();
 }
 
 void cmd_dpussd(Console&, const std::vector<std::string> &args)
 {
-  _billFacade->setUssdOp(true);
+  _billFacade->getDlgConfig().setUssdOp(true);
   _billFacade->printDlgConfig();
 }
 
@@ -235,7 +236,7 @@ static void cmd_use_abnts(Console&, const std::vector<std::string> &args)
   if (args.size() ==  1) {
     fprintf(stdout, hlp_use_abnts, args[0].c_str());
     fprintf(stdout, "Known abonents:\n");
-    AbonentsDB::getInstance()->printAbonents(stdout);
+    _abonentsReg->printAbonents(stdout);
     return;
   }
   if (args.size() > 1) {
@@ -275,7 +276,7 @@ void cmd_use_dabn(Console&, const std::vector<std::string> &args)
   if (args.size() ==  1) {
     fprintf(stdout, hlp_use_dabn, args[0].c_str());
     fprintf(stdout, "Known abonents:\n");
-    AbonentsDB::getInstance()->printAbonents(stdout);
+    _abonentsReg->printAbonents(stdout);
     return;
   }
   if (args.size() > 1) {
@@ -321,7 +322,7 @@ void cmd_use_imsi(Console&, const std::vector<std::string> &args)
 
   }
   if (args.size() > 2) {
-    AbonentInfo * abInfo = AbonentsDB::getInstance()->getAbnInfo(abId);
+    AbonentInfo * abInfo = _abonentsReg->getAbnInfo(abId);
     TonNpiAddress   abImsi;
     if (!abImsi.fromText(args[2].c_str())
         || (abImsi.typeOfNumber || (abImsi.numPlanInd != NUMBERING_ISDN))) {
@@ -329,7 +330,7 @@ void cmd_use_imsi(Console&, const std::vector<std::string> &args)
     }
     abInfo->setImsi(abImsi.getSignals());
   }
-  AbonentsDB::getInstance()->printAbnInfo(stdout, abId);
+  _abonentsReg->printAbnInfo(stdout, abId);
 }
 
 
@@ -345,7 +346,7 @@ static void utl_next_abn(const std::vector<std::string> &args, AbonentContract_e
     }
     abId = (uint32_t)atoi(args[1].c_str());
   }
-  abId = AbonentsDB::getInstance()->searchNextAbn(ab_type, abId);
+  abId = _abonentsReg->searchNextAbn(ab_type, abId);
   if (!abId)
     fprintf(stdout, "ERR: no known abonent found!");
   else {
@@ -390,14 +391,14 @@ void cmd_use_xsms(Console&, const std::vector<std::string> &args)
     base = 0; //autodetect
   }
   if ((sym == '0') && (len == 1)) {
-    _billFacade->setSmsXIds(0);
+    _billFacade->getDlgConfig().setSmsXIds(0);
   } else {
     unsigned long val = strtoul(args[1].c_str(), NULL, base);
     if (!val || (val > 0xFFFFFFFF)) {
       fprintf(stdout, "ERR: invalid number!");
       return;
     }
-    _billFacade->setSmsXIds((uint32_t)val);
+    _billFacade->getDlgConfig().setSmsXIds((uint32_t)val);
   }
   _billFacade->printDlgConfig();
 }
@@ -423,19 +424,19 @@ void cmd_charge_policy(Console&, const std::vector<std::string> &args)
     fprintf(stdout, "ERR: invalid charging mode: %s!", mode);
     return;
   }
-  _billFacade->setChargePolicy(chg_policy);
+  _billFacade->getDlgConfig().setChargePolicy(chg_policy);
   _billFacade->printDlgConfig();
 }
 
 void cmd_charge_type_MO(Console&, const std::vector<std::string> &args)
 {
-  _billFacade->setChargeType(CDRRecord::MO_Charge);
+  _billFacade->getDlgConfig().setChargeType(CDRRecord::MO_Charge);
   _billFacade->printDlgConfig();
 }
 
 void cmd_charge_type_MT(Console&, const std::vector<std::string> &args)
 {
-  _billFacade->setChargeType(CDRRecord::MT_Charge);
+  _billFacade->getDlgConfig().setChargeType(CDRRecord::MT_Charge);
   _billFacade->printDlgConfig();
 }
 
@@ -451,9 +452,9 @@ void cmd_cdr_charge(Console&, const std::vector<std::string> &args)
   }
 
   if (!strcmp("on", args[1].c_str())) {
-    _billFacade->setForcedCDR(true);
+    _billFacade->getDlgConfig().setForcedCDR(true);
   } else if (!strcmp("off", args[1].c_str())) {
-    _billFacade->setForcedCDR(false);
+    _billFacade->getDlgConfig().setForcedCDR(false);
   } else {
     fprintf(stdout, hlp_cdr_charge, args[0].c_str());
     return;
@@ -482,7 +483,7 @@ void cmd_org_msc(Console&, const std::vector<std::string> &args)
     return;
   }
 
-  _billFacade->setLocMSC(adrStr);
+  _billFacade->getDlgConfig().setOrgMSC(false, &tadr);
   _billFacade->printDlgConfig();
 }
 
@@ -581,11 +582,11 @@ int main(int argc, char** argv)
   smsc_log_info(_logger, "* INMan testing console");
   smsc_log_info(_logger, "********************************************************");
 
-  AbonentsDB::Init(smsc::inman::test::_knownAbonentsNum, smsc::inman::test::_knownAbonents);
+  _abonentsReg = AbonentsDB::Init(smsc::inman::test::_knownAbonentsNum, smsc::inman::test::_knownAbonents);
 
   std::auto_ptr<ConnectSrv> _connServ(new ConnectSrv(ConnectSrv::POLL_TIMEOUT_ms, _logger));
   try {
-    _billFacade = new BillFacade(_connServ.get(), _logger);
+    _billFacade = new BillFacade(*_abonentsReg, _connServ.get(), _logger);
     _dtcrFacade = new DtcrFacade(_connServ.get(), _logger);
     Console console;
 /* ************************************************************************** *

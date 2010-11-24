@@ -14,6 +14,8 @@ using smsc::inman::interaction::SPckChargeSmsResult;
 using smsc::inman::interaction::SPckDeliverySmsResult;
 using smsc::inman::interaction::SPckDeliveredSmsData;
 
+using smsc::util::format;
+
 namespace smsc  {
 namespace inman {
 namespace test {
@@ -21,10 +23,10 @@ namespace test {
 /* ************************************************************************** *
  * class BillFacade implementation:
  * ************************************************************************** */
-BillFacade::BillFacade(ConnectSrv * conn_srv, Logger * use_log/* = NULL*/)
+BillFacade::BillFacade(AbonentsDB & use_db, ConnectSrv * conn_srv, Logger * use_log/* = NULL*/)
   : TSTFacadeAC(conn_srv, use_log)
-  , _msg_ref(0x0100), _msg_id(0x010203040000ULL), _maxDlgId(0)
-  , _abDB(AbonentsDB::getInstance())
+  , _abDB(use_db), _msg_ref(0x0100), _msg_id(0x010203040000ULL), _maxDlgId(0)
+  , _dlgCfg(use_db)
 { 
   strcpy(_logId, "TFBill");
   INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
@@ -34,91 +36,54 @@ BillFacade::~BillFacade()
 { 
   MutexGuard grd(_sync);
   do_disconnect();
-  if (!_Dialogs.empty()) {
-    for (INDialogsMap::const_iterator
-         it = _Dialogs.begin(); it != _Dialogs.end(); ++it) {
-      INDialog * dlg = it->second;
-      delete dlg;
+  if (!_dlgReg.empty()) {
+    for (INDialogsMap::iterator
+         it = _dlgReg.begin(); it != _dlgReg.end(); ++it) {
+      delete it->second;
     }
-    _Dialogs.clear();
+    _dlgReg.clear();
   }
 }
 
-void  BillFacade::printDlgConfig(void) const
-{
-  const AbonentInfo * abi = _abDB->getAbnInfo(_dlgCfg.abId);
-  const AbonentInfo * dAdr = _abDB->getAbnInfo(_dlgCfg.dstId);
-  fprintf(stdout, "INDialog config:\n"
-          "  LocationMSC: %s\n"
-          "  OrigAdr[%u]: %s (%s)\n"
-          "  bearerType : dp%s\n"
-          "  DestAdr[%u]: %s (%s)\n"
-          "  chargePol  : %s\n"
-          "  chargeType : %s\n"
-          "  forcedCDR  : %s\n"
-          "  SMSExtra: %u\n",
-          _dlgCfg.locMSC.c_str(),
-          _dlgCfg.abId, (abi->msIsdn.toString()).c_str(), abi->type2Str(),
-          _dlgCfg.ussdOp ? "USSD" : "SMS",
-          _dlgCfg.dstId, (dAdr->msIsdn.toString()).c_str(), dAdr->type2Str(),
-          CDRRecord::nmPolicy(_dlgCfg.chgPolicy),
-          _dlgCfg.chgType ? "MT" : "MO", _dlgCfg.forcedCDR ? "ON" : "OFF",
-          _dlgCfg.xsmsIds);
-}
-
-bool BillFacade::setAbonentId(unsigned ab_id, bool orig_abn/* = true*/)
-{
-  if (!_abDB->getAbnInfo(ab_id))
-    return false;
-
-  if (orig_abn)
-    _dlgCfg.abId = ab_id;
-  else
-    _dlgCfg.dstId = ab_id;
-  return true;
-}
-
-
-unsigned BillFacade::initDialog(unsigned int did/* = 0*/, bool batch_mode/* = false*/,
-                        uint32_t delivery/* = 1016*/, INDialogCfg * use_cfg/* = NULL*/)
+unsigned BillFacade::getNextDialogId(void)
 {
   MutexGuard grd(_sync);
-  if (!did)
-    did = getNextDialogId();
+  return allcNextDialogId();
+}
+
+unsigned BillFacade::initDialog(unsigned int dlg_id/* = 0*/, bool batch_mode/* = false*/,
+                        uint32_t delivery/* = 1016*/, const CapSmDialogCfg * use_cfg/* = NULL*/)
+{
+  MutexGuard grd(_sync);
+  if (!dlg_id)
+    dlg_id = allcNextDialogId();
   if (!use_cfg)
     use_cfg = &_dlgCfg;
-  if (!_abDB->getAbnInfo(use_cfg->abId)) {
-    smsc_log_error(logger, "WRN: unknown abId: %u, using #1", use_cfg->abId);
-    fprintf(stdout, "\nWRN: unknown abId: %u, using #1", use_cfg->abId);
-    use_cfg->abId = 1;
-  }
-  INDialog * dlg = new INDialog(did, use_cfg, batch_mode, delivery);
-  _Dialogs.insert(INDialogsMap::value_type(did, dlg));
-  return did;
+
+  CapSmDialog * pDlg = new CapSmDialog(*use_cfg, dlg_id, batch_mode, delivery);
+  _dlgReg.insert(INDialogsMap::value_type(dlg_id, pDlg));
+  return dlg_id;
 }
 
-INDialog * BillFacade::findDialog(unsigned int did) const
+CapSmDialog * BillFacade::findDialog(unsigned int dlg_id) const
 {
   MutexGuard grd(_sync);
-  INDialogsMap::const_iterator it = _Dialogs.find(did);
-  return (it != _Dialogs.end()) ? it->second : NULL;
+  INDialogsMap::const_iterator it = _dlgReg.find(dlg_id);
+  return (it != _dlgReg.end()) ? it->second : NULL;
 }
 
 // -- INMan commands composition and sending methods -- //
-void BillFacade::composeChargeSms(ChargeSms & op, const INDialogCfg * dlg_cfg)
+void BillFacade::composeChargeSms(ChargeSms & op, const CapSmDialogCfg & dlg_cfg)
 {
-  const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
-  op.setDestinationSubscriberNumber(dAdr->msIsdn.toString().c_str());
+  op.setDestinationSubscriberNumber(dlg_cfg.getDstAbnt()->msIsdn.toString().c_str());
+  op.setCallingPartyNumber(dlg_cfg.getOrgAbnt()->msIsdn.toString().c_str());
 
-  const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
-  op.setCallingPartyNumber(abi->msIsdn.toString().c_str());
-  op.setCallingIMSI(abi->abImsi.c_str());
-  if (dlg_cfg->forcedCDR)
+  if (dlg_cfg.getOrgIMSI())
+    op.setCallingIMSI(dlg_cfg.getOrgIMSI());
+  if (dlg_cfg.isForcedCDR())
     op.setForcedCDR();
-  op.setLocationInformationMSC(dlg_cfg->locMSC.c_str());
-//        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
-//                                     ".1.1.79139860001" : "");
-//        op.setLocationInformationMSC("GT_SMSXC");
+  if (dlg_cfg.getOrgMSC())
+    op.setLocationInformationMSC(dlg_cfg.getOrgMSC()->toString().c_str());
 
   op.setSMSCAddress(".1.1.79029869990");
 
@@ -134,30 +99,30 @@ void BillFacade::composeChargeSms(ChargeSms & op, const INDialogCfg * dlg_cfg)
   op.setServiceType("InTst");
   op.setUserMsgRef(++_msg_ref);
   op.setMsgId(++_msg_id);
-  op.setServiceOp(dlg_cfg->ussdOp ? 0 : -1);
+  op.setServiceOp(dlg_cfg.isUssdOp() ? 0 : -1);
   op.setMsgLength(160);
-  if (dlg_cfg->xsmsIds)
-    op.setSmsXSrvs(dlg_cfg->xsmsIds);
-  if (dlg_cfg->chgPolicy == CDRRecord::ON_SUBMIT)
+  op.setSmsXSrvs(dlg_cfg.getSmsXIds());
+
+  if (dlg_cfg.isChargePolicy(CDRRecord::ON_SUBMIT))
     op.setChargeOnSubmit();
-  if (dlg_cfg->chgType)
+  if (dlg_cfg.isChargeType(CDRRecord::MT_Charge))
     op.setMTcharge();
 }
 
-void BillFacade::composeDeliveredSmsData(DeliveredSmsData & op, const INDialogCfg * dlg_cfg)
+void BillFacade::composeDeliveredSmsData(DeliveredSmsData & op, const CapSmDialogCfg & dlg_cfg)
 {
-  const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
-  op.setDestinationSubscriberNumber(dAdr->msIsdn.toString().c_str());
+  const AbonentInfo * dstAbnt = dlg_cfg.getDstAbnt();
+ 
+  op.setDestinationSubscriberNumber(dstAbnt->msIsdn.toString().c_str());
+  op.setCallingPartyNumber(dlg_cfg.getOrgAbnt()->msIsdn.toString().c_str());
 
-  const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
-  op.setCallingPartyNumber(abi->msIsdn.toString().c_str());
-  op.setCallingIMSI(abi->abImsi.c_str());
-  if (dlg_cfg->forcedCDR)
+  if (dlg_cfg.getOrgIMSI())
+    op.setCallingIMSI(dlg_cfg.getOrgIMSI());
+  if (dlg_cfg.isForcedCDR())
     op.setForcedCDR();
-  op.setLocationInformationMSC(dlg_cfg->locMSC.c_str());
-//        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
-//                                     ".1.1.79139860001" : "");
-//        op.setLocationInformationMSC("GT_SMSXC"); 
+  if (dlg_cfg.getOrgMSC())
+    op.setLocationInformationMSC(dlg_cfg.getOrgMSC()->toString().c_str());
+
   op.setSMSCAddress(".1.1.79029869990");
 
   op.setSubmitTimeTZ(time(NULL));
@@ -171,56 +136,62 @@ void BillFacade::composeDeliveredSmsData(DeliveredSmsData & op, const INDialogCf
   op.setServiceId(1234);
   op.setUserMsgRef(++_msg_ref);
   op.setMsgId(++_msg_id);
-  op.setServiceOp(dlg_cfg->ussdOp ? 0 : -1);
+  op.setServiceOp(dlg_cfg.isUssdOp() ? 0 : -1);
   op.setMsgLength(160);
-  if (dlg_cfg->xsmsIds)
-    op.setSmsXSrvs(dlg_cfg->xsmsIds);
-  if (dlg_cfg->chgPolicy == CDRRecord::ON_SUBMIT_COLLECTED)
+  op.setSmsXSrvs(dlg_cfg.getSmsXIds());
+
+  if (dlg_cfg.isChargePolicy(CDRRecord::ON_SUBMIT_COLLECTED))
     op.setChargeOnSubmit();
+  if (dlg_cfg.isChargeType(CDRRecord::MT_Charge))
+    op.setMTcharge();
 
   //fill delivery fields for CDR creation
-  if (dAdr->getImsi())
-    op.setDestIMSI(dAdr->getImsi());
-  op.setDestMSC(dAdr->msIsdn.interISDN() ? ".1.1.79139860001" : "");
+  if (dlg_cfg.getDstIMSI())
+    op.setDestIMSI(dlg_cfg.getDstIMSI());
+  if (dlg_cfg.getDstMSC()) //".1.1.79139860001"
+    op.setDestMSC(dlg_cfg.getDstMSC()->toString().c_str());
+
   op.setDestSMEid("DST_MAP_PROXY");
-  op.setDivertedAdr(dAdr->msIsdn.toString().c_str());
+  op.setDivertedAdr(dstAbnt->msIsdn.toString().c_str());
   op.setDeliveryTime(time(NULL));
-  if (dlg_cfg->chgType)
-    op.setMTcharge();
 }
 
-void BillFacade::composeDeliverySmsResult(DeliverySmsResult& op, const INDialogCfg * dlg_cfg)
+void BillFacade::composeDeliverySmsResult(DeliverySmsResult & op, const CapSmDialogCfg & dlg_cfg)
 {
-  const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
+  const AbonentInfo * dstAbnt = dlg_cfg.getDstAbnt();
+
   //fill fields for CDR creation
-  if (dAdr->getImsi())
-    op.setDestIMSI(dAdr->getImsi());
-  op.setDestMSC(dAdr->msIsdn.interISDN() ? ".1.1.79139860001" : "");
+  if (dlg_cfg.getDstIMSI())
+    op.setDestIMSI(dlg_cfg.getDstIMSI());
+  if (dlg_cfg.getDstMSC()) //".1.1.79139860001"
+    op.setDestMSC(dlg_cfg.getDstMSC()->toString().c_str());
+  
   op.setDestSMEid("DST_MAP_PROXY");
-  op.setDivertedAdr(dAdr->msIsdn.toString().c_str());
+  op.setDivertedAdr(dstAbnt->msIsdn.toString().c_str());
   op.setDeliveryTime(time(NULL));
 }
 
-void BillFacade::sendChargeSms(unsigned int dlgId, uint32_t num_bytes/* = 0*/)
+void BillFacade::sendChargeSms(unsigned int dlg_id, uint32_t num_bytes/* = 0*/)
 {   
-  std::string msg;
-  const INDialogCfg * dlg_cfg = &_dlgCfg;
-  INDialog * dlg = findDialog(dlgId);
+  std::string       msg;
+  CapSmDialogCfg &  dlgCfg = _dlgCfg;
+  CapSmDialog *     dlg = findDialog(dlg_id);
+
   if (!dlg) {
-    msg = format("WRN: Dialog[%u] is unknown!", dlgId);
+    format(msg, "WRN: Dialog[%u] is unknown!", dlg_id);
     Prompt(Logger::LEVEL_DEBUG, msg);
   } else {
-    dlg_cfg = dlg->getConfig();
+    dlgCfg = dlg->getConfig();
     //fix charging mode
-    if (dlg->getConfig()->chgPolicy == CDRRecord::ON_DATA_COLLECTED)
-        dlg->setChargePolicy(CDRRecord::ON_DELIVERY);
+    if (dlgCfg.isChargePolicy(CDRRecord::ON_DATA_COLLECTED))
+        dlgCfg.setChargePolicy(CDRRecord::ON_DELIVERY);
   }
   //compose ChargeSms
   CDRRecord       cdr;
   SPckChargeSms   pck;
 
-  pck.Hdr().dlgId = dlgId;
-  composeChargeSms(pck.Cmd(), dlg_cfg);
+  pck.Hdr().dlgId = dlg_id;
+  composeChargeSms(pck.Cmd(), dlgCfg);
   pck.Cmd().export2CDR(cdr);
 
   char tbuf[sizeof("%u bytes of ") + 4*3 + 1];
@@ -229,37 +200,39 @@ void BillFacade::sendChargeSms(unsigned int dlgId, uint32_t num_bytes/* = 0*/)
     n = snprintf(tbuf, sizeof(tbuf)-1, "%u bytes of ", num_bytes);
   tbuf[n] = 0;
 
-  msg = format("--> %sChargeSms[%u] %s: %s -> %s .., %s", tbuf, dlgId,
+  msg.clear();
+  format(msg, "--> %sChargeSms[%u] %s: %s -> %s .., %s", tbuf, dlg_id,
                cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str(),
                cdr.nmPolicy());
   Prompt(Logger::LEVEL_DEBUG, msg);
   if (sendPckPart(&pck, num_bytes) && dlg) { // 0 - forces sending whole packet
-    if (dlg->getState() == INDialog::dIdle)
-      dlg->setState(INDialog::dCharged);
+    if (dlg->isState(CapSmDialog::dIdle))
+      dlg->setState(CapSmDialog::dCharged);
     else {
-      msg =  format("WRN: Dialog[%u] state is %u!", dlg->getState());
+      msg.clear();
+      format(msg, "WRN: Dialog[%u] state is %u!", dlg->getState());
       Prompt(Logger::LEVEL_DEBUG, msg);
     }
   }
 }
 
-void BillFacade::sendDeliveredSmsData(unsigned int dlgId, uint32_t num_bytes/* = 0*/)
+void BillFacade::sendDeliveredSmsData(unsigned int dlg_id, uint32_t num_bytes/* = 0*/)
 {
-  std::string msg;
-  const INDialogCfg * dlg_cfg = &_dlgCfg;
-  INDialog * dlg = findDialog(dlgId);
+  std::string       msg;
+  CapSmDialogCfg &  dlgCfg = _dlgCfg;
+  CapSmDialog *     dlg = findDialog(dlg_id);
   if (!dlg) {
-    msg = format("WRN: Dialog[%u] is unknown!", dlgId);
+    format(msg, "WRN: Dialog[%u] is unknown!", dlg_id);
     Prompt(Logger::LEVEL_DEBUG, msg);
   } else {
-    dlg_cfg = dlg->getConfig();
+    dlgCfg = dlg->getConfig();
   }
-  //compose ChargeSms
+  //compose DeliveredSmsData
   CDRRecord       cdr;
   SPckDeliveredSmsData   pck;
 
-  pck.Hdr().dlgId = dlgId;
-  composeDeliveredSmsData(pck.Cmd(), dlg_cfg);
+  pck.Hdr().dlgId = dlg_id;
+  composeDeliveredSmsData(pck.Cmd(), dlgCfg);
   pck.Cmd().setResultValue(dlg->getDlvrResult());
   pck.Cmd().export2CDR(cdr);
 
@@ -269,37 +242,40 @@ void BillFacade::sendDeliveredSmsData(unsigned int dlgId, uint32_t num_bytes/* =
     n = snprintf(tbuf, sizeof(tbuf)-1, "%u bytes of ", num_bytes);
   tbuf[n] = 0;
 
-  msg = format("--> %sDeliveredSmsData[%u] %s: %s -> %s ..., %s", tbuf, dlgId,
+  msg.clear();
+  format(msg, "--> %sDeliveredSmsData[%u] %s: %s -> %s ..., %s", tbuf, dlg_id,
                cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str(),
                cdr.nmPolicy());
   Prompt(Logger::LEVEL_DEBUG, msg);
   if (sendPckPart(&pck, num_bytes) && dlg) { // 0 - forces sending whole packet
-    if (dlg->getState() == INDialog::dIdle)
-      dlg->setState(INDialog::dReported);
+    if (dlg->isState(CapSmDialog::dIdle))
+      dlg->setState(CapSmDialog::dReported);
     else {
-      msg =  format("WRN: Dialog[%u] state is %u!", dlg->getState());
+      msg.clear();
+      format(msg, "WRN: Dialog[%u] state is %u!", dlg->getState());
       Prompt(Logger::LEVEL_DEBUG, msg);
     }
   }
 }
 
-void BillFacade::sendDeliverySmsResult(unsigned int dlgId, uint32_t deliveryStatus,
+void BillFacade::sendDeliverySmsResult(unsigned int dlg_id, uint32_t delivery_status,
                                        uint32_t num_bytes/* = 0*/)
 {
-  std::string msg;
-  const INDialogCfg * dlg_cfg = &_dlgCfg;
-  INDialog * dlg = findDialog(dlgId);
+  std::string       msg;
+  CapSmDialogCfg &  dlgCfg = _dlgCfg;
+  CapSmDialog *     dlg = findDialog(dlg_id);
+
   if (!dlg) {
-    msg =  format("WRN: Dialog[%u] is unknown!", dlgId);
+    format(msg, "WRN: Dialog[%u] is unknown!", dlg_id);
     Prompt(Logger::LEVEL_DEBUG, msg);
   } else {
-    dlg_cfg = dlg->getConfig();
+    dlgCfg = dlg->getConfig();
   }
   //compose DeliverySmsResult
   SPckDeliverySmsResult   pck;
-  pck.Hdr().dlgId = dlgId;
-  pck.Cmd().setResultValue(deliveryStatus);
-  composeDeliverySmsResult(pck.Cmd(), dlg_cfg);
+  pck.Hdr().dlgId = dlg_id;
+  pck.Cmd().setResultValue(delivery_status);
+  composeDeliverySmsResult(pck.Cmd(), dlgCfg);
 
   char tbuf[sizeof("%u bytes of ") + 4*3 + 1];
   int n = 0;
@@ -307,14 +283,16 @@ void BillFacade::sendDeliverySmsResult(unsigned int dlgId, uint32_t deliveryStat
     n = snprintf(tbuf, sizeof(tbuf)-1, "%u bytes of ", num_bytes);
   tbuf[n] = 0;
 
-  msg = format("--> %sDeliverySmsResult[%u]: DELIVERY_%s", tbuf,
-               dlgId, !deliveryStatus ? "SUCCEEDED" : "FAILED");
+  msg.clear();
+  format(msg, "--> %sDeliverySmsResult[%u]: DELIVERY_%s", tbuf,
+               dlg_id, !delivery_status ? "SUCCEEDED" : "FAILED");
   Prompt(Logger::LEVEL_DEBUG, msg);
   if (sendPckPart(&pck, num_bytes) && dlg) { // 0 - forces sending whole packet
-    if (dlg->getState() == INDialog::dApproved)
-      dlg->setState(INDialog::dReported);
+    if (dlg->isState(CapSmDialog::dApproved))
+      dlg->setState(CapSmDialog::dReported);
     else {
-      msg =  format("WRN: Dialog[%u] state is %u!", dlg->getState());
+      msg.clear();
+      format(msg, "WRN: Dialog[%u] state is %u!", dlg->getState());
       Prompt(Logger::LEVEL_DEBUG, msg);
     }
   }
@@ -363,29 +341,32 @@ void BillFacade::onPacketReceived(Connect * conn,
 // ---------------------------------------------------
 void BillFacade::onChargeSmsResult(ChargeSmsResult * result, CsBillingHdr_dlg * hdr)
 {
-  std::string msg = format("<-- ChargeSmsResult[%u]: CHARGING_%sPOSSIBLE", hdr->dlgId,
-          (result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ) ?
-           "" : "NOT_");
+  std::string msg;
+
+  format(msg, "<-- ChargeSmsResult[%u]: CHARGING_%sPOSSIBLE", hdr->dlgId,
+        (result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ) ? "" : "NOT_");
   if (result->getError())
       msg += format(", error %u: %s", result->getError(), result->getMsg());
 
   Prompt(Logger::LEVEL_DEBUG, msg);
 
-  INDialog * dlg = findDialog(hdr->dlgId);
+  CapSmDialog * dlg = findDialog(hdr->dlgId);
   if (dlg) {
-    if (dlg->getState() == INDialog::dCharged) {
-      dlg->setState(INDialog::dApproved);
+    if (dlg->isState(CapSmDialog::dCharged)) {
+      dlg->setState(CapSmDialog::dApproved);
       if (dlg->isBatchMode()) {
         if ((result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE)
-            && (dlg->getConfig()->chgPolicy != CDRRecord::ON_DATA_COLLECTED))
+            && !dlg->getConfig().isChargePolicy(CDRRecord::ON_DATA_COLLECTED))
             sendDeliverySmsResult(hdr->dlgId, dlg->getDlvrResult());
       }
     } else {
-      msg = format("ERR: Dialog[%u] was not Charged!", hdr->dlgId);
+      msg.clear();
+      format(msg, "ERR: Dialog[%u] was not Charged!", hdr->dlgId);
       Prompt(Logger::LEVEL_ERROR, msg);
     }
   } else {
-    msg = format("ERR: Dialog[%u] is inknown!", hdr->dlgId);
+    msg.clear();
+    format(msg, "ERR: Dialog[%u] is inknown!", hdr->dlgId);
     Prompt(Logger::LEVEL_ERROR, msg);
   }
 }
