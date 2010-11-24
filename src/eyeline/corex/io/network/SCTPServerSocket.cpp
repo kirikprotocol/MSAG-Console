@@ -1,3 +1,4 @@
+#ifndef __SunOS_5_9
 #include "SCTPServerSocket.hpp"
 
 namespace eyeline {
@@ -73,3 +74,5 @@ SCTPServerSocket::_getDescriptor()
 }
 
 }}}}
+
+#endif

@@ -1,3 +1,4 @@
+#ifndef __SunOS_5_9
 #include <string.h>
 #include <netdb.h>
 #include <unistd.h>
@@ -384,3 +385,5 @@ SctpInputStream::getStreamNo() const
 }
 
 }}}}
+
+#endif

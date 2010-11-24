@@ -1,6 +1,8 @@
 #ifndef __EYELINE_COREX_IO_NETWORK_SCTPSOCKET_HPP__
 # define __EYELINE_COREX_IO_NETWORK_SCTPSOCKET_HPP__
 
+#ifndef __SunOS_5_9
+
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -96,5 +98,8 @@ private:
 };
 
 }}}}
+
+
+#endif
 
 #endif
