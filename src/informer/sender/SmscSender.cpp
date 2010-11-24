@@ -416,20 +416,18 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         try {
 
             // convert subscribers to addresses
-            smsc::sms::Address oa, da;
+            smsc::sms::Address da;
             {
                 uint8_t len;
                 uint64_t addr;
                 char buf[20];
-                addr = subscriberToAddress(info.getSourceAddress(),len,oa.type,oa.plan);
-                sprintf(buf,"%*.*llu",len,len,ulonglong(addr));
-                oa.setValue(len,buf);
                 addr = subscriberToAddress(msg.subscriber,len,da.type,da.plan);
                 sprintf(buf,"%*.*llu",len,len,ulonglong(addr));
                 da.setValue(len,buf);
             }
 
             smsc::sms::SMS sms;
+            smsc::sms::Address oa = info.getSourceAddress();
             sms.setOriginatingAddress(oa);
             sms.setDestinationAddress(da);
             sms.setArchivationRequested(false);

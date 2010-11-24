@@ -56,8 +56,7 @@ endDate_(0),
 activePeriodStart_(-1),
 activePeriodEnd_(-1),
 validityPeriod_(-1),
-activeWeekDays_(-1),
-sourceAddress_(0)
+activeWeekDays_(-1)
 {
     if (!log_) {
         log_ = smsc::logger::Logger::getInstance("dlvinfo");
@@ -214,7 +213,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     timediff_type activePeriodEnd = activePeriodEnd_;
     timediff_type validityPeriod = validityPeriod_;
     int activeWeekDays = activeWeekDays_;
-    personid_type sourceAddress = sourceAddress_;
+    smsc::sms::Address sourceAddress(sourceAddress_);
     RetryString retryPolicy;
     bool newRetryPolicy = false;
 
@@ -240,8 +239,15 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         retryPolicy.init(data.retryPolicy.c_str());
         newRetryPolicy = true;
     }
+    bool sourceAddressChanged = false;
     if ((!old || old->sourceAddress != data.sourceAddress) && !data.sourceAddress.empty()) {
-        sourceAddress = parseAddress(data.sourceAddress.c_str());
+        // sourceAddress = parseAddress(data.sourceAddress.c_str());
+        try {
+            sourceAddress = smsc::sms::Address( data.sourceAddress.c_str() );
+        } catch ( std::exception& e ) {
+            throw InfosmeException(EXC_BADFORMAT,"invalid source address '%s': %s",data.sourceAddress.c_str(),e.what());
+        }
+        sourceAddressChanged = true;
     }
 
     if ( !isGoodAsciiName(data.userData.c_str()) ) {
@@ -271,7 +277,9 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         }
     }
 
-    if ( sourceAddress == 0 ) {
+    if ( sourceAddress.length <= 1 &&
+         sourceAddress.type == 0 &&
+         sourceAddress.plan == 0 ) {
         throw InfosmeException(EXC_CONFIG,"source address in not specified");
     }
 
@@ -284,7 +292,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (activePeriodEnd != -1) { activePeriodEnd_ = activePeriodEnd; }
     if (validityPeriod != -1) { validityPeriod_ = validityPeriod; }
     if (activeWeekDays != -1) { activeWeekDays_ = activeWeekDays; }
-    if (sourceAddress != 0) { sourceAddress_ = sourceAddress; }
+    if (sourceAddressChanged) { sourceAddress_ = sourceAddress; }
     if (newRetryPolicy) { retryPolicy_ = retryPolicy; }
     data_ = data;
 }

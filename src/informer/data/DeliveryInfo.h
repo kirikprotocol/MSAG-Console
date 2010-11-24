@@ -6,6 +6,7 @@
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
 #include "RetryString.h"
+#include "sms/sms.h"
 
 namespace eyeline {
 namespace informer {
@@ -111,7 +112,7 @@ public:
 
     const char* getUserData() const { return data_.userData.c_str(); }
 
-    personid_type getSourceAddress() const { return sourceAddress_; }
+    const smsc::sms::Address& getSourceAddress() const { return sourceAddress_; }
 
     // ============ end of delivery settings ==========================
 
@@ -134,7 +135,7 @@ private:
     timediff_type         activePeriodEnd_;
     timediff_type         validityPeriod_;
     int                   activeWeekDays_;
-    personid_type         sourceAddress_;
+    smsc::sms::Address    sourceAddress_;
     RetryString           retryPolicy_;
 };
 
