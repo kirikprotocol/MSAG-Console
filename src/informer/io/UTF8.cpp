@@ -1,17 +1,26 @@
 #include <cerrno>
 #include <string.h>
 #include "UTF8.h"
+#include "HexDump.h"
 #include "InfosmeException.h"
+#include "logger/Logger.h"
 
 namespace eyeline {
 namespace informer {
 
+namespace {
+smsc::logger::Logger* log_ = 0;
+}
+
 UTF8::UTF8() :
 conv_(iconv_t(-1))
 {
-    conv_ = iconv_open("UCS-2BE","UTF-8");
+    conv_ = iconv_open("UCS-2","UTF-8");
     if (conv_ == iconv_t(-1)) {
         throw ErrnoException(errno,"iconv_open");
+    }
+    if (!log_) {
+        log_ = smsc::logger::Logger::getInstance("utf8");
     }
 }
 
@@ -28,6 +37,13 @@ void UTF8::convertToUcs2( const char* inptr, size_t inlen, BufType& buf )
     static const size_t maxBytesPerChar = 4;
     int error = 0;
     // initial reservation
+    if (log_ && log_->isDebugEnabled()) {
+        HexDump hd;
+        HexDump::string_type dump;
+        const size_t dumplen = inlen < 50 ? inlen : 50;
+        hd.hexdump(dump,inptr,dumplen);
+        smsc_log_debug(log_,"before: %s",hd.c_str(dump));
+    }
     buf.reserve(buf.GetPos()+inlen*maxBytesPerChar);
     {
         smsc::core::synchronization::MutexGuard mg(lock_);
@@ -61,6 +77,13 @@ void UTF8::convertToUcs2( const char* inptr, size_t inlen, BufType& buf )
     }
     if (error) {
         throw ErrnoException(error,"invalid/incomplete utf8");
+    }
+    if (log_ && log_->isDebugEnabled()) {
+        HexDump hd;
+        HexDump::string_type dump;
+        const size_t dumplen = size_t(buf.GetPos()) < 50 ? size_t(buf.GetPos()) : 50;
+        hd.hexdump(dump,buf.get(),dumplen);
+        smsc_log_debug(log_,"after: %s",hd.c_str(dump));
     }
 }
 

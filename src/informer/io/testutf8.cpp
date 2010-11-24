@@ -6,7 +6,7 @@ using namespace eyeline::informer;
 
 int main()
 {
-    const char* text = "Русский текст";
+    const char* text = "Русский текст #1";
     const char* fname = "testutf8.log";
 
     smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
