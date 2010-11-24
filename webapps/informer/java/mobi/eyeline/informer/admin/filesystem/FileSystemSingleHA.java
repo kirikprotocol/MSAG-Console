@@ -80,4 +80,9 @@ class FileSystemSingleHA extends FileSystem {
     }
     return file.exists();
   }
+
+  @Override
+  public long length(File f) throws AdminException {
+    return f.length();
+  }
 }

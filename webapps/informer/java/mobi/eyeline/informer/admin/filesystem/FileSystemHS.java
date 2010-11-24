@@ -160,6 +160,33 @@ class FileSystemHS extends FileSystem {
     return true;
   }
 
+  @Override
+  public long length(File file) throws AdminException {
+    if (file == null) {
+          throw new IllegalArgumentException("Some arguments are null");
+    }
+    checkErrors();
+
+    File[] files = new File[mirrorsDir.length + 1];
+    getMirrorsFiles(file, files);
+    files[mirrorsDir.length] = file;
+
+    long len = 0;
+    for (int i = files.length - 1; i > -1; i--) {
+      if(i == files.length - 1) {
+        len = files[i].length();
+        continue;
+      }
+      long newLen = files[i].length();
+      if(len!=0 && newLen!=len) {
+        errStr = "Different lengths for files "+file.getAbsolutePath();
+        error = true;
+        throw new FileSystemException("io_error");
+      }
+    }
+    return len;        
+  }
+
   private File[] getMirrorsFiles(File baseFile) throws AdminException {
     File[] files = new File[mirrorsDir.length];
     getMirrorsFiles(baseFile, files);

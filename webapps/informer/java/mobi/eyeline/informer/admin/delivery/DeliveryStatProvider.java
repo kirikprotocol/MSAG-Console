@@ -61,7 +61,7 @@ class DeliveryStatProvider {
         maxMinute = c.get(Calendar.MINUTE);
       }
 
-      List<File> files = filterFiles(filter);
+      List<File> files = filterFiles(filter,true);
       Collections.sort(files);
       int total = files.size();
       for (int i = 0; i < total; i++) {
@@ -81,7 +81,7 @@ class DeliveryStatProvider {
     }
   }
 
-  private List<File> filterFiles(DeliveryStatFilter filter) throws AdminException {
+  List<File> filterFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
 
     String minSubDirName = null;
     String maxSubDirName = null;
@@ -120,6 +120,11 @@ class DeliveryStatProvider {
               continue;
             }
           }
+          if (maxFilePath != null && !endDateInclusive) {
+            if (filePath.compareTo(maxFilePath) >= 0) {
+              continue;
+            }
+          }
           if (maxFilePath != null) {
             if (filePath.compareTo(maxFilePath) > 0) {
               continue;
@@ -139,10 +144,7 @@ class DeliveryStatProvider {
     InputStream is = null;
     try {
 
-      String filePath = (new File(file.getParent())).getName() + File.separatorChar + file.getName();
-      Date fileDate = new SimpleDateFormat(filePathFormat).parse(filePath);
-      Calendar c = Calendar.getInstance();
-      c.setTime(fileDate);
+      Calendar c = getCalendarOfStatFile(file);
 
       is = fileSys.getInputStream(file);
       BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -188,7 +190,7 @@ class DeliveryStatProvider {
           }
         }
         catch (Exception e) {
-          throw new DeliveryStatException("error.parsing.stat.line", filePath, line);
+          throw new DeliveryStatException("error.parsing.stat.line", file.getAbsolutePath(), line);
         }
       }
     }
@@ -200,6 +202,23 @@ class DeliveryStatProvider {
       }
     }
     return true;
+  }
+
+  Calendar getCalendarOfStatFile(File file) throws AdminException {
+    try {
+      String filePath = (new File(file.getParent())).getName() + File.separatorChar + file.getName();
+      Date fileDate = null;
+
+      fileDate = new SimpleDateFormat(filePathFormat).parse(filePath);
+
+      Calendar c = Calendar.getInstance();
+      c.setTime(fileDate);
+      return c;
+    }
+    catch (ParseException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      throw new DeliveryStatException("error.parsing.filedate", file.getAbsolutePath());
+    }
   }
 
 }

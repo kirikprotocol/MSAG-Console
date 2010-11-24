@@ -107,7 +107,7 @@ public class TestUtils {
     JarEntry je;
     while (( je = jis.getNextJarEntry())!=null) {
       String name = je.getName();
-      if(!je.isDirectory() && name.startsWith(jarInternalPathURI)) {
+      if(!je.isDirectory() && (name+File.separatorChar).startsWith(jarInternalPathURI+File.separatorChar)) {
         String relPath = name.substring(jarInternalPathURI.length());
         File dstFile = new File(dstStatDir,relPath.replace('/',File.separatorChar));
         extractFile(jis,dstFile,fileSys);

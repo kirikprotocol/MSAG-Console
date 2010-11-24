@@ -294,7 +294,13 @@
       <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.MessagesByPeriodController</managed-bean-class>
       <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
-  
+
+   <managed-bean>
+      <managed-bean-name>statsSize</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.stats.StatsSizeController</managed-bean-class>
+      <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
   <managed-bean>
       <managed-bean-name>createDelivery</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.delivery.CreateDeliveryController</managed-bean-class>
@@ -442,6 +448,11 @@
     <navigation-case>
       <from-outcome>STATS_DELIVERY_MESSAGES_BY_USER</from-outcome>
       <to-view-id>/stats/messagesByUser.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>STATS_SIZE</from-outcome>
+      <to-view-id>/stats/statSizeByPeriod.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 

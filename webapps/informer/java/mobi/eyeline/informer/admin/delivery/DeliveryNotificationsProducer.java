@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.notifications.DateAndFile;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.CSVTokenizer;
 import org.apache.log4j.Logger;
@@ -30,6 +31,7 @@ public class DeliveryNotificationsProducer implements Runnable {
   private FileSystem fileSys;
   ScheduledExecutorService scheduler;
   final List<DeliveryNotificationsListener> listeners = Collections.synchronizedList(new LinkedList<DeliveryNotificationsListener>());
+  private static final String FILE_NAME_DATE_PATTERN = "yyyyMMddHHmm'.csv'";
 
 
   public DeliveryNotificationsProducer(File directory, FileSystem fileSys) throws InitException {
@@ -100,7 +102,7 @@ public class DeliveryNotificationsProducer implements Runnable {
     BufferedReader reader = null;
     try {
       Calendar c = Calendar.getInstance();
-      c.setTime(new SimpleDateFormat("yyyyMMddHHmm'.csv'").parse(fileName));
+      c.setTime(new SimpleDateFormat(FILE_NAME_DATE_PATTERN).parse(fileName));
       reader = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f)));
       String line;
       while ((line = reader.readLine()) != null) {
@@ -218,5 +220,24 @@ public class DeliveryNotificationsProducer implements Runnable {
     throw new IllegalArgumentException("Invalid event type = " + value);
   }
 
+
+  public List<DateAndFile> getProcessedNotificationsFiles(Date startDate,Date endDate) throws AdminException {
+    List<DateAndFile> ret = new ArrayList<DateAndFile>();
+    File[] files = fileSys.listFiles(backupDir);
+    if(files==null) return ret;
+    for (File f : files ) {
+      try {
+        Calendar c = Calendar.getInstance();
+        c.setTime(new SimpleDateFormat(FILE_NAME_DATE_PATTERN).parse(f.getName()));
+        if(startDate!=null && c.getTime().before(startDate)) continue;
+        if(endDate!=null && endDate.before(c.getTime()))     continue;
+        ret.add(new DateAndFile(c,f));
+      }
+      catch (Exception e) {
+        log.error("Error parsing delivery processed file: " + f.getAbsolutePath(), e);
+      }      
+    }
+    return ret;
+  }
 
 }

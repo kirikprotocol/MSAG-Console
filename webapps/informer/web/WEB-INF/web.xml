@@ -272,6 +272,7 @@
       <url-pattern>/journal/*</url-pattern>
       <url-pattern>/notifications/*</url-pattern>
       <url-pattern>/stats/messagesByUser.faces</url-pattern>
+      <url-pattern>/stats/statSizeByPeriod.faces</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>informer-admin</role-name>

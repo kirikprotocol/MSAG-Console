@@ -14,6 +14,7 @@ import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.notifications.DateAndFile;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
@@ -531,6 +532,19 @@ public class AdminContext {
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     deliveryManager.statistics(filter, visitor);
   }
+
+  public List<File> getStatisticsFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
+    return deliveryManager.getStatisticsFiles(filter, endDateInclusive);
+  }
+
+  public Calendar getCalendarOfStatFile(File f) throws AdminException {
+    return deliveryManager.getCalendarOfStatFile(f);
+  }
+
+  public List<DateAndFile> getProcessedNotificationsFiles(Date startDate,Date endDate) throws AdminException {
+    return deliveryNotificationsProducer.getProcessedNotificationsFiles(startDate,endDate);
+  }
+
 
   public List<Daemon> getDaemons() {
     List<Daemon> ret = new LinkedList<Daemon>();

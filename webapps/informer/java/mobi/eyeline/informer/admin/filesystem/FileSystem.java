@@ -122,4 +122,12 @@ public abstract class FileSystem {
     return file.isDirectory();
   }
 
+  /**
+   * Возвращает размер файла
+   * @param f File
+   * @return размер файла в байтах
+   * @throws AdminException ошибка ввода/вывода
+   */
+  public abstract long length(File f) throws AdminException;
+
 }

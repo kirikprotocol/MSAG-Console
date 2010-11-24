@@ -36,7 +36,7 @@ public class TopMenu extends InformerController {
 //          add(new MenuItem("informer.admin.import", "/import/index.faces")).
 //          add(new MenuItem("informer.admin.archieve", "/archieve/index.faces")).
 //          add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
-    add(new MenuItem("informer.admin.journal", "/journal/index.faces"));
+        add(new MenuItem("informer.admin.journal", "/journal/index.faces"));
 
     menuBarItems.add(i);
     menuBarItems.add(new MenuBarItem("informer.deliveries", "informer.deliveries.width").
@@ -44,16 +44,18 @@ public class TopMenu extends InformerController {
         add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
         add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
     );
-    menuBarItems.add(new MenuBarItem("informer.stats", "informer.stats.width").
-        add(new MenuItem("informer.stats.common", "/stats/messagesByPeriod.faces")).
+    i = new MenuBarItem("informer.stats", "informer.stats.width");
+    i.add(new MenuItem("informer.stats.common", "/stats/messagesByPeriod.faces")).
         add(new MenuItem("informer.stats.deliveries", "/stats/deliveriesCountByPeriod.faces")).
         //add(new MenuItem("informer.stats.messages", "/stats/messages.faces"))
             add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDeliveries.faces")).
         add(new MenuItem("informer.stats.messages.recipients", "/stats/messagesByRecs.faces")).
-        add(new MenuItem("informer.stats.messages.byUser", "/stats/messagesByUser.faces"))
-
+        add(new MenuItem("informer.stats.messages.byUser", "/stats/messagesByUser.faces"));
         //add(new MenuItem("informer.stats.messages.deliveries", "/stats/messagesByDels.faces"))
-    );
+    if (isUserhasRole("informer-admin")) {
+      i.add(new MenuItem("informer.stats.size", "/stats/statSizeByPeriod.faces"));
+    }
+    menuBarItems.add(i);
   }
 
   public Collection<MenuBarItem> getMenuBarItems() {

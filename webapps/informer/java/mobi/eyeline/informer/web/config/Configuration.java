@@ -9,6 +9,7 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
+import mobi.eyeline.informer.admin.notifications.DateAndFile;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionException;
@@ -328,6 +329,19 @@ public class Configuration {
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     context.statistics(filter, visitor);
   }
+
+  public List<File> getStatisticFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
+    return context.getStatisticsFiles(filter,endDateInclusive);
+  }
+
+  public Calendar getCalendarOfStatFile(File f) throws AdminException {
+    return context.getCalendarOfStatFile(f);
+  }
+
+  public List<DateAndFile> getProcessedNotificationsFiles(Date startDate,Date endDate) throws AdminException {
+    return context.getProcessedNotificationsFiles(startDate,endDate);
+  }
+
 
   public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException {
     return context.getDeliveryStatusHistory(login, password, deliveryId);

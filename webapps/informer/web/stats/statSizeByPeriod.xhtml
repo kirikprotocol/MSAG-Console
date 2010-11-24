@@ -1,0 +1,132 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.stats']} / #{msg['informer.stats.size']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smsc" rendered="#{!statsSize.initError}">
+
+      <c:set var="longOpState" value="#{statsSize.state}"/>
+
+
+        <eye:dataTableFilter bean="#{statsSize}" clearAction="clearFilter" applyAction="start">
+          <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
+
+            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
+            <t:inputDate value="#{statsSize.filter.fromDate}" popupCalendar="true"/>
+
+            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
+            <h:selectOneMenu value="#{statsSize.aggregation}" >
+              <f:selectItems value="#{statsSize.aggregations}"/>
+            </h:selectOneMenu>
+
+            <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
+            <t:inputDate value="#{statsSize.filter.tillDate}"  popupCalendar="true"/>
+            
+          </h:panelGrid>
+        </eye:dataTableFilter>
+
+      <eye:delimiter/>
+
+
+        <eye:updatableContent updatePeriod="1" enabled="#{longOpState == 1}">
+
+          <eye:message level="error" rendered="#{longOpState == 3}">
+            <p/>
+            <h:outputText value="#{statsSize.error}"/>
+            <p/>
+          </eye:message>
+
+          <h:panelGroup rendered="#{longOpState == 1}">
+            <tr:message id="upload_message"/>
+
+            <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+              <h:outputText value="#{msg['processing.label']}  #{statsSize.current}"/>
+              <eye:progressBar current="#{statsSize.current}" maximum="#{statsSize.total}" width="500" height="20" />
+            </h:panelGrid>
+
+            <eye:delimiter/>
+
+            <eye:buttons>
+              <eye:button>
+                <tr:commandLink text="#{msg['stop.button']}" action="#{statsSize.cancel}"/>
+              </eye:button>
+              <eye:space/>
+            </eye:buttons>
+          </h:panelGroup>
+
+
+            <eye:dataTable value="#{statsSize.records}" var="row" rendered="#{longOpState == 2}" selectedRows="#{statsSize.selectedRows}">
+              <eye:row rowId="#{row.periodId}" innerRows="#{row.innerRows}">
+                <eye:column name="date" title="#{msg['stat.page.period']}" sortable="true" defaultSortOrder="asc" width="30%" align="center">
+                  <h:outputText value="#{row.data.periodString}"/>
+                  <f:facet name="inner">
+                    <h:outputText value="#{row.periodString}" style="color:GREEN"/>
+                  </f:facet>
+                  <f:facet name="footer">
+                        <h:outputText value="#{msg['stat.page.total']}" style="font-weight:bold;"/>
+                  </f:facet>
+
+                </eye:column>
+                <eye:column name="count" title="#{msg['stat.page.sizeFilesCount']}" sortable="true" width="20%" align="center">
+                  <h:outputText value="#{row.data.count}"/>
+                  <f:facet name="inner">
+                    <h:outputText value="#{row.count}" style="color:GREEN"/>
+                  </f:facet>
+                  <f:facet name="footer">
+                      <h:outputText value="#{statsSize.totals.count}" style="font-weight:bold;"/>
+                  </f:facet>
+                </eye:column>
+                <eye:column name="size" title="#{msg['stat.page.sizeSize']}" sortable="true" width="20%" align="center">
+                  <h:outputText value="#{row.data.sizeFormatted}"/>
+                  <f:facet name="inner">
+                    <h:outputText value="#{row.sizeFormatted}" style="color:GREEN"/>
+                  </f:facet>
+                  <f:facet name="footer">
+                      <h:outputText value="#{statsSize.totals.sizeFormatted}" style="font-weight:bold;"/>
+                  </f:facet>
+                </eye:column>
+              </eye:row>
+            </eye:dataTable>
+
+          <eye:delimiter/>
+          
+          <eye:buttons rendered="#{longOpState == 2}">
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}" action="#{statsSize.removeSelected}"
+                          onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
+                          
+              />
+            </eye:button>
+            <eye:space/>
+            <eye:button>
+              <h:commandLink value="#{msg['download.button']}"  >
+                <tr:fileDownloadActionListener method="#{statsSize.download}" contentType="application/csv" filename="statSizes.csv"/>
+              </h:commandLink>
+            </eye:button>
+          </eye:buttons>
+        </eye:updatableContent>
+
+
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

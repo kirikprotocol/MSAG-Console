@@ -7,6 +7,7 @@ import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -504,6 +505,27 @@ public class DeliveryManager {
    */
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     statsProvider.accept(filter, visitor);
+  }
+
+  /**
+   * Возвращает список файлов статистики, удовлетворяющие условиям, накладываемыми в filter.
+   * Если filter == null, то провайдер перебирает все записи.
+   * @param filter  фильтр, описывающий ограничения на файлы
+   * @param endDateInclusive - Включтительно или нет по верхней границе даты фильтра
+   * @throws AdminException если произошла ошибка при обращении к стораджу статистики
+   */
+  public List<File> getStatisticsFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
+    return statsProvider.filterFiles(filter, endDateInclusive);
+  }
+
+  /**
+   * Парсит дату из имени файла статистики
+   * @param f - Файл статистики
+   * @return Дата из имени файла
+   * @throws AdminException
+   */
+  public Calendar getCalendarOfStatFile(File f) throws AdminException {
+    return statsProvider.getCalendarOfStatFile(f);
   }
 
 
