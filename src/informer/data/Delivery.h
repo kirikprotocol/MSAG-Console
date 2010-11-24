@@ -76,7 +76,11 @@ private:
 
 protected:
     smsc::logger::Logger*                              log_;
+
+    smsc::core::synchronization::Mutex                 stateLock_;
     std::auto_ptr<DeliveryInfo>                        dlvInfo_;
+    DlvState                                           state_;
+    msgtime_type                                       planTime_;
 
     ActivityLog                                        activityLog_;
     InputMessageSource*                                source_;       // owned
@@ -84,9 +88,6 @@ protected:
     smsc::core::synchronization::Mutex                 lock_;
     unsigned                                           ref_;
 
-    // fixme: move under separate lock?
-    DlvState                                           state_;
-    msgtime_type                                       planTime_;
 };
 
 typedef EmbedRefPtr< Delivery >  DeliveryPtr;

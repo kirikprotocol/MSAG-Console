@@ -12,11 +12,11 @@ Delivery::Delivery( DeliveryInfo*               dlvInfo,
                     InputMessageSource*         source ) :
 log_(0),
 dlvInfo_(dlvInfo),
+state_(DlvState(0)),
+planTime_(0),
 activityLog_(userInfo,dlvInfo_->getDlvId()),
 source_(source),
-ref_(0),
-state_(DlvState(0)),
-planTime_(0)
+ref_(0)
 {
     char buf[20];
     sprintf(buf,"d.%u",dlvInfo_->getDlvId() % 10000);

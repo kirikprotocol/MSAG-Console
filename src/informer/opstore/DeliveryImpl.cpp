@@ -125,6 +125,7 @@ DeliveryImpl::~DeliveryImpl()
 DlvState DeliveryImpl::readState( dlvid_type            dlvId,
                                   msgtime_type&         planTime )
 {
+    // we may not lock here, as we have exclusive access to the delivery
     planTime = 0;
     DlvState state = DLVSTATE_PAUSED;
     char buf[200];
@@ -198,7 +199,7 @@ DlvState DeliveryImpl::readState( dlvid_type            dlvId,
 void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
 {
     // should we unbind first?
-    MutexGuard mg(cacheLock_);
+    MutexGuard mg(stateLock_);
     dlvInfo_->update( data );
     writeDeliveryInfoData();
 }
@@ -211,7 +212,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     msgtime_type now;
     ulonglong ymd;
     {
-        MutexGuard mg(cacheLock_);
+        MutexGuard mg(stateLock_);
         const DlvState oldState = state_;
         if (oldState == newState) return;
         smsc_log_debug(log_,"D=%u changing state: %s into %s",dlvId,
@@ -256,11 +257,13 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         case DLVSTATE_PLANNED: 
         case DLVSTATE_PAUSED:
         case DLVSTATE_FINISHED:
-        case DLVSTATE_CANCELLED:
+        case DLVSTATE_CANCELLED: {
+            MutexGuard mg(cacheLock_);
             for ( StoreHash::Iterator i(storages_); i.Next(regId,regPtr); ) {
                 regPtr->stopTransfer(newState == DLVSTATE_CANCELLED);
             }
             break;
+        }
         case DLVSTATE_ACTIVE:
             // do nothing here, activation is below in delivery activator
             break;
@@ -300,6 +303,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         bs.dlvId = dlvId;
         bs.bind = (newState == DLVSTATE_ACTIVE);
         {
+            MutexGuard mg(cacheLock_);
             bs.regIds.reserve(storages_.Count());
             int ri;
             RegionalStoragePtr* ptr;
@@ -308,8 +312,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
                 bs.regIds.push_back(regionid_type(ri));
             }
         }
+        source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
     }
-    source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
 }
 
 
