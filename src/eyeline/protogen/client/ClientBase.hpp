@@ -78,7 +78,7 @@ protected:
 
 public:
   ClientBase(const char* logName);
-  ~ClientBase();
+  virtual ~ClientBase();
   void Init(const char* host,int port);
   void Stop();
 
@@ -100,7 +100,7 @@ public:
     sync::MutexGuard mg(seqMtx);
     return seqNum++;
   }
-  
+
   bool isConnected()const
   {
     return connected;
@@ -115,6 +115,7 @@ protected:
 
   virtual void onHandleCommand(Buffer& buf)=0;
   virtual void onConnect()=0;
+  virtual void onDisconnect()=0;
 
 
   class Reader:public thr::Thread{

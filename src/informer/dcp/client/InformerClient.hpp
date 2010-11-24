@@ -282,6 +282,11 @@ protected:
     {
       throw FailedRequestException(msg.messageGetName(),req->code,req->error);
     }
+    ReqMap::iterator it=reqMap.find(msg.messageGetSeqNum());
+    if(it!=reqMap.end())
+    {
+      reqMap.erase(it);
+    }
   }
 
   void registerOkResp(int seqNum);

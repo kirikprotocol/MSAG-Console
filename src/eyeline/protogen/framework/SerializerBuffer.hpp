@@ -6,8 +6,9 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <string>
-#include <wchar.h>
 #include "eyeline/protogen/framework/Exceptions.hpp"
+#include "util/utf8.h"
+#include <iterator>
 
 namespace eyeline{
 namespace protogen{
@@ -57,6 +58,18 @@ protected:
     return htons(val);
   }
   int32_t htonX(int32_t val)
+  {
+    return htonl(val);
+  }
+  uint8_t htonX(uint8_t val)
+  {
+    return val;
+  }
+  uint16_t htonX(uint16_t val)
+  {
+    return htons(val);
+  }
+  uint32_t htonX(uint32_t val)
   {
     return htonl(val);
   }
@@ -117,10 +130,12 @@ public:
   void writeStr(const std::string& value)
   {
     resize(value.length()*2+lengthTypeSize);
-    writeLength((LengthType)value.length()*2);
-    for(size_t i=0;i<value.length();i++)
+    std::string::const_iterator it=value.begin(),end=value.end();
+    writeLength((LengthType)utf8::distance(it,end)*2);
+    for(;it!=end;)
     {
-      writeInt16(btowc((unsigned char)value[i]));
+      //writeInt16(btowc((unsigned char)value[i]));
+      writeInt16(utf8::next(it,end));
     }
   }
 
@@ -190,7 +205,8 @@ public:
   }
   static LengthType fieldSize(const std::string& value)
   {
-    return (LengthType)(value.length()*2);
+    //return (LengthType)(value.length()*2);
+    return (LengthType)(utf8::distance(value.begin(),value.end())*2);
   }
 
   template <class T>
@@ -238,7 +254,7 @@ public:
     pos++;
     rv=high;
     rv<<=16;
-    int16_t low;
+    uint16_t low;
     memcpy(&low,buf+pos,2);
     low=htonX(low);
     rv|=low;
@@ -327,9 +343,10 @@ public:
       throw ReadBeyonEof();
     }
     std::string rv;
+    rv.reserve(length*2);
     for(int i=0;i<length/2;i++)
     {
-      rv+=wctob(readInt16());
+      utf8::append(readInt16(),std::back_inserter(rv));
     }
     return rv;
   }
@@ -342,9 +359,10 @@ public:
       throw ReadBeyonEof();
     }
     std::string rv;
+    rv.reserve(length*2);
     for(int i=0;i<length/2;i++)
     {
-      rv+=wctob(readInt16());
+      utf8::append(readInt16(),std::back_inserter(rv));
     }
     return rv;
   }

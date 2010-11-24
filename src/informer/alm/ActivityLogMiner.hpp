@@ -47,7 +47,9 @@ protected:
   sync::Mutex mtx;
   int reqIdSeq;
 
-  std::string mkFilePath(dlvid_type dlvId,msgtime_type date);
+  std::string mkFilePath(dlvid_type dlvId,const ::tm& date);
+  std::string mkDatePath(dlvid_type dlvId,const ::tm& date);
+  std::string mkHourPath(dlvid_type dlvId,const ::tm& date);
 
   int parseFiles(Request* req,std::vector<ALMResult>* result,int count,bool countOnly);
 

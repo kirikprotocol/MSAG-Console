@@ -31,7 +31,7 @@ public:
     outSeqId=0;
     isStopping=false;
   }
-  ~ServerBase();
+  virtual ~ServerBase();
   void Init(const char* host,int port,int hndCnt);
   void Stop();
 
@@ -47,6 +47,7 @@ public:
     proto.encodeMessage(cmd,&sb);
     ProtocolSocketBase::Packet p(sb.detachBuffer(),sb.getDataWritten(),connId);
     outQueue.Push(p);
+    outQueueMon.notify();
   }
 
 protected:

@@ -46,17 +46,37 @@ int ActivityLogMiner::createRequest(dlvid_type dlvId,const ALMRequestFilter& fil
   return rv;
 }
 
-std::string ActivityLogMiner::mkFilePath(dlvid_type dlvId,msgtime_type date)
+std::string ActivityLogMiner::mkFilePath(dlvid_type dlvId,const ::tm& tm)
 {
   char buf[128];
-  ::tm tm;
-  msgTimeToYmd(date,&tm);
   sprintf(makeDeliveryPath(buf,dlvId),
                       "activity_log/%04u.%02u.%02u/%02u/%02u.log",
                       tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday,
                       tm.tm_hour, tm.tm_min );
   return path+buf;
 }
+
+std::string ActivityLogMiner::mkDatePath(dlvid_type dlvId,const ::tm& tm)
+{
+  char buf[128];
+  sprintf(makeDeliveryPath(buf,dlvId),
+                      "activity_log/%04u.%02u.%02u",
+                      tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday
+                      );
+  return path+buf;
+}
+
+std::string ActivityLogMiner::mkHourPath(dlvid_type dlvId,const ::tm& tm)
+{
+  char buf[128];
+  sprintf(makeDeliveryPath(buf,dlvId),
+                      "activity_log/%04u.%02u.%02u/%02u",
+                      tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday,
+                      tm.tm_hour);
+  return path+buf;
+}
+
+
 
 namespace {
 std::string::size_type skipField(const std::string& str,std::string::size_type pos)
@@ -97,7 +117,8 @@ int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filt
 
 int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int count,bool countOnly)
 {
-  smsc::core::buffers::File f;
+  using smsc::core::buffers::File;
+  File f;
   std::string filePath;
   bool nextFile=false;
 
@@ -107,20 +128,58 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
 
   int rv=0;
 
+  bool dayChecked=false;
+  bool hourChecked=false;
+  int day=-1;
+  int hour=-1;
+
+
   while(countOnly || rv<count)
   {
     if(!f.isOpened())
     {
-      filePath=mkFilePath(req->dlvId,req->curDate);
-      smsc_log_debug(log,"probing file %s",filePath.c_str());
+      if(req->curDate>req->filter.endDate)
+      {
+        return rv;
+      }
+      ::tm tm;
+      msgTimeToYmd(req->curDate,&tm);
+      if(!dayChecked || tm.tm_mday!=day)
+      {
+        if(!File::Exists(mkDatePath(req->dlvId,tm).c_str()))
+        {
+          req->curDate-=req->curDate%(24*60*60);
+          req->curDate+=24*60*60;
+          continue;
+        }
+        day=tm.tm_mday;
+        dayChecked=true;
+      }
+      if(!hourChecked || tm.tm_hour!=hour)
+      {
+        if(!File::Exists(mkHourPath(req->dlvId,tm).c_str()))
+        {
+          req->curDate-=req->curDate%(60*60);
+          req->curDate+=60*60;
+          continue;
+        }
+        hour=tm.tm_hour;
+        hourChecked=true;
+      }
+
+      filePath=mkFilePath(req->dlvId,tm);
+      if(!nextFile)
+      {
+        smsc_log_debug(log,"probing file %s",filePath.c_str());
+      }
       if(nextFile || !smsc::core::buffers::File::Exists(filePath.c_str()))
       {
-        smsc_log_debug(log,"file %s not found",filePath.c_str());
-        req->curDate+=60;
-        if(req->curDate>req->filter.endDate)
+        if(!nextFile)
         {
-          return rv;
+          smsc_log_debug(log,"file %s not found",filePath.c_str());
         }
+        req->curDate+=60;
+        nextFile=false;
         continue;
       }
       smsc_log_debug(log,"reading %s",filePath.c_str());
@@ -130,6 +189,7 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
     if(!f.ReadLine(line))
     {
       f.Close();
+      req->offset=0;
       nextFile=true;
       continue;
     }

@@ -137,7 +137,6 @@ void ServerBase::readPackets()
         int connId=(*it)->second->getConnId();
         smsc_log_info(log,"Deleting connId=%d",connId);
         onDisconnect((*it)->second);
-        delete (*it)->second;
         clnts.erase(*it);
       }
     }
@@ -196,7 +195,7 @@ void ServerBase::writePackets()
         }
       }
     }
-    if(outMp.getSize() && outMp.canWrite(wr,err,500))
+    if(outMp.getSize() && outMp.canWrite(wr,err,1))
     {
       for(int i=0;i<wr.Count();i++)
       {
@@ -346,6 +345,8 @@ bool ProtocolSocketBase::Read()
 
 bool ProtocolSocketBase::Write()
 {
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("ps.wr");
+
   int wr=sck->Write(wrBuffer+wrDataWritten,(int)(wrBufferSize-wrDataWritten));
   if(wr==0)
   {
@@ -362,6 +363,7 @@ bool ProtocolSocketBase::Write()
     if(outQueue.Count())
     {
       ProtocolSocketBase::Packet p;
+      smsc_log_debug(log,"writing to connId=%d:%s",connId,p.getDump().c_str());
       outQueue.Pop(p);
       wrBuffer=p.data;
       wrBufferSize=p.dataSize;

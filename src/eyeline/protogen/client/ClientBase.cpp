@@ -34,6 +34,9 @@ void ClientBase::Stop()
 {
   stopReq=true;
   sck.Close();
+  tp.shutdown();
+  reader.WaitFor();
+  writer.WaitFor();
 }
 
 
@@ -109,6 +112,7 @@ void ClientBase::ReadLoop()
 
 void ClientBase::Disconnect()
 {
+  onDisconnect();
   sck.Close();
   connected=false;
 }

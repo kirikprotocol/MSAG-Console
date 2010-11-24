@@ -30,7 +30,7 @@ int main( int argc, char** argv )
     ic.userAuth("bukind","pwd");
     printf("auth ok\n");
     messages::DeliveryInfo di;
-    di.setName("test1");
+    di.setName("test1 по русски");
     di.setPriority(1);
     di.setTransactionMode(false);
     di.setStartDate("15.11.2010 10:00:00");
@@ -139,8 +139,18 @@ int main( int argc, char** argv )
     ic.modifyDeliveryGlossary(did,dg);
 
     messages::RequestMessagesState rmsReq;
-    rmsReq.setStartDate("18.11.2010 05:00:00");
-    rmsReq.setEndDate("18.11.2010 20:00:00");
+    tm nowTime;
+    time_t now=time(0);
+    gmtime_r(&now,&nowTime);
+    char dateBuf1[32];
+    char dateBuf2[32];
+    sprintf(dateBuf1,"%02d.%02d.%02d 02:00:00",nowTime.tm_mday,nowTime.tm_mon+1,nowTime.tm_year+1900);
+    sprintf(dateBuf2,"%02d.%02d.%02d 22:00:00",nowTime.tm_mday,nowTime.tm_mon+1,nowTime.tm_year+1900);
+    rmsReq.setStartDate(dateBuf1);
+    rmsReq.setEndDate(dateBuf2);
+    rmsReq.getStatesRef().push_back(messages::DeliveryMessageState::New);
+    //rmsReq.getMsisdnFilterRef().push_back("+79130000001");
+    //rmsReq.getMsisdnFilterRef().push_back("+79130000002");
     std::vector<messages::ReqField> flds;
     flds.push_back(messages::ReqField::Abonent);
     flds.push_back(messages::ReqField::Date);
@@ -164,9 +174,11 @@ int main( int argc, char** argv )
       rmsResult.empty();
     }
     messages::CountMessages cm;
-    cm.setStartDate("18.11.2010 05:00:00");
-    cm.setEndDate("18.11.2010 20:00:00");
+    cm.setStartDate(dateBuf1);
+    cm.setEndDate(dateBuf2);
     cm.setDeliveryId(did);
+    cm.getStatesRef().push_back(messages::DeliveryMessageState::Delivered);
+    cm.getStatesRef().push_back(messages::DeliveryMessageState::Failed);
     printf("messages count=%d\n",ic.countMessages(cm));
 
     allMsgids.erase(allMsgids.begin()+allMsgids.size()/2,allMsgids.end());
@@ -184,6 +196,7 @@ int main( int argc, char** argv )
       sleep(1);
       messages::GetDeliveryStateResp ds2=ic.getDeliveryState(did);
       printf("new delivery state:%s\n",ds2.toString().c_str());
+      printf("messages count=%d\n",ic.countMessages(cm));
     }
 
 
