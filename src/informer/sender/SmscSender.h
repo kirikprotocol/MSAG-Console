@@ -106,7 +106,7 @@ private:
     void scoredObjToString( std::string& s, ScoredPtrType regionSender );
 
     void processExpiredTimers();
-    void journalReceiptData( const ReceiptData& rd );
+    // void journalReceiptData( const ReceiptData& rd );
 
 private:
     smsc::logger::Logger*                     log_;

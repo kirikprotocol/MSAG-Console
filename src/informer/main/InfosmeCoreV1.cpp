@@ -667,7 +667,16 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
     BindSignal bs;
     bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
-    // FIXME: check userinfo
+    {
+        DeliveryImplPtr ptr;
+        if ( !dlvMgr_->getDelivery(dlvId,ptr) ) {
+            throw InfosmeException(EXC_NOTFOUND,"no such delivery %u",dlvId);
+        }
+        if ( &(ptr->getUserInfo()) != &userInfo &&
+             !userInfo.hasRole(USERROLE_ADMIN)) {
+            throw InfosmeException(EXC_ACCESSDENIED,"access denied to delivery %u",dlvId);
+        }
+    }
     dlvMgr_->deleteDelivery(dlvId,bs.regIds);
     bindDeliveryRegions(bs);
 }
@@ -837,7 +846,6 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
 
 void InfosmeCoreV1::loadUsers( const char* userId )
 {
-    // FIXME: optimize smsc::util::config to load only one section
     std::vector< UserInfoPtr > uservec;
     try {
         if (!userId) throw InfosmeException(EXC_LOGICERROR,"loadUsers: NULL passed");

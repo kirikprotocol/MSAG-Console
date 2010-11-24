@@ -100,7 +100,7 @@ public:
                                                              msg,
                                                              0 );
         }
-        return !isDropped;
+        return true;
     }
 private:
     InputStorage&      is_;
@@ -169,11 +169,10 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
 
 void InputStorage::dropMessages( const std::vector<msgid_type>& msgids )
 {
-    // FIXME: optimize sort the vector outside please
+    // FIXME: optimize (skv) sort the vector outside please
     std::vector<msgid_type> msgIds(msgids);
     std::sort(msgIds.begin(),msgIds.end());
     blackList_->addMessages(msgIds);
-    // activityLog_->addDeleteRecords( currentTimeSeconds(), msgIds );
 }
 
 
@@ -293,7 +292,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
                    unsigned(getDlvId()),total,
                    formatRegionList(regs.begin(),regs.end()).c_str());
     // writing regions
-    // fixme: optimize (write via big buffer)
+    // FIXME: optimize (write regions via big buffer)
     smsc::core::buffers::TmpBuf<unsigned char,200> msgbuf;
     for ( std::vector<regionid_type>::const_iterator ir = regs.begin();
           ir != regs.end(); ++ir ) {
@@ -418,7 +417,6 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
             }
 
             try {
-                // FIXME: limit the number of reads in deleted storage!
                 FileReader fileReader(fg);
                 IReader recordReader(*this,msglist,ro,regId);
                 reqCount -= fileReader.readRecords(buf,recordReader,reqCount);

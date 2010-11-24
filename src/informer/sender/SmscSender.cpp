@@ -219,6 +219,7 @@ protected:
                 if (isStopping_) { break; }
                 journalReceiptData(rd);
                 smsc_log_debug(sender_.log_,"FIXME: optimize S='%s' place limit on throughput",sender_.smscId_.c_str());
+                sender_.receiptMon_.wait(30);
             } while (true);
             smsc_log_debug(sender_.log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
             if (!isStopping_) { rollOver(); }
@@ -1144,13 +1145,6 @@ void SmscSender::processExpiredTimers()
         queueData(rd);
     }
     rcptWaitQueue_.erase(rcptWaitQueue_.begin(), i);
-}
-
-
-void SmscSender::journalReceiptData( const ReceiptData& rd )
-{
-    assert(rd.responded);
-    // FIXME: journal receipt data
 }
 
 }
