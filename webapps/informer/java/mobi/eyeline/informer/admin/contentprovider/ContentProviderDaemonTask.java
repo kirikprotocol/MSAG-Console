@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * Date: 17.11.2010
  * Time: 18:29:48
  */
-public class ContentProviderDaemonTask implements Runnable {
+public class ContentProviderDaemonTask implements Runnable { // todo можно уменьшить видимость
   Logger log = Logger.getLogger(this.getClass());
   private AdminContext context;
   ContentProviderDaemon daemon;
@@ -68,7 +68,7 @@ public class ContentProviderDaemonTask implements Runnable {
     for(File f : files) {
       processUnfinished(u,f);
     }
-    for(File f : files) {
+    for(File f : files) { // todo Unfinished файлы не попадут в обработку.
       processUserFile(u,f);
     }
   }
@@ -177,6 +177,7 @@ public class ContentProviderDaemonTask implements Runnable {
       }
       catch (Exception e) {
         handleErrorProccessingFile(e, userDir, f, baseName);
+        //todo Если в процессе создания рассылки произошла ошибка, надо попытаться удалить рассылку, чтобы мусор не плодить.
       }
     }
   }

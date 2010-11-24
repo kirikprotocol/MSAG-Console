@@ -44,7 +44,7 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
     }
   };
 
-  public ContentProviderDaemon(AdminContext context, File informerBase, File workDir, FileSystem fileSys) throws AdminException {
+  public ContentProviderDaemon(AdminContext context, File informerBase, File workDir, FileSystem fileSys) throws AdminException {  // todo Плохая зависимость от AdminContext. Надо постараться убрать. По аналогии с Siebel.
     this.workDir = new File(workDir,"contentProvider");
     if(!fileSys.exists(this.workDir)) {
       fileSys.mkdirs(this.workDir);
@@ -126,7 +126,7 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
       ps.println(notification.getUserId());
       synchronized (this) {
         if(isStarted()) {
-          reportScheduler.schedule(new Runnable(){
+          reportScheduler.schedule(new Runnable(){  //todo Точно такой же Runnable созается в методе start. Предлагаю оформить всю логику по формированию отчетов в отдельном классе.
             public void run() {
               processNotifications();
             }
