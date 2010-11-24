@@ -259,7 +259,9 @@ void InfosmeCoreV1::addUser( const char* user )
 {
     smsc_log_debug(log_,"== addUser(%s)",user ? user : "");
     UserInfoPtr ptr = getUserInfo(user);
-    if (ptr.get()) throw InfosmeException(EXC_ALREADYEXIST,"user '%s' already exists",user);
+    if (ptr.get()) {
+        throw InfosmeException(EXC_ALREADYEXIST,"user '%s' already exists",user);
+    }
     loadUsers(user);
 }
 
@@ -271,9 +273,12 @@ void InfosmeCoreV1::deleteUser( const char* login )
     UserInfoPtr user;
     {
         MutexGuard mg(userLock_);
-        users_.Pop(login,user);
+        UserInfoPtr* ptr = users_.GetPtr(login);
+        if (ptr) { user = *ptr; }
     }
-    if (!user.get()) throw InfosmeException(EXC_NOTFOUND,"no such user '%s'",login);
+    if (!user || user->isDeleted() ) {
+        throw InfosmeException(EXC_NOTFOUND,"no such user '%s'",login);
+    }
 
     std::vector< DeliveryPtr > dlvs;
     user->getDeliveries( dlvs );
@@ -281,7 +286,7 @@ void InfosmeCoreV1::deleteUser( const char* login )
         (*i)->setState(DLVSTATE_CANCELLED);
         deleteDelivery(*user,(*i)->getDlvId());
     }
-    smsc_log_warn(log_,"U='%s' FIXME should we dump stats of the user after all dlvs stopped?",login);
+    user->setDeleted(true);
 }
 
 
@@ -291,7 +296,7 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
     if (!login) throw InfosmeException(EXC_LOGICERROR,"userid NULL passed");
     MutexGuard mg(userLock_);
     UserInfoPtr* ptr = users_.GetPtr(login);
-    if (!ptr) return UserInfoPtr();
+    if (!ptr || (*ptr)->isDeleted() ) return UserInfoPtr();
     return *ptr;
 }
 
@@ -304,7 +309,9 @@ void InfosmeCoreV1::getUsers( std::vector< UserInfoPtr >& users )
     char* userId;
     UserInfoPtr* user;
     for ( Hash< UserInfoPtr >::Iterator i(&users_); i.Next(userId,user); ) {
-        users.push_back(*user);
+        if (user && !(*user)->isDeleted()) {
+            users.push_back(*user);
+        }
     }
 }
 
@@ -905,6 +912,10 @@ void InfosmeCoreV1::loadUsers( const char* userId )
             users_.Insert((*i)->getUserId(),*i);
             smsc_log_info(log_,"new user U='%s' added",(*i)->getUserId());
         } else {
+            if ( (*olduser)->isDeleted() ) {
+                smsc_log_info(log_,"deleted user U='%s' is restored");
+                (*olduser)->setDeleted(false);
+            }
             (*olduser)->update(**i);
             smsc_log_info(log_,"user U='%s' updated",(*i)->getUserId());
         }

@@ -89,10 +89,18 @@ public:
     /// priority -- the more the better
     unsigned getPriority() const { return priority_; }
 
+    bool isDeleted() const { return isDeleted_; }
+
     void addRole( UserRole role );
 
     // roles are replaced by those of ruser.
     void update( const UserInfo& ruser );
+
+    // mark the user as deleted
+    void setDeleted( bool del ) {
+        MutexGuard mg(statLock_);
+        isDeleted_ = del;
+    }
 
     /// get current stats
     inline void getStats( UserDlvStats& stats ) {
@@ -127,6 +135,7 @@ private:
     uint64_t    roles_;
     unsigned    maxTotalDeliveries_;
     unsigned    priority_;
+    bool        isDeleted_;
 
     // statistics
     smsc::core::synchronization::Mutex statLock_;

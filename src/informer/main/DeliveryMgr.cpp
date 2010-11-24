@@ -818,7 +818,7 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
     try {
         userInfo.incStats(state);
     } catch (std::exception& e) {
-        // FIXME: move to paused?
+        // FIXME: implement when user exceeded dlvs - move to paused?
         throw InfosmeException(EXC_DLVLIMITEXCEED,"D=%u cannot set state, exc: %s",
                                dlvId,e.what());
     }
@@ -835,11 +835,6 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
     if (state == DLVSTATE_PLANNED && planTime) {
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
     }
-    /*
-    if (state == DLVSTATE_ACTIVE && planTime) {
-        deliveryStopQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
-    }
-     */
     mon_.notify();
 }
 

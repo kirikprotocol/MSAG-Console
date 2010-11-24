@@ -41,7 +41,8 @@ ref_(0),
 speedControl_(speed),
 roles_(0),
 maxTotalDeliveries_(totaldlv),
-priority_(priority)
+priority_(priority),
+isDeleted_(false)
 {
     getlog();
     assert(id && pwd);
