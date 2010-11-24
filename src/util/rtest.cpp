@@ -14,6 +14,7 @@
 #include "core/buffers/Hash.hpp"
 #include "util/sleep.h"
 #include "util/int.h"
+#include <locale.h>
 
 using namespace std;
 
@@ -45,6 +46,8 @@ void split(const string& str,char delim,vector<string>& out)
 int main(int argc,char* argv[])
 {
   if(argc!=4)return 0;
+  
+  setlocale(LC_CTYPE,"");
 
   smsc::logger::Logger::Init();
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("debug");
@@ -114,6 +117,8 @@ int main(int argc,char* argv[])
 
 
   rc.load("routes.xml");
+  rc.reload();
+  rm.enableTrace(true);
   smsc::system::loadRoutes(&rm,rc,true);
   vector<string> trc;
   rm.getTrace(trc);
@@ -202,6 +207,11 @@ int main(int argc,char* argv[])
     }else
     {
       printf("Not found\n");
+      rm.getTrace(trc);
+      for(vector<string>::iterator it=trc.begin();it!=trc.end();it++)
+      {
+        printf("trace:%s\n",it->c_str());
+      }
     }
     printf("Lookup time:%llu\n",lookup_end-lookup_start);
   }catch(std::exception& e)
