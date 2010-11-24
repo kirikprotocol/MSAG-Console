@@ -353,7 +353,8 @@ inputRoller_(0),
 storeRoller_(0),
 statsDumper_(0),
 logStateTime_(0),
-lastDlvId_(0)
+lastDlvId_(0),
+trafficSpeed_(cs_.getLicenseLimit())
 {
     smsc_log_debug(log_,"ctor");
 }
@@ -480,6 +481,10 @@ void DeliveryMgr::stop()
         stopping_ = true;
         mon_.notifyAll();
     }
+    {
+        MutexGuard mg(trafficMon_);
+        trafficMon_.notifyAll();
+    }
     if (inputRoller_) inputRoller_->WaitFor();
     if (storeRoller_) storeRoller_->WaitFor();
     if (statsDumper_) statsDumper_->WaitFor();
@@ -583,13 +588,27 @@ bool DeliveryMgr::receiveResponse( const DlvRegMsgId& drmId )
 
 void DeliveryMgr::incIncoming()
 {
-    smsc_log_error(log_,"FIXME: incIncoming() not impl");
+    // NOTE: we do nothing here right now as incOutgoing
+    // need not to be waked
 }
 
 
 void DeliveryMgr::incOutgoing( unsigned nchunks )
 {
-    smsc_log_error(log_,"FIXME: incOutgoing(%u) not impl",nchunks);
+    // NOTE: this code is taked from infosme v2
+    smsc_log_debug(log_,"incOutgoing(%u)",nchunks);
+    MutexGuard mg(trafficMon_);
+    trafficSpeed_.consumeQuant();
+    do {
+        const usectime_type currentTime = currentTimeMicro() % flipTimePeriod;
+        const usectime_type delay = trafficSpeed_.isReady(currentTime,maxSnailDelay);
+        if ( delay == 0 ) { break; }
+        if (stopping_) { break; }
+        int waitTime = int(delay / 1000) + 1;
+        smsc_log_debug(log_,"waiting %lluusec/%umsec on license",
+                       ulonglong(delay),waitTime);
+        trafficMon_.wait(waitTime);
+    } while (true);
 }
 
 

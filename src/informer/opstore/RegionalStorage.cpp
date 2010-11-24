@@ -133,7 +133,7 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
 
     if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return 6*tuPerSec; }
 
-    // fixme: return this date as next time.
+    // FIXME: optimize return this date as next time.
     if ( !info.checkActiveTime(weekTime) ) { return 5*tuPerSec; }
 
     /// check speed control
@@ -225,7 +225,7 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
     } while ( false );
 
     if (uploadNextResend && !resendTransferTask_) {
-        smsc_log_debug(log_,"FIXME: start upload next resend task here");
+        smsc_log_debug(log_,"FIXME: implement start upload next resend task here");
     }
 
     MsgLock ml(iter,this);
@@ -348,8 +348,8 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         m.timeLeft -= retryDelay;
         m.lastTime = currentTime + retryDelay;
         resendQueue_.insert( std::make_pair(m.lastTime,iter) );
-        // FIXME: check if resendQueue become very big and it have
-        // messages in the next+1 chunk, then start flush task.
+        // FIXME: impl check if resendQueue become very big, then start flush task.
+        // it should only happen if messages of the next+1 chunk are in the queue.
 
         mg.Unlock();
         const uint8_t prevState = m.state;
@@ -542,7 +542,7 @@ size_t RegionalStorage::rollOver()
             break;
         }
         mg.Lock();
-        // FIXME: calculate delay based on throughput restriction
+        // FIXME: optimize calculate delay based on throughput restriction
         cacheMon_.wait(30); 
     }
     return written;
@@ -687,7 +687,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
 void RegionalStorage::resendIO( bool isInputDirection )
 {
     /// this method is invoked from ResendTransferTask
-    smsc_log_debug(log_,"FIXME: R=%u/D=%u resend IO dir=%s",
+    smsc_log_debug(log_,"FIXME: R=%u/D=%u implement resend IO dir=%s",
                    regionId_, dlv_->getDlvInfo().getDlvId(),
                    isInputDirection ? "in" : "out");
 }

@@ -42,7 +42,7 @@ public:
                                 const smsc::util::config::Config& cv );
      */
 
-    InfosmeCoreV1();
+    InfosmeCoreV1( unsigned maxsms );
 
     virtual ~InfosmeCoreV1();
 

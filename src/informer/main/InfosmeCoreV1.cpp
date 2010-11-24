@@ -59,8 +59,9 @@ void readSmscConfig( const char*   name,
 namespace eyeline {
 namespace informer {
 
-InfosmeCoreV1::InfosmeCoreV1() :
+InfosmeCoreV1::InfosmeCoreV1( unsigned maxsms ) :
 log_(smsc::logger::Logger::getInstance("core")),
+cs_(maxsms),
 stopping_(false),
 started_(false),
 dlvMgr_(0),
@@ -867,28 +868,25 @@ void InfosmeCoreV1::loadUsers( const char* userId )
             std::auto_ptr<Config> roles;
             try { roles.reset(uc->getSubConfig("ROLES",true)); } catch (...) {}
             // reading user
-            unsigned priority = 1;
-            try { priority = uc->getInt("priority"); } catch (...) {}
-            unsigned speed = 1;
-            try { speed = uc->getInt("smsPerSec"); } catch (...) {}
-            const unsigned totaldlv = 100;
+            ConfigWrapper cwrap(*uc,log_);
+            const unsigned priority = cwrap.getInt("priority",1,1,100);
+            const unsigned speed = cwrap.getInt("smsPerSec",1,1,1000);
+            const unsigned totaldlv = cwrap.getInt("totalDeliveries",100,0,20000);
+            const std::string password = cwrap.getString("password");
             uservec.push_back(UserInfoPtr(new UserInfo(i->c_str(),
-                                                       uc->getString("password"),
+                                                       password.c_str(),
                                                        priority,
                                                        speed,
                                                        totaldlv )));
             UserInfoPtr& user = uservec.back();
             if (roles.get()) {
-                try {
-                    if (uc->getBool("informer-admin")) {
-                        user->addRole(USERROLE_ADMIN);
-                    }
-                } catch (...) {}
-                try {
-                    if (uc->getBool("informer-user")) {
-                        user->addRole(USERROLE_USER);
-                    }
-                } catch (...) {}
+                ConfigWrapper rolecfg(*roles,log_);
+                if ( rolecfg.getBool("informer-admin",false) ) {
+                    user->addRole(USERROLE_ADMIN);
+                }
+                if ( rolecfg.getBool("informer-user",true) ) {
+                    user->addRole(USERROLE_USER);
+                }
             } else {
                 user->addRole(USERROLE_USER);
             }

@@ -191,9 +191,9 @@ int main( int argc, char** argv )
             sigset(SIGPIPE, SIG_IGN);
 
             // license
-            checkLicenseFile();
+            const unsigned maxsms = checkLicenseFile();
 
-            core.reset( new InfosmeCoreV1 );
+            core.reset( new InfosmeCoreV1(maxsms) );
             core->init();
 
             // enter main loop

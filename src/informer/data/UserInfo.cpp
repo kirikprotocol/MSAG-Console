@@ -112,6 +112,8 @@ void UserInfo::addRole( UserRole role )
     if (unsigned(role) >= sizeof(userroles)/sizeof(userroles[0]) ) {
         throw InfosmeException(EXC_NOTFOUND,"U='%s' wrong role %u",userId_.c_str(),unsigned(role));
     }
+    smsc_log_debug(log_,"U='%s' setting role '%u'",
+                   userId_.c_str(), userroles[unsigned(role)] );
     roles_ |= userroles[unsigned(role)];
 }
 

@@ -10,9 +10,10 @@ namespace informer {
 
 CommonSettings* CommonSettings::instance_ = 0;
 
-CommonSettings::CommonSettings() :
+CommonSettings::CommonSettings( unsigned licenseLimit ) :
 utf8_(0),
-incStatBank_(0)
+incStatBank_(0),
+licenseLimit_(licenseLimit)
 {
     assert(instance_ == 0);
     instance_ = this;

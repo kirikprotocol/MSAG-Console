@@ -4,6 +4,7 @@
 #include <memory>
 #include "core/threads/Thread.hpp"
 #include "informer/data/DeliveryInfo.h"
+#include "informer/data/SpeedControl.h"
 #include "informer/io/Typedefs.h"
 #include "informer/newstore/InputJournal.h"
 #include "informer/opstore/DeliveryImpl.h"
@@ -109,6 +110,9 @@ private:
     ulonglong                                     logStateTime_;
     FileGuard                                     logStateFile_;
     dlvid_type                                    lastDlvId_;
+
+    smsc::core::synchronization::EventMonitor     trafficMon_;
+    SpeedControl<usectime_type,tuPerSec>          trafficSpeed_;
 };
 
 } // informer

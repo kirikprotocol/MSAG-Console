@@ -23,7 +23,7 @@ class CommonSettings
 public:
     inline static const CommonSettings* getCS() { return instance_; }
 
-    CommonSettings();
+    CommonSettings( unsigned licenseLimit );
     ~CommonSettings();
 
     // void init( const std::string& path, const std::string& statpath );
@@ -108,6 +108,10 @@ public:
         return timediff_type(validityPeriodDefault_);
     }
 
+    inline unsigned getLicenseLimit() const {
+        return licenseLimit_;
+    }
+
     // --- non-configurable parameters
 
     /// return a length of period (second) to split resend messages into.
@@ -138,6 +142,7 @@ private:
     unsigned    incStatBank_;
 
     std::string svcType_;
+    unsigned licenseLimit_;
     unsigned inputJournalRollingPeriod_;
     unsigned inputMinQueueSize_;
     unsigned inputTransferChunkSize_;
