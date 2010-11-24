@@ -291,7 +291,7 @@ public:
   {
     bool rval = enlarge(use_num);
     if (rval) { //copy elements
-      LWArrayTraits<_TArg>::copy(_buf + _numElem, use_arr, use_num);
+      LWArrayTraits<_TArg>::construct(_buf + _numElem, use_arr, use_num);
       _numElem += use_num;
     }
     return rval;
@@ -375,6 +375,9 @@ public:
 
   LWArrayExtension_T & operator= (const LWArrayExtension_T & use_arr) //throw()
   {
+    if (this == &use_arr)
+      return *this;
+
     clear();
     append(use_arr); //cann't fail here
     return *this;
@@ -485,10 +488,27 @@ public:
     _stack._alignedPtr = 0;
     append(use_arr); //NOTE: here append() cann't fail
   }
+  template <_SizeTypeArg _SZArg>
+  LWArray_T(const LWArray_T<_TArg, _SizeTypeArg, _SZArg>& use_arr) //throw()
+    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
+  {
+    _stack._alignedPtr = 0;
+    append(use_arr); //NOTE: here append() cann't fail
+  }
+
   ~LWArray_T()
   {
     if (!this->isHeapBuf()) //elements on private stack were never moved, so destroy them
       this->clear();
+  }
+
+  LWArray_T & operator= (const LWArray_T& use_arr) //throw()
+  {
+    if (this == &use_arr)
+      return *this;
+    this->clear();
+    append(use_arr.get(), use_arr.size()); //cann't fail here
+    return *this;
   }
 
   template <_SizeTypeArg _SZArg>
