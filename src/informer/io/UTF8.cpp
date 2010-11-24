@@ -15,7 +15,14 @@ smsc::logger::Logger* log_ = 0;
 UTF8::UTF8() :
 conv_(iconv_t(-1))
 {
-    conv_ = iconv_open("UCS-2","UTF-8");
+    // NOTE: damn sunos places BOM in ucs2 sequence when converting utf8->ucs2
+    // To avoid this we have to specify explicitly ucs-2be/ucs-2le according to the arch.
+    union {
+        uint8_t bytes[2];
+        uint16_t words[1];
+    } test;
+    test.words[0] = 0xff00;
+    conv_ = iconv_open( test.bytes[0] == 0xff ? "UCS-2BE" : "UCS-2LE","UTF-8" );
     if (conv_ == iconv_t(-1)) {
         throw ErrnoException(errno,"iconv_open");
     }
