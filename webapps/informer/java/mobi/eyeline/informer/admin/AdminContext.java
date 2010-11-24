@@ -853,7 +853,9 @@ public class AdminContext {
         siebelFinalStateListener.setPeriodSec(Integer.parseInt(props.getProperty(SiebelFinalStateListener.PERIOD_PARAM)));
         siebelManager.stop();
         try {
-          siebelManager.start(user, props);
+          Properties _p = new Properties();
+          _p.putAll(props);
+          siebelManager.start(user, _p);
           if(!siebelFinalStateListener.isStarted()) {
             siebelFinalStateListener.start();
           }

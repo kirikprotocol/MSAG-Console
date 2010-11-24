@@ -155,22 +155,21 @@ public class JournalController extends InformerController {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
 
         // Сортируем записи
-        if (sortOrder != null) {
-          final int mul = sortOrder.isAsc() ? 1 : -1;
-          Collections.sort(records, new Comparator<JournalRecord>() {
-            public int compare(JournalRecord o1, JournalRecord o2) {
-              if (sortOrder.getColumnId().equals("user")) {
-                return mul * o1.getUser().compareTo(o2.getUser());
-              } else if (sortOrder.getColumnId().equals("subject")) {
-                Locale l = getLocale();
-                return mul * o1.getSubject().getSubject(l).compareTo(o2.getSubject().getSubject(l));
-              } else if (sortOrder.getColumnId().equals("time")) {
-                return o1.getTime() >= o2.getTime() ? mul : -mul;
-              }
-              return 0;
+        final int mul = sortOrder == null ? -1 : sortOrder.isAsc() ? 1 : -1;
+        Collections.sort(records, new Comparator<JournalRecord>() {
+          public int compare(JournalRecord o1, JournalRecord o2) {
+            if (sortOrder == null || sortOrder.getColumnId().equals("time")) {
+              return o1.getTime() >= o2.getTime() ? mul : -mul;
+            }else if (sortOrder.getColumnId().equals("user")) {
+              return mul * o1.getUser().compareTo(o2.getUser());
+            } else if (sortOrder.getColumnId().equals("subject")) {
+              Locale l = getLocale();
+              return mul * o1.getSubject().getSubject(l).compareTo(o2.getSubject().getSubject(l));
             }
-          });
-        }
+            return 0;
+          }
+        });
+
 
         List<JournalTableRow> result = new ArrayList<JournalTableRow>(records.size());
         Locale l = getLocale();
