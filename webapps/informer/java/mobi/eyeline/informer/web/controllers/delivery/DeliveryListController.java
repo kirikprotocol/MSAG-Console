@@ -20,7 +20,7 @@ public class DeliveryListController extends DeliveryController {
 
   private String status;
 
-  private boolean init = false;
+  private boolean init = true;
 
   private List<String> selected;
 

@@ -41,7 +41,7 @@
 
       <eye:dataTable value="#{journal.records}" var="rec" rendered="#{journal.init}">
         <eye:row>
-          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="15%" align="center">
+          <eye:column name="time" title="#{msg['journal.page.time']}" sortable="true" width="15%" align="center" defaultSortOrder="desc">
             <h:outputText value="#{rec.date}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </h:outputText>
