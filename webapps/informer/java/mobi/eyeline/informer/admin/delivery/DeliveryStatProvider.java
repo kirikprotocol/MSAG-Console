@@ -32,7 +32,7 @@ class DeliveryStatProvider {
     baseDir = directory;
     this.fileSys = fileSys;
     this.subDirNameFormat = subDirNamePattern;
-    this.filePathFormat = subDirNameFormat + File.separatorChar + "HH'.csv'";
+    this.filePathFormat = subDirNameFormat + File.separatorChar + "'msg'HH'.log'";
   }
 
   /**

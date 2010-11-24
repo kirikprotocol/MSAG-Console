@@ -87,7 +87,7 @@ public class DcpConverterTest {
     mi.setText("sms_text");
     mi.setState(mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMessageState.Failed);
     mi.setUserData("user=data");
-    MessageInfo info = DcpConverter.convert(mi, null);
+    MessageInfo info = DcpConverter.convert(mi);
     assertEquals(mi.getAbonent(), info.getAbonent());
     assertEquals(DcpConverter.convertDate(mi.getDate()), info.getDate());
     assertNotNull(info.getErrorCode());

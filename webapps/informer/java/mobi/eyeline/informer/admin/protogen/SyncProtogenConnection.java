@@ -68,6 +68,7 @@ public abstract class SyncProtogenConnection {
 
     for (T resp : expectedResponsesInst) {
       if (resp.getTag() == tag) {
+        resp.setSeqNum(seqNum);
         resp.decode(buffer);
         return resp;
       }

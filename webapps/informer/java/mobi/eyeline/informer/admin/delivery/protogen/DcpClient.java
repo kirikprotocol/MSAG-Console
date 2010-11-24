@@ -9,6 +9,8 @@ import mobi.eyeline.protogen.framework.PDU;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Aleksandr Khalitov
@@ -19,7 +21,7 @@ public class DcpClient extends SyncProtogenConnection {
 
   private static final int RESPONSE_TIMEOUT = 5000;
 
-
+  private final Lock lock = new ReentrantLock();
   private final String login;
   private final String password;
 
@@ -45,6 +47,10 @@ public class DcpClient extends SyncProtogenConnection {
   private <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
     FailResponse fail = new FailResponse();
     try {
+      lock.lock();
+      if (log.isDebugEnabled())
+        log.debug("Dcp Connection locked: login=" + login);
+
       PDU resp;
       resp = request(request, response, fail);
       
@@ -55,6 +61,10 @@ public class DcpClient extends SyncProtogenConnection {
       throw new DeliveryException("dcp_server_offline");
     } catch (IOException e) {
       throw new DeliveryException("interaction_error", e, e.getMessage());
+    } finally {
+      lock.unlock();
+      if (log.isDebugEnabled())
+        log.debug("Dcp Connection unlocked: login=" + login);
     }
   }
 

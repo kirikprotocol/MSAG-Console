@@ -48,9 +48,6 @@ public class DeliveryManager {
       connection = createConnection(host, port, login, password);
       pool.put(u, connection);
     }
-//    if (!connection.isConnected()) {
-//      throw new DeliveryException("connection_lost");
-//    }
     return connection;
   }
 
@@ -457,10 +454,10 @@ public class DeliveryManager {
     }
     DcpConnection conn = getDeliveryConnection(login, password);
     int _reqId = conn.getMessages(filter);
-    final Delivery d = conn.getDelivery(filter.getDeliveryId());
+
     new DeliveryDataSource<MessageInfo>(_pieceSize, _reqId, conn) {
       protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<MessageInfo> result) throws AdminException {
-        return connection.getNextMessages(reqId, pieceSize, d, result);
+        return connection.getNextMessages(reqId, pieceSize, result);
       }
     }.visit(visitor);
   }

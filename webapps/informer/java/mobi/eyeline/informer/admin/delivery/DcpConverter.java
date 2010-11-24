@@ -151,7 +151,8 @@ public class DcpConverter {
       return null;
     }
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState result = new DeliveryState();
-    result.setDate(convertDate(ds.getDate()));
+    if (ds.getDate() != null)
+      result.setDate(convertDate(ds.getDate()));
     result.setStatus(convert(ds.getStatus()));
     return result;
   }
@@ -167,7 +168,7 @@ public class DcpConverter {
     return result;
   }
 
-  public static MessageInfo convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi, String text) throws AdminException {
+  public static MessageInfo convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi) throws AdminException {
     if (mi == null) {
       return null;
     }
@@ -185,11 +186,9 @@ public class DcpConverter {
     if (mi.hasState()) {
       result.setState(convert(mi.getState()));
     }
-    if (text == null && mi.hasText()) {
+    if (mi.hasText())
       result.setText(mi.getText());
-    } else {
-      result.setText(text);
-    }
+    
     if (mi.hasUserData()) {
       result.addProperties(convertUserData(mi.getUserData()));
     }
@@ -452,7 +451,7 @@ public class DcpConverter {
     }
     List<DeliveryStatusHistory.Item> items = new ArrayList<DeliveryStatusHistory.Item>(history.length);
     for (DeliveryHistoryItem i : history) {
-      items.add(new DeliveryStatusHistory.Item(convertDate(i.getDate()), convert(i.getStatus())));
+      items.add(new DeliveryStatusHistory.Item(convertDateYY(i.getDate()), convert(i.getStatus())));
     }
     return new DeliveryStatusHistory(deliveryId, items);
   }

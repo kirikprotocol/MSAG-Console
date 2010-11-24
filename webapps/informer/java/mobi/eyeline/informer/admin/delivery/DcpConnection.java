@@ -4,16 +4,12 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields;
-import mobi.eyeline.informer.admin.protogen.SyncProtogenConnection;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Коннект к DCP, упрвление рассылками
@@ -22,45 +18,14 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class DcpConnection {
 
-  private static final Logger logger = Logger.getLogger(DcpConnection.class);
-
   private DcpClient client;
-
-  private Lock lock;
 
   public DcpConnection(String host, int port, final String login, String password) throws AdminException {
     this.client = new DcpClient(host, port, login, password);
-
-    lock = new ReentrantLock() {
-      @Override
-      public void lock() {
-        super.lock();
-        if (logger.isDebugEnabled()) {
-          logger.debug("Dcp Connection locked: login=" + login);
-        }
-      }
-
-      @Override
-      public void unlock() {
-        super.unlock();
-        if (logger.isDebugEnabled()) {
-          logger.debug("Dcp Connection unlocked: login=" + login);
-        }
-      }
-    };
   }
 
   protected DcpConnection() {
   }
-
-  /**
-   * Соединение установлено
-   *
-   * @return true - да, false - нет
-   */
-//  public boolean isConnected() {
-//    return client.isConnected();
-//  }
 
   /**
    * Закрывает соединение
@@ -77,27 +42,22 @@ public class DcpConnection {
    * @throws AdminException ошибка выполнения команды
    */
   public int createDelivery(Delivery delivery) throws AdminException {
+    if (delivery.getSingleText() != null)
+      delivery.setProperty("singleText", "true");
+    
     CreateDelivery req = new CreateDelivery();
     req.setInfo(DcpConverter.convert(delivery));
-    CreateDeliveryResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+
+
+    CreateDeliveryResp resp = client.send(req);
+
     if (delivery.getSingleText() != null) {
       ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
       reqG.setDeliveryId(resp.getDeliveryId());
       DeliveryGlossary glossary = new DeliveryGlossary();
       glossary.setMessages(new String[]{delivery.getSingleText()});
       reqG.setGlossary(glossary);
-      try {
-        lock.lock();
-        client.send(reqG);
-      } finally {
-        lock.unlock();
-      }
+      client.send(reqG);
     }
     return resp.getDeliveryId();
   }
@@ -115,13 +75,7 @@ public class DcpConnection {
     AddDeliveryMessages req = new AddDeliveryMessages();
     req.setDeliveryId(deliveryId);
     req.setMessages(DcpConverter.convert(messages));
-    AddDeliveryMessagesResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    AddDeliveryMessagesResp resp = client.send(req);
     return resp.getMessageIds();
   }
 
@@ -138,13 +92,7 @@ public class DcpConnection {
     AddDeliveryMessages req = new AddDeliveryMessages();
     req.setDeliveryId(deliveryId);
     req.setMessages(DcpConverter.convert(addresses));
-    AddDeliveryMessagesResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    AddDeliveryMessagesResp resp = client.send(req);
     return resp.getMessageIds();
   }
 
@@ -158,24 +106,14 @@ public class DcpConnection {
     ModifyDelivery req = new ModifyDelivery();
     req.setDeliveryId(delivery.getId());
     req.setInfo(DcpConverter.convert(delivery));
-    try {
-      lock.lock();
-      client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    client.send(req);
     if (delivery.getType() == Delivery.Type.SingleText) {
       ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
       reqG.setDeliveryId(delivery.getId());
       DeliveryGlossary glossary = new DeliveryGlossary();
       glossary.setMessages(new String[]{delivery.getSingleText()});
       reqG.setGlossary(glossary);
-      try {
-        lock.lock();
-        client.send(reqG);
-      } finally {
-        lock.unlock();
-      }
+      client.send(reqG);
     }
   }
 
@@ -188,12 +126,7 @@ public class DcpConnection {
   public void dropDelivery(int deliveryId) throws AdminException {
     DropDelivery req = new DropDelivery();
     req.setDeliveryId(deliveryId);
-    try {
-      lock.lock();
-      client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    client.send(req);
   }
 
   /**
@@ -230,13 +163,7 @@ public class DcpConnection {
       }
     }
     req.setFilter(f);
-    CountDeliveriesResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    CountDeliveriesResp resp = client.send(req);
     return resp.getResult();
   }
 
@@ -251,12 +178,7 @@ public class DcpConnection {
     DropDeliveryMessages req = new DropDeliveryMessages();
     req.setMessageIds(messageIds);
     req.setDeliveryId(deliveryId);
-    try {
-      lock.lock();
-      client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    client.send(req);
   }
 
   /**
@@ -269,13 +191,7 @@ public class DcpConnection {
   public Delivery getDelivery(int deliveryId) throws AdminException {
     GetDeliveryInfo req = new GetDeliveryInfo();
     req.setDeliveryId(deliveryId);
-    GetDeliveryInfoResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    GetDeliveryInfoResp resp = client.send(req);
     if (!resp.hasInfo()) {
       return null;
     }
@@ -287,12 +203,7 @@ public class DcpConnection {
       GetDeliveryGlossary reqG = new GetDeliveryGlossary();
       GetDeliveryGlossaryResp respG;
       reqG.setDeliveryId(deliveryId);
-      try {
-        lock.lock();
-        respG = client.send(reqG);
-      } finally {
-        lock.unlock();
-      }
+      respG = client.send(reqG);
       return DcpConverter.convert(deliveryId, info, respG.getGlossary().getMessages());
     }
   }
@@ -308,12 +219,7 @@ public class DcpConnection {
     ChangeDeliveryState req = new ChangeDeliveryState();
     req.setDeliveryId(deliveryId);
     req.setState(DcpConverter.convert(state));
-    try {
-      lock.lock();
-      client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    client.send(req);
   }
 
   /**
@@ -327,12 +233,7 @@ public class DcpConnection {
     GetDeliveryState req = new GetDeliveryState();
     req.setDeliveryId(deliveryId);
     GetDeliveryStateResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    resp = client.send(req);
     return DcpConverter.convert(resp.getStats(), resp.getState());
   }
 
@@ -386,13 +287,7 @@ public class DcpConnection {
     req.setResultFields(fs);
     req.setFilter(f);
 
-    GetDeliveriesListResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    GetDeliveriesListResp resp = client.send(req);
     return resp.getReqId();
   }
 
@@ -410,12 +305,7 @@ public class DcpConnection {
     req.setReqId(reqId);
     req.setCount(pieceSize);
     GetDeliveriesListNextResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    resp = client.send(req);
     if (resp.getInfo() != null) {
       for (DeliveryListInfo di : resp.getInfo()) {
         deliveries.add(DcpConverter.convert(di));
@@ -458,13 +348,7 @@ public class DcpConnection {
         req.setCodeFilter(codes);
       }
     }
-    RequestMessagesStateResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    RequestMessagesStateResp resp = client.send(req);
     return resp.getReqId();
   }
 
@@ -473,26 +357,18 @@ public class DcpConnection {
    *
    * @param reqId     идентификатор запроса
    * @param pieceSize максимальное кол-во извлекаемых сообщений
-   * @param delivery  рассылка
    * @param messages  куда следуют сложить сообщения
    * @return есть ли ещё сообщения
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextMessages(int reqId, int pieceSize, Delivery delivery, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException {
+  public boolean getNextMessages(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException {
     GetNextMessagesPack req = new GetNextMessagesPack();
     req.setReqId(reqId);
     req.setCount(pieceSize);
-    GetNextMessagesPackResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    GetNextMessagesPackResp resp = client.send(req);
     if (resp.getInfo() != null) {
       for (mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
-        messages.add(DcpConverter.convert(mi,
-            delivery.getType() == Delivery.Type.SingleText ? delivery.getSingleText() : null));
+        messages.add(DcpConverter.convert(mi));
       }
     }
     return resp.getMoreMessages();
@@ -527,13 +403,7 @@ public class DcpConnection {
         req.setCodeFilter(codes);
       }
     }
-    CountMessagesResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    CountMessagesResp resp = client.send(req);
     return resp.getCount();
   }
 
@@ -547,13 +417,7 @@ public class DcpConnection {
   public DeliveryStatusHistory getDeliveryHistory(int deliveryId) throws AdminException {
     GetDeliveryHistory req = new GetDeliveryHistory();
     req.setDeliveryId(deliveryId);
-    GetDeliveryHistoryResp resp;
-    try {
-      lock.lock();
-      resp = client.send(req);
-    } finally {
-      lock.unlock();
-    }
+    GetDeliveryHistoryResp resp = client.send(req);
     return DcpConverter.convert(deliveryId, resp.getHistory());
   }
 
