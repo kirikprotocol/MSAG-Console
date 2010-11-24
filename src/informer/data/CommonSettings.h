@@ -104,8 +104,8 @@ public:
     }
 
     /// default validity period for each message (initial TTL)
-    inline timediff_type getValidityPeriod() const {
-        return 3600; // fixme
+    inline timediff_type getValidityPeriodDefault() const {
+        return timediff_type(validityPeriodDefault_);
     }
 
     // --- non-configurable parameters
@@ -152,6 +152,7 @@ private:
     unsigned skippedIdsMinCacheSize_;
     unsigned slicedMessageSize_;
     unsigned unrespondedMessagesMax_;
+    unsigned validityPeriodDefault_;
 };
 
 inline const CommonSettings* getCS() { return CommonSettings::getCS(); }
