@@ -98,14 +98,20 @@ void ActionContext::clearLongCallContext()
 
 void ActionContext::setContextScope( int id )
 {
-    __require__( session_->getCurrentOperation() );
+    if (!session_->getCurrentOperation()) {
+        throw Exception("setCtxScope: session has no operation %s",
+                        session_->sessionKey().toString().c_str() );
+    }
     session_->getCurrentOperation()->setContextScope( id );
 }
 
 
 int ActionContext::getContextScope() const
 {
-    __require__( session_->getCurrentOperation() );
+    if (!session_->getCurrentOperation()) {
+        throw Exception("getCtxScope: session has no operation %s",
+                        session_->sessionKey().toString().c_str() );
+    }
     return session_->getCurrentOperation()->getContextScope();
 }
 
@@ -134,7 +140,10 @@ Property* ActionContext::getProperty( const std::string& var )
     }
 
     case ftContext: {
-        __require__( session_->getCurrentOperation() );
+        if ( !session_->getCurrentOperation()) {
+            throw Exception("getProperty(context): session has no operation %s",
+                            session_->sessionKey().toString().c_str() );
+        }
         scope = session_->getContextScope( session_->getCurrentOperation()->getContextScope() );
         break;
     }

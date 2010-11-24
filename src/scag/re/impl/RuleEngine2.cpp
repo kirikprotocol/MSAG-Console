@@ -1,6 +1,5 @@
 #include <sys/types.h>
 #include <dirent.h>
-#include <cassert>
 
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/TransService.hpp>
@@ -203,7 +202,10 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
 
         if ( session.getLongCallContext().continueExec ) {
             // take rule from action context
-            __require__( session.getLongCallContext().getActionContext() );
+            if ( !session.getLongCallContext().getActionContext() ) {
+                throw Exception("process(continue): session has no action context %s",
+                                session.sessionKey().toString().c_str() );
+            }
             smsc_log_debug(logger,"taking rule from actionContext");
             rulePtr = session.getLongCallContext().getActionContext()->getRule();
         } else {
@@ -286,8 +288,6 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
         if ( ! session.getRuleKey(key.serviceId, key.transport) ) break;
 
         // isNew may be not set in case of failure from long call
-        // assert( ! session.isNew(key.serviceId, key.transport) );
-        // make sure 
         if ( session.isNew( key.serviceId, key.transport ) ) {
             smsc_log_warn( logger, "session=%p/%s didn't finish init svc/trans=%d/%d",
                            &session, session.sessionKey().toString().c_str(),
@@ -297,7 +297,10 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
         }
 
         if ( session.getLongCallContext().continueExec ) {
-            __require__( session.getLongCallContext().getActionContext() );
+            if ( !session.getLongCallContext().getActionContext() ) {
+                throw Exception("processSession(continue): session has no action context %s",
+                                session.sessionKey().toString().c_str() );
+            }
             smsc_log_debug(logger,"taking rule from actionContext");
             rulePtr = session.getLongCallContext().getActionContext()->getRule();
         } else {

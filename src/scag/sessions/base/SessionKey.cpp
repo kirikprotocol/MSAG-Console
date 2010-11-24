@@ -1,4 +1,3 @@
-#include <cassert>
 #include <sys/time.h>
 // #include "sms/sms.h"
 #include "SessionKey.h"
@@ -142,7 +141,9 @@ void SessionPrimaryKey::setBornTime( const timeval& tv )
 {
     borntime_ = tv;
     const char* p = strrchr( key_.c_str(), '/' );
-    assert( p );
+    if (!p) {
+        throw Exception("born time has no '/'");
+    }
     key_.erase( p - key_.c_str() );
     addtokey();
 }

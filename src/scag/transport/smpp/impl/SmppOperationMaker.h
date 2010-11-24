@@ -1,7 +1,6 @@
 #ifndef _SCAG_TRANSPORT_SMPP_SMPPOPERATIONMAKER_H
 #define _SCAG_TRANSPORT_SMPP_SMPPOPERATIONMAKER_H
 
-#include <cassert>
 #include "scag/transport/CommandOperation.h"
 #include "scag/re/base/RuleStatus2.h"
 #include "scag/re/base/ActionContext2.h"
@@ -36,7 +35,6 @@ public:
 
     ~SmppOperationMaker() {
         // NOTE: postproc_ may be not set, in case of failure in setupOperation()
-        // assert( postproc_ );
     }
 
     /// process command/session:

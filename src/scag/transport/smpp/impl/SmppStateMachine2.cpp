@@ -1,4 +1,3 @@
-#include <cassert>
 #include "SmppManager2.h"
 #include "SmppStateMachine2.h"
 #include "scag/transport/smpp/common/SmppUtil.h"
@@ -90,7 +89,11 @@ struct StateMachine::ResponseRegistry
     {
         if (!cmd) return false;
         CommandId cmdid( CommandId(cmd->getCommandId()) );
-        assert( cmdid == SUBMIT || cmdid == DELIVERY || cmdid == DATASM );
+        if ( cmdid != SUBMIT &&
+             cmdid != DELIVERY &&
+             cmdid != DATASM ) {
+            throw Exception("command is not submit/delivery/datasm");
+        }
 
         RegKey key(uid, seq);
         sync::MutexGuard mg(mtx);

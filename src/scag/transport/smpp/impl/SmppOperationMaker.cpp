@@ -29,7 +29,9 @@ postproc_(false),
 currentTime_(time(0)),
 log_(logger)
 {
-    assert( cmd_.get() && session_.get() );
+    if ( !cmd_.get() || !session_.get() ) {
+        throw Exception("cmd or session is NULL");
+    }
     SMS* sms = cmd_->get_sms();
     if ( !sms ) {
         smsc_log_debug(log_,"sms not found in command %p", cmd_.get());

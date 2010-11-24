@@ -1,5 +1,4 @@
 #include <set>
-#include <cassert>
 // #include <cstdlib>      // for abort
 #include <sys/time.h>
 
@@ -160,7 +159,9 @@ protected:
         if ( np ) {
             properties_.Insert( name.c_str(), np );
         } else {
-            assert(p);
+            if (!p) {
+                throw Exception("processReadonly: p is not set");
+            }
             np = *p;
         }
         smsc_log_debug( log_, "readonly property '%s' has value '%s'",
@@ -257,7 +258,9 @@ Serializer& SessionPropertyScope::serialize( Serializer& o ) const
                 o << key << value->getStr().c_str();
             }
         }
-        assert( sz == 0 );
+        if (sz!=0) {
+            throw Exception("serialize: sz is not 0");
+        }
     }
     return o;
 }
@@ -432,7 +435,10 @@ Serializer& Session::serialize( Serializer& s ) const
         uint64_t(expirationTime_) <<
         uint64_t(expirationTimeAtLeast_);
 
-    assert( ! lcmCtx_.continueExec );
+    if ( lcmCtx_.continueExec ) {
+        throw Exception("serializing session with active longcall %s",
+                        sessionKey().toString().c_str() );
+    }
 
     // services init/destroy fields
     uint32_t count = uint32_t(initrulekeys_.size());
@@ -445,7 +451,9 @@ Serializer& Session::serialize( Serializer& s ) const
         const uint32_t transport( i->second );
         s << service << transport << uint8_t(isNew(service,transport));
     }
-    assert( count == 0 );
+    if ( count != 0 ) {
+        throw Exception("serialize: service count differ %s",sessionKey().toString().c_str());
+    }
 
     s << currentOperationId_ << ussdOperationId_;
     
@@ -460,7 +468,9 @@ Serializer& Session::serialize( Serializer& s ) const
             if ( opid_type(key) != invalidOpId() )
                 value->serialize( s );
         }
-        assert( count == 0 );
+        if ( count != 0 ) {
+            throw Exception("serialize: op count differ %s",sessionKey().toString().c_str());
+        }
     }
 
     count = transactions_ ? transactions_->GetCount() : 0;
@@ -1121,7 +1131,10 @@ void Session::serializeScopeHash( Serializer& o, const IntHash< SessionPropertyS
         o << uint32_t(key);
         serializeScope(o,value);
     }
-    assert( sz == 0 );
+    if ( sz != 0 ) {
+        throw Exception("serializing session scopes: sz not 0 %s",
+                        sessionKey().toString().c_str() );
+    }
 }
 
 

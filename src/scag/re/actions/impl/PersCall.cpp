@@ -1,3 +1,4 @@
+#include <cassert>
 #include "PersCall.h"
 #include "scag/lcm/base/LongCallManager2.h"
 #include "scag/pvss/api/packets/ErrorResponse.h"
