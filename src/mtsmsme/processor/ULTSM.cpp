@@ -56,7 +56,8 @@ void ULTSM::CONTINUE_received(uint8_t cdlen,
 
 void ULTSM::END_received(Message& msg)
 {
-  if(listener) listener->complete(1);
+  //if(listener) listener->complete(1);
+  if(listener) listener->complete(msg);
   TSM::END_received(msg);
 }
 void ULTSM::expiredwdtimer(uint32_t secret)

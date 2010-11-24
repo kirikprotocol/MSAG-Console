@@ -107,6 +107,7 @@ class UpdateLocationTask: public TsmComletionListener{
     }
     bool isCompleted() { return (status != 0); }
     virtual void complete(int _status) { changeStatus(_status); }
+    virtual void complete(Message& msg) { changeStatus(1) }
 };
 SubscriberRegistrator::SubscriberRegistrator(TCO* _coordinator)
 {
