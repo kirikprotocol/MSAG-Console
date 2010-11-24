@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotification;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 
@@ -25,7 +24,9 @@ import java.util.concurrent.TimeUnit;
  * Time: 16:21:41
  */
 public class ContentProviderDaemon extends DeliveryNotificationsAdapter implements Daemon  {
+
   Logger log = Logger.getLogger(this.getClass());
+
   private ScheduledExecutorService scheduler;
   private ScheduledExecutorService reportScheduler;
   static final String NAME = "ContentProviderDaemon";
@@ -36,13 +37,12 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
   AdminContext context;
   File informerBase;
   File workDir;
-
-
   private static ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>(){
     @Override protected DateFormat initialValue() {
       return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
     }
   };
+
 
   public ContentProviderDaemon(AdminContext context, File informerBase, File workDir, FileSystem fileSys) throws AdminException {  // todo Плохая зависимость от AdminContext. Надо постараться убрать. По аналогии с Siebel.
     this.workDir = new File(workDir,"contentProvider");
@@ -67,7 +67,7 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
     });
 
     scheduler.scheduleAtFixedRate(
-        new ContentProviderDaemonTask(context,this,fileSys),
+        new ContentProviderImportTask(context,this,fileSys),
         0,
         PERIOD_MSEC,
         TimeUnit.MILLISECONDS
@@ -80,11 +80,7 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
       }
     });
 
-    reportScheduler.schedule(new Runnable(){
-      public void run() {
-        processNotifications();
-      }
-    },0,TimeUnit.MILLISECONDS);
+    reportScheduler.schedule(new ContentProviderReportTask(),0,TimeUnit.MILLISECONDS);
 
   }
 
@@ -108,13 +104,6 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
   }
 
 
-  public static void writeReportLine(PrintStream reportWriter, String abonent, Date date, String s) {
-    reportWriter.print(abonent);
-    reportWriter.print(" | ");
-    reportWriter.print(dateFormat.get().format(date));
-    reportWriter.print(" | ");
-    reportWriter.println(s);
-  }
 
   @Override
   public void onDeliveryFinishNotification(DeliveryNotification notification) {
@@ -126,11 +115,7 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
       ps.println(notification.getUserId());
       synchronized (this) {
         if(isStarted()) {
-          reportScheduler.schedule(new Runnable(){  //todo Точно такой же Runnable созается в методе start. Предлагаю оформить всю логику по формированию отчетов в отдельном классе.
-            public void run() {
-              processNotifications();
-            }
-          },0,TimeUnit.MILLISECONDS);
+          reportScheduler.schedule(new ContentProviderReportTask(),0,TimeUnit.MILLISECONDS);
         }
       }
     }
@@ -142,82 +127,6 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
     }
 
 
-  }
-
-
-  private void processNotifications() {
-    File[] files = fileSys.listFiles(workDir);
-    if(files==null) {
-      log.error("Error listing of working directory "+workDir.getAbsolutePath());
-      return;
-    }
-    for(File f : files) {
-      if(f.getName().endsWith(".notification")) {
-        String sId = f.getName().substring(0,f.getName().length()-".notification".length());
-        BufferedReader reader=null;
-        try {
-          int deliveryId = Integer.valueOf(sId);
-          reader = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f),"utf-8"));
-          String userName = reader.readLine().trim();
-          createReport(deliveryId,userName);
-        }
-        catch (Exception e){
-          log.error("error processing file "+f.getAbsolutePath());
-          try {
-            fileSys.rename(f,new File(workDir,sId+".err"));
-          }
-          catch (Exception ex){
-            log.error("unable to rename file to "+sId+".err",ex);
-          }
-        }
-        finally {
-          if(reader!=null) try {reader.close();} catch (Exception e){}
-          try {
-            if(fileSys.exists(f)) fileSys.delete(f);
-          }
-          catch (Exception e) {
-            log.error("unable to delete file"+f.getAbsolutePath(),e);
-          }
-        }
-      }
-    }
-  }
-
-
-  private void createReport(int deliveryId, String userName) throws AdminException, UnsupportedEncodingException {
-    User user = context.getUser(userName);
-
-    if(user!=null && user.isCreateReports() && user.getDirectory()!=null) {
-
-      File userDir = getUserDirectory(user);
-
-      Delivery d = context.getDelivery(user.getLogin(),user.getPassword(),deliveryId);
-
-      //check was imported
-      File reportFile = new File(userDir,d.getName()+".rep."+deliveryId);
-      if(!fileSys.exists(reportFile)) return;
-
-      PrintStream ps = null;
-
-      try {
-        ps = new PrintStream(fileSys.getOutputStream(reportFile,true),true,user.getFileEncoding());
-        final PrintStream psFinal = ps;
-        MessageFilter filter = new MessageFilter(deliveryId,d.getStartDate(),new Date());
-        context.getMessagesStates(user.getLogin(),user.getPassword(),filter,1000,new Visitor<MessageInfo>(){
-          public boolean visit(MessageInfo mi) throws AdminException {
-            String result="";
-            result = mi.getState().toString() + ((mi.getErrorCode())!=null ? (" errCode="+mi.getErrorCode()) : "");
-            writeReportLine(psFinal,mi.getAbonent(),mi.getDate(),result);
-            return true;
-          }
-        });
-      }
-      finally {
-        if(ps!=null) try {ps.close();} catch (Exception e){}
-        File finReportFile = new File(userDir,d.getName()+".report");
-        fileSys.rename(reportFile,finReportFile);
-      }
-    }
   }
 
   public File getUserDirectory(User user) throws AdminException {
@@ -236,5 +145,90 @@ public class ContentProviderDaemon extends DeliveryNotificationsAdapter implemen
     return userDir;
   }
 
+
+
+  public static void writeReportLine(PrintStream reportWriter, String abonent, Date date, String s) {
+    reportWriter.print(abonent);
+    reportWriter.print(" | ");
+    reportWriter.print(dateFormat.get().format(date));
+    reportWriter.print(" | ");
+    reportWriter.println(s);
+  }
+
+
+
+  class ContentProviderReportTask implements Runnable {
+    public void run() {
+      File[] files = fileSys.listFiles(workDir);
+      if(files==null) {
+        log.error("Error listing of working directory "+workDir.getAbsolutePath());
+        return;
+      }
+      for(File f : files) {
+        if(f.getName().endsWith(".notification")) {
+          String sId = f.getName().substring(0,f.getName().length()-".notification".length());
+          BufferedReader reader=null;
+          try {
+            int deliveryId = Integer.valueOf(sId);
+            reader = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f),"utf-8"));
+            String userName = reader.readLine().trim();
+            createReport(deliveryId,userName);
+          }
+          catch (Exception e){
+            log.error("error processing file "+f.getAbsolutePath());
+            try {
+              fileSys.rename(f,new File(workDir,sId+".err"));
+            }
+            catch (Exception ex){
+              log.error("unable to rename file to "+sId+".err",ex);
+            }
+          }
+          finally {
+            if(reader!=null) try {reader.close();} catch (Exception e){}
+            try {
+              if(fileSys.exists(f)) fileSys.delete(f);
+            }
+            catch (Exception e) {
+              log.error("unable to delete file"+f.getAbsolutePath(),e);
+            }
+          }
+        }
+      }
+    }
+
+    private void createReport(int deliveryId, String userName) throws AdminException, UnsupportedEncodingException {
+      User user = context.getUser(userName);
+      if(user!=null && user.isCreateReports() && user.getDirectory()!=null) {
+        File userDir = getUserDirectory(user);
+
+        Delivery d = context.getDelivery(user.getLogin(),user.getPassword(),deliveryId);
+
+        //check was imported
+        File reportFile = new File(userDir,d.getName()+".rep."+deliveryId);
+        if(!fileSys.exists(reportFile)) return;
+
+        PrintStream ps = null;
+
+        try {
+          ps = new PrintStream(fileSys.getOutputStream(reportFile,true),true,user.getFileEncoding());
+          final PrintStream psFinal = ps;
+          MessageFilter filter = new MessageFilter(deliveryId,d.getStartDate(),new Date());
+          context.getMessagesStates(user.getLogin(),user.getPassword(),filter,1000,new Visitor<MessageInfo>(){
+            public boolean visit(MessageInfo mi) throws AdminException {
+              String result="";
+              result = mi.getState().toString() + ((mi.getErrorCode())!=null ? (" errCode="+mi.getErrorCode()) : "");
+              ContentProviderDaemon.writeReportLine(psFinal,mi.getAbonent(),mi.getDate(),result);
+              return true;
+            }
+          });
+        }
+        finally {
+          if(ps!=null) try {ps.close();} catch (Exception e){}
+          File finReportFile = new File(userDir,d.getName()+".report");
+          fileSys.rename(reportFile,finReportFile);
+        }
+      }
+    }
+  }
 
 }

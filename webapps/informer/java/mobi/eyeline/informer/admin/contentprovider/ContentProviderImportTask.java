@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * Date: 17.11.2010
  * Time: 18:29:48
  */
-public class ContentProviderDaemonTask implements Runnable { // todo можно уменьшить видимость
+class ContentProviderImportTask implements Runnable {
   Logger log = Logger.getLogger(this.getClass());
   private AdminContext context;
   ContentProviderDaemon daemon;
@@ -32,7 +32,7 @@ public class ContentProviderDaemonTask implements Runnable { // todo можно 
 
   Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
 
-  public ContentProviderDaemonTask(AdminContext context,ContentProviderDaemon daemon, FileSystem fileSys) {
+  public ContentProviderImportTask(AdminContext context,ContentProviderDaemon daemon, FileSystem fileSys) {
     this.daemon = daemon;
     this.context = context;
     this.fileSys=fileSys;
@@ -68,13 +68,18 @@ public class ContentProviderDaemonTask implements Runnable { // todo можно 
     for(File f : files) {
       processUnfinished(u,f);
     }
-    for(File f : files) { // todo Unfinished файлы не попадут в обработку.
+    files = fileSys.listFiles(userDir);
+    if(files==null) {
+      log.error("Can't get directory listing for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
+      return;
+    }
+    for(File f : files) {
       processUserFile(u,f);
     }
   }
 
 
-  private void handleErrorProccessingFile(Exception e, File userDir, File f, String baseName) {
+  private void handleErrorProccessingFile(Exception e, File userDir, File f, String baseName, String username, String password, Integer deliveryId) {
     try {
       PrintWriter pw = null;
       try {
@@ -108,6 +113,15 @@ public class ContentProviderDaemonTask implements Runnable { // todo можно 
     catch (AdminException ex) {
       log.error("Error renaming file to bak "+f.getAbsolutePath(),ex);
     }
+
+    if(deliveryId!=null) {
+      try {
+          context.dropDelivery(username,password,deliveryId);
+      }
+      catch (Exception ex) {
+          log.error("Error removing delivery "+deliveryId,ex);
+      }
+    }
   }
 
   private void processUnfinished(User u, File f) {
@@ -119,8 +133,9 @@ public class ContentProviderDaemonTask implements Runnable { // todo можно 
       File userDir = f.getParentFile();
       String ext = unfinishedMatcher.group();
       String baseName = f.getName().substring(0,f.getName().length()-ext.length());
+      Integer deliveryId =null;
       try {
-          int deliveryId = Integer.valueOf(ext.substring(5));
+          deliveryId = Integer.valueOf(ext.substring(5));
           context.dropDelivery(u.getLogin(),u.getPassword(),deliveryId);
           //rename .csv.<id> to .csv
           File newFile = new File(userDir,baseName+".csv");
@@ -129,7 +144,7 @@ public class ContentProviderDaemonTask implements Runnable { // todo можно 
           fileSys.delete(reportFile);
       }
       catch (Exception e) {
-        handleErrorProccessingFile(e, userDir, f, baseName);
+        handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), u.getPassword(), deliveryId);
       }
     }
   }
@@ -141,13 +156,14 @@ public class ContentProviderDaemonTask implements Runnable { // todo можно 
     if(fileName.endsWith(".csv")) {
       File userDir = f.getParentFile();
       String baseName = fileName.substring(0,fileName.length()-4);
+      Integer deliveryId=null;
       try {
         Delivery delivery = new Delivery(Delivery.Type.Common);
         delivery.setName(baseName);
         delivery.setStartDate(new Date(System.currentTimeMillis()));
         context.getDefaultDelivery(u.getLogin(),delivery);
         context.createDelivery(u.getLogin(),u.getPassword(),delivery,null);
-        int deliveryId=delivery.getId();
+        deliveryId = delivery.getId();
         //rename to .csv.<id>
         File newFile = new File(userDir,baseName+".csv."+deliveryId);
         File reportFile = new File(userDir,baseName+".rep."+deliveryId);
@@ -176,8 +192,7 @@ public class ContentProviderDaemonTask implements Runnable { // todo можно 
         fileSys.rename(f,newFile);
       }
       catch (Exception e) {
-        handleErrorProccessingFile(e, userDir, f, baseName);
-        //todo Если в процессе создания рассылки произошла ошибка, надо попытаться удалить рассылку, чтобы мусор не плодить.
+        handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), u.getPassword(), deliveryId);
       }
     }
   }
