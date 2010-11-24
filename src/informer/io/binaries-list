@@ -1,0 +1,5 @@
+informer/tests/testutf8 testutf8 \
+ -linformer-io \
+ @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+ -lutil \
+ -lpthread -lrt -ldl

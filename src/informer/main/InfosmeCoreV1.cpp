@@ -331,7 +331,7 @@ void InfosmeCoreV1::selfTest()
 
         DeliveryInfoData data;
         {
-            data.name = "testdlv";
+            data.name = "Моя рассылка";
             data.priority = 1;
             data.transactionMode = false;
             data.startDate = "";
@@ -368,7 +368,7 @@ void InfosmeCoreV1::selfTest()
         {
             smsc_log_debug(log_,"--- setting text glossary for D=%u ---", dlvId);
             std::vector< std::string > glotexts;
-            glotexts.push_back("the first message");
+            glotexts.push_back("Русский текст");
             glotexts.push_back("the second message");
             dlv->setGlossary( glotexts );
         }
@@ -387,7 +387,7 @@ void InfosmeCoreV1::selfTest()
                 mlk.msg.subscriber = addressToSubscriber(11,1,1,address);
                 char userdata[30];
                 char msgtext[50];
-                sprintf(msgtext,"the unbound text #%u",i);
+                sprintf(msgtext,"русский текст #%u",i);
                 MessageText(msgtext).swap(mlk.msg.text);
                 sprintf(userdata,"msg#%d",i);
                 mlk.msg.userData = userdata;
