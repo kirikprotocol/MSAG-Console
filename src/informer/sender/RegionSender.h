@@ -46,13 +46,6 @@ public:
         return unsigned(speedControl_.isReady(currentTime % flipTimePeriod, maxSnailDelay));
     }
 
-    /*
-    inline void suspend(usectime_type currentTime)
-    {
-        speedControl_.suspend(unsigned(currentTime % flipTimePeriod));
-    }
-     */
-
     bool processRegion(usectime_type currentTime);
 
     void addDelivery( RegionalStorage& ptr );
@@ -61,7 +54,7 @@ public:
 private:
     typedef RegionalStoragePtr ScoredPtrType;
 
-    void scoredObjToString( std::string& s, const ScoredPtrType dlv )
+    void scoredObjToString( std::string& s, const ScoredPtrType& dlv )
     {
         if (!dlv) return;
         char buf[20];
@@ -96,7 +89,7 @@ private:
     smsc::core::synchronization::Mutex lock_;
     SmscSender*                        conn_;     // not owned
     RegionPtr                          region_;   // shared ownership
-    // fixme: optimize keep ptr not in the list
+    /// fixme: optimize keep ptr
     ScoredPtrList< RegionSender >      taskList_; // dlvs are not owned
 
     SpeedControl<usectime_type,tuPerSec> speedControl_; // lock is not needed

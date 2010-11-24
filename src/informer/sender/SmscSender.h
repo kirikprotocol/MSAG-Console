@@ -118,7 +118,6 @@ private:
 
     smsc::core::synchronization::Mutex                reconfLock_;
     std::auto_ptr<smsc::sme::SmppSession>             session_;
-    /// fixme: optimize keep ptr not in the list
     ScoredPtrList< SmscSender >                       scoredList_; // not owned
     usectime_type                                     currentTime_;
 
