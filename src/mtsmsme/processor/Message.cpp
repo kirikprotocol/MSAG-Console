@@ -315,12 +315,12 @@ vector<unsigned char> Message::getComponent()
     if (list->count == 1)
     {
       Component_t *comp = (Component_t *)(list->array[0]);
-      if (comp->present == Component_PR_invoke)
+      if (Component_PR_invoke == comp->present)
       {
         ANY_t *pdu = comp->choice.invoke.argument;
         buf.insert(buf.end(),pdu->buf, pdu->buf + pdu->size);
       }
-      if (comp->present == Component_PR_returnResultLast)
+      if (Component_PR_returnResultLast == comp->present)
       {
         if (comp->choice.returnResultLast.result)
         {
@@ -328,7 +328,7 @@ vector<unsigned char> Message::getComponent()
           buf.insert(buf.end(),pdu.buf, pdu.buf + pdu.size);
         }
        }
-      if (comp->present = Component_PR_returnResultNotLast)
+      if (Component_PR_returnResultNotLast == comp->present)
       {
         if (comp->choice.returnResultNotLast.result)
         {
@@ -336,7 +336,7 @@ vector<unsigned char> Message::getComponent()
           buf.insert(buf.end(),pdu.buf, pdu.buf + pdu.size);
         }
       }
-      if (comp->present = Component_PR_returnError)
+      if (Component_PR_returnError == comp->present)
       {
         if (comp->choice.returnError.parameter)
         {
