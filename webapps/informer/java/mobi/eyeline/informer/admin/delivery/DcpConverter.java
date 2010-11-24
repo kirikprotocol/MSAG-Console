@@ -200,7 +200,9 @@ public class DcpConverter {
     result.setAbonent(m.getAbonent().getSimpleAddress());
     result.setText(m.getText());
     result.setMsgType(MessageType.TextMessage);
-    result.setUserData(convertUserData(m.getProperties()));
+    String userDataStr = convertUserData(m.getProperties());
+    if (userDataStr != null)
+      result.setUserData(userDataStr);
     return result;
   }
 
