@@ -710,9 +710,11 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag bugfix: rule was not saved/restored in session init/destroy longcalls
 
 =================================================================================================================
-2010-11-24 18:40 bukind msag-build-20101124
+2010-11-25 13:50 bukind msag-build-20101125
 2010-11-24 18:40 bukind
   msag bugfix: replaced a lot of asserts with throws
+2010-11-25 13:50 bukind
+  msag bugfix: contextScopeId is kept in CctionCtx to be allow access w/o op
 
 --- current fixes ---
 2010-11-12 13:00 bukind
