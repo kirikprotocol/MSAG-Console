@@ -108,6 +108,8 @@ private:
     void processExpiredTimers();
     // void journalReceiptData( const ReceiptData& rd );
 
+    bool getNextRollingData( ReceiptData& rd, bool firstPass );
+
 private:
     smsc::logger::Logger*                     log_;
     ReceiptProcessor&                         rproc_;
@@ -126,13 +128,12 @@ private:
     std::multimap<msgtime_type, ReceiptId>            rcptWaitQueue_;
 
     // when process receipt/response.
-    // monitor is used by journal also.
     smsc::core::synchronization::EventMonitor          receiptMon_;
     ReceiptList                                        receiptList_;
     ReceiptList::iterator                              rollingIter_;
     smsc::core::buffers::Hash< ReceiptList::iterator > receiptHash_;
-    SmscJournal*                                       journal_;
 
+    SmscJournal*                                       journal_;
     DataQueue*                                         rQueue_;
 
     // queueMon only to put into queue and notify

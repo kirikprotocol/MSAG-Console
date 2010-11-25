@@ -117,8 +117,8 @@ public:
         if (isStopping_) return;
         isStopping_ = true;
         {
-            smsc::core::synchronization::MutexGuard mg(sender_.receiptMon_);
-            sender_.receiptMon_.notifyAll();
+            MutexGuard mg(mon_);
+            mon_.notifyAll();
         }
         WaitFor();
     }
@@ -139,7 +139,7 @@ public:
         const size_t pos = tb.getPos();
         tb.setPos(0);
         tb.set16(uint16_t(pos-LENSIZE));
-        smsc::core::synchronization::MutexGuard mg(lock_);
+        MutexGuard mg(mon_);
         fg_.write(buf,pos);
     }
 
@@ -155,7 +155,7 @@ protected:
         FileGuard fg;
         fg.create(jpath.c_str(),0666);
         {
-            smsc::core::synchronization::MutexGuard mg(lock_);
+            smsc::core::synchronization::MutexGuard mg(mon_);
             fg_.swap(fg);
         }
         smsc_log_debug(sender_.log_,"file '%s' rolled",jpath.c_str());
@@ -197,34 +197,23 @@ protected:
         smsc_log_debug(sender_.log_,"S='%s' journal roller started", sender_.smscId_.c_str());
         while ( !isStopping_ ) {
             bool firstPass = true;
-            ReceiptList& rl = sender_.receiptList_;
-            ReceiptList::iterator& iter = sender_.rollingIter_;
+            ReceiptData rd;
             do {
-                ReceiptData rd;
-                if (isStopping_) { break; }
-                {
-                    smsc::core::synchronization::MutexGuard mg(sender_.receiptMon_);
-                    if (firstPass) {
-                        iter = rl.begin();
-                        firstPass = false;
-                    }
-                    if (iter == rl.end()) { break; }
-                    if (!iter->responded) {
-                        ++iter;
-                        continue;
-                    }
-                    rd = *iter;
-                    ++iter;
+                if (!sender_.getNextRollingData(rd,firstPass)) {
+                    break;
                 }
+                firstPass = false;
                 if (isStopping_) { break; }
+                if (!rd.responded) { continue; }
                 journalReceiptData(rd);
                 smsc_log_debug(sender_.log_,"FIXME: optimize S='%s' place limit on throughput",sender_.smscId_.c_str());
-                sender_.receiptMon_.wait(30);
+                MutexGuard mg(mon_);
+                mon_.wait(30);
             } while (true);
             smsc_log_debug(sender_.log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
             if (!isStopping_) { rollOver(); }
-            smsc::core::synchronization::MutexGuard mg(sender_.receiptMon_);
-            sender_.receiptMon_.wait(10000);
+            MutexGuard mg(mon_);
+            mon_.wait(10000);
         }
         return 0;
     }
@@ -232,7 +221,7 @@ protected:
 private:
     SmscSender& sender_;
     bool        isStopping_;
-    smsc::core::synchronization::Mutex lock_;
+    smsc::core::synchronization::EventMonitor mon_;
     FileGuard   fg_;
 };
 
@@ -1149,6 +1138,27 @@ void SmscSender::processExpiredTimers()
     }
     rcptWaitQueue_.erase(rcptWaitQueue_.begin(), i);
 }
+
+
+bool SmscSender::getNextRollingData( ReceiptData& rd, bool firstPass )
+{
+    MutexGuard mg(receiptMon_);
+    if (firstPass) {
+        rollingIter_ = receiptList_.begin();
+    }
+    while ( rollingIter_ != receiptList_.end() ) {
+        if ( !rollingIter_->responded ) {
+            ++rollingIter_;
+            if (stopping_) { return false; }
+            continue;
+        }
+        rd = *rollingIter_;
+        ++rollingIter_;
+        return true;
+    }
+    return false;
+}
+
 
 }
 }
