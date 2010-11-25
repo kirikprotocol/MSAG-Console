@@ -1149,7 +1149,7 @@ bool SmscSender::getNextRollingData( ReceiptData& rd, bool firstPass )
     while ( rollingIter_ != receiptList_.end() ) {
         if ( !rollingIter_->responded ) {
             ++rollingIter_;
-            if (stopping_) { return false; }
+            if (isStopping_) { return false; }
             continue;
         }
         rd = *rollingIter_;
