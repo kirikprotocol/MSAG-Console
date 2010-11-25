@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
-import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DataSource;
 import mobi.eyeline.informer.admin.delivery.Delivery;
@@ -26,14 +25,14 @@ import java.util.regex.Pattern;
  */
 class ContentProviderImportTask implements Runnable {
   Logger log = Logger.getLogger(this.getClass());
-  private AdminContext context;
-  ContentProviderDaemon daemon;
+  private ContentProviderContext context;
+  ContentProviderUserDirectoryResolver userDirResolver;
   private FileSystem fileSys;
 
   Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
 
-  public ContentProviderImportTask(AdminContext context,ContentProviderDaemon daemon, FileSystem fileSys) {
-    this.daemon = daemon;
+  public ContentProviderImportTask(ContentProviderUserDirectoryResolver userDirResolver,ContentProviderContext context, FileSystem fileSys) {
+    this.userDirResolver = userDirResolver;
     this.context = context;
     this.fileSys=fileSys;
   }
@@ -45,7 +44,7 @@ class ContentProviderImportTask implements Runnable {
       for(User u : users ) {
         if(u.getStatus()==User.Status.ENABLED && u.isImportDeliveriesFromDir()) {
           try {
-            File userDir = daemon.getUserDirectory(u);
+            File userDir = userDirResolver.getUserDirectory(u);
             processUserDirectory(u,userDir);
           }
           catch (Exception e) {
@@ -229,7 +228,7 @@ class ContentProviderImportTask implements Runnable {
                   ab = new Address(abonent);
               }
               catch (Exception e) {
-                ContentProviderDaemon.writeReportLine(reportWriter,abonent,new Date(),"INVALID ABONENT");
+                ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"INVALID ABONENT");
                 continue;
               }
               boolean skip = false;
@@ -240,14 +239,14 @@ class ContentProviderImportTask implements Runnable {
                 }
               }
               if(skip) {
-                ContentProviderDaemon.writeReportLine(reportWriter,abonent,new Date(),"NOT ALLOWED REGION");
+                ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"NOT ALLOWED REGION");
                 continue;
               }
               String  text = line.substring(inx+1).trim();
               return Message.newMessage(ab,text);
           }
           catch(Exception e) {
-            ContentProviderDaemon.writeReportLine(reportWriter,abonent,new Date(),"ERROR PARSING LINE :"+line);
+            ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"ERROR PARSING LINE :"+line);
           }
         }
       }

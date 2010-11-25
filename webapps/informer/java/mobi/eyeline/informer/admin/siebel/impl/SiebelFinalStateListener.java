@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Aleksandr Khalitov
  */
-public class SiebelFinalStateListener extends DeliveryNotificationsAdapter {
+public class SiebelFinalStateListener extends DeliveryNotificationsListenerStub {
 
   private static final Logger logger = Logger.getLogger("SIEBEL");
 

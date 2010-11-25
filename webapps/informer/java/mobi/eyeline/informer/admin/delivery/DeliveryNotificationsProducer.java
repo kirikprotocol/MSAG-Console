@@ -82,8 +82,15 @@ public class DeliveryNotificationsProducer implements Runnable {
 
 
   public void run() {
+    String[] files=null;
     try {
-      String[] files = fileSys.list(baseDir);  //todo метод list может вернуть null, надо это корректно обработать.
+       files = fileSys.list(baseDir);        
+    }
+    catch (Exception e) {
+      log.error("Fatal error,EXITING! can't access baseDir: "+baseDir.getAbsolutePath(), e);
+      shutdown();
+    }
+    try{
       Arrays.sort(files);
       for (String fileName : files) {
         if (fileName.endsWith(".csv")) {
@@ -92,7 +99,7 @@ public class DeliveryNotificationsProducer implements Runnable {
       }
     }
     catch (Exception e) {
-      log.error("Fatal error, Notification producer EXITING! ", e);
+      log.error("Fatal error,EXITING! ", e);
       shutdown();
     }
   }

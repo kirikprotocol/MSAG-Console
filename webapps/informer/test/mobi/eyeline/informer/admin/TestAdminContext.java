@@ -233,7 +233,9 @@ public class TestAdminContext extends AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
-      contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir, workDir, fileSystem);
+      contentProviderDaemon = new ContentProviderDaemon(
+          new ContentProviderContextImpl(this),appBaseDir, workDir
+      );
 
       deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);

@@ -5,7 +5,7 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryNotification;
 import mobi.eyeline.informer.admin.delivery.DeliveryNotificationType;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotificationsAdapter;
+import mobi.eyeline.informer.admin.delivery.DeliveryNotificationsListenerStub;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -27,7 +27,7 @@ import java.util.concurrent.*;
  * Date: 13.11.2010
  * Time: 13:46:28
  */
-public class DeliveryNotificationsDaemon extends DeliveryNotificationsAdapter {
+public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerStub {
   private final Logger log = Logger.getLogger("NOTIFICATION_DAEMON");
 
   private final AdminContext context;

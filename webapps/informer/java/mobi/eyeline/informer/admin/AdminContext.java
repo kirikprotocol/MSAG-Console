@@ -4,6 +4,7 @@ import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
+import mobi.eyeline.informer.admin.contentprovider.ContentProviderContext;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
@@ -168,7 +169,7 @@ public class AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
-      contentProviderDaemon = new ContentProviderDaemon(this,appBaseDir,workDir,fileSystem);
+      contentProviderDaemon = new ContentProviderDaemon(new ContentProviderContextImpl(this),appBaseDir,workDir);
 
 
       deliveryNotificationsProducer = new DeliveryNotificationsProducer(new File(is.getStoreDir(), "final_log"), fileSystem);
@@ -968,4 +969,59 @@ public class AdminContext {
       context.getDefaultDelivery(user, delivery);
     }
   }
+
+  protected static class ContentProviderContextImpl implements ContentProviderContext{
+
+    private AdminContext context;
+
+    ContentProviderContextImpl(AdminContext context) {
+      this.context = context;
+    }
+
+
+    public FileSystem getFileSystem() {
+      return this.context.getFileSystem();
+    }
+
+    public List<User> getUsers() {
+      return this.context.getUsers();
+    }
+
+    public User getUser(String userName) {
+      return this.context.getUser(userName);  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public Region getRegion(Address ab) {
+      return this.context.getRegion(ab);
+    }
+
+    public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
+      this.context.createDelivery(login,password,delivery,msDataSource);
+    }
+
+    public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException{
+      return this.context.getDelivery(login,password,deliveryId);
+    }
+
+    public void activateDelivery(String login, String password, int deliveryId) throws AdminException{
+      this.context.activateDelivery(login,password,deliveryId);
+    }
+
+    public void dropDelivery(String login, String password, int deliveryId) throws AdminException{
+      this.context.dropDelivery(login,password,deliveryId);
+    }
+
+    public void getDefaultDelivery(String login, Delivery delivery) throws AdminException{
+      this.context.getDefaultDelivery(login,delivery);
+    }
+
+    public void addMessages(String login, String password, DataSource<Message> messageSource, int deliveryId) throws AdminException{
+      this.context.addMessages(login,password,messageSource,deliveryId);
+    }
+
+    public void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<MessageInfo> visitor) throws AdminException{
+      this.context.getMessagesStates(login,password,filter,deliveryId,visitor);
+    }
+  }
+
 }
