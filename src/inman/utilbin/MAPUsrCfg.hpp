@@ -7,11 +7,17 @@
 #endif
 #define __INMAN_MAPUSER_CFG_READER_HPP__
 
-#include "inman/inap/TCXCfgParser.hpp"
+#include "util/config/XCFView.hpp"
+
+#include "inman/inap/xcfg/TCDspCfgParser.hpp"
+#include "inman/inap/xcfg/TCUsrCfgParser.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace inap {
+
+using smsc::util::config::XConfigView;
+
 
 struct MAPUsr_CFG {
   TCDsp_CFG   ss7;

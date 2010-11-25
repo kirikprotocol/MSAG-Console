@@ -11,6 +11,7 @@ using smsc::inman::comp::MAPServiceRC;
 using smsc::inman::comp::_RCS_MAPService;
 using smsc::inman::inap::TCAPDispatcherITF;
 using smsc::inman::inap::SSNBinding;
+using smsc::inman::inap::SSNSession;
 
 using smsc::inman::comp::UnifiedCSI;
 using smsc::inman::iaprvd::CSIRecord;

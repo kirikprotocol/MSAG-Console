@@ -3,7 +3,7 @@ static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "inman/services/iapSRI/IAPrvdSRICfgReader.hpp"
-#include "inman/inap/TCXCfgParser.hpp"
+#include "inman/inap/xcfg/TCUsrCfgParser.hpp"
 #include "util/strutil.hpp"
 
 namespace smsc {

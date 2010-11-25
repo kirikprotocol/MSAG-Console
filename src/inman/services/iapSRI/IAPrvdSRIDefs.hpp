@@ -8,7 +8,7 @@
 #endif
 #define __INMAN_IAPRVD_SRI_DEFS_HPP
 
-#include "inman/inap/TCDspDefs.hpp"
+#include "inman/inap/TCUsrDefs.hpp"
 #include "inman/services/ICSrvIDs.hpp"
 
 namespace smsc  {

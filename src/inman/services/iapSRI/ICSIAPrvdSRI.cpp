@@ -2,7 +2,7 @@
 static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
-#include "inman/inap/TCDspDefs.hpp"
+#include "inman/inap/TCDspIface.hpp"
 using smsc::inman::inap::TCAPDispatcherITF;
 
 #include "inman/inap/HDSSnSession.hpp"
