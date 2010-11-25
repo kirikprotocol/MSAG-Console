@@ -7,7 +7,7 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/incache/AbCacheDefs.hpp"
 using smsc::inman::cache::AbonentCacheCFG;
 
-#include "inman/inap/TCXCfgParser.hpp"
+#include "inman/inap/xcfg/TCUsrCfgParser.hpp"
 using smsc::inman::inap::TCAPUsrCfgParser;
 
 #include "util/csv/CSVArrayOf.hpp"

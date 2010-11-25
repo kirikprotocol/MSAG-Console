@@ -10,7 +10,7 @@
 #include <map>
 
 #include "util/TonNpiAddress.hpp"
-#include "inman/inap/TCDspDefs.hpp"
+#include "inman/inap/TCUsrDefs.hpp"
 #include "inman/services/ICSrvIDs.hpp"
 
 namespace smsc    {

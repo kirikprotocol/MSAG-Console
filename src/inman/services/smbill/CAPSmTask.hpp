@@ -14,7 +14,8 @@
 #include "inman/services/scheduler/TaskSchedulerDefs.hpp"
 
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
-#include "inman/inap/TCDspDefs.hpp"
+#include "inman/inap/TCDspIface.hpp"
+#include "inman/inap/TCUsrDefs.hpp"
 
 namespace smsc {
 namespace inman {

@@ -16,7 +16,7 @@
 #include "inman/services/tmwatch/TimeWatcher.hpp"
 #include "inman/services/scheduler/TaskSchedulerDefs.hpp"
 #include "inman/services/smbill/SmBillDefs.hpp"
-#include "inman/inap/TCDspDefs.hpp"
+#include "inman/inap/TCDspIface.hpp"
 
 namespace smsc   {
 namespace inman  {
