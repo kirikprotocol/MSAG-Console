@@ -30,7 +30,7 @@ import java.util.concurrent.*;
 public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerStub {
   private final Logger log = Logger.getLogger("NOTIFICATION_DAEMON");
 
-  private final AdminContext context;
+  private final DeliveryNotificationsContext context;
   private final Map<String, AggregatedEmailNotificationTask> userEmailNotifications = new HashMap<String, AggregatedEmailNotificationTask>();
 
   private final Object lock = new Object();
@@ -42,7 +42,7 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerSt
   private static final int MAX_QUEUE_SIZE = 10000;
 
 
-  public DeliveryNotificationsDaemon(AdminContext context) {  // todo Плохая зависимость от AdminContext. Надо придумать как от нее избавиться. Можно использовать пример Siebel.
+  public DeliveryNotificationsDaemon(DeliveryNotificationsContext context) {  // todo Плохая зависимость от AdminContext. Надо придумать как от нее избавиться. Можно использовать пример Siebel.
     this.context = context;
     scheduler = new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactory() {
       int n = 0;

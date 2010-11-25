@@ -238,7 +238,7 @@ public class TestAdminContext extends AdminContext {
       );
 
       deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);
-      deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
+      deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
       try{

@@ -16,6 +16,7 @@ import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.infosme.protogen.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.notifications.DateAndFile;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsContext;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
@@ -173,7 +174,7 @@ public class AdminContext {
 
 
       deliveryNotificationsProducer = new DeliveryNotificationsProducer(new File(is.getStoreDir(), "final_log"), fileSystem);
-      deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(this);
+      deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
       deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
 
       try{
@@ -1021,6 +1022,38 @@ public class AdminContext {
 
     public void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<MessageInfo> visitor) throws AdminException{
       this.context.getMessagesStates(login,password,filter,deliveryId,visitor);
+    }
+  }
+
+  protected static class  DeliveryNotificationsContextImpl implements DeliveryNotificationsContext {
+    private AdminContext context;
+
+     DeliveryNotificationsContextImpl(AdminContext context) {
+       this.context = context;
+     }
+
+    public User getUser(String userId) throws AdminException {
+      return context.getUser(userId);
+    }
+
+    public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
+      return context.getDelivery(login,password,deliveryId);
+    }
+
+    public Address getSmsSenderAddress() throws AdminException {
+      return context.getSmsSenderAddress();
+    }
+
+    public Properties getNotificationTemplates() {
+      return context.getNotificationTemplates();
+    }
+
+    public void sendTestSms(TestSms testSms) throws AdminException {
+      context.sendTestSms(testSms);
+    }
+
+    public Properties getJavaMailProperties() {
+      return context.getJavaMailProperties();
     }
   }
 
