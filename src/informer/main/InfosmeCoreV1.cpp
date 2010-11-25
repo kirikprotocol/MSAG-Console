@@ -383,25 +383,31 @@ void InfosmeCoreV1::selfTest()
 
         {
             smsc_log_debug(log_,"--- adding messages to D=%u ---",dlvId);
-            MessageList msgList;
-            MessageLocker mlk;
-            for ( int i = 0; i < 10000; ++i ) {
-                ulonglong address;
-                if ( i % 2 ) {
-                    address = 79137650000ULL + i;
-                } else {
-                    address = 79537690000ULL + i;
+            for ( int pass = 0; pass < 1000; ++pass ) {
+                MessageList msgList;
+                if (stopping_) break;
+                for ( int j = 0; j < 1000; ++j ) {
+
+                    const int i = pass*1000 + j;
+                    
+                    ulonglong address;
+                    if ( i % 2 ) {
+                        address = 79130000000ULL + i;
+                    } else {
+                        address = 79530000000ULL + i;
+                    }
+                    msgList.push_back(MessageLocker());
+                    MessageLocker& mlk = msgList.back();
+                    mlk.msg.subscriber = addressToSubscriber(11,1,1,address);
+                    char userdata[30];
+                    char msgtext[50];
+                    sprintf(msgtext,"русский текст #%u",i);
+                    MessageText(msgtext).swap(mlk.msg.text);
+                    sprintf(userdata,"msg#%d",i);
+                    mlk.msg.userData = userdata;
                 }
-                mlk.msg.subscriber = addressToSubscriber(11,1,1,address);
-                char userdata[30];
-                char msgtext[50];
-                sprintf(msgtext,"русский текст #%u",i);
-                MessageText(msgtext).swap(mlk.msg.text);
-                sprintf(userdata,"msg#%d",i);
-                mlk.msg.userData = userdata;
-                msgList.push_back(mlk);
+                dlv->addNewMessages(msgList.begin(), msgList.end());
             }
-            dlv->addNewMessages(msgList.begin(), msgList.end());
         }
 
         {

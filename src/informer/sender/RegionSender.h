@@ -1,6 +1,7 @@
 #ifndef _INFORMER_REGIONSENDER_H
 #define _INFORMER_REGIONSENDER_H
 
+#include <map>
 #include "informer/data/Region.h"
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/opstore/RegionalStorage.h"
@@ -52,7 +53,7 @@ public:
     void removeDelivery( dlvid_type dlvId );
 
 private:
-    typedef RegionalStoragePtr ScoredPtrType;
+    typedef RegionalStorage* ScoredPtrType;
 
     void scoredObjToString( std::string& s, const ScoredPtrType& dlv )
     {
@@ -81,6 +82,8 @@ private:
     }
     
 private:
+    typedef std::map< dlvid_type, RegionalStoragePtr > DlvMap;
+
     smsc::logger::Logger*              log_;
 
     smsc::core::synchronization::Mutex reflock_;
@@ -89,7 +92,7 @@ private:
     smsc::core::synchronization::Mutex lock_;
     SmscSender*                        conn_;     // not owned
     RegionPtr                          region_;   // shared ownership
-    /// fixme: optimize keep ptr
+    DlvMap                             dlvList_;
     ScoredPtrList< RegionSender >      taskList_; // dlvs are not owned
 
     SpeedControl<usectime_type,tuPerSec> speedControl_; // lock is not needed

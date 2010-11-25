@@ -8,7 +8,7 @@ namespace {
 using namespace eyeline::informer;
 struct EqualById {
     inline EqualById(dlvid_type dlvId) : d(dlvId) {}
-    inline bool operator () ( const RegionalStoragePtr& ptr ) const {
+    inline bool operator () ( const RegionalStorage* ptr ) const {
         return (ptr->getDlvId() == d);
     }
     dlvid_type d;
@@ -98,10 +98,17 @@ bool RegionSender::processRegion( usectime_type currentTime )
 
 void RegionSender::addDelivery( RegionalStorage& ptr )
 {
-    smsc_log_debug(log_,"add delivery D=%u",ptr.getDlvId());
+    const dlvid_type dlvId = ptr.getDlvId();
+    smsc_log_debug(log_,"add delivery D=%u",dlvId);
     {
         MutexGuard mg(lock_);
-        taskList_.add(RegionalStoragePtr(&ptr));
+        DlvMap::iterator iter = dlvList_.lower_bound(dlvId);
+        if (iter != dlvList_.end() && iter->first == dlvId ) {
+            // already added
+            return;
+        }
+        dlvList_.insert(iter,std::make_pair(dlvId,RegionalStoragePtr(&ptr)));
+        taskList_.add(&ptr);
         usectime_type currentTime = (currentTimeMicro() + 1000) % flipTimePeriod;
         if ( speedControl_.getNextTime() > currentTime ) {
             speedControl_.suspend( currentTime );
@@ -116,14 +123,21 @@ void RegionSender::removeDelivery( dlvid_type dlvId )
     smsc_log_debug(log_,"remove delivery D=%u",dlvId);
     {
         MutexGuard mg(lock_);
+        DlvMap::iterator iter = dlvList_.lower_bound(dlvId);
+        if (iter == dlvList_.end() || iter->first != dlvId ) {
+            // not found
+            return;
+        }
         taskList_.remove(EqualById(dlvId));
     }
+    /*
     if (log_->isDebugEnabled()) {
         std::string dumpstring;
         dumpstring.reserve(200);
         taskList_.dump(dumpstring);
         smsc_log_debug(log_,"list after remove: %s",dumpstring.c_str());
     }
+     */
 }
 
 

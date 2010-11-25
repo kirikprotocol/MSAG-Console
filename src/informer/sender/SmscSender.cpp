@@ -568,6 +568,9 @@ void SmscSender::attachRegionSender( RegionSender& rs )
     smsc_log_debug(log_,"S='%s' attaching regsend R=%u",smscId_.c_str(),unsigned(rs.getRegionId()));
     {
         MutexGuard mg(reconfLock_);
+        if ( scoredList_.has(ScoredPtrList<SmscSender>::isEqual(&rs)) ) {
+            return;
+        }
         scoredList_.add(&rs);
     }
     wakeUp();

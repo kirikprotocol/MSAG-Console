@@ -420,6 +420,9 @@ void DeliveryMgr::init()
               ++idlv ) {
             // get dlvid
             const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
+            if (dlvId > lastDlvId_) {
+                lastDlvId_ = dlvId;
+            }
             try {
 
                 DeliveryInfoData data;

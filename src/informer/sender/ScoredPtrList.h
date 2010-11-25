@@ -173,18 +173,24 @@ public:
     }
 
 
+    /// NOTE: you may have to ensure that the list does not have an object
+    /// via method has() below.
     void add( const Ptr& object ) {
         // add an object to the end of the list
         if ( ! object ) return;
-        // a check if we don't have this object already
-        isEqual comp(object);
-        for ( typename PtrMap::const_iterator i = objects_.begin();
-              i != objects_.end(); ++i ) {
-            if ( comp(i->second) ) return;
-        }
         objects_.insert(std::make_pair(objects_.empty() ? 0 :
                                        objects_.rbegin()->first,
                                        object));
+    }
+
+
+    template < class Pred > bool has( Pred pred )
+    {
+        for ( typename PtrMap::const_iterator i = objects_.begin();
+              i != objects_.end(); ++i ) {
+            if ( pred(i->second) ) { return true; }
+        }
+        return false;
     }
 
 
