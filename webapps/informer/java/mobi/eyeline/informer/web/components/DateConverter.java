@@ -14,8 +14,6 @@ public class DateConverter implements Converter {
 
   public Object getAsObject(FacesContext facesContext, UIComponent uiComponent, String s) throws ConverterException {
 
-    System.out.println("GET AS OBJECT: " + s);     //todo
-
     StringTokenizer st = new StringTokenizer(s, "\n");
     String t = st.nextToken();
     Calendar c = Calendar.getInstance();
@@ -72,7 +70,6 @@ public class DateConverter implements Converter {
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
-    System.out.println("GET AS STRING: " + o);     //todo
     return null;
   }
 }
