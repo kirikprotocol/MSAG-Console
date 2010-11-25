@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+<ui:composition>
+
+  <c:choose>
+    <c:when test="#{id != null}">
+      <t:inputDate popupCalendar="#{popupCalendar == null ? true : popupCalendar}"
+                   id="#{id}"
+                   value="#{value}"
+                   type="#{type}"
+                   rendered="#{rendered == null ? true : rendered}"
+                   required="#{required == null ? false : required}"
+                   disabled="#{disabled ? false : disabled}"
+                   autocomplete="#{autocomplete == null ? false : autocomplete}"
+                   requiredMessage="#{msg['date.required']}" converter="dateConverter" converterMessage="#{msg['date.incorrect']}"
+          />
+    </c:when>
+    <c:otherwise>
+      <t:inputDate popupCalendar="#{popupCalendar == null ? true : popupCalendar}"
+                   value="#{value}"
+                   type="#{type}"
+                   rendered="#{rendered == null ? true : rendered}"
+                   required="#{required == null ? false : required}"
+                   disabled="#{disabled ? false : disabled}"
+                   autocomplete="#{autocomplete == null ? false : autocomplete}"
+                   requiredMessage="#{msg['date.required']}" converter="dateConverter" converterMessage="#{msg['date.incorrect']}"
+          />
+    </c:otherwise>
+  </c:choose>
+
+</ui:composition>
+
+</html>

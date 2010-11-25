@@ -29,10 +29,10 @@
             <h:outputText value="&#160;"/>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <t:inputDate value="#{statsMessagesByRec.fromDate}" popupCalendar="true" type="both" />
+            <eye:inputDate value="#{statsMessagesByRec.fromDate}" type="both" />
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <t:inputDate value="#{statsMessagesByRec.tillDate}"  popupCalendar="true" type="both"/>
+            <eye:inputDate value="#{statsMessagesByRec.tillDate}" type="both"/>
 
           </h:panelGrid>
         </eye:dataTableFilter>

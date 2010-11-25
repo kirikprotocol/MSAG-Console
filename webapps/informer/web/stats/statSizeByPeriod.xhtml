@@ -23,7 +23,7 @@
           <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <t:inputDate value="#{statsSize.filter.fromDate}" popupCalendar="true"/>
+            <eye:inputDate value="#{statsSize.filter.fromDate}" type="date"/>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
             <h:selectOneMenu value="#{statsSize.aggregation}" >
@@ -31,7 +31,7 @@
             </h:selectOneMenu>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <t:inputDate value="#{statsSize.filter.tillDate}"  popupCalendar="true"/>
+            <eye:inputDate value="#{statsSize.filter.tillDate}" type="date"/>
             
           </h:panelGrid>
         </eye:dataTableFilter>

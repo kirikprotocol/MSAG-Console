@@ -6,6 +6,65 @@
   <description>
   </description>
 
+  <!-- INPUT DATE -->
+
+  <tag>
+    <name>inputDate</name>
+    <description>Ввод даты</description>
+
+    <attribute>
+      <name>type</name>
+      <description>Тип (date | time | short_time | both | full)</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>value</name>
+      <description>Значение</description>
+      <type>java.util.Date</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>id</name>
+      <description>id</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <name>popupCalendar</name>
+      <description>Всплывающий календарь (по умолчанию: true)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>required</name>
+      <description>Обязательный параметр (по умолчанию: false)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>disabled</name>
+      <description>Компонент отключен (по умолчанию: false)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>autocomplete</name>
+      <description>Автозаполнение (по умолчанию: false)</description>
+      <type>boolean</type>
+    </attribute>
+
+  </tag>
+
+
   <!-- STATUS -->
   <tag>
     <name>status</name>

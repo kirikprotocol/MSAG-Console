@@ -23,7 +23,7 @@
           <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width,columnTopLeftAlign">
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <t:inputDate value="#{messagesByPeriod.filter.fromDate}" popupCalendar="true" type="both" />
+            <eye:inputDate value="#{messagesByPeriod.filter.fromDate}" type="both" />
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
             <h:selectOneMenu value="#{messagesByPeriod.aggregation}" >
@@ -34,7 +34,7 @@
             <h:outputText value="&#160;"/>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <t:inputDate value="#{messagesByPeriod.filter.tillDate}"  popupCalendar="true" type="both"/>
+            <eye:inputDate value="#{messagesByPeriod.filter.tillDate}" type="both"/>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.user']}" rendered="#{messagesByPeriod.admin}"/>
             <h:selectOneMenu value="#{messagesByPeriod.filter.user}" rendered="#{messagesByPeriod.admin}" required="false">

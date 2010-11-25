@@ -30,10 +30,10 @@
           </h:selectOneMenu>
 
           <h:outputText value="#{msg['journal.page.from_date']}"/>
-          <t:inputDate value="#{journal.filterByStartDate}" popupCalendar="true" type="both" autocomplete="true"/>
+          <eye:inputDate value="#{journal.filterByStartDate}" type="both" autocomplete="true"/>
 
           <h:outputText value="#{msg['journal.page.till_date']}"/>
-          <t:inputDate value="#{journal.filterByEndDate}" type="both" popupCalendar="true" autocomplete="true"/>
+          <eye:inputDate value="#{journal.filterByEndDate}" type="both" autocomplete="true"/>
         </h:panelGrid>
       </eye:dataTableFilter>
 

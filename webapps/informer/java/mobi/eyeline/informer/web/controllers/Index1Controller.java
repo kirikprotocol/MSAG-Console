@@ -14,6 +14,22 @@ public class Index1Controller {
 
   private static int current = 0;
 
+  private Date date = new Date();
+
+
+  public Date getDate() {
+    return date;
+  }
+
+  public void setDate(Date date) {
+    this.date = date;
+  }
+
+  public String printDate() {
+    System.out.println(date);
+    return null;
+  }
+
   public int getMaximum() {
     return 100;
   }

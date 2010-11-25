@@ -41,10 +41,10 @@
         </tr:inputText>
 
         <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.startDate']}"/>
-        <t:inputDate value="#{restrictionEdit.restriction.startDate}"  popupCalendar="true" type="both" />
+        <eye:inputDate value="#{restrictionEdit.restriction.startDate}" type="both" />
 
         <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.endDate']}"/>
-        <t:inputDate value="#{restrictionEdit.restriction.endDate}"  popupCalendar="true" type="both" />
+        <eye:inputDate value="#{restrictionEdit.restriction.endDate}" type="both" />
 
         <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.allUsers']}"/>
         <t:selectBooleanCheckbox value="#{restrictionEdit.restriction.allUsers}"

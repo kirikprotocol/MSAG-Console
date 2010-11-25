@@ -12,6 +12,11 @@
     <tag-name>status</tag-name>
     <source>status.xhtml</source>
   </tag>
+  
+  <tag>
+    <tag-name>inputDate</tag-name>
+    <source>inputDate.xhtml</source>
+  </tag>
 
   <tag>
     <tag-name>delimiter</tag-name>

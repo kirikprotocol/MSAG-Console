@@ -40,10 +40,10 @@
               </tr:inputText>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.from_date']}"/>
-              <t:inputDate id="fromDate" value="#{messages.msgFilter.fromDate}" popupCalendar="true" type="date" autocomplete="true"/>
+              <eye:inputDate id="fromDate" value="#{messages.msgFilter.fromDate}" type="date" autocomplete="true"/>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.till_date']}"/>
-              <t:inputDate id="tillDate" value="#{messages.msgFilter.tillDate}" popupCalendar="true" type="date" autocomplete="true"/>
+              <eye:inputDate id="tillDate" value="#{messages.msgFilter.tillDate}" type="date" autocomplete="true"/>
 
             </h:panelGrid>
           </eye:dataTableFilter>

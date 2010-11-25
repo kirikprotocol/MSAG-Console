@@ -22,9 +22,9 @@
           <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
             <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
               <h:outputText value="#{msg['stat.page.from_date']}"/>
-              <t:inputDate value="#{deliveryMessagesByPeriod.filter.fromDate}" popupCalendar="true" type="both" />
+              <eye:inputDate value="#{deliveryMessagesByPeriod.filter.fromDate}" type="both" />
               <h:outputText value="#{msg['stat.page.till_date']}"/>
-              <t:inputDate value="#{deliveryMessagesByPeriod.filter.tillDate}"  popupCalendar="true" type="both"/>
+              <eye:inputDate value="#{deliveryMessagesByPeriod.filter.tillDate}"  type="both"/>
             </h:panelGrid>
             <h:panelGrid columns="2" columnClasses="column100Width, column400Width">
               <h:outputText value="#{msg['stat.page.aggregation']}"/>

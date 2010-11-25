@@ -31,10 +31,10 @@
           <tr:inputText value="#{restrictionsList.filter.userId}" simple="true"/>
 
           <h:outputText id="fromDate" value="#{msg['restriction.page.from_date']}"/>
-          <t:inputDate value="#{restrictionsList.filter.startDate}" popupCalendar="true" type="both"/>
+          <eye:inputDate value="#{restrictionsList.filter.startDate}" type="both"/>
 
           <h:outputText value="#{msg['restriction.page.till_date']}"/>
-          <t:inputDate id="tillDate" value="#{restrictionsList.filter.endDate}" popupCalendar="true" type="both"/>
+          <eye:inputDate id="tillDate" value="#{restrictionsList.filter.endDate}" type="both"/>
 
         </h:panelGrid>
       </eye:dataTableFilter>

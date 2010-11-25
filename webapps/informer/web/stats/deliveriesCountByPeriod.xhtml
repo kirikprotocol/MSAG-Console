@@ -23,7 +23,7 @@
           <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <t:inputDate value="#{deliveriesCountByPeriod.filter.fromDate}" popupCalendar="true" type="both" />
+            <eye:inputDate value="#{deliveriesCountByPeriod.filter.fromDate}" type="both" />
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.aggregation']}"/>
             <h:selectOneMenu value="#{deliveriesCountByPeriod.aggregation}" >
@@ -31,7 +31,7 @@
             </h:selectOneMenu>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <t:inputDate value="#{deliveriesCountByPeriod.filter.tillDate}"  popupCalendar="true" type="both"/>
+            <eye:inputDate value="#{deliveriesCountByPeriod.filter.tillDate}" type="both"/>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.user']}" rendered="#{deliveriesCountByPeriod.admin}"/>
             <h:selectOneMenu value="#{deliveriesCountByPeriod.filter.user}" rendered="#{deliveriesCountByPeriod.admin}" required="false">

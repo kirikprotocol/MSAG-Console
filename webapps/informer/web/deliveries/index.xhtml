@@ -20,7 +20,7 @@
         <h:panelGrid columns="6" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, column300Width,column50WidthNoWrap, column300Width">
 
           <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-          <t:inputDate value="#{deliveries.startDateFrom}" popupCalendar="true" type="both" />
+          <eye:inputDate value="#{deliveries.startDateFrom}" type="both" />
 
           <h:outputText value="#{deliveryBundle.name}"/>
           <h:inputText value="#{deliveries.namePrefix}"/>
@@ -33,7 +33,7 @@
           <h:outputText value="&#160;" rendered="#{!deliveries.userInAdminRole}"/>
 
           <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-          <t:inputDate value="#{deliveries.startDateTo}" popupCalendar="true" type="both"/>
+          <eye:inputDate value="#{deliveries.startDateTo}" type="both"/>
 
           <h:outputText value="#{msg['delivery.status']}"/>
           <h:selectOneMenu value="#{deliveries.status}" >

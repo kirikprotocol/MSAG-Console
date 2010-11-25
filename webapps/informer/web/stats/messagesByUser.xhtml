@@ -22,7 +22,7 @@
         <eye:dataTableFilter bean="#{messagesByUserStats}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="4" columnClasses="column50Width,column300Width, column50Width, columnTopLeftAlign">
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
-            <t:inputDate value="#{messagesByUserStats.filter.fromDate}" popupCalendar="true" type="both" />
+            <eye:inputDate value="#{messagesByUserStats.filter.fromDate}" type="both" />
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.user']}" rendered="#{messagesByUserStats.admin}"/>
             <h:selectOneMenu value="#{messagesByUserStats.filter.user}" rendered="#{messagesByUserStats.admin}" required="false">
@@ -30,7 +30,7 @@
             </h:selectOneMenu>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
-            <t:inputDate value="#{messagesByUserStats.filter.tillDate}"  popupCalendar="true" type="both"/>
+            <eye:inputDate value="#{messagesByUserStats.filter.tillDate}" type="both"/>
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.detalised']}"/>
             <h:selectBooleanCheckbox value="#{messagesByUserStats.fullMode}"/>

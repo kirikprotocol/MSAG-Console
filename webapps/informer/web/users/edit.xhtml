@@ -92,9 +92,9 @@
 
           <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.active.period']}"/>
           <h:panelGroup>
-            <t:inputDate value="#{userEdit.deliveryStartTime}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
+            <eye:inputDate value="#{userEdit.deliveryStartTime}" required="true" type="short_time"/>
             <h:outputText style="white-space:nowrap;" value=" - "/>
-            <t:inputDate value="#{userEdit.deliveryEndTime}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
+            <eye:inputDate value="#{userEdit.deliveryEndTime}" required="true" type="short_time"/>
           </h:panelGroup>
 
 
@@ -136,7 +136,7 @@
                                     "/>
 
           <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
-          <t:inputDate id="validityPeriod" value="#{userEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" required="true"  type="short_time"/>
+          <eye:inputDate id="validityPeriod" value="#{userEdit.validityPeriod}" required="true"  type="short_time"/>
         </h:panelGrid>
 
       </eye:collapsingGroup>

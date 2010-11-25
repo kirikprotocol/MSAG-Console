@@ -15,6 +15,11 @@
 
     <h:form>
 
+      <eye:inputDate value="#{index1.date}" type="full"/>
+
+      <tr:commandLink text="Submit date" action="#{index1.printDate}"/>      
+
+
       <c:set var="i" value="1"/>
 
       <eye:dataTable value="#{index1.model}" var="r" selectedRows="#{index1.selected}">

@@ -50,14 +50,14 @@
           document.getElementById('deliveryStartTime.minutes').disabled=!this.checked"
           />
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodStart}"/>
-      <t:inputDate id="deliveryStartTime" value="#{deliveryGroupEdit.activePeriodStart}" requiredMessage="#{msg['date.required']}" type="short_time"/>
+      <eye:inputDate id="deliveryStartTime" value="#{deliveryGroupEdit.activePeriodStart}" type="short_time"/>
 
       <h:selectBooleanCheckbox id="editDeliveryEndTime" value="#{deliveryGroupEdit.editActivePeriodEnd}" onchange="
           document.getElementById('deliveryEndTime.hours').disabled=!this.checked;
           document.getElementById('deliveryEndTime.minutes').disabled=!this.checked;
           "/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodEnd}"/>
-      <t:inputDate id="deliveryEndTime" value="#{deliveryGroupEdit.activePeriodEnd}" requiredMessage="#{msg['date.required']}" type="short_time"/>
+      <eye:inputDate id="deliveryEndTime" value="#{deliveryGroupEdit.activePeriodEnd}" type="short_time"/>
 
       <h:selectBooleanCheckbox id="editEndDate" value="#{deliveryGroupEdit.editEndDate}" onchange="
           document.getElementById('endDate.day').disabled=!this.checked;
@@ -67,7 +67,7 @@
           document.getElementById('endDate.minutes').disabled=!this.checked;
           "/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
-      <t:inputDate popupCalendar="true" id="endDate" value="#{deliveryGroupEdit.endDate}" requiredMessage="#{msg['date.required']}" type="both"/>
+      <eye:inputDate id="endDate" value="#{deliveryGroupEdit.endDate}" type="both"/>
 
 
       <h:selectBooleanCheckbox id="editPriority" value="#{deliveryGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
@@ -146,7 +146,7 @@
                                    document.getElementById('validityPeriod.minutes').disabled=!this.checked;
                                    "/>
       <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <t:inputDate id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" type="short_time"/>
+      <eye:inputDate id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" type="short_time"/>
 
 
     </h:panelGrid>

@@ -98,6 +98,11 @@
     <converter-class>mobi.eyeline.informer.web.controllers.ErrorCodeConverter</converter-class>
   </converter>
 
+  <converter>
+    <converter-id>dateConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.components.DateConverter</converter-class>
+  </converter>
+
   <render-kit>
     <renderer>
       <component-family>Eyeline</component-family>

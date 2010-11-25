@@ -51,10 +51,10 @@
         <tr:inputText converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" required="true" simple="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
-        <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.startDate}" requiredMessage="#{msg['date.required']}" required="true" type="both" disabled="true"/>
+        <eye:inputDate value="#{deliveryEdit.delivery.startDate}" required="true" type="both" disabled="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
-        <t:inputDate popupCalendar="true" value="#{deliveryEdit.delivery.endDate}" type="both"/>
+        <eye:inputDate value="#{deliveryEdit.delivery.endDate}" type="both"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
@@ -66,9 +66,9 @@
 
         <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
         <h:panelGroup>
-          <t:inputDate value="#{deliveryEdit.activePeriodStart}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
+          <eye:inputDate value="#{deliveryEdit.activePeriodStart}" required="true" type="short_time"/>
           <h:outputText value=" - "/>
-          <t:inputDate value="#{deliveryEdit.activePeriodEnd}" requiredMessage="#{msg['date.required']}" required="true" type="short_time"/>
+          <eye:inputDate value="#{deliveryEdit.activePeriodEnd}" required="true" type="short_time"/>
         </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
@@ -124,7 +124,7 @@
             "/>
 
         <h:outputText id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-        <t:inputDate id="vPeriod" value="#{deliveryEdit.validityPeriod}" requiredMessage="#{msg['date.required']}" type="short_time"/>
+        <eye:inputDate id="vPeriod" value="#{deliveryEdit.validityPeriod}" type="short_time"/>
 
       </h:panelGrid>
 

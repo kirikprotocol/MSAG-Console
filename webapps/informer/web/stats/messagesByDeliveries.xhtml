@@ -21,7 +21,7 @@
           <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width,column50Width, columnTopLeftAlign">
 
             <h:outputText style="white-space:nowrap" value="#{msg['stat.page.from_date']}"/>
-            <t:inputDate value="#{messagesByDeliveries.filter.fromDate}" popupCalendar="true" type="both" />
+            <eye:inputDate value="#{messagesByDeliveries.filter.fromDate}" type="both" />
 
             <h:outputText style="white-space:nowrap" value="#{msg['stat.page.deliveryName']}"/>
             <t:inputText id="Name" value="#{messagesByDeliveries.nameFilter}"/>
@@ -30,7 +30,7 @@
             <h:outputText value="&#160;"/>
 
             <h:outputText style="white-space:nowrap" value="#{msg['stat.page.till_date']}"/>
-            <t:inputDate value="#{messagesByDeliveries.filter.tillDate}"  popupCalendar="true" type="both"/>
+            <eye:inputDate value="#{messagesByDeliveries.filter.tillDate}"  type="both"/>
 
             <h:outputText style="white-space:nowrap" value="#{msg['stat.page.user']}" rendered="#{messagesByDeliveries.admin}"/>
             <h:selectOneMenu value="#{messagesByDeliveries.filter.user}" rendered="#{messagesByDeliveries.admin}" required="false">

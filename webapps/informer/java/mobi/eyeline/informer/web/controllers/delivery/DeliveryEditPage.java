@@ -133,11 +133,15 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     User u = config.getUser(user);
     DeliveryFilter filter = new DeliveryFilter();
     filter.setNameFilter(delivery.getName());
+    filter.setResultFields(DeliveryFields.Name);
     final boolean[] intersection = new boolean[]{false};
     config.getDeliveries(u.getLogin(), u.getPassword(), filter, 1, new Visitor<DeliveryInfo>() {
       public boolean visit(DeliveryInfo value) throws AdminException {
-        intersection[0] = true;
-        return false;
+        if(value.getName().equals(delivery.getName())) {
+          intersection[0] = true;
+          return false;
+        }
+        return true;
       }
     });
     if (intersection[0]) {
