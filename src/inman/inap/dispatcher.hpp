@@ -64,6 +64,7 @@ private:
     volatile unsigned    _connCounter;
 
     TCDsp_CFG       _cfg;
+    unsigned        _maxUConnAtt;
     SS7Unit_CFG *   _unitCfg;   //TCAP Unit(s) configuration
 #ifdef EIN_HD
     char *          _rcpMgrAdr; //remote CP Manager addresses
