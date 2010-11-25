@@ -4,6 +4,9 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.notifications.DateAndFile;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListener;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.CSVTokenizer;
 import org.apache.log4j.Logger;
@@ -183,7 +186,7 @@ public class DeliveryNotificationsProducer implements Runnable {
   private void notifyListeners(DeliveryNotification notification) {
     for (DeliveryNotificationsListener listener : listeners) {
       try {
-        if(notification.getType()==DeliveryNotificationType.DELIVERY_START) {
+        if(notification.getType()== DeliveryNotificationType.DELIVERY_START) {
           listener.onDeliveryStartNotification(notification);
         }
         else {

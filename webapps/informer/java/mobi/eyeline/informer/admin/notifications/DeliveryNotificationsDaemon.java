@@ -1,11 +1,7 @@
 package mobi.eyeline.informer.admin.notifications;
 
-import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotification;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotificationType;
-import mobi.eyeline.informer.admin.delivery.DeliveryNotificationsListenerStub;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -42,7 +38,7 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerSt
   private static final int MAX_QUEUE_SIZE = 10000;
 
 
-  public DeliveryNotificationsDaemon(DeliveryNotificationsContext context) {  // todo Плохая зависимость от AdminContext. Надо придумать как от нее избавиться. Можно использовать пример Siebel.
+  public DeliveryNotificationsDaemon(DeliveryNotificationsContext context) {      
     this.context = context;
     scheduler = new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactory() {
       int n = 0;

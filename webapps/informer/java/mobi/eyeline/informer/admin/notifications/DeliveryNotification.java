@@ -1,4 +1,6 @@
-package mobi.eyeline.informer.admin.delivery;
+package mobi.eyeline.informer.admin.notifications;
+
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
 
 import java.util.Date;
 
