@@ -8,8 +8,12 @@
 # define __SMSC_USSMAN_CFG_READER_HPP__
 
 #include "logger/Logger.h"
+#include "util/config/XCFView.hpp"
+
+#include "inman/inap/xcfg/TCDspCfgParser.hpp"
+#include "inman/inap/xcfg/TCUsrCfgParser.hpp"
+
 #include "inman/uss/UssServiceCfg.hpp"
-#include "inman/inap/TCXCfgParser.hpp"
 
 namespace smsc  {
 namespace inman {

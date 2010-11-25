@@ -9,6 +9,8 @@
 
 #include "inman/interaction/server.hpp"
 #include "inman/inap/TCDspDefs.hpp"
+#include "inman/inap/TCDspIface.hpp"
+#include "inman/inap/TCUsrDefs.hpp"
 
 namespace smsc  {
 namespace inman {

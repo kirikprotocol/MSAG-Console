@@ -11,7 +11,7 @@
 /* -- NOTE: these defines are set by developers -- */
 #define USSMAN_VER_MAJOR     0    //major verison
 #define USSMAN_VER_MINOR     7    //minor version
-#define USSMAN_VER_FIX       3    //bug fix version
+#define USSMAN_VER_FIX       4    //bug fix version
 /* -- ----------------------------------------- -- */
 
 #define USSMAN_VENDOR        "Eyeline"

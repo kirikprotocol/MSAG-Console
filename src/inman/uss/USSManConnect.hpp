@@ -12,7 +12,7 @@
 # include <memory>
 # include <set>
 
-//# include "logger/Logger.h"
+# include "logger/Logger.h"
 # include "inman/interaction/connect.hpp"
 # include "inman/interaction/serializer.hpp"
 # include "util/Singleton.hpp"
@@ -23,6 +23,7 @@ namespace smsc {
 namespace inman {
 namespace uss {
 
+using smsc::logger::Logger;
 using smsc::inman::interaction::Connect;
 
 class USSRequestProcessor;
@@ -66,7 +67,7 @@ private:
 
 class USSManConnect : public smsc::inman::interaction::ConnectListenerITF {
 public:
-  USSManConnect(unsigned conn_id, smsc::logger::Logger* logger, const UssService_CFG& cfg);
+  USSManConnect(unsigned conn_id, Logger * logger, const UssService_CFG& cfg);
   ~USSManConnect();
 
   void onPacketReceived(smsc::inman::interaction::Connect* conn,
@@ -78,7 +79,7 @@ public:
 
   void markReqProcessorAsCompleted(USSRequestProcessor* ussReqProc);
 private:
-  smsc::logger::Logger *_logger;
+  Logger *      _logger;
   char          _logId[sizeof("Con[%u]") + sizeof(unsigned int)*3 + 1];
   const UssService_CFG& _cfg;
 

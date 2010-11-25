@@ -7,7 +7,7 @@
 #endif
 #define __INMAN_TCDSP_CONFIG_PARSING__
 
-#include "inman/inap/TCXCfgParser.hpp"
+#include "inman/inap/xcfg/TCDspCfgParser.hpp"
 #include "inman/services/ICSCfgReader.hpp"
 
 #ifdef EIN_HD

@@ -9,6 +9,6 @@
 switch EIN_SS7_LINKAGE
 static: #no need for .so loader, service is statically linked into libinman
 default: \
-inman/ldlib/libinman_ics_tcapdsp.so TCAPDspLoader $(SHARED_OPT) -linman-services-tcapdsp -linman-inap -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-comp -linman-common -ldl -lrt
+inman/ldlib/libinman_ics_tcapdsp.so TCAPDspLoader $(SHARED_OPT) -linman-services-tcapdsp -linman-inap-xcfg -linman-inap -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-comp -linman-common -ldl -lrt
 end switch
 

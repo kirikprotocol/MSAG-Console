@@ -7,22 +7,19 @@
 #endif
 #define __INMAN_TCAP_DISPATCHER_HPP
 
-#include "logger/Logger.h"
-using smsc::logger::Logger;
-
 #include "core/threads/Thread.hpp"
-using smsc::core::threads::Thread;
-
 #include "core/synchronization/EventMonitor.hpp"
-using smsc::core::synchronization::EventMonitor;
 
 #include "inman/inap/TCDspDefs.hpp"
+#include "inman/inap/TCDspIface.hpp"
 #include "inman/inap/HDSSnSession.hpp"
-using smsc::inman::inap::SSNSession;
 
 namespace smsc  {
 namespace inman {
 namespace inap  {
+
+using smsc::core::threads::Thread;
+using smsc::core::synchronization::EventMonitor;
 
 //TCAPDispatcher: manages SS7 stack connecton, listens for TCAP messages
 //NOTE: this is a singleton, so initialization is not thread safe

@@ -15,8 +15,8 @@
 # include "inman/interaction/server.hpp"
 # include "inman/inap/dispatcher.hpp"
 
-# include "UssServiceCfg.hpp"
-# include "USSManConnect.hpp"
+# include "inman/uss/UssServiceCfg.hpp"
+# include "inman/uss/USSManConnect.hpp"
 
 namespace smsc  {
 namespace inman {

@@ -18,7 +18,7 @@
 #include "inman/inap/ACRegDefs.hpp"
 #include "inman/inap/SS7Types.hpp"
 #include "inman/inap/TCDlgDefs.hpp"
-#include "inman/inap/SS7HDCfgDefs.hpp"
+#include "inman/inap/SS7UnitsDefs.hpp"
 
 
 namespace smsc {
