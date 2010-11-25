@@ -7,7 +7,7 @@
 #endif
 #define __SMSC_INMAN_TCAP_DEFS__
 
-#include <string>
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc {
 namespace inman {
@@ -108,23 +108,20 @@ public:
 extern TCDlgStateMASK   _TCDlgStateMasks; //Must be initialized somewhere!
 
 class TCDlgState {
-private:
-    unsigned int    _inited;
-    unsigned int    _continued;
-    unsigned int    _ended;
-    unsigned int    _aborted;
-    unsigned int    _closed;
-
 public:
-    TCDlgStateT    value;
+    static const size_t _StrSZ = 10*sizeof(",N") + 2;
+    typedef smsc::core::buffers::FixedLengthString<_StrSZ>
+      StringForm_t;
 
     enum Stage_e { dlgIdle = 0,
-        dlgInited, dlgContinued, dlgEnded, dlgAborted, dlgClosed
+      dlgInited, dlgContinued, dlgEnded, dlgAborted, dlgClosed
     };
+
+    TCDlgStateT    value;
 
     TCDlgState()
     {
-        value.mask = 0;
+      value.mask = 0;
     }
     ~TCDlgState()
     { }
@@ -157,9 +154,9 @@ public:
                                           || (value.s.dlgLContinued > 1)
                                           || (value.s.dlgLEnded > 1)); }
 
-    std::string Print(void) const
+    StringForm_t Print(void) const
     {
-        char buf[32];
+        char buf[_StrSZ];
         short i = 0;
         buf[i++] = 0x30 + value.s.dlgLInited; 
         buf[i++] = ','; buf[i++] = 0x30 + value.s.dlgRInited;
@@ -174,7 +171,7 @@ public:
         return buf;
     }
 };
-
+typedef TCDlgState::StringForm_t TCDlgStateString_t;
 
 } //inap
 } //inman
