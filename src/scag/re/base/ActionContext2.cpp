@@ -51,6 +51,28 @@ routeId(_routeId)
 }
 
 
+ActionContext::ActionContext( Hash<Property>*  constants,
+                              Session*         session, 
+                              CommandAccessor* command,
+                              CommandProperty* commandProperty,
+                              RuleStatus*      rs) :
+    isTrueCondition(false),
+    status_(rs),
+    constants_(constants),
+    infrastructConstants_(0),
+    session_(session),
+    command_(command),
+    commandProperty_(commandProperty),
+    tariffOperId_(uint32_t(-1)),
+    destroyService_(-1),
+    contextScopeId_(0),
+    rule_(0)
+{
+    if (session_ && session_->getCurrentOperation()) {
+        contextScopeId_ = session_->getCurrentOperation()->getContextScope();
+    }
+}
+
 
 FieldType ActionContext::Separate(const std::string& var,const char *& name)
 {
@@ -80,6 +102,9 @@ void ActionContext::resetContext( Hash<Property>*  constants,
     status_ = rs;
     constants_ = constants;
     session_ = session;
+    if (session_ && session_->getCurrentOperation()) {
+        contextScopeId_ = session_->getCurrentOperation()->getContextScope();
+    }
     command_ = command;
     commandProperty_ = commandProperty;
     if ( infrastructConstants_ ) infrastructConstants_->Empty();
@@ -98,21 +123,21 @@ void ActionContext::clearLongCallContext()
 
 void ActionContext::setContextScope( int id )
 {
-    if (!session_->getCurrentOperation()) {
-        throw Exception("setCtxScope: session has no operation %s",
-                        session_->sessionKey().toString().c_str() );
+    contextScopeId_ = id;
+    if (session_->getCurrentOperation()) {
+        session_->getCurrentOperation()->setContextScope( id );
     }
-    session_->getCurrentOperation()->setContextScope( id );
 }
 
 
 int ActionContext::getContextScope() const
 {
-    if (!session_->getCurrentOperation()) {
-        throw Exception("getCtxScope: session has no operation %s",
-                        session_->sessionKey().toString().c_str() );
+    int id = contextScopeId_;
+    if (session_->getCurrentOperation()) {
+        id = session_->getCurrentOperation()->getContextScope();
+        contextScopeId_ = id;
     }
-    return session_->getCurrentOperation()->getContextScope();
+    return id;
 }
 
 
@@ -140,11 +165,8 @@ Property* ActionContext::getProperty( const std::string& var )
     }
 
     case ftContext: {
-        if ( !session_->getCurrentOperation()) {
-            throw Exception("getProperty(context): session has no operation %s",
-                            session_->sessionKey().toString().c_str() );
-        }
-        scope = session_->getContextScope( session_->getCurrentOperation()->getContextScope() );
+        const int id = getContextScope();
+        scope = session_->getContextScope(id);
         break;
     }
 
@@ -207,10 +229,8 @@ void ActionContext::delProperty( const std::string& var )
         break;
     }
     case ftContext: {
-        if ( ! session_->getCurrentOperation() ) {
-            throw SCAGException( "ActionContext:delProperty(%s): no current operation", var.c_str());
-        }
-        scope = session_->getContextScope( session_->getCurrentOperation()->getContextScope() );
+        const int id = getContextScope();
+        scope = session_->getContextScope(id);
         break;
     }
     case ftOperation: {
