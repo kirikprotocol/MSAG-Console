@@ -132,9 +132,5 @@ public class ContentProviderDaemon extends DeliveryNotificationsListenerStub imp
     }
     return userDir;
   }
-
-
-  public File getWorkDir() {
-    return workDir;
-  }
+ 
 }
