@@ -337,6 +337,8 @@ void InfosmeCoreV1::selfTest()
             throw InfosmeException(EXC_NOTFOUND,"U='%s' is not found",userId);
         }
 
+        smsc_log_info(log_,"--- selfTest started ---");
+
         DeliveryInfoData data;
         {
             data.name = "Моя рассылка";
@@ -361,12 +363,12 @@ void InfosmeCoreV1::selfTest()
             data.finalDlvRecords = true;
             data.finalMsgRecords = true;
         }
-        smsc_log_debug(log_,"--- adding new delivery for U='%s' ---",userId);
+        smsc_log_info(log_,"--- adding new delivery for U='%s' ---",userId);
 
         const dlvid_type dlvId = addDelivery(*user, data);
-        smsc_log_debug(log_,"--- delivery added, D=%u ---", dlvId);
+        smsc_log_info(log_,"--- delivery added, D=%u ---", dlvId);
 
-        smsc_log_debug(log_,"--- getting delivery D=%u ---", dlvId);
+        smsc_log_info(log_,"--- getting delivery D=%u ---", dlvId);
         DeliveryPtr dlv = getDelivery(*user,dlvId);
         if (!dlv.get()) {
             throw InfosmeException(EXC_NOTFOUND,"D=%u is not found",dlvId);
@@ -374,7 +376,7 @@ void InfosmeCoreV1::selfTest()
 
         // adding glossary messages
         {
-            smsc_log_debug(log_,"--- setting text glossary for D=%u ---", dlvId);
+            smsc_log_info(log_,"--- setting text glossary for D=%u ---", dlvId);
             std::vector< std::string > glotexts;
             glotexts.push_back("Русский текст");
             glotexts.push_back("the second message");
@@ -382,8 +384,8 @@ void InfosmeCoreV1::selfTest()
         }
 
         {
-            smsc_log_debug(log_,"--- adding messages to D=%u ---",dlvId);
-            for ( int pass = 0; pass < 1000; ++pass ) {
+            smsc_log_info(log_,"--- adding messages to D=%u ---",dlvId);
+            for ( int pass = 0; pass < 100; ++pass ) {
                 MessageList msgList;
                 if (stopping_) break;
                 for ( int j = 0; j < 1000; ++j ) {
@@ -411,7 +413,7 @@ void InfosmeCoreV1::selfTest()
         }
 
         {
-            smsc_log_debug(log_,"--- getting text glossary for D=%u ---", dlvId);
+            smsc_log_info(log_,"--- getting text glossary for D=%u ---", dlvId);
             std::vector< std::string > glotexts;
             dlv->getGlossary( glotexts );
         }
@@ -430,7 +432,7 @@ void InfosmeCoreV1::selfTest()
         {
             smsc_log_debug(log_,"--- changing delivery D=%u state ---", dlvId);
             dlv->setState(DLVSTATE_ACTIVE);
-            smsc_log_debug(log_,"--- delivery activated ---");
+            smsc_log_info(log_,"--- delivery activated ---");
         }
 
         /*
