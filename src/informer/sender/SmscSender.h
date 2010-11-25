@@ -43,13 +43,22 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
     friend class ScoredPtrList< SmscSender >;
     typedef smsc::core::buffers::CyclicQueue< ResponseData > DataQueue;
     typedef std::list< ReceiptData > ReceiptList;
-
     class SmscJournal;
 
+    struct ResponseTimer;
+    typedef std::multimap< msgtime_type, ResponseTimer > RespWaitQueue;
+
     struct DRMTrans : public DlvRegMsgId {
-        unsigned     nchunks;
-        bool         trans;
-        msgtime_type endTime; // wait time of receipt
+        unsigned                nchunks;
+        bool                    trans;
+        msgtime_type            endTime; // receipt wait time
+        RespWaitQueue::iterator respTimer;
+    };
+
+    struct ResponseTimer
+    {
+        int                      seqNum;
+        DRMTrans*                drmPtr;
     };
 
 public:
@@ -124,7 +133,8 @@ private:
     usectime_type                                     currentTime_;
 
     smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;
-    smsc::core::buffers::CyclicQueue< ResponseTimer > respWaitQueue_;
+    std::multimap<msgtime_type, ResponseTimer>        respWaitQueue_;
+    // FIXME: optimize make timers ala resptimer
     std::multimap<msgtime_type, ReceiptId>            rcptWaitQueue_;
 
     // when process receipt/response.

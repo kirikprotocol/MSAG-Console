@@ -385,22 +385,32 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             seqNum = session_->getNextSeq();
         } while (seqNum == 0);
         DRMTrans* drm = seqnumHash_.GetPtr(seqNum);
-        if (!drm) {
+        if (drm) {
+            // we have to cleanup respTimer
+            if (drm->respTimer != respWaitQueue_.end()) {
+                respWaitQueue_.erase(drm->respTimer);
+            }
+        } else {
             drm = &seqnumHash_.Insert(seqNum,DRMTrans());
         }
+
+        // making responseTimer
+        {
+            ResponseTimer rt;
+            const msgtime_type endTime = now + getCS()->getResponseWaitTime();
+            rt.seqNum = seqNum;
+            rt.drmPtr = drm;
+            drm->respTimer = respWaitQueue_.insert(respWaitQueue_.end(),
+                                                   std::make_pair(endTime,rt));
+        }
+
+        // filling drm
         drm->dlvId = info.getDlvId();
         drm->regId = ptr.getRegionId();
         drm->msgId = msg.msgId;
         drm->nchunks = 0;
         drm->trans = info.isTransactional();
         drm->endTime = now + validityTime + getCS()->getReceiptExtraWaitTime();
-
-        {
-            ResponseTimer rt;
-            rt.endTime = now + getCS()->getResponseWaitTime();
-            rt.seqNum = seqNum;
-            respWaitQueue_.Push(rt);
-        }
 
         // prepare the sms
         try {
@@ -520,7 +530,12 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
     }
 
     if (seqNum!=0) {
-        seqnumHash_.Delete(seqNum);
+        DRMTrans drm;
+        if (seqnumHash_.Pop(seqNum,drm)) {
+            if (drm.respTimer != respWaitQueue_.end()) {
+                respWaitQueue_.erase(drm.respTimer);
+            }
+        }
     }
 
     uint8_t len, ton, npi;
@@ -739,7 +754,6 @@ void SmscSender::handleResponse( smsc::sme::SmppHeader* pdu )
         smsc_log_info(log_,"S='%s' sms msgid='%s' seq=%u wasn't accepted, errcode=%d",
                       smscId_.c_str(), rd.rcptId.msgId, rd.seqNum, rd.status );
     }
-    // rd.retry = rd.wantRetry(rd.status);
     rd.retry = true;
     queueData(rd);
 }
@@ -775,9 +789,14 @@ void SmscSender::processQueue( DataQueue& queue )
 
             DRMTrans drm;
             if ( !seqnumHash_.Pop(rd.seqNum,drm) ) {
+                // not found in seqnum hash, expired
                 smsc_log_warn(log_,"S='%s' resp (seq=%u,status=%d,msgid='%s') has no drm mapping, expired?",
                               smscId_.c_str(),rd.seqNum,rd.status,rd.rcptId.msgId);
                 continue;
+            }
+            if (drm.respTimer != respWaitQueue_.end()) {
+                // remove timer
+                respWaitQueue_.erase(drm.respTimer);
             }
 
             if (drm.trans) {
@@ -1105,39 +1124,49 @@ void SmscSender::processExpiredTimers()
 {
     // NOTE: i'm too lazy to implement the same code here, so calling queueData
     const msgtime_type now = msgtime_type(currentTime_/tuPerSec);
-    ResponseTimer rt;
-    while (!isStopping_) {
-
-        if ( respWaitQueue_.Count() <= 0 ) { break; }
-        if ( respWaitQueue_.Front().endTime > now ) { break; }
-        if (!respWaitQueue_.Pop(rt)) { break; }
-
-        smsc_log_debug(log_,"S='%s' expired (%u sec) resp seq=%u",
-                       smscId_.c_str(), unsigned(now-rt.endTime), rt.seqNum);
-        ResponseData rd;
-        rd.seqNum = rt.seqNum;
-        rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
-        rd.rcptId.setMsgId("");
-        rd.retry = true;
-        queueData(rd);
+    if ( isStopping_ ) return;
+    {
+        std::multimap<msgtime_type, ResponseTimer>::iterator iter, upto;
+        iter = respWaitQueue_.begin();
+        upto = respWaitQueue_.lower_bound(now);
+        for ( ; iter != upto; ++iter ) {
+            if (isStopping_) { break; }
+            ResponseData rd;
+            ResponseTimer& rt = iter->second;
+            rd.seqNum = rt.seqNum;
+            rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
+            rd.rcptId.setMsgId("");
+            rd.retry = true;
+            // remove ref to this timer
+            if (rt.drmPtr) {
+                rt.drmPtr->respTimer = respWaitQueue_.end();
+            }
+            queueData(rd);
+            smsc_log_debug(log_,"S='%s' expired (%u sec) resp seq=%u",
+                           smscId_.c_str(), unsigned(now - iter->first), rd.seqNum);
+        }
+        respWaitQueue_.erase(respWaitQueue_.begin(),iter);
     }
 
     if (isStopping_) return;
-    std::multimap<msgtime_type, ReceiptId>::iterator i, upto;
-    i = rcptWaitQueue_.begin();
-    upto = rcptWaitQueue_.lower_bound(now);
-    for ( ; i != upto; ++i ) {
-        if (isStopping_) { break; }
-        smsc_log_debug(log_,"S='%s' expired (%u sec) rcpt.msgId='%s'",
-                       smscId_.c_str(), unsigned(now-rt.endTime), i->second.msgId);
-        ResponseData rd;
-        rd.seqNum = 0; // receipt
-        rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
-        rd.rcptId.setMsgId(i->second.msgId);
-        rd.retry = true;
-        queueData(rd);
+    {
+        std::multimap<msgtime_type, ReceiptId>::iterator iter, upto;
+        iter = rcptWaitQueue_.begin();
+        upto = rcptWaitQueue_.lower_bound(now);
+        for ( ; iter != upto; ++iter ) {
+            if (isStopping_) { break; }
+            ResponseData rd;
+            rd.seqNum = 0; // receipt
+            rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
+            rd.rcptId.setMsgId(iter->second.msgId);
+            rd.retry = true;
+            queueData(rd);
+            smsc_log_debug(log_,"S='%s' expired (%u sec) rcpt.msgId='%s'",
+                           smscId_.c_str(), unsigned(now - iter->first),
+                           rd.rcptId.msgId);
+        }
+        rcptWaitQueue_.erase(rcptWaitQueue_.begin(),iter);
     }
-    rcptWaitQueue_.erase(rcptWaitQueue_.begin(), i);
 }
 
 

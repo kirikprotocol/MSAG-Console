@@ -30,25 +30,10 @@ public:
     int         seqNum; // 0 if receipt, any other if response
     int         status;
     ReceiptId   rcptId;
+    /// if we need to attempt to generate retry:
+    ///  - response - always true;
+    ///  - receipt - deduced from receipt message_state (final/non-final).
     bool        retry;
-    
-    /* not needed anymore - using per smsc policy
-    static bool wantRetry( int stat ) {
-        if ( stat != smsc::system::Status::OK && 
-             !smsc::system::Status::isErrorPermanent(stat) ) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-     */
-};
-
-
-struct ResponseTimer
-{
-    msgtime_type endTime;
-    int          seqNum;
 };
 
 
@@ -58,7 +43,7 @@ struct ReceiptData
     ReceiptId    rcptId;
     msgtime_type endTime;
     int          status;
-    uint16_t     responded; // 0 -- not responed, >0 -- responded (nchunks)
+    uint16_t     responded; // 0 -- not responded, >0 -- responded (nchunks)
     bool         retry;
 };
 
