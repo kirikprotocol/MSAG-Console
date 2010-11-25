@@ -295,10 +295,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
 {
     const DeliveryInfo& info = ptr.getDlvInfo();
 
-    smsc_log_info(log_,"send(R=%u/D=%u/M=%llu)",
-                  unsigned(ptr.getRegionId()),
-                  unsigned(info.getDlvId()),
-                  ulonglong(msg.msgId));
+    smsc_log_debug(log_,"send(R=%u/D=%u/M=%llu)",
+                   unsigned(ptr.getRegionId()),
+                   unsigned(info.getDlvId()),
+                   ulonglong(msg.msgId));
     char whatbuf[150];
     const char* what = "";
     int res = smsc::system::Status::OK;
@@ -775,7 +775,8 @@ void SmscSender::processQueue( DataQueue& queue )
 
             DRMTrans drm;
             if ( !seqnumHash_.Pop(rd.seqNum,drm) ) {
-                smsc_log_warn(log_,"S='%s' resp seq=%u has no drm mapping", smscId_.c_str(), rd.seqNum);
+                smsc_log_warn(log_,"S='%s' resp (seq=%u,status=%d,msgid='%s') has no drm mapping, expired?",
+                              smscId_.c_str(),rd.seqNum,rd.status,rd.rcptId.msgId);
                 continue;
             }
 
