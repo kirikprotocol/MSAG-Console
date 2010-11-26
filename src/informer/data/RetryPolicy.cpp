@@ -25,7 +25,7 @@ void RetryPolicy::init( Config* cfg )
         std::auto_ptr<CStrSet> temps(cfg->getChildStrParamNames("temporary"));
         std::auto_ptr<Config> subc(cfg->getSubConfig("temporary",true));
         for ( CStrSet::const_iterator i = temps->begin(); i != temps->end(); ++i ) {
-            std::auto_ptr<RetryString> rs;
+            std::auto_ptr<RetryString> rs(new RetryString);
             rs->init(i->c_str());
             policyList.push_back(rs.release());
             const char* items = subc->getString(i->c_str());
