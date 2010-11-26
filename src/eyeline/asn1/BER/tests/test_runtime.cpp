@@ -31,7 +31,10 @@ void test_runtime()
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
-
+  if (!eyeline::asn1::ber::tests::test_OCTET_STRING_constructed(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
   if (!eyeline::asn1::ber::tests::test_BIT_STRING(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else

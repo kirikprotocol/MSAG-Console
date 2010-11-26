@@ -18,11 +18,14 @@ namespace tests {
 bool
 test_INT_edgeValue(char* err_msg)
 {
-  IntValue_t value1= -1, value2= 0x7fffffff, value3=0xFFFFFFFF;
+  IntValue_t value1= -1, value2= 0x7fffffff,
+             value3= 0xFFFFFFFF, value4= 0x400000, value5= 0x4000;
   asn_enc_rval_t retVal;
   char patternTrSyntax_1[MAX_PATTERN_LEN]={0};
   char patternTrSyntax_2[MAX_PATTERN_LEN]={0};
   char patternTrSyntax_3[MAX_PATTERN_LEN]={0};
+  char patternTrSyntax_4[MAX_PATTERN_LEN]={0};
+  char patternTrSyntax_5[MAX_PATTERN_LEN]={0};
 
   printf("test_INT_edgeValue:\t\t");
   retVal = der_encode(&asn_DEF_IntValue,
@@ -45,6 +48,20 @@ test_INT_edgeValue(char* err_msg)
     return false;
 
   fprintf(logfile, "test_INT_edgeValue:: IntValue=0xffffffff, trSyntax=%s, retVal=%ld\n", patternTrSyntax_3, retVal.encoded);
+
+  retVal = der_encode(&asn_DEF_IntValue,
+                      &value4, write_transfer_syntax, patternTrSyntax_4);
+  if (retVal.encoded == -1)
+    return false;
+
+  fprintf(logfile, "test_INT_edgeValue:: IntValue=0x400000, trSyntax=%s, retVal=%ld\n", patternTrSyntax_4, retVal.encoded);
+
+  retVal = der_encode(&asn_DEF_IntValue,
+                      &value5, write_transfer_syntax, patternTrSyntax_5);
+  if (retVal.encoded == -1)
+    return false;
+
+  fprintf(logfile, "test_INT_edgeValue:: IntValue=0x4000, trSyntax=%s, retVal=%ld\n", patternTrSyntax_5, retVal.encoded);
 
   try {
     EncoderOfINTEGER encInt;
@@ -116,6 +133,58 @@ test_INT_edgeValue(char* err_msg)
     if ( strcmp(trSyntaxAsStr, patternTrSyntax_3)) {
       snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_3, trSyntaxAsStr);
       fprintf(logfile, "test_INT_edgeValue:: expected value='%s', calculated value='%s'\n", patternTrSyntax_3, trSyntaxAsStr);
+      return false;
+    }
+  } catch (std::exception& ex) {
+    snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
+    fprintf(logfile, "test_INT_edgeValue:: caught exception [%s]\n", ex.what());
+    return false;
+  }
+
+  try {
+    EncoderOfINTEGER encInt;
+    encInt.setValue(0x400000);
+
+    uint8_t encodedBuf[MAX_ENCODED_LEN];
+    char trSyntaxAsStr[MAX_PATTERN_LEN];
+
+    ENCResult encResult= encInt.encode(encodedBuf, MAX_ENCODED_LEN);
+    fprintf(logfile, "test_INT_edgeValue:: ENCResult.status=%d\n", encResult.status);
+    if (encResult.status != ENCResult::encOk) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "ENCResult.status=%d", encResult.status);
+      return false;
+    }
+    utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
+    fprintf(logfile, "test_INT_edgeValue:: IntValue=0x400000, trSyntax=%s\n", trSyntaxAsStr);
+    if ( strcmp(trSyntaxAsStr, patternTrSyntax_4)) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_4, trSyntaxAsStr);
+      fprintf(logfile, "test_INT_edgeValue:: expected value='%s', calculated value='%s'\n", patternTrSyntax_4, trSyntaxAsStr);
+      return false;
+    }
+  } catch (std::exception& ex) {
+    snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
+    fprintf(logfile, "test_INT_edgeValue:: caught exception [%s]\n", ex.what());
+    return false;
+  }
+
+  try {
+    EncoderOfINTEGER encInt;
+    encInt.setValue(0x4000);
+
+    uint8_t encodedBuf[MAX_ENCODED_LEN];
+    char trSyntaxAsStr[MAX_PATTERN_LEN];
+
+    ENCResult encResult= encInt.encode(encodedBuf, MAX_ENCODED_LEN);
+    fprintf(logfile, "test_INT_edgeValue:: ENCResult.status=%d\n", encResult.status);
+    if (encResult.status != ENCResult::encOk) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "ENCResult.status=%d", encResult.status);
+      return false;
+    }
+    utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
+    fprintf(logfile, "test_INT_edgeValue:: IntValue=0x4000, trSyntax=%s\n", trSyntaxAsStr);
+    if ( strcmp(trSyntaxAsStr, patternTrSyntax_5)) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_5, trSyntaxAsStr);
+      fprintf(logfile, "test_INT_edgeValue:: expected value='%s', calculated value='%s'\n", patternTrSyntax_5, trSyntaxAsStr);
       return false;
     }
   } catch (std::exception& ex) {

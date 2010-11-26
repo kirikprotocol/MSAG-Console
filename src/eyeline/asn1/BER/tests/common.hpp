@@ -20,6 +20,7 @@ bool test_BOOL(char* err_msg);
 bool test_INT(char* err_msg);
 bool test_INT_edgeValue(char* err_msg);
 bool test_OCTET_STRING(char* err_msg);
+bool test_OCTET_STRING_constructed(char* err_msg);
 bool test_BIT_STRING(char* err_msg);
 bool test_SeqType1(char* err_msg);
 bool test_SeqTypeExplicit1(char* err_msg);
