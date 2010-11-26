@@ -6,54 +6,56 @@
         xmlns:ui="http://java.sun.com/jsf/facelets">
   <tr:document title="#{msg['informer.title']}" >
 
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/colors.css"/>
 
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/common.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/list.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/properties_list.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/main_menu.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_list.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/navbar.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/messages.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/message.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/page_menu.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/page_calendar.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/colors.css"/>
 
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/sme_menu.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/header.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/common.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/list.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/properties_list.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/main_menu.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_list.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/navbar.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/messages.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/message.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/page_menu.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/page_calendar.css"/>
+
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/sme_menu.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/header.css"/>
 
 
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_group.css"/>
-  <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/data_table_filter.css"/>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/collapsing_group.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/dynamic_table.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/ajax.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table_filter.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/updatable_content.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/selectToggleMany.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/page_calendar.js"></script>
-  <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menubar.js"></script>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/collapsing_group.css"/>
+    <link rel="STYLESHEET" type="text/css" href="#{facesContext.externalContext.requestContextPath}/styles/data_table_filter.css"/>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/collapsing_group.js"></script>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/dynamic_table.js"></script>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/ajax.js"></script>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table.js"></script>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/data_table_filter.js"></script>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/updatable_content.js"></script>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/selectToggleMany.js"></script>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/page_calendar.js"></script>
+    <script type="text/javascript" language="javascript" src="#{facesContext.externalContext.requestContextPath}/js/menubar.js"></script>
 
-  <script type="text/javascript">
+    <script type="text/javascript">
 
-    function submitFormOnEnter(e) {
-      if (!e)
-        e = window.event;
-      var keyCode = e.keyCode; // For IE
-      if (!keyCode)
-        keyCode = e.which; // For Firefox
-      if (keyCode == 13) // On Enter
-        opForm.submit();
+      function submitFormOnEnter(e) {
+        if (!e)
+          e = window.event;
+        var keyCode = e.keyCode; // For IE
+        if (!keyCode)
+          keyCode = e.which; // For Firefox
+        if (keyCode == 13) // On Enter
+          opForm.submit();
 
-      return true;
-    }
-  </script>
+        return true;
+      }
+    </script>
 
-    <table cellspacing="0" cellpadding="0" height="100%" style="min-height:100%">
-      <tr height="100">
-        <td width="30" background="#{facesContext.externalContext.requestContextPath}/images/smsc_03.jpg" rowspan="4"></td>
-        <td bgcolor="#F3F0E3" valign="top" colspan="3">
+    <table cellspacing="0" cellpadding="0" height="100%" >
+      <tr height="98%">
+        <td width="30" background="#{facesContext.externalContext.requestContextPath}/images/smsc_03.jpg" rowspan="3"></td>
+        <td bgcolor="#F3F0E3" valign="top">
+
           <!-- "SMS Service Center" header -->
           <table cellspacing="0" cellpadding="0" border="0">
             <tr>
@@ -76,36 +78,56 @@
               <td width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_19.jpg" style="padding-right:0px;"></td>
             </tr>
           </table>
-        </td>
-        <td width="30" background="#{facesContext.externalContext.requestContextPath}/images/smsc_07.jpg" rowspan="4"></td>
-      </tr>
-      <tr height="90%">
-        <td width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_24.jpg" rowspan="2"></td>
-        <td valign="top">
-          <table cellspacing="0" cellpadding="0">
+
+          <table cellspacing="0" cellpadding="0" style="height:100%">
+
             <tr>
-              <td valign="top">                
+              <td width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_24.jpg" ></td>
+              <td valign="top">
                 <tr:messages id="informer_errors"/>
                 <eye:delimiter/>
                 <ui:insert name="content"/>
                 <eye:delimiter/>
               </td>
+              <td height="1px" width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_26.jpg"></td>
             </tr>
+
           </table>
+
         </td>
-        <td height="1px" width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_26.jpg" rowspan="2"></td>
+
+        <td width="30" background="#{facesContext.externalContext.requestContextPath}/images/smsc_07.jpg" rowspan="3"></td>
+
       </tr>
 
-      <tr height="1">
-          <td height="1px" bgcolor="#F3F0E3"><img height="0px" width="1px"/></td>
+      <tr height="1%">
+        <td style="position:relative;">
+          <table cellspacing="0" cellpadding="0" height="100%">
+            <tr>
+              <td height="1px" width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_24.jpg"></td>
+              <td height="1px" bgcolor="#F3F0E3"><img height="0px" width="1px"/></td>
+              <td height="1px" width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_26.jpg"></td>
+            </tr>
+          </table>
+
+        </td>
       </tr>
-      <tr height="15">
-          <td width="12" background="#{facesContext.externalContext.requestContextPath}/images/smsc_30.jpg"></td>
-          <td align="right" bgcolor="#161E49"><span
-              style="color: #6F77A3;">Copyright&#160;&#160;2003-2010.&#160;All&#160;rights&#160;reserved.</span>
-          </td>
-          <td width="12" background="#{facesContext.externalContext.requestContextPath}/images/smsc_32.jpg"></td>
+      <tr height="1%">
+        <td>
+          <table cellpadding="0" cellspacing="0">
+            <tr>
+              <td width="12" background="#{facesContext.externalContext.requestContextPath}/images/smsc_30.jpg"></td>
+              <td align="right" bgcolor="#161E49"><span
+                  style="color: #6F77A3;">Copyright&#160;&#160;2003-2010.&#160;All&#160;rights&#160;reserved.</span>
+              </td>
+              <td width="12" background="#{facesContext.externalContext.requestContextPath}/images/smsc_32.jpg"></td>
+            </tr>
+
+          </table>
+        </td>
       </tr>
     </table>
   </tr:document>
+
+
 </f:view>
