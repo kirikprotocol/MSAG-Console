@@ -36,14 +36,15 @@ public:
                                     uint16_t  retryCount ) const;
 
 private:
-    int nextItem( const char*& p,
-                  const char*  policy,
-                  const char*  items );
-
-private:
     typedef smsc::core::buffers::IntHash< RetryString* > SmppHash;
     typedef std::vector< RetryString* >                  PolicyList;
 
+    int nextItem( const char*& p,
+                  const char*  policy,
+                  const char*  items,
+                  SmppHash*    smppHash );
+
+private:
     /// if the code is not found it is permanent.
     /// if the code is found, but the pointer is null it is immediate,
     /// otherwise -- use policy.

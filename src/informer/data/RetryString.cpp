@@ -134,10 +134,12 @@ void RetryString::init( const char* line )
                                            line, unsigned(p-line));
                 }
                 items_[idx].count = attempts;
-                items_[idx].interval = val;
+                items_[idx].interval = res;
                 ++idx;
-                if ( (*p == '\0' && idx != itemsize_) || (idx>= itemsize_)) {
-                    throw InfosmeException(EXC_LOGICERROR,"miscounted items in '%s', mea culpa",line);
+                if ( (*p == '\0' && idx != itemsize_) ||
+                     (*p != '\0' && idx >= itemsize_) ) {
+                    throw InfosmeException(EXC_LOGICERROR,"miscounted items in '%s' (idx=%u itemsize=%u eol=%d), mea culpa",
+                                           line, idx, itemsize_, *p == '\0' );
                 }
                 if (*p == '\0') {
                     break;

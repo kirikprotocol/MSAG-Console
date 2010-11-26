@@ -230,7 +230,8 @@ private:
 
 SmscSender::SmscSender( ReceiptProcessor&  core,
                         const std::string& smscId,
-                        const SmscConfig&  cfg ) :
+                        const SmscConfig&  cfg,
+                        smsc::util::config::Config* retryConfig ) :
 log_(0),
 rproc_(core),
 parser_(0),
@@ -266,6 +267,7 @@ isStopping_(true)
           i != receiptList_.end(); ++i ) {
         rcptWaitQueue_.insert(std::make_pair(i->endTime,i->rcptId));
     }
+    retryPolicy_.init(retryConfig);
 }
 
 
@@ -550,10 +552,12 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
 }
 
 
-void SmscSender::updateConfig( const SmscConfig& config )
+void SmscSender::updateConfig( const SmscConfig& config,
+                               smsc::util::config::Config* retryConfig )
 {
     stop();
     MutexGuard mg(reconfLock_);
+    retryPolicy_.init(retryConfig);
     smscConfig_ = config;
     session_.reset(new smsc::sme::SmppSession(smscConfig_.smeConfig,this));
 }
@@ -751,7 +755,7 @@ void SmscSender::handleResponse( smsc::sme::SmppHeader* pdu )
         rd.rcptId.setMsgId(passedid);
     }
     if (!accepted) {
-        smsc_log_info(log_,"S='%s' sms msgid='%s' seq=%u wasn't accepted, errcode=%d",
+        smsc_log_info(log_,"S='%s' sms msgid='%s' seq=%u wasn't accepted, status=%d",
                       smscId_.c_str(), rd.rcptId.msgId, rd.seqNum, rd.status );
     }
     rd.retry = true;

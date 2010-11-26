@@ -355,7 +355,7 @@ void InfosmeCoreV1::selfTest()
             data.deliveryMode = DLVMODE_SMS;
             data.owner = userId;
             data.retryOnFail = true;
-            data.retryPolicy = "";
+            data.retryPolicy = "1s:*";
             data.replaceMessage = false;
             data.svcType = "info";
             data.userData = "0xdeadbeef";
@@ -572,7 +572,7 @@ void InfosmeCoreV1::updateSmsc(const char* smscId)
 void InfosmeCoreV1::deleteSmsc( const char* smscId )
 {
     smsc_log_debug(log_,"== deleteSmsc(%s)",smscId ? smscId : "");
-    updateSmsc(smscId,0);
+    updateSmsc(smscId,0,0);
 }
 
 
@@ -971,7 +971,9 @@ void InfosmeCoreV1::loadSmscs( const char* smscId )
             std::auto_ptr< Config > sect(scfg->getSubConfig(i->c_str(),true));
             SmscConfig smscConfig;
             readSmscConfig(i->c_str(), smscConfig, *sect.get());
-            updateSmsc( i->c_str(), &smscConfig );
+            std::auto_ptr< Config > retryConfig
+                (sect->getSubConfig("retryPolicies",true));
+            updateSmsc( i->c_str(), &smscConfig, retryConfig.get() );
         }
 
     } catch ( InfosmeException& e ) {
@@ -983,7 +985,8 @@ void InfosmeCoreV1::loadSmscs( const char* smscId )
 
 
 void InfosmeCoreV1::updateSmsc( const char*       smscId,
-                                const SmscConfig* cfg )
+                                const SmscConfig* cfg,
+                                Config*           retryConfig )
 {
     if (cfg) {
         // create/update
@@ -991,12 +994,14 @@ void InfosmeCoreV1::updateSmsc( const char*       smscId,
         SmscSender** ptr = smscs_.GetPtr(smscId);
         if (!ptr) {
             ptr = smscs_.SetItem(smscId,
-                                 new SmscSender(*dlvMgr_,smscId,*cfg));
+                                 new SmscSender(*dlvMgr_,smscId,
+                                                *cfg,
+                                                retryConfig));
         } else if (*ptr) {
-            (*ptr)->updateConfig(*cfg);
+            (*ptr)->updateConfig(*cfg,retryConfig);
             // (*ptr)->waitUntilReleased();
         } else {
-            *ptr = new SmscSender(*dlvMgr_,smscId,*cfg);
+            *ptr = new SmscSender(*dlvMgr_,smscId,*cfg,retryConfig);
         }
         if (ptr && *ptr && started_) {
             (*ptr)->start();

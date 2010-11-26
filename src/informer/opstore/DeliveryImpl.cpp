@@ -86,7 +86,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
         }
         data.owner = config.getString("owner");
         data.retryOnFail = config.getBool("retryOnFail",true);
-        data.retryPolicy = config.getString("retryPolicy","");
+        data.retryPolicy = config.getString("retryPolicy","1s:*");
         data.replaceMessage = config.getBool("replaceMessage",false,false);
         data.svcType = config.getString("svcType","");
         data.userData = config.getString("userData","");

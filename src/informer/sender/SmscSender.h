@@ -64,7 +64,8 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
 public:
     SmscSender( ReceiptProcessor&       rproc,
                 const std::string&      smscId,
-                const SmscConfig&       config );
+                const SmscConfig&       config,
+                smsc::util::config::Config* retryConfig );
 
     virtual ~SmscSender();
 
@@ -83,7 +84,8 @@ public:
 
     /// a method allows to wait until sender stops it work
     /// NOTE: post-requisite -- task is released!
-    void updateConfig( const SmscConfig& config );
+    void updateConfig( const SmscConfig& config,
+                       smsc::util::config::Config* retryConfig );
     // void waitUntilReleased();
 
     /// this two methods are invoked from locked state.

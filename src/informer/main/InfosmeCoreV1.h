@@ -130,7 +130,9 @@ protected:
     /// 1. create smsc: new smscId, valid cfg;
     /// 2. update smsc: old smscId, valid cfg;
     /// 3. delete smsc: old smscId, cfg=0.
-    void updateSmsc( const char* smscId, const SmscConfig* cfg );
+    void updateSmsc( const char* smscId,
+                     const SmscConfig* cfg,
+                     smsc::util::config::Config* retryConfig );
 
 private:
     smsc::logger::Logger*                      log_;
