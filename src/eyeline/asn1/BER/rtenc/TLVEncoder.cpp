@@ -117,9 +117,9 @@ ENCResult TLVLayoutEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
   if (_effTags && !_effTags->empty() && _tlws[0].getEOCsize()) {
     //traverse tags from inner to outer
     uint8_t i = _effTags->size();
-    while (--i && rval.isOk()) {
-      rval += _tlws[i].encodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
-    }
+    do {
+      rval += _tlws[--i].encodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
+    } while (i && rval.isOk());
   }
   return rval;
 }
