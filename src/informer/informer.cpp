@@ -161,6 +161,7 @@ int main( int argc, char** argv )
 
         // infrastructure
         smsc::util::regexp::RegExp::InitLocale();
+        setlocale(LC_ALL,"");
 
         do {
             char* loc = setlocale(LC_CTYPE,NULL);
