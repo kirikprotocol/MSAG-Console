@@ -58,18 +58,18 @@ public:
   virtual ENCResult encode(uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/ = 0;
 };
 
-//
-//template <class _TArg>
-//class ASTypeEncoderOf_T : public ASTypeEncoderAC {
-//public:
-//  ASTypeEncoderOf_T(TransferSyntax::Rule_e use_rule)
-//    : ASTypeEncoderAC(use_rule)
-//  { }
-//  virtual ~ASTypeEncoderOf_T()
-//  { }
-//
-//  virtual void setValue(const _TArg & use_value) /*throw(std::exception)*/ = 0;
-//};
+
+template <class _TArg>
+class ASTypeEncoderOf_T : public ASTypeEncoderAC {
+public:
+  ASTypeEncoderOf_T(TransferSyntax::Rule_e use_rule)
+    : ASTypeEncoderAC(use_rule)
+  { }
+  virtual ~ASTypeEncoderOf_T()
+  { }
+
+  virtual void setValue(const _TArg & use_value) /*throw(std::exception)*/ = 0;
+};
 
 //Basic abstract class for decoder of ASN.1 defined type.
 class ASTypeDecoderAC {
