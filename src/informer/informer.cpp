@@ -2,6 +2,7 @@
 #include <ctime>
 #include <memory>
 #include <signal.h>
+#include <locale.h>
 
 #include "license/check/license.hpp"
 #include "logger/Logger.h"
