@@ -1,6 +1,11 @@
 /******************************************************************************/
 /* COMMON TAGS                                                                */
 /******************************************************************************/
+
+html {
+  height:100%;
+}
+
 body {
   font-family: Verdana, Arial, Helvetica, sans-serif;
   font-size: x-small;
@@ -8,6 +13,7 @@ body {
   background-color: #F3F0E3;
   color: #161E49;
   display: block;
+  height:100%;
 }
 
 body * {
