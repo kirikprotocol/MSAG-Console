@@ -54,7 +54,7 @@ public class Mode {${line.separator}
     </copy>
     <javac srcdir="test" destdir="${informer.test.classes}" classpathref="lib" debug="true" source="1.5"/>
     <copy todir="${informer.test.classes}">
-      <fileset dir="test" includes="**/*.properties,**/*.bin,**/*.xml,**/*.csv"/>
+      <fileset dir="test" includes="**/*.properties,**/*.bin,**/*.xml,**/*.csv,**/*.log"/>
     </copy>
     <native2ascii src="java" dest="${informer.source.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
