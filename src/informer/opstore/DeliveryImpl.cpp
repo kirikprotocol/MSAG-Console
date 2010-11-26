@@ -113,7 +113,7 @@ storeJournal_(journal)
     planTime_ = planTime;
     const dlvid_type dlvId = dlvInfo_->getDlvId();
     writeDeliveryInfoData();
-    smsc_log_info(log_,"ctor D=%u done",dlvId);
+    smsc_log_debug(log_,"ctor D=%u done",dlvId);
 }
 
 

@@ -56,7 +56,7 @@ MessageGlossary::~MessageGlossary()
 void MessageGlossary::init( dlvid_type dlvId )
 {
     dlvId_ = dlvId;
-    smsc_log_warn(log_,"D=%u reading glossary at init",dlvId_);
+    smsc_log_debug(log_,"D=%u reading glossary at init",dlvId_);
     smsc::core::synchronization::MutexGuard mg(lock_);
     smsc::core::buffers::TmpBuf<char,8192> buf;
     strcat(makeDeliveryPath(buf.get(),dlvId_),"glossary.txt");
@@ -64,7 +64,7 @@ void MessageGlossary::init( dlvid_type dlvId )
     try {
         fg.ropen((getCS()->getStorePath()+buf.get()).c_str());
     } catch ( ErrnoException& e ) {
-        smsc_log_info(log_,"D=%u has no glossary",dlvId);
+        smsc_log_debug(log_,"D=%u has no glossary",dlvId);
         return;
     }
     // reading glossary

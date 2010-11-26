@@ -173,7 +173,7 @@ protected:
         try {
             fg.ropen(jpath.c_str());
         } catch ( std::exception& e ) {
-            smsc_log_warn(sender_.log_,"cannot read '%s', exc: %s", jpath.c_str(), e.what());
+            smsc_log_debug(sender_.log_,"cannot read '%s', exc: %s", jpath.c_str(), e.what());
             return;
         }
         SJReader sjreader(sender_);

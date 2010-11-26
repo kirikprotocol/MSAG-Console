@@ -403,7 +403,7 @@ void DeliveryMgr::init()
     try {
         makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), chunks);
     } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"directory '%s' does not exist",buf.get());
+        smsc_log_warn(log_,"directory '%s' does not exist, creating",buf.get());
         FileGuard::makedirs(buf.get());
     }
     std::sort( chunks.begin(), chunks.end() );
@@ -449,7 +449,7 @@ void DeliveryMgr::init()
     }
 
     // reading journals and binding deliveries and regions
-    smsc_log_debug(log_,"--- reading journals ---");
+    smsc_log_info(log_,"--- reading journals ---");
     StoreJournalReader sjr(*this);
     storeJournal_->init(sjr);
     InputJournalReader ijr(*this);

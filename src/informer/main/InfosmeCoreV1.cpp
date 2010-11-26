@@ -723,7 +723,7 @@ int InfosmeCoreV1::Execute()
         bindQueue_.waitForItem();
 
     }
-    smsc_log_info(log_,"finishing main loop");
+    smsc_log_debug(log_,"finishing main loop");
     MutexGuard mg(startMon_);
     started_ = false;
     return 0;
@@ -857,7 +857,11 @@ void InfosmeCoreV1::loadUsers( const char* userId )
     std::vector< UserInfoPtr > uservec;
     try {
         if (!userId) throw InfosmeException(EXC_LOGICERROR,"loadUsers: NULL passed");
-        smsc_log_info(log_,"loading user(s) '%s'",userId);
+        if (userId[0] == '\0') {
+            smsc_log_info(log_,"loading all users");
+        } else {
+            smsc_log_info(log_,"loading user '%s'",userId);
+        }
         if (userId[0] != '\0' && !isGoodAsciiName(userId)) {
             throw InfosmeException(EXC_BADNAME,"invalid userId '%s'",userId);
         }
@@ -926,14 +930,26 @@ void InfosmeCoreV1::loadUsers( const char* userId )
         UserInfoPtr* olduser = users_.GetPtr((*i)->getUserId());
         if (!olduser) {
             users_.Insert((*i)->getUserId(),*i);
-            smsc_log_info(log_,"new user U='%s' added",(*i)->getUserId());
+            const UserInfo& u = **i;
+            smsc_log_info(log_,"new user U='%s' added: maxdlv=%u prio=%u speed=%u isadmin=%u",
+                          u.getUserId(),
+                          u.getMaxTotalDeliveries(),
+                          u.getPriority(),
+                          u.getSpeed(),
+                          u.hasRole(USERROLE_ADMIN));
         } else {
             if ( (*olduser)->isDeleted() ) {
                 smsc_log_info(log_,"deleted user U='%s' is restored");
                 (*olduser)->setDeleted(false);
             }
             (*olduser)->update(**i);
-            smsc_log_info(log_,"user U='%s' updated",(*i)->getUserId());
+            const UserInfo& u = **i;
+            smsc_log_info(log_,"user U='%s' updated: maxdlv=%u prio=%u speed=%u isadmin=%u",
+                          u.getUserId(),
+                          u.getMaxTotalDeliveries(),
+                          u.getPriority(),
+                          u.getSpeed(),
+                          u.hasRole(USERROLE_ADMIN));
         }
     }
 }

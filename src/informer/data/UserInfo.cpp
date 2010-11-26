@@ -77,9 +77,9 @@ isDeleted_(false)
         smsc_log_warn(log_,"U='%s' too many maxdlvs %u replaced with %u",id,maxTotalDeliveries_,maxdlv);
         maxTotalDeliveries_ = maxdlv;
     }
-    smsc_log_info(log_,"U='%s' ctor done: roles=%llu maxTotalDlv=%u speed=%u prio=%u",
-                  userId_.c_str(), ulonglong(roles_), unsigned(maxTotalDeliveries_),
-                  unsigned(speedControl_.getSpeed()), unsigned(priority_) );
+    smsc_log_debug(log_,"U='%s' ctor done: roles=%llu maxTotalDlv=%u speed=%u prio=%u",
+                   userId_.c_str(), ulonglong(roles_), unsigned(maxTotalDeliveries_),
+                   unsigned(speedControl_.getSpeed()), unsigned(priority_) );
 }
 
 

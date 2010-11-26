@@ -85,7 +85,7 @@ public:
     usectime_type isReadyAndConsumeQuant( usectime_type currentTime );
 
     // a limit of sms per second
-    // unsigned getSpeed() const { return unsigned(speedControl_.getSpeed()); }
+    unsigned getSpeed() const { return unsigned(speedControl_.getSpeed()); }
     /// priority -- the more the better
     unsigned getPriority() const { return priority_; }
 

@@ -6,8 +6,6 @@
 #include "license/check/license.hpp"
 #include "logger/Logger.h"
 #include "system/smscsignalhandlers.h"
-// #include "util/config/Config.h"
-// #include "util/config/ConfigView.h"
 #include "util/config/ConfString.h"
 #include "util/crc32.h"
 #include "util/findConfigFile.h"
@@ -29,12 +27,12 @@ bool isStarted = true;
 
 extern "C" void appSignalHandler(int sig)
 {
-    smsc_log_info(mainlog,"signal handler invoked, sig=%d",sig);
+    smsc_log_error(mainlog,"signal handler invoked, sig=%d",sig);
     if ( sig == smsc::system::SHUTDOWN_SIGNAL || sig == SIGINT ) {
         if (isStarted) {
             smsc::core::synchronization::MutexGuard mg(startMon);
             if (isStarted) {
-                smsc_log_error(mainlog,"set flag to leave main loop");
+                smsc_log_debug(mainlog,"set flag to leave main loop");
                 isStarted = false;
                 startMon.notifyAll();
             }

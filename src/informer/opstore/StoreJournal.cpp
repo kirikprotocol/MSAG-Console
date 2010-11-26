@@ -254,7 +254,7 @@ void StoreJournal::init( Reader& jr )
 void StoreJournal::rollOver()
 {
     std::string jpath = makePath(getCS()->getStorePath());
-    smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
+    smsc_log_debug(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
         throw ErrnoException(errno,"rename('%s')",jpath.c_str());
     }
@@ -287,7 +287,7 @@ void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
     try {
         sjreader.readHeader(fg, jpath);
     } catch (std::exception& e) {
-        smsc_log_warn(log_,"cannot read '%s', exc: %s",jpath.c_str(),e.what());
+        smsc_log_debug(log_,"cannot read '%s', exc: %s",jpath.c_str(),e.what());
         return;
     }
     smsc::core::buffers::TmpBuf<char,8192> buf;

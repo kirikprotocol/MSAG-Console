@@ -341,7 +341,7 @@ public:
   }
   int Execute()
   {
-    smsc_log_info(logwr,"Starting smppwriter");
+    smsc_log_info(logwr,"smpp writer started");
     PduBuffer pb;
     mon.Lock();
     running=true;
@@ -373,7 +373,7 @@ public:
       queue.Pop(pb);
       delete pb.buf;
     }
-    smsc_log_info(logwr,"Exiting smppwriter");
+    smsc_log_info(logwr,"smpp writer exited");
     mon.Unlock();
     running=false;
     stopped=false;
@@ -748,7 +748,8 @@ public:
 #endif
   {
     log=smsc::logger::Logger::getInstance("smpp.ses");
-    smsc_log_info(log,"SmppSession: create session %s:%p", config.sid.c_str(),this);
+    smsc_log_info(log,"SmppSession @%p: created %s:%u sid='%s'",
+                  this, cfg.host.c_str(), cfg.port, cfg.sid.c_str());
   }
   ~SmppSession()
   {
@@ -760,7 +761,9 @@ public:
   }
   void connect(int bindtype=BindType::Transceiver)//throw(SmppConnectException)
   {
-    smsc_log_info(log,"SmppSession: connect %p, %s:%d to=%d",this, cfg.host.c_str(), cfg.port, cfg.timeOut);
+    smsc_log_info(log,"SmppSession @%p: connect %s:%u sid='%s' to=%d",
+                  this, cfg.host.c_str(), cfg.port, cfg.sid.c_str(),
+                  cfg.timeOut);
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkResolve);
@@ -800,7 +803,8 @@ public:
         try {
             cfg.parseAddressRange(ton,npi,ar);
         } catch ( util::config::ConfigException& e ) {
-            smsc_log_error(log,"SmppSession: bad address range: %s",e.what());
+            smsc_log_error(log,"SmppSession @%p: %s:%u sid='%s' bad address range: %s",
+                           this, cfg.host.c_str(), cfg.port, cfg.sid.c_str(), e.what());
             throw SmppConnectException(SmppConnectException::Reason::bindFailed);
         }
         pdu.get_addressRange().set_typeOfNumber(ton);
@@ -825,7 +829,9 @@ public:
                SmppConnectException::Reason::unknown;
       if(resp)
       {
-        smsc_log_warn(log,"Unexpected bind response code:%04X",resp->get_header().get_commandStatus());
+        smsc_log_warn(log,"SmppSession @%p: %s:%u sid='%s' unexpected bind response code:%04X",
+                      this, cfg.host.c_str(), cfg.port, cfg.sid.c_str(),
+                      resp->get_header().get_commandStatus());
         disposePdu((SmppHeader*)resp);
       }
       reader.Stop();
@@ -836,13 +842,15 @@ public:
       throw SmppConnectException(reason);
     }
     disposePdu((SmppHeader*)resp);
-    smsc_log_info(log,"SmppSession: connected %p",this);
+    smsc_log_info(log,"SmppSession @%p: connected to %s:%u sid='%s'",
+                  this, cfg.host.c_str(), cfg.port, cfg.sid.c_str() );
     closed=false;
   }
   void close()
   {
     if(closed)return;
-    smsc_log_info(log,"SmppSession: closing %p",this);
+    smsc_log_info(log,"SmppSession @%p: closing %s:%u sid='%s'",
+                  this, cfg.host.c_str(), cfg.port, cfg.sid.c_str() );
     reader.Stop();
     writer.Stop();
     socket.Close();

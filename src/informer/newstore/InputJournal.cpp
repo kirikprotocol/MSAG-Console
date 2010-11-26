@@ -111,21 +111,21 @@ void InputJournal::init( Reader& reader )
     if ( 0 == jnl_.seek(0,SEEK_END) ) {
         // new file
         version_ = defaultVersion;
-        smsc_log_info(log_,"creating a new file '%s', version=%u",jpath.c_str(),version_);
+        smsc_log_debug(log_,"creating a new file '%s', version=%u",jpath.c_str(),version_);
         char verbuf[VERSIZE];
         ToBuf tb(verbuf,VERSIZE);
         tb.set32(version_);
         jnl_.write(verbuf,VERSIZE);
     }
     reader.postInit();
-    smsc_log_info(log_,"init done");
+    smsc_log_debug(log_,"init done");
 }
     
 
 void InputJournal::rollOver()
 {
     std::string jpath = makePath(getCS()->getStorePath());
-    smsc_log_info(log_,"rolling over '%s'",jpath.c_str());
+    smsc_log_debug(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
         throw ErrnoException(errno,"rename('%s')",jpath.c_str());
     }

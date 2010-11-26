@@ -80,7 +80,7 @@ createTime_(0)
         smsc_log_debug(log_,"D=%u actlog, exc: %s", dlvId_, e.what());
     }
     if (!statsLoaded) {
-        smsc_log_warn(log_,"D=%u statistics is not found", dlvId_);
+        smsc_log_debug(log_,"D=%u statistics is not found", dlvId_);
     }
 }
 
