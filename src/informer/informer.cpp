@@ -160,6 +160,20 @@ int main( int argc, char** argv )
 
         // infrastructure
         smsc::util::regexp::RegExp::InitLocale();
+
+        do {
+            char* loc = setlocale(LC_CTYPE,NULL);
+            loc = strchr(loc,'.');
+            if (loc) {
+                ++loc;
+                if ( strncmp(loc,"UTF-8",5) == 0 ) {
+                    // ok
+                    break;
+                }
+            }
+            throw InfosmeException(EXC_CONFIG,"LC_ALL/LC_CTYPE are not set correctly (UTF-8 needed)");
+        } while (false);
+
         smsc::logger::Logger::Init();
 
         mainlog = smsc::logger::Logger::getInstance("main");

@@ -148,7 +148,7 @@ protected:
     void rollOver()
     {
         const std::string jpath(makePath());
-        smsc_log_info(sender_.log_,"rolling over '%s'",jpath.c_str());
+        smsc_log_debug(sender_.log_,"rolling over '%s'",jpath.c_str());
         if (-1 == rename(jpath.c_str(),(jpath+".old").c_str())) {
             throw ErrnoException(errno,"rename('%s')",jpath.c_str());
         }
