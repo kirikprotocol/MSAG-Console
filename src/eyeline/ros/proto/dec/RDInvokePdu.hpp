@@ -2,7 +2,9 @@
  * ROS Invoke PDU decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_DEC_INVOKE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ROS_PROTO_DEC_INVOKE_HPP
 
 #include "eyeline/ros/ROSPrimitives.hpp"

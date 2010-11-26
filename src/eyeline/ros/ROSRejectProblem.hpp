@@ -3,7 +3,9 @@
  * joint-iso-itu-t(2) remote-operations(4) generic-ROS-PDUs(6) version1(0)
   * ************************************************************************** */
 #ifndef __ROS_REJECT_PROBLEM_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ROS_REJECT_PROBLEM_DEFS_HPP
 
 #include <inttypes.h>

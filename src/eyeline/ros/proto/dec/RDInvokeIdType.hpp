@@ -2,7 +2,9 @@
  * ROS Invokation Id type decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_DEC_INVOKEIDTYPE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ROS_PROTO_DEC_INVOKEIDTYPE_HPP
 
 #include "eyeline/ros/ROSTypes.hpp"

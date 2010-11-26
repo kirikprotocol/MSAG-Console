@@ -2,7 +2,9 @@
  * ROS Operations Components factory(ARGUMENT, RESULT, ERRORS).
  * ************************************************************************* */
 #ifndef __ROS_COMPONENTS_FACTORY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ROS_COMPONENTS_FACTORY_HPP
 
 #include <vector>

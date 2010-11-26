@@ -2,7 +2,9 @@
  * ROS Reject problem type decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_DEC_REJECT_PROBLEM_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ROS_PROTO_DEC_REJECT_PROBLEM_HPP
 
 #include "eyeline/ros/ROSRejectProblem.hpp"

@@ -2,7 +2,9 @@
  * Types used in definition of ROS PDUs
   * ************************************************************************** */
 #ifndef __ROS_TYPES_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ROS_TYPES_DEFS_HPP
 
 #include <inttypes.h>

@@ -3,7 +3,9 @@
  * joint-iso-itu-t(2) remote-operations(4) generic-ROS-PDUs(6) version1(0)
   * ************************************************************************** */
 #ifndef __ROS_PRIMITIVES_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ROS_PRIMITIVES_DEFS_HPP
 
 #include "eyeline/asn1/AbstractValue.hpp"

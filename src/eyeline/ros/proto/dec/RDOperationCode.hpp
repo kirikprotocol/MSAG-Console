@@ -2,7 +2,9 @@
  * ROS Local Operation code (LOCAL) type decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_DEC_OPERATION_LOCAL_CODE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ROS_PROTO_DEC_OPERATION_LOCAL_CODE_HPP
 
 #include "eyeline/ros/ROSTypes.hpp"

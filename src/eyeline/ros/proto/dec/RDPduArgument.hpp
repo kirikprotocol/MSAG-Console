@@ -2,7 +2,9 @@
  * ROS Primitives ARGUMENT decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_DEC_ARGUMENT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ROS_PROTO_DEC_ARGUMENT_HPP
 
 #include "eyeline/ros/ROSPrimitives.hpp"

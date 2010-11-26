@@ -1,7 +1,8 @@
-#ifndef MOD_IDENT_OFF
+#ifdef MOD_IDENT_ON
 static char const ident[] = "@(#)$Id$";
-#endif /* MOD_IDENT_OFF */
+#endif /* MOD_IDENT_ON */
 
+#include <memory>
 #include "eyeline/ros/ACRegistry.hpp"
 
 namespace eyeline {

@@ -2,7 +2,9 @@
  * ROS PDU encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_ENC_ROSPDU_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ROS_PROTO_ENC_ROSPDU_HPP
 
 #include "eyeline/ros/ROSPdu.hpp"

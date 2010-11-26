@@ -2,7 +2,9 @@
  * ROS ReturnError PDU encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_ENC_RETURN_ERROR_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ROS_PROTO_ENC_RETURN_ERROR_HPP
 
 #include "eyeline/ros/ROSPrimitives.hpp"

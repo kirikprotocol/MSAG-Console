@@ -3,7 +3,9 @@
  * ************************************************************************* */
 /* NOTE: ApplicationContextRegistry initialization is not a threadsafe !!!   */
 #ifndef __ROS_AC_REGISTRY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __ROS_AC_REGISTRY_HPP
 
 #include "core/synchronization/Mutex.hpp"

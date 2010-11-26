@@ -2,7 +2,9 @@
  * ROS Reject PDU encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_ROS_PROTO_ENC_REJECT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_ROS_PROTO_ENC_REJECT_HPP
 
 #include "eyeline/ros/ROSPrimitives.hpp"
