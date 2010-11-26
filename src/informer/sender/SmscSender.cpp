@@ -778,11 +778,11 @@ bool SmscSender::queueData( const ResponseData& rd )
 }
 
 
-void SmscSender::processQueue( DataQueue& queue )
+bool SmscSender::processQueue( DataQueue& queue )
 {
     ResponseData rd;
     // FIXME: optimize queue (preprocess) to match resp+rcpt
-
+    bool throttled = false;
     while ( queue.Pop(rd) ) {
 
         smsc_log_debug(log_,"S='%s' processing RD(seq=%u,status=%d,msgid='%s',retry=%d)",
@@ -801,6 +801,10 @@ void SmscSender::processQueue( DataQueue& queue )
             if (drm.respTimer != respWaitQueue_.end()) {
                 // remove timer
                 respWaitQueue_.erase(drm.respTimer);
+            }
+
+            if ( rd.status == smsc::system::Status::THROTTLED ) {
+                throttled = true;
             }
 
             if (drm.trans) {
@@ -917,6 +921,7 @@ void SmscSender::processQueue( DataQueue& queue )
         } // if receipt
 
     } // while pop rd
+    return throttled;
 }
 
 
@@ -1058,11 +1063,23 @@ void SmscSender::sendLoop()
 
         MutexGuard mg(reconfLock_);  // prevent reconfiguration
         if ( !session_.get() || session_->isClosed() ) break;
+        bool throttled = false;
         if (rQueue->Count() > 0) {
-            processQueue(*rQueue.get());
+            throttled = processQueue(*rQueue.get());
         }
         if (nextWakeTime > currentTime_) continue;
         processExpiredTimers();
+
+        // check the number of seqnums
+        if ( throttled ) {
+            nextWakeTime = currentTime_ + 1000;
+            continue;
+        } else if ( seqnumHash_.Count() > getCS()->getUnrespondedMessagesMax() ) {
+            // too many unresponded, wait one millisec
+            nextWakeTime = currentTime_ + 1000;
+            continue;
+        }
+
         nextWakeTime = currentTime_ + scoredList_.processOnce(0/* not used*/,
                                                               sleepTime);
     }

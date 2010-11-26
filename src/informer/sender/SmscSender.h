@@ -99,7 +99,10 @@ private:
     void handleReceipt( smsc::sme::SmppHeader* pdu );
     void handleResponse( smsc::sme::SmppHeader* pdu );
     bool queueData( const ResponseData& rd );
-    void processQueue( DataQueue& queue );
+
+    /// process input queue
+    /// @return true if response with status=THROTTLED encountered.
+    bool processQueue( DataQueue& queue );
 
     /// sending messages
     virtual int Execute();
