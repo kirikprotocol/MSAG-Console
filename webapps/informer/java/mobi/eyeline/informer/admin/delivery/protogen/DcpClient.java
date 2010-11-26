@@ -13,6 +13,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * Синхронный клиент для Dcp
+ *
  * @author Aleksandr Khalitov
  */
 public class DcpClient extends SyncProtogenConnection {

@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryListInfo;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMessage;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import org.junit.Test;
 
@@ -33,7 +34,7 @@ public class DcpConverterTest {
 
   @Test
   public void testConvertDay() throws AdminException {
-    Delivery.Day[] ds1 = new Delivery.Day[]{Delivery.Day.Sun, Delivery.Day.Tue};
+    Day[] ds1 = new Day[]{Day.Sun, Day.Tue};
     assertTrue(Arrays.equals(ds1, DcpConverter.convertDays(DcpConverter.convertDays(ds1))));
   }
 
@@ -46,11 +47,12 @@ public class DcpConverterTest {
 
   @Test
   public void testConvertDelivery() throws AdminException {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
+//    d.setType(Delivery.Type.IndividualTexts);
     d.setSourceAddress(new Address("+791394"));
     d.setActivePeriodEnd(new Time(22,0,0));
     d.setActivePeriodStart(new Time(0,0,0));
-    d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Sat});
+    d.setActiveWeekDays(new Day[]{Day.Fri, Day.Sat});
     d.setDeliveryMode(DeliveryMode.SMS);
     d.setEndDate(new Date(System.currentTimeMillis() + 1000000));
     d.setId(0);
@@ -64,7 +66,7 @@ public class DcpConverterTest {
     d.setSvcType("svc1");
     d.setValidityPeriod(new Time(1,0,0));
     d.setProperty(UserDataConsts.RESTRICTION, "true");
-    assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d), null));
+    assertEquals(d, DcpConverter.convert(d.getId(), DcpConverter.convert(d)));
   }
 
 
@@ -87,12 +89,12 @@ public class DcpConverterTest {
     mi.setText("sms_text");
     mi.setState(mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMessageState.Failed);
     mi.setUserData("user=data");
-    MessageInfo info = DcpConverter.convert(mi);
-    assertEquals(mi.getAbonent(), info.getAbonent());
+    Message info = DcpConverter.convert(mi);
+    assertEquals(mi.getAbonent(), info.getAbonent().getSimpleAddress());
     assertEquals(DcpConverter.convertDate(mi.getDate()), info.getDate());
     assertNotNull(info.getErrorCode());
     assertEquals(mi.getErrorCode(), info.getErrorCode().intValue());
-    assertEquals(mi.getId(), info.getId());
+    assertEquals(mi.getId(), info.getId().longValue());
     assertEquals(mi.getText(), info.getText());
     assertEquals(DcpConverter.convert(mi.getState()), info.getState());
   }
@@ -128,15 +130,15 @@ public class DcpConverterTest {
     di.setStartDate(DcpConverter.convertDate(new Date()));
     di.setStatus(DcpConverter.convert(DeliveryStatus.Cancelled));
     di.setUserId("user2");
-    DeliveryInfo info = DcpConverter.convert(di);
-    assertEquals(DcpConverter.convertTime(info.getActivityPeriodEnd().getTimeDate()), di.getActivityPeriodEnd());
-    assertEquals(DcpConverter.convertTime(info.getActivityPeriodStart().getTimeDate()), di.getActivityPeriodStart());
+    Delivery info = DcpConverter.convert(di);
+    assertEquals(DcpConverter.convertTime(info.getActivePeriodEnd().getTimeDate()), di.getActivityPeriodEnd());
+    assertEquals(DcpConverter.convertTime(info.getActivePeriodStart().getTimeDate()), di.getActivityPeriodStart());
     assertEquals(DcpConverter.convertDate(info.getStartDate()), di.getStartDate());
     assertEquals(DcpConverter.convertDate(info.getEndDate()), di.getEndDate());
     assertEquals(DcpConverter.convert(info.getStatus()), di.getStatus());
-    assertEquals(info.getDeliveryId(), di.getDeliveryId());
+    assertEquals(info.getId().intValue(), di.getDeliveryId());
     assertEquals(info.getName(), di.getName());
-    assertEquals(info.getUserId(), di.getUserId());
+    assertEquals(info.getOwner(), di.getUserId());
   }
 
   @Test
@@ -146,22 +148,6 @@ public class DcpConverterTest {
     }
   }
 
-  @Test
-  public void testConvertDeliveryFields() {
-    DeliveryFields[] df = new DeliveryFields[]{DeliveryFields.StartDate, DeliveryFields.Status};
-    mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields[] res = DcpConverter.convert(df);
-    assertArrayEquals(res, new mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields[]{mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields.StartDate,
-        mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields.Status});
-
-  }
-
-  @Test
-  public void testConvertMessageFields() {
-    MessageFields[] df = new MessageFields[]{MessageFields.Date, MessageFields.ErrorCode};
-    mobi.eyeline.informer.admin.delivery.protogen.protocol.ReqField[] res = DcpConverter.convert(df);
-    assertArrayEquals(res, new mobi.eyeline.informer.admin.delivery.protogen.protocol.ReqField[]{mobi.eyeline.informer.admin.delivery.protogen.protocol.ReqField.Date,
-        mobi.eyeline.informer.admin.delivery.protogen.protocol.ReqField.ErrorCode});
-  }
 
   @Test
   public void testConvertDeliveryStat() throws AdminException {

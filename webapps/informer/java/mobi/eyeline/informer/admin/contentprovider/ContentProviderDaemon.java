@@ -2,9 +2,10 @@ package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
+import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListenerStub;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
 
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 17.11.2010
  * Time: 16:21:41
  */
-public class ContentProviderDaemon extends DeliveryNotificationsListenerStub implements Daemon, ContentProviderUserDirectoryResolver {
+public class ContentProviderDaemon extends DeliveryChangeListenerStub implements Daemon, ContentProviderUserDirectoryResolver {
 
   Logger log = Logger.getLogger(this.getClass());
 
@@ -94,24 +95,27 @@ public class ContentProviderDaemon extends DeliveryNotificationsListenerStub imp
 
 
   @Override
-  public void onDeliveryFinishNotification(DeliveryNotification notification) {
+  public void deliveryStateChanged(ChangeDeliveryStatusEvent e) {
+
+    if (e.getStatus() != DeliveryStatus.Finished)
+      return;
 
     PrintStream ps = null;
     try {
-      File notificationFile = new File(workDir,notification.getDeliveryId()+".notification");
+      File notificationFile = new File(workDir,e.getDeliveryId()+".notification");
       ps = new PrintStream(fileSys.getOutputStream(notificationFile,false),true,"utf-8");
-      ps.println(notification.getUserId());
+      ps.println(e.getUserId());
       synchronized (this) {
         if(isStarted()) {
           reportScheduler.schedule(new ContentProviderReportTask(this,context,workDir),0,TimeUnit.MILLISECONDS);
         }
       }
     }
-    catch (Exception e) {
-      log.error("Error processing delivery finished report for delivery "+notification.getDeliveryId(),e);
+    catch (Exception ex) {
+      log.error("Error processing delivery finished report for delivery "+e.getDeliveryId(),ex);
     }
     finally {
-      if(ps!=null) try {ps.close();} catch (Exception e){}
+      if(ps!=null) try {ps.close();} catch (Exception ex){}
     }
 
 

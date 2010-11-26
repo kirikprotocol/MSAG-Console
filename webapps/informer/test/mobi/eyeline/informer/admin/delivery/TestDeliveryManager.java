@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatProvider;
 
 /**
  * @author Aleksandr Khalitov
@@ -16,6 +17,10 @@ public class TestDeliveryManager extends DeliveryManager{
   @Override
   protected DcpConnection createConnection(String host, int port, String login, String password) throws AdminException {
     return connection;
+  }
+
+  void forceModifyDeliveries() throws AdminException {
+    connection.modifyAll();
   }
   
 }

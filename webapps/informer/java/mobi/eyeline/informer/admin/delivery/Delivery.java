@@ -3,7 +3,9 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -16,10 +18,19 @@ import java.util.*;
  */
 public class Delivery implements Serializable {
 
+  private static final Logger logger = Logger.getLogger(Delivery.class);
+
   private static final ValidationHelper vh = new ValidationHelper(Delivery.class);
 
   public static enum Type {
-    SingleText, Common;
+    /**
+     * Рассылка с одним текстом
+     */
+    SingleText,
+    /**
+     * Рассылка с индивидуальными текстами для каждого реципиента
+     */
+    IndividualTexts;
 
     public String getValue() {
       return toString();
@@ -51,29 +62,56 @@ public class Delivery implements Serializable {
   private boolean replaceMessage;
   private String svcType;
 
-
   private Address sourceAddress;
 
   private String singleText;
 
-  private final Type type;
+  private Type type;
 
   private final Properties properties = new Properties();
 
   private boolean enableMsgFinalizationLogging;
   private boolean enableStateChangeLogging;
 
-  public static Delivery newSingleTextDelivery() {
-    return new Delivery(Type.SingleText);
+  private DeliveryStatus status;
+
+  private boolean loaded;
+  private DeliveryManager m;
+  private String login;
+  private String password;
+
+  Delivery() {
   }
 
-  public static Delivery newCommonDelivery() {
-    return new Delivery(Type.Common);
+
+
+  void setDeliveryManager(DeliveryManager m) {
+    this.m = m;
   }
 
+  void setLogin(String login) {
+    this.login = login;
+  }
 
-  public Delivery(Type type) {
-    this.type = type;
+  void setPassword(String password) {
+    this.password = password;
+  }
+
+  private void loadDelivery() {
+    if (m != null && !loaded) {
+      Delivery d = null;
+      try {
+        d = m.getDelivery(login, password, id);
+        copyFrom(d);
+      } catch (AdminException e) {
+        logger.error(e);
+      }
+      loaded = true;
+    }
+  }
+
+  public void setLoaded(boolean loaded) {
+    this.loaded = loaded;
   }
 
   public void setProperty(String name, String value) {
@@ -106,7 +144,13 @@ public class Delivery implements Serializable {
     return type;
   }
 
+  void setType(Type type) {
+    this.type = type;
+  }
+
+
   public Address getSourceAddress() {
+    loadDelivery();
     return sourceAddress;
   }
 
@@ -115,28 +159,13 @@ public class Delivery implements Serializable {
     this.sourceAddress = sourceAddress;
   }
 
-//  public String getEmailNotificationAddress() {
-//    return emailNotificationAddress;
-//  }
-//
-//  public void setEmailNotificationAddress(String emailNotificationAddress) {
-//    this.emailNotificationAddress = emailNotificationAddress;
-//  }
-//
-//  public Address getSmsNotificationAddress() {
-//    return smsNotificationAddress;
-//  }
-//
-//  public void setSmsNotificationAddress(Address smsNotificationAddress) {
-//    this.smsNotificationAddress = smsNotificationAddress;
-//  }
-
   public String getSingleText() {
+      loadDelivery();
     return singleText;
   }
 
   public void setSingleText(String singleText) throws AdminException {
-    if (type == Type.Common) {
+    if (type == Type.IndividualTexts) {
       throw new DeliveryException("illegal_delivery_type");
     }
     vh.checkNotEmpty("singleText", singleText);
@@ -161,6 +190,7 @@ public class Delivery implements Serializable {
   }
 
   public int getPriority() {
+    loadDelivery();
     return priority;
   }
 
@@ -170,6 +200,7 @@ public class Delivery implements Serializable {
   }
 
   public boolean isTransactionMode() {
+    loadDelivery();
     return transactionMode;
   }
 
@@ -213,6 +244,7 @@ public class Delivery implements Serializable {
   }
 
   public Day[] getActiveWeekDays() {
+    loadDelivery();
     return activeWeekDays;
   }
 
@@ -222,6 +254,7 @@ public class Delivery implements Serializable {
   }
 
   public Time getValidityPeriod() {
+    loadDelivery();
     return validityPeriod;
   }
 
@@ -232,6 +265,7 @@ public class Delivery implements Serializable {
   }
 
   public boolean isFlash() {
+    loadDelivery();
     return flash;
   }
 
@@ -240,6 +274,7 @@ public class Delivery implements Serializable {
   }
 
   public boolean isUseDataSm() {
+    loadDelivery();
     return useDataSm;
   }
 
@@ -248,6 +283,7 @@ public class Delivery implements Serializable {
   }
 
   public DeliveryMode getDeliveryMode() {
+    loadDelivery();
     return deliveryMode;
   }
 
@@ -266,6 +302,7 @@ public class Delivery implements Serializable {
   }
 
   public boolean isRetryOnFail() {
+    loadDelivery();
     return retryOnFail;
   }
 
@@ -274,6 +311,7 @@ public class Delivery implements Serializable {
   }
 
   public String getRetryPolicy() {
+    loadDelivery();
     return retryPolicy;
   }
 
@@ -282,6 +320,7 @@ public class Delivery implements Serializable {
   }
 
   public boolean isReplaceMessage() {
+    loadDelivery();
     return replaceMessage;
   }
 
@@ -290,6 +329,7 @@ public class Delivery implements Serializable {
   }
 
   public String getSvcType() {
+    loadDelivery();
     return svcType;
   }
 
@@ -298,6 +338,7 @@ public class Delivery implements Serializable {
   }
 
   public boolean isEnableMsgFinalizationLogging() {
+    loadDelivery();
     return enableMsgFinalizationLogging;
   }
 
@@ -306,6 +347,7 @@ public class Delivery implements Serializable {
   }
 
   public boolean isEnableStateChangeLogging() {
+    loadDelivery();
     return enableStateChangeLogging;
   }
 
@@ -313,39 +355,20 @@ public class Delivery implements Serializable {
     this.enableStateChangeLogging = enableStateChangeLogging;
   }
 
-  /**
-   * Дни недели
-   */
-  public static enum Day {
-    Mon(1),
-    Tue(2),
-    Wed(3),
-    Thu(4),
-    Fri(5),
-    Sat(6),
-    Sun(7);
-
-    private static final Map<Integer, Day> days = new HashMap<Integer, Day>(7);
-
-    static {
-      for (Day d : values()) {
-        days.put(d.getDay(), d);
+  public DeliveryStatus getStatus() {
+    if (status == null && m != null) {
+      try {
+        DeliveryStatusHistory h = m.getDeliveryStatusHistory(login, password, id);
+        status = h.getHistoryItems().get(h.getHistoryItems().size() - 1).getStatus();
+      } catch (AdminException e) {
+        logger.error(e,e);
       }
     }
+    return status;
+  }
 
-    private final int day;
-
-    Day(int day) {
-      this.day = day;
-    }
-
-    public int getDay() {
-      return day;
-    }
-
-    public static Day valueOf(int d) {
-      return days.get(d);
-    }
+  void setStatus(DeliveryStatus status) {
+    this.status = status;
   }
 
   @SuppressWarnings({"RedundantIfStatement"})
@@ -408,8 +431,15 @@ public class Delivery implements Serializable {
   }
 
   public Delivery cloneDelivery() {
-    Delivery d = new Delivery(type);
+    Delivery d = new Delivery();
+    d.type = type;
+
     d.id = id;
+
+    d.m = m;
+    d.login = login;
+    d.password = password;
+    d.status = status;
 
     d.name = name;
     d.priority = priority;
@@ -441,5 +471,74 @@ public class Delivery implements Serializable {
     d.enableStateChangeLogging = enableStateChangeLogging;
     d.properties.putAll(properties);
     return d;
+  }
+
+  void copyFrom(Delivery d) {
+    m = d.m;
+    login = d.login;
+    password = d.password;
+
+    name = d.name;
+    priority = d.priority;
+    transactionMode = d.transactionMode;
+
+    startDate = d.startDate == null ? null : new Date(d.startDate.getTime());
+    endDate = d.endDate == null ? null : new Date(d.endDate.getTime());
+    activePeriodEnd = d.activePeriodEnd == null ? null : new Time(d.activePeriodEnd);
+    activePeriodStart = d.activePeriodStart == null ? null : new Time(d.activePeriodStart);
+    activeWeekDays = new Day[d.activeWeekDays.length];
+    System.arraycopy(d.activeWeekDays, 0, activeWeekDays, 0, d.activeWeekDays.length);
+    validityPeriod = d.validityPeriod;
+
+    flash = d.flash;
+    useDataSm = d.useDataSm;
+    deliveryMode = d.deliveryMode;
+
+    owner = d.owner;
+
+    retryOnFail = d.retryOnFail;
+    retryPolicy = d.retryPolicy;
+
+    replaceMessage = d.replaceMessage;
+    svcType = d.svcType;
+
+    sourceAddress = d.sourceAddress == null ? null : new Address(d.sourceAddress.getSimpleAddress());
+    singleText = d.singleText;
+    enableMsgFinalizationLogging = d.enableMsgFinalizationLogging;
+    enableStateChangeLogging = d.enableStateChangeLogging;
+    properties.putAll(d.properties);
+  }
+  
+  void copyFrom(DeliveryPrototype d) {
+
+    name = d.name;
+    priority = d.priority;
+    transactionMode = d.transactionMode;
+
+    startDate = d.startDate == null ? null : new Date(d.startDate.getTime());
+    endDate = d.endDate == null ? null : new Date(d.endDate.getTime());
+    activePeriodEnd = d.activePeriodEnd == null ? null : new Time(d.activePeriodEnd);
+    activePeriodStart = d.activePeriodStart == null ? null : new Time(d.activePeriodStart);
+    activeWeekDays = new Day[d.activeWeekDays.length];
+    System.arraycopy(d.activeWeekDays, 0, activeWeekDays, 0, d.activeWeekDays.length);
+    validityPeriod = d.validityPeriod;
+
+    flash = d.flash;
+    useDataSm = d.useDataSm;
+    deliveryMode = d.deliveryMode;
+
+    owner = d.owner;
+
+    retryOnFail = d.retryOnFail;
+    retryPolicy = d.retryPolicy;
+
+    replaceMessage = d.replaceMessage;
+    svcType = d.svcType;
+
+    sourceAddress = d.sourceAddress == null ? null : new Address(d.sourceAddress.getSimpleAddress());
+    singleText = d.singleText;
+    enableMsgFinalizationLogging = d.enableMsgFinalizationLogging;
+    enableStateChangeLogging = d.enableStateChangeLogging;
+    properties.putAll(d.properties);
   }
 }

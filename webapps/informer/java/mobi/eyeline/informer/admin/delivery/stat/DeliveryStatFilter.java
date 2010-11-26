@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.delivery;
+package mobi.eyeline.informer.admin.delivery.stat;
 
 import java.util.Date;
 

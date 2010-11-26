@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import org.junit.Test;
 
@@ -17,7 +18,7 @@ public class DeliveryTest {
 
   @Test
   public void testSourceAddress() throws AdminException {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     try{
       d.setSourceAddress(null);
       assertTrue(false);
@@ -28,7 +29,7 @@ public class DeliveryTest {
 
   @Test
   public void testName() throws AdminException {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     try{
       d.setName(null);
       assertTrue(false);
@@ -42,7 +43,7 @@ public class DeliveryTest {
 
   @Test
   public void testPriority() throws AdminException {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     try{
       d.setPriority(0);
       assertTrue(false);
@@ -57,7 +58,7 @@ public class DeliveryTest {
 
   @Test
   public void testStartDate() throws AdminException {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     try{
       d.setStartDate(null);
       assertTrue(false);
@@ -68,14 +69,14 @@ public class DeliveryTest {
 
   @Test
   public void testEndDate() {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     d.setEndDate(null);
     d.setEndDate(new Date());
   }
 
   @Test
   public void testActivePeriod() throws AdminException {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     try{
       d.setActivePeriodStart(null);
       assertTrue(false);
@@ -92,23 +93,23 @@ public class DeliveryTest {
 
   @Test
   public void testActiveDays() throws AdminException {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     try{
       d.setActiveWeekDays(null);
       assertTrue(false);
     }catch (AdminException e){}
 
     try{
-      d.setActiveWeekDays(new Delivery.Day[0]);
+      d.setActiveWeekDays(new Day[0]);
       assertTrue(false);
     }catch (AdminException e){}
 
-    d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri});
+    d.setActiveWeekDays(new Day[]{Day.Fri});
   }
 
   @Test
   public void testValidity() throws AdminException{
-    Delivery d = Delivery.newCommonDelivery();    
+    Delivery d = new Delivery();
     try{
       d.setValidityPeriod(new Time(0,0,0));
       assertTrue(false);
@@ -118,7 +119,7 @@ public class DeliveryTest {
 
   @Test
   public void testDeliveryMode() throws AdminException{
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     try{
       d.setDeliveryMode(null);
       assertTrue(false);
@@ -128,7 +129,7 @@ public class DeliveryTest {
 
   @Test
   public void testOwner() throws AdminException{
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     try{
       d.setOwner(null);
       assertTrue(false);
@@ -144,7 +145,7 @@ public class DeliveryTest {
 
   @Test
   public void testRetry() {
-    Delivery d = Delivery.newCommonDelivery();
+    Delivery d = new Delivery();
     d.setRetryOnFail(false);
     d.setRetryPolicy("");
     d.setRetryPolicy(null);

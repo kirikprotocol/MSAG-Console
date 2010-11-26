@@ -1,13 +1,14 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.UserDataConsts;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatProvider;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -52,31 +53,42 @@ public class DeliveryManager {
     return connection;
   }
 
-  public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-    DcpConnection conn = getDcpConnection(login, password);
-    Delivery d = conn.getDelivery(deliveryId);
+  /**
+   * Добавляет сообщения в рассылку с индивидуальными сообщениями
+   * @param login логин
+   * @param password пароль
+   * @param msDataSource список сообщений, которые надо добавить
+   * @param deliveryId идентификатор рассылки
+   * @throws AdminException если произошла ошибка
+   */
+  public void addIndividualMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
+    addMessages(login, password, msDataSource, deliveryId, Delivery.Type.IndividualTexts);
+  }
+
+  /**
+   * Добавляет реципиентов в рассылку с одним текстом
+   * @param login логин
+   * @param password пароль
+   * @param msDataSource список адресов
+   * @param deliveryId идентификатор рассылки
+   * @throws AdminException если произошла ошибка
+   */
+  public void addSingleTextMessages(String login, String password, final DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+    addMessages(login, password, new Address2MessageDataSourceAdapter(msDataSource), deliveryId, Delivery.Type.SingleText);
+  }
+
+  private void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId, Delivery.Type expectedDeliveryType) throws AdminException {
+    Delivery d = getDelivery(login, password, deliveryId);
     if (d == null) {
       throw new DeliveryException("delivery_not_found");
     }
-    if (d.getType() == Delivery.Type.SingleText) {
+    if (d.getType() != expectedDeliveryType) {
       throw new DeliveryException("illegal_delivery_type");
     }
-    addMessages(msDataSource, conn, d);
+    addMessages(msDataSource, getDcpConnection(login, password), deliveryId);
   }
 
-  public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
-    DcpConnection conn = getDcpConnection(login, password);
-    Delivery d = conn.getDelivery(deliveryId);
-    if (d == null) {
-      throw new DeliveryException("delivery_not_found");
-    }
-    if (d.getType() == Delivery.Type.Common) {
-      throw new DeliveryException("illegal_delivery_type");
-    }
-    return addSingleTextMessages(msDataSource, conn, d);
-  }
-
-  private void addMessages(DataSource<Message> msDataSource, DcpConnection conn, Delivery delivery) throws AdminException {
+  private void addMessages(DataSource<Message> msDataSource, DcpConnection conn, int deliveryId) throws AdminException {
     Message m;
     int count = 0;
     List<Message> messages = new ArrayList<Message>(1000);
@@ -85,7 +97,7 @@ public class DeliveryManager {
       count++;
       if (count == 1000) {
         Collections.shuffle(messages);
-        long[] ids = conn.addDeliveryMessages(delivery.getId(), messages);
+        long[] ids = conn.addDeliveryMessages(deliveryId, messages);
         int i = 0;
         for (Message _m : messages) {
           _m.setId(ids[i]);
@@ -97,7 +109,7 @@ public class DeliveryManager {
     }
     if (!messages.isEmpty()) {
       Collections.shuffle(messages);
-      long[] ids = conn.addDeliveryMessages(delivery.getId(), messages);
+      long[] ids = conn.addDeliveryMessages(deliveryId, messages);
       int i = 0;
       for (Message _m : messages) {
         _m.setId(ids[i]);
@@ -106,33 +118,6 @@ public class DeliveryManager {
     }
   }
 
-  private List<Long> addSingleTextMessages(DataSource<Address> dataSource, DcpConnection conn, Delivery delivery) throws AdminException {
-    Address a;
-    int count = 0;
-    List<Address> addresses = new ArrayList<Address>(1000);
-    List<Long> results = new LinkedList<Long>();
-    while ((a = dataSource.next()) != null) {
-      addresses.add(a);
-      count++;
-      if (count == 1000) {
-        Collections.shuffle(addresses);
-        long[] ids = conn.addDeliveryAddresses(delivery.getId(), addresses);
-        for (long id : ids) {
-          results.add(id);
-        }
-        addresses.clear();
-        count = 0;
-      }
-    }
-    if (!addresses.isEmpty()) {
-      Collections.shuffle(addresses);
-      long[] ids = conn.addDeliveryAddresses(delivery.getId(), addresses);
-      for (long id : ids) {
-        results.add(id);
-      }
-    }
-    return results;
-  }
 
   private static void validateDelivery(final Delivery delivery) throws AdminException {
     if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
@@ -155,46 +140,6 @@ public class DeliveryManager {
     }
   }
 
-  /**
-   * Создание рассылки
-   *
-   * @param login        логин
-   * @param password     пароль
-   * @param delivery     рассылка
-   * @param msDataSource сообщения
-   * @throws mobi.eyeline.informer.admin.AdminException
-   *          ошибка выполнения команды
-   */
-  public void createDelivery(final String login, final String password, final Delivery delivery, final DataSource<Message> msDataSource) throws AdminException {
-    if (delivery.getType() == Delivery.Type.SingleText) {
-      throw new DeliveryException("illegal_delivery_type");
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("Create delivery: " + delivery.getName());
-    }
-    validateDelivery(delivery);
-    final DcpConnection conn = getDcpConnection(login, password);
-    final int id = conn.createDelivery(delivery);
-    delivery.setId(id);
-    if (msDataSource != null) {
-      try {
-        addMessages(msDataSource, conn, delivery);
-      } catch (AdminException e) {
-        logger.error("Delivery creation failed.", e);
-        silentDropDelivery(conn, id);
-        throw e;
-
-      } catch (Exception e) {
-        logger.error("Delivery creation failed.", e);
-        silentDropDelivery(conn, id);
-        throw new DeliveryException("internal_error");
-      }
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("Delivery is proccessed: " + id);
-    }
-  }
-
   private void silentDropDelivery(DcpConnection conn, int id) {
     try {
       logger.warn("Try drop delivery: " + id);
@@ -205,32 +150,24 @@ public class DeliveryManager {
     }
   }
 
-  /**
-   * Создание рассылки
-   *
-   * @param login      логин
-   * @param password   пароль
-   * @param delivery   рассылка
-   * @param dataSource адресаты рассылки (или null)
-   * @return идентификаторы сообщений (или null, если спсико адресатов пуст)
-   * @throws mobi.eyeline.informer.admin.AdminException
-   *          ошибка выполнения команды
-   */
-  public List<Long> createSingleTextDelivery(final String login, final String password, final Delivery delivery, final DataSource<Address> dataSource) throws AdminException {
-    if (delivery.getType() == Delivery.Type.Common) {
-      throw new DeliveryException("illegal_delivery_type");
-    }
+  private int createDelivery(final String login, final String password, final Delivery delivery, final DataSource<Message> msDataSource) throws AdminException {
     if (logger.isDebugEnabled()) {
       logger.debug("Create delivery: " + delivery.getName());
     }
+
+    if (delivery.getType() == Delivery.Type.SingleText)
+      delivery.setProperty("singleText", "true");
+
     validateDelivery(delivery);
     final DcpConnection conn = getDcpConnection(login, password);
     final int id = conn.createDelivery(delivery);
     delivery.setId(id);
-    List<Long> res = null;
-    if (dataSource != null) {
+    if (msDataSource != null) {
       try {
-        res = addSingleTextMessages(dataSource, conn, delivery);
+        if (delivery.getType() == Delivery.Type.SingleText)
+          conn.modifyDeliveryGlossary(id, delivery.getSingleText());
+
+        addMessages(msDataSource, conn, id);
       } catch (AdminException e) {
         logger.error("Delivery creation failed.", e);
         silentDropDelivery(conn, id);
@@ -245,7 +182,47 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Delivery is proccessed: " + id);
     }
-    return res;
+
+    return id;
+  }
+
+  /**
+   * Создаёт рассылку с индивидуальными текстами для каждого реципиента.
+   *
+   * @param login        логин
+   * @param password     пароль
+   * @param delivery     рассылка
+   * @param msDataSource сообщения
+   * @return созданную рассылку
+   * @throws mobi.eyeline.informer.admin.AdminException
+   *          ошибка выполнения команды
+   */
+  public Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+    Delivery d = new Delivery();
+    d.setType(Delivery.Type.IndividualTexts);
+    d.setLoaded(true);
+    d.copyFrom(delivery);
+    createDelivery(login, password, d, msDataSource);
+    return d;
+  }
+
+  /**
+   * Создает рассылку с одним текстом для всех реципиентов.
+   *
+   * @param login      логин
+   * @param password   пароль
+   * @param delivery   рассылка
+   * @param dataSource адресаты рассылки (или null)
+   * @return созданную рассылку
+   * @throws AdminException ошибка выполнения команды
+   */
+  public Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> dataSource) throws AdminException {
+    Delivery d = new Delivery();
+    d.setType(Delivery.Type.SingleText);
+    d.setLoaded(true);
+    d.copyFrom(delivery);
+    createDelivery(login, password, d, new Address2MessageDataSourceAdapter(dataSource));
+    return d;
   }
 
   /**
@@ -260,9 +237,13 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Modify delivery: " + delivery.getName());
     }
+
     validateDelivery(delivery);
     DcpConnection conn = getDcpConnection(login, password);
     conn.modifyDelivery(delivery);
+
+    if (delivery.getType() == Delivery.Type.SingleText)
+      conn.modifyDeliveryGlossary(delivery.getId(), delivery.getSingleText());
   }
 
   /**
@@ -309,10 +290,6 @@ public class DeliveryManager {
    */
   public void dropMessages(String login, String password, int deliveryId, Collection<Long> messageIds) throws AdminException {
     DcpConnection conn = getDcpConnection(login, password);
-    dropMessages(conn, deliveryId, messageIds);
-  }
-
-  private void dropMessages(DcpConnection conn, int deliveryId, Collection<Long> messageIds) throws AdminException {
     if (logger.isDebugEnabled()) {
       logger.debug("Drop Messages");
     }
@@ -339,7 +316,18 @@ public class DeliveryManager {
       logger.debug("Get delivery: " + deliveryId);
     }
     DcpConnection conn = getDcpConnection(login, password);
-    return conn.getDelivery(deliveryId);
+    Delivery d = conn.getDelivery(deliveryId);
+    if (d == null)
+      return null;
+    d.setLoaded(true);
+
+    if (d.getProperty("singleText") != null) {
+      d.setType(Delivery.Type.SingleText);
+      d.setSingleText(conn.getDeliveryGlossary(deliveryId)[0]);
+    } else
+      d.setType(Delivery.Type.IndividualTexts);
+
+    return d;
   }
 
   /**
@@ -423,15 +411,28 @@ public class DeliveryManager {
    * @param visitor        визитер извлечения рассылок
    * @throws AdminException ошибка выполнения команды
    */
-  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
-    if (deliveryFilter == null || deliveryFilter.getResultFields() == null || deliveryFilter.getResultFields().length == 0) {
+  public void getDeliveries(final String login, final String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
+    if (deliveryFilter == null) {
       throw new DeliveryException("resultFields");
     }
     DcpConnection conn = getDcpConnection(login, password);
     int _reqId = conn.getDeliveries(deliveryFilter);
-    new DeliveryDataSource<DeliveryInfo>(_pieceSize, _reqId, conn) {
-      protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<DeliveryInfo> result) throws AdminException {
-        return connection.getNextDeliviries(reqId, pieceSize, result);
+    new VisitorHelper<Delivery>(_pieceSize, _reqId, conn) {
+      protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<Delivery> result) throws AdminException {
+        boolean res = connection.getNextDeliveries(reqId, pieceSize, result);
+        for (Delivery d : result) {
+          d.setDeliveryManager(DeliveryManager.this);
+          d.setLogin(login);
+          d.setPassword(password);
+          d.setLoaded(false);
+
+          if (d.getProperty("singleText") != null) {
+            d.setType(Delivery.Type.SingleText);
+          } else
+            d.setType(Delivery.Type.IndividualTexts);
+        }
+
+        return res;
       }
     }.visit(visitor);
   }
@@ -446,8 +447,8 @@ public class DeliveryManager {
    * @param visitor    визитер извлечения сообщений
    * @throws AdminException ошибка выполнения команды
    */
-  public void getMessages(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
-    if (filter == null || filter.getFields() == null || filter.getFields().length == 0) {
+  public void getMessages(String login, String password, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+    if (filter == null) {
       throw new DeliveryException("resultFields");
     }
     if (filter.getStartDate() == null || filter.getEndDate() == null) {
@@ -456,8 +457,8 @@ public class DeliveryManager {
     DcpConnection conn = getDcpConnection(login, password);
     int _reqId = conn.getMessages(filter);
 
-    new DeliveryDataSource<MessageInfo>(_pieceSize, _reqId, conn) {
-      protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<MessageInfo> result) throws AdminException {
+    new VisitorHelper<Message>(_pieceSize, _reqId, conn) {
+      protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<Message> result) throws AdminException {
         return connection.getNextMessages(reqId, pieceSize, result);
       }
     }.visit(visitor);
@@ -528,28 +529,6 @@ public class DeliveryManager {
     return statsProvider.getCalendarOfStatFile(f);
   }
 
-
-  /**
-   * Устанавливает у рассылки флаг в поле userData попадает она под запрет или нет
-   *
-   * @param login       логин
-   * @param password    пароль
-   * @param deliveryId  идентификатор рассылки
-   * @param restriction флаг
-   * @return рассылка
-   * @throws AdminException ошибка выполнения команды
-   */
-  public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
-    DcpConnection conn = getDcpConnection(login, password);
-    Delivery d = conn.getDelivery(deliveryId);
-    if (d == null) {
-      throw new DeliveryException("delivery_not_found");
-    }
-    d.setProperty(UserDataConsts.RESTRICTION, Boolean.toString(restriction));
-    conn.modifyDelivery(d);
-    return d;
-  }
-
   /**
    * Завершение работы менеджера
    */
@@ -562,6 +541,30 @@ public class DeliveryManager {
     }
   }
 
+  /**
+   * Адаптер для преобразования DataSource&lt;Address&gt; в DataSource%lt;Message&gt;
+   */
+  private static class Address2MessageDataSourceAdapter implements DataSource<Message> {
+    private final DataSource<Address> addrDs;
+
+    private Address2MessageDataSourceAdapter(DataSource<Address> addrDs) {
+      this.addrDs = addrDs;
+    }
+
+    public Message next() throws AdminException {
+      Address addr = addrDs.next();
+      if (addr == null)
+        return null;
+      Message m = new Message();
+      m.setAbonent(addr);
+      m.setGlossaryIndex(0);
+      return m;
+    }
+  }
+
+  /**
+   * Составной ключ для пользователя
+   */
   private static class User {
     private final String login;
     private final String password;

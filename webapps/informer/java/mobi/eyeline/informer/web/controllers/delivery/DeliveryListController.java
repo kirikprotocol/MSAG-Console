@@ -192,8 +192,6 @@ public class DeliveryListController extends DeliveryController {
     if (namePrefix != null && (namePrefix = namePrefix.trim()).length() != 0)
       filter.setNameFilter(namePrefix);
 
-    filter.setResultFields(DeliveryFields.Name, DeliveryFields.UserId, DeliveryFields.Status, DeliveryFields.StartDate, DeliveryFields.EndDate);
-
     if (status != null && status.length() > 0)
       filter.setStatusFilter(DeliveryStatus.valueOf(status));
 
@@ -210,14 +208,14 @@ public class DeliveryListController extends DeliveryController {
 
 
 
-  private List<DeliveryInfo> getSortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count, DataTableSortOrder sortOrder) throws AdminException {
-    final Comparator<DeliveryInfo> comparator = getComparator(sortOrder);
+  private List<Delivery> getSortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count, DataTableSortOrder sortOrder) throws AdminException {
+    final Comparator<Delivery> comparator = getComparator(sortOrder);
 
-    final DeliveryInfo infos[] = new DeliveryInfo[startPos + count];
+    final Delivery infos[] = new Delivery[startPos + count];
     final int lastIdx = infos.length - 1;
 
-    config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<DeliveryInfo>() {
-      public boolean visit(DeliveryInfo value) throws AdminException {
+    config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<Delivery>() {
+      public boolean visit(Delivery value) throws AdminException {
         if (infos[lastIdx] == null || comparator.compare(value, infos[lastIdx]) < 0)
           insert(infos, value, comparator);
 
@@ -228,12 +226,12 @@ public class DeliveryListController extends DeliveryController {
     return Arrays.asList(infos).subList(startPos, startPos + count);
   }
 
-  private List<DeliveryInfo> getUnsortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count) throws AdminException {
-    final DeliveryInfo infos[] = new DeliveryInfo[count];
-    config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<DeliveryInfo>() {
+  private List<Delivery> getUnsortedDeliveriesList(User u, DeliveryFilter filter, final int startPos, final int count) throws AdminException {
+    final Delivery infos[] = new Delivery[count];
+    config.getDeliveries(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<Delivery>() {
       int pos = 0;
 
-      public boolean visit(DeliveryInfo value) throws AdminException {
+      public boolean visit(Delivery value) throws AdminException {
         if (pos >= startPos + count)
           return false;
 
@@ -258,14 +256,14 @@ public class DeliveryListController extends DeliveryController {
     return new DataTableModel() {
       public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
         try {
-          List<DeliveryInfo> list;
+          List<Delivery> list;
           if (sortOrder != null)
             list = getSortedDeliveriesList(u, filter, startPos, count, sortOrder);
           else
             list = getUnsortedDeliveriesList(u, filter, startPos, count);
 
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
-          for (DeliveryInfo di : list)
+          for (Delivery di : list)
             if (di != null)
               rows.add(new DeliveryRow(di));
           return rows;
@@ -288,42 +286,42 @@ public class DeliveryListController extends DeliveryController {
     };
   }
 
-  private static Comparator<DeliveryInfo> getComparator(final DataTableSortOrder sortOrder) {
+  private static Comparator<Delivery> getComparator(final DataTableSortOrder sortOrder) {
     if (sortOrder == null || sortOrder.getColumnId().equals("name")) {
-      return new Comparator<DeliveryInfo>() {
-        public int compare(DeliveryInfo o1, DeliveryInfo o2) {
+      return new Comparator<Delivery>() {
+        public int compare(Delivery o1, Delivery o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
           return o1.getName().compareTo(o2.getName()) * (sortOrder == null || sortOrder.isAsc() ? 1 : -1);
         }
       };
     } else if (sortOrder.getColumnId().equals("userId")) {
-      return new Comparator<DeliveryInfo>() {
-        public int compare(DeliveryInfo o1, DeliveryInfo o2) {
+      return new Comparator<Delivery>() {
+        public int compare(Delivery o1, Delivery o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
-          return o1.getUserId().compareTo(o2.getUserId()) * (sortOrder.isAsc() ? 1 : -1);
+          return o1.getOwner().compareTo(o2.getOwner()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
     } else if (sortOrder.getColumnId().equals("status")) {
-      return new Comparator<DeliveryInfo>() {
-        public int compare(DeliveryInfo o1, DeliveryInfo o2) {
+      return new Comparator<Delivery>() {
+        public int compare(Delivery o1, Delivery o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
           return o1.getStatus().toString().compareTo(o2.getStatus().toString()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
     } else if (sortOrder.getColumnId().equals("startDate")) {
-      return new Comparator<DeliveryInfo>() {
-        public int compare(DeliveryInfo o1, DeliveryInfo o2) {
+      return new Comparator<Delivery>() {
+        public int compare(Delivery o1, Delivery o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
           return o1.getStartDate().compareTo(o2.getStartDate()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
     } else {
-      return new Comparator<DeliveryInfo>() {
-        public int compare(DeliveryInfo o1, DeliveryInfo o2) {
+      return new Comparator<Delivery>() {
+        public int compare(Delivery o1, Delivery o2) {
           if (o1 == null) return 1;
           if (o2 == null) return -1;
           if (o1.getEndDate() == null) {
@@ -340,34 +338,34 @@ public class DeliveryListController extends DeliveryController {
 
   public class DeliveryRow {
 
-    private final DeliveryInfo deliveryInfo;
+    private final Delivery Delivery;
 
-    public DeliveryRow(DeliveryInfo deliveryInfo) {
-      this.deliveryInfo = deliveryInfo;
+    public DeliveryRow(Delivery Delivery) {
+      this.Delivery = Delivery;
     }
 
     public Date getEndDate() {
-      return deliveryInfo.getEndDate();
+      return Delivery.getEndDate();
     }
 
     public Date getStartDate() {
-      return deliveryInfo.getStartDate();
+      return Delivery.getStartDate();
     }
 
     public DeliveryStatus getStatus() {
-      return deliveryInfo.getStatus();
+      return Delivery.getStatus();
     }
 
     public String getUserId() {
-      return deliveryInfo.getUserId();
+      return Delivery.getOwner();
     }
 
     public String getName() {
-      return deliveryInfo.getName();
+      return Delivery.getName();
     }
 
     public int getDeliveryId() {
-      return deliveryInfo.getDeliveryId();
+      return Delivery.getId();
     }
   }
 

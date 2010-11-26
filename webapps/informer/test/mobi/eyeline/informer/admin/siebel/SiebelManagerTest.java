@@ -1,8 +1,8 @@
 package mobi.eyeline.informer.admin.siebel;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryInfo;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.regions.Region;
@@ -71,8 +71,8 @@ public class SiebelManagerTest {
     filter.setUserIdFilter(siebelUser.getLogin());
     filter.setStatusFilter(DeliveryStatus.Active, DeliveryStatus.Finished);
     final boolean[] exist = new boolean[]{false};
-    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<DeliveryInfo>() {
-      public boolean visit(DeliveryInfo value) throws AdminException {
+    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<Delivery>() {
+      public boolean visit(Delivery value) throws AdminException {
         if(value.getName().startsWith("siebel_")) {
           exist[0] = true;
           return false;
@@ -88,8 +88,8 @@ public class SiebelManagerTest {
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
     filter.setStatusFilter(DeliveryStatus.Paused);
-    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<DeliveryInfo>() {
-      public boolean visit(DeliveryInfo value) throws AdminException {
+    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<Delivery>() {
+      public boolean visit(Delivery value) throws AdminException {
         if(value.getName().startsWith("siebel_")) {
           exist[0] = true;
           return false;
@@ -105,8 +105,8 @@ public class SiebelManagerTest {
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
     filter.setStatusFilter(DeliveryStatus.Active, DeliveryStatus.Finished);
-    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<DeliveryInfo>() {
-      public boolean visit(DeliveryInfo value) throws AdminException {
+    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<Delivery>() {
+      public boolean visit(Delivery value) throws AdminException {
         if(value.getName().startsWith("siebel_")) {
           exist[0] = true;
           return false;
@@ -122,8 +122,8 @@ public class SiebelManagerTest {
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
     filter.setStatusFilter(DeliveryStatus.Cancelled);
-    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<DeliveryInfo>() {
-      public boolean visit(DeliveryInfo value) throws AdminException {
+    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<Delivery>() {
+      public boolean visit(Delivery value) throws AdminException {
         if(value.getName().startsWith("siebel_")) {
           exist[0] = true;
           return false;
@@ -139,8 +139,8 @@ public class SiebelManagerTest {
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
     filter.setStatusFilter(DeliveryStatus.Cancelled);
-    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<DeliveryInfo>() {
-      public boolean visit(DeliveryInfo value) throws AdminException {
+    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<Delivery>() {
+      public boolean visit(Delivery value) throws AdminException {
         if(value.getName().startsWith("siebel_")) {
           exist[0] = true;
         }

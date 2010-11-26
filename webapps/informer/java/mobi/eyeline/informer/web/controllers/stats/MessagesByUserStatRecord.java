@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
-import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;

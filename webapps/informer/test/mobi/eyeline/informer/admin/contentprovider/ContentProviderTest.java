@@ -3,8 +3,7 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.*;
 
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationType;
+import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -116,12 +115,11 @@ public class ContentProviderTest {
     assertTrue(d!=null);
 
     MessageFilter filter = new MessageFilter(id,startDate,new Date());
-    filter.setFields(new MessageFields[]{MessageFields.Abonent,MessageFields.Text});
     final Counter cnt = new Counter();
-    context.getMessagesStates("a","1",filter,1000,new Visitor<MessageInfo>(){
-      public boolean visit(MessageInfo mi) throws AdminException {
-        assertTrue(mi.getAbonent().startsWith("+7913000"));
-        String s = mi.getAbonent().substring(5);
+    context.getMessagesStates("a","1",filter,1000,new Visitor<Message>(){
+      public boolean visit(Message mi) throws AdminException {
+        assertTrue(mi.getAbonent().getSimpleAddress().startsWith("+7913000"));
+        String s = mi.getAbonent().getSimpleAddress().substring(5);
         int n = Integer.parseInt(s,10);
         assertEquals(mi.getText(),"Привет с большого бодуна "+n);
         cnt.inc();
@@ -139,8 +137,8 @@ public class ContentProviderTest {
 
 
 
-    DeliveryNotification notification = new DeliveryNotification(DeliveryNotificationType.DELIVERY_FINISHED,new Date(),100,"a");
-    cpDaemon.onDeliveryFinishNotification(notification);
+    ChangeDeliveryStatusEvent stateEventChange = new ChangeDeliveryStatusEvent(DeliveryStatus.Finished,new Date(),100,"a");
+    cpDaemon.deliveryStateChanged(stateEventChange);
 
     File workDir = new File(context.getWorkDir(),"contentProvider");
     assertTrue(context.getFileSystem().exists(workDir));
@@ -150,7 +148,7 @@ public class ContentProviderTest {
 
     cpDaemon.start();
 
-    synchronized (this) {wait(1000);}
+    synchronized (this) {wait(10000);}
 
     assertTrue(context.getFileSystem().exists(new File(userDir,"test.report"))) ;
 

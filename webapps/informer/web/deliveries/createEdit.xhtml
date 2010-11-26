@@ -69,8 +69,8 @@
         <h:inputText id="email"  value="#{createDelivery.activePage.emailNotificationAddress}"/>
       </h:panelGroup>
 
-      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.singleText}" rendered="#{createDelivery.activePage.delivery.type.value == 'SingleText'}"/>
-      <h:panelGroup rendered="#{createDelivery.activePage.delivery.type.value == 'SingleText'}">
+      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.singleText}" rendered="#{createDelivery.activePage.deliveryWithSingleText}"/>
+      <h:panelGroup rendered="#{createDelivery.activePage.deliveryWithSingleText}">
         <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" required="true" simple="true"/>
           <tr:outputText value="&#160;"/>
           <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>

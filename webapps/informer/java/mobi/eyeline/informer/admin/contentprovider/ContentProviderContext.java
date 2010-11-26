@@ -27,7 +27,7 @@ public interface ContentProviderContext {
   Region getRegion(Address ab);
 
 
-  void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException;
+  Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
 
   Delivery getDelivery(String login, String password, int deliveryId) throws AdminException;
 
@@ -35,11 +35,11 @@ public interface ContentProviderContext {
 
   void dropDelivery(String username, String password, int deliveryId) throws AdminException;
 
-  void getDefaultDelivery(String login, Delivery delivery) throws AdminException;
+  void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException;
 
 
 
   void addMessages(String login, String password, DataSource<Message> messageSource, int deliveryId) throws AdminException;
 
-  void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<MessageInfo> visitor) throws AdminException;
+  void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
 }

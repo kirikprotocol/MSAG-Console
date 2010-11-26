@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryStatus;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 
 import java.text.ParseException;
@@ -16,7 +17,7 @@ import java.util.*;
  *
  * @author Aleksandr Khalitov
  */
-public class DcpConverter {
+class DcpConverter {
 
   private static final String TIME_FORMAT = "HH:mm:ss";
 
@@ -61,18 +62,18 @@ public class DcpConverter {
     return format.format(date);
   }
 
-  static Delivery.Day[] convertDays(String[] days) {
+  static Day[] convertDays(String[] days) {
     if (days == null) {
       return null;
     }
-    Delivery.Day[] res = new Delivery.Day[days.length];
+    Day[] res = new Day[days.length];
     for (int i = 0; i < days.length; i++) {
-      res[i] = Delivery.Day.valueOf(days[i]);
+      res[i] = Day.valueOf(days[i]);
     }
     return res;
   }
 
-  static String[] convertDays(Delivery.Day[] days) {
+  static String[] convertDays(Day[] days) {
     if (days == null) {
       return null;
     }
@@ -97,17 +98,11 @@ public class DcpConverter {
     return mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryMode.valueOf(mode.toString());
   }
 
-  public static Delivery convert(int id, mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo di, String[] glossary) throws AdminException {
+  public static Delivery convert(int id, mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo di) throws AdminException {
     if (di == null) {
       return null;
     }
-    Delivery delivery;
-    if (glossary == null) {
-      delivery = Delivery.newCommonDelivery();
-    } else {
-      delivery = Delivery.newSingleTextDelivery();
-      delivery.setSingleText(glossary[0]);
-    }
+    Delivery delivery = new Delivery();
     delivery.setId(id);
     delivery.setActivePeriodEnd(new Time(convertTime(di.getActivePeriodEnd())));
     delivery.setActivePeriodStart(new Time(convertTime(di.getActivePeriodStart())));
@@ -168,14 +163,14 @@ public class DcpConverter {
     return result;
   }
 
-  public static MessageInfo convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi) throws AdminException {
+  public static Message convert(mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi) throws AdminException {
     if (mi == null) {
       return null;
     }
-    MessageInfo result = new MessageInfo();
+    Message result = new Message();
     result.setId(mi.getId());
     if (mi.hasAbonent()) {
-      result.setAbonent(mi.getAbonent());
+      result.setAbonent(new Address(mi.getAbonent()));
     }
     if (mi.hasDate()) {
       result.setDate(convertDate(mi.getDate()));
@@ -190,7 +185,9 @@ public class DcpConverter {
       result.setText(mi.getText());
     
     if (mi.hasUserData()) {
-      result.addProperties(convertUserData(mi.getUserData()));
+      Map<String, String> props = convertUserData(mi.getUserData());
+      if (props != null)
+        result.addProperties(props);
     }
     return result;
   }
@@ -198,8 +195,14 @@ public class DcpConverter {
   public static DeliveryMessage convert(Message m) {
     DeliveryMessage result = new DeliveryMessage();
     result.setAbonent(m.getAbonent().getSimpleAddress());
-    result.setText(m.getText());
-    result.setMsgType(MessageType.TextMessage);
+    if (m.getText() != null) {
+      result.setText(m.getText());
+      result.setMsgType(MessageType.TextMessage);
+    } else {
+      result.setIndex(m.getGlossaryIndex());
+      result.setMsgType(MessageType.GlossaryMessage);
+    }
+
     String userDataStr = convertUserData(m.getProperties());
     if (userDataStr != null)
       result.setUserData(userDataStr);
@@ -233,17 +236,17 @@ public class DcpConverter {
     return result;
   }
 
-  public static DeliveryInfo convert(DeliveryListInfo di) throws AdminException {
+  public static Delivery convert(DeliveryListInfo di) throws AdminException {
     if (di == null) {
       return null;
     }
-    DeliveryInfo result = new DeliveryInfo();
-    result.setDeliveryId(di.getDeliveryId());
+    Delivery result = new Delivery();
+    result.setId(di.getDeliveryId());
     if (di.hasActivityPeriodEnd()) {
-      result.setActivityPeriodEnd(new Time(convertTime(di.getActivityPeriodEnd())));
+      result.setActivePeriodEnd(new Time(convertTime(di.getActivityPeriodEnd())));
     }
     if (di.hasActivityPeriodStart()) {
-      result.setActivityPeriodStart(new Time(convertTime(di.getActivityPeriodStart())));
+      result.setActivePeriodStart(new Time(convertTime(di.getActivityPeriodStart())));
     }
     if (di.hasEndDate()) {
       result.setEndDate(convertDateYY(di.getEndDate()));
@@ -258,7 +261,7 @@ public class DcpConverter {
       result.setStatus(convert(di.getStatus()));
     }
     if (di.hasUserId()) {
-      result.setUserId(di.getUserId());
+      result.setOwner(di.getUserId());
     }
     if (di.hasUserData()) {
       Map<String, String> uD = convertUserData(di.getUserData());
@@ -344,43 +347,7 @@ public class DcpConverter {
   }
 
 
-  public static mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields[] convert(mobi.eyeline.informer.admin.delivery.DeliveryFields[] fields) {
-    if (fields == null) {
-      return null;
-    }
-    mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields[] result = new mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields[fields.length];
-    for (int i = 0; i < fields.length; i++) {
-      result[i] = convert(fields[i]);
-    }
-    return result;
-  }
-
-  private static mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields convert(mobi.eyeline.informer.admin.delivery.DeliveryFields fields) {
-    if (fields == null) {
-      return null;
-    }
-    return mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields.valueOf(fields.toString());
-  }
-
-  public static ReqField[] convert(MessageFields[] fields) {
-    if (fields == null) {
-      return null;
-    }
-    ReqField[] result = new ReqField[fields.length];
-    for (int i = 0; i < fields.length; i++) {
-      result[i] = convert(fields[i]);
-    }
-    return result;
-  }
-
-  private static ReqField convert(MessageFields fields) {
-    if (fields == null) {
-      return null;
-    }
-    return ReqField.valueOf(fields.toString());
-  }
-
-
+  
   public static DeliveryMessageState[] convert(MessageState[] states) {
     if (states == null) {
       return null;

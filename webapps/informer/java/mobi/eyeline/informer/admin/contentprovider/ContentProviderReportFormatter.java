@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
+import mobi.eyeline.informer.util.Address;
+
 import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -25,5 +27,9 @@ class ContentProviderReportFormatter {
     reportWriter.print(dateFormat.get().format(date));
     reportWriter.print(" | ");
     reportWriter.println(s);
+  }
+
+  static void writeReportLine(PrintStream reportWriter, Address abonent, Date date, String s) {
+    writeReportLine(reportWriter, abonent.getSimpleAddress(), date, s);
   }
 }

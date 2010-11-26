@@ -10,6 +10,7 @@ import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UsersManagerTest;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -224,10 +225,9 @@ public class RestrictionsDaemonTest {
 
   private void checkDeliveryState(final Delivery d, final DeliveryStatus requiredStatus, final boolean requiredRestricted , final long start) throws AdminException {
     DeliveryFilter filter = new DeliveryFilter();
-    filter.setResultFields(new DeliveryFields[]{DeliveryFields.Status});
     filter.setUserIdFilter(new String[]{d.getOwner()});
-    deliveryManager.getDeliveries(d.getOwner(),"1",filter,100,new Visitor<DeliveryInfo>(){
-      public boolean visit(DeliveryInfo di) throws AdminException {
+    deliveryManager.getDeliveries(d.getOwner(),"1",filter,100,new Visitor<Delivery>(){
+      public boolean visit(Delivery di) throws AdminException {
         System.out.println((System.currentTimeMillis()-start)+" "+d.getOwner()+" status="+di.getStatus()+" "+Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION)));
         assertTrue(di.getStatus()==requiredStatus);
         assertTrue(Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION))==requiredRestricted);
@@ -274,22 +274,22 @@ public class RestrictionsDaemonTest {
 
 
   private Delivery _createDelivery(String userId) throws AdminException{
-    Delivery d = Delivery.newCommonDelivery();
+    DeliveryPrototype d = new DeliveryPrototype();
     d.setActivePeriodEnd(new Time(22,0,0));
     d.setActivePeriodStart(new Time(1,0,0));
     Calendar c = Calendar.getInstance();
     int weekDay = c.get(Calendar.DAY_OF_WEEK);
-    Delivery.Day[] days = {
-        Delivery.Day.Sun,
-        Delivery.Day.Mon,
-        Delivery.Day.Tue,
-        Delivery.Day.Wed,
-        Delivery.Day.Thu,
-        Delivery.Day.Fri,
-        Delivery.Day.Sat
+    Day[] days = {
+        Day.Sun,
+        Day.Mon,
+        Day.Tue,
+        Day.Wed,
+        Day.Thu,
+        Day.Fri,
+        Day.Sat
     };
-    Delivery.Day notToday = days[(weekDay+3)%7];
-    d.setActiveWeekDays(new Delivery.Day[]{notToday});
+    Day notToday = days[(weekDay+3)%7];
+    d.setActiveWeekDays(new Day[]{notToday});
 
     d.setStartDate(c.getTime());
     c.add(Calendar.DAY_OF_MONTH,1);
@@ -307,7 +307,7 @@ public class RestrictionsDaemonTest {
     d.setValidityPeriod(new Time(1,0,0));
     d.setSourceAddress(new Address("+79123942341"));
 
-    deliveryManager.createDelivery(userId,"1", d, new DataSource<Message>() {
+    Delivery delivery = deliveryManager.createDeliveryWithIndividualTexts(userId,"1", d, new DataSource<Message>() {
       private LinkedList<Message> ms = new LinkedList<Message>() {
         {
           Message m1 = Message.newMessage("text1");
@@ -326,7 +326,7 @@ public class RestrictionsDaemonTest {
         return ms.removeFirst();
       }
     });
-    return d;
+    return delivery;
   }
 
   private synchronized void waitT(long t, long startTime) throws InterruptedException {

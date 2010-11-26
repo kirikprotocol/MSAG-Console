@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
@@ -25,7 +26,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   private int maximum = Integer.MAX_VALUE;
 
-  private Delivery delivery;
+  private DeliveryPrototype delivery;
 
   private File tmpFile;
 
@@ -57,7 +58,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
       return new UploadFilePage(config, user);
     }
     next();
-    return new DeliveryEditPage(delivery, tmpFile, config);
+    return new DeliveryEditPage(delivery, fileContentType == 1, tmpFile, config);
   }
 
   public int getFileContentType() {
@@ -70,13 +71,9 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   @Override
   public String upload() {
-    if (fileContentType == 1) {
-      delivery = Delivery.newSingleTextDelivery();
-    } else {
-      delivery = Delivery.newCommonDelivery();
-    }
+    delivery = new DeliveryPrototype();
     try {
-      config.getDefaultDelivery(user, delivery);
+      config.copyUserSettingsToDeliveryPrototype(user, delivery);
       delivery.setStartDate(new Date());
     } catch (AdminException e) {
       addError(e);
@@ -201,7 +198,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
         if (line.trim().length() == 0)
           continue;
 
-        String addressStr = getAddressFromLine(line, lineNumber, delivery.getType() != Delivery.Type.SingleText);
+        String addressStr = getAddressFromLine(line, lineNumber, fileContentType != 1);
         Address address;
         try {
           address = new Address(addressStr);

@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
@@ -17,8 +18,12 @@ public class Message {
   private static final ValidationHelper vh = new ValidationHelper(Message.class);
 
   private Long id;
+  private MessageState state;
+  private Date date;
   private String text;
+  private int glossaryIndex;
   private Address abonent;
+  private Integer errorCode;
 
   private final Properties properties = new Properties();
 
@@ -63,6 +68,30 @@ public class Message {
     this.abonent = abonent;
   }
 
+  public MessageState getState() {
+    return state;
+  }
+
+  public void setState(MessageState state) {
+    this.state = state;
+  }
+
+  public Date getDate() {
+    return date;
+  }
+
+  public void setDate(Date date) {
+    this.date = date;
+  }
+
+  public Integer getErrorCode() {
+    return errorCode;
+  }
+
+  public void setErrorCode(Integer errorCode) {
+    this.errorCode = errorCode;
+  }
+
   public String removeProperty(String name) {
     return (String) properties.remove(name);
   }
@@ -89,6 +118,13 @@ public class Message {
     return properties;
   }
 
+  int getGlossaryIndex() {
+    return glossaryIndex;
+  }
+
+  void setGlossaryIndex(int glossaryIndex) {
+    this.glossaryIndex = glossaryIndex;
+  }
 
   public String getText() {
     return text;
@@ -98,6 +134,10 @@ public class Message {
     Message m = new Message(text);
     m.id = id;
     m.abonent = abonent;
+    m.glossaryIndex = glossaryIndex;
+    m.state = state;
+    m.date = date;
+    m.errorCode = errorCode;
     return m;
   }
 

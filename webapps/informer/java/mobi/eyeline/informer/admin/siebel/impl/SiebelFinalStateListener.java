@@ -5,8 +5,9 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotification;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsListenerStub;
+import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
+import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
 import mobi.eyeline.informer.admin.siebel.SiebelDelivery;
 import mobi.eyeline.informer.admin.siebel.SiebelException;
 import mobi.eyeline.informer.admin.siebel.SiebelManager;
@@ -24,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Aleksandr Khalitov
  */
-public class SiebelFinalStateListener extends DeliveryNotificationsListenerStub {
+public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   private static final Logger logger = Logger.getLogger("SIEBEL");
 
@@ -94,27 +95,27 @@ public class SiebelFinalStateListener extends DeliveryNotificationsListenerStub 
     this.periodSec = periodSec;
   }
 
-  private void messageFinished(DeliveryMessageNotification notification) throws AdminException {
+  private void messageFinished(ChangeMessageStateEvent stateEvent) throws AdminException {
     if(stop) {
       return;
     }
-    if (notification.getUserData() == null) {
+    if (stateEvent.getProperties() == null) {
       return;
     }
-    switch (notification.getMessageState()) {
+    switch (stateEvent.getMessageState()) {
       case New:
       case Process:
         return;
     }
 
-    Map<String, String> userData = DcpConverter.convertUserData(notification.getUserData());
+    Properties userData = stateEvent.getProperties();
 
-    String clcId = userData.get(UserDataConsts.SIEBEL_MESSAGE_ID);
+    String clcId = userData.getProperty(UserDataConsts.SIEBEL_MESSAGE_ID);
     if (clcId == null) {
       return;
     }
-    MessageState state = notification.getMessageState();
-    int errCode = notification.getSmppStatus();
+    MessageState state = stateEvent.getMessageState();
+    int errCode = stateEvent.getSmppStatus();
     try {
       writeLock();
       if(!stop) {
@@ -126,16 +127,16 @@ public class SiebelFinalStateListener extends DeliveryNotificationsListenerStub 
     }
   }
 
-  private void deliveryFinished(DeliveryNotification notification) throws AdminException {
+  private void deliveryFinished(ChangeDeliveryStatusEvent stateEventChange) throws AdminException {
     if(stop) {
       return;
     }
-    User u = users.getUser(notification.getUserId());
+    User u = users.getUser(stateEventChange.getUserId());
     if (u == null) {
-      logger.error("Can't find user with id: " + notification.getUserId());
+      logger.error("Can't find user with id: " + stateEventChange.getUserId());
       return;
     }
-    Delivery d = deliveries.getDelivery(u.getLogin(), u.getPassword(), notification.getDeliveryId());
+    Delivery d = deliveries.getDelivery(u.getLogin(), u.getPassword(), stateEventChange.getDeliveryId());
     String waveId;
     if (d != null && (waveId = d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID)) != null) {
       try {
@@ -150,14 +151,16 @@ public class SiebelFinalStateListener extends DeliveryNotificationsListenerStub 
     }
   }
 
-  @Override
-  public void onDeliveryFinishNotification(DeliveryNotification notification) throws AdminException {
-    deliveryFinished(notification);
+  public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
+    if (e.getMessageState() == MessageState.New || e.getMessageState() == MessageState.Process)
+      return;
+    messageFinished(e);
   }
 
-  @Override
-  public void onMessageNotification(DeliveryMessageNotification notification) throws AdminException {
-    messageFinished(notification);
+  public void deliveryStateChanged(ChangeDeliveryStatusEvent e) throws AdminException {
+    if (e.getStatus() != DeliveryStatus.Finished)
+      return;
+    deliveryFinished(e);
   }
 
   public synchronized void start() throws AdminException{

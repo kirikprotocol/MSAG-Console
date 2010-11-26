@@ -1,6 +1,7 @@
-package mobi.eyeline.informer.admin.delivery;
+package mobi.eyeline.informer.admin.delivery.stat;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.CSVTokenizer;
 import org.apache.log4j.Logger;
@@ -9,13 +10,14 @@ import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Интерфейс, обеспечивающий досуп к статистике
  *
  * @author Artem Snopkov
  */
-class DeliveryStatProvider {
+public class DeliveryStatProvider {
 
   Logger log = Logger.getLogger(this.getClass());
 
@@ -23,16 +25,19 @@ class DeliveryStatProvider {
   private FileSystem fileSys;
   private String subDirNameFormat;
   private String filePathFormat;
+  private Pattern fileNamePattern;
 
-  DeliveryStatProvider(File directory, FileSystem fileSys) {
+  public DeliveryStatProvider(File directory, FileSystem fileSys) {
     this(directory, fileSys, "yyyy.MM.dd");
   }
 
-  DeliveryStatProvider(File directory, FileSystem fileSys, String subDirNamePattern) {
+  protected DeliveryStatProvider(File directory, FileSystem fileSys, String subDirNamePattern) {
     baseDir = directory;
     this.fileSys = fileSys;
     this.subDirNameFormat = subDirNamePattern;
+    this.fileNamePattern = Pattern.compile("msg\\d\\d\\.log");
     this.filePathFormat = subDirNameFormat + File.separatorChar + "'msg'HH'.log'";
+
   }
 
   /**
@@ -44,7 +49,7 @@ class DeliveryStatProvider {
    * @param visitor визитор, обрабатывающий найденные записи
    * @throws AdminException если произошла ошибка при обращении к стораджу статистики
    */
-  void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
+  public void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     try {
       int minMinute = 0;
       int maxMinute = 59;
@@ -81,7 +86,7 @@ class DeliveryStatProvider {
     }
   }
 
-  List<File> filterFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
+  public List<File> filterFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
 
     String minSubDirName = null;
     String maxSubDirName = null;
@@ -113,7 +118,14 @@ class DeliveryStatProvider {
           }
         }
         File subDir = new File(baseDir, subDirName);
+        if (!subDir.isDirectory())
+          continue;
+
         for (String fileName : fileSys.list(subDir)) {
+
+          if (!fileNamePattern.matcher(fileName).matches())
+            continue;
+
           String filePath = subDirName + File.separatorChar + fileName;
           if (minFilePath != null) {
             if (filePath.compareTo(minFilePath) < 0) {
@@ -130,6 +142,7 @@ class DeliveryStatProvider {
               continue;
             }
           }
+
           files.add(new File(subDir, fileName));
         }
       }
@@ -144,7 +157,7 @@ class DeliveryStatProvider {
     InputStream is = null;
     try {
 
-      Calendar c = getCalendarOfStatFile(file);
+      Calendar c= getCalendarOfStatFile(file);
 
       is = fileSys.getInputStream(file);
       BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -198,25 +211,22 @@ class DeliveryStatProvider {
       if (is != null) try {
         is.close();
       }
-      catch (IOException e) {
+      catch (IOException ignored) {
       }
     }
     return true;
   }
 
-  Calendar getCalendarOfStatFile(File file) throws AdminException {
+  public Calendar getCalendarOfStatFile(File file) throws AdminException {
     try {
       String filePath = (new File(file.getParent())).getName() + File.separatorChar + file.getName();
-      Date fileDate = null;
-
-      fileDate = new SimpleDateFormat(filePathFormat).parse(filePath);
+      Date fileDate = new SimpleDateFormat(filePathFormat).parse(filePath);
 
       Calendar c = Calendar.getInstance();
       c.setTime(fileDate);
       return c;
     }
     catch (ParseException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       throw new DeliveryStatException("error.parsing.filedate", file.getAbsolutePath());
     }
   }

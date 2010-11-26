@@ -5,6 +5,8 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
@@ -240,11 +242,11 @@ public class Configuration {
     return context.getDeliveryStats(login, password, deliveryId);
   }
 
-  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
+  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
     context.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
   }
 
-  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
+  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
     context.getMessagesStates(login, password, filter, _pieceSize, visitor);
   }
 
@@ -266,12 +268,14 @@ public class Configuration {
 
   }
 
-  public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
-    context.createDelivery(login, password, delivery, msDataSource);
+  public Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+    return context.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
+    //todo log
   }
 
-  public void createSingleTextDelivery(String login, String password, Delivery delivery, DataSource<Address> msDataSource) throws AdminException {
-    context.createSingleTextDelivery(login, password, delivery, msDataSource);
+  public Delivery createSingleTextDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
+    return context.createDeliveryWithSingleText(login, password, delivery, msDataSource);
+    //todo log
   }
 
   public void startInformer(String user) throws AdminException {
@@ -383,12 +387,12 @@ public class Configuration {
     context.addMessages(login, password, msDataSource, deliveryId);
   }
 
-  public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
-    return context.addSingleTextMessages(login, password, msDataSource, deliveryId);
+  public void addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+    context.addSingleTextMessages(login, password, msDataSource, deliveryId);
   }
 
-  public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
-    context.getDefaultDelivery(user, delivery);
+  public void copyUserSettingsToDeliveryPrototype(String user, DeliveryPrototype delivery) throws AdminException {
+    context.copyUserSettingsToDeliveryPrototype(user, delivery);
   }
 
   public void sendTestSms(TestSms sms) throws AdminException {

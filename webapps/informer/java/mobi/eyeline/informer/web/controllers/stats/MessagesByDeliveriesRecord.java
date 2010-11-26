@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
-import mobi.eyeline.informer.admin.delivery.DeliveryInfo;
+import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
@@ -21,12 +21,12 @@ import java.util.Date;
 public class MessagesByDeliveriesRecord extends AggregatedRecord {
 
   private User user;
-  private DeliveryInfo info;
+  private Delivery info;
   private DeliveryStatistics stat;
   private Date startDate;
   private Date endDate;
 
-  public MessagesByDeliveriesRecord(User user, DeliveryInfo info, DeliveryStatistics stat, Date startDate, Date endDate) {
+  public MessagesByDeliveriesRecord(User user, Delivery info, DeliveryStatistics stat, Date startDate, Date endDate) {
     this.user = user;
     this.info = info;
     this.stat = stat;
@@ -34,7 +34,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     this.endDate = endDate;
   }
 
-  public DeliveryInfo getInfo() {
+  public Delivery getInfo() {
     return info;
   }
 
@@ -70,7 +70,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   public void printWithChildrenToCSV(PrintWriter writer, boolean fullMode) {
     if (fullMode) {
       writer.println(StringEncoderDecoder.toCSVString(info.getName(),
-          info.getUserId(),
+          info.getOwner(),
           stat.getDeliveryState().getStatus(),
           getStartDateString(),
           getEndDateString(),
@@ -81,7 +81,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           stat.getExpiredMessages()));
     } else {
       writer.println(StringEncoderDecoder.toCSVString(info.getName(),
-          info.getUserId(),
+          info.getOwner(),
           stat.getDeliveryState().getStatus(),
           getStartDateString(),
           getEndDateString(),
@@ -136,7 +136,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
               if (sortOrder.getColumnId().equals("name")) {
                 return mul * o1.getInfo().getName().compareTo(o2.getInfo().getName());
               } else if (sortOrder.getColumnId().equals("userId")) {
-                return mul * o1.getInfo().getUserId().compareTo(o2.getInfo().getUserId());
+                return mul * o1.getInfo().getOwner().compareTo(o2.getInfo().getOwner());
               } else if (sortOrder.getColumnId().equals("status")) {
                 return mul * o1.getStat().getDeliveryState().getStatus().compareTo(o2.getStat().getDeliveryState().getStatus());
               } else if (sortOrder.getColumnId().equals("new")) {

@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -117,12 +118,10 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
     setCurrentAndTotal(0, config.countDeliveries(getCurrentUser().getLogin(), getCurrentUser().getPassword(), deliveryFilter));
 
-    deliveryFilter.setResultFields(DeliveryFields.Name, DeliveryFields.UserId);
-
     config.getDeliveries(getCurrentUser().getLogin(), getCurrentUser().getPassword(), deliveryFilter, 1000,
-        new Visitor<DeliveryInfo>() {
-          public boolean visit(DeliveryInfo deliveryInfo) throws AdminException {
-            final int deliveryId = deliveryInfo.getDeliveryId();
+        new Visitor<Delivery>() {
+          public boolean visit(Delivery deliveryInfo) throws AdminException {
+            final int deliveryId = deliveryInfo.getId();
             DeliveryStatistics stat = config.getDeliveryStats(getCurrentUser().getLogin(), getCurrentUser().getPassword(), deliveryId);
             DeliveryStatusHistory hist = config.getDeliveryStatusHistory(getCurrentUser().getLogin(), getCurrentUser().getPassword(), deliveryId);
             Date startDate = null;
@@ -136,7 +135,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
               }
             }
 
-            User owner = config.getUser(deliveryInfo.getUserId());
+            User owner = config.getUser(deliveryInfo.getOwner());
             MessagesByDeliveriesRecord r = new MessagesByDeliveriesRecord(owner, deliveryInfo, stat, startDate, endDate);
             records.add(r);
             getTotals().add(r);

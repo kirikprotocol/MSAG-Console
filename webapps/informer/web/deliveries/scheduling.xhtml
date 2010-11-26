@@ -38,7 +38,7 @@
           <tr:iterator value="#{list}" var="m">
             <br/>
             <tr:commandLink text="#{m.name}" action="DELIVERY_EDIT">
-              <f:param name="#{deliveriesWeekly.deliveryParam}" value="#{m.deliveryId}"/>
+              <f:param name="#{deliveriesWeekly.deliveryParam}" value="#{m.id}"/>
               <f:param name="#{deliveriesWeekly.deliveryComeBackParam}" value="DELIVERIES_WEEKLY"/>
             </tr:commandLink>
           </tr:iterator>

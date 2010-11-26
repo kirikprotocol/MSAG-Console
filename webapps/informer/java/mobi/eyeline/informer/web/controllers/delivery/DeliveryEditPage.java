@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
@@ -20,7 +21,7 @@ import java.util.*;
  */
 public class DeliveryEditPage extends InformerController implements CreateDeliveryPage {
 
-  private final Delivery delivery;
+  private final DeliveryPrototype delivery;
 
   private final File tmpFile;
 
@@ -38,11 +39,14 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private boolean secretFlash;
 
+  private final boolean singleText;
+
 
   private final Configuration config;
 
-  public DeliveryEditPage(Delivery delivery, File tmpFile, Configuration config) {
+  public DeliveryEditPage(DeliveryPrototype delivery, boolean singleText, File tmpFile, Configuration config) {
     this.delivery = delivery;
+    this.singleText = singleText;
     this.tmpFile = tmpFile;
     this.config = config;
 
@@ -97,6 +101,10 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     this.secretFlash = secretFlash;
   }
 
+  public boolean isDeliveryWithSingleText() {
+    return singleText;
+  }
+
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
     if (secret && (secretMessage == null || (secretMessage = secretMessage.trim()).length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.secret.message.empty");
@@ -126,17 +134,16 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
       return null;
     }
-    if (delivery.getType() == Delivery.Type.SingleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
+    if (singleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
       return null;
     }
     User u = config.getUser(user);
     DeliveryFilter filter = new DeliveryFilter();
     filter.setNameFilter(delivery.getName());
-    filter.setResultFields(DeliveryFields.Name);
     final boolean[] intersection = new boolean[]{false};
-    config.getDeliveries(u.getLogin(), u.getPassword(), filter, 1, new Visitor<DeliveryInfo>() {
-      public boolean visit(DeliveryInfo value) throws AdminException {
+    config.getDeliveries(u.getLogin(), u.getPassword(), filter, 1, new Visitor<Delivery>() {
+      public boolean visit(Delivery value) throws AdminException {
         if(value.getName().equals(delivery.getName())) {
           intersection[0] = true;
           return false;
@@ -162,7 +169,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       delivery.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
     }
 
-    return new ProcessDeliveryPage(delivery, tmpFile, config, locale, user);
+    return new ProcessDeliveryPage(delivery, singleText, tmpFile, config, locale, user);
   }
 
   public List<SelectItem> getUniqueDeliveryModes() {
@@ -176,7 +183,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
   public List<SelectItem> getAllDays() {
     List<SelectItem> result = new ArrayList<SelectItem>(7);
     int i = 1;
-    for (Delivery.Day d : Delivery.Day.values()) {
+    for (Day d : Day.values()) {
       result.add(new SelectItem(d, getLocalizedString("weekday." + i % 7)));
       i++;
     }
@@ -242,7 +249,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
 
   public String sendTest() {
-    if (delivery.getType() != Delivery.Type.SingleText) {
+    if (!singleText) {
       return null;
     }
     try {
@@ -271,7 +278,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     return null;
   }
 
-  public Delivery getDelivery() {
+  public DeliveryPrototype getDelivery() {
     return delivery;
   }
 }

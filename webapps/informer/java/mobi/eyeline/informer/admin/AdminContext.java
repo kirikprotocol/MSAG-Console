@@ -7,6 +7,9 @@ import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderContext;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
@@ -38,6 +41,7 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserException;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
@@ -90,7 +94,7 @@ public class AdminContext {
 
   protected RestrictionDaemon restrictionDaemon;
 
-  protected DeliveryNotificationsProducer deliveryNotificationsProducer;
+  protected DeliveryChangesDetector deliveryChangesDetector;
 
   protected SiebelManager siebelManager;
 
@@ -173,9 +177,9 @@ public class AdminContext {
       contentProviderDaemon = new ContentProviderDaemon(new ContentProviderContextImpl(this),appBaseDir,workDir);
 
 
-      deliveryNotificationsProducer = new DeliveryNotificationsProducer(new File(is.getStoreDir(), "final_log"), fileSystem);
+      deliveryChangesDetector = new DeliveryChangesDetector(new File(is.getStoreDir(), "final_log"), fileSystem);
       deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
-      deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
+      deliveryChangesDetector.addListener(deliveryNotificationsDaemon);
 
       try{
         initSiebel(workDir);
@@ -183,7 +187,7 @@ public class AdminContext {
         logger.error(e,e);
       }
 
-      deliveryNotificationsProducer.start();
+      deliveryChangesDetector.start();
 
 
     } catch (AdminException e) {
@@ -210,7 +214,7 @@ public class AdminContext {
         userManager, workDir,
         Integer.parseInt(webConfig.getSiebelProperties().getProperty(SiebelFinalStateListener.PERIOD_PARAM)));
 
-    deliveryNotificationsProducer.addListener(siebelFinalStateListener);
+    deliveryChangesDetector.addListener(siebelFinalStateListener);
 
     siebelManager.start(siebelUser, webConfig.getSiebelProperties());
 
@@ -220,9 +224,9 @@ public class AdminContext {
 
   private void shutdownSiebel() {
     if (siebelFinalStateListener != null) {
-      if (deliveryNotificationsProducer != null) {
+      if (deliveryChangesDetector != null) {
         try {
-          deliveryNotificationsProducer.removeListener(siebelFinalStateListener);
+          deliveryChangesDetector.removeListener(siebelFinalStateListener);
         } catch (Exception ignored) {
         }
       }
@@ -259,9 +263,9 @@ public class AdminContext {
       } catch (Exception e) {
       }
     }
-    if (deliveryNotificationsProducer != null) {
+    if (deliveryChangesDetector != null) {
       try {
-        deliveryNotificationsProducer.shutdown();
+        deliveryChangesDetector.shutdown();
       } catch (Exception e) {
       }
     }
@@ -360,10 +364,9 @@ public class AdminContext {
       User user = usersManager.getUser(login);
       DeliveryFilter filter = new DeliveryFilter();
       filter.setUserIdFilter(login);
-      filter.setResultFields(DeliveryFields.Name);
       final String[] exist = new String[]{null};
-      deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter, 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
-        public boolean visit(DeliveryInfo value) throws AdminException {
+      deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter, 1, new Visitor<mobi.eyeline.informer.admin.delivery.Delivery>() {
+        public boolean visit(Delivery value) throws AdminException {
           exist[0] = value.getName();
           return false;
         }
@@ -544,7 +547,7 @@ public class AdminContext {
   }
 
   public List<DateAndFile> getProcessedNotificationsFiles(Date startDate,Date endDate) throws AdminException {
-    return deliveryNotificationsProducer.getProcessedNotificationsFiles(startDate,endDate);
+    return deliveryChangesDetector.getProcessedNotificationsFiles(startDate,endDate);
   }
 
 
@@ -570,7 +573,7 @@ public class AdminContext {
     return lock;
   }
 
-  public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
+  public Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
     if (restrictionsManager.hasActiveRestriction(login)) {
       throw new DeliveryException("creation_restricted");
     }
@@ -579,19 +582,19 @@ public class AdminContext {
       if (usersManager.getUser(delivery.getOwner()) == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
       }
-      deliveryManager.createDelivery(login, password, delivery, msDataSource);
+      return deliveryManager.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
     } finally {
       integrityLock.unlock();
     }
   }
 
-  public void createSingleTextDelivery(String login, String password, Delivery delivery, DataSource<Address> msDataSource) throws AdminException {
+  public Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
     try {
       integrityLock.lock();
       if (usersManager.getUser(delivery.getOwner()) == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
       }
-      deliveryManager.createSingleTextDelivery(login, password, delivery, msDataSource);
+      return deliveryManager.createDeliveryWithSingleText(login, password, delivery, msDataSource);
     } finally {
       integrityLock.unlock();
     }
@@ -611,9 +614,18 @@ public class AdminContext {
     }
   }
 
+  public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
+    synchronized (getLock(deliveryId)) {
+      Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
+      d.setProperty(UserDataConsts.RESTRICTION, Boolean.toString(restriction));
+      deliveryManager.modifyDelivery(login, password, d);
+      return d;
+    }
+  }
+
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
-      deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
+      setDeliveryRestriction(login, password, deliveryId, false);
       deliveryManager.dropDelivery(login, password, deliveryId);
     }
   }
@@ -621,13 +633,13 @@ public class AdminContext {
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
 
     synchronized (getLock(deliveryId)) {
-      deliveryManager.addMessages(login, password, msDataSource, deliveryId);
+      deliveryManager.addIndividualMessages(login, password, msDataSource, deliveryId);
     }
   }
 
-  public List<Long> addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
+  public void addSingleTextMessages(String login, String password, DataSource<Address> msDataSource, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
-      return deliveryManager.addSingleTextMessages(login, password, msDataSource, deliveryId);
+      deliveryManager.addSingleTextMessages(login, password, msDataSource, deliveryId);
     }
   }
 
@@ -647,14 +659,14 @@ public class AdminContext {
 
   public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
-      deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
+      setDeliveryRestriction(login, password, deliveryId, false);
       deliveryManager.cancelDelivery(login, password, deliveryId);
     }
   }
 
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
-      deliveryManager.setDeliveryRestriction(login, password, deliveryId, false);
+      setDeliveryRestriction(login, password, deliveryId, false);
       deliveryManager.pauseDelivery(login, password, deliveryId);
     }
   }
@@ -674,11 +686,11 @@ public class AdminContext {
     }
   }
 
-  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
+  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
     deliveryManager.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
   }
 
-  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<MessageInfo> visitor) throws AdminException {
+  public void getMessagesStates(String login, String password, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
     synchronized (getLock(filter.getDeliveryId())) {
       deliveryManager.getMessages(login, password, filter, _pieceSize, visitor);
     }
@@ -696,7 +708,7 @@ public class AdminContext {
     }
   }
 
-  public static void getDefaultDelivery(User u, Delivery delivery) throws AdminException {
+  public static void getDefaultDelivery(User u, DeliveryPrototype delivery) throws AdminException {
     delivery.setOwner(u.getLogin());
 
     if (u.getSourceAddr() != null) {
@@ -743,15 +755,15 @@ public class AdminContext {
 
     delivery.setValidityPeriod(u.getValidityPeriod());
     if(u.getDeliveryDays() != null && !u.getDeliveryDays().isEmpty()) {
-      List<Delivery.Day> days = new ArrayList<Delivery.Day>(7);
+      List<Day> days = new ArrayList<Day>(7);
       for (Integer i : u.getDeliveryDays()) {
-        days.add(Delivery.Day.valueOf(i == 0 ? 7 : i));
+        days.add(Day.valueOf(i == 0 ? 7 : i));
       }
-      delivery.setActiveWeekDays(days.toArray(new Delivery.Day[days.size()]));
+      delivery.setActiveWeekDays(days.toArray(new Day[days.size()]));
     }
   }
 
-  public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
+  public void copyUserSettingsToDeliveryPrototype(String user, DeliveryPrototype delivery) throws AdminException {
     User u = getUser(user);
     if (u == null) {
       throw new IntegrityException("user_not_exist", user);
@@ -784,12 +796,6 @@ public class AdminContext {
 
   public boolean isRestrictionDaemonStarted() {
     return restrictionDaemon.isStarted();
-  }
-
-  public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
-    synchronized (getLock(deliveryId)) {
-      return deliveryManager.setDeliveryRestriction(login, password, deliveryId, restriction);
-    }
   }
 
   public void sendTestSms(TestSms sms) throws AdminException {
@@ -847,10 +853,9 @@ public class AdminContext {
       if (!old.getProperty(SiebelManager.USER).equals(props.getProperty(SiebelManager.USER))) {
         DeliveryFilter filter = new DeliveryFilter();
         filter.setUserIdFilter(old.getProperty(SiebelManager.USER));
-        filter.setResultFields(DeliveryFields.Status);
         final boolean[] notExist = new boolean[]{true};
-        deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter, 1, new Visitor<mobi.eyeline.informer.admin.delivery.DeliveryInfo>() {
-          public boolean visit(DeliveryInfo value) throws AdminException {
+        deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter, 1, new Visitor<mobi.eyeline.informer.admin.delivery.Delivery>() {
+          public boolean visit(Delivery value) throws AdminException {
             if (value.getStatus() != DeliveryStatus.Finished && value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
               notExist[0] = false;
               return false;
@@ -930,8 +935,8 @@ public class AdminContext {
       this.context = context;
     }
 
-    public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
-      context.createDelivery(login, password, delivery, msDataSource);
+    public Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+      return context.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
     }
 
     public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
@@ -962,12 +967,12 @@ public class AdminContext {
       context.activateDelivery(login, password, deliveryId);
     }
 
-    public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
+    public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
       context.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
     }
 
-    public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
-      context.getDefaultDelivery(user, delivery);
+    public void getDefaultDelivery(String user, DeliveryPrototype delivery) throws AdminException {
+      context.copyUserSettingsToDeliveryPrototype(user, delivery);
     }
   }
 
@@ -996,8 +1001,8 @@ public class AdminContext {
       return this.context.getRegion(ab);
     }
 
-    public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
-      this.context.createDelivery(login,password,delivery,msDataSource);
+    public Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+      return this.context.createDeliveryWithIndividualTexts(login,password,delivery,msDataSource);
     }
 
     public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException{
@@ -1012,15 +1017,15 @@ public class AdminContext {
       this.context.dropDelivery(login,password,deliveryId);
     }
 
-    public void getDefaultDelivery(String login, Delivery delivery) throws AdminException{
-      this.context.getDefaultDelivery(login,delivery);
+    public void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException{
+      this.context.copyUserSettingsToDeliveryPrototype(login,delivery);
     }
 
     public void addMessages(String login, String password, DataSource<Message> messageSource, int deliveryId) throws AdminException{
       this.context.addMessages(login,password,messageSource,deliveryId);
     }
 
-    public void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<MessageInfo> visitor) throws AdminException{
+    public void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException{
       this.context.getMessagesStates(login,password,filter,deliveryId,visitor);
     }
   }

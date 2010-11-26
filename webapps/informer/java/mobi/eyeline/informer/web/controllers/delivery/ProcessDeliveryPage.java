@@ -1,10 +1,7 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DataSource;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryException;
-import mobi.eyeline.informer.admin.delivery.Message;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.config.Configuration;
@@ -28,7 +25,11 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
   private String error;
 
-  private final Delivery delivery;
+  private final DeliveryPrototype delivery;
+
+  private final boolean singleText;
+
+  private Integer deliveryId;
 
   private final Configuration config;
 
@@ -44,8 +45,9 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
   private int processed;
 
-  public ProcessDeliveryPage(Delivery delivery, File tmpFile, Configuration config, Locale locale, String user) {
+  public ProcessDeliveryPage(DeliveryPrototype delivery, boolean singleText, File tmpFile, Configuration config, Locale locale, String user) {
     this.delivery = delivery;
+    this.singleText = singleText;
     this.config = config;
     this.user = user;
     this.locale = locale;
@@ -71,8 +73,8 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     return maximum;
   }
 
-  private void createSingleTextDelivery(User u, final BufferedReader r) throws AdminException {
-    config.createSingleTextDelivery(u.getLogin(), u.getPassword(), delivery, new DataSource<Address>() {
+  private Delivery createSingleTextDelivery(User u, final BufferedReader r) throws AdminException {
+    return config.createSingleTextDelivery(u.getLogin(), u.getPassword(), delivery, new DataSource<Address>() {
       public Address next() throws AdminException {
         if (thread.stop) {
           return null;
@@ -95,8 +97,8 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     });
   }
 
-  private void createMultiTextDelivery(User u, final BufferedReader r) throws AdminException {
-    config.createDelivery(u.getLogin(), u.getPassword(), delivery, new DataSource<Message>() {
+  private Delivery createMultiTextDelivery(User u, final BufferedReader r) throws AdminException {
+    return config.createDelivery(u.getLogin(), u.getPassword(), delivery, new DataSource<Message>() {
       public Message next() throws AdminException {
         if (thread.stop) {
           return null;
@@ -135,13 +137,17 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     try {
       r = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(tmpFile)));
 
-      if (delivery.getType() == Delivery.Type.SingleText) {
-        createSingleTextDelivery(u, r);
+      Delivery d;
+      if (singleText) {
+        d = createSingleTextDelivery(u, r);
       } else {
-        createMultiTextDelivery(u, r);
+        d = createMultiTextDelivery(u, r);
       }
+
+      deliveryId = d.getId();
+
       if (!thread.stop) {
-        config.activateDelivery(u.getLogin(), u.getPassword(), delivery.getId());
+        config.activateDelivery(u.getLogin(), u.getPassword(), d.getId());
         current = maximum;
       }
     } finally {
@@ -192,9 +198,9 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
       logger.error("Can't delete: "+tmpFile.getAbsolutePath());
     }
     try {
-      if (delivery.getId() != null) {
+      if (deliveryId != null) {
         User u = config.getUser(user);
-        config.dropDelivery(u.getLogin(), u.getPassword(), delivery.getId());
+        config.dropDelivery(u.getLogin(), u.getPassword(), deliveryId);
       }
     } catch (AdminException e) {
       addError(e);

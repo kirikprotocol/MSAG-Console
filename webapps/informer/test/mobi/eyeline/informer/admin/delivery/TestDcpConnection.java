@@ -1,11 +1,15 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryGlossary;
+import mobi.eyeline.informer.admin.delivery.protogen.protocol.GetDeliveryGlossary;
+import mobi.eyeline.informer.admin.delivery.protogen.protocol.GetDeliveryGlossaryResp;
+import mobi.eyeline.informer.admin.delivery.protogen.protocol.ModifyDeliveryGlossary;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -25,9 +29,9 @@ public class TestDcpConnection extends DcpConnection{
 
   private int reqIds = 0;
 
-  private Map<Integer, DeliveryWStatus> deliveries = new LinkedHashMap<Integer, DeliveryWStatus>();
+  private Map<Integer, Delivery> deliveries = new LinkedHashMap<Integer, Delivery>();
 
-  private Map<Integer, List<MessageWState>> messages = new HashMap<Integer, List<MessageWState>>();
+  private Map<Integer, List<Message>> messages = new HashMap<Integer, List<Message>>();
 
   private Map<Integer, DeliveryStatusHistory> histories = new HashMap<Integer, DeliveryStatusHistory>();
 
@@ -57,7 +61,8 @@ public class TestDcpConnection extends DcpConnection{
 
   public synchronized int createDelivery(Delivery delivery) throws AdminException {
     int id = dIdCounter++;
-    deliveries.put(id, new DeliveryWStatus(delivery, id));
+    delivery.setId(id);
+    deliveries.put(id, delivery.cloneDelivery());
     histories.put(id, new DeliveryStatusHistory(id,
         new LinkedList<DeliveryStatusHistory.Item>(){{add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Planned));}}));
     return id;
@@ -67,9 +72,9 @@ public class TestDcpConnection extends DcpConnection{
     if(!deliveries.containsKey(deliveryId)) {
       throw new DeliveryException("interaction_error","");
     }
-    List<MessageWState> ms = this.messages.get(deliveryId);
+    List<Message> ms = this.messages.get(deliveryId);
     if(ms == null) {
-      ms = new LinkedList<MessageWState>();
+      ms = new LinkedList<Message>();
       this.messages.put(deliveryId, ms);
     }
     long[] ids = new long[messages.size()];
@@ -77,40 +82,28 @@ public class TestDcpConnection extends DcpConnection{
     for(Message m : messages) {
       ids[i] = mIdCounter++;
       m.setId(ids[i]);
-      ms.add(new MessageWState(m));
+      m.setState(MessageState.New);
+      m.setDate(new Date());
+      ms.add(m.cloneMessage());
       i++;
     }
     return ids;
   }
 
-  public synchronized long[] addDeliveryAddresses(int deliveryId, List<Address> addresses) throws AdminException {
-    if(!deliveries.containsKey(deliveryId)) {
-      throw new DeliveryException("interaction_error","");
-    }
-    List<MessageWState> ms = this.messages.get(deliveryId);
-    if(ms == null) {
-      ms = new LinkedList<MessageWState>();
-      this.messages.put(deliveryId, ms);
-    }
-    long[] ids = new long[addresses.size()];
-    int i = 0;
-    for(Address a : addresses) {
-      ids[i] = mIdCounter++;
-      Message m = Message.newMessage(null);
-      m.setAbonent(a);
-      m.setId(ids[i]);
-      ms.add(new MessageWState(m));
-      i++;
-    }
-    return ids;
+  public void modifyDeliveryGlossary(int deliveryId, String... messages) throws AdminException {
+    deliveries.get(deliveryId).setSingleText(messages[0]);
+  }
+
+  public String[] getDeliveryGlossary(int deliveryId) throws AdminException {
+    return new String[]{deliveries.get(deliveryId).getSingleText()};
   }
 
   public synchronized void modifyDelivery(Delivery delivery) throws AdminException {
     if(delivery.getId() == null || !deliveries.containsKey(delivery.getId())) {
       throw new DeliveryException("interaction_error","");
     }
-    DeliveryWStatus d = new DeliveryWStatus(delivery, delivery.getId());
-    d.status = deliveries.get(delivery.getId()).status;
+    Delivery d = delivery.cloneDelivery();
+    d.setStatus(deliveries.get(delivery.getId()).getStatus());
     deliveries.put(delivery.getId(), d);
   }
 
@@ -118,7 +111,7 @@ public class TestDcpConnection extends DcpConnection{
     deliveries.remove(deliveryId);
   }
 
-  private boolean accept(DeliveryWStatus delivery, DeliveryFilter filter) {
+  private boolean accept(Delivery delivery, DeliveryFilter filter) {
     if(filter.getEndDateFrom()!= null && delivery.getEndDate() != null && delivery.getEndDate().before(filter.getEndDateFrom())) {
       return false;
     }
@@ -146,7 +139,7 @@ public class TestDcpConnection extends DcpConnection{
     if(filter.getStatusFilter() != null) {
       boolean accept = false;
       for(DeliveryStatus s : filter.getStatusFilter()) {
-        if(s.equals(delivery.status)) {
+        if(s.equals(delivery.getStatus())) {
           accept = true;
           break;
         }
@@ -172,7 +165,7 @@ public class TestDcpConnection extends DcpConnection{
   }
 
 
-  private boolean accept(int deliveryId, MessageWState message, MessageFilter filter) {
+  private boolean accept(int deliveryId, Message message, MessageFilter filter) {
     if(filter.getDeliveryId() != null && filter.getDeliveryId() != deliveryId) {
       return false;
     }
@@ -188,13 +181,13 @@ public class TestDcpConnection extends DcpConnection{
         return false;
       }
     }
-    if(filter.getStartDate() != null && message.date.before(filter.getStartDate())) {
+    if(filter.getStartDate() != null && message.getDate().before(filter.getStartDate())) {
       return false;
     }
     if(filter.getStates() != null && filter.getStates().length > 0) {
       boolean accept = false;
       for(MessageState s : filter.getStates()) {
-        if(s.equals(message.state)) {
+        if(s.equals(message.getState())) {
           accept = true;
           break;
         }
@@ -203,13 +196,13 @@ public class TestDcpConnection extends DcpConnection{
         return false;
       }
     }
-    if(filter.getEndDate() != null && message.date.after(filter.getEndDate())) {
+    if(filter.getEndDate() != null && message.getDate().after(filter.getEndDate())) {
       return false;
     }
     if(filter.getErrorCodes() != null && filter.getErrorCodes().length > 0) {
       boolean accept = false;
       for(Integer s : filter.getErrorCodes()) {
-        if(s.equals(message.errorCode)) {
+        if(s.equals(message.getErrorCode())) {
           accept = true;
           break;
         }
@@ -224,7 +217,7 @@ public class TestDcpConnection extends DcpConnection{
 
   public synchronized int countDeliveries(DeliveryFilter deliveryFilter) throws AdminException {
     int count = 0;
-    for(DeliveryWStatus d : deliveries.values()) {
+    for(Delivery d : deliveries.values()) {
       if(deliveryFilter != null && !accept(d, deliveryFilter)) {
         continue;
       }
@@ -235,9 +228,9 @@ public class TestDcpConnection extends DcpConnection{
 
   public synchronized int countMessages(MessageFilter messageFilter) throws AdminException {
     int count = 0;
-    for(Map.Entry<Integer,List<MessageWState>> e : messages.entrySet()) {
+    for(Map.Entry<Integer,List<Message>> e : messages.entrySet()) {
       int deliveryId = e.getKey();
-      for(MessageWState m : e.getValue()) {
+      for(Message m : e.getValue()) {
         if(messageFilter != null && !accept(deliveryId, m, messageFilter)) {
           continue;
         }
@@ -256,11 +249,11 @@ public class TestDcpConnection extends DcpConnection{
     for(long m : messageIds) {
       ids.add(m);
     }
-    List<MessageWState> ms = messages.get(deliveryId);
+    List<Message> ms = messages.get(deliveryId);
     if(ms != null) {
-      Iterator<MessageWState> i = ms.iterator();
+      Iterator<Message> i = ms.iterator();
       while(i.hasNext()) {
-        MessageWState m = i.next();
+        Message m = i.next();
         if(ids.contains(m.getId())) {
           i.remove();
         }
@@ -269,8 +262,8 @@ public class TestDcpConnection extends DcpConnection{
   }
 
   public Delivery getDelivery(int deliveryId) throws AdminException {
-    DeliveryWStatus d =  deliveries.get(deliveryId);
-    return d == null ? null : d.delivery.cloneDelivery();
+    Delivery d =  deliveries.get(deliveryId);
+    return d == null ? null : d.cloneDelivery();
   }
 
   public synchronized void changeDeliveryState(int deliveryId, DeliveryState state) throws AdminException {
@@ -279,11 +272,11 @@ public class TestDcpConnection extends DcpConnection{
     }
     final DeliveryStatus status = state.getStatus();
     final DeliveryStatusHistory oldHistory = histories.get(deliveryId);
-    DeliveryWStatus delivery = deliveries.get(deliveryId);
-    DeliveryStatus current = delivery.status;
-    if(current == status) {
-      return;
-    }
+    Delivery delivery = deliveries.get(deliveryId);
+//    DeliveryStatus current = delivery.getStatus();
+//    if(current == status) {
+//      return;
+//    }
 //    switch (status) {
 //      case Active:
 //        if(current != DeliveryStatus.Planned && current != DeliveryStatus.Paused) {
@@ -304,7 +297,7 @@ public class TestDcpConnection extends DcpConnection{
 //          throw new DeliveryException("interaction_error","");
 //        }
 //    }
-    delivery.status = status;
+    delivery.setStatus(status);
     histories.put(deliveryId, new DeliveryStatusHistory(deliveryId, new LinkedList<DeliveryStatusHistory.Item>(){{
       addAll(oldHistory.getHistoryItems());
       add(new DeliveryStatusHistory.Item(new Date(), status));}}));
@@ -315,15 +308,15 @@ public class TestDcpConnection extends DcpConnection{
       throw new DeliveryException("interaction_error","");
     }
     DeliveryState state = new DeliveryState();
-    state.setStatus(deliveries.get(deliveryId).status);
+    state.setStatus(deliveries.get(deliveryId).getStatus());
     DeliveryStatistics stats = new DeliveryStatistics();
-    List<MessageWState> ms = messages.get(deliveryId);
+    List<Message> ms = messages.get(deliveryId);
     int delivered = 0;
     int failed = 0;
     int newD = 0;
     if(ms != null) {
-      for(MessageWState m : ms) {
-        switch (m.state) {
+      for(Message m : ms) {
+        switch (m.getState()) {
           case Delivered: delivered++; break;
           case New: newD++;break;
           case Failed: failed++;
@@ -343,14 +336,14 @@ public class TestDcpConnection extends DcpConnection{
     return r;
   }
 
-  public synchronized boolean getNextDeliviries(int reqId, int pieceSize, Collection<DeliveryInfo> deliveries) throws AdminException {
+  public synchronized boolean getNextDeliveries(int reqId, int pieceSize, Collection<Delivery> deliveries) throws AdminException {
     if(!deliveryReqs.containsKey(reqId) || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
     }
     DeliveryRequest r = deliveryReqs.get(reqId);
     int count = 0;
-    List<DeliveryWStatus> result = new LinkedList<DeliveryWStatus>();
-    for(DeliveryWStatus d : this.deliveries.values()) {
+    List<Delivery> result = new LinkedList<Delivery>();
+    for(Delivery d : this.deliveries.values()) {
       if(accept(d, r.filter) && ++count > r.position) {
         result.add(d);
         if(result.size() == pieceSize) {
@@ -359,16 +352,16 @@ public class TestDcpConnection extends DcpConnection{
       }
     }
     r.position+=result.size();
-    for(DeliveryWStatus d : result) {
-      DeliveryInfo info = new DeliveryInfo();
-      info.setDeliveryId(d.getId());
-      info.setActivityPeriodEnd(d.getActivePeriodEnd());
-      info.setActivityPeriodStart(d.getActivePeriodStart());
+    for(Delivery d : result) {
+      Delivery info = new Delivery();
+      info.setId(d.getId());
+      info.setActivePeriodEnd(d.getActivePeriodEnd());
+      info.setActivePeriodStart(d.getActivePeriodStart());
       info.setEndDate(d.getEndDate());
       info.setName(d.getName());
       info.setStartDate(d.getStartDate());
-      info.setStatus(d.status);
-      info.setUserId(d.getOwner());
+      info.setStatus(d.getStatus());
+      info.setOwner(d.getOwner());
       for(Map.Entry e : d.getProperties().entrySet()) {
         info.setProperty(e.getKey().toString(), e.getValue().toString());
       }
@@ -383,21 +376,21 @@ public class TestDcpConnection extends DcpConnection{
     return r;
   }
 
-  public synchronized boolean getNextMessages(int reqId, int pieceSize, Collection<MessageInfo> messages) throws AdminException {
+  public synchronized boolean getNextMessages(int reqId, int pieceSize, Collection<Message> messages) throws AdminException {
     MessageRequest req = messReqs.get(reqId);
     if(req == null || pieceSize == 0) {
       throw new DeliveryException("interaction_error","");
     }
     MessageRequest r = messReqs.get(reqId);
     int count = 0;
-    List<MessageWState> result = new LinkedList<MessageWState>();
+    List<Message> result = new LinkedList<Message>();
     int deliveryId = req.filter.getDeliveryId();
 
     if(this.messages.get(deliveryId) == null) {
       return false;
     }
     
-    for(MessageWState m : this.messages.get(deliveryId)) {
+    for(Message m : this.messages.get(deliveryId)) {
       if(accept(deliveryId, m, r.filter) && ++count > r.position) {
         result.add(m);
         if(result.size() == pieceSize) {
@@ -409,17 +402,17 @@ public class TestDcpConnection extends DcpConnection{
     Delivery delivery = getDelivery(deliveryId);
 
     r.position+=result.size();
-    for(MessageWState d : result) {
-      MessageInfo info = new MessageInfo();
-      info.setAbonent(d.getAbonent().getSimpleAddress());
-      info.setDate(d.date);
-      info.setErrorCode(d.errorCode);
+    for(Message d : result) {
+      Message info = new Message();
+      info.setAbonent(d.getAbonent());
+      info.setDate(d.getDate());
+      info.setErrorCode(d.getErrorCode());
       if(delivery.getType() == Delivery.Type.SingleText) {
         info.setText(delivery.getSingleText());
       }else {
         info.setText(d.getText());
       }
-      info.setState(d.state);
+      info.setState(d.getState());
       info.setId(d.getId());
       for(Map.Entry e : d.getProperties().entrySet()) {
         info.setProperty(e.getKey().toString(), e.getValue().toString());
@@ -431,22 +424,22 @@ public class TestDcpConnection extends DcpConnection{
 
 
   @SuppressWarnings({"EmptyCatchBlock"})
-  private synchronized void modifyAll() throws AdminException {
+  synchronized void modifyAll() throws AdminException {
     Random r = new Random();
     SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
     Date now = new Date();
-    for(DeliveryWStatus d : deliveries.values()) {
-      if(d.status == DeliveryStatus.Active) {
+    for(Delivery d : deliveries.values()) {
+      if(d.getStatus() == DeliveryStatus.Active) {
         if(d.getStartDate().after(now)) {
           continue;
         }
         if(d.getEndDate() != null && d.getEndDate().before(now)) {
-          d.status = DeliveryStatus.Finished;
+          d.setStatus(DeliveryStatus.Finished);
           continue;
         }
         int today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
         boolean send = false;
-        for(Delivery.Day day : d.getActiveWeekDays()) {
+        for(Day day : d.getActiveWeekDays()) {
           if((day.getDay()%7) + 1 == today) {
             send = true;
             break;
@@ -461,22 +454,22 @@ public class TestDcpConnection extends DcpConnection{
           if(d.getActivePeriodEnd().getTimeDate().before(now)) {
             continue;
           }
-        List<MessageWState> ms = messages.get(d.getId());
+        List<Message> ms = messages.get(d.getId());
         if(ms == null) {
           continue;
         }
         int count = 0;
-        for(MessageWState m : ms) {
-          if(m.state == MessageState.New) {
+        for(Message m : ms) {
+          if(m.getState() == MessageState.New) {
             if(count<100) {
               boolean delivered = r.nextBoolean();
               if(delivered) {
-                m.state = MessageState.Delivered;
+                m.setState(MessageState.Delivered);
               }else {
-                m.state = MessageState.Failed;
-                m.errorCode = 1179;
+                m.setState(MessageState.Failed);
+                m.setErrorCode(1179);
               }
-              m.date = new Date();
+              m.setDate(new Date());
             }
             count++;
           }
@@ -487,7 +480,7 @@ public class TestDcpConnection extends DcpConnection{
             logger.debug("Delivery is finished: "+d.getName());
           }
           final DeliveryStatusHistory oldHistory = histories.get(d.getId());
-          d.status = DeliveryStatus.Finished;
+          d.setStatus(DeliveryStatus.Finished);
           histories.put(d.getId(), new DeliveryStatusHistory(d.getId(), new LinkedList<DeliveryStatusHistory.Item>(){{
             addAll(oldHistory.getHistoryItems());
             add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Finished));
@@ -521,7 +514,6 @@ public class TestDcpConnection extends DcpConnection{
       this.filter.setEndDateTo(filter.getEndDateTo());
       this.filter.setNameFilter(filter.getNameFilter());
       this.filter.setStartDateFrom(filter.getStartDateFrom());
-      this.filter.setResultFields(filter.getResultFields());
       this.filter.setStartDateTo(filter.getStartDateTo());
       this.filter.setUserIdFilter(filter.getUserIdFilter());
       this.filter.setStatusFilter(filter.getStatusFilter());
@@ -533,303 +525,15 @@ public class TestDcpConnection extends DcpConnection{
     private MessageFilter filter;
     private MessageRequest(MessageFilter filter) throws AdminException {
       this.filter = new MessageFilter(filter.getDeliveryId(), filter.getStartDate(), filter.getEndDate());
-      this.filter.setFields(filter.getFields());
       this.filter.setStates(filter.getStates());
       this.filter.setMsisdnFilter(filter.getMsisdnFilter());
       this.filter.setErrorCodes(filter.getErrorCodes());
     }
   }
 
-  private static class DeliveryWStatus extends Delivery {
-    private DeliveryStatus status = DeliveryStatus.Planned;
-    private Delivery delivery;
-    private DeliveryWStatus(Delivery delivery, int id) {
-      super(delivery.getType());
-      this.delivery = delivery.cloneDelivery();
-      this.delivery.setId(id);
-    }
-
-    @Override
-    public Type getType() {
-      return delivery.getType();
-    }
-
-    @Override
-    public Address getSourceAddress() {
-      return delivery.getSourceAddress();
-    }
-
-    @Override
-    public void setSourceAddress(Address sourceAddress) throws AdminException {
-      delivery.setSourceAddress(sourceAddress);
-    }
 
 
-    @Override
-    public String getSingleText() {
-      return delivery.getSingleText();
-    }
-
-    @Override
-    public void setSingleText(String singleText) throws AdminException {
-      delivery.setSingleText(singleText);
-    }
-
-    @Override
-    public Integer getId() {
-      return delivery.getId();
-    }
-
-    @Override
-    public void setId(int id) {
-      delivery.setId(id);
-    }
-
-    @Override
-    public String getName() {
-      return delivery.getName();
-    }
-
-    @Override
-    public void setName(String name) throws AdminException {
-      delivery.setName(name);
-    }
-
-    @Override
-    public int getPriority() {
-      return delivery.getPriority();
-    }
-
-    @Override
-    public void setPriority(int priority) throws AdminException {
-      delivery.setPriority(priority);
-    }
-
-    @Override
-    public boolean isTransactionMode() {
-      return delivery.isTransactionMode();
-    }
-
-    @Override
-    public void setTransactionMode(boolean transactionMode) {
-      delivery.setTransactionMode(transactionMode);
-    }
-
-    @Override
-    public Date getStartDate() {
-      return delivery.getStartDate();
-    }
-
-    @Override
-    public void setStartDate(Date startDate) throws AdminException {
-      delivery.setStartDate(startDate);
-    }
-
-    @Override
-    public Date getEndDate() {
-      return delivery.getEndDate();
-    }
-
-    @Override
-    public void setEndDate(Date endDate) {
-      delivery.setEndDate(endDate);
-    }
-
-    @Override
-    public Time getActivePeriodEnd() {
-      return delivery.getActivePeriodEnd();
-    }
-
-    @Override
-    public void setActivePeriodEnd(Time activePeriodEnd) throws AdminException {
-      delivery.setActivePeriodEnd(activePeriodEnd);
-    }
-
-    @Override
-    public Time getActivePeriodStart() {
-      return delivery.getActivePeriodStart();
-    }
-
-    @Override
-    public void setActivePeriodStart(Time activePeriodStart) throws AdminException {
-      delivery.setActivePeriodStart(activePeriodStart);
-    }
-
-    @Override
-    public Day[] getActiveWeekDays() {
-      return delivery.getActiveWeekDays();
-    }
-
-    @Override
-    public void setActiveWeekDays(Day[] days) throws AdminException {
-      delivery.setActiveWeekDays(days);
-    }
-
-    @Override
-    public Time getValidityPeriod() {
-      return delivery.getValidityPeriod();
-    }
-
-    @Override
-    public void setValidityPeriod(Time validityPeriod) throws AdminException{
-      delivery.setValidityPeriod(validityPeriod);
-    }
-
-    @Override
-    public boolean isFlash() {
-      return delivery.isFlash();
-    }
-
-    @Override
-    public void setFlash(boolean flash) {
-      delivery.setFlash(flash);
-    }
-
-    @Override
-    public boolean isUseDataSm() {
-      return delivery.isUseDataSm();
-    }
-
-    @Override
-    public void setUseDataSm(boolean useDataSm) {
-      delivery.setUseDataSm(useDataSm);
-    }
-
-    @Override
-    public DeliveryMode getDeliveryMode() {
-      return delivery.getDeliveryMode();
-    }
-
-    @Override
-    public void setDeliveryMode(DeliveryMode deliveryMode) throws AdminException {
-      delivery.setDeliveryMode(deliveryMode);
-    }
-
-    @Override
-    public String getOwner() {
-      return delivery.getOwner();
-    }
-
-    @Override
-    public void setOwner(String owner) throws AdminException {
-      delivery.setOwner(owner);
-    }
-
-    @Override
-    public boolean isRetryOnFail() {
-      return delivery.isRetryOnFail();
-    }
-
-    @Override
-    public void setRetryOnFail(boolean retryOnFail) {
-      delivery.setRetryOnFail(retryOnFail);
-    }
-
-    @Override
-    public String getRetryPolicy() {
-      return delivery.getRetryPolicy();
-    }
-
-    @Override
-    public void setRetryPolicy(String retryPolicy) {
-      delivery.setRetryPolicy(retryPolicy);
-    }
-
-    @Override
-    public boolean isReplaceMessage() {
-      return delivery.isReplaceMessage();
-    }
-
-    @Override
-    public void setReplaceMessage(boolean replaceMessage) {
-      delivery.setReplaceMessage(replaceMessage);
-    }
-
-    @Override
-    public String getSvcType() {
-      return delivery.getSvcType();
-    }
-
-    @Override
-    public void setSvcType(String svcType) {
-      delivery.setSvcType(svcType);
-    }
-
-    @Override
-    public void setProperty(String name, String value) {
-      delivery.setProperty(name, value);
-    }
-
-    @Override
-    public void addProperties(Map<String, String> props) {
-      delivery.addProperties(props);
-    }
-
-    @Override
-    public String getProperty(String name) {
-      return delivery.getProperty(name);
-    }
-
-    @Override
-    public boolean containsProperty(String name) {
-      return delivery.containsProperty(name);
-    }
-
-    public String removeProperty(String name) {
-      return delivery.removeProperty(name);
-    }
-
-    @Override
-    public Properties getProperties() {
-      return delivery.getProperties();
-    }
-  }
-
-  private static class MessageWState extends Message{
-
-    private Message message;
-
-    private MessageState state = MessageState.New;
-
-    private Date date = new Date();
-
-    private Integer errorCode = 0;
-
-    private MessageWState(Message message) {
-      this.message = message.cloneMessage();
-    }
-
-    @Override
-    public Long getId() {
-      return message.getId();
-    }
-
-    @Override
-    public void setId(Long id) {
-      message.setId(id);
-    }
-
-    @Override
-    public Address getAbonent() {
-      return message.getAbonent();
-    }
-
-    @Override
-    public void setAbonent(Address msisdn) throws AdminException {
-      message.setAbonent(msisdn);
-    }
-
-    @Override
-    public String getText() {
-      return message.getText();
-    }
-
-
-    @Override
-    void setText(String text) {
-      message.setText(text);
-    }
-  }
+  
 
 
 

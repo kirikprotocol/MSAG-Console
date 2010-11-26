@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DataSource;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
 import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
@@ -157,12 +158,12 @@ class ContentProviderImportTask implements Runnable {
       String baseName = fileName.substring(0,fileName.length()-4);
       Integer deliveryId=null;
       try {
-        Delivery delivery = new Delivery(Delivery.Type.Common);
+        DeliveryPrototype delivery = new DeliveryPrototype();
         delivery.setName(baseName);
         delivery.setStartDate(new Date(System.currentTimeMillis()));
-        context.getDefaultDelivery(u.getLogin(),delivery);
-        context.createDelivery(u.getLogin(),u.getPassword(),delivery,null);
-        deliveryId = delivery.getId();
+        context.copyUserSettingsToDeliveryPrototype(u.getLogin(),delivery);
+        Delivery d = context.createDelivery(u.getLogin(),u.getPassword(),delivery,null);
+        deliveryId = d.getId();
         //rename to .csv.<id>
         File newFile = new File(userDir,baseName+".csv."+deliveryId);
         File reportFile = new File(userDir,baseName+".rep."+deliveryId);

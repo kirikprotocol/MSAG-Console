@@ -19,7 +19,6 @@ public class MessageFilter {
   private String[] msisdnFilter;
   private Date startDate;
   private Date endDate;
-  private MessageFields[] fields = MessageFields.ALL;
   private Integer[] errorCodes;
 
   public MessageFilter(Integer deliveryId, Date startDate, Date endDate) {
@@ -82,11 +81,4 @@ public class MessageFilter {
     this.endDate = endDate;
   }
 
-  public MessageFields[] getFields() {
-    return fields;
-  }
-
-  public void setFields(MessageFields[] fields) {
-    this.fields = fields;
-  }
 }

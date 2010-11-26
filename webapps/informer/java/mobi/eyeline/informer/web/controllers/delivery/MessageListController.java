@@ -227,7 +227,6 @@ public class MessageListController extends InformerController {
 
   private MessageFilter getModelFilter() throws AdminException {
     MessageFilter filter = new MessageFilter(deliveryId, new Date(msgFilter.getFromDate().getTime()), new Date(msgFilter.getTillDate().getTime()));
-    filter.setFields(new MessageFields[]{MessageFields.Date, MessageFields.State, MessageFields.Text, MessageFields.ErrorCode, MessageFields.Abonent});
     if (msgFilter.getState() != null && msgFilter.getState().length() > 0) {
       filter.setStates(new MessageState[]{MessageState.valueOf(msgFilter.getState())});
     }
@@ -244,8 +243,8 @@ public class MessageListController extends InformerController {
   protected void _download(final PrintWriter writer) throws IOException {
     try {
       final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-      visit(new Visitor<MessageInfo>() {
-        public boolean visit(MessageInfo value) throws AdminException {
+      visit(new Visitor<Message>() {
+        public boolean visit(Message value) throws AdminException {
           writer.println(StringEncoderDecoder.toCSVString(value.getAbonent(), sdf.format(value.getDate()), value.getText(),
                   value.getState().toString(), value.getErrorCode() == null ? "" : value.getErrorCode().toString()
           ));
@@ -257,7 +256,7 @@ public class MessageListController extends InformerController {
     }
   }
 
-  private void visit(Visitor<MessageInfo> visitor, MessageFilter filter) throws AdminException {
+  private void visit(Visitor<Message> visitor, MessageFilter filter) throws AdminException {
     config.getMessagesStates(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, visitor);
   }
 
@@ -278,11 +277,11 @@ public class MessageListController extends InformerController {
         if (!init || state == 1) {
           return Collections.emptyList();
         }
-        final LinkedList<MessageInfo> list = new LinkedList<MessageInfo>();
+        final LinkedList<Message> list = new LinkedList<Message>();
         try {
           final int[] c = new int[]{0};
-          visit(new Visitor<MessageInfo>() {
-            public boolean visit(MessageInfo value) throws AdminException {
+          visit(new Visitor<Message>() {
+            public boolean visit(Message value) throws AdminException {
               c[0]++;
               if (c[0] > startPos) {
                 list.add(value);
@@ -353,8 +352,8 @@ public class MessageListController extends InformerController {
 
         final int[] count = new int[]{0};
 
-        config.getMessagesStates(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<MessageInfo>() {
-          public boolean visit(MessageInfo value) throws AdminException {
+        config.getMessagesStates(u.getLogin(), u.getPassword(), filter, MEMORY_LIMIT, new Visitor<Message>() {
+          public boolean visit(Message value) throws AdminException {
             if (stop) {
               return false;
             }

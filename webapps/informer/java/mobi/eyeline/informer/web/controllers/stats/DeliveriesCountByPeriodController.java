@@ -1,9 +1,8 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DeliveryFields;
+import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryInfo;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.web.config.Configuration;
 
@@ -17,7 +16,7 @@ import java.util.Locale;
  * Date: 25.10.2010
  * Time: 15:20:49
  */
-public class DeliveriesCountByPeriodController extends DeliveryStatController implements Visitor<DeliveryInfo> {
+public class DeliveriesCountByPeriodController extends DeliveryStatController implements Visitor<Delivery> {
 
 
   public DeliveriesCountByPeriodController() {
@@ -37,12 +36,11 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
     }
     f.setStartDateFrom(getFilter().getFromDate());
     f.setStartDateTo(getFilter().getTillDate());
-    f.setResultFields(DeliveryFields.StartDate);
 
     config.getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);
   }
 
-  public boolean visit(DeliveryInfo di) throws AdminException {
+  public boolean visit(Delivery di) throws AdminException {
     Calendar c = Calendar.getInstance();
     c.setTime(di.getStartDate());
     AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c, getAggregation(), 1, true);

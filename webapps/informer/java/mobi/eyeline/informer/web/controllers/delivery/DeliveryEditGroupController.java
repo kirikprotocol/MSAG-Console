@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 
 import javax.faces.application.FacesMessage;
@@ -35,7 +36,7 @@ public class DeliveryEditGroupController extends DeliveryController{
   private Date activePeriodStart;
   private boolean editActivePeriodStart;
 
-  private Delivery.Day[] activeWeekDays;
+  private Day[] activeWeekDays;
   private boolean editActiveWeekDays;
 
   private Date validityPeriod;
@@ -313,11 +314,11 @@ public class DeliveryEditGroupController extends DeliveryController{
     this.activePeriodStart = activePeriodStart;
   }
 
-  public Delivery.Day[] getActiveWeekDays() {
+  public Day[] getActiveWeekDays() {
     return activeWeekDays;
   }
 
-  public void setActiveWeekDays(Delivery.Day[] activeWeekDays) {
+  public void setActiveWeekDays(Day[] activeWeekDays) {
     this.activeWeekDays = activeWeekDays;
   }
 

@@ -31,7 +31,7 @@ public class DeliveryWeeklyController extends DeliveryController {
 
   public void query() {}
 
-  private void getDeliveries(Date start, Date end, final Collection<DeliveryInfo> result) throws AdminException {
+  private void getDeliveries(Date start, Date end, final Collection<Delivery> result) throws AdminException {
     DeliveryFilter filter = new DeliveryFilter();
     if (!isUserInAdminRole()) {
       filter.setUserIdFilter(logined.getLogin());
@@ -41,11 +41,10 @@ public class DeliveryWeeklyController extends DeliveryController {
     if(status != null && status.length()>0) {
       filter.setStatusFilter(DeliveryStatus.valueOf(status));
     }
-    filter.setResultFields(DeliveryFields.Name, DeliveryFields.StartDate);
     filter.setStartDateFrom(start);
     filter.setStartDateTo(end);
-    config.getDeliveries(logined.getLogin(), logined.getPassword(), filter, 1000, new Visitor<DeliveryInfo>() {
-      public boolean visit(DeliveryInfo value) throws AdminException {
+    config.getDeliveries(logined.getLogin(), logined.getPassword(), filter, 1000, new Visitor<Delivery>() {
+      public boolean visit(Delivery value) throws AdminException {
         result.add(value);
         return true;
       }
@@ -73,7 +72,7 @@ public class DeliveryWeeklyController extends DeliveryController {
 
     return new PageCalendarModel() {
 
-      private final List<DeliveryInfo> ds = new LinkedList<DeliveryInfo>();
+      private final List<Delivery> ds = new LinkedList<Delivery>();
 
       private final SimpleDateFormat df = new SimpleDateFormat("ddMMyyyy");
 
@@ -104,8 +103,8 @@ public class DeliveryWeeklyController extends DeliveryController {
 
       public Object getValue(Date date) {
         String d = df.format(date);
-        List<DeliveryInfo> toReturn = new LinkedList<DeliveryInfo>();
-        for (DeliveryInfo di : ds) {
+        List<Delivery> toReturn = new LinkedList<Delivery>();
+        for (Delivery di : ds) {
           if (df.format(di.getStartDate()).equals(d)) {
             toReturn.add(di);
           }

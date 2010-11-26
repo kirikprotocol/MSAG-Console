@@ -1,7 +1,5 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
-import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
-
 /**
  * Copyright Eyeline.mobi
  * User: vmax

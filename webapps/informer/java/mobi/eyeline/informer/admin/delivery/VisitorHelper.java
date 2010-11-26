@@ -11,7 +11,7 @@ import java.util.List;
  *
  * @author Aleksandr Khalitov
  */
-abstract class DeliveryDataSource<T> {
+abstract class VisitorHelper<T> {
 
   private final int pieceSize;
 
@@ -19,7 +19,7 @@ abstract class DeliveryDataSource<T> {
 
   private final int reqId;
 
-  DeliveryDataSource(int pieceSize, int reqId, DcpConnection dcpConnection) {
+  VisitorHelper(int pieceSize, int reqId, DcpConnection dcpConnection) {
     this.pieceSize = pieceSize;
     this.dcpConnection = dcpConnection;
     this.reqId = reqId;

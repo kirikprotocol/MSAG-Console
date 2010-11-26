@@ -2,9 +2,9 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatRecord;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import java.util.Calendar;

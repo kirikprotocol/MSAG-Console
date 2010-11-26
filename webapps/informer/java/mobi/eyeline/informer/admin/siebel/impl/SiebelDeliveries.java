@@ -8,7 +8,7 @@ import mobi.eyeline.informer.admin.delivery.*;
  */
 public interface SiebelDeliveries {
 
-  public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException;
+  public Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
 
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException;
 
@@ -24,7 +24,7 @@ public interface SiebelDeliveries {
 
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException;
 
-  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException;
+  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException;
 
-  public void getDefaultDelivery(String user, Delivery delivery) throws AdminException;
+  public void getDefaultDelivery(String user, DeliveryPrototype delivery) throws AdminException;
 }

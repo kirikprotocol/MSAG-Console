@@ -2,8 +2,8 @@ package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.informer.admin.delivery.MessageFilter;
-import mobi.eyeline.informer.admin.delivery.MessageInfo;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
 import org.apache.log4j.Logger;
@@ -84,8 +84,8 @@ class ContentProviderReportTask implements Runnable{
           ps = new PrintStream(context.getFileSystem().getOutputStream(reportFile, true), true, user.getFileEncoding());
           final PrintStream psFinal = ps;
           MessageFilter filter = new MessageFilter(deliveryId, d.getStartDate(), new Date());
-          context.getMessagesStates(user.getLogin(), user.getPassword(), filter, 1000, new Visitor<MessageInfo>() {
-            public boolean visit(MessageInfo mi) throws AdminException {
+          context.getMessagesStates(user.getLogin(), user.getPassword(), filter, 1000, new Visitor<Message>() {
+            public boolean visit(Message mi) throws AdminException {
               String result = "";
               result = mi.getState().toString() + ((mi.getErrorCode()) != null ? (" errCode=" + mi.getErrorCode()) : "");
               ContentProviderReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);

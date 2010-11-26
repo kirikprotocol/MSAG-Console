@@ -20,10 +20,10 @@ class TestSiebelDeliveries implements SiebelDeliveries {
   private TestDeliveryManager deliveryManager = new TestDeliveryManager(null);
 
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
-    deliveryManager.addMessages(login, password, msDataSource, deliveryId);
+    deliveryManager.addIndividualMessages(login, password, msDataSource, deliveryId);
   }
-  public void createDelivery(String login, String password, Delivery delivery, DataSource<Message> msDataSource) throws AdminException {
-    deliveryManager.createDelivery(login, password, delivery, msDataSource);
+  public Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+    return deliveryManager.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
   }
 
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
@@ -52,11 +52,11 @@ class TestSiebelDeliveries implements SiebelDeliveries {
   }
 
 
-  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<DeliveryInfo> visitor) throws AdminException {
+  public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
     deliveryManager.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
   }
 
-  public void getDefaultDelivery(String user, Delivery delivery) throws AdminException {
+  public void getDefaultDelivery(String user, DeliveryPrototype delivery) throws AdminException {
     TestAdminContext.getDefaultDelivery(siebelUser, delivery);
   }
 

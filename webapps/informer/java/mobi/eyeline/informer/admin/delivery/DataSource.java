@@ -3,7 +3,7 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 
 /**
- * Источник данных
+ * Абстрактный источник данных
  *
  * @author Aleksandr Khalitov
  */

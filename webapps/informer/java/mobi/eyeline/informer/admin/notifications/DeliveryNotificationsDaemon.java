@@ -1,7 +1,11 @@
 package mobi.eyeline.informer.admin.notifications;
 
+import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
+import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -23,7 +27,7 @@ import java.util.concurrent.*;
  * Date: 13.11.2010
  * Time: 13:46:28
  */
-public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerStub {
+public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
   private final Logger log = Logger.getLogger("NOTIFICATION_DAEMON");
 
   private final DeliveryNotificationsContext context;
@@ -50,17 +54,12 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerSt
     });
   }
 
-  @Override
-  public void onDeliveryStartNotification(DeliveryNotification notification) {
-    processDeliveryNotification(notification);
+  public void deliveryStateChanged(ChangeDeliveryStatusEvent e) throws AdminException {
+    processDeliveryNotification(e);
   }
 
-  @Override
-  public void onDeliveryFinishNotification(DeliveryNotification notification) {
-    processDeliveryNotification(notification);
-  }
 
-  public void processDeliveryNotification(DeliveryNotification notification) {
+  public void processDeliveryNotification(ChangeDeliveryStatusEvent notification) {
         try {
           User user = context.getUser(notification.getUserId());
           if (user != null) {
@@ -118,7 +117,7 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerSt
     }
   }
 
-  private static String formatTemplate(String template, DeliveryNotification n, String deliveryName, User user) {
+  private static String formatTemplate(String template, ChangeDeliveryStatusEvent n, String deliveryName, User user) {
     return MessageFormat.format(
           template,
           deliveryName,
@@ -128,16 +127,17 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerSt
   }
 
 
-  /*  ======================= */
+  /*  
+======================= */
 
   class SMSNotificationTask implements Callable<Object> {
     final Address address;
 
     private final User user;
-    private final DeliveryNotification notification;
+    private final ChangeDeliveryStatusEvent notification;
     private final String deliveryName;
 
-    public SMSNotificationTask(Address address, User user, DeliveryNotification notification, String deliveryName) {
+    public SMSNotificationTask(Address address, User user, ChangeDeliveryStatusEvent notification, String deliveryName) {
       this.address = address;
       this.user = user;
       this.notification = notification;
@@ -153,7 +153,7 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerSt
         testSms.setMode(TestSms.Mode.SMS);
 
         String template = (String) context.getNotificationTemplates().get(
-            notification.getType() == DeliveryNotificationType.DELIVERY_START
+            notification.getStatus() == DeliveryStatus.Active
                 ?
                 DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED
                 :
@@ -171,7 +171,8 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerSt
     }
   }
 
-  /*  ======================= */
+  /*  
+======================= */
 
   class AggregatedEmailNotificationTask implements Callable<Object> {
     private final String email;
@@ -184,10 +185,10 @@ public class DeliveryNotificationsDaemon extends DeliveryNotificationsListenerSt
       this.notifications = new LinkedList<String>();
     }
 
-    public void addNotification(DeliveryNotification n, String deliveryName) {
+    public void addNotification(ChangeDeliveryStatusEvent n, String deliveryName) {
       Properties templates = context.getNotificationTemplates();
 
-      String template = n.getType() == DeliveryNotificationType.DELIVERY_START
+      String template = n.getStatus() == DeliveryStatus.Active
           ?
           templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED)
           :

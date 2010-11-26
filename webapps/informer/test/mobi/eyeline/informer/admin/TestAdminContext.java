@@ -3,6 +3,8 @@ package mobi.eyeline.informer.admin;
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.changelog.TestDeliveryChangesDetector;
+import mobi.eyeline.informer.admin.delivery.stat.TestDeliveryStatProvider;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.informer.TestInformerManager;
@@ -25,6 +27,7 @@ import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.TestWebConfigManager;
 import testutils.TestUtils;
@@ -75,7 +78,7 @@ public class TestAdminContext extends AdminContext {
       }
       else {
         File srcStatDir = new File(uri);
-        srcStatDir = new File(srcStatDir,"stat");
+//        srcStatDir = new File(srcStatDir,"stat");
         TestUtils.copyDirectory(srcStatDir,dstStatDir,fileSystem);
       }
 
@@ -84,13 +87,13 @@ public class TestAdminContext extends AdminContext {
 
   private void prepareNotificationLogs(File dstStatDir, FileSystem fileSystem) throws URISyntaxException, IOException, AdminException {
     if(!fileSystem.exists(dstStatDir)) {
-      URL u = TestDeliveryStatProvider.class.getResource("");
+      URL u = TestDeliveryChangesDetector.class.getResource("");
       URI uri = u.toURI();
 
       if("jar".equals(uri.getScheme())) {
         String jarPath = uri.getSchemeSpecificPart();
         String jarFileURI   = jarPath.substring(0,jarPath.indexOf("!/"));
-        String jarEntryPathURI = jarPath.substring(jarPath.indexOf("!/")+2)+"statuslogs";
+        String jarEntryPathURI = jarPath.substring(jarPath.indexOf("!/")+2)+"changelog";
         InputStream is = null;
         try {
           is = fileSystem.getInputStream(new File(new URI(jarFileURI)));
@@ -103,7 +106,7 @@ public class TestAdminContext extends AdminContext {
       }
       else {
         File srcStatDir = new File(uri);
-        srcStatDir = new File(srcStatDir,"statuslogs");
+//        srcStatDir = new File(srcStatDir,"changelog");
         TestUtils.copyDirectory(srcStatDir,dstStatDir,fileSystem);
       }
 
@@ -118,11 +121,11 @@ public class TestAdminContext extends AdminContext {
     SimpleDateFormat df = new SimpleDateFormat("HHmmss");
     for(int i=1;i<=100;i++) {
       User u = users.get((i-1)%users.size());
-      Delivery d = (i%2 == 1) ? Delivery.newCommonDelivery() : Delivery.newSingleTextDelivery();
+      DeliveryPrototype d = new DeliveryPrototype();
       d.setSourceAddress(new Address("+7901111"+i));
       d.setActivePeriodEnd(new Time(20,0,0));
       d.setActivePeriodStart(new Time(9,0,0));
-      d.setActiveWeekDays(new Delivery.Day[]{Delivery.Day.Fri, Delivery.Day.Mon, Delivery.Day.Thu, Delivery.Day.Wed, Delivery.Day.Thu,});
+      d.setActiveWeekDays(new Day[]{Day.Fri, Day.Mon, Day.Thu, Day.Wed, Day.Thu,});
       d.setDeliveryMode(DeliveryMode.SMS);
       if(i%5 == 1) {
         d.setEndDate(new Date(System.currentTimeMillis() + (r1.nextInt(6)+1)*86400000L*i));
@@ -133,8 +136,10 @@ public class TestAdminContext extends AdminContext {
       d.setStartDate(new Date(System.currentTimeMillis() - (r1.nextInt(6)+1)*86400000L*i));
       d.setSvcType("svc1");
       d.setValidityPeriod(new Time(1,0,0));
-      if(d.getType() == Delivery.Type.Common) {
-        deliveryManager.createDelivery(u.getLogin(),u.getPassword(), d, new DataSource<Message>() {
+
+      Delivery deliv;
+      if((i%2 == 1)) {
+        deliv = deliveryManager.createDeliveryWithIndividualTexts(u.getLogin(),u.getPassword(), d, new DataSource<Message>() {
           private LinkedList<Message> ms = new LinkedList<Message>() {
             {
               Random r = new Random();
@@ -155,7 +160,7 @@ public class TestAdminContext extends AdminContext {
         });
       }else {
         d.setSingleText("single text");
-        deliveryManager.createSingleTextDelivery(u.getLogin(),u.getPassword(), d, new DataSource<Address>() {
+        deliv = deliveryManager.createDeliveryWithSingleText(u.getLogin(),u.getPassword(), d, new DataSource<Address>() {
           private LinkedList<Address> as = new LinkedList<Address>() {
             {
               for(int k=0;k<1000;k++) {
@@ -173,8 +178,8 @@ public class TestAdminContext extends AdminContext {
         });
       }
 
-      assertNotNull(d.getId());
-      deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),d.getId());
+      assertNotNull(deliv.getId());
+      deliveryManager.activateDelivery(u.getLogin(),u.getPassword(),deliv.getId());
     }
   }
 
@@ -237,9 +242,9 @@ public class TestAdminContext extends AdminContext {
           new ContentProviderContextImpl(this),appBaseDir, workDir
       );
 
-      deliveryNotificationsProducer  = new TestDeliveryNotificationsProducer(statusLogsDir,fileSystem);
+      deliveryChangesDetector = new TestDeliveryChangesDetector(statusLogsDir,fileSystem);
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
-      deliveryNotificationsProducer.addListener(deliveryNotificationsDaemon);
+      deliveryChangesDetector.addListener(deliveryNotificationsDaemon);
 
       try{
         initSiebel(workDir);
@@ -247,7 +252,7 @@ public class TestAdminContext extends AdminContext {
         logger.error(e,e);
       }
       
-      deliveryNotificationsProducer.start();
+      deliveryChangesDetector.start();
 
     } catch (IOException e) {
       throw new InitException(e);
@@ -284,7 +289,7 @@ public class TestAdminContext extends AdminContext {
         userManager, workDir,
         Integer.parseInt(webConfig.getSiebelProperties().getProperty(SiebelFinalStateListener.PERIOD_PARAM)));
 
-    deliveryNotificationsProducer.addListener(siebelFinalStateListener);
+    deliveryChangesDetector.addListener(siebelFinalStateListener);
 
     siebelManager.start(siebelUser, webConfig.getSiebelProperties());
 

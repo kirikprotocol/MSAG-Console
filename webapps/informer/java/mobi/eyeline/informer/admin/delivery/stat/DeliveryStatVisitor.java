@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.delivery;
+package mobi.eyeline.informer.admin.delivery.stat;
 
 /**
  * Обработчик записей статистики

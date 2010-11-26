@@ -120,11 +120,10 @@ public class RestrictionDaemon implements Daemon {
       DeliveryFilter dFilter = new DeliveryFilter();
       dFilter.setUserIdFilter(u.getLogin());
       dFilter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Paused);
-      dFilter.setResultFields(DeliveryFields.Status);
       //System.out.println("apply restrictions get deliveries");
       deliveryManager.getDeliveries(u.getLogin(), u.getPassword(), dFilter, 1000,
-          new Visitor<DeliveryInfo>() {
-            public boolean visit(DeliveryInfo di) throws AdminException {
+          new Visitor<Delivery>() {
+            public boolean visit(Delivery di) throws AdminException {
               //System.out.println("visit");
               boolean shouldBeRestricted;
               if (restrictions != null) {
@@ -154,19 +153,21 @@ public class RestrictionDaemon implements Daemon {
     return restrictionManager.getRestrictions(rFilter);
   }
 
-  private void adjustDeliveryState(User u, DeliveryInfo di, boolean shouldBeRestricted) throws AdminException {
+  private void adjustDeliveryState(User u, Delivery di, boolean shouldBeRestricted) throws AdminException {
     //System.out.println("adjust delivery "+di.getDeliveryId()+" "+di.getUserId()+" to restricted="+shouldBeRestricted);
     if (shouldBeRestricted) {
       if (di.getStatus() != DeliveryStatus.Paused) {
         //System.out.println("changed");
-        deliveryManager.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getDeliveryId(), true);
-        deliveryManager.pauseDelivery(u.getLogin(), u.getPassword(), di.getDeliveryId());
+        // todo uncomment next 2 lines
+//        deliveryManager.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getDeliveryId(), true);
+//        deliveryManager.pauseDelivery(u.getLogin(), u.getPassword(), di.getDeliveryId());
       }
     } else {
       if (di.getStatus() == DeliveryStatus.Paused && Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION))) {
         //System.out.println("changed");
-        deliveryManager.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getDeliveryId(), false);
-        deliveryManager.activateDelivery(u.getLogin(), u.getPassword(), di.getDeliveryId());
+        // todo uncomment next 2 lines
+//        deliveryManager.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getDeliveryId(), false);
+//        deliveryManager.activateDelivery(u.getLogin(), u.getPassword(), di.getDeliveryId());
       }
     }
   }

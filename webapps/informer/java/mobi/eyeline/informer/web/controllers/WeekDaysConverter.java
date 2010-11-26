@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.util.Day;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -17,14 +18,14 @@ public class WeekDaysConverter implements Converter {
       return null;
     }
     try {
-      return Delivery.Day.valueOf(s);
+      return Day.valueOf(s);
     } catch (IllegalArgumentException e) {
       throw new ConverterException(e);
     }
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
-    if (!(o instanceof Delivery.Day)) {
+    if (!(o instanceof Day)) {
       return null;
     }
     return o.toString();

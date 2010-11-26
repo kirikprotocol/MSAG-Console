@@ -102,26 +102,23 @@ public class MessagesByRecController extends LongOperationController {
 
     setCurrentAndTotal(0, config.countDeliveries(getUser().getLogin(), getUser().getPassword(), deliveryFilter));
 
-    deliveryFilter.setResultFields(DeliveryFields.Name, DeliveryFields.UserId, DeliveryFields.StartDate, DeliveryFields.EndDate);
-
     config.getDeliveries(getUser().getLogin(), getUser().getPassword(), deliveryFilter, 1000,
-        new Visitor<DeliveryInfo>() {
-          public boolean visit(DeliveryInfo deliveryInfo) throws AdminException {
-            final int deliveryId = deliveryInfo.getDeliveryId();
-            final String name = deliveryInfo.getName();
-            final String userId = deliveryInfo.getUserId();
+        new Visitor<Delivery>() {
+          public boolean visit(Delivery Delivery) throws AdminException {
+            final int deliveryId = Delivery.getId();
+            final String name = Delivery.getName();
+            final String userId = Delivery.getOwner();
             final User owner = config.getUser(userId);
 
-            MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate == null ? deliveryInfo.getStartDate() : fromDate,
-                tillDate != null ? tillDate : deliveryInfo.getEndDate() != null ? deliveryInfo.getEndDate() : new Date());
+            MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate == null ? Delivery.getStartDate() : fromDate,
+                tillDate != null ? tillDate : Delivery.getEndDate() != null ? Delivery.getEndDate() : new Date());
             messageFilter.setMsisdnFilter(new String[]{msisdn});
-            messageFilter.setFields(new MessageFields[]{MessageFields.Date, MessageFields.State, MessageFields.Text, MessageFields.ErrorCode});
 
             config.getMessagesStates(getUser().getLogin(), getUser().getPassword(), messageFilter, 1000,
-                new Visitor<MessageInfo>() {
-                  public boolean visit(MessageInfo messageInfo) throws AdminException {
+                new Visitor<Message>() {
+                  public boolean visit(Message Message) throws AdminException {
                     String errString = null;
-                    Integer errCode = messageInfo.getErrorCode();
+                    Integer errCode = Message.getErrorCode();
                     if (errCode != null) {
                       try {
                         errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode." + errCode);
@@ -130,7 +127,7 @@ public class MessagesByRecController extends LongOperationController {
                         errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode.unknown");
                       }
                     }
-                    MessagesByRecRecord rec = new MessagesByRecRecord(deliveryId, userId, owner, name, messageInfo.getText(), messageInfo.getDate(), messageInfo.getState(), errString);
+                    MessagesByRecRecord rec = new MessagesByRecRecord(deliveryId, userId, owner, name, Message.getText(), Message.getDate(), Message.getState(), errString);
                     records.add(rec);
                     return !isCancelled();
                   }

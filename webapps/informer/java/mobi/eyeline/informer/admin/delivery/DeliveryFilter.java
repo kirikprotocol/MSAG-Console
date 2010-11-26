@@ -17,7 +17,6 @@ public class DeliveryFilter {
   private Date startDateTo;
   private Date endDateFrom;
   private Date endDateTo;
-  private DeliveryFields[] resultFields = DeliveryFields.ALL;
 
   public String[] getUserIdFilter() {
     return userIdFilter;
@@ -75,11 +74,4 @@ public class DeliveryFilter {
     this.endDateTo = endDateTo;
   }
 
-  public DeliveryFields[] getResultFields() {
-    return resultFields;
-  }
-
-  public void setResultFields(DeliveryFields... resultFields) {
-    this.resultFields = resultFields;
-  }
 }

@@ -4,19 +4,17 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields;
-import mobi.eyeline.informer.util.Address;
-import org.apache.log4j.Logger;
+import static mobi.eyeline.informer.admin.delivery.DcpConverter.*;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Коннект к DCP, упрвление рассылками
  *
  * @author Aleksandr Khalitov
  */
-public class DcpConnection {
+class DcpConnection {
 
   private DcpClient client;
 
@@ -42,24 +40,28 @@ public class DcpConnection {
    * @throws AdminException ошибка выполнения команды
    */
   public int createDelivery(Delivery delivery) throws AdminException {
-    if (delivery.getSingleText() != null)
-      delivery.setProperty("singleText", "true");
-    
     CreateDelivery req = new CreateDelivery();
-    req.setInfo(DcpConverter.convert(delivery));
-
+    req.setInfo(convert(delivery));
 
     CreateDeliveryResp resp = client.send(req);
-
-    if (delivery.getSingleText() != null) {
-      ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
-      reqG.setDeliveryId(resp.getDeliveryId());
-      DeliveryGlossary glossary = new DeliveryGlossary();
-      glossary.setMessages(new String[]{delivery.getSingleText()});
-      reqG.setGlossary(glossary);
-      client.send(reqG);
-    }
     return resp.getDeliveryId();
+  }
+
+  public void modifyDeliveryGlossary(int deliveryId, String... messages) throws AdminException {
+    ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
+    reqG.setDeliveryId(deliveryId);
+    DeliveryGlossary glossary = new DeliveryGlossary();
+    glossary.setMessages(messages);
+    reqG.setGlossary(glossary);
+    client.send(reqG);
+  }
+
+  public String[] getDeliveryGlossary(int deliveryId) throws AdminException {
+    GetDeliveryGlossary reqG = new GetDeliveryGlossary();
+    GetDeliveryGlossaryResp respG;
+    reqG.setDeliveryId(deliveryId);
+    respG = client.send(reqG);
+    return respG.getGlossary().getMessages();
   }
 
 
@@ -74,24 +76,7 @@ public class DcpConnection {
   public long[] addDeliveryMessages(int deliveryId, List<Message> messages) throws AdminException {
     AddDeliveryMessages req = new AddDeliveryMessages();
     req.setDeliveryId(deliveryId);
-    req.setMessages(DcpConverter.convert(messages));
-    AddDeliveryMessagesResp resp = client.send(req);
-    return resp.getMessageIds();
-  }
-
-
-  /**
-   * Добавляет сообщения в рассылку
-   *
-   * @param deliveryId идентификатор рассылки
-   * @param addresses  адресаты
-   * @return идентификаторы сообщений
-   * @throws AdminException ошибка выполнения команды
-   */
-  public long[] addDeliveryAddresses(int deliveryId, List<Address> addresses) throws AdminException {
-    AddDeliveryMessages req = new AddDeliveryMessages();
-    req.setDeliveryId(deliveryId);
-    req.setMessages(DcpConverter.convert(addresses));
+    req.setMessages(convert(messages));
     AddDeliveryMessagesResp resp = client.send(req);
     return resp.getMessageIds();
   }
@@ -105,16 +90,8 @@ public class DcpConnection {
   public void modifyDelivery(Delivery delivery) throws AdminException {
     ModifyDelivery req = new ModifyDelivery();
     req.setDeliveryId(delivery.getId());
-    req.setInfo(DcpConverter.convert(delivery));
+    req.setInfo(convert(delivery));
     client.send(req);
-    if (delivery.getType() == Delivery.Type.SingleText) {
-      ModifyDeliveryGlossary reqG = new ModifyDeliveryGlossary();
-      reqG.setDeliveryId(delivery.getId());
-      DeliveryGlossary glossary = new DeliveryGlossary();
-      glossary.setMessages(new String[]{delivery.getSingleText()});
-      reqG.setGlossary(glossary);
-      client.send(reqG);
-    }
   }
 
   /**
@@ -141,16 +118,16 @@ public class DcpConnection {
     DeliveriesFilter f = new DeliveriesFilter();
     if (deliveryFilter != null) {
       if (deliveryFilter.getEndDateFrom() != null) {
-        f.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+        f.setEndDateFrom(convertDate(deliveryFilter.getEndDateFrom()));
       }
       if (deliveryFilter.getEndDateTo() != null) {
-        f.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+        f.setEndDateTo(convertDate(deliveryFilter.getEndDateTo()));
       }
       if (deliveryFilter.getStartDateFrom() != null) {
-        f.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+        f.setStartDateFrom(convertDate(deliveryFilter.getStartDateFrom()));
       }
       if (deliveryFilter.getStartDateTo() != null) {
-        f.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+        f.setStartDateTo(convertDate(deliveryFilter.getStartDateTo()));
       }
       if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
         f.setNameFilter(deliveryFilter.getNameFilter());
@@ -159,7 +136,7 @@ public class DcpConnection {
         f.setUserIdFilter(deliveryFilter.getUserIdFilter());
       }
       if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
-        f.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
+        f.setStatusFilter(convert(deliveryFilter.getStatusFilter()));
       }
     }
     req.setFilter(f);
@@ -196,16 +173,7 @@ public class DcpConnection {
       return null;
     }
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo info = resp.getInfo();
-    Map<String, String> userData = DcpConverter.convertUserData(info.getUserData());
-    if (!userData.containsKey("singleText")) {
-      return DcpConverter.convert(deliveryId, info, null);
-    } else {
-      GetDeliveryGlossary reqG = new GetDeliveryGlossary();
-      GetDeliveryGlossaryResp respG;
-      reqG.setDeliveryId(deliveryId);
-      respG = client.send(reqG);
-      return DcpConverter.convert(deliveryId, info, respG.getGlossary().getMessages());
-    }
+    return convert(deliveryId, info);
   }
 
   /**
@@ -218,7 +186,7 @@ public class DcpConnection {
   public void changeDeliveryState(int deliveryId, DeliveryState state) throws AdminException {
     ChangeDeliveryState req = new ChangeDeliveryState();
     req.setDeliveryId(deliveryId);
-    req.setState(DcpConverter.convert(state));
+    req.setState(convert(state));
     client.send(req);
   }
 
@@ -234,7 +202,7 @@ public class DcpConnection {
     req.setDeliveryId(deliveryId);
     GetDeliveryStateResp resp;
     resp = client.send(req);
-    return DcpConverter.convert(resp.getStats(), resp.getState());
+    return convert(resp.getStats(), resp.getState());
   }
 
   /**
@@ -248,28 +216,28 @@ public class DcpConnection {
     GetDeliveriesList req = new GetDeliveriesList();
     DeliveriesFilter f = new DeliveriesFilter();
     if (deliveryFilter.getEndDateFrom() != null) {
-      f.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+      f.setEndDateFrom(convertDate(deliveryFilter.getEndDateFrom()));
     }
     if (deliveryFilter.getStartDateFrom() != null) {
-      f.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+      f.setStartDateFrom(convertDate(deliveryFilter.getStartDateFrom()));
     }
     if (deliveryFilter.getEndDateTo() != null) {
-      f.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+      f.setEndDateTo(convertDate(deliveryFilter.getEndDateTo()));
     }
     if (deliveryFilter.getStartDateTo() != null) {
-      f.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+      f.setStartDateTo(convertDate(deliveryFilter.getStartDateTo()));
     }
     if (deliveryFilter.getEndDateFrom() != null) {
-      f.setEndDateFrom(DcpConverter.convertDate(deliveryFilter.getEndDateFrom()));
+      f.setEndDateFrom(convertDate(deliveryFilter.getEndDateFrom()));
     }
     if (deliveryFilter.getEndDateTo() != null) {
-      f.setEndDateTo(DcpConverter.convertDate(deliveryFilter.getEndDateTo()));
+      f.setEndDateTo(convertDate(deliveryFilter.getEndDateTo()));
     }
     if (deliveryFilter.getStartDateFrom() != null) {
-      f.setStartDateFrom(DcpConverter.convertDate(deliveryFilter.getStartDateFrom()));
+      f.setStartDateFrom(convertDate(deliveryFilter.getStartDateFrom()));
     }
     if (deliveryFilter.getStartDateTo() != null) {
-      f.setStartDateTo(DcpConverter.convertDate(deliveryFilter.getStartDateTo()));
+      f.setStartDateTo(convertDate(deliveryFilter.getStartDateTo()));
     }
     if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
       f.setNameFilter(deliveryFilter.getNameFilter());
@@ -278,9 +246,9 @@ public class DcpConnection {
       f.setUserIdFilter(deliveryFilter.getUserIdFilter());
     }
     if (deliveryFilter.getStatusFilter() != null && deliveryFilter.getStatusFilter().length > 0) {
-      f.setStatusFilter(DcpConverter.convert(deliveryFilter.getStatusFilter()));
+      f.setStatusFilter(convert(deliveryFilter.getStatusFilter()));
     }
-    DeliveryFields[] fieldses = DcpConverter.convert(deliveryFilter.getResultFields());
+    DeliveryFields[] fieldses = DeliveryFields.values();
     DeliveryFields[] fs = new DeliveryFields[fieldses.length + 1];
     fs[0] = DeliveryFields.UserData;
     System.arraycopy(fieldses, 0, fs, 1, fieldses.length);
@@ -300,7 +268,7 @@ public class DcpConnection {
    * @return есть ли ещё рассылки
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextDeliviries(int reqId, int pieceSize, Collection<DeliveryInfo> deliveries) throws AdminException {
+  public boolean getNextDeliveries(int reqId, int pieceSize, Collection<Delivery> deliveries) throws AdminException {
     GetDeliveriesListNext req = new GetDeliveriesListNext();
     req.setReqId(reqId);
     req.setCount(pieceSize);
@@ -308,7 +276,7 @@ public class DcpConnection {
     resp = client.send(req);
     if (resp.getInfo() != null) {
       for (DeliveryListInfo di : resp.getInfo()) {
-        deliveries.add(DcpConverter.convert(di));
+        deliveries.add(convert(di));
       }
     }
     return resp.getMoreDeliveries();
@@ -327,10 +295,10 @@ public class DcpConnection {
       if (filter.getDeliveryId() != null) {
         req.setDeliveryId(filter.getDeliveryId());
       }
-      req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
-      req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
+      req.setEndDate(convertDate(filter.getEndDate()));
+      req.setStartDate(convertDate(filter.getStartDate()));
 
-      ReqField[] fieldses = DcpConverter.convert(filter.getFields());
+      ReqField[] fieldses = ReqField.values();
       ReqField[] fs = new ReqField[fieldses.length + 1];
       fs[0] = ReqField.UserData;
       System.arraycopy(fieldses, 0, fs, 1, fieldses.length);
@@ -340,7 +308,7 @@ public class DcpConnection {
         req.setMsisdnFilter(filter.getMsisdnFilter());
       }
       if (filter.getStates() != null && filter.getStates().length > 0) {
-        req.setStates(DcpConverter.convert(filter.getStates()));
+        req.setStates(convert(filter.getStates()));
       }
       if (filter.getErrorCodes() != null && filter.getErrorCodes().length > 0) {
         int[] codes = new int[filter.getErrorCodes().length];
@@ -361,14 +329,14 @@ public class DcpConnection {
    * @return есть ли ещё сообщения
    * @throws AdminException ошибка выполнения команды
    */
-  public boolean getNextMessages(int reqId, int pieceSize, Collection<mobi.eyeline.informer.admin.delivery.MessageInfo> messages) throws AdminException {
+  public boolean getNextMessages(int reqId, int pieceSize, Collection<Message> messages) throws AdminException {
     GetNextMessagesPack req = new GetNextMessagesPack();
     req.setReqId(reqId);
     req.setCount(pieceSize);
     GetNextMessagesPackResp resp = client.send(req);
     if (resp.getInfo() != null) {
       for (mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
-        messages.add(DcpConverter.convert(mi));
+        messages.add(convert(mi));
       }
     }
     return resp.getMoreMessages();
@@ -388,14 +356,14 @@ public class DcpConnection {
       if (filter.getDeliveryId() != null) {
         req.setDeliveryId(filter.getDeliveryId());
       }
-      req.setEndDate(DcpConverter.convertDate(filter.getEndDate()));
-      req.setStartDate(DcpConverter.convertDate(filter.getStartDate()));
+      req.setEndDate(convertDate(filter.getEndDate()));
+      req.setStartDate(convertDate(filter.getStartDate()));
 
       if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
         req.setMsisdnFilter(filter.getMsisdnFilter());
       }
       if (filter.getStates() != null && filter.getStates().length > 0) {
-        req.setStates(DcpConverter.convert(filter.getStates()));
+        req.setStates(convert(filter.getStates()));
       }
       if (filter.getErrorCodes() != null && filter.getErrorCodes().length > 0) {
         int[] codes = new int[filter.getErrorCodes().length];
@@ -418,7 +386,7 @@ public class DcpConnection {
     GetDeliveryHistory req = new GetDeliveryHistory();
     req.setDeliveryId(deliveryId);
     GetDeliveryHistoryResp resp = client.send(req);
-    return DcpConverter.convert(deliveryId, resp.getHistory());
+    return convert(deliveryId, resp.getHistory());
   }
 
 }

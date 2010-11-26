@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.delivery;
+package mobi.eyeline.informer.admin.delivery.stat;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Copyright Eyeline.mobi
@@ -23,26 +24,37 @@ import static org.junit.Assert.assertTrue;
  */
 public class DeliveryStatProviderTest {
 
-  DeliveryStatProvider statProvider;
+  File statDir;
 
   @Before
   public void before() throws Exception {
-    URL u = TestDeliveryStatProvider.class.getResource("./");
-    File statDir = new File(u.toURI());
-    statDir  = new File(statDir,"stat");
+    URL u = DeliveryStatProviderTest.class.getResource("./");
+    statDir = new File(u.toURI());
+  }
 
-    statProvider = new TestDeliveryStatProvider(statDir, FileSystem.getFSForSingleInst());
+  @Test
+  public void testWithUnknownDir() throws AdminException {
+    DeliveryStatProvider statProvider = new TestDeliveryStatProvider(new File("unknown"), FileSystem.getFSForSingleInst());
+
+    statProvider.accept(null,new DeliveryStatVisitor(){
+      public boolean visit(DeliveryStatRecord rec, int total, int current) {
+        return true;
+      }
+    });
   }
 
   @Test
   public void providerTest() throws AdminException, IOException, ParseException {
+
+    DeliveryStatProvider statProvider = new TestDeliveryStatProvider(statDir, FileSystem.getFSForSingleInst());
+
      final List<DeliveryStatRecord> records = new ArrayList<DeliveryStatRecord>();
 
 
      statProvider.accept(null,new DeliveryStatVisitor(){
 
        public boolean visit(DeliveryStatRecord rec, int total, int current) {
-         assertTrue(total==2);
+         assertEquals(2, total);
          assertTrue(current<total);
          records.add(rec);         
          return true;

@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -63,7 +64,7 @@ public class DeliveryController extends InformerController {
   public List<SelectItem> getAllDays() {
     List<SelectItem> result = new ArrayList<SelectItem>(7);
     int i = 1;
-    for (Delivery.Day d : Delivery.Day.values()) {
+    for (Day d : Day.values()) {
       result.add(new SelectItem(d, getLocalizedString("weekday." + i % 7)));
       i++;
     }
