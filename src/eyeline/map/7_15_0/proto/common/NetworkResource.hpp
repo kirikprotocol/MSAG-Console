@@ -2,7 +2,9 @@
  * NetworkResource type definition.
  * ************************************************************************** */
 #ifndef __EYELINE_MAP_7F0_NETWORK_RESOURCE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_7F0_NETWORK_RESOURCE_HPP
 
 namespace eyeline {

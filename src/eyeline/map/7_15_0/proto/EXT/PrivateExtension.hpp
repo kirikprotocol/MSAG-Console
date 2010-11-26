@@ -1,5 +1,7 @@
 #ifndef __EYELINE_MAP_7F0_PROTO_EXT_PRIVATEEXTENSION_HPP__
+#ifndef __GNUC__
 # ident "@(#)$Id$"
+#endif
 # define __EYELINE_MAP_7F0_PROTO_EXT_PRIVATEEXTENSION_HPP__
 
 # include "eyeline/util/OptionalObjT.hpp"

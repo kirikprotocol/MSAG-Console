@@ -2,7 +2,9 @@
  * NetworkResource type encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_MAP_7F0_PROTO_COMMON_MENETWORKRESOURCE_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 # define __EYELINE_MAP_7F0_PROTO_COMMON_MENETWORKRESOURCE_HPP__
 
 #include "eyeline/map/7_15_0/proto/common/NetworkResource.hpp"

@@ -1,5 +1,7 @@
 #ifndef __EYELINE_MAP_7F0_PROTO_ERR_DATAMISSINGPARAM_HPP__
+#ifndef __GNUC__
 # ident "@(#)$Id$"
+#endif
 # define __EYELINE_MAP_7F0_PROTO_ERR_DATAMISSINGPARAM_HPP__
 
 # include "eyeline/asn1/UnknownExtensions.hpp"

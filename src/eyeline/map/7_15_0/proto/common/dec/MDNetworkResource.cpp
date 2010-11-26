@@ -1,3 +1,7 @@
+#ifdef MOD_IDENT_ON
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
 #include "MDNetworkResource.hpp"
 
 namespace eyeline {

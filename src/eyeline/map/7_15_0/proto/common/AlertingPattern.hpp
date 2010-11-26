@@ -2,7 +2,9 @@
  * Alerting Pattern type definition.
  * ************************************************************************** */
 #ifndef __EYELINE_MAP_7F0_ALERTING_PATTERN_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_7F0_ALERTING_PATTERN_HPP
 
 namespace eyeline {

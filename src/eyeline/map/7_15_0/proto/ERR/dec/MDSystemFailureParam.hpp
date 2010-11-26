@@ -1,5 +1,7 @@
 #ifndef __EYELINE_MAP_7F0_PROTO_ERR_DEC_MDSYSTEMFAILUREPARAM_HPP__
+#ifndef __GNUC__
 # ident "@(#)$Id$"
+#endif
 # define __EYELINE_MAP_7F0_PROTO_ERR_DEC_MDSYSTEMFAILUREPARAM_HPP__
 
 # include "eyeline/asn1/BER/rtdec/DecodeChoice.hpp"

@@ -2,7 +2,9 @@
  * USSD-String type definition.
  * ************************************************************************** */
 #ifndef __EYELINE_MAP_7F0_USSD_STRING_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_7F0_USSD_STRING_HPP
 
 #include "eyeline/asn1/OCTSTR.hpp"

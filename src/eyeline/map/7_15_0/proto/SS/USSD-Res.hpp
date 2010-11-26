@@ -2,7 +2,9 @@
  * USSD-Res type definition.
  * ************************************************************************** */
 #ifndef __EYELINE_MAP_7F0_USSD_RES_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_7F0_USSD_RES_HPP
 
 #include "eyeline/asn1/UnknownExtensions.hpp"

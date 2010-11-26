@@ -1,5 +1,7 @@
 #ifndef __EYELINE_MAP_7F0_PROTO_ERR_FAILURECAUSEPARAM_HPP__
+#ifndef __GNUC__
 # ident "@(#)$Id$"
+#endif
 # define __EYELINE_MAP_7F0_PROTO_ERR_FAILURECAUSEPARAM_HPP__
 
 #include <inttypes.h>
@@ -32,4 +34,5 @@ struct FailureCauseParam {
 
 }}}
 
-#endif
+#endif /* __EYELINE_MAP_7F0_PROTO_ERR_FAILURECAUSEPARAM_HPP__ */
+

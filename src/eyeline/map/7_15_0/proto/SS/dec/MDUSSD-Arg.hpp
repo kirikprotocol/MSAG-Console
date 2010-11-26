@@ -2,7 +2,9 @@
  * USSD-Arg type decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_MAP_7F0_USSD_ARG_DEC_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_7F0_USSD_ARG_DEC_HPP
 
 #include "eyeline/map/7_15_0/proto/SS/USSD-Arg.hpp"

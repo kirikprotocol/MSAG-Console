@@ -2,7 +2,9 @@
  * MAP OPERATIONs ERROR codes.
  * ************************************************************************* */
 #ifndef __EYELINE_MAP_ERR_CODES_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_ERR_CODES_HPP
 
 #include <inttypes.h>

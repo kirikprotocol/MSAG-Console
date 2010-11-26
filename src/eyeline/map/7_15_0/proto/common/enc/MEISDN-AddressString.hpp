@@ -2,7 +2,9 @@
  * ISDN-AddressString type encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_MAP_7F0_ISDN_ADDRESS_STRING_ENC_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_MAP_7F0_ISDN_ADDRESS_STRING_ENC_HPP
 
 #include "eyeline/map/7_15_0/proto/common/ISDN-AddressString.hpp"
