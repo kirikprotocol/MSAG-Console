@@ -31,12 +31,10 @@ template <
   , uint16_t _NumElemsTArg //estimated number of element values
 >
 class EncoderOfSequencedAC_T : public EncoderOfConstructedAC {
-public:
+private:
   typedef EncoderProducer_T<_EncoderOfTArg> EncoderProducer;
-
   typedef eyeline::util::LWArray_T<TLVLayoutEncoder, uint16_t, _NumElemsTArg> ElementsStore;
   typedef eyeline::util::LWArray_T<EncoderProducer, uint16_t, _NumElemsTArg> ProducersStore;
-private:
 
   ElementsStore   _elmStore;
   ProducersStore  _prdStore;
@@ -73,7 +71,7 @@ protected:
 
   //'Generic sequenced type encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
-  EncoderOfSequencedAC_T(const ASTagging & eff_tags,
+  explicit EncoderOfSequencedAC_T(const ASTagging & eff_tags,
                          TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : EncoderOfConstructedAC(_elmStore, eff_tags, use_rule)
     , _maxElems(0)
