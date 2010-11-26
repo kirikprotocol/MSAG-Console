@@ -304,7 +304,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
     char whatbuf[150];
     const char* what = "";
     int res = smsc::system::Status::OK;
-    int seqNum;
+    int seqNum = 0;
     nchunks = 0;
     do {
 

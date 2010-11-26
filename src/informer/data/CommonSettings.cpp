@@ -35,11 +35,11 @@ void CommonSettings::init( smsc::util::config::Config& cfg )
     const ConfigWrapper conf(cfg, smsc::logger::Logger::getInstance("config"));
     path_ = conf.getString("storePath");
     if (path_.empty()) path_ = "./";
-    else if (path_[path_.size()-1] != '/') path_ += '/';
+    else if (path_[path_.size()-1] != '/') path_.append("/");
 
     statpath_ = conf.getString("statPath");
     if (statpath_.empty()) statpath_ = "./";
-    else if (statpath_[statpath_.size()-1] != '/') statpath_ += '/';
+    else if (statpath_[statpath_.size()-1] != '/') statpath_.append("/");
 
     unrespondedMessagesMax_ = conf.getInt("unrespondedMessagesMax",100,10,10000);
     responseWaitTime_ = conf.getInt("responseWaitTime",30,10,120);

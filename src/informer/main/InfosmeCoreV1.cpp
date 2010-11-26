@@ -385,7 +385,7 @@ void InfosmeCoreV1::selfTest()
 
         {
             smsc_log_info(log_,"--- adding messages to D=%u ---",dlvId);
-            for ( int pass = 0; pass < 100; ++pass ) {
+            for ( int pass = 0; pass < 10; ++pass ) {
                 MessageList msgList;
                 if (stopping_) break;
                 for ( int j = 0; j < 1000; ++j ) {
@@ -409,6 +409,12 @@ void InfosmeCoreV1::selfTest()
                     mlk.msg.userData = userdata;
                 }
                 dlv->addNewMessages(msgList.begin(), msgList.end());
+
+                if ( pass == 0 ) {
+                    smsc_log_debug(log_,"--- changing delivery D=%u state ---", dlvId);
+                    dlv->setState(DLVSTATE_ACTIVE);
+                    smsc_log_info(log_,"--- delivery activated ---");
+                }
             }
         }
 
@@ -429,11 +435,6 @@ void InfosmeCoreV1::selfTest()
         }
          */
 
-        {
-            smsc_log_debug(log_,"--- changing delivery D=%u state ---", dlvId);
-            dlv->setState(DLVSTATE_ACTIVE);
-            smsc_log_info(log_,"--- delivery activated ---");
-        }
 
         /*
         {

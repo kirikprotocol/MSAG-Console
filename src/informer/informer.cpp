@@ -177,6 +177,7 @@ int main( int argc, char** argv )
         } while (false);
 
         smsc::logger::Logger::Init();
+        smsc::util::xml::initXerces();
 
         mainlog = smsc::logger::Logger::getInstance("main");
         smsc_log_info(mainlog,"\n"
@@ -230,8 +231,10 @@ int main( int argc, char** argv )
             
         } catch ( std::exception& e ) {
             smsc_log_error(mainlog,"EXCEPTION, exc: %s",e.what());
+            smsc::util::xml::TerminateXerces();
             throw;
         }
+        smsc::util::xml::TerminateXerces();
 
     } catch ( std::exception& e ) {
         fprintf(stderr,"EXCEPTION: %s\n",e.what());
