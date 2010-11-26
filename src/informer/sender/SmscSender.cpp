@@ -1074,7 +1074,7 @@ void SmscSender::sendLoop()
         if ( throttled ) {
             nextWakeTime = currentTime_ + 1000;
             continue;
-        } else if ( seqnumHash_.Count() > getCS()->getUnrespondedMessagesMax() ) {
+        } else if ( unsigned(seqnumHash_.Count()) > getCS()->getUnrespondedMessagesMax() ) {
             // too many unresponded, wait one millisec
             nextWakeTime = currentTime_ + 1000;
             continue;
