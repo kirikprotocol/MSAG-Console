@@ -156,8 +156,10 @@ public:
                 (static_cast<ProfileResponse*>(resp.get())->getResponse());
             if ( grp->getProperty().getBoolValue() ) {
                 // property exists, blocking
+                smsc_log_debug(log_,"blocked by pvss");
                 pbr->getMsg().timeLeft = 0;
             } else {
+                smsc_log_debug(log_,"allowed by pvss");
                 pbr->getMsg().timeLeft = 1;
             }
             return;
