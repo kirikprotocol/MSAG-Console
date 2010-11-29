@@ -102,9 +102,6 @@ void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
   struct timespec maxTime = timeout.adjust2Nano();
 
   MutexGuard  grd(lock);
-  if (!usedThreads.Count() && !freeThreads.Count())
-    return;
-
   __trace2__("stopping tasks, pending:%d, used:%d, free:%d", pendingTasks.Count(), usedThreads.Count(), freeThreads.Count());
   //delete pending task first
   for (int i=0; i<pendingTasks.Count(); ++i)
@@ -116,6 +113,9 @@ void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
   }
   pendingTasks.Empty();
 
+  if (!usedThreads.Count() && !freeThreads.Count())
+    return;
+
   //stop tasks of currently active threads
   for (int i=0; i < usedThreads.Count(); ++i)
   {
@@ -124,7 +124,9 @@ void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
   }
   __trace__("all tasks are notified");
   //wait either last released thread signal or first timeout expiration
-  lock.wait(firstTmo);
+  if (usedThreads.Count()) {
+    lock.wait(firstTmo);
+  }
 
    //check for unexpectedly lasting threads
   if (usedThreads.Count())
