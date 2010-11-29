@@ -29,9 +29,9 @@
               <h:inputText id="msisdn" value="#{messages.msgFilter.msisdn}"/>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.state']}"/>
-              <h:selectOneMenu id="state"  value="#{messages.msgFilter.state}">
+              <h:selectOneMenu id="state"  value="#{messages.msgFilter.state}" converter="msgStateConverter">
                 <f:selectItem itemLabel="" itemValue=""/>
-                <f:selectItems value="#{messages.uniqueStates}"/>
+                <f:selectItems value="#{messages.uniqueStates}" />
               </h:selectOneMenu>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.error']}"/>
@@ -51,7 +51,7 @@
 
         <eye:delimiter/>
 
-        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init}" selectedRows="#{messages.selected}">
+        <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init }" selectedRows="#{messages.selected}" >
           <eye:row rowId="#{m.id}">
             <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
               <h:outputText value="#{m.abonent}"/>
@@ -64,16 +64,16 @@
                 <f:convertDateTime dateStyle="short" type="both"/>
               </tr:outputText>
             </eye:column>
-            <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%">
+            <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%" rendered="#{!messages.singleTextDelivery}">
               <h:outputText value="#{m.text}"/>
             </eye:column>
-            <eye:column name="error" title="#{msg['informer.deliveries.message.error']}" width="20%">
+            <eye:column name="error" title="#{msg['informer.deliveries.message.error']}" width="#{messages.singleTextDelivery ? '55' : '20'}%">
               <h:outputText value="#{m.errorCode}"/>
               <h:outputText value=":&#160;"/>
               <h:outputText value="#{m.errorCode}" converter="errorCodeConverter"/>
             </eye:column>
           </eye:row>
-        </eye:dataTable>
+        </eye:dataTable>        
 
         <eye:delimiter/>
 

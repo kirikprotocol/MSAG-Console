@@ -437,6 +437,16 @@ public class DeliveryManager {
     }.visit(visitor);
   }
 
+  private static GetMessagesStrategy selectGetMessagesStrategy(MessageFilter filter) {
+    if (filter.getStates() == null)
+      return new GetNonFinalMessagesStrategy();
+    for (MessageState s : filter.getStates())
+      if (s == MessageState.New || s == MessageState.Process)
+        return new GetNonFinalMessagesStrategy();
+
+    return new GetFinalizedMessagesStrategy();
+  }
+
   /**
    * Возвращает информацию о сообщениях рассылки
    *
@@ -454,14 +464,10 @@ public class DeliveryManager {
     if (filter.getStartDate() == null || filter.getEndDate() == null) {
       throw new DeliveryException("date_start_end_empty");
     }
-    DcpConnection conn = getDcpConnection(login, password);
-    int _reqId = conn.getMessages(filter);
 
-    new VisitorHelper<Message>(_pieceSize, _reqId, conn) {
-      protected boolean load(DcpConnection connection, int pieceSize, int reqId, Collection<Message> result) throws AdminException {
-        return connection.getNextMessages(reqId, pieceSize, result);
-      }
-    }.visit(visitor);
+    GetMessagesStrategy strategy = selectGetMessagesStrategy(filter);
+    DcpConnection conn = getDcpConnection(login, password);
+    strategy.getMessages(conn, filter, _pieceSize, visitor);
   }
 
   /**
@@ -477,8 +483,9 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Count deliveries");
     }
+    GetMessagesStrategy strategy = selectGetMessagesStrategy(messageFilter);
     DcpConnection conn = getDcpConnection(login, password);
-    return conn.countMessages(messageFilter);
+    return strategy.countMessages(conn, messageFilter);
   }
 
   /**

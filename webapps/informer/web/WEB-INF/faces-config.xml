@@ -94,6 +94,11 @@
   </converter>
 
   <converter>
+    <converter-id>msgStateConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.delivery.MsgStateConverter</converter-class>
+  </converter>
+
+  <converter>
     <converter-id>errorCodeConverter</converter-id>
     <converter-class>mobi.eyeline.informer.web.controllers.ErrorCodeConverter</converter-class>
   </converter>

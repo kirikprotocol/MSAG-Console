@@ -60,7 +60,7 @@ public class DeliveryStatProviderTest {
          return true;
        }
      });
-     assertTrue(records.size()==8);
+     assertEquals(8, records.size());
 
      records.clear();
      DeliveryStatFilter filter = new DeliveryStatFilter();

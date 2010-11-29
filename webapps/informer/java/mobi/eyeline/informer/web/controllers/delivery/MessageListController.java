@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -159,8 +160,8 @@ public class MessageListController extends InformerController {
 
   public List<SelectItem> getUniqueStates() {
     List<SelectItem> result = new LinkedList<SelectItem>();
-    for (MessageState st : MessageState.values()) {
-      result.add(new SelectItem(st.toString(), MessageStateConverter.getAsString(getLocale(), st)));
+    for (MsgState st : MsgState.values()) {
+      result.add(new SelectItem(st, MsgStateConverter.getAsString(getLocale(), st)));
     }
     return result;
   }
@@ -200,7 +201,7 @@ public class MessageListController extends InformerController {
         session.setAttribute(THREAD_NAME, thread);
         state = 1;
       }
-    } catch (AdminException e) {
+    } catch (LocalizedException e) {
       addError(e);
     }
     return null;
@@ -219,22 +220,22 @@ public class MessageListController extends InformerController {
         session.setAttribute(THREAD_NAME, thread);
         state = 1;
       }
-    } catch (AdminException e) {
+    } catch (LocalizedException e) {
       addError(e);
     }
     return null;
   }
 
-  private MessageFilter getModelFilter() throws AdminException {
+  private MessageFilter getModelFilter() throws LocalizedException {
     MessageFilter filter = new MessageFilter(deliveryId, new Date(msgFilter.getFromDate().getTime()), new Date(msgFilter.getTillDate().getTime()));
-    if (msgFilter.getState() != null && msgFilter.getState().length() > 0) {
-      filter.setStates(new MessageState[]{MessageState.valueOf(msgFilter.getState())});
+    if (msgFilter.getState() != null ) {
+      filter.setStates(msgFilter.getState().toMessageStates());
     }
     if (msgFilter.getMsisdn() != null && msgFilter.getMsisdn().length() > 0) {
-      filter.setMsisdnFilter(new String[]{msgFilter.getMsisdn()});
+      filter.setMsisdnFilter(msgFilter.getMsisdn());
     }
     if (msgFilter.getErrorCode() != null) {
-      filter.setErrorCodes(new Integer[]{msgFilter.getErrorCode()});
+      filter.setErrorCodes(msgFilter.getErrorCode());
     }
     return filter;
   }
@@ -251,7 +252,7 @@ public class MessageListController extends InformerController {
           return true;
         }
       }, getModelFilter());
-    } catch (AdminException e) {
+    } catch (LocalizedException e) {
       addError(e);
     }
   }
@@ -268,7 +269,7 @@ public class MessageListController extends InformerController {
     final MessageFilter filter;
     try {
       filter = getModelFilter();
-    } catch (AdminException e) {
+    } catch (LocalizedException e) {
       addError(e);
       return new EmptyDataTableModel();
     }
@@ -298,12 +299,16 @@ public class MessageListController extends InformerController {
       public int getRowsCount() {
         try {
           return config.countMessages(u.getLogin(), u.getPassword(), getModelFilter());
-        } catch (AdminException e) {
+        } catch (LocalizedException e) {
           addError(e);
         }
         return 0;
       }
     };
+  }
+
+  public boolean isSingleTextDelivery() {
+    return deliveryType == Delivery.Type.SingleText;
   }
 
   public static class ResendThread extends Thread {

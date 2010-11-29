@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
@@ -115,13 +114,13 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     return super.isStoped();
   }
 
-  private String getAddressFromLine(String line, int lineNumber, boolean containsText) throws UploadFileException {
+  private String getAddressFromLine(String line, int lineNumber, boolean containsText) throws DeliveryControllerException {
     if (!containsText)
       return line.trim();
 
     int i = line.indexOf('|');
     if (i < 0)
-      throw new UploadFileException("invalid.string.format", String.valueOf(lineNumber), line);
+      throw new DeliveryControllerException("invalid.string.format", String.valueOf(lineNumber), line);
     return line.substring(0, i);
   }
 
@@ -203,7 +202,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
         try {
           address = new Address(addressStr);
         } catch (IllegalArgumentException e) {
-          throw new UploadFileException("invalid.msisdn", String.valueOf(lineNumber), addressStr);
+          throw new DeliveryControllerException("invalid.msisdn", String.valueOf(lineNumber), addressStr);
         }
 
         if (!isAddressAllowed(address, _user)) {
@@ -219,7 +218,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
         current = maximum;
 
       if (rejectedAddressesCount == abonentsSize)
-        throw new UploadFileException("all.msisdns.rejected");
+        throw new DeliveryControllerException("all.msisdns.rejected");
 
     } finally {
       if (is != null) {

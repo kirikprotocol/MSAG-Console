@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
+import mobi.eyeline.informer.admin.delivery.MessageState;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -10,7 +12,7 @@ public class MsgFilter implements Serializable {
 
   private String msisdn;
 
-  private String state;
+  private MsgState state;
 
   private Date fromDate;
 
@@ -37,11 +39,11 @@ public class MsgFilter implements Serializable {
     this.msisdn = msisdn;
   }
 
-  public String getState() {
+  public MsgState getState() {
     return state;
   }
 
-  public void setState(String state) {
+  public void setState(MsgState state) {
     this.state = state;
   }
 

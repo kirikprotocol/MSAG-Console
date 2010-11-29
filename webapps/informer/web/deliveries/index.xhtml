@@ -17,7 +17,7 @@
 
 
       <eye:dataTableFilter bean="#{deliveries}" clearAction="clearFilter" applyAction="query">
-        <h:panelGrid columns="6" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, column300Width,column50WidthNoWrap, column300Width">
+        <h:panelGrid columns="6" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, column300Width,column50WidthNoWrap, columnTopLeftAlign">
 
           <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
           <eye:inputDate value="#{deliveries.startDateFrom}" type="both" />

@@ -19,7 +19,7 @@ public class MessageFilter {
   private String[] msisdnFilter;
   private Date startDate;
   private Date endDate;
-  private Integer[] errorCodes;
+  private int[] errorCodes;
 
   public MessageFilter(Integer deliveryId, Date startDate, Date endDate) {
     if (deliveryId == null || startDate == null || endDate == null) {
@@ -28,6 +28,15 @@ public class MessageFilter {
     this.deliveryId = deliveryId;
     this.startDate = startDate;
     this.endDate = endDate;
+  }
+
+  public MessageFilter(MessageFilter copy) {
+    this.deliveryId = copy.deliveryId;
+    this.states = copy.states;
+    this.msisdnFilter = copy.msisdnFilter;
+    this.startDate = copy.startDate;
+    this.endDate = copy.endDate;
+    this.errorCodes = copy.errorCodes;
   }
 
   public Integer getDeliveryId() {
@@ -43,7 +52,7 @@ public class MessageFilter {
     return states;
   }
 
-  public void setStates(MessageState[] states) {
+  public void setStates(MessageState... states) {
     this.states = states;
   }
 
@@ -51,15 +60,15 @@ public class MessageFilter {
     return msisdnFilter;
   }
 
-  public void setMsisdnFilter(String[] msisdnFilter) {
+  public void setMsisdnFilter(String... msisdnFilter) {
     this.msisdnFilter = msisdnFilter;
   }
 
-  public Integer[] getErrorCodes() {
+  public int[] getErrorCodes() {
     return errorCodes;
   }
 
-  public void setErrorCodes(Integer[] errorCodes) {
+  public void setErrorCodes(int... errorCodes) {
     this.errorCodes = errorCodes;
   }
 

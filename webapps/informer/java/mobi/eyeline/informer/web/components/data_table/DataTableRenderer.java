@@ -101,8 +101,10 @@ public class DataTableRenderer extends Renderer {
       w.append("\n<col width=\"1%\"/>");
     if (hasInnerData)
       w.append("\n<col width=\"1%\"/>");
-    for (Column column : columns)
-      w.append("\n<col width=\"" + column.getWidth() + "\" align=\"" + column.getAlign() + "\"/>");
+    for (Column column : columns) {
+      if (column.isRendered())
+        w.append("\n<col width=\"" + column.getWidth() + "\" align=\"" + column.getAlign() + "\"/>");
+    }
 
     w.append("\n<thead>");
     if (t.isRowSelection())
@@ -111,6 +113,8 @@ public class DataTableRenderer extends Renderer {
       w.append("\n<th class=\"clickable\" onclick=\"pagedTable" + t.getId() + ".expandAll()\"><div id=\"" + t.getId() + "_expand\" class=\"inner_data_closed\">&nbsp;</div></th>");
 
     for (Column column : columns) {
+      if (!column.isRendered())
+        continue;
       String classStr = "";
       String sortOrder = column.getName();
       if (t.getSortOrder() != null && t.getSortOrder().endsWith(column.getName())) {
