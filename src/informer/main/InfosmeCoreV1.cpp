@@ -17,6 +17,7 @@
 #include "scag/pvss/api/pvap/PvapProtocol.h"
 #include "scag/pvss/api/packets/GetCommand.h"
 #include "scag/pvss/api/packets/GetResponse.h"
+#include "core/buffers/FastMTQueue.hpp"
 
 using namespace smsc::util::config;
 
@@ -89,11 +90,44 @@ private:
 }
 
 
-class InfosmeCoreV1::PvssRespHandler : public scag2::pvss::core::client::Client::ResponseHandler
+class InfosmeCoreV1::PvssRespHandler :
+protected smsc::core::threads::Thread,
+public scag2::pvss::core::client::Client::ResponseHandler
 {
 public:
     PvssRespHandler( InfosmeCoreV1& core ) :
-    core_(core), log_(smsc::logger::Logger::getInstance("pvss")) {}
+    core_(core), log_(smsc::logger::Logger::getInstance("pvss")),
+    stopping_(false) {}
+
+    virtual ~PvssRespHandler() {
+        stop();
+        WaitFor();
+    }
+
+    virtual void start() { Start(); }
+
+    virtual void stop() {
+        stopping_ = true;
+        queue_.notify();
+        WaitFor();
+    }
+
+
+    virtual int Execute()
+    {
+        Message* msg;
+        while (!stopping_) {
+            queue_.waitForItem();
+            while (queue_.Pop(msg)) {
+                core_.startPvssCheck(*msg);
+            }
+        }
+        while (queue_.Pop(msg)) {
+            core_.startPvssCheck(*msg);
+        }
+        return 0;
+    }
+
 
     virtual void handleResponse( std::auto_ptr<scag2::pvss::Request>  req,
                                  std::auto_ptr<scag2::pvss::Response> resp )
@@ -129,7 +163,7 @@ public:
             return;
 
         } while (false);
-        core_.startPvssCheck( pbr->getMsg() );
+        queue_.Push( & pbr->getMsg());
     }
 
     virtual void handleError(const scag2::pvss::PvssException& exc,
@@ -145,8 +179,10 @@ public:
     }
 
 private:
-    InfosmeCoreV1&        core_;
-    smsc::logger::Logger* log_;
+    InfosmeCoreV1&                               core_;
+    smsc::logger::Logger*                        log_;
+    smsc::core::buffers::FastMTQueue< Message* > queue_;
+    bool                                         stopping_;
 };
 
 
@@ -357,6 +393,7 @@ void InfosmeCoreV1::start()
     if (started_) return;
     MutexGuard mg(startMon_);
     if (started_) return;
+    if (pvssHandler_) { pvssHandler_->start(); }
     if (pvss_) { pvss_->startup(); }
     dlvMgr_->start();
     Start();
@@ -392,6 +429,10 @@ void InfosmeCoreV1::stop()
         if (pvss_) {
             smsc_log_debug(log_,"--- stopping pvss ---");
             pvss_->shutdown();
+        }
+        if (pvssHandler_) {
+            smsc_log_debug(log_,"--- stopping pvss handler ---");
+            pvssHandler_->stop();
         }
 
         // stop all smscs
