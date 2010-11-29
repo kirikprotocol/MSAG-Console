@@ -81,6 +81,9 @@ public class UserGroupEditController extends UserController {
   private boolean editCreateCdr;
   private boolean createCdr;
 
+  private String cdrDestination;
+  private String cdrOriginator;
+
 
 //Вкл/откл принудительную архивацию рассылок и макс. время жизни рассылки.
 //Настройки рассылок по-умолчанию (см. выше).
@@ -110,6 +113,15 @@ public class UserGroupEditController extends UserController {
     if (policyId != null && !Smsc.RETRY_POLICY_PATTERN.matcher(policyId).matches()) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "retry_policy_incorrect");
       return null;
+    }
+    if(editCreateCdr && createCdr) {
+      if(cdrDestination == null || cdrDestination.length() == 0 || cdrOriginator == null || cdrOriginator.length() == 0) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "user.edit.cdr.props.required");
+        return null;
+      }
+    }else {
+      cdrDestination = null;
+      cdrOriginator = null;
     }
     Configuration config = getConfig();
     try {
@@ -182,8 +194,11 @@ public class UserGroupEditController extends UserController {
           u.setDeliveryLifetime(deliveryLifetime);
         }
 
-        if (editCreateCdr)
+        if (editCreateCdr) {
           u.setCreateCDR(createCdr);
+          u.setCdrDestination(cdrDestination);
+          u.setCdrOriginator(cdrOriginator);
+        }
 
         users.add(u);
       }
@@ -199,6 +214,21 @@ public class UserGroupEditController extends UserController {
     return null;
   }
 
+  public String getCdrDestination() {
+    return cdrDestination;
+  }
+
+  public void setCdrDestination(String cdrDestination) {
+    this.cdrDestination = cdrDestination;
+  }
+
+  public String getCdrOriginator() {
+    return cdrOriginator;
+  }
+
+  public void setCdrOriginator(String cdrOriginator) {
+    this.cdrOriginator = cdrOriginator;
+  }
 
   public String getOrganization() {
     return organization;

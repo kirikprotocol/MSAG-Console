@@ -47,6 +47,8 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setEmail(section.getString("email"));
     u.setOrganization(section.getString("organization"));
     u.setCreateCDR(section.getBool("createCDR", false));
+    u.setCdrDestination(section.getString("cdrDestination", null));
+    u.setCdrOriginator(section.getString("cdrOriginator", null));
     String lang = section.getString("locale", "en");
     if (lang != null) {
       u.setLocale(new Locale(lang));
@@ -158,6 +160,12 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     userSection.setString("phone",user.getPhone());
     userSection.setString("email",user.getEmail());
     userSection.setString("organization",user.getOrganization());
+    if(user.getCdrDestination() != null) {
+      userSection.setString("cdrDestination",user.getCdrDestination());
+    }
+    if(user.getCdrOriginator() != null) {
+      userSection.setString("cdrOriginator",user.getCdrOriginator());
+    }
     if(user.isCreateCDR()) {
       userSection.setBool("createCDR",true);
     }

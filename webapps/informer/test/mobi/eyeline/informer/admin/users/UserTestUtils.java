@@ -40,5 +40,8 @@ public class UserTestUtils {
     assertEquals(o.getDirectory(),n.getDirectory());    
     assertEquals(o.isCreateReports(),n.isCreateReports());
     assertEquals(o.getReportsLifetime(),n.getReportsLifetime());
+    assertEquals(o.isCreateCDR(),n.isCreateCDR());
+    assertEquals(o.getCdrDestination(),n.getCdrDestination());
+    assertEquals(o.getCdrOriginator(),n.getCdrOriginator());
   }
 }

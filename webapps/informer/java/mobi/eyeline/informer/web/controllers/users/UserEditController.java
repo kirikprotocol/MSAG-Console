@@ -83,6 +83,16 @@ public class UserEditController extends UserController {
 
   public String save() {
     try {
+      if(userToEdit.isCreateCDR()) {
+        if(userToEdit.getCdrDestination() == null || userToEdit.getCdrDestination().length() == 0 ||
+            userToEdit.getCdrOriginator() == null || userToEdit.getCdrOriginator().length() == 0) {
+          addLocalizedMessage(FacesMessage.SEVERITY_WARN, "user.edit.cdr.props.required");
+          return null;
+        }
+      }else {
+        userToEdit.setCdrDestination(null);
+        userToEdit.setCdrOriginator(null);
+      }
       if (!passwordConfirm.equals(userToEdit.getPassword())) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "user.edit.passwdConfirmMissmatch");
         return null;

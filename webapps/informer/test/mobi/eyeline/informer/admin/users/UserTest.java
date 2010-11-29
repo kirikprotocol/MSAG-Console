@@ -379,6 +379,9 @@ public class UserTest {
     o.setCreateCDR(true);
     o.setSourceAddr(new Address("+79130000000"));
     o.setFileEncoding("cp1251");
+    o.setCreateCDR(true);
+    o.setCdrDestination("dest");
+    o.setCdrOriginator("orig");
 
     User n = new User(o);
     UserTestUtils.compareUsers(o,n);

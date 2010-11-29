@@ -13,7 +13,7 @@
   <ui:define name="content">
 
     <tr:form id="userForm" rendered="#{!userEdit.initError}">
-    
+
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}"/>
@@ -26,7 +26,7 @@
 
       <tr:inputHidden id="userId" value="#{userEdit.userId}"/>
       <eye:delimiter/>
-      
+
       <h:panelGrid style="padding-left:10px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.login}"/>
@@ -111,8 +111,8 @@
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
           <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" simple="true"/>
-          
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>                              
+
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
           <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.emailNotification}" simple="true"/>
 
           <h:outputText style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}"/>
@@ -217,13 +217,27 @@
 
       <eye:collapsingGroup label="#{msg['user.edit.billing']}" opened="true">
         <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+
           <h:outputText style="white-space:nowrap;" value="#{userBundle.createCDR}"/>
-          <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.createCDR}" simple="true"/>
+          <tr:selectBooleanCheckbox id="createCDR" value="#{userEdit.userToEdit.createCDR}" simple="true" onchange="
+            document.getElementById('cdrOpts').style.display = this.checked ? '' : 'none';
+          "/>
+
+        </h:panelGrid>
+
+        <h:panelGrid id="cdrOpts" style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.cdrDestination}"/>
+          <tr:inputText value="#{userEdit.userToEdit.cdrDestination}" simple="true"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.cdrOriginator}"/>
+          <tr:inputText value="#{userEdit.userToEdit.cdrOriginator}" simple="true"/>
+
         </h:panelGrid>
       </eye:collapsingGroup>
 
       <eye:delimiter/>
-      
+
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}"/>
@@ -242,6 +256,10 @@
 
         d = document.getElementById('importDeliveriesFromDir').checked ? '':'none';
         document.getElementById('importDeliveriesSettings').style.display=d;
+
+        var cdr = document.getElementById('createCDR').checked;
+        document.getElementById('cdrOpts').style.display = cdr ? '' : 'none';
+
       </script>
 
     </tr:form>

@@ -47,7 +47,7 @@
         <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
 
           <h:selectBooleanCheckbox id="editSourceAddr" value="#{userGroupEdit.editSourceAddr}" onchange="document.getElementById('sourceAddr').disabled=!this.checked"/>
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.sourceAddr}"/>        
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.sourceAddr}"/>
           <tr:inputText id="sourceAddr" value="#{userGroupEdit.sourceAddr}" simple="true" columns="15" />
 
           <h:selectBooleanCheckbox id="editDeliveryDays" value="#{userGroupEdit.editDeliveryDays}" onchange="
@@ -137,7 +137,7 @@
       </eye:collapsingGroup>
 
       <p/>
-      
+
       <eye:collapsingGroup label="#{msg['user.edit.restrictions']}" opened="true">
         <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100Width, columnTopLeftAlign">
           <h:selectBooleanCheckbox id="editSmsPerSec" value="#{userGroupEdit.editSmsPerSec}" onchange="document.getElementById('smsPerSec').disabled=!this.checked"/>
@@ -192,10 +192,29 @@
 
       <eye:collapsingGroup label="#{msg['user.edit.billing']}" opened="true">
         <h:panelGrid style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width, column100WidthNoWrap, columnTopLeftAlign">
-          <h:selectBooleanCheckbox id="editCreateCdr" value="#{userGroupEdit.editSmsPerSec}" onchange="document.getElementById('createCdr').disabled=!this.checked"/>
+          <h:selectBooleanCheckbox id="editCreateCdr" value="#{userGroupEdit.editCreateCdr}" onchange="
+            document.getElementById('createCdr').disabled=!this.checked;
+          "/>
+
           <h:outputText style="white-space:nowrap;" value="#{userBundle.createCDR}"/>
-          <h:selectBooleanCheckbox id="createCdr" value="#{userGroupEdit.createCdr}" />
+          <h:selectBooleanCheckbox id="createCdr" value="#{userGroupEdit.createCdr}" onchange="
+            document.getElementById('cdrOpts').style.display=this.checked ? '' : 'none';
+          "/>
+
         </h:panelGrid>
+
+        <h:panelGrid id="cdrOpts" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width, column100WidthNoWrap, columnTopLeftAlign">
+
+          <h:outputText value="&#160;"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.cdrDestination}"/>
+          <tr:inputText value="#{userGroupEdit.cdrDestination}" simple="true"/>
+          
+          <h:outputText value="&#160;"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.cdrOriginator}"/>
+          <tr:inputText value="#{userGroupEdit.cdrOriginator}" simple="true"/>
+
+        </h:panelGrid>
+
       </eye:collapsingGroup>
 
       <p/>
@@ -260,6 +279,12 @@
         document.getElementById('deliveryLifetime').disabled=archivateDeliveriesDisabled;
 
         document.getElementById('createCdr').disabled=!document.getElementById('editCreateCdr').checked;
+        if(document.getElementById('editCreateCdr').checked &amp;&amp; document.getElementById('createCdr').checked){
+          document.getElementById('cdrOpts').style.display='';
+        }else {
+          document.getElementById('cdrOpts').style.display='none';
+        }
+
 
         var d = document.getElementById('transactionMode').checked ? 'none' : '';
         document.getElementById('editValidHours').style.display=d;

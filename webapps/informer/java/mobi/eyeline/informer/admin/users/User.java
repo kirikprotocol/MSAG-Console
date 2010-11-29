@@ -57,6 +57,10 @@ public class User implements Serializable {
   public static final String INFORMER_ADMIN_ROLE = "informer-admin";
   public static final String INFORMER_USER_ROLE = "informer-user";
 
+  private String cdrDestination;
+  private String cdrOriginator;
+
+
   public User() {
   }
 
@@ -95,8 +99,25 @@ public class User implements Serializable {
     this.importDeliveriesFromDir = user.importDeliveriesFromDir;
     this.retryOnFail = user.retryOnFail;
     this.fileEncoding = user.fileEncoding;
+    this.cdrDestination = user.cdrDestination;
+    this.cdrOriginator = user.cdrOriginator;
   }
 
+  public String getCdrOriginator() {
+    return cdrOriginator;
+  }
+
+  public void setCdrOriginator(String cdrOriginator) {
+    this.cdrOriginator = cdrOriginator;
+  }
+
+  public String getCdrDestination() {
+    return cdrDestination;
+  }
+
+  public void setCdrDestination(String cdrDestination) {
+    this.cdrDestination = cdrDestination;
+  }
 
   public String getLogin() {
     return login;
