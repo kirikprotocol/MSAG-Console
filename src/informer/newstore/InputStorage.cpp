@@ -16,6 +16,7 @@
 #include "core/buffers/TmpBuf.hpp"
 #include "core/buffers/IntHash64.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "core/threads/Thread.hpp"
 
 namespace {
 
@@ -81,7 +82,7 @@ public:
         msg.msgId = msgid_type(msgId);
         msg.subscriber = fb.get64();
         // msg.lastTime = fb.get32();
-        // msg.timeLeft = fb.get32();
+        msg.timeLeft = -1; // waiting for pvss
         msg.userData = fb.getCString();
         if (state & 0x80) {
             MessageText(fb.getCString()).swap(msg.text);
@@ -93,12 +94,15 @@ public:
             msg.timeLeft = 0;
             msg.retryCount = 0;
             // we have to add kill record in activity log
-            is_.activityLog_->addRecord(currentTime_,regId_,msg,0);
+            is_.activityLog_->addRecord(currentTime_,regId_,msg,0,MSGSTATE_INPUT);
+            // FIXME check that final records are needed
             is_.getDlvActivator().getFinalLog().addMsgRecord(currentTime_,
                                                              is_.getDlvId(),
                                                              is_.activityLog_->getUserInfo().getUserId(),
                                                              msg,
                                                              0 );
+        } else {
+            is_.core_.startPvssCheck(msg);
         }
         return true;
     }
@@ -161,7 +165,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
             // necessary to replace text ids with real texts
             glossary_.fetchText(i->msg.text);
         }
-        activityLog_->addRecord(currentTime, i->serial, i->msg, 0);
+        activityLog_->addRecord(currentTime,i->serial,i->msg,0);
     }
     core_.deliveryRegions( getDlvId(), regs, true );
 }
@@ -440,18 +444,68 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
             }
             buf.SetPos(0);
 
+            if (core_.isStopping()) {
+                smsc_log_debug(log_,"R=%u/D=%u transfer cancelled at stop",
+                               regId, getDlvId() );
+                ok = false;
+                break;
+            }
+
             // we have read things
             if ( ! msglist.empty() ) {
 
-                // write back record
-                for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
-                    if (!i->msg.isTextUnique()) {
-                        // NOTE: replacing input ids with real ids here!
-                        glossary_.fetchText(i->msg.text,true);
+                if ( ! core_.isStopping() ) {
+                    for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
+                        if (!i->msg.isTextUnique()) {
+                            // NOTE: replacing input ids with real ids here!
+                            glossary_.fetchText(i->msg.text,true);
+                        }
                     }
                 }
 
+                // wait until all pvss requests finish
                 const msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
+                for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ) {
+                    timediff_type ttl;
+                    while ( (ttl = i->msg.timeLeft) == -1 ) {
+                        // wait until pvss request is finished
+                        // struct timespec ts = {0, 3000000};
+                        // nanosleep(&ts,0);
+                        smsc_log_debug(log_,"R=%u/D=%u/M=%llu waits until PVSS result",
+                                       regId, getDlvId(), i->msg.msgId );
+                        smsc::core::threads::Thread::Yield();
+                    }
+                    if ( ttl == 0 ) {
+                        // message should be removed from list
+                        uint8_t len, ton, npi;
+                        const uint64_t addr = subscriberToAddress(i->msg.subscriber,len,ton,npi);
+                        smsc_log_info(log_,"R=%u/D=%u/M=%llu A=.%u.%u.%0*.*llu is blocked by PVSS",
+                                      regId, getDlvId(), i->msg.msgId,
+                                      ton,npi,len,len,ulonglong(addr));
+                        i->msg.state = MSGSTATE_FAILED;
+                        const int smppState = 9999;
+                        activityLog_->addRecord(currentTime,regId,i->msg,
+                                                smppState,
+                                                MSGSTATE_INPUT);
+                        // FIXME check that final records are needed
+                        core_.getFinalLog().addMsgRecord(currentTime,
+                                                         getDlvId(),
+                                                         activityLog_->getUserInfo().getUserId(),
+                                                         i->msg,
+                                                         smppState );
+                        i = msglist.erase(i);
+                    } else {
+                        ++i;
+                    }
+                }
+
+                if (core_.isStopping()) {
+                    smsc_log_debug(log_,"R=%u/D=%u transfer cancelled at stop",
+                                   regId, getDlvId() );
+                    ok = false;
+                    break;
+                }
+
                 req.addNewMessages( currentTime,
                                     msglist,
                                     msglist.begin(),

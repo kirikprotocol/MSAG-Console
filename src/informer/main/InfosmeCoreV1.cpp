@@ -13,6 +13,10 @@
 #include "informer/sender/SmscSender.h"
 #include "informer/io/ConfigWrapper.h"
 #include "util/config/Config.h"
+#include "scag/pvss/api/core/client/impl/ClientCore.h"
+#include "scag/pvss/api/pvap/PvapProtocol.h"
+#include "scag/pvss/api/packets/GetCommand.h"
+#include "scag/pvss/api/packets/GetResponse.h"
 
 using namespace smsc::util::config;
 
@@ -59,6 +63,95 @@ void readSmscConfig( const char*   name,
 namespace eyeline {
 namespace informer {
 
+namespace {
+using namespace scag2::pvss;
+class PvssBlockRequest : public ProfileRequest
+{
+public:
+    PvssBlockRequest( const ProfileKey& pkey,
+                      ProfileCommand* cmd,
+                      Message& msg ) :
+    ProfileRequest(pkey,cmd), msg_(&msg) {}
+
+    virtual ~PvssBlockRequest() {
+    }
+
+    inline Message& getMsg() { return *msg_; }
+
+    virtual PvssBlockRequest* clone() const {
+        throw InfosmeException(EXC_NOTIMPL, "pvss block request clone() is forbidden");
+    }
+
+private:
+    Message* msg_;
+};
+
+}
+
+
+class InfosmeCoreV1::PvssRespHandler : public scag2::pvss::core::client::Client::ResponseHandler
+{
+public:
+    PvssRespHandler( InfosmeCoreV1& core ) :
+    core_(core), log_(smsc::logger::Logger::getInstance("pvss")) {}
+
+    virtual void handleResponse( std::auto_ptr<scag2::pvss::Request>  req,
+                                 std::auto_ptr<scag2::pvss::Response> resp )
+    {
+        PvssBlockRequest* pbr = static_cast< PvssBlockRequest* >(req.get());
+        if (!pbr) {
+            smsc_log_warn(log_,"no req");
+            return;
+        }
+        do {
+            if (!resp.get()) {
+                smsc_log_warn(log_,"no resp (to be retried)");
+                break;
+            }
+            if (resp->getStatus() == scag2::pvss::StatusType::PROPERTY_NOT_FOUND ) {
+                smsc_log_info(log_,"PVSS property not found, ok");
+                pbr->getMsg().timeLeft = 1;
+                return;
+            }
+            if (resp->getStatus() != scag2::pvss::StatusType::OK ) {
+                smsc_log_warn(log_,"resp has bad status=%u (to be retried)",resp->getStatus());
+                break;
+            }
+
+            GetResponse* grp = static_cast<GetResponse*>
+                (static_cast<ProfileResponse*>(resp.get())->getResponse());
+            if ( grp->getProperty().getBoolValue() ) {
+                // property exists, blocking
+                pbr->getMsg().timeLeft = 0;
+            } else {
+                pbr->getMsg().timeLeft = 1;
+            }
+            return;
+
+        } while (false);
+        core_.startPvssCheck( pbr->getMsg() );
+    }
+
+    virtual void handleError(const scag2::pvss::PvssException& exc,
+                             std::auto_ptr<scag2::pvss::Request> req)
+    {
+        PvssBlockRequest* pbr = static_cast< PvssBlockRequest* >(req.get());
+        if (!pbr) {
+            smsc_log_warn(log_,"no req");
+            return;
+        }
+        smsc_log_warn(log_,"failed (to be retried) exc: %s",exc.what());
+        core_.startPvssCheck( pbr->getMsg() );
+    }
+
+private:
+    InfosmeCoreV1&        core_;
+    smsc::logger::Logger* log_;
+};
+
+
+// =======================================================================
+
 InfosmeCoreV1::InfosmeCoreV1( unsigned maxsms ) :
 log_(smsc::logger::Logger::getInstance("core")),
 cs_(maxsms),
@@ -68,7 +161,9 @@ dlvMgr_(0),
 finalLog_(0),
 adminServer_(0),
 dcpServer_(0),
-alm_(0)
+alm_(0),
+pvss_(0),
+pvssHandler_(0)
 {
 }
 
@@ -79,14 +174,26 @@ InfosmeCoreV1::~InfosmeCoreV1()
 
     stop();
 
-    smsc_log_info(log_,"--- destroying admin server ---");
-    delete adminServer_;
+    if (pvss_) {
+        smsc_log_info(log_,"--- destroying pvss client ---");
+        delete pvss_;
+        delete pvssHandler_;
+    }
 
-    smsc_log_info(log_,"--- destroying dcp server ---");
-    delete dcpServer_;
+    if (adminServer_) {
+        smsc_log_info(log_,"--- destroying admin server ---");
+        delete adminServer_;
+    }
 
-    smsc_log_info(log_,"--- destroying activity log miner ---");
-    delete alm_;
+    if (dcpServer_) {
+        smsc_log_info(log_,"--- destroying dcp server ---");
+        delete dcpServer_;
+    }
+
+    if (alm_) {
+        smsc_log_info(log_,"--- destroying activity log miner ---");
+        delete alm_;
+    }
 
     // detaching region senders
     smsc_log_info(log_,"--- destroying region senders ---");
@@ -96,7 +203,6 @@ InfosmeCoreV1::~InfosmeCoreV1()
         smsc_log_debug(log_,"detaching regsend RS=%u", regionid_type(regId));
         (*regsend)->assignSender(0);
     }
-    smsc_log_debug(log_,"removing all regsends");
     regSends_.Empty();
 
     smsc_log_info(log_,"--- destroying smscs ---");
@@ -133,13 +239,13 @@ void InfosmeCoreV1::init()
     const char* filename = mainfilename;
 
     try {
-        std::auto_ptr<Config> cfg( Config::createFromFile(mainfilename));
-        if (!cfg.get()) {
+        std::auto_ptr<Config> maincfg( Config::createFromFile(mainfilename));
+        if (!maincfg.get()) {
             throw InfosmeException(EXC_CONFIG,"config file '%s' is not found",mainfilename);
         }
 
         section = "informer";
-        cfg.reset( cfg->getSubConfig(section,true) );
+        std::auto_ptr<Config> cfg(maincfg->getSubConfig(section,true));
 
         cs_.init( *cfg );
 
@@ -174,6 +280,46 @@ void InfosmeCoreV1::init()
         // create regions
         smsc_log_info(log_,"--- loading regions ---");
         loadRegions(anyRegionId);
+
+        try {
+            // creating pvss client
+            smsc_log_info(log_,"--- creating pvss client ---");
+            const char* pvssSectName = "pvss";
+            if (!maincfg->findSection(pvssSectName)) {
+                throw InfosmeException(EXC_CONFIG,"subsection '%s' is not found",pvssSectName);
+            }
+            std::auto_ptr<Config> pcfg(maincfg->getSubConfig(pvssSectName,true));
+            std::auto_ptr<scag2::pvss::core::client::ClientConfig> 
+                pvssConfig(new scag2::pvss::core::client::ClientConfig);
+            ConfigWrapper cwrap(*pcfg.get(),smsc::logger::Logger::getInstance("pvss"));
+            pvssConfig->setPort(cwrap.getInt("port",0,1024,100000,false));
+            pvssConfig->setHost(cwrap.getString("host"));
+            pvssConfig->setEnabled(cwrap.getBool("enabled",true));
+
+            pvssConfig->setConnectionsCount(cwrap.getInt("connections",3,1,10));
+            pvssConfig->setChannelQueueSizeLimit(cwrap.getInt("queueSize",100,50,1000));
+            pvssConfig->setPacketSizeLimit(cwrap.getInt("maxPacketSize",1000,100,10000));
+            pvssConfig->setIOTimeout(cwrap.getInt("ioTimeout",100,50,1000));
+            pvssConfig->setInactivityTime(cwrap.getInt("inactiveTimeout",60000,10000,100000));
+            pvssConfig->setConnectTimeout(cwrap.getInt("connectTimeout",60000,1000,100000));
+            pvssConfig->setProcessTimeout(cwrap.getInt("processTimeout",500,100,10000));
+            pvssConfig->setMaxReaderChannelsCount(cwrap.getInt("connPerThread",5,1,20));
+            pvssConfig->setMaxWriterChannelsCount(pvssConfig->getMaxReaderChannelsCount());
+            pvssConfig->setReadersCount(cwrap.getInt("ioThreads",2,1,10));
+            pvssConfig->setWritersCount(pvssConfig->getReadersCount());
+            pvssConfig->setStatisticsInterval(cwrap.getInt("statInterval",60000,5000,3600000));
+
+            std::auto_ptr<scag2::pvss::Protocol> 
+                pvssProto( new scag2::pvss::pvap::PvapProtocol );
+
+            pvssHandler_ = new PvssRespHandler(*this);
+            pvss_ = new scag2::pvss::core::client::ClientCore( pvssConfig.release(),
+                                                               pvssProto.release() );
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"PvssClient (to be disabled) exc: %s",e.what());
+            delete pvssHandler_; pvssHandler_ = 0;
+            delete pvss_; pvss_ = 0;
+        }
 
         dlvMgr_->init();
 
@@ -211,6 +357,7 @@ void InfosmeCoreV1::start()
     if (started_) return;
     MutexGuard mg(startMon_);
     if (started_) return;
+    if (pvss_) { pvss_->startup(); }
     dlvMgr_->start();
     Start();
     // start all smsc
@@ -242,6 +389,10 @@ void InfosmeCoreV1::stop()
         if (dcpServer_) dcpServer_->Stop();
         if (adminServer_) adminServer_->Stop();
         if (dlvMgr_) dlvMgr_->stop();
+        if (pvss_) {
+            smsc_log_debug(log_,"--- stopping pvss ---");
+            pvss_->shutdown();
+        }
 
         // stop all smscs
         char* smscId;
@@ -249,6 +400,7 @@ void InfosmeCoreV1::stop()
         for (Hash< SmscSender* >::Iterator i(&smscs_); i.Next(smscId,sender);) {
             sender->stop();
         }
+        smsc_log_debug(log_,"--- waiting for self thread ---");
         WaitFor();
     }
     smsc_log_info(log_,"--- core stopped ---");
@@ -531,6 +683,49 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
     if ( bs.regIds.empty() ) return;
     bs.ignoreState = false;
     bindDeliveryRegions( bs );
+}
+
+
+void InfosmeCoreV1::startPvssCheck( Message& msg )
+{
+    if (!pvss_) {
+        msg.timeLeft = 1;
+        return;
+    }
+    scag2::pvss::PvssException exc;
+
+    int pass = 0;
+    while ( true ) {
+        if ( stopping_ ) {
+            msg.timeLeft = 1;
+            break;
+        }
+        try {
+
+            if ( ! pvss_->canProcessRequest(&exc) ) { throw exc; }
+
+            char buf[30];
+            uint8_t ton,npi,len;
+            const uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
+            sprintf(buf,".%u.%u.%*.*llu",ton,npi,len,len,ulonglong(addr));
+            ProfileKey pkey;
+            pkey.setAbonentKey(buf);
+
+            scag2::pvss::GetCommand* cmd = new scag2::pvss::GetCommand;
+            cmd->setVarName("infosme_black_list");
+            std::auto_ptr< scag2::pvss::Request > 
+                preq( new PvssBlockRequest(pkey,cmd,msg) );
+            pvss_->processRequestAsync(preq,*pvssHandler_);
+            break;
+
+        } catch ( std::exception& e ) {
+            if (!pass) {
+                smsc_log_debug(log_,"PVSS start proc exc: %s", e.what() );
+                ++pass;
+            }
+            smsc::core::threads::Thread::Yield();
+        }
+    }
 }
 
 

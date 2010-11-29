@@ -211,9 +211,11 @@ protected:
                 mon_.wait(30);
             } while (true);
             smsc_log_debug(sender_.log_,"S='%s' rolling pass done", sender_.smscId_.c_str());
-            if (!isStopping_) { rollOver(); }
-            MutexGuard mg(mon_);
-            mon_.wait(10000);
+            if (!isStopping_) {
+                rollOver();
+                MutexGuard mg(mon_);
+                mon_.wait(10000);
+            }
         }
         return 0;
     }
@@ -521,7 +523,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         if (log_->isDebugEnabled()) {
             uint8_t len, ton, npi;
             uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
-            smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu A=.%u.%u.%0*.*llu seq=%u sent",
+            smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu A=.%u.%u.%*.*llu seq=%u sent",
                            smscId_.c_str(),
                            ptr.getRegionId(),
                            info.getDlvId(),

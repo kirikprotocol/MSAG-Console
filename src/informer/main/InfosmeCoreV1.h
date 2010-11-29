@@ -18,6 +18,16 @@
 #include "informer/sender/RegionSender.h"
 #include "logger/Logger.h"
 
+namespace scag2 {
+namespace pvss {
+namespace core {
+namespace client {
+class Client;
+}
+}
+}
+}
+
 namespace eyeline {
 namespace informer {
 
@@ -36,6 +46,7 @@ class InfosmeCoreV1 : public InfosmeCore,
 public DeliveryActivator,
 public smsc::core::threads::Thread
 {
+    class PvssRespHandler;
 public:
     /*
     static void readSmscConfig( SmscConfig& cfg,
@@ -106,6 +117,8 @@ public:
 
     virtual FinalLog& getFinalLog() { return *finalLog_; }
 
+    virtual void startPvssCheck( Message& msg );
+
     // --- end of delivery activator iface
 
     void selfTest();
@@ -160,6 +173,9 @@ private:
     admin::AdminServer*                           adminServer_;  // owned
     dcp::DcpServer*                               dcpServer_;    // owned
     alm::IActivityLogMiner*                       alm_;          // owned
+
+    scag2::pvss::core::client::Client*            pvss_;         // owned
+    PvssRespHandler*                              pvssHandler_;  // owned
 };
 
 } // informer

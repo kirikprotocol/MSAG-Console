@@ -14,6 +14,15 @@ informer/informer  informer \
  -llicense-check \
  -lsmpp \
  -lsms \
+ -lscag-pvss-api-core-client-impl \
+ -lscag-pvss-api-core \
+ -lscag-pvss-api-pvap \
+ -lscag-pvss-data \
+ -lscag-pvss-api-packets \
+ -lscag-pvss-common \
+ -lscag-util-storage \
+ -lscag-util-io \
+ \
  -lcore-network \
  -lcore-threads \
  -lutil-recoder-recode_dll \
