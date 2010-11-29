@@ -12,7 +12,6 @@ class InputTransferTask;
 class ResendTransferTask;
 class Delivery;
 class BindSignal;
-class FinalLog;
 class Message;
 
 /// an interface for applying some activities on deliveries.
@@ -42,8 +41,6 @@ public:
                                     ulonglong          ymdTime,
                                     BindSignal&        bs,
                                     const Delivery&    dlv ) = 0;
-
-    virtual FinalLog& getFinalLog() = 0;
 
     /// start checking of message via pvss.
     /// NOTE: msg.timeLeft should be set to -1 on input (waiting for pvss reply),

@@ -41,6 +41,7 @@ class DcpServer;
 class SmscSender;
 class SmscConfig;
 class DeliveryMgr;
+class FinalLog;
 
 class InfosmeCoreV1 : public InfosmeCore,
 public DeliveryActivator,
@@ -114,8 +115,6 @@ public:
                                     ulonglong       ymdTime,
                                     BindSignal&     bs,
                                     const Delivery& dlv );
-
-    virtual FinalLog& getFinalLog() { return *finalLog_; }
 
     virtual void startPvssCheck( Message& msg );
 

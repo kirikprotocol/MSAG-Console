@@ -111,7 +111,7 @@ storeJournal_(journal)
 {
     state_ = state;
     planTime_ = planTime;
-    const dlvid_type dlvId = dlvInfo_->getDlvId();
+    const dlvid_type dlvId = getDlvInfo()->getDlvId();
     writeDeliveryInfoData();
     smsc_log_debug(log_,"ctor D=%u done",dlvId);
 }
@@ -200,14 +200,14 @@ void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
 {
     // should we unbind first?
     MutexGuard mg(stateLock_);
-    dlvInfo_->update( data );
+    getDlvInfo()->update( data );
     writeDeliveryInfoData();
 }
 
 
 void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 {
-    const dlvid_type dlvId = dlvInfo_->getDlvId();
+    const dlvid_type dlvId = getDlvInfo()->getDlvId();
     BindSignal bs;
     msgtime_type now;
     ulonglong ymd;
@@ -328,7 +328,7 @@ void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
 size_t DeliveryImpl::rollOverStore()
 {
     size_t written = 0;
-    smsc_log_debug(log_,"D=%u rolling store",dlvInfo_->getDlvId());
+    smsc_log_debug(log_,"D=%u rolling store",getDlvInfo()->getDlvId());
     bool firstPass = true;
     do {
         RegionalStoragePtr ptr;
@@ -345,7 +345,7 @@ size_t DeliveryImpl::rollOverStore()
         written += ptr->rollOver();
         if (source_->getDlvActivator().isStopping()) { break; }
     } while ( true );
-    smsc_log_debug(log_,"D=%u rolling store done, written=%u",dlvInfo_->getDlvId(),written);
+    smsc_log_debug(log_,"D=%u rolling store done, written=%u",getDlvInfo()->getDlvId(),written);
     return written;
 }
 
@@ -409,7 +409,7 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
     DeliveryStats ds;
     activityLog_.getStats(ds);
     smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u retry=%u dlvd=%u fail=%u expd=%u kill=%u",
-                  dlvInfo_->getDlvId(),
+                  getDlvInfo()->getDlvId(),
                   ds.totalMessages, ds.procMessages,
                   ds.sentMessages, ds.retryMessages,
                   ds.dlvdMessages, ds.failedMessages,
@@ -419,21 +419,21 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 
 void DeliveryImpl::detachEverything()
 {
-    smsc_log_debug(log_,"D=%u detaching everything",dlvInfo_->getDlvId());
+    smsc_log_debug(log_,"D=%u detaching everything",getDlvInfo()->getDlvId());
     {
-        activityLog_.getUserInfo().detachDelivery(dlvInfo_->getDlvId());
+        activityLog_.getUserInfo().detachDelivery(getDlvInfo()->getDlvId());
         MutexGuard mg(cacheLock_);
         storeHash_.Empty();
         storeList_.clear();
         rollingIter_ = storeList_.end();
     }
-    smsc_log_debug(log_,"D=%u detached",dlvInfo_->getDlvId());
+    smsc_log_debug(log_,"D=%u detached",getDlvInfo()->getDlvId());
 }
 
 
 void DeliveryImpl::checkFinalize()
 {
-    const dlvid_type dlvId = dlvInfo_->getDlvId();
+    const dlvid_type dlvId = getDlvInfo()->getDlvId();
     smsc_log_debug(log_,"D=%u check finalize invoked",dlvId);
     DeliveryStats ds;
     bool finalize = true;
@@ -467,7 +467,7 @@ void DeliveryImpl::checkFinalize()
 
 void DeliveryImpl::writeDeliveryInfoData()
 {
-    const DeliveryInfoData& data = dlvInfo_->getDeliveryData();
+    const DeliveryInfoData& data = getDlvInfo()->getDeliveryData();
     Config config;
     config.setString("name",data.name.c_str());
     config.setInt("priority",data.priority);

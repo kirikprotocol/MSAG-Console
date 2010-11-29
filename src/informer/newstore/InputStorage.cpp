@@ -5,7 +5,6 @@
 #include "InputBlackList.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
-#include "informer/data/FinalLog.h"
 #include "informer/data/Region.h"
 #include "informer/data/InputRegionRecord.h"
 #include "informer/data/UserInfo.h"
@@ -95,12 +94,14 @@ public:
             msg.retryCount = 0;
             // we have to add kill record in activity log
             is_.activityLog_->addRecord(currentTime_,regId_,msg,0,MSGSTATE_INPUT);
+            /*
             // FIXME check that final records are needed
             is_.getDlvActivator().getFinalLog().addMsgRecord(currentTime_,
                                                              is_.getDlvId(),
                                                              is_.activityLog_->getUserInfo().getUserId(),
                                                              msg,
                                                              0 );
+             */
         } else {
             is_.core_.startPvssCheck(msg);
         }
@@ -487,12 +488,14 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                         activityLog_->addRecord(currentTime,regId,i->msg,
                                                 smppState,
                                                 MSGSTATE_INPUT);
+                        /*
                         // FIXME check that final records are needed
                         core_.getFinalLog().addMsgRecord(currentTime,
                                                          getDlvId(),
                                                          activityLog_->getUserInfo().getUserId(),
                                                          i->msg,
                                                          smppState );
+                         */
                         i = msglist.erase(i);
                     } else {
                         ++i;

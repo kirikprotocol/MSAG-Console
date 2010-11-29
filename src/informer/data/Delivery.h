@@ -4,7 +4,6 @@
 #include <memory>
 #include "core/synchronization/Mutex.hpp"
 #include "informer/io/EmbedRefPtr.h"
-#include "DeliveryInfo.h"
 #include "ActivityLog.h"
 #include "InputMessageSource.h"
 
@@ -24,11 +23,9 @@ protected:
 public:
     virtual ~Delivery();
 
-    inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
-
-    const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
-
-    const UserInfo& getUserInfo() const { return activityLog_.getUserInfo(); }
+    inline dlvid_type getDlvId() const { return activityLog_.getDlvId(); }
+    inline const DeliveryInfo& getDlvInfo() const { return activityLog_.getDlvInfo(); }
+    inline const UserInfo& getUserInfo() const { return activityLog_.getUserInfo(); }
 
     virtual void updateDlvInfo( const DeliveryInfoData& data ) = 0;
 
@@ -57,13 +54,13 @@ public:
 protected:
     void ref() {
         smsc::core::synchronization::MutexGuard mg(lock_);
-        smsc_log_debug(log_,"D=%u ref=%u +1",dlvInfo_->getDlvId(),ref_);
+        // smsc_log_debug(log_,"D=%u ref=%u +1",getDlvId(),ref_);
         ++ref_;
     }
     void unref() {
         {
             smsc::core::synchronization::MutexGuard mg(lock_);
-            smsc_log_debug(log_,"D=%u ref=%u -1",dlvInfo_->getDlvId(),ref_);
+            // smsc_log_debug(log_,"D=%u ref=%u -1",getDlvId(),ref_);
             if (ref_>1) {
                 --ref_;
                 return;
@@ -76,7 +73,6 @@ protected:
     smsc::logger::Logger*                              log_;
 
     smsc::core::synchronization::Mutex                 stateLock_;
-    std::auto_ptr<DeliveryInfo>                        dlvInfo_;
     DlvState                                           state_;
     msgtime_type                                       planTime_;
 

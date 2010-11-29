@@ -4,7 +4,6 @@
 #include "informer/io/UTF8.h"
 #include "informer/data/CommonSettings.h"
 #include "informer/data/DeliveryActivator.h"
-#include "informer/data/FinalLog.h"
 #include "informer/data/UserInfo.h"
 #include "informer/data/MessageGlossary.h"
 #include "informer/data/RetryPolicy.h"
@@ -106,7 +105,7 @@ dlvid_type RegionalStorage::getDlvId() const
 
 const DeliveryInfo& RegionalStorage::getDlvInfo() const
 {
-    return dlv_->getDlvInfo();
+    return *dlv_->getDlvInfo();
 }
 
 
@@ -128,7 +127,7 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
     MsgIter iter;
     RelockMutexGuard mg(cacheMon_);
     const char* from;
-    const DeliveryInfo& info = dlv_->getDlvInfo();
+    const DeliveryInfo& info = *dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
 
     if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return 6*tuPerSec; }
@@ -258,7 +257,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
 {
     RelockMutexGuard mg(cacheMon_);
     MsgIter* ptr = messageHash_.GetPtr(msgId);
-    const DeliveryInfo& info = dlv_->getDlvInfo();
+    const DeliveryInfo& info = *dlv_->getDlvInfo();
     if (!ptr) {
         throw InfosmeException(EXC_NOTFOUND,"message R=%u/D=%u/M=%llu is not found (messageSent)",
                                unsigned(regionId_),
@@ -282,7 +281,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                                     int                smppState,
                                     unsigned           nchunks )
 {
-    const DeliveryInfo& info = dlv_->getDlvInfo();
+    const DeliveryInfo& info = *dlv_->getDlvInfo();
 
     RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
@@ -373,7 +372,7 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
                                        int          smppState,
                                        unsigned     nchunks )
 {
-    const DeliveryInfo& info = dlv_->getDlvInfo();
+    const DeliveryInfo& info = *dlv_->getDlvInfo();
     RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
@@ -416,7 +415,8 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
                    nchunks,
                    checkFinal);
     dlv_->activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
-    if (dlv_->getDlvInfo().wantFinalMsgRecords()) {
+    /*
+    if (dlv_->getDlvInfo()->wantFinalMsgRecords()) {
         dlv_->source_->getDlvActivator().getFinalLog()
             .addMsgRecord(currentTime,
                           dlvId,
@@ -424,6 +424,7 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
                           m,
                           smppState);
     }
+     */
     dlv_->storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
     if (checkFinal) dlv_->checkFinalize();
 }
@@ -433,7 +434,7 @@ unsigned RegionalStorage::evaluateNchunks( const char*     outText,
                                            size_t          outLen,
                                            smsc::sms::SMS* sms ) const
 {
-    const DeliveryInfo& info = dlv_->getDlvInfo();
+    const DeliveryInfo& info = *dlv_->getDlvInfo();
     try {
         const char* out = outText;
         UTF8::BufType ucstext;
@@ -507,7 +508,7 @@ void RegionalStorage::stopTransfer( bool finalizeAll )
 
 size_t RegionalStorage::rollOver()
 {
-    const DeliveryInfo& info = dlv_->getDlvInfo();
+    const DeliveryInfo& info = *dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
     RelockMutexGuard mg(cacheMon_);
     if ( storingIter_ != messageList_.end() ) {
@@ -657,7 +658,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                                       MsgIter      iter1,
                                       MsgIter      iter2 )
 {
-    const DeliveryInfo& info = dlv_->getDlvInfo();
+    const DeliveryInfo& info = *dlv_->getDlvInfo();
     smsc_log_debug(log_,"adding new messages to storage R=%u/D=%u",
                    unsigned(regionId_),
                    unsigned(info.getDlvId()));
@@ -688,7 +689,7 @@ void RegionalStorage::resendIO( bool isInputDirection )
 {
     /// this method is invoked from ResendTransferTask
     smsc_log_debug(log_,"FIXME: R=%u/D=%u implement resend IO dir=%s",
-                   regionId_, dlv_->getDlvInfo().getDlvId(),
+                   regionId_, dlv_->getDlvInfo()->getDlvId(),
                    isInputDirection ? "in" : "out");
 }
 

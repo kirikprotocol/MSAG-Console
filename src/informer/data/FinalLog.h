@@ -12,8 +12,13 @@ class Message;
 /// this class also holds statistics data.
 class FinalLog
 {
+    static FinalLog* instance_;
 public:
+    /// pseudo singleton.
+    inline static FinalLog* getFinalLog() { return instance_; }
+
     FinalLog();
+    ~FinalLog();
 
     void addMsgRecord( msgtime_type         currentTime,
                        dlvid_type           dlvId,

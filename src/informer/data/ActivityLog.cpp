@@ -5,6 +5,7 @@
 #include "informer/io/DirListing.h"
 #include "core/buffers/TmpBuf.hpp"
 #include "UserInfo.h"
+#include "FinalLog.h"
 
 namespace {
 const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u,KILL=%u%n";
@@ -14,9 +15,10 @@ smsc::logger::Logger* log_ = 0;
 namespace eyeline {
 namespace informer {
 
-ActivityLog::ActivityLog( UserInfo& userInfo, dlvid_type dlvId ) :
+ActivityLog::ActivityLog( UserInfo& userInfo,
+                          DeliveryInfo* info ) :
 userInfo_(&userInfo),
-dlvId_(dlvId),
+dlvInfo_(info),
 createTime_(0)
 {
     if (!log_) {
@@ -38,7 +40,7 @@ createTime_(0)
         DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
         std::vector< std::string > dirs;
         char fnbuf[150];
-        makeDeliveryPath(fnbuf,dlvId_);
+        makeDeliveryPath(fnbuf,getDlvId());
         const std::string actpath = getCS()->getStorePath() + fnbuf + "activity_log/";
         dl.list( actpath.c_str(), dirs );
         std::sort( dirs.begin(), dirs.end() );
@@ -69,7 +71,7 @@ createTime_(0)
                         }
                     } catch ( std::exception& e ) {
                         smsc_log_warn(log_,"D=%u, file '%s' exc: %s",
-                                      dlvId_, filename.c_str(), e.what());
+                                      getDlvId(), filename.c_str(), e.what());
                     }
                 }
                 if (statsLoaded) break;
@@ -77,10 +79,10 @@ createTime_(0)
             if (statsLoaded) break;
         }
     } catch (std::exception& e) {
-        smsc_log_debug(log_,"D=%u actlog, exc: %s", dlvId_, e.what());
+        smsc_log_debug(log_,"D=%u actlog, exc: %s", getDlvId(), e.what());
     }
     if (!statsLoaded) {
-        smsc_log_debug(log_,"D=%u statistics is not found", dlvId_);
+        smsc_log_debug(log_,"D=%u statistics is not found", getDlvId());
     }
 }
 
@@ -207,11 +209,6 @@ bool ActivityLog::readStatistics( const std::string& filename,
 }
 
 
-dlvid_type ActivityLog::getDlvId() const {
-    return dlvId_;
-}
-
-
 void ActivityLog::addRecord( msgtime_type currentTime,
                              regionid_type regId,
                              const Message& msg,
@@ -222,7 +219,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     {
         const time_t tmnow(currentTime);
         if ( !gmtime_r(&tmnow,&now) ) {
-            throw InfosmeException(EXC_SYSTEM,"D=%u gmtime_r",dlvId_);
+            throw InfosmeException(EXC_SYSTEM,"D=%u gmtime_r",getDlvId());
         }
     }
 
@@ -268,11 +265,21 @@ void ActivityLog::addRecord( msgtime_type currentTime,
         if ( currentTime < createTime_ ) {
             // a fix for delayed write
             smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
-                           dlvId_, unsigned(createTime_ - currentTime));
+                           getDlvId(), unsigned(createTime_ - currentTime));
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
         doIncStats(msg.state,1,fromState,msg.retryCount);
+    }
+
+    // writing final log
+    if ( msg.state >= MSGSTATE_FINAL &&
+         getDlvInfo().wantFinalMsgRecords() ) {
+        FinalLog::getFinalLog()->addMsgRecord(currentTime,
+                                              getDlvId(),
+                                              getUserInfo().getUserId(),
+                                              msg,
+                                              smppStatus);
     }
 }
 
@@ -284,7 +291,7 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
     {
         const time_t tmnow(currentTime);
         if ( !gmtime_r(&tmnow,&now) ) {
-            throw InfosmeException(EXC_SYSTEM,"D=%u gmtime_r",dlvId_);
+            throw InfosmeException(EXC_SYSTEM,"D=%u gmtime_r",getDlvId());
         }
     }
     char buf[100];
@@ -302,7 +309,7 @@ void ActivityLog::addDeleteRecords( msgtime_type currentTime,
         if ( currentTime < createTime_ ) {
             // a fix for delayed write
             smsc_log_debug(log_,"D=%u fix for delayed write, creaTime-curTime=%u",
-                           dlvId_, unsigned(createTime_ - currentTime));
+                           getDlvId(), unsigned(createTime_ - currentTime));
             ::memcpy(buf,"00",2);
         }
         for ( std::vector<msgid_type>::const_iterator i = msgIds.begin();
@@ -319,7 +326,7 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
     char fnbuf[100];
     const int oldmin = now.tm_min;
     now.tm_min = ((now.tm_min*60) / period_) * period_ / 60;
-    sprintf(makeDeliveryPath(fnbuf,dlvId_),
+    sprintf(makeDeliveryPath(fnbuf,getDlvId()),
             "activity_log/%04u.%02u.%02u/%02u/%02u.log",
             now.tm_year+1900, now.tm_mon+1, now.tm_mday,
             now.tm_hour, now.tm_min );

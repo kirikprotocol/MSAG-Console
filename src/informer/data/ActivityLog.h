@@ -2,28 +2,32 @@
 #define _INFORMER_ACTIVITYLOG_H
 
 #include <vector>
+#include <memory>
 #include "informer/data/Message.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/EmbedRefPtr.h"
 #include "DeliveryStats.h"
 #include "core/buffers/TmpBuf.hpp"
+#include "DeliveryInfo.h"
 
 namespace eyeline {
 namespace informer {
 
-class DeliveryInfo;
 class UserInfo;
 
 /// this class also holds statistics data.
 class ActivityLog
 {
 public:
-    ActivityLog( UserInfo& userInfo, dlvid_type dlvId );
+    /// dlvinfo gets owned
+    ActivityLog( UserInfo& userInfo, DeliveryInfo* dlvInfo );
 
-    dlvid_type getDlvId() const;
+    inline DeliveryInfo& getDlvInfo() { return * dlvInfo_.get(); }
+    inline const DeliveryInfo& getDlvInfo() const { return *dlvInfo_.get(); }
+    inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 
-    UserInfo& getUserInfo() { return *userInfo_; }
-    const UserInfo& getUserInfo() const { return *userInfo_; }
+    inline UserInfo& getUserInfo() { return *userInfo_; }
+    inline const UserInfo& getUserInfo() const { return *userInfo_; }
 
     /// this will automatically increment stats
     void addRecord( msgtime_type         currentTime,
@@ -63,7 +67,7 @@ private:
 private:
     smsc::core::synchronization::Mutex lock_;
     EmbedRefPtr< UserInfo >            userInfo_;
-    dlvid_type                         dlvId_;
+    std::auto_ptr< DeliveryInfo >      dlvInfo_;
     FileGuard                          fg_;
     msgtime_type                       createTime_;
     msgtime_type                       period_;

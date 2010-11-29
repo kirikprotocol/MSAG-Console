@@ -718,9 +718,9 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
     }
     if (dlv.getDlvInfo().wantFinalDlvRecords() &&
         (newState == DLVSTATE_FINISHED || newState == DLVSTATE_ACTIVE) ) {
-        finalLog_->addDlvRecord(currentTime,bs.dlvId,
-                                dlv.getUserInfo().getUserId(),
-                                newState );
+        FinalLog::getFinalLog()->addDlvRecord(currentTime,bs.dlvId,
+                                              dlv.getUserInfo().getUserId(),
+                                              newState );
     }
     dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
     if ( bs.regIds.empty() ) return;

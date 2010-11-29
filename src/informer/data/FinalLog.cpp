@@ -34,10 +34,15 @@ private:
 namespace eyeline {
 namespace informer {
 
+FinalLog* FinalLog::instance_ = 0;
+
 FinalLog::FinalLog() :
 createTime_(0),
 period_(60)
 {
+    assert(!instance_);
+    instance_ = this;
+
     // check if we have unrolled old files
     std::vector< ulonglong > logfiles;
     std::vector< std::string > dummy;
@@ -65,6 +70,13 @@ period_(60)
             fg_.create(fn,0666);
         }
     }
+}
+
+
+FinalLog::~FinalLog()
+{
+    assert(instance_);
+    instance_ = 0;
 }
 
 
