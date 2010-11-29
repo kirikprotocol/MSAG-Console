@@ -1,5 +1,6 @@
 #include "init.h"
 #include <memory>
+#include <vector>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/TransService.hpp>
 #include <xercesc/util/TransENameMap.hpp>
@@ -20,12 +21,15 @@ using namespace smsc::core::synchronization;
 
 Mutex mutex;
 bool isXercesInitialized = false;
+namespace {
+std::vector<const XMLCh*> encnames;
+}
 
 void addEncoding(const char * const encodingName)
 {
   std::auto_ptr<const XMLCh> xenc(XMLString::transcode(encodingName));
   XMLTransService::addEncoding(xenc.get(), new ENameMapFor<SmscTranscoder>(xenc.get()));
-  xenc.release();
+  encnames.push_back(xenc.release());
 }
 
 void initXerces()
@@ -56,6 +60,11 @@ void TerminateXerces()
   {
     XMLPlatformUtils::Terminate();
     clearIconvs();
+    for ( std::vector< const XMLCh* >::iterator i = encnames.begin();
+          i != encnames.end(); ++i ) {
+        delete *i;
+    }
+    encnames.clear();
     isXercesInitialized = false;
   }
 }
