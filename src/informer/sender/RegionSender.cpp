@@ -129,6 +129,7 @@ void RegionSender::removeDelivery( dlvid_type dlvId )
             return;
         }
         taskList_.remove(EqualById(dlvId));
+        dlvList_.erase(iter);
     }
     /*
     if (log_->isDebugEnabled()) {
