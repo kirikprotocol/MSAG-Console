@@ -16,7 +16,7 @@
 
       <eye:pageSubtitle value="#{msg['status.page.services']}"/>
 
-      <h:panelGroup>
+
         <h:panelGroup>
           <table class="list">
 
@@ -67,41 +67,8 @@
 
           </table>
         </h:panelGroup>
-      </h:panelGroup>
 
-      <p/>
-
-      <eye:pageSubtitle value="#{msg['status.page.daemons']}"/>
-
-      <h:panelGroup>
-        <eye:dataTable value="#{informerStatus.daemons}" var="data">
-
-          <eye:row>
-
-            <eye:column name="connected" title="" sortable="false" width="2%">
-              <h:graphicImage value="/images/ic_internal.gif" rendered="#{data.started}"/>
-              <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{!data.started}"/>
-            </eye:column>
-
-            <eye:column name="name" title="#{msg['status.page.daemon.name']}" width="60%">
-              <h:outputText value="#{data.name}" converter="daemonsConverter"/>
-            </eye:column>
-
-            <eye:column name="action" title="#{msg['status.page.action']}">
-              <h:commandLink value="#{msg['status.page.disable']}" rendered="#{data.started}" action="#{informerStatus.stopDaemon}">
-                <f:param name="daemon" value="#{data.name}"/>
-              </h:commandLink>
-              <h:commandLink value="#{msg['status.page.enable']}" rendered="#{!data.started}" action="#{informerStatus.startDaemon}">
-                <f:param name="daemon" value="#{data.name}"/>
-              </h:commandLink>
-            </eye:column>
-
-          </eye:row>
-
-        </eye:dataTable>
-        
-      </h:panelGroup>
-
+      <eye:delimiter/>
 
     </tr:form>
   </ui:define>

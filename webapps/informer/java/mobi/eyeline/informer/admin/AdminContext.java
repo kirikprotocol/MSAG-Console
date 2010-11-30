@@ -174,6 +174,8 @@ public class AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
+
+
       contentProviderDaemon = new ContentProviderDaemon(new ContentProviderContextImpl(this),appBaseDir,workDir);
 
 
@@ -181,11 +183,15 @@ public class AdminContext {
       deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
       deliveryChangesDetector.addListener(deliveryNotificationsDaemon);
 
+      restrictionDaemon.start();
+
       try{
         initSiebel(workDir);
       }catch (Exception e){
         logger.error(e,e);
       }
+
+      contentProviderDaemon.start();      
 
       deliveryChangesDetector.start();
 
