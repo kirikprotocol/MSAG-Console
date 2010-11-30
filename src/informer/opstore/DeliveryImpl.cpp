@@ -234,7 +234,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         } else {
             planTime = 0;
         }
-        activityLog_.getUserInfo().incStats(newState,state_); // may throw
+        activityLog_.getUserInfo().incDlvStats(newState,state_); // may NOT throw
         state_ = newState;
         planTime_ = planTime;
         switch (newState) {

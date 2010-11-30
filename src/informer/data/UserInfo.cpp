@@ -152,8 +152,9 @@ void UserInfo::getDeliveries( DeliveryList& dlvs ) const
 }
 
 
-void UserInfo::incStats( uint8_t state,
-                         uint8_t fromState )
+void UserInfo::incDlvStats( uint8_t state,
+                            uint8_t fromState,
+                            bool    checkDlvLimit )
 {
     if (state == fromState ) return;
     unsigned total;

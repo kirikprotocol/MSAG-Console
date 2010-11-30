@@ -95,14 +95,6 @@ public:
             msg.retryCount = 0;
             // we have to add kill record in activity log
             is_.activityLog_->addRecord(currentTime_,regId_,msg,0,MSGSTATE_INPUT);
-            /*
-            // FIXME check that final records are needed
-            is_.getDlvActivator().getFinalLog().addMsgRecord(currentTime_,
-                                                             is_.getDlvId(),
-                                                             is_.activityLog_->getUserInfo().getUserId(),
-                                                             msg,
-                                                             0 );
-             */
         } else {
             is_.core_.startPvssCheck(msg);
         }

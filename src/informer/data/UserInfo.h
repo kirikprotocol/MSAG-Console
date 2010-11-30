@@ -125,7 +125,9 @@ public:
     void getDeliveries( DeliveryList& dlvs ) const;
 
     /// increment number of deliveries
-    void incStats( uint8_t state, uint8_t fromState = 0 );
+    void incDlvStats( uint8_t state,
+                      uint8_t fromState = 0,
+                      bool checkDlvLimit = false );
 
     void popIncrementalStats( UserDlvStats& ds );
 

@@ -75,7 +75,8 @@ protected:
     void addDelivery( UserInfo&     userInfo,
                       DeliveryInfo* info,
                       DlvState      state,
-                      msgtime_type  planTime );
+                      msgtime_type  planTime,
+                      bool          checkDlvLimit );
 
     dlvid_type getNextDlvId();
     

@@ -439,7 +439,7 @@ void DeliveryMgr::init()
                 const DlvState state = DeliveryImpl::readState(dlvId, planTime );
 
                 DeliveryInfo* info = new DeliveryInfo(dlvId, data );
-                addDelivery(*user.get(), info, state, planTime );
+                addDelivery(*user.get(), info, state, planTime, false);
 
             } catch (std::exception& e) {
                 smsc_log_error(log_,"D=%u cannot read/add dlvInfo, exc: %s",dlvId,e.what());
@@ -629,7 +629,7 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
             planTime = info->getStartDate();
         }
     }
-    addDelivery(userInfo,info,state,planTime);
+    addDelivery(userInfo,info,state,planTime,true);
     return dlvId;
 }
 
@@ -807,7 +807,8 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
 void DeliveryMgr::addDelivery( UserInfo&     userInfo,
                                DeliveryInfo* info,
                                DlvState      state,
-                               msgtime_type  planTime )
+                               msgtime_type  planTime,
+                               bool          checkDlvLimit )
 {
     std::auto_ptr< DeliveryInfo > infoptr(info);
     if (!info) {
@@ -819,7 +820,7 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
         throw InfosmeException(EXC_ALREADYEXIST,"D=%u already exists",dlvId);
     }
     try {
-        userInfo.incStats(state);
+        userInfo.incDlvStats(state,0,checkDlvLimit);
     } catch (std::exception& e) {
         // FIXME: implement when user exceeded dlvs - move to paused?
         throw InfosmeException(EXC_DLVLIMITEXCEED,"D=%u cannot set state, exc: %s",
