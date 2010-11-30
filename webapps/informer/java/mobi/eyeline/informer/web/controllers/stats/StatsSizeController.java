@@ -86,16 +86,23 @@ public class StatsSizeController extends DeliveryStatController  {
   }
 
   public String removeSelected() {
+    if (logger.isDebugEnabled())
+      logger.debug("Start remove statistics.");
+
     FileSystem fileSys = getConfig().getFileSystem();
     DeliveryStatFilter filter = new DeliveryStatFilter();
     for(String s : selectedRows) {
       try {
         String[] pair = s.split("-");
+        if (logger.isDebugEnabled())
+          logger.debug("Removing statistict for period: " + s);
         filter.setFromDate(StatsSizeRecord.getPeriodIdFormat().parse(pair[0]));
         filter.setTillDate(StatsSizeRecord.getPeriodIdFormat().parse(pair[1]));
         List<File> files = getConfig().getStatisticFiles(filter,false);
         for(File f : files) {
           try {
+            if (logger.isDebugEnabled())
+              logger.debug("Remove file: " + f);
             fileSys.delete(f);
           }
           catch (AdminException e) {
@@ -105,6 +112,8 @@ public class StatsSizeController extends DeliveryStatController  {
         List<DateAndFile> dfiles = getConfig().getProcessedNotificationsFiles(filter.getFromDate(),filter.getTillDate());
         for(DateAndFile f : dfiles) {
           try {
+            if (logger.isDebugEnabled())
+              logger.debug("Remove file: " + f.getFile());
             fileSys.delete(f.getFile());
           }
           catch (AdminException e) {
@@ -121,6 +130,9 @@ public class StatsSizeController extends DeliveryStatController  {
       }      
     }
     start();
+
+    if (logger.isDebugEnabled())
+      logger.debug("Finish remove statistics.");
     return null;
   }
 }

@@ -11,7 +11,8 @@
 
   <section name="pvss">
     <param name="host" type="string">pvssHost</param>
-    <param name="port" type="int">25403</param>
-  </section>  
+    <param name="syncPort" type="int">25403</param>
+    <param name="asyncPort" type="int">25404</param>
+  </section>
 
 </config>

@@ -26,6 +26,9 @@ public class DeliveryEditController extends DeliveryController {
 
   private String comeBackParam;
 
+  private boolean smsNotificationCheck;
+  private boolean emailNotificationCheck;
+
   public DeliveryEditController() {
     super();
 
@@ -63,6 +66,8 @@ public class DeliveryEditController extends DeliveryController {
       smsNotificationAddress = new Address(p);
     }
     emailNotificationAddress = delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
+    smsNotificationCheck = smsNotificationAddress != null;
+    emailNotificationCheck = emailNotificationAddress != null;
     secret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET));
     flashSecret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET_FLASH));
     secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
@@ -130,13 +135,15 @@ public class DeliveryEditController extends DeliveryController {
       return null;
     }
 
-    if (emailNotificationAddress != null && (emailNotificationAddress = emailNotificationAddress.trim()).length() != 0) {
+    if (emailNotificationCheck && emailNotificationAddress != null && (emailNotificationAddress = emailNotificationAddress.trim()).length() != 0) {
       delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotificationAddress);
+      delivery.setEnableStateChangeLogging(true);
     } else {
       delivery.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
     }
-    if (smsNotificationAddress != null) {
+    if (smsNotificationCheck && smsNotificationAddress != null) {
       delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, smsNotificationAddress.getSimpleAddress());
+      delivery.setEnableStateChangeLogging(true);
     } else {
       delivery.removeProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
     }
@@ -233,5 +240,20 @@ public class DeliveryEditController extends DeliveryController {
       return null;
     return delivery.getValidityPeriod().getTimeDate();
   }
-  
+
+  public boolean isSmsNotificationCheck() {
+    return smsNotificationCheck;
+  }
+
+  public void setSmsNotificationCheck(boolean smsNotificationCheck) {
+    this.smsNotificationCheck = smsNotificationCheck;
+  }
+
+  public boolean isEmailNotificationCheck() {
+    return emailNotificationCheck;
+  }
+
+  public void setEmailNotificationCheck(boolean emailNotificationCheck) {
+    this.emailNotificationCheck = emailNotificationCheck;
+  }
 }

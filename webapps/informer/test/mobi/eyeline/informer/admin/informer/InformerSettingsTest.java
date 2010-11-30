@@ -1,8 +1,6 @@
 package mobi.eyeline.informer.admin.informer;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.util.config.XmlConfig;
-import mobi.eyeline.informer.util.config.XmlConfigException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -69,16 +67,16 @@ public class InformerSettingsTest {
   @Test
   public void persPort() throws AdminException{
     try {
-      cs.setPersPort(-1);
+      cs.setPersSyncPort(-1);
       assertTrue(false);
     } catch (AdminException e) {}
     try {
-      cs.setPersPort(65536);
+      cs.setPersSyncPort(65536);
       assertTrue(false);
     } catch (AdminException e) {}
 
-    cs.setPersPort(1);
-    assertEquals(1, cs.getPersPort());
+    cs.setPersSyncPort(1);
+    assertEquals(1, cs.getPersSyncPort());
   }
 
   @Test
@@ -118,7 +116,7 @@ public class InformerSettingsTest {
     cs.setDcpHost("dcpHost");
     cs.setDcpPort(2);
     cs.setPersHost("persHost");
-    cs.setPersPort(3);
+    cs.setPersSyncPort(3);
     cs.setStatDir("statDir");
     cs.setStoreDir("storeDir");
 
@@ -130,7 +128,7 @@ public class InformerSettingsTest {
     assertEquals(cs.getDcpHost(), cs1.getDcpHost());
     assertEquals(cs.getDcpPort(), cs1.getDcpPort());
     assertEquals(cs.getPersHost(), cs1.getPersHost());
-    assertEquals(cs.getPersPort(), cs1.getPersPort());
+    assertEquals(cs.getPersSyncPort(), cs1.getPersSyncPort());
     assertEquals(cs.getStatDir(), cs1.getStatDir());
     assertEquals(cs.getStoreDir(), cs1.getStoreDir());
   }

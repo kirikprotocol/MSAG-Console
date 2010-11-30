@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.admin.informer;
 
-import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.config.XmlConfig;
 import org.junit.AfterClass;
@@ -45,7 +44,8 @@ public class InformerConfigTest {
     assertEquals("dcpHost", s.getDcpHost());
     assertEquals(8088, s.getDcpPort());
     assertEquals("pvssHost", s.getPersHost());
-    assertEquals(25403, s.getPersPort());
+    assertEquals(25403, s.getPersSyncPort());
+    assertEquals(25404, s.getPersAsyncPort());
     assertEquals("stat", s.getStatDir());
     assertEquals("store", s.getStoreDir());
   }

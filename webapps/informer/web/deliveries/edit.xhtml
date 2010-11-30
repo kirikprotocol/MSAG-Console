@@ -51,7 +51,9 @@
         <tr:inputText converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" required="true" simple="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
-        <eye:inputDate value="#{deliveryEdit.delivery.startDate}" required="true" type="both" disabled="true"/>
+        <tr:outputText value="#{deliveryEdit.delivery.startDate}">
+          <f:convertDateTime dateStyle="short" type="both"/>
+        </tr:outputText>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
         <eye:inputDate value="#{deliveryEdit.delivery.endDate}" type="both"/>
@@ -85,10 +87,16 @@
         </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
-        <tr:inputText converter="addressConverter" value="#{deliveryEdit.smsNotificationAddress}" simple="true"/>
+        <h:panelGroup>
+          <h:selectBooleanCheckbox id="smsNotif" value="#{deliveryEdit.smsNotificationCheck}" onchange="document.getElementById('sms').disabled = !this.checked;" style="position: relative; top: 2px; left: -3px;"/>
+          <tr:inputText id="sms" converter="addressConverter" value="#{deliveryEdit.smsNotificationAddress}" simple="true"/>
+        </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
-        <tr:inputText value="#{deliveryEdit.emailNotificationAddress}" simple="true"/>
+        <h:panelGroup>
+          <h:selectBooleanCheckbox id="emailNotif" value="#{deliveryEdit.emailNotificationCheck}" onchange="document.getElementById('email').disabled = !this.checked;" style="position: relative; top: 2px; left: -3px;"/>
+          <tr:inputText id="email" value="#{deliveryEdit.emailNotificationAddress}" simple="true"/>
+        </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.singleText}" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}"/>
         <h:panelGrid columns="1" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}">
@@ -155,6 +163,9 @@
         var d = document.getElementById('trMode').checked ? 'none' : '';
         document.getElementById('vPeriodLabel').style.display=d;        
         document.getElementById('vPeriod').style.display=d;
+
+        document.getElementById('sms').disabled = !document.getElementById('smsNotif').checked;
+        document.getElementById('email').disabled = !document.getElementById('emailNotif').checked;
       </script>
 
     </tr:form>

@@ -67,13 +67,23 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     if (!st[0] || !states.containsKey(MessageState.New))
       return;
 
+    Delivery delivery = conn.getDelivery(filter.getDeliveryId());
+    String singleText = null;
+    if (delivery.getProperty("singleText") != null)
+      singleText = conn.getDeliveryGlossary(filter.getDeliveryId())[0];
+    final String fSingleText = singleText;
+
     // Наконец, выгребаем все сообщения в статусе New, чьи идентификаторы отсутствуют в ids
     f.setStates(MessageState.New);
 
     _reqId = conn.getMessages(f);
     new VisitorHelperImpl(_pieceSize, _reqId, conn).visit(new Visitor<Message> () {
       public boolean visit(Message value) throws AdminException {
-        return ids.contains(value.getId()) || visitor.visit(value);
+        if (ids.contains(value.getId()))
+          return true;
+        if (fSingleText != null)
+          value.setText(fSingleText);
+        return  visitor.visit(value);
       }
     });
 

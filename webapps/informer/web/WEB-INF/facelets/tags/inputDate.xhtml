@@ -21,6 +21,7 @@
                    required="#{required == null ? false : required}"
                    disabled="#{disabled ? false : disabled}"
                    autocomplete="#{autocomplete == null ? false : autocomplete}"
+                   readonly="#{readonly == null ? false : readonly}"
                    requiredMessage="#{msg['date.required']}" converter="dateConverter" converterMessage="#{msg['date.incorrect']}"
           />
     </c:when>
@@ -32,6 +33,7 @@
                    required="#{required == null ? false : required}"
                    disabled="#{disabled ? false : disabled}"
                    autocomplete="#{autocomplete == null ? false : autocomplete}"
+                   readonly="#{readonly == null ? false : readonly}"
                    requiredMessage="#{msg['date.required']}" converter="dateConverter" converterMessage="#{msg['date.incorrect']}"
           />
     </c:otherwise>

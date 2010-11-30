@@ -377,7 +377,7 @@ public class DeliveryManager {
       logger.debug("Activate delivery: " + deliveryId);
     }
     DeliveryState state = new DeliveryState();
-    state.setStatus(DeliveryStatus.Active);
+    state.setStatus(DeliveryStatus.Planned);
     state.setDate(new Date());
     changeDeliveryState(login, password, deliveryId, state);
   }

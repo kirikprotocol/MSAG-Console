@@ -22,18 +22,10 @@ public class MsgStateConverter implements Converter {
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
-    System.out.println("GET AS STRING: " + o);
-    if (o == null || !(o instanceof MsgState)) {
+    if (o == null || !(o instanceof MsgState))
       return null;
-    }
 
-    return getAsString(getLocale(facesContext), (MsgState) o);
-
-  }
-
-  private static Locale getLocale(FacesContext facesContext) {
-    Locale l = (Locale) facesContext.getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER);
-    return l == null ? Locale.ENGLISH : l;
+    return o.toString();
   }
 
   public static String getAsString(Locale locale, MsgState state) {

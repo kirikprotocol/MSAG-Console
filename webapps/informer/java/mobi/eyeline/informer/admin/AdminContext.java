@@ -159,7 +159,7 @@ public class AdminContext {
 
       Properties pers = new Properties();
       pers.setProperty("personalization.host", is.getPersHost());
-      pers.setProperty("personalization.port", Integer.toString(is.getPersPort()));
+      pers.setProperty("personalization.port", Integer.toString(is.getPersSyncPort()));
 
       personalizationClientPool = new PersonalizationClientPool(pers);
 

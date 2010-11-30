@@ -51,6 +51,12 @@
     </attribute>
 
     <attribute>
+      <name>readonly</name>
+      <description>По умолчанию: false</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
       <name>disabled</name>
       <description>Компонент отключен (по умолчанию: false)</description>
       <type>boolean</type>

@@ -47,6 +47,8 @@ public class MessageListController extends InformerController {
 
   private Integer deliveryId;
 
+  private boolean showTexts;
+
   public MessageListController() {
     config = getConfig();
     u = getConfig().getUser(getUserName());
@@ -307,8 +309,12 @@ public class MessageListController extends InformerController {
     };
   }
 
-  public boolean isSingleTextDelivery() {
-    return deliveryType == Delivery.Type.SingleText;
+  public boolean isShowTexts() {
+    return showTexts;
+  }
+
+  public void setShowTexts(boolean showTexts) {
+    this.showTexts = showTexts;
   }
 
   public static class ResendThread extends Thread {
@@ -469,6 +475,7 @@ public class MessageListController extends InformerController {
           }
           if (!stop) {
             resendCurrent = resendTotal;
+            config.activateDelivery(u.getLogin(), u.getPassword(), filter.getDeliveryId());
           }
         } finally {
           try {

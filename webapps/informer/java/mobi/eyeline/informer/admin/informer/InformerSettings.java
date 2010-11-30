@@ -19,7 +19,8 @@ public class InformerSettings {
   private int dcpPort;
 
   private String persHost;
-  private int persPort;
+  private int persSyncPort;
+  private int persAsyncPort;
 
   private String statDir;
   private String storeDir;
@@ -69,13 +70,22 @@ public class InformerSettings {
     this.persHost = persHost;
   }
 
-  public int getPersPort() {
-    return persPort;
+  public int getPersSyncPort() {
+    return persSyncPort;
   }
 
-  public void setPersPort(int persPort) throws AdminException {
-    vh.checkPort("persPort", persPort);
-    this.persPort = persPort;
+  public void setPersSyncPort(int persSyncPort) throws AdminException {
+    vh.checkPort("persSyncPort", persSyncPort);
+    this.persSyncPort = persSyncPort;
+  }
+
+  public int getPersAsyncPort() {
+    return persAsyncPort;
+  }
+
+  public void setPersAsyncPort(int persAsyncPort) throws AdminException {
+    vh.checkPort("persAsyncPort", persAsyncPort);
+    this.persAsyncPort = persAsyncPort;
   }
 
   public String getStatDir() {
@@ -108,7 +118,8 @@ public class InformerSettings {
     cs.dcpHost = dcpHost;
     cs.dcpPort = dcpPort;
     cs.persHost = persHost;
-    cs.persPort = persPort;
+    cs.persSyncPort = persSyncPort;
+    cs.persAsyncPort = persAsyncPort;
     cs.statDir = statDir;
     cs.storeDir = storeDir;
     return cs;

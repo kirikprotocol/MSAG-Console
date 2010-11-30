@@ -57,7 +57,7 @@ public class DcpClient extends SyncProtogenConnection {
       resp = request(request, response, fail);
       
       if (resp == fail)
-        throw new DeliveryException("interaction_error", "Status " + fail.getStatus() + ": " + fail.getStatusMessage());
+        throw new DeliveryException("interaction_error", fail.getStatus() + ": " + fail.getStatusMessage());
       return response;
     } catch (ServerOfflineException e) {
       throw new DeliveryException("dcp_server_offline");

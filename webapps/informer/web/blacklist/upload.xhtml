@@ -63,7 +63,7 @@
         </h:panelGrid>
         <eye:buttons>
           <eye:button rendered="#{blacklistUpload.finished}">
-            <tr:commandLink text="#{msg['next.button']}" action="#{blacklistUpload.next}"/>
+            <tr:commandLink text="#{msg['next.button']} &gt;" action="#{blacklistUpload.next}"/>
           </eye:button>
           <eye:button rendered="#{!blacklistUpload.finished}">
             <tr:commandLink text="#{msg['stop.button']}" action="#{blacklistUpload.stop}"/>

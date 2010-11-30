@@ -53,10 +53,6 @@
 
       <eye:collapsingGroup label="#{msg['notifications.config.email']}" opened="true">
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.mail.from']}"/>
-          <tr:inputText id="mailFrom" value="#{notificationSettings.mailFrom}" simple="true" required="true">
-              <tr:validateLength minimum="1"/>
-            </tr:inputText>
 
           <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.mail.host']}"/>
           <tr:inputText id="mailHost" value="#{notificationSettings.mailHost}" simple="true" required="true">
@@ -69,8 +65,13 @@
           <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.mail.password']}"/>
           <tr:inputText id="mailPwd" secret="true" value="#{notificationSettings.mailPassword}" simple="true"/>
 
+          <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.mail.from']}"/>
+          <tr:inputText id="mailFrom" value="#{notificationSettings.mailFrom}" simple="true" required="true" columns="30">
+              <tr:validateLength minimum="1"/>
+            </tr:inputText>
+
           <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.delivery.state.changed.email.template.subject']}"/>
-          <tr:inputText id="emailSubj" value="#{notificationSettings.emailSubjectTemplate}" simple="true" required="true">
+          <tr:inputText id="emailSubj" value="#{notificationSettings.emailSubjectTemplate}" simple="true" required="true" columns="50">
               <tr:validateLength minimum="1"/>
             </tr:inputText>
 

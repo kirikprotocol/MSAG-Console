@@ -127,7 +127,9 @@ public class DeliveryChangesDetector implements Runnable {
       Calendar c = Calendar.getInstance();
       c.setTime(new SimpleDateFormat(FILE_NAME_DATE_PATTERN).parse(fileName));
       reader = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f)));
-      String line;
+      String line = reader.readLine(); // Skip header
+      if (line == null)
+        return;
       while ((line = reader.readLine()) != null) {
         processLine(fileName, c, line);
       }

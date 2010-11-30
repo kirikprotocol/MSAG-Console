@@ -57,8 +57,13 @@
           <tr:panelLabelAndMessage label="#{informerSettings.persHost}">
             <tr:inputText value="#{config.settings.persHost}" simple="true" required="true"/>
           </tr:panelLabelAndMessage>
-          <tr:panelLabelAndMessage label="#{informerSettings.persPort}">
-            <tr:inputText value="#{config.settings.persPort}" simple="true" required="true" columns="6">
+          <tr:panelLabelAndMessage label="#{informerSettings.persSyncPort}">
+            <tr:inputText value="#{config.settings.persSyncPort}" simple="true" required="true" columns="6">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{informerSettings.persAsyncPort}">
+            <tr:inputText value="#{config.settings.persAsyncPort}" simple="true" required="true" columns="6">
               <eye:validatePort/>
             </tr:inputText>
           </tr:panelLabelAndMessage>

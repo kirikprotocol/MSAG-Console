@@ -29,7 +29,8 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
 
     s = config.getSection("pvss");
     settings.setPersHost(s.getString("host"));
-    settings.setPersPort(s.getInt("port"));
+    settings.setPersSyncPort(s.getInt("syncPort"));
+    settings.setPersAsyncPort(s.getInt("asyncPort"));
 
     return settings;
   }
@@ -46,7 +47,8 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
 
     s = config.getOrCreateSection("pvss");
     s.setString("host", settings.getPersHost());
-    s.setInt("port", settings.getPersPort());
+    s.setInt("syncPort", settings.getPersSyncPort());
+    s.setInt("asyncPort", settings.getPersAsyncPort());
 
     config.save(os);
   }

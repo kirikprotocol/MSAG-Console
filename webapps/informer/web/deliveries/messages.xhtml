@@ -45,6 +45,9 @@
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.till_date']}"/>
               <eye:inputDate id="tillDate" value="#{messages.msgFilter.tillDate}" type="date" autocomplete="true"/>
 
+              <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.show.texts']}"/>
+              <h:selectBooleanCheckbox value="#{messages.showTexts}"/>
+
             </h:panelGrid>
           </eye:dataTableFilter>
         </h:panelGroup>
@@ -64,10 +67,10 @@
                 <f:convertDateTime dateStyle="short" type="both"/>
               </tr:outputText>
             </eye:column>
-            <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%" rendered="#{!messages.singleTextDelivery}">
+            <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="35%" rendered="#{messages.showTexts}">
               <h:outputText value="#{m.text}"/>
             </eye:column>
-            <eye:column name="error" title="#{msg['informer.deliveries.message.error']}" width="#{messages.singleTextDelivery ? '55' : '20'}%">
+            <eye:column name="error" title="#{msg['informer.deliveries.message.error']}" width="#{!messages.showTexts ? '55' : '20'}%">
               <h:outputText value="#{m.errorCode}"/>
               <h:outputText value=":&#160;"/>
               <h:outputText value="#{m.errorCode}" converter="errorCodeConverter"/>
