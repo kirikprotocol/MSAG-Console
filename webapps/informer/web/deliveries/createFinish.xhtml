@@ -40,7 +40,7 @@
           <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true"/>
         </eye:button>
         <eye:button rendered="#{createDelivery.activePage.finished and !createDelivery.activePage.stoped and createDelivery.activePage.error == null}">
-          <tr:commandLink text="#{msg['finish.button']}" action="#{createDelivery.next}"/>
+          <tr:commandLink text="#{msg['finish.button']}" action="#{createDelivery.finish}"/>
         </eye:button>
         
         <eye:button rendered="#{!createDelivery.activePage.finished}">

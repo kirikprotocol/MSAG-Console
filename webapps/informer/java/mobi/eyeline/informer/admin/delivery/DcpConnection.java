@@ -118,16 +118,16 @@ class DcpConnection {
     DeliveriesFilter f = new DeliveriesFilter();
     if (deliveryFilter != null) {
       if (deliveryFilter.getEndDateFrom() != null) {
-        f.setEndDateFrom(convertDate(deliveryFilter.getEndDateFrom()));
+        f.setEndDateFrom(convertDateToDcpFormat(deliveryFilter.getEndDateFrom()));
       }
       if (deliveryFilter.getEndDateTo() != null) {
-        f.setEndDateTo(convertDate(deliveryFilter.getEndDateTo()));
+        f.setEndDateTo(convertDateToDcpFormat(deliveryFilter.getEndDateTo()));
       }
       if (deliveryFilter.getStartDateFrom() != null) {
-        f.setStartDateFrom(convertDate(deliveryFilter.getStartDateFrom()));
+        f.setStartDateFrom(convertDateToDcpFormat(deliveryFilter.getStartDateFrom()));
       }
       if (deliveryFilter.getStartDateTo() != null) {
-        f.setStartDateTo(convertDate(deliveryFilter.getStartDateTo()));
+        f.setStartDateTo(convertDateToDcpFormat(deliveryFilter.getStartDateTo()));
       }
       if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
         f.setNameFilter(deliveryFilter.getNameFilter());
@@ -216,28 +216,28 @@ class DcpConnection {
     GetDeliveriesList req = new GetDeliveriesList();
     DeliveriesFilter f = new DeliveriesFilter();
     if (deliveryFilter.getEndDateFrom() != null) {
-      f.setEndDateFrom(convertDate(deliveryFilter.getEndDateFrom()));
+      f.setEndDateFrom(convertDateToDcpFormat(deliveryFilter.getEndDateFrom()));
     }
     if (deliveryFilter.getStartDateFrom() != null) {
-      f.setStartDateFrom(convertDate(deliveryFilter.getStartDateFrom()));
+      f.setStartDateFrom(convertDateToDcpFormat(deliveryFilter.getStartDateFrom()));
     }
     if (deliveryFilter.getEndDateTo() != null) {
-      f.setEndDateTo(convertDate(deliveryFilter.getEndDateTo()));
+      f.setEndDateTo(convertDateToDcpFormat(deliveryFilter.getEndDateTo()));
     }
     if (deliveryFilter.getStartDateTo() != null) {
-      f.setStartDateTo(convertDate(deliveryFilter.getStartDateTo()));
+      f.setStartDateTo(convertDateToDcpFormat(deliveryFilter.getStartDateTo()));
     }
     if (deliveryFilter.getEndDateFrom() != null) {
-      f.setEndDateFrom(convertDate(deliveryFilter.getEndDateFrom()));
+      f.setEndDateFrom(convertDateToDcpFormat(deliveryFilter.getEndDateFrom()));
     }
     if (deliveryFilter.getEndDateTo() != null) {
-      f.setEndDateTo(convertDate(deliveryFilter.getEndDateTo()));
+      f.setEndDateTo(convertDateToDcpFormat(deliveryFilter.getEndDateTo()));
     }
     if (deliveryFilter.getStartDateFrom() != null) {
-      f.setStartDateFrom(convertDate(deliveryFilter.getStartDateFrom()));
+      f.setStartDateFrom(convertDateToDcpFormat(deliveryFilter.getStartDateFrom()));
     }
     if (deliveryFilter.getStartDateTo() != null) {
-      f.setStartDateTo(convertDate(deliveryFilter.getStartDateTo()));
+      f.setStartDateTo(convertDateToDcpFormat(deliveryFilter.getStartDateTo()));
     }
     if (deliveryFilter.getNameFilter() != null && deliveryFilter.getNameFilter().length > 0) {
       f.setNameFilter(deliveryFilter.getNameFilter());
@@ -295,8 +295,8 @@ class DcpConnection {
       if (filter.getDeliveryId() != null) {
         req.setDeliveryId(filter.getDeliveryId());
       }
-      req.setEndDate(convertDate(filter.getEndDate()));
-      req.setStartDate(convertDate(filter.getStartDate()));
+      req.setEndDate(convertDateToDcpFormat(filter.getEndDate()));
+      req.setStartDate(convertDateToDcpFormat(filter.getStartDate()));
 
       ReqField[] fieldses = ReqField.values();
       ReqField[] fs = new ReqField[fieldses.length + 1];
@@ -356,8 +356,8 @@ class DcpConnection {
       if (filter.getDeliveryId() != null) {
         req.setDeliveryId(filter.getDeliveryId());
       }
-      req.setEndDate(convertDate(filter.getEndDate()));
-      req.setStartDate(convertDate(filter.getStartDate()));
+      req.setEndDate(convertDateToDcpFormat(filter.getEndDate()));
+      req.setStartDate(convertDateToDcpFormat(filter.getStartDate()));
 
       if (filter.getMsisdnFilter() != null && filter.getMsisdnFilter().length > 0) {
         req.setMsisdnFilter(filter.getMsisdnFilter());

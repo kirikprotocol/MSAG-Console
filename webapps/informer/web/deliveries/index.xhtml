@@ -47,17 +47,20 @@
         <eye:delimiter/>
         <eye:buttons>
           <eye:button>
-            <tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
+            <tr:commandLink text="#{msg['add.button']}" action="DELIVERY_CREATE"/>
           </eye:button>
           <eye:button>
             <tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
           </eye:button>
-          <eye:space/>
           <eye:button>
             <tr:commandLink text="#{msg['edit.selected.button']}" action="#{deliveries.editGroup}"/>
+          </eye:button>
+          <eye:space/>
+          <eye:button>
+            <tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}"/>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
           </eye:button>
         </eye:buttons>
       </h:panelGroup>
@@ -96,17 +99,20 @@
         <eye:delimiter/>
         <eye:buttons>
           <eye:button>
-            <tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
+            <tr:commandLink text="#{msg['add.button']}" action="DELIVERY_CREATE"/>
           </eye:button>
           <eye:button>
             <tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
           </eye:button>
-          <eye:space/>
           <eye:button>
             <tr:commandLink text="#{msg['edit.selected.button']}" action="#{deliveries.editGroup}"/>
+          </eye:button>
+          <eye:space/>
+          <eye:button>
+            <tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}"/>
+          </eye:button>
+          <eye:button>
+            <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
           </eye:button>
         </eye:buttons>
       </h:panelGroup>

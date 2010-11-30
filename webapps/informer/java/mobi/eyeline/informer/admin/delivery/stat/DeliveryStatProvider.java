@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.CSVTokenizer;
+import mobi.eyeline.informer.util.Functions;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -20,6 +21,10 @@ import java.util.regex.Pattern;
 public class DeliveryStatProvider {
 
   Logger log = Logger.getLogger(this.getClass());
+
+  private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
+
+  private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
 
   private File baseDir;
   private FileSystem fileSys;
@@ -94,12 +99,14 @@ public class DeliveryStatProvider {
     String maxFilePath = null;
     if (filter != null) {
       if (filter.getFromDate() != null) {
-        minSubDirName = new SimpleDateFormat(subDirNameFormat).format(filter.getFromDate());
-        minFilePath = new SimpleDateFormat(filePathFormat).format(filter.getFromDate());
+        Date fromDate = Functions.convertTime(filter.getFromDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
+        minSubDirName = new SimpleDateFormat(subDirNameFormat).format(fromDate);
+        minFilePath = new SimpleDateFormat(filePathFormat).format(fromDate);
       }
       if (filter.getTillDate() != null) {
-        maxSubDirName = new SimpleDateFormat(subDirNameFormat).format(filter.getTillDate());
-        maxFilePath = new SimpleDateFormat(filePathFormat).format(filter.getTillDate());
+        Date tillDate = Functions.convertTime(filter.getTillDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
+        maxSubDirName = new SimpleDateFormat(subDirNameFormat).format(tillDate);
+        maxFilePath = new SimpleDateFormat(filePathFormat).format(tillDate);
       }
     }
 
@@ -192,7 +199,7 @@ public class DeliveryStatProvider {
             int failedSms = Integer.parseInt(tokenizer.nextToken());
             int expiredSms = Integer.parseInt(tokenizer.nextToken());
 
-            DeliveryStatRecord rec = new DeliveryStatRecord(user, c.getTime(), taskId,
+            DeliveryStatRecord rec = new DeliveryStatRecord(user, Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), taskId,
                 newmessages, processing, delivered, failed, expired,
                 deliveredSms, failedSms, expiredSms
             );

@@ -26,10 +26,22 @@ public class CreateDeliveryController extends InformerController {
     return null;
   }
 
+  public String finish() {
+    activePage = new UploadFilePage(getConfig(), getUserName());
+    return "DELIVERIES";
+  }
+
+  public String returnToStart() {
+    if (activePage != null)
+      activePage.cancel();
+    activePage = new UploadFilePage(getConfig(), getUserName());
+    return null;
+  }
+
   public String cancel() {
     activePage.cancel();
     activePage = new UploadFilePage(getConfig(), getUserName());
-    return null;
+    return "DELIVERIES";
   }
 
   public CreateDeliveryPage getActivePage() {

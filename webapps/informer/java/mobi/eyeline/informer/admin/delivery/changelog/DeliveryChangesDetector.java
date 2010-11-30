@@ -8,6 +8,7 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.notifications.DateAndFile;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.CSVTokenizer;
+import mobi.eyeline.informer.util.Functions;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -30,6 +31,11 @@ import java.util.concurrent.TimeUnit;
 public class DeliveryChangesDetector implements Runnable {
 
   Logger log = Logger.getLogger(this.getClass());
+
+  private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
+
+  private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
+
   private File baseDir;
   private File backupDir;
   private FileSystem fileSys;
@@ -94,6 +100,12 @@ public class DeliveryChangesDetector implements Runnable {
       log.error("Fatal error,EXITING! can't access baseDir: "+baseDir.getAbsolutePath(), e);
       shutdown();
     }
+
+    if (files == null) {
+      log.error("Unable to get list of files.");
+      return;
+    }
+
     try{
       Arrays.sort(files);
       for (String fileName : files) {
@@ -175,12 +187,12 @@ public class DeliveryChangesDetector implements Runnable {
           if (userData != null)
             props.putAll(convertUserData(userData));
 
-          notifyListenersOnMessage(new ChangeMessageStateEvent(c.getTime(), deliveryId, userId,
+          notifyListenersOnMessage(new ChangeMessageStateEvent(Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), deliveryId, userId,
               msgId, messageState, smpp_status, addr, props));
         }
         else {
           DeliveryStatus state = type == DeliveryNotificationType.DELIVERY_START ? DeliveryStatus.Active : DeliveryStatus.Finished;
-          stateEventChange = new ChangeDeliveryStatusEvent(state, c.getTime(), deliveryId, userId);
+          stateEventChange = new ChangeDeliveryStatusEvent(state, Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), deliveryId, userId);
           notifyListeners(stateEventChange);
         }
       }

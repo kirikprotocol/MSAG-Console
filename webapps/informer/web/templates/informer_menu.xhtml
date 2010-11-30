@@ -23,6 +23,7 @@
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.restrictions']}" action="RESTRICTIONS"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.notifications']}" action="NOTIFICATIONS"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.siebel']}" action="SIEBEL"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.stats.size']}" action="STATS_SIZE"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.journal']}" action="JOURNAL"/></eye:menubaritem>
            </eye:menubar>
         </td>
@@ -30,7 +31,6 @@
           <eye:menubar label="#{msg['informer.deliveries']}" rendered="#{userSession.logined}">
             <eye:menubaritem><h:commandLink value="#{msg['informer.deliveries.list']}" action="DELIVERIES"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.deliveries.scheduling']}" action="DELIVERIES_WEEKLY"/></eye:menubaritem>
-            <eye:menubaritem><h:commandLink value="#{msg['informer.deliveries.create']}" action="DELIVERY_CREATE"/></eye:menubaritem>
           </eye:menubar>
         </td>
         <td width="1%">
@@ -40,7 +40,6 @@
             <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.deliveries']}" action="STATS_MESSAGES_BY_DELIVERIES"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.recipients']}" action="STATS_MESSAGES_BY_REC"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.byUser']}" action="STATS_DELIVERY_MESSAGES_BY_USER"/></eye:menubaritem>
-            <eye:menubaritem rendered="#{userSession.userInAdminRole}"><h:commandLink value="#{msg['informer.stats.size']}" action="STATS_SIZE"/></eye:menubaritem>
           </eye:menubar>
         </td>
         <td width="100%">&#160;</td>

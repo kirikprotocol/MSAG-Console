@@ -6,6 +6,7 @@ import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryStatus;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
+import mobi.eyeline.informer.util.Functions;
 import mobi.eyeline.informer.util.Time;
 
 import java.text.ParseException;
@@ -19,47 +20,51 @@ import java.util.*;
  */
 class DcpConverter {
 
+  private static final TimeZone DCP_TIMEZONE=TimeZone.getTimeZone("UTC");
+
+  private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
+
   private static final String TIME_FORMAT = "HH:mm:ss";
 
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
   private static final String DATE_FORMAT_YY = "dd.MM.yy HH:mm:ss";
 
-  public static Date convertTime(String time) throws AdminException {
+  public static Date convertTimeFromDcpFormat(String time) throws AdminException {
     SimpleDateFormat format = new SimpleDateFormat(TIME_FORMAT);
     try {
-      return format.parse(time);
+      return format.parse(time) ;
     } catch (ParseException e) {
       throw new DeliveryException("unparsable_date", time);
     }
   }
 
-  public static String convertTime(Date time) {
+  public static String convertTimeToDcpFormat(Date time) {
     SimpleDateFormat format = new SimpleDateFormat(TIME_FORMAT);
     return format.format(time);
   }
 
-  public static Date convertDate(String date) throws AdminException {
+  public static Date convertDateFromDcpFormat(String date) throws AdminException {
     SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
     try {
-      return format.parse(date);
+      return Functions.convertTime(format.parse(date), DCP_TIMEZONE, LOCAL_TIMEZONE);
     } catch (ParseException e) {
       throw new DeliveryException("unparsable_date", date);
     }
   }
 
-  public static Date convertDateYY(String date) throws AdminException {
+  public static Date convertDateYYFromDcpFormat(String date) throws AdminException {
     SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT_YY);
     try {
-      return format.parse(date);
+      return Functions.convertTime(format.parse(date), DCP_TIMEZONE, LOCAL_TIMEZONE);
     } catch (ParseException e) {
       throw new DeliveryException("unparsable_date", date);
     }
   }
 
-  public static String convertDate(Date date) {
+  public static String convertDateToDcpFormat(Date date) {
     SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
-    return format.format(date);
+    return format.format(Functions.convertTime(date, LOCAL_TIMEZONE, DCP_TIMEZONE));
   }
 
   static Day[] convertDays(String[] days) {
@@ -104,12 +109,12 @@ class DcpConverter {
     }
     Delivery delivery = new Delivery();
     delivery.setId(id);
-    delivery.setActivePeriodEnd(new Time(convertTime(di.getActivePeriodEnd())));
-    delivery.setActivePeriodStart(new Time(convertTime(di.getActivePeriodStart())));
+    delivery.setActivePeriodEnd(new Time(convertTimeFromDcpFormat(di.getActivePeriodEnd())));
+    delivery.setActivePeriodStart(new Time(convertTimeFromDcpFormat(di.getActivePeriodStart())));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
     if (di.hasEndDate()) {
-      delivery.setEndDate(convertDate(di.getEndDate()));
+      delivery.setEndDate(convertDateFromDcpFormat(di.getEndDate()));
     }
     delivery.setFlash(di.getFlash());
     delivery.setName(di.getName());
@@ -125,7 +130,7 @@ class DcpConverter {
       Map<String, String> uD = convertUserData(di.getUserData());
       delivery.addProperties(uD);
     }
-    delivery.setStartDate(convertDate(di.getStartDate()));
+    delivery.setStartDate(convertDateFromDcpFormat(di.getStartDate()));
     if (di.hasSvcType()) {
       delivery.setSvcType(di.getSvcType());
     }
@@ -133,7 +138,7 @@ class DcpConverter {
     delivery.setUseDataSm(di.getUseDataSm());
 
     if (di.hasValidityPeriod()) {
-      delivery.setValidityPeriod(new Time(convertTime(di.getValidityPeriod())));
+      delivery.setValidityPeriod(new Time(convertTimeFromDcpFormat(di.getValidityPeriod())));
     }
 
     delivery.setEnableMsgFinalizationLogging(di.getFinalMsgRecords());
@@ -147,7 +152,7 @@ class DcpConverter {
     }
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState result = new DeliveryState();
     if (ds.getDate() != null)
-      result.setDate(convertDate(ds.getDate()));
+      result.setDate(convertDateToDcpFormat(ds.getDate()));
     result.setStatus(convert(ds.getStatus()));
     return result;
   }
@@ -158,7 +163,7 @@ class DcpConverter {
     }
     mobi.eyeline.informer.admin.delivery.DeliveryState result = new mobi.eyeline.informer.admin.delivery.DeliveryState();
     if (ds.hasDate())
-      result.setDate(convertDate(ds.getDate()));
+      result.setDate(convertDateFromDcpFormat(ds.getDate()));
     result.setStatus(convert(ds.getStatus()));
     return result;
   }
@@ -173,7 +178,7 @@ class DcpConverter {
       result.setAbonent(new Address(mi.getAbonent()));
     }
     if (mi.hasDate()) {
-      result.setDate(convertDate(mi.getDate()));
+      result.setDate(convertDateFromDcpFormat(mi.getDate()));
     }
     if (mi.hasErrorCode()) {
       result.setErrorCode(mi.getErrorCode());
@@ -243,19 +248,19 @@ class DcpConverter {
     Delivery result = new Delivery();
     result.setId(di.getDeliveryId());
     if (di.hasActivityPeriodEnd()) {
-      result.setActivePeriodEnd(new Time(convertTime(di.getActivityPeriodEnd())));
+      result.setActivePeriodEnd(new Time(convertTimeFromDcpFormat(di.getActivityPeriodEnd())));
     }
     if (di.hasActivityPeriodStart()) {
-      result.setActivePeriodStart(new Time(convertTime(di.getActivityPeriodStart())));
+      result.setActivePeriodStart(new Time(convertTimeFromDcpFormat(di.getActivityPeriodStart())));
     }
     if (di.hasEndDate()) {
-      result.setEndDate(convertDateYY(di.getEndDate()));
+      result.setEndDate(convertDateYYFromDcpFormat(di.getEndDate()));
     }
     if (di.hasName()) {
       result.setName(di.getName());
     }
     if (di.hasStartDate()) {
-      result.setStartDate(convertDateYY(di.getStartDate()));
+      result.setStartDate(convertDateYYFromDcpFormat(di.getStartDate()));
     }
     if (di.hasStatus()) {
       result.setStatus(convert(di.getStatus()));
@@ -275,12 +280,12 @@ class DcpConverter {
       return null;
     }
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo delivery = new mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo();
-    delivery.setActivePeriodEnd(convertTime(di.getActivePeriodEnd().getTimeDate()));
-    delivery.setActivePeriodStart(convertTime(di.getActivePeriodStart().getTimeDate()));
+    delivery.setActivePeriodEnd(convertTimeToDcpFormat(di.getActivePeriodEnd().getTimeDate()));
+    delivery.setActivePeriodStart(convertTimeToDcpFormat(di.getActivePeriodStart().getTimeDate()));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
     if (di.getEndDate() != null) {
-      delivery.setEndDate(convertDate(di.getEndDate()));
+      delivery.setEndDate(convertDateToDcpFormat(di.getEndDate()));
     }
     delivery.setFlash(di.isFlash());
     delivery.setName(di.getName());
@@ -293,7 +298,7 @@ class DcpConverter {
     delivery.setSourceAddress(di.getSourceAddress().getSimpleAddress());
     if (di.getProperties() != null)
       delivery.setUserData(convertUserData(di.getProperties()));
-    delivery.setStartDate(convertDate(di.getStartDate()));
+    delivery.setStartDate(convertDateToDcpFormat(di.getStartDate()));
     if (di.getSvcType() != null) {
       delivery.setSvcType(di.getSvcType());
     }
@@ -301,7 +306,7 @@ class DcpConverter {
     delivery.setUseDataSm(di.isUseDataSm());
 
     if (di.getValidityPeriod() != null)
-      delivery.setValidityPeriod(convertTime(di.getValidityPeriod().getTimeDate()));
+      delivery.setValidityPeriod(convertTimeToDcpFormat(di.getValidityPeriod().getTimeDate()));
 
     delivery.setFinalDlvRecords(di.isEnableStateChangeLogging());
     delivery.setFinalMsgRecords(di.isEnableMsgFinalizationLogging());
@@ -420,7 +425,7 @@ class DcpConverter {
     }
     List<DeliveryStatusHistory.Item> items = new ArrayList<DeliveryStatusHistory.Item>(history.length);
     for (DeliveryHistoryItem i : history) {
-      items.add(new DeliveryStatusHistory.Item(convertDateYY(i.getDate()), convert(i.getStatus())));
+      items.add(new DeliveryStatusHistory.Item(convertDateYYFromDcpFormat(i.getDate()), convert(i.getStatus())));
     }
     return new DeliveryStatusHistory(deliveryId, items);
   }

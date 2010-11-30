@@ -19,17 +19,16 @@ import static org.junit.Assert.*;
  */
 public class DcpConverterTest {
 
-
   @Test
   public void testTime() throws AdminException {
     String t = "10:00:09";
-    assertEquals(DcpConverter.convertTime(DcpConverter.convertTime(t)), t);
+    assertEquals(DcpConverter.convertTimeToDcpFormat(DcpConverter.convertTimeFromDcpFormat(t)), t);
   }
 
   @Test
   public void testDate() throws AdminException {
     String date = "12.11.2007 10:00:09";
-    assertEquals(DcpConverter.convertDate(DcpConverter.convertDate(date)), date);
+    assertEquals(DcpConverter.convertDateToDcpFormat(DcpConverter.convertDateFromDcpFormat(date)), date);
   }
 
   @Test
@@ -83,7 +82,7 @@ public class DcpConverterTest {
     Date date = new Date();
     mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi = new mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo();
     mi.setAbonent("+79139489906");
-    mi.setDate(DcpConverter.convertDate(date));
+    mi.setDate(DcpConverter.convertDateToDcpFormat(date));
     mi.setErrorCode(1179);
     mi.setId(1);
     mi.setText("sms_text");
@@ -91,7 +90,7 @@ public class DcpConverterTest {
     mi.setUserData("user=data");
     Message info = DcpConverter.convert(mi);
     assertEquals(mi.getAbonent(), info.getAbonent().getSimpleAddress());
-    assertEquals(DcpConverter.convertDate(mi.getDate()), info.getDate());
+    assertEquals(DcpConverter.convertDateFromDcpFormat(mi.getDate()), info.getDate());
     assertNotNull(info.getErrorCode());
     assertEquals(mi.getErrorCode(), info.getErrorCode().intValue());
     assertEquals(mi.getId(), info.getId().longValue());
@@ -122,19 +121,19 @@ public class DcpConverterTest {
   @Test
   public void testConvertDeliveryInfo() throws AdminException {
     DeliveryListInfo di = new DeliveryListInfo();
-    di.setActivityPeriodEnd(DcpConverter.convertTime(new Date()));
-    di.setActivityPeriodStart(DcpConverter.convertTime(new Date(1000003231L)));
+    di.setActivityPeriodEnd(DcpConverter.convertTimeToDcpFormat(new Date()));
+    di.setActivityPeriodStart(DcpConverter.convertTimeToDcpFormat(new Date(1000003231L)));
     di.setDeliveryId(45);
-    di.setEndDate(DcpConverter.convertDate(new Date(System.currentTimeMillis() + 1000000)));
+    di.setEndDate(DcpConverter.convertDateToDcpFormat(new Date(System.currentTimeMillis() + 1000000)));
     di.setName("test delivery");
-    di.setStartDate(DcpConverter.convertDate(new Date()));
+    di.setStartDate(DcpConverter.convertDateToDcpFormat(new Date()));
     di.setStatus(DcpConverter.convert(DeliveryStatus.Cancelled));
     di.setUserId("user2");
     Delivery info = DcpConverter.convert(di);
-    assertEquals(DcpConverter.convertTime(info.getActivePeriodEnd().getTimeDate()), di.getActivityPeriodEnd());
-    assertEquals(DcpConverter.convertTime(info.getActivePeriodStart().getTimeDate()), di.getActivityPeriodStart());
-    assertEquals(DcpConverter.convertDate(info.getStartDate()), di.getStartDate());
-    assertEquals(DcpConverter.convertDate(info.getEndDate()), di.getEndDate());
+    assertEquals(DcpConverter.convertTimeToDcpFormat(info.getActivePeriodEnd().getTimeDate()), di.getActivityPeriodEnd());
+    assertEquals(DcpConverter.convertTimeToDcpFormat(info.getActivePeriodStart().getTimeDate()), di.getActivityPeriodStart());
+    assertEquals(DcpConverter.convertDateToDcpFormat(info.getStartDate()), di.getStartDate());
+    assertEquals(DcpConverter.convertDateToDcpFormat(info.getEndDate()), di.getEndDate());
     assertEquals(DcpConverter.convert(info.getStatus()), di.getStatus());
     assertEquals(info.getId().intValue(), di.getDeliveryId());
     assertEquals(info.getName(), di.getName());
@@ -158,7 +157,7 @@ public class DcpConverterTest {
     stats.setNewMessages(15);
     stats.setProcessMessage(16);
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState ds = new mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState();
-    ds.setDate(DcpConverter.convertDate(new Date()));
+    ds.setDate(DcpConverter.convertDateToDcpFormat(new Date()));
     ds.setStatus(mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryStatus.Active);
 
     DeliveryStatistics s = DcpConverter.convert(stats, ds);
