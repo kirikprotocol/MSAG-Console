@@ -650,7 +650,7 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& 
     }
     (*iter)->setState(DLVSTATE_CANCELLED);
     (*iter)->getRegionList(regIds);
-    (*iter)->detachEverything();
+    (*iter)->detachEverything(true);
 }
 
 

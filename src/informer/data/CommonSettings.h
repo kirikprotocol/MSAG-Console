@@ -72,10 +72,6 @@ public:
         return timediff_type(receiptExtraWaitTime_);
     }
 
-    inline unsigned getResendIOThreadCount() const {
-        return resendIOThreadCount_;
-    }
-
     inline unsigned getResponseWaitTime() const {
         return responseWaitTime_;
     }
@@ -112,10 +108,19 @@ public:
         return licenseLimit_;
     }
 
+    inline unsigned getResendIOThreadCount() const {
+        return resendIOThreadCount_;
+    }
+
+    inline unsigned getResendQueueMaxSize() const {
+        return 100;
+    }
+
     // --- non-configurable parameters
 
     /// return a length of period (second) to split resend messages into.
     /// must state: assert(3600%ret==0), assert(ret%60==0).
+    /// NOTE: never changes this value unless you don't have resends!
     inline msgtime_type getResendUploadPeriod() const {
         return 600;
     }

@@ -164,6 +164,10 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
                                ulonglong(sleepTimeNotReady));
                 return sleepTimeNotReady; // wait one second
             }
+        } else {
+            smsc_log_debug(log_,"R=%u/D=%u: is not active",
+                           getRegionId(),
+                           ptr->getDlvId());
         }
     } catch ( std::exception& e ) {
         smsc_log_warn(log_,"R=%u/D=%u isReady exc: %s",

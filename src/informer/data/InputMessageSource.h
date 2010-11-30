@@ -94,11 +94,12 @@ class ResendTransferTask : public smsc::core::threads::ThreadedTask
 {
 public:
     virtual ~ResendTransferTask() {}
-protected:
+
     ResendTransferTask( TransferRequester& req, bool isInputDir ) :
     smsc::core::threads::ThreadedTask(false),
     requester_(&req), isInputDir_(isInputDir) {}
 
+protected:
     virtual void onRelease() {
         smsc::core::threads::ThreadedTask::onRelease();
         requester_->transferFinished(this);

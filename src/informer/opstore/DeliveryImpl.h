@@ -87,7 +87,7 @@ public:
                             std::vector<regionid_type>& emptyRegs );
 
 
-    void detachEverything();
+    void detachEverything( bool cleanDirectory = false );
 
 private:
     typedef std::list< RegionalStoragePtr >            StoreList;

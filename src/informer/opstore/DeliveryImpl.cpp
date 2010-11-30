@@ -417,17 +417,26 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 }
 
 
-void DeliveryImpl::detachEverything()
+void DeliveryImpl::detachEverything( bool cleanDirectory )
 {
-    smsc_log_debug(log_,"D=%u detaching everything",getDlvInfo()->getDlvId());
+    const dlvid_type dlvId = getDlvInfo()->getDlvId();
+    smsc_log_debug(log_,"D=%u detaching everything",dlvId);
     {
-        activityLog_.getUserInfo().detachDelivery(getDlvInfo()->getDlvId());
+        activityLog_.getUserInfo().detachDelivery(dlvId);
         MutexGuard mg(cacheLock_);
         storeHash_.Empty();
         storeList_.clear();
         rollingIter_ = storeList_.end();
     }
-    smsc_log_debug(log_,"D=%u detached",getDlvInfo()->getDlvId());
+    if (cleanDirectory) {
+        char buf[100];
+        makeDeliveryPath(buf,dlvId);
+        if ( unlink(buf) ) {
+            ErrnoException e(errno,"unlink(%s)",buf);
+            smsc_log_warn(log_,"D=%u exc: %s",dlvId,e.what());
+        }
+    }
+    smsc_log_debug(log_,"D=%u detached",dlvId);
 }
 
 

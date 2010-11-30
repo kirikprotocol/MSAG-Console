@@ -69,7 +69,7 @@ inputTransferTask_(0),
 resendTransferTask_(0),
 regionId_(regionId),
 newOrResend_(0),
-nextResendFile_(0)
+nextResendFile_(0) // FIXME: init this field
 {
     smsc_log_debug(log_,"ctor @%p R=%u/D=%u",
                    this, unsigned(regionId),unsigned(getDlvId()));
@@ -130,14 +130,23 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
     const DeliveryInfo& info = *dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
 
-    if ( dlv_->getState() != DLVSTATE_ACTIVE ) { return 6*tuPerSec; }
+    if ( dlv_->getState() != DLVSTATE_ACTIVE ) {
+        smsc_log_debug(log_,"R=%u/D=%u is not active",regionId_,dlvId);
+        return 6*tuPerSec;
+    }
 
     // FIXME: optimize return this date as next time.
-    if ( !info.checkActiveTime(weekTime) ) { return 5*tuPerSec; }
+    if ( !info.checkActiveTime(weekTime) ) {
+        smsc_log_debug(log_,"R=%u/D=%u not on active period weekTime=%u",
+                       regionId_, dlvId, weekTime );
+        return 5*tuPerSec;
+    }
 
     /// check speed control
     usectime_type ret = dlv_->activityLog_.getUserInfo().isReadyAndConsumeQuant(usecTime);
     if (ret>0) {
+        smsc_log_debug(log_,"R=%u/D=%u not ready by user limit, wait=%lluus",
+                       regionId_, dlvId, ret);
         if (ret > 1*tuPerSec) ret = 1*tuPerSec;
         return unsigned(ret);
     }
@@ -219,12 +228,19 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
         }
 
         // message is not found, please try in a second
-        return tuPerSec;
+        return tuPerSec + 12;
 
     } while ( false );
 
     if (uploadNextResend && !resendTransferTask_) {
-        smsc_log_debug(log_,"FIXME: implement start upload next resend task here");
+        try {
+            ResendTransferTask* task = new ResendTransferTask(*this,true);
+            dlv_->source_->getDlvActivator().startResendTransfer(task);
+            resendTransferTask_ = task;
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"R=%u/D=%u resend in task, exc: %s",
+                          regionId_, dlvId, e.what());
+        }
     }
 
     MsgLock ml(iter,this);
@@ -282,15 +298,14 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                                     unsigned           nchunks )
 {
     const DeliveryInfo& info = *dlv_->getDlvInfo();
+    const dlvid_type dlvId = info.getDlvId();
 
     RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
         // not found
         throw InfosmeException(EXC_NOTFOUND,"message R=%u/D=%u/M=%llu is not found (retryMessage)",
-                               unsigned(regionId_),
-                               unsigned(info.getDlvId()),
-                               ulonglong(msgId));
+                               unsigned(regionId_), dlvId, ulonglong(msgId));
     }
 
     timediff_type retryDelay = -1;
@@ -317,9 +332,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         newQueue_.PushFront(iter);
         mg.Unlock();
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into immediate retry",
-                       unsigned(regionId_),
-                       unsigned(info.getDlvId()),
-                       ulonglong(msgId));
+                       regionId_, dlvId, ulonglong(msgId));
         return;
     } else if ( retryDelay == -1 ) {
         // permanent failure
@@ -347,16 +360,29 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         m.timeLeft -= retryDelay;
         m.lastTime = currentTime + retryDelay;
         resendQueue_.insert( std::make_pair(m.lastTime,iter) );
-        // FIXME: impl check if resendQueue become very big, then start flush task.
-        // it should only happen if messages of the next+1 chunk are in the queue.
+        if ( !resendTransferTask_ &&
+             resendQueue_.size() > getCS()->getResendQueueMaxSize() ) {
+            const msgtime_type queueStartTime = std::min(currentTime,resendQueue_.begin()->first);
+            msgtime_type queueLastChunk = resendQueue_.rbegin()->first;
+            queueLastChunk -= queueLastChunk % getCS()->getResendUploadPeriod();
+            if ( queueLastChunk > queueStartTime +
+                 getCS()->getResendMinTimeToUpload() + getCS()->getResendUploadPeriod() ) {
+                try {
+                    ResendTransferTask* task = new ResendTransferTask(*this,false);
+                    dlv_->source_->getDlvActivator().startResendTransfer(task);
+                    resendTransferTask_ = task;
+                } catch (std::exception& e) {
+                    smsc_log_warn(log_,"R=%u/D=%u resend out task, exc: %s",
+                                  regionId_, dlvId, e.what() );
+                }
+            }
+        }
 
         mg.Unlock();
         const uint8_t prevState = m.state;
         m.state = MSGSTATE_RETRY;
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %llu",
-                       unsigned(regionId_),
-                       unsigned(info.getDlvId()),
-                       ulonglong(msgId),
+                       regionId_, dlvId, ulonglong(msgId),
                        msgTimeToYmd(m.lastTime) );
         dlv_->storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
         dlv_->activityLog_.incStats(m.state,1,prevState);
@@ -688,9 +714,34 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
 void RegionalStorage::resendIO( bool isInputDirection )
 {
     /// this method is invoked from ResendTransferTask
-    smsc_log_debug(log_,"FIXME: R=%u/D=%u implement resend IO dir=%s",
-                   regionId_, dlv_->getDlvInfo()->getDlvId(),
+    smsc_log_debug(log_,"FIXME: R=%u/D=%u resend %s task started",
+                   regionId_, dlv_->getDlvId(),
                    isInputDirection ? "in" : "out");
+    /*
+    if ( isInputDirection ) {
+
+        // need to input
+        if (!nextResendFile_) return;
+
+        try {
+
+            // reading just one file
+            char fpath[100];
+            makeResendFilePath(fpath,nextResendFile_);
+
+            FileGuard fg;
+            fg.ropen(fpath);
+
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"R=%u/D=%u resend in task exc: %s",
+                          regionId_, dlv_->getDlvId(), e.what());
+        }
+        return;
+
+    }
+
+    // output
+     */
 }
 
 }
