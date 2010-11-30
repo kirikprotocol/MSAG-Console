@@ -92,7 +92,7 @@ void ICSIAPrvdATSI::logConfig(Logger * use_log/* = NULL*/) const
   else
     smsc_log_info(use_log, "%s: TCMA uninitialized yet", _logId);
 
-  smsc_log_info(use_log, "%s: Max.queries: %u", _logId, _fcltCfg.max_queries);
+  smsc_log_info(use_log, "%s: Max.queries: %u", _logId, _fcltCfg.maxQueries);
   smsc_log_info(use_log, "%s: Query timeout: %u secs", _logId, _cfg.qryCfg.mapTimeout);
 }
 

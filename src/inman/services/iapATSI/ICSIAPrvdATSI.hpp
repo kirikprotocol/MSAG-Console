@@ -72,10 +72,11 @@ public:
     , IAProviderAC(IAPProperty::iapATSI)
     , _logId("iapATSI"), _cfg(use_cfg->atsiCfg)
   {
-    _fcltCfg.init_threads = _cfg.init_threads;
-    _fcltCfg.max_queries = _cfg.atsiCfg.maxDlgId;
+    _fcltCfg.initThreads = _cfg.init_threads;
+    _fcltCfg.maxQueries = _cfg.atsiCfg.maxDlgId;
     _fcltCfg.qryMultiRun = true; //MapATSI dialogs are reused !!!
     _fcltCfg.qryPlant = NULL;    //will be inited by _icsInit() later
+    _fcltCfg._iapProp = &IAProviderAC::getProperty();
     //
     _icsDeps = use_cfg->deps;
     _icsState = ICServiceAC::icsStConfig;

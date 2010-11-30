@@ -93,10 +93,11 @@ void IAPQueryAC::onRelease(void)
  * class IAProviderFacility implementation:
  * ************************************************************************** */
 IAPQueryFacility::IAPQueryFacility(const IAPFacilityCFG & in_cfg, Logger * uselog/* = NULL*/)
-    : _cfg(in_cfg), _lastQId(0), _logId("IAPrvd")
+    : _cfg(in_cfg), _lastQId(0)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.iaprvd");
-    pool.setMaxThreads((int)_cfg.max_queries);
+    pool.setMaxThreads((int)_cfg.maxQueries);
+    _logId = _cfg._iapProp->_iapIdent.c_str();
 }
 
 IAPQueryFacility::~IAPQueryFacility()
@@ -117,9 +118,9 @@ IAPQueryFacility::~IAPQueryFacility()
 bool IAPQueryFacility::Start(void)
 {
     MutexGuard  guard(qrsGuard);
-    if (_cfg.init_threads) {
-        pool.preCreateThreads((int)_cfg.init_threads);
-        _cfg.init_threads = 0;
+    if (_cfg.initThreads) {
+        pool.preCreateThreads((int)_cfg.initThreads);
+        _cfg.initThreads = 0;
     }
     return true;
 }

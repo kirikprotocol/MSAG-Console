@@ -113,10 +113,15 @@ protected:
 
 
 struct IAPFacilityCFG {
-  unsigned            max_queries;
-  unsigned            init_threads;
+  unsigned            maxQueries;
+  unsigned            initThreads;
   bool                qryMultiRun;
   IAPQueryFactoryITF * qryPlant;
+  const IAPProperty *  _iapProp;
+
+  IAPFacilityCFG() : maxQueries(0), initThreads(0), qryMultiRun(false)
+    , qryPlant(NULL), _iapProp(NULL)
+  { }
 };
 
 
