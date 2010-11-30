@@ -176,6 +176,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
                 case 'K': ++ds.killedMessages; break;
                 default: break;
                 }
+                break;
             }
             default:
                 throw InfosmeException(EXC_BADFILE,"unknown record state in '%s'",line);
