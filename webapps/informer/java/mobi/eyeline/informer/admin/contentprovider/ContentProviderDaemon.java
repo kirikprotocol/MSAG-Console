@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.admin.users.UserCPsettings;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 17.11.2010
  * Time: 16:21:41
  */
-public class ContentProviderDaemon extends DeliveryChangeListenerStub implements Daemon, ContentProviderUserDirectoryResolver {
+public class ContentProviderDaemon extends DeliveryChangeListenerStub implements Daemon, ContentProviderUserDirResolver {
 
   Logger log = Logger.getLogger(this.getClass());
 
@@ -67,9 +68,9 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
       }
     });
 
-    scheduler.scheduleAtFixedRate(new ContentProviderImportTask(this,context,fileSys),0,PERIOD_MSEC,TimeUnit.MILLISECONDS);
+    scheduler.scheduleAtFixedRate(new ContentProviderImportTask(context,this,workDir),0,PERIOD_MSEC,TimeUnit.MILLISECONDS);
 
-    reportScheduler.schedule(new ContentProviderReportTask(this,context,workDir),0,TimeUnit.MILLISECONDS);
+    reportScheduler.schedule(new ContentProviderReportTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
 
   }
 
@@ -107,7 +108,7 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
       ps.println(e.getUserId());
       synchronized (this) {
         if(isStarted()) {
-          reportScheduler.schedule(new ContentProviderReportTask(this,context,workDir),0,TimeUnit.MILLISECONDS);
+          reportScheduler.schedule(new ContentProviderReportTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
         }
       }
     }
@@ -117,13 +118,14 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
     finally {
       if(ps!=null) try {ps.close();} catch (Exception ex){}
     }
-
-
   }
 
-  public File getUserDirectory(User user) throws AdminException {
-    //todo
-    return null;
+  public File getUserLocalDir(String login, UserCPsettings ucps) throws AdminException {
+    File dir = new File(workDir,login+"_"+ucps.getHashId());
+    return dir;
   }
- 
+
+  public ContentProviderConnection getConnection(User user, UserCPsettings ucps) throws AdminException {
+    return new ContentProviderConnectionSFTP(fileSys,ucps);
+  }
 }

@@ -8,10 +8,13 @@ import mobi.eyeline.informer.admin.delivery.Message;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.FileUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -27,15 +30,18 @@ import java.util.regex.Pattern;
 class ContentProviderImportTask implements Runnable {
   Logger log = Logger.getLogger(this.getClass());
   private ContentProviderContext context;
-  ContentProviderUserDirectoryResolver userDirResolver;
   private FileSystem fileSys;
+  private File workDir;
+
 
   Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
+  private ContentProviderUserDirResolver userDirResolver;
 
-  public ContentProviderImportTask(ContentProviderUserDirectoryResolver userDirResolver,ContentProviderContext context, FileSystem fileSys) {
-    this.userDirResolver = userDirResolver;
+  public ContentProviderImportTask(ContentProviderContext context,ContentProviderUserDirResolver userDirResolver, File workDir) throws AdminException {
     this.context = context;
-    this.fileSys=fileSys;
+    this.fileSys=context.getFileSystem();
+    this.workDir=workDir;
+    this.userDirResolver=userDirResolver;
   }
 
 
@@ -45,8 +51,7 @@ class ContentProviderImportTask implements Runnable {
       for(User u : users ) {
         if(u.getStatus()==User.Status.ENABLED && u.isImportDeliveriesFromDir()) {
           try {
-            File userDir = userDirResolver.getUserDirectory(u);
-            processUserDirectory(u,userDir);
+            processUser(u);
           }
           catch (Exception e) {
             log.error("Error processing ",e);
@@ -59,7 +64,71 @@ class ContentProviderImportTask implements Runnable {
     }
   }
 
-  private void processUserDirectory(User u, File userDir) {
+  private void processUser(User u) throws AdminException {
+    List<String> userDirsNames = new ArrayList<String>();
+    if(u.isImportDeliveriesFromDir() && u.getCpSettings()!=null) {
+      for(UserCPsettings ucps : u.getCpSettings()) {
+        File userDir = userDirResolver.getUserLocalDir(u.getLogin(), ucps);
+        try {
+          if(!fileSys.exists(userDir)) {
+                fileSys.mkdirs(userDir);
+          }
+          userDirsNames.add(userDir.getName());
+          downloadUserFiles(u, userDir,ucps);
+          processImportFromLocal(u, userDir, ucps);
+        }
+        catch (Exception e) {
+          log.error("Error processing u="+u.getLogin()+" ucps="+ucps,e);
+        }
+      }
+    }
+    //clean up unused dirs for this user
+    String[] allDirs = fileSys.list(workDir);
+    if(allDirs!=null) {
+      for(String dirName : allDirs) {
+        if(dirName.startsWith(u.getLogin()+"_")) {
+          if(!userDirsNames.contains(dirName)) {
+            FileUtils.recursiveDeleteFolder(new File(workDir,dirName));
+          }
+        }
+      }
+    }
+  }
+
+
+  void downloadUserFiles(User user, File userDir, UserCPsettings ucps) throws Exception {
+    ContentProviderConnection connection = null;
+    try {
+      connection = userDirResolver.getConnection(user,ucps);
+      connection.connect();
+      List<String> remoteFiles = connection.listCSVFiles();
+      for (String remoteFile : remoteFiles) {
+        OutputStream localOs = null;
+        File localTmpFile = new File(userDir, remoteFile + ".tmp");
+        if (!fileSys.exists(localTmpFile)) {
+          fileSys.delete(localTmpFile);
+        }
+        try {
+          connection.get(remoteFile,localTmpFile);
+          connection.rename(remoteFile, remoteFile+".bak");
+          fileSys.rename(localTmpFile,new File(localTmpFile.getParentFile(), localTmpFile.getName().substring(localTmpFile.getName().length()-4)));
+        }
+        catch (Exception e) {
+          try {fileSys.delete(localTmpFile);} catch (Exception ex){};
+          log.error("Error loading u="+user.getLogin()+" sourceFile"+ucps.toString()+"/"+remoteFile,e);
+        }
+        finally {
+          if(localOs!=null) try {localOs.close();} catch (Exception e){}
+        }
+      }
+    }
+    finally {
+      if (connection != null) connection.close();
+    }
+  }
+
+
+  private void processImportFromLocal(User u, File userDir, UserCPsettings ucps) {
     File[] files = fileSys.listFiles(userDir);
     if(files==null) {
       log.error("Can't get directory listing for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
@@ -68,22 +137,70 @@ class ContentProviderImportTask implements Runnable {
     for(File f : files) {
       processUnfinished(u,f);
     }
+
     files = fileSys.listFiles(userDir);
     if(files==null) {
       log.error("Can't get directory listing for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
       return;
     }
     for(File f : files) {
-      processUserFile(u,f);
+      processUserFile(u,f, ucps);
+    }
+
+    try {
+      uploadResults(u, userDir, ucps);
+    }
+    catch (Exception e) {
+      log.error("Result upload error u="+u.getLogin()+" ucps="+ucps.toString(),e);
+    }
+  }
+
+  private void uploadResults(User u, File userDir, UserCPsettings ucps) throws AdminException {
+    File[] files = fileSys.listFiles(userDir);
+    if(files==null) {
+      log.error("Can't get directory listing for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
+      return;
+    }
+
+    List<File> uploadFiles = new ArrayList<File>();
+    for(File f : files) {
+        if(f.getName().endsWith(".err") || f.getName().endsWith(".errLog") || (u.isCreateReports() && f.getName().endsWith(".report"))) {
+          uploadFiles.add(f);
+        }
+    }
+
+    if(!uploadFiles.isEmpty()) {
+      ContentProviderConnection connection = null;
+      try {
+        connection = new ContentProviderConnectionSFTP(fileSys,ucps);
+        for(File f : uploadFiles) {
+          try {
+            connection.put(f,f.getName());
+            fileSys.delete(f);
+          }
+          catch (Exception e) {
+            log.error("Unable to upload file="+f.getAbsolutePath()+" to u="+u.getLogin()+" ucps="+ucps.toString(),e);
+          }
+        }
+        //clean user dir
+        File[] list = fileSys.listFiles(userDir);
+        if(list!=null && list.length==0) {
+          fileSys.delete(userDir);
+        }
+      }
+      finally {
+        if (connection != null) connection.close();
+      }
     }
   }
 
 
   private void handleErrorProccessingFile(Exception e, File userDir, File f, String baseName, String username, String password, Integer deliveryId) {
+    File errLogFile = new File(userDir,baseName+".errLog");
     try {
       PrintWriter pw = null;
       try {
-        pw = new PrintWriter(fileSys.getOutputStream(new File(userDir,baseName+".errLog"),true));
+        pw = new PrintWriter(fileSys.getOutputStream(errLogFile,true));
         e.printStackTrace(pw);
       }
       finally {
@@ -96,12 +213,12 @@ class ContentProviderImportTask implements Runnable {
     }
 
     //rename to err
-    File newFile = new File(userDir,baseName+".err");
+    File errFile = new File(userDir,baseName+".err");
     try {
-      fileSys.rename(f,newFile);
+      fileSys.rename(f,errFile);
     }
     catch (AdminException ex) {
-      log.error("Error renaming file to bak "+f.getAbsolutePath(),ex);
+      log.error("Error renaming file to err "+f.getAbsolutePath(),ex);
     }
     //delete report
     File reportFile = new File(userDir,baseName+".rep");
@@ -111,21 +228,20 @@ class ContentProviderImportTask implements Runnable {
       }
     }
     catch (AdminException ex) {
-      log.error("Error renaming file to bak "+f.getAbsolutePath(),ex);
+      log.error("Error deleting report "+f.getAbsolutePath(),ex);
     }
 
     if(deliveryId!=null) {
       try {
-          context.dropDelivery(username,password,deliveryId);
+        context.dropDelivery(username,password,deliveryId);
       }
       catch (Exception ex) {
-          log.error("Error removing delivery "+deliveryId,ex);
+        log.error("Error removing delivery "+deliveryId,ex);
       }
     }
   }
 
   private void processUnfinished(User u, File f) {
-
 
     Matcher unfinishedMatcher = unfinishedFileName.matcher(f.getName());
 
@@ -135,13 +251,20 @@ class ContentProviderImportTask implements Runnable {
       String baseName = f.getName().substring(0,f.getName().length()-ext.length());
       Integer deliveryId =null;
       try {
-          deliveryId = Integer.valueOf(ext.substring(5));
-          context.dropDelivery(u.getLogin(),u.getPassword(),deliveryId);
-          //rename .csv.<id> to .csv
-          File newFile = new File(userDir,baseName+".csv");
+        deliveryId = Integer.valueOf(ext.substring(5));
+        context.dropDelivery(u.getLogin(),u.getPassword(),deliveryId);
+        //rename .csv.<id> to .csv
+        File newFile = new File(userDir,baseName+".csv");
+        if(fileSys.exists(newFile)){
+          fileSys.delete(f);
+        }
+        else {
           fileSys.rename(f,newFile);
-          File reportFile = new File(userDir,baseName+".rep."+deliveryId);
+        }
+        File reportFile = new File(userDir,baseName+".rep."+deliveryId);
+        if(fileSys.exists(reportFile)){
           fileSys.delete(reportFile);
+        }
       }
       catch (Exception e) {
         handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), u.getPassword(), deliveryId);
@@ -150,7 +273,7 @@ class ContentProviderImportTask implements Runnable {
   }
 
 
-  private void processUserFile(User u, File f)  {
+  private void processUserFile(User u, File f, UserCPsettings ucps)  {
 
     String fileName = f.getName();
     if(fileName.endsWith(".csv")) {
@@ -162,6 +285,7 @@ class ContentProviderImportTask implements Runnable {
         delivery.setName(baseName);
         delivery.setStartDate(new Date(System.currentTimeMillis()));
         context.copyUserSettingsToDeliveryPrototype(u.getLogin(),delivery);
+        delivery.setSourceAddress(ucps.getSourceAddress());
         Delivery d = context.createDelivery(u.getLogin(),u.getPassword(),delivery,null);
         deliveryId = d.getId();
         //rename to .csv.<id>
@@ -172,7 +296,7 @@ class ContentProviderImportTask implements Runnable {
         BufferedReader is=null;
         PrintStream reportWriter = null;
         try {
-          String encoding = null;// u.getFileEncoding();
+          String encoding = ucps.getEncoding();
           if(encoding==null) encoding="UTF-8";
           is = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f),encoding));
           reportWriter = new PrintStream(fileSys.getOutputStream(reportFile,true),true,encoding);
@@ -182,14 +306,12 @@ class ContentProviderImportTask implements Runnable {
               reportWriter
           ),deliveryId);
           context.activateDelivery(u.getLogin(),u.getPassword(),deliveryId);
+          fileSys.delete(f);
         }
         finally {
           if(is!=null) try {is.close();} catch (Exception e){}
           if(reportWriter!=null) try {reportWriter.close();} catch (Exception e){}
         }
-        //rename to .bak.<id>
-        newFile = new File(userDir,baseName+".bak."+deliveryId);
-        fileSys.rename(f,newFile);
       }
       catch (Exception e) {
         handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), u.getPassword(), deliveryId);
@@ -222,29 +344,29 @@ class ContentProviderImportTask implements Runnable {
           String abonent="";
           if(line.length()==0) continue;
           try {
-              inx = line.indexOf('|');
-              abonent = line.substring(0,inx).trim();
-              Address ab = null;
-              try {
-                  ab = new Address(abonent);
+            inx = line.indexOf('|');
+            abonent = line.substring(0,inx).trim();
+            Address ab;
+            try {
+              ab = new Address(abonent);
+            }
+            catch (Exception e) {
+              ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"INVALID ABONENT");
+              continue;
+            }
+            boolean skip = false;
+            if(regions!=null) {
+              Region r = context.getRegion(ab);
+              if(r==null || !regions.contains(r.getRegionId())) {
+                skip = true;
               }
-              catch (Exception e) {
-                ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"INVALID ABONENT");
-                continue;
-              }
-              boolean skip = false;
-              if(regions!=null) {
-                Region r = context.getRegion(ab);
-                if(r==null || !regions.contains(r.getRegionId())) {
-                  skip = true;
-                }
-              }
-              if(skip) {
-                ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"NOT ALLOWED REGION");
-                continue;
-              }
-              String  text = line.substring(inx+1).trim();
-              return Message.newMessage(ab,text);
+            }
+            if(skip) {
+              ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"NOT ALLOWED REGION");
+              continue;
+            }
+            String  text = line.substring(inx+1).trim();
+            return Message.newMessage(ab,text);
           }
           catch(Exception e) {
             ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"ERROR PARSING LINE :"+line);

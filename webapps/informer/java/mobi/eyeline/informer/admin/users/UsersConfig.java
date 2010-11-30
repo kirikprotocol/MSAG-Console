@@ -156,7 +156,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     return result;
   }
 
-  public void save(InputStream oldFile, OutputStream newFile, UsersSettings settings) throws XmlConfigException {
+  public void save(InputStream oldFile, OutputStream newFile, UsersSettings settings) throws XmlConfigException, AdminException {
 
     XmlConfig config = new XmlConfig();
     config.load(oldFile);
@@ -173,7 +173,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     config.save(newFile);
   }
 
-  private XmlConfigSection createUserSection(User user) {
+  private XmlConfigSection createUserSection(User user) throws AdminException {
     XmlConfigSection userSection = new XmlConfigSection(user.getLogin());
     userSection.setString("password",user.getPassword());
     userSection.setString("status",user.getStatus().toString());
@@ -257,12 +257,12 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     return regionsSection;
   }
 
-  private XmlConfigSection createCpSettingsSection(User user) {
+  private XmlConfigSection createCpSettingsSection(User user) throws AdminException {
     XmlConfigSection section = new XmlConfigSection("CPSETTINGS");
     List<UserCPsettings> cpSettings = user.getCpSettings();
     for (int i = 0, cpSettingsSize = cpSettings.size(); i < cpSettingsSize; i++) {
       UserCPsettings ucps = cpSettings.get(i);
-      XmlConfigSection s = new XmlConfigSection("ucps_"+i);
+      XmlConfigSection s = new XmlConfigSection(user.getLogin()+"_"+ucps.getHashId());
       section.addSection(s);
 
       s.setString("host",ucps.getHost());
