@@ -822,9 +822,9 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
     try {
         userInfo.incDlvStats(state,0,checkDlvLimit);
     } catch (std::exception& e) {
-        // FIXME: implement when user exceeded dlvs - move to paused?
-        throw InfosmeException(EXC_DLVLIMITEXCEED,"D=%u cannot set state, exc: %s",
-                               dlvId,e.what());
+        // cannot create delivery!
+        throw InfosmeException(EXC_DLVLIMITEXCEED,"U='%s' cannot create delivery, exc: %s",
+                               userInfo.getUserId(),e.what());
     }
     InputMessageSource* ims = new InputStorage(core_,*inputJournal_);
     dlv.reset( new DeliveryImpl(infoptr.release(),
