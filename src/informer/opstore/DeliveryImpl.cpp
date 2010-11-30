@@ -215,7 +215,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         MutexGuard mg(stateLock_);
         const DlvState oldState = state_;
         if (oldState == newState) return;
-        smsc_log_debug(log_,"D=%u changing state: %s into %s",dlvId,
+        smsc_log_debug(log_,"D=%u setState: %s into %s",dlvId,
                        dlvStateToString(oldState), dlvStateToString(newState));
         if (oldState == DLVSTATE_CANCELLED) {
             throw InfosmeException(EXC_LOGICERROR,
@@ -234,6 +234,14 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         } else {
             planTime = 0;
         }
+
+        bs.dlvId = dlvId;
+        getRegionList(bs.regIds);
+        if ( newState == DLVSTATE_ACTIVE && bs.regIds.empty() ) {
+            smsc_log_debug(log_,"D=%u has no regions, switch to finish",dlvId);
+            newState = DLVSTATE_FINISHED;
+        }
+        bs.bind = (newState == DLVSTATE_ACTIVE);
         activityLog_.getUserInfo().incDlvStats(newState,state_); // may NOT throw
         state_ = newState;
         planTime_ = planTime;
@@ -254,6 +262,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         default:
             throw InfosmeException(EXC_LOGICERROR,"unknown state %d",newState);
         }
+
         // write status line into status file
         char buf[200];
         sprintf(makeDeliveryPath(buf,dlvId),"status.log");
@@ -284,9 +293,6 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         assert(buflen>0);
         fg.write(buf,buflen);
         smsc_log_debug(log_,"D=%u record written into status.log",dlvId);
-        bs.dlvId = dlvId;
-        bs.bind = (newState == DLVSTATE_ACTIVE);
-        getRegionList(bs.regIds);
         source_->getDlvActivator().finishStateChange(now, ymd, bs, *this );
     }
 }
