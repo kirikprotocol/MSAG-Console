@@ -10,11 +10,11 @@
 
 <ui:composition>
 
-  <h:outputText rendered="#{status == 'Planned'}" style="font-size:15px" value="&#9723;"/>
-  <h:outputText rendered="#{status == 'Finished'}" style="font-size:20px" value="&#10003;"/>
-  <h:outputText rendered="#{status == 'Active'}" style="font-size:15px" value="&#10132;"/>
-  <h:outputText rendered="#{status == 'Paused'}" style="font-size:10px; font-weight:bold" value="||"/>
-  <h:outputText rendered="#{status == 'Cancelled'}" style="font-size:15px"  value="&#10007;"/>
+      <tr:image rendered="#{status == 'Planned'}" source="/images/white_medium_square.gif"/>
+      <tr:image rendered="#{status == 'Finished'}" source="/images/check_mark.gif"/>
+      <tr:image rendered="#{status == 'Active'}" source="/images/heavy_wideheaded_rightwards_arrow.gif"/>
+      <tr:image rendered="#{status == 'Paused'}" source="/images/pause.gif"/>
+      <tr:image rendered="#{status == 'Cancelled'}" source="/images/ballot_x.gif"/>
 
 </ui:composition>
 

@@ -195,6 +195,12 @@
   </managed-bean>
 
   <managed-bean>
+    <managed-bean-name>cdr</managed-bean-name>
+    <managed-bean-class>mobi.eyeline.informer.web.controllers.cdr.CdrController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
     <managed-bean-name>regionsUpload</managed-bean-name>
     <managed-bean-class>mobi.eyeline.informer.web.controllers.regions.RegionsUploadController</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
@@ -519,6 +525,12 @@
     <navigation-case>
       <from-outcome>NOTIFICATIONS</from-outcome>
       <to-view-id>/notifications/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>CDR</from-outcome>
+      <to-view-id>/cdr/index.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 

@@ -4,6 +4,9 @@ import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
+import mobi.eyeline.informer.admin.cdr.CdrDaemon;
+import mobi.eyeline.informer.admin.cdr.CdrDeliveries;
+import mobi.eyeline.informer.admin.cdr.CdrUsers;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderContext;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
@@ -60,8 +63,6 @@ public class AdminContext {
 
   protected static final Logger logger = Logger.getLogger(AdminContext.class);
 
-  private File appBaseDir;
-
   protected FileSystem fileSystem;
 
   private InstallationType instType;
@@ -104,6 +105,8 @@ public class AdminContext {
 
   protected ContentProviderDaemon contentProviderDaemon;
 
+  protected CdrDaemon cdrDaemon;
+
 // delivery ->user ->region->smsc
 
   final private Lock integrityLock = new ReentrantLock();
@@ -116,7 +119,6 @@ public class AdminContext {
   public AdminContext(File appBaseDir) throws InitException {
 
     try {
-      this.appBaseDir = appBaseDir;
       File webConfDir = new File(appBaseDir, "conf");
       this.webConfig = new WebConfigManager(new File(webConfDir, "webconfig.xml"), new File(webConfDir, "backup"), FileSystem.getFSForSingleInst());
 
@@ -193,6 +195,16 @@ public class AdminContext {
 
       contentProviderDaemon.start();      
 
+
+      cdrDaemon = new CdrDaemon(new File(workDir, "cdr"),
+          new File(webConfig.getCdrProperties().getProperty(CdrDaemon.CDR_DIR)),
+          fileSystem,
+          new CdrDeliveriesImpl(this), new CdrUsersImpl(this));
+      cdrDaemon.start();
+
+      deliveryChangesDetector.addListener(cdrDaemon);
+      
+      
       deliveryChangesDetector.start();
 
 
@@ -251,6 +263,25 @@ public class AdminContext {
     }
   }
 
+  private void shutdownCdr() {
+    if (cdrDaemon != null) {
+      if (deliveryChangesDetector != null) {
+        try {
+          deliveryChangesDetector.removeListener(cdrDaemon);
+        } catch (Exception ignored) {
+        }
+      }
+      try {
+        cdrDaemon.stop();
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
+  public boolean isCdrStarted() {
+    return cdrDaemon != null && cdrDaemon.istStrated();
+  }
+
   public File getWorkDir() {
     return new File(workDir.getAbsolutePath());
   }
@@ -258,6 +289,7 @@ public class AdminContext {
   @SuppressWarnings({"EmptyCatchBlock"})
   public void shutdown() {
     shutdownSiebel();
+    shutdownCdr();
     if(contentProviderDaemon!= null) {
       try{
         contentProviderDaemon.stop();
@@ -280,7 +312,6 @@ public class AdminContext {
         deliveryNotificationsDaemon.shutdown();
       } catch (Exception e) {
       }
-
     }
 
     if (personalizationClientPool != null) {
@@ -585,8 +616,12 @@ public class AdminContext {
     }
     try {
       integrityLock.lock();
-      if (usersManager.getUser(delivery.getOwner()) == null) {
+      User u = usersManager.getUser(delivery.getOwner());
+      if (u == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
+      }
+      if(u.isCreateCDR()) {
+        delivery.setEnableMsgFinalizationLogging(true);
       }
       return deliveryManager.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
     } finally {
@@ -597,8 +632,12 @@ public class AdminContext {
   public Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
     try {
       integrityLock.lock();
-      if (usersManager.getUser(delivery.getOwner()) == null) {
+      User u = usersManager.getUser(delivery.getOwner());
+      if (u == null) {
         throw new IntegrityException("user_not_exist", delivery.getOwner());
+      }
+      if(u.isCreateCDR()) {
+        delivery.setEnableMsgFinalizationLogging(true);
       }
       return deliveryManager.createDeliveryWithSingleText(login, password, delivery, msDataSource);
     } finally {
@@ -832,6 +871,15 @@ public class AdminContext {
     webConfig.setSmsSenderAddress(addr);
   }
 
+  public Properties getCdrProperties() {
+    return webConfig.getCdrProperties();
+  }
+
+  public void setCdrProperties(Properties props) throws AdminException {
+    cdrDaemon.setCdrOutputDir(new File(props.getProperty(CdrDaemon.CDR_DIR)));
+    webConfig.setCdrProperties(props);
+  }
+
   public Properties getSiebelProperties() {
     return webConfig.getSiebelProperties();
   }
@@ -1039,9 +1087,9 @@ public class AdminContext {
   protected static class  DeliveryNotificationsContextImpl implements DeliveryNotificationsContext {
     private AdminContext context;
 
-     DeliveryNotificationsContextImpl(AdminContext context) {
-       this.context = context;
-     }
+    DeliveryNotificationsContextImpl(AdminContext context) {
+      this.context = context;
+    }
 
     public User getUser(String userId) throws AdminException {
       return context.getUser(userId);
@@ -1065,6 +1113,36 @@ public class AdminContext {
 
     public Properties getJavaMailProperties() {
       return context.getJavaMailProperties();
+    }
+  }
+
+  protected static class CdrUsersImpl implements CdrUsers {
+
+    private AdminContext context;
+
+    public CdrUsersImpl(AdminContext context) {
+      this.context = context;
+    }
+
+    public User getUser(String login) {
+      return context.getUser(login);
+    }
+  }
+
+  protected static class CdrDeliveriesImpl implements CdrDeliveries {
+
+    private AdminContext context;
+
+    public CdrDeliveriesImpl(AdminContext context) {
+      this.context = context;
+    }
+
+    public Delivery getDelviery(String user, int deliveryId) throws AdminException {
+      User u = context.getUser(user);
+      if(u == null) {
+        throw new UserException("user_not_exist");
+      }
+      return context.getDelivery(user, u.getPassword(), deliveryId);
     }
   }
 

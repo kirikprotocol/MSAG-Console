@@ -1,0 +1,68 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.cdr']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{cdr.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="CDR" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
+      <eye:message level="warn" rendered="#{cdr.warn != null}">
+        <tr:outputText value="#{cdr.warn}"/>        
+      </eye:message>
+
+
+      <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
+
+        <tr:panelLabelAndMessage label="#{msg['informer.cdr.dir']}" labelStyle="text-align:left">
+          <tr:inputText value="#{cdr.cdrDir}" simple="true" required="true"/>
+        </tr:panelLabelAndMessage>
+
+      </tr:panelFormLayout>
+
+
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{cdr.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="CDR" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

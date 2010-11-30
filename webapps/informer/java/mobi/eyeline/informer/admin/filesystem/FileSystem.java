@@ -113,6 +113,17 @@ public abstract class FileSystem {
   }
 
   /**
+   * Возвращает список файлов в данной директории
+   *
+   * @param file директория
+   * @param fileFilter фильтр
+   * @return список файлов
+   */
+  public File[] listFiles(File file, FileFilter fileFilter) {
+    return file.listFiles(fileFilter);
+  }
+
+  /**
    * Является ли данный File директорией
    *
    * @param file File

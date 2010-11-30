@@ -17,6 +17,14 @@ class DeliveriesDiffHelper extends DiffHelper {
     super(Subject.DELIVERIES);
   }
 
+  void logDeliveryCreated(Journal j, String user, int id, String deliveryName) throws AdminException {
+    j.addRecord(JournalRecord.Type.ADD, subject, user, "delivery_created", Integer.toString(id), deliveryName);
+  }
+
+  void logDeliveryDroped(Journal j, String user, int id, String deliveryName) throws AdminException {
+    j.addRecord(JournalRecord.Type.REMOVE, subject, user, "delivery_removed", Integer.toString(id), deliveryName);
+  }
+
   void logDeliveryPaused(Journal j, String user, int id) throws AdminException {
     j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_paused", Integer.toString(id));
   }

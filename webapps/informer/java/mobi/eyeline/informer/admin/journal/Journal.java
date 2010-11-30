@@ -343,6 +343,15 @@ public class Journal {
     deliveries.logChanges(this, user, oldDelivery, newDelivery);
   }
 
+  public void logDeliveryCreated(String user, Delivery d) throws AdminException {
+    deliveries.logDeliveryCreated(this, user, d.getId(), d.getName());
+  }
+
+
+  public void logDeliveryDroped(String user, Delivery d) throws AdminException {
+    deliveries.logDeliveryDroped(this, user, d.getId(), d.getName());
+  }
+
   public void logAddRestriction(Restriction r, String user) throws AdminException {
     restrictions.logRestrictionAdd(this, user, r);
   }
@@ -370,6 +379,9 @@ public class Journal {
 
   public void logUpdateSiebelProps(Properties props, Properties old, String user) throws AdminException {
     webconfig.logUpdateSiebelProps(this, props, old, user);
+  }
 
+  public void logUpdateCdrProps(Properties props, Properties old, String user) throws AdminException {
+    webconfig.logUpdateCdrProps(this, props, old, user);
   }
 }

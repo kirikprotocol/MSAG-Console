@@ -224,10 +224,6 @@ public class Configuration {
     return context.getDelivery(login, password, deliveryId);
   }
 
-  public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
-    context.cancelDelivery(login, password, deliveryId);
-  }
-
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
     context.pauseDelivery(login, password, deliveryId);
     journal.logDeliveryPaused(login, deliveryId);
@@ -255,7 +251,12 @@ public class Configuration {
   }
 
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
+    Delivery oldD = context.getDelivery(login, password, deliveryId);
+    if (oldD == null) {
+      throw new DeliveryException("delivery_not_found");
+    }
     context.dropDelivery(login, password, deliveryId);
+    journal.logDeliveryDroped(login, oldD);
   }
 
   public void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
@@ -265,17 +266,18 @@ public class Configuration {
     }
     context.modifyDelivery(login, password, delivery);
     journal.logDeliveriesChanges(login, oldD, delivery);
-
   }
 
   public Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
-    return context.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
-    //todo log
+    Delivery d = context.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
+    journal.logDeliveryCreated(login, d);
+    return d;
   }
 
   public Delivery createSingleTextDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
-    return context.createDeliveryWithSingleText(login, password, delivery, msDataSource);
-    //todo log
+    Delivery d = context.createDeliveryWithSingleText(login, password, delivery, msDataSource);
+    journal.logDeliveryCreated(login, d);
+    return d;
   }
 
   public void startInformer(String user) throws AdminException {
@@ -429,8 +431,22 @@ public class Configuration {
     journal.logUpdateSmsSenderAddress(addr, old, user);
   }
 
+  public boolean isCdrStarted() {
+    return context.isCdrStarted();
+  }
+
   public boolean isSiebelDaemonStarted() {
     return context.isSiebelDaemonStarted();
+  }
+
+  public Properties getCdrProperties() {
+    return context.getCdrProperties();
+  }
+
+  public void setCdrProperties(Properties props, String user) throws AdminException {
+    Properties old = context.getCdrProperties();
+    context.setCdrProperties(props);  
+    journal.logUpdateCdrProps(props, old, user);
   }
 
   public boolean setSiebelProperties(Properties props, String user) throws AdminException {

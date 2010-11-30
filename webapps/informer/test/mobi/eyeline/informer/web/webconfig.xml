@@ -63,4 +63,8 @@
 
   </section>
 
+  <section name="cdr">
+    <param name="dir">cdr</param>
+  </section>
+
 </config>

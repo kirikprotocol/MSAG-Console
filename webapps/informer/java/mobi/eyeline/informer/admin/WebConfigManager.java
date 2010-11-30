@@ -205,6 +205,28 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     });
   }
 
+  public Properties getCdrProperties() {
+    return readSettings(new SettingsReader<WebConfigSettings, Properties>() {
+      public Properties executeRead(WebConfigSettings settings) {
+        return settings.getCdrProperties();
+      }
+    });
+
+  }
+
+  public void setCdrProperties(final Properties props) throws AdminException {
+
+    updateSettings(new SettingsWriter<WebConfigSettings>() {
+      public void changeSettings(WebConfigSettings settings) throws AdminException {
+        settings.setCdrProperties(props);
+      }
+
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        //dummy
+      }
+    });
+  }
+
   public Address getSmsSenderAddress() {
     return readSettings(new SettingsReader<WebConfigSettings, Address>() {
       public Address executeRead(WebConfigSettings settings) {
