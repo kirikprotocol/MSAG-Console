@@ -242,7 +242,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         case DLVSTATE_PAUSED:
         case DLVSTATE_FINISHED:
         case DLVSTATE_CANCELLED: {
-            MutexGuard mg(cacheLock_);
+            MutexGuard cmg(cacheLock_);
             for ( StoreList::iterator i = storeList_.begin(); i != storeList_.end(); ++i ) {
                 (*i)->stopTransfer(newState == DLVSTATE_CANCELLED);
             }
