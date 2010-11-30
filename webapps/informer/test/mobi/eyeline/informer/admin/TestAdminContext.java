@@ -123,6 +123,9 @@ public class TestAdminContext extends AdminContext {
     for(int i=1;i<=100;i++) {
       User u = users.get((i-1)%users.size());
       DeliveryPrototype d = new DeliveryPrototype();
+      if(u.isCreateCDR()) {
+        d.setEnableMsgFinalizationLogging(true);
+      }
       d.setSourceAddress(new Address("+7901111"+i));
       d.setActivePeriodEnd(new Time(20,0,0));
       d.setActivePeriodStart(new Time(9,0,0));
