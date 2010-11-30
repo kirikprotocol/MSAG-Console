@@ -166,6 +166,7 @@ void UserInfo::incDlvStats( uint8_t state,
         if ( total <= maxTotalDeliveries_ ) {
             const unsigned idx = getCS()->getStatBankIndex();
             incstats_[idx].incStat(state,1);
+            return;
         }
         stats_.incStat(state,-1);
         if (fromState) stats_.incStat(fromState,1);
