@@ -29,6 +29,6 @@ abstract class ColumnTagHandler extends TagHandler {
     if (title != null)
       column.setTitle(title.getValue(ctx));
     if (width != null)
-      column.setWidth(width.getInt(ctx));
+      column.setWidth(width.getValue(ctx));
   }
 }

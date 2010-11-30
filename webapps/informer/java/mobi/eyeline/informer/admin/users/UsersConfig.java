@@ -82,13 +82,35 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setDeliveryLifetime(section.getInt("deliveryLifetime"));
 
     u.setImportDeliveriesFromDir(section.getBool("importDeliveriesFromDir", false));
-    u.setDirectory(section.getString("directory", null));
+
 
     u.setCreateReports(section.getBool("createReports",false));
-    u.setReportsLifetime(section.getInt("reportsLifetime"));
-    u.setFileEncoding(section.getString("fileEncoding","UTF-8"));
+
+
+    u.setCpSettings(loadUserCpSettings(section));
     return u;
   }
+
+  private List<UserCPsettings> loadUserCpSettings(XmlConfigSection section) throws XmlConfigException, AdminException {
+    if (section.containsSection("CPSETTINGS")) {
+      List<UserCPsettings> ucpsList = new ArrayList<UserCPsettings>();
+      XmlConfigSection cpSectionsRoot = section.getSection("CPSETTINGS");
+      for(XmlConfigSection s : cpSectionsRoot.sections()) {
+        UserCPsettings ucps = new UserCPsettings();
+        ucps.setHost(s.getString("host"));
+        ucps.setPort(s.getInt("port",22));
+        ucps.setDirectory(s.getString("directory"));
+        ucps.setEncoding(s.getString("encoding","UTF-8"));
+        ucps.setSourceAddress(new Address(s.getString("sourceAddress")));
+        ucps.setLogin(s.getString("login"));
+        ucps.setPassword(s.getString("password"));
+        ucpsList.add(ucps);
+      }
+      return ucpsList.isEmpty() ? null : ucpsList;
+    }
+    return null;
+  }
+
 
   private List<Integer> loadUserRegions(XmlConfigSection section) throws XmlConfigException {
     if (section.containsSection("REGIONS")) {
@@ -214,15 +236,15 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     userSection.setInt("deliveryLifetime", user.getDeliveryLifetime());
     userSection.setBool("importDeliveriesFromDir", user.isImportDeliveriesFromDir());
 
-    if (user.getDirectory() != null)
-      userSection.setString("directory",user.getDirectory());
     if(user.isCreateReports()) {
       userSection.setBool("createReports",true);
     }
-    userSection.setInt("reportsLifetime",user.getReportsLifetime());
-    if(user.getFileEncoding()!=null) {
-      userSection.setString("fileEncoding",user.getFileEncoding());
+    
+
+    if (user.getCpSettings() != null && !user.getCpSettings().isEmpty()) {
+      userSection.addSection(createCpSettingsSection(user));
     }
+
     return userSection;
   }
 
@@ -233,6 +255,26 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       regionsSection.setBool(region.toString(), true);
     }
     return regionsSection;
+  }
+
+  private XmlConfigSection createCpSettingsSection(User user) {
+    XmlConfigSection section = new XmlConfigSection("CPSETTINGS");
+    List<UserCPsettings> cpSettings = user.getCpSettings();
+    for (int i = 0, cpSettingsSize = cpSettings.size(); i < cpSettingsSize; i++) {
+      UserCPsettings ucps = cpSettings.get(i);
+      XmlConfigSection s = new XmlConfigSection("ucps_"+i);
+      section.addSection(s);
+
+      s.setString("host",ucps.getHost());
+      s.setInt("port",ucps.getPort());
+      s.setString("directory",ucps.getDirectory());
+      s.setString("encoding",ucps.getEncoding());
+      s.setString("sourceAddress",ucps.getSourceAddress().getSimpleAddress());
+      s.setString("login",ucps.getLogin());
+      s.setString("password",ucps.getLogin());
+
+    }
+    return section;
   }
 
   private XmlConfigSection createDeliveryDaysSection(User user) {

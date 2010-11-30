@@ -275,6 +275,19 @@
       <description>Максимальное количество символов</description>
       <type>int</type>
     </attribute>
+
+    <attribute>
+      <name>width</name>
+      <description>Ширина колонки в пикселях или процентах</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <name>title</name>
+      <description>заголовок колонки</description>
+      <type>java.lang.String</type>
+    </attribute>
+
   </tag>
 
   <tag>
@@ -301,6 +314,18 @@
       <name>uniqueValues</name>
       <description>Флаг, разрешающий или запрещающий установку одинаковых значений в столбец таблицы.</description>
       <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>width</name>
+      <description>Ширина колонки в пикселях или процентах</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
+      <name>title</name>
+      <description>заголовок колонки</description>
+      <type>java.lang.String</type>
     </attribute>
   </tag>
 

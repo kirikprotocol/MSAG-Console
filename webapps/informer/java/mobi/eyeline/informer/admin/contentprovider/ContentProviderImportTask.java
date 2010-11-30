@@ -172,7 +172,7 @@ class ContentProviderImportTask implements Runnable {
         BufferedReader is=null;
         PrintStream reportWriter = null;
         try {
-          String encoding = u.getFileEncoding();
+          String encoding = null;// u.getFileEncoding();
           if(encoding==null) encoding="UTF-8";
           is = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f),encoding));
           reportWriter = new PrintStream(fileSys.getOutputStream(reportFile,true),true,encoding);

@@ -25,7 +25,7 @@ public class User implements Serializable {
   private String email;
   private String organization;
   private Locale locale;
-  private String fileEncoding;
+
   private Set<String> roles = new TreeSet<String>();
 
   private boolean retryOnFail;
@@ -48,10 +48,10 @@ public class User implements Serializable {
   private int deliveryLifetime;
 
   private boolean importDeliveriesFromDir;
-  private String directory;
+  //private String directory;
 
   private boolean createReports;
-  private int reportsLifetime;
+
 
   private final ValidationHelper vh = new ValidationHelper(User.class);
   public static final String INFORMER_ADMIN_ROLE = "informer-admin";
@@ -60,6 +60,7 @@ public class User implements Serializable {
   private String cdrDestination;
   private String cdrOriginator;
 
+  private List<UserCPsettings> cpSettings;
 
   public User() {
   }
@@ -91,16 +92,17 @@ public class User implements Serializable {
     this.smsNotification = user.smsNotification;
     this.createArchive=user.createArchive;
     this.deliveryLifetime=user.deliveryLifetime;
-    this.directory=user.directory;
 
     this.createReports=user.createReports;
-    this.reportsLifetime=user.reportsLifetime;
     this.allRegionsAllowed=user.allRegionsAllowed;
     this.importDeliveriesFromDir = user.importDeliveriesFromDir;
     this.retryOnFail = user.retryOnFail;
-    this.fileEncoding = user.fileEncoding;
+
     this.cdrDestination = user.cdrDestination;
     this.cdrOriginator = user.cdrOriginator;
+
+    this.cpSettings = user.getCpSettings()==null ? null : new ArrayList<UserCPsettings>(user.getCpSettings());
+
   }
 
   public String getCdrOriginator() {
@@ -369,27 +371,8 @@ public class User implements Serializable {
     this.deliveryLifetime = deliveryLifetime;
   }
 
-  public String getDirectory() {
-    return directory;
-  }
-
-  public void setDirectory(String directory) throws AdminException {
-    if (directory == null || directory.trim().length() == 0)
-      this.directory = null;
-    this.directory = directory;
-  }
 
 
-  public String getFileEncoding() {
-    return fileEncoding;
-  }
-
-  public void setFileEncoding(String fileEncoding) throws ValidationException {
-    if(fileEncoding!=null) {
-      vh.checkSupportedEncoding("fileEncoding",fileEncoding);
-    }
-    this.fileEncoding = fileEncoding;
-  }
 
   public boolean isCreateReports() {
     return createReports;
@@ -399,14 +382,6 @@ public class User implements Serializable {
     this.createReports = createReports;
   }
 
-  public int getReportsLifetime() {
-    return reportsLifetime;
-  }
-
-  public void setReportsLifetime(int reportsLifetime) throws AdminException {
-    vh.checkPositive("reportsLifetime", reportsLifetime);
-    this.reportsLifetime = reportsLifetime;
-  }
 
   public boolean isAllRegionsAllowed() {
     return allRegionsAllowed;
@@ -430,6 +405,27 @@ public class User implements Serializable {
 
   public void setImportDeliveriesFromDir(boolean importDeliveriesFromDir) {
     this.importDeliveriesFromDir = importDeliveriesFromDir;
+  }
+
+  public List<UserCPsettings> getCpSettings() {
+    //with clone
+    if(cpSettings==null) return null;
+    List<UserCPsettings> ret = new ArrayList<UserCPsettings>();
+    for(UserCPsettings ucps : cpSettings) {
+      ret.add(new UserCPsettings(ucps));
+    }
+    return ret;
+  }
+
+  public void setCpSettings(List<UserCPsettings> cpSettings) {
+    //with clone
+    if(cpSettings==null) this.cpSettings=null;
+    else {
+      this.cpSettings = new ArrayList<UserCPsettings>();
+      for(UserCPsettings ucps : cpSettings) {
+        this.cpSettings .add(new UserCPsettings(ucps));
+      }
+    }
   }
 
   public enum Status {

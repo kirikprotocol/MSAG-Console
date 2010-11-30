@@ -122,19 +122,8 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
   }
 
   public File getUserDirectory(User user) throws AdminException {
-    String sDir = user.getDirectory();
-    if(sDir==null || sDir.length()==0) {
-      throw new ContentProviderException("userDirNotFound",user.getLogin(),sDir);
-    }
-
-    File userDir = new File(informerBase,sDir);
-    if(fileSys.exists(userDir)) return userDir;
-
-    userDir=new File(user.getDirectory());
-    if(!fileSys.exists(userDir)) {
-      throw new ContentProviderException("userDirNotFound",user.getLogin(),sDir);
-    }
-    return userDir;
+    //todo
+    return null;
   }
  
 }

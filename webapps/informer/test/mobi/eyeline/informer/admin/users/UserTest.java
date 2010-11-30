@@ -325,39 +325,39 @@ public class UserTest {
     assertEquals(o.isCreateArchive(),true);
   }
 
+
+
   @Test
-  public void testDirectory() throws AdminException {
+  public void testCPSettings() throws AdminException {
     User o = new User();
-    o.setDirectory("aaaaaa");
-    assertEquals(o.getDirectory(),"aaaaaa");
+    List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
+    UserCPsettings ucps = new UserCPsettings();
+    ucps.setDirectory("/home/bla");
+    ucps.setHost("some.bla.host");
+    ucps.setPort(2222);
+    ucps.setSourceAddress(new Address("+79130000111"));
+    ucps.setEncoding("UTF-8");
+    ucps.setLogin("user1");
+    ucps.setPassword("pwd1");
+
+    UserCPsettings ucpsn = new UserCPsettings(ucps);
+    assertEquals(ucps,ucpsn);
+
+    ucps.setDirectory("/home/fio");
+    ucps.setHost("some.fio.host");
+    ucps.setPort(3333);
+    ucpsn.setSourceAddress(new Address("+79130000222"));
+    ucps.setEncoding("cp1251");
+    ucps.setLogin("user2");
+    ucps.setPassword("pwd2");
+
+    cpSettings.add(ucpsn);
+
+    o.setCpSettings(cpSettings);
+
+    assertEquals(o.getCpSettings(),cpSettings);
 
 
-
-    o.setCreateReports(true);
-    assertEquals(o.isCreateReports(),true);
-
-    o.setReportsLifetime(8888);
-    assertEquals(o.getReportsLifetime(),8888);
-    try {
-      o.setReportsLifetime(0);
-      assertTrue(false);
-    }
-    catch (AdminException e){}
-
-    try {
-      o.setReportsLifetime(-100);
-      assertTrue(false);
-    }
-    catch (AdminException e){}
-
-    o.setFileEncoding("cp1251");
-    assertEquals(o.getFileEncoding(),"cp1251");
-
-    try {
-      o.setFileEncoding("BLABLA");
-      assertTrue(false);
-    }
-    catch (AdminException e){}
   }
 
 
@@ -378,10 +378,29 @@ public class UserTest {
     o.setSmsPerSec(9);
     o.setCreateCDR(true);
     o.setSourceAddr(new Address("+79130000000"));
-    o.setFileEncoding("cp1251");
     o.setCreateCDR(true);
     o.setCdrDestination("dest");
     o.setCdrOriginator("orig");
+
+    List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
+    UserCPsettings ucps = new UserCPsettings();
+    ucps.setDirectory("/home/bla");
+    ucps.setHost("some.bla.host");
+    ucps.setPort(2222);
+    ucps.setSourceAddress(new Address("+79130000111"));
+    ucps.setEncoding("UTF-8");
+
+    UserCPsettings ucpsn = new UserCPsettings(ucps);
+    assertEquals(ucps,ucpsn);
+
+    ucps.setDirectory("/home/fio");
+    ucps.setHost("some.fio.host");
+    ucps.setPort(3333);       
+    ucpsn.setSourceAddress(new Address("+79130000222"));
+    ucps.setEncoding("cp1251");
+    cpSettings.add(ucpsn);
+
+    o.setCpSettings(cpSettings);
 
     User n = new User(o);
     UserTestUtils.compareUsers(o,n);

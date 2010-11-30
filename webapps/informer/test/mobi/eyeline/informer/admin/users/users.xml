@@ -19,15 +19,32 @@
       <param name="policyId"        type="string">1h</param>
       <param name="priority"        type="int">5</param>
       <param name="deliveryLifetime"  type="int">1000</param>
-      <param name="directory"         type="string">homedir</param>
-      <param name="fileEncoding"      type="string">UTF-8</param>
-      <param name="reportsLifetime" type="int">1002</param>
       <section name="ROLES">
         <param name="informer-admin" type="bool">true</param>
         <param name="informer-user"  type="bool">true</param>
       </section>
       <section name="REGIONS">        
         <param name="1"  type="bool">true</param>
+      </section>
+      <section name="CPSETTINGS">
+        <section name="ucps_0">
+          <param name="host" type="string">some.host.1</param>
+          <param name="port" type="int">22</param>
+          <param name="login" type="string">userName</param>
+          <param name="password" type="string">pwd</param>
+          <param name="directory" type="string">/home/path</param>
+          <param name="encoding"  type="string">UTF-8</param>
+          <param name="sourceAddress"  type="string">+79130000111</param>
+        </section>
+        <section name="ucps_1">
+          <param name="host" type="string">some.host.2</param>
+          <param name="port" type="int">33</param>
+          <param name="login" type="string">userName2</param>
+          <param name="password" type="string">pwd2</param>
+          <param name="directory" type="string">/home/path2</param>
+          <param name="encoding"  type="string">cp1251</param>
+          <param name="sourceAddress"  type="string">+79130000222</param>
+        </section>
       </section>
     </section>
     <section name="b">      
@@ -49,9 +66,6 @@
       <param name="policyId"        type="string">1m</param>
       <param name="priority"        type="int">1</param>
       <param name="deliveryLifetime"  type="int">1001</param>
-      <param name="directory"         type="string">homedir</param>
-      <param name="fileEncoding"      type="string">cp1251</param>
-      <param name="reportsLifetime" type="int">2002</param>
       <section name="ROLES">
         <param name="informer-user"  type="bool">true</param>
       </section>

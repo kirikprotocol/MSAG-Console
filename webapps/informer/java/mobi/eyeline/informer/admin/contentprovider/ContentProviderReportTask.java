@@ -68,41 +68,41 @@ class ContentProviderReportTask implements Runnable{
     }
 
     private void createReport(int deliveryId, String userName) throws AdminException, UnsupportedEncodingException {
-      User user = context.getUser(userName);
-      if (user != null && user.isCreateReports() && user.getDirectory() != null) {
-        File userDir = userDirectoryResolver.getUserDirectory(user);
-
-        Delivery d = context.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
-
-        //check was imported
-        File reportFile = new File(userDir, d.getName() + ".rep." + deliveryId);
-        if (!context.getFileSystem().exists(reportFile)) return;
-
-        PrintStream ps = null;
-
-        try {
-          ps = new PrintStream(context.getFileSystem().getOutputStream(reportFile, true), true, user.getFileEncoding());
-          final PrintStream psFinal = ps;
-          MessageFilter filter = new MessageFilter(deliveryId, d.getStartDate(), new Date());
-          context.getMessagesStates(user.getLogin(), user.getPassword(), filter, 1000, new Visitor<Message>() {
-            public boolean visit(Message mi) throws AdminException {
-              String result = "";
-              result = mi.getState().toString() + ((mi.getErrorCode()) != null ? (" errCode=" + mi.getErrorCode()) : "");
-              ContentProviderReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);
-              return true;
-            }
-          });
-        }
-        finally {
-          if (ps != null) try {
-            ps.close();
-          }
-          catch (Exception e) {
-          }
-          File finReportFile = new File(userDir, d.getName() + ".report");
-          context.getFileSystem().rename(reportFile, finReportFile);
-        }
-      }
+//      User user = context.getUser(userName);
+//      if (user != null && user.isCreateReports()) {
+//        File userDir = userDirectoryResolver.getUserDirectory(user);
+//
+//        Delivery d = context.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
+//
+//        //check was imported
+//        File reportFile = new File(userDir, d.getName() + ".rep." + deliveryId);
+//        if (!context.getFileSystem().exists(reportFile)) return;
+//
+//        PrintStream ps = null;
+//
+//        try {
+//          ps = new PrintStream(context.getFileSystem().getOutputStream(reportFile, true), true, user.getFileEncoding());
+//          final PrintStream psFinal = ps;
+//          MessageFilter filter = new MessageFilter(deliveryId, d.getStartDate(), new Date());
+//          context.getMessagesStates(user.getLogin(), user.getPassword(), filter, 1000, new Visitor<Message>() {
+//            public boolean visit(Message mi) throws AdminException {
+//              String result = "";
+//              result = mi.getState().toString() + ((mi.getErrorCode()) != null ? (" errCode=" + mi.getErrorCode()) : "");
+//              ContentProviderReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);
+//              return true;
+//            }
+//          });
+//        }
+//        finally {
+//          if (ps != null) try {
+//            ps.close();
+//          }
+//          catch (Exception e) {
+//          }
+//          File finReportFile = new File(userDir, d.getName() + ".report");
+//          context.getFileSystem().rename(reportFile, finReportFile);
+//        }
+//      }
     }
 
 }

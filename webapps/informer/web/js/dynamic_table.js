@@ -14,7 +14,7 @@ function TextColumn(columnId, allowEditAfterAdd) {
     input.setAttribute("value", value);
     input.value = value;
     input.type="text";
-    input.setAttribute("class", "txtW");
+    input.className="txtW";
     return input;
   };
 
@@ -88,7 +88,7 @@ function SelectColumn(columnId, values, allowEditAfterAdd, uniqueValues) {
     var select = document.createElement("select");
     select.id = id;
     select.name = id;
-    select.setAttribute("class", "selectW");
+    select.className="selectW";
     for (var i = 0; i < values.length; i++)
       select.options[i] = new Option(values[i], values[i], i == 0, value == values[i]);
     return select;
@@ -130,6 +130,11 @@ function SelectColumn(columnId, values, allowEditAfterAdd, uniqueValues) {
           break;
         }
       }
+    }
+
+    this.clearLastRowValue = function(tableId) {
+      var id = tableId + "_newcell_" + columnId;
+      document.getElementById(id).selectedIndex = 0;
     }
   };
 

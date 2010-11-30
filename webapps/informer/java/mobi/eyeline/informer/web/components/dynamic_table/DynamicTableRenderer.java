@@ -63,7 +63,13 @@ public class DynamicTableRenderer extends Renderer {
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
     ResponseWriter w = context.getResponseWriter();
     DynamicTable table = (DynamicTable) component;
-    w.append("\n<table class=\"properties_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\"></table>\n");
+    w.append("\n<table class=\"properties_list\" cellspacing=0 id=\"" + component.getId() + "\" name=\"" + component.getId() + "\"><tr>");
+    for (Column c : table.getColumns()) {
+      w.append("<th");
+      w.append(" width=\""+c.getWidth()+"\"");
+      w.append(" >"+(c.getTitle()==null ? "":c.getTitle())+"</td>");
+    }
+    w.append("</tr></table>\n");
 
     w.append("<script language=\"javascript\" type=\"text/javascript\">\n");
 
