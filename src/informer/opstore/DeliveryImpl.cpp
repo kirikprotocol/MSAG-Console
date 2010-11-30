@@ -467,7 +467,8 @@ void DeliveryImpl::checkFinalize()
 
 void DeliveryImpl::writeDeliveryInfoData()
 {
-    const DeliveryInfoData& data = getDlvInfo()->getDeliveryData();
+    DeliveryInfoData data;
+    getDlvInfo()->getDeliveryData(data);
     Config config;
     config.setString("name",data.name.c_str());
     config.setInt("priority",data.priority);

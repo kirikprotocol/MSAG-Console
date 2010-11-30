@@ -4,6 +4,7 @@
 #include <string.h>
 #include <vector>
 #include "core/buffers/FixedLengthString.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include "informer/io/EmbedRefPtr.h"
 #include "informer/io/Typedefs.h"
 #include "informer/io/InfosmeException.h"
@@ -63,6 +64,9 @@ class UserInfo
     friend class DeliveryImpl;
 
 public:
+    static const size_t USERID_LENGTH = userid_type::MAX_SZ;
+    static const size_t PASSWORD_LENGTH = 32;
+
     typedef std::vector< DeliveryPtr > DeliveryList;
 
     UserInfo( const char* id,
@@ -73,8 +77,17 @@ public:
               
     ~UserInfo();
 
-    const char* getUserId() const { return userId_.c_str(); }
-    const char* getPassword() const { return password_.c_str(); }
+    // NOTE: userId never changes!
+    inline const char* getUserId() const {
+        return userId_.c_str();
+    }
+
+    inline char* getPassword( char* pwd ) const {
+        MutexGuard mg(dataLock_);
+        strcpy(pwd,password_.c_str());
+        return pwd;
+    }
+
     bool hasRole( UserRole role ) const;
 
     /// max number of deliveries or (-1==unlimited).
@@ -98,7 +111,7 @@ public:
 
     // mark the user as deleted
     void setDeleted( bool del ) {
-        MutexGuard mg(statLock_);
+        MutexGuard mg(dataLock_);
         isDeleted_ = del;
     }
 
@@ -126,24 +139,26 @@ private:
 
 private:
 
-    mutable smsc::core::synchronization::Mutex lock_;
+    // NOTE: for faster reaction speed control is under reflock
+    mutable smsc::core::synchronization::Mutex refLock_;
     unsigned    ref_;
     SpeedControl<usectime_type,tuPerSec> speedControl_;
 
+    mutable smsc::core::synchronization::Mutex dataLock_;
     userid_type userId_;
     userid_type password_;
     uint64_t    roles_;
     unsigned    maxTotalDeliveries_;
     unsigned    priority_;
     bool        isDeleted_;
+    // the list of owned deliveries, ordered by dlvid
+    DeliveryList deliveries_;
 
     // statistics
     smsc::core::synchronization::Mutex statLock_;
     UserDlvStats                       stats_;
     UserDlvStats                       incstats_[2];
 
-    // the list of owned deliveries, ordered by dlvid
-    DeliveryList deliveries_;
 };
 
 typedef EmbedRefPtr<UserInfo> UserInfoPtr;

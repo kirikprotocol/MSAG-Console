@@ -431,7 +431,8 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
             }
 
             smsc::sms::SMS sms;
-            smsc::sms::Address oa = info.getSourceAddress();
+            smsc::sms::Address oa;
+            info.getSourceAddress(oa);
             sms.setOriginatingAddress(oa);
             sms.setDestinationAddress(da);
             sms.setArchivationRequested(false);
@@ -441,8 +442,17 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
 
             sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                                 info.isReplaceIfPresent() ? 1 : 0 );
-            sms.setEServiceType( (info.isReplaceIfPresent() && info.getSvcType()[0]) ?
-                                 info.getSvcType() : getCS()->getSvcType() );
+            do {
+                if ( info.isReplaceIfPresent() ) {
+                    char svcType[DeliveryInfoData::SVCTYPE_LENGTH];
+                    info.getSvcType(svcType);
+                    if ( svcType[0] ) {
+                        sms.setEServiceType(svcType);
+                        break;
+                    }
+                }
+                sms.setEServiceType(getCS()->getSvcType());
+            } while (false);
             sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID, getCS()->getProtocolId());
             sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
                                info.isTransactional() ? 2 : 0);

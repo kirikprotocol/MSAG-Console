@@ -16,6 +16,7 @@
 #include "core/buffers/IntHash64.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
+#include "system/status.h"
 
 namespace {
 
@@ -484,18 +485,11 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                                       regId, getDlvId(), i->msg.msgId,
                                       ton,npi,len,len,ulonglong(addr));
                         i->msg.state = MSGSTATE_FAILED;
-                        const int smppState = 9999;
+                        // const int smppState = smsc::system::Status::ILLEGALSUBSCRIBER;
+                        const int smppState = smsc::system::Status::DENIEDBYACCESSMASK;
                         activityLog_->addRecord(currentTime,regId,i->msg,
                                                 smppState,
                                                 MSGSTATE_INPUT);
-                        /*
-                        // FIXME check that final records are needed
-                        core_.getFinalLog().addMsgRecord(currentTime,
-                                                         getDlvId(),
-                                                         activityLog_->getUserInfo().getUserId(),
-                                                         i->msg,
-                                                         smppState );
-                         */
                         i = msglist.erase(i);
                     } else {
                         ++i;

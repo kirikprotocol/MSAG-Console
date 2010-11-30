@@ -287,14 +287,15 @@ void DcpServer::handle(const messages::UserAuth& inmsg)
 {
   UserInfoPtr ui=core->getUserInfo(inmsg.getUserId().c_str());
   int connId=inmsg.messageGetConnId();
-  if(!ui.get() || inmsg.getPassword()!=ui->getPassword())
+  char pwd[UserInfo::PASSWORD_LENGTH];
+  if(!ui.get() || inmsg.getPassword()!=ui->getPassword(pwd))
   {
     if(!ui.get())
     {
       smsc_log_warn(log,"user '%s' not found",inmsg.getUserId().c_str());
     }else
     {
-      smsc_log_warn(log,"password mismatch for user '%s' ('%s'!='%s')",inmsg.getUserId().c_str(),ui->getPassword(),inmsg.getPassword().c_str());
+      smsc_log_warn(log,"password mismatch for user '%s' ('%s'!='%s')",inmsg.getUserId().c_str(),pwd,inmsg.getPassword().c_str());
     }
     mkFailResponse(connId,inmsg.messageGetSeqNum(),DcpError::AuthFailed,"user not found or password mismatch");
     return;
@@ -526,8 +527,8 @@ void DcpServer::handle(const messages::GetDeliveryInfo& inmsg)
 {
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
-  const DeliveryInfo& di=dlv->getDlvInfo();
-  const DeliveryInfoData& did=di.getDeliveryData();
+  DeliveryInfoData did;
+  dlv->getDlvInfo().getDeliveryData(did);
   messages::GetDeliveryInfoResp resp;
   fillMsgFromDeliveryInfoData(resp.getInfoRef(),did);
   enqueueResp(resp,inmsg);
@@ -539,11 +540,12 @@ static bool isDeliveryMatchFilter(Delivery* dlv,const messages::DeliveriesFilter
 {
   if(flt.hasNameFilter())
   {
-    std::string nm=dlv->getDlvInfo().getName();
+    char nm[DeliveryInfoData::NAME_LENGTH];
+    dlv->getDlvInfo().getName(nm);
     bool found=false;
     VECLOOP(it,std::string,flt.getNameFilter())
     {
-      if(nm.find(*it)!=std::string::npos)
+      if(strstr(nm,it->c_str())!=NULL)
       {
         found=true;
         break;
@@ -737,7 +739,12 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
               dli.setEndDate(msgTimeToDateTimeStr(di.getEndDate()));
             }
             break;
-          case messages::DeliveryFields::Name:dli.setName(di.getName());break;
+          case messages::DeliveryFields::Name: {
+            char nm[DeliveryInfoData::NAME_LENGTH];
+            di.getName(nm);
+            dli.setName(nm);
+            break;
+          }
           case messages::DeliveryFields::StartDate:
             if(di.getStartDate()!=0)
             {
@@ -745,7 +752,12 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
             }
             break;
           case messages::DeliveryFields::Status:dli.setStatus(dlvStateToDeliveryStatus(dlv->getState(0)));break;
-          case messages::DeliveryFields::UserData:dli.setUserData(di.getUserData());break;
+          case messages::DeliveryFields::UserData: {
+            std::string userData;
+            di.getUserData(userData);
+            dli.setUserData(userData);
+            break;
+          }
           case messages::DeliveryFields::UserId:dli.setUserId(dlv->getUserInfo().getUserId());break;
         }
       }

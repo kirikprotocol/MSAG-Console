@@ -21,6 +21,10 @@ enum DlvMode{
 /// the structure holding data from dcp protocol.
 struct DeliveryInfoData
 {
+    static const size_t NAME_LENGTH = 64;    // max len (including \0)
+    static const size_t SVCTYPE_LENGTH = 32; // max len (including \0)
+    static const size_t USERDATA_LENGTH = 1024;
+
   std::string name;
   int32_t priority;
   bool transactionMode;
@@ -57,33 +61,37 @@ public:
 
     void update( const DeliveryInfoData& data );
 
-    const DeliveryInfoData& getDeliveryData() const
-    {
-      return data_;
+    inline void getDeliveryData( DeliveryInfoData& data ) const {
+        MutexGuard mg(lock_);
+        data = data_;
     }
 
     // ============ delivery settings ==========================
 
-    const char* getName() const { return data_.name.c_str(); }
+    /// get the name of the delivery
+    inline void getName( char* name ) const {
+        MutexGuard mg(lock_);
+        strcpy(name,data_.name.c_str());
+    }
 
-    unsigned getPriority() const { return data_.priority; }
+    inline unsigned getPriority() const { return data_.priority; }
 
-    bool isTransactional() const { return data_.transactionMode; }
+    inline bool isTransactional() const { return data_.transactionMode; }
 
-    bool wantFinalMsgRecords() const { return data_.finalMsgRecords; }
-    bool wantFinalDlvRecords() const { return data_.finalDlvRecords; }
+    inline bool wantFinalMsgRecords() const { return data_.finalMsgRecords; }
+    inline bool wantFinalDlvRecords() const { return data_.finalDlvRecords; }
 
     /// return start date or 0
-    msgtime_type getStartDate() const { return startDate_; }
+    inline msgtime_type getStartDate() const { return startDate_; }
 
     /// return end date or 0
-    msgtime_type getEndDate() const { return endDate_; }
+    inline msgtime_type getEndDate() const { return endDate_; }
 
     /// return active period start in seconds since midnight (localtime) or -1
-    timediff_type getActivePeriodStart() const { return activePeriodStart_; }
+    inline timediff_type getActivePeriodStart() const { return activePeriodStart_; }
 
     /// return active period end in seconds since midnight (localtime) or -1
-    timediff_type getActivePeriodEnd() const { return activePeriodEnd_; }
+    inline timediff_type getActivePeriodEnd() const { return activePeriodEnd_; }
 
     // return active week days or -1
     // int getActiveWeekDays() const { return activeWeekDays_; }
@@ -92,27 +100,38 @@ public:
     bool checkActiveTime( int weekTime ) const;
 
     /// get validity period or -1
-    timediff_type getValidityPeriod() const { return validityPeriod_; }
+    inline timediff_type getValidityPeriod() const { return validityPeriod_; }
 
-    bool isFlash() const { return data_.flash; }
+    inline bool isFlash() const { return data_.flash; }
 
-    bool useDataSm() const { return data_.useDataSm; }
+    inline bool useDataSm() const { return data_.useDataSm; }
 
-    DlvMode getDeliveryMode() const { return data_.deliveryMode; }
+    inline DlvMode getDeliveryMode() const { return data_.deliveryMode; }
 
     // if retry on fail is requested.
-    bool wantRetryOnFail() const { return data_.retryOnFail; }
+    inline bool wantRetryOnFail() const { return data_.retryOnFail; }
     timediff_type getRetryInterval( uint16_t retryCount ) const {
+        MutexGuard mg(lock_);
         return retryPolicy_.getRetryInterval(retryCount);
     }
 
-    bool isReplaceIfPresent() const { return data_.replaceMessage; }
+    inline bool isReplaceIfPresent() const { return data_.replaceMessage; }
 
-    const char* getSvcType() const { return data_.svcType.c_str(); }
+    void getSvcType( char* svcType ) const {
+        MutexGuard mg(lock_);
+        strcpy(svcType,data_.svcType.c_str());
+    }
 
-    const char* getUserData() const { return data_.userData.c_str(); }
+    // const char* getUserData() const { return data_.userData.c_str(); }
+    void getUserData( std::string& userData ) const {
+        MutexGuard mg(lock_);
+        userData = data_.userData;
+    }
 
-    const smsc::sms::Address& getSourceAddress() const { return sourceAddress_; }
+    void getSourceAddress( smsc::sms::Address& oa ) const {
+        MutexGuard mg(lock_);
+        oa = sourceAddress_;
+    }
 
     // ============ end of delivery settings ==========================
 
@@ -126,7 +145,9 @@ private:
 
 private:
     dlvid_type            dlvId_;
-    DeliveryInfoData      data_;
+
+    mutable smsc::core::synchronization::Mutex lock_;
+    DeliveryInfoData                   data_;
 
     // cached things updated from data_
     msgtime_type          startDate_;

@@ -46,6 +46,10 @@ int parseWeekDays( const std::vector< std::string >& wd )
 
 } // namespace
 
+const size_t DeliveryInfoData::NAME_LENGTH;
+const size_t DeliveryInfoData::SVCTYPE_LENGTH;
+const size_t DeliveryInfoData::USERDATA_LENGTH;
+
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
 DeliveryInfo::DeliveryInfo( dlvid_type              dlvId,
@@ -73,6 +77,7 @@ void DeliveryInfo::update( const DeliveryInfoData& data )
 
 bool DeliveryInfo::checkActiveTime( int weekTime ) const
 {
+    MutexGuard mg(lock_);
     if (activeWeekDays_ != -1) {
         const unsigned weekDay = unsigned(weekTime / daynight);
         if ( weekDay>= 7 ) {
@@ -103,110 +108,24 @@ bool DeliveryInfo::checkActiveTime( int weekTime ) const
 }
 
 
-/*
-timediff_type DeliveryInfo::nextActiveTime( int tm_wday, msgtime_type now ) const
-{
-    if ((activeWeekDays_ & 0x6f) == 0) {
-        throw InfosmeException(EXC_LOGICERROR,"wrong active week days: %d",activeWeekDays_);
-    }
-    // current day time
-    timediff_type ms = timediff_type(now % daynight);
-    timediff_type res = 0;
-    const char* what = "";
-    timediff_type fixedAE = activePeriodEnd_ - 60; // one minute less
-    if (fixedAE<0) { fixedAE += daynight; }
-    for (;;) {
-
-        smsc_log_debug(log_,"D=%u acttime wday=%u ms=%u as=%d ae=%d res=%u",
-                       dlvId_, tm_wday, ms, activePeriodStart_, fixedAE, res );
-
-        if ((weekBits[tm_wday] & activeWeekDays_)!=0) {
-            // day is allowed
-            if (activePeriodStart_<0) {
-                // not limited by period
-                what = "all day allowed";
-                break;
-            }
-
-            if (ms<activePeriodStart_) {
-                if (fixedAE < activePeriodStart_ && ms < fixedAE ) {
-                    what = "before invend";
-                    break;
-                } else {
-                    what = "before start";
-                    res += activePeriodStart_ - ms;
-                    break;
-                }
-            } else if (fixedAE < activePeriodStart_) {
-                what = "after invstart";
-                break;
-            }
-        }
-
-        // move to the next day
-        res += (daynight - ms);
-        ms = 0;
-        if ( ++tm_wday >= 7 ) {tm_wday = 0;}
-
-    }
-    smsc_log_debug(log_,"D=%u acttime final (%s) res=%u",dlvId_,what,res);
-    return res;
-}
-
-
-timediff_type DeliveryInfo::nextStopTime( int tm_wday, msgtime_type now ) const
-{
-    if ( (activeWeekDays_ & 0x6f) == 0x6f &&
-         activePeriodStart_<0 ) {
-        // not limited
-        return -1;
-    }
-    timediff_type ms = timediff_type(now % daynight);
-    timediff_type fixedAE = activePeriodEnd_ - 60;
-    if (fixedAE<0) { fixedAE += daynight; }
-    timediff_type res = 0;
-    const char* what = "";
-    for (;;) {
-
-        smsc_log_debug(log_,"D=%u stoptime wday=%u ms=%u as=%d ae=%d res=%u",
-                       dlvId_, tm_wday, ms, activePeriodStart_, fixedAE, res );
-
-        if ((weekBits[tm_wday] & activeWeekDays_)==0) {
-            // day is not allowed
-            what = "all day forbidden";
-            break;
-        }
-        // day is allowed
-        if (activePeriodStart_>=0) {
-            if (ms < fixedAE) {
-                if (activePeriodStart_<fixedAE && ms < activePeriodStart_) {
-                    what = "before start";
-                    break;
-                } else {
-                    res += fixedAE - ms;
-                    what = "before end";
-                    break;
-                }
-            } else if (ms < activePeriodStart_) {
-                what = "before invstart";
-                break;
-            }
-        }
-
-        // move to the next day
-        res += (daynight - ms);
-        ms = 0;
-        if (++tm_wday>=7) {tm_wday = 0;}
-    }
-    smsc_log_debug(log_,"D=%u stoptime final (%s) res=%u",dlvId_,what,res);
-    return res;
-}
- */
-
-
 void DeliveryInfo::updateData( const DeliveryInfoData& data,
                                const DeliveryInfoData* old )
 {
+    // pre-check
+    if ( data.svcType.size() >= DeliveryInfoData::SVCTYPE_LENGTH ) {
+        throw InfosmeException(EXC_BADNAME,"D=%u too long svcType '%s'",
+                               dlvId_, data.svcType.c_str());
+    }
+    if ( data.name.size() >= DeliveryInfoData::NAME_LENGTH ) {
+        throw InfosmeException(EXC_BADNAME,"D=%u too long name '%s'",
+                               dlvId_, data.name.c_str());
+    }
+    if ( data.userData.size() >= DeliveryInfoData::USERDATA_LENGTH ) {
+        throw InfosmeException(EXC_BADNAME,"D=%u too long userdata '%s'",
+                               dlvId_, data.userData.c_str());
+    }
+
+    MutexGuard mg(lock_);
     msgtime_type startDate = startDate_;
     msgtime_type endDate = endDate_;
     timediff_type activePeriodStart = activePeriodStart_;
@@ -250,9 +169,10 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         sourceAddressChanged = true;
     }
 
-    if ( !isGoodAsciiName(data.userData.c_str()) ) {
-        throw InfosmeException(EXC_BADNAME,"invalid chars in userData '%s'",data.userData.c_str());
-    }
+    // NOTE: we don't need this check as we don't use userdata in core
+    // if ( !isGoodAsciiName(data.userData.c_str()) ) {
+    // throw InfosmeException(EXC_BADNAME,"invalid chars in userData '%s'",data.userData.c_str());
+    // }
 
     /// post-parsing check & fill
     if (data.priority < 1 || data.priority > 100 ) {
