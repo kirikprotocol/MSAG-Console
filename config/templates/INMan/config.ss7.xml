@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+<!--  "$Id$" -->
+<!-- configuration for INMan v0.8.0 or higher -->
+<config>
+
+  <section name="SS7_HD"> <!-- SS7 HD stack interaction parameters -->
+    <param name="cpMgrHosts" type="string">
+      @CPMgr.host@ : @CPMgr.port@ , @CPMgr2.host@ : @CPMgr2.port@
+    </param>  <!-- CSV list of Remote CommonParts Managers addresses
+    (in form 'host:port') -->
+    <param name="cpMgrInstId" type="int">0</param> <!-- optional: Remote
+    CommonParts Manager instanceId, [0..255], default: 0 -->
+    <param name="mpUserId" type="int">03</param>               <!--
+    CP userId of message port owner [1..20] -->
+    <param name="maxMsgNum" type="int">800</param> <!-- optional:
+    max input SS7 messages buffer size, [1..65535], default: 512 -->
+    <param name="reconnectTimeout" type="int">1000</param> <!--
+    timeout between reconnection attempts, units millisecs
+    [500..65535], default: 800  --> 
+
+    <param name="dfltLayout" type="string">TCAPApplication1</param>
+    <!-- name of 'Layouts' subsection that describes required stack configuration.
+    NOTE: may be overriden by commandline arg -->
+
+    <section name="Layouts">
+
+      <section name="TCAPApplication1"> <!-- simple application that
+      uses single TCAP BE (1st instance) -->
+        <param name="instanceId" type="int">1</param>
+        <!-- optional: local application instanceId, [1..255], default: 1 -->
+        <param name="ss7Units" type="string">TCAP_BE_1</param>
+        <!-- CSV list of names of SS7 Unit(s) configuration sections  -->
+      </section>
+
+      <section name="TCAPApplication2"> <!-- simple application that
+      uses single TCAP BE (2nd instance) -->
+        <param name="instanceId" type="int">2</param>
+        <!-- optional: local application instanceId, [1..255], default: 1 -->
+        <param name="ss7Units" type="string">TCAP_BE_2</param>
+        <!-- CSV list of names of SS7 Unit(s) configuration sections  -->
+      </section>
+
+      <section name="TCAPApplicationHD"> <!-- simple application that
+      uses HD TCAP BE (distibuted by two instances) -->
+        <param name="instanceId" type="int">3</param>
+        <!-- optional: local application instanceId, [1..255], default: 1 -->
+        <param name="ss7Units" type="string">TCAP_BE_HD2</param>
+        <!-- CSV list of names of SS7 Unit(s) configuration sections  -->
+      </section>
+
+      <section name="ComplexApplication"> <!-- complex application that
+      uses HD TCAP BE (distibuted by two instances) and single SCCP BE -->
+        <param name="instanceId" type="int">4</param>
+        <!-- optional: local application instanceId, [1..255], default: 1 -->
+        <param name="ss7Units" type="string">TCAP_BE_HD2, SCCP_BE_1</param>
+        <!-- CSV list of names of SS7 Unit(s) configuration sections  -->
+      </section>
+
+    </section> <!-- SS7_HD.Layouts -->
+
+    <section name="SS7Units"> <!-- configuration of known SS7 Units  -->
+      <section name="TCAP_BE_1"> <!-- single instance TCAP unit  -->
+        <param name="unitId" type="string">TCAP_ID</param>
+        <!-- id of interacted communication unit, see portss7.h -->
+        <param name="instancesList" type="string">1</param>
+        <!-- optional: CSV list of instanceIds of interacted communication
+        unit, [1..255], default: "1" --> 
+      </section>
+
+      <section name="TCAP_BE_2"> <!-- single instance TCAP unit -->
+        <param name="unitId" type="string">TCAP_ID</param>
+        <!-- id of interacted communication unit, see portss7.h -->
+        <param name="instancesList" type="string">2</param>
+        <!-- optional: CSV list of instanceIds of interacted communication
+        unit, [1..255], default: "1" -->
+      </section>
+
+      <section name="TCAP_BE_HD2"> <!-- HD variant of TCAP unit
+      distributed by two instances -->
+        <param name="unitId" type="string">TCAP_ID</param>
+        <!-- id of interacted communication unit, see portss7.h -->
+        <param name="instancesList" type="string">1, 2</param>
+        <!-- optional: CSV list of instanceIds of interacted communication
+        unit, [1..255], default: "1" -->
+      </section>
+
+      <section name="SCCP_BE_1"> <!-- single instance SCCP unit  -->
+        <param name="unitId" type="string">SCCP_ID</param>
+        <!-- id of interacted communication unit, see portss7.h -->
+        <param name="instancesList" type="string">1</param>
+        <!-- optional: CSV list of instanceIds of interacted communication
+        unit, [1..255], default: "1" -->
+      </section>
+
+    </section> <!-- SS7_HD.SS7Units -->
+
+  </section> <!-- SS7_HD -->
+
+  <section name="SS7"> <!-- SS7 HR stack interaction parameters -->
+    <param name="ss7UserId" type="int">03</param>  <!--
+    PortSS7 user id [1..20], default: 03  -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxMsgNum" type="int">800</param>  <!--
+    max input SS7 messages buffer size, [1..65535], default: 512,
+    NOTE: is overriden by value from cp.cnf  --> 
+    <param name="reconnectTimeout" type="int">1000</param> <!--
+    timeout between reconnection attempts, units millisecs
+    [500..65535], default: 800  --> 
+  </section>
+
+  <section name="TCAPUserCAP"> <!-- CAP3 specific TCUser configuration -->
+    <param name="ownSsn" type="int">146</param>
+    <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxDialogs" type="int">2000</param>   <!--
+    maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+    -->
+    <param name="fakeSsn" type="int">0</param>    <!--
+    SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+    -->
+    <param name="rosTimeout" type="int">20</param>   <!--
+    timeout on ROS operations (MAP/CAP), units: seconds, max: 65535, default 20
+    -->
+  </section>
+
+  <section name="TCAPUserSRI"> <!-- SRI specific TCUser configuration -->
+    <param name="ownSsn" type="int">146</param>
+    <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxDialogs" type="int">500</param>   <!--
+    maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+    -->
+    <param name="fakeSsn" type="int">8</param>    <!--
+    SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+    -->
+    <param name="rosTimeout" type="int">10</param>   <!--
+    timeout on MAP operations, units: seconds, max: 65535, default 20
+    -->
+  </section>
+
+  <section name="TCAPUserATSI"> <!-- ATSI specific TCUser configuration -->
+    <param name="ownSsn" type="int">146</param>
+    <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxDialogs" type="int">500</param>   <!--
+    maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+    -->
+    <param name="fakeSsn" type="int">147</param>    <!--
+    SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+    -->
+    <param name="rosTimeout" type="int">10</param>   <!--
+    timeout on MAP operations, units: seconds, max: 65535, default 20
+    -->
+  </section>
+
+</config>
+
