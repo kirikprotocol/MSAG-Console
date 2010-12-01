@@ -188,7 +188,7 @@
                 </f:facet>
               </eye:column>
 
-              <eye:column name="wait" title="#{msg['stat.page.wait']}" sortable="true" width="10%" align="center">
+              <eye:column name="wait" title="#{msg['stat.page.indelivery']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.stat.newMessages+row.stat.processMessages}"/>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.newMessages+messagesByDeliveries.totals.processMessages}" style="font-weight:bold;"/>

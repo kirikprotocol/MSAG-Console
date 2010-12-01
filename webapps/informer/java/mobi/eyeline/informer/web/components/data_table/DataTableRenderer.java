@@ -199,14 +199,15 @@ public class DataTableRenderer extends Renderer {
 
     w.append("<table class=\"navbar\" cellspacing=\"1\" cellpadding=\"0\">");
     w.append("<tr>");
-    if (m.getRowsCount() > t.getPageSize()) {
+    int rowsCount = m.getRowsCount();
+    if (rowsCount > t.getPageSize()) {
 
       w.append("<td class=\"first\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(0)\"><img src=\"" + ctxPath + "/images/nav_first.gif\" width=\"12\" height=\"11\"></a></td>");
       if (t.getCurrentPage() > 0)
         w.append("<td class=\"prev\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() - 1) + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"></a></td>");
 
-      int numberOfPages = m.getRowsCount() / t.getPageSize();
-      if (t.getPageSize() * numberOfPages == m.getRowsCount())
+      int numberOfPages = rowsCount / t.getPageSize();
+      if (t.getPageSize() * numberOfPages == rowsCount)
         numberOfPages--;
 
       int firstPageNumber = Math.max(t.getCurrentPage() - 5, 0);
@@ -223,7 +224,7 @@ public class DataTableRenderer extends Renderer {
 
     ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale());
 
-    w.append("<td class=\"total\">" + b.getString("total") + ": " + m.getRowsCount() + "&nbsp;");
+    w.append("<td class=\"total\">" + b.getString("total") + ": " + rowsCount + "&nbsp;");
     if (t.isPageSizeRendered()) {
       w.append(b.getString("page") + ": ");
       w.append("<select id=\"" + t.getId() + "_pageSizeSelect\" name=\"" + t.getId() + "_pageSizeSelect\" onchange=\"pagedTable" + t.getId() + ".setPageSize(this.options[this.selectedIndex].value)\">");

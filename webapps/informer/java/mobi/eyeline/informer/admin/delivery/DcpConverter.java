@@ -178,7 +178,7 @@ class DcpConverter {
       result.setAbonent(new Address(mi.getAbonent()));
     }
     if (mi.hasDate()) {
-      result.setDate(convertDateFromDcpFormat(mi.getDate()));
+      result.setDate(convertDateYYFromDcpFormat(mi.getDate()));
     }
     if (mi.hasErrorCode()) {
       result.setErrorCode(mi.getErrorCode());

@@ -17,15 +17,15 @@ public class Message {
 
   private static final ValidationHelper vh = new ValidationHelper(Message.class);
 
-  private Long id;
-  private MessageState state;
-  private Date date;
-  private String text;
-  private int glossaryIndex;
-  private Address abonent;
-  private Integer errorCode;
+  protected Long id;
+  protected MessageState state;
+  protected Date date;
+  protected String text;
+  protected Integer glossaryIndex;
+  protected Address abonent;
+  protected Integer errorCode;
 
-  private final Properties properties = new Properties();
+  protected final Properties properties = new Properties();
 
   public static Message newMessage(String text) {
     return new Message(text);
@@ -118,7 +118,7 @@ public class Message {
     return properties;
   }
 
-  int getGlossaryIndex() {
+  Integer getGlossaryIndex() {
     return glossaryIndex;
   }
 

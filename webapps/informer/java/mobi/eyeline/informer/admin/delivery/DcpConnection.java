@@ -336,7 +336,7 @@ class DcpConnection {
     GetNextMessagesPackResp resp = client.send(req);
     if (resp.getInfo() != null) {
       for (mobi.eyeline.informer.admin.delivery.protogen.protocol.MessageInfo mi : resp.getInfo()) {
-        messages.add(convert(mi));
+        messages.add(new LazyMessage(mi));
       }
     }
     return resp.getMoreMessages();
