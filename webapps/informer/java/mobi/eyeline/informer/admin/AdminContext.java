@@ -366,25 +366,6 @@ public class AdminContext {
       }
       User oldUser = usersManager.getUser(u.getLogin());
 
-      if(!u.isCreateCDR() && oldUser.isCreateCDR()) {
-        DeliveryFilter filter = new DeliveryFilter();
-        filter.setUserIdFilter(u.getLogin());
-        final boolean[] exist = new boolean[]{false};
-        filter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Paused);
-        deliveryManager.getDeliveries(u.getLogin(), u.getPassword(), filter, 1000, new Visitor<Delivery>() {
-          public boolean visit(Delivery value) throws AdminException {
-            if(value.isEnableMsgFinalizationLogging()) {
-              exist[0] = true;
-              return false;
-            }
-            return true;
-          }
-        });
-        if(exist[0]) {
-          throw new IntegrityException("user.cdr.cant.disable", u.getLogin());
-        }
-      }
-
       usersManager.updateUser(u);
       if (oldUser.getStatus() != u.getStatus()) {
         restrictionDaemon.rebuildSchedule();
