@@ -1,25 +1,24 @@
-#include "DOMTreeReader.h"
-
-#include <xercesc/dom/DOM.hpp>
+/* 
+ * "@(#)$Id$"
+ */
+#include <iostream>
 #include <xercesc/sax/SAXException.hpp>
 
-#include <iostream>
-#include <logger/Logger.h>
-#include <util/xml/DOMErrorLogger.h>
-#include <util/xml/init.h>
-#include <util/xml/DtdResolver.h>
+#include "util/xml/DOMTreeReader.h"
+#include "util/xml/init.h"
+#include "util/xml/DtdResolver.h"
 
 namespace smsc {
 namespace util {
 namespace xml {
 
-using smsc::logger::Logger;
+//using smsc::logger::Logger;
 
-DOMTreeReader::DOMTreeReader()
-  :parser(0)
+DOMTreeReader::DOMTreeReader(unsigned throw_lvl/* = (unsigned)-1*/)
+  : _throwLvl(throw_lvl)
 {
   initXerces();
-  parser.reset(createParser());
+  parser.reset(createParser(_throwLvl));
 }
 
 DOMTreeReader::~DOMTreeReader()
@@ -29,7 +28,7 @@ DOMTreeReader::~DOMTreeReader()
 }
 
 
-DOMBuilder * DOMTreeReader::createParser() {
+DOMBuilder * DOMTreeReader::createParser(unsigned throw_lvl/* = (unsigned)-1*/) {
   XMLCh tempStr[100];
   XMLString::transcode("LS", tempStr, 99);
   DOMBuilder *parser = ((DOMImplementationLS*)DOMImplementationRegistry::getDOMImplementation(tempStr))->createDOMBuilder(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
@@ -39,7 +38,7 @@ DOMBuilder * DOMTreeReader::createParser() {
   if (parser->canSetFeature(XMLUni::fgDOMNamespaces, false))
     parser->setFeature(XMLUni::fgDOMNamespaces, false);
 
-	parser->setErrorHandler(new DOMErrorLogger());
+	parser->setErrorHandler(new DOMErrorLogger(throw_lvl));
 	parser->setEntityResolver(new DtdResolver()); 
 
 	return parser;
@@ -52,7 +51,11 @@ DOMDocument * DOMTreeReader::read(const char * const filename)
   try {
     Wrapper4InputSource source(new LocalFileInputSource(XmlStr(filename)));
     return read(source);
-  } catch (Exception &e)
+  }
+  catch (const ParseException & pexc) {
+    throw;
+  }
+  catch (smsc::util::Exception &e)
   {
     smsc_log_error(Logger::getInstance("smsc.util.xml.DOMTreeReader"), "An error occured during parsing file (\"%s\"): %s", filename, e.what());
     throw ParseException(e.what());
@@ -92,6 +95,9 @@ DOMDocument * DOMTreeReader::read(const DOMInputSource & source)
     std::auto_ptr<char> message(XMLString::transcode(e.getMessage()));
     smsc_log_error(Logger::getInstance("smsc.util.xml.DOMTreeReader"), "A SAX error occured during parsing, nested: %s", message.get());
     throw ParseException(message.get());
+  }
+  catch (const ParseException & pexc) {
+    throw;
   }
   catch (...)
   {
