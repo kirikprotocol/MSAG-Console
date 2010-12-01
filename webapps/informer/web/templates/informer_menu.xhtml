@@ -40,7 +40,7 @@
             <eye:menubaritem><h:commandLink value="#{msg['informer.stats.deliveries']}" action="STATS_DELIVERIES_COUNTS_BY_PERIOD"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.deliveries']}" action="STATS_MESSAGES_BY_DELIVERIES"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.recipients']}" action="STATS_MESSAGES_BY_REC"/></eye:menubaritem>
-            <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.byUser']}" action="STATS_DELIVERY_MESSAGES_BY_USER"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.byUser']}" action="STATS_DELIVERY_MESSAGES_BY_USER" rendered="#{userSession.userInAdminRole}"/></eye:menubaritem>
           </eye:menubar>
         </td>
         <td width="100%">&#160;</td>

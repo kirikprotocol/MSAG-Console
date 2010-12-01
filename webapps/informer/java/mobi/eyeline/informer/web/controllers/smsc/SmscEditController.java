@@ -207,6 +207,10 @@ public class SmscEditController extends SmscController {
     this.tempErrors = tempErrors;
   }
 
+  public boolean isAllowUssdPush() {
+    return getConfig().isAllowUssdPushDeliveries();
+  }
+
   public static class SmscInfo {
 
     private String name;

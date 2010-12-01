@@ -61,6 +61,7 @@ public class UserEditController extends UserController {
       userToEdit.setAllRegionsAllowed(true);      
       userToEdit.setDeliveryLifetime(72);
       userToEdit.setDeliveryType(User.DeliveryType.SMS);
+      userToEdit.setSmsPerSec(1);
     } else {
       userToEdit = getConfig().getUser(userId);
     }

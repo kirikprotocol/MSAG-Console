@@ -30,8 +30,8 @@ public class User implements Serializable {
 
   private boolean retryOnFail;
   private String policyId;
-  private boolean createCDR = true;
-  private int smsPerSec = 1;
+  private boolean createCDR;
+  private int smsPerSec;
   private Address sourceAddr;
   private Time deliveryStartTime;
   private Time deliveryEndTime;

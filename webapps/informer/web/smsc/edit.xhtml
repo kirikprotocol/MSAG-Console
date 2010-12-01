@@ -98,16 +98,16 @@
       <eye:collapsingGroup label="#{msg['smsc.edit.advanced']}" opened="true">
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <!-- THIS AND OTHER PANEL GROUPS IS WORKAROUND FOR IE -->
-          <h:outputText style="white-space:nowrap;" value="#{smscBundle.ussdServiceOp}"/>
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.ussdServiceOp}" rendered="#{smscEdit.allowUssdPush}"/>
 
-          <tr:inputText value="#{smscEdit.smsc.ussdServiceOp}" required="true" simple="true" columns="6">
+          <tr:inputText value="#{smscEdit.smsc.ussdServiceOp}" required="true" simple="true" columns="6" rendered="#{smscEdit.allowUssdPush}">
             <tr:validateLongRange minimum="0"/>
           </tr:inputText>
 
 
-          <h:outputText style="white-space:nowrap;" value="#{smscBundle.vlrUssdServiceOp}"/>
+          <h:outputText style="white-space:nowrap;" value="#{smscBundle.vlrUssdServiceOp}" rendered="#{smscEdit.allowUssdPush}"/>
 
-          <tr:inputText value="#{smscEdit.smsc.vlrUssdServiceOp}" required="true" simple="true" columns="6">
+          <tr:inputText value="#{smscEdit.smsc.vlrUssdServiceOp}" required="true" simple="true" columns="6" rendered="#{smscEdit.allowUssdPush}">
             <tr:validateLongRange minimum="0"/>
           </tr:inputText>
 
