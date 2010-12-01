@@ -1,10 +1,7 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
-import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
-import mobi.eyeline.informer.admin.delivery.Visitor;
+import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -324,10 +321,12 @@ public class DeliveryListController extends DeliveryController {
 
       Integer id = Integer.parseInt(idFilter);
       final Delivery[] delivery = new Delivery[]{null};
+      final DeliveryStatistics[] stats = new DeliveryStatistics[]{null};
       try {
         Delivery d = config.getDelivery(u.getLogin(), u.getPassword(), id);
         if(accept(d, filter)) {
           delivery[0] = d;
+          stats[0] = config.getDeliveryStats(u.getLogin(), u.getPassword(), delivery[0].getId());
         }
       } catch (AdminException e) {
         addError(e);
@@ -336,7 +335,7 @@ public class DeliveryListController extends DeliveryController {
         public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
           List<DeliveryRow> rows = new ArrayList<DeliveryRow>(1);
           if(delivery[0] != null) {
-            rows.add(new DeliveryRow(delivery[0]));
+            rows.add(new DeliveryRow(delivery[0], stats[0]));
           }
           return rows;
         }
@@ -358,8 +357,10 @@ public class DeliveryListController extends DeliveryController {
 
             List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
             for (Delivery di : list)
-              if (di != null)
-                rows.add(new DeliveryRow(di));
+              if (di != null) {
+                DeliveryStatistics stats = config.getDeliveryStats(u.getLogin(), u.getPassword(), di.getId());
+                rows.add(new DeliveryRow(di, stats));
+              }
             return rows;
 
           } catch (AdminException e) {
@@ -443,8 +444,11 @@ public class DeliveryListController extends DeliveryController {
 
     private final Delivery delivery;
 
-    public DeliveryRow(Delivery Delivery) {
-      this.delivery = Delivery;
+    private final DeliveryStatistics stats;
+
+    public DeliveryRow(Delivery delivery, DeliveryStatistics stats) {
+      this.delivery = delivery;
+      this.stats = stats;
     }
 
     public Integer getId() {
@@ -473,6 +477,39 @@ public class DeliveryListController extends DeliveryController {
 
     public int getDeliveryId() {
       return delivery.getId();
+    }
+
+    public boolean isRenderProgress() {
+      return delivery.getStatus() == DeliveryStatus.Active;
+    }
+
+    public int getTotal() {
+      return (int)(stats.getDeliveredMessages()+stats.getExpiredMessages()+
+              stats.getProcessMessages()+stats.getNewMessages()+stats.getFailedMessages());
+    }
+
+    public int getFinalized() {
+      return (int)(stats.getDeliveredMessages()+stats.getExpiredMessages()+stats.getFailedMessages());
+    }
+
+    public long getNewMessages() {
+      return stats.getNewMessages();
+    }
+
+    public long getProcessMessages() {
+      return stats.getProcessMessages();
+    }
+
+    public long getDeliveredMessages() {
+      return stats.getDeliveredMessages();
+    }
+
+    public long getFailedMessages() {
+      return stats.getFailedMessages();
+    }
+
+    public long getExpiredMessages() {
+      return stats.getExpiredMessages();
     }
   }
 

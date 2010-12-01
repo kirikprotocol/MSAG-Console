@@ -87,7 +87,15 @@
             <h:outputText value="#{m.userId}"/>
           </eye:column>
           <eye:column name="status" title="#{msg['delivery.status']}" sortable="true" width="19%" align="center">
-            <eye:status status="#{m.status.stringValue}"/>
+
+            <tr:panelBorderLayout shortDesc="#{msg['delivery.messages.new']} #{m.newMessages}, #{msg['delivery.messages.process']} #{m.processMessages}, #{msg['delivery.messages.delivered']} #{m.deliveredMessages}, #{msg['delivery.messages.failed']} #{m.failedMessages}, #{msg['delivery.messages.expired']}  #{m.expiredMessages}">
+
+              <eye:status status="#{m.status.stringValue}" rendered="#{!m.renderProgress}"/>
+
+              <eye:progressBar fontSize="10" rendered="#{m.renderProgress}" current="#{m.finalized}" maximum="#{m.total}" width="150" height="10"/>
+
+            </tr:panelBorderLayout>
+
           </eye:column>
           <eye:column name="startDate" title="#{deliveryBundle.startDate}" sortable="true" width="19%" align="center">
             <tr:outputText value="#{m.startDate}">
@@ -106,7 +114,7 @@
       <h:panelGroup style="display: #{deliveries.init ? '' : 'none'}">
         <eye:delimiter/>
         <eye:buttons>
-          <eye:button>                
+          <eye:button>
             <tr:commandLink text="#{msg['add.button']}" action="DELIVERY_CREATE"/>
           </eye:button>
           <eye:button>

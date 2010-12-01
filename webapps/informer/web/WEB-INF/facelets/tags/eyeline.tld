@@ -82,6 +82,13 @@
       <type>java.lang.String</type>
       <required>true</required>
     </attribute>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Отрисовывать или нет (по умолчанию: да)</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
   </tag>
 
   <!-- DELIMITER -->
@@ -163,6 +170,13 @@
     </attribute>
 
     <attribute>
+      <name>rendered</name>
+      <description>Отрисовывать элемент или нет (по умолчанию: да)</description>
+      <type>boolean</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
       <name>percents</name>
       <description>Показывать проценты или нет</description>
       <type>boolean</type>
@@ -180,6 +194,13 @@
       <name>fontColor</name>
       <description>Цвет шрифта</description>
       <type>java.lang.String</type>
+      <required>false</required>
+    </attribute>
+
+    <attribute>
+      <name>fontSize</name>
+      <description>Размер шрифта</description>
+      <type>int</type>
       <required>false</required>
     </attribute>
 

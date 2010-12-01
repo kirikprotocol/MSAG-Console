@@ -8,14 +8,15 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad">
 
-<ui:composition>
+<ui:composition>   
 
+  <h:panelGroup rendered="#{rendered == null ? true : rendered}">
       <tr:image rendered="#{status == 'Planned'}" source="/images/white_medium_square.gif"/>
       <tr:image rendered="#{status == 'Finished'}" source="/images/check_mark.gif"/>
       <tr:image rendered="#{status == 'Active'}" source="/images/heavy_wideheaded_rightwards_arrow.gif"/>
       <tr:image rendered="#{status == 'Paused'}" source="/images/pause.gif"/>
       <tr:image rendered="#{status == 'Cancelled'}" source="/images/ballot_x.gif"/>
-
+   </h:panelGroup>
 </ui:composition>
 
 </html>

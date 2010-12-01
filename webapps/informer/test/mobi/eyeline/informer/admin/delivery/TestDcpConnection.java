@@ -307,18 +307,25 @@ public class TestDcpConnection extends DcpConnection{
     int delivered = 0;
     int failed = 0;
     int newD = 0;
+    int exp = 0;
+    int proc = 0;
     if(ms != null) {
       for(Message m : ms) {
         switch (m.getState()) {
           case Delivered: delivered++; break;
-          case New: newD++;break;
-          case Failed: failed++;
+          case New: newD++; break;
+          case Failed: failed++; break;
+          case Process: exp++; break;
+          case Expired: proc++; break;
         }
       }
     }
     stats.setDeliveryState(state);
+
     stats.setDeliveredMessages(delivered);
     stats.setFailedMessages(failed);
+    stats.setExpiredMessages(exp);
+    stats.setProcessMessages(proc);
     stats.setNewMessages(newD);
     return stats;
   }
@@ -423,7 +430,7 @@ public class TestDcpConnection extends DcpConnection{
     Date now = new Date();
     for(Delivery d : deliveries.values()) {
       if(d.getStatus() == DeliveryStatus.Planned) {
-        d.setStatus(DeliveryStatus.Active);          
+        d.setStatus(DeliveryStatus.Active);
       }else if(d.getStatus() != DeliveryStatus.Active) {
         continue;
       }
