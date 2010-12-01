@@ -31,37 +31,38 @@
 
       <eye:delimiter/>
 
+      <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
 
-        <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
-
-          <tr:panelLabelAndMessage label="#{msg['informer.siebel.user']}" labelStyle="text-align:left">
-            <h:selectOneMenu value="#{siebel.siebelUser}">
-              <f:selectItems value="#{siebel.uniqueUsers}"/>
-            </h:selectOneMenu>
-          </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{msg['informer.siebel.user']}" labelStyle="text-align:left">
+          <h:selectOneMenu value="#{siebel.siebelUser}">
+            <f:selectItems value="#{siebel.uniqueUsers}"/>
+          </h:selectOneMenu>
+        </tr:panelLabelAndMessage>
 
 
-          <tr:panelLabelAndMessage label="#{msg['informer.siebel.timeout']}" labelStyle="text-align:left">
-            <tr:inputText value="#{siebel.timeout}" required="true" simple="true">
-              <eye:validatePositive/>
-            </tr:inputText>
-          </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{msg['informer.siebel.timeout']}" labelStyle="text-align:left">
+          <tr:inputText value="#{siebel.timeout}" required="true" simple="true">
+            <eye:validatePositive/>
+          </tr:inputText>
+        </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{msg['informer.siebel.statsPeriod']}" labelStyle="text-align:left">
-            <tr:inputText value="#{siebel.statsPeriod}" required="true" simple="true">
-              <eye:validatePositive/>
-            </tr:inputText>
-          </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{msg['informer.siebel.statsPeriod']}" labelStyle="text-align:left">
+          <tr:inputText value="#{siebel.statsPeriod}" required="true" simple="true">
+            <eye:validatePositive/>
+          </tr:inputText>
+        </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{msg['informer.siebel.remove.on.stop']}" labelStyle="text-align:left">
-            <tr:selectBooleanCheckbox value="#{siebel.removeOnStop}" simple="true"/>
-          </tr:panelLabelAndMessage>
+        <tr:panelLabelAndMessage label="#{msg['informer.siebel.remove.on.stop']}" labelStyle="text-align:left">
+          <tr:selectBooleanCheckbox value="#{siebel.removeOnStop}" simple="true"/>
+        </tr:panelLabelAndMessage>
 
-        </tr:panelFormLayout>
+      </tr:panelFormLayout>
 
-        <eye:delimiter/>
+      <eye:delimiter/>
 
-        <eye:collapsingGroup label="#{msg['informer.siebel.jdbc']}" opened="true">
+      <eye:collapsingGroup label="#{msg['informer.siebel.jdbc']}" opened="true">
+
+        <h:panelGrid columns="2" columnClasses="column400Width, column400Width">
 
           <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
 
@@ -85,7 +86,11 @@
 
           </tr:panelFormLayout>
 
-        </eye:collapsingGroup>
+          <tr:commandLink text="#{msg['check.settings.button']}" action="#{siebel.check}"/>
+
+        </h:panelGrid>
+
+      </eye:collapsingGroup>
 
       <eye:delimiter/>
 

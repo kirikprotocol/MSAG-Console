@@ -412,6 +412,16 @@ public class AdminContext {
     }
   }
 
+  public boolean checkSiebelProperties(Properties p) {
+    if(siebelManager != null) {
+      try{
+        siebelManager.checkProperties(p);
+        return true;
+      }catch (AdminException ignored) {}
+    }
+    return false;
+  }
+
   public void removeUser(String login) throws AdminException {
     try {
       integrityLock.lock();

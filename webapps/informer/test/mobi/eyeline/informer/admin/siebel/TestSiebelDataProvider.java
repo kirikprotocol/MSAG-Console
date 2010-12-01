@@ -149,6 +149,10 @@ class TestSiebelDataProvider implements SiebelDataProvider{
     shutdown = false;
   }
 
+  public void check(Properties props) throws AdminException {
+    
+  }
+
   public boolean isShutdowned() {
     return shutdown;
   }

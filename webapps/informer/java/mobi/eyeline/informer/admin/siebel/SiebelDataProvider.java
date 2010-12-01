@@ -117,6 +117,15 @@ public interface SiebelDataProvider {
    */
   public void connect(Properties props) throws AdminException;
 
+
+  /**
+   * Проверяет соединение с источником данных
+   *
+   * @param props параметры соеддинения
+   * @throws AdminException ошибка выполнения команды
+   */
+  public void check(Properties props) throws AdminException;
+
   /**
    * Было ли выполнено завершение работы с источником данных
    *

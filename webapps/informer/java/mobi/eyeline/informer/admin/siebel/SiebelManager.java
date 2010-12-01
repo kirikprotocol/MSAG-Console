@@ -120,6 +120,10 @@ public class SiebelManager {
     provider.setDeliveryStatuses(statuses);
   }
 
+  public void checkProperties(Properties p) throws AdminException {
+    provider.check(p);
+  }
+
   public synchronized void start(User siebelUser, Properties ps) throws AdminException {
     if (shutdown) {
       lastUpdate = new Date(0);

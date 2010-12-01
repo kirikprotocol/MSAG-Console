@@ -88,16 +88,7 @@ public class SiebelController extends InformerController {
 
   public String save() {
     try {
-      Properties ps = config.getSiebelProperties();
-      ps.setProperty(SiebelManager.TIMEOUT, Integer.toString(timeout));
-      ps.setProperty(SiebelManager.JDBC_SOURCE, jdbcSource);
-      ps.setProperty(SiebelManager.JDBC_USER, jdbcLogin);
-      ps.setProperty(SiebelManager.JDBC_PASSWORD, jdbcPassword);
-      ps.setProperty(SiebelManager.DB_TYPE, dbType);
-      ps.setProperty(SiebelManager.USER, siebelUser);
-      ps.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.toString(removeOnStop));
-      ps.setProperty(SiebelFinalStateListener.PERIOD_PARAM, Integer.toString(statsPeriod));
-      if(!config.setSiebelProperties(ps, getUserName())) {
+      if(!config.setSiebelProperties(getProperties(), getUserName())) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.applying.not.started");
         return null;
       }
@@ -106,6 +97,28 @@ public class SiebelController extends InformerController {
       addError(e);
       return null;
     }
+  }
+
+  private Properties getProperties() {
+    Properties ps = config.getSiebelProperties();
+    ps.setProperty(SiebelManager.TIMEOUT, Integer.toString(timeout));
+    ps.setProperty(SiebelManager.JDBC_SOURCE, jdbcSource);
+    ps.setProperty(SiebelManager.JDBC_USER, jdbcLogin);
+    ps.setProperty(SiebelManager.JDBC_PASSWORD, jdbcPassword);
+    ps.setProperty(SiebelManager.DB_TYPE, dbType);
+    ps.setProperty(SiebelManager.USER, siebelUser);
+    ps.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.toString(removeOnStop));
+    ps.setProperty(SiebelFinalStateListener.PERIOD_PARAM, Integer.toString(statsPeriod));
+    return ps;
+  }
+
+  public String check() {
+    if(config.checkSiebelProperties(getProperties())) {
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "informer.siebel.props.correct");
+    }else {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.props.illegal");
+    }
+    return null;
   }
 
   public String getDbType() {

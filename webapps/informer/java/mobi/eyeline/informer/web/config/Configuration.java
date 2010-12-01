@@ -443,6 +443,10 @@ public class Configuration {
     return context.getCdrProperties();
   }
 
+  public boolean checkSiebelProperties(Properties p) {
+    return context.checkSiebelProperties(p);
+  }
+
   public void setCdrProperties(Properties props, String user) throws AdminException {
     Properties old = context.getCdrProperties();
     context.setCdrProperties(props);  

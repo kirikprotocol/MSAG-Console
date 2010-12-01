@@ -1,16 +1,14 @@
 package mobi.eyeline.informer.admin.siebel.impl;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.siebel.ResultSet;
 import mobi.eyeline.informer.admin.siebel.*;
 import org.apache.log4j.Logger;
 import ru.sibinco.util.conpool.ConnectionPool;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
@@ -57,18 +55,72 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     }
     try {
-      String dbType = props.getProperty("jdbc.pool.type");
-      if(dbType.equals("mysql")) {
-        props.setProperty("jdbc.driver", "com.mysql.jdbc.Driver");
-      }else if(dbType.equals("oracle")) {
-        props.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver");
-      }else {
-        throw new IllegalArgumentException("DB type is illegal: "+dbType);
-      }
+      setDriver(props);
       pool = new ConnectionPool(props);
       shutdowned = false;
     } catch (SQLException e) {
       logger.error(e, e);
+      throw new SiebelException("internal_error");
+    }
+  }
+
+  private void setDriver(Properties props) {
+    String dbType = props.getProperty("jdbc.pool.type");
+    if(dbType.equals("mysql")) {
+      props.setProperty("jdbc.driver", "com.mysql.jdbc.Driver");
+    }else if(dbType.equals("oracle")) {
+      props.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver");
+    }else {
+      throw new IllegalArgumentException("DB type is illegal: "+dbType);
+    }
+  }
+
+
+  public void check(Properties props) throws AdminException {
+    setDriver(props);
+    try{
+      Class.forName(props.getProperty("jdbc.driver"));
+      Connection con = null;
+      try{
+        con = DriverManager.getConnection(props.getProperty("jdbc.source"),
+            props.getProperty("jdbc.user"), props.getProperty("jdbc.password"));
+
+        PreparedStatement prepStatement = null;
+        try{
+          prepStatement = con.prepareStatement(getSql("task.list.update"));
+          prepStatement.setFetchSize(FETCH_SIZE);
+          prepStatement.setTimestamp(1, new Timestamp(0));
+          java.sql.ResultSet sqlResult = null;
+          try{
+            sqlResult = prepStatement.executeQuery();
+            sqlResult.next();
+          }finally {
+            if(sqlResult != null) {
+              try{
+                sqlResult.close();
+              }catch (SQLException ignored){}
+            }
+          }
+        }finally {
+          if(prepStatement != null) {
+            try{
+              prepStatement.close();
+            }catch (SQLException ignored){}
+          }
+        }
+
+      }finally {
+        if(con != null) {
+          try{
+            con.close();
+          }catch (SQLException ignored){}
+        }
+      }
+    }catch (SQLException e){
+      logger.error(e,e);
+      throw new SiebelException("internal_error");
+    } catch (ClassNotFoundException e) {
+      logger.error(e,e);
       throw new SiebelException("internal_error");
     }
   }
