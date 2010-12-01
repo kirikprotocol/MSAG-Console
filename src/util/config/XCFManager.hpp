@@ -43,13 +43,26 @@ public:
 
   void addPath(const char * use_path);
 
-  //returns actual file path, relating to working directory
+  //Searches for file with given name according to configured path.
+  //Returns actual file path(absolute or relative to working directory)
   bool findFile(const char * nm_file, std::string * rel_nm = NULL);
 
-  //Searches for XML configuration file, perfoms its parsing.
-  //Returns allocated Config() on success.
-  Config * getConfig(const char * xcfg_file, std::string * real_nm = NULL)
+  //Parses XML configuration stored in file with given name
+  void parseFile(Config & out_cfg, const char * nm_file_abs)
       throw(ConfigException);
+
+  //Searches for XML configuration file with given name according to
+  //configured path and parses it.
+  //If requested (real_nm != 0), returns actual file path.
+  void getConfig(Config & out_cfg, const char * xcfg_file, std::string * real_nm = NULL)
+    throw(ConfigException);
+
+  //Searches for XML configuration file with given name according to
+  //configured path and parses it.
+  //If requested (real_nm != 0), returns actual file path.
+  //Returns newly allocated Config.
+  Config * getConfig(const char * xcfg_file, std::string * real_nm = NULL)
+    throw(ConfigException);
 };
 
 } //config
