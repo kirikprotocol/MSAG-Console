@@ -4,8 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
-
-import javax.persistence.Transient;
 import java.io.Serializable;
 import java.security.MessageDigest;
 

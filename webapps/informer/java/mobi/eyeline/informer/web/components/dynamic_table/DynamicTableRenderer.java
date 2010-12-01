@@ -112,7 +112,10 @@ public class DynamicTableRenderer extends Renderer {
       for (int j = 0; j < table.getColumns().size(); j++) {
         if (j > 0)
           valuesArray.append(',');
-        valuesArray.append("'").append(row.getValue(table.getColumns().get(j).getName())).append("'");
+        String jsValue = row.getValue(table.getColumns().get(j).getName()).toString();
+        jsValue = jsValue.replaceAll("'","\\\\'");
+        jsValue = jsValue.replaceAll("\n","\\\\n'");
+        valuesArray.append("'").append(jsValue).append("'");
       }
       valuesArray.append(")");
       w.append("dtable.addRow(").append(valuesArray).append(");\n");
