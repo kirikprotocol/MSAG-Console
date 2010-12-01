@@ -28,6 +28,7 @@ public class UserEditController extends UserController {
   private String passwordConfirm;
   private Object fileEncodings;
   private DynamicTableModel dynamicModel = new DynamicTableModel();
+  private String retryOnFail;
 
   public UserEditController() {
     super();
@@ -62,8 +63,13 @@ public class UserEditController extends UserController {
       userToEdit.setDeliveryLifetime(72);
       userToEdit.setDeliveryType(User.DeliveryType.SMS);
       userToEdit.setSmsPerSec(1);
+      retryOnFail = "off";
     } else {
       userToEdit = getConfig().getUser(userId);
+      if (userToEdit.isRetryOnFail()) {
+        retryOnFail = (userToEdit.getPolicyId() == null || userToEdit.getPolicyId().length()==0) ? "default" : "custom";
+      } else
+        retryOnFail = "off";
     }
     this.userId = userId;
     passwordConfirm = userToEdit.getPassword();
@@ -116,7 +122,18 @@ public class UserEditController extends UserController {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "user.edit.passwdConfirmMissmatch");
         return null;
       }
-      if (userToEdit.getPolicyId() != null && !Smsc.RETRY_POLICY_PATTERN.matcher(userToEdit.getPolicyId()).matches()) {
+
+      if (retryOnFail.equals("off")) {
+        userToEdit.setRetryOnFail(false);
+        userToEdit.setPolicyId(null);
+      } else if (retryOnFail.equals("default")) {
+        userToEdit.setRetryOnFail(true);
+        userToEdit.setPolicyId("");
+      } else {
+        userToEdit.setRetryOnFail(true);        
+      }
+
+      if (retryOnFail.equals("custom") && (userToEdit.getPolicyId() == null || !Smsc.RETRY_POLICY_PATTERN.matcher(userToEdit.getPolicyId()).matches())) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "retry_policy_incorrect");
         return null;
       }
@@ -262,6 +279,14 @@ public class UserEditController extends UserController {
     ret.add("UTF-8");
     ret.add("ASCII");
     return ret;
+  }
+
+  public String getRetryOnFail() {
+    return retryOnFail;
+  }
+
+  public void setRetryOnFail(String retryOnFail) {
+    this.retryOnFail = retryOnFail;
   }
 
   public DynamicTableModel getDynamicModel() {

@@ -111,20 +111,7 @@
 
           <h:selectBooleanCheckbox id="editTransactionMode" value="#{userGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
           <h:outputText style="white-space:nowrap;" value="#{userBundle.transactionMode}"/>
-          <h:selectBooleanCheckbox id="transactionMode" value="#{userGroupEdit.transactionMode}"
-             onchange="
-              var d = this.checked ? 'none' : '';
-              document.getElementById('editValidHours').style.display=d;
-              document.getElementById('validHoursLabel').style.display=d;
-              document.getElementById('validityPeriod').style.display=d;
-              document.getElementById('validityPeriod.hours').disabled=!this.checked;
-              document.getElementById('validityPeriod.minutes').disabled=!this.checked;
-              if(this.checked) {
-                document.getElementById('editValidHours').checked=false;
-                document.getElementById('validityPeriod.hours').value = '';
-                document.getElementById('validityPeriod.minutes').value = '';
-              }
-             "/>
+          <h:selectBooleanCheckbox id="transactionMode" value="#{userGroupEdit.transactionMode}"/>
 
           <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidityPeriod}" onchange="
           document.getElementById('validityPeriod.hours').disabled=!this.checked;
@@ -284,12 +271,7 @@
         }else {
           document.getElementById('cdrOpts').style.display='none';
         }
-
-
-        var d = document.getElementById('transactionMode').checked ? 'none' : '';
-        document.getElementById('editValidHours').style.display=d;
-        document.getElementById('validHoursLabel').style.display=d;
-        document.getElementById('validityPeriod').style.display=d;
+        
       </script>
 
     </tr:form>

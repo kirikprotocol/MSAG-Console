@@ -65,10 +65,10 @@
         </tr:inputText>
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.isAdmin']}"/>
-        <h:selectBooleanCheckbox value="#{userEdit.admin}"/>
+        <h:selectBooleanCheckbox value="#{userEdit.admin}" style="position: relative;  left: -3px;"/>
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.blocked']}"/>
-        <h:selectBooleanCheckbox value="#{userEdit.blocked}"/>
+        <h:selectBooleanCheckbox value="#{userEdit.blocked}" style="position: relative;  left: -3px;"/>
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.locale}"/>
         <h:selectOneMenu value="#{userEdit.userLocale}" style="align:left;" required="true" >
@@ -103,41 +103,35 @@
             <eye:validatePositive/>
           </tr:inputText>
 
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
-          <h:panelGroup>
-            <h:selectBooleanCheckbox id="retryOnFail" value="#{userEdit.userToEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;"/>
-            <h:inputText id="retryPolicy" value="#{userEdit.userToEdit.policyId}"/>
-          </h:panelGroup>
-
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
-          <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" simple="true"/>
-
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
-          <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.emailNotification}" simple="true"/>
-
-          <h:outputText style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}"/>
-          <h:selectOneMenu id="deliveryType" value="#{userEdit.userToEdit.deliveryType}" style="align:left; display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" required="true" onchange="
-          var dt = document.getElementById('deliveryType');
-          var disp = dt.options[0].selected ? '' : 'none';
-          document.getElementById('smsSettings').style.display=disp;
-          " >
-            <f:selectItems value="#{userEdit.deliveryTypes}"/>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.retryOnFail}"/>
+          <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{userEdit.retryOnFail}">
+            <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
+            <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
+            <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
           </h:selectOneMenu>
 
-        </h:panelGrid>
-
-        <h:panelGrid id="smsSettings" style="padding-left:10px; display: #{userEdit.smsDeliveryMode == true ? '' : 'none'}" columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.transactionMode}"/>
-          <tr:selectBooleanCheckbox id="trMode" value="#{userEdit.userToEdit.transactionMode}" simple="true"
-                                    onchange="
-                                    var d = this.checked ? 'none' : '';
-                                    document.getElementById('validHoursLabel').style.display=d;
-                                    document.getElementById('validityPeriod').style.display=d;
-                                    "/>
+          <h:outputText id="retryPolicyLabel" style="white-space:nowrap;" value="#{userBundle.policyId}"/>
+          <h:inputText id="retryPolicy" value="#{userEdit.userToEdit.policyId}"/>
 
           <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
           <eye:inputDate id="validityPeriod" value="#{userEdit.validityPeriod}" required="true"  type="short_time"/>
-        </h:panelGrid>
+
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
+          <h:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" style="position: relative;  left: -3px;"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
+          <h:selectBooleanCheckbox value="#{userEdit.userToEdit.emailNotification}" style="position: relative; left: -3px;"/>
+
+          <h:outputText style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}"/>
+          <h:selectOneMenu id="deliveryType" value="#{userEdit.userToEdit.deliveryType}" style="align:left; display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" required="true"
+                           onchange="deliveryTypeChanged()">
+            <f:selectItems value="#{userEdit.deliveryTypes}"/>
+          </h:selectOneMenu>
+
+          <h:outputText id="trModeLabel" style="white-space:nowrap;" value="#{userBundle.transactionMode}"/>
+          <h:selectBooleanCheckbox id="trMode" value="#{userEdit.userToEdit.transactionMode}" style="position: relative; left: -3px;"/>
+
+        </h:panelGrid>        
 
       </eye:collapsingGroup>
 
@@ -151,10 +145,13 @@
           </tr:inputText>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.regions}"/>
-          <tr:selectBooleanCheckbox value="#{userEdit.userToEdit.allRegionsAllowed}" text="#{msg['user.edit.all']}" simple="true" required="false" onchange="var el = document.getElementById('regionsSelectMany'); el.style.display = this.checked ? 'none':'';"/>
+          <h:panelGroup>
+            <h:selectBooleanCheckbox id="allRegions" value="#{userEdit.userToEdit.allRegionsAllowed}" style="position: relative; top: 1px; left: -3px;" onchange="allRegionsChanged()"/>
+            <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.all']}"/>
+          </h:panelGroup>
 
-          <h:outputText style="white-space:nowrap;" value="&#160;"/>
-          <tr:selectManyCheckbox id="regionsSelectMany" value="#{userEdit.userToEdit.regions}" simple="true" contentStyle="display: #{userEdit.userToEdit.allRegionsAllowed==true ? 'none':''};">
+          <h:outputText id="regionsSelectManyLabel" style="white-space:nowrap;" value="&#160;"/>
+          <tr:selectManyCheckbox id="regionsSelectMany" value="#{userEdit.userToEdit.regions}" simple="true" inlineStyle="position: relative; top: 1px; left: -3px;">
             <f:selectItems value="#{userEdit.regionsList}"/>
           </tr:selectManyCheckbox>
         </h:panelGrid>
@@ -244,11 +241,31 @@
       </eye:buttons>
 
       <script type="text/javascript" language="javascript">
-        document.getElementById('retryPolicy').disabled = !document.getElementById('retryOnFail').checked;
-        var d = document.getElementById('trMode').checked ? 'none' : '';
-        document.getElementById('validHoursLabel').style.display=d;
-        document.getElementById('validityPeriod').style.display=d;
+        function retryOnFailChanged() {
+          var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
+          document.getElementById('retryPolicyLabel').style.display=d;
+          document.getElementById('retryPolicy').style.display=d;
+        }
 
+        function deliveryTypeChanged() {
+          var dt = document.getElementById('deliveryType');
+          var disp = dt.options[0].selected ? '' : 'none';
+          document.getElementById('trMode').style.display=disp;
+          document.getElementById('trModeLabel').style.display=disp;
+        }
+
+        function allRegionsChanged() {
+          var d= document.getElementById("allRegions").checked ? 'none':'';
+          document.getElementById('regionsSelectMany').style.display = d;
+          document.getElementById('regionsSelectManyLabel').style.display = d;
+        }
+
+        retryOnFailChanged();
+
+        deliveryTypeChanged();
+
+        allRegionsChanged();
+        
         d = document.getElementById('importDeliveriesFromDir').checked ? '':'none';
         document.getElementById('importDeliveriesSettings').style.display=d;
 
