@@ -19,6 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Aleksandr Khalitov
@@ -220,7 +222,9 @@ public class CdrDaemon implements DeliveryChangeListener{
   private String lastDateBeforeCrash;
   private Set<Long> lastEventsBeforeCrash = new HashSet<Long>();
 
-  public synchronized void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
+  private final Lock writeLock = new ReentrantLock();
+
+  public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
     Delivery d = getDelivery(e.getDeliveryId(), e.getUserId());
 
     if(!lastEventsBeforeCrash.isEmpty()) {
@@ -240,6 +244,7 @@ public class CdrDaemon implements DeliveryChangeListener{
       logger.error("Delivery hasn't been found with id: "+e.getDeliveryId());
       throw new CdrDaemonException("internal_error");
     }
+    
     User u = cdrUsers.getUser(e.getUserId());
     if(u == null) {
       logger.error("User hasn't been found with id: "+e.getUserId());
@@ -248,20 +253,25 @@ public class CdrDaemon implements DeliveryChangeListener{
 
     String date = sdf.format(e.getEventDate());
 
-    if(writer == null || currentDate == null || !currentDate.equals(date)) {
-      if(writer != null) {
-        writer.close();
-      }
-      currentDate = date;
-      currentFile = new File(workDir, date+".csv");
-      writer =  new PrintWriter(new BufferedWriter(
-          new OutputStreamWriter(fs.getOutputStream(currentFile, true))));
+    try{
+      writeLock.lock();
+      if(writer == null || currentDate == null || !currentDate.equals(date)) {
+        if(writer != null) {
+          writer.close();
+        }
+        currentDate = date;
+        currentFile = new File(workDir, date+".csv");
+        writer =  new PrintWriter(new BufferedWriter(
+            new OutputStreamWriter(fs.getOutputStream(currentFile, true))));
 
+      }
+      write(e, d, u);
+    }finally {
+      writeLock.unlock();
     }
-    write(e, d, u);
   }
 
-  synchronized void roll() throws AdminException {
+  void roll() throws AdminException {
     if(logger.isDebugEnabled()) {
       logger.debug("Start rolling files...");
     }
@@ -272,9 +282,14 @@ public class CdrDaemon implements DeliveryChangeListener{
     });
     for(File f : files) {
       if((System.currentTimeMillis() - f.lastModified()) > fileCompletedInterval) {
-        if(f.getName().equals(currentFile.getName())) {
-          writer.close();
-          writer = null;
+        try{
+          writeLock.lock();
+          if(f.getName().equals(currentFile.getName())) {
+            writer.close();
+            writer = null;
+          }
+        }finally {
+          writeLock.unlock();
         }
         File to = new File(cdrOutputDir, f.getName());
         fs.rename(f, to);

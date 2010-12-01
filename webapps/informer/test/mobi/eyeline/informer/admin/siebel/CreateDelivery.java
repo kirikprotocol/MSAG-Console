@@ -27,7 +27,7 @@ public class CreateDelivery {
       if(is != null) {
         try{
           is.close();
-        }catch (IOException e){}
+        }catch (IOException ignored){}
       }
     }
     new ConnectionPool(ps);
