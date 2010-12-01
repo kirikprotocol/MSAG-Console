@@ -31,13 +31,21 @@ struct UserDlvStats
     uint32_t active;
     uint32_t finished;
     uint32_t cancelled;
+    uint32_t created;
+    uint32_t deleted;
 
     void clear() {
         ::memset(this,0,sizeof(*this));
     }
 
     bool isEmpty() const {
-        return paused == 0 && planned == 0 && active == 0 && finished == 0 && cancelled == 0;
+        return paused == 0 &&
+            planned == 0 &&
+            active == 0 &&
+            finished == 0 &&
+            cancelled == 0 &&
+            created == 0 &&
+            deleted == 0;
     }
 
     // NOTE: we do not count finished deliveries
@@ -52,6 +60,8 @@ struct UserDlvStats
         case DLVSTATE_ACTIVE: active += value; break;
         case DLVSTATE_FINISHED: finished += value; break;
         case DLVSTATE_CANCELLED: cancelled += value; break;
+        case DLVSTATE_CREATED: created += value; break;
+        case DLVSTATE_DELETED: deleted += value; break;
         default:
             throw InfosmeException(EXC_LOGICERROR,"unknown delivery state %d",state);
         }

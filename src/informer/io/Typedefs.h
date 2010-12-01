@@ -108,7 +108,9 @@ typedef enum {
     DLVSTATE_ACTIVE = 3,
     DLVSTATE_FINISHED = 4,
     DLVSTATE_CANCELLED = 5,
-    DLVSTATE_MAX = DLVSTATE_CANCELLED
+    DLVSTATE_MAX = DLVSTATE_CANCELLED,
+    DLVSTATE_CREATED = 6,   // pseudo states
+    DLVSTATE_DELETED = 7
 } DlvState;
 
 const char* dlvStateToString( DlvState state );

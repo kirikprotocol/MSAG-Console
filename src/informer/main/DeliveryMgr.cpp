@@ -642,6 +642,7 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
         }
     }
     addDelivery(userInfo,info,state,planTime,true);
+    userInfo.incDlvStats(DLVSTATE_CREATED);
     return dlvId;
 }
 
@@ -780,6 +781,7 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
 
     {
         MutexGuard mg(logStateLock_);
+        bool newFile = false;
         if ( logStateTime_ < fileTime ) {
             // need to replace cur file
             FileGuard fg;
@@ -788,12 +790,27 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
             if (fg.getPos() == 0) {
                 const char* header = "#1 MINSEC,STATE,DLVID,USER,PLAN\n";
                 fg.write( header, strlen(header));
+                newFile = true;
             }
             logStateTime_ = fileTime;
             logStateFile_.swap(fg);
         } else if ( logStateTime_ > fileTime ) {
             // fix delayed record
             memcpy(buf,"0000",4);
+        }
+        if (newFile) {
+            char dbuf[100];
+            memcpy(dbuf,buf,4);
+            MutexGuard dmg(mon_);
+            for ( DeliveryList::iterator i = deliveryList_.begin(); i != deliveryList_.end(); ++i ) {
+                const DeliveryImpl* ptr = i->get();
+                if ( ptr && ptr->getState() == DLVSTATE_ACTIVE ) {
+                    const int dbuflen = sprintf(dbuf+4,",a,%u,%s,0\n",
+                                                ptr->getDlvId(),
+                                                ptr->getUserInfo().getUserId());
+                    logStateFile_.write(dbuf,size_t(dbuflen+4));
+                }
+            }
         }
         logStateFile_.write(buf,size_t(buflen));
     }

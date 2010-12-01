@@ -160,6 +160,7 @@ messages::DeliveryStatus dlvStateToDeliveryStatus(DlvState st)
     case DLVSTATE_ACTIVE:return messages::DeliveryStatus(messages::DeliveryStatus::Active);
     case DLVSTATE_FINISHED:return messages::DeliveryStatus(messages::DeliveryStatus::Finished);
     case DLVSTATE_CANCELLED:return messages::DeliveryStatus(messages::DeliveryStatus::Cancelled);
+    default: break;
   }
   throw InfosmeException(EXC_GENERIC,"Unknown delivery state %d",st);
 }

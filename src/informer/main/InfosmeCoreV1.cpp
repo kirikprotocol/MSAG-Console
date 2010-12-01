@@ -1091,17 +1091,19 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
             fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
             fg.seek(0,SEEK_END);
             if (fg.getPos()==0) {
-                const char* header = "#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL\n";
+                const char* header = "#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL,CREATED,DELETED\n";
                 fg.write(header,strlen(header));
             }
         }
-        char* p = bufpos + sprintf(bufpos,"%s,%u,%u,%u,%u,%u\n",
+        char* p = bufpos + sprintf(bufpos,"%s,%u,%u,%u,%u,%u,%u,%u\n",
                                    (*i)->getUserId(),
                                    ds.paused,
                                    ds.planned,
                                    ds.active,
                                    ds.finished,
-                                   ds.cancelled );
+                                   ds.cancelled,
+                                   ds.created,
+                                   ds.deleted );
         fg.write(buf,p-buf);
     }
 }
