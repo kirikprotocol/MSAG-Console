@@ -334,6 +334,9 @@ void InfosmeCoreV1::init()
             pvssConfig->setPort(cwrap.getInt("asyncPort",0,1024,100000,false));
             pvssConfig->setHost(cwrap.getString("host"));
             pvssConfig->setEnabled(cwrap.getBool("enabled",true));
+            if ( !pvssConfig->isEnabled() ) {
+                throw InfosmeException(EXC_CONFIG,"disabled in config");
+            }
 
             pvssConfig->setConnectionsCount(cwrap.getInt("connections",3,1,10));
             pvssConfig->setChannelQueueSizeLimit(cwrap.getInt("queueSize",100,50,1000));

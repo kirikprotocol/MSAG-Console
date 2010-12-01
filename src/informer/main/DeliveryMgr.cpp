@@ -545,11 +545,11 @@ void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
 
         const msgtime_type now(currentTimeSeconds());
 
-        if (retry) {
+        const bool ok = (status == smsc::system::Status::OK);
+        if (!ok && retry) {
             // attempt to retry
             reg->retryMessage( drmId.msgId, policy, now, status, nchunks);
         } else {
-            const bool ok = (status == smsc::system::Status::OK);
             reg->finalizeMessage(drmId.msgId, now,
                                  ok ? MSGSTATE_DELIVERED : MSGSTATE_FAILED,
                                  status, nchunks );

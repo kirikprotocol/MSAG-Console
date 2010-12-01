@@ -883,16 +883,25 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
     // output
     throw InfosmeException(EXC_NOTIMPL,"R=%u/D=%u resend out is not implemented",
                            regionId_, dlvId );
+
+    if ( resendQueue_.empty() ) return;
+    const msgtime_type period = getCS()->getResendUploadPeriod();
+    const msgtime_type startTime =
+        ( std::min(currentTimeSeconds(), resendQueue_.begin()->first) +
+          getCS()->getResendMinTimeToUpload() + period*2 - 1 ) % period;
+    RelockMutexGuard mg(cacheMon_);
+    StopRollingGuard srg(mg,stopRolling_,false);
+    ResendQueue::iterator iter = resendQueue_.lower_bound(startTime);
+    if ( iter == resendQueue_.end() ) return;
 }
 
 
-void RegionalStorage::makeResendFilePath( char* fpath,
-                                          msgtime_type nextTime )
+void RegionalStorage::makeResendFilePath( char*     fpath,
+                                          ulonglong nextTime )
 {
     sprintf(makeDeliveryPath(fpath,getDlvId()),"resend/");
     if ( nextTime ) {
-        const ulonglong date = msgTimeToYmd(nextTime);
-        sprintf(fpath + strlen(fpath),"%llu.jnl",date);
+        sprintf(fpath + strlen(fpath),"%llu.jnl",nextTime);
     }
 }
 

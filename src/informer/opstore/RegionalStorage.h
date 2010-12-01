@@ -136,8 +136,8 @@ protected:
 
     virtual void resendIO( bool isInputDirection, volatile bool& stopFlag );
 
-    void makeResendFilePath( char* fpath,
-                             msgtime_type nextTime );
+    void makeResendFilePath( char*     fpath,
+                             ulonglong nextTime );
 
     /// return the next resend file or 0
     msgtime_type findNextResendFile();

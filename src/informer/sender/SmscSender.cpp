@@ -770,7 +770,7 @@ void SmscSender::handleResponse( smsc::sme::SmppHeader* pdu )
         smsc_log_info(log_,"S='%s' sms msgid='%s' seq=%u wasn't accepted, status=%d",
                       smscId_.c_str(), rd.rcptId.msgId, rd.seqNum, rd.status );
     }
-    rd.retry = true;
+    rd.retry = (rd.status != smsc::system::Status::OK);
     queueData(rd);
 }
 
