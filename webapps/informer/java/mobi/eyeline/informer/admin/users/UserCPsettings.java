@@ -4,6 +4,9 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
+
+import javax.persistence.Transient;
+import java.io.Serializable;
 import java.security.MessageDigest;
 
 /**
@@ -12,7 +15,7 @@ import java.security.MessageDigest;
  * Date: 29.11.2010
  * Time: 14:38:29
  */
-public class UserCPsettings {
+public class UserCPsettings implements Serializable {
   private Protocol protocol;
   private String host;
   private Integer port;
@@ -22,6 +25,7 @@ public class UserCPsettings {
   private String login;
   private String password;
   private String hashId;
+
 
   private final ValidationHelper vh = new ValidationHelper(User.class);
 
