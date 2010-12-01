@@ -13,7 +13,7 @@ namespace inap {
 /* ************************************************************************* *
  * class TCAPUsrCfgParser implementation
  * ************************************************************************* */
-void TCAPUsrCfgParser::readConfig(Config & root_sec, TCAPUsr_CFG & st_cfg)
+void TCAPUsrCfgParser::readConfig(const Config & root_sec, TCAPUsr_CFG & st_cfg)
   throw(ConfigException)
 {
   XConfigView cfgSec(root_sec, nmSec);

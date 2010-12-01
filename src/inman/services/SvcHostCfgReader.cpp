@@ -11,11 +11,39 @@ namespace inman {
 /* ************************************************************************** *
  * class ICSHostCfgReader implementation:
  * ************************************************************************** */
+//Reads info of extra configuration files, parses them and initializes XMFConfig
+void ICSHostCfgReader::readFiles(const XConfigView & root_sec) /*throw(ConfigException)*/
+{
+  XConfigView   fileSec;
+  root_sec.getSubConfig(fileSec, "Files");
+
+  smsc_log_info(logger, "Reading settings from 'Files' ..");
+  std::auto_ptr<CStrSet>  params(fileSec.getStrParamNames());
+
+  // <param name="SectionName_mask" type="string">File_name</param>
+  for (CStrSet::const_iterator it = params->begin(); it != params->end(); ++it) {
+    const char * cstr = NULL;
+    try { cstr =  fileSec.getString(it->c_str());
+    } catch (...) { }
+    if (!cstr || !cstr[0])
+      throw ConfigException("%s.%s - value is invalid/missing",
+                            fileSec.relSection(), it->c_str());
+
+    const XCFConfig * pXcf = _xmfCfg.setSectionsConfig(cstr, it->c_str()); //throws
+    if (!pXcf)
+      throw ConfigException("%s.%s - duplicate SectionName prefix",
+                            fileSec.relSection(), it->c_str());
+
+    smsc_log_info(logger, "  sections '%s' -> %s", it->c_str(), pXcf->first.c_str());
+  }
+}
+
+//
 bool ICSHostCfgReader::markProducer(ICSUId ics_uid)
 {
   ICSLoadupsReg::ICSLoadState icsState = ICSLoadupsReg::get().getService(ics_uid);
   if (icsState._prod) {
-    icsCfg->prodReg.insert(ics_uid, new ICSProducerCFG(icsState._prod, rootSec, icsState._nmSec, logger));
+    icsCfg->prodReg.insert(ics_uid, new ICSProducerCFG(icsState._prod, _xmfCfg, icsState._nmSec, logger));
     return true;
   }
   return false;
@@ -37,30 +65,34 @@ bool ICSHostCfgReader::addDfltLoadUps(void) /*throw(ConfigException)*/
 //Reads 'Services' section containing services loadup configuration
 //NOTE: default config section names for services may be overridden
 //      only in 'Services' section
-void ICSHostCfgReader::readLoadUps(XConfigView & cfg_sec) /*throw(ConfigException)*/
+void ICSHostCfgReader::readLoadUps(const XConfigView & root_sec) /*throw(ConfigException)*/
 {
-  if (!cfg_sec.findSubSection("Services")) {
+  if (!root_sec.findSubSection("Services")) {
     smsc_log_warn(logger, "'Services' section is empty or missed!");
-#ifdef ICSERVICES_ASSUMED_OFF
+#ifdef ICSERVICES_ASSUMED_ON
     ICSLoadupsReg::get().loadService(ICSIdent::icsIdSmBilling, logger);
     markProducer(ICSIdent::icsIdSmBilling);
 #endif /* OLD_CODE */
     return;
   }
-  std::auto_ptr<XConfigView>  cfgSub(cfg_sec.getSubConfig("Services"));
-  std::auto_ptr<CStrSet>      srvs(cfgSub->getStrParamNames());
+
+  XConfigView cfgSub;
+  root_sec.getSubConfig(cfgSub, "Services");
+
+  std::auto_ptr<CStrSet>      srvs(cfgSub.getStrParamNames());
   if (srvs->empty()) {
     smsc_log_warn(logger, "'Services' section is empty or missed!");
-#ifdef ICSERVICES_ASSUMED_OFF
+#ifdef ICSERVICES_ASSUMED_ON
     ICSLoadupsReg::get().loadService(ICSIdent::icsIdSmBilling, logger);
     markProducer(ICSIdent::icsIdSmBilling);
 #endif /* OLD_CODE */
     return;
   }
   for (CStrSet::const_iterator it = srvs->begin(); it != srvs->end(); ++it) {
-    const char * cstr = cfgSub->getString(it->c_str());
-    if (!cfg_sec.findSubSection(it->c_str()))
-        throw ConfigException("%s section is missed", it->c_str());
+    const char * cstr = cfgSub.getString(it->c_str());
+
+    if (!_xmfCfg.hasSection(it->c_str())) 
+      throw ConfigException("%s section is missed", it->c_str());
     ICSUId uid = processICSLoadUp(it->c_str(), cstr, logger);
     markProducer(uid);
   }
@@ -108,21 +140,24 @@ void ICSHostCfgReader::readLoadedCfg(void)
 ICSrvCfgReaderAC::CfgState ICSHostCfgReader::parseConfig(void * opaque_arg/* = NULL*/)
   throw(ConfigException)
 {
-  XConfigView cfgSec(rootSec, nmCfgSection());
-
   const char * cstr = NULL;
-  try { cstr = cfgSec.getString("version");
+  try { cstr = _topSec.getString("version");
   } catch (const ConfigException & exc) { }
   if (!cstr || !cstr[0])
       smsc_log_warn(logger, "Config version is not set");
   else
       smsc_log_info(logger, "Config version: %s", cstr);
 
+
+  //Read info of extra configuration files and initialize XMFConfig
+  if (_topSec.findSubSection("Files"))
+    readFiles(_topSec); //throws
+
   //Read initial services loadup configuration
-  readLoadUps(cfgSec);
+  readLoadUps(_topSec); //throws
   //Read configurations for loaded services and load up services requested
   //by dependencies
-  readLoadedCfg();
+  readLoadedCfg(); //throws
   //verify that configurations of all default services were read
   if (addDfltLoadUps())
     readLoadedCfg();

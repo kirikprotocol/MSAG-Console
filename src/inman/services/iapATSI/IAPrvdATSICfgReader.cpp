@@ -24,10 +24,8 @@ ICSrvCfgReaderAC::CfgState
   ICSIAPrvdATSICfgReader::parseConfig(void * opaque_arg/* = NULL*/)
     throw(ConfigException)
 {
-  XConfigView  iapCFG(rootSec, nmCfgSection());
-
   const char * cstr = NULL;
-  try { cstr = iapCFG.getString("tcapUser");
+  try { cstr = _topSec.getString("tcapUser");
   } catch (const ConfigException & exc) { }
   if (!cstr || !cstr[0])
     throw ConfigException("parameter 'tcapUser' isn't set!");
@@ -37,12 +35,14 @@ ICSrvCfgReaderAC::CfgState
     throw ConfigException("parameter 'tcapUser' isn't set!");
 
   cstr = nmSec.c_str();
-  if (!rootSec.findSection(cstr))
+  if (!_xmfCfg.hasSection(cstr))
     throw ConfigException("section %s' is missing!", cstr);
+
   smsc_log_info(logger, "Reading settings from '%s' ..", cstr);
+  XCFConfig * pTCfg = _xmfCfg.getSectionConfig(cstr);
   /**/
   TCAPUsrCfgParser  parser(logger, cstr);
-  parser.readConfig(rootSec, icsCfg.get()->atsiCfg); //throws
+  parser.readConfig(pTCfg->second, icsCfg.get()->atsiCfg); //throws
   /**/
   return ICSrvCfgReaderAC::cfgComplete;
 }

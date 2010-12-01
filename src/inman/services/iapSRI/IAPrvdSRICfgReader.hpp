@@ -16,16 +16,20 @@ namespace iaprvd {
 namespace sri {
 
 using smsc::inman::ICSrvCfgReaderAC_T;
+using smsc::inman::XMFConfig;
 
 class ICSIAPrvdSRICfgReader : public ICSrvCfgReaderAC_T<IAProviderSRI_XCFG> {
 protected:
+  // --------------------------------------------------
+  // ICSrvCfgReaderAC interface methods implementation
+  // --------------------------------------------------
   //Parses XML configuration entry section, updates dependencies.
-  //Returns status of config parsing, 
-  CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException);
+  //Returns status of config parsing
+  virtual CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException);
 
 public:
-  ICSIAPrvdSRICfgReader(Config & root_sec, Logger * use_log, const char * ics_sec)
-      : ICSrvCfgReaderAC_T<IAProviderSRI_XCFG>(root_sec, use_log, ics_sec)
+  ICSIAPrvdSRICfgReader(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec)
+    : ICSrvCfgReaderAC_T<IAProviderSRI_XCFG>(xmf_cfg, use_log, ics_sec)
   {
     //unconditional dependencies:
     icsDeps.insert(ICSIdent::icsIdTCAPDisp);

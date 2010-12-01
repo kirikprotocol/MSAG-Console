@@ -15,19 +15,20 @@ namespace inman {
 namespace iapmgr {
 
 using smsc::inman::ICSMultiSectionCfgReaderAC_T;
+using smsc::inman::XMFConfig;
 
 class ICSProvidersCfgReader : public ICSMultiSectionCfgReaderAC_T<IAPrvdsRegistry> {
 protected:
   // -- ----------------------------------------------
   // -- ICSMultiSectionCfgReaderAC_T interface methods
   // -- ----------------------------------------------
-  ICSrvCfgReaderAC::CfgState 
-    parseSection(XConfigView * cfg_sec, const std::string & nm_sec, void * opaque_arg = NULL)
+  virtual ICSrvCfgReaderAC::CfgState
+    parseSection(XConfigView & cfg_sec, const std::string & nm_sec, void * opaque_arg = NULL)
       throw(ConfigException);
 
 public:
-  ICSProvidersCfgReader(Config & root_sec, Logger * use_log, const char * ics_sec = NULL)
-      : ICSMultiSectionCfgReaderAC_T<IAPrvdsRegistry>(root_sec, use_log,
+  ICSProvidersCfgReader(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec = NULL)
+    : ICSMultiSectionCfgReaderAC_T<IAPrvdsRegistry>(xmf_cfg, use_log,
                                       ics_sec ? ics_sec : "AbonentProviders")
   { }
   ~ICSProvidersCfgReader()

@@ -15,6 +15,7 @@ namespace inman {
 namespace iapmgr {
 
 using smsc::inman::ICSMultiSectionCfgReaderAC_T;
+using smsc::inman::XMFConfig;
 
 class SCFsCfgReader : public ICSMultiSectionCfgReaderAC_T<SCFRegistry> {
 protected:
@@ -41,14 +42,14 @@ protected:
   // -- ----------------------------------------------
   // -- ICSMultiSectionCfgReaderAC_T interface methods
   // -- ----------------------------------------------
-  virtual CfgState
-    parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
+  virtual ICSrvCfgReaderAC::CfgState
+    parseSection(XConfigView & cfg_sec, const std::string & nm_sec,
                  void * opaque_arg = NULL) throw(ConfigException);
 
 public:
-  SCFsCfgReader(Config & root_sec, Logger * use_log, const char * ics_sec = NULL)
-    : ICSMultiSectionCfgReaderAC_T<SCFRegistry>(root_sec, use_log,
-                                  ics_sec ? ics_sec : "IN-platforms")
+  SCFsCfgReader(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec = NULL)
+    : ICSMultiSectionCfgReaderAC_T<SCFRegistry>(xmf_cfg, use_log,
+                                                ics_sec ? ics_sec : "IN-platforms")
   { }
   ~SCFsCfgReader()
   { }

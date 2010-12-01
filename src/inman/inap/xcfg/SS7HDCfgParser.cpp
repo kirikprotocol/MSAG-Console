@@ -28,7 +28,7 @@ static uint16_t unitIdByName(const char * unit_nm)
 /* ************************************************************************* *
  * class SS7HDCfgParser implementation
  * ************************************************************************* */
-void SS7HDCfgParser::readConfig(Config & root_sec, SS7HDConnParms & st_cfg)
+void SS7HDCfgParser::readConfig(const Config & root_sec, SS7HDConnParms & st_cfg)
   throw(ConfigException)
 {
   XConfigView cfgSec(root_sec, nmSec);

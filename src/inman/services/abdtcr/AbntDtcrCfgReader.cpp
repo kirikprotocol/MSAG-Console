@@ -4,6 +4,8 @@ static char const ident[] = "@(#)$Id$";
 
 #include "inman/services/abdtcr/AbntDtcrCfgReader.hpp"
 
+using smsc::inman::cache::AbonentCacheCFG;
+
 namespace smsc {
 namespace inman {
 namespace abdtcr {
@@ -13,14 +15,14 @@ namespace abdtcr {
   //Parses XML configuration entry section, updates dependencies.
   //Returns status of config parsing, 
 ICSrvCfgReaderAC::CfgState
-  ICSAbntDetectorCfgReader::parseConfig(void *opaque_arg) throw(ConfigException)
+  ICSAbntDetectorCfgReader::parseConfig(void * opaque_arg/* = NULL*/)
+    throw(ConfigException)
 {
-  uint32_t tmo = 0;
-  const char * cstr = NULL;
-  XConfigView cfgSec(rootSec, nmCfgSection());
+  uint32_t      tmo = 0;
+  const char *  cstr = NULL;
 
   //abonent contract determination policy is required
-  try { cstr = cfgSec.getString("abonentPolicy");
+  try { cstr = _topSec.getString("abonentPolicy");
   } catch (const ConfigException & exc) { }
   if (!cstr || !cstr[0])
     throw ConfigException("default abonent policy is not set!");
@@ -29,7 +31,7 @@ ICSrvCfgReaderAC::CfgState
   icsDeps.insert(ICSIdent::icsIdIAPManager, "*"); //icsCfg->policyNm
 
   tmo = 0;    //abtTimeout
-  try { tmo = (uint32_t)cfgSec.getInt("abonentTypeTimeout");
+  try { tmo = (uint32_t)_topSec.getInt("abonentTypeTimeout");
   } catch (const ConfigException & exc) { tmo = _MAX_ABTYPE_TIMEOUT; }
   if (tmo >= _MAX_ABTYPE_TIMEOUT)
     throw ConfigException("'abonentTypeTimeout' should fall into the"
@@ -39,7 +41,7 @@ ICSrvCfgReaderAC::CfgState
                 !tmo ? " (default)":"");
 
   tmo = 0;    //maxRequests
-  try { tmo = (uint32_t)cfgSec.getInt("maxRequests");
+  try { tmo = (uint32_t)_topSec.getInt("maxRequests");
   } catch (const ConfigException & exc) { tmo = _MAX_REQUESTS_NUM; }
   if (tmo >= _MAX_REQUESTS_NUM)
     throw ConfigException("'maxRequests' is invalid or missing,"
@@ -51,7 +53,7 @@ ICSrvCfgReaderAC::CfgState
   //cache parameters
   {
     bool dflt = false;
-    try { icsCfg->useCache = cfgSec.getBool("useCache");
+    try { icsCfg->useCache = _topSec.getBool("useCache");
     } catch (const ConfigException & exc) {
       icsCfg->useCache = dflt = true;
     }
@@ -62,7 +64,7 @@ ICSrvCfgReaderAC::CfgState
     icsDeps.insert(ICSIdent::icsIdAbntCache);
 
     tmo = 0;
-    try { tmo = (uint32_t)cfgSec.getInt("cacheExpiration");
+    try { tmo = (uint32_t)_topSec.getInt("cacheExpiration");
     } catch (const ConfigException & exc) {
       tmo = AbonentCacheCFG::_MAX_CACHE_INTERVAL;
     }

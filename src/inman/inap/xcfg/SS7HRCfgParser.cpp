@@ -15,7 +15,7 @@ namespace inap {
 /* ************************************************************************* *
  * class SS7HRCfgParser implementation
  * ************************************************************************* */
-void SS7HRCfgParser::readConfig(Config & root_sec, SS7HRConnParms & st_cfg)
+void SS7HRCfgParser::readConfig(const Config & root_sec, SS7HRConnParms & st_cfg)
   throw(ConfigException)
 {
   XConfigView cfgSec(root_sec, nmSec);

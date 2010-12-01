@@ -21,13 +21,13 @@ struct ICSProducerCFG {
     ICSProducerAC * allc;           //service producer
     ICSrvCfgReaderAC *  xcfReader;  //XML configuration reader
 
-    ICSProducerCFG(ICSProducerAC * use_allc, Config & root_sec,
+    ICSProducerCFG(ICSProducerAC * use_allc, XMFConfig & xmf_cfg,
                    const char * sec_nm, Logger * use_log)
         : icsUId(use_allc->icsUId()), allc(use_allc)
         , xcfReader(0)
     { 
         xcfReader = (!allc->isConfigurable() ? NULL :
-                  ((ICSProducerXcfAC*)allc)->newCfgReader(root_sec, sec_nm, use_log));
+                  ((ICSProducerXcfAC*)allc)->newCfgReader(xmf_cfg, sec_nm, use_log));
     }
     ICSrvCfgReaderAC::CfgState cfgState(void) const
     {

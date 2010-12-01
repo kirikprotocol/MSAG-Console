@@ -23,7 +23,7 @@ namespace smbill {
  * class ICSXSMSCfgReader implementation
  * ************************************************************************* */
 ICSrvCfgReaderAC::CfgState
-  ICSXSMSCfgReader::parseSection(XConfigView * cfg_sec,
+  ICSXSMSCfgReader::parseSection(XConfigView & cfg_sec,
                     const std::string & nm_sec, void * opaque_arg/* = NULL*/)
     throw(ConfigException)
 {
@@ -37,7 +37,7 @@ ICSrvCfgReaderAC::CfgState
   smsc_log_info(logger, "SMS Extra service '%s' config ..", nm_cfg);
   XSmsService xSrv(nm_cfg);
 
-  try { xSrv.mask = (uint32_t)cfg_sec->getInt("serviceMask");
+  try { xSrv.mask = (uint32_t)cfg_sec.getInt("serviceMask");
   } catch (const ConfigException & exc) { }
   if (!xSrv.mask || (xSrv.mask & SMSX_RESERVED_MASK))
     throw ConfigException("'serviceMask' is missed or invalid or reserved bits is used");
@@ -47,20 +47,20 @@ ICSrvCfgReaderAC::CfgState
     throw ConfigException("'serviceMask' %u is shared by %s and %s",
                             xSrv.mask, (xit->second).name.c_str(), nm_cfg);
 
-  try { xSrv.svcCode = (uint32_t)cfg_sec->getInt("serviceCode");
+  try { xSrv.svcCode = (uint32_t)cfg_sec.getInt("serviceCode");
   } catch (const ConfigException & exc) { }
   if (!xSrv.svcCode)
     throw ConfigException("'serviceCode' is missed or invalid");
 
   const char * cstr = NULL;
-  try { cstr = cfg_sec->getString("serviceAdr"); //optional param
+  try { cstr = cfg_sec.getString("serviceAdr"); //optional param
   } catch (const ConfigException & exc) { }
   if (!cstr || !cstr[0])
     smsc_log_warn(logger, "  'serviceAdr' is omitted");
   else if (!xSrv.adr.fromText(cstr))
     throw ConfigException("'serviceAdr' is invalid: %s", cstr);
 
-  try { xSrv.chargeBearer = cfg_sec->getBool("chargeBearer"); //optional param
+  try { xSrv.chargeBearer = cfg_sec.getBool("chargeBearer"); //optional param
   } catch (const ConfigException & exc) { }
 
   icsCfg->insert(SmsXServiceMap::value_type(xSrv.mask, xSrv));
@@ -80,15 +80,13 @@ ICSrvCfgReaderAC::CfgState
 ICSrvCfgReaderAC::CfgState
   ICSSmBillingCfgReader::parseConfig(void * opaque_obj/* = NULL*/) throw(ConfigException)
 {
-  XConfigView cfgSec(rootSec, nmCfgSection());
-
   //according to ChargeParm::ContractReqMode
   static const char * _abReq[] = { "onDemand", "always" };
   uint32_t tmo = 0;
   const char * cstr = NULL;
 
   //read BillingModes subsection
-  readBillingModes(cfgSec);
+  readBillingModes(_topSec);
   if (icsCfg->prm->mo_billMode.useIN() || icsCfg->prm->mt_billMode.useIN()) {
     icsDeps.insert(ICSIdent::icsIdTCAPDisp);
     icsDeps.insert(ICSIdent::icsIdScheduler);
@@ -96,7 +94,7 @@ ICSrvCfgReaderAC::CfgState
 
   cstr = NULL;
   icsCfg->prm->cntrReq = ChargeParm::reqOnDemand;
-  try { cstr = cfgSec.getString("abonentTypeRequest");
+  try { cstr = _topSec.getString("abonentTypeRequest");
   } catch (const ConfigException & exc) { }
   if (cstr && cstr[0]) {
     if (!strcmp(_abReq[ChargeParm::reqAlways], cstr)) {
@@ -111,7 +109,7 @@ ICSrvCfgReaderAC::CfgState
   if (icsCfg->prm->needIAProvider()) {
     //abonent contract determination policy is required
     cstr = NULL;
-    try { cstr = cfgSec.getString("abonentPolicy");
+    try { cstr = _topSec.getString("abonentPolicy");
     } catch (const ConfigException & exc) { }
     if (!cstr || !cstr[0])
       throw ConfigException("default abonent policy is not set!");
@@ -120,7 +118,7 @@ ICSrvCfgReaderAC::CfgState
     icsDeps.insert(ICSIdent::icsIdIAPManager, "*"); //icsCfg->policyNm
 
     tmo = 0;    //abtTimeout
-    try { tmo = (uint32_t)cfgSec.getInt("abonentTypeTimeout");
+    try { tmo = (uint32_t)_topSec.getInt("abonentTypeTimeout");
     } catch (const ConfigException & exc) { tmo = _MAX_ABTYPE_TIMEOUT; }
     if (tmo >= _MAX_ABTYPE_TIMEOUT)
       throw ConfigException("'abonentTypeTimeout' should fall into the"
@@ -134,7 +132,7 @@ ICSrvCfgReaderAC::CfgState
   // CDR storage parameters
   // -----------------------
   cstr = NULL;
-  try { cstr = cfgSec.getString("cdrMode");
+  try { cstr = _topSec.getString("cdrMode");
   } catch (const ConfigException & exc) {
     throw ConfigException("'cdrMode' is unknown or missing");
   }
@@ -148,7 +146,7 @@ ICSrvCfgReaderAC::CfgState
 
   if (icsCfg->prm->cdrMode != ChargeParm::cdrNONE) {
     cstr = NULL;
-    try { cstr = cfgSec.getString("cdrDir");
+    try { cstr = _topSec.getString("cdrDir");
     } catch (const ConfigException & exc) { }
     if (!cstr || !cstr[0])
         throw ConfigException("'cdrDir' is invalid or missing");
@@ -156,7 +154,7 @@ ICSrvCfgReaderAC::CfgState
     smsc_log_info(logger, "  cdrDir: %s", cstr);
 
     tmo = 0;
-    try { tmo = (uint32_t)cfgSec.getInt("cdrInterval");
+    try { tmo = (uint32_t)_topSec.getInt("cdrInterval");
     } catch (const ConfigException & exc) { }
     if (tmo && (tmo < _MIN_CDR_ROLL_INTERVAL))
         tmo = 0;
@@ -171,7 +169,7 @@ ICSrvCfgReaderAC::CfgState
   }
 
   tmo = 0;    //maxBillings
-  try { tmo = (uint32_t)cfgSec.getInt("maxBillings");
+  try { tmo = (uint32_t)_topSec.getInt("maxBillings");
   } catch (const ConfigException & exc) { tmo = _MAX_BILLINGS_NUM; }
   if (tmo >= _MAX_BILLINGS_NUM)
     throw ConfigException("'maxBilling' is invalid or missing,"
@@ -181,7 +179,7 @@ ICSrvCfgReaderAC::CfgState
                 !tmo ? " (default)":"");
 
   tmo = 0;    //maxTimeout
-  try { tmo = (uint32_t)cfgSec.getInt("maxTimeout");
+  try { tmo = (uint32_t)_topSec.getInt("maxTimeout");
   } catch (const ConfigException & exc) { tmo = _MAX_DELAY_SECS; }
   if ((tmo >= _MAX_DELAY_SECS) || (tmo < 2))
     throw ConfigException("'maxTimeout' is invalid or missing,"
@@ -193,7 +191,7 @@ ICSrvCfgReaderAC::CfgState
   //cache parameters
   {
     bool dflt = false;
-    try { icsCfg->prm->useCache = cfgSec.getBool("useCache");
+    try { icsCfg->prm->useCache = _topSec.getBool("useCache");
     } catch (const ConfigException & exc) {
         icsCfg->prm->useCache = dflt = true;
     }
@@ -204,7 +202,7 @@ ICSrvCfgReaderAC::CfgState
     icsDeps.insert(ICSIdent::icsIdAbntCache);
 
     tmo = 0;
-    try { tmo = (uint32_t)cfgSec.getInt("cacheExpiration");
+    try { tmo = (uint32_t)_topSec.getInt("cacheExpiration");
     } catch (const ConfigException & exc) { tmo = AbonentCacheCFG::_MAX_CACHE_INTERVAL; }
     if (tmo >= AbonentCacheCFG::_MAX_CACHE_INTERVAL)
         throw ConfigException("'cacheExpiration' is invalid or missing,"
@@ -218,20 +216,19 @@ ICSrvCfgReaderAC::CfgState
 
   //read CAP3Sms configuration
   if (icsDeps.LookUp(ICSIdent::icsIdTCAPDisp))
-    icsCfg->prm->capSms.reset(readCAP3Sms(cfgSec));
+    icsCfg->prm->capSms.reset(readCAP3Sms(_topSec));
 
 #ifdef SMSEXTRA
   /* ********************************* *
    * SMS Extra services configuration: *
    * ********************************* */
   cstr = NULL;
-  try { cstr = cfgSec.getString("smsExtraConfig");
+  try { cstr = _topSec.getString("smsExtraConfig");
   } catch (const ConfigException & exc) { }
   if (cstr && cstr[0]) { //throws
     smsc_log_info(logger, "  'smsExtraConfig': %s", cstr);
-    //Trying to read and parse SMS Extra config file ..
-    std::auto_ptr<Config> xrootSec(XCFManager::getInstance().getConfig(cstr));
-    ICSXSMSCfgReader xReader(*(xrootSec.get()), logger);
+    //Attempt to read and parse SMS Extra config file ..
+    ICSXSMSCfgReader xReader(_xmfCfg, logger, cstr);
     xReader.readConfig();
     icsCfg->prm->smsXMap.reset(xReader.rlseConfig());
     smsc_log_info(logger, "total SMS Extra services configured: %u",
@@ -326,13 +323,15 @@ void ICSSmBillingCfgReader::readBillingModes(XConfigView & cfg)
   if (!cfg.findSubSection("BillingModes"))
     throw ConfigException("'BillingModes' subsection is missed");
 
-  std::auto_ptr<XConfigView>   bmCfg(cfg.getSubConfig("BillingModes"));
-  std::auto_ptr<CStrSet>      msgs(bmCfg->getShortSectionNames());
+  XConfigView   bmCfg;
+  cfg.getSubConfig(bmCfg, "BillingModes");
+
+  std::auto_ptr<CStrSet>  msgs(bmCfg.getShortSectionNames());
   if (msgs->empty())
     throw ConfigException("no billing modes set");
 
   for (CStrSet::iterator sit = msgs->begin(); sit != msgs->end(); ++sit) {
-    std::auto_ptr<XConfigView> curMsg(bmCfg->getSubConfig(sit->c_str()));
+    std::auto_ptr<XConfigView> curMsg(bmCfg.getSubConfig(sit->c_str()));
     if (!strcmp(_MSGtypes[ChargeParm::msgSMS], sit->c_str()))
       readModesFor(ChargeParm::msgSMS, curMsg.get());
     else if (!strcmp(_MSGtypes[ChargeParm::msgUSSD], sit->c_str()))
@@ -345,20 +344,22 @@ void ICSSmBillingCfgReader::readBillingModes(XConfigView & cfg)
 }
 
 //Returns true if service depends on other ones
-TCAPUsr_CFG * ICSSmBillingCfgReader::readCAP3Sms(XConfigView & cfg)
+TCAPUsr_CFG * ICSSmBillingCfgReader::readCAP3Sms(XConfigView & cfg_sec)
     throw(ConfigException)
 {
   const char * cstr = NULL;
-  try { cstr = cfg.getString("CAP3Sms");
+  try { cstr = cfg_sec.getString("CAP3Sms");
   } catch (const ConfigException & exc) { }
 
   TCAPUsrCfgParser    parser(logger, cstr);
-  if (!rootSec.findSection(parser.nmCfgSection()))
+  if (!_xmfCfg.hasSection(parser.nmCfgSection()))
     throw ConfigException("section %s' is missing!", parser.nmCfgSection());
+
   smsc_log_info(logger, "Reading settings from '%s' ..", parser.nmCfgSection());
+  XCFConfig * pTCfg = _xmfCfg.getSectionConfig(cstr);
 
   std::auto_ptr<TCAPUsr_CFG>  capCfg(new TCAPUsr_CFG());
-  parser.readConfig(rootSec, *capCfg.get()); //throws
+  parser.readConfig(pTCfg->second, *capCfg.get()); //throws
   /**/
   return capCfg.release();
 }

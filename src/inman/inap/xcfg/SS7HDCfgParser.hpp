@@ -43,7 +43,7 @@ public:
 
   const char * nmCfgSection(void) const { return nmSec; }
 
-  void readConfig(Config & root_sec, SS7HDConnParms & st_cfg) throw(ConfigException);
+  void readConfig(const Config & root_sec, SS7HDConnParms & st_cfg) throw(ConfigException);
 };
 
 } //inap

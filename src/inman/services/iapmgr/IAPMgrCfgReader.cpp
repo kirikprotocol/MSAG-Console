@@ -105,7 +105,7 @@ IAPManagerCFG * ICSIAPMgrCfgReader::rlseConfig(void)
 // -- ICSMultiSectionCfgReaderAC_T interface methods
 // -- ----------------------------------------------
 ICSrvCfgReaderAC::CfgState 
-  ICSIAPMgrCfgReader::parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
+  ICSIAPMgrCfgReader::parseSection(XConfigView & cfg_sec, const std::string & nm_sec,
                                    void * opaque_arg/* = NULL*/)
     throw(ConfigException)
 {
@@ -119,7 +119,7 @@ ICSrvCfgReaderAC::CfgState
   smsc_log_info(logger, "Reading %s policy config ..", nm_cfg);
   const char * cstr = NULL;
 
-  try { cstr = cfg_sec->getString("active");
+  try { cstr = cfg_sec.getString("active");
   } catch (const ConfigException & exc) { }
 
   if (cstr && cstr[0]) {
@@ -135,7 +135,7 @@ ICSrvCfgReaderAC::CfgState
       throw ConfigException("\'%s.active\' value is invalid", nm_cfg);
   }
 
-  cstr = cfg_sec->getString("policy"); //throws
+  cstr = cfg_sec.getString("policy"); //throws
 
   IAPolicyParser   polXCFG(nm_cfg);
   polXCFG.Parse(cstr); //throws
@@ -147,15 +147,16 @@ ICSrvCfgReaderAC::CfgState
   {
     std::auto_ptr<CStrSet>  poolsSet;
 
-    if (cfg_sec->findSubSection("AddressPools")) {
-      std::auto_ptr<XConfigView> poolsCfg(cfg_sec->getSubConfig("AddressPools"));
+    if (cfg_sec.findSubSection("AddressPools")) {
+      XConfigView   poolsCfg;
+      cfg_sec.getSubConfig(poolsCfg, "AddressPools");
   
-      poolsSet.reset(poolsCfg->getStrParamNames());
+      poolsSet.reset(poolsCfg.getStrParamNames());
   
       for (CStrSet::iterator it = poolsSet->begin(); it != poolsSet->end(); ++it) {
         AddressPool itPool(it->c_str());
 
-        cstr = poolsCfg->getString(it->c_str());
+        cstr = poolsCfg.getString(it->c_str());
         if (!itPool._mask.fromText(cstr))
           throw ConfigException("\'%s\'value is invalid: %s", it->c_str(), cstr);
         polDat->_poolsSet.insert(itPool);

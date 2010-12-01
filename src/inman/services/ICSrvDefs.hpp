@@ -111,9 +111,10 @@ protected:
     const ICSUId icsId;
     ICSIdsSet    icsDeps;
 
-public:
-    ICSProducerAC(ICSUId ics_uid) : icsId(ics_uid)
+    explicit ICSProducerAC(ICSUId ics_uid) : icsId(ics_uid)
     { }
+
+public:
     virtual ~ICSProducerAC()
     { }
 

@@ -33,7 +33,7 @@ public:
 
   const char * nmCfgSection(void) const { return nmSec; }
 
-  void readConfig(Config & root_sec, TCAPUsr_CFG & st_cfg) throw(ConfigException);
+  void readConfig(const Config & root_sec, TCAPUsr_CFG & st_cfg) throw(ConfigException);
 };
 
 } //inap

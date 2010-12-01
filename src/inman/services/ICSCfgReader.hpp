@@ -12,15 +12,13 @@
 #include "util/config/XCFManager.hpp"
 #include "util/config/XCFView.hpp"
 #include "inman/services/ICSrvDefs.hpp"
+#include "inman/services/XMFConfig.hpp"
 
 namespace smsc  {
 namespace inman {
 
-using smsc::util::config::XCFManager;
-using smsc::util::config::Config;
 using smsc::util::config::XConfigView;
 using smsc::util::config::CStrSet;
-using smsc::util::config::ConfigException;
 
 struct ICSCfgArgs {
   std::string _nmSec; //name of service configuration section
@@ -37,83 +35,83 @@ typedef std::list<std::string> CStrList;
 //Inman Configurable Services Configuration Dependencies
 class ICSCfgDeps {
 protected:
-    ICSArgsMap  icsArgs;
+  ICSArgsMap  icsArgs;
 
-    ICSArgsMap::iterator getNode(ICSUId uid)
-    {
-        ICSArgsMap::iterator it = icsArgs.find(uid);
-        if (it == icsArgs.end()) {
-            std::pair<ICSArgsMap::iterator, bool> res =
-                icsArgs.insert(ICSArgsMap::value_type(uid, ICSCfgArgs()));
-            it = res.first;
-        }
-        return it;
+  ICSArgsMap::iterator getNode(ICSUId uid)
+  {
+    ICSArgsMap::iterator it = icsArgs.find(uid);
+    if (it == icsArgs.end()) {
+      std::pair<ICSArgsMap::iterator, bool>
+        res = icsArgs.insert(ICSArgsMap::value_type(uid, ICSCfgArgs()));
+      it = res.first;
     }
+    return it;
+  }
 
 public:
-    ICSCfgDeps()
-    { }
-    ~ICSCfgDeps()
-    { }
+  ICSCfgDeps()
+  { }
+  ~ICSCfgDeps()
+  { }
 
-    void exportDeps(ICSIdsSet & ics_deps) const
-    {
-        for (ICSArgsMap::const_iterator it = icsArgs.begin();
-                                        it != icsArgs.end(); ++it)
-            ics_deps.insert(it->first);
-    }
-    //
-    bool empty(void) const { return icsArgs.empty(); }
-    //
-    const ICSArgsMap & Map(void) const { return icsArgs; }
-    //
-    const ICSArgsMap::value_type * LookUp(ICSUId uid) const
-    {
-        ICSArgsMap::const_iterator it = icsArgs.find(uid);
-        return (it == icsArgs.end()) ? NULL : it.operator->();
-    }
+  void exportDeps(ICSIdsSet & ics_deps) const
+  {
+    for (ICSArgsMap::const_iterator it = icsArgs.begin(); it != icsArgs.end(); ++it)
+      ics_deps.insert(it->first);
+  }
+  //
+  bool empty(void) const { return icsArgs.empty(); }
+  //
+  const ICSArgsMap & Map(void) const { return icsArgs; }
+  //
+  const ICSArgsMap::value_type * LookUp(ICSUId uid) const
+  {
+    ICSArgsMap::const_iterator it = icsArgs.find(uid);
+    return (it == icsArgs.end()) ? NULL : it.operator->();
+  }
 
-    void insert(ICSUId uid) { getNode(uid); }
-    //
-    void insert(const ICSIdsSet & ics_ids)
-    {
-        for (ICSIdsSet::const_iterator it = ics_ids.begin(); it != ics_ids.end(); ++it)
-            getNode(*it);
+  void insert(ICSUId uid) { getNode(uid); }
+  //
+  void insert(const ICSIdsSet & ics_ids)
+  {
+    for (ICSIdsSet::const_iterator it = ics_ids.begin(); it != ics_ids.end(); ++it)
+      getNode(*it);
+  }
+  void insert(ICSUId uid, const std::string & ics_arg)
+  {
+    getNode(uid)->second._args.insert(ics_arg);
+  }
+  //
+  void insert(ICSUId uid, const CStrSet & ics_arg)
+  {
+    getNode(uid)->second._args.insert(ics_arg.begin(), ics_arg.end());
+  }
+  //Imports only ICSUIds 
+  void importDeps(const ICSCfgDeps & ics_deps)
+  {
+    for (ICSArgsMap::const_iterator
+         cit = ics_deps.icsArgs.begin(); cit != ics_deps.icsArgs.end(); ++cit) {
+      insert(cit->first);
     }
-    void insert(ICSUId uid, const std::string & ics_arg)
-    {
-        getNode(uid)->second._args.insert(ics_arg);
-    }
-    //
-    void insert(ICSUId uid, const CStrSet & ics_arg)
-    {
-        getNode(uid)->second._args.insert(ics_arg.begin(), ics_arg.end());
-    }
-    //Imports only ICSUIds 
-    void importDeps(const ICSCfgDeps & ics_deps)
-    {
-        for (ICSArgsMap::const_iterator
-             cit = ics_deps.icsArgs.begin(); cit != ics_deps.icsArgs.end(); ++cit) {
-            insert(cit->first);
-        }
-    }
+  }
 
-    //NOTE: zero value of 'nm_sec' forces the section name reset
-    void setSection(ICSUId uid, const char * nm_sec)
-    {
-      if (nm_sec)
-        getNode(uid)->second._nmSec = nm_sec;
-      else
-        getNode(uid)->second._nmSec.clear();
-    }
+  //NOTE: zero value of 'nm_sec' forces the section name reset
+  void setSection(ICSUId uid, const char * nm_sec)
+  {
+    if (nm_sec)
+      getNode(uid)->second._nmSec = nm_sec;
+    else
+      getNode(uid)->second._nmSec.clear();
+  }
 };
 
 class ICSrvCfgReaderAC {
 public:
-    enum CfgState { cfgNone = 0, cfgPartial, cfgComplete };
+  enum CfgState { cfgNone = 0, cfgPartial, cfgComplete };
 
 protected:
-  Config &        rootSec;
+  XMFConfig &     _xmfCfg;
+  XConfigView     _topSec;
   CfgState        cfgState;
   CStrSet         icsArg; //arguments customizing configuration reading
   std::string     icsSec; //name of config.xml section
@@ -121,23 +119,31 @@ protected:
   ICSCfgDeps      icsDeps;//service dependencies list
   Logger *        logger;
 
-  //Parses XML configuration entry section, updates dependencies.
-  //Returns status of config parsing, 
-  virtual CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException) = 0;
 
-  ICSrvCfgReaderAC(Config & root_sec, Logger * use_log, const char * ics_sec)
-    : rootSec(root_sec), cfgState(cfgNone), logger(use_log)
+  ICSrvCfgReaderAC(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec)
+    : _xmfCfg(xmf_cfg), cfgState(cfgNone), logger(use_log)
   {
     if (ics_sec)
       icsSec = ics_sec;
   }
+
+  // --------------------------------------
+  // ICSrvCfgReaderAC interface methods
+  // ---------------------------------------
+  //Parses XML configuration entry section, updates dependencies.
+  //Returns status of config parsing.
+  virtual CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException) = 0;
 
 public:
   virtual ~ICSrvCfgReaderAC()
   { }
 
   CfgState icsCfgState(void) const { return cfgState; }
-  const char * nmCfgSection(void) const { return icsSec.c_str(); }
+  //
+  const char * nmCfgSection(void) const
+  {
+    return icsSec.empty() ? NULL : icsSec.c_str();
+  }
   //returns true if there are settings to read
   bool hasToRead(void) const
   {
@@ -162,80 +168,86 @@ public:
 
 class ICSMultiSectionCfgReaderAC : public ICSrvCfgReaderAC {
 protected:
-    struct CfgParsingResult {
-      ICSrvCfgReaderAC::CfgState  cfgState;
-      const void *                opaqueRes; //some public result of section parsing
+  struct CfgParsingResult {
+    ICSrvCfgReaderAC::CfgState  cfgState;
+    const void *                opaqueRes; //some public result of section parsing
 
-      explicit CfgParsingResult(ICSrvCfgReaderAC::CfgState parsing_state = cfgNone)
-        : cfgState(parsing_state), opaqueRes(0)
-      { }
-      explicit CfgParsingResult(const CfgParsingResult * use_res)
-      {
-        if (use_res) {
-          cfgState = use_res->cfgState;
-          opaqueRes = use_res->opaqueRes;
-        } else {
-          cfgState = ICSrvCfgReaderAC::cfgNone;
-          opaqueRes = 0;
-        }
+    explicit CfgParsingResult(ICSrvCfgReaderAC::CfgState parsing_state = cfgNone)
+      : cfgState(parsing_state), opaqueRes(0)
+    { }
+    explicit CfgParsingResult(const CfgParsingResult * use_res)
+    {
+      if (use_res) {
+        cfgState = use_res->cfgState;
+        opaqueRes = use_res->opaqueRes;
+      } else {
+        cfgState = ICSrvCfgReaderAC::cfgNone;
+        opaqueRes = 0;
       }
-    };
-    typedef std::map<std::string, CfgParsingResult> SectionRegistry;
-
-    SectionRegistry     secReg;
-    std::auto_ptr<XConfigView> _cfgXCV;
-
-    const CfgParsingResult * sectionState(const std::string & nm_sec) const
-    {
-      SectionRegistry::const_iterator it = secReg.find(nm_sec);
-      return (it == secReg.end()) ? NULL : &(it->second);
     }
-    ICSrvCfgReaderAC::CfgState registerSection(const std::string & nm_sec,
-                                               const CfgParsingResult & parsing_res)
-    {
-      secReg.insert(SectionRegistry::value_type(nm_sec, parsing_res));
-      return parsing_res.cfgState;
-    }
+  };
 
-    //Parses section settings. if parsing may yeld various results
-    //depending on arguments, section state should be set to
-    //ICSrvCfgReaderAC::cfgPartial instead of ICSrvCfgReaderAC::cfgComplete.
-    //NOTE: function MUST register parsing result in SectionRegistry upon return!
-    virtual ICSrvCfgReaderAC::CfgState
-        parseSection(XConfigView * cfg_sec, const std::string & nm_sec, void * opaque_arg = NULL)
-            throw(ConfigException) = 0;
+private:
+  typedef std::map<std::string, CfgParsingResult> SectionRegistry;
 
-    // -- ------------------------------------
-    // -- ICSrvCfgReaderAC interface methods
-    // -- ------------------------------------
-    //Returns true if service depends on other ones
-    //Clears arguments upon return
-    virtual ICSrvCfgReaderAC::CfgState
-      parseConfig(void * opaque_arg = NULL) throw(ConfigException);
+  SectionRegistry     _secReg;
+
+protected:
+  const CfgParsingResult * sectionState(const std::string & nm_sec) const
+  {
+    SectionRegistry::const_iterator it = _secReg.find(nm_sec);
+    return (it == _secReg.end()) ? NULL : &(it->second);
+  }
+  ICSrvCfgReaderAC::CfgState registerSection(const std::string & nm_sec,
+                                             const CfgParsingResult & parsing_res)
+  {
+    _secReg.insert(SectionRegistry::value_type(nm_sec, parsing_res));
+    return parsing_res.cfgState;
+  }
+
+  // --------------------------------------------------
+  // ICSrvCfgReaderAC interface methods implementation
+  // --------------------------------------------------
+  //Returns true if service depends on other ones
+  //Clears arguments upon return
+  virtual ICSrvCfgReaderAC::CfgState
+    parseConfig(void * opaque_arg = NULL) throw(ConfigException);
+
+  // --------------------------------------------------
+  // ICSMultiSectionCfgReaderAC interface methods 
+  // --------------------------------------------------
+  //Parses section settings. if parsing may yeld various results
+  //depending on arguments, section state should be set to
+  //ICSrvCfgReaderAC::cfgPartial instead of ICSrvCfgReaderAC::cfgComplete.
+  //NOTE: function MUST register parsing result in SectionRegistry upon return!
+  virtual ICSrvCfgReaderAC::CfgState
+      parseSection(XConfigView & cfg_sec, const std::string & nm_sec, void * opaque_arg = NULL)
+          throw(ConfigException) = 0;
+
+  ICSMultiSectionCfgReaderAC(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec)
+    : ICSrvCfgReaderAC(xmf_cfg, use_log, ics_sec)
+  { }
 
 public:
-    ICSMultiSectionCfgReaderAC(Config & root_sec, Logger * use_log, const char * ics_sec)
-        : ICSrvCfgReaderAC(root_sec, use_log, ics_sec)
-    { }
-    virtual ~ICSMultiSectionCfgReaderAC()
-    { }
+  virtual ~ICSMultiSectionCfgReaderAC()
+  { }
 };
 
 template <class _CfgTArg>
 class ICSrvCfgReaderAC_T : public ICSrvCfgReaderAC {
 protected:
-    std::auto_ptr<_CfgTArg> icsCfg; //structure containing parsed configuration
+  std::auto_ptr<_CfgTArg> icsCfg; //structure containing parsed configuration
 
 public:
-    ICSrvCfgReaderAC_T(Config & root_sec, Logger * use_log, const char * ics_sec)
-        : ICSrvCfgReaderAC(root_sec, use_log, ics_sec), icsCfg(new _CfgTArg())
-    { }
-    virtual ~ICSrvCfgReaderAC_T()
-    { }
+  ICSrvCfgReaderAC_T(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec)
+    : ICSrvCfgReaderAC(xmf_cfg, use_log, ics_sec), icsCfg(new _CfgTArg())
+  { }
+  virtual ~ICSrvCfgReaderAC_T()
+  { }
 
-    const _CfgTArg * getConfig(void) const { return icsCfg.get(); }
+  const _CfgTArg * getConfig(void) const { return icsCfg.get(); }
 
-    virtual _CfgTArg * rlseConfig(void) { return icsCfg.release(); }
+  virtual _CfgTArg * rlseConfig(void) { return icsCfg.release(); }
 };
 
 
@@ -245,15 +257,15 @@ protected:
   std::auto_ptr<_CfgTArg> icsCfg; //structure containing parsed configuration
 
 public:
-    ICSMultiSectionCfgReaderAC_T(Config & root_sec, Logger * use_log, const char * ics_sec)
-        : ICSMultiSectionCfgReaderAC(root_sec, use_log, ics_sec), icsCfg(new _CfgTArg())
-    { }
-    virtual ~ICSMultiSectionCfgReaderAC_T()
-    { }
+  ICSMultiSectionCfgReaderAC_T(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec)
+    : ICSMultiSectionCfgReaderAC(xmf_cfg, use_log, ics_sec), icsCfg(new _CfgTArg())
+  { }
+  virtual ~ICSMultiSectionCfgReaderAC_T()
+  { }
 
-    const _CfgTArg * getConfig(void) const { return icsCfg.get(); }
+  const _CfgTArg * getConfig(void) const { return icsCfg.get(); }
 
-    virtual _CfgTArg * rlseConfig(void) { return icsCfg.release(); }
+  virtual _CfgTArg * rlseConfig(void) { return icsCfg.release(); }
 };
 
 

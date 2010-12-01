@@ -16,16 +16,20 @@ namespace iaprvd {
 namespace atih {
 
 using smsc::inman::ICSrvCfgReaderAC_T;
+using smsc::inman::XMFConfig;
 
 class ICSIAPrvdATSICfgReader : public ICSrvCfgReaderAC_T<IAProviderATSI_XCFG> {
 protected:
+  // --------------------------------------------------
+  // ICSrvCfgReaderAC interface methods implementation
+  // --------------------------------------------------
   //Parses XML configuration entry section, updates dependencies.
-  //Returns status of config parsing, 
-  CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException);
+  //Returns status of config parsing
+  virtual CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException);
 
 public:
-  ICSIAPrvdATSICfgReader(Config & root_sec, Logger * use_log, const char * ics_sec)
-      : ICSrvCfgReaderAC_T<IAProviderATSI_XCFG>(root_sec, use_log, ics_sec)
+  ICSIAPrvdATSICfgReader(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec)
+    : ICSrvCfgReaderAC_T<IAProviderATSI_XCFG>(xmf_cfg, use_log, ics_sec)
   {
     //unconditional dependencies:
     icsDeps.insert(ICSIdent::icsIdTCAPDisp);

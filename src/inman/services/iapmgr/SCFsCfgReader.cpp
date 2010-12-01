@@ -77,8 +77,9 @@ SKAlgorithmAC *
     if (!scf_cfg.findSubSection(algStr[2].c_str()))
       return NULL;
     std::auto_ptr<SKAlgorithm_SKMap> alg(new SKAlgorithm_SKMap(csi_type, argCsi));
-    std::auto_ptr<XConfigView> xltCfg(scf_cfg.getSubConfig(algStr[2].c_str()));
-    bool res = readSKeyMap(alg.get(), *xltCfg.get());
+    XConfigView xltCfg;
+    scf_cfg.getSubConfig(xltCfg, algStr[2].c_str());
+    bool res = readSKeyMap(alg.get(), xltCfg);
     return (res && alg->size()) ? alg.release() : NULL;
   }
   return NULL;
@@ -209,7 +210,7 @@ void SCFsCfgReader::readSCFParms(const char * nm_sec, XConfigView & cfg_sec,
 // -- ICSMultiSectionCfgReaderAC_T interface methods
 // -- ----------------------------------------------
 ICSrvCfgReaderAC::CfgState
-  SCFsCfgReader::parseSection(XConfigView * cfg_sec, const std::string & nm_sec,
+  SCFsCfgReader::parseSection(XConfigView & cfg_sec, const std::string & nm_sec,
                               void * opaque_arg/* = NULL*/)
     throw(ConfigException)
 {
@@ -225,7 +226,7 @@ ICSrvCfgReaderAC::CfgState
   std::auto_ptr<INScfCFG> pin(new INScfCFG(nmCfg));
 
   const char * cstr = NULL;
-  try { cstr = cfg_sec->getString("scfAddress"); //throws
+  try { cstr = cfg_sec.getString("scfAddress"); //throws
   } catch (const ConfigException & exc) { }
   if (!cstr || !cstr[0])
     throw ConfigException("%s.scfAddress is invalid or missing", nmCfg);
@@ -246,23 +247,24 @@ ICSrvCfgReaderAC::CfgState
   const INScfCFG *  pInCfg = NULL;
 
   cstr = NULL;
-  try { cstr = cfg_sec->getString("aliasFor");
+  try { cstr = cfg_sec.getString("aliasFor");
   } catch (const ConfigException & exc) { }
   if (cstr && cstr[0]) {
     //read configuration of targeted IN-platform
     smsc_log_info(logger, "  aliasFor: %s", cstr);
-    std::auto_ptr<XConfigView>  refCfg(_cfgXCV->getSubConfig(cstr)); //throws
 
+    XConfigView refCfg;
+    _topSec.getSubConfig(refCfg, cstr);  //throws
     //read aliased configuration & insert into registry
     std::string refSec(cstr);
-    parseSection(refCfg.get(), refSec, opaque_arg); //throws if not a cfgComplete
+    parseSection(refCfg, refSec, opaque_arg); //throws if not a cfgComplete
 
     INScfIdent_t  nmAlias(cstr);
     pInCfg = icsCfg->insertAlias(pin.get(), nmAlias);
     /* */
   } else {
     //read parameters & insert into registry
-    readSCFParms(nmCfg, *cfg_sec, pin->_prm.init());
+    readSCFParms(nmCfg, cfg_sec, pin->_prm.init());
     icsCfg->insertParms(pin.get());
     pInCfg = pin.get();
   }

@@ -10,10 +10,12 @@ static char const ident[] = "@(#)$Id$";
 using smsc::inman::ICServiceAC;
 using smsc::inman::SVCHost;
 using smsc::inman::SVCHostProducer;
+using smsc::inman::ICSHostCfgReader;
 using smsc::inman::ICSrvCfgReaderAC;
+using smsc::inman::XMFConfig;
 
 using smsc::util::config::XCFManager;
-using smsc::util::config::Config;
+//using smsc::util::config::Config;
 using smsc::util::config::ConfigException;
 
 
@@ -61,18 +63,27 @@ int main(int argc, char** argv)
     }
 
     try {
-        std::auto_ptr<Config> config(XCFManager::getInstance().getConfig(cfgFile));
-        SVCHostProducer hostProd;
-        ICSrvCfgReaderAC * xcfReader = hostProd.newCfgReader(*config.get(), 0, inmanLogger);
-        xcfReader->readConfig();
+        XMFConfig   config(XCFManager::getInstance());
+        config.parseSectionsConfig(cfgFile); //throws
+
+        SVCHostProducer   hostProd;
+        ICSHostCfgReader * xcfReader = (ICSHostCfgReader *)
+                              hostProd.newCfgReader(config, 0, inmanLogger);
+
+        xcfReader->readConfig(); //throws
         if (xcfReader->icsCfgState() != ICSrvCfgReaderAC::cfgComplete)
-            throw ConfigException("SVCHost configuration is incomplete");
+          throw ConfigException("SVCHost configuration is incomplete");
+
         _svcHost = (SVCHost*)hostProd.newService(0, inmanLogger);
         smsc_log_info(inmanLogger, "INMan: configuration processed.\n");
     } catch (const ConfigException & exc) {
-        smsc_log_error(inmanLogger, "INMan: %s", exc.what());
-        smsc_log_error(inmanLogger, "Configuration invalid. Exiting.");
+        smsc_log_fatal(inmanLogger, "INMan: %s", exc.what());
+        smsc_log_fatal(inmanLogger, "Configuration invalid. Exiting.");
         exit(-1);
+    } catch (...) {
+      smsc_log_fatal(inmanLogger, "INMan: unknown exception caught");
+      smsc_log_fatal(inmanLogger, "Configuration invalid. Exiting.");
+      exit(-1);
     }
 
     try {

@@ -92,15 +92,27 @@ void ICSrvCfgReaderAC::addArguments(const CStrSet & use_args)
 bool ICSrvCfgReaderAC::readConfig(void * opaque_arg/* = NULL*/)
   throw(ConfigException)
 {
+  if (!_topSec.isAssigned())
+    _xmfCfg.getSectionView(_topSec, nmCfgSection());
+
   if (cfgState != ICSrvCfgReaderAC::cfgComplete) {
     if (!cfgState) {
-      if (!icsSec.empty() && !rootSec.findSection(nmCfgSection()))
+      if (nmCfgSection() && !_xmfCfg.hasSection(nmCfgSection()))
         throw ConfigException("section is missed: %s", nmCfgSection());
     }
-    smsc_log_info(logger, "Reading settings from '%s' ..", nmCfgSection());
+    if (nmCfgSection()) {
+      smsc_log_info(logger, "Reading settings from '%s' ..", nmCfgSection());
+    } else {
+      smsc_log_info(logger, "Reading settings ..");
+    }
     cfgState = parseConfig(opaque_arg);
-  } else
-    smsc_log_info(logger, "Processed settings of '%s'", nmCfgSection());
+  } else {
+    if (nmCfgSection()) {
+      smsc_log_info(logger, "Processed settings of '%s' ..", nmCfgSection());
+    } else {
+      smsc_log_info(logger, "Processed settings ..");
+    }
+  }
   icsArg.clear();
   return !icsDeps.empty();
 }
@@ -114,10 +126,7 @@ bool ICSrvCfgReaderAC::readConfig(void * opaque_arg/* = NULL*/)
 ICSrvCfgReaderAC::CfgState 
   ICSMultiSectionCfgReaderAC::parseConfig(void * opaque_arg/* = NULL*/) throw(ConfigException)
 {
-  if (!_cfgXCV.get())
-    _cfgXCV.reset(new XConfigView(this->rootSec, this->nmCfgSection()));
-
-  std::auto_ptr<CStrSet> subs(_cfgXCV->getShortSectionNames());
+  std::auto_ptr<CStrSet> subs(_topSec.getShortSectionNames());
 
   const CStrSet * nm_lst;
   if (this->icsArg.empty() || !this->icsArg.begin()->compare("*")) {
@@ -133,8 +142,9 @@ ICSrvCfgReaderAC::CfgState
   }
   //parse requested sections
   for (CStrSet::const_iterator cit = nm_lst->begin(); cit != nm_lst->end(); ++cit) {
-    std::auto_ptr<XConfigView> subsCfg(_cfgXCV->getSubConfig(cit->c_str()));
-    parseSection(subsCfg.get(), *cit, opaque_arg);
+    XConfigView subsCfg;
+    _topSec.getSubConfig(subsCfg, cit->c_str());
+    parseSection(subsCfg, *cit, opaque_arg);
   }
 
   //check overall state

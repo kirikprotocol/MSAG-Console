@@ -21,25 +21,26 @@ namespace inman {
 namespace inap {
 
 using smsc::inman::ICSrvCfgReaderAC_T;
+using smsc::inman::XMFConfig;
 
 class ICSTCDispCfgReader : public ICSrvCfgReaderAC_T<TCDsp_CFG> {
 protected:
-    //Parses XML configuration entry section, updates dependencies.
-    //Returns status of config parsing, 
-    CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException)
-    {
-        TCDspCfgParser  parser(logger, nmCfgSection());
-        parser.readConfig(rootSec, *icsCfg.get()); //throws
-        /**/
-        return ICSrvCfgReaderAC::cfgComplete;
-    }
+  //Parses XML configuration entry section, updates dependencies.
+  //Returns status of config parsing, 
+  CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException)
+  {
+      TCDspCfgParser  parser(logger, nmCfgSection());
+      parser.readConfig(_topSec.relConfig(), *icsCfg.get()); //throws
+      /**/
+      return ICSrvCfgReaderAC::cfgComplete;
+  }
 
 public:
-    ICSTCDispCfgReader(Config & root_sec, Logger * use_log, const char * ics_sec = NULL)
-        : ICSrvCfgReaderAC_T<TCDsp_CFG>(root_sec, use_log, ics_sec ? ics_sec : NM_SS7_CFG_SECTION)
-    { }
-    ~ICSTCDispCfgReader()
-    { }
+  ICSTCDispCfgReader(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec = NULL)
+    : ICSrvCfgReaderAC_T<TCDsp_CFG>(xmf_cfg, use_log, ics_sec ? ics_sec : NM_SS7_CFG_SECTION)
+  { }
+  ~ICSTCDispCfgReader()
+  { }
 };
 
 } //inap

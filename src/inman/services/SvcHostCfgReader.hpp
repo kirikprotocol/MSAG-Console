@@ -24,11 +24,14 @@ private:
   //Reads 'Services' section containing services loadup configuration
   //NOTE: default config section names for services may be overridden
   //      only in 'Services' section
-  void readLoadUps(XConfigView & cfg_sec) /*throw(ConfigException)*/;
+  void readLoadUps(const XConfigView & root_sec) /*throw(ConfigException)*/;
 
   //Reads or complete reading the configuration of loaded services,
   //also loads up services requested by dependencies
   void readLoadedCfg(void);
+
+  //Reads info of extra configuration files and initializes XMFConfig
+  void readFiles(const XConfigView & root_sec) /*throw(ConfigException)*/;
 
 protected:
   static const unsigned int _DFLT_CLIENT_CONNS = 3;
@@ -38,8 +41,8 @@ protected:
   CfgState parseConfig(void * opaque_arg = NULL) throw(ConfigException);
 
 public:
-  ICSHostCfgReader(Config & root_sec, Logger * use_log, const char * ics_sec = NULL)
-    : ICSrvCfgReaderAC_T<SvcHostCFG>(root_sec, use_log, ics_sec)
+  ICSHostCfgReader(XMFConfig & xmf_cfg, Logger * use_log, const char * ics_sec = NULL)
+    : ICSrvCfgReaderAC_T<SvcHostCFG>(xmf_cfg, use_log, ics_sec)
   { }
   ~ICSHostCfgReader()
   { }
