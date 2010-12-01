@@ -46,16 +46,26 @@
         <eye:inputDate value="#{createDelivery.activePage.activePeriodEnd}" required="true" type="short_time"/>
       </h:panelGroup>
 
-      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.retryOnFail}"/>
-      <h:panelGroup>
-        <h:selectBooleanCheckbox id="retryOnFail" value="#{createDelivery.activePage.delivery.retryOnFail}" onchange="document.getElementById('retryPolicy1').disabled = !this.checked;"/>
-        <h:inputText value="#{createDelivery.activePage.delivery.retryPolicy}" id="retryPolicy1"/>
-      </h:panelGroup>
-
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.priority}"/>
       <tr:inputText value="#{createDelivery.activePage.delivery.priority}" simple="true" required="true">
         <tr:validateLongRange minimum="1" maximum="1000"/>
       </tr:inputText>
+
+      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.retryOnFail}"/>
+      <h:panelGroup>
+        <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{createDelivery.activePage.retryOnFail}">
+            <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
+            <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
+            <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
+          </h:selectOneMenu>
+          <h:outputText value=" "/>
+        <h:inputText value="#{createDelivery.activePage.delivery.retryPolicy}" id="retryPolicy1"/>
+      </h:panelGroup>
+
+      <h:outputText id="vPeriodLabel" style="white-space: nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+      <eye:inputDate id="vPeriod" value="#{createDelivery.activePage.validityPeriod}" type="short_time"/>
+
+
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
       <h:panelGroup>
@@ -85,9 +95,6 @@
                        document.getElementById('trModeLabel').style.display=disp;
                        document.getElementById('trMode').style.display=disp;
 
-                       disp = (this.options[0].selected &amp;&amp; !document.getElementById('trMode').checked) ? '' : 'none';
-                       document.getElementById('vPeriodLabel').style.display=disp;
-                       document.getElementById('vPeriod').style.display=disp;
                        " style="display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}">
         <f:selectItems value="#{createDelivery.activePage.uniqueDeliveryModes}"/>
       </h:selectOneMenu>
@@ -96,15 +103,7 @@
       <h:selectBooleanCheckbox id="flash" value="#{createDelivery.activePage.delivery.flash}"/>
 
       <h:outputText id="trModeLabel" style="white-space: nowrap;" value="#{deliveryBundle.transactionMode}"/>
-      <tr:selectBooleanCheckbox id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"
-                                    onchange="
-                                    disp = (document.getElementById('dMode').options[0].selected &amp;&amp; this.checked) ? 'none' : '';
-                                    document.getElementById('vPeriodLabel').style.display=disp;
-                                    document.getElementById('vPeriod').style.display=disp;
-                                    "/>
-
-      <h:outputText id="vPeriodLabel" style="white-space: nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <eye:inputDate id="vPeriod" value="#{createDelivery.activePage.validityPeriod}" type="short_time"/>
+      <tr:selectBooleanCheckbox id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"/>
 
     </h:panelGrid>
 
@@ -121,7 +120,13 @@
     </eye:buttons>
 
     <script type="text/javascript" language="javascript">
-      document.getElementById('retryPolicy1').disabled = !document.getElementById('retryOnFail').checked;
+      function retryOnFailChanged() {
+        var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
+        document.getElementById('retryPolicy1').style.display=d;
+      }
+
+      retryOnFailChanged();
+
       document.getElementById('sms').disabled = !document.getElementById('smsNotif').checked;
       document.getElementById('email').disabled = !document.getElementById('emailNotif').checked;
 
@@ -131,9 +136,6 @@
       document.getElementById('trModeLabel').style.display=disp;
       document.getElementById('trMode').style.display=disp;
 
-      disp = (document.getElementById('dMode').options[0].selected &amp;&amp; document.getElementById('trMode').checked) ? 'none' : '';  
-      document.getElementById('vPeriodLabel').style.display=disp;
-      document.getElementById('vPeriod').style.display=disp;
     </script>
 
   </tr:form>

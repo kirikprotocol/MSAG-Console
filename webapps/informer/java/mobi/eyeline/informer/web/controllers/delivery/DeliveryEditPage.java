@@ -41,6 +41,8 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private final boolean singleText;
 
+  private String retryOnFail;
+
 
   private final Configuration config;
 
@@ -49,6 +51,12 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     this.singleText = singleText;
     this.tmpFile = tmpFile;
     this.config = config;
+
+    if (delivery.isRetryOnFail()) {
+      retryOnFail = (delivery.getRetryPolicy() == null || delivery.getRetryPolicy().length() == 0) ? "default" : "custom";
+    } else {
+      retryOnFail = "off";
+    }
 
     String p = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
     if (p != null) {
@@ -128,12 +136,21 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
         delivery.setEnableStateChangeLogging(true);
       }
     }
-    if (!delivery.isRetryOnFail()) {
+
+    if (retryOnFail.equals("off")) {
+      delivery.setRetryOnFail(false);
       delivery.setRetryPolicy(null);
+    } else if (retryOnFail.equals("default")) {
+      delivery.setRetryOnFail(true);
+      delivery.setRetryPolicy("");
     } else if(delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
       return null;
+    } else {
+      delivery.setRetryOnFail(true);
     }
+
+
     if (singleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
       return null;
@@ -240,6 +257,14 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     if (delivery.getValidityPeriod() == null)
       return null;
     return delivery.getValidityPeriod().getTimeDate();
+  }
+
+  public String getRetryOnFail() {
+    return retryOnFail;
+  }
+
+  public void setRetryOnFail(String retryOnFail) {
+    this.retryOnFail = retryOnFail;
   }
 
   @SuppressWarnings({"ResultOfMethodCallIgnored"})

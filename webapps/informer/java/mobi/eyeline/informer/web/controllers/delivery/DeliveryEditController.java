@@ -25,6 +25,7 @@ public class DeliveryEditController extends DeliveryController {
   private Delivery delivery;
 
   private String comeBackParam;
+  private String retryOnFail;
 
   private boolean smsNotificationCheck;
   private boolean emailNotificationCheck;
@@ -71,6 +72,11 @@ public class DeliveryEditController extends DeliveryController {
     secret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET));
     flashSecret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET_FLASH));
     secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
+
+    if (delivery.isRetryOnFail()) {
+      retryOnFail = (delivery.getRetryPolicy() == null || delivery.getRetryPolicy().length() == 0) ? "default" : "custom";
+    } else
+      retryOnFail = "off";
   }
 
   private String emailNotificationAddress;
@@ -124,12 +130,21 @@ public class DeliveryEditController extends DeliveryController {
   }
 
   public String save() {
-    if (!delivery.isRetryOnFail()) {
+
+    if (retryOnFail.equals("off")) {
+      delivery.setRetryOnFail(false);
       delivery.setRetryPolicy(null);
-    } else if (delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
-      return null;
+    } else if (retryOnFail.equals("default")) {
+      delivery.setRetryOnFail(true);
+      delivery.setRetryPolicy("");
+    } else {
+      if (delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
+        return null;
+      }
+      delivery.setRetryOnFail(true);
     }
+    
     if (delivery.getType() == Delivery.Type.SingleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
       return null;
@@ -255,5 +270,13 @@ public class DeliveryEditController extends DeliveryController {
 
   public void setEmailNotificationCheck(boolean emailNotificationCheck) {
     this.emailNotificationCheck = emailNotificationCheck;
+  }
+
+  public String getRetryOnFail() {
+    return retryOnFail;
+  }
+
+  public void setRetryOnFail(String retryOnFail) {
+    this.retryOnFail = retryOnFail;
   }
 }

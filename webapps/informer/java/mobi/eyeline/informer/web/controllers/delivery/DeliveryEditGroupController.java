@@ -48,7 +48,7 @@ public class DeliveryEditGroupController extends DeliveryController{
   private DeliveryMode deliveryMode;
   private boolean editDeliveryMode;
 
-  private boolean retryOnFail;
+  private String retryOnFail;
 
   private String retryPolicy;
   private boolean editRetryPolicy;
@@ -131,9 +131,12 @@ public class DeliveryEditGroupController extends DeliveryController{
           }
           
           if(editRetryPolicy) {
-            if (!retryOnFail) {
+            if (retryOnFail.equals("off")) {
               d.setRetryPolicy(null);
               d.setRetryOnFail(false);
+            } else if (retryOnFail.equals("default")) {
+              d.setRetryPolicy("");
+              d.setRetryOnFail(true);
             } else if (retryPolicy == null || !getRetryPoliciesPattern().matcher(retryPolicy).matches()) {
               addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", retryPolicy == null ? "" : retryPolicy);
               return null;
@@ -346,11 +349,11 @@ public class DeliveryEditGroupController extends DeliveryController{
     this.deliveryMode = deliveryMode;
   }
 
-  public boolean isRetryOnFail() {
+  public String getRetryOnFail() {
     return retryOnFail;
   }
 
-  public void setRetryOnFail(boolean retryOnFail) {
+  public void setRetryOnFail(String retryOnFail) {
     this.retryOnFail = retryOnFail;
   }
 

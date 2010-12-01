@@ -75,14 +75,27 @@
       <tr:inputText id="priority" value="#{deliveryGroupEdit.priority}" simple="true"  columns="3"/>
 
       <h:selectBooleanCheckbox id="editRetryPolicy" value="#{deliveryGroupEdit.editRetryPolicy}" onchange="
-          document.getElementById('retryPolicy').disabled=!this.checked || !document.getElementById('retryOnFail').checked;
+          document.getElementById('retryPolicy').disabled=!this.checked;
           document.getElementById('retryOnFail').disabled=!this.checked;
           "/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
       <h:panelGroup>
-        <h:selectBooleanCheckbox id="retryOnFail" value="#{deliveryGroupEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;"/>
+        <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{deliveryGroupEdit.retryOnFail}">
+            <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
+            <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
+            <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
+          </h:selectOneMenu>
+        <h:outputText value=" "/>
         <h:inputText id="retryPolicy" value="#{deliveryGroupEdit.retryPolicy}" />
       </h:panelGroup>
+
+      <h:selectBooleanCheckbox id="editValidHours" value="#{deliveryGroupEdit.editValidityPeriod}"
+                               onchange="
+                                   document.getElementById('validityPeriod.hours').disabled=!this.checked;
+                                   document.getElementById('validityPeriod.minutes').disabled=!this.checked;
+                                   "/>
+      <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+      <eye:inputDate id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" type="short_time"/>
 
 
       <h:selectBooleanCheckbox id="editSmsNotification" value="#{deliveryGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>
@@ -101,10 +114,7 @@
           document.getElementById('smsSettings').style.display=disp;
           if(!dt.options[0].selected ) {
             document.getElementById('editFlash').checked = false;
-            document.getElementById('editTransactionMode').checked = false;
-            document.getElementById('editValidHours').checked = false;
-            document.getElementById('validityPeriod.hours').disabled=true;
-            document.getElementById('validityPeriod.minutes').disabled=true;
+            document.getElementById('editTransactionMode').checked = false;            
             document.getElementById('flash').disabled=true;
             document.getElementById('transactionMode').disabled=true;
           }
@@ -125,29 +135,7 @@
 
       <h:selectBooleanCheckbox id="editTransactionMode" value="#{deliveryGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
-      <h:selectBooleanCheckbox id="transactionMode" value="#{deliveryGroupEdit.transactionMode}"
-                               onchange="
-              var d = this.checked ? 'none' : '';
-              document.getElementById('editValidHours').style.display=d;
-              document.getElementById('validHoursLabel').style.display=d;
-              document.getElementById('validityPeriod').style.display=d;
-              document.getElementById('validityPeriod.hours').disabled=!this.checked;
-              document.getElementById('validityPeriod.minutes').disabled=!this.checked;
-              if(this.checked) {
-                document.getElementById('editValidHours').checked=false;
-                document.getElementById('validityPeriod.hours').value = '';  
-                document.getElementById('validityPeriod.minutes').value = '';
-              }
-             "/>
-
-      <h:selectBooleanCheckbox id="editValidHours" value="#{deliveryGroupEdit.editValidityPeriod}"
-                               onchange="
-                                   document.getElementById('validityPeriod.hours').disabled=!this.checked;
-                                   document.getElementById('validityPeriod.minutes').disabled=!this.checked;
-                                   "/>
-      <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <eye:inputDate id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" type="short_time"/>
-
+      <h:selectBooleanCheckbox id="transactionMode" value="#{deliveryGroupEdit.transactionMode}"/>
 
     </h:panelGrid>
 
@@ -164,6 +152,14 @@
     </eye:buttons>
 
     <script type="text/javascript" language="javascript">
+
+      function retryOnFailChanged() {
+        var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
+        document.getElementById('retryPolicy').style.display=d;
+      }
+
+      retryOnFailChanged();
+
       document.getElementById('sourceAddr').disabled = !document.getElementById('editSourceAddr').checked;
 
       var deliveryDaysDisabled = !document.getElementById('editDeliveryDays').checked;
@@ -188,7 +184,7 @@
       document.getElementById('priority').disabled = !document.getElementById('editPriority').checked;
 
       var retryPolicyDisabled = !document.getElementById('editRetryPolicy').checked;
-      document.getElementById('retryPolicy').disabled=retryPolicyDisabled || !document.getElementById('retryOnFail').checked;
+      document.getElementById('retryPolicy').disabled=retryPolicyDisabled;
       document.getElementById('retryOnFail').disabled=retryPolicyDisabled;
 
       document.getElementById('smsNotification').disabled = !document.getElementById('editSmsNotification').checked;
