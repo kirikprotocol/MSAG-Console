@@ -79,6 +79,11 @@ public class UserListController extends InformerController {
               if ("status".equals(sortOrder.getColumnId())) {
                 return (mul) * o1.getStatus().compareTo(o2.getStatus());
               }
+              if ("admin".equals(sortOrder.getColumnId())) {
+                Boolean o1a = o1.getRoles().contains(User.INFORMER_ADMIN_ROLE);
+                Boolean o2a = o2.getRoles().contains(User.INFORMER_ADMIN_ROLE);
+                return (mul) * o1a.compareTo(o2a);
+              }
               return 0;
             }
           });
