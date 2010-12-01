@@ -54,6 +54,11 @@ public:
         intParams.Empty();
         boolParams.Empty();
     }
+
+    bool empty(void) const
+    {
+      return !(strParams.GetCount() || intParams.GetCount() || boolParams.GetCount());
+    }
     /**
      *
      * @param paramName имя параметра
