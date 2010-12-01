@@ -41,7 +41,7 @@
 
       </h:panelGrid>
 
-      <p/>
+      <eye:delimiter/>
 
       <eye:collapsingGroup label="#{msg['user.edit.defaults']}" opened="true">
         <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
@@ -78,14 +78,26 @@
           <tr:inputText id="priority" value="#{userGroupEdit.priority}" simple="true"  columns="3"/>
 
           <h:selectBooleanCheckbox id="editRetryPolicy" value="#{userGroupEdit.editRetryPolicy}" onchange="
-          document.getElementById('retryPolicy').disabled=!this.checked || !document.getElementById('retryOnFail').checked;
+          document.getElementById('retryPolicy').disabled=!this.checked;
           document.getElementById('retryOnFail').disabled=!this.checked;
           "/>
           <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
           <h:panelGroup>
-            <h:selectBooleanCheckbox id="retryOnFail" value="#{userGroupEdit.retryOnFail}" style="position: relative; top: 2px; left: -3px;" onchange="document.getElementById('retryPolicy').disabled=!this.checked;"/>
+            <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{userGroupEdit.retryOnFail}">
+              <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
+              <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
+              <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
+            </h:selectOneMenu>
+            <h:outputText value=" "/>
             <h:inputText id="retryPolicy" value="#{userGroupEdit.policyId}" />
           </h:panelGroup>
+
+          <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidityPeriod}" onchange="
+          document.getElementById('validityPeriod.hours').disabled=!this.checked;
+          document.getElementById('validityPeriod.minutes').disabled=!this.checked;
+          "/>
+          <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
+          <eye:inputDate id="validityPeriod" value="#{userGroupEdit.validityPeriod}" type="short_time"/>
 
           <h:selectBooleanCheckbox id="editSmsNotification" value="#{userGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>
           <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
@@ -97,33 +109,19 @@
 
           <h:selectBooleanCheckbox id="editDeliveryType" value="#{userGroupEdit.editDeliveryType}" onchange="document.getElementById('deliveryType').disabled=!this.checked" style="display:#{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
           <h:outputText style="white-space:nowrap;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}" />
-          <h:selectOneMenu id="deliveryType" value="#{userGroupEdit.deliveryType}" style="align:left;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"  onchange="
-          var dt = document.getElementById('deliveryType');
-          var disp = dt.options[0].selected ? '' : 'none';
-          document.getElementById('smsSettings').style.display=disp;
-          ">
+          <h:selectOneMenu id="deliveryType" value="#{userGroupEdit.deliveryType}" style="align:left;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"
+                           onchange="deliveryTypeChanged()">
             <f:selectItems value="#{userGroupEdit.deliveryTypes}"/>
           </h:selectOneMenu>
 
-        </h:panelGrid>
-
-        <h:panelGrid id="smsSettings" style="padding-left:10px; display: #{userGroupEdit.smsDeliveryMode == true ? '' : 'none'}" columns="3" columnClasses="column20Width, column100Width, columnTopLeftAlign">
-
           <h:selectBooleanCheckbox id="editTransactionMode" value="#{userGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.transactionMode}"/>
+          <h:outputText id="transactionModeLabel" style="white-space:nowrap;" value="#{userBundle.transactionMode}"/>
           <h:selectBooleanCheckbox id="transactionMode" value="#{userGroupEdit.transactionMode}"/>
-
-          <h:selectBooleanCheckbox id="editValidHours" value="#{userGroupEdit.editValidityPeriod}" onchange="
-          document.getElementById('validityPeriod.hours').disabled=!this.checked;
-          document.getElementById('validityPeriod.minutes').disabled=!this.checked;
-          "/>
-          <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
-          <eye:inputDate id="validityPeriod" value="#{userGroupEdit.validityPeriod}" type="short_time"/>
 
         </h:panelGrid>
       </eye:collapsingGroup>
 
-      <p/>
+      <eye:delimiter/>
 
       <eye:collapsingGroup label="#{msg['user.edit.restrictions']}" opened="true">
         <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100Width, columnTopLeftAlign">
@@ -155,7 +153,7 @@
         </h:panelGrid>
       </eye:collapsingGroup>
 
-      <p/>
+      <eye:delimiter/>
 
       <eye:collapsingGroup label="#{msg['user.edit.archive']}" opened="true">
 
@@ -175,7 +173,7 @@
         </h:panelGrid>
       </eye:collapsingGroup>
 
-      <p/>
+      <eye:delimiter/>
 
       <eye:collapsingGroup label="#{msg['user.edit.billing']}" opened="true">
         <h:panelGrid style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width, column100WidthNoWrap, columnTopLeftAlign">
@@ -204,7 +202,7 @@
 
       </eye:collapsingGroup>
 
-      <p/>
+      <eye:delimiter/>
 
       <eye:buttons>
         <eye:button>
@@ -217,6 +215,24 @@
       </eye:buttons>
 
       <script type="text/javascript" language="javascript">
+
+        function deliveryTypeChanged() {
+          var dt = document.getElementById('deliveryType');
+          var disp = dt.options[0].selected ? '' : 'none';
+          document.getElementById('editTransactionMode').style.display=disp;
+          document.getElementById('transactionModeLabel').style.display=disp;
+          document.getElementById('transactionMode').style.display=disp;
+        }
+
+        function retryOnFailChanged() {
+          var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
+          document.getElementById('retryPolicy').style.display=d;
+        }
+
+        deliveryTypeChanged();
+
+        retryOnFailChanged();
+
         document.getElementById('organization').disabled = !document.getElementById('editOrganization').checked;
         document.getElementById('admin').disabled = !document.getElementById('editAdmin').checked;
         document.getElementById('blocked').disabled = !document.getElementById('editBlocked').checked;

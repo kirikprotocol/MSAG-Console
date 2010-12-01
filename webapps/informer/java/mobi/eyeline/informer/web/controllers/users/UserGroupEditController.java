@@ -49,7 +49,7 @@ public class UserGroupEditController extends UserController {
   private int priority;
 
   private boolean editRetryPolicy;
-  private boolean retryOnFail;
+  private String retryOnFail = "off";
   private String policyId;
 
   private boolean editDeliveryType;
@@ -162,8 +162,16 @@ public class UserGroupEditController extends UserController {
           u.setPriority(priority);
 
         if (editRetryPolicy) {
-          u.setRetryOnFail(retryOnFail);
-          u.setPolicyId(policyId);
+          if (retryOnFail.equals("off")) {
+            u.setRetryOnFail(false);
+            u.setPolicyId(null);
+          } else if (retryOnFail.equals("default")) {
+            u.setRetryOnFail(true);
+            u.setPolicyId("");
+          } else {
+            u.setRetryOnFail(true);
+            u.setPolicyId(policyId);
+          }
         }
 
         if (editDeliveryType)
@@ -369,11 +377,11 @@ public class UserGroupEditController extends UserController {
     this.deliveryLifetime = deliveryLifetime;
   }
 
-  public boolean isRetryOnFail() {
+  public String getRetryOnFail() {
     return retryOnFail;
   }
 
-  public void setRetryOnFail(boolean retryOnFail) {
+  public void setRetryOnFail(String retryOnFail) {
     this.retryOnFail = retryOnFail;
   }
 

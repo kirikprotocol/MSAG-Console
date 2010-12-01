@@ -103,15 +103,18 @@
             <eye:validatePositive/>
           </tr:inputText>
 
-          <h:outputText style="white-space:nowrap;" value="#{userBundle.retryOnFail}"/>
-          <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{userEdit.retryOnFail}">
-            <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
-            <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
-            <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
-          </h:selectOneMenu>
+          <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
+          <h:panelGroup>
+            <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{userEdit.retryOnFail}">
+              <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
+              <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
+              <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
+            </h:selectOneMenu>
+            <h:outputText style="white-space:nowrap;" value=" "/>
+            <h:inputText id="retryPolicy" value="#{userEdit.userToEdit.policyId}"/>
+          </h:panelGroup>
 
-          <h:outputText id="retryPolicyLabel" style="white-space:nowrap;" value="#{userBundle.policyId}"/>
-          <h:inputText id="retryPolicy" value="#{userEdit.userToEdit.policyId}"/>
+
 
           <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
           <eye:inputDate id="validityPeriod" value="#{userEdit.validityPeriod}" required="true"  type="short_time"/>
@@ -243,7 +246,6 @@
       <script type="text/javascript" language="javascript">
         function retryOnFailChanged() {
           var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
-          document.getElementById('retryPolicyLabel').style.display=d;
           document.getElementById('retryPolicy').style.display=d;
         }
 
