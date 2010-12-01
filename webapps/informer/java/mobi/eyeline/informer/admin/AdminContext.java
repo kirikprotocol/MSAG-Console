@@ -438,23 +438,42 @@ public class AdminContext {
     informerManager.updateSettings(informerSettings);
   }
 
+  public boolean isBlackListEnabled() throws AdminException {
+    return informerManager.getConfigSettings().isPvssEnabledBL();
+  }
+
   public void addInBlacklist(String msisdn) throws AdminException {
+    if(!isBlackListEnabled()) {
+      throw new IntegrityException("blacklist.disabled");
+    }
     blacklistManager.add(msisdn);
   }
 
   public void addInBlacklist(Collection<String> msisdn) throws AdminException {
+    if(!isBlackListEnabled()) {
+      throw new IntegrityException("blacklist.disabled");
+    }
     blacklistManager.add(msisdn);
   }
 
   public void removeFromBlacklist(String msisdn) throws AdminException {
+    if(!isBlackListEnabled()) {
+      throw new IntegrityException("blacklist.disabled");
+    }
     blacklistManager.remove(msisdn);
   }
 
   public void removeFromBlacklist(Collection<String> msisdns) throws AdminException {
+    if(!isBlackListEnabled()) {
+      throw new IntegrityException("blacklist.disabled");
+    }
     blacklistManager.remove(msisdns);
   }
 
   public boolean blacklistContains(String msisdn) throws AdminException {
+    if(!isBlackListEnabled()) {
+      throw new IntegrityException("blacklist.disabled");
+    }
     return blacklistManager.contains(msisdn);
   }
 

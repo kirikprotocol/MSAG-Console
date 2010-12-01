@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
@@ -39,9 +38,9 @@ public class TestDeliveryManagerTest {
 
     Delivery d = _createDelivery();
 
-    checkStats(d, new DeliveryStatus[]{DeliveryStatus.Active, DeliveryStatus.Finished});
+    checkStats(d, new DeliveryStatus[]{DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Finished});
 
-    checkGetDeliviries(d, new DeliveryStatus[]{DeliveryStatus.Active, DeliveryStatus.Finished});
+    checkGetDeliviries(d, new DeliveryStatus[]{DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Finished});
 
     checkGetMessages(d, new MessageState[]{MessageState.New, MessageState.Delivered, MessageState.Failed});
 

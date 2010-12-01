@@ -14,67 +14,67 @@
 
     <tr:form usesUpload="true">
 
-
-      <h:panelGroup rendered="#{blacklistUpload.state == 0}">
-
-        <h:panelGrid columns="1" style="padding:10px" cellspacing="0" cellpadding="0" columnClasses=",column0WidthRight">
-
-          <tr:panelFormLayout>
-            <tr:panelLabelAndMessage label="#{msg['informer.upload.label']}">
-              <tr:inputFile columns="50" value="#{blacklistUpload.file}" simple="true" required="true"/>
-            </tr:panelLabelAndMessage>
-          </tr:panelFormLayout>
-
-        </h:panelGrid>
+      <h:panelGroup rendered="#{blacklistUpload.blacklistEnabled}">
 
 
-        <eye:buttons>
-          <eye:button>
-            <tr:commandLink text="#{msg['add.button']}" action="#{blacklistUpload.upload}" shortDesc="#{msg['blacklist.upload.add.desc']}">
-              <f:param name="file_add" value="true"/>
-            </tr:commandLink>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['delete.button']}" action="#{blacklistUpload.upload}" shortDesc="#{msg['blacklist.upload.del.desc']}">
-              <f:param name="file_remove" value="true"/>
-            </tr:commandLink>
-          </eye:button>
-          <eye:space/>
-          <eye:button>
-            <tr:commandLink text="#{msg['cancel.button']}" action="BLACKLIST" immediate="true"/>
-          </eye:button>
-        </eye:buttons>
+        <h:panelGroup rendered="#{blacklistUpload.state == 0}">
 
+          <h:panelGrid columns="1" style="padding:10px" cellspacing="0" cellpadding="0" columnClasses=",column0WidthRight">
+
+            <tr:panelFormLayout>
+              <tr:panelLabelAndMessage label="#{msg['informer.upload.label']}">
+                <tr:inputFile columns="50" value="#{blacklistUpload.file}" simple="true" required="true"/>
+              </tr:panelLabelAndMessage>
+            </tr:panelFormLayout>
+
+          </h:panelGrid>
+
+
+          <eye:buttons>
+            <eye:button>
+              <tr:commandLink text="#{msg['add.button']}" action="#{blacklistUpload.upload}" shortDesc="#{msg['blacklist.upload.add.desc']}">
+                <f:param name="file_add" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:button>
+              <tr:commandLink text="#{msg['delete.button']}" action="#{blacklistUpload.upload}" shortDesc="#{msg['blacklist.upload.del.desc']}">
+                <f:param name="file_remove" value="true"/>
+              </tr:commandLink>
+            </eye:button>
+            <eye:space/>
+            <eye:button>
+              <tr:commandLink text="#{msg['cancel.button']}" action="BLACKLIST" immediate="true"/>
+            </eye:button>
+          </eye:buttons>
+
+
+        </h:panelGroup>
+
+
+        <eye:updatableContent updatePeriod="1" rendered="#{blacklistUpload.state == 1}">
+
+          <tr:message id="upload_message"/>
+
+          <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+            <h:outputText value="#{msg['processing.label']}"/>
+            <eye:progressBar current="#{blacklistUpload.current}" maximum="#{blacklistUpload.maximum}" width="500" height="20" />
+          </h:panelGrid>
+          <h:panelGrid columns="1" style="padding:15px">
+            <tr:outputText value="#{msg['blacklist.uploaded']} #{blacklistUpload.uploaded}"/>
+            <tr:outputText inlineStyle="color:red" rendered="#{blacklistUpload.unrecognized != 0}"  value="#{msg['blacklist.not.uploaded']} #{blacklistUpload.unrecognized}"/>
+          </h:panelGrid>
+          <eye:buttons>
+            <eye:button rendered="#{blacklistUpload.finished}">
+              <tr:commandLink text="#{msg['next.button']} &gt;" action="#{blacklistUpload.next}"/>
+            </eye:button>
+            <eye:button rendered="#{!blacklistUpload.finished}">
+              <tr:commandLink text="#{msg['stop.button']}" action="#{blacklistUpload.stop}"/>
+            </eye:button>
+            <eye:space/>
+          </eye:buttons>
+        </eye:updatableContent>
 
       </h:panelGroup>
-
-
-      <eye:updatableContent updatePeriod="1" rendered="#{blacklistUpload.state == 1}">
-
-        <tr:message id="upload_message"/>
-
-        <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
-          <h:outputText value="#{msg['processing.label']}"/>
-          <eye:progressBar current="#{blacklistUpload.current}" maximum="#{blacklistUpload.maximum}" width="500" height="20" />
-        </h:panelGrid>
-        <h:panelGrid columns="1" style="padding:15px">
-          <tr:outputText value="#{msg['blacklist.uploaded']} #{blacklistUpload.uploaded}"/>
-          <tr:outputText inlineStyle="color:red" rendered="#{blacklistUpload.unrecognized != 0}"  value="#{msg['blacklist.not.uploaded']} #{blacklistUpload.unrecognized}"/>
-        </h:panelGrid>
-        <eye:buttons>
-          <eye:button rendered="#{blacklistUpload.finished}">
-            <tr:commandLink text="#{msg['next.button']} &gt;" action="#{blacklistUpload.next}"/>
-          </eye:button>
-          <eye:button rendered="#{!blacklistUpload.finished}">
-            <tr:commandLink text="#{msg['stop.button']}" action="#{blacklistUpload.stop}"/>
-          </eye:button>
-          <eye:space/>
-        </eye:buttons>
-      </eye:updatableContent>
-
-
-
-
 
     </tr:form>
 

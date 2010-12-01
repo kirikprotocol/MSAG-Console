@@ -27,10 +27,31 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     settings.setStatDir(s.getString("statPath", null));
     settings.setStoreDir(s.getString("storePath"));
 
+    settings.setResendIOThreadCount(s.getInt("resendIOThreadCount"));
+    settings.setInputMinQueueSize(s.getInt("inputMinQueueSize"));
+    settings.setInputTransferThreadCount(s.getInt("inputTransferThreadCount"));
+    settings.setProtocolId(s.getInt("protocolId"));
+    settings.setReceiptExtraWaitTime(s.getInt("receiptExtraWaitTime"));
+    settings.setInputTransferChunkSize(s.getInt("inputTransferChunkSize"));
+    settings.setSkippedIdsChunkSize(s.getInt("skippedIdsChunkSize"));
+    settings.setInputJournalRollingPeriod(s.getInt("inputJournalRollingPeriod"));
+    settings.setUnrespondedMessagesMax(s.getInt("unrespondedMessagesMax"));
+    settings.setSkippedIdsMinCacheSize(s.getInt("skippedIdsMinCacheSize"));
+    settings.setSlicedMessageSize(s.getInt("slicedMessageSize"));
+    settings.setAlmRequestTimeout(s.getInt("almRequestTimeout"));
+    settings.setOperationalJournalRollingPeriod(s.getInt("operationalJournalRollingPeriod"));
+    settings.setDcpHandlers(s.getInt("dcpHandlers"));
+    settings.setSvcType(s.getString("svcType"));
+    settings.setAdminHandlers(s.getInt("adminHandlers"));
+    settings.setRetryMinTimeToLive(s.getInt("retryMinTimeToLive"));
+    settings.setResponseWaitTime(s.getInt("responseWaitTime"));
+
+
     s = config.getSection("pvss");
     settings.setPersHost(s.getString("host"));
     settings.setPersSyncPort(s.getInt("syncPort"));
     settings.setPersAsyncPort(s.getInt("asyncPort"));
+    settings.setPvssEnabledBL(s.getBool("enabled"));
 
     return settings;
   }
@@ -45,10 +66,31 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     s.setString("statPath", settings.getStatDir());
     s.setString("storePath", settings.getStoreDir());
 
+    s.setInt("resendIOThreadCount", settings.getResendIOThreadCount());
+    s.setInt("inputMinQueueSize", settings.getInputMinQueueSize());
+    s.setInt("inputTransferThreadCount", settings.getInputTransferThreadCount());
+    s.setInt("protocolId", settings.getProtocolId());
+    s.setInt("receiptExtraWaitTime", settings.getReceiptExtraWaitTime());
+    s.setInt("inputTransferChunkSize", settings.getInputTransferChunkSize());
+    s.setInt("skippedIdsChunkSize", settings.getSkippedIdsChunkSize());
+    s.setInt("inputJournalRollingPeriod", settings.getInputJournalRollingPeriod());
+    s.setInt("unrespondedMessagesMax", settings.getUnrespondedMessagesMax());
+    s.setInt("skippedIdsMinCacheSize", settings.getSkippedIdsMinCacheSize());
+    s.setInt("slicedMessageSize", settings.getSlicedMessageSize());
+    s.setInt("almRequestTimeout", settings.getAlmRequestTimeout());
+    s.setInt("operationalJournalRollingPeriod", settings.getOperationalJournalRollingPeriod());
+    s.setInt("dcpHandlers", settings.getDcpHandlers());
+    s.setString("svcType", settings.getSvcType());
+    s.setInt("adminHandlers", settings.getAdminHandlers());
+    s.setInt("retryMinTimeToLive", settings.getRetryMinTimeToLive());
+    s.setInt("responseWaitTime", settings.getResponseWaitTime());
+
+
     s = config.getOrCreateSection("pvss");
     s.setString("host", settings.getPersHost());
     s.setInt("syncPort", settings.getPersSyncPort());
     s.setInt("asyncPort", settings.getPersAsyncPort());
+    s.setBool("enabled", settings.isPvssEnabledBL());
 
     config.save(os);
   }

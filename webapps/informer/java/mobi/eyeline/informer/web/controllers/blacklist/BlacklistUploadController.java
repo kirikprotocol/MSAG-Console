@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.web.controllers.blacklist;
 
+import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.UploadController;
 import org.apache.myfaces.trinidad.model.UploadedFile;
@@ -26,7 +27,17 @@ public class BlacklistUploadController extends UploadController {
 
   private int current;
 
-  private int maximum = Integer.MAX_VALUE;
+  private int maximum = Integer.MAX_VALUE;    
+
+
+  public boolean isBlacklistEnabled() {
+    try{
+      return getConfig().isBlackListEnabled();
+    }catch (AdminException e) {
+      addError(e);
+      return false;
+    }
+  }
 
   public BlacklistUploadController() {
   }

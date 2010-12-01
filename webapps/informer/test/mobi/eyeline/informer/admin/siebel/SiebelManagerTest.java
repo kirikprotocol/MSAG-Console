@@ -69,7 +69,7 @@ public class SiebelManagerTest {
   private void testCreation() throws Exception{
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
-    filter.setStatusFilter(DeliveryStatus.Active, DeliveryStatus.Finished);
+    filter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Finished);
     final boolean[] exist = new boolean[]{false};
     deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<Delivery>() {
       public boolean visit(Delivery value) throws AdminException {
@@ -104,7 +104,7 @@ public class SiebelManagerTest {
     final boolean[] exist = new boolean[]{false};
     DeliveryFilter filter = new DeliveryFilter();
     filter.setUserIdFilter(siebelUser.getLogin());
-    filter.setStatusFilter(DeliveryStatus.Active, DeliveryStatus.Finished);
+    filter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Finished);
     deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,  new Visitor<Delivery>() {
       public boolean visit(Delivery value) throws AdminException {
         if(value.getName().startsWith("siebel_")) {

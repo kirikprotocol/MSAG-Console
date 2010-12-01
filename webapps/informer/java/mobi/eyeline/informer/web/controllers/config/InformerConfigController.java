@@ -17,7 +17,6 @@ public class InformerConfigController extends SettingsController<InformerSetting
 
   private static final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(InformerConfigController.class);
 
-
   private InformerSettings settings;
 
   public InformerConfigController() {
@@ -29,7 +28,7 @@ public class InformerConfigController extends SettingsController<InformerSetting
       return;
     }
 
-    if (getRequestParameter("revision") == null) {
+    if(getRequestParameter("revision") == null) {
         settings = getConfig().getConfigSettings();
     }
   }

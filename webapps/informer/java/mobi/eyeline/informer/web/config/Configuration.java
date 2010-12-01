@@ -87,6 +87,10 @@ public class Configuration {
     }
   }
 
+  public boolean isBlackListEnabled() throws AdminException {
+    return context.isBlackListEnabled();
+  }
+
   public void addInBlacklist(String msisdn, String user) throws AdminException {
     context.addInBlacklist(msisdn);
     journal.logAddBlacklist(msisdn, user);

@@ -15,7 +15,16 @@ public class BlacklistController extends InformerController {
 
   private boolean init = false;
 
-  private boolean contains;
+  private boolean contains;  
+
+  public boolean isBlacklistEnabled() {
+    try{
+      return getConfig().isBlackListEnabled();
+    }catch (AdminException e) {
+      addError(e);
+      return false;
+    }
+  }
 
   public String lookup() {
     if (validateMsisdn()) {

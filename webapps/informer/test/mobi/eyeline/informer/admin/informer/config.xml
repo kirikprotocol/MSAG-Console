@@ -7,12 +7,32 @@
     <param name="dcpPort" type="int">8088</param>
     <param name="statPath" type="string">stat</param>
     <param name="storePath" type="string">store</param>
+
+    <param name="resendIOThreadCount" type="int">30</param>
+    <param name="inputMinQueueSize" type="int">10</param>
+    <param name="inputTransferThreadCount" type="int">30</param>
+    <param name="protocolId" type="int">0</param>
+    <param name="receiptExtraWaitTime" type="int">30</param>
+    <param name="inputTransferChunkSize" type="int">1000</param>
+    <param name="skippedIdsChunkSize" type="int">256</param>
+    <param name="inputJournalRollingPeriod" type="int">60</param>
+    <param name="unrespondedMessagesMax" type="int">100</param>
+    <param name="skippedIdsMinCacheSize" type="int">10</param>
+    <param name="slicedMessageSize" type="int">160</param>
+    <param name="almRequestTimeout" type="int">10</param>
+    <param name="operationalJournalRollingPeriod" type="int">60</param>
+    <param name="dcpHandlers" type="int">3</param>
+    <param name="svcType" type="string">Info</param>
+    <param name="adminHandlers" type="int">3</param>
+    <param name="retryMinTimeToLive" type="int">30</param>
+    <param name="responseWaitTime" type="int">70</param>
   </section>
 
   <section name="pvss">
     <param name="host" type="string">pvssHost</param>
     <param name="syncPort" type="int">25403</param>
     <param name="asyncPort" type="int">25404</param>
+    <param name="enabled">true</param>
   </section>
 
 </config>

@@ -18,7 +18,7 @@
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.config']}" action="CONFIG"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.regions']}" action="REGION"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.smsc']}" action="SMSC"/></eye:menubaritem>
-            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.blacklist']}" action="BLACKLIST"/></eye:menubaritem>
+            <eye:menubaritem rendered="#{userSession.blacklistEnabled}"><h:commandLink value="#{msg['informer.admin.blacklist']}" action="BLACKLIST"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.users']}" action="USERS"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.restrictions']}" action="RESTRICTIONS"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.admin.notifications']}" action="NOTIFICATIONS"/></eye:menubaritem>
