@@ -1,13 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryGlossary;
-import mobi.eyeline.informer.admin.delivery.protogen.protocol.GetDeliveryGlossary;
-import mobi.eyeline.informer.admin.delivery.protogen.protocol.GetDeliveryGlossaryResp;
-import mobi.eyeline.informer.admin.delivery.protogen.protocol.ModifyDeliveryGlossary;
-import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
-import mobi.eyeline.informer.util.Time;
 import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;
@@ -389,7 +383,7 @@ public class TestDcpConnection extends DcpConnection{
     if(this.messages.get(deliveryId) == null) {
       return false;
     }
-    
+
     for(Message m : this.messages.get(deliveryId)) {
       if(accept(deliveryId, m, r.filter) && ++count > r.position) {
         result.add(m);
@@ -429,64 +423,68 @@ public class TestDcpConnection extends DcpConnection{
     SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
     Date now = new Date();
     for(Delivery d : deliveries.values()) {
-      if(d.getStatus() == DeliveryStatus.Active) {
-        if(d.getStartDate().after(now)) {
-          continue;
-        }
-        if(d.getEndDate() != null && d.getEndDate().before(now)) {
-          d.setStatus(DeliveryStatus.Finished);
-          continue;
-        }
-        int today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
-        boolean send = false;
-        for(Day day : d.getActiveWeekDays()) {
-          if((day.getDay()%7) + 1 == today) {
-            send = true;
-            break;
-          }
-        }
-        if(!send) {
-          continue;
-        }
-          if(d.getActivePeriodStart().getTimeDate().after(now)) {
-            continue;
-          }
-          if(d.getActivePeriodEnd().getTimeDate().before(now)) {
-            continue;
-          }
-        List<Message> ms = messages.get(d.getId());
-        if(ms == null) {
-          continue;
-        }
-        int count = 0;
-        for(Message m : ms) {
-          if(m.getState() == MessageState.New) {
-            if(count<100) {
-              boolean delivered = r.nextBoolean();
-              if(delivered) {
-                m.setState(MessageState.Delivered);
-              }else {
-                m.setState(MessageState.Failed);
-                m.setErrorCode(1179);
-              }
-              m.setDate(new Date());
-            }
-            count++;
-          }
-
-        }
-        if(count <= 10 ) {
-          if(logger.isDebugEnabled()) {
-            logger.debug("Delivery is finished: "+d.getName());
-          }
-          final DeliveryStatusHistory oldHistory = histories.get(d.getId());
-          d.setStatus(DeliveryStatus.Finished);
-          histories.put(d.getId(), new DeliveryStatusHistory(d.getId(), new LinkedList<DeliveryStatusHistory.Item>(){{
-            addAll(oldHistory.getHistoryItems());
-            add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Finished));
-          }}));
+      if(d.getStatus() == DeliveryStatus.Planned) {
+        d.setStatus(DeliveryStatus.Active);          
+      }else if(d.getStatus() != DeliveryStatus.Active) {
+        continue;
+      }
+      if(d.getStartDate().after(now)) {
+        continue;
+      }
+      if(d.getEndDate() != null && d.getEndDate().before(now)) {
+        d.setStatus(DeliveryStatus.Finished);
+        continue;
+      }
+      int today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+      boolean send = false;
+      for(Day day : d.getActiveWeekDays()) {
+        if((day.getDay()%7) + 1 == today) {
+          send = true;
+          break;
         }
       }
+      if(!send) {
+        continue;
+      }
+      if(d.getActivePeriodStart().getTimeDate().after(now)) {
+        continue;
+      }
+      if(d.getActivePeriodEnd().getTimeDate().before(now)) {
+        continue;
+      }
+      List<Message> ms = messages.get(d.getId());
+      if(ms == null) {
+        continue;
+      }
+      int count = 0;
+      for(Message m : ms) {
+        if(m.getState() == MessageState.New) {
+          if(count<100) {
+            boolean delivered = r.nextBoolean();
+            if(delivered) {
+              m.setState(MessageState.Delivered);
+            }else {
+              m.setState(MessageState.Failed);
+              m.setErrorCode(1179);
+            }
+            m.setDate(new Date());
+          }
+          count++;
+        }
+
+      }
+      if(count <= 10 ) {
+        if(logger.isDebugEnabled()) {
+          logger.debug("Delivery is finished: "+d.getName());
+        }
+        final DeliveryStatusHistory oldHistory = histories.get(d.getId());
+        d.setStatus(DeliveryStatus.Finished);
+        histories.put(d.getId(), new DeliveryStatusHistory(d.getId(), new LinkedList<DeliveryStatusHistory.Item>(){{
+          addAll(oldHistory.getHistoryItems());
+          add(new DeliveryStatusHistory.Item(new Date(), DeliveryStatus.Finished));
+        }}));
+      }
+
     }
   }
 
@@ -533,7 +531,7 @@ public class TestDcpConnection extends DcpConnection{
 
 
 
-  
+
 
 
 
