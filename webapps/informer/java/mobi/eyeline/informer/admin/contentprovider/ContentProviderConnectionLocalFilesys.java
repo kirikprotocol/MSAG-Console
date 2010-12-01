@@ -21,9 +21,14 @@ public class ContentProviderConnectionLocalFilesys implements ContentProviderCon
   private FileSystem fileSys;
   private File userSrcDir;
 
-  public ContentProviderConnectionLocalFilesys(File workDir, FileSystem fileSys, UserCPsettings ucps) {    
+  public ContentProviderConnectionLocalFilesys(File informerBase, FileSystem fileSys, UserCPsettings ucps) {    
     this.fileSys = fileSys;
-    this.userSrcDir = new File(workDir,ucps.getDirectory());
+    if(ucps.getDirectory().indexOf(File.separatorChar)==0) {
+      this.userSrcDir = new File(ucps.getDirectory());
+    }
+    else {
+      this.userSrcDir = new File(informerBase,ucps.getDirectory());
+    }
   }
 
   public void connect() throws AdminException {
@@ -32,6 +37,9 @@ public class ContentProviderConnectionLocalFilesys implements ContentProviderCon
 
   public List<String> listCSVFiles() throws AdminException {
     String[] files = fileSys.list(userSrcDir);
+    if(files==null) {
+      throw new ContentProviderException("userDirNotFound","",userSrcDir.getAbsolutePath());
+    }
     List<String> ret = new ArrayList();
     for(String f: files) {
       if(f.endsWith(".csv")) {
@@ -49,12 +57,11 @@ public class ContentProviderConnectionLocalFilesys implements ContentProviderCon
       os = fileSys.getOutputStream(localFile,false);
       pump(is,os);
     }
-    catch (IOException e) {
+    catch (Exception e) {
       throw new ContentProviderException("connectionError",e);
     }
     finally {
-      try {if(is!=null) is.close();} catch (Exception e){}
-      try {if(is!=null) is.close();} catch (Exception e){}
+      closeStreams(is, os);
     }
 
   }
@@ -72,13 +79,17 @@ public class ContentProviderConnectionLocalFilesys implements ContentProviderCon
       os = fileSys.getOutputStream(new File(userSrcDir,fileName),false);
       pump(is,os);
     }
-    catch (IOException e) {
+    catch (Exception e) {
       throw new ContentProviderException("connectionError",e);
     }
     finally {
-      try {if(is!=null) is.close();} catch (Exception e){}
-      try {if(is!=null) is.close();} catch (Exception e){}
+      closeStreams(is, os);
     }
+  }
+
+  private void closeStreams(InputStream is, OutputStream os) {
+    try {if(is!=null) is.close();} catch (Exception e){}
+    try {if(os!=null) os.close();} catch (Exception e){}
   }
 
   public void close() throws AdminException {

@@ -41,6 +41,7 @@ import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.SmscException;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.admin.users.UserException;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import mobi.eyeline.informer.util.Address;
@@ -959,6 +960,11 @@ public class AdminContext {
     }
 
   }
+
+  public void verifyCPSettings(User u, UserCPsettings ucps) throws AdminException {
+    contentProviderDaemon.verifyConnection(u,ucps);
+  }
+
 
   protected static class SiebelUserManagerImpl implements SiebelUserManager {
 

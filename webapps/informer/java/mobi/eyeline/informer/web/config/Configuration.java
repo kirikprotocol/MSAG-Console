@@ -18,6 +18,7 @@ import mobi.eyeline.informer.admin.restriction.RestrictionException;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
@@ -489,6 +490,10 @@ public class Configuration {
 
   public File getWorkDir() {
     return context.getWorkDir();
+  }
+
+  public void verifyCPSettings(User u, UserCPsettings ucps) throws AdminException {
+    context.verifyCPSettings(u, ucps);
   }
 
   public enum ConfigType {

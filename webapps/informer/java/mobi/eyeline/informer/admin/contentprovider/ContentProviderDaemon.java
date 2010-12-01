@@ -126,6 +126,24 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
   }
 
   public ContentProviderConnection getConnection(User user, UserCPsettings ucps) throws AdminException {
-    return new ContentProviderConnectionSFTP(fileSys,ucps);
+    if(ucps.getProtocol()==UserCPsettings.Protocol.sftp) {
+      return new ContentProviderConnectionSFTP(fileSys,ucps);
+    }
+    else {
+      return new ContentProviderConnectionLocalFilesys(informerBase,fileSys,ucps);
+    }
+  }
+
+  public void verifyConnection(User u, UserCPsettings ucps) throws AdminException {
+    ContentProviderConnection con = null;
+    try {
+      con = getConnection(u,ucps);
+      con.connect();
+      con.listCSVFiles();
+      con.close();
+    }
+    finally {
+      try {if(con!=null) con.close();} catch (Exception e){}
+    }
   }
 }

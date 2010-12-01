@@ -332,6 +332,7 @@ public class UserTest {
     User o = new User();
     List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
     UserCPsettings ucps = new UserCPsettings();
+    ucps.setProtocol(UserCPsettings.Protocol.sftp);
     ucps.setDirectory("/home/bla");
     ucps.setHost("some.bla.host");
     ucps.setPort(2222);
@@ -343,20 +344,22 @@ public class UserTest {
     UserCPsettings ucpsn = new UserCPsettings(ucps);
     assertEquals(ucps,ucpsn);
 
-    ucps.setDirectory("/home/fio");
-    ucps.setHost("some.fio.host");
-    ucps.setPort(3333);
+    ucps.setProtocol(UserCPsettings.Protocol.file);
+    ucps.setDirectory("/some/dir");
+    ucps.setHost(null);
+    ucps.setPort(null);
     ucpsn.setSourceAddress(new Address("+79130000222"));
     ucps.setEncoding("cp1251");
-    ucps.setLogin("user2");
-    ucps.setPassword("pwd2");
+    ucps.setLogin(null);
+    ucps.setPassword(null);
 
     cpSettings.add(ucpsn);
 
     o.setCpSettings(cpSettings);
 
-    assertEquals(o.getCpSettings(),cpSettings);
 
+
+    assertEquals(o.getCpSettings(),cpSettings);
 
   }
 
@@ -384,6 +387,7 @@ public class UserTest {
 
     List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
     UserCPsettings ucps = new UserCPsettings();
+    ucps.setProtocol(UserCPsettings.Protocol.sftp);
     ucps.setDirectory("/home/bla");
     ucps.setHost("some.bla.host");
     ucps.setPort(2222);
@@ -393,6 +397,7 @@ public class UserTest {
     UserCPsettings ucpsn = new UserCPsettings(ucps);
     assertEquals(ucps,ucpsn);
 
+    ucps.setProtocol(UserCPsettings.Protocol.file);
     ucps.setDirectory("/home/fio");
     ucps.setHost("some.fio.host");
     ucps.setPort(3333);       

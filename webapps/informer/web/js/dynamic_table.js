@@ -132,12 +132,13 @@ function SelectColumn(columnId, values, allowEditAfterAdd, uniqueValues) {
       }
     }
 
-    this.clearLastRowValue = function(tableId) {
-      var id = tableId + "_newcell_" + columnId;
-      document.getElementById(id).selectedIndex = 0;
-    }
   };
 
+  this.clearLastRowValue = function(tableId) {
+    var id = tableId + "_newcell_" + columnId;
+    document.getElementById(id).selectedIndex = 0;
+  } ;
+  
   //--------------------------------------------------------------------------------------------------------------------
   this.removeColumnElement = function(tableId, rowNum) {
     if (uniqueValues) {

@@ -14,12 +14,9 @@ import java.io.File;
  */
 public class TestContentProviderDaemon extends ContentProviderDaemon{
 
+
   public TestContentProviderDaemon(ContentProviderContext context, File informerBase, File appWorkDir) throws AdminException {
     super(context, informerBase, appWorkDir);
   }
 
-  @Override
-  public ContentProviderConnection getConnection(User user, UserCPsettings ucps) throws AdminException {
-    return new ContentProviderConnectionLocalFilesys(workDir,fileSys,ucps);
-  }
 }

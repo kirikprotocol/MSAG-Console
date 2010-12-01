@@ -80,6 +80,12 @@ class ContentProviderImportTask implements Runnable {
         catch (Exception e) {
           log.error("Error processing u="+u.getLogin()+" ucps="+ucps,e);
         }
+        try {
+          uploadResults(u, userDir, ucps);
+        }
+        catch (Exception e) {
+          log.error("Result upload error u="+u.getLogin()+" ucps="+ucps.toString(),e);
+        }
       }
     }
     //clean up unused dirs for this user
@@ -105,13 +111,13 @@ class ContentProviderImportTask implements Runnable {
       for (String remoteFile : remoteFiles) {
         OutputStream localOs = null;
         File localTmpFile = new File(userDir, remoteFile + ".tmp");
-        if (!fileSys.exists(localTmpFile)) {
+        if (fileSys.exists(localTmpFile)) {
           fileSys.delete(localTmpFile);
         }
         try {
           connection.get(remoteFile,localTmpFile);
           connection.rename(remoteFile, remoteFile+".bak");
-          fileSys.rename(localTmpFile,new File(localTmpFile.getParentFile(), localTmpFile.getName().substring(localTmpFile.getName().length()-4)));
+          fileSys.rename(localTmpFile,new File(localTmpFile.getParentFile(), localTmpFile.getName().substring(0,localTmpFile.getName().length()-4)));
         }
         catch (Exception e) {
           try {fileSys.delete(localTmpFile);} catch (Exception ex){};
@@ -147,12 +153,7 @@ class ContentProviderImportTask implements Runnable {
       processUserFile(u,f, ucps);
     }
 
-    try {
-      uploadResults(u, userDir, ucps);
-    }
-    catch (Exception e) {
-      log.error("Result upload error u="+u.getLogin()+" ucps="+ucps.toString(),e);
-    }
+
   }
 
   private void uploadResults(User u, File userDir, UserCPsettings ucps) throws AdminException {
@@ -172,7 +173,8 @@ class ContentProviderImportTask implements Runnable {
     if(!uploadFiles.isEmpty()) {
       ContentProviderConnection connection = null;
       try {
-        connection = new ContentProviderConnectionSFTP(fileSys,ucps);
+        connection = userDirResolver.getConnection(u,ucps);
+        connection.connect();
         for(File f : uploadFiles) {
           try {
             connection.put(f,f.getName());

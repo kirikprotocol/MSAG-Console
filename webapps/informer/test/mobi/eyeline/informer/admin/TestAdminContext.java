@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin;
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
 import mobi.eyeline.informer.admin.cdr.CdrDaemon;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
+import mobi.eyeline.informer.admin.contentprovider.TestContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.TestDeliveryChangesDetector;
 import mobi.eyeline.informer.admin.delivery.stat.TestDeliveryStatProvider;
@@ -242,7 +243,7 @@ public class TestAdminContext extends AdminContext {
           new File(confDir, "backup"), fileSystem);
 
       restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
-      contentProviderDaemon = new ContentProviderDaemon(
+      contentProviderDaemon = new TestContentProviderDaemon(
           new ContentProviderContextImpl(this),appBaseDir, workDir
       );
 

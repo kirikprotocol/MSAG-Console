@@ -22,10 +22,10 @@ import java.util.List;
  */
 class ContentProviderConnectionSFTP implements ContentProviderConnection {
   private JSch jsch;
-  Session session = null;
-  ChannelSftp channel = null;
+  private Session session = null;
+  private ChannelSftp channel = null;
   private FileSystem fileSysLocal;
-  UserCPsettings ucps;
+  private UserCPsettings ucps;
 
 
   ContentProviderConnectionSFTP(FileSystem fileSysLocal,UserCPsettings ucps) throws AdminException {
@@ -45,6 +45,7 @@ class ContentProviderConnectionSFTP implements ContentProviderConnection {
   public void connect() throws AdminException {
     try {
       session = jsch.getSession(ucps.getLogin(), ucps.getHost());
+      if(ucps.getPort()!=null) session.setPort(ucps.getPort());
       session.setPassword(ucps.getPassword());
       session.connect();
       channel = (ChannelSftp)session.openChannel("sftp");
@@ -76,8 +77,10 @@ class ContentProviderConnectionSFTP implements ContentProviderConnection {
       channel.get(ucps.getDirectory() + "/" + fileName,os);
     }
     catch (Exception e) {
-      if(os!=null) try {os.close();} catch (Exception ee) {}
       throw new ContentProviderException("connectionError",e);
+    }
+    finally {
+      if(os!=null) try {os.close();} catch (Exception ee) {}
     }
   }
 
@@ -97,15 +100,17 @@ class ContentProviderConnectionSFTP implements ContentProviderConnection {
       channel.put(is,ucps.getDirectory() + "/" +toFileName);
     }
     catch (Exception e) {
-      if(is!=null) try { is.close(); } catch (IOException e1) {}
       throw new ContentProviderException("connectionError",e);
+    }
+    finally {
+      if(is!=null) try { is.close(); } catch (IOException e1) {}
     }
   }
 
 
   public void close() throws AdminException{
-    if (session != null) session.disconnect();
-    if (channel != null) channel.exit();
+    if (session != null) try {session.disconnect(); } catch (Exception e){};
+    if (channel != null) try {channel.exit(); } catch (Exception e){}
     session=null;
     channel=null;
   }

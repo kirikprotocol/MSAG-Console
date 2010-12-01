@@ -173,8 +173,9 @@
         </h:panelGrid>
 
         <h:panelGrid id="importDeliveriesSettings" style="padding-left:10px; display: #{userEdit.userToEdit.importDeliveriesFromDir ? '':'none'};" columns="1" columnClasses="columnTopLeftAlign">
-          <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.import.sources']}"/>
-          <eye:dynamicTable value="#{userEdit.dynamicModel}">
+          <p/>
+          <h:outputText style="white-space:nowrap;  font-weight:bold;" value="#{msg['user.edit.import.sftpsources']}"/>
+          <eye:dynamicTable value="#{userEdit.dynamicSfptModel}">
             <eye:textColumn width="25%" title="#{msg['user.edit.import.host']}"   name="host" maxLength="50" allowEditAfterAdd="true"/>
             <eye:textColumn width="5%"  title="#{msg['user.edit.import.port']}"   name="port" maxLength="8" allowEditAfterAdd="true"/>
             <eye:textColumn width="10%" title="#{msg['user.edit.import.login']}"   name="login" maxLength="20" allowEditAfterAdd="true"/>
@@ -183,6 +184,14 @@
             <eye:selectColumn width="5%" title="#{msg['user.edit.import.encoding']}" name="encoding" allowEditAfterAdd="true" values="#{userEdit.fileEncodings}"/>
             <eye:textColumn width="10%" title="#{msg['user.edit.import.sourceAddress']}"   name="sourceAddress" maxLength="15" allowEditAfterAdd="true"/>
           </eye:dynamicTable>
+          <p/>
+          <h:outputText style="white-space:nowrap; font-weight:bold;" value="#{msg['user.edit.import.filesources']}" />
+          <eye:dynamicTable value="#{userEdit.dynamicFileModel}">
+            <eye:textColumn width="85%" title="#{msg['user.edit.import.directory']}"   name="directory" maxLength="1024" allowEditAfterAdd="true"/>
+            <eye:selectColumn width="5%" title="#{msg['user.edit.import.encoding']}"   name="encoding" allowEditAfterAdd="true" values="#{userEdit.fileEncodings}"/>
+            <eye:textColumn width="10%" title="#{msg['user.edit.import.sourceAddress']}"  name="sourceAddress" maxLength="15" allowEditAfterAdd="true"/>
+          </eye:dynamicTable>
+          <p/>
           <h:panelGrid columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{userBundle.createReports}"/>
           <h:selectBooleanCheckbox id="createReports" value="#{userEdit.userToEdit.createReports}"/>

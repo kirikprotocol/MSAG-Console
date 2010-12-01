@@ -97,13 +97,17 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       XmlConfigSection cpSectionsRoot = section.getSection("CPSETTINGS");
       for(XmlConfigSection s : cpSectionsRoot.sections()) {
         UserCPsettings ucps = new UserCPsettings();
-        ucps.setHost(s.getString("host"));
-        ucps.setPort(s.getInt("port",22));
+        UserCPsettings.Protocol protocol = UserCPsettings.Protocol.valueOf(s.getString("protocol","sftp"));
+        ucps.setProtocol(protocol);
+        if(protocol==UserCPsettings.Protocol.sftp) {
+          ucps.setHost(s.getString("host"));
+          if(s.containsParam("port")) {ucps.setPort(s.getInt("port"));}
+          ucps.setLogin(s.getString("login"));
+          ucps.setPassword(s.getString("password"));
+        }
         ucps.setDirectory(s.getString("directory"));
         ucps.setEncoding(s.getString("encoding","UTF-8"));
         ucps.setSourceAddress(new Address(s.getString("sourceAddress")));
-        ucps.setLogin(s.getString("login"));
-        ucps.setPassword(s.getString("password"));
         ucpsList.add(ucps);
       }
       return ucpsList.isEmpty() ? null : ucpsList;
@@ -264,15 +268,16 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       UserCPsettings ucps = cpSettings.get(i);
       XmlConfigSection s = new XmlConfigSection(user.getLogin()+"_"+ucps.getHashId());
       section.addSection(s);
-
-      s.setString("host",ucps.getHost());
-      s.setInt("port",ucps.getPort());
+      s.setString("protocol",ucps.getProtocol().toString());
+      if(ucps.getProtocol()==UserCPsettings.Protocol.sftp) {
+        s.setString("host",ucps.getHost());
+        if(ucps.getPort()!=null) s.setInt("port",ucps.getPort());
+        s.setString("login",ucps.getLogin());
+        s.setString("password",ucps.getLogin());
+      }
       s.setString("directory",ucps.getDirectory());
       s.setString("encoding",ucps.getEncoding());
       s.setString("sourceAddress",ucps.getSourceAddress().getSimpleAddress());
-      s.setString("login",ucps.getLogin());
-      s.setString("password",ucps.getLogin());
-
     }
     return section;
   }
