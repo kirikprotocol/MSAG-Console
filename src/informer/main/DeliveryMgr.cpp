@@ -291,21 +291,8 @@ public:
         mgr_.core_.dumpUserStats( currentTime );
         FileGuard fg;
         char buf[200];
-        char* bufpos;
-        {
-            struct tm now;
-            const ulonglong ymd = msgTimeToYmd(currentTime,&now);
-            sprintf(buf,"%04u.%02u.%02u/msg%02u.log",
-                    now.tm_year+1900, now.tm_mon+1,
-                    now.tm_mday, now.tm_hour);
-            fg.create((mgr_.cs_.getStatPath()+buf).c_str(),0666,true);
-            fg.seek(0,SEEK_END);
-            if (fg.getPos() == 0) {
-                const char* header = "#1 MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL\n";
-                fg.write(header,strlen(header));
-            }
-            bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
-        }
+        const ulonglong ymd = msgTimeToYmd(currentTime);
+        char* bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
 
         DeliveryList::iterator& iter = mgr_.statsDumpingIter_;
         bool firstPass = true;
@@ -326,6 +313,22 @@ public:
                 ++iter;
             }
             if ( ds.isEmpty() ) continue;
+            if (!fg.isOpened()) {
+                // open file
+                char fpath[200];
+                const unsigned dayhour = unsigned(ymd/10000);
+                sprintf(fpath,"%04u.%02u.%02u/msg%02u.log",
+                        dayhour / 1000000,
+                        dayhour / 10000 % 100,
+                        dayhour / 100 % 100,
+                        dayhour % 100);
+                fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
+                fg.seek(0,SEEK_END);
+                if (fg.getPos() == 0) {
+                    const char* header = "#1 MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL\n";
+                    fg.write(header,strlen(header));
+                }
+            }
             char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                                        dlvId, userId.c_str(),
                                        ds.totalMessages,

@@ -1060,20 +1060,9 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
 {
     FileGuard fg;
     char buf[200];
-    char* bufpos;
-    {
-        struct tm now;
-        const ulonglong ymd = msgTimeToYmd(currentTime,&now);
-        sprintf(buf,"%04u.%02u.%02u/dlv%02u.log",
-                now.tm_year + 1900, now.tm_mon+1, now.tm_mday, now.tm_hour );
-        fg.create((getCS()->getStatPath()+buf).c_str(),0666,true);
-        fg.seek(0,SEEK_END);
-        if (fg.getPos()==0) {
-            const char* header = "#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL\n";
-            fg.write(header,strlen(header));
-        }
-        bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd%10000));
-    }
+    const ulonglong ymd = msgTimeToYmd(currentTime);
+    char* bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
+
     std::vector< UserInfoPtr > users;
     {
         MutexGuard mg(userLock_);
@@ -1091,6 +1080,21 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
         UserDlvStats ds;
         (*i)->popIncrementalStats(ds);
         if ( ds.isEmpty() ) continue;
+        if (!fg.isOpened()) {
+            char fpath[100];
+            const unsigned dayhour = unsigned(ymd/10000);
+            sprintf(fpath,"%04u.%02u.%02u/dlv%02u.log",
+                    dayhour / 1000000,
+                    dayhour / 10000 % 100,
+                    dayhour / 100 % 100,
+                    dayhour % 100);
+            fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
+            fg.seek(0,SEEK_END);
+            if (fg.getPos()==0) {
+                const char* header = "#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL\n";
+                fg.write(header,strlen(header));
+            }
+        }
         char* p = bufpos + sprintf(bufpos,"%s,%u,%u,%u,%u,%u\n",
                                    (*i)->getUserId(),
                                    ds.paused,
