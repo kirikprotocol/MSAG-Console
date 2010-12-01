@@ -5,6 +5,7 @@
 #include "informer/io/DirListing.h"
 #include "informer/data/InputRegionRecord.h"
 #include "informer/data/CommonSettings.h"
+#include "informer/data/FinalLog.h"
 #include "system/status.h"
 
 namespace {
@@ -288,6 +289,7 @@ public:
     void dumpStats( msgtime_type currentTime )
     {
         mgr_.cs_.flipStatBank();
+        FinalLog::getFinalLog()->checkRollFile( currentTime );
         mgr_.core_.dumpUserStats( currentTime );
         FileGuard fg;
         char buf[200];

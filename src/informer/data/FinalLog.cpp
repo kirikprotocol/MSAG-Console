@@ -106,7 +106,7 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
         throw InfosmeException(EXC_SYSTEM,"cannot printf to final.log: %d",bufsize);
     }
     MutexGuard mg(lock_);
-    checkRollFile(currentTime);
+    doCheckRollFile(currentTime,true);
     if ( currentTime < createTime_ ) {
         // fix for delayed write
         ::memcpy(buf,"00",2);
@@ -134,7 +134,7 @@ void FinalLog::addDlvRecord( msgtime_type         currentTime,
         throw InfosmeException(EXC_SYSTEM, "cannot printf to final.log: %d",bufsize);
     }
     MutexGuard mg(lock_);
-    checkRollFile(currentTime);
+    doCheckRollFile(currentTime,true);
     if (currentTime < createTime_) {
         ::memcpy(buf,"00",2);
     }
@@ -144,12 +144,19 @@ void FinalLog::addDlvRecord( msgtime_type         currentTime,
 
 void FinalLog::checkRollFile( msgtime_type currentTime )
 {
+    MutexGuard mg(lock_);
+    doCheckRollFile(currentTime,false);
+}
+
+
+void FinalLog::doCheckRollFile( msgtime_type currentTime, bool create )
+{
     if (fg_.isOpened() && (createTime_ + period_) <= currentTime ) {
         fg_.close();
         rollFile( filename_ );
     }
 
-    if (!fg_.isOpened()) {
+    if (!fg_.isOpened() && create) {
 
         struct ::tm now;
         const time_t t(currentTime);

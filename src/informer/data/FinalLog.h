@@ -31,8 +31,11 @@ public:
                        const char*          userId,
                        DlvState             state );
 
+    void checkRollFile( msgtime_type currentTime );
+
 private:
-    void checkRollFile( msgtime_type        currentTime );
+    void doCheckRollFile( msgtime_type currentTime,
+                          bool         create );
     void rollFile( const char* fn );
 
 private:
