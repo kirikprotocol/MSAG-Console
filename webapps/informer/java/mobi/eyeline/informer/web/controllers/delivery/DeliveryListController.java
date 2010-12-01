@@ -1,7 +1,10 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
+import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -19,6 +22,8 @@ public class DeliveryListController extends DeliveryController {
   private String userFilter;
 
   private String status;
+
+  private String idFilter;
 
   private boolean init = true;
 
@@ -62,6 +67,14 @@ public class DeliveryListController extends DeliveryController {
     this.status = status;
   }
 
+  public String getIdFilter() {
+    return idFilter;
+  }
+
+  public void setIdFilter(String idFilter) {
+    this.idFilter = idFilter;
+  }
+
   public void clearFilter() {
     userFilter = null;
     status = null;
@@ -69,6 +82,7 @@ public class DeliveryListController extends DeliveryController {
     init = false;
     startDateFrom = new Date(System.currentTimeMillis() - (7*24*60*60*1000));
     startDateTo = null;
+    idFilter = null;
   }
 
   public void query() {
@@ -245,45 +259,126 @@ public class DeliveryListController extends DeliveryController {
     return Arrays.asList(infos);
   }
 
+  private static boolean accept(Delivery delivery, DeliveryFilter filter) {
+    if(filter.getEndDateFrom()!= null && delivery.getEndDate() != null && delivery.getEndDate().before(filter.getEndDateFrom())) {
+      return false;
+    }
+    if(filter.getEndDateTo()!= null && delivery.getEndDate() != null && delivery.getEndDate().after(filter.getEndDateTo())) {
+      return false;
+    }
+    if(filter.getNameFilter() != null) {
+      boolean accept = false;
+      for(String s : filter.getNameFilter()) {
+        if(delivery.getName().contains(s)) {
+          accept = true;
+          break;
+        }
+      }
+      if(!accept) {
+        return false;
+      }
+    }
+    if(filter.getStartDateFrom() != null && delivery.getStartDate().before(filter.getStartDateFrom())) {
+      return false;
+    }
+    if(filter.getStartDateTo() != null && delivery.getStartDate().after(filter.getStartDateTo())) {
+      return false;
+    }
+    if(filter.getStatusFilter() != null) {
+      boolean accept = false;
+      for(DeliveryStatus s : filter.getStatusFilter()) {
+        if(s.equals(delivery.getStatus())) {
+          accept = true;
+          break;
+        }
+      }
+      if(!accept) {
+        return false;
+      }
+    }
+    if(filter.getUserIdFilter() != null) {
+      boolean accept = false;
+      for(String s : filter.getUserIdFilter()) {
+        if(s.equals(delivery.getOwner())) {
+          accept = true;
+          break;
+        }
+      }
+      if(!accept) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   public DataTableModel getDeliviries() {
 
     if (!init)
       return new EmptyDataTableModel();
 
     final User u = config.getUser(getUserName());
+
     final DeliveryFilter filter = createFilter(u);
 
-    return new DataTableModel() {
-      public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
-        try {
-          List<Delivery> list;
-          if (sortOrder != null)
-            list = getSortedDeliveriesList(u, filter, startPos, count, sortOrder);
-          else
-            list = getUnsortedDeliveriesList(u, filter, startPos, count);
+    if(idFilter != null && idFilter.length()>0) {
 
-          List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
-          for (Delivery di : list)
-            if (di != null)
-              rows.add(new DeliveryRow(di));
+      Integer id = Integer.parseInt(idFilter);
+      final Delivery[] delivery = new Delivery[]{null};
+      try {
+        Delivery d = config.getDelivery(u.getLogin(), u.getPassword(), id);
+        if(accept(d, filter)) {
+          delivery[0] = d;
+        }
+      } catch (AdminException e) {
+        addError(e);
+      }
+      return new DataTableModel() {
+        public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
+          List<DeliveryRow> rows = new ArrayList<DeliveryRow>(1);
+          if(delivery[0] != null) {
+            rows.add(new DeliveryRow(delivery[0]));
+          }
           return rows;
+        }
+        public int getRowsCount() {
+          return delivery[0] == null ? 0 : 1;
+        }
+      };
 
-        } catch (AdminException e) {
-          addError(e);
+    }else {
+
+      return new DataTableModel() {
+        public List getRows(final int startPos, final int count, DataTableSortOrder sortOrder) {
+          try {
+            List<Delivery> list;
+            if (sortOrder != null)
+              list = getSortedDeliveriesList(u, filter, startPos, count, sortOrder);
+            else
+              list = getUnsortedDeliveriesList(u, filter, startPos, count);
+
+            List<DeliveryRow> rows = new ArrayList<DeliveryRow>(list.size());
+            for (Delivery di : list)
+              if (di != null)
+                rows.add(new DeliveryRow(di));
+            return rows;
+
+          } catch (AdminException e) {
+            addError(e);
+          }
+
+          return Collections.emptyList();
         }
 
-        return Collections.emptyList();
-      }
-
-      public int getRowsCount() {
-        try {
-          return config.countDeliveries(u.getLogin(), u.getPassword(), filter);
-        } catch (AdminException e) {
-          addError(e);
-          return 0;
+        public int getRowsCount() {
+          try {
+            return config.countDeliveries(u.getLogin(), u.getPassword(), filter);
+          } catch (AdminException e) {
+            addError(e);
+            return 0;
+          }
         }
-      }
-    };
+      };
+    }
   }
 
   private static Comparator<Delivery> getComparator(final DataTableSortOrder sortOrder) {
@@ -319,6 +414,14 @@ public class DeliveryListController extends DeliveryController {
           return o1.getStartDate().compareTo(o2.getStartDate()) * (sortOrder.isAsc() ? 1 : -1);
         }
       };
+    } else if (sortOrder.getColumnId().equals("id")) {
+      return new Comparator<Delivery>() {
+        public int compare(Delivery o1, Delivery o2) {
+          if (o1 == null) return 1;
+          if (o2 == null) return -1;
+          return o1.getId().compareTo(o2.getId()) * (sortOrder.isAsc() ? 1 : -1);
+        }
+      };
     } else {
       return new Comparator<Delivery>() {
         public int compare(Delivery o1, Delivery o2) {
@@ -338,34 +441,38 @@ public class DeliveryListController extends DeliveryController {
 
   public class DeliveryRow {
 
-    private final Delivery Delivery;
+    private final Delivery delivery;
 
     public DeliveryRow(Delivery Delivery) {
-      this.Delivery = Delivery;
+      this.delivery = Delivery;
+    }
+
+    public Integer getId() {
+      return delivery.getId();
     }
 
     public Date getEndDate() {
-      return Delivery.getEndDate();
+      return delivery.getEndDate();
     }
 
     public Date getStartDate() {
-      return Delivery.getStartDate();
+      return delivery.getStartDate();
     }
 
     public DeliveryStatus getStatus() {
-      return Delivery.getStatus();
+      return delivery.getStatus();
     }
 
     public String getUserId() {
-      return Delivery.getOwner();
+      return delivery.getOwner();
     }
 
     public String getName() {
-      return Delivery.getName();
+      return delivery.getName();
     }
 
     public int getDeliveryId() {
-      return Delivery.getId();
+      return delivery.getId();
     }
   }
 

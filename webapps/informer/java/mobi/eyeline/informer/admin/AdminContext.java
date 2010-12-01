@@ -370,7 +370,7 @@ public class AdminContext {
         DeliveryFilter filter = new DeliveryFilter();
         filter.setUserIdFilter(u.getLogin());
         final boolean[] exist = new boolean[]{false};
-        filter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Cancelled, DeliveryStatus.Paused);
+        filter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Paused);
         deliveryManager.getDeliveries(u.getLogin(), u.getPassword(), filter, 1000, new Visitor<Delivery>() {
           public boolean visit(Delivery value) throws AdminException {
             if(value.isEnableMsgFinalizationLogging()) {

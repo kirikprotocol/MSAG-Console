@@ -154,7 +154,6 @@ public class TestDcpConnection extends DcpConnection{
         return false;
       }
     }
-
     return true;
   }
 
