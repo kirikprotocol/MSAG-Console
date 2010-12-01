@@ -21,6 +21,9 @@
 
       <eye:buttons>
         <eye:button>
+          <tr:commandLink text="#{msg['check.settings.button']}" action="#{siebel.check}"/>
+        </eye:button>
+        <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{siebel.save}"/>
         </eye:button>
         <eye:button>
@@ -30,6 +33,7 @@
       </eye:buttons>
 
       <eye:delimiter/>
+
 
       <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
 
@@ -62,39 +66,36 @@
 
       <eye:collapsingGroup label="#{msg['informer.siebel.jdbc']}" opened="true">
 
-        <h:panelGrid columns="2" columnClasses="column400Width, column400Width">
+        <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
 
-          <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
+          <tr:panelLabelAndMessage label="#{msg['informer.siebel.db.type']}" labelStyle="text-align:left">
+            <h:selectOneMenu value="#{siebel.dbType}">
+              <f:selectItems value="#{siebel.uniqueDBTypes}"/>
+            </h:selectOneMenu>
+          </tr:panelLabelAndMessage>
 
-            <tr:panelLabelAndMessage label="#{msg['informer.siebel.db.type']}" labelStyle="text-align:left">
-              <h:selectOneMenu value="#{siebel.dbType}">
-                <f:selectItems value="#{siebel.uniqueDBTypes}"/>
-              </h:selectOneMenu>
-            </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.source']}" labelStyle="text-align:left">
+            <tr:inputText columns="100" value="#{siebel.jdbcSource}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
 
-            <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.source']}" labelStyle="text-align:left">
-              <tr:inputText columns="100" value="#{siebel.jdbcSource}" required="true" simple="true"/>
-            </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.login']}" labelStyle="text-align:left">
+            <tr:inputText value="#{siebel.jdbcLogin}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
 
-            <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.login']}" labelStyle="text-align:left">
-              <tr:inputText value="#{siebel.jdbcLogin}" required="true" simple="true"/>
-            </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.password']}" labelStyle="text-align:left">
+            <tr:inputText secret="true" value="#{siebel.jdbcPassword}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
 
-            <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.password']}" labelStyle="text-align:left">
-              <tr:inputText secret="true" value="#{siebel.jdbcPassword}" required="true" simple="true"/>
-            </tr:panelLabelAndMessage>
-
-          </tr:panelFormLayout>
-
-          <tr:commandLink text="#{msg['check.settings.button']}" action="#{siebel.check}"/>
-
-        </h:panelGrid>
+        </tr:panelFormLayout>
 
       </eye:collapsingGroup>
 
       <eye:delimiter/>
 
       <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['check.settings.button']}" action="#{siebel.check}"/>
+        </eye:button>
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{siebel.save}"/>
         </eye:button>
