@@ -330,7 +330,7 @@ void InfosmeCoreV1::init()
             std::auto_ptr<scag2::pvss::core::client::ClientConfig> 
                 pvssConfig(new scag2::pvss::core::client::ClientConfig);
             ConfigWrapper cwrap(*pcfg.get(),smsc::logger::Logger::getInstance("pvss"));
-            pvssConfig->setPort(cwrap.getInt("port",0,1024,100000,false));
+            pvssConfig->setPort(cwrap.getInt("asyncPort",0,1024,100000,false));
             pvssConfig->setHost(cwrap.getString("host"));
             pvssConfig->setEnabled(cwrap.getBool("enabled",true));
 
@@ -573,8 +573,16 @@ void InfosmeCoreV1::selfTest()
         {
             smsc_log_info(log_,"--- setting text glossary for D=%u ---", dlvId);
             std::vector< std::string > glotexts;
-            glotexts.push_back("Русский текст");
-            glotexts.push_back("the second message");
+            glotexts.push_back("русское глоссари #0");
+            glotexts.push_back("русское глоссари #1");
+            glotexts.push_back("русское глоссари #2");
+            glotexts.push_back("русское глоссари #3");
+            glotexts.push_back("русское глоссари #4");
+            glotexts.push_back("русское глоссари #5");
+            glotexts.push_back("русское глоссари #6");
+            glotexts.push_back("русское глоссари #7");
+            glotexts.push_back("русское глоссари #8");
+            glotexts.push_back("русское глоссари #9");
             dlv->setGlossary( glotexts );
         }
 
@@ -597,11 +605,15 @@ void InfosmeCoreV1::selfTest()
                     MessageLocker& mlk = msgList.back();
                     mlk.msg.subscriber = addressToSubscriber(11,1,1,address);
                     char userdata[30];
-                    char msgtext[50];
-                    sprintf(msgtext,"русский текст #%u",i);
-                    MessageText(msgtext).swap(mlk.msg.text);
                     sprintf(userdata,"msg#%d",i);
                     mlk.msg.userData = userdata;
+                    if ( i / 10 % 2 ) {
+                        char msgtext[50];
+                        sprintf(msgtext,"русский текст #%u",i);
+                        MessageText(msgtext).swap(mlk.msg.text);
+                    } else {
+                        MessageText(0,i%10).swap(mlk.msg.text);
+                    }
                 }
                 dlv->addNewMessages(msgList.begin(), msgList.end());
 

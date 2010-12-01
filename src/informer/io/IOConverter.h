@@ -19,6 +19,7 @@ struct FromBuf
     const char* getCString();
     void setPos( size_t newpos );
     void setLen( size_t newlen );
+    inline const char* getBuf() const { return reinterpret_cast<const char*>(buf); }
     inline size_t getPos() const { return pos; }
     inline size_t getLen() const { return buflen; }
     inline void setBuf( void* thebuf, size_t bufLen ) {

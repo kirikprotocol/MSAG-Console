@@ -55,9 +55,7 @@ public:
     virtual void dropMessages( const std::vector<msgid_type>& msgids );
 
     virtual InputTransferTask* createInputTransferTask( TransferRequester& requester,
-                                                        unsigned           count ) {
-        return new InputTransferTaskImpl(requester,count,*this);
-    }
+                                                        unsigned           count );
 
     virtual MessageGlossary& getGlossary() { return glossary_; }
 

@@ -34,9 +34,9 @@ public:
     inline MessageText& operator = ( const MessageText& t ) {
         if (t.text_ != text_) {
             if (id_ == uniqueId && text_) delete [] text_;
-            id_ = t.id_;
             text_ = t.id_ != uniqueId ? t.text_ : copyText(t.text_);
         }
+        id_ = t.id_;
         return *this;
     }
 
@@ -48,6 +48,7 @@ public:
     /// return 0 if non-glossary
     inline int32_t getTextId() const { return id_; }
     inline const char* getText() const { return text_; }
+    inline bool isUnique() const { return id_ == uniqueId; }
 
     /// copy text, create char[] buffer via new
     inline static char* copyText( const char* text ) {

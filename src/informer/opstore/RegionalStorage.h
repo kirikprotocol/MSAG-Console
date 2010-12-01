@@ -102,9 +102,6 @@ public:
 
     /// invoked at init stage ONLY!
     void setRecordAtInit( Message& msg, regionid_type serial );
-    void setNextResendAtInit( msgtime_type nextResend ) {
-        nextResendFile_ = nextResend;
-    }
 
     /// invoked after opstore is loaded.
     /// messages accumulated in messageHash_ will be partly moved according to their state
@@ -129,8 +126,6 @@ protected:
                                  MsgIter      iter1,
                                  MsgIter      iter2 );
 
-    virtual void resendIO( bool isInputDirection );
-
     /// NOTE: mg must be locked!
     void doFinalize( RelockMutexGuard& mg,
                      MsgIter           iter,
@@ -138,6 +133,14 @@ protected:
                      uint8_t           state,
                      int               smppState,
                      unsigned          nchunks );
+
+    virtual void resendIO( bool isInputDirection, volatile bool& stopFlag );
+
+    void makeResendFilePath( char* fpath,
+                             msgtime_type nextTime );
+
+    /// return the next resend file or 0
+    msgtime_type findNextResendFile();
 
 private:
     // message cleanup
@@ -166,9 +169,10 @@ private:
 
     EmbedRefPtr<DeliveryImpl>         dlv_;
     InputTransferTask*                inputTransferTask_;  // owned
-    ResendTransferTask*               resendTransferTask_;  // owned
+    ResendTransferTask*               resendTransferTask_; // owned
     regionid_type                     regionId_;
-
+    unsigned                          stopRolling_;        // wait until 0 to roll
+    
     unsigned                           newOrResend_; // if <3 then new, otherwise resend
 
     /// the next resend file starting time or 0 (if there is no files).

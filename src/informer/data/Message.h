@@ -23,8 +23,15 @@ struct Message
     uint16_t         retryCount;
     uint8_t          state;
 
-    inline bool isTextUnique() const {
-        return text.getTextId() == MessageText::uniqueId;
+    inline void swap( Message& m ) {
+        std::swap(subscriber,m.subscriber);
+        std::swap(msgId,m.msgId);
+        std::swap(lastTime,m.lastTime);
+        std::swap(timeLeft,m.timeLeft);
+        std::swap(userData,m.userData);
+        text.swap(m.text);
+        std::swap(retryCount,m.retryCount);
+        std::swap(state,m.state);
     }
 
     static const uint16_t maxRetryCount = 0xffff;

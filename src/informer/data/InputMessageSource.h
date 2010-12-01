@@ -41,7 +41,7 @@ public:
                                  MsgIter iter2 ) = 0;
 
     /// resend file input/output
-    virtual void resendIO( bool isInputDirection ) = 0;
+    virtual void resendIO( bool isInputDirection, volatile bool& stopFlag ) = 0;
 
 protected:
     void ref() {
@@ -113,7 +113,7 @@ protected:
     virtual const char* taskName() { return "resendIO"; }
 
     virtual int Execute() {
-        requester_->resendIO(isInputDir_);
+        requester_->resendIO(isInputDir_,isStopping);
         return 0;
     }
 

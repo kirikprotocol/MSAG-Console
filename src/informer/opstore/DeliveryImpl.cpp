@@ -382,20 +382,17 @@ void DeliveryImpl::setRecordAtInit( regionid_type            regionId,
 }
 
 
+/*
 void DeliveryImpl::setNextResendAtInit( regionid_type       regionId,
                                         msgtime_type        nextResend )
 {
     StoreList::iterator* ptr = storeHash_.GetPtr(regionId);
     if (!ptr) {
-        /*
-        ptr = &storages_.Insert(regionId,
-                                RegionalStoragePtr(new RegionalStorage(*this,
-                                                                       regionId)));
-         */
         ptr = createRegionalStorage(regionId);
     }
     (**ptr)->setNextResendAtInit(nextResend);
 }
+ */
 
 
 void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
@@ -403,6 +400,7 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 {
     int regId;
     StoreList::iterator ptr;
+    smsc_log_debug(log_,"D=%u postInitOperative",getDlvId());
     for ( StoreHash::Iterator i(storeHash_); i.Next(regId,ptr); ) {
         if ( (*ptr)->postInit() ) {
             filledRegs.push_back(regionid_type(regId));

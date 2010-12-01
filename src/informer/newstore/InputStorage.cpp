@@ -155,7 +155,7 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     msgtime_type currentTime(currentTimeSeconds());
     // binding to glossary (necessary to write texts to activity log)
     for ( MsgIter i = begin; i != end; ++i ) {
-        if (!i->msg.isTextUnique()) {
+        if (!i->msg.text.isUnique()) {
             // necessary to replace text ids with real texts
             glossary_.fetchText(i->msg.text);
         }
@@ -171,6 +171,21 @@ void InputStorage::dropMessages( const std::vector<msgid_type>& msgids )
     std::vector<msgid_type> msgIds(msgids);
     std::sort(msgIds.begin(),msgIds.end());
     blackList_->addMessages(msgIds);
+}
+
+
+InputTransferTask*
+    InputStorage::createInputTransferTask( TransferRequester& req,
+                                           unsigned           count )
+{
+    InputRegionRecord ro;
+    ro.regionId = req.getRegionId();
+    getRecord(ro);
+    if ( ro.rfn < ro.wfn || (ro.rfn==ro.wfn && ro.roff<ro.woff) ) {
+        // may create
+        return new InputTransferTaskImpl(req,count,*this);
+    }
+    return 0;
 }
 
 
@@ -319,7 +334,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
             }
             // writing to a file
             Message& msg = i->msg;
-            if (msg.isTextUnique()) {
+            if (msg.text.isUnique()) {
                 msgbuf.setSize(90+strlen(msg.text.getText()));
             }
             // msg.lastTime = ro.wfn;
@@ -329,7 +344,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
             tb.skip(LENSIZE);
             tb.set16(::defaultVersion);
             uint8_t state = msg.state & 0x7f;
-            if (msg.isTextUnique()) { state |= 0x80; }
+            if (msg.text.isUnique()) { state |= 0x80; }
             tb.set64(msg.msgId);
             tb.set8(state);
             tb.set64(msg.subscriber);
@@ -449,8 +464,8 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
             if ( ! msglist.empty() ) {
 
                 if ( ! core_.isStopping() ) {
-                    for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ++i ) {
-                        if (!i->msg.isTextUnique()) {
+                    for ( MsgIter i = msglist.begin(); i != msglist.end(); ++i ) {
+                        if (!i->msg.text.isUnique()) {
                             // NOTE: replacing input ids with real ids here!
                             glossary_.fetchText(i->msg.text,true);
                         }
@@ -459,7 +474,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
 
                 // wait until all pvss requests finish
                 const msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
-                for ( MessageList::iterator i = msglist.begin(); i != msglist.end(); ) {
+                for ( MsgIter i = msglist.begin(); i != msglist.end(); ) {
                     timediff_type ttl;
                     while ( (ttl = i->msg.timeLeft) == -1 ) {
                         // wait until pvss request is finished

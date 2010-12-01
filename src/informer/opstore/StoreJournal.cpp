@@ -9,7 +9,6 @@
 namespace {
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
-const uint8_t  NEXTRESENDID = 16;
 const unsigned defaultVersion = 1;
 
 using namespace eyeline::informer;
@@ -63,18 +62,21 @@ public:
     }
     /// read the record data (w/o length)
     virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
+        if (log_->isDebugEnabled()) {
+            HexDump hd;
+            HexDump::string_type dump;
+            const size_t buflen = fb.getLen();
+            const char* buf = fb.getBuf();
+            dump.reserve(buflen*5);
+            hd.hexdump(dump,buf,buflen);
+            hd.strdump(dump,buf,buflen);
+            smsc_log_debug(log_,"buffer to load(%u): %s",buflen,hd.c_str(dump));
+        }
+
         const dlvid_type dlvId = fb.get32();
         const regionid_type regId = fb.get32();
         Message msg;
         uint8_t readstate = fb.get8();
-        if (readstate == NEXTRESENDID) {
-            const msgtime_type nextResend = fb.get32();
-            if (fb.getPos() != fb.getLen()) {
-                throw InfosmeException(EXC_BADFILE,"next resend record at %llu has extra data", ulonglong(filePos));
-            }
-            reader_.setNextResendAtInit(dlvId,regId,nextResend);
-            return false;
-        }
         msg.state = readstate & 0x7f;
         msg.msgId = fb.get64();
         do {
@@ -86,7 +88,7 @@ public:
             msg.subscriber = fb.get64();
             msg.userData = fb.getCString();
             if (readstate & 0x80) {
-                MessageText(fb.getCString(),0).swap(msg.text);
+                MessageText(fb.getCString()).swap(msg.text);
             } else {
                 MessageText(0,fb.get32()).swap(msg.text);
             }
@@ -125,8 +127,9 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
                                      regionid_type& serial )
 {
     smsc::core::buffers::TmpBuf<unsigned char,200> buf;
+    // NOTE: it is a prediction (NOT under lock!)
     const bool equalSerials = (serial == serial_);
-    if (!equalSerials && msg.isTextUnique()) {
+    if (!equalSerials && msg.text.isUnique()) {
         // need to write text
         buf.setSize(90+strlen(msg.text.getText()));
     }
@@ -135,7 +138,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         tb.skip(LENSIZE);
         tb.set32(dlvId);
         tb.set32(regionId);
-        if (msg.isTextUnique()) {
+        if (msg.text.isUnique()) {
             tb.set8(msg.state | 0x80); // text will be embedded
         } else {
             tb.set8(msg.state & 0x7f);
@@ -155,7 +158,7 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         }
         tb.set64(msg.subscriber);
         tb.setCString(msg.userData.c_str());
-        if (msg.isTextUnique()) {
+        if (msg.text.isUnique()) {
             tb.setCString(msg.text.getText());
         } else {
             tb.set32(msg.text.getTextId());
@@ -170,14 +173,14 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
     if (msg.state < uint8_t(MSGSTATE_FINAL) &&
         equalSerials && serial != serial_ ) {
         // oops, the serial has changed while we were preparing the buffer
-        if (msg.isTextUnique()) {
+        if (msg.text.isUnique()) {
             buf.reserve(90+strlen(msg.text.getText()));
             tb.setBuf(buf.get(),buf.getSize());
         }
         tb.setPos(buflen);
         tb.set64(msg.subscriber);
         tb.setCString(msg.userData.c_str());
-        if (msg.isTextUnique()) {
+        if (msg.text.isUnique()) {
             tb.setCString(msg.text.getText());
         } else {
             tb.set32(msg.text.getTextId());
@@ -200,41 +203,13 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
 }
 
 
-size_t StoreJournal::journalNextResend( dlvid_type dlvId,
-                                        regionid_type regionId,
-                                        msgtime_type nextResend )
-{
-    char buf[100];
-    ToBuf tb(buf,sizeof(buf));
-    tb.skip(LENSIZE);
-    tb.set32(dlvId);
-    tb.set32(regionId);
-    tb.set8(NEXTRESENDID);
-    tb.set32(nextResend);
-    const size_t buflen = tb.getPos();
-    tb.setPos(0);
-    tb.set16(uint16_t(buflen-LENSIZE));
-    smsc::core::synchronization::MutexGuard mg(lock_);
-    if (log_->isDebugEnabled()) {
-        HexDump hd;
-        HexDump::string_type dump;
-        dump.reserve(buflen*5);
-        hd.hexdump(dump,buf,buflen);
-        hd.strdump(dump,buf,buflen);
-        smsc_log_debug(log_,"buffer to save(%u): %s",buflen,hd.c_str(dump));
-    }
-    fg_.write(buf,buflen);
-    return buflen;
-}
-
-
 void StoreJournal::init( Reader& jr )
 {
     std::string jpath = makePath(getCS()->getStorePath());
     readRecordsFrom(jpath+".old",jr);
     readRecordsFrom(jpath,jr);
     if (jr.isStopping()) return;
-    fg_.create(jpath.c_str(),0666,true,true);
+    fg_.create(jpath.c_str(),0666,true);
     if ( 0 == fg_.seek(0,SEEK_END) ) {
         // new file
         version_ = defaultVersion;

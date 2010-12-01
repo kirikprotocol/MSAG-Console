@@ -139,13 +139,14 @@ unsigned checkLicenseFile()
 }
 
 
-int main( int argc, char** argv )
+int main( int argc, const char** argv )
 {
+    bool selftest = false;
     try {
 
-        if ( argc > 1 ) {
+        for ( const char** arg = argv+1; *arg != 0; ++arg ) {
 
-            if (!strcmp(argv[1], "-h") || !strcmp(argv[1],"--help")) {
+            if (!strcmp(*arg,"-h") || !strcmp(*arg,"--help")) {
                 printf("%s [options]\n",argv[0]);
                 printf(" Options:\n");
                 printf(" -h --help   \tThis help\n");
@@ -153,9 +154,13 @@ int main( int argc, char** argv )
                 return 0;
             }
 
-            if (!strcmp(argv[1], "-v") || !strcmp(argv[1],"--version")) {
+            if (!strcmp(*arg, "-v") || !strcmp(*arg,"--version")) {
                 printf("%s\n", getStrVersion());
                 return 0;
+            }
+
+            if (!strcmp(*arg,"--selftest")) {
+                selftest = true;
             }
         }
 
@@ -215,11 +220,13 @@ int main( int argc, char** argv )
             core->start();
             pthread_sigmask(SIG_SETMASK, &original_signal_mask, 0);
 
-            try {
-                core->selfTest();
-            } catch (std::exception& e ) {
-                smsc_log_error(mainlog,"self test failed, exc: %s",e.what());
-                // isStarted = false;
+            if ( selftest ) {
+                try {
+                    core->selfTest();
+                } catch (std::exception& e ) {
+                    smsc_log_error(mainlog,"self test failed, exc: %s",e.what());
+                    // isStarted = false;
+                }
             }
 
             while ( isStarted ) {

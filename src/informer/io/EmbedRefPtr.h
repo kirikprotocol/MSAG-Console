@@ -21,16 +21,12 @@ public:
     explicit EmbedRefPtr( T* x = 0 ) : x_(x) {
         if (x_) x_->ref();
         erpgetlog();
-        if (x_) {
-            smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_);
-        }
+        // if (x_) { smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_); }
     }
     EmbedRefPtr( const EmbedRefPtr& p ) : x_(p.x_) {
         if (x_) x_->ref();
         erpgetlog();
-        if (x_) {
-            smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_);
-        }
+        // if (x_) { smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_); }
     }
     EmbedRefPtr& operator = ( const EmbedRefPtr& p ) {
         reset(p.x_);
@@ -42,9 +38,7 @@ public:
     EmbedRefPtr( const EmbedRefPtr<U>& p ) : x_(const_cast<U*>(p.get())) {
         if (x_) x_->ref();
         erpgetlog();
-        if (x_) {
-            smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_);
-        }
+        // if (x_) { smsc_log_debug(erplog_,"ctor(%s)@%p x=%p",thetypename(),this,x_); }
     }
     template <class U>
     EmbedRefPtr< T >& operator = ( const EmbedRefPtr< U >& p ) {
@@ -53,7 +47,7 @@ public:
     }
     ~EmbedRefPtr() {
         if (x_) {
-            smsc_log_debug(erplog_,"dtor(%s)@%p x=%p",thetypename(),this,x_);
+            // smsc_log_debug(erplog_,"dtor(%s)@%p x=%p",thetypename(),this,x_);
             x_->unref();
         }
     }
@@ -72,7 +66,7 @@ public:
 
     inline void reset( T* x ) {
         if (x != x_) {
-            smsc_log_debug(erplog_,"reset(%s)@%p x=%p -> x=%p",thetypename(),this,x_,x);
+            // smsc_log_debug(erplog_,"reset(%s)@%p x=%p -> x=%p",thetypename(),this,x_,x);
             if (x_) x_->unref();
             x_ = x;
             if (x_) x_->ref();

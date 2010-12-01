@@ -25,9 +25,6 @@ public:
                                       regionid_type  regionId,
                                       Message&       msg,
                                       regionid_type  serial ) = 0;
-        virtual void setNextResendAtInit( dlvid_type dlvId,
-                                          regionid_type regionId,
-                                          msgtime_type nextResend ) = 0;
         virtual void postInit() = 0;
     };
 
@@ -42,11 +39,6 @@ public:
                            regionid_type  regionId,
                            const Message& msg,
                            regionid_type& serial );
-
-    /// journal next resend time.
-    size_t journalNextResend( dlvid_type    dlvId,
-                              regionid_type regionId,
-                              msgtime_type  nextResend );
 
     void init( Reader& jr );
 

@@ -80,10 +80,17 @@ public:
                                   Message&      msg,
                                   regionid_type serial )
     {
-        smsc_log_debug(log_,"load store record R=%u/D=%u/M=%llu state=%s serial=%u",
-                       regionId, dlvId,
-                       ulonglong(msg.msgId),
-                       msgStateToString(MsgState(msg.state)), serial);
+        if (log_->isDebugEnabled()) {
+            uint8_t ton, npi, len;
+            const uint64_t addr = subscriberToAddress(msg.subscriber,len,ton,npi);
+            smsc_log_debug(log_,"load record R=%u/D=%u/M=%llu state=%s A=.%u.%u.%*.*llu txtId=%d/'%s' serial=%u",
+                           regionId, dlvId, ulonglong(msg.msgId),
+                           msgStateToString(MsgState(msg.state)),
+                           ton,npi,len,len,ulonglong(addr),
+                           msg.text.getTextId(),
+                           msg.text.getText() ? msg.text.getText() : "",
+                           serial);
+        }
         DeliveryList::iterator* iter = mgr_.deliveryHash_.GetPtr(dlvId);
         if (!iter) {
             smsc_log_info(log_,"delivery D=%u is not found, ok",dlvId);
@@ -93,6 +100,7 @@ public:
     }
 
 
+    /*
     virtual void setNextResendAtInit( dlvid_type    dlvId,
                                       regionid_type regId,
                                       msgtime_type  nextResend )
@@ -106,6 +114,7 @@ public:
         }
         (**iter)->setNextResendAtInit(regId,nextResend);
     }
+     */
 
 
     virtual void postInit()
