@@ -225,7 +225,21 @@ public class CdrDaemon implements DeliveryChangeListener{
   private final Lock writeLock = new ReentrantLock();
 
   public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
+    User u = cdrUsers.getUser(e.getUserId());
+    if(u == null) {
+      logger.error("User hasn't been found with id: "+e.getUserId());
+      throw new CdrDaemonException("internal_error");
+    }
+    if(!u.isCreateCDR()) {
+      return;
+    }
+
     Delivery d = getDelivery(e.getDeliveryId(), e.getUserId());
+
+    if(d == null) {
+      logger.error("Delivery hasn't been found with id: "+e.getDeliveryId());
+      throw new CdrDaemonException("internal_error");
+    }
 
     if(!lastEventsBeforeCrash.isEmpty()) {
       if(lastEventsBeforeCrash.contains(e.getMessageId())) {
@@ -238,17 +252,6 @@ public class CdrDaemon implements DeliveryChangeListener{
       }else if(compare < 0) {
         lastEventsBeforeCrash.clear();
       }
-    }
-
-    if(d == null) {
-      logger.error("Delivery hasn't been found with id: "+e.getDeliveryId());
-      throw new CdrDaemonException("internal_error");
-    }
-    
-    User u = cdrUsers.getUser(e.getUserId());
-    if(u == null) {
-      logger.error("User hasn't been found with id: "+e.getUserId());
-      throw new CdrDaemonException("internal_error");
     }
 
     String date = sdf.format(e.getEventDate());
