@@ -168,6 +168,7 @@ public:
         queue_.Push( & pbr->getMsg());
     }
 
+
     virtual void handleError(const scag2::pvss::PvssException& exc,
                              std::auto_ptr<scag2::pvss::Request> req)
     {
@@ -177,7 +178,7 @@ public:
             return;
         }
         smsc_log_warn(log_,"failed (to be retried) exc: %s",exc.what());
-        core_.startPvssCheck( pbr->getMsg() );
+        queue_.Push( & pbr->getMsg() );
     }
 
 private:
