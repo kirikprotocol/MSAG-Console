@@ -26,10 +26,7 @@ import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsContext;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
-import mobi.eyeline.informer.admin.restriction.Restriction;
-import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
-import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
-import mobi.eyeline.informer.admin.restriction.RestrictionsManager;
+import mobi.eyeline.informer.admin.restriction.*;
 import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.siebel.SiebelException;
 import mobi.eyeline.informer.admin.siebel.SiebelManager;
@@ -176,7 +173,7 @@ public class AdminContext {
       restrictionsManager = new RestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
           new File(confDir, "backup"), fileSystem);
 
-      restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
+      restrictionDaemon = new RestrictionDaemon(new RestrictionDaemonContextImpl(this));
 
 
       contentProviderDaemon = new ContentProviderDaemon(new ContentProviderContextImpl(this),appBaseDir,workDir);
@@ -1182,4 +1179,34 @@ public class AdminContext {
     }
   }
 
+  class RestrictionDaemonContextImpl implements RestrictionDaemonContext {
+    private AdminContext adminContext;
+    public RestrictionDaemonContextImpl(AdminContext adminContext) {
+      this.adminContext = adminContext;
+    }
+
+    public List<Restriction> getRestrictions(RestrictionsFilter rFilter) {
+      return adminContext.getRestrictions(rFilter);
+    }
+
+    public List<User> getUsers() {
+      return adminContext.getUsers();
+    }
+
+    public void getDeliveries(String login, String password, DeliveryFilter dFilter, int piecesize, Visitor<Delivery> visitor) throws AdminException {
+      adminContext.getDeliveries( login,  password,  dFilter,  piecesize,  visitor);
+    }
+
+    public void setDeliveryRestriction(String login, String password, Integer deliveryId, boolean restricted) throws AdminException {
+      adminContext.setDeliveryRestriction( login,  password,  deliveryId, restricted);
+    }
+
+    public void pauseDelivery(String login, String password, Integer deliveryId) throws AdminException {
+      adminContext.pauseDelivery(login, password, deliveryId);
+    }
+
+    public void activateDelivery(String login, String password, Integer deliveryId) throws AdminException {
+      adminContext.activateDelivery(login, password, deliveryId); 
+    }
+  }
 }

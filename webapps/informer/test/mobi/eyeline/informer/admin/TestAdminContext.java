@@ -51,6 +51,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public class TestAdminContext extends AdminContext {
 
+
   private void prepareServices(File confDir) throws IOException, AdminException {
     TestUtils.exportResource(TestUsersManager.class.getResourceAsStream("users.xml"), new File(confDir,"users.xml"), false);
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
@@ -242,7 +243,7 @@ public class TestAdminContext extends AdminContext {
       restrictionsManager = new TestRestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
           new File(confDir, "backup"), fileSystem);
 
-      restrictionDaemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
+      restrictionDaemon = new RestrictionDaemon(new RestrictionDaemonContextImpl(this));
       contentProviderDaemon = new TestContentProviderDaemon(
           new ContentProviderContextImpl(this),appBaseDir, workDir
       );
@@ -315,7 +316,7 @@ public class TestAdminContext extends AdminContext {
     ds.addAll(testDaemons);
     return ds;
   }
-
+  
 
   private static class TestDaemon implements Daemon {
 

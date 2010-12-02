@@ -3,9 +3,11 @@ package mobi.eyeline.informer.admin.restriction;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.UserDataConsts;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
+import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.admin.users.UsersManager;
 import org.apache.log4j.Logger;
 
 import java.util.Date;
@@ -18,25 +20,22 @@ import java.util.concurrent.*;
  * Date: 08.11.2010
  * Time: 16:35:50
  */
-public class RestrictionDaemon implements Daemon {
+public class RestrictionDaemon implements Daemon{
 
   Logger log = Logger.getLogger(this.getClass());
 
 
   public static final String NAME = "RestrictionDaemon";
-  DeliveryManager deliveryManager;
-  RestrictionsManager restrictionManager;
-  UsersManager userManager;
+
+  private RestrictionDaemonContext context;
   ScheduledExecutorService scheduler = null;
   ScheduledFuture task;
   long startDate;
   int taskNum;
 
 
-  public RestrictionDaemon(DeliveryManager deliveryManager, RestrictionsManager restrictionManager, UsersManager userManager) {
-    this.deliveryManager = deliveryManager;
-    this.restrictionManager = restrictionManager;
-    this.userManager = userManager;
+  public RestrictionDaemon(RestrictionDaemonContext context) {
+    this.context= context;
   }
 
 
@@ -68,7 +67,7 @@ public class RestrictionDaemon implements Daemon {
     //System.out.println("next schedule<-");
     if (isStarted()) {
       RestrictionsFilter rFilter = new RestrictionsFilter();
-      List<Restriction> restrictions = restrictionManager.getRestrictions(rFilter);
+      List<Restriction> restrictions = context.getRestrictions(rFilter);
       RestrictionTask rTask;
       long delay;
 
@@ -107,7 +106,7 @@ public class RestrictionDaemon implements Daemon {
 
   private void applyRestrictions(long forDate) throws AdminException {
     //System.out.println("apply restrictions<-");
-    List<User> users = userManager.getUsers();
+    List<User> users = context.getUsers();
     for (final User u : users) {
 
       //do not get restrictions if user disabled
@@ -121,7 +120,7 @@ public class RestrictionDaemon implements Daemon {
       dFilter.setUserIdFilter(u.getLogin());
       dFilter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Paused);
       //System.out.println("apply restrictions get deliveries");
-      deliveryManager.getDeliveries(u.getLogin(), u.getPassword(), dFilter, 1000,
+      context.getDeliveries(u.getLogin(), u.getPassword(), dFilter, 1000,
           new Visitor<Delivery>() {
             public boolean visit(Delivery di) throws AdminException {
               //System.out.println("visit");
@@ -150,7 +149,7 @@ public class RestrictionDaemon implements Daemon {
     rFilter.setStartDate(new Date(startDate));
     rFilter.setEndDate(new Date(startDate + 1));
     rFilter.setUserId(u.getLogin());
-    return restrictionManager.getRestrictions(rFilter);
+    return context.getRestrictions(rFilter);
   }
 
   private void adjustDeliveryState(User u, Delivery di, boolean shouldBeRestricted) throws AdminException {
@@ -158,16 +157,14 @@ public class RestrictionDaemon implements Daemon {
     if (shouldBeRestricted) {
       if (di.getStatus() != DeliveryStatus.Paused) {
         //System.out.println("changed");
-        // todo uncomment next 2 lines
-//        deliveryManager.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getDeliveryId(), true);
-//        deliveryManager.pauseDelivery(u.getLogin(), u.getPassword(), di.getDeliveryId());
+        context.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getId(), true);
+        context.pauseDelivery(u.getLogin(), u.getPassword(), di.getId());
       }
     } else {
       if (di.getStatus() == DeliveryStatus.Paused && Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION))) {
         //System.out.println("changed");
-        // todo uncomment next 2 lines
-//        deliveryManager.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getDeliveryId(), false);
-//        deliveryManager.activateDelivery(u.getLogin(), u.getPassword(), di.getDeliveryId());
+          context.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getId(), false);
+          context.activateDelivery(u.getLogin(), u.getPassword(), di.getId());
       }
     }
   }

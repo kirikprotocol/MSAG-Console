@@ -55,7 +55,7 @@ public class RestrictionsDaemonTest {
       infosme.addUser(u.getLogin());
     }
     restrictionsManager = new TestRestrictionsManager(infosme, restrictionConfigFile, backupDir, FileSystem.getFSForSingleInst());
-    daemon = new RestrictionDaemon(deliveryManager,restrictionsManager,usersManager);
+    daemon = new RestrictionDaemon(new TestRestrictionsDaemonContext(deliveryManager,restrictionsManager,usersManager));
   }
 
 
@@ -75,14 +75,17 @@ public class RestrictionsDaemonTest {
     Delivery db = _createDelivery("b");
     deliveryManager.activateDelivery("a","1",da.getId());
     deliveryManager.activateDelivery("b","1",db.getId());
+    deliveryManager.forceActivatePlannedDeliveries();
 
     start = System.currentTimeMillis();
     Restriction ra  = createRestriction("a",new Date(start),new Date(start+1000));
     Restriction rb  = createRestriction("b",new Date(start+1000),new Date(start+2000));
     Restriction rab = createRestriction(null,new Date(start+3000),new Date(start+4000));
 
+
     checkDeliveryState(da,DeliveryStatus.Active,false,start);
     checkDeliveryState(db,DeliveryStatus.Active,false,start);
+
     daemon.start();
 
     waitT(500,start);
@@ -189,8 +192,9 @@ public class RestrictionsDaemonTest {
     checkNextTaskDate(2000,start);
     waitT(2500,start);
     checkDeliveryState(da,DeliveryStatus.Paused,false,start);
-    deliveryManager.activateDelivery("a","1",da.getId());
 
+    deliveryManager.activateDelivery("a","1",da.getId());    
+    deliveryManager.forceActivatePlannedDeliveries();
 
 
 
@@ -329,10 +333,11 @@ public class RestrictionsDaemonTest {
     return delivery;
   }
 
-  private synchronized void waitT(long t, long startTime) throws InterruptedException {
+  private synchronized void waitT(long t, long startTime) throws InterruptedException, AdminException {
     long tw = t+(startTime-System.currentTimeMillis());
     if(tw<0) return;
     wait(tw);
+    deliveryManager.forceActivatePlannedDeliveries();
   }
 
   void checkNextTaskDate(long isAt, long startDate) {
