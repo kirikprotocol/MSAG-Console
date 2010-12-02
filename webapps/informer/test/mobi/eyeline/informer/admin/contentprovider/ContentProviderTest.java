@@ -169,6 +169,7 @@ public class ContentProviderTest {
 
     assertTrue(context.getFileSystem().exists(new File(userSrcDir,"test.report"))) ;
 
+    cpDaemon.stop();
   }
 
 
