@@ -10,8 +10,6 @@
 #include "informer/data/RetryPolicy.h"
 #include "DeliveryImpl.h"
 #include "StoreJournal.h"
-// #include "util/smstext.h"
-// #include "sms/sms.h"
 
 namespace eyeline {
 namespace informer {
@@ -66,25 +64,33 @@ public:
 
 
 namespace {
-
 const size_t LENSIZE = 2;
+}
 
-struct StopRollingGuard
+struct RegionalStorage::StopRollingGuard
 {
-    StopRollingGuard( RelockMutexGuard& rmg, unsigned& roll, bool unlockAfter = true ) :
-    rmg_(rmg), roll_(roll) {
-        ++roll_;
+    StopRollingGuard( RelockMutexGuard& rmg, RegionalStorage& rs, bool unlockAfter = true ) :
+    rmg_(rmg), rs_(rs) {
+        ++rs_.stopRolling_;
+        smsc_log_debug(rs_.log_,"R=%u/D=%u rolling is forbidden, stop=%u",
+                       rs_.regionId_, rs_.getDlvId(), rs_.stopRolling_);
         if (unlockAfter) rmg_.Unlock();
     }
     ~StopRollingGuard() {
-        if (!rmg_.isLocked()) rmg_.Lock();
-        --roll_;
+        rmg_.Lock();
+        if (!--rs_.stopRolling_) {
+            smsc_log_debug(rs_.log_,"R=%u/D=%u rolling is allowed, stop=%u",
+                           rs_.regionId_, rs_.getDlvId(), rs_.stopRolling_);
+        }
     }
+
 private:
     RelockMutexGuard& rmg_;
-    unsigned&         roll_;
+    RegionalStorage&  rs_;
 };
 
+
+namespace {
 
 class ResendReader : public FileReader::RecordReader
 {
@@ -115,14 +121,14 @@ public:
         try {
             msgList_.push_back(MessageLocker());
             Message& msg = msgList_.rbegin()->msg;
+            const uint8_t stateVersion = fb.get8();
             msg.state = MSGSTATE_RETRY;
             msg.msgId = fb.get64();
             msg.lastTime = fb.get32();
             msg.timeLeft = fb.get32();
             msg.subscriber = fb.get64();
             msg.userData = fb.getCString();
-            const uint8_t readstate = fb.get8();
-            if (readstate) {
+            if (stateVersion & 0x80) {
                 MessageText(fb.getCString()).swap(msg.text);
             } else {
                 MessageText(0,fb.get32()).swap(msg.text);
@@ -145,7 +151,6 @@ private:
 };
 
 }
-
 
 RegionalStorage::RegionalStorage( DeliveryImpl&        dlv,
                                   regionid_type        regionId ) :
@@ -770,7 +775,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
     smsc_log_debug(log_,"adding new messages to storage R=%u/D=%u",
                    unsigned(regionId_), dlvId );
     RelockMutexGuard mg(cacheMon_);
-    StopRollingGuard srg(mg,stopRolling_);
+    StopRollingGuard srg(mg,*this);
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         Message& m = i->msg;
         m.lastTime = currentTime;
@@ -798,8 +803,8 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
 {
     /// this method is invoked from ResendTransferTask
     const dlvid_type dlvId = dlv_->getDlvId();
-    smsc_log_debug(log_,"FIXME: R=%u/D=%u resend %s task started",
-                   regionId_, dlvId, isInputDirection ? "in" : "out");
+    smsc_log_info(log_,"R=%u/D=%u resend-%s task started",
+                  regionId_, dlvId, isInputDirection ? "in" : "out");
 
     if ( isInputDirection ) {
 
@@ -824,7 +829,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             const size_t total = fileReader.readRecords(buf,resendReader);
             fg.close();
             if (stopFlag) return;
-            smsc_log_info(log_,"R=%u/D=%u resend file %llu has been read %u records",
+            smsc_log_info(log_,"R=%u/D=%u resend-in: file %llu has been read %u records",
                           regionId_, dlvId, ymdTime, unsigned(total));
             {
                 // checking
@@ -841,31 +846,59 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                         }
                     }
                     if ( found ) {
+                        smsc_log_debug(log_,"R=%u/D=%u/M=%llu duplicate: found in queue",
+                                       regionId_, dlvId, ulonglong(i->msg.msgId));
                         i = msgList.erase(i);
                     } else {
-                        ++i;
-                        // FIXME: we have to insert into resendQueue here to make sure
+                        // NOTE: we have to insert into resendQueue here to make sure
                         // that we don't have duplicate entries in the file.
+                        resendQueue_.insert( std::make_pair(i->msg.lastTime,i));
+                        smsc_log_debug(log_,"R=%u/D=%u/M=%llu added to resend queue",
+                                       regionId_, dlvId, ulonglong(i->msg.msgId));
+                        ++i;
                     }
                 }
             }
             {
                 RelockMutexGuard mg(cacheMon_);
-                StopRollingGuard srg(mg,stopRolling_);
+                StopRollingGuard srg(mg,*this);
 
-                // storing into journal
-                for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
-                    regionid_type serial = 0;
-                    dlv_->storeJournal_.journalMessage(dlvId,regionId_,i->msg,serial);
-                    i->serial = serial;
-                    if (stopFlag) return;
+                try {
+                    // storing into journal, note that cacheMon_ is unlocked here
+                    for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
+                        regionid_type serial = 0;
+                        // NOTE: we may not lock here, as i is not in msgList_
+                        dlv_->storeJournal_.journalMessage(dlvId,regionId_,i->msg,serial);
+                        i->serial = serial;
+                        if (stopFlag) {
+                            throw InfosmeException(EXC_EXPIRED,"stop flagged");
+                        }
+                    }
+                } catch ( std::exception& e ) {
+                    // failed, we have to clean up the resendQueue_
+                    smsc_log_warn(log_,"R=%u/D=%u resend-in failed to journal: %s",
+                                  regionId_, dlvId, e.what());
+                    for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
+                        std::pair< ResendQueue::iterator, ResendQueue::iterator > ab =
+                            resendQueue_.equal_range( i->msg.lastTime );
+                        bool found = false;
+                        for ( ResendQueue::iterator j = ab.first; j != ab.second; ++j ) {
+                            if ( j->second->msg.msgId == i->msg.msgId ) {
+                                resendQueue_.erase(j);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            smsc_log_warn(log_,"R=%u/D=%u resend-in logic failure: M=%llu is not found",
+                                          regionId_, dlvId, ulonglong(i->msg.msgId) );
+                        }
+                    }
+                    if (stopFlag) { return; }
+                    throw;
                 }
 
                 mg.Lock();
-                for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
-                    // FIXME: move this code above (see upper FIXME)
-                    resendQueue_.insert( std::make_pair(i->msg.lastTime,i));
-                }
                 messageList_.splice(messageList_.begin(), msgList, msgList.begin(), msgList.end());
 
                 // we have to delete the file and find the next resend file
@@ -879,44 +912,103 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             }
 
         } catch ( std::exception& e ) {
-            smsc_log_warn(log_,"R=%u/D=%u resend in task exc: %s",
+            smsc_log_warn(log_,"R=%u/D=%u resend-in exc: %s",
                           regionId_, dlvId, e.what());
         }
+        smsc_log_info(log_,"R=%u/D=%u resend-in finished",
+                      regionId_, dlvId );
         return;
 
     }
 
     // output
-    throw InfosmeException(EXC_NOTIMPL,"R=%u/D=%u resend out is not implemented",
-                           regionId_, dlvId );
-
-    if ( resendQueue_.empty() ) return;
+    if ( resendQueue_.empty() ) {
+        smsc_log_warn(log_,"R=%u/D=%u resend-out: queue is empty",
+                      regionId_, dlvId );
+        return;
+    }
     const msgtime_type period = getCS()->getResendUploadPeriod();
     msgtime_type startTime =
         ( std::min(currentTimeSeconds(), resendQueue_.begin()->first) +
           getCS()->getResendMinTimeToUpload() + period*2 - 1 ) % period;
+
+    smsc::core::buffers::TmpBuf<char,8192> buf;
     RelockMutexGuard mg(cacheMon_);
-    StopRollingGuard srg(mg,stopRolling_,false);
+    StopRollingGuard srg(mg,*this,false);
     for ( ResendQueue::iterator prev = resendQueue_.lower_bound(startTime);
           prev != resendQueue_.end(); ) {
         msgtime_type nextTime = startTime + period;
         ResendQueue::iterator next = resendQueue_.lower_bound(nextTime);
         MessageList msgList;
+        unsigned count = 0;
         for ( ResendQueue::iterator i = prev; i != next; ++i ) {
             MsgLock ml(i->second,this,mg,false);
-            // the iterator is locked here
+            // the iterator is locked here, pop the item from the list
             msgList.splice(msgList.end(),messageList_,i->second);
+            ++count;
         }
         resendQueue_.erase(prev,next);
+        mg.Unlock();
+        char fpath[100];
+        makeResendFilePath(fpath,msgTimeToYmd(startTime));
+        smsc_log_info(log_,"R=%u/D=%u resend-out writing %u records in '%s'",
+                      regionId_, dlvId, count, fpath );
+        FileGuard fg;
         try {
-            // FIXME: writing msgList to next resend file
+
+            // FIXME: optimize writing by big buffer
+            fg.create( (getCS()->getStorePath() + fpath).c_str(),
+                       0666, true );
+            fg.seek(0,SEEK_END);
+            static const uint8_t version = 1;
+            for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
+                Message& msg = i->msg;
+                uint8_t stateVersion = version;
+                if (msg.text.isUnique()) {
+                    buf.setSize(100 + strlen(msg.text.getText()));
+                    stateVersion |= 0x80;
+                }
+                ToBuf tb(buf.get(),buf.getSize());
+                tb.skip(LENSIZE);
+                tb.set8(stateVersion);
+                tb.set64(msg.msgId);
+                tb.set32(msg.lastTime);
+                tb.set32(msg.timeLeft);
+                tb.set64(msg.subscriber);
+                tb.setCString(msg.userData.c_str());
+                if (stateVersion & 0x80) {
+                    tb.setCString(msg.text.getText());
+                } else {
+                    tb.set32(msg.text.getTextId());
+                }
+                const size_t buflen = tb.getPos();
+                tb.setPos(0);
+                tb.set16(uint16_t(buflen-LENSIZE));
+                fg.write(buf.get(),buflen);
+            }
+
         } catch ( std::exception& e ) {
-            // FIXME: restore resend queue from msgList
+            smsc_log_warn(log_,"R=%u/D=%u resend-out writing '%s' exc: %s",
+                          regionId_, getDlvId(), fpath, e.what());
+            mg.Lock();
+            // restoring resend queue from msgList
+            for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
+                resendQueue_.insert(std::make_pair(i->msg.lastTime,i));
+            }
+            messageList_.splice(messageList_.begin(), msgList,
+                                msgList.begin(), msgList.end());
             throw;
+        }
+
+        mg.Lock();
+        if ( nextResendFile_ == 0 || nextResendFile_ > startTime ) {
+            nextResendFile_ = startTime;
         }
         startTime = nextTime;
         prev = next;
     }
+    smsc_log_info(log_,"R=%u/D=%u resend-out finished",
+                  regionId_, dlvId );
 }
 
 

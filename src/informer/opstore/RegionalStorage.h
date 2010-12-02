@@ -42,6 +42,7 @@ private:
 
     /// message locking guard fwd decl
     class MsgLock;
+    class StopRollingGuard;
 
 public:
 

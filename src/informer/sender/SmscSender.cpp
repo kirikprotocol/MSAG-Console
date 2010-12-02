@@ -185,7 +185,7 @@ protected:
                           unsigned(total), unsigned(sjreader.unique_) );
         } catch ( FileDataException& e ) {
             smsc_log_warn(sender_.log_,"file '%s', exc: %s", jpath.c_str(), e.what());
-            // FIXME: should we trunk the file?
+            // FIXME: the smsc journal is corrupted, should we trunk the file?
         } catch ( std::exception& e ) {
             smsc_log_error(sender_.log_,"file '%s', exc: %s", jpath.c_str(), e.what());
         }

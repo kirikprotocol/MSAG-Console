@@ -102,7 +102,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
         if (wasread==0) {
             // EOF
             if (ptr < buf.GetCurPtr()) {
-                // FIXME: should we truncate instead?
+                // FIXME: the activity log is corrupted, should we truncate?
                 throw InfosmeException(EXC_BADFILE,"file is not terminated with LF");
             }
             break;
