@@ -1,1 +1,3 @@
-Файл нужен для тестирования.
+#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL,CREATED,DELETED
+5200,admin,0,0,1,0,0,0,0
+5200,artem,0,0,1,1,0,0,0

@@ -7,6 +7,8 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
@@ -339,6 +341,10 @@ public class Configuration {
 
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     context.statistics(filter, visitor);
+  }
+
+  public void statisticByUsers(UserStatFilter filter, UserStatVisitor visitor) throws AdminException {
+    context.statisticByUsers(filter, visitor);
   }
 
   public List<File> getStatisticFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {

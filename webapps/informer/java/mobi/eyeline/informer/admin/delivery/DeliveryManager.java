@@ -1,9 +1,7 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
-import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatProvider;
-import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.delivery.stat.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
@@ -28,15 +26,19 @@ public class DeliveryManager {
 
   private final DeliveryStatProvider statsProvider;
 
+  private final UserStatProvider userStatsProvider;
+
 
   public DeliveryManager(String host, int port, File statsDirectory, FileSystem fileSys) {
     this.host = host;
     this.port = port;
     this.statsProvider = new DeliveryStatProvider(statsDirectory, fileSys);
+    this.userStatsProvider = new UserStatProvider(statsDirectory, fileSys);
   }
 
-  protected DeliveryManager(DeliveryStatProvider statsProvider) {
+  protected DeliveryManager(DeliveryStatProvider statsProvider, UserStatProvider userStatsProvider) {
     this.statsProvider = statsProvider;
+    this.userStatsProvider = userStatsProvider;
   }
 
   protected DcpConnection createConnection(String host, int port, String login, String password) throws AdminException {
@@ -515,6 +517,10 @@ public class DeliveryManager {
     statsProvider.accept(filter, visitor);
   }
 
+  public void statisticsByUser(UserStatFilter filter, UserStatVisitor visitor) throws AdminException {
+    userStatsProvider.accept(filter, visitor);
+  }
+
   /**
    * Возвращает список файлов статистики, удовлетворяющие условиям, накладываемыми в filter.
    * Если filter == null, то провайдер перебирает все записи.
@@ -525,6 +531,11 @@ public class DeliveryManager {
   public List<File> getStatisticsFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
     return statsProvider.filterFiles(filter, endDateInclusive);
   }
+
+  public List<File> getStatisticsFiles(UserStatFilter filter, boolean endDateInclusive) throws AdminException {
+     return userStatsProvider.filterFiles(filter, endDateInclusive);
+   }
+
 
   /**
    * Парсит дату из имени файла статистики

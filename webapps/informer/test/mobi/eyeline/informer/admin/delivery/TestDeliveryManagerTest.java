@@ -23,7 +23,7 @@ public class TestDeliveryManagerTest {
 
   @BeforeClass
   public static void init() {
-    manager = new TestDeliveryManager(null);
+    manager = new TestDeliveryManager(null, null);
   }
 
   @AfterClass

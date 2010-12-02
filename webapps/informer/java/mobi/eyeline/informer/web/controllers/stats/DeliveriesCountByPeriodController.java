@@ -4,6 +4,9 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
 import mobi.eyeline.informer.admin.delivery.Visitor;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatRecord;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import java.util.Calendar;
@@ -16,7 +19,7 @@ import java.util.Locale;
  * Date: 25.10.2010
  * Time: 15:20:49
  */
-public class DeliveriesCountByPeriodController extends DeliveryStatController implements Visitor<Delivery> {
+public class DeliveriesCountByPeriodController extends DeliveryStatController implements UserStatVisitor {
 
 
   public DeliveriesCountByPeriodController() {
@@ -37,13 +40,18 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
     f.setStartDateFrom(getFilter().getFromDate());
     f.setStartDateTo(getFilter().getTillDate());
 
-    config.getDeliveries(getUser().getLogin(), getUser().getPassword(), f, 1000, this);
+    UserStatFilter filter = new UserStatFilter();
+    filter.setUser(getFilter().getUser());
+    filter.setFromDate(getFilter().getFromDate());
+    filter.setTillDate(getFilter().getTillDate());
+
+    config.statisticByUsers(filter, this);
   }
 
-  public boolean visit(Delivery di) throws AdminException {
+  public boolean visit(UserStatRecord rec, int total, int current) {
     Calendar c = Calendar.getInstance();
-    c.setTime(di.getStartDate());
-    AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c, getAggregation(), 1, true);
+    c.setTime(rec.getDate());
+    AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c, getAggregation(), rec.getCreated(), true);
     AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
     if (oldRecord == null) {
       putRecord(newRecord);
@@ -54,5 +62,4 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
     setCurrent(getCurrent() + 1);
     return !isCancelled();
   }
-
 }

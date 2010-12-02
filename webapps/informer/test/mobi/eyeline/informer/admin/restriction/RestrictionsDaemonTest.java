@@ -49,7 +49,7 @@ public class RestrictionsDaemonTest {
   @Before
   public void before() throws Exception {
     infosme = new TestInfosme();
-    deliveryManager = new TestDeliveryManager(null);
+    deliveryManager = new TestDeliveryManager(null, null);
     usersManager = new TestUsersManager(infosme, usersConfigFile, backupDir, FileSystem.getFSForSingleInst());
     for(User u : usersManager.getUsers()) {
       infosme.addUser(u.getLogin());

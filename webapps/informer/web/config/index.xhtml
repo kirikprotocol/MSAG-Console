@@ -73,10 +73,13 @@
   </tr:panelFormLayout>
 </eye:collapsingGroup>
 
-<eye:collapsingGroup label="#{msg['config.stats.section']}" opened="true">
+<eye:collapsingGroup label="#{msg['config.store.section']}" opened="true">
   <tr:panelFormLayout inlineStyle="padding: 10px">
     <tr:panelLabelAndMessage label="#{informerSettings.statDir}">
       <tr:inputText value="#{config.settings.statDir}" simple="true" required="true" columns="100"/>
+    </tr:panelLabelAndMessage>
+    <tr:panelLabelAndMessage label="#{informerSettings.storeDir}">
+      <tr:inputText value="#{config.settings.storeDir}" simple="true" required="true" columns="100"/>
     </tr:panelLabelAndMessage>
   </tr:panelFormLayout>
 </eye:collapsingGroup>
@@ -84,11 +87,6 @@
 
 <eye:collapsingGroup label="#{msg['config.additional']}" opened="false">
   <tr:panelFormLayout inlineStyle="padding: 10px">
-
-    <tr:panelLabelAndMessage label="#{informerSettings.storeDir}">
-      <tr:inputText value="#{config.settings.storeDir}" simple="true" required="true" columns="100"/>
-    </tr:panelLabelAndMessage>
-
 
     <tr:panelLabelAndMessage label="#{informerSettings.adminHandlers}">
       <tr:inputText value="#{config.settings.adminHandlers}" simple="true" required="true">

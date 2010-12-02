@@ -13,6 +13,8 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
@@ -601,6 +603,10 @@ public class AdminContext {
 
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     deliveryManager.statistics(filter, visitor);
+  }
+
+  public void statisticByUsers(UserStatFilter filter, UserStatVisitor visitor) throws AdminException {
+    deliveryManager.statisticsByUser(filter, visitor);
   }
 
   public List<File> getStatisticsFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {

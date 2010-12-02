@@ -17,7 +17,7 @@ class TestSiebelDeliveries implements SiebelDeliveries {
     this.siebelUser = siebelUser;
   }
 
-  private TestDeliveryManager deliveryManager = new TestDeliveryManager(null);
+  private TestDeliveryManager deliveryManager = new TestDeliveryManager(null, null);
 
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
     deliveryManager.addIndividualMessages(login, password, msDataSource, deliveryId);

@@ -80,7 +80,7 @@ public class CdrDaemonTest {
     p.setPriority(10);
 
 
-    manager = new TestDeliveryManager(null);
+    manager = new TestDeliveryManager(null, null);
     deliveries = new CdrDeliveries() {
 
       {
