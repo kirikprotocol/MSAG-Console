@@ -131,7 +131,7 @@ public class SiebelManager {
       timeout = Integer.parseInt(ps.getProperty(TIMEOUT));
       removeOnStop = Boolean.valueOf(ps.getProperty(REMOVE_ON_STOP_PARAM));
       provider.connect(ps);
-      executor = new ThreadPoolExecutor(5, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,   //todo?
+      executor = new ThreadPoolExecutor(5, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
           new LinkedBlockingQueue<Runnable>(), new ThreadFactoryWithCounter("Siebel-Delivery-Processor", 0));
       listenerThread = new Thread(new ProviderListener(), "SiebelProviderListener");
       listenerThread.start();
@@ -142,8 +142,19 @@ public class SiebelManager {
   }
 
   private boolean isInProcessing(SiebelDelivery st) {
-    synchronized (lock) {
+    try {
+      lock.lock();
       return processedDeliveries.contains(st.getWaveId());
+    } finally {
+      lock.unlock();
+    }
+  }
+  private boolean isInProcessing(String waveId) {
+    try {
+      lock.lock();
+      return processedDeliveries.contains(waveId);
+    } finally {
+      lock.unlock();
     }
   }
 
@@ -162,6 +173,31 @@ public class SiebelManager {
       processedDeliveries.remove(st.getWaveId());
     } finally {
       lock.unlock();
+    }
+  }
+
+  private Collection<String> errors = new LinkedList<String>();
+
+  private final Lock errorLock = new ReentrantLock();
+
+
+  private List<String> getErrors() {
+    try{
+      errorLock.lock();
+      List<String> res = new ArrayList<String>(errors);
+      errors.clear();
+      return res;
+    }finally {
+      errorLock.unlock();
+    }
+  }
+
+  private void addError(String waveId) {
+    try{
+      errorLock.lock();
+      errors.add(waveId);
+    }finally {
+      errorLock.unlock();
     }
   }
 
@@ -186,11 +222,12 @@ public class SiebelManager {
                 if(st.getLastUpdate().after(lastUpdate)) {
                   lastUpdate = new Date(st.getLastUpdate().getTime());
                 }
-              } else {
+              }else{
                 if (logger.isDebugEnabled())
                   logger.debug("Siebel: delivery (waveId=" + st.getWaveId() + ") is already in processing...");
               }
             }
+
           } catch (Exception e) {
             logger.error(e, e);
           } finally {
@@ -198,6 +235,25 @@ public class SiebelManager {
               rs.close();
             }
           }
+
+          for(String e : getErrors()) {
+            if(!isInProcessing(e)) {
+              if(logger.isDebugEnabled()) {
+                logger.debug("Try to repair operation with wave: waveId="+e);
+              }
+              final SiebelDelivery st = provider.getDelivery(e);
+              if(st != null) {
+                process(st);
+              }else {
+                if(logger.isDebugEnabled()) {
+                  logger.debug("Wave hasn't been found: waveId="+e);
+                }
+              }
+            }else {
+              addError(e);
+            }
+          }
+
           try {
             Thread.sleep(timeout * 1000);
           } catch (InterruptedException ignored) {
@@ -244,7 +300,7 @@ public class SiebelManager {
     Delivery delivery = info == null ? null : deliveries.getDelivery(siebelUser.getLogin(), siebelUser.getPassword(), info.getId());
 
     if (delivery != null) {
-      if (info.getProperty("message_generation_in_process") == null) {
+      if (info.getProperty(generationFlag) == null) {
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: delivery already exists and has generated, waveId='" + st.getWaveId() + "'. Activate it");
         }
@@ -261,9 +317,9 @@ public class SiebelManager {
 
     DeliveryPrototype proto = createDelivery(st, buildDeliveryName(st.getWaveId()));
 
+    proto.setProperty(generationFlag, "true");
+
     delivery = deliveries.createDelivery(siebelUser.getLogin(), siebelUser.getPassword(), proto, null);
-    delivery.setProperty(generationFlag, "true");
-    deliveries.modifyDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery);
 
     ResultSet<SiebelMessage> messages = null;
     boolean hasMessages;
@@ -274,7 +330,7 @@ public class SiebelManager {
       messages = provider.getMessages(st.getWaveId());
       hasMessages = addMessages(delivery, messages) != 0;
 
-      delivery.removeProperty("message_generation_in_process");
+      delivery.removeProperty(generationFlag);
       deliveries.modifyDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery);
 
       deliveries.activateDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
@@ -369,6 +425,7 @@ public class SiebelManager {
               beginDelivery(st);
             } catch (Exception e) {
               logger.error(e, e);
+              addError(st.getWaveId());
             } finally {
               setProcessed(st);
             }
@@ -381,6 +438,7 @@ public class SiebelManager {
               stopDelivery(st, removeOnStop);
             } catch (Exception e) {
               logger.error(e, e);
+              addError(st.getWaveId());
             } finally {
               setProcessed(st);
             }
@@ -393,6 +451,7 @@ public class SiebelManager {
               pauseDelivery(st);
             } catch (Exception e) {
               logger.error(e, e);
+              addError(st.getWaveId());
             } finally {
               setProcessed(st);
             }
@@ -440,6 +499,9 @@ public class SiebelManager {
         public Message next() throws AdminException {
           Message msg;
           while (messages.next()) {
+            try {
+              Thread.sleep(10);     // todo!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            } catch (InterruptedException e) {}
             SiebelMessage sM = messages.get();
             String msisdn = sM.getMsisdn();
             if (msisdn != null && Address.validate(msisdn = convertMsisdn(msisdn))) {

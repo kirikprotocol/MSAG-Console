@@ -163,6 +163,12 @@ public class DeliveryManager {
     validateDelivery(delivery);
     final DcpConnection conn = getDcpConnection(login, password);
     final int id = conn.createDelivery(delivery);
+
+    DeliveryState state = new DeliveryState();
+    state.setStatus(DeliveryStatus.Paused);
+    state.setDate(new Date());
+    conn.changeDeliveryState(id, state);  
+
     delivery.setId(id);
     if (msDataSource != null) {
       try {

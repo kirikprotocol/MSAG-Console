@@ -132,9 +132,6 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
       writeLock();
       if(!stop) {
         String line = StringEncoderDecoder.toCSVString(0, clcId, state, errCode);
-        if(logger.isDebugEnabled()) {
-          logger.debug("Add line: "+StringEncoderDecoder.toCSVString(0, clcId, state, errCode));
-        }
         writer.println(line);
         writer.flush();
       }else {
