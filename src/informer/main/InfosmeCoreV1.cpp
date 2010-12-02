@@ -52,7 +52,7 @@ void readSmscConfig( const char*   name,
         rv.setAddressRange(config.getString("rangeOfAddress",""));
         cfg.ussdPushOp = config.getInt("ussdPushTag",-1,1,0);
         cfg.ussdPushVlrOp = config.getInt("ussdPushVlrTag",-1,1,0);
-        cfg.minValidityTime = config.getInt("minValidityTime",10*60,60,2*3600);
+        cfg.minValidityTime = config.getInt("minValidityTime",2*60,60,2*3600);
         cfg.maxValidityTime = config.getInt("maxValidityTime",2*3600,cfg.minValidityTime,3*3600);
     } catch ( std::exception& e ) {
         throw InfosmeException(EXC_CONFIG,"S='%s' config exc: %s", name, e.what());

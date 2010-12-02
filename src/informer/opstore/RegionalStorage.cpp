@@ -221,7 +221,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 
     // how many seconds to wait until activeStart / activeEnd.
     int secondsReady = info.checkActiveTime(weekTime);
-    if ( secondsReady >= 0 ) {
+    if ( secondsReady > 0 ) {
         smsc_log_debug(log_,"R=%u/D=%u not on active period weekTime=%u (need to wait %u seconds)",
                        regionId_, dlvId, weekTime, secondsReady );
         if ( secondsReady > 100 ) { secondsReady = 100; }
@@ -409,9 +409,16 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         }
     }
 
+    Message& m = iter->msg;
+
+    // fixing time left.
+    m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
+    if (m.timeLeft < 0) {
+        m.timeLeft = 0;
+    }
+
     if (retryDelay == 0) {
         // immediate retry
-        Message& m = iter->msg;
         // putting the message to the new queue
         assert( m.state == MSGSTATE_PROCESS );
         // m.state = MSGSTATE_PROCESS;
@@ -426,19 +433,18 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         return;
     }
 
-    Message& m = iter->msg;
+    do {
 
-    // fixing time left.
-    m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
+        if ( m.retryCount >= Message::maxRetryCount ) {
+            break;
+        }
 
-    if ( m.retryCount < Message::maxRetryCount ) {
         ++m.retryCount;
-    } else {
-        // no more retries, failed
-        m.timeLeft = 0;
-    }
 
-    if ( m.timeLeft > getCS()->getRetryMinTimeToLive() ) {
+        if ( m.timeLeft < getCS()->getRetryMinTimeToLive() ) {
+            break;
+        }
+
         // there is enough validity time to try the next time
 
         MsgLock ml(iter,this,mg,false);
@@ -472,9 +478,10 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                        msgTimeToYmd(m.lastTime) );
         dlv_->storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
         dlv_->activityLog_.incStats(m.state,1,prevState);
-    } else {
-        doFinalize(mg,iter,currentTime,MSGSTATE_EXPIRED,smppState,nchunks);
-    }
+        return;
+
+    } while ( false );
+    doFinalize(mg,iter,currentTime,MSGSTATE_EXPIRED,smppState,nchunks);
 }
 
 
@@ -511,96 +518,21 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
     const bool checkFinal = messageList_.empty() && !nextResendFile_;
     mg.Unlock();
     Message& m = iter->msg;
-    /*
-    if (!nchunks) {
-        const char* text = m.text.getText();
-        nchunks = evaluateNchunks(text,strlen(text));
-    }
-     */
     m.lastTime = currentTime;
-    m.timeLeft = 0;
     m.retryCount = nchunks;
     const uint8_t prevState = m.state;
     m.state = state;
-    smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is finalized, state=%u, smpp=%u, nchunks=%u, checkFin=%d",
+    smsc_log_debug(log_,"message R=%u/D=%u/M=%llu is finalized, state=%u, smpp=%u, ttl=%d, nchunks=%u, checkFin=%d",
                    unsigned(regionId_),
                    unsigned(dlvId),
                    ulonglong(m.msgId),state,smppState,
+                   m.timeLeft,
                    nchunks,
                    checkFinal);
     dlv_->activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
-    /*
-    if (dlv_->getDlvInfo()->wantFinalMsgRecords()) {
-        dlv_->source_->getDlvActivator().getFinalLog()
-            .addMsgRecord(currentTime,
-                          dlvId,
-                          dlv_->getUserInfo().getUserId(),
-                          m,
-                          smppState);
-    }
-     */
     dlv_->storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
     if (checkFinal) dlv_->checkFinalize();
 }
-
-
-/*
-unsigned RegionalStorage::evaluateNchunks( const char*     outText,
-                                           size_t          outLen,
-                                           smsc::sms::SMS* sms ) const
-{
-    const DeliveryInfo& info = *dlv_->getDlvInfo();
-    try {
-        const char* out = outText;
-        UTF8::BufType ucstext;
-        const bool hasHighBit = smsc::util::hasHighBit(out,outLen);
-        if (hasHighBit) {
-            getCS()->getUTF8().convertToUcs2(out,outLen,ucstext);
-            outLen = ucstext.GetPos();
-            out = ucstext.get();
-            if (sms) sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::UCS2);
-        } else if (sms) {
-            sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
-        }
-
-        if ( outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm() ) {
-            if (sms) {
-                sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, unsigned(outLen));
-                sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, unsigned(outLen));
-            }
-        } else if ( info.getDeliveryMode() != DLVMODE_SMS ) {
-            // ussdpush*
-            if ( outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
-                smsc_log_warn(log_,"ussdpush: max allowed msg len reached: %u",unsigned(outLen));
-                outLen = MAX_ALLOWED_MESSAGE_LENGTH;
-            }
-            if (sms) {
-                sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, unsigned(outLen));
-                sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, unsigned(outLen));
-            }
-        } else {
-            if ( outLen > MAX_ALLOWED_PAYLOAD_LENGTH ) {
-                outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
-            }
-            if (sms) {
-                sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, out, unsigned(outLen));
-            }
-        }
-        
-        const unsigned chunkLen = getCS()->getSlicedMessageSize();
-        unsigned nchunks;
-        if ( chunkLen > 0 && outLen > chunkLen ) {
-            nchunks = unsigned(outLen-1) / chunkLen + 1;
-        } else {
-            nchunks = 1;
-        }
-        return nchunks;
-    } catch ( std::exception& e ) {
-        throw InfosmeException(EXC_IOERROR,"bad msg body: '%s'",outText);
-    }
-    return 0;
-}
- */
 
 
 void RegionalStorage::stopTransfer( bool finalizeAll )
@@ -938,8 +870,9 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
     }
     const msgtime_type period = getCS()->getResendUploadPeriod();
     msgtime_type startTime =
-        ( std::min(currentTimeSeconds(), resendQueue_.begin()->first) +
-          getCS()->getResendMinTimeToUpload() + period*2 - 1 ) % period;
+        std::min(currentTimeSeconds(), resendQueue_.begin()->first) +
+        getCS()->getResendMinTimeToUpload() + period*2 - 1;
+    startTime -= startTime % period;
 
     smsc::core::buffers::TmpBuf<char,8192> buf;
     RelockMutexGuard mg(cacheMon_);
@@ -947,7 +880,12 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
     for ( ResendQueue::iterator prev = resendQueue_.lower_bound(startTime);
           prev != resendQueue_.end(); ) {
         msgtime_type nextTime = startTime + period;
+        if (stopFlag) { break; }
         ResendQueue::iterator next = resendQueue_.lower_bound(nextTime);
+        if ( prev == next ) {
+            startTime = nextTime;
+            continue;
+        }
         MessageList msgList;
         unsigned count = 0;
         for ( ResendQueue::iterator i = prev; i != next; ++i ) {

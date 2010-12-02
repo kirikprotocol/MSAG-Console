@@ -334,38 +334,32 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
         const msgtime_type now = msg.lastTime;
 
         // calculate the validityTime of the message
-        timediff_type validityTime = info.getValidityPeriod();
+        timediff_type validityTime = msg.timeLeft;
 
         if ( validityTime > smscConfig_.maxValidityTime ) {
             validityTime = smscConfig_.maxValidityTime;
-        } else if ( validityTime < smscConfig_.minValidityTime ) {
-            validityTime = smscConfig_.minValidityTime;
-        }
-        if ( validityTime > msg.timeLeft ) {
-            validityTime = msg.timeLeft;
         }
         if ( untilAE && validityTime > untilAE ) {
             validityTime = untilAE;
         }
 
-        smsc_log_debug(log_,"R=%u/D=%u/M=%llu info.VT=%d S.minVT=%d S.maxVT=%d msg.TTL=%d untilAE=%d -> VT=%u",
+        smsc_log_debug(log_,"R=%u/D=%u/M=%llu S.minVT=%d S.maxVT=%d msg.TTL=%d untilAE=%d -> VT=%u",
                        ptr.getRegionId(), info.getDlvId(),
                        ulonglong(msg.msgId),
-                       info.getValidityPeriod(),
                        smscConfig_.minValidityTime,
                        smscConfig_.maxValidityTime,
                        msg.timeLeft,
                        untilAE, validityTime );
 
         if (validityTime < smscConfig_.minValidityTime) {
-            what = "too small validity time by smsc";
+            what = "too small validity time for smsc";
             res = smsc::system::Status::DELIVERYTIMEDOUT;
             break;
         }
 
-        if (validityTime<60) {
-            // less than one minute, cannot send
-            what = "validity time is less than a minute";
+        if (validityTime < 30) {
+            // less than half a minute, cannot send
+            what = "validity time is less than half a minute";
             res = smsc::system::Status::DELIVERYTIMEDOUT;
             break;
         }
@@ -693,9 +687,13 @@ void SmscSender::handleReceipt( smsc::sme::SmppHeader* pdu )
             rd.status = err;
         }
         if ( rd.status == smsc::system::Status::OK ) {
+            if (retry) {
+                rd.status = smsc::system::Status::DELIVERYTIMEDOUT;
+            } else {
+                rd.status = smsc::system::Status::UNKNOWNERR;
+            }
             smsc_log_warn(log_,"S='%s' sms msgid='%s' seq=%u receipt has status=OK but not delivered",
                           smscId_.c_str(), msgid, pdu->get_sequenceNumber());
-            rd.status = smsc::system::Status::UNKNOWNERR;
         }
     }
 
