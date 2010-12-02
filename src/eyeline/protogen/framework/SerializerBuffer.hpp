@@ -129,7 +129,11 @@ public:
   }
   void writeStr(const std::string& value)
   {
-    resize(value.length()*2+lengthTypeSize);
+    resize(value.length()+lengthTypeSize);
+    writeLength((LengthType)value.length());
+    memcpy(buf+pos,value.c_str(),value.length());
+    pos+=value.length();
+    /*
     std::string::const_iterator it=value.begin(),end=value.end();
     writeLength((LengthType)utf8::distance(it,end)*2);
     for(;it!=end;)
@@ -137,6 +141,7 @@ public:
       //writeInt16(btowc((unsigned char)value[i]));
       writeInt16(utf8::next(it,end));
     }
+    */
   }
 
   void writeBool(bool value)
@@ -205,8 +210,9 @@ public:
   }
   static LengthType fieldSize(const std::string& value)
   {
+    return (LengthType)(value.length());
     //return (LengthType)(value.length()*2);
-    return (LengthType)(utf8::distance(value.begin(),value.end())*2);
+    //return (LengthType)(utf8::distance(value.begin(),value.end())*2);
   }
 
   template <class T>
@@ -343,10 +349,11 @@ public:
       throw ReadBeyonEof();
     }
     std::string rv;
-    rv.reserve(length*2);
-    for(int i=0;i<length/2;i++)
+    rv.reserve(length);
+    for(int i=0;i<length;i++)
     {
-      utf8::append(readInt16(),std::back_inserter(rv));
+      //utf8::append(readInt16(),std::back_inserter(rv));
+      rv.append(1,(char)readByte());
     }
     return rv;
   }
@@ -359,10 +366,11 @@ public:
       throw ReadBeyonEof();
     }
     std::string rv;
-    rv.reserve(length*2);
-    for(int i=0;i<length/2;i++)
+    //rv.reserve(length*2);
+    for(int i=0;i<length;i++)
     {
-      utf8::append(readInt16(),std::back_inserter(rv));
+      //utf8::append(readInt16(),std::back_inserter(rv));
+      rv.append(1,(char)readByte());
     }
     return rv;
   }
