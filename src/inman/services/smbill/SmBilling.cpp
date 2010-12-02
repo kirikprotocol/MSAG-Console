@@ -463,8 +463,11 @@ RCHash Billing::startCAPSmTask(void)
     RCHash rval = 0;
     try { //compose InitialDPSMS argument
         switch (_cfgScf->_prm->_capSms.idpLiAddr) {
-        case INParmsCapSms::idpLiSSF:
-            smTask->Arg().setLocationInformationMSC(cfgSS7.ownAddr); break;
+        case INParmsCapSms::idpLiSSF: {
+            smTask->Arg().setLocationInformationMSC(cfgSS7.ownAddr);
+            if (!_cfgScf->_prm->_capSms._cellGId.empty())
+              smTask->Arg().setCellGlobalId(_cfgScf->_prm->_capSms._cellGId);
+        } break;
         case INParmsCapSms::idpLiSMSC:
             smTask->Arg().setLocationInformationMSC(csInfo.smscAddress.c_str()); break;
         default:

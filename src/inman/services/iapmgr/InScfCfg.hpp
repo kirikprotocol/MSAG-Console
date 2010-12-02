@@ -9,6 +9,7 @@
 
 #include "inman/common/RPCList.hpp"
 #include "inman/common/OptionalObjT.hpp"
+#include "inman/common/CellGlobalId.hpp"
 #include "inman/services/iapmgr/SKAlgorithms.hpp"
 
 namespace smsc  {
@@ -16,6 +17,7 @@ namespace inman {
 namespace iapmgr {
 
 using smsc::util::IMSIString;
+using smsc::inman::CellGlobalId;
 using smsc::inman::common::RPCList;
 using smsc::inman::common::RPCListATT;
 
@@ -36,6 +38,8 @@ struct INParmsCapSms {
   RPCList           rejectRPC;    //list of RP causes forcing charging denial because of low balance
   RPCListATT        retryRPC;     //list of RP causes indicating that IN point should be
                                   //interacted again a bit later
+
+  CellGlobalId      _cellGId;     //meamimgfull in case idpLiAddr == idpLiSSF
 
   INParmsCapSms()
     : idpLiAddr(idpLiMSC), idpReqMode(idpReqMT)

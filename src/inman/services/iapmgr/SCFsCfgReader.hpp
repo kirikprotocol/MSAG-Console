@@ -35,6 +35,9 @@ protected:
   unsigned readSrvKeys(XConfigView & scf_cfg, SKAlgorithmsDb & sk_alg)
       throw(ConfigException);
 
+  void readSSFLocationId(XConfigView & cfg_sec, CellGlobalId & cell_gid)
+      throw(ConfigException);
+
   //Reads IN-platform configuration parameters
   void readSCFParms(const char * nm_sec, XConfigView & cfg_sec, INScfParams & in_cfg)
       throw(ConfigException);

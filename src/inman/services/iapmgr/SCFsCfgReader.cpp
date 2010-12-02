@@ -113,6 +113,48 @@ unsigned SCFsCfgReader::readSrvKeys(XConfigView & scf_cfg, SKAlgorithmsDb & sk_a
   return sk_alg.size();
 }
 
+
+void SCFsCfgReader::readSSFLocationId(XConfigView & cfg_sec, CellGlobalId & cell_gid)
+  throw(ConfigException)
+{
+  const char * cstr = NULL;
+
+  try { cstr = cfg_sec.getString("MCC");
+  } catch (const ConfigException & exc) { }
+  if (!cstr || !*cstr)
+    throw ConfigException("%s.MCC value is missing", cfg_sec.relSection());
+  if (!MobileCountryCode::validateChars(cstr))
+    throw ConfigException("%s.MCC value is invalid: ^s", cfg_sec.relSection(), cstr);
+  strncpy(cell_gid._mcc._value, cstr, MobileCountryCode::_MAX_SZ);
+
+  cstr = NULL;
+  try { cstr = cfg_sec.getString("MNC");
+  } catch (const ConfigException & exc) { }
+  if (!cstr || !*cstr)
+    throw ConfigException("%s.MNC value is missing", cfg_sec.relSection());
+  if (!MobileNetworkCode::validateChars(cstr))
+    throw ConfigException("%s.MNC value is invalid: ^s", cfg_sec.relSection(), cstr);
+  strncpy(cell_gid._mnc._value, cstr, MobileNetworkCode::_MAX_SZ);
+  
+  cstr = NULL;
+  try { cstr = cfg_sec.getString("LAC");
+  } catch (const ConfigException & exc) { }
+  if (!cstr || !*cstr)
+    throw ConfigException("%s.LAC value is missing", cfg_sec.relSection());
+  if (!LocationAreaCode::validateChars(cstr))
+    throw ConfigException("%s.LAC value is invalid: ^s", cfg_sec.relSection(), cstr);
+  strncpy(cell_gid._lac._value, cstr, LocationAreaCode::_MAX_SZ);
+
+  cstr = NULL;
+  try { cstr = cfg_sec.getString("CI");
+  } catch (const ConfigException & exc) { }
+  if (!cstr || !*cstr)
+    throw ConfigException("%s.CI value is missing", cfg_sec.relSection());
+  if (!CellIdentity::validateChars(cstr))
+    throw ConfigException("%s.CI value is invalid: ^s", cfg_sec.relSection(), cstr);
+  strncpy(cell_gid._ci._value, cstr, CellIdentity::_MAX_SZ);
+}
+
 //Reads optional IN-platform parameters
 void SCFsCfgReader::readSCFParms(const char * nm_sec, XConfigView & cfg_sec,
                                  INScfParams & in_parms)
@@ -178,6 +220,19 @@ void SCFsCfgReader::readSCFParms(const char * nm_sec, XConfigView & cfg_sec,
   } else
     cstr = (char*)_IDPLIAddr[INParmsCapSms::idpLiMSC];
   smsc_log_info(logger, "  IDPLocationInfo: %s", cstr);
+
+  //check for SSF CellGlobalId
+  if (in_parms._capSms.idpLiAddr == INParmsCapSms::idpLiSSF) {
+    if (cfg_sec.findSubSection("SSFLocationIdentification")) {
+      XConfigView cfgSsfLoc;
+      cfg_sec.getSubConfig(cfgSsfLoc, "SSFLocationIdentification");
+      readSSFLocationId(cfgSsfLoc, in_parms._capSms._cellGId);
+      smsc_log_info(logger, "  SSFLocationIdentification: %s",
+                    in_parms._capSms._cellGId.toString().c_str());
+    } else {
+      smsc_log_info(logger, "  SSFLocationIdentification: <none>", cstr);
+    }
+  }
 
   cstr = NULL;
   try { cstr = cfg_sec.getString("IDPReqMode");
