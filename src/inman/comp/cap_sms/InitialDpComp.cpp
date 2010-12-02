@@ -51,11 +51,14 @@ public:
     OCTET_STRING_DECL(_vlrNumber, sizeof(TONNPI_ADDRESS_OCTS));
     OCTET_STRING_DECL(_locNumber, sizeof(LOCATION_ADDRESS_OCTS));
     CellGlobalIdOrServiceAreaIdOrLAI_t	_cGidOrSAIorLAI;
-    unsigned char			_cGidOrSAIfl[7];
+    unsigned char			_cGidOrSAIfl_buf[7];
 
     PrivateInitialDPSMSArg(void)
     {
-        memset(&idp, 0, sizeof(idp)); //clear _asn_ctx & optionals
+      //clear _asn_ctx & optionals
+      memset(&idp, 0, sizeof(idp)); 
+      memset(&_li, 0, sizeof(_li));
+      memset(&_cGidOrSAIorLAI, 0, sizeof(_cGidOrSAIorLAI));
     }
     ~PrivateInitialDPSMSArg()
     { }
@@ -220,7 +223,6 @@ void SMSInitialDPArg::setLocationInformationMSC(const TonNpiAddress& sadr) throw
         throw CustomException(-1, "IDPSmsArg: invalid VLR address",
                               addr.toString().c_str());
 
-    memset(&(comp->_li), 0, sizeof(comp->_li)); //reset _asn_ctx & optionals
     Address2OCTET_STRING(comp->_vlrNumber, addr);
     comp->_li.vlr_number = &(comp->_vlrNumber);
     /**/
@@ -229,23 +231,8 @@ void SMSInitialDPArg::setLocationInformationMSC(const TonNpiAddress& sadr) throw
     if (comp->_locNumber.size)
         comp->_li.locationNumber = &(comp->_locNumber);
     /**/
-    //reset _asn_ctx & optionals
-    memset(&(comp->_cGidOrSAIorLAI), 0, sizeof(comp->_cGidOrSAIorLAI));
-/*
-    comp->_cGidOrSAIorLAI.present =
-        CellGlobalIdOrServiceAreaIdOrLAI_PR_cellGlobalIdOrServiceAreaIdFixedLength;
-
-    static const uint8_t _cgidorsaifl1_buf[] = { 0x52, 0xf0, 0x10, 0x97, 0xFE, 0x13, 0x89 };
-
-    comp->_cGidOrSAIorLAI.choice.cellGlobalIdOrServiceAreaIdFixedLength.size = 7;
-    comp->_cGidOrSAIorLAI.choice.cellGlobalIdOrServiceAreaIdFixedLength.buf  =
-								comp->_cGidOrSAIfl;
-    memcpy(comp->_cGidOrSAIorLAI.choice.cellGlobalIdOrServiceAreaIdFixedLength.buf,
-							_cgidorsaifl1_buf, 7);
-    comp->_li.cellGlobalIdOrServiceAreaIdOrLAI = &(comp->_cGidOrSAIorLAI);
-*/
-    /**/
-    comp->idp.locationInformationMSC = &(comp->_li);
+    if (!comp->idp.locationInformationMSC)
+      comp->idp.locationInformationMSC = &(comp->_li);
 }
 
 void SMSInitialDPArg::setLocationInformationMSC(const char* text) throw(CustomException)
@@ -255,6 +242,28 @@ void SMSInitialDPArg::setLocationInformationMSC(const char* text) throw(CustomEx
         throw CustomException(-1, "IDPSmsArg: invalid VLR address",
                               sadr.toString().c_str());
     SMSInitialDPArg::setLocationInformationMSC(sadr);
+}
+
+void SMSInitialDPArg::setCellGlobalId(const CellGlobalId & cell_gid) throw(CustomException)
+{
+  if (!cell_gid.validate())
+    throw CustomException(-1, "IDPSmsArg: invalid CellGlobalId",
+                              cell_gid.toString().c_str());
+
+  //static const uint8_t _cgidorsaifl1_buf[] = { 0x52, 0xf0, 0x10, 0x97, 0xFE, 0x13, 0x89 };
+  //memcpy(comp->_cGidOrSAIfl_buf, _cgidorsaifl1_buf, 7);
+  cell_gid.pack2Octs(comp->_cGidOrSAIfl_buf);
+
+  comp->_cGidOrSAIorLAI.present =
+    CellGlobalIdOrServiceAreaIdOrLAI_PR_cellGlobalIdOrServiceAreaIdFixedLength;
+  comp->_cGidOrSAIorLAI.choice.
+    cellGlobalIdOrServiceAreaIdFixedLength.size = 7;
+  comp->_cGidOrSAIorLAI.choice.
+    cellGlobalIdOrServiceAreaIdFixedLength.buf = comp->_cGidOrSAIfl_buf;
+
+  comp->_li.cellGlobalIdOrServiceAreaIdOrLAI = &(comp->_cGidOrSAIorLAI);
+  if (!comp->idp.locationInformationMSC)
+    comp->idp.locationInformationMSC = &(comp->_li);
 }
 
 void SMSInitialDPArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)

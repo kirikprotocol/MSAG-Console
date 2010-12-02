@@ -10,13 +10,11 @@
 #include <map>
 
 #include "logger/Logger.h"
-using smsc::logger::Logger;
-
 #include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
 
 #include "inman/comp/compdefs.hpp"
 #include "inman/comp/CapOpErrors.hpp"
+#include "inman/common/CellGlobalId.hpp"
 
 /* GVR NOTE: while linking the below enums are taken from generated
  * asn1/c codec, so they should not have namespace prefix.
@@ -57,6 +55,9 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
+using smsc::logger::Logger;
+using smsc::util::TonNpiAddress;
+using smsc::inman::CellGlobalId;
 
 extern const char * _nmMonitorMode(enum MonitorMode m_mode);
 extern const char * _nmEventTypeSMS(enum EventTypeSMS event);
@@ -165,6 +166,8 @@ public:
 
     void setLocationInformationMSC(const TonNpiAddress& addr) throw(CustomException);
     void setLocationInformationMSC(const char* text) throw(CustomException);
+
+    void setCellGlobalId(const CellGlobalId & cell_gid) throw(CustomException);
 
     virtual void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
