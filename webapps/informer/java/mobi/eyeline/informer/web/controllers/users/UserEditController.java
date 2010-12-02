@@ -155,47 +155,12 @@ public class UserEditController extends UserController {
       }
 
 
-        List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
-        for(DynamicTableRow row : dynamicSfptModel.getRows()) {
-           UserCPsettings ucps = new UserCPsettings();
-           ucps.setProtocol(UserCPsettings.Protocol.sftp);
-           ucps.setHost((String)row.getValue("host"));
-           String sPort = (String)row.getValue("port");
-           ucps.setPort( (sPort==null || sPort.length()==0) ? null : Integer.valueOf(sPort));
-           ucps.setLogin((String) row.getValue("login"));
-           ucps.setPassword((String) row.getValue("password"));
-           ucps.setDirectory((String) row.getValue("directory"));
-           ucps.setEncoding((String) row.getValue("encoding"));
-           try {
-            ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
-           }
-           catch (IllegalArgumentException e) {
-            addLocalizedMessage(FacesMessage.SEVERITY_ERROR,"user.edit.invalid.sourceAddress",row.getValue("sourceAddress"));
-            return null;
-           }
-           ucps.checkValid();
-
-           cpSettings.add(ucps);
-        }
-        for(DynamicTableRow row : dynamicFileModel.getRows()) {
-           UserCPsettings ucps = new UserCPsettings();
-           ucps.setProtocol(UserCPsettings.Protocol.file);
-           ucps.setDirectory((String) row.getValue("directory"));
-           ucps.setEncoding((String) row.getValue("encoding"));
-           try {
-            ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
-           }
-           catch (IllegalArgumentException e) {
-             addLocalizedMessage(FacesMessage.SEVERITY_ERROR,"user.edit.invalid.sourceAddress",row.getValue("sourceAddress"));
-             return null;
-           }
-           ucps.checkValid();
-
-           cpSettings.add(ucps);
-        }
-
-        userToEdit.setCpSettings(cpSettings.isEmpty()?null:cpSettings);
-
+      List<UserCPsettings> cpSettings = buildUCPSList();
+      userToEdit.setCpSettings(cpSettings.isEmpty()?null:cpSettings);
+    }
+    catch (IllegalArgumentException e) {
+      addLocalizedMessage(FacesMessage.SEVERITY_ERROR,"user.edit.invalid.sourceAddress",e.getMessage());
+      return null;
     }
     catch (AdminException e) {
       addError(e);
@@ -204,21 +169,58 @@ public class UserEditController extends UserController {
     return "USERS";  //To change body of created methods use File | Settings | File Templates.
   }
 
+  private List<UserCPsettings> buildUCPSList() throws AdminException,IllegalArgumentException {
+    List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
+    for(DynamicTableRow row : dynamicSfptModel.getRows()) {
+       UserCPsettings ucps = new UserCPsettings();
+       ucps.setProtocol(UserCPsettings.Protocol.sftp);
+       ucps.setHost((String)row.getValue("host"));
+       String sPort = (String)row.getValue("port");
+       ucps.setPort( (sPort==null || sPort.length()==0) ? null : Integer.valueOf(sPort));
+       ucps.setLogin((String) row.getValue("login"));
+       ucps.setPassword((String) row.getValue("password"));
+       ucps.setDirectory((String) row.getValue("directory"));
+       ucps.setEncoding((String) row.getValue("encoding"));
+       ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
+       ucps.checkValid();
+       cpSettings.add(ucps);
+    }
+    for(DynamicTableRow row : dynamicFileModel.getRows()) {
+       UserCPsettings ucps = new UserCPsettings();
+       ucps.setProtocol(UserCPsettings.Protocol.file);
+       ucps.setDirectory((String) row.getValue("directory"));
+       ucps.setEncoding((String) row.getValue("encoding"));
+       ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
+       ucps.checkValid();
+       cpSettings.add(ucps);
+    }
+    return cpSettings;
+  }
+
   public User getUserToEdit() {
     return userToEdit;
   }
 
   public String verifyUcps() {
-    List<UserCPsettings> ucpsList = userToEdit.getCpSettings();
-    if(ucpsList!=null) {
-      for(UserCPsettings ucps : ucpsList) {
-        try {
-            getConfig().verifyCPSettings(userToEdit,ucps  );
-        }
-        catch (AdminException e) {
-          addLocalizedMessage(FacesMessage.SEVERITY_WARN,"user.edit.connect.fail",ucps.toString());
+    try {
+      List<UserCPsettings> ucpsList = buildUCPSList();
+      if(ucpsList!=null) {
+        for(UserCPsettings ucps : ucpsList) {
+          try {
+              getConfig().verifyCPSettings(userToEdit,ucps  );
+          }
+          catch (AdminException e) {
+            addLocalizedMessage(FacesMessage.SEVERITY_WARN,"user.edit.connect.fail",ucps.toString());
+          }
         }
       }
+    }
+    catch (IllegalArgumentException e) {
+      addLocalizedMessage(FacesMessage.SEVERITY_ERROR,"user.edit.invalid.sourceAddress",e.getMessage());
+      return null;
+    }
+    catch (AdminException  e)  {
+      addError(e);
     }
     return null;
   }
