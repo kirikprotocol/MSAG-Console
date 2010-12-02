@@ -169,7 +169,9 @@ public class CdrDaemon implements DeliveryChangeListener{
 
   private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
-  private String currentDate;
+  private SimpleDateFormat rollSdf = new SimpleDateFormat("yyyyMMddHHmm");
+
+  private String currentFileDate;
   private File currentFile;
 
 
@@ -254,15 +256,15 @@ public class CdrDaemon implements DeliveryChangeListener{
       }
     }
 
-    String date = sdf.format(e.getEventDate());
+    String date = rollSdf.format(e.getEventDate());
 
     try{
       writeLock.lock();
-      if(writer == null || currentDate == null || !currentDate.equals(date)) {
+      if(writer == null || currentFileDate == null || !currentFileDate.equals(date)) {
         if(writer != null) {
           writer.close();
         }
-        currentDate = date;
+        currentFileDate = date;
         currentFile = new File(workDir, date+".csv");
         writer =  new PrintWriter(new BufferedWriter(
             new OutputStreamWriter(fs.getOutputStream(currentFile, true))));

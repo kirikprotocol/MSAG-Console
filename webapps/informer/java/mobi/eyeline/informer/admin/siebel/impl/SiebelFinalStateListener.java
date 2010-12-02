@@ -4,7 +4,9 @@ import com.eyeline.utils.FileUtils;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.UserDataConsts;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
+import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
@@ -97,14 +99,19 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   private void messageFinished(ChangeMessageStateEvent stateEvent) throws AdminException {
     if(stop) {
+      logger.warn("Listener is stopped, can't process event");
       return;
     }
     if (stateEvent.getProperties() == null) {
+      if(logger.isDebugEnabled()) {
+        logger.debug("Event doesn't contains userData, skip it: "+stateEvent);
+      }
       return;
     }
     switch (stateEvent.getMessageState()) {
       case New:
       case Process:
+        logger.warn("Message state is "+stateEvent.getMessageState()+". Skip it: "+stateEvent);
         return;
     }
 
@@ -112,6 +119,9 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
     String clcId = userData.getProperty(UserDataConsts.SIEBEL_MESSAGE_ID);
     if (clcId == null) {
+      if(logger.isDebugEnabled()) {
+        logger.debug("Message is not a siebel message. Skip it : "+stateEvent);
+      }
       return;
     }
     MessageState state = stateEvent.getMessageState();
@@ -121,6 +131,8 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
       if(!stop) {
         writer.println(StringEncoderDecoder.toCSVString(0, clcId, state, errCode));
         writer.flush();
+      }else {
+        logger.warn("Listener is stopped, can't process event");
       }
     } finally {
       writeUnlock();
@@ -129,6 +141,7 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   private void deliveryFinished(ChangeDeliveryStatusEvent stateEventChange) throws AdminException {
     if(stop) {
+      logger.warn("Listener is stopped, can't process event");
       return;
     }
     User u = users.getUser(stateEventChange.getUserId());
@@ -139,6 +152,9 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
     Delivery d = deliveries.getDelivery(u.getLogin(), u.getPassword(), stateEventChange.getDeliveryId());
     String waveId;
     if (d != null && (waveId = d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID)) != null) {
+      if(logger.isDebugEnabled()) {
+        logger.debug("Siebel delivery is finalized. WaveId="+waveId);
+      }
       try {
         writeLock();
         if(!stop) {

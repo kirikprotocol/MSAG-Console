@@ -66,4 +66,20 @@ public class ChangeMessageStateEvent  {
   public String getUserId() {
     return userId;
   }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append("ChangeMessageStateEvent");
+    sb.append("{eventDate=").append(eventDate);
+    sb.append(", deliveryId=").append(deliveryId);
+    sb.append(", userId='").append(userId).append('\'');
+    sb.append(", messageId=").append(messageId);
+    sb.append(", messageState=").append(messageState);
+    sb.append(", smppStatus=").append(smppStatus);
+    sb.append(", address=").append(address);
+    sb.append(", properties=").append(properties);
+    sb.append('}');
+    return sb.toString();
+  }
 }
