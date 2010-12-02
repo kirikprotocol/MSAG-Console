@@ -981,11 +981,11 @@ public class AdminContext {
     contentProviderDaemon.verifyConnection(u,ucps);
   }
 
-  public void testEmailNotification(User user, String email, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
-    deliveryNotificationsDaemon.testEmailNotification(user,email,javaMailProps, notificationTemplates);
+  public void sendTestEmailNotification(User user, String email, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
+    deliveryNotificationsDaemon.sendTestEmailNotification(user,email,javaMailProps, notificationTemplates);
   }
-  public void testSMSNotification(User user, Address address, DeliveryStatus status, Properties notificationTemplates) throws AdminException {
-    deliveryNotificationsDaemon.testSMSNotification(user,address,status,notificationTemplates);  
+  public void sendTestSMSNotification(User user, Address address, DeliveryStatus status, Properties notificationTemplates) throws AdminException {
+    deliveryNotificationsDaemon.sendTestSMSNotification(user,address,status,notificationTemplates);
   }
 
   protected static class SiebelUserManagerImpl implements SiebelUserManager {

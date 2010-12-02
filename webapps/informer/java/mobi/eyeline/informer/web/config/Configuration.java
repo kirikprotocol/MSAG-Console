@@ -473,12 +473,12 @@ public class Configuration {
     return context.isAllowUssdPushDeliveries();
   }
 
-  public void testEmailNotification(User user, String email, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
-    context.testEmailNotification(user,email,javaMailProps, notificationTemplates);
+  public void sendTestEmailNotification(User user, String email, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
+    context.sendTestEmailNotification(user,email,javaMailProps, notificationTemplates);
   }
 
-  public void testSmsNotification(User user, Address address, DeliveryStatus status, Properties templates) throws AdminException {
-    context.testSMSNotification(user,address,status,templates);  
+  public void sendTestSmsNotification(User user, Address address, DeliveryStatus status, Properties templates) throws AdminException {
+    context.sendTestSMSNotification(user,address,status,templates);  
   }
 
   private final Lock lock = new ReentrantLock();

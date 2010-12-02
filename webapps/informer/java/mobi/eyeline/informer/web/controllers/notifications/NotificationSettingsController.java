@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationTemplatesConstants;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -139,15 +138,15 @@ public class NotificationSettingsController extends InformerController {
     this.testEmail = testEmail;
   }
 
-  public String testEmail() {
-    if(testAddress==null) {
+  public String sendTestEmail() {
+    if(testEmail==null) {
       addMessage(FacesMessage.SEVERITY_WARN,"notifications.test.email.required");
       return null;
     }
     try {
       User user = getConfig().getUser(getUserName());
-      getConfig().testEmailNotification(user,testEmail,javaMailProps,notificationTemplates);
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO,"notifications.test.ok",testEmail());
+      getConfig().sendTestEmailNotification(user,testEmail,javaMailProps,notificationTemplates);
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO,"notifications.test.ok",testEmail);
     }
     catch (AdminException e) {
       addError(e);
@@ -155,23 +154,23 @@ public class NotificationSettingsController extends InformerController {
     return null;
   }
 
-  public Address getTestSmsAddress() {
-    return testAddress;
+  public String getTestSmsAddress() {
+    return testAddress==null ? null : testAddress.getSimpleAddress();
   }
 
   public void setTestSmsAddress(String testAddress) {
     this.testAddress  = (testAddress==null || testAddress.length()==0) ?  null:new Address(testAddress);
   }
 
-  public String testSms() {
+  public String sendTestSms() {
     if(testAddress==null) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN,"notifications.test.address.required");
       return null;
     }
     try {
       User user = getConfig().getUser(getUserName());
-      getConfig().testSmsNotification(user,testAddress, DeliveryStatus.Active,notificationTemplates);
-      getConfig().testSmsNotification(user,testAddress, DeliveryStatus.Finished,notificationTemplates);
+      getConfig().sendTestSmsNotification(user,testAddress, DeliveryStatus.Active,notificationTemplates);
+      getConfig().sendTestSmsNotification(user,testAddress, DeliveryStatus.Finished,notificationTemplates);
       addLocalizedMessage(FacesMessage.SEVERITY_INFO,"notifications.test.ok",testAddress.getSimpleAddress());
     }
     catch (AdminException e) {

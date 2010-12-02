@@ -126,7 +126,7 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
       );
   }
 
-  public void testEmailNotification(User user, String toEmail, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
+  public void sendTestEmailNotification(User user, String toEmail, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
     try {
       AggregatedEmailNotificationTask task = new AggregatedEmailNotificationTask(toEmail, user, javaMailProps, notificationTemplates);
       task.addNotification(new ChangeDeliveryStatusEvent(DeliveryStatus.Active,new Date(),1,user.getLogin())
@@ -140,7 +140,7 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
     }
   }
 
-  public void testSMSNotification(User user, Address toAddress, DeliveryStatus status, Properties notificationTemplates) throws AdminException {
+  public void sendTestSMSNotification(User user, Address toAddress, DeliveryStatus status, Properties notificationTemplates) throws AdminException {
     try {
       ChangeDeliveryStatusEvent event = new ChangeDeliveryStatusEvent(status,new Date(),1,user.getLogin());
       SMSNotificationTask task = new SMSNotificationTask(toAddress,user,event,status==DeliveryStatus.Active ? "SmsTestActivate":"SmsTestFinished",notificationTemplates);
@@ -228,7 +228,6 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
     }
 
     public void addNotification(ChangeDeliveryStatusEvent n, String deliveryName) {
-      Properties templates = context.getNotificationTemplates();
 
       String template = n.getStatus() == DeliveryStatus.Active
           ?

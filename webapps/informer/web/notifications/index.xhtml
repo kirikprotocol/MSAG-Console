@@ -47,12 +47,10 @@
 
           <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.testSMS']}"/>
           <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <tr:inputText id="testEmail" value="#{notificationSettings.testSmsAddress}" simple="true" required="false">
-              <eye:validateEmail/>
+          <tr:inputText id="testSmsAddr" value="#{notificationSettings.testSmsAddress}" simple="true" required="false">
+              <eye:validatePhone/>
           </tr:inputText>
-          <eye:button>
-              <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.testSms}"/>
-          </eye:button>
+          <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.sendTestSms}" styleClass="linkButton"/>
           </h:panelGrid>
 
         </h:panelGrid>
@@ -97,12 +95,10 @@
 
           <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.testEmail']}"/>
           <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <tr:inputText id="testEmail" value="#{notificationSettings.testEmailAddr}" simple="true" required="false">
+          <tr:inputText id="testEmailAddr" value="#{notificationSettings.testEmailAddr}" simple="true" required="false">
               <eye:validateEmail/>
           </tr:inputText>
-          <eye:button>
-              <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.testEmail}"/>
-          </eye:button>
+          <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.sendTestEmail}" styleClass="linkButton"/>
           </h:panelGrid>
 
         </h:panelGrid>
