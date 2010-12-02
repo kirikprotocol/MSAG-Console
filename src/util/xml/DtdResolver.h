@@ -69,15 +69,16 @@ private:
 
   DOMInputSource * createInputSource(const XMLCh * const dtdName)
   {
-    const char prefixChars[] = "../conf/";
+    // const char prefixChars[] = "../conf/";
 
     DOMInputSource * result = 0;
-    if (result = tryPrefix(dtdName, "../conf/"))
+    if ((result = tryPrefix(dtdName, "../conf/"))) {
       return result;
-    else if (result = tryPrefix(dtdName, "conf/"))
+    } else if ((result = tryPrefix(dtdName, "conf/"))) {
       return result;
-    else
+    } else {
       return new Wrapper4InputSource(new LocalFileInputSource(dtdName));
+    }
   }
 };
 

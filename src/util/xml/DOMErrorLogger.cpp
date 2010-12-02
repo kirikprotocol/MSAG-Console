@@ -34,7 +34,7 @@ bool DOMErrorLogger::handleError(const DOMError &domError)
   XMLString::release(&uri);
   XMLString::release(&message);
 
-  if (domError.getSeverity() >= _throwLvl)
+  if (domError.getSeverity() >= int(_throwLvl))
     throw exc;
   return false;
 }
