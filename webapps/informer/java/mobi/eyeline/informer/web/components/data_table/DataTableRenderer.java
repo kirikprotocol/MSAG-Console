@@ -202,9 +202,9 @@ public class DataTableRenderer extends Renderer {
     int rowsCount = m.getRowsCount();
     if (rowsCount > t.getPageSize()) {
 
-      w.append("<td class=\"first\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(0)\"><img src=\"" + ctxPath + "/images/nav_first.gif\" width=\"12\" height=\"11\"></a></td>");
+      w.append("<td class=\"first\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(0)\"><img src=\"" + ctxPath + "/images/nav_first.gif\" width=\"12\" height=\"11\"/></a></td>");
       if (t.getCurrentPage() > 0)
-        w.append("<td class=\"prev\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() - 1) + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"></a></td>");
+        w.append("<td class=\"prev\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() - 1) + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"/></a></td>");
 
       int numberOfPages = rowsCount / t.getPageSize();
       if (t.getPageSize() * numberOfPages == rowsCount)
@@ -217,9 +217,9 @@ public class DataTableRenderer extends Renderer {
         w.append("<td class=\"" + (i == t.getCurrentPage() ? "current" : "page") + "\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + i + ")\">" + (i + 1) + "</a></td>");
 
       if (t.getCurrentPage() < numberOfPages)
-        w.append("<td class=\"next\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() + 1) + ")\"><img src=\"" + ctxPath + "/images/nav_next.gif\" width=\"12\" height=\"11\"></a></td>");
+        w.append("<td class=\"next\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() + 1) + ")\"><img src=\"" + ctxPath + "/images/nav_next.gif\" width=\"12\" height=\"11\"/></a></td>");
 
-      w.append("<td class=\"last\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + numberOfPages + ")\"><img src=\"" + ctxPath + "/images/nav_last.gif\" width=\"12\" height=\"11\"></a></td>");
+      w.append("<td class=\"last\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + numberOfPages + ")\"><img src=\"" + ctxPath + "/images/nav_last.gif\" width=\"12\" height=\"11\"/></a></td>");
     }
 
     ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot() != null ? context.getViewRoot().getLocale() : context.getExternalContext().getRequestLocale());
