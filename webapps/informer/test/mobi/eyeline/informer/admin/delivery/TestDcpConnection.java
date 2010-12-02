@@ -422,6 +422,14 @@ public class TestDcpConnection extends DcpConnection{
     return result.size() == pieceSize;
   }
 
+  synchronized void forceActivate() throws AdminException {
+    for(Delivery d : deliveries.values()) {
+      if(d.getStatus() == DeliveryStatus.Planned) {
+        d.setStatus(DeliveryStatus.Active);
+      }
+    }     
+  }
+
 
   @SuppressWarnings({"EmptyCatchBlock"})
   synchronized void modifyAll() throws AdminException {

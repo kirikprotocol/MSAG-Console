@@ -22,5 +22,9 @@ public class TestDeliveryManager extends DeliveryManager{
   void forceModifyDeliveries() throws AdminException {
     connection.modifyAll();
   }
+
+  void forceActivatePlannedDeliveries() throws AdminException {
+    connection.forceActivate();
+  }
   
 }
