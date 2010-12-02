@@ -143,7 +143,7 @@ public:
                 break;
             }
             if (resp->getStatus() == scag2::pvss::StatusType::PROPERTY_NOT_FOUND ) {
-                smsc_log_info(log_,"PVSS property not found, ok");
+                smsc_log_debug(log_,"PVSS property not found, ok");
                 pbr->getMsg().timeLeft = 1;
                 return;
             }
@@ -754,6 +754,7 @@ void InfosmeCoreV1::startPvssCheck( Message& msg )
     scag2::pvss::PvssException exc;
 
     int pass = 0;
+    static smsc::core::synchronization::EventMonitor emon;
     while ( true ) {
         if ( stopping_ ) {
             msg.timeLeft = 1;
@@ -761,7 +762,11 @@ void InfosmeCoreV1::startPvssCheck( Message& msg )
         }
         try {
 
-            if ( ! pvss_->canProcessRequest(&exc) ) { throw exc; }
+            if ( ! pvss_->canProcessRequest(&exc) ) {
+                MutexGuard mg(emon);
+                emon.wait(10);
+                continue;
+            }
 
             char buf[30];
             uint8_t ton,npi,len;
@@ -782,7 +787,8 @@ void InfosmeCoreV1::startPvssCheck( Message& msg )
                 smsc_log_debug(log_,"PVSS start proc exc: %s", e.what() );
                 ++pass;
             }
-            smsc::core::threads::Thread::Yield();
+            MutexGuard mg(emon);
+            emon.wait(10);
         }
     }
 }
@@ -1057,6 +1063,19 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
         }
         (*i)->addDelivery(*rptr.get());
     }
+}
+
+
+void InfosmeCoreV1::initUserStats()
+{
+    char* userid;
+    UserInfoPtr* ptr;
+    UserDlvStats ds;
+    MutexGuard mg(userLock_);
+    for ( smsc::core::buffers::Hash<UserInfoPtr>::Iterator i(&users_); i.Next(userid,ptr); ) {
+        ptr->get()->popIncrementalStats(ds);
+    }
+    smsc_log_debug(log_,"user stats cleared");
 }
 
 

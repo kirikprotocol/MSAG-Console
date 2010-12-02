@@ -93,11 +93,13 @@ public:
     /// return active period end in seconds since midnight (localtime) or -1
     inline timediff_type getActivePeriodEnd() const { return activePeriodEnd_; }
 
-    // return active week days or -1
-    // int getActiveWeekDays() const { return activeWeekDays_; }
-
     /// check activity time
     bool checkActiveTime( int weekTime ) const;
+
+    /// evaluate the number of chunks in sms, fills sms fields (optional)
+    unsigned evaluateNchunks( const char*     text,
+                              size_t          textlen,
+                              smsc::sms::SMS* sms = 0 ) const;
 
     /// get validity period or -1
     inline timediff_type getValidityPeriod() const { return validityPeriod_; }

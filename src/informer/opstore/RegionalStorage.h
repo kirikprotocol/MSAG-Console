@@ -108,11 +108,6 @@ public:
     /// into newQueue and resendQueue.
     bool postInit();
 
-    /// evaluate a number of chunks, fills sms fields
-    unsigned evaluateNchunks( const char*     out,
-                              size_t          outLen,
-                              smsc::sms::SMS* sms = 0 ) const;
-
 protected:
     /// invoked when upload task has finished.
     virtual void transferFinished( InputTransferTask* );

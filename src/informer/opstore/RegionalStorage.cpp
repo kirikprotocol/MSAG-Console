@@ -1,7 +1,6 @@
 #include <cassert>
 #include "RegionalStorage.h"
 #include "informer/io/UnlockMutexGuard.h"
-#include "informer/io/UTF8.h"
 #include "informer/io/FileReader.h"
 #include "informer/io/DirListing.h"
 #include "informer/data/CommonSettings.h"
@@ -11,8 +10,8 @@
 #include "informer/data/RetryPolicy.h"
 #include "DeliveryImpl.h"
 #include "StoreJournal.h"
-#include "util/smstext.h"
-#include "sms/sms.h"
+// #include "util/smstext.h"
+// #include "sms/sms.h"
 
 namespace eyeline {
 namespace informer {
@@ -21,9 +20,11 @@ class RegionalStorage::MsgLock
 {
 public:
     /// it also move iter
-    MsgLock(MsgIter iter, RegionalStorage* s) :
+    MsgLock(MsgIter iter, RegionalStorage* s, RelockMutexGuard& rmg,
+            bool unlock = true ) :
     iter_(iter),
-    rs_(s)
+    rs_(s),
+    rmg_(rmg)
     {
         // rs must be locked
         if (iter->serial == MessageLocker::lockedSerial) {
@@ -44,17 +45,20 @@ public:
             // moving iter before begin
             l.splice(l.begin(),l,iter);
         }
+        if (unlock) { rmg.Unlock(); }
     }
 
     ~MsgLock()
     {
-        MutexGuard mg(rs_->cacheMon_);
+        rmg_.Lock();
         iter_->serial = serial;
         rs_->getCnd(iter_).Signal();
     }
+
 private:
-    MsgIter          iter_;
-    RegionalStorage* rs_;
+    MsgIter           iter_;
+    RegionalStorage*  rs_;
+    RelockMutexGuard& rmg_;
 public:
     // used to pass to journal
     regionid_type    serial;
@@ -313,8 +317,7 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
         }
     }
 
-    MsgLock ml(iter,this);
-    mg.Unlock();
+    MsgLock ml(iter,this,mg);
 
     Message& m = iter->msg;
     m.lastTime = currentTime;
@@ -350,8 +353,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
                                unsigned(info.getDlvId()),
                                ulonglong(msgId));
     }
-    MsgLock ml(*ptr,this);
-    mg.Unlock();
+    MsgLock ml(*ptr,this,mg);
     Message& m = (*ptr)->msg;
     m.lastTime = currentTime;
     const uint8_t prevState = m.state;
@@ -425,7 +427,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
     if ( m.timeLeft > getCS()->getRetryMinTimeToLive() ) {
         // there is enough validity time to try the next time
 
-        MsgLock ml(iter,this);
+        MsgLock ml(iter,this,mg,false);
         if ( m.timeLeft < retryDelay ) retryDelay = m.timeLeft;
         m.timeLeft -= retryDelay;
         m.lastTime = currentTime + retryDelay;
@@ -490,15 +492,17 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
 {
     const dlvid_type dlvId = dlv_->getDlvId();
     MessageList tokill;
-    MsgLock ml(iter,this);
+    MsgLock ml(iter,this,mg,false);
     tokill.splice(tokill.begin(),messageList_,iter);
     const bool checkFinal = messageList_.empty() && !nextResendFile_;
     mg.Unlock();
     Message& m = iter->msg;
+    /*
     if (!nchunks) {
         const char* text = m.text.getText();
         nchunks = evaluateNchunks(text,strlen(text));
     }
+     */
     m.lastTime = currentTime;
     m.timeLeft = 0;
     m.retryCount = nchunks;
@@ -526,6 +530,7 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
 }
 
 
+/*
 unsigned RegionalStorage::evaluateNchunks( const char*     outText,
                                            size_t          outLen,
                                            smsc::sms::SMS* sms ) const
@@ -581,6 +586,7 @@ unsigned RegionalStorage::evaluateNchunks( const char*     outText,
     }
     return 0;
 }
+ */
 
 
 void RegionalStorage::stopTransfer( bool finalizeAll )
@@ -623,17 +629,14 @@ size_t RegionalStorage::rollOver()
         if ( iter == messageList_.end() ) break;
         ++storingIter_;
         {
-            MsgLock ml(iter,this);
-            mg.Unlock();
+            MsgLock ml(iter,this,mg);
             written += dlv_->storeJournal_.journalMessage(info.getDlvId(),
                                                          regionId_,iter->msg,ml.serial);
         }
         if ( dlv_->source_->getDlvActivator().isStopping() ) {
-            mg.Lock();
             storingIter_ = messageList_.end();
             break;
         }
-        mg.Lock();
         // FIXME: optimize calculate delay based on throughput restriction
         cacheMon_.wait(30); 
     }
@@ -841,6 +844,8 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                         i = msgList.erase(i);
                     } else {
                         ++i;
+                        // FIXME: we have to insert into resendQueue here to make sure
+                        // that we don't have duplicate entries in the file.
                     }
                 }
             }
@@ -858,6 +863,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
 
                 mg.Lock();
                 for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
+                    // FIXME: move this code above (see upper FIXME)
                     resendQueue_.insert( std::make_pair(i->msg.lastTime,i));
                 }
                 messageList_.splice(messageList_.begin(), msgList, msgList.begin(), msgList.end());
@@ -886,13 +892,31 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
 
     if ( resendQueue_.empty() ) return;
     const msgtime_type period = getCS()->getResendUploadPeriod();
-    const msgtime_type startTime =
+    msgtime_type startTime =
         ( std::min(currentTimeSeconds(), resendQueue_.begin()->first) +
           getCS()->getResendMinTimeToUpload() + period*2 - 1 ) % period;
     RelockMutexGuard mg(cacheMon_);
     StopRollingGuard srg(mg,stopRolling_,false);
-    ResendQueue::iterator iter = resendQueue_.lower_bound(startTime);
-    if ( iter == resendQueue_.end() ) return;
+    for ( ResendQueue::iterator prev = resendQueue_.lower_bound(startTime);
+          prev != resendQueue_.end(); ) {
+        msgtime_type nextTime = startTime + period;
+        ResendQueue::iterator next = resendQueue_.lower_bound(nextTime);
+        MessageList msgList;
+        for ( ResendQueue::iterator i = prev; i != next; ++i ) {
+            MsgLock ml(i->second,this,mg,false);
+            // the iterator is locked here
+            msgList.splice(msgList.end(),messageList_,i->second);
+        }
+        resendQueue_.erase(prev,next);
+        try {
+            // FIXME: writing msgList to next resend file
+        } catch ( std::exception& e ) {
+            // FIXME: restore resend queue from msgList
+            throw;
+        }
+        startTime = nextTime;
+        prev = next;
+    }
 }
 
 

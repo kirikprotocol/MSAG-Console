@@ -247,6 +247,22 @@ public:
     mgr_(mgr), log_(smsc::logger::Logger::getInstance("statdump")) {}
     ~StatsDumper() { WaitFor(); }
 
+
+    void init()
+    {
+        // cleaning the statistics
+        mgr_.cs_.flipStatBank();
+        mgr_.core_.initUserStats();
+        DeliveryStats ds;
+        MutexGuard mg(mgr_.mon_);
+        for ( DeliveryList::iterator i = mgr_.deliveryList_.begin();
+              i != mgr_.deliveryList_.end(); ++i ) {
+            (*i)->popIncrementalStats(ds);
+        }
+        smsc_log_debug(log_,"stats dumper inited");
+    }
+
+
     virtual int Execute()
     {
         smsc_log_debug(log_,"stats dumper started");
@@ -471,6 +487,7 @@ void DeliveryMgr::init()
     inputRoller_ = new InputJournalRoller(*this);
     storeRoller_ = new StoreJournalRoller(*this);
     statsDumper_ = new StatsDumper(*this);
+    statsDumper_->init();
     smsc_log_debug(log_,"--- init done ---");
 }
 

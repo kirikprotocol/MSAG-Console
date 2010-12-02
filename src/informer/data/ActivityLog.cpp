@@ -225,14 +225,20 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     }
 
     unsigned planTime = 0;
+    int retryCount = int(msg.retryCount);
     char cstate = msgStateToString(MsgState(msg.state))[0];
     switch (msg.state) {
     case MSGSTATE_INPUT:
     case MSGSTATE_PROCESS:
+        break;
     case MSGSTATE_DELIVERED:
     case MSGSTATE_FAILED:
     case MSGSTATE_EXPIRED:
     case MSGSTATE_KILLED:
+        if (!retryCount) {
+            const char* text = msg.text.getText();
+            retryCount = int(dlvInfo_->evaluateNchunks(text,strlen(text)));
+        }
         break;
     case MSGSTATE_RETRY:
         planTime = unsigned(msg.lastTime - currentTime);
@@ -246,7 +252,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     smsc::core::buffers::TmpBuf<char,1024> buf;
     const int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,\"",
                             unsigned(now.tm_sec), cstate, regId,
-                            msg.msgId, msg.retryCount, planTime, 
+                            msg.msgId, retryCount, planTime, 
                             caddr,
                             msg.timeLeft, smppStatus,
                             msg.userData.c_str());
@@ -270,7 +276,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
-        doIncStats(msg.state,1,fromState,msg.retryCount);
+        doIncStats(msg.state,1,fromState,retryCount);
     }
 
     // writing final log

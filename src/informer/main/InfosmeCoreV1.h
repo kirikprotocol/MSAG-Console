@@ -127,6 +127,8 @@ public:
 
     void bindDeliveryRegions( const BindSignal& bs );
 
+    /// init user stats
+    void initUserStats();
     /// invoked from stats dumper
     void dumpUserStats( msgtime_type currentTime );
 

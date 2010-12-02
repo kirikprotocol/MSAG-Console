@@ -4,6 +4,9 @@
 #include "informer/io/InfosmeException.h"
 #include "DeliveryInfo.h"
 #include "CommonSettings.h"
+#include "util/smstext.h"
+#include "informer/io/UTF8.h"
+#include "informer/data/MessageText.h"
 
 namespace eyeline {
 namespace informer {
@@ -105,6 +108,62 @@ bool DeliveryInfo::checkActiveTime( int weekTime ) const
         }
     }
     return true;
+}
+
+
+unsigned DeliveryInfo::evaluateNchunks( const char*     outText,
+                                        size_t          outLen,
+                                        smsc::sms::SMS* sms ) const
+{
+    try {
+        const char* out = outText;
+        UTF8::BufType ucstext;
+        const bool hasHighBit = smsc::util::hasHighBit(out,outLen);
+        if (hasHighBit) {
+            getCS()->getUTF8().convertToUcs2(out,outLen,ucstext);
+            outLen = ucstext.GetPos();
+            out = ucstext.get();
+            if (sms) sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+        } else if (sms) {
+            sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
+        }
+
+        if ( outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !this->useDataSm() ) {
+            if (sms) {
+                sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, unsigned(outLen));
+                sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, unsigned(outLen));
+            }
+        } else if ( this->getDeliveryMode() != DLVMODE_SMS ) {
+            // ussdpush*
+            if ( outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
+                smsc_log_warn(log_,"ussdpush: max allowed msg len reached: %u",unsigned(outLen));
+                outLen = MAX_ALLOWED_MESSAGE_LENGTH;
+            }
+            if (sms) {
+                sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, unsigned(outLen));
+                sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, unsigned(outLen));
+            }
+        } else {
+            if ( outLen > MAX_ALLOWED_PAYLOAD_LENGTH ) {
+                outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+            }
+            if (sms) {
+                sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, out, unsigned(outLen));
+            }
+        }
+        
+        const unsigned chunkLen = getCS()->getSlicedMessageSize();
+        unsigned nchunks;
+        if ( chunkLen > 0 && outLen > chunkLen ) {
+            nchunks = unsigned(outLen-1) / chunkLen + 1;
+        } else {
+            nchunks = 1;
+        }
+        return nchunks;
+    } catch ( std::exception& e ) {
+        throw InfosmeException(EXC_IOERROR,"bad msg body: '%s'",outText);
+    }
+    return 1;
 }
 
 

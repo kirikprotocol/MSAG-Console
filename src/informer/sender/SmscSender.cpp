@@ -464,7 +464,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
 
             const char* out = msg.text.getText();
             try {
-                nchunks = ptr.evaluateNchunks(out,strlen(out),&sms);
+                nchunks = info.evaluateNchunks(out,strlen(out),&sms);
             } catch ( std::exception& e ) {
                 what = "wrong message body";
                 res = smsc::system::Status::SYSERR;
