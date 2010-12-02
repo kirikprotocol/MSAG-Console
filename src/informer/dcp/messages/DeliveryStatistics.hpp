@@ -30,6 +30,8 @@ public:
     deliveredMessagesFlag=false;
     failedMessageFlag=false;
     expiredMessagesFlag=false;
+    retriedMessagesFlag=false;
+    sentMessagesFlag=false;
   }
  
 
@@ -92,6 +94,26 @@ public:
       sprintf(buf,"%lld",expiredMessages);
       rv+=buf;
     }
+    if(retriedMessagesFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="retriedMessages=";
+      sprintf(buf,"%lld",retriedMessages);
+      rv+=buf;
+    }
+    if(sentMessagesFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="sentMessages=";
+      sprintf(buf,"%lld",sentMessages);
+      rv+=buf;
+    }
     return rv;
   }
 
@@ -128,6 +150,18 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(expiredMessages);
+    }
+    if(retriedMessagesFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(retriedMessages);
+    }
+    if(sentMessagesFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(sentMessages);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -242,6 +276,50 @@ public:
   {
     return expiredMessagesFlag;
   }
+  int64_t getRetriedMessages()const
+  {
+    if(!retriedMessagesFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("retriedMessages");
+    }
+    return retriedMessages;
+  }
+  void setRetriedMessages(int64_t argValue)
+  {
+    retriedMessages=argValue;
+    retriedMessagesFlag=true;
+  }
+  int64_t& getRetriedMessagesRef()
+  {
+    retriedMessagesFlag=true;
+    return retriedMessages;
+  }
+  bool hasRetriedMessages()const
+  {
+    return retriedMessagesFlag;
+  }
+  int64_t getSentMessages()const
+  {
+    if(!sentMessagesFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("sentMessages");
+    }
+    return sentMessages;
+  }
+  void setSentMessages(int64_t argValue)
+  {
+    sentMessages=argValue;
+    sentMessagesFlag=true;
+  }
+  int64_t& getSentMessagesRef()
+  {
+    sentMessagesFlag=true;
+    return sentMessages;
+  }
+  bool hasSentMessages()const
+  {
+    return sentMessagesFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -265,6 +343,14 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("expiredMessages");
     }
+    if(!retriedMessagesFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("retriedMessages");
+    }
+    if(!sentMessagesFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("sentMessages");
+    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
@@ -278,6 +364,10 @@ public:
     ds.writeInt64LV(failedMessage); 
     ds.writeTag(expiredMessagesTag);
     ds.writeInt64LV(expiredMessages); 
+    ds.writeTag(retriedMessagesTag);
+    ds.writeInt64LV(retriedMessages); 
+    ds.writeTag(sentMessagesTag);
+    ds.writeInt64LV(sentMessages); 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -343,6 +433,24 @@ public:
           expiredMessages=ds.readInt64LV();
           expiredMessagesFlag=true;
         }break;
+        case retriedMessagesTag:
+        {
+          if(retriedMessagesFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("retriedMessages");
+          }
+          retriedMessages=ds.readInt64LV();
+          retriedMessagesFlag=true;
+        }break;
+        case sentMessagesTag:
+        {
+          if(sentMessagesFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("sentMessages");
+          }
+          sentMessages=ds.readInt64LV();
+          sentMessagesFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -374,6 +482,14 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("expiredMessages");
     }
+    if(!retriedMessagesFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("retriedMessages");
+    }
+    if(!sentMessagesFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("sentMessages");
+    }
 
   }
 
@@ -398,6 +514,8 @@ protected:
   static const int32_t deliveredMessagesTag=2;
   static const int32_t failedMessageTag=3;
   static const int32_t expiredMessagesTag=5;
+  static const int32_t retriedMessagesTag=6;
+  static const int32_t sentMessagesTag=7;
 
   int connId;
 
@@ -406,12 +524,16 @@ protected:
   int64_t deliveredMessages;
   int64_t failedMessage;
   int64_t expiredMessages;
+  int64_t retriedMessages;
+  int64_t sentMessages;
 
   bool newMessagesFlag;
   bool processMessageFlag;
   bool deliveredMessagesFlag;
   bool failedMessageFlag;
   bool expiredMessagesFlag;
+  bool retriedMessagesFlag;
+  bool sentMessagesFlag;
 };
 
 }

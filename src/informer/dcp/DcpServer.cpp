@@ -520,6 +520,8 @@ void DcpServer::handle(const messages::GetDeliveryState& inmsg)
   respStats.setFailedMessage(ds.failedMessages);
   respStats.setNewMessages(ds.getNewMessagesCount());
   respStats.setProcessMessage(ds.procMessages);
+  respStats.setRetriedMessages(ds.retryMessages);
+  respStats.setSentMessages(ds.sentMessages);
 
   enqueueResp(resp,inmsg);
 }
@@ -562,7 +564,7 @@ static bool isDeliveryMatchFilter(Delivery* dlv,const messages::DeliveriesFilter
     bool found=false;
     VECLOOP(it,messages::DeliveryStatus,flt.getStatusFilter())
     {
-      if(dlv->getState(0)==it->getValue())
+      if(dlvStateToDeliveryStatus(dlv->getState(0))==*it)
       {
         found=true;
         break;
@@ -860,7 +862,7 @@ void fillFilter(const MSG& inmsg,alm::ALMRequestFilter& filter)
   {
     VECLOOP(it,std::string,inmsg.getMsisdnFilter())
     {
-      filter.abonentFilter.insert(*it);
+      filter.abonentFilter.Insert(it->c_str(),true);
     }
   }
   filter.resultFields=0;
