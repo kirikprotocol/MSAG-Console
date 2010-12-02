@@ -174,7 +174,7 @@ public class UserEditController extends UserController {
             return null;
            }
            ucps.checkValid();
-           getConfig().verifyCPSettings(userToEdit,ucps);
+
            cpSettings.add(ucps);
         }
         for(DynamicTableRow row : dynamicFileModel.getRows()) {
@@ -190,7 +190,7 @@ public class UserEditController extends UserController {
              return null;
            }
            ucps.checkValid();
-           getConfig().verifyCPSettings(userToEdit,ucps);
+
            cpSettings.add(ucps);
         }
 
@@ -208,6 +208,20 @@ public class UserEditController extends UserController {
     return userToEdit;
   }
 
+  public String verifyUcps() {
+    List<UserCPsettings> ucpsList = userToEdit.getCpSettings();
+    if(ucpsList!=null) {
+      for(UserCPsettings ucps : ucpsList) {
+        try {
+            getConfig().verifyCPSettings(userToEdit,ucps  );
+        }
+        catch (AdminException e) {
+          addLocalizedMessage(FacesMessage.SEVERITY_WARN,"user.edit.connect.fail",ucps.toString());
+        }
+      }
+    }
+    return null;
+  }
 
   public boolean isAdmin() {
     return userToEdit.hasRole(User.INFORMER_ADMIN_ROLE);

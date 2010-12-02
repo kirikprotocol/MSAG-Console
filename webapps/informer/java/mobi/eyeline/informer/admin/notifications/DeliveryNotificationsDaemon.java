@@ -126,9 +126,32 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
       );
   }
 
+  public void testEmailNotification(User user, String toEmail, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
+    try {
+      AggregatedEmailNotificationTask task = new AggregatedEmailNotificationTask(toEmail, user, javaMailProps, notificationTemplates);
+      task.addNotification(new ChangeDeliveryStatusEvent(DeliveryStatus.Active,new Date(),1,user.getLogin())
+      ,"EmailTestActivate");
+      task.addNotification(new ChangeDeliveryStatusEvent(DeliveryStatus.Finished,new Date(),2,user.getLogin())
+      ,"EmailTestFinished");
+      task.call();
+    }
+    catch (Exception e) {
+      throw new DeliveryNotificationException("email.test.fail",e,e.getMessage());
+    }
+  }
 
-  /*  
-======================= */
+  public void testSMSNotification(User user, Address toAddress, DeliveryStatus status, Properties notificationTemplates) throws AdminException {
+    try {
+      ChangeDeliveryStatusEvent event = new ChangeDeliveryStatusEvent(status,new Date(),1,user.getLogin());
+      SMSNotificationTask task = new SMSNotificationTask(toAddress,user,event,status==DeliveryStatus.Active ? "SmsTestActivate":"SmsTestFinished",notificationTemplates);
+      task.call();
+    }
+    catch (Exception e) {
+      throw new DeliveryNotificationException("sms.test.fail",e,e.getMessage());
+    }
+  }
+
+  /*======================= */
 
   class SMSNotificationTask implements Callable<Object> {
     final Address address;
@@ -136,12 +159,19 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
     private final User user;
     private final ChangeDeliveryStatusEvent notification;
     private final String deliveryName;
+    private Properties templates;
+
 
     public SMSNotificationTask(Address address, User user, ChangeDeliveryStatusEvent notification, String deliveryName) {
+      this(address,user,notification,deliveryName,context.getNotificationTemplates());
+    }
+
+    public SMSNotificationTask(Address address, User user, ChangeDeliveryStatusEvent notification, String deliveryName, Properties templates) {
       this.address = address;
       this.user = user;
       this.notification = notification;
       this.deliveryName = deliveryName;
+      this.templates = templates;
     }
 
     public Object call() throws Exception {
@@ -152,7 +182,7 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
         testSms.setFlash(false);
         testSms.setMode(TestSms.Mode.SMS);
 
-        String template = (String) context.getNotificationTemplates().get(
+        String template = (String) templates.get(
             notification.getStatus() == DeliveryStatus.Active
                 ?
                 DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED
@@ -171,17 +201,29 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
     }
   }
 
-  /*  
-======================= */
+
+
+
+  /*======================= */
 
   class AggregatedEmailNotificationTask implements Callable<Object> {
     private final String email;
     private final User user;
     private final LinkedList<String> notifications;
+    private Properties mailProps;
+    private Properties templates;
+
+
 
     public AggregatedEmailNotificationTask(String email, User user) {
+      this(email,user,context.getJavaMailProperties(),context.getNotificationTemplates());
+    }
+
+    AggregatedEmailNotificationTask(String email, User user,  Properties mailProps, Properties templates) {
       this.email = email;
       this.user = user;
+      this.mailProps = mailProps;
+      this.templates = templates;
       this.notifications = new LinkedList<String>();
     }
 
@@ -204,13 +246,13 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
         userEmailNotifications.remove(email);
       }
       try {
-        Properties templates = context.getNotificationTemplates();
+
 
         StringBuilder sb = new StringBuilder();
         for (String n : notifications)
           sb.append(n).append("\n");
 
-        Properties mailProps = context.getJavaMailProperties();
+
         Session session = Session.getDefaultInstance(mailProps);
         MimeMessage message = new MimeMessage(session);
         message.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(email));

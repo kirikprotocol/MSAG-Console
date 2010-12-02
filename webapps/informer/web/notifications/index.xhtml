@@ -45,7 +45,17 @@
             <tr:validateLength minimum="1"/>
           </tr:inputText>
 
+          <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.testSMS']}"/>
+          <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <tr:inputText id="testEmail" value="#{notificationSettings.testSmsAddress}" simple="true" required="false">
+              <eye:validateEmail/>
+          </tr:inputText>
+          <eye:button>
+              <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.testSms}"/>
+          </eye:button>
           </h:panelGrid>
+
+        </h:panelGrid>
 
       </eye:collapsingGroup>
 
@@ -83,7 +93,17 @@
           <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.delivery.state.finished.email.template.body']}"/>
           <tr:inputText id="emailTextFinished" rows="3" value="#{notificationSettings.emailTemplateFinished}" simple="true" required="true">
               <tr:validateLength minimum="1"/>
-            </tr:inputText>
+          </tr:inputText>
+
+          <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.testEmail']}"/>
+          <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <tr:inputText id="testEmail" value="#{notificationSettings.testEmailAddr}" simple="true" required="false">
+              <eye:validateEmail/>
+          </tr:inputText>
+          <eye:button>
+              <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.testEmail}"/>
+          </eye:button>
+          </h:panelGrid>
 
         </h:panelGrid>
 

@@ -2,10 +2,14 @@ package mobi.eyeline.informer.web.controllers.notifications;
 
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationTemplatesConstants;
+import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
+import javax.faces.application.FacesMessage;
 import java.util.Properties;
 
 /**
@@ -19,6 +23,8 @@ public class NotificationSettingsController extends InformerController {
   private final Properties javaMailProps;
   private final Properties notificationTemplates;
   private Address smsSenderAddress;
+  private String testEmail;
+  private Address testAddress;
 
 
   public NotificationSettingsController() {
@@ -123,4 +129,56 @@ public class NotificationSettingsController extends InformerController {
   public String getMailPassword() {
     return (String) javaMailProps.get("mail.password");
   }
+
+
+  public String getTestEmailAddr() {
+    return testEmail;
+  }
+
+  public void setTestEmailAddr(String testEmail) {
+    this.testEmail = testEmail;
+  }
+
+  public String testEmail() {
+    if(testAddress==null) {
+      addMessage(FacesMessage.SEVERITY_WARN,"notifications.test.email.required");
+      return null;
+    }
+    try {
+      User user = getConfig().getUser(getUserName());
+      getConfig().testEmailNotification(user,testEmail,javaMailProps,notificationTemplates);
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO,"notifications.test.ok",testEmail());
+    }
+    catch (AdminException e) {
+      addError(e);
+    }
+    return null;
+  }
+
+  public Address getTestSmsAddress() {
+    return testAddress;
+  }
+
+  public void setTestSmsAddress(String testAddress) {
+    this.testAddress  = (testAddress==null || testAddress.length()==0) ?  null:new Address(testAddress);
+  }
+
+  public String testSms() {
+    if(testAddress==null) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN,"notifications.test.address.required");
+      return null;
+    }
+    try {
+      User user = getConfig().getUser(getUserName());
+      getConfig().testSmsNotification(user,testAddress, DeliveryStatus.Active,notificationTemplates);
+      getConfig().testSmsNotification(user,testAddress, DeliveryStatus.Finished,notificationTemplates);
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO,"notifications.test.ok",testAddress.getSimpleAddress());
+    }
+    catch (AdminException e) {
+      addError(e);
+    }
+    return null;
+  }
+
+
 }
