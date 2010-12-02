@@ -112,7 +112,7 @@ public class MessagesByRecController extends LongOperationController {
 
             MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate == null ? Delivery.getStartDate() : fromDate,
                 tillDate != null ? tillDate : Delivery.getEndDate() != null ? Delivery.getEndDate() : new Date());
-            messageFilter.setMsisdnFilter(new String[]{msisdn});
+            messageFilter.setMsisdnFilter(msisdn);
 
             config.getMessagesStates(getUser().getLogin(), getUser().getPassword(), messageFilter, 1000,
                 new Visitor<Message>() {
@@ -127,7 +127,7 @@ public class MessagesByRecController extends LongOperationController {
                         errString = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", locale).getString("informer.errcode.unknown");
                       }
                     }
-                    MessagesByRecRecord rec = new MessagesByRecRecord(deliveryId, userId, owner, name, Message.getText(), Message.getDate(), Message.getState(), errString);
+                    MessagesByRecRecord rec = new MessagesByRecRecord(Message.getAbonent().getSimpleAddress(), deliveryId, userId, owner, name, Message.getText(), Message.getDate(), Message.getState(), errString);
                     records.add(rec);
                     return !isCancelled();
                   }

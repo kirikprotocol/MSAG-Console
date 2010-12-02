@@ -57,7 +57,7 @@
         <eye:dataTable value="#{messages.messages}" var="m" rendered="#{messages.init }" selectedRows="#{messages.selected}" >
           <eye:row rowId="#{m.id}">
             <eye:column name="msisdn" title="#{msg['informer.deliveries.message.abonent']}" width="15%">
-              <h:outputText value="#{m.abonent}"/>
+              <h:outputText value="#{m.abonent.simpleAddress}"/>
             </eye:column>
             <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" width="15%">
               <h:outputText value="#{m.state}" converter="messageStateConverter"/>

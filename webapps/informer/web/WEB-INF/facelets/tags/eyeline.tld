@@ -543,6 +543,11 @@
   </tag>
 
   <tag>
+    <name>validateMask</name>
+    <description>Проверка корректности маски телефона</description>
+  </tag>
+
+  <tag>
     <name>message</name>
     <description>Вывод сообщения на экран</description>
     <attribute>

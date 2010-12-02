@@ -22,7 +22,7 @@
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.recMsisdn']}"/>
             <t:inputText id="Recipient" value="#{statsMessagesByRec.msisdn}" required="true">
-              <eye:validatePhone/>
+              <eye:validateMask/>
             </t:inputText>
 
             <h:outputText value="&#160;"/>
@@ -67,24 +67,27 @@
           <eye:dataTable value="#{statsMessagesByRec.records}" var="row" rendered="#{longOpState == 2}" >
 
             <eye:row>
-              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="10%" align="center">
-                <h:commandLink value="#{row.userId}" action="USER_EDIT" title="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
-                  <f:param name="userId" value="#{row.userId}"/>
-                </h:commandLink>                
-                <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
+              <eye:column name="recipient" title="#{msg['stat.page.recMsisdn']}" sortable="true" width="10%" align="center">
+                <h:outputText value="#{row.recipient}"/>
               </eye:column>
               <eye:column name="name" title="#{msg['stat.page.deliveryName']}" sortable="true" width="10%" align="center">
                 <h:commandLink value="#{row.name}" action="DELIVERY_EDIT">
                   <f:param name="delivery" value="#{row.deliveryId}"/>
                 </h:commandLink>
               </eye:column>
-              <eye:column name="text" title="#{msg['stat.page.text']}" sortable="true" width="10%" align="center">
+              <eye:column name="userId" title="#{msg['stat.page.user']}" sortable="true" defaultSortOrder="asc" width="5%" align="center">
+                <h:commandLink value="#{row.userId}" action="USER_EDIT" title="#{row.userDetails}" rendered="#{statsMessagesByRec.admin}">
+                  <f:param name="userId" value="#{row.userId}"/>
+                </h:commandLink>                
+                <h:outputText value="#{row.userId}" title="#{row.userDetails}" rendered="#{!statsMessagesByRec.admin}"/>
+              </eye:column>
+              <eye:column name="text" title="#{msg['stat.page.text']}" sortable="true" width="20%" align="center">
                 <h:outputText value="#{row.text}"/>
               </eye:column>
               <eye:column name="deliveryDate" title="#{msg['stat.page.deliveryDate']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.deliveryDateString}"/>
               </eye:column>
-              <eye:column name="state" title="#{msg['stat.page.state']}" sortable="true" width="10%" align="center">
+              <eye:column name="state" title="#{msg['stat.page.state']}" sortable="true" width="5%" align="center">
                 <h:outputText value="#{row.state}"/>
               </eye:column>
               <eye:column name="state" title="#{msg['stat.page.errorString']}" sortable="true" width="10%" align="center">

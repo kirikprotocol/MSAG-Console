@@ -16,6 +16,8 @@ import java.util.Date;
  */
 public class MessagesByRecRecord {
 
+  private final String recipient;
+
   private final String userId;
   private final User user;
   private final Integer deliveryId;
@@ -26,7 +28,8 @@ public class MessagesByRecRecord {
   private final MessageState state;
   private final String errorString;
 
-  public MessagesByRecRecord(Integer deliveryId, String userId, User user, String name, String text, Date deliveryDate, MessageState state, String errorString) {
+  public MessagesByRecRecord(String recipient, Integer deliveryId, String userId, User user, String name, String text, Date deliveryDate, MessageState state, String errorString) {
+    this.recipient = recipient;
     this.deliveryId = deliveryId;
     this.userId = userId;
     this.user = user;
@@ -35,6 +38,10 @@ public class MessagesByRecRecord {
     this.deliveryDate = deliveryDate;
     this.state = state;
     this.errorString = errorString;
+  }
+
+  public String getRecipient() {
+    return recipient;
   }
 
   public Integer getDeliveryId() {
@@ -75,7 +82,7 @@ public class MessagesByRecRecord {
   }
 
   public void printCSV(PrintWriter writer) {
-    writer.println(StringEncoderDecoder.toCSVString(name,
+    writer.println(StringEncoderDecoder.toCSVString(recipient,name,
         userId,
         text,
         getDeliveryDateString(),

@@ -201,6 +201,10 @@ div.query_result {
   width:600px;
 }
 
+.column50ProcWidth {
+  width:50%;
+}
+
 .column0WidthRight {
   width:0px;
   text-align:right;

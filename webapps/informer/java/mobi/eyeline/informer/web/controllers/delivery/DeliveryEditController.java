@@ -4,6 +4,8 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
+import mobi.eyeline.informer.admin.delivery.DeliveryStatusHistory;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
@@ -23,6 +25,8 @@ public class DeliveryEditController extends DeliveryController {
   private Integer id;
 
   private Delivery delivery;
+  private DeliveryStatistics status;
+  private DeliveryStatusHistory statusHistory;
 
   private String comeBackParam;
   private String retryOnFail;
@@ -77,6 +81,9 @@ public class DeliveryEditController extends DeliveryController {
       retryOnFail = (delivery.getRetryPolicy() == null || delivery.getRetryPolicy().length() == 0) ? "default" : "custom";
     } else
       retryOnFail = "off";
+
+    status = getConfig().getDeliveryStats(user.getLogin(), user.getPassword(), id);
+    statusHistory = getConfig().getDeliveryStatusHistory(user.getLogin(), user.getPassword(), id);
   }
 
   private String emailNotificationAddress;
@@ -278,5 +285,13 @@ public class DeliveryEditController extends DeliveryController {
 
   public void setRetryOnFail(String retryOnFail) {
     this.retryOnFail = retryOnFail;
+  }
+
+  public DeliveryStatistics getStatus() {
+    return status;
+  }
+
+  public DeliveryStatusHistory getStatusHistory() {
+    return statusHistory;
   }
 }

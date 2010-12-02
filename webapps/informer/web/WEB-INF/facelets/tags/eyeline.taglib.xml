@@ -49,6 +49,11 @@
   </tag>
 
   <tag>
+    <tag-name>validateMask</tag-name>
+    <source>validateMask.xhtml</source>
+  </tag>
+
+  <tag>
     <tag-name>validatePositive</tag-name>
     <source>validatePositive.xhtml</source>
   </tag>

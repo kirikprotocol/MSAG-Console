@@ -2,6 +2,8 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:fn="http://java.sun.com/jstl/functions"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi">
@@ -38,8 +40,12 @@
       <tr:inputHidden id="delivery_comeback" value="#{deliveryEdit.comeBackParam}"/>
 
       <eye:delimiter/>
+      
+      <eye:pageSubtitle value="#{msg['delivery.edit.settings']}"/>
 
-      <h:panelGrid columns="2" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign">
+      <eye:delimiter/>
+
+      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;border-bottom: 1px solid #E6E3D8;" columnClasses="column100Width, columnTopLeftAlign" >
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.name}"/>
         <tr:inputText value="#{deliveryEdit.delivery.name}" required="true" simple="true"/>
@@ -118,21 +124,70 @@
       
         <h:outputText style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
         <h:selectOneMenu id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter"
-                         onchange="var d = (this.value != 'SMS') ? 'none' : ''; document.getElementById('smsSettings').style.display = d;"
+                         onchange="dModeChanged()"
                          style="display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}">
           <f:selectItems value="#{deliveryEdit.uniqueDeliveryModes}"/>
         </h:selectOneMenu>
-      </h:panelGrid>
 
-      <h:panelGrid id="smsSettings" columns="2" columnClasses="column100Width, columnTopLeftAlign" style="padding-left:10px; display: #{deliveryEdit.smsMode ? '' : 'none'}">
+        <h:outputText id="flashLabel" style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
+        <tr:selectBooleanCheckbox id="flash" value="#{deliveryEdit.delivery.flash}" simple="true"/>
 
-        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
-        <tr:selectBooleanCheckbox value="#{deliveryEdit.delivery.flash}" simple="true"/>
-
-        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+        <h:outputText id="trModeLabel" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
         <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
 
       </h:panelGrid>
+
+      <eye:delimiter/>
+
+      <eye:updatableContent updatePeriod="5">
+
+        <h:panelGrid columns="2" columnClasses="column50ProcWidth, columnTopLeftAlign">
+
+          <h:panelGroup>
+
+            <eye:pageSubtitle value="#{msg['delivery.edit.counters']}"/>
+
+            <eye:delimiter/>
+
+            <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign" >
+              <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.new']}"/>
+              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.newMessages}"/>
+              <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.process']}"/>
+              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.processMessages}"/>
+              <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.delivered']}"/>
+              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.deliveredMessages}"/>
+              <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.failed']}"/>
+              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.failedMessages}"/>
+              <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.expired']}"/>
+              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.expiredMessages}"/>
+            </h:panelGrid>
+
+          </h:panelGroup>
+
+          <h:panelGroup>
+            <c:set var="nm" value="delivery.status.#{deliveryEdit.status.deliveryState.status}"/>
+
+            <eye:pageSubtitle value="#{msg['delivery.edit.status']} : #{msg[nm]}"/>
+
+            <eye:delimiter/>
+
+            <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign" >
+              <c:forEach items="#{deliveryEdit.statusHistory.historyItems}" var="item">
+
+                <c:set var="nm1" value="delivery.status.#{item.status}"/>
+
+                <tr:outputText value="#{item.date}" inlineStyle="white-space:nowrap;font-weight: bold">
+                  <f:convertDateTime dateStyle="short" type="both"/>
+                </tr:outputText>
+
+                <h:outputText value=" : #{msg[nm1]}"/>
+              </c:forEach>
+            </h:panelGrid>
+          </h:panelGroup>
+
+        </h:panelGrid>
+
+      </eye:updatableContent>
 
       <eye:delimiter/>
 
@@ -158,12 +213,22 @@
 
       <script type="text/javascript" language="javascript">
 
+        function dModeChanged() {
+          var d = (document.getElementById('dMode').value != 'SMS') ? 'none' : '';
+          document.getElementById('flashLabel').style.display = d;
+          document.getElementById('flash').style.display = d;
+          document.getElementById('trModeLabel').style.display = d;
+          document.getElementById('trMode').style.display = d;
+        }
+
         function retryOnFailChanged() {
           var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
           document.getElementById('retryPolicy1').style.display=d;
         }
 
         retryOnFailChanged();
+
+        dModeChanged();
 
         document.getElementById('sms').disabled = !document.getElementById('smsNotif').checked;
         document.getElementById('email').disabled = !document.getElementById('emailNotif').checked;
