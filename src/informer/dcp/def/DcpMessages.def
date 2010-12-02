@@ -255,6 +255,8 @@ message DeliveryStatistics
   int64 deliveredMessages 2
   int64 failedMessage 3
   int64 expiredMessages 5
+  int64 retriedMessages 6
+  int64 sentMessages 7
 end
 
 message GetDeliveryStateResp 42
