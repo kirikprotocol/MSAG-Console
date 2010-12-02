@@ -57,6 +57,18 @@
       </section>
       <param name="RPCList_reject" type="string">16</param>
       <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+
+      <section name="SSFLocationIdentification"> <!--
+      meaningfull if IDPLocationInfo == SSF -->
+        <param name="MCC" type="string">250</param> <!--
+        Mobile Country Cide, NumericString[3] -->
+        <param name="MNC" type="string">01</param> <!--
+        Mobile Network Code, NumericString[2..3] -->
+        <param name="LAC" type="string">AAAA</param> <!--
+        Location Area Code, HexString[4] -->
+        <param name="CI" type="string">AAAA</param> <!--
+        Cell Identity value, HexString[4] -->
+      </section>
     </section>
 
     <section name="IN_NNov_Alcatel_1">
