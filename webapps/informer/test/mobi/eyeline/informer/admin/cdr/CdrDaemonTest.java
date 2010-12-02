@@ -170,7 +170,7 @@ public class CdrDaemonTest {
     File[] fs = dir.listFiles();
     assertEquals(fs.length, 3);
 
-    File f = new File(dir, "20101112030410.csv");
+    File f = new File(dir, "201011120304.csv");
     assertTrue(f.exists());
     int countLines = 0;
     BufferedReader reader = null;

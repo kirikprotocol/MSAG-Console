@@ -45,6 +45,8 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   private PrintWriter writer;
 
+  private File curentFile;
+
   private static final SimpleDateFormat df = new SimpleDateFormat("ddMMyyyy_HHmmss");
 
   private int periodSec;
@@ -129,7 +131,11 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
     try {
       writeLock();
       if(!stop) {
-        writer.println(StringEncoderDecoder.toCSVString(0, clcId, state, errCode));
+        String line = StringEncoderDecoder.toCSVString(0, clcId, state, errCode);
+        if(logger.isDebugEnabled()) {
+          logger.debug("Add line: "+StringEncoderDecoder.toCSVString(0, clcId, state, errCode));
+        }
+        writer.println(line);
         writer.flush();
       }else {
         logger.warn("Listener is stopped, can't process event");
@@ -182,7 +188,8 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
   public synchronized void start() throws AdminException{
     if(stop) {
       try {
-        writer = new PrintWriter(new FileWriter(new File(dir, df.format(new Date())+".csv")));
+        curentFile = new File(dir, df.format(new Date())+".csv");
+        writer = new PrintWriter(new FileWriter(curentFile));
       } catch (IOException e) {
         logger.error(e,e);
         throw new SiebelException("internal_error");
@@ -329,24 +336,24 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
             try{
               writeLock();
               writer.close();
-              writer = new PrintWriter(new FileWriter(new File(dir, df.format(new Date())+".csv")));
+              curentFile = new File(dir, df.format(new Date())+".csv");
+              writer = new PrintWriter(new FileWriter(curentFile));
             }finally {
               writeUnlock();
             }
 
-            File[] files = dir.listFiles();
-            Arrays.sort(files, new Comparator<File>() {
-              public int compare(File o1, File o2) {
-                return o1.getName().compareTo(o2.getName());
-              }});
+            File[] files = dir.listFiles(new FileFilter() {
+              public boolean accept(File pathname) {
+                return !pathname.getName().equals(curentFile.getName()); 
+              }
+            });
 
-            for(int i=0;i<files.length-1;i++) {
-              File toProccess = files[i];
-              if(toProccess.length()>0){
+            for (File toProccess : files) {
+              if (toProccess.length() > 0) {
                 processFile(toProccess);
               }
-              if(!toProccess.delete()) {
-                logger.error("Can't delete a file: "+toProccess.getAbsolutePath());
+              if (!toProccess.delete()) {
+                logger.error("Can't delete a file: " + toProccess.getAbsolutePath());
               }
             }
           }catch (Exception e){
