@@ -250,11 +250,11 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
     pos+=n;
     pos=skipField(line,pos);//skip retry
     pos=skipField(line,pos);//skip plan
-    if((req->filter.resultFields&rfAbonent) || !req->filter.abonentFilter.empty())
+    if((req->filter.resultFields&rfAbonent) || req->filter.abonentFilter.Count())
     {
       std::string::size_type np=line.find(',',pos);
       rec.abonent.assign(line.c_str()+pos,np-pos);
-      if(!req->filter.abonentFilter.empty() && req->filter.abonentFilter.find(rec.abonent.c_str())==req->filter.abonentFilter.end())
+      if(req->filter.abonentFilter.Count() && !req->filter.abonentFilter.Find(rec.abonent.c_str()))
       {
         continue;
       }

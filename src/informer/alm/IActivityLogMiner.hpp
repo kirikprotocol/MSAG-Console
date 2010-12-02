@@ -5,6 +5,7 @@
 #include <set>
 #include "core/buffers/FixedLengthString.hpp"
 #include "informer/data/Message.h"
+#include "core/buffers/XTree.hpp"
 
 namespace eyeline{
 namespace informer{
@@ -21,11 +22,33 @@ enum ResultFields{
 
 struct ALMRequestFilter{
   std::set<MsgState> stateFilter;
-  std::set<std::string> abonentFilter;
+  mutable smsc::core::buffers::XTree<bool> abonentFilter;
   std::set<int> codeFilter;
   msgtime_type startDate;
   msgtime_type endDate;
   int32_t resultFields;
+  ALMRequestFilter()
+  {
+
+  }
+  ALMRequestFilter(const ALMRequestFilter& that)
+  {
+    stateFilter=that.stateFilter;
+    abonentFilter.Swap(that.abonentFilter);
+    codeFilter=that.codeFilter;
+    startDate=that.startDate;
+    endDate=that.endDate;
+    resultFields=that.resultFields;
+  }
+  void operator=(const ALMRequestFilter& that)
+  {
+    stateFilter=that.stateFilter;
+    abonentFilter.Swap(that.abonentFilter);
+    codeFilter=that.codeFilter;
+    startDate=that.startDate;
+    endDate=that.endDate;
+    resultFields=that.resultFields;
+  }
 };
 
 struct ALMResult{
