@@ -241,13 +241,18 @@ public class SiebelManager {
               if(logger.isDebugEnabled()) {
                 logger.debug("Try to repair operation with wave: waveId="+e);
               }
-              final SiebelDelivery st = provider.getDelivery(e);
-              if(st != null) {
-                process(st);
-              }else {
-                if(logger.isDebugEnabled()) {
-                  logger.debug("Wave hasn't been found: waveId="+e);
+              try{
+                final SiebelDelivery st = provider.getDelivery(e);
+                if(st != null) {
+                  process(st);
+                }else {
+                  if(logger.isDebugEnabled()) {
+                    logger.debug("Wave hasn't been found: waveId="+e);
+                  }
                 }
+              }catch (Exception ex){
+                logger.error(ex,ex);
+                addError(e);
               }
             }else {
               addError(e);
@@ -499,9 +504,6 @@ public class SiebelManager {
         public Message next() throws AdminException {
           Message msg;
           while (messages.next()) {
-            try {
-              Thread.sleep(10);     // todo!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            } catch (InterruptedException e) {}
             SiebelMessage sM = messages.get();
             String msisdn = sM.getMsisdn();
             if (msisdn != null && Address.validate(msisdn = convertMsisdn(msisdn))) {
