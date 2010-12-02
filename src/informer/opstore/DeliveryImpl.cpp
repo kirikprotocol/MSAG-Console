@@ -469,10 +469,11 @@ void DeliveryImpl::checkFinalize()
             setState(DLVSTATE_FINISHED);
             // source_->getDlvActivator().setDeliveryState(dlvId,DLVSTATE_FINISHED,0);
         } else {
-            smsc_log_warn(log_,"D=%u all messages are final, discrep by stats: %u/%u/%u/%u",
+            smsc_log_warn(log_,"D=%u all messages are final, discrep by stats: tot=%u/dlv=%u/fail=%u/exp=%u/kill=%u",
                           dlvId,
                           ds.totalMessages, ds.dlvdMessages,
-                          ds.failedMessages, ds.expiredMessages );
+                          ds.failedMessages, ds.expiredMessages,
+                          ds.killedMessages );
         }
     }
 }

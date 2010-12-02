@@ -149,14 +149,15 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
     try {
         if ( ptr->getState() == DLVSTATE_ACTIVE ) {
             // delivery is active
-            const unsigned sleepTimeNotReady = ptr->getNextMessage(currentTime_,
-                                                                   weekTime_,
-                                                                   msg_);
-            if (sleepTimeNotReady == 0) {
+            const int sleepTimeNotReady = ptr->getNextMessage(currentTime_,
+                                                              weekTime_,
+                                                              msg_);
+            if (sleepTimeNotReady <= 0) {
                 smsc_log_debug(log_,"R=%u/D=%u/M=%llu is ready to be sent",
                                unsigned(getRegionId()),
                                unsigned(ptr->getDlvId()),
                                ulonglong(msg_.msgId));
+                untilActiveEnd_ = -sleepTimeNotReady;
                 return 0;
             } else {
                 smsc_log_debug(log_,"R=%u/D=%u: is not ready, going to sleep %u usec",
@@ -188,7 +189,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
     try {
 
         assert(conn_);
-        res = conn_->send(*ptr, msg_, nchunks);
+        res = conn_->send(*ptr, msg_, untilActiveEnd_, nchunks);
         if ( res == smsc::system::Status::OK && nchunks > 0 ) {
             // message has been put into output queue
             smsc_log_debug(log_,"R=%u/D=%u/M=%llu sent nchunks=%d",

@@ -295,7 +295,8 @@ SmscSender::~SmscSender()
 }
 
 
-int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
+int SmscSender::send( RegionalStorage& ptr, Message& msg,
+                      int untilAE, int& nchunks )
 {
     const DeliveryInfo& info = ptr.getDlvInfo();
 
@@ -343,36 +344,21 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg, int& nchunks )
         if ( validityTime > msg.timeLeft ) {
             validityTime = msg.timeLeft;
         }
-
-        static const timediff_type daynight = 86400;
-
-        const timediff_type ms = timediff_type(now) % daynight;
-        timediff_type as, ae;
-        as = ae = ms;
-        if (info.getActivePeriodEnd() >= 0) {
-            as = info.getActivePeriodStart();
-            ae = info.getActivePeriodEnd();
-            if (as > ae) {
-                if (ms<ae) {as -= daynight;}
-                else if (ms>as) {ae += daynight; }
-            }
-            if (ms + validityTime > ae) {
-                validityTime = ae - ms;
-            }
+        if ( untilAE && validityTime > untilAE ) {
+            validityTime = untilAE;
         }
 
-        smsc_log_debug(log_,"R=%u/D=%u/M=%llu info.VT=%d S.minVT=%d S.maxVT=%d msg.TTL=%d as=%d ae=%d ms=%u -> VT=%u",
-                       ptr.getRegionId(), info.getDlvId(), ulonglong(msg.msgId),
+        smsc_log_debug(log_,"R=%u/D=%u/M=%llu info.VT=%d S.minVT=%d S.maxVT=%d msg.TTL=%d untilAE=%d -> VT=%u",
+                       ptr.getRegionId(), info.getDlvId(),
+                       ulonglong(msg.msgId),
                        info.getValidityPeriod(),
                        smscConfig_.minValidityTime,
                        smscConfig_.maxValidityTime,
                        msg.timeLeft,
-                       info.getActivePeriodStart(),
-                       info.getActivePeriodEnd(),
-                       ms, validityTime );
+                       untilAE, validityTime );
 
-        if (ms<as || ms>ae) {
-            what = "now is out of active period";
+        if (validityTime < smscConfig_.minValidityTime) {
+            what = "too small validity time by smsc";
             res = smsc::system::Status::DELIVERYTIMEDOUT;
             break;
         }

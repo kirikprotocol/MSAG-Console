@@ -100,6 +100,7 @@ private:
 
     usectime_type                      currentTime_;
     int                                weekTime_;  // local weektime (seconds since monday midnight)
+    int                                untilActiveEnd_; // number of seconds until AE
 };
 
 typedef EmbedRefPtr< RegionSender > RegionSenderPtr;

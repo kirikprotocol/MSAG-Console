@@ -93,8 +93,11 @@ public:
     /// return active period end in seconds since midnight (localtime) or -1
     inline timediff_type getActivePeriodEnd() const { return activePeriodEnd_; }
 
-    /// check activity time
-    bool checkActiveTime( int weekTime ) const;
+    /// check activity time.
+    /// @return number of seconds to wait until active period.
+    ///  >0 -- how many seconds to wait until activeStart;
+    ///  <=0 -- how many seconds left until activeEnd.
+    int checkActiveTime( int weekTime ) const;
 
     /// evaluate the number of chunks in sms, fills sms fields (optional)
     unsigned evaluateNchunks( const char*     text,

@@ -79,8 +79,9 @@ public:
     void wakeUp();
 
     /// sending one message, filling nchunks.
+    /// @param untilAE -- number of seconds until activeEnd (or 0 if unlimited).
     /// @return SMPP status
-    int send( RegionalStorage& dlv, Message& msg, int& nchunks );
+    int send( RegionalStorage& dlv, Message& msg, int untilAE, int& nchunks );
 
     /// a method allows to wait until sender stops it work
     /// NOTE: post-requisite -- task is released!

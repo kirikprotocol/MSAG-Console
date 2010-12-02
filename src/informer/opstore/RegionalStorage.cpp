@@ -196,12 +196,17 @@ DlvState RegionalStorage::getState() const {
 bool RegionalStorage::isFinished()
 {
     MutexGuard mg(cacheMon_);
+    smsc_log_debug( log_,"R=%u/D=%u list.empty=%d tasks=%d/%d next=%u",
+                    regionId_, getDlvId(), messageList_.empty(),
+                    inputTransferTask_ != 0,
+                    resendTransferTask_ != 0,
+                    nextResendFile_ );
     return messageList_.empty() && !nextResendFile_;
 }
 
 
-unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
-                                          int weekTime, Message& msg )
+int RegionalStorage::getNextMessage( usectime_type usecTime,
+                                     int weekTime, Message& msg )
 {
     MsgIter iter;
     RelockMutexGuard mg(cacheMon_);
@@ -214,20 +219,24 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
         return 6*tuPerSec;
     }
 
-    // FIXME: optimize return this date as next time.
-    if ( !info.checkActiveTime(weekTime) ) {
-        smsc_log_debug(log_,"R=%u/D=%u not on active period weekTime=%u",
-                       regionId_, dlvId, weekTime );
-        return 5*tuPerSec;
+    // how many seconds to wait until activeStart / activeEnd.
+    int secondsReady = info.checkActiveTime(weekTime);
+    if ( secondsReady >= 0 ) {
+        smsc_log_debug(log_,"R=%u/D=%u not on active period weekTime=%u (need to wait %u seconds)",
+                       regionId_, dlvId, weekTime, secondsReady );
+        if ( secondsReady > 100 ) { secondsReady = 100; }
+        return secondsReady*tuPerSec;
     }
 
     /// check speed control
-    usectime_type ret = dlv_->activityLog_.getUserInfo().isReadyAndConsumeQuant(usecTime);
-    if (ret>0) {
-        smsc_log_debug(log_,"R=%u/D=%u not ready by user limit, wait=%lluus",
-                       regionId_, dlvId, ret);
-        if (ret > 1*tuPerSec) ret = 1*tuPerSec;
-        return unsigned(ret);
+    {
+        usectime_type ret = dlv_->activityLog_.getUserInfo().isReadyAndConsumeQuant(usecTime);
+        if (ret>0) {
+            smsc_log_debug(log_,"R=%u/D=%u not ready by user limit, wait=%lluus",
+                           regionId_, dlvId, ret);
+            if (ret > 3*tuPerSec) ret = 3*tuPerSec;
+            return int(ret);
+        }
     }
 
     const msgtime_type currentTime(msgtime_type(usecTime/tuPerSec));
@@ -307,7 +316,7 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
         }
 
         // message is not found, please try in a second
-        return tuPerSec + 12;
+        return int(tuPerSec + 12);
 
     } while ( false );
 
@@ -342,7 +351,7 @@ unsigned RegionalStorage::getNextMessage( usectime_type usecTime,
         dlv_->storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
         dlv_->activityLog_.incStats(m.state,1,prevState);
     }
-    return 0;
+    return secondsReady;
 }
 
 

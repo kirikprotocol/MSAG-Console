@@ -68,10 +68,11 @@ public:
     /// @param weekTime - the local time (seconds) since monday midnight.
     /// SIDEEFFECT: request more messages into the new queue if needed.
     /// @return how many microseconds to wait until message will be ready:
-    ///   =0 message is ready and returned in msg;
-    ///   >0 message is not ready
-    unsigned getNextMessage( usectime_type currentTime,
-                             int weekTime, Message& msg );
+    ///   <0 message is ready (return number of seconds to wait until activeEnd).
+    ///   =0 message is ready (not limited by active period).
+    ///   >0 message is not ready (number of MICROseconds to wait).
+    int getNextMessage( usectime_type currentTime,
+                        int weekTime, Message& msg );
 
     /// change message state when non-transaction response has come.
     /// message is left in the cache.
