@@ -192,12 +192,7 @@
             <eye:textColumn width="10%" title="#{msg['user.edit.import.sourceAddress']}"  name="sourceAddress" maxLength="15" allowEditAfterAdd="true"/>
           </eye:dynamicTable>
           <p/>
-          <eye:buttons>
-            <eye:space/>
-            <eye:button>
-              <tr:commandLink text="#{msg['testconnect.button']}" action="#{userEdit.verifyUcps}"/>
-            </eye:button>
-          </eye:buttons>
+          <tr:commandLink text="#{msg['testconnect.button']}" action="#{userEdit.verifyUcps}" styleClass="linkButton"/>          
           <p/>
           <h:panelGrid columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{userBundle.createReports}"/>
