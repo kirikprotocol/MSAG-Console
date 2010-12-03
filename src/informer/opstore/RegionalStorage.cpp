@@ -150,11 +150,18 @@ private:
     volatile bool& stopFlag_;
 };
 
+smsc::logger::Logger* makeLogger( dlvid_type dlvId, regionid_type regionId )
+{
+    char buf[20];
+    sprintf(buf,"r.%u.%u",dlvId % 1000,regionId);
+    return smsc::logger::Logger::getInstance(buf);
+}
+
 }
 
 RegionalStorage::RegionalStorage( DeliveryImpl&        dlv,
                                   regionid_type        regionId ) :
-log_(smsc::logger::Logger::getInstance("regstore")),
+log_(makeLogger(dlv.getDlvId(),regionId)),
 storingIter_(messageList_.end()),
 dlv_(&dlv),
 inputTransferTask_(0),
@@ -250,7 +257,8 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 
             const bool mayDetachRegion = ( newQueue_.Count()==0 &&
                                            resendQueue_.empty() &&
-                                           nextResendFile_==0 );
+                                           nextResendFile_==0 &&
+                                           !resendTransferTask_ );
             try {
                 smsc_log_debug(log_,"R=%u/D=%u wants to request input transfer as it has new=%u",
                                unsigned(regionId_),
@@ -277,33 +285,31 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
             }
         }
 
+        if (nextResendFile_) {
+            msgtime_type startTime = currentTime;
+            if (!resendQueue_.empty()) {
+                ResendQueue::iterator v = resendQueue_.begin();
+                if (v->first < startTime) startTime = v->first;
+            }
+            if (startTime + getCS()->getResendMinTimeToUpload() >= nextResendFile_) {
+                uploadNextResend = true;
+            }
+        }
+
         if ( !resendQueue_.empty() ) {
             if (++newOrResend_ > 3 ) {
                 newOrResend_ = 0;
                 ResendQueue::iterator v = resendQueue_.begin();
                 if ( nextResendFile_ && v->first >= nextResendFile_ ) {
-                    // we cannot take from resend queue until we load from file
+                    // cannot take from resend queue until we load it
                     uploadNextResend = true;
-                } else {
-                    if (nextResendFile_ && 
-                        v->first + getCS()->getResendMinTimeToUpload() > nextResendFile_) {
-                        uploadNextResend = true;
-                    }
-                    if ( v->first <= currentTime ) {
-                        // get from the resendQueue
-                        iter = v->second;
-                        from = "resendQueue";
-                        messageHash_.Insert(iter->msg.msgId,iter);
-                        resendQueue_.erase(resendQueue_.begin());
-                        break;
-                    }
+                } else if ( v->first <= currentTime ) {
+                    iter = v->second;
+                    from = "resendQueue";
+                    messageHash_.Insert(iter->msg.msgId,iter);
+                    resendQueue_.erase(resendQueue_.begin());
+                    break;
                 }
-            }
-        } else {
-            // resend queue is empty
-            if (nextResendFile_ &&
-                currentTime + getCS()->getResendMinTimeToUpload() > nextResendFile_) {
-                uploadNextResend = true;
             }
         }
 
@@ -322,6 +328,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 
     if (uploadNextResend && !resendTransferTask_) {
         try {
+            smsc_log_debug(log_,"R=%u/D=%u wants resend-in", regionId_, dlvId);
             ResendTransferTask* task = new ResendTransferTask(*this,true);
             dlv_->source_->getDlvActivator().startResendTransfer(task);
             resendTransferTask_ = task;
@@ -460,6 +467,10 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
             if ( queueLastChunk > queueStartTime +
                  getCS()->getResendMinTimeToUpload() + getCS()->getResendUploadPeriod() ) {
                 try {
+                    smsc_log_debug(log_,"R=%u/D=%u wants resend-out as qSize=%u last=+%u",
+                                   regionId_, dlvId,
+                                   unsigned(resendQueue_.size()),
+                                   unsigned(queueLastChunk-queueStartTime));
                     ResendTransferTask* task = new ResendTransferTask(*this,false);
                     dlv_->source_->getDlvActivator().startResendTransfer(task);
                     resendTransferTask_ = task;

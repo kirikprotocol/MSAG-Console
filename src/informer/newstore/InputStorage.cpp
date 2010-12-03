@@ -263,7 +263,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
                                      MsgIter end,
                                      std::vector< regionid_type >& regs )
 {
-    static const unsigned fileSize = 100000;
+    const unsigned fileSize = getCS()->getInputStorageFileSize();
     RegionFinder& rf = core_.getRegionFinder();
     MutexGuard mg(wlock_);
     // preprocess

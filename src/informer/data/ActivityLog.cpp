@@ -7,13 +7,12 @@
 #include "UserInfo.h"
 #include "FinalLog.h"
 
-namespace {
-const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u,KILL=%u%n";
-smsc::logger::Logger* log_ = 0;
-}
-
 namespace eyeline {
 namespace informer {
+
+namespace {
+const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u,KILL=%u%n";
+}
 
 ActivityLog::ActivityLog( UserInfo& userInfo,
                           DeliveryInfo* info ) :
@@ -21,9 +20,12 @@ userInfo_(&userInfo),
 dlvInfo_(info),
 createTime_(0)
 {
-    if (!log_) {
-        log_ = smsc::logger::Logger::getInstance("actlog");
+    {
+        char buf[10];
+        sprintf(buf,"alog.%u",getDlvId() % 1000);
+        log_ = smsc::logger::Logger::getInstance(buf);
     }
+
     stats_.clear();
     incstats_[0].clear();
     incstats_[1].clear();
@@ -121,7 +123,7 @@ bool ActivityLog::readStatistics( const std::string& filename,
             if ( *line == '#' ) {
                 // head comment, trying to read statline
                 int shift = 0;
-                sscanf(line, ::statsFormat,
+                sscanf(line, statsFormat,
                        &ds.totalMessages, &ds.procMessages,
                        &ds.sentMessages, &ds.retryMessages,
                        &ds.dlvdMessages, &ds.failedMessages,
@@ -350,7 +352,7 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
             MutexGuard lmg(statLock_);
             int shift;
             headlen = sprintf(headbuf,
-                              ::statsFormat,
+                              statsFormat,
                               stats_.totalMessages, stats_.procMessages,
                               stats_.sentMessages, stats_.retryMessages,
                               stats_.dlvdMessages, stats_.failedMessages,

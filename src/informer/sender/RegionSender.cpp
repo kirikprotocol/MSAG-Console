@@ -19,13 +19,25 @@ struct EqualById {
 namespace eyeline {
 namespace informer {
 
+namespace {
+smsc::logger::Logger* makeLogger( const Region* r)
+{
+    if (!r) {
+        throw InfosmeException(EXC_LOGICERROR,"NULL region passed");
+    }
+    char buf[15];
+    sprintf(buf,"rs.%u",r->getRegionId());
+    return smsc::logger::Logger::getInstance(buf);
+}
+
+}
+
 RegionSender::RegionSender( SmscSender& conn, const RegionPtr& r ) :
-log_(smsc::logger::Logger::getInstance("regsend")),
+log_(makeLogger(r.get())),
 ref_(0),
 conn_(0),
 region_(r),
-taskList_(*this,2*maxScoreIncrement,
-          smsc::logger::Logger::getInstance("dlvlist")),
+taskList_(*this,2*maxScoreIncrement,log_),
 speedControl_(region_->getBandwidth())
 {
     smsc_log_debug(log_,"ctor S='%s' R=%u",conn.getSmscId().c_str(),unsigned(r->getRegionId()));

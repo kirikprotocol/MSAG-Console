@@ -34,13 +34,12 @@ private:
 
 
 MessageGlossary::MessageGlossary() :
-log_(smsc::logger::Logger::getInstance("glossary")),
+log_(0),
 dlvId_(0),
 hash_(0),
 lastRealId_(MessageText::uniqueId),
 changing_(false)
 {
-    smsc_log_debug(log_,"ctor");
 }
 
 
@@ -49,13 +48,20 @@ MessageGlossary::~MessageGlossary()
     // destroying all messages
     delete hash_; hash_ = 0;
     cleanList( list_ );
-    smsc_log_debug(log_,"D=%u dtor done",dlvId_);
+    if (log_) { smsc_log_debug(log_,"D=%u dtor done",dlvId_); }
 }
 
 
 void MessageGlossary::init( dlvid_type dlvId )
 {
     dlvId_ = dlvId;
+
+    {
+        char buf[10];
+        sprintf(buf,"glos.%u",dlvId_ % 1000);
+        log_ = smsc::logger::Logger::getInstance(buf);
+    }
+
     smsc_log_debug(log_,"D=%u reading glossary at init",dlvId_);
     smsc::core::synchronization::MutexGuard mg(lock_);
     smsc::core::buffers::TmpBuf<char,8192> buf;

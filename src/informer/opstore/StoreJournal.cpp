@@ -114,7 +114,7 @@ namespace eyeline {
 namespace informer {
 
 StoreJournal::StoreJournal() :
-log_(smsc::logger::Logger::getInstance("storejnl")),
+log_(smsc::logger::Logger::getInstance("opjnl")),
 version_(defaultVersion),
 serial_(1)
 {

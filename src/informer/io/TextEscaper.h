@@ -27,7 +27,7 @@ public:
         buf.reserve(cursize);
         const char* p = from;
         char* to = buf.GetCurPtr();
-        smsc_log_debug(log_,"escaping text '%.*s'",len,from);
+        // smsc_log_debug(log_,"escaping text '%.*s'",len,from);
         while (len>0) {
             switch (*p) {
             case '\0' :
@@ -67,7 +67,7 @@ nocheck:
         }
         *to = '\0'; // trailer
         buf.SetPos(to-buf.get());
-        smsc_log_debug(log_,"after escape '%s'",buf.get());
+        // smsc_log_debug(log_,"after escape '%s'",buf.get());
     }
 
     char* unescapeText( char* text, const char* from = 0, size_t len = 0 );

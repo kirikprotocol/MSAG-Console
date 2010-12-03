@@ -230,35 +230,39 @@ private:
 
 // =========================================================================
 
+namespace {
+    
+smsc::logger::Logger* checkSmscName( const std::string& smscId )
+{
+    if ( smscId.size() > 64 ) {
+        throw InfosmeException(EXC_BADNAME,
+                               "SMSC id '%s' is too long", smscId.c_str());
+    }
+    char c;
+    if ( ! isGoodAsciiName(smscId.c_str(),&c) ) {
+        throw InfosmeException(EXC_BADNAME,
+                               "SMSC id '%s' contains forbidden character '%c'",
+                               smscId.c_str(), c );
+    }
+    return smsc::logger::Logger::getInstance(("s." + smscId).c_str());
+}
+
+}
+
 SmscSender::SmscSender( ReceiptProcessor&  core,
                         const std::string& smscId,
                         const SmscConfig&  cfg,
                         smsc::util::config::Config* retryConfig ) :
-log_(0),
+log_(checkSmscName(smscId)),
 rproc_(core),
 parser_(0),
 smscId_(smscId),
 smscConfig_(cfg),
-scoredList_(*this, 2*maxScoreIncrement,
-            smsc::logger::Logger::getInstance("reglist")),
+scoredList_(*this, 2*maxScoreIncrement,log_),
 journal_(0),
 awaken_(false),
 isStopping_(true)
 {
-    {
-        if ( smscId_.size() > 64 ) {
-            throw InfosmeException(EXC_BADNAME,
-                                   "SMSC id '%s' is too long", smscId_.c_str());
-        }
-        char c;
-        if ( ! isGoodAsciiName(smscId_.c_str(),&c) ) {
-            throw InfosmeException(EXC_BADNAME,
-                                   "SMSC id '%s' contains forbidden character '%c'",
-                                   smscId_.c_str(), c );
-        }
-    }
-    log_ = smsc::logger::Logger::getInstance( ("s." + smscId).c_str());
-
     journal_ = new SmscJournal(*this);
     // session_.reset( new smsc::sme::SmppSession(cfg.smeConfig,this) );
     parser_ = new smsc::sms::IllFormedReceiptParser();

@@ -65,6 +65,7 @@ private:
     void createFile( msgtime_type currentTime, struct tm& now );
 
 private:
+    smsc::logger::Logger*              log_;
     smsc::core::synchronization::Mutex lock_;
     EmbedRefPtr< UserInfo >            userInfo_;
     std::auto_ptr< DeliveryInfo >      dlvInfo_;
