@@ -24,6 +24,11 @@ public class ValidationHelper {
     this(clazz.getCanonicalName());
   }
 
+  public void checkTrue(String argName, boolean isTrue) throws AdminException {
+    if (!isTrue)
+      throw new ValidationException(paramNameBundle, argName);
+  }
+
   public void checkPositive(String argName, int value) throws AdminException {
     if (value <= 0)
       throw new ValidationException(paramNameBundle, argName);

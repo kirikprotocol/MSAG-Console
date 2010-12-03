@@ -4,14 +4,12 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
-import mobi.eyeline.informer.admin.users.UserException;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import java.util.*;
 
@@ -26,7 +24,9 @@ public class UserEditController extends UserController {
   private String userId;
   private User userToEdit;
   private static final String USER_ID_PARAMETER = "userId";
-  private boolean initError;
+  private static final String initParam = "init";
+
+  private boolean init;
   private String passwordConfirm;
   private DynamicTableModel dynamicSfptModel = new DynamicTableModel();
   private DynamicTableModel dynamicFileModel = new DynamicTableModel();
@@ -34,12 +34,12 @@ public class UserEditController extends UserController {
 
   public UserEditController() {
     super();
-    try {
-      setUserId(getRequestParameter(USER_ID_PARAMETER));
-    }
-    catch (AdminException e) {
-      initError = true;
-    }
+    init = Boolean.valueOf(getRequestParameter(initParam));
+    setUserId(getRequestParameter(USER_ID_PARAMETER));
+  }
+
+  public boolean isInit() {
+    return init;
   }
 
   public void setSelectedRows(List<String> rows) throws AdminException {
@@ -52,7 +52,7 @@ public class UserEditController extends UserController {
     return userId;
   }
 
-  private void setUserId(String userId) throws AdminException {
+  private void setUserId(String userId) {
     if (userId == null || userId.length() == 0) {
       userId = null;
       userToEdit = new User();
@@ -61,7 +61,7 @@ public class UserEditController extends UserController {
       userToEdit.setDeliveryDays(Arrays.<Integer>asList(0,1,2,3,4,5,6));
       userToEdit.setValidityPeriod(new Time(1,0,0));
       userToEdit.setPriority(1);
-      userToEdit.setAllRegionsAllowed(true);      
+      userToEdit.setAllRegionsAllowed(true);
       userToEdit.setDeliveryLifetime(72);
       userToEdit.setDeliveryType(User.DeliveryType.SMS);
       userToEdit.setSmsPerSec(1);
@@ -74,8 +74,10 @@ public class UserEditController extends UserController {
         retryOnFail = "off";
     }
     this.userId = userId;
-    passwordConfirm = userToEdit.getPassword();
-
+    if(!init) {
+      passwordConfirm = userToEdit.getPassword();
+      init = true;
+    }
     dynamicSfptModel = new DynamicTableModel();
     dynamicFileModel = new DynamicTableModel();
     if(userToEdit.getCpSettings()!=null) {
@@ -100,19 +102,12 @@ public class UserEditController extends UserController {
   }
 
   public void setActiveWeekDays(Integer[] days) throws AdminException {
+    Arrays.sort(days);
     userToEdit.setDeliveryDays(Arrays.<Integer>asList(days));
   }
 
   public Integer[] getActiveWeekDays() {
     return userToEdit.getDeliveryDays().toArray(new Integer[userToEdit.getDeliveryDays().size()]);
-  }
-
-  public boolean isInitError() {
-    return initError;
-  }
-
-  public void setInitError(boolean initError) {
-    this.initError = initError;
   }
 
   public String save() {
@@ -128,10 +123,6 @@ public class UserEditController extends UserController {
         userToEdit.setCdrDestination(null);
         userToEdit.setCdrOriginator(null);
       }
-      if (!passwordConfirm.equals(userToEdit.getPassword())) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "user.edit.passwdConfirmMissmatch");
-        return null;
-      }
 
       if (retryOnFail.equals("off")) {
         userToEdit.setRetryOnFail(false);
@@ -140,11 +131,16 @@ public class UserEditController extends UserController {
         userToEdit.setRetryOnFail(true);
         userToEdit.setPolicyId("");
       } else {
-        userToEdit.setRetryOnFail(true);        
+        userToEdit.setRetryOnFail(true);
       }
 
       if (retryOnFail.equals("custom") && (userToEdit.getPolicyId() == null || !Smsc.RETRY_POLICY_PATTERN.matcher(userToEdit.getPolicyId()).matches())) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "retry_policy_incorrect");
+        return null;
+      }
+
+      if (passwordConfirm == null || !passwordConfirm.equals(userToEdit.getPassword())) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "user.edit.passwdConfirmMissmatch");
         return null;
       }
 
@@ -172,27 +168,27 @@ public class UserEditController extends UserController {
   private List<UserCPsettings> buildUCPSList() throws AdminException,IllegalArgumentException {
     List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
     for(DynamicTableRow row : dynamicSfptModel.getRows()) {
-       UserCPsettings ucps = new UserCPsettings();
-       ucps.setProtocol(UserCPsettings.Protocol.sftp);
-       ucps.setHost((String)row.getValue("host"));
-       String sPort = (String)row.getValue("port");
-       ucps.setPort( (sPort==null || sPort.length()==0) ? null : Integer.valueOf(sPort));
-       ucps.setLogin((String) row.getValue("login"));
-       ucps.setPassword((String) row.getValue("password"));
-       ucps.setDirectory((String) row.getValue("directory"));
-       ucps.setEncoding((String) row.getValue("encoding"));
-       ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
-       ucps.checkValid();
-       cpSettings.add(ucps);
+      UserCPsettings ucps = new UserCPsettings();
+      ucps.setProtocol(UserCPsettings.Protocol.sftp);
+      ucps.setHost((String)row.getValue("host"));
+      String sPort = (String)row.getValue("port");
+      ucps.setPort( (sPort==null || sPort.length()==0) ? null : Integer.valueOf(sPort));
+      ucps.setLogin((String) row.getValue("login"));
+      ucps.setPassword((String) row.getValue("password"));
+      ucps.setDirectory((String) row.getValue("directory"));
+      ucps.setEncoding((String) row.getValue("encoding"));
+      ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
+      ucps.checkValid();
+      cpSettings.add(ucps);
     }
     for(DynamicTableRow row : dynamicFileModel.getRows()) {
-       UserCPsettings ucps = new UserCPsettings();
-       ucps.setProtocol(UserCPsettings.Protocol.file);
-       ucps.setDirectory((String) row.getValue("directory"));
-       ucps.setEncoding((String) row.getValue("encoding"));
-       ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
-       ucps.checkValid();
-       cpSettings.add(ucps);
+      UserCPsettings ucps = new UserCPsettings();
+      ucps.setProtocol(UserCPsettings.Protocol.file);
+      ucps.setDirectory((String) row.getValue("directory"));
+      ucps.setEncoding((String) row.getValue("encoding"));
+      ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
+      ucps.checkValid();
+      cpSettings.add(ucps);
     }
     return cpSettings;
   }
@@ -207,7 +203,7 @@ public class UserEditController extends UserController {
       if(ucpsList!=null) {
         for(UserCPsettings ucps : ucpsList) {
           try {
-              getConfig().verifyCPSettings(userToEdit,ucps  );
+            getConfig().verifyCPSettings(userToEdit,ucps  );
           }
           catch (AdminException e) {
             addLocalizedMessage(FacesMessage.SEVERITY_WARN,"user.edit.connect.fail",ucps.toString());
@@ -253,12 +249,12 @@ public class UserEditController extends UserController {
   }
 
 
-  public void setSourceAddr(String sourceAddr) throws AdminException {
-    userToEdit.setSourceAddr(new Address(sourceAddr));
+  public void setSourceAddr(Address sourceAddr)  {
+    userToEdit.setSourceAddr(sourceAddr);
   }
 
-  public String getSourceAddr() {
-    return userToEdit.getSourceAddr() == null ? null : userToEdit.getSourceAddr().getSimpleAddress();
+  public Address getSourceAddr() {
+    return userToEdit.getSourceAddr();
   }
 
 
@@ -364,5 +360,19 @@ public class UserEditController extends UserController {
       ret.add(v.toString());
     }
     return ret;
+  }
+
+  public void setRegions(Integer[] rs) {
+    Arrays.sort(rs);
+    userToEdit.setRegions(Arrays.<Integer>asList(rs));
+  }
+
+  public Integer[] getRegions() {
+    List<Integer> res = userToEdit.getRegions();
+    if(res != null) {
+      return res.toArray(new Integer[res.size()]);
+    }else {
+      return new Integer[0];
+    }
   }
 }

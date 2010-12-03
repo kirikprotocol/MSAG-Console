@@ -2,7 +2,12 @@ package mobi.eyeline.informer.web.controllers;
 
 import mobi.eyeline.informer.admin.AdminException;
 
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Контроллер сеанса пользователя
@@ -30,5 +35,18 @@ public class UserSessionController extends InformerController {
       session.invalidate();
     }
     return "INDEX";
+  }
+
+  public List<FacesMessage> getMessages() {
+    List<FacesMessage> result = new LinkedList<FacesMessage>();
+    Iterator<FacesMessage> i=  FacesContext.getCurrentInstance().getMessages();
+    while(i.hasNext()) {
+      result.add(i.next());
+    }
+    return result;
+  }
+
+  public boolean isHasMessages() {
+    return FacesContext.getCurrentInstance().getMessages().hasNext();
   }
 }

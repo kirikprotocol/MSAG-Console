@@ -1,13 +1,13 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.util.validation.ValidationException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Настройки пользователя
@@ -125,8 +125,7 @@ public class User implements Serializable {
     return login;
   }
 
-  public void setLogin(String login) throws AdminException {
-    vh.checkNotEmpty("login", login);
+  public void setLogin(String login) {
     this.login = login;
   }
 
@@ -134,8 +133,7 @@ public class User implements Serializable {
     return password;
   }
 
-  public void setPassword(String password) throws AdminException {
-    vh.checkNotEmpty("password", password);
+  public void setPassword(String password) {
     this.password = password;
   }
 
@@ -143,8 +141,7 @@ public class User implements Serializable {
     return roles;
   }
 
-  public void setRoles(Set<String> roles) throws AdminException {
-    vh.checkNotNull("roles", roles);
+  public void setRoles(Set<String> roles){
     this.roles = roles;
   }
 
@@ -152,8 +149,7 @@ public class User implements Serializable {
     return firstName;
   }
 
-  public void setFirstName(String firstName) throws AdminException {
-    vh.checkNotEmpty("firstName", firstName);
+  public void setFirstName(String firstName) {
     this.firstName = firstName;
   }
 
@@ -161,8 +157,7 @@ public class User implements Serializable {
     return lastName;
   }
 
-  public void setLastName(String lastName) throws AdminException {
-    vh.checkNotEmpty("lastName", lastName);
+  public void setLastName(String lastName) {
     this.lastName = lastName;
   }
 
@@ -171,8 +166,7 @@ public class User implements Serializable {
     return phone;
   }
 
-  public void setPhone(String phone) throws AdminException {
-    vh.checkNotEmpty("phone", phone);
+  public void setPhone(String phone) {
     this.phone = phone;
   }
 
@@ -180,8 +174,7 @@ public class User implements Serializable {
     return email;
   }
 
-  public void setEmail(String email) throws AdminException {
-    vh.checkNotEmpty("email", email);
+  public void setEmail(String email) {
     this.email = email;
   }
 
@@ -189,8 +182,7 @@ public class User implements Serializable {
     return roles.contains(name);
   }
 
-  public void setStatus(Status status) throws AdminException {
-    vh.checkNotNull("status", status);
+  public void setStatus(Status status) {
     this.status = status;
   }
 
@@ -198,8 +190,7 @@ public class User implements Serializable {
     return status;
   }
 
-  public void setOrganization(String organization) throws AdminException {
-    vh.checkNotEmpty("organization", organization);
+  public void setOrganization(String organization) {
     this.organization = organization;
   }
 
@@ -227,8 +218,7 @@ public class User implements Serializable {
     return smsPerSec;
   }
 
-  public void setSmsPerSec(int smsPerSec) throws AdminException {
-    vh.checkPositive("smsPerSec", smsPerSec);
+  public void setSmsPerSec(int smsPerSec) {
     this.smsPerSec = smsPerSec;
   }
 
@@ -236,8 +226,7 @@ public class User implements Serializable {
     return sourceAddr;
   }
 
-  public void setSourceAddr(Address sourceAddr) throws AdminException {
-    vh.checkNotNull("sourceAddr", sourceAddr);
+  public void setSourceAddr(Address sourceAddr) {
     this.sourceAddr = sourceAddr;
   }
 
@@ -266,30 +255,19 @@ public class User implements Serializable {
   }
 
 
-  public void setValidityPeriod(Time validityPeriod) throws AdminException {
-    if (validityPeriod != null)
-      vh.checkPositive("validityPeriod", validityPeriod.getHour());
+  public void setValidityPeriod(Time validityPeriod) {
     this.validityPeriod = validityPeriod;
   }
 
-  public void setDeliveryDays(List<Integer> deliveryDays) throws AdminException {
-    List<Integer> deliveryDaysOut = new ArrayList<Integer>();
-    if (deliveryDays != null) {
-      for (Integer day : deliveryDays) {
-        vh.checkNotContains("deliveryDays", deliveryDaysOut, day);
-        vh.checkBetween("deliveryDays", day, 0, 6);
-        deliveryDaysOut.add(day);
-      }
-    }
-    this.deliveryDays = deliveryDaysOut;
+  public void setDeliveryDays(List<Integer> deliveryDays)  {
+    this.deliveryDays = deliveryDays == null ? new ArrayList<Integer>(0) : new ArrayList<Integer>(deliveryDays);
   }
 
   public DeliveryType getDeliveryType() {
     return deliveryType;
   }
 
-  public void setDeliveryType(DeliveryType deliveryType) throws AdminException {
-    vh.checkNotNull("deliveryType", deliveryType);
+  public void setDeliveryType(DeliveryType deliveryType) {
     this.deliveryType = deliveryType;
   }
 
@@ -305,8 +283,7 @@ public class User implements Serializable {
     return policyId;
   }
 
-  public void setPolicyId(String policyId) throws AdminException {
-    if (policyId != null && policyId.trim().length() == 0) policyId = null;
+  public void setPolicyId(String policyId) {
     this.policyId = policyId;
   }
 
@@ -314,27 +291,19 @@ public class User implements Serializable {
     return allowedRegions;
   }
 
-  public void setRegions(List<Integer> regions) throws AdminException {
+  public void setRegions(List<Integer> regions){
     if (regions == null) {
       this.allowedRegions = null;
       return;
     }
-    List<Integer> regionsIds = new ArrayList<Integer>();
-    for (Integer r : regions) {
-      vh.checkNotContains("regions", regionsIds, r);
-      vh.checkNotNull("regions", r);
-      regionsIds.add(r);
-    }
-
-    this.allowedRegions = regionsIds;
+    this.allowedRegions = new ArrayList<Integer>(regions);
   }
 
   public int getPriority() {
     return priority;
   }
 
-  public void setPriority(int priority) throws AdminException {
-    vh.checkPositive("priority", priority);
+  public void setPriority(int priority) {
     this.priority = priority;
   }
 
@@ -366,8 +335,7 @@ public class User implements Serializable {
     return deliveryLifetime;
   }
 
-  public void setDeliveryLifetime(int deliveryLifetime) throws AdminException {
-    vh.checkPositive("deliveryLifetime", deliveryLifetime);
+  public void setDeliveryLifetime(int deliveryLifetime) {
     this.deliveryLifetime = deliveryLifetime;
   }
 
@@ -426,6 +394,59 @@ public class User implements Serializable {
         this.cpSettings .add(new UserCPsettings(ucps));
       }
     }
+  }
+
+  private static Pattern emailPattern = Pattern.compile("^[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*@[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*$");
+  private static Pattern phonePattern = Pattern.compile("^(\\+)?\\d{1,20}$");
+
+  void validate() throws AdminException{
+    vh.checkNotEmpty("login", login);
+    vh.checkNotEmpty("password", password);
+    vh.checkNotNull("roles", roles);
+    vh.checkNotEmpty("firstName", firstName);
+    vh.checkNotEmpty("lastName", lastName);
+    vh.checkNotEmpty("phone", phone);
+    vh.checkMaches("phone", phone, phonePattern);
+    vh.checkNotEmpty("email", email);
+    vh.checkMaches("email", email, emailPattern);
+    vh.checkNotNull("status", status);
+    vh.checkNotEmpty("organization", organization);
+    vh.checkPositive("smsPerSec", smsPerSec);
+    vh.checkNotNull("sourceAddr", sourceAddr);
+    vh.checkNotNull("deliveryStartTime",deliveryStartTime);
+    vh.checkNotNull("deliveryEndTime",deliveryEndTime);
+    if (validityPeriod != null)
+      vh.checkPositive("validityPeriod", validityPeriod.getHour());
+
+    if (deliveryDays != null) {
+      for (Integer day1 : deliveryDays) {
+        vh.checkBetween("deliveryDays", day1, 0, 6);
+        for(Integer day2 : deliveryDays) {
+          if(day1 != day2) {
+            vh.checkNotEquals("deliveryDays", day1, day2); //todo check it!
+          }
+        }
+      }
+    }
+
+
+    vh.checkNotNull("deliveryType", deliveryType);
+    if (policyId != null && policyId.trim().length() == 0) policyId = null;
+
+    if(allowedRegions != null) {
+      for (Integer r : allowedRegions) {
+        vh.checkNotNull("regions", r);
+        for(Integer r2 : allowedRegions) {
+          if(r != r2) {
+            vh.checkNotEquals("allowedRegions", r, r2);
+          }
+        }
+      }
+    }
+
+    vh.checkPositive("deliveryLifetime", deliveryLifetime);
+    vh.checkBetween("priority", priority, 1, 100);
+
   }
 
   public enum Status {

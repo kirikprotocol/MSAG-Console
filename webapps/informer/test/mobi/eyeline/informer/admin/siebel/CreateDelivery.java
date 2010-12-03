@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -45,14 +46,56 @@ public class CreateDelivery {
   }
 
 
+//  @Test
+  public void get() throws Exception {
+    Connection connection = null;
+
+    try {
+      connection = ConnectionPool.getPool("default").getConnection();
+
+      PreparedStatement prepStatement = null;
+      try {
+        prepStatement = connection.prepareStatement("SELECT * FROM SMS_MAIL_PARAMS WHERE CTRL_STATUS IN ('ENQUEUED','PAUSED','STOPPED')");
+        ResultSet rs = null;
+        try{
+            rs = prepStatement.executeQuery();        
+          while(rs.next()) {
+            System.out.println(rs.getString(1));
+          }
+        }finally {
+          if(rs != null) {
+            try{
+              rs.close();
+            }catch (Exception ignored){}
+          }
+        }
+      } finally {
+        if (prepStatement != null) {
+          try{
+            prepStatement.close();
+          }catch (Exception ignored){}
+        }
+
+      }
+
+    } finally {
+      if(connection != null) {
+        try{
+          connection.close();
+        }catch (Exception ignored){}
+      }
+    }
+  }
+
+
+
 
   static void _createMessages(int wid, Connection connection) throws SQLException {
     int firstmsgid = -1;
     int msgid = wid-1000;
     PreparedStatement prepStatement = null;
     try {
-      prepStatement = connection.prepareStatement("insert into SMS_MAIL (ROW_ID, WAVE_INT_ID, " +
-          "CLC_INT_ID, CREATED, LAST_UPD, MSISDN, MESSAGE, MESSAGE_STATE, SMSC_STAT_CODE, SMSC_STAT_VAL) values (?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?,?,?,?,?)");
+      prepStatement = connection.prepareStatement("insert into SMS_MAIL (ROW_ID, WAVE_INT_ID, CLC_INT_ID, CREATED, LAST_UPD, MSISDN, MESSAGE, MESSAGE_STATE, SMSC_STAT_CODE, SMSC_STAT_VAL) values (?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?,?,?,?,?)");
       int count = 0;
 
       System.out.println("Creation of SMS_MAIL table...");
@@ -74,6 +117,7 @@ public class CreateDelivery {
         prepStatement.setNull(6, java.sql.Types.VARCHAR);
         prepStatement.setNull(7, java.sql.Types.VARCHAR);
         prepStatement.setNull(8, java.sql.Types.VARCHAR);
+        System.out.println(prepStatement);
         prepStatement.addBatch();
         ++msgid;
         count++;
@@ -98,8 +142,7 @@ public class CreateDelivery {
 
     PreparedStatement prepStatement = null;
     try {
-      prepStatement = connection.prepareStatement("insert into SMS_MAIL_PARAMS (ROW_ID, WAVE_INT_ID, CAMPAIGN_INT_ID, " +
-          "CREATED, LAST_UPD, PRIORITY, FLASH_FLG, SAVE_FLG, BEEP_FLG, EXP_PERIOD, CTRL_STATUS) values (?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?,?,?,?,?,?)");
+      prepStatement = connection.prepareStatement("insert into SMS_MAIL_PARAMS (ROW_ID, WAVE_INT_ID, CAMPAIGN_INT_ID, CREATED, LAST_UPD, PRIORITY, FLASH_FLG, SAVE_FLG, BEEP_FLG, EXP_PERIOD, CTRL_STATUS) values (?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?,?,?,?,?,?)");
 
 
       System.out.println("Creation of SMS_MAIL_PARAMS table...");

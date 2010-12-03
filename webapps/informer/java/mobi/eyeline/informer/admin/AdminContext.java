@@ -379,6 +379,9 @@ public class AdminContext {
   public void addUser(User u) throws AdminException {
     try {
       integrityLock.lock();
+      if(usersManager.getUser(u.getLogin()) != null) {
+        throw new UserException("user_already_exist", u.getLogin());
+      }
       if (u.getRegions() != null) {
         for (Integer rId : u.getRegions()) {
           if (null == regionsManager.getRegion(rId)) {
@@ -1230,7 +1233,7 @@ public class AdminContext {
     }
 
     public void activateDelivery(String login, String password, Integer deliveryId) throws AdminException {
-      adminContext.activateDelivery(login, password, deliveryId); 
+      adminContext.activateDelivery(login, password, deliveryId);
     }
   }
 }

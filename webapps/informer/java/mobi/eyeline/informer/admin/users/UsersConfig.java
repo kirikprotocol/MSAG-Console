@@ -200,7 +200,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     }
     userSection.setInt("smsPerSec",user.getSmsPerSec());
     userSection.setString("sourceAddr",user.getSourceAddr().getSimpleAddress());
-    userSection.setString("validDityPeriod",user.getValidityPeriod().getTimeString());
+    if(user.getValidityPeriod() != null) {
+      userSection.setString("validityPeriod",user.getValidityPeriod().getTimeString());
+    }
     userSection.setString("deliveryType",user.getDeliveryType().toString());
     if(user.isTransactionMode())  {
       userSection.setBool("transactionMode",true);
@@ -243,7 +245,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     if(user.isCreateReports()) {
       userSection.setBool("createReports",true);
     }
-    
+
 
     if (user.getCpSettings() != null && !user.getCpSettings().isEmpty()) {
       userSection.addSection(createCpSettingsSection(user));

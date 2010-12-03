@@ -15,70 +15,72 @@ import static org.junit.Assert.assertTrue;
  */
 public class UserTest {
 
-
   @Test
   public void testSetPhone() throws AdminException{
     User o = new User();
-    o.setPhone("1");
     try{
       o.setPhone("");
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
     try{
       o.setPhone(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
+    }catch (AdminException e) {}
+    try{
+      o.setPhone("dasdasdasdasda");
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
   }
 
   @Test
   public void testSetEmail() throws AdminException {
     User o = new User();
-    o.setEmail("1");
     try{
       o.setEmail("");
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
     try{
       o.setEmail(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
+    }catch (AdminException e) {}
+    try{
+      o.setEmail("dasdasdasdasda");
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
   }
 
   @Test
   public void testSetFirstName() throws AdminException {
     User o = new User();
-    o.setFirstName("1");
     try{
       o.setFirstName("");
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
     try{
       o.setFirstName(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
   }
 
   @Test
   public void testSetLastName() throws AdminException {
     User o = new User();
-    o.setLastName("1");
     try{
       o.setLastName("");
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
     try{
       o.setLastName(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
   }
 
   @Test
   public void testSetStatus() throws AdminException {
     User o = new User();
-    o.setStatus(User.Status.ENABLED);
     try{
       o.setStatus(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }
     catch (AdminException e) {}
   }
@@ -86,36 +88,27 @@ public class UserTest {
   @Test
   public void testSetPassword() throws AdminException {
     User o = new User();
-    o.setPassword("1");
     try{
       o.setPassword("");
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
     try{
       o.setPassword(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
   }
 
   @Test
   public void testSetLogin() throws AdminException {
     User o = new User();
-    o.setLogin("1");
     try{
       o.setLogin("");
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
     try{
       o.setLogin(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
-  }
-
-  @Test
-  public void testSetOrganization() throws AdminException {
-    User o = new User();
-    o.setOrganization("1");
-    assertEquals("1",o.getOrganization());
   }
 
   @Test
@@ -140,26 +133,22 @@ public class UserTest {
   @Test
   public void testSetSmsPerSec() throws AdminException {
     User o = new User();
-    o.setSmsPerSec(100);
-    assertEquals(o.getSmsPerSec(),100);
     try{
       o.setSmsPerSec(0);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
     try{
       o.setSmsPerSec(-100);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
   }
 
   @Test
   public void testSourceAddr() throws AdminException {
     User o = new User();
-    o.setSourceAddr(new Address("+79130000000"));
-    assertEquals(o.getSourceAddr().getSimpleAddress(),"+79130000000");
     try{
       o.setSourceAddr(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (AdminException e) {}
   }
 
@@ -185,15 +174,15 @@ public class UserTest {
     o.setDeliveryEndTime(null);
     try{
       o.setDeliveryEndTime(new Time("24:00:00"));
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (IllegalArgumentException e) {}
     try{
       o.setDeliveryEndTime(new Time("00:99:00"));
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (IllegalArgumentException e) {}
     try{
       o.setDeliveryEndTime(new Time("00:00:60"));
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }catch (IllegalArgumentException e) {}
   }
 
@@ -216,14 +205,14 @@ public class UserTest {
       set.clear();
       set.add(-1);
       o.setDeliveryDays(set);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }
     catch (AdminException e){}
     try {
       set.clear();
       set.add(7);
       o.setDeliveryDays(set);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }
     catch (AdminException e){}
   }
@@ -231,11 +220,9 @@ public class UserTest {
   @Test
   public void testValidHours() throws AdminException {
     User o = new User();
-    o.setValidityPeriod(new Time(9,0,0));
-    assertEquals(o.getValidityPeriod(), new Time(9,0,0));
     try {
       o.setValidityPeriod(new Time(0,50,30));
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }
     catch (AdminException e){}
   }
@@ -272,7 +259,7 @@ public class UserTest {
     try {
       regions.add(null);
       o.setRegions(regions);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }
     catch (AdminException e){}
   }
@@ -280,11 +267,9 @@ public class UserTest {
   @Test
   public void testDeliveryType() throws AdminException {
     User o = new User();
-    o.setDeliveryType(User.DeliveryType.USSD_PUSH_VIA_VLR);
-    assertEquals(o.getDeliveryType(),User.DeliveryType.USSD_PUSH_VIA_VLR);
     try {
       o.setDeliveryType(null);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }
     catch (AdminException e){}
   }
@@ -296,7 +281,7 @@ public class UserTest {
     assertEquals(o.getPriority(),1001);
     try {
       o.setPriority(-5);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }
     catch (AdminException e){}
   }
@@ -317,7 +302,7 @@ public class UserTest {
     assertEquals(o.getDeliveryLifetime(),333);
     try {
       o.setDeliveryLifetime(0);
-      assertTrue(false);
+      o.validate(); assertTrue(false);
     }
     catch (AdminException e){}
 
@@ -366,11 +351,11 @@ public class UserTest {
 
 
   @Test
-  public void testClone() throws AdminException{
+  public void testCloneAndValdiate() throws AdminException{
     User o = new User();
     o.setPhone("1");
     o.setOrganization("2");
-    o.setEmail("3");
+    o.setEmail("3@dasdsa.re");
     o.setFirstName("4");
     o.setLastName("5");
     o.setLogin("6");
@@ -384,6 +369,9 @@ public class UserTest {
     o.setCreateCDR(true);
     o.setCdrDestination("dest");
     o.setCdrOriginator("orig");
+    o.setDeliveryType(User.DeliveryType.SMS);
+    o.setDeliveryLifetime(1);
+    o.setPriority(1);
 
     List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
     UserCPsettings ucps = new UserCPsettings();
@@ -407,8 +395,15 @@ public class UserTest {
 
     o.setCpSettings(cpSettings);
 
+    o.validate();
+
     User n = new User(o);
+
+    n.validate();
+    
     UserTestUtils.compareUsers(o,n);
+
+
   }
 
 

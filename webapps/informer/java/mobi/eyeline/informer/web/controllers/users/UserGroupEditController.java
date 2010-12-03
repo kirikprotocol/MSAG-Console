@@ -262,22 +262,20 @@ public class UserGroupEditController extends UserController {
     this.smsPerSec = smsPerSec;
   }
 
-  public List<Integer> getRegions() {
-    return regions;
+  public Integer[] getRegions() {
+    return regions.toArray(new Integer[regions.size()]);
   }
 
-  public void setRegions(List<Integer> regions) {
-    this.regions = regions;
+  public void setRegions(Integer[] regions) {
+    this.regions = Arrays.asList(regions);
   }
 
-  public void setSourceAddr(String sourceAddr) {
-    if (sourceAddr != null && sourceAddr.trim().length() > 0) {
-      this.sourceAddr = new Address(sourceAddr);
-    }
+  public void setSourceAddr(Address sourceAddr) {
+      this.sourceAddr = sourceAddr;
   }
 
-  public String getSourceAddr() {
-    return sourceAddr == null ? null : sourceAddr.getSimpleAddress();
+  public Address getSourceAddr() {
+    return sourceAddr;
   }
 
   public Integer[] getDeliveryDays() {

@@ -37,10 +37,11 @@ class UsersSettings {
     return users;
   }
 
-  public void setUsers(Collection<User> users) throws AdminException {
+  void setUsers(Collection<User> users) throws AdminException {
     vh.checkNoNulls("users", users);
     Map<String, User> r = new LinkedHashMap<String, User>(users.size());
     for (User r1 : users) {
+      r1.validate();
       for (User r2 : users) {
         if (r1 != r2) {
           vh.checkNotEquals("login", r1.getLogin(), r2.getLogin());
@@ -59,7 +60,8 @@ class UsersSettings {
     return new UsersSettings(this);
   }
 
-  public void updateUser(User user) throws UserException {
+  public void updateUser(User user) throws AdminException {
+    user.validate();
     User old = users.remove(user.getLogin());
     if (old == null) {
       throw new UserException("user_not_exist", user.getLogin());
@@ -74,7 +76,8 @@ class UsersSettings {
     }
   }
 
-  public void addUser(User user) {
+  public void addUser(User user) throws AdminException{
+    user.validate();
     users.put(user.getLogin(), user);
   }
 }
