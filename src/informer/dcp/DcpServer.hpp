@@ -67,17 +67,17 @@ protected:
   smsc::logger::Logger* dumpLog;
 
   template <class MSG>
-  void dumpMsg(const MSG& msg)
+  void dumpMsg(const MSG& msg,const char* dir="in")
   {
     if(dumpLog->isDebugEnabled())
     {
       const std::string& dumpStr=msg.toString();
       if(dumpStr.length()>256)
       {
-        smsc_log_debug(dumpLog,"connId=%d, %s:%s ...",msg.messageGetConnId(),msg.messageGetName().c_str(),dumpStr.substr(0,256).c_str());
+        smsc_log_debug(dumpLog,"%s connId=%d, %s:%s ...",dir,msg.messageGetConnId(),msg.messageGetName().c_str(),dumpStr.substr(0,256).c_str());
       }else
       {
-        smsc_log_debug(dumpLog,"connId=%d, %s:%s",msg.messageGetConnId(),msg.messageGetName().c_str(),dumpStr.c_str());
+        smsc_log_debug(dumpLog,"%s connId=%d, %s:%s",dir,msg.messageGetConnId(),msg.messageGetName().c_str(),dumpStr.c_str());
       }
     }
   }
@@ -136,7 +136,7 @@ protected:
   {
     respMsg.messageSetSeqNum(reqMsg.messageGetSeqNum());
     respMsg.messageSetConnId(reqMsg.messageGetConnId());
-    dumpMsg(respMsg);
+    dumpMsg(respMsg,"out");
     enqueueCommand(reqMsg.messageGetConnId(),respMsg,proto,false);
   }
 
