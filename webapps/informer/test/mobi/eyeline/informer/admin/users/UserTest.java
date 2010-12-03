@@ -372,6 +372,8 @@ public class UserTest {
     o.setDeliveryType(User.DeliveryType.SMS);
     o.setDeliveryLifetime(1);
     o.setPriority(1);
+    o.setDeliveryStartTime(new Time(1,1,1));
+    o.setDeliveryEndTime(new Time(21,1,1));
 
     List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
     UserCPsettings ucps = new UserCPsettings();

@@ -87,6 +87,13 @@
               <td width="12px" background="#{facesContext.externalContext.requestContextPath}/images/smsc_24.jpg" ></td>
               <td valign="top">
                 <tr:messages id="informer_errors"/>
+                <!--<eye:message level="error" rendered="#{userSession.hasMessages}">-->
+                  <!--<h:panelGrid columns="1">-->
+                    <!--<tr:iterator value="#{userSession.messages}" var="m">-->
+                      <!--<tr:outputText value="#{m.summary}"/>-->
+                    <!--</tr:iterator>-->
+                  <!--</h:panelGrid>-->
+                <!--</eye:message>-->
                 <eye:delimiter/>
                 <ui:insert name="content"/>
                 <eye:delimiter/>

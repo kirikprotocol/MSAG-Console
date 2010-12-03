@@ -2,6 +2,8 @@
 <config>
   <section name="USERS">
     <section name="a">
+      <param name="deliveryEndTime" type="string">22:00:00</param>
+      <param name="deliveryStartTime" type="string">09:00:00</param>
       <param name="password"  type="string">1</param>
       <param name="status"    type="string">ENABLED</param>
       <param name="firstName" type="string">AfirstName</param>
@@ -23,7 +25,7 @@
         <param name="informer-admin" type="bool">true</param>
         <param name="informer-user"  type="bool">true</param>
       </section>
-      <section name="REGIONS">        
+      <section name="REGIONS">
         <param name="1"  type="bool">true</param>
       </section>
       <section name="CPSETTINGS">
@@ -47,7 +49,9 @@
         </section>
       </section>
     </section>
-    <section name="b">      
+    <section name="b">
+      <param name="deliveryEndTime" type="string">22:00:00</param>
+      <param name="deliveryStartTime" type="string">09:00:00</param>
       <param name="password"  type="string">1</param>
       <param name="status"    type="string">ENABLED</param>
       <param name="firstName" type="string">BfirstName</param>

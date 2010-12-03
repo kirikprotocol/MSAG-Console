@@ -12,7 +12,7 @@
 
   <ui:define name="content">
 
-    <tr:form id="userForm" rendered="#{!userEdit.initError}">
+    <tr:form id="userForm">
 
       <eye:buttons>
         <eye:button>
@@ -25,44 +25,35 @@
       </eye:buttons>
 
       <tr:inputHidden id="userId" value="#{userEdit.userId}"/>
+      <tr:inputHidden id="init" value="#{userEdit.init}"/>
       <eye:delimiter/>
 
       <h:panelGrid style="padding-left:10px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.login}"/>
         <tr:outputText value="#{userEdit.userToEdit.login}" rendered="#{userEdit.userId!=null}"/>
-        <tr:inputText value="#{userEdit.userToEdit.login}" rendered="#{userEdit.userId==null}" simple="true">
-          <tr:validateLength minimum="1"/>
-        </tr:inputText>
+        <tr:inputText simple="true" value="#{userEdit.userToEdit.login}" rendered="#{userEdit.userId==null}" />
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.password']}"/>
-        <tr:inputText secret="true" value="#{userEdit.userToEdit.password}" simple="true">
-          <tr:validateLength minimum="3" maximum="15"/>
-        </tr:inputText>
+        <h:inputSecret size="30" redisplay="true" value="#{userEdit.userToEdit.password}" />
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.passwordConfirm']}"/>
-        <tr:inputText secret="true" value="#{userEdit.passwordConfirm}"  simple="true">
-          <tr:validateLength minimum="3" maximum="15"/>
-        </tr:inputText>
+        <h:inputSecret size="30" redisplay="true" value="#{userEdit.passwordConfirm}"  />
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.firstName}"/>
-        <tr:inputText value="#{userEdit.userToEdit.firstName}" simple="true" required="true"/>
+        <tr:inputText simple="true" value="#{userEdit.userToEdit.firstName}"  />
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.lastName}"/>
-        <tr:inputText value="#{userEdit.userToEdit.lastName}" simple="true" required="true"/>
+        <tr:inputText simple="true" value="#{userEdit.userToEdit.lastName}"  />
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.organization}"/>
-        <tr:inputText value="#{userEdit.userToEdit.organization}" simple="true" required="true"/>
+        <tr:inputText simple="true" value="#{userEdit.userToEdit.organization}"  />
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.phone}"/>
-        <tr:inputText value="#{userEdit.userToEdit.phone}" simple="true" required="true">
-          <eye:validatePhone/>
-        </tr:inputText>
+        <tr:inputText simple="true" value="#{userEdit.userToEdit.phone}" />
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.email}"/>
-        <tr:inputText value="#{userEdit.userToEdit.email}" simple="true" required="true">
-          <eye:validateEmail/>
-        </tr:inputText>
+        <tr:inputText simple="true" value="#{userEdit.userToEdit.email}" />
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.isAdmin']}"/>
         <h:selectBooleanCheckbox value="#{userEdit.admin}" style="position: relative;  left: -3px;"/>
@@ -71,7 +62,7 @@
         <h:selectBooleanCheckbox value="#{userEdit.blocked}" style="position: relative;  left: -3px;"/>
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.locale}"/>
-        <h:selectOneMenu value="#{userEdit.userLocale}" style="align:left;" required="true" >
+        <h:selectOneMenu value="#{userEdit.userLocale}" style="align:left;"  >
           <f:selectItems value="#{userEdit.locales}"/>
         </h:selectOneMenu>
 
@@ -83,7 +74,7 @@
 
         <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{userBundle.sourceAddr}"/>
-          <tr:inputText value="#{userEdit.sourceAddr}" simple="true" required="true" columns="15"/>
+          <h:inputText value="#{userEdit.sourceAddr}" converterMessage="#{userBundle.sourceAddr}"  size="15" converter="addressConverter"/>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryDays}"/>
           <h:selectManyCheckbox value="#{userEdit.activeWeekDays}" style="width: 100px">
@@ -92,16 +83,14 @@
 
           <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.active.period']}"/>
           <h:panelGroup>
-            <eye:inputDate value="#{userEdit.deliveryStartTime}" required="true" type="short_time"/>
+            <eye:inputDate value="#{userEdit.deliveryStartTime}"  type="short_time"/>
             <h:outputText style="white-space:nowrap;" value=" - "/>
-            <eye:inputDate value="#{userEdit.deliveryEndTime}" required="true" type="short_time"/>
+            <eye:inputDate value="#{userEdit.deliveryEndTime}"  type="short_time"/>
           </h:panelGroup>
 
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.priority}"/>
-          <tr:inputText value="#{userEdit.userToEdit.priority}" simple="true" required="true" columns="3">
-            <eye:validatePositive/>
-          </tr:inputText>
+          <tr:inputText simple="true" value="#{userEdit.userToEdit.priority}"   columns="3"/>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
           <h:panelGroup>
@@ -117,7 +106,7 @@
 
 
           <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
-          <eye:inputDate id="validityPeriod" value="#{userEdit.validityPeriod}" required="true"  type="short_time"/>
+          <eye:inputDate id="validityPeriod" value="#{userEdit.validityPeriod}"   type="short_time"/>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
           <h:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" style="position: relative;  left: -3px;"/>
@@ -126,7 +115,7 @@
           <h:selectBooleanCheckbox value="#{userEdit.userToEdit.emailNotification}" style="position: relative; left: -3px;"/>
 
           <h:outputText style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}"/>
-          <h:selectOneMenu id="deliveryType" value="#{userEdit.userToEdit.deliveryType}" style="align:left; display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" required="true"
+          <h:selectOneMenu id="deliveryType" value="#{userEdit.userToEdit.deliveryType}" style="align:left; display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" 
                            onchange="deliveryTypeChanged()">
             <f:selectItems value="#{userEdit.deliveryTypes}"/>
           </h:selectOneMenu>
@@ -143,9 +132,7 @@
       <eye:collapsingGroup label="#{msg['user.edit.restrictions']}" opened="true">
         <h:panelGrid style="padding-top:10px; padding-left:10px" columns="2" columnClasses="column100Width,columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{userBundle.smsPerSec}"/>
-          <tr:inputText value="#{userEdit.userToEdit.smsPerSec}" simple="true" columns="5">
-            <eye:validatePositive/>
-          </tr:inputText>
+          <tr:inputText simple="true" value="#{userEdit.userToEdit.smsPerSec}"  columns="5"/>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.regions}"/>
           <h:panelGroup>
@@ -154,7 +141,7 @@
           </h:panelGroup>
 
           <h:outputText id="regionsSelectManyLabel" style="white-space:nowrap;" value="&#160;"/>
-          <tr:selectManyCheckbox id="regionsSelectMany" value="#{userEdit.userToEdit.regions}" simple="true" inlineStyle="position: relative; top: 1px; left: -3px;">
+          <tr:selectManyCheckbox simple="true" id="regionsSelectMany" value="#{userEdit.regions}"  inlineStyle="position: relative; top: 1px; left: -3px;">
             <f:selectItems value="#{userEdit.regionsList}"/>
           </tr:selectManyCheckbox>
         </h:panelGrid>
@@ -213,9 +200,7 @@
 
         <h:panelGrid id="archiveSettings" style="padding-left:10px;display: #{userEdit.userToEdit.createArchive ? '':'none'};" columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.delivery.lifetime']}"/>
-          <tr:inputText value="#{userEdit.userToEdit.deliveryLifetime}" simple="true" required="true" columns="5">
-            <eye:validatePositive/>
-          </tr:inputText>
+          <tr:inputText simple="true" value="#{userEdit.userToEdit.deliveryLifetime}"   columns="5"/>
         </h:panelGrid>
       </eye:collapsingGroup>
 
@@ -234,10 +219,10 @@
         <h:panelGrid id="cdrOpts" style="padding-left:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.cdrDestination}"/>
-          <tr:inputText value="#{userEdit.userToEdit.cdrDestination}" simple="true"/>
+          <tr:inputText simple="true" value="#{userEdit.userToEdit.cdrDestination}" />
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.cdrOriginator}"/>
-          <tr:inputText value="#{userEdit.userToEdit.cdrOriginator}" simple="true"/>
+          <tr:inputText simple="true" value="#{userEdit.userToEdit.cdrOriginator}" />
 
         </h:panelGrid>
       </eye:collapsingGroup>
