@@ -122,7 +122,7 @@ public:
     /// must state: assert(3600%ret==0), assert(ret%60==0).
     /// NOTE: never changes this value unless you don't have resends!
     inline msgtime_type getResendUploadPeriod() const {
-        return 600;
+        return 300;
     }
 
     /// upload next resend file if less than this time remains.

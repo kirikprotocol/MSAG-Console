@@ -248,7 +248,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 
     const msgtime_type currentTime(msgtime_type(usecTime/tuPerSec));
 
-    bool uploadNextResend = false;
+    msgtime_type uploadNextResend = 0;
     do { // fake loop
 
         /// check if we need to request new messages
@@ -292,7 +292,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                 if (v->first < startTime) startTime = v->first;
             }
             if (startTime + getCS()->getResendMinTimeToUpload() >= nextResendFile_) {
-                uploadNextResend = true;
+                uploadNextResend = startTime;
             }
         }
 
@@ -302,7 +302,6 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                 ResendQueue::iterator v = resendQueue_.begin();
                 if ( nextResendFile_ && v->first >= nextResendFile_ ) {
                     // cannot take from resend queue until we load it
-                    uploadNextResend = true;
                 } else if ( v->first <= currentTime ) {
                     iter = v->second;
                     from = "resendQueue";
@@ -327,7 +326,10 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 
     if (uploadNextResend && !resendTransferTask_) {
         try {
-            smsc_log_debug(log_,"R=%u/D=%u wants resend-in", regionId_, dlvId);
+            smsc_log_debug(log_,"R=%u/D=%u wants resend-in as curTime=%u start=%+d next=%+d",
+                           regionId_, dlvId,
+                           currentTime, int(uploadNextResend-currentTime),
+                           int(nextResendFile_-uploadNextResend) );
             ResendTransferTask* task = new ResendTransferTask(*this,true);
             dlv_->source_->getDlvActivator().startResendTransfer(task);
             resendTransferTask_ = task;
@@ -492,10 +494,11 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
             if ( queueLastChunk > queueStartTime +
                  getCS()->getResendMinTimeToUpload() + getCS()->getResendUploadPeriod() ) {
                 try {
-                    smsc_log_debug(log_,"R=%u/D=%u wants resend-out as qSize=%u last=+%u",
+                    smsc_log_debug(log_,"R=%u/D=%u wants resend-out as qSize=%u start=%+d last=+%d",
                                    regionId_, dlvId,
                                    unsigned(resendQueue_.size()),
-                                   unsigned(queueLastChunk-queueStartTime));
+                                   int(queueStartTime-currentTime),
+                                   int(queueLastChunk-queueStartTime));
                     ResendTransferTask* task = new ResendTransferTask(*this,false);
                     dlv_->source_->getDlvActivator().startResendTransfer(task);
                     resendTransferTask_ = task;
@@ -914,10 +917,13 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
         return;
     }
     const msgtime_type period = getCS()->getResendUploadPeriod();
+    const msgtime_type currentTime = currentTimeSeconds();
     msgtime_type startTime =
-        std::min(currentTimeSeconds(), resendQueue_.begin()->first) +
+        std::min(currentTime, resendQueue_.begin()->first) +
         getCS()->getResendMinTimeToUpload() + period*2 - 1;
     startTime -= startTime % period;
+    smsc_log_debug(log_,"R=%u/D=%u resend-out curTime=%u startTime=%+d period=%u",
+                   regionId_, dlvId, currentTime, int(startTime-currentTime), period);
 
     smsc::core::buffers::TmpBuf<char,8192> buf;
     RelockMutexGuard mg(cacheMon_);
