@@ -420,8 +420,10 @@ public class User implements Serializable {
 
     if (deliveryDays != null) {
       for (Integer day1 : deliveryDays) {
+        vh.checkNotNull("deliveryDays", day1);
         vh.checkBetween("deliveryDays", day1, 0, 6);
         for(Integer day2 : deliveryDays) {
+          vh.checkNotNull("deliveryDays", day2);
           if(day1 != day2) {
             vh.checkNotEquals("deliveryDays", day1, day2); //todo check it!
           }
@@ -437,6 +439,7 @@ public class User implements Serializable {
       for (Integer r : allowedRegions) {
         vh.checkNotNull("regions", r);
         for(Integer r2 : allowedRegions) {
+          vh.checkNotNull("regions", r2);
           if(r != r2) {
             vh.checkNotEquals("allowedRegions", r, r2);
           }

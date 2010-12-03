@@ -49,6 +49,7 @@ public class InformerManagerImpl implements InformerManager {
 
 
   public void updateSettings(InformerSettings informerSettings) throws AdminException {
+    informerSettings.validate();
     try {
       lock.writeLock().lock();
       cfgFileManager.save(informerSettings);

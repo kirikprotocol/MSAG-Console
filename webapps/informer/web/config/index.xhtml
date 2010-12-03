@@ -34,20 +34,16 @@
 <eye:collapsingGroup label="#{msg['config.informer.section']}" opened="true">
   <tr:panelFormLayout inlineStyle="padding: 10px">
     <tr:panelLabelAndMessage label="#{informerSettings.adminHost}">
-      <tr:inputText value="#{config.settings.adminHost}" simple="true" required="true"/>
+      <tr:inputText value="#{config.settings.adminHost}" simple="true" />
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{informerSettings.adminPort}">
-      <tr:inputText value="#{config.settings.adminPort}" simple="true" required="true" columns="6">
-        <eye:validatePort/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.adminPort}" simple="true"  columns="6"/>
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{informerSettings.dcpHost}">
-      <tr:inputText value="#{config.settings.dcpHost}" simple="true" required="true"/>
+      <tr:inputText value="#{config.settings.dcpHost}" simple="true" />
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{informerSettings.dcpPort}">
-      <tr:inputText value="#{config.settings.dcpPort}" simple="true" required="true" columns="6">
-        <eye:validatePort/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.dcpPort}" simple="true"  columns="6"/>
     </tr:panelLabelAndMessage>
   </tr:panelFormLayout>
 </eye:collapsingGroup>
@@ -58,17 +54,13 @@
       <tr:selectBooleanCheckbox value="#{config.settings.pvssEnabledBL}" simple="true"/>
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{informerSettings.persHost}">
-      <tr:inputText value="#{config.settings.persHost}" simple="true" required="true"/>
+      <tr:inputText value="#{config.settings.persHost}" simple="true" />
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{informerSettings.persSyncPort}">
-      <tr:inputText value="#{config.settings.persSyncPort}" simple="true" required="true" columns="6">
-        <eye:validatePort/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.persSyncPort}" simple="true"  columns="6"/>
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{informerSettings.persAsyncPort}">
-      <tr:inputText value="#{config.settings.persAsyncPort}" simple="true" required="true" columns="6">
-        <eye:validatePort/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.persAsyncPort}" simple="true"  columns="6"/>
     </tr:panelLabelAndMessage>
   </tr:panelFormLayout>
 </eye:collapsingGroup>
@@ -76,116 +68,84 @@
 <eye:collapsingGroup label="#{msg['config.store.section']}" opened="true">
   <tr:panelFormLayout inlineStyle="padding: 10px">
     <tr:panelLabelAndMessage label="#{informerSettings.statDir}">
-      <tr:inputText value="#{config.settings.statDir}" simple="true" required="true" columns="100"/>
+      <tr:inputText value="#{config.settings.statDir}" simple="true"  columns="100"/>
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{informerSettings.storeDir}">
-      <tr:inputText value="#{config.settings.storeDir}" simple="true" required="true" columns="100"/>
+      <tr:inputText value="#{config.settings.storeDir}" simple="true"  columns="100"/>
     </tr:panelLabelAndMessage>
   </tr:panelFormLayout>
 </eye:collapsingGroup>
 
 
-<eye:collapsingGroup label="#{msg['config.additional']}" opened="false">
+<eye:collapsingGroup label="#{msg['config.additional']}" opened="#{config.additionalOpened}">
   <tr:panelFormLayout inlineStyle="padding: 10px">
 
     <tr:panelLabelAndMessage label="#{informerSettings.adminHandlers}">
-      <tr:inputText value="#{config.settings.adminHandlers}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.adminHandlers}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.almRequestTimeout}">
-      <tr:inputText value="#{config.settings.almRequestTimeout}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.almRequestTimeout}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.dcpHandlers}">
-      <tr:inputText value="#{config.settings.dcpHandlers}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.dcpHandlers}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.inputJournalRollingPeriod}">
-      <tr:inputText value="#{config.settings.inputJournalRollingPeriod}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.inputJournalRollingPeriod}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.inputTransferChunkSize}">
-      <tr:inputText value="#{config.settings.inputTransferChunkSize}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.inputTransferChunkSize}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.inputMinQueueSize}">
-      <tr:inputText value="#{config.settings.inputMinQueueSize}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.inputMinQueueSize}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.operationalJournalRollingPeriod}">
-      <tr:inputText value="#{config.settings.operationalJournalRollingPeriod}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.operationalJournalRollingPeriod}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.protocolId}">
-      <tr:inputText value="#{config.settings.protocolId}" simple="true" required="true">
-        <tr:validateLongRange minimum="0"/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.protocolId}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.receiptExtraWaitTime}">
-      <tr:inputText value="#{config.settings.receiptExtraWaitTime}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.receiptExtraWaitTime}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.resendIOThreadCount}">
-      <tr:inputText value="#{config.settings.resendIOThreadCount}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.resendIOThreadCount}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.responseWaitTime}">
-      <tr:inputText value="#{config.settings.responseWaitTime}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.responseWaitTime}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.retryMinTimeToLive}">
-      <tr:inputText value="#{config.settings.retryMinTimeToLive}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.retryMinTimeToLive}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.skippedIdsChunkSize}">
-      <tr:inputText value="#{config.settings.skippedIdsChunkSize}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.skippedIdsChunkSize}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.skippedIdsMinCacheSize}">
-      <tr:inputText value="#{config.settings.skippedIdsMinCacheSize}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.skippedIdsMinCacheSize}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.slicedMessageSize}">
-      <tr:inputText value="#{config.settings.slicedMessageSize}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.slicedMessageSize}" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.svcType}">
-      <tr:inputText value="#{config.settings.svcType}" simple="true" required="true"/>
+      <tr:inputText value="#{config.settings.svcType}" simple="true" />
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{informerSettings.unrespondedMessagesMax}">
-      <tr:inputText value="#{config.settings.unrespondedMessagesMax}" simple="true" required="true">
-        <eye:validatePositive/>
-      </tr:inputText>
+      <tr:inputText value="#{config.settings.unrespondedMessagesMax}" simple="true"/>
     </tr:panelLabelAndMessage>
 
   </tr:panelFormLayout>

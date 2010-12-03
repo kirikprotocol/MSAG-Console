@@ -46,7 +46,37 @@ public class InformerSettings {
   private int retryMinTimeToLive;
   private int responseWaitTime;
   private boolean pvssEnabledBL;
-      
+
+  void validate() throws AdminException {
+    vh.checkPositive("resendIOThreadCount", resendIOThreadCount);
+    vh.checkPositive("inputMinQueueSize", inputMinQueueSize);
+    vh.checkPositive("inputTransferThreadCount", inputTransferThreadCount);
+    vh.checkGreaterOrEqualsTo("protocolId", protocolId, 0);
+    vh.checkPositive("receiptExtraWaitTime", receiptExtraWaitTime);
+    vh.checkPositive("inputTransferChunkSize", inputTransferChunkSize);
+    vh.checkPositive("skippedIdsChunkSize", skippedIdsChunkSize);
+    vh.checkPositive("inputJournalRollingPeriod", inputJournalRollingPeriod);
+    vh.checkPositive("unrespondedMessagesMax", unrespondedMessagesMax);
+    vh.checkPositive("skippedIdsMinCacheSize", skippedIdsMinCacheSize);
+    vh.checkPositive("slicedMessageSize", slicedMessageSize);
+    vh.checkPositive("almRequestTimeout", almRequestTimeout);
+    vh.checkPositive("operationalJournalRollingPeriod", operationalJournalRollingPeriod);
+    vh.checkPositive("dcpHandlers", dcpHandlers);
+    vh.checkNotEmpty("svcType", svcType);
+    vh.checkPositive("adminHandlers", adminHandlers);
+    vh.checkPositive("retryMinTimeToLive", retryMinTimeToLive);
+    vh.checkPositive("responseWaitTime", responseWaitTime);
+    vh.checkNotEmpty("adminHost", adminHost);
+    vh.checkPort("adminPort", adminPort);
+    vh.checkPort("dcpPort", dcpPort);
+    vh.checkNotEmpty("dcpHost", dcpHost);
+    vh.checkNotEmpty("persHost", persHost);
+    vh.checkPort("persSyncPort", persSyncPort);
+    vh.checkPort("persAsyncPort", persAsyncPort);
+    vh.checkNotEmpty("statDir", statDir);
+    vh.checkNotEmpty("storeDir", storeDir);
+  }
+
   public boolean isPvssEnabledBL() {
     return pvssEnabledBL;
   }
@@ -59,8 +89,7 @@ public class InformerSettings {
     return resendIOThreadCount;
   }
 
-  public void setResendIOThreadCount(int resendIOThreadCount) throws AdminException{
-    vh.checkPositive("resendIOThreadCount", resendIOThreadCount);
+  public void setResendIOThreadCount(int resendIOThreadCount){
     this.resendIOThreadCount = resendIOThreadCount;
   }
 
@@ -68,8 +97,7 @@ public class InformerSettings {
     return inputMinQueueSize;
   }
 
-  public void setInputMinQueueSize(int inputMinQueueSize) throws AdminException{
-    vh.checkPositive("inputMinQueueSize", inputMinQueueSize);
+  public void setInputMinQueueSize(int inputMinQueueSize) {
     this.inputMinQueueSize = inputMinQueueSize;
   }
 
@@ -77,8 +105,7 @@ public class InformerSettings {
     return inputTransferThreadCount;
   }
 
-  public void setInputTransferThreadCount(int inputTransferThreadCount) throws AdminException{
-    vh.checkPositive("inputTransferThreadCount", inputTransferThreadCount);
+  public void setInputTransferThreadCount(int inputTransferThreadCount) {
     this.inputTransferThreadCount = inputTransferThreadCount;
   }
 
@@ -86,8 +113,7 @@ public class InformerSettings {
     return protocolId;
   }
 
-  public void setProtocolId(int protocolId) throws AdminException{
-    vh.checkGreaterOrEqualsTo("protocolId", protocolId, 0);
+  public void setProtocolId(int protocolId){
     this.protocolId = protocolId;
   }
 
@@ -95,8 +121,7 @@ public class InformerSettings {
     return receiptExtraWaitTime;
   }
 
-  public void setReceiptExtraWaitTime(int receiptExtraWaitTime) throws AdminException{
-    vh.checkPositive("receiptExtraWaitTime", receiptExtraWaitTime);
+  public void setReceiptExtraWaitTime(int receiptExtraWaitTime){
     this.receiptExtraWaitTime = receiptExtraWaitTime;
   }
 
@@ -104,8 +129,7 @@ public class InformerSettings {
     return inputTransferChunkSize;
   }
 
-  public void setInputTransferChunkSize(int inputTransferChunkSize) throws AdminException{
-    vh.checkPositive("inputTransferChunkSize", inputTransferChunkSize);
+  public void setInputTransferChunkSize(int inputTransferChunkSize) {
     this.inputTransferChunkSize = inputTransferChunkSize;
   }
 
@@ -113,8 +137,7 @@ public class InformerSettings {
     return skippedIdsChunkSize;
   }
 
-  public void setSkippedIdsChunkSize(int skippedIdsChunkSize) throws AdminException{
-    vh.checkPositive("skippedIdsChunkSize", skippedIdsChunkSize);
+  public void setSkippedIdsChunkSize(int skippedIdsChunkSize) {
     this.skippedIdsChunkSize = skippedIdsChunkSize;
   }
 
@@ -122,8 +145,7 @@ public class InformerSettings {
     return inputJournalRollingPeriod;
   }
 
-  public void setInputJournalRollingPeriod(int inputJournalRollingPeriod) throws AdminException{
-    vh.checkPositive("inputJournalRollingPeriod", inputJournalRollingPeriod);
+  public void setInputJournalRollingPeriod(int inputJournalRollingPeriod) {
     this.inputJournalRollingPeriod = inputJournalRollingPeriod;
   }
 
@@ -131,8 +153,7 @@ public class InformerSettings {
     return unrespondedMessagesMax;
   }
 
-  public void setUnrespondedMessagesMax(int unrespondedMessagesMax) throws AdminException{
-    vh.checkPositive("unrespondedMessagesMax", unrespondedMessagesMax);
+  public void setUnrespondedMessagesMax(int unrespondedMessagesMax) {
     this.unrespondedMessagesMax = unrespondedMessagesMax;
   }
 
@@ -140,8 +161,7 @@ public class InformerSettings {
     return skippedIdsMinCacheSize;
   }
 
-  public void setSkippedIdsMinCacheSize(int skippedIdsMinCacheSize) throws AdminException{
-    vh.checkPositive("skippedIdsMinCacheSize", skippedIdsMinCacheSize);
+  public void setSkippedIdsMinCacheSize(int skippedIdsMinCacheSize) {
     this.skippedIdsMinCacheSize = skippedIdsMinCacheSize;
   }
 
@@ -149,8 +169,7 @@ public class InformerSettings {
     return slicedMessageSize;
   }
 
-  public void setSlicedMessageSize(int slicedMessageSize) throws AdminException{
-    vh.checkPositive("slicedMessageSize", slicedMessageSize);
+  public void setSlicedMessageSize(int slicedMessageSize){
     this.slicedMessageSize = slicedMessageSize;
   }
 
@@ -158,8 +177,7 @@ public class InformerSettings {
     return almRequestTimeout;
   }
 
-  public void setAlmRequestTimeout(int almRequestTimeout) throws AdminException{
-    vh.checkPositive("almRequestTimeout", almRequestTimeout);
+  public void setAlmRequestTimeout(int almRequestTimeout) {
     this.almRequestTimeout = almRequestTimeout;
   }
 
@@ -167,8 +185,7 @@ public class InformerSettings {
     return operationalJournalRollingPeriod;
   }
 
-  public void setOperationalJournalRollingPeriod(int operationalJournalRollingPeriod) throws AdminException{
-    vh.checkPositive("operationalJournalRollingPeriod", operationalJournalRollingPeriod);
+  public void setOperationalJournalRollingPeriod(int operationalJournalRollingPeriod) {
     this.operationalJournalRollingPeriod = operationalJournalRollingPeriod;
   }
 
@@ -176,8 +193,7 @@ public class InformerSettings {
     return dcpHandlers;
   }
 
-  public void setDcpHandlers(int dcpHandlers) throws AdminException{
-    vh.checkPositive("dcpHandlers", dcpHandlers);
+  public void setDcpHandlers(int dcpHandlers) {
     this.dcpHandlers = dcpHandlers;
   }
 
@@ -185,8 +201,7 @@ public class InformerSettings {
     return svcType;
   }
 
-  public void setSvcType(String svcType) throws AdminException{
-    vh.checkNotEmpty("svcType", svcType);
+  public void setSvcType(String svcType) {
     this.svcType = svcType;
   }
 
@@ -194,8 +209,7 @@ public class InformerSettings {
     return adminHandlers;
   }
 
-  public void setAdminHandlers(int adminHandlers) throws AdminException{
-    vh.checkPositive("adminHandlers", adminHandlers);
+  public void setAdminHandlers(int adminHandlers) {
     this.adminHandlers = adminHandlers;
   }
 
@@ -203,8 +217,7 @@ public class InformerSettings {
     return retryMinTimeToLive;
   }
 
-  public void setRetryMinTimeToLive(int retryMinTimeToLive) throws AdminException{
-    vh.checkPositive("retryMinTimeToLive", retryMinTimeToLive);
+  public void setRetryMinTimeToLive(int retryMinTimeToLive) {
     this.retryMinTimeToLive = retryMinTimeToLive;
   }
 
@@ -212,8 +225,7 @@ public class InformerSettings {
     return responseWaitTime;
   }
 
-  public void setResponseWaitTime(int responseWaitTime) throws AdminException{
-    vh.checkPositive("responseWaitTime", responseWaitTime);
+  public void setResponseWaitTime(int responseWaitTime) {
     this.responseWaitTime = responseWaitTime;
   }
 
@@ -221,8 +233,7 @@ public class InformerSettings {
     return adminHost;
   }
 
-  public void setAdminHost(String host) throws AdminException {
-    vh.checkNotEmpty("adminHost", host);
+  public void setAdminHost(String host) {
     this.adminHost = host;
   }
 
@@ -230,8 +241,7 @@ public class InformerSettings {
     return adminPort;
   }
 
-  public void setAdminPort(int adminPort) throws AdminException {
-    vh.checkPort("adminPort", adminPort);
+  public void setAdminPort(int adminPort) {
     this.adminPort = adminPort;
   }
 
@@ -239,8 +249,7 @@ public class InformerSettings {
     return dcpPort;
   }
 
-  public void setDcpPort(int port) throws AdminException {
-    vh.checkPort("dcpPort", port);
+  public void setDcpPort(int port) {
     this.dcpPort = port;
   }
 
@@ -248,8 +257,7 @@ public class InformerSettings {
     return dcpHost;
   }
 
-  public void setDcpHost(String dcpHost) throws AdminException {
-    vh.checkNotEmpty("dcpHost", dcpHost);
+  public void setDcpHost(String dcpHost) {
     this.dcpHost = dcpHost;
   }
 
@@ -257,8 +265,7 @@ public class InformerSettings {
     return persHost;
   }
 
-  public void setPersHost(String persHost) throws AdminException {
-    vh.checkNotEmpty("persHost", persHost);
+  public void setPersHost(String persHost) {
     this.persHost = persHost;
   }
 
@@ -266,8 +273,7 @@ public class InformerSettings {
     return persSyncPort;
   }
 
-  public void setPersSyncPort(int persSyncPort) throws AdminException {
-    vh.checkPort("persSyncPort", persSyncPort);
+  public void setPersSyncPort(int persSyncPort) {
     this.persSyncPort = persSyncPort;
   }
 
@@ -275,8 +281,7 @@ public class InformerSettings {
     return persAsyncPort;
   }
 
-  public void setPersAsyncPort(int persAsyncPort) throws AdminException {
-    vh.checkPort("persAsyncPort", persAsyncPort);
+  public void setPersAsyncPort(int persAsyncPort) {
     this.persAsyncPort = persAsyncPort;
   }
 
@@ -284,8 +289,7 @@ public class InformerSettings {
     return statDir;
   }
 
-  public void setStatDir(String statDir) throws AdminException {
-    vh.checkNotEmpty("statDir", statDir);
+  public void setStatDir(String statDir) {
     this.statDir = statDir;
   }
 
@@ -293,8 +297,7 @@ public class InformerSettings {
     return storeDir;
   }
 
-  public void setStoreDir(String storeDir) throws AdminException {
-    vh.checkNotEmpty("storeDir", storeDir);
+  public void setStoreDir(String storeDir) {
     this.storeDir = storeDir;
   }
 

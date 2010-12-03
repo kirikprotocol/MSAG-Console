@@ -19,6 +19,8 @@ public class InformerConfigController extends SettingsController<InformerSetting
 
   private InformerSettings settings;
 
+  private boolean additionalOpened;
+
   public InformerConfigController() {
 
     try {
@@ -33,6 +35,14 @@ public class InformerConfigController extends SettingsController<InformerSetting
     }
   }
 
+  public boolean isAdditionalOpened() {
+    return additionalOpened;
+  }
+
+  public void setAdditionalOpened(boolean additionalOpened) {
+    this.additionalOpened = additionalOpened;
+  }
+
   public String save() {
     try {
       setSettings(settings);
@@ -43,6 +53,7 @@ public class InformerConfigController extends SettingsController<InformerSetting
       }
       return "INDEX";
     } catch (AdminException e) {
+      additionalOpened = true;
       logger.warn(e, e);
       addError(e);
       return null;

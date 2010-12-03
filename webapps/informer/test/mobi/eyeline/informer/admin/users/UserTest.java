@@ -17,7 +17,7 @@ public class UserTest {
 
   @Test
   public void testSetPhone() throws AdminException{
-    User o = new User();
+    User o = createUser();;
     try{
       o.setPhone("");
       o.validate(); assertTrue(false);
@@ -34,7 +34,7 @@ public class UserTest {
 
   @Test
   public void testSetEmail() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try{
       o.setEmail("");
       o.validate(); assertTrue(false);
@@ -51,7 +51,7 @@ public class UserTest {
 
   @Test
   public void testSetFirstName() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try{
       o.setFirstName("");
       o.validate(); assertTrue(false);
@@ -64,7 +64,7 @@ public class UserTest {
 
   @Test
   public void testSetLastName() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try{
       o.setLastName("");
       o.validate(); assertTrue(false);
@@ -77,7 +77,7 @@ public class UserTest {
 
   @Test
   public void testSetStatus() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try{
       o.setStatus(null);
       o.validate(); assertTrue(false);
@@ -87,7 +87,7 @@ public class UserTest {
 
   @Test
   public void testSetPassword() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try{
       o.setPassword("");
       o.validate(); assertTrue(false);
@@ -100,7 +100,7 @@ public class UserTest {
 
   @Test
   public void testSetLogin() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try{
       o.setLogin("");
       o.validate(); assertTrue(false);
@@ -113,14 +113,14 @@ public class UserTest {
 
   @Test
   public void testSetLocale() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     o.setLocale(new Locale("en"));
     assertEquals(o.getLocale().getLanguage(),"en");
   }
 
   @Test
   public void testRoles() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     TreeSet<String> roles = new TreeSet<String>();
     roles.add("roleA");
     roles.add("roleB");
@@ -132,7 +132,7 @@ public class UserTest {
 
   @Test
   public void testSetSmsPerSec() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try{
       o.setSmsPerSec(0);
       o.validate(); assertTrue(false);
@@ -145,7 +145,7 @@ public class UserTest {
 
   @Test
   public void testSourceAddr() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try{
       o.setSourceAddr(null);
       o.validate(); assertTrue(false);
@@ -154,7 +154,7 @@ public class UserTest {
 
   @Test
   public void testSetDeliveryStartTime() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     o.setDeliveryStartTime(new Time("09:30:15"));
     assertEquals(o.getDeliveryStartTime().getHour(),9);
     assertEquals(o.getDeliveryStartTime().getMin(),30);
@@ -165,7 +165,7 @@ public class UserTest {
 
   @Test
   public void testSetDeliveryEndTime() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     o.setDeliveryEndTime(new Time("08:03:07"));
     assertEquals(o.getDeliveryEndTime().getHour(),8);
     assertEquals(o.getDeliveryEndTime().getMin(),3);
@@ -189,7 +189,7 @@ public class UserTest {
   @Test
   public void testDeliveryDays() throws AdminException{
 
-    User o = new User();
+    User o = createUser();;
     List<Integer> set = new ArrayList<Integer>();
     set.add(0);
     set.add(3);
@@ -219,7 +219,7 @@ public class UserTest {
 
   @Test
   public void testValidHours() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try {
       o.setValidityPeriod(new Time(0,50,30));
       o.validate(); assertTrue(false);
@@ -229,14 +229,14 @@ public class UserTest {
 
   @Test
   public void testTransactionMode() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     o.setTransactionMode(true);
     assertEquals(o.isTransactionMode(),true);
   }
 
   @Test
   public void testPolicyId() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     o.setPolicyId("blablabla");
     assertEquals(o.getPolicyId(),"blablabla");
     o.setPolicyId(null);
@@ -245,7 +245,7 @@ public class UserTest {
 
   @Test
   public void testRegion() throws AdminException {
-    User o = new User();
+    User o = createUser();
     List<Integer> regions = new ArrayList<Integer>();
     regions.add(1);
     regions.add(2);
@@ -266,7 +266,7 @@ public class UserTest {
 
   @Test
   public void testDeliveryType() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     try {
       o.setDeliveryType(null);
       o.validate(); assertTrue(false);
@@ -276,7 +276,7 @@ public class UserTest {
 
   @Test
   public void testPriority() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     o.setPriority(1001);
     assertEquals(o.getPriority(),1001);
     try {
@@ -288,7 +288,7 @@ public class UserTest {
 
   @Test
   public void testNotifications() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     o.setSmsNotification(true);
     o.setEmailNotification(false);
     assertEquals(o.isSmsNotification(),true);
@@ -297,7 +297,7 @@ public class UserTest {
 
   @Test
   public void testDeliveryLifetime() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     o.setDeliveryLifetime(333);
     assertEquals(o.getDeliveryLifetime(),333);
     try {
@@ -314,7 +314,7 @@ public class UserTest {
 
   @Test
   public void testCPSettings() throws AdminException {
-    User o = new User();
+    User o = createUser();;
     List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
     UserCPsettings ucps = new UserCPsettings();
     ucps.setProtocol(UserCPsettings.Protocol.sftp);
@@ -349,9 +349,7 @@ public class UserTest {
   }
 
 
-
-  @Test
-  public void testCloneAndValdiate() throws AdminException{
+  private User createUser() {
     User o = new User();
     o.setPhone("1");
     o.setOrganization("2");
@@ -374,7 +372,13 @@ public class UserTest {
     o.setPriority(1);
     o.setDeliveryStartTime(new Time(1,1,1));
     o.setDeliveryEndTime(new Time(21,1,1));
+    return o;
+  }
 
+
+  @Test
+  public void testCloneAndValdiate() throws AdminException{
+    User o = createUser();
     List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
     UserCPsettings ucps = new UserCPsettings();
     ucps.setProtocol(UserCPsettings.Protocol.sftp);
