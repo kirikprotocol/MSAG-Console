@@ -66,6 +66,8 @@ public:
         pos_ = 0;
     }
 
+    static void unlink( const char* fname );
+
     static void makedirs( const std::string& dir );
 
 private:

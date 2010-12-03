@@ -435,8 +435,9 @@ void DeliveryImpl::detachEverything( bool cleanDirectory )
     if (cleanDirectory) {
         char buf[100];
         sprintf(makeDeliveryPath(buf,dlvId),"config.xml");
-        if ( unlink((getCS()->getStorePath() + buf).c_str()) ) {
-            ErrnoException e(errno,"unlink(%s)",buf);
+        try {
+            FileGuard::unlink((getCS()->getStorePath() + buf).c_str());
+        } catch ( ErrnoException& e ) {
             smsc_log_warn(log_,"D=%u exc: %s",dlvId,e.what());
         }
     }

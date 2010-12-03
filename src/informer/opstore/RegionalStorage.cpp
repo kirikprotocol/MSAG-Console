@@ -702,7 +702,7 @@ bool RegionalStorage::postInit()
     // dlv_->activityLog_.incStats(MSGSTATE_RETRY,retry); taking from actlog
     dlv_->activityLog_.incStats(MSGSTATE_SENT,sent);
     dlv_->activityLog_.incStats(MSGSTATE_PROCESS,process);
-    return !messageList_.empty();
+    return ( !messageList_.empty() || nextResendFile_);
 }
 
 
@@ -865,9 +865,15 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
 
                 // we have to delete the file and find the next resend file
                 mg.Unlock();
-                unlink((getCS()->getStorePath() + fpath).c_str());
+                try {
+                    FileGuard::unlink((getCS()->getStorePath() + fpath).c_str());
+                } catch ( ErrnoException& e ) {
+                    smsc_log_warn(log_,"R=%u/D=%u exc: %s",
+                                  regionId_,dlvId,e.what());
+                }
                 const msgtime_type nexttime = findNextResendFile();
-
+                smsc_log_debug(log_,"R=%u/D=%u resend-in set nextResend=%u",
+                               regionId_, dlvId, nexttime);
                 mg.Lock();
                 nextResendFile_ = nexttime;
                 cacheMon_.notify();
@@ -970,6 +976,8 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
 
         mg.Lock();
         if ( nextResendFile_ == 0 || nextResendFile_ > startTime ) {
+            smsc_log_debug(log_,"R=%u/D=%u resend-out set nextResend=%u",
+                           regionId_, dlvId, startTime);
             nextResendFile_ = startTime;
         }
         startTime = nextTime;

@@ -122,8 +122,23 @@ size_t FileGuard::read( void* buf, size_t buflen )
 }
 
 
+void FileGuard::unlink( const char* fname )
+{
+    getlog();
+    if (!fname) {
+        throw InfosmeException(EXC_LOGICERROR,"NULL passed to unlink");
+    }
+    if ( 0 == ::unlink(fname) ) {
+        smsc_log_debug(log_,"unlink('%s')",fname);
+    } else {
+        throw ErrnoException(errno,"unlink('%s')",fname);
+    }
+}
+
+
 void FileGuard::makedirs( const std::string& dir )
 {
+    getlog();
     std::string work;
     work.reserve(dir.size());
     for (size_t nextpos = 1; nextpos != std::string::npos;) {
