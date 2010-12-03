@@ -434,19 +434,27 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         m.timeLeft = 0;
     }
 
+    if ( retryDelay == -1 ) {
+        // permanent failure
+        doFinalize(mg,iter,currentTime,MSGSTATE_FAILED,smppState,nchunks);
+        return;
+    }
+
     if (retryDelay == 0) {
         // immediate retry
         // putting the message to the new queue
         assert( m.state == MSGSTATE_PROCESS );
         // m.state = MSGSTATE_PROCESS;
+        if ( newQueue_.Count() == 0 && resendQueue_.empty() ) {
+            // signalling to bind
+            std::vector< regionid_type > regs;
+            regs.push_back(regionId_);
+            dlv_->source_->getDlvActivator().deliveryRegions(dlvId,regs,true);
+        }
         newQueue_.PushFront(iter);
         mg.Unlock();
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into immediate retry",
                        regionId_, dlvId, ulonglong(msgId));
-        return;
-    } else if ( retryDelay == -1 ) {
-        // permanent failure
-        doFinalize(mg,iter,currentTime,MSGSTATE_FAILED,smppState,nchunks);
         return;
     }
 
@@ -463,6 +471,13 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         }
 
         // there is enough validity time to try the next time
+
+        if (resendQueue_.empty() && newQueue_.Count() == 0) {
+            // signalling to bind
+            std::vector< regionid_type > regs;
+            regs.push_back(regionId_);
+            dlv_->source_->getDlvActivator().deliveryRegions(dlvId,regs,true);
+        }
 
         MsgLock ml(iter,this,mg,false);
         if ( m.timeLeft < retryDelay ) retryDelay = m.timeLeft;
@@ -829,7 +844,10 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                     // storing into journal, note that cacheMon_ is unlocked here
                     for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
                         regionid_type serial = 0;
-                        // NOTE: we may not lock here, as i is not in msgList_
+                        // NOTE: we may avoid locking here, as i is not in msgList_
+                        if ( ! i->msg.text.isUnique() ) {
+                            dlv_->source_->getGlossary().fetchText(i->msg.text);
+                        }
                         dlv_->storeJournal_.journalMessage(dlvId,regionId_,i->msg,serial);
                         i->serial = serial;
                         if (stopFlag) {

@@ -420,10 +420,11 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                                                regId, getDlvId(), fname.c_str(), ro.roff);
                     }
                     if (errno == ENOENT) {
-                        smsc_log_debug(log_,"R=%u/D=%u file '%s' does not exist, move on",
-                                       regId, getDlvId(), fname.c_str());
                         ++ro.rfn;
                         ro.roff = 0;
+                        smsc_log_debug(log_,"R=%u/D=%u file '%s' does not exist, move on RP=%u/%u",
+                                       regId, getDlvId(), fname.c_str(),
+                                       ro.rfn, ro.roff );
                         continue;
                     }
                     throw ErrnoException(errno,"stat('%s')",fname.c_str());
@@ -441,7 +442,10 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                 IReader recordReader(*this,msglist,ro,regId);
                 reqCount -= fileReader.readRecords(buf,recordReader,reqCount);
                 fg.close();
-                if (ro.rfn<ro.wfn) {
+                if (reqCount>0 && ro.rfn<ro.wfn) {
+                    smsc_log_debug(log_,"R=%u/D=%u RP=%u/%u advancing as count=%u",
+                                   regId, getDlvId(), ro.rfn, ro.roff,
+                                   unsigned(reqCount));
                     ++ro.rfn;
                     ro.roff=0;
                 }
