@@ -18,7 +18,7 @@ source_(source),
 ref_(0)
 {
     char buf[20];
-    sprintf(buf,"d.%u",getDlvId() % 10000);
+    sprintf(buf,"d.%u",getDlvId() % 1000);
     log_ = smsc::logger::Logger::getInstance(buf);
     try {
         source_->init(activityLog_);
