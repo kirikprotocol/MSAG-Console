@@ -45,7 +45,8 @@ public class TestRestrictionsDaemonContext implements RestrictionDaemonContext {
     deliveryManager.modifyDelivery(login, password, d);
   }
 
-  public void pauseDelivery(String login, String password, Integer deliveryId) throws AdminException {
+  public void restrictDelivery(String login, String password, Integer deliveryId) throws AdminException {
+    setDeliveryRestriction(login, password, deliveryId, true);
     deliveryManager.pauseDelivery(login,password,deliveryId);
   }
 

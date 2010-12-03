@@ -24,7 +24,7 @@ public interface RestrictionDaemonContext {
 
   void setDeliveryRestriction(String login, String password, Integer deliveryId, boolean restricted) throws AdminException;
 
-  void pauseDelivery(String login, String password, Integer deliveryId) throws AdminException;
+  void restrictDelivery(String login, String password, Integer deliveryId) throws AdminException;
 
   void activateDelivery(String login, String password, Integer deliveryId) throws AdminException;
 }

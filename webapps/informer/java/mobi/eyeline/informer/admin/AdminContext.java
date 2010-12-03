@@ -754,6 +754,9 @@ public class AdminContext {
     }
   }
 
+
+
+
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
       if (restrictionsManager.hasActiveRestriction(login)) {
@@ -1219,8 +1222,11 @@ public class AdminContext {
       adminContext.setDeliveryRestriction( login,  password,  deliveryId, restricted);
     }
 
-    public void pauseDelivery(String login, String password, Integer deliveryId) throws AdminException {
-      adminContext.pauseDelivery(login, password, deliveryId);
+    public void restrictDelivery(String login, String password, Integer deliveryId) throws AdminException {
+      synchronized (getLock(deliveryId)) {
+          setDeliveryRestriction(login, password, deliveryId, true);
+          deliveryManager.pauseDelivery(login, password, deliveryId);
+      }
     }
 
     public void activateDelivery(String login, String password, Integer deliveryId) throws AdminException {

@@ -22,7 +22,7 @@ import java.util.concurrent.*;
  */
 public class RestrictionDaemon implements Daemon{
 
-  Logger log = Logger.getLogger(this.getClass());
+  Logger log = Logger.getLogger(NAME);
 
 
   public static final String NAME = "RestrictionDaemon";
@@ -161,9 +161,8 @@ public class RestrictionDaemon implements Daemon{
     try {
       if (shouldBeRestricted) {
         if (di.getStatus() != DeliveryStatus.Paused) {
-          log.debug("pause delivery "+di);
-          context.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getId(), true);
-          context.pauseDelivery(u.getLogin(), u.getPassword(), di.getId());
+          log.debug("pause delivery "+di);          
+          context.restrictDelivery(u.getLogin(), u.getPassword(), di.getId());
         }
       }
       else {
