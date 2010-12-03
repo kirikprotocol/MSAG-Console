@@ -5,14 +5,14 @@
 <config>
 
   <section name="AbonentPolicies">
-  <!--  policy value is a CSV(:) list of  two parts(first one is optional):
+  <!--  policy value is a CSV(:) list of  two parts:
 
-       1) prioritized CSV(,) List of abonent providers to use (defined in
-          section AbonentProviders) for getting abonent contract type
-          (possibly with gsmSCF parms),
+    1) prioritized CSV(,) pair of abonent providers (defined in section
+       AbonentProviders), which used for determining abonent contract type
+       (possibly with serving gsmSCF params),
 
-       2) CSV(,) list of IN-platform (defined in section IN-platforms)
-         NOTE: * is a special symbol, replacing all defined IN-platforms
+    2) CSV(,) list of IN-platform (defined in section IN-platforms)
+       NOTE: * is a substitute symbol, matching all defined IN-platforms
   -->
     <section name="MTC_Default">
       <param name="policy" type="string">HLR_CH_SRI : *</param> <!-- get contract from gsmSCF, No provider at all !!!  -->
@@ -50,6 +50,7 @@
         <param name="pool_Msk_tst_12" type="string">79853646295</param>  <!-- address pool mask -->
         <param name="pool_Msk_tst_13" type="string">79163841468</param>  <!-- address pool mask -->
         <param name="pool_Msk_tst_14" type="string">79169037692</param>  <!-- address pool mask -->
+        <param name="pool_Msk_tst_15" type="string">79168056148</param>  <!-- address pool mask -->
       </section>
       <!-- param name="active" type="bool">false</param -->    <!-- use or ignore this policy, default: true -->
     </section>
