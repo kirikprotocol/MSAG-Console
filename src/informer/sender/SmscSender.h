@@ -83,6 +83,13 @@ public:
     /// @return SMPP status
     int send( RegionalStorage& dlv, Message& msg, int untilAE, int& nchunks );
 
+    /// return smpp status
+    int sendTestSms( const char*   sourceAddr,
+                     personid_type subscriber,
+                     const char*   text,
+                     bool          isFlash,
+                     int           deliveryMode );
+
     /// a method allows to wait until sender stops it work
     /// NOTE: post-requisite -- task is released!
     void updateConfig( const SmscConfig& config,

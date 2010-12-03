@@ -967,6 +967,35 @@ DeliveryPtr InfosmeCoreV1::getDelivery( const UserInfo& userInfo,
 }
 
 
+int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
+                                personid_type      subscriber,
+                                const char*        text,
+                                bool               isFlash,
+                                DlvMode            deliveryMode )
+{
+    // find region
+    MutexGuard mg(startMon_);
+    const regionid_type rId = rf_.findRegion(subscriber);
+    RegionPtr* region = regions_.GetPtr(rId);
+    if (!region) {
+        uint8_t len, ton, npi;
+        const uint64_t addr = subscriberToAddress(subscriber,len,ton,npi);
+        throw InfosmeException(EXC_NOTFOUND,"Region %u corresponding to .%u.%u.%*.*llu is not found",
+                               rId, ton, npi, len, len, ulonglong(addr));
+    }
+    const std::string smscId = region->get()->getSmscId();
+    SmscSender** sender = smscs_.GetPtr(smscId.c_str());
+    if ( !sender ) {
+        throw InfosmeException(EXC_NOTFOUND,"Smsc '%s' is not found",smscId.c_str());
+    }
+    return (*sender)->sendTestSms( sourceAddr,
+                                   subscriber,
+                                   text,
+                                   isFlash,
+                                   deliveryMode );
+}
+
+
 int InfosmeCoreV1::Execute()
 {
     {

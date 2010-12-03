@@ -88,6 +88,12 @@ public:
     virtual DeliveryPtr getDelivery( const UserInfo& userInfo,
                                      dlvid_type   dlvId );
 
+    virtual int sendTestSms( const char*        sourceAddr,
+                             personid_type      subscriber,
+                             const char*        text,
+                             bool               isFlash,
+                             DlvMode            deliveryMode );
+
     virtual alm::IActivityLogMiner& getALM() { return *alm_; }
 
     // --- end of infosme core iface

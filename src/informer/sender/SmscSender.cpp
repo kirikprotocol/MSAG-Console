@@ -8,6 +8,7 @@
 #include "informer/io/IOConverter.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/Typedefs.h"
+#include "informer/io/UTF8.h"
 #include "smpp/smpp_structures.h"
 #include "sms/IllFormedReceiptParser.h"
 #include "sms/sms.h"
@@ -545,6 +546,97 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                    ulonglong(msg.msgId),
                    ton,npi,len,len,ulonglong(addr), res, what);
     return res;
+}
+
+
+int SmscSender::sendTestSms( const char*        sourceAddress,
+                             personid_type      subscriber,
+                             const char*        text,
+                             bool               isFlash,
+                             int                deliveryMode )
+{
+    if ( !sourceAddress || !*sourceAddress ) {
+        throw InfosmeException(EXC_LOGICERROR,"bad address NULL/empty");
+    }
+    if ( !text || !*text ) {
+        throw InfosmeException(EXC_LOGICERROR,"bad text NULL/empty");
+    }
+
+    smsc::sms::Address oa;
+    try {
+        oa = smsc::sms::Address(sourceAddress);
+        if (oa.length <= 1 && oa.type == 0 && oa.plan == 0 ) {
+            throw InfosmeException(EXC_BADADDRESS,"bad address '%s'",sourceAddress);
+        }
+    } catch ( InfosmeException& e ) {
+        throw;
+    } catch ( std::exception& e ) {
+        throw InfosmeException(EXC_BADADDRESS,"bad address '%s' exc: %s",sourceAddress,e.what());
+    }
+
+    smsc::sms::Address da;
+    {
+        uint8_t len;
+        uint64_t addr;
+        char buf[20];
+        addr = subscriberToAddress(subscriber,len,da.type,da.plan);
+        sprintf(buf,"%*.*llu",len,len,ulonglong(addr));
+        da.setValue(len,buf);
+    }
+    
+    PduSubmitSm sbm;
+    PduPartSm& msg = sbm.get_message();
+    msg.set_source(smsc::smpp::Address2PduAddress(oa));
+    msg.set_dest(smsc::smpp::Address2PduAddress(da));
+    msg.set_esmClass(2); // transactional
+    if ( isFlash ) {
+        sbm.get_optional().set_destAddrSubunit(1);
+    }
+    
+    const size_t textLen = strlen(text);
+    if ( smsc::util::hasHighBit(text,textLen) ) {
+        msg.set_dataCoding( DataCoding::UCS2 );
+        UTF8::BufType ucstext;
+        getCS()->getUTF8().convertToUcs2(text,textLen,ucstext);
+        const size_t buflen = ucstext.GetPos();
+        assert(buflen%2==0);
+        const short* start = reinterpret_cast<short*>(ucstext.get());
+        for ( short* end = reinterpret_cast<short*>(ucstext.GetCurPtr());
+              end != start; ) {
+            --end;
+            *end = htons(*end);
+        }
+        sbm.get_optional().set_messagePayload(ucstext.get(),buflen);
+    } else {
+        msg.set_dataCoding(DataCoding::LATIN1);
+        sbm.get_optional().set_messagePayload(text,textLen);
+    }
+    sbm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+
+    MutexGuard mg(reconfLock_);
+    
+    if ( deliveryMode != DLVMODE_SMS ) {
+        const int ussdop = ( deliveryMode == DLVMODE_USSDPUSH ?
+                             smscConfig_.ussdPushOp : smscConfig_.ussdPushVlrOp );
+        if (ussdop == -1) {
+            throw InfosmeException(EXC_ACCESSDENIED,"ussd not supported");
+        }
+        sbm.get_optional().set_ussdServiceOp(ussdop);
+    }
+
+    if ( !session_.get() || session_->isClosed() ) {
+        return smsc::system::Status::SMENOTCONNECTED;
+    }
+
+    sbm.get_header().set_sequenceNumber(session_->getNextSeq());
+
+    PduSubmitSmResp* resp = session_->getSyncTransmitter()->submit(sbm);
+    if ( !resp ) {
+        throw InfosmeException(EXC_EXPIRED, "no resp");
+    }
+    const int ret = resp->get_header().get_commandStatus();
+    disposePdu((SmppHeader*)resp);
+    return ret;
 }
 
 

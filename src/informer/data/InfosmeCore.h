@@ -58,6 +58,13 @@ public:
     virtual DeliveryPtr getDelivery( const UserInfo&  userInfo,
                                      dlvid_type       dlvId ) = 0;
 
+    // send a test sms
+    virtual int sendTestSms( const char*        sourceAddr,
+                             personid_type      subscriber,
+                             const char*        text,
+                             bool               isFlash,
+                             DlvMode            deliveryMode ) = 0;
+
     virtual alm::IActivityLogMiner& getALM() = 0;
 };
 
