@@ -259,7 +259,7 @@ div.query_result {
   
 }
 
-#overlay{
+.overlay{
   z-Index:100000;
   background-color:#c0c0c0;
   text-align:center; 

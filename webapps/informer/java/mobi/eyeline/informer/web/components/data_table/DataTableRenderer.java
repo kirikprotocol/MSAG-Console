@@ -241,6 +241,9 @@ public class DataTableRenderer extends Renderer {
 
     if (!ajax) {
       w.append("\n</div>");
+      w.append("<table id=\""+t.getId()+"_overlay\" class=\"overlay\"><tr><td align=\"center\" valign=\"center\">")
+       .append("<img src=\"" + ctxPath + "/images/loading.gif\" alt=\"\" style=\"margin-top:auto;margin-bottom:auto;\"/>")
+       .append("</td></tr></table>");
       w.append("\n<script language=\"javascript\" type=\"text/javascript\">");
 
       if (t.isUpdateUsingSubmit() == null)

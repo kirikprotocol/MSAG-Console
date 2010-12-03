@@ -89,11 +89,13 @@ function DataTable(tableId, updateUsingSubmit) {
   };
 
 
+
   /**
    * Обновляет содержимое таблицы
    */
+
   this.updateTable = function() {
-    setOverlay(bodyElement);
+    this.setOverlay(bodyElement);
     checked = false;    
     if (updateUsingSubmit)
       return closestForm.submit();
@@ -198,37 +200,40 @@ function DataTable(tableId, updateUsingSubmit) {
     expandElement.className = expand ? 'inner_data_opened' : 'inner_data_closed';
   };
 
+  this.setOverlay = function() {
+   var el = bodyElement;
+   if (el.offsetParent) {
+     var x=0;
+     var y=0;
+     var w = el.offsetWidth+'px';
+     var h = el.offsetHeight+'px';
+     do {
+       x+=el.offsetLeft;
+       y+=el.offsetTop;
+     }
+     while (el = el.offsetParent);
+     var overlay = document.getElementById(tableId+"_overlay");
+     overlay.style.left=x+'px';
+     overlay.style.top= y+'px';
+     overlay.style.width = w;
+     overlay.style.height = h;
+     overlay.style.backgroundPosition='center';
+   }
+  };
 
-}
-
- function setOverlay(el) {
-  if (el.offsetParent) {
-    var x=0;
-    var y=0;
-    var w = el.offsetWidth+'px';
-    var h = el.offsetHeight+'px';
-    do {
-      x+=el.offsetLeft;
-      y+=el.offsetTop;
-    }
-    while (el = el.offsetParent);
-    var overlay = document.getElementById("overlay");
-    overlay.style.left=x+'px';
-    overlay.style.top= y+'px';
-    overlay.style.width = w;
-    overlay.style.height = h;
-    overlay.style.backgroundPosition='center';
+  var hideOverlay = function() {
+    var overlay = document.getElementById(tableId+"_overlay");
+    overlay.style.top = '-500px';
+    overlay.style.width = '1px';
+    overlay.style.height = '1px';
   }
+
 }
 
 
 
- function hideOverlay() {
-  var overlay = document.getElementById("overlay");
-  overlay.style.top = '-500px';
-  overlay.style.width = '1px';
-  overlay.style.height = '1px';
-}
+
+
 
 
 
