@@ -156,6 +156,8 @@ public class DcpConverterTest {
     stats.setFailedMessage(14);
     stats.setNewMessages(15);
     stats.setProcessMessage(16);
+    stats.setSentMessages(2112);
+    stats.setRetriedMessages(3223);
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState ds = new mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryState();
     ds.setDate(DcpConverter.convertDateToDcpFormat(new Date()));
     ds.setStatus(mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryStatus.Active);
@@ -166,6 +168,8 @@ public class DcpConverterTest {
     assertEquals(s.getDeliveredMessages(), stats.getDeliveredMessages());
     assertEquals(s.getExpiredMessages(), stats.getExpiredMessages());
     assertEquals(s.getNewMessages(), stats.getNewMessages());
+    assertEquals(s.getSentMessages(), stats.getSentMessages());
+    assertEquals(s.getRetriedMessages(), stats.getRetriedMessages());
 
     assertEquals(s.getDeliveryState(), DcpConverter.convert(ds));
   }
