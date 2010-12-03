@@ -34,23 +34,25 @@
 
     <section name="MTC_Msk_ATSI"> <!-- get contract/gsmSCF from HLR using ATSI -->
       <param name="policy" type="string">HLR_ATSI, HLR_CH_SRI : *</param>
-      <section name="AddressPools">
-        <param name="pool_Msk_tst_0" type="string">79104075344</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_1" type="string">79169300003</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_2" type="string">79165603331</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_3" type="string">79166699601</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_4" type="string">79857603330</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_5" type="string">79166803330</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_6" type="string">79857860099</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_7" type="string">79161690056</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_8" type="string">79166199999</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_9" type="string">79162624625</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_10" type="string">79167595907</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_11" type="string">79160305277</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_12" type="string">79853646295</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_13" type="string">79163841468</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_14" type="string">79169037692</param>  <!-- address pool mask -->
-        <param name="pool_Msk_tst_15" type="string">79168056148</param>  <!-- address pool mask -->
+      <section name="AddressPools"> <!-- address pools masks -->
+        <param name="pool_Msk_tst_0" type="string">79104075344</param>  
+        <param name="pool_Msk_tst_1" type="string">79169300003</param>
+        <param name="pool_Msk_tst_2" type="string">79165603331</param>
+        <param name="pool_Msk_tst_3" type="string">79166699601</param>
+        <param name="pool_Msk_tst_4" type="string">79857603330</param>
+        <param name="pool_Msk_tst_5" type="string">79166803330</param>
+        <param name="pool_Msk_tst_6" type="string">79857860099</param>
+        <param name="pool_Msk_tst_7" type="string">79161690056</param>
+        <param name="pool_Msk_tst_8" type="string">79166199999</param>
+        <param name="pool_Msk_tst_9" type="string">79162624625</param>
+        <param name="pool_Msk_tst_10" type="string">79167595907</param>
+        <param name="pool_Msk_tst_11" type="string">79160305277</param>
+        <param name="pool_Msk_tst_12" type="string">79853646295</param>
+        <param name="pool_Msk_tst_13" type="string">79163841468</param>
+        <param name="pool_Msk_tst_14" type="string">79169037692</param>
+        <param name="pool_Msk_tst_15" type="string">79168056148</param>
+        <param name="pool_Msk_tst_16" type="string">79104081922</param>
+        <param name="pool_Msk_tst_17" type="string">79104082370</param>
       </section>
       <!-- param name="active" type="bool">false</param -->    <!-- use or ignore this policy, default: true -->
     </section>
