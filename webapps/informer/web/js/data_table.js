@@ -199,10 +199,6 @@ function DataTable(tableId, updateUsingSubmit) {
   };
 
 
-
-
-
-
 }
 
 

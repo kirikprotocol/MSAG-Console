@@ -64,7 +64,7 @@ public class RestrictionDaemon implements Daemon{
 
 
   private synchronized void nextSchedule() {
-    //System.out.println("next schedule<-");
+    log.debug("next schedule<-");
     if (isStarted()) {
       RestrictionsFilter rFilter = new RestrictionsFilter();
       List<Restriction> restrictions = context.getRestrictions(rFilter);
@@ -90,10 +90,10 @@ public class RestrictionDaemon implements Daemon{
       taskNum++;
 
       task = scheduler.schedule(rTask, delay, TimeUnit.MILLISECONDS);
-      //System.out.println("task "+taskNum+" delay="+delay);
+      log.debug("task "+taskNum+" delay="+delay);
     }
 
-    //System.out.println("next schedule->");
+    log.debug("next schedule->");
   }
 
   private void cancelCurrentTask() {
@@ -105,7 +105,7 @@ public class RestrictionDaemon implements Daemon{
 
 
   private void applyRestrictions(long forDate) throws AdminException {
-    //System.out.println("apply restrictions<-");
+    log.debug("apply restrictions<-");
     List<User> users = context.getUsers();
     for (final User u : users) {
 
@@ -116,24 +116,28 @@ public class RestrictionDaemon implements Daemon{
               :
               null;
 
+      log.debug("user restrictions = "+restrictions);
+      
       DeliveryFilter dFilter = new DeliveryFilter();
       dFilter.setUserIdFilter(u.getLogin());
       dFilter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Paused);
-      //System.out.println("apply restrictions get deliveries");
+      log.debug("get deliveries for user = "+u.getLogin());
       context.getDeliveries(u.getLogin(), u.getPassword(), dFilter, 1000,
           new Visitor<Delivery>() {
             public boolean visit(Delivery di) throws AdminException {
-              //System.out.println("visit");
+              log.debug("check state for delivery "+di);
               boolean shouldBeRestricted;
               if (restrictions != null) {
                 shouldBeRestricted = false;
                 for (Restriction r : restrictions) {
-                  if (r.isAllUsers() || r.getUserIds().contains(u.getLogin())) {
+                  if (r.isAllUsers() || (r.getUserIds()!=null && r.getUserIds().contains(u.getLogin()))) {
                     shouldBeRestricted = true;
+                    log.debug("should be restricted r.allUsers="+r.isAllUsers()+" userIds="+r.getUserIds());
                     break;
                   }
                 }
               } else {
+                log.debug("should be restricted (user not enabled)");
                 shouldBeRestricted = true;
               }
               adjustDeliveryState(u, di, shouldBeRestricted);
@@ -141,7 +145,7 @@ public class RestrictionDaemon implements Daemon{
             }
           });
     }
-    //System.out.println("applyRestictions->");
+    log.debug("applyRestictions->");
   }
 
   private List<Restriction> getActiveRestrictions(long startDate, User u) {
@@ -153,19 +157,25 @@ public class RestrictionDaemon implements Daemon{
   }
 
   private void adjustDeliveryState(User u, Delivery di, boolean shouldBeRestricted) throws AdminException {
-    //System.out.println("adjust delivery "+di.getDeliveryId()+" "+di.getUserId()+" to restricted="+shouldBeRestricted);
-    if (shouldBeRestricted) {
-      if (di.getStatus() != DeliveryStatus.Paused) {
-        //System.out.println("changed");
-        context.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getId(), true);
-        context.pauseDelivery(u.getLogin(), u.getPassword(), di.getId());
+    log.debug("Adjust delivery state "+di.getId()+" "+di.getOwner()+" to restricted="+shouldBeRestricted);
+    try {
+      if (shouldBeRestricted) {
+        if (di.getStatus() != DeliveryStatus.Paused) {
+          log.debug("pause delivery "+di);
+          context.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getId(), true);
+          context.pauseDelivery(u.getLogin(), u.getPassword(), di.getId());
+        }
       }
-    } else {
-      if (di.getStatus() == DeliveryStatus.Paused && Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION))) {
-        //System.out.println("changed");
-          context.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getId(), false);
-          context.activateDelivery(u.getLogin(), u.getPassword(), di.getId());
+      else {
+        if ( (di.getStatus() == DeliveryStatus.Paused) && Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION))) {
+            log.debug("activate delivery "+di);
+            context.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getId(), false);
+            context.activateDelivery(u.getLogin(), u.getPassword(), di.getId());
+        }
       }
+    }
+    catch (Exception e) {
+      log.error("Error adjusting delivery state ",e);
     }
   }
 
