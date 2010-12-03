@@ -90,7 +90,7 @@
 
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.priority}"/>
-          <tr:inputText simple="true" value="#{userEdit.userToEdit.priority}"   columns="3"/>
+          <h:inputText converterMessage="#{userBundle.priority}" value="#{userEdit.userToEdit.priority}"   size="3"/>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
           <h:panelGroup>
