@@ -704,6 +704,10 @@ public class AdminContext {
 
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
+      Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
+      if(d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
+        throw new IntegrityException("siebel.delivery.remove");
+      }
       setDeliveryRestriction(login, password, deliveryId, false);
       deliveryManager.dropDelivery(login, password, deliveryId);
     }
