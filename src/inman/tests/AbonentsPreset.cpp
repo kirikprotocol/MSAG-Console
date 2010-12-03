@@ -37,6 +37,8 @@ const AbonentPreset  _knownAbonents[] = {
   , AbonentPreset(AbonentContractInfo::abtPostpaid,  ".1.1.79163841468", "250016907163177")
   , AbonentPreset(AbonentContractInfo::abtPostpaid,  ".1.1.79169037692", "250016918392913")
   , AbonentPreset(AbonentContractInfo::abtPostpaid,  ".1.1.79168056148", "250016819159666")
+  , AbonentPreset(AbonentContractInfo::abtPrepaid,  ".1.1.79104081922", "250016170023652")
+  , AbonentPreset(AbonentContractInfo::abtPrepaid,  ".1.1.79104082370", "250016170023659")
 };
 const unsigned _knownAbonentsNum = (sizeof(_knownAbonents)/sizeof(AbonentPreset));
 
