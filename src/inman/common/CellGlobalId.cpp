@@ -64,10 +64,10 @@ void CellGlobalId::unpackOcts(const uint8_t (& oct_buf)[7])
 CellGlobalId::StringForm_t CellGlobalId::toString(void) const
 {
   StringForm_t rval("{");
-  rval += _mcc._value;
-  rval += ','; rval += _mnc._value;
-  rval += ','; rval += _lac._value;
-  rval += ','; rval += _ci._value;
+  strncat(rval.str, _mcc._value, _mcc._MAX_SZ);
+  rval += ','; strncat(rval.str, _mnc._value, _mnc._MAX_SZ);
+  rval += ','; strncat(rval.str, _lac._value, _lac._MAX_SZ);
+  rval += ','; strncat(rval.str, _ci._value, _ci._MAX_SZ);
   rval += '}';
   return rval;
 }
