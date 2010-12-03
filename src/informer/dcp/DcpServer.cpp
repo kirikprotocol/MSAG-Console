@@ -183,6 +183,7 @@ void DcpServer::mkOkResponse(int connId,int seqNum)
 {
   messages::OkResponse resp;
   resp.messageSetSeqNum(seqNum);
+  dumpMsg(resp);
   enqueueCommand(connId,resp,proto,false);
 }
 
@@ -192,6 +193,7 @@ void DcpServer::mkFailResponse(int connId,int seq,int status,const std::string& 
   resp.setStatus(status);
   resp.setStatusMessage(msg);
   resp.messageSetSeqNum(seq);
+  dumpMsg(resp);
   enqueueCommand(connId,resp,proto,false);
 }
 
@@ -286,6 +288,7 @@ void DcpServer::onDisconnect(eyeline::protogen::ProtocolSocketBase* sck)
 
 void DcpServer::handle(const messages::UserAuth& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=core->getUserInfo(inmsg.getUserId().c_str());
   int connId=inmsg.messageGetConnId();
   char pwd[UserInfo::PASSWORD_LENGTH];
@@ -327,6 +330,7 @@ void DcpServer::handle(const messages::UserAuth& inmsg)
 
 void DcpServer::handle(const messages::GetUserStats& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui;
   {
     sync::MutexGuard mg(clntsMon);
@@ -372,6 +376,7 @@ void DcpServer::handle(const messages::GetUserStats& inmsg)
 
 void DcpServer::handle(const messages::CreateDelivery& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryInfoData did;
   const messages::DeliveryInfo& di=inmsg.getInfo();
@@ -386,6 +391,7 @@ void DcpServer::handle(const messages::CreateDelivery& inmsg)
 
 void DcpServer::handle(const messages::ModifyDelivery& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryInfoData did;
   const messages::DeliveryInfo& di=inmsg.getInfo();
@@ -396,6 +402,7 @@ void DcpServer::handle(const messages::ModifyDelivery& inmsg)
 
 void DcpServer::handle(const messages::DropDelivery& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   core->deleteDelivery(*ui.get(),inmsg.getDeliveryId());
   mkOkResponse(inmsg);
@@ -418,6 +425,7 @@ static msgtime_type parseDate(const std::string& str)
 
 void DcpServer::handle(const messages::ChangeDeliveryState& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DlvState state;
   msgtime_type date=0;
@@ -441,6 +449,7 @@ void DcpServer::handle(const messages::ChangeDeliveryState& inmsg)
 
 void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
   MessageList lst;
@@ -473,6 +482,7 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
 
 void DcpServer::handle(const messages::DropDeliveryMessages& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
 
@@ -483,6 +493,7 @@ void DcpServer::handle(const messages::DropDeliveryMessages& inmsg)
 
 void DcpServer::handle(const messages::GetDeliveryGlossary& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
   messages::GetDeliveryGlossaryResp resp;
@@ -492,6 +503,7 @@ void DcpServer::handle(const messages::GetDeliveryGlossary& inmsg)
 
 void DcpServer::handle(const messages::ModifyDeliveryGlossary& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
   dlv->setGlossary(inmsg.getGlossary().getMessages());
@@ -500,6 +512,7 @@ void DcpServer::handle(const messages::ModifyDeliveryGlossary& inmsg)
 
 void DcpServer::handle(const messages::GetDeliveryState& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
   //const DeliveryInfo& di=dlv->getDlvInfo();
@@ -528,6 +541,7 @@ void DcpServer::handle(const messages::GetDeliveryState& inmsg)
 
 void DcpServer::handle(const messages::GetDeliveryInfo& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
   DeliveryInfoData did;
@@ -613,6 +627,7 @@ static bool isDeliveryMatchFilter(Delivery* dlv,const messages::DeliveriesFilter
 
 void DcpServer::handle(const messages::GetDeliveriesList& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   std::vector<UserInfoPtr> users;
   if(!ui->hasRole(USERROLE_ADMIN))
@@ -685,6 +700,7 @@ void DcpServer::handle(const messages::GetDeliveriesList& inmsg)
 
 void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   messages::GetDeliveriesListNextResp resp;
   {
@@ -782,6 +798,7 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
 
 void DcpServer::handle(const messages::CountDeliveries& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   std::vector<UserInfoPtr> users;
   if(!ui->hasRole(USERROLE_ADMIN))
@@ -872,6 +889,7 @@ void fillFilter(const MSG& inmsg,alm::ALMRequestFilter& filter)
 
 void DcpServer::handle(const messages::RequestMessagesState& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
   alm::ALMRequestFilter filter;
@@ -895,6 +913,7 @@ void DcpServer::handle(const messages::RequestMessagesState& inmsg)
 
 void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   messages::GetNextMessagesPackResp resp;
   std::vector<alm::ALMResult> result;
@@ -945,6 +964,7 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
 
 void DcpServer::handle(const messages::CountMessages& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
   alm::ALMRequestFilter filter;
@@ -956,6 +976,7 @@ void DcpServer::handle(const messages::CountMessages& inmsg)
 
 void DcpServer::handle(const messages::GetDeliveryHistory& inmsg)
 {
+  dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
   std::string path=getCS()->getStorePath();
