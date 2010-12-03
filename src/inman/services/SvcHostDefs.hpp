@@ -79,6 +79,14 @@ public:
 struct SvcHostCFG {
     ICSProducersReg prodReg;
     ICServicesReg   srvReg;
+
+    SvcHostCFG()
+    { }
+    ~SvcHostCFG()
+    { //NOTE: top level services may acces lowId services while destruction,
+      //      so destroy services in reverse order.
+      srvReg.rclear();
+    }
 };
 
 } //inman
