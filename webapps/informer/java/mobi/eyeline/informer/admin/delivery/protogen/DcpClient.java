@@ -21,7 +21,7 @@ public class DcpClient extends SyncProtogenConnection {
 
   private static final Logger log = Logger.getLogger(DcpClient.class);
 
-  private static final int RESPONSE_TIMEOUT = 5000;
+  private static final int RESPONSE_TIMEOUT = 30000;
 
   private final Lock lock = new ReentrantLock();
   private final String login;

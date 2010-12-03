@@ -64,6 +64,7 @@ message DeliveryInfo
   string activeWeekDays 9 array
   // removed. has no sense now
 //  string validityDate 10 opt
+  //hh:mm:ss
   string validityPeriod 11 opt
 
   bool flash 12
@@ -254,6 +255,8 @@ message DeliveryStatistics
   int64 deliveredMessages 2
   int64 failedMessage 3
   int64 expiredMessages 5
+  int64 retriedMessages 6
+  int64 sentMessages 7
 end
 
 message GetDeliveryStateResp 42
@@ -285,11 +288,13 @@ enum byte ReqField
 end
 
 enum byte DeliveryMessageState
-  New 1
-  Process 2
+  New       1
+  Process   2
+  Retry     6
   Delivered 3
-  Failed 4
-  Expired 5
+  Failed    4
+  Expired   5
+  Killed    7
 end
 
 message RequestMessagesState 43

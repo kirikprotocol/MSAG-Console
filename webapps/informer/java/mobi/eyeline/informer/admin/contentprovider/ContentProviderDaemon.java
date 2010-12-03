@@ -24,13 +24,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class ContentProviderDaemon extends DeliveryChangeListenerStub implements Daemon, ContentProviderUserDirResolver {
 
-  Logger log = Logger.getLogger(this.getClass());
+  private static Logger log = Logger.getLogger("CONTENT_PROVIDER");
 
   private ScheduledExecutorService scheduler;
   private ScheduledExecutorService reportScheduler;
   static final String NAME = "ContentProviderDaemon";
   static final String NAME_REPORT = "ContentProviderDaemonReports";
-  private static final long PERIOD_MSEC = 1000L;
+  private static final long PERIOD_MSEC = 300000L;
   private static final long SHUTDOWN_WAIT_TIME = 2000L;
   FileSystem fileSys;
   ContentProviderContext context;
@@ -54,6 +54,8 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
   }
 
   public synchronized void start() throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug("Content Provider Daemon starting...");
 
     if(scheduler!=null) return;
 
@@ -72,9 +74,14 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
 
     reportScheduler.schedule(new ContentProviderReportTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
 
+    if (log.isDebugEnabled())
+      log.debug("Content Provider Daemon successfully started.");
   }
 
   public synchronized void stop() throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug("Content Provider Daemon shutdowning...");
+
     scheduler.shutdown();
     reportScheduler.shutdown();
     try {
@@ -87,6 +94,9 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
     }
     scheduler = null;
     reportScheduler = null;
+
+    if (log.isDebugEnabled())
+      log.debug("Content Provider Daemon shutdowned.");
   }
 
   public boolean isStarted() {
@@ -97,7 +107,6 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
 
   @Override
   public void deliveryStateChanged(ChangeDeliveryStatusEvent e) {
-
     if (e.getStatus() != DeliveryStatus.Finished)
       return;
 
@@ -135,12 +144,12 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
   }
 
   public void verifyConnection(User u, UserCPsettings ucps) throws AdminException {
+    
     ContentProviderConnection con = null;
     try {
       con = getConnection(u,ucps);
       con.connect();
       con.listCSVFiles();
-      con.close();
     }
     finally {
       try {if(con!=null) con.close();} catch (Exception e){}

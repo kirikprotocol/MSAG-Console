@@ -77,8 +77,8 @@ input.txtW {
 }
 
 input.radio, input.check {
-  width: 1.2em;
-  height: 1.2em;
+  /*width: 1.2em;*/
+  /*height: 1.2em;*/
   padding: 0px;
   margin: 0px;
 }
@@ -204,6 +204,11 @@ div.query_result {
 .column50ProcWidth {
   width:50%;
 }
+
+.column50ProcWidthTop {
+  width:50%;
+}
+
 
 .column0WidthRight {
   width:0px;

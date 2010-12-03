@@ -390,6 +390,8 @@ class DcpConverter {
     result.setNewMessages(stats.getNewMessages());
     result.setFailedMessages(stats.getFailedMessage());
     result.setProcessMessages(stats.getProcessMessage());
+    result.setSentMessages(stats.getSentMessages());
+    result.setRetriedMessages(stats.getRetriedMessages());
     return result;
   }
 

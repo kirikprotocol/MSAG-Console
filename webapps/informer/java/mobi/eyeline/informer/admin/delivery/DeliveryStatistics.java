@@ -19,6 +19,10 @@ public class DeliveryStatistics {
 
   private long expiredMessages;
 
+  private long sentMessages;
+
+  private long retriedMessages;
+
   public DeliveryState getDeliveryState() {
     return deliveryState == null ? null : deliveryState.cloneState();
   }
@@ -65,5 +69,21 @@ public class DeliveryStatistics {
 
   void setExpiredMessages(long expiredMessages) {
     this.expiredMessages = expiredMessages;
+  }
+
+  public long getSentMessages() {
+    return sentMessages;
+  }
+
+  void setSentMessages(long sentMessages) {
+    this.sentMessages = sentMessages;
+  }
+
+  public long getRetriedMessages() {
+    return retriedMessages;
+  }
+
+  void setRetriedMessages(long retriedMessages) {
+    this.retriedMessages = retriedMessages;
   }
 }

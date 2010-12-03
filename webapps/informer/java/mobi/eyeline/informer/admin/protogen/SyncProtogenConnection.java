@@ -96,6 +96,7 @@ public abstract class SyncProtogenConnection {
       try {
         resp = sendPDU(request, expectedResponsesInst);
       } catch (Exception ignored) {
+        logger.error("Connection lost. Cause: " + ignored.getMessage() + ". Try to reconnect.");
         // Если отправить не удалось, реконнектимся и снова отправляем
         reconnect();
         resp = sendPDU(request, expectedResponsesInst);

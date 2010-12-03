@@ -139,9 +139,9 @@
 
       <eye:delimiter/>
 
-      <eye:updatableContent updatePeriod="5">
+      <eye:updatableContent  updatePeriod="5">
 
-        <h:panelGrid columns="2" columnClasses="column50ProcWidth, columnTopLeftAlign">
+        <h:panelGrid columns="2" columnClasses="column50ProcWidthTop, columnTopLeftAlign">
 
           <h:panelGroup>
 
@@ -149,17 +149,26 @@
 
             <eye:delimiter/>
 
-            <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign" >
+            <c:set var="total" value="0"/>
+            <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px" columnClasses="column100WidthTopLeft, columnTopLeftAlign" >
               <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.new']}"/>
               <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.newMessages}"/>
+              <c:set var="total" value="#{total + deliveryEdit.status.newMessages}"/>
               <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.process']}"/>
-              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.processMessages}"/>
+              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.processMessages + deliveryEdit.status.retriedMessages}"/>
+              <c:set var="total" value="#{total + deliveryEdit.status.processMessages + deliveryEdit.status.retriedMessages}"/>
+              <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.sent']}"/>
+              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.sentMessages}"/>
+              <c:set var="total" value="#{total + deliveryEdit.status.sentMessages}"/>
               <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.delivered']}"/>
               <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.deliveredMessages}"/>
+              <c:set var="total" value="#{total + deliveryEdit.status.deliveredMessages}"/>
               <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.failed']}"/>
-              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.failedMessages}"/>
-              <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.messages.expired']}"/>
-              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.expiredMessages}"/>
+              <h:outputText style="white-space:nowrap;" value="#{deliveryEdit.status.failedMessages + deliveryEdit.status.expiredMessages}"/>
+              <c:set var="total" value="#{total + deliveryEdit.status.failedMessages + deliveryEdit.status.expiredMessages}"/>
+
+              <h:outputText style="white-space:nowrap; font-weight: bold; border-bottom: 1px solid BLACK;" value="#{msg['delivery.messages.total']}"/>
+              <h:outputText style="white-space:nowrap; font-weight: bold; border-bottom: 1px solid BLACK;" value="#{total}"/>
             </h:panelGrid>
 
           </h:panelGroup>

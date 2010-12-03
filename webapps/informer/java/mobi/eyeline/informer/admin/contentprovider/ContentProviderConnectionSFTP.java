@@ -47,6 +47,7 @@ class ContentProviderConnectionSFTP implements ContentProviderConnection {
       session = jsch.getSession(ucps.getLogin(), ucps.getHost());
       if(ucps.getPort()!=null) session.setPort(ucps.getPort());
       session.setPassword(ucps.getPassword());
+      session.setTimeout(5000);
       session.connect();
       channel = (ChannelSftp)session.openChannel("sftp");
       channel.connect();
