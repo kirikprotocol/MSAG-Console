@@ -151,7 +151,7 @@ void MessageGlossary::fetchText( MessageText& p, bool returnRealId )
         throw InfosmeException(EXC_LOGICERROR,"D=%u text is already bound",dlvId_);
     }
     {
-        smsc_log_debug(log_,"D=%u fetch text id=%d", dlvId_, id);
+        // smsc_log_debug(log_,"D=%u fetch text id=%d", dlvId_, id);
         MutexGuard mg(lock_);
         if (!hash_) {
             throw InfosmeException(EXC_LOGICERROR,"D=%u glossary is not loaded",dlvId_);

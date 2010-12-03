@@ -592,7 +592,7 @@ void InfosmeCoreV1::selfTest()
 
         {
             smsc_log_info(log_,"--- adding messages to D=%u ---",dlvId);
-            for ( int pass = 0; pass < 10; ++pass ) {
+            for ( int pass = 0; pass < 5; ++pass ) {
                 MessageList msgList;
                 if (stopping_) break;
                 for ( int j = 0; j < 1000; ++j ) {
@@ -600,11 +600,11 @@ void InfosmeCoreV1::selfTest()
                     const int i = pass*1000 + j;
                     
                     ulonglong address;
-                    if ( i % 2 ) {
-                        address = 79130000000ULL + i;
-                    } else {
+                    // if ( i % 2 ) {
+                    // address = 79130000000ULL + i;
+                    // } else {
                         address = 79530000000ULL + i;
-                    }
+                    // }
                     msgList.push_back(MessageLocker());
                     MessageLocker& mlk = msgList.back();
                     mlk.msg.subscriber = addressToSubscriber(11,1,1,address);

@@ -114,7 +114,7 @@ private:
 
 InputStorage::InputStorage( DeliveryActivator& core,
                             InputJournal&      jnl ) :
-log_(smsc::logger::Logger::getInstance("instore")),
+log_(0),
 core_(core),
 rollingIter_(recordList_.end()),
 jnl_(jnl),
@@ -135,10 +135,16 @@ InputStorage::~InputStorage()
 void InputStorage::init( ActivityLog& actLog )
 {
     activityLog_ = &actLog;
+    const dlvid_type dlvId = getDlvId();
+    {
+        char buf[20];
+        sprintf(buf,"in.%u",dlvId % 1000);
+        log_ = smsc::logger::Logger::getInstance(buf);
+    }
     try {
-        glossary_.init(getDlvId());
+        glossary_.init(dlvId);
     } catch ( std::exception& e ) {
-        smsc_log_error(log_,"D=%u glossary init exc: %s",getDlvId(),e.what());
+        smsc_log_error(log_,"D=%u glossary init exc: %s",dlvId,e.what());
         throw;
     }
     if (!blackList_) {
@@ -321,6 +327,7 @@ void InputStorage::dispatchMessages( MsgIter begin,
         for ( MsgIter i = begin; i != end; ++i ) {
             if (i->serial != regId) continue;
             if (ro.count % fileSize == 0) {
+                // FIXME: should we write a record here, no?
                 // need to create new file.
                 ro.wfn = ++lastfn_;
                 ro.woff = 0;

@@ -297,7 +297,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
         }
 
         if ( !resendQueue_.empty() ) {
-            if (++newOrResend_ > 3 ) {
+            if ( ++newOrResend_ > 3 || newQueue_.Count() == 0 ) {
                 newOrResend_ = 0;
                 ResendQueue::iterator v = resendQueue_.begin();
                 if ( nextResendFile_ && v->first >= nextResendFile_ ) {
@@ -321,8 +321,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
             break;
         }
 
-        // message is not found, please try in a second
-        return int(tuPerSec + 12);
+        from = "";
 
     } while ( false );
 
@@ -337,6 +336,17 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                           regionId_, dlvId, e.what());
         }
     }
+
+    if ( !from[0] ) {
+        // message is not found, please try in a second
+        smsc_log_debug(log_,"R=%u/D=%u fail: newSize=0, reSize=%u (first=%+d) nextFile=%+d",
+                       regionId_, dlvId, unsigned(resendQueue_.size()),
+                       resendQueue_.empty() ? 0U :
+                       unsigned(resendQueue_.begin()->first - currentTime),
+                       nextResendFile_ ? int(nextResendFile_ - currentTime) : -1);
+        return int(tuPerSec + 12);
+    }
+
 
     MsgLock ml(iter,this,mg);
 
@@ -999,6 +1009,8 @@ msgtime_type RegionalStorage::findNextResendFile()
                                regionId_, dlv_->getDlvId(),i->c_str());
                 continue;
             }
+            smsc_log_debug(log_,"R=%u/D=%u next resend file is %llu",
+                           regionId_,dlv_->getDlvId(),ymd);
             return ymdToMsgTime(ymd);
         }
     } catch ( std::exception& e ) {
