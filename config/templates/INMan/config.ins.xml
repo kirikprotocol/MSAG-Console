@@ -3,7 +3,9 @@
 <!--  "$Id$" -->
 <!-- configuration for INMan v0.8.0 or higher -->
 <config>
-
+  <!-- NOTE: Remove prefix 'sample_' from optional param/section name
+             in order to activate it.
+  -->
   <section name="IN-platforms"> <!-- known IN-platforms with serviceKeys specified -->
   <!--  IN-platform configuration may have optional fields defined:
      1) param name="RPCList_retry" type="string"  - it's a comma 
@@ -40,7 +42,8 @@
       <param name="RPCList_reject" type="string"></param>     <!-- not supported -->
       <param name="IDPLocationInfo" type="string"></param>  <!-- [MSC (default), SMSC, SSF] -->
       <param name="IDPReqMode" type="string"></param>  <!-- [MT (default), SEQ] -->
-      <param name="defaultIMSI" type="string">250013903368782</param>
+
+      <param name="sample_defaultIMSI" type="string">250013903368782</param>
     </section>
 
     <section name="IN_Vlad_Huawei">
@@ -57,18 +60,6 @@
       </section>
       <param name="RPCList_reject" type="string">16</param>
       <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
-
-      <section name="SSFLocationIdentification"> <!--
-      meaningfull if IDPLocationInfo == SSF -->
-        <param name="MCC" type="string">250</param> <!--
-        Mobile Country Cide, NumericString[3] -->
-        <param name="MNC" type="string">01</param> <!--
-        Mobile Network Code, NumericString[2..3] -->
-        <param name="LAC" type="string">AAAA</param> <!--
-        Location Area Code, HexString[4] -->
-        <param name="CI" type="string">AAAA</param> <!--
-        Cell Identity value, HexString[4] -->
-      </section>
     </section>
 
     <section name="IN_NNov_Alcatel_1">
@@ -158,7 +149,6 @@
       <section name="ServiceKeys">
         <param name="MO-SM" type="string">2</param>   <!-- uint32_t or algorithm -->
       </section>
-      <param name="RPCList_postpaid" type="string"></param>
       <param name="RPCList_reject" type="string">16</param>
       <param name="IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
     </section>
@@ -204,6 +194,20 @@
       <section name="ServiceKeys">
         <param name="MO-SM" type="string">105</param>   <!-- uint32_t or algorithm -->
       </section>
+
+      <param name="sample_IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+      <section name="sample_SSFLocationIdentification"> <!--
+      meaningfull if IDPLocationInfo == SSF -->
+        <param name="MCC" type="string">250</param> <!--
+        Mobile Country Code, NumericString[3] -->
+        <param name="MNC" type="string">01</param> <!--
+        Mobile Network Code, NumericString[2..3] -->
+        <param name="LAC" type="string">AAAA</param> <!--
+        Location Area Code, HexString[4] -->
+        <param name="CI" type="string">AAAA</param> <!--
+        Cell Identity value, HexString[4] -->
+      </section>
+
     </section>
 
     <section name="IN_Msk_Siemens_2">
@@ -232,6 +236,20 @@
       <section name="ServiceKeys">
         <param name="MO-SM" type="string">150</param>   <!-- uint32_t or algorithm -->
       </section>
+
+      <param name="sample_IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+      <section name="sample_SSFLocationIdentification"> <!--
+      meaningfull if IDPLocationInfo == SSF -->
+        <param name="MCC" type="string">250</param> <!--
+        Mobile Country Code, NumericString[3] -->
+        <param name="MNC" type="string">01</param> <!--
+        Mobile Network Code, NumericString[2..3] -->
+        <param name="LAC" type="string">AAAA</param> <!--
+        Location Area Code, HexString[4] -->
+        <param name="CI" type="string">AAAA</param> <!--
+        Cell Identity value, HexString[4] -->
+      </section>
+
     </section>
 
     <section name="IN_Orel_Strom">
@@ -392,7 +410,21 @@
          <param name="MO-SM" type="string">120</param> 
       </section>
       <param name="RPCList_retry" type="string">41:2</param>
-      <param name="defaultIMSI" type="string">250016170023531</param>
+
+      <param name="sample_defaultIMSI" type="string">250016170023531</param>
+      <param name="sample_IDPLocationInfo" type="string">SSF</param>  <!-- [MSC (default), SMSC, SSF] -->
+      <section name="sample_SSFLocationIdentification"> <!--
+      meaningfull if IDPLocationInfo == SSF -->
+        <param name="MCC" type="string">250</param> <!--
+        Mobile Country Code, NumericString[3] -->
+        <param name="MNC" type="string">01</param> <!--
+        Mobile Network Code, NumericString[2..3] -->
+        <param name="LAC" type="string">AAAA</param> <!--
+        Location Area Code, HexString[4] -->
+        <param name="CI" type="string">AAAA</param> <!--
+        Cell Identity value, HexString[4] -->
+      </section>
+
     </section>
 
     <section name="IN_Msk_Comverse_13">
