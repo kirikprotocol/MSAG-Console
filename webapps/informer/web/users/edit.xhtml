@@ -35,10 +35,10 @@
         <tr:inputText simple="true" value="#{userEdit.userToEdit.login}" rendered="#{userEdit.userId==null}" />
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.password']}"/>
-        <h:inputSecret size="30" redisplay="true" value="#{userEdit.userToEdit.password}" />
+        <h:inputSecret redisplay="true" value="#{userEdit.userToEdit.password}" />
 
         <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.passwordConfirm']}"/>
-        <h:inputSecret size="30" redisplay="true" value="#{userEdit.passwordConfirm}"  />
+        <h:inputSecret redisplay="true" value="#{userEdit.passwordConfirm}"  />
 
         <h:outputText style="white-space:nowrap;" value="#{userBundle.firstName}"/>
         <tr:inputText simple="true" value="#{userEdit.userToEdit.firstName}"  />

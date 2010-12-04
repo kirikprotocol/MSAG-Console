@@ -7,7 +7,7 @@
 
   <property name="informer.exploded.dir" value="${informer.build.dir}/exploded"/>
 
-  <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="lib/protogen.jar"/>
+  <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="protogen/protogen.jar"/>
 
   <path id="lib">
     <fileset dir="lib" includes="*.jar"/>

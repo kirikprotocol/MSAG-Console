@@ -36,14 +36,19 @@ public abstract class SyncProtogenConnection {
   }
 
   private static void serialize(PDU request, OutputStream os) throws IOException {
-    BufferWriter buffer = new BufferWriter();
-    int pos = buffer.getLength();
-    buffer.writeInt(0); // write 4 bytes for future length
-    buffer.writeInt(request.getTag());
-    buffer.writeInt(request.getSeqNum());
-    request.encode(buffer);
-    buffer.replaceInt(pos, buffer.getLength() - pos - 4);
-    buffer.writeData(os);
+    BufferWriter writer = new BufferWriter();
+    int pos = writer.size();
+    writer.appendInt(0); // write 4 bytes for future length
+    writer.appendInt(request.getTag());
+    writer.appendInt(request.getSeqNum());
+    request.encode(writer);
+    int len = writer.size()-pos-4;
+    writer.replaceInt( len,  pos); // fill first 4 bytes with actual length
+
+    if (logger.isDebugEnabled())
+      logger.debug("Sending PDU: " + writer.getHexDump());
+
+    writer.writeBuffer(os);
     os.flush();
   }
 
@@ -52,13 +57,19 @@ public abstract class SyncProtogenConnection {
     serialize(request, os);
 
     BufferReader buffer = new BufferReader(1024);
-    buffer.fill(is, 4);
-    int len = buffer.readInt();
-    if (len > 0)
-      buffer.fill(is, len);
+    buffer.fillFully(is, 4);
+    int len = buffer.removeInt();
 
-    int tag = buffer.readInt();
-    int seqNum = buffer.readInt();
+    if (logger.isDebugEnabled())
+      logger.debug("Received packet len=" + len);
+    if (len > 0)
+      buffer.fillFully(is, len);
+
+    if (logger.isDebugEnabled())
+      logger.debug("PDU received: " + buffer.getHexDump());
+
+    int tag = buffer.removeInt();
+    int seqNum = buffer.removeInt();
 
     if (seqNum != request.getSeqNum())
       throw new IOException("Unexpected response sequence number: " + seqNum + ". Expected value: " + request.getSeqNum());
@@ -95,15 +106,17 @@ public abstract class SyncProtogenConnection {
       // При первой попытке отправки допустима ошибка
       try {
         resp = sendPDU(request, expectedResponsesInst);
-      } catch (Exception ignored) {
-        logger.error("Connection lost. Cause: " + ignored.getMessage() + ". Try to reconnect.");
+      } catch (IOException ignored) {
+        logger.error("Connection lost. Cause: " + ignored.getClass() + " : "+ ignored.getMessage() + ". Try to reconnect.");
         // Если отправить не удалось, реконнектимся и снова отправляем
         reconnect();
         resp = sendPDU(request, expectedResponsesInst);
+      } catch (Exception e) {
+        logger.error(e,e);
+        throw new IOException(e.getMessage());
       }
       
       if (logger.isDebugEnabled()) {
-        logger.debug("Request sent: " + request);
         logger.debug("Response received:" + resp);
       }
 

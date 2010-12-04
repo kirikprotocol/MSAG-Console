@@ -125,13 +125,12 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
       log.error("Error processing delivery finished report for delivery "+e.getDeliveryId(),ex);
     }
     finally {
-      if(ps!=null) try {ps.close();} catch (Exception ex){}
+      if(ps!=null) try {ps.close();} catch (Exception ignored){}
     }
   }
 
   public File getUserLocalDir(String login, UserCPsettings ucps) throws AdminException {
-    File dir = new File(workDir,login+"_"+ucps.getHashId());
-    return dir;
+    return new File(workDir,login+"_"+ucps.getHashId());
   }
 
   public ContentProviderConnection getConnection(User user, UserCPsettings ucps) throws AdminException {
@@ -152,7 +151,7 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
       con.listCSVFiles();
     }
     finally {
-      try {if(con!=null) con.close();} catch (Exception e){}
+      try {if(con!=null) con.close();} catch (Exception ignored){}
     }
   }
 }

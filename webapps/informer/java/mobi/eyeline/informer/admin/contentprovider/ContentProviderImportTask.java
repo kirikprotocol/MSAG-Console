@@ -28,7 +28,8 @@ import java.util.regex.Pattern;
  * Time: 18:29:48
  */
 class ContentProviderImportTask implements Runnable {
-  Logger log = Logger.getLogger(this.getClass());
+  private static Logger log = Logger.getLogger("CONTENT_PROVIDER");
+
   private ContentProviderContext context;
   private FileSystem fileSys;
   private File workDir;
@@ -71,11 +72,11 @@ class ContentProviderImportTask implements Runnable {
         File userDir = userDirResolver.getUserLocalDir(u.getLogin(), ucps);
         try {
           if(!fileSys.exists(userDir)) {
-                fileSys.mkdirs(userDir);
+            fileSys.mkdirs(userDir);
           }
           userDirsNames.add(userDir.getName());
-          downloadUserFiles(u, userDir,ucps);
-          processImportFromLocal(u, userDir, ucps);
+          downloadUserFilesToLocalDir(u, userDir,ucps);
+          processFilesInLocalDir(u, userDir, ucps);
         }
         catch (Exception e) {
           log.error("Error processing u="+u.getLogin()+" ucps="+ucps,e);
@@ -101,40 +102,40 @@ class ContentProviderImportTask implements Runnable {
     }
   }
 
+  private void downloadFile(ContentProviderConnection connection, String remoteFile, File toDit) throws AdminException {
+    File localTmpFile = new File(toDit, remoteFile + ".tmp");
+    if (fileSys.exists(localTmpFile))
+      fileSys.delete(localTmpFile);
 
-  void downloadUserFiles(User user, File userDir, UserCPsettings ucps) throws Exception {
+    try {
+      connection.get(remoteFile,localTmpFile);
+      connection.rename(remoteFile, remoteFile+".bak");
+      fileSys.rename(localTmpFile,new File(localTmpFile.getParentFile(), localTmpFile.getName().substring(0,localTmpFile.getName().length()-4)));
+    } catch (Exception e) {
+      try {fileSys.delete(localTmpFile);} catch (Exception ignored){}
+      log.error("Error loading file: " + toDit.getName() + File.separator + remoteFile,e);
+    }
+  }
+
+
+
+  void downloadUserFilesToLocalDir(User user, File userDir, UserCPsettings ucps) throws Exception {
     ContentProviderConnection connection = null;
     try {
       connection = userDirResolver.getConnection(user,ucps);
       connection.connect();
+
       List<String> remoteFiles = connection.listCSVFiles();
-      for (String remoteFile : remoteFiles) {
-        OutputStream localOs = null;
-        File localTmpFile = new File(userDir, remoteFile + ".tmp");
-        if (fileSys.exists(localTmpFile)) {
-          fileSys.delete(localTmpFile);
-        }
-        try {
-          connection.get(remoteFile,localTmpFile);
-          connection.rename(remoteFile, remoteFile+".bak");
-          fileSys.rename(localTmpFile,new File(localTmpFile.getParentFile(), localTmpFile.getName().substring(0,localTmpFile.getName().length()-4)));
-        }
-        catch (Exception e) {
-          try {fileSys.delete(localTmpFile);} catch (Exception ex){};
-          log.error("Error loading u="+user.getLogin()+" sourceFile"+ucps.toString()+"/"+remoteFile,e);
-        }
-        finally {
-          if(localOs!=null) try {localOs.close();} catch (Exception e){}
-        }
-      }
-    }
-    finally {
+      for (String remoteFile : remoteFiles)
+        downloadFile(connection, remoteFile, userDir);
+
+    } finally {
       if (connection != null) connection.close();
     }
   }
 
 
-  private void processImportFromLocal(User u, File userDir, UserCPsettings ucps) {
+  private void processFilesInLocalDir(User u, File userDir, UserCPsettings ucps) {
     File[] files = fileSys.listFiles(userDir);
     if(files==null) {
       log.error("Can't get directory listing for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
