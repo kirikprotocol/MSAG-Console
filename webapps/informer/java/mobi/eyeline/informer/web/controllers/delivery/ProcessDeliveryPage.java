@@ -2,15 +2,9 @@ package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -27,37 +21,21 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
   private final DeliveryPrototype delivery;
 
-  private final boolean singleText;
-
-  private Integer deliveryId;
-
-  private final Configuration config;
-
   private final Locale locale;
 
-  private final String user;
+  private final DeliveryBuilder fact;
 
-  private final File tmpFile;
 
-  private int current = 0;
-
-  private int maximum = Integer.MAX_VALUE;
-
-  private int processed;
-
-  public ProcessDeliveryPage(DeliveryPrototype delivery, boolean singleText, File tmpFile, Configuration config, Locale locale, String user) {
+  public ProcessDeliveryPage(DeliveryPrototype delivery, DeliveryBuilder fact, Locale locale) {
     this.delivery = delivery;
-    this.singleText = singleText;
-    this.config = config;
-    this.user = user;
+    this.fact = fact;
     this.locale = locale;
-    this.tmpFile = tmpFile;
     thread.start();
     state = 1;
   }
 
   public int getProcessed() {
-    return processed;
+    return fact.getProcessed();
   }
 
   public String getError() {
@@ -65,106 +43,22 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
   }
 
   public int getCurrent() {
-    return current;
+    return fact.getCurrent();
   }
 
 
   public int getMaximum() {
-    return maximum;
-  }
-
-  private Delivery createSingleTextDelivery(User u, final BufferedReader r) throws AdminException {
-    return config.createSingleTextDelivery(u.getLogin(), u.getPassword(), delivery, new DataSource<Address>() {
-      public Address next() throws AdminException {
-        if (thread.stop) {
-          return null;
-        }
-
-        try {
-          String line = r.readLine();
-          if (line == null)
-            return null;
-
-          current += line.length();
-          processed++;
-          return new Address(line);
-
-        } catch (IOException e) {
-          logger.error(e, e);
-          throw new DeliveryException("internal_error");
-        }
-      }
-    });
-  }
-
-  private Delivery createMultiTextDelivery(User u, final BufferedReader r) throws AdminException {
-    return config.createDelivery(u.getLogin(), u.getPassword(), delivery, new DataSource<Message>() {
-      public Message next() throws AdminException {
-        if (thread.stop) {
-          return null;
-        }
-
-        try {
-          String line = r.readLine();
-          if (line == null)
-            return null;
-
-          current += line.length();
-          int i = line.indexOf('|');
-          String address = line.substring(0, i);
-          String text = line.substring(i + 1, line.length());
-          Message m = Message.newMessage(new Address(address), text);
-          processed++;
-          return m;
-
-        } catch (IOException e) {
-          logger.error(e, e);
-          throw new DeliveryException("internal_error");
-        }
-      }
-    });
+    return fact.getTotal();
   }
 
   @SuppressWarnings({"EmptyCatchBlock"})
   protected void _process() throws Exception {
-
-    final User u = config.getUser(user);
-
-    BufferedReader r = null;
-
-    maximum = (int) tmpFile.length();
-
-    try {
-      r = new BufferedReader(new InputStreamReader(config.getFileSystem().getInputStream(tmpFile)));
-
-      Delivery d;
-      if (singleText) {
-        d = createSingleTextDelivery(u, r);
-      } else {
-        d = createMultiTextDelivery(u, r);
-      }
-
-      deliveryId = d.getId();
-
-      if (!thread.stop) {
-        config.activateDelivery(u.getLogin(), u.getPassword(), d.getId());
-        current = maximum;
-      }
-    } finally {
-      if (r != null) {
-        try {
-          r.close();
-        } catch (IOException e) {
-        }
-      }
-
-    }
+    fact.createDelivery(delivery);
   }
 
   public boolean isStoped() {
     return thread != null && thread.stop;
   }
-
 
   public int getState() {
     return state;
@@ -172,6 +66,7 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
 
   public String stop() {
     if (thread != null) {
+      fact.cancelDeliveryCreation();
       thread.stop = true;
       thread.interrupt();
     }
@@ -183,9 +78,6 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
-    if(tmpFile.delete()) {
-      logger.error("Can't delete: "+tmpFile.getAbsolutePath());
-    }
     return new UploadFilePage(config, user);
   }
 
@@ -194,18 +86,14 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
   }
 
   public void cancel() {
-    if(tmpFile.delete()) {
-      logger.error("Can't delete: "+tmpFile.getAbsolutePath());
-    }
     try {
-      if (deliveryId != null) {
-        User u = config.getUser(user);
-        config.dropDelivery(u.getLogin(), u.getPassword(), deliveryId);
-      }
+      fact.removeDelivery();
     } catch (AdminException e) {
       addError(e);
     }
   }
+
+  
 
   private class ProcessThread extends Thread {
 

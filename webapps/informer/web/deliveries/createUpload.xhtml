@@ -40,6 +40,9 @@
         <h:outputText style="white-space:nowrap;" value="#{msg['informer.upload.label']}"/>
         <tr:inputFile columns="50" value="#{createDelivery.activePage.file}" simple="true" required="true"/>
 
+        <h:outputText style="white-space:nowrap;" value="#{msg['informer.upload.split']}"/>
+        <h:selectBooleanCheckbox value="#{createDelivery.activePage.splitByRegions}"/>
+
       </h:panelGrid>
 
       <eye:delimiter/>
@@ -70,9 +73,15 @@
 
       <eye:delimiter/>
 
-      <h:panelGrid columns="1" style="padding-left: 10px" >
-        <h:outputText value="#{msg['informer.deliveries.create.abonetns.size']} #{createDelivery.activePage.abonentsSize}"/>
-        <h:outputText value="#{msg['informer.deliveries.create.abonetns.region.not.found']} #{createDelivery.activePage.rejectedAddressesCount}"/>
+      <h:panelGrid columns="2" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign">
+        <c:forEach items="#{createDelivery.activePage.regions}" var="reg">
+          <h:outputText style="white-space: nowrap;" value="#{reg.name}"/>
+          <h:outputText style="white-space: nowrap;" value="#{reg.abonentsNumber}"/>
+        </c:forEach>
+        <h:outputText style="color: RED;" value="#{msg['informer.deliveries.create.abonetns.region.not.found']}"/>
+        <h:outputText style="color: RED;" value="#{createDelivery.activePage.rejectedAddressesCount}"/>
+        <h:outputText style="font-weight: bold; border-bottom: 1px solid BLACK;" value="#{msg['informer.deliveries.create.abonetns.size']}"/>
+        <h:outputText style="font-weight: bold; border-bottom: 1px solid BLACK;" value="#{createDelivery.activePage.abonentsSize}"/>
       </h:panelGrid>
 
       <eye:delimiter/>

@@ -13,7 +13,6 @@ import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.io.File;
 import java.util.*;
 
 /**
@@ -23,7 +22,6 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private final DeliveryPrototype delivery;
 
-  private final File tmpFile;
 
   private boolean smsNotificationCheck;
 
@@ -39,17 +37,22 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private boolean secretFlash;
 
-  private final boolean singleText;
-
   private String retryOnFail;
+
+  private DeliveryBuilder fact;
+
+  private boolean singleText;
 
 
   private final Configuration config;
 
-  public DeliveryEditPage(DeliveryPrototype delivery, boolean singleText, File tmpFile, Configuration config) {
-    this.delivery = delivery;
+  public DeliveryEditPage(DeliveryBuilder fact, boolean singleText, Configuration config, String user) throws AdminException {
+    this.delivery = new DeliveryPrototype();
+    this.delivery.setStartDate(new Date());
+    config.copyUserSettingsToDeliveryPrototype(user, delivery);
+    
+    this.fact = fact;
     this.singleText = singleText;
-    this.tmpFile = tmpFile;
     this.config = config;
 
     if (delivery.isRetryOnFail()) {
@@ -186,7 +189,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       delivery.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
     }
 
-    return new ProcessDeliveryPage(delivery, singleText, tmpFile, config, locale, user);
+    return new ProcessDeliveryPage(delivery, fact, locale);
   }
 
   public List<SelectItem> getUniqueDeliveryModes() {
@@ -269,7 +272,11 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   @SuppressWarnings({"ResultOfMethodCallIgnored"})
   public void cancel() {
-    tmpFile.delete();
+    try {
+      fact.shutdown();
+    } catch (AdminException e) {
+      addError(e);
+    }
   }
 
 

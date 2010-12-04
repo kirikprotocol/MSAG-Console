@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
@@ -12,9 +11,7 @@ import org.apache.myfaces.trinidad.model.UploadedFile;
 
 import javax.faces.context.FacesContext;
 import java.io.*;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
@@ -25,9 +22,8 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   private int maximum = Integer.MAX_VALUE;
 
-  private DeliveryPrototype delivery;
-
-  private File tmpFile;
+  private Map<String, File> tmpFiles;
+  private Map<String, RegionInfo> regions;
 
   private int abonentsSize;
 
@@ -35,17 +31,18 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   private int fileContentType = 1;
   private String fileEncoding;
+  private boolean splitByRegions;
 
   private Configuration config;
-  private String user;
   private File rejectedAddressesFile;
   private int rejectedAddressesCount;
 
   public UploadFilePage(Configuration config, String user) {
     this.config = config;
-    this.user = user;
     fs = config.getFileSystem();
-    tmpFile = new File(config.getWorkDir(), "messages_" + user + System.currentTimeMillis());
+    tmpFiles = new HashMap<String, File>();
+    regions = new HashMap<String, RegionInfo>();
+
     rejectedAddressesFile = new File(config.getWorkDir(), "rejected_addresses_" + user + System.currentTimeMillis());
     rejectedAddressesFile.deleteOnExit();
 
@@ -57,38 +54,48 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
       return new UploadFilePage(config, user);
     }
     next();
-    return new DeliveryEditPage(delivery, fileContentType == 1, tmpFile, config);
-  }
 
-  public int getFileContentType() {
-    return fileContentType;
-  }
+    DeliveryBuilder fact;
+    if (!splitByRegions)
+      fact= new SingleDeliveryBuilder(new ArrayList<File>(tmpFiles.values()).get(0), fileContentType == 1, config.getUser(user), config);
+    else
+      fact = new MultiDeliveryBuilder(tmpFiles, fileContentType == 1, config.getUser(user), config);
 
-  public void setFileContentType(int content) {
-    this.fileContentType = content;
-  }
-
-  @Override
-  public String upload() {
-    delivery = new DeliveryPrototype();
-    try {
-      config.copyUserSettingsToDeliveryPrototype(user, delivery);
-      delivery.setStartDate(new Date());
-    } catch (AdminException e) {
-      addError(e);
-      return null;
+    if (rejectedAddressesFile != null) {
+      try {
+        config.getFileSystem().delete(rejectedAddressesFile);
+      } catch (AdminException e) {
+        logger.error(e,e);
+      }
     }
 
-    return super.upload();
+    return new DeliveryEditPage(fact, fileContentType == 1, config, user);
   }
 
   public String getPageId() {
     return "DELIVERY_UPLOAD_FILE";
   }
 
+  private void removeTmpFiles() {
+    for (File file : tmpFiles.values()) {
+      try {
+        config.getFileSystem().delete(file);
+      } catch (AdminException e) {
+        logger.error(e,e);
+      }
+    }
+    if (rejectedAddressesFile != null) {
+      try {
+        config.getFileSystem().delete(rejectedAddressesFile);
+      } catch (AdminException e) {
+        logger.error(e);
+      }
+    }
+  }
+
   @SuppressWarnings({"ResultOfMethodCallIgnored"})
   public void cancel() {
-    tmpFile.delete();
+    removeTmpFiles();
   }
 
   @Override
@@ -110,28 +117,6 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     return abonentsSize;
   }
 
-  public boolean isStoped() {
-    return super.isStoped();
-  }
-
-  private String getAddressFromLine(String line, int lineNumber, boolean containsText) throws DeliveryControllerException {
-    if (!containsText)
-      return line.trim();
-
-    int i = line.indexOf('|');
-    if (i < 0)
-      throw new DeliveryControllerException("invalid.string.format", String.valueOf(lineNumber), line);
-    return line.substring(0, i);
-  }
-
-  private boolean isAddressAllowed(Address address, User u) {
-    if (u.isAllRegionsAllowed())
-      return true;
-
-    Region r = config.getRegion(address);
-    return r != null && u.getRegions() != null && u.getRegions().contains(r.getRegionId());
-  }
-
   public String getRejectedAddressesFile() {
     return rejectedAddressesFile.getAbsolutePath();
   }
@@ -146,6 +131,30 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
 
   public void setFileEncoding(String fileEncoding) {
     this.fileEncoding = fileEncoding;
+  }
+
+  public boolean isSplitByRegions() {
+    return splitByRegions;
+  }
+
+  public void setSplitByRegions(boolean splitByRegions) {
+    this.splitByRegions = splitByRegions;
+  }
+
+  public int getFileContentType() {
+    return fileContentType;
+  }
+
+  public void setFileContentType(int content) {
+    this.fileContentType = content;
+  }
+
+  public boolean isStoped() {
+    return super.isStoped();
+  }
+
+  public Collection<RegionInfo> getRegions() {
+    return regions.values();
   }
 
   public void downloadRejectedLines(FacesContext context, OutputStream out) throws IOException {
@@ -176,16 +185,45 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
     w.flush();
   }
 
-  @Override
-  protected void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception {
+  private Address getAddressFromLine(String line, int lineNumber) throws DeliveryControllerException {
+    String addr;
+    if (fileContentType == 1)
+      addr = line.trim();
+    else {
+      int i = line.indexOf('|');
+      if (i < 0)
+        throw new DeliveryControllerException("invalid.string.format", String.valueOf(lineNumber), line);
+
+      addr = line.substring(0, i);
+      if (addr.length() >0 && addr.charAt(0) != '+') {
+        if (addr.charAt(0) == '7')
+          addr = '+' + addr;
+        else if (addr.charAt(0) == '8')
+          addr = "+7" + addr.substring(1);
+      }
+    }
+
+    try {
+      return new Address(addr);
+    } catch (IllegalArgumentException e) {
+      throw new DeliveryControllerException("invalid.msisdn", String.valueOf(lineNumber), addr);
+    }
+  }
+
+  private boolean isRegionAllowed(Region r, User _user) {
+    return _user.isAllRegionsAllowed() || (r != null && _user.getRegions() != null && _user.getRegions().contains(r.getRegionId()));
+  }
+
+  private void loadFile(UploadedFile file, String user) throws Exception {
     User _user = config.getUser(user);
     maximum = (int) file.getLength();
     BufferedReader is = null;
-    PrintWriter os = null;
     PrintWriter rejectedAddresses = null;
+
+    Map<Integer, PrintWriter> outputs = new HashMap<Integer, PrintWriter>();
+
     try {
       is = new BufferedReader(new InputStreamReader(file.getInputStream(), fileEncoding));
-      os = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(tmpFile, false))));
       rejectedAddresses = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(rejectedAddressesFile, false))));
 
       int lineNumber = 0;
@@ -197,21 +235,48 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
         if (line.trim().length() == 0)
           continue;
 
-        String addressStr = getAddressFromLine(line, lineNumber, fileContentType != 1);
-        Address address;
-        try {
-          address = new Address(addressStr);
-        } catch (IllegalArgumentException e) {
-          throw new DeliveryControllerException("invalid.msisdn", String.valueOf(lineNumber), addressStr);
-        }
-
-        if (!isAddressAllowed(address, _user)) {
-          rejectedAddresses.println(line);
-          rejectedAddressesCount++;
-        } else
-          os.println(line);
+        // Достаем и проверяем адрес получателя
+        Address address = getAddressFromLine(line, lineNumber);
 
         abonentsSize++;
+
+        // Определяем регион и проверяем разрешен ли он пользователю
+        Region r = config.getRegion(address);
+        if (!isRegionAllowed(r, _user)) {
+          rejectedAddresses.println(line);
+          rejectedAddressesCount++;
+          continue;
+        }
+
+        // Определяем имя региона и его идентификатор
+        String regionName;
+        int rId;
+        if (r == null) {
+          rId = 0;
+          regionName = "Default";
+        } else {
+          rId = splitByRegions ? r.getRegionId() : 0;
+          regionName = r.getName();
+        }
+
+        // Определяем файл, в который надо записать текущую строку
+        PrintWriter os = outputs.get(rId);
+        if (os == null) {
+          File tmpFile = new File(config.getWorkDir(), "messages_" + rId + "_" + user + System.currentTimeMillis());
+          tmpFiles.put(regionName, tmpFile);
+          os = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(tmpFile, false))));
+          outputs.put(rId, os);
+        }
+
+        RegionInfo rcounter = regions.get(regionName);
+        if (rcounter == null) {
+          rcounter = new RegionInfo(regionName);
+          regions.put(regionName, rcounter);
+        }
+
+        rcounter.incAbonentsNumber();
+
+        os.println(line);
       }
 
       if (!isStoped())
@@ -227,11 +292,44 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
         } catch (IOException ignored) {
         }
       }
-      if (os != null) {
+      for (PrintWriter os : outputs.values()) {
         os.close();
       }
       if (rejectedAddresses != null)
         rejectedAddresses.close();
+    }
+  }
+
+  @Override
+  protected void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception {
+    try {
+      loadFile(file, user);
+      if (isStoped())
+        removeTmpFiles();
+    } catch (Exception e) {
+      removeTmpFiles();
+      throw e;
+    }
+  }
+
+  public class RegionInfo {
+    private String name;
+    private int abonentsNumber;
+
+    public RegionInfo(String name) {
+      this.name = name;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public int getAbonentsNumber() {
+      return abonentsNumber;
+    }
+
+    public void incAbonentsNumber() {
+      abonentsNumber++;
     }
   }
 }
