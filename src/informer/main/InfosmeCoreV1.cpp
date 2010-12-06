@@ -1049,6 +1049,14 @@ void InfosmeCoreV1::bindDeliveryRegions( const BindSignal& bs )
               i != rsp.end(); ++i ) {
             (*i)->removeDelivery(bs.dlvId);
         }
+
+        // get the delivery
+        DeliveryImplPtr dlv;
+        if (!dlvMgr_->getDelivery(bs.dlvId,dlv)) { return; }
+        if ( dlv->getState() == DLVSTATE_ACTIVE) {
+            smsc_log_debug(log_,"D=%u checking finalize",bs.dlvId);
+            dlv->checkFinalize();
+        }
         return;
     }
 

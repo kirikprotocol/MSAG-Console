@@ -91,15 +91,15 @@ public:
 
     void detachEverything( bool cleanDirectory = false );
 
+    /// check if all regional storages is empty, and no messages in retries.
+    void checkFinalize();
+
 private:
     typedef std::list< RegionalStoragePtr >            StoreList;
     typedef smsc::core::buffers::IntHash< StoreList::iterator > StoreHash;
 
     inline DeliveryInfo* getDlvInfo() { return &activityLog_.getDlvInfo(); }
     inline const DeliveryInfo* getDlvInfo() const { return &activityLog_.getDlvInfo(); }
-
-    /// check if all regional storages is empty, and no messages in retries.
-    void checkFinalize();
 
     void writeDeliveryInfoData();
 
