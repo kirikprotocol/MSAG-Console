@@ -20,7 +20,7 @@
 
       <tr:subform>
         <h:panelGrid columns="3" columnClasses="column100Width, column100Width,columnTopLeftAlign">
-          <tr:inputText columns="8" value="#{regions.defaultMax}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{msg['region.default.max']}" size="8" value="#{regions.defaultMax}"/>
           <tr:commandLink text="#{msg['apply.button']}" shortDesc="#{msg['region.apply.default.max.desc']}" action="#{regions.submitDefault}"/>
           <h:outputText/>
         </h:panelGrid>
