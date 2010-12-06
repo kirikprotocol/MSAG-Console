@@ -173,6 +173,7 @@ class ContentProviderImportTask implements Runnable {
 
     if(!uploadFiles.isEmpty()) {
       ContentProviderConnection connection = null;
+      String baseName=null;
       try {
         connection = userDirResolver.getConnection(u,ucps);
         connection.connect();
@@ -180,8 +181,12 @@ class ContentProviderImportTask implements Runnable {
           try {
             connection.put(f,f.getName());
             fileSys.delete(f);
-
-            String baseName=null;
+          }
+          catch (Exception e) {
+            log.error("Unable to upload file="+f.getAbsolutePath()+" to u="+u.getLogin()+" ucps="+ucps.toString(),e);
+          }
+          try {
+            baseName=null;
             if(f.getName().endsWith(".report")) {
               baseName = f.getName().substring(0,f.getName().length()-".report".length());
             }
@@ -192,11 +197,9 @@ class ContentProviderImportTask implements Runnable {
               String remoteFile = baseName+".csv.planned";
               connection.rename(remoteFile, baseName+".csv.finished");
             }
-
-
           }
           catch (Exception e) {
-            log.error("Unable to upload file="+f.getAbsolutePath()+" to u="+u.getLogin()+" ucps="+ucps.toString(),e);
+            log.error("Unable rename remote file to finished state="+baseName+".csv.planned",e);
           }
         }
         //clean user dir
