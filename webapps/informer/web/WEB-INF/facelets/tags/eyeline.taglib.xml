@@ -187,4 +187,12 @@
     </component>
   </tag>
 
+  <tag>
+    <tag-name>set</tag-name>
+     <component>
+      <component-type>set</component-type>
+      <handler-class>mobi.eyeline.informer.web.components.set.SetHandler</handler-class>
+    </component>
+  </tag>
+
 </facelet-taglib>

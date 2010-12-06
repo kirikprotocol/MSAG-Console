@@ -580,4 +580,20 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>set</name>
+    <description>Задает значение переменной</description>
+    <attribute>
+      <name>var</name>
+      <description>Название переменной на странице, в которую будет записываться значение</description>
+      <required>true</required>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>value</name>
+      <description>Значение</description>
+      <required>true</required>
+    </attribute>
+  </tag>
+
 </taglib>

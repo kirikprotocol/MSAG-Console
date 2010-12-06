@@ -118,6 +118,18 @@ public class DeliveryListController extends DeliveryController {
     }
   }
 
+  public String getSelectedAsString() {
+    if (selected == null || selected.isEmpty())
+      return "";
+
+    StringBuilder sb = new StringBuilder();
+    for (String s : selected) {
+      if (sb.length() > 0)
+        sb.append(',');
+      sb.append(s);
+    }
+    return sb.toString();
+  }
 
   public String activate() {
     if (selected != null) {
@@ -154,7 +166,17 @@ public class DeliveryListController extends DeliveryController {
       return null;
     }
     getRequest().put(DELIVERY_IDS_PARAM, selected);
+    selected = null;
     return "DELIVERY_EDIT_GROUP";
+  }
+
+  public String statForSelected() {
+    if(selected == null || selected.isEmpty())
+      return null;
+
+    getRequest().put("delivery", getSelectedAsString());
+    selected = null;
+    return "STATS_MESSAGES_BY_PERIOD_FOR_DELIVERIES";
   }
 
   public String pause() {
@@ -169,6 +191,7 @@ public class DeliveryListController extends DeliveryController {
         }
       }
     }
+    selected = null;
     return null;
   }
 

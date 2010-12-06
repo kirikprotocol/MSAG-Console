@@ -10,6 +10,7 @@ function DataTable(tableId, updateUsingSubmit) {
   var pageSizeElement = document.getElementById(tableId + '_pageSize');
   var previousPageSizeElement = document.getElementById(tableId + '_previousPageSize');
   var bodyElement = document.getElementById(tableId);
+  var overlay = document.getElementById(tableId+"_overlay");
   var checked = false;
 
   /**
@@ -45,11 +46,16 @@ function DataTable(tableId, updateUsingSubmit) {
       var el = rootElement.children[i];
 
       var pname = el.getAttribute("id");
-      if (pname == null)
+      if (pname == null || pname.length == 0)
         pname = el.getAttribute("name");
-      if (pname != null) {
+      if (pname == null || pname.length == 0)
+        pname = el.id;
+      if (pname == null || pname.length == 0)
+        pname = el.name;
+
+      if (pname != null && pname.length != 0) {
         if (el.tagName == "INPUT" && el.getAttribute("type") == "checkbox") {
-          if (el.getAttribute("checked") != null)
+          if (el.getAttribute("checked") != null && el.getAttribute("checked") == "true")
             args += pname + '=true';
           continue;
         }
@@ -95,7 +101,7 @@ function DataTable(tableId, updateUsingSubmit) {
    */
 
   this.updateTable = function() {
-    this.setOverlay(bodyElement);
+    this.setOverlay();
     checked = false;    
     if (updateUsingSubmit)
       return closestForm.submit();
@@ -212,17 +218,15 @@ function DataTable(tableId, updateUsingSubmit) {
        y+=el.offsetTop;
      }
      while (el = el.offsetParent);
-     var overlay = document.getElementById(tableId+"_overlay");
+
      overlay.style.left=x+'px';
      overlay.style.top= y+'px';
      overlay.style.width = w;
-     overlay.style.height = h;
-     overlay.style.backgroundPosition='center';
+     overlay.style.height = h;     
    }
   };
 
   var hideOverlay = function() {
-    var overlay = document.getElementById(tableId+"_overlay");
     overlay.style.top = '-500px';
     overlay.style.width = '1px';
     overlay.style.height = '1px';

@@ -5,6 +5,7 @@ import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.LongOperationController;
 
@@ -158,6 +159,13 @@ public abstract class DeliveryStatController extends LongOperationController {
 
 
   public DataTableModel getRecords() {
+
+    if (getState() != 2)
+      return new EmptyDataTableModel();
+
+    System.out.println("GET MODEL: " + getState());
+    System.out.println("GET MODEL1: " + isFullMode());
+
     //loadRecords();
     return new DataTableModel() {
 

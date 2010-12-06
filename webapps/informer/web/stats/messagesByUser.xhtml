@@ -16,7 +16,7 @@
   <ui:define name="content">
 
     <tr:form id="smsc" rendered="#{!messagesByUserStats.initError}">
-      <c:set var="longOpState" value="#{messagesByUserStats.state}"/>
+      <eye:set var="longOpState" value="#{messagesByUserStats.state}"/>
 
 
         <eye:dataTableFilter bean="#{messagesByUserStats}" clearAction="clearFilter" applyAction="start">

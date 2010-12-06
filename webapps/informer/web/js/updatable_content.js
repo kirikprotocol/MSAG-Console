@@ -46,12 +46,19 @@ function UpdateContent(contentId, updatePeriod) {
       var el = rootElement.children[i];
 
       var pname = el.getAttribute("id");
-      if (pname == null)
+      if (pname == null || pname.length == 0)
         pname = el.getAttribute("name");
-      if (pname != null) {
+      if (pname == null || pname.length == 0)
+        pname = el.id;
+      if (pname == null || pname.length == 0)
+        pname = el.name;
+
+      if (pname != null && pname.length != 0) {
+
         if (el.tagName == "INPUT" && el.getAttribute("type") == "checkbox") {
-          if (el.getAttribute("checked") != null)
+          if (el.getAttribute("checked") != null && el.getAttribute("checked") == "true")
             args += pname + '=true';
+
           continue;
         }
         var value = el.getAttribute("value");

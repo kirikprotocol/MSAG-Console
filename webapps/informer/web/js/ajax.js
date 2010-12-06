@@ -29,10 +29,9 @@ function EXmlHttpRequest(url, parameters, onResponse) {
     if (!http_request)
       return false;
 
-    http_request.onreadystatechange = alertContents;
-    //    http_request.open('GET', url + parameters, true);
     http_request.open('POST', url, true);
-    http_request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    http_request.onreadystatechange = alertContents;
+    http_request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     http_request.setRequestHeader("Content-length", parameters.length);
     http_request.setRequestHeader("Connection", "close");
     http_request.send(parameters);

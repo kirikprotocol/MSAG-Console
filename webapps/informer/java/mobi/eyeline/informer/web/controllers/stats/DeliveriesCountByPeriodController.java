@@ -49,6 +49,7 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
   }
 
   public boolean visit(UserStatRecord rec, int total, int current) {
+    setCurrentAndTotal(current, total);
     Calendar c = Calendar.getInstance();
     c.setTime(rec.getDate());
     AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c, getAggregation(), rec.getCreated(), true);
@@ -59,7 +60,7 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
       oldRecord.add(newRecord);
     }
     getTotals().add(newRecord);
-    setCurrent(getCurrent() + 1);
+//    setCurrent(getCurrent() + 1);
     return !isCancelled();
   }
 }

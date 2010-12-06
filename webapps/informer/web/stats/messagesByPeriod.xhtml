@@ -15,9 +15,9 @@
 
   <ui:define name="content">
 
-    <tr:form id="smsc" rendered="#{!messagesByPeriod.initError}">
+    <tr:form id="smsc" rendered="#{!messagesByPeriod.initError}" >
 
-      <c:set var="longOpState" value="#{messagesByPeriod.state}"/>
+      <eye:set var="longOpState" value="#{messagesByPeriod.state}"/>
 
         <eye:dataTableFilter bean="#{messagesByPeriod}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width,columnTopLeftAlign">

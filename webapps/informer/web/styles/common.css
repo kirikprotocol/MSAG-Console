@@ -261,7 +261,8 @@ div.query_result {
 
 .overlay{
   z-Index:100000;
-  background-color:#c0c0c0;
+  background-color: #e8e7e7;
+  background-position: center;
   text-align:center; 
   position:absolute;
   width:1px;
@@ -269,7 +270,7 @@ div.query_result {
   top:-500px;
   left:0px;
   margin:0px 0px 0px 0px;
-  border:1px solid #000000;
+  /*border:1px solid #000000;*/
   opacity: 0.5; /* CSS3 - Mozilla 1.7b +, Firefox 0.9 +, Safari 1.2+, Opera 9 */
   -khtml-opacity: 0.5; /* Konqueror 3.1, Safari 1.1 */
   -moz-opacity: 0.5; /* Mozilla 1.6 и ниже */

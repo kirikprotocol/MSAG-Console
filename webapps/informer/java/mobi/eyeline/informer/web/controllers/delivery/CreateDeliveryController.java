@@ -32,6 +32,7 @@ public class CreateDeliveryController extends InformerController {
   }
 
   public String returnToStart() {
+    System.out.println("RETURN TO START CALLED");
     if (activePage != null)
       activePage.cancel();
     activePage = new UploadFilePage(getConfig(), getUserName());

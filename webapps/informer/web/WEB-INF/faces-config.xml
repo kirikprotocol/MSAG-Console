@@ -443,6 +443,11 @@
     </navigation-case>
 
     <navigation-case>
+      <from-outcome>STATS_MESSAGES_BY_PERIOD_FOR_DELIVERIES</from-outcome>
+      <to-view-id>/stats/messagesByPeriod.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
       <from-outcome>STATS_MESSAGES_BY_PERIOD</from-outcome>
       <to-view-id>/stats/messagesByPeriod.xhtml</to-view-id>
       <redirect/>

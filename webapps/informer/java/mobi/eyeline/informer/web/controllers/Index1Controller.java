@@ -4,6 +4,7 @@ import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.page_calendar.PageCalendarModel;
 
+import javax.faces.context.FacesContext;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -27,6 +28,7 @@ public class Index1Controller {
 
   public String printDate() {
     System.out.println(date);
+    current = 0;
     return null;
   }
 
@@ -40,6 +42,9 @@ public class Index1Controller {
 
 
   public int getCurrent() {
+    for (Map.Entry e : FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().entrySet())
+      System.out.println(e.getKey() + " " + e.getValue());
+
     if (current < 1000) {
       current++;
     }

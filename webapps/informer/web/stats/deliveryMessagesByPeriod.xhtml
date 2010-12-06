@@ -16,7 +16,7 @@
   <ui:define name="content">
 
     <tr:form id="smsc" rendered="#{!deliveryMessagesByPeriod.initError and deliveryMessagesByPeriod.deliveriesIds!=null}">
-      <c:set var="longOpState" value="#{deliveryMessagesByPeriod.state}"/>
+      <eye:set var="longOpState" value="#{deliveryMessagesByPeriod.state}"/>
 
         <eye:dataTableFilter bean="#{deliveryMessagesByPeriod}" clearAction="clearFilter" applyAction="start">
           <h:panelGrid columns="2" columnClasses="column400Width, columnTopLeftAlign">
@@ -195,5 +195,4 @@
 
 
 </html>
-
 

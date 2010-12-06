@@ -247,7 +247,7 @@ public class DataTableRenderer extends Renderer {
       w.append("\n<script language=\"javascript\" type=\"text/javascript\">");
 
       if (t.isUpdateUsingSubmit() == null)
-        w.append("\nvar updateUsingSubmit" + t.getId() + "= navigator.appName == 'Microsoft Internet Explorer';");
+        w.append("\nvar updateUsingSubmit" + t.getId() + "= false;");
       else
         w.append("\nvar updateUsingSubmit" + t.getId() + "= " + t.isUpdateUsingSubmit() + ";");
 

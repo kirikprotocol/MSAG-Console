@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.web.config.Configuration;
 import org.apache.log4j.Logger;
 
+import javax.faces.context.FacesContext;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;
@@ -13,6 +14,7 @@ public abstract class LongOperationController extends InformerController {
   protected static final Logger logger = Logger.getLogger(LongOperationController.class);
 
   private int state = 0;
+  private int tmpState = 0;
   private AdminException error = null;
   private Thread thread;
   int current = 0;
@@ -70,6 +72,18 @@ public abstract class LongOperationController extends InformerController {
       thread.interrupt();
     }
     return null;
+  }
+
+  public int getUpdateTmpState() {
+    tmpState = state;
+    return 0;
+  }
+
+  public void setUpdateTmpState(int v) {
+  }
+
+  public int getTmpState() {
+    return tmpState;
   }
 
   public int getState() {

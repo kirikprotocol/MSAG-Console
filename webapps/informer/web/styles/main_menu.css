@@ -19,84 +19,30 @@ table.main_menu div,
 table.main_menu a.xi {
   text-decoration: none;
   color: #F2E275;
-  cursor: pointer;
   font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
-  font-size: 12px;
+  font-size: 14px;
 }
 
-div.menubardiv {
-  z-index: 10;
-  color: #F2E275;
-  border: none;
-  cursor: default; /*position: absolute;*/
-  visibility: visible;
+
+table.main_menu div.menubardivover {
+  color:YELLOW;
 }
 
-div.menubardivover {
-  z-index: 10;
-  color: yellow;
-  border: none;
-  cursor: default; /*position: absolute;*/
-  visibility: visible;
+table.main_menu div.menudiv {
+  background-color: #3A5867;
+  border: 1px solid #111155;
 }
 
-div.menudiv {
-  background-color: #3A5867; /*background-repeat: repeat-y;*/
-  border: 1px #111155;
-  cursor: default;
-  padding-bottom: 1px;
-  padding-top: 1px;
-  position: absolute;
-  overflow: auto;
-  z-index: 10;
-}
-
-div.menuitem {
+table.main_menu div.menuitem *,
+table.main_menu div.menuitemover * {
   background: #3A5867;
-  border: none;
-  color: #F2E275;
-
-  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
   font-size: 12px;
-
-  padding-bottom: 1px;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 1px;
-
-  position: relative; /* Do not alter this line! */
-
-  white-space: nowrap;
-  z-index: 11;
 }
 
-div.menuitem a.xi{
+table.main_menu div.menuitem * {
   color: #F2E275;
 }
 
-
-div.menuitemover {
-  background: #3A5867;
-  border: none;
-  color: yellow;
-
-  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
-  font-size: 12px;
-
-  padding-bottom: 1px;
-  margin-left: 0px;
-  margin-right: 0px;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 1px;
-
-  position: relative; /* Do not alter this line! */
-  cursor: pointer;
-
-  white-space: nowrap;
-  z-index: 11;
-}
-
-div.menuitemover a.xi{
+table.main_menu div.menuitemover * {
   color: yellow;
 }

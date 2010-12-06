@@ -23,15 +23,15 @@
         <h:outputText value="#{createDelivery.activePage.error}"/>
       </eye:message>
 
-      <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
+      <h:panelGrid columns="2" columnClasses="column50Width, columnTopLeftAlign" style="padding:10px">
         <h:outputText value="#{msg['processing.label']}"/>
         <eye:progressBar current="#{createDelivery.activePage.current}" maximum="#{createDelivery.activePage.maximum}" width="500" height="20" />
       </h:panelGrid>
 
-      <h:panelGrid rendered="#{createDelivery.activePage.error == null and !createDelivery.activePage.stoped}" style="margin : 10px 10px 10px 10px">
+      <h:panelGroup rendered="#{createDelivery.activePage.error == null and !createDelivery.activePage.stoped}" style="margin : 10px 10px 10px 10px">
         <h:outputText
             value="#{msg['informer.deliveries.create.abonetns.size']} #{createDelivery.activePage.processed}"/>
-      </h:panelGrid>
+      </h:panelGroup>
 
       <eye:delimiter/>
 

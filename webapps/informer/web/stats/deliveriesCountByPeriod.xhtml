@@ -16,7 +16,7 @@
 
     <tr:form id="smsc" rendered="#{!deliveriesCountByPeriod.initError}">
 
-      <c:set var="longOpState" value="#{deliveriesCountByPeriod.state}"/>
+      <eye:set var="longOpState" value="#{deliveriesCountByPeriod.state}"/>
 
 
         <eye:dataTableFilter bean="#{deliveriesCountByPeriod}" clearAction="clearFilter" applyAction="start">
@@ -57,7 +57,7 @@
 
             <h:panelGrid columns="2" columnClasses="column50Width" style="padding:10px">
               <h:outputText value="#{msg['processing.label']}  #{deliveriesCountByPeriod.current}"/>
-              <!--<eye:progressBar current="#{deliveriesCountByPeriod.current}" maximum="#{deliveriesCountByPeriod.total}" width="500" height="20" />-->
+              <eye:progressBar current="#{deliveriesCountByPeriod.current}" maximum="#{deliveriesCountByPeriod.total}" width="500" height="20" />
             </h:panelGrid>
 
             <eye:delimiter/>

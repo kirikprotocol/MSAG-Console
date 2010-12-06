@@ -66,7 +66,7 @@
         <h:outputText value="#{createDelivery.activePage.error}"/>
       </eye:message>
       
-      <h:panelGrid columns="2" columnClasses="column50Width" style="padding-left:10px">
+      <h:panelGrid columns="2" columnClasses="column50Width, columnTopLeftAlign" style="padding-left:10px">
         <h:outputText value="#{msg['processing.label']}"/>
         <eye:progressBar current="#{createDelivery.activePage.current}" maximum="#{createDelivery.activePage.maximum}" width="500" height="20" />
       </h:panelGrid>
@@ -75,11 +75,18 @@
 
       <h:panelGrid columns="2" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign">
         <c:forEach items="#{createDelivery.activePage.regions}" var="reg">
-          <h:outputText style="white-space: nowrap;" value="#{reg.name}"/>
+          <h:outputText style="white-space: nowrap; font-weight: bold;" value="#{reg.name}"/>
           <h:outputText style="white-space: nowrap;" value="#{reg.abonentsNumber}"/>
         </c:forEach>
-        <h:outputText style="color: RED;" value="#{msg['informer.deliveries.create.abonetns.region.not.found']}"/>
-        <h:outputText style="color: RED;" value="#{createDelivery.activePage.rejectedAddressesCount}"/>
+        <h:outputText style="color: RED; font-weight: bold;" value="#{msg['informer.deliveries.create.abonetns.region.not.found']}" rendered="#{createDelivery.activePage.rejectedAddressesCount > 0}"/>
+        <h:panelGroup rendered="#{createDelivery.activePage.rejectedAddressesCount gt 0}">
+          <h:outputText style="color: RED;" value="#{createDelivery.activePage.rejectedAddressesCount}" />
+          <h:outputText value=" "/>
+          <h:commandLink value="(#{msg['informer.deliveries.download.region.not.found']})" rendered="#{createDelivery.activePage.finished and (createDelivery.activePage.error == null)}">
+            <tr:fileDownloadActionListener method="#{createDelivery.activePage.downloadRejectedLines}" contentType="application/csv" filename="rejected_addresses.csv"/>
+          </h:commandLink>
+        </h:panelGroup>
+
         <h:outputText style="font-weight: bold; border-bottom: 1px solid BLACK;" value="#{msg['informer.deliveries.create.abonetns.size']}"/>
         <h:outputText style="font-weight: bold; border-bottom: 1px solid BLACK;" value="#{createDelivery.activePage.abonentsSize}"/>
       </h:panelGrid>
@@ -97,11 +104,6 @@
           <tr:commandLink text="#{msg['next.button']} &gt;" action="#{createDelivery.next}"/>
         </eye:button>
         <eye:space/>
-        <eye:button rendered="#{createDelivery.activePage.finished and (createDelivery.activePage.rejectedAddressesCount gt 0) and (createDelivery.activePage.error == null)}" >
-          <h:commandLink value="#{msg['informer.deliveries.download.region.not.found']}">
-            <tr:fileDownloadActionListener method="#{createDelivery.activePage.downloadRejectedLines}" contentType="application/csv" filename="rejected_addresses.csv"/>
-          </h:commandLink>
-        </eye:button>
       </eye:buttons>
 
     </eye:updatableContent>

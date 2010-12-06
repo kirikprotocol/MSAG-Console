@@ -52,21 +52,18 @@
         <eye:delimiter/>
         <eye:buttons>
           <eye:button>
-            <tr:commandLink text="#{msg['add.button']}" action="DELIVERY_CREATE"/>
+            <tr:commandLink text="#{msg['create.button']}" action="DELIVERY_CREATE"/>
           </eye:button>
           <eye:button>
-            <tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['edit.selected.button']}" action="#{deliveries.editGroup}"/>
+            <eye:menubar label="#{msg['informer.deliveries.selected']}...">
+              <eye:menubaritem><tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}" onclick="if (!confirm('#{msg['informer.deliveries.activate.confirm']}')) return false"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}" onclick="if (!confirm('#{msg['informer.deliveries.pause.confirm']}')) return false"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['edit.button']}" action="#{deliveries.editGroup}"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['informer.stats']}" action="#{deliveries.statForSelected}"/></eye:menubaritem>
+            </eye:menubar>
           </eye:button>
           <eye:space/>
-          <eye:button>
-            <tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
-          </eye:button>
         </eye:buttons>
       </h:panelGroup>
 
@@ -115,21 +112,18 @@
         <eye:delimiter/>
         <eye:buttons>
           <eye:button>
-            <tr:commandLink text="#{msg['add.button']}" action="DELIVERY_CREATE"/>
+            <tr:commandLink text="#{msg['create.button']}" action="DELIVERY_CREATE"/>
           </eye:button>
           <eye:button>
-            <tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['edit.selected.button']}" action="#{deliveries.editGroup}"/>
+            <eye:menubar label="#{msg['informer.deliveries.selected']} ...">
+              <eye:menubaritem><tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}" onclick="if (!confirm('#{msg['informer.deliveries.activate.confirm']}')) return false"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}" onclick="if (!confirm('#{msg['informer.deliveries.pause.confirm']}')) return false"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['edit.button']}" action="#{deliveries.editGroup}"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['informer.stats']}" action="#{deliveries.statForSelected}"/></eye:menubaritem>
+            </eye:menubar>
           </eye:button>
           <eye:space/>
-          <eye:button>
-            <tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}"/>
-          </eye:button>
-          <eye:button>
-            <tr:commandLink text="#{msg['activate.button']}" action="#{deliveries.activate}"/>
-          </eye:button>
         </eye:buttons>
       </h:panelGroup>
 

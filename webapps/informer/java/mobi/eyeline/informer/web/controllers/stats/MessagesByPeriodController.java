@@ -56,7 +56,6 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   @Override
   public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
-
     config.statistics(getFilter(), this);
   }
 
@@ -77,6 +76,8 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public String setDeliveryParam() {
     String s = getRequestParameter("delivery");
+    if (s == null)
+      s = (String)getRequest().get("delivery");
     if (s != null) {
       try {
 
