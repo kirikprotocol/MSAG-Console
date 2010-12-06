@@ -75,9 +75,9 @@ public class DeliveryStatProvider {
       Collections.sort(files);
       int total = files.size();
       for (int i = 0; i < total; i++) {
-        File f = files.get(i);
+        StatFile f = (StatFile) files.get(i);
         try {
-          if (!process(f, filter, visitor, i, total, i == 0 ? minMinute : 0, i == total - 1 ? maxMinute : 59)) {
+          if (!process(f, filter, visitor, i, total, f.minFile ? minMinute : 0, f.maxFile ? maxMinute : 59)) {
             break;
           }
         }
@@ -90,6 +90,8 @@ public class DeliveryStatProvider {
       throw new DeliveryException("filesys.ioexception");
     }
   }
+
+
 
   public List<File> filterFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
 
@@ -132,7 +134,8 @@ public class DeliveryStatProvider {
 
 
         for (String fileName : fileSys.list(subDir)) {
-
+          boolean isMinFile=false;
+          boolean isMaxFile=false;
           if (!fileNamePattern.matcher(fileName).matches())
             continue;
 
@@ -141,6 +144,7 @@ public class DeliveryStatProvider {
             if (filePath.compareTo(minFilePath) < 0) {
               continue;
             }
+            isMinFile = filePath.compareTo(minFilePath) == 0;
           }
           if (maxFilePath != null && !endDateInclusive) {
             if (filePath.compareTo(maxFilePath) >= 0) {
@@ -151,9 +155,10 @@ public class DeliveryStatProvider {
             if (filePath.compareTo(maxFilePath) > 0) {
               continue;
             }
+            isMaxFile = filePath.compareTo(maxFilePath) == 0;
           }
 
-          files.add(new File(subDir, fileName));
+          files.add(new StatFile(subDir, fileName, isMinFile, isMaxFile));
         }
       }
     } else {
@@ -238,6 +243,18 @@ public class DeliveryStatProvider {
     }
     catch (ParseException e) {
       throw new DeliveryStatException("error.parsing.filedate", file.getAbsolutePath());
+    }
+  }
+
+
+  private class StatFile extends File {
+    private boolean minFile;
+    private boolean maxFile;
+
+    public StatFile(File file, String s, boolean minFile, boolean maxFile) {
+      super(file, s);
+      this.minFile = minFile;
+      this.maxFile = maxFile;
     }
   }
 

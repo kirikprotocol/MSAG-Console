@@ -47,9 +47,11 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public void clearFilter() {
     super.clearFilter();
-    List<Integer> taskIds = new ArrayList<Integer>();
-    taskIds.add(getDeliveryId());
-    getFilter().setTaskIds(taskIds);
+    if(getDeliveryId()!=null) {
+      List<Integer> taskIds = new ArrayList<Integer>();
+      taskIds.add(getDeliveryId());
+      getFilter().setTaskIds(taskIds);
+    }    
   }
 
 
