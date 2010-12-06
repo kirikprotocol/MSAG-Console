@@ -69,7 +69,7 @@ public class TestAdminContext extends AdminContext {
       if("jar".equals(uri.getScheme())) {
         String jarPath = uri.getSchemeSpecificPart();
         String jarFileURI   = jarPath.substring(0,jarPath.indexOf("!/"));
-        String jarEntryPathURI = jarPath.substring(jarPath.indexOf("!/")+2)+"stat";
+        String jarEntryPathURI = jarPath.substring(jarPath.indexOf("!/")+2,jarPath.length()-1);
         InputStream is = null;
         try {
           is = fileSystem.getInputStream(new File(new URI(jarFileURI)));
