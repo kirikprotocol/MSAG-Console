@@ -2,15 +2,13 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.web.config.Configuration;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Copyright Eyeline.mobi
@@ -21,7 +19,7 @@ import java.util.Locale;
 public class MessagesByPeriodController extends DeliveryStatController implements DeliveryStatVisitor {
 
 
-  private Delivery delivery = null;
+  private List<Integer> deliveriesIds = null;
 
 
   public MessagesByPeriodController() {
@@ -29,27 +27,28 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     setDeliveryParam();
   }
 
-  public Integer getDeliveryId() {
-    return delivery != null ? delivery.getId() : null;
-  }
-
   public String getDeliveryName() {
-    Delivery d = getDelivery();
-    return d == null ? null : d.getName();
+    if(deliveriesIds==null) return null;
+    if(deliveriesIds.size()!=1) return ""; //empty or multiple;
+    try {
+      return getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), deliveriesIds.get(0)).getName();
+    }
+    catch (AdminException e) {
+      addError(e);
+    }
+    return null;
   }
 
 
-
-  public Delivery getDelivery() {
-    return delivery;
+  public List<Integer> getDeliveriesIds() {
+    return deliveriesIds;
   }
-
 
   public void clearFilter() {
     super.clearFilter();
-    if(getDeliveryId()!=null) {
+    if(deliveriesIds!=null) {
       List<Integer> taskIds = new ArrayList<Integer>();
-      taskIds.add(getDeliveryId());
+      taskIds.addAll(deliveriesIds);
       getFilter().setTaskIds(taskIds);
     }    
   }
@@ -80,15 +79,43 @@ public class MessagesByPeriodController extends DeliveryStatController implement
     String s = getRequestParameter("delivery");
     if (s != null) {
       try {
-        int deliveryId = Integer.parseInt(s);
-        boolean firstTime= (delivery == null || delivery.getId() != deliveryId);
-        delivery = getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), deliveryId);
-        List<Integer> taskIds = new ArrayList<Integer>();
-        taskIds.add(deliveryId);
-        getFilter().setTaskIds(taskIds);
+
+        StringTokenizer st = new StringTokenizer(s,",; ");
+        List<Integer> newIds = new ArrayList<Integer>();
+        while(st.hasMoreTokens()) {
+          String token = st.nextToken().trim();
+          if(token.length()>0) {
+            newIds.add(Integer.parseInt(token));
+          }
+        }
+
+        boolean firstTime=false;
+        if(deliveriesIds==null) {
+          firstTime = true;
+        }
+        else {
+          for(Integer id : newIds) {
+            if(!deliveriesIds.contains(id)) {
+              firstTime = true;
+            }
+          }
+        }
+
         if(firstTime) {
+          deliveriesIds = newIds;
+
+          List<Integer> taskIds = new ArrayList<Integer>();
+          taskIds.addAll(newIds);
+          getFilter().setTaskIds(taskIds);
+          for(Integer id : deliveriesIds) {
+            Delivery d = getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), id);
+            Date startDate = d.getStartDate();
+            if(getFilter().getFromDate()==null || getFilter().getFromDate().after(startDate)) {
+              getFilter().setFromDate(startDate);
+            }
+          }
+
           reset();
-          getFilter().setFromDate(delivery.getStartDate());
           start();
         }
       }
