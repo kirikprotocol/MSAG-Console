@@ -747,6 +747,12 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <mkdir dir="${DISTR_DIR}/services/pvss/conf"/>
         <copy file="${BUILD_DIR}/bin/scag/pvss" todir="${DISTR_DIR}/services/pvss/bin"/>
         <chmod file="${DISTR_DIR}/services/pvss/bin/pvss" perm="755"/>
+        <copy todir="${DISTR_DIR}/services/pvss/conf"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${SMSC_DIR}/config"
+                     includes="scag/counters.dtd"/>
+        </copy>
     </target>
 
     <target name="-update.pvss.flooder" depends="-update.libs" if="SETUP_MAKE_PVSS_FLOODER">
@@ -997,7 +1003,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <chmod file="${DISTR_DIR}/services/pvss/bin/service" perm="755"/>
         <copy todir="${DISTR_DIR}/services/pvss/conf"
               flatten="yes">
-            <fileset dir="${TEMPL_DIR}/pvss" includes="config.xml"/>
+            <fileset dir="${TEMPL_DIR}/pvss" includes="config.xml counters.xml"/>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
         <mkdir dir="${pvss.storage_dir}" description="create pvss storage dir"/>
