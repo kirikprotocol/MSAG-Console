@@ -24,12 +24,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public MessagesByPeriodController() {
     super(new MessagesByPeriodTotals());
-    String s = getRequestParameter("delivery");
-    if(s==null) {
-      Calendar c = getLastWeekStart();
-      getFilter().setFromDate(c.getTime());
-      start();
-    }
+    getDelivery();
   }
 
   public Integer getDeliveryId() {
@@ -50,7 +45,6 @@ public class MessagesByPeriodController extends DeliveryStatController implement
         int deliveryId = Integer.parseInt(s);
         boolean firstTime= (delivery == null || delivery.getId() != deliveryId);
         delivery = getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), deliveryId);
-        getFilter().setFromDate(delivery.getStartDate());
         getFilter().setTaskId(deliveryId);
         if(firstTime) {
           reset();
@@ -76,13 +70,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   @Override
   public void loadRecords(final Configuration config, final Locale locale) throws AdminException {
 
-
-    DeliveryStatFilter filterCopy = new DeliveryStatFilter(getFilter());
-    if (delivery != null && filterCopy.getFromDate() == null) {
-      filterCopy.setFromDate(delivery.getStartDate());
-    }
-    config.statistics(filterCopy, this);
-
+    config.statistics(getFilter(), this);
   }
 
 
@@ -100,5 +88,9 @@ public class MessagesByPeriodController extends DeliveryStatController implement
   }
 
 
+  public String setDeliveryParam() {
+    getDelivery();
+    return "STATS_DELIVERY_MESSAGES_BY_PERIOD";
+  }
 }
 

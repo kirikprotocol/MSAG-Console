@@ -25,7 +25,7 @@
         </eye:button>
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['informer.stats']}" action="STATS_DELIVERY_MESSAGES_BY_PERIOD">
+          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
           </tr:commandLink>
         </eye:button>
@@ -209,7 +209,7 @@
         </eye:button>
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['informer.stats']}" action="STATS_DELIVERY_MESSAGES_BY_PERIOD">
+          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
           </tr:commandLink>
         </eye:button>
