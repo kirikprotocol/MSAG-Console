@@ -95,6 +95,7 @@ public class ContentProviderTest {
   @Test
   public void testImport() throws AdminException, UnsupportedEncodingException, InterruptedException {
     ContentProviderDaemon cpDaemon = getCPDaemon();
+    cpDaemon.stop();
     userLocalDir = cpDaemon.getUserLocalDir("a",ucps);
 
     createTestInputFile();
@@ -115,11 +116,11 @@ public class ContentProviderTest {
     String[] files = context.getFileSystem().list(userSrcDir);
     String fn=null;
     for(String fName : files) {
-      if(fName.indexOf(".bak")>=0) {
+      if(fName.indexOf(".planned")>=0) {
         fn = fName;
       }
     }
-    assertEquals("test.csv.bak",fn);
+    assertEquals("test.csv.planned",fn);
 
     files = context.getFileSystem().list(userLocalDir);
     fn=null;
@@ -168,6 +169,7 @@ public class ContentProviderTest {
     synchronized (this) {wait(5000);}
 
     assertTrue(context.getFileSystem().exists(new File(userSrcDir,"test.report"))) ;
+    assertTrue(context.getFileSystem().exists(new File(userSrcDir,"test.csv.finished"))) ;
 
     cpDaemon.stop();
   }

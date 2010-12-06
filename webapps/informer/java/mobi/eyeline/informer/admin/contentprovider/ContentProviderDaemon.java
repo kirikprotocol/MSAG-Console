@@ -38,6 +38,7 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
   File workDir;
 
 
+
   public ContentProviderDaemon(ContentProviderContext context, File informerBase, File workDir) throws AdminException {  
     this.context = context;
     this.informerBase = informerBase;
@@ -70,7 +71,7 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
       }
     });
 
-    scheduler.scheduleAtFixedRate(new ContentProviderImportTask(context,this,workDir),0,PERIOD_MSEC,TimeUnit.MILLISECONDS);
+    scheduler.scheduleAtFixedRate(new ContentProviderImportTask(context,this,workDir),0,getPeriod(),TimeUnit.MILLISECONDS);
 
     reportScheduler.schedule(new ContentProviderReportTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
 
@@ -153,5 +154,9 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
     finally {
       try {if(con!=null) con.close();} catch (Exception ignored){}
     }
+  }
+
+  protected long getPeriod() {
+    return PERIOD_MSEC;
   }
 }

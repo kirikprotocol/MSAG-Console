@@ -109,7 +109,7 @@ class ContentProviderImportTask implements Runnable {
 
     try {
       connection.get(remoteFile,localTmpFile);
-      connection.rename(remoteFile, remoteFile+".bak");
+      connection.rename(remoteFile, remoteFile+".planned");
       fileSys.rename(localTmpFile,new File(localTmpFile.getParentFile(), localTmpFile.getName().substring(0,localTmpFile.getName().length()-4)));
     } catch (Exception e) {
       try {fileSys.delete(localTmpFile);} catch (Exception ignored){}
@@ -180,6 +180,20 @@ class ContentProviderImportTask implements Runnable {
           try {
             connection.put(f,f.getName());
             fileSys.delete(f);
+
+            String baseName=null;
+            if(f.getName().endsWith(".report")) {
+              baseName = f.getName().substring(0,f.getName().length()-".report".length());
+            }
+            else if(f.getName().endsWith(".err")) {
+              baseName = f.getName().substring(0,f.getName().length()-".err".length());
+            }
+            if(baseName!=null) {
+              String remoteFile = baseName+".csv.planned";
+              connection.rename(remoteFile, baseName+".csv.finished");
+            }
+
+
           }
           catch (Exception e) {
             log.error("Unable to upload file="+f.getAbsolutePath()+" to u="+u.getLogin()+" ucps="+ucps.toString(),e);
