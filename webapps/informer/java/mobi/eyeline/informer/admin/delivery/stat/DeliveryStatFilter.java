@@ -1,6 +1,8 @@
 package mobi.eyeline.informer.admin.delivery.stat;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Фильтр описывающий ограничения на записи статистики
@@ -12,23 +14,23 @@ public class DeliveryStatFilter {
   private Date fromDate;
   private Date tillDate;
   private String user;
-  private Integer taskId;
+  private List<Integer> taskIds;
 
   public DeliveryStatFilter() {
   }
 
-  public DeliveryStatFilter(Date fromDate, Date tillDate, String user, Integer taskId) {
+  public DeliveryStatFilter(Date fromDate, Date tillDate, String user, List<Integer> taskIds) {
     this.fromDate = fromDate;
     this.tillDate = tillDate;
     this.user = user;
-    this.taskId = taskId;
+    this.taskIds = taskIds;
   }
 
   public DeliveryStatFilter(DeliveryStatFilter other) {
     this.fromDate = other.fromDate == null ? null : (Date) other.fromDate.clone();
     this.tillDate = other.tillDate == null ? null : (Date) other.tillDate.clone();
     this.user = other.user;
-    this.taskId = other.taskId;
+    this.taskIds = other.taskIds==null ? null : new ArrayList<Integer>(other.taskIds);
   }
 
   /**
@@ -77,12 +79,12 @@ public class DeliveryStatFilter {
    *
    * @return идентификатор рассылки, чьи записи надо перебрать или null, если ограничение отсутствует.
    */
-  public Integer getTaskId() {
-    return taskId;
+  public List<Integer> getTaskIds() {
+    return taskIds;
   }
 
-  public void setTaskId(Integer taskId) {
-    this.taskId = taskId;
+  public void setTaskIds(List<Integer> taskId) {
+    this.taskIds = taskId;
   }
 
 

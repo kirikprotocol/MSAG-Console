@@ -7,7 +7,9 @@ import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.web.config.Configuration;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -24,7 +26,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public MessagesByPeriodController() {
     super(new MessagesByPeriodTotals());
-    getDelivery();
+    setDeliveryParam();
   }
 
   public Integer getDeliveryId() {
@@ -39,31 +41,15 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
 
   public Delivery getDelivery() {
-    String s = getRequestParameter("delivery");
-    if (s != null) {
-      try {
-        int deliveryId = Integer.parseInt(s);
-        boolean firstTime= (delivery == null || delivery.getId() != deliveryId);
-        delivery = getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), deliveryId);
-        getFilter().setTaskId(deliveryId);
-        if(firstTime) {
-          reset();
-          getFilter().setFromDate(delivery.getStartDate());
-          getFilter().setTaskId(deliveryId);
-          start();
-        }
-      }
-      catch (AdminException e) {
-        addError(e);
-      }
-    }
     return delivery;
   }
 
 
   public void clearFilter() {
     super.clearFilter();
-    getFilter().setTaskId(getDeliveryId());
+    List<Integer> taskIds = new ArrayList<Integer>();
+    taskIds.add(getDeliveryId());
+    getFilter().setTaskIds(taskIds);
   }
 
 
@@ -89,7 +75,25 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
 
   public String setDeliveryParam() {
-    getDelivery();
+    String s = getRequestParameter("delivery");
+    if (s != null) {
+      try {
+        int deliveryId = Integer.parseInt(s);
+        boolean firstTime= (delivery == null || delivery.getId() != deliveryId);
+        delivery = getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), deliveryId);
+        List<Integer> taskIds = new ArrayList<Integer>();
+        taskIds.add(deliveryId);
+        getFilter().setTaskIds(taskIds);
+        if(firstTime) {
+          reset();
+          getFilter().setFromDate(delivery.getStartDate());
+          start();
+        }
+      }
+      catch (AdminException e) {
+        addError(e);
+      }
+    }
     return "STATS_DELIVERY_MESSAGES_BY_PERIOD";
   }
 }

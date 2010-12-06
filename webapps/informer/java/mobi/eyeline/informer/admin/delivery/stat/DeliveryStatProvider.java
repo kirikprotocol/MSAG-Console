@@ -114,6 +114,11 @@ public class DeliveryStatProvider {
     List<File> files = new ArrayList<File>();
     if (fileSys.exists(baseDir)) {
       for (String subDirName : fileSys.list(baseDir)) {
+
+        File subDir = new File(baseDir, subDirName);
+        if (!subDir.isDirectory())
+          continue;
+
         if (minSubDirName != null) {
           if (subDirName.compareTo(minSubDirName) < 0) {
             continue;
@@ -124,9 +129,7 @@ public class DeliveryStatProvider {
             continue;
           }
         }
-        File subDir = new File(baseDir, subDirName);
-        if (!subDir.isDirectory())
-          continue;
+
 
         for (String fileName : fileSys.list(subDir)) {
 
@@ -144,7 +147,7 @@ public class DeliveryStatProvider {
               continue;
             }
           }
-          if (maxFilePath != null) {
+          if (maxFilePath != null && endDateInclusive) {
             if (filePath.compareTo(maxFilePath) > 0) {
               continue;
             }
@@ -185,7 +188,7 @@ public class DeliveryStatProvider {
             c.set(Calendar.MINUTE, minute);
 
             int taskId = Integer.parseInt(tokenizer.nextToken());
-            if (filter != null && filter.getTaskId() != null && filter.getTaskId() != taskId) continue;
+            if (filter != null && filter.getTaskIds() != null && !filter.getTaskIds().contains(taskId)) continue;
 
             String user = tokenizer.nextToken();
             if (filter != null && filter.getUser() != null && !filter.getUser().equals(user)) continue;

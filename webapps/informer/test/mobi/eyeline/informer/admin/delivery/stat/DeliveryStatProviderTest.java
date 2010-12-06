@@ -83,10 +83,12 @@ public class DeliveryStatProviderTest {
      });
      assertTrue(records.size()==6);
 
-
+     //todo fix timezones differences
      records.clear();
      filter.setUser(null);
-     filter.setTaskId(2);
+     List<Integer> taskIds = new ArrayList<Integer>();
+     taskIds.add(2);
+     filter.setTaskIds(taskIds);
      statProvider.accept(filter,new DeliveryStatVisitor(){
        public boolean visit(DeliveryStatRecord rec, int total, int current) {
          records.add(rec);
@@ -97,7 +99,7 @@ public class DeliveryStatProviderTest {
 
      records.clear();
      filter.setUser(null);
-     filter.setTaskId(null);
+     filter.setTaskIds(null);
 
      Calendar c1 = Calendar.getInstance();
      c1.set(2010,10-1,16,12,12);

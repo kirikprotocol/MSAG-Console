@@ -61,7 +61,7 @@ public abstract class DeliveryStatController extends LongOperationController {
     initUser();
     filter.setFromDate(null);
     filter.setTillDate(null);
-    filter.setTaskId(null);
+    filter.setTaskIds(null);
     setFullMode(false);
     setAggregation(TimeAggregationType.DAY);
   }
