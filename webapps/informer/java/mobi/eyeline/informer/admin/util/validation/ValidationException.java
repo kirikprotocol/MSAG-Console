@@ -2,6 +2,8 @@ package mobi.eyeline.informer.admin.util.validation;
 
 import mobi.eyeline.informer.admin.AdminException;
 
+import java.util.ResourceBundle;
+
 /**
  * Ошибка валидации
  *
@@ -9,8 +11,9 @@ import mobi.eyeline.informer.admin.AdminException;
  */
 public class ValidationException extends AdminException {
 
-  ValidationException(String bundleName, String key, String... args) {
-    super(bundleName, key, args);
+  ValidationException(String bundleName, String field) {
+    super(ValidationException.class.getCanonicalName(), "invalid_param_value", 
+        new String[]{ResourceBundle.getBundle(bundleName).getString(field)});
   }
 
 }

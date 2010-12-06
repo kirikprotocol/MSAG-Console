@@ -31,24 +31,22 @@
         <tr:panelFormLayout inlineStyle="align:left; width:35%" labelWidth="30%">
 
           <tr:panelLabelAndMessage label="#{regionBundle.name}" labelStyle="text-align:left">
-            <tr:inputText value="#{regionEdit.region.name}" required="true" simple="true" columns="50"/>
+            <tr:inputText value="#{regionEdit.region.name}" simple="true" columns="50"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{regionBundle.maxSmsPerSecond}" labelStyle="text-align:left">
-            <tr:inputText value="#{regionEdit.region.maxSmsPerSecond}" required="true" simple="true" columns="5">
-              <eye:validatePositive/>
-            </tr:inputText>
+            <tr:inputText value="#{regionEdit.region.maxSmsPerSecond}" simple="true" columns="5"/>
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{regionBundle.timeZone}" labelStyle="text-align:left">
-            <h:selectOneMenu id="timezone" value="#{regionEdit.region.timeZone}" required="true" converter="timeZoneIdConverter">
+            <h:selectOneMenu id="timezone" value="#{regionEdit.region.timeZone}" converter="timeZoneIdConverter">
               <f:selectItems value="#{regionEdit.timeZones}"/>
             </h:selectOneMenu>
           </tr:panelLabelAndMessage>
 
 
           <tr:panelLabelAndMessage label="#{regionBundle.smsc}" labelStyle="text-align:left">
-            <h:selectOneMenu id="smsc" value="#{regionEdit.region.smsc}" required="true" onchange="this.form.submit();">
+            <h:selectOneMenu id="smsc" value="#{regionEdit.region.smsc}" onchange="this.form.submit();">
               <f:selectItems value="#{regionEdit.smscs}"/>
             </h:selectOneMenu>
             <tr:outputText value="&#160;"/>
@@ -68,9 +66,6 @@
           </tr:panelLabelAndMessage>
 
         </tr:panelFormLayout>
-
-
-
 
 
       </h:panelGrid>

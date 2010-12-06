@@ -43,6 +43,7 @@ class RegionsSettings {
 
   void addRegion(Region region) throws AdminException {
     checkMask(region);
+    region.validate();
     region.setRegionId(getNextId());
     for (Address a : region.getMasks()) {
       regionsByMasks.put(a.getSimpleAddress(), region);
@@ -61,6 +62,7 @@ class RegionsSettings {
 
   void updateRegion(Region region) throws AdminException {
     checkMask(region);
+    region.validate();
     Region old = regions.remove(region.getRegionId());
     if (old == null) {
       throw new RegionException("region_not_exist", region.getName());

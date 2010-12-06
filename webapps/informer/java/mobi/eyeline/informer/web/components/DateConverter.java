@@ -37,10 +37,13 @@ public class DateConverter implements Converter {
       if (day.trim().length() == 0 || day.trim().equals("null")){
         return null;
       }
-
-      c.set(Calendar.YEAR, Integer.parseInt(year));
-      c.set(Calendar.MONTH, Integer.parseInt(month) - 1);
-      c.set(Calendar.DATE, Integer.parseInt(day));
+      try{
+        c.set(Calendar.YEAR, Integer.parseInt(year));
+        c.set(Calendar.MONTH, Integer.parseInt(month) - 1);
+        c.set(Calendar.DATE, Integer.parseInt(day));
+      }catch (NumberFormatException e) {
+        throw new ConverterException(e);
+      }
       if (st.hasMoreTokens())
         hour = st.nextToken().substring(6);
       if (hour.trim().length() == 0)
@@ -48,7 +51,7 @@ public class DateConverter implements Converter {
     }else {
       hour = t.substring(6);
       if (hour.trim().length() == 0 || hour.trim().equals("null"))
-        return null;   
+        return null;
     }
 
     String minutes = "";
@@ -62,9 +65,13 @@ public class DateConverter implements Converter {
       seconds = st.nextToken().substring(8);
     if (seconds.trim().length() == 0)
       seconds="00";
+    try{
     c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(hour));
     c.set(Calendar.MINUTE, Integer.parseInt(minutes));
     c.set(Calendar.SECOND, Integer.parseInt(seconds));
+    }catch (NumberFormatException e){
+      throw new ConverterException(e);
+    }
 
     return c.getTime();
   }

@@ -8,164 +8,166 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-<ui:param name="pageTitle" value="#{msg['informer.admin.config']}"/>
+  <ui:param name="pageTitle" value="#{msg['informer.admin.config']}"/>
 
-<ui:define name="content">
+  <ui:define name="content">
 
-<tr:form>
+    <tr:form>
 
-<h:inputHidden value="#{config.revision}"/>
+      <h:inputHidden value="#{config.revision}"/>
 
-<eye:message level="info"><h:outputText value="#{msg['config.apply.after.restart.notification']}"/></eye:message>
-<eye:delimiter/>
+      <eye:message level="info"><h:outputText value="#{msg['config.apply.after.restart.notification']}"/></eye:message>
+      <eye:delimiter/>
 
-<eye:buttons>
-  <eye:button>
-    <tr:commandLink text="#{msg['submit.button']}" action="#{config.save}" shortDesc="#{msg['submit.config.desc']}"/>
-  </eye:button>
-  <eye:button>
-    <tr:commandLink text="#{msg['reset.button']}" action="#{config.reset}" immediate="true" shortDesc="#{msg['reset.config.desc']}"/>
-  </eye:button>
-  <eye:space/>
-</eye:buttons>
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{config.save}" shortDesc="#{msg['submit.config.desc']}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="#{config.reset}" immediate="true" shortDesc="#{msg['reset.config.desc']}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
 
-<eye:delimiter/>
+      <eye:delimiter/>
 
-<eye:collapsingGroup label="#{msg['config.informer.section']}" opened="true">
-  <tr:panelFormLayout inlineStyle="padding: 10px">
-    <tr:panelLabelAndMessage label="#{informerSettings.adminHost}">
-      <tr:inputText value="#{config.settings.adminHost}" simple="true" />
-    </tr:panelLabelAndMessage>
-    <tr:panelLabelAndMessage label="#{informerSettings.adminPort}">
-      <tr:inputText value="#{config.settings.adminPort}" simple="true"  columns="6"/>
-    </tr:panelLabelAndMessage>
-    <tr:panelLabelAndMessage label="#{informerSettings.dcpHost}">
-      <tr:inputText value="#{config.settings.dcpHost}" simple="true" />
-    </tr:panelLabelAndMessage>
-    <tr:panelLabelAndMessage label="#{informerSettings.dcpPort}">
-      <tr:inputText value="#{config.settings.dcpPort}" simple="true"  columns="6"/>
-    </tr:panelLabelAndMessage>
-  </tr:panelFormLayout>
-</eye:collapsingGroup>
+      <eye:collapsingGroup label="#{msg['config.informer.section']}" opened="true">
 
-<eye:collapsingGroup label="#{msg['config.pvss.section']}" opened="true">
-  <tr:panelFormLayout inlineStyle="padding: 10px">
-    <tr:panelLabelAndMessage label="#{informerSettings.pvssEnabledBL}">
-      <tr:selectBooleanCheckbox value="#{config.settings.pvssEnabledBL}" simple="true"/>
-    </tr:panelLabelAndMessage>
-    <tr:panelLabelAndMessage label="#{informerSettings.persHost}">
-      <tr:inputText value="#{config.settings.persHost}" simple="true" />
-    </tr:panelLabelAndMessage>
-    <tr:panelLabelAndMessage label="#{informerSettings.persSyncPort}">
-      <tr:inputText value="#{config.settings.persSyncPort}" simple="true"  columns="6"/>
-    </tr:panelLabelAndMessage>
-    <tr:panelLabelAndMessage label="#{informerSettings.persAsyncPort}">
-      <tr:inputText value="#{config.settings.persAsyncPort}" simple="true"  columns="6"/>
-    </tr:panelLabelAndMessage>
-  </tr:panelFormLayout>
-</eye:collapsingGroup>
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.adminHost}"/>
+          <tr:inputText value="#{config.settings.adminHost}" simple="true" />
 
-<eye:collapsingGroup label="#{msg['config.store.section']}" opened="true">
-  <tr:panelFormLayout inlineStyle="padding: 10px">
-    <tr:panelLabelAndMessage label="#{informerSettings.statDir}">
-      <tr:inputText value="#{config.settings.statDir}" simple="true"  columns="100"/>
-    </tr:panelLabelAndMessage>
-    <tr:panelLabelAndMessage label="#{informerSettings.storeDir}">
-      <tr:inputText value="#{config.settings.storeDir}" simple="true"  columns="100"/>
-    </tr:panelLabelAndMessage>
-  </tr:panelFormLayout>
-</eye:collapsingGroup>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.adminPort}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.adminPort}" value="#{config.settings.adminPort}" size="6"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.dcpHost}"/>
+          <tr:inputText value="#{config.settings.dcpHost}" simple="true" />
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.dcpPort}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.dcpPort}" value="#{config.settings.dcpPort}" size="6"/>
+
+        </h:panelGrid>
+
+      </eye:collapsingGroup>
+
+      <eye:collapsingGroup label="#{msg['config.pvss.section']}" opened="true">
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.pvssEnabledBL}"/>
+          <tr:selectBooleanCheckbox value="#{config.settings.pvssEnabledBL}" simple="true"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.persHost}"/>
+          <tr:inputText value="#{config.settings.persHost}" simple="true" />
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.persSyncPort}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.persSyncPort}" value="#{config.settings.persSyncPort}" size="6"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.persAsyncPort}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.persAsyncPort}" value="#{config.settings.persAsyncPort}" size="6"/>
+
+        </h:panelGrid>
+      </eye:collapsingGroup>
+
+      <eye:collapsingGroup label="#{msg['config.store.section']}" opened="true">
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.statDir}"/>
+          <tr:inputText value="#{config.settings.statDir}" simple="true"  columns="100"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.storeDir}"/>
+          <tr:inputText value="#{config.settings.storeDir}" simple="true"  columns="100"/>
+
+        </h:panelGrid>
+      </eye:collapsingGroup>
 
 
-<eye:collapsingGroup label="#{msg['config.additional']}" opened="#{config.additionalOpened}">
-  <tr:panelFormLayout inlineStyle="padding: 10px">
+      <eye:collapsingGroup label="#{msg['config.additional']}" opened="#{config.additionalOpened}">
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
-    <tr:panelLabelAndMessage label="#{informerSettings.adminHandlers}">
-      <tr:inputText value="#{config.settings.adminHandlers}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.adminHandlers}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.adminHandlers}" value="#{config.settings.adminHandlers}"/>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.almRequestTimeout}">
-      <tr:inputText value="#{config.settings.almRequestTimeout}" simple="true"/>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.dcpHandlers}">
-      <tr:inputText value="#{config.settings.dcpHandlers}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.almRequestTimeout}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.almRequestTimeout}" value="#{config.settings.almRequestTimeout}"/>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.inputJournalRollingPeriod}">
-      <tr:inputText value="#{config.settings.inputJournalRollingPeriod}" simple="true"/>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.inputTransferChunkSize}">
-      <tr:inputText value="#{config.settings.inputTransferChunkSize}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.dcpHandlers}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.dcpHandlers}" value="#{config.settings.dcpHandlers}"/>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.inputMinQueueSize}">
-      <tr:inputText value="#{config.settings.inputMinQueueSize}" simple="true"/>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.operationalJournalRollingPeriod}">
-      <tr:inputText value="#{config.settings.operationalJournalRollingPeriod}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.inputJournalRollingPeriod}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} {informerSettings.inputJournalRollingPeriod}" value="#{config.settings.inputJournalRollingPeriod}"/>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.protocolId}">
-      <tr:inputText value="#{config.settings.protocolId}" simple="true"/>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.receiptExtraWaitTime}">
-      <tr:inputText value="#{config.settings.receiptExtraWaitTime}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.inputTransferChunkSize}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.inputTransferChunkSize}" value="#{config.settings.inputTransferChunkSize}"/>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.resendIOThreadCount}">
-      <tr:inputText value="#{config.settings.resendIOThreadCount}" simple="true"/>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.responseWaitTime}">
-      <tr:inputText value="#{config.settings.responseWaitTime}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.inputMinQueueSize}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.inputMinQueueSize}" value="#{config.settings.inputMinQueueSize}"/>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.retryMinTimeToLive}">
-      <tr:inputText value="#{config.settings.retryMinTimeToLive}" simple="true"/>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.skippedIdsChunkSize}">
-      <tr:inputText value="#{config.settings.skippedIdsChunkSize}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.operationalJournalRollingPeriod}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.operationalJournalRollingPeriod}" value="#{config.settings.operationalJournalRollingPeriod}"/>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.skippedIdsMinCacheSize}">
-      <tr:inputText value="#{config.settings.skippedIdsMinCacheSize}" simple="true"/>
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.slicedMessageSize}">
-      <tr:inputText value="#{config.settings.slicedMessageSize}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.protocolId}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.protocolId}" value="#{config.settings.protocolId}"/>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.svcType}">
-      <tr:inputText value="#{config.settings.svcType}" simple="true" />
-    </tr:panelLabelAndMessage>
 
-    <tr:panelLabelAndMessage label="#{informerSettings.unrespondedMessagesMax}">
-      <tr:inputText value="#{config.settings.unrespondedMessagesMax}" simple="true"/>
-    </tr:panelLabelAndMessage>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.receiptExtraWaitTime}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.receiptExtraWaitTime}" value="#{config.settings.receiptExtraWaitTime}"/>
 
-  </tr:panelFormLayout>
-</eye:collapsingGroup>
 
-<eye:delimiter/>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.resendIOThreadCount}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.resendIOThreadCount}" value="#{config.settings.resendIOThreadCount}"/>
 
-<eye:buttons>
-  <eye:button>
-    <tr:commandLink text="#{msg['submit.button']}" action="#{config.save}" shortDesc="#{msg['submit.config.desc']}"/>
-  </eye:button>
-  <eye:button>
-    <tr:commandLink text="#{msg['reset.button']}" action="#{config.reset}" immediate="true" shortDesc="#{msg['reset.config.desc']}"/>
-  </eye:button>
-  <eye:space/>
-</eye:buttons>
 
-</tr:form>
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.responseWaitTime}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.responseWaitTime}" value="#{config.settings.responseWaitTime}"/>
 
-</ui:define>
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.retryMinTimeToLive}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.retryMinTimeToLive}" value="#{config.settings.retryMinTimeToLive}"/>
+
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.skippedIdsChunkSize}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.skippedIdsChunkSize}" value="#{config.settings.skippedIdsChunkSize}"/>
+
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.skippedIdsMinCacheSize}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.skippedIdsMinCacheSize}" value="#{config.settings.skippedIdsMinCacheSize}"/>
+
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.slicedMessageSize}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.slicedMessageSize}" value="#{config.settings.slicedMessageSize}"/>
+
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.svcType}"/>
+          <h:inputText value="#{config.settings.svcType}"/>
+
+
+          <h:outputText style="white-space:nowrap;" value="#{informerSettings.unrespondedMessagesMax}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{informerSettings.unrespondedMessagesMax}" value="#{config.settings.unrespondedMessagesMax}"/>
+
+
+        </h:panelGrid>
+      </eye:collapsingGroup>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{config.save}" shortDesc="#{msg['submit.config.desc']}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="#{config.reset}" immediate="true" shortDesc="#{msg['reset.config.desc']}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
 
 </ui:composition>
 

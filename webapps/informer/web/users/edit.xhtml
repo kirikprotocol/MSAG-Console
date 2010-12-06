@@ -74,7 +74,7 @@
 
         <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{userBundle.sourceAddr}"/>
-          <h:inputText value="#{userEdit.sourceAddr}" converterMessage="#{userBundle.sourceAddr}"  size="15" converter="addressConverter"/>
+          <h:inputText value="#{userEdit.sourceAddr}" converterMessage="#{msg['invalid_param_value']} #{userBundle.sourceAddr}"  size="15" converter="addressConverter"/>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.deliveryDays}"/>
           <h:selectManyCheckbox value="#{userEdit.activeWeekDays}" style="width: 100px">
@@ -90,7 +90,7 @@
 
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.priority}"/>
-          <h:inputText converterMessage="#{userBundle.priority}" value="#{userEdit.userToEdit.priority}"   size="3"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{userBundle.priority}" value="#{userEdit.userToEdit.priority}"   size="3"/>
 
           <h:outputText style="white-space:nowrap;" value="#{userBundle.policyId}"/>
           <h:panelGroup>

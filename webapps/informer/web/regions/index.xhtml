@@ -20,9 +20,7 @@
 
       <tr:subform>
         <h:panelGrid columns="3" columnClasses="column100Width, column100Width,columnTopLeftAlign">
-          <tr:inputText columns="8" value="#{regions.defaultMax}" required="true">
-            <eye:validatePositive/>
-          </tr:inputText>
+          <tr:inputText columns="8" value="#{regions.defaultMax}"/>
           <tr:commandLink text="#{msg['apply.button']}" shortDesc="#{msg['region.apply.default.max.desc']}" action="#{regions.submitDefault}"/>
           <h:outputText/>
         </h:panelGrid>

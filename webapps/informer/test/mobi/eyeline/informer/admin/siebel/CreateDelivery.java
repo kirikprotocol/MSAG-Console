@@ -1,7 +1,5 @@
 package mobi.eyeline.informer.admin.siebel;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
 import ru.sibinco.util.conpool.ConnectionPool;
 
 import java.io.IOException;
@@ -17,7 +15,7 @@ import java.util.Properties;
  */
 public class CreateDelivery {
 
-  @BeforeClass
+//  @BeforeClass
   public static void before() throws Exception{
     Properties ps = new Properties();
     InputStream is = null;
@@ -35,12 +33,12 @@ public class CreateDelivery {
   }
 
 
-  @Test
+//  @Test
   public void create() throws SQLException {
     CreateDelivery.createDelivery(1);
   }
 
-  @Test
+//  @Test
   public void remove() throws Exception {
     CreateDelivery.removeDelivery(1);
   }

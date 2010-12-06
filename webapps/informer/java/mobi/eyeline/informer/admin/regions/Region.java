@@ -31,12 +31,30 @@ public class Region {
     this.regionId = regionId;
   }
 
+  void validate() throws AdminException{
+    vh.checkNotEmpty("name", name);
+    vh.checkNotEmpty("smsc", smsc);
+    vh.checkNotNull("timeZone", timeZone);
+    vh.checkGreaterThan("maxSmsPerSecond", maxSmsPerSecond, 0);
+
+    for (Address ad : masks) {
+      vh.checkNotNull("masks", ad);
+      for(Address ad2 : masks) {
+        vh.checkNotNull("masks", ad2);
+        if (ad != ad2) {
+          vh.checkNotEquals("masks", ad.getSimpleAddress(), ad2.getSimpleAddress());
+        }
+      }
+    }
+
+
+  }
+
   public String getName() {
     return name;
   }
 
-  public void setName(String name) throws AdminException {
-    vh.checkNotEmpty("name", name);
+  public void setName(String name) {
     this.name = name;
   }
 
@@ -48,8 +66,7 @@ public class Region {
     return smsc;
   }
 
-  public void setSmsc(String smsc) throws AdminException {
-    vh.checkNotEmpty("smsc", smsc);
+  public void setSmsc(String smsc) {
     this.smsc = smsc;
   }
 
@@ -57,8 +74,7 @@ public class Region {
     return timeZone;
   }
 
-  public void setTimeZone(TimeZone timeZone) throws AdminException {
-    vh.checkNotNull("timeZone", timeZone);
+  public void setTimeZone(TimeZone timeZone) {
     this.timeZone = timeZone;
   }
 
@@ -66,19 +82,14 @@ public class Region {
     return maxSmsPerSecond;
   }
 
-  public void setMaxSmsPerSecond(int maxSmsPerSecond) throws AdminException {
-    vh.checkGreaterThan("maxSmsPerSecond", maxSmsPerSecond, 0);
+  public void setMaxSmsPerSecond(int maxSmsPerSecond) {
     this.maxSmsPerSecond = maxSmsPerSecond;
   }
 
-  public void addMask(Address a) throws AdminException {
-    vh.checkNotNull("masks", a);
-    for (Address ad : masks) {
-      if (ad.getSimpleAddress().equals(a.getSimpleAddress())) {
-        return;
-      }
+  public void addMask(Address a)  {
+    if(a != null) {
+      masks.add(a);
     }
-    masks.add(a);
   }
 
   public void removeMask(Address r) {

@@ -66,11 +66,7 @@ public class RegionEditController extends RegionsController {
     } else {
       region = new Region();
       if (!ss.isEmpty()) {
-        try {
-          region.setSmsc(ss.iterator().next().getName());
-        } catch (AdminException e) {
-          addError(e);
-        }
+        region.setSmsc(ss.iterator().next().getName());
       }
     }
 
@@ -88,11 +84,7 @@ public class RegionEditController extends RegionsController {
       id = null;
       region = new Region();
       if (!ss.isEmpty()) {
-        try {
-          region.setSmsc(ss.iterator().next().getName());
-        } catch (AdminException e) {
-          addError(e);
-        }
+        region.setSmsc(ss.iterator().next().getName());
       }
     } else {
       dynamicModel = new DynamicTableModel();
@@ -123,14 +115,9 @@ public class RegionEditController extends RegionsController {
       newMasks.add(new Address(mask));
     }
 
-    try {
-      region.clearMasks();
-      for (Address a : newMasks) {
-        region.addMask(a);
-      }
-    } catch (AdminException e) {
-      addError(e);
-      return null;
+    region.clearMasks();
+    for (Address a : newMasks) {
+      region.addMask(a);
     }
 
     try {
