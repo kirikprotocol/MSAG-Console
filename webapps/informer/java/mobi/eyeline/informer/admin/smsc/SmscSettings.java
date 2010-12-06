@@ -41,11 +41,13 @@ class SmscSettings {
 
   void addSmsc(Smsc smsc) throws AdminException {
     vh.checkNotСontainsKey("smsc_name", smscs, smsc.getName());
+    smsc.validate();
     smscs.put(smsc.getName(), smsc);
   }
 
   void updateSmsc(Smsc smsc) throws AdminException {
     vh.checkСontainsKey("smsc_name", smscs, smsc.getName());
+    smsc.validate();
     smscs.put(smsc.getName(), smsc);
   }
 

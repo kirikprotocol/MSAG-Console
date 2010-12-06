@@ -122,12 +122,54 @@ public class Smsc {
     }
   }
 
+  void validate() throws AdminException {
+    vh.checkGreaterOrEqualsTo("maxValidityPeriod", maxValidityPeriod, 0);
+    vh.checkGreaterOrEqualsTo("defaultValidityPeriod", defaultValidityPeriod, 0);
+    vh.checkGreaterOrEqualsTo("minValidityPeriod", minValidityPeriod, 0);
+    vh.checkGreaterThan("timeout", timeout, 0);
+    vh.checkNotEmpty("host", host);
+    vh.checkNotNull("password", password);
+    vh.checkNotEmpty("systemId", systemId);
+    vh.checkNotEmpty("systemType", systemType);
+    vh.checkGreaterOrEqualsTo("interfaceVersion", interfaceVersion, 0);
+    vh.checkGreaterOrEqualsTo("ussdServiceOp", ussdServiceOp, 0);
+    vh.checkGreaterOrEqualsTo("vlrUssdServiceOp", vlrUssdServiceOp, 0);
+
+    for(Integer i1 : permanentErrors) {
+      int count = 0;
+      for(Integer i2 : permanentErrors) {
+        if(i1.equals(i2)) {
+          count++;
+        }
+      }
+      if(count>1) {
+        vh.checkTrue("permanentErrors", false);
+      }
+    }
+    for(Integer i1 : immediateErrors) {
+      int count = 0;
+      for(Integer i2 : immediateErrors) {
+        if(i1.equals(i2)) {
+          count++;
+        }
+      }
+      vh.checkTrue("immediateErrors", count == 1);
+    }
+
+    for(Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
+      String period = e.getKey();
+      vh.checkNotEmpty("temporaryErrors", period);
+      vh.checkMaches("temporaryErrors", period, RETRY_POLICY_PATTERN);
+      vh.checkSizeGreaterThan("temporaryErrors", e.getValue(), 0);
+    }
+
+  }
+
   public int getMaxValidityPeriod() {
     return maxValidityPeriod;
   }
 
-  public void setMaxValidityPeriod(int maxValidityPeriod) throws AdminException {
-    vh.checkGreaterOrEqualsTo("maxValidityPeriod", maxValidityPeriod, 0);
+  public void setMaxValidityPeriod(int maxValidityPeriod)  {
     this.maxValidityPeriod = maxValidityPeriod;
   }
 
@@ -135,8 +177,7 @@ public class Smsc {
     return defaultValidityPeriod;
   }
 
-  public void setDefaultValidityPeriod(int defaultValidityPeriod) throws AdminException {
-    vh.checkGreaterOrEqualsTo("defaultValidityPeriod", defaultValidityPeriod, 0);
+  public void setDefaultValidityPeriod(int defaultValidityPeriod) {
     this.defaultValidityPeriod = defaultValidityPeriod;
   }
 
@@ -144,8 +185,7 @@ public class Smsc {
     return minValidityPeriod;
   }
 
-  public void setMinValidityPeriod(int minValidityPeriod) throws AdminException {
-    vh.checkGreaterOrEqualsTo("minValidityPeriod", minValidityPeriod, 0);
+  public void setMinValidityPeriod(int minValidityPeriod) {
     this.minValidityPeriod = minValidityPeriod;
   }
 
@@ -167,8 +207,7 @@ public class Smsc {
     return result;
   }
 
-  public void addImmediateError(int error) throws AdminException {
-    vh.checkNotContains("immediateErrors", immediateErrors, error);
+  public void addImmediateError(int error) {
     immediateErrors.add(error);
   }
 
@@ -180,8 +219,7 @@ public class Smsc {
     immediateErrors.clear();
   }
 
-  public void addPermanentError(int error) throws AdminException {
-    vh.checkNotContains("permanentErrors", permanentErrors, error);
+  public void addPermanentError(int error) {
     permanentErrors.add(error);
   }
 
@@ -193,11 +231,7 @@ public class Smsc {
     permanentErrors.remove(error);
   }
 
-  public void addTempError(String period, Set<Integer> errors) throws AdminException {
-    vh.checkNotEmpty("temporaryErrors", period);
-    vh.checkMaches("temporaryErrors", period, RETRY_POLICY_PATTERN);
-    vh.checkNotContains("temporaryErrors", temporaryErrors.keySet(), period);
-    vh.checkSizeGreaterThan("temporaryErrors", errors, 0);
+  public void addTempError(String period, Set<Integer> errors) {
     temporaryErrors.put(period, errors);
   }
 
@@ -214,8 +248,7 @@ public class Smsc {
     return timeout;
   }
 
-  public void setTimeout(int timeout) throws AdminException {
-    vh.checkGreaterThan("timeout", timeout, 0);
+  public void setTimeout(int timeout) {
     this.timeout = timeout;
   }
 
@@ -223,7 +256,7 @@ public class Smsc {
     return rangeOfAddress;
   }
 
-  public void setRangeOfAddress(int rangeOfAddress) throws AdminException {
+  public void setRangeOfAddress(int rangeOfAddress) {
     this.rangeOfAddress = rangeOfAddress;
   }
 
@@ -235,8 +268,7 @@ public class Smsc {
     return host;
   }
 
-  public void setHost(String host) throws AdminException {
-    vh.checkNotEmpty("host", host);
+  public void setHost(String host) {
     this.host = host;
   }
 
@@ -253,8 +285,7 @@ public class Smsc {
     return systemId;
   }
 
-  public void setSystemId(String systemId) throws AdminException {
-    vh.checkNotEmpty("systemId", systemId);
+  public void setSystemId(String systemId) {
     this.systemId = systemId;
   }
 
@@ -262,8 +293,7 @@ public class Smsc {
     return password;
   }
 
-  public void setPassword(String password) throws AdminException {
-    vh.checkNotNull("password", password);
+  public void setPassword(String password) {
     this.password = password;
   }
 
@@ -271,8 +301,7 @@ public class Smsc {
     return systemType;
   }
 
-  public void setSystemType(String systemType) throws AdminException {
-    vh.checkNotEmpty("systemType", systemType);
+  public void setSystemType(String systemType) {
     this.systemType = systemType;
   }
 
@@ -280,8 +309,7 @@ public class Smsc {
     return interfaceVersion;
   }
 
-  public void setInterfaceVersion(int interfaceVersion) throws AdminException {
-    vh.checkGreaterOrEqualsTo("interfaceVersion", interfaceVersion, 0);
+  public void setInterfaceVersion(int interfaceVersion) {
     this.interfaceVersion = interfaceVersion;
   }
 
@@ -289,8 +317,7 @@ public class Smsc {
     return ussdServiceOp;
   }
 
-  public void setUssdServiceOp(int ussdServiceOp) throws AdminException {
-    vh.checkGreaterOrEqualsTo("ussdServiceOp", ussdServiceOp, 0);
+  public void setUssdServiceOp(int ussdServiceOp) {
     this.ussdServiceOp = ussdServiceOp;
   }
 
@@ -298,8 +325,7 @@ public class Smsc {
     return vlrUssdServiceOp;
   }
 
-  public void setVlrUssdServiceOp(int vlrUssdServiceOp) throws AdminException {
-    vh.checkGreaterOrEqualsTo("vlrUssdServiceOp", vlrUssdServiceOp, 0);
+  public void setVlrUssdServiceOp(int vlrUssdServiceOp) {
     this.vlrUssdServiceOp = vlrUssdServiceOp;
   }
 

@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin.smsc;
 
 import mobi.eyeline.informer.admin.AdminException;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -13,15 +14,38 @@ import static org.junit.Assert.*;
  */
 @SuppressWarnings({"EmptyCatchBlock"})
 public class SmscTest {
+  
+  private Smsc smsc;
+  
+  
+  @Before
+  public void before() throws AdminException {
+    smsc = new Smsc("name1");
+    smsc.setHost("dsa");
+    smsc.setPort(123);
+    smsc.setPassword("qwerty");
+    smsc.setInterfaceVersion(2);
+    smsc.setSystemId("sid1");
+    smsc.setSystemType("sType");
+    smsc.setUssdServiceOp(12);
+    smsc.setVlrUssdServiceOp(562);
+    smsc.setTimeout(12);
+    smsc.setRangeOfAddress(34);
+    smsc.setDefaultValidityPeriod(1);
+    smsc.setMaxValidityPeriod(2);
+    smsc.setMinValidityPeriod(3);
+    smsc.addImmediateError(1254);
+    smsc.addPermanentError(1255);
+    smsc.addTempError("1m", new HashSet<Integer>(){{add(1453);}});
+  }
 
 
   @SuppressWarnings({"UnusedAssignment"})
   @Test
   public void testDefaultValidity() throws AdminException{
-    Smsc smsc = new Smsc("smsc1");
     try{
       smsc.setDefaultValidityPeriod(-1);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     smsc.setDefaultValidityPeriod(0);
     smsc.setDefaultValidityPeriod(234);
@@ -31,10 +55,10 @@ public class SmscTest {
   @SuppressWarnings({"UnusedAssignment"})
   @Test
   public void testMinValidity() throws AdminException{
-    Smsc smsc = new Smsc("smsc1");
+    
     try{
       smsc.setMinValidityPeriod(-1);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     smsc.setMinValidityPeriod(0);
     smsc.setMinValidityPeriod(234);
@@ -44,10 +68,10 @@ public class SmscTest {
   @SuppressWarnings({"UnusedAssignment"})
   @Test
   public void testMaxValidity() throws AdminException{
-    Smsc smsc = new Smsc("smsc1");
+    
     try{
       smsc.setMaxValidityPeriod(-1);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     smsc.setMaxValidityPeriod(0);
     smsc.setMaxValidityPeriod(234);
@@ -57,47 +81,52 @@ public class SmscTest {
   @SuppressWarnings({"UnusedAssignment"})
   @Test
   public void testImmedError() throws AdminException{
-    Smsc smsc = new Smsc("smsc1");
-    smsc.addImmediateError(1);
+    Integer i = 1;
+    smsc.addImmediateError(i);
     try{
-      smsc.addImmediateError(1);
-      assertTrue(false);
+      smsc.addImmediateError(i);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
-    assertTrue( smsc.getImmediateErrors().contains(1));
-    smsc.removeImmediateError(1);
-    assertFalse( smsc.getImmediateErrors().contains(1));
+    before();
+    smsc.addImmediateError(i);
+    assertTrue( smsc.getImmediateErrors().contains(i));
+    smsc.removeImmediateError(i);
+    assertFalse( smsc.getImmediateErrors().contains(i));
   }
+
   @SuppressWarnings({"UnusedAssignment"})
   @Test
   public void testPermdError() throws AdminException{
-    Smsc smsc = new Smsc("smsc1");
-    smsc.addPermanentError(1);
+    Integer i = 1;
+    smsc.addPermanentError(i);
     try{
-      smsc.addPermanentError(1);
-      assertTrue(false);
+      smsc.addPermanentError(i);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
-    assertTrue( smsc.getPermanentErrors().contains(1));
-    smsc.removePermanentError(1);  
-    assertFalse( smsc.getPermanentErrors().contains(1));
+    before();
+    smsc.addPermanentError(i);
+    assertTrue( smsc.getPermanentErrors().contains(i));
+    smsc.removePermanentError(i);
+    assertFalse( smsc.getPermanentErrors().contains(i));
   }
 
   @SuppressWarnings({"UnusedAssignment"})
   @Test
   public void testTempError() throws AdminException{
-    Smsc smsc = new Smsc("smsc1");
+    
     Set<Integer> errors = new HashSet<Integer>();
     errors.add(1202);
     try{
       smsc.addTempError("blablabla", errors);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     try{
       smsc.addTempError("", errors);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     try{
       smsc.addTempError(null, errors);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
 
     smsc.addTempError("1m", errors);       
@@ -108,14 +137,14 @@ public class SmscTest {
   @SuppressWarnings({"UnusedAssignment"})
   @Test
   public void testTimeout() throws AdminException{
-    Smsc smsc = new Smsc("smsc1");
+    
     try{
       smsc.setTimeout(0);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     try{
       smsc.setTimeout(-1);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
 
     smsc.setTimeout(234);
@@ -125,7 +154,7 @@ public class SmscTest {
   @SuppressWarnings({"UnusedAssignment"})
   @Test
   public void testRangeOfAddress() throws AdminException{
-    Smsc smsc = new Smsc("smsc1");
+    
     smsc.setRangeOfAddress(234);
     assertEquals(234, smsc.getRangeOfAddress());
   }
@@ -136,11 +165,11 @@ public class SmscTest {
     Smsc smsc;
     try{
       smsc = new Smsc("");
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     try{
       smsc = new Smsc(null);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     smsc = new Smsc("SMSC0");
   }
@@ -151,12 +180,12 @@ public class SmscTest {
 
     try{
       smsc.setHost("");
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
 
     try{
       smsc.setHost(null);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
 
     smsc.setHost("niagara");
@@ -169,12 +198,12 @@ public class SmscTest {
 
     try{
       smsc.setPort(-1);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e) {}
 
     try{
       smsc.setPort(Integer.MAX_VALUE);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e) {}
 
     smsc.setPort(8080);
@@ -185,12 +214,12 @@ public class SmscTest {
 
     try{
       smsc.setSystemId("");
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
 
     try{
       smsc.setSystemId(null);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
 
     smsc.setSystemId("sid");
@@ -201,12 +230,12 @@ public class SmscTest {
 
     try{
       smsc.setSystemType("");
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
 
     try{
       smsc.setSystemType(null);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
 
     smsc.setSystemType("sType");
@@ -216,7 +245,7 @@ public class SmscTest {
     Smsc smsc = new Smsc("SMSC0");
     try{
       smsc.setPassword(null);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e){}
     smsc.setPassword("");
     smsc.setPassword("qwerty");
@@ -230,7 +259,7 @@ public class SmscTest {
 
     try{
       smsc.setInterfaceVersion(-1);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e) {}
 
     smsc.setInterfaceVersion(Integer.MAX_VALUE);
@@ -244,7 +273,7 @@ public class SmscTest {
 
     try{
       smsc.setUssdServiceOp(-1);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e) {}
 
     smsc.setUssdServiceOp(Integer.MAX_VALUE);
@@ -257,7 +286,7 @@ public class SmscTest {
 
     try{
       smsc.setVlrUssdServiceOp(-1);
-      assertTrue(false);
+      smsc.validate(); assertTrue(false);
     }catch (AdminException e) {}
 
     smsc.setVlrUssdServiceOp(Integer.MAX_VALUE);
@@ -265,27 +294,31 @@ public class SmscTest {
   }
 
   @Test
-  public void cloneTest() throws AdminException {
-    Smsc s1 = new Smsc("name1");
-    s1.setHost("dsa");
-    s1.setPort(123);
-    s1.setPassword("qwerty");
-    s1.setInterfaceVersion(2);
-    s1.setSystemId("sid1");
-    s1.setSystemType("sType");
-    s1.setUssdServiceOp(12);
-    s1.setVlrUssdServiceOp(562);
-    s1.setTimeout(12);
-    s1.setRangeOfAddress(34);
-    s1.setDefaultValidityPeriod(1);
-    s1.setMaxValidityPeriod(2);
-    s1.setMinValidityPeriod(3);
-    s1.addImmediateError(1254);
-    s1.addPermanentError(1255);
-    s1.addTempError("1m", new HashSet<Integer>(){{add(1453);}});
-    Smsc s2 = s1.cloneSmsc();
-    assertTrue(s1 != s2);
-    assertEquals(s1, s2);
+  public void validateAndCloneTest() throws AdminException {
+    Smsc smsc = new Smsc("name1");
+    smsc.setHost("dsa");
+    smsc.setPort(123);
+    smsc.setPassword("qwerty");
+    smsc.setInterfaceVersion(2);
+    smsc.setSystemId("sid1");
+    smsc.setSystemType("sType");
+    smsc.setUssdServiceOp(12);
+    smsc.setVlrUssdServiceOp(562);
+    smsc.setTimeout(12);
+    smsc.setRangeOfAddress(34);
+    smsc.setDefaultValidityPeriod(1);
+    smsc.setMaxValidityPeriod(2);
+    smsc.setMinValidityPeriod(3);
+    smsc.addImmediateError(1254);
+    smsc.addPermanentError(1255);
+    smsc.addTempError("1m", new HashSet<Integer>(){{add(1453);}});
+    smsc.validate();
+    
+    Smsc s2 = smsc.cloneSmsc();
+    s2.validate();
+    
+    assertTrue(smsc != s2);
+    assertEquals(smsc, s2);
   }
 
 }

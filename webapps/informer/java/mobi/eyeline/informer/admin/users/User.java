@@ -422,12 +422,14 @@ public class User implements Serializable {
       for (Integer day1 : deliveryDays) {
         vh.checkNotNull("deliveryDays", day1);
         vh.checkBetween("deliveryDays", day1, 0, 6);
+        int count = 0;
         for(Integer day2 : deliveryDays) {
           vh.checkNotNull("deliveryDays", day2);
-          if(day1 != day2) {
-            vh.checkNotEquals("deliveryDays", day1, day2); //todo check it!
+          if(day1.equals(day2)) {
+            count++;
           }
         }
+        vh.checkTrue("deliveryDays", count == 1);
       }
     }
 
@@ -438,12 +440,14 @@ public class User implements Serializable {
     if(allowedRegions != null) {
       for (Integer r : allowedRegions) {
         vh.checkNotNull("regions", r);
+        int count = 0;
         for(Integer r2 : allowedRegions) {
           vh.checkNotNull("regions", r2);
-          if(r != r2) {
-            vh.checkNotEquals("allowedRegions", r, r2);
+          if(r.equals(r2)) {
+            count++;
           }
         }
+        vh.checkTrue("allowedRegions", count == 1);
       }
     }
 
