@@ -1,7 +1,9 @@
 package mobi.eyeline.informer.admin;
 
+import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
+import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.util.config.BaseManager;
 import mobi.eyeline.informer.admin.util.config.SettingsReader;
 import mobi.eyeline.informer.admin.util.config.SettingsWriter;
@@ -183,20 +185,20 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     });
   }
 
-  public Properties getSiebelProperties() {
-    return readSettings(new SettingsReader<WebConfigSettings, Properties>() {
-      public Properties executeRead(WebConfigSettings settings) {
-        return settings.getSiebelProperties();
+  public SiebelSettings getSiebelSettings() {
+    return readSettings(new SettingsReader<WebConfigSettings, SiebelSettings>() {
+      public SiebelSettings executeRead(WebConfigSettings settings) {
+        return settings.getSiebelSettings();
       }
     });
 
   }
 
-  public void setSiebelProperties(final Properties props) throws AdminException {
+  public void setSiebelSettings(final SiebelSettings siebelSettings) throws AdminException {
 
     updateSettings(new SettingsWriter<WebConfigSettings>() {
       public void changeSettings(WebConfigSettings settings) throws AdminException {
-        settings.setSiebelProperties(props);
+        settings.setSiebelSettings(siebelSettings);
       }
 
       public void infosmeCommand(Infosme infosme) throws AdminException {
@@ -205,20 +207,20 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     });
   }
 
-  public Properties getCdrProperties() {
-    return readSettings(new SettingsReader<WebConfigSettings, Properties>() {
-      public Properties executeRead(WebConfigSettings settings) {
-        return settings.getCdrProperties();
+  public CdrSettings getCdrSettings() {
+    return readSettings(new SettingsReader<WebConfigSettings, CdrSettings>() {
+      public CdrSettings executeRead(WebConfigSettings settings) {
+        return settings.getCdrSettings();
       }
     });
 
   }
 
-  public void setCdrProperties(final Properties props) throws AdminException {
+  public void setCdrSettings(final CdrSettings props) throws AdminException {
 
     updateSettings(new SettingsWriter<WebConfigSettings>() {
       public void changeSettings(WebConfigSettings settings) throws AdminException {
-        settings.setCdrProperties(props);
+        settings.setCdrSettings(props);
       }
 
       public void infosmeCommand(Infosme infosme) throws AdminException {

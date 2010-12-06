@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin;
 
+import mobi.eyeline.informer.admin.cdr.CdrSettings;
+import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.util.config.ManagedConfigFile;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.config.XmlConfig;
@@ -45,14 +47,14 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     config.addSection(javamail);
 
     XmlConfigSection siebel = config.getOrCreateSection("siebel");
-    props = settings.getSiebelProperties();
+    props = settings.getSiebelSettings().getAllProperties();
     for (Object s : props.keySet()) {
       siebel.addParam(new XmlConfigParam((String) s, (String) props.get(s), XmlConfigParam.Type.STRING));
     }
     config.addSection(siebel);
 
     XmlConfigSection cdr = config.getOrCreateSection("cdr");
-    props = settings.getCdrProperties();
+    props = settings.getCdrSettings().getAllProperties();
     for (Object s : props.keySet()) {
       cdr.addParam(new XmlConfigParam((String) s, (String) props.get(s), XmlConfigParam.Type.STRING));
     }
@@ -110,10 +112,10 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       settings.setNotificationTemplates(notificationTemplates.toProperties("", null));
 
       XmlConfigSection siebel = webconfig.getSection("siebel");
-      settings.setSiebelProperties(siebel.toProperties("", null));
+      settings.setSiebelSettings(new SiebelSettings(siebel.toProperties("", null)));
 
       XmlConfigSection cdr = webconfig.getSection("cdr");
-      settings.setCdrProperties(cdr.toProperties("", null));
+      settings.setCdrSettings(new CdrSettings(cdr.toProperties("", null)));
 
       XmlConfigSection deliveries = webconfig.getSection("deliveries");
       settings.setAllowUssdPushDeliveries(deliveries.getBool("allowUssdPush", false));

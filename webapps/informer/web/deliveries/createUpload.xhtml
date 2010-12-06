@@ -20,7 +20,7 @@
 
       <h:panelGrid columns="2" style="padding-left:10px" columnClasses="column50Width,columnTopLeftAlign">
         <h:outputText style="white-space:nowrap;" value="#{msg['informer.upload.file.content']}"/>
-        <tr:selectOneChoice value="#{createDelivery.activePage.fileContentType}" simple="true" required="true"
+        <tr:selectOneChoice value="#{createDelivery.activePage.fileContentType}" simple="true" 
                             onchange="document.getElementById('fileEncodings1').style.display = this.options[1].selected ? '' : 'none';
                                       document.getElementById('fileEncodings2').style.display = this.options[1].selected ? '' : 'none';
                             ">
@@ -30,7 +30,7 @@
 
         <h:outputText id="fileEncodings1" style="white-space:nowrap;display: #{createDelivery.activePage.fileContentType == 1 ? 'none' : ''}" value="#{msg['informer.upload.file.encoding']}"/>
         <h:panelGroup id="fileEncodings2" style="display: #{createDelivery.activePage.fileContentType == 1 ? 'none' : ''}">
-          <tr:selectOneChoice value="#{createDelivery.activePage.fileEncoding}" simple="true" required="true" >
+          <tr:selectOneChoice value="#{createDelivery.activePage.fileEncoding}" simple="true">
             <f:selectItem itemLabel="windows-1251" itemValue="windows-1251" />
             <f:selectItem itemLabel="utf8" itemValue="utf8" />
             <f:selectItem itemLabel="koi8" itemValue="koi8r" />
@@ -38,7 +38,7 @@
         </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{msg['informer.upload.label']}"/>
-        <tr:inputFile columns="50" value="#{createDelivery.activePage.file}" simple="true" required="true"/>
+        <tr:inputFile columns="50" value="#{createDelivery.activePage.file}" simple="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{msg['informer.upload.split']}"/>
         <h:selectBooleanCheckbox value="#{createDelivery.activePage.splitByRegions}"/>

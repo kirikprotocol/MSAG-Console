@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
+import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
@@ -18,6 +19,7 @@ import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionException;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
+import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
@@ -450,29 +452,29 @@ public class Configuration {
     return context.isSiebelDaemonStarted();
   }
 
-  public Properties getCdrProperties() {
-    return context.getCdrProperties();
+  public CdrSettings getCdrProperties() {
+    return context.getCdrSettings();
   }
 
-  public boolean checkSiebelProperties(Properties p) {
-    return context.checkSiebelProperties(p);
+  public boolean checkSiebelSettings(SiebelSettings p) throws AdminException {
+    return context.checkSiebelSettings(p);
   }
 
-  public void setCdrProperties(Properties props, String user) throws AdminException {
-    Properties old = context.getCdrProperties();
-    context.setCdrProperties(props);  
-    journal.logUpdateCdrProps(props, old, user);
+  public void setCdrSettings(CdrSettings props, String user) throws AdminException {
+    CdrSettings old = context.getCdrSettings();
+    context.setCdrSettings(props);
+    journal.logUpdateCdrProps(props.getAllProperties(), old.getAllProperties(), user);
   }
 
-  public boolean setSiebelProperties(Properties props, String user) throws AdminException {
-    Properties old = context.getSiebelProperties();
-    boolean res =  context.setSiebelProperties(props);
-    journal.logUpdateSiebelProps(props, old, user);
+  public boolean setSiebelSettings(SiebelSettings props, String user) throws AdminException {
+    SiebelSettings old = context.getSiebelSettings();
+    boolean res =  context.setSiebelSettings(props);
+    journal.logUpdateSiebelProps(props.getAllProperties(), old.getAllProperties(), user);
     return res;
   }
 
-  public Properties getSiebelProperties() {
-    return context.getSiebelProperties();
+  public SiebelSettings getSiebelSettings() {
+    return context.getSiebelSettings();
   }
 
   public boolean isAllowUssdPushDeliveries() {

@@ -6,12 +6,16 @@ import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
 import mobi.eyeline.informer.admin.cdr.CdrDaemon;
 import mobi.eyeline.informer.admin.cdr.CdrDeliveries;
+import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.cdr.CdrUsers;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderContext;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
-import mobi.eyeline.informer.admin.delivery.stat.*;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
@@ -29,6 +33,7 @@ import mobi.eyeline.informer.admin.restriction.*;
 import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.siebel.SiebelException;
 import mobi.eyeline.informer.admin.siebel.SiebelManager;
+import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.siebel.impl.SiebelDeliveries;
 import mobi.eyeline.informer.admin.siebel.impl.SiebelFinalStateListener;
 import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
@@ -194,7 +199,7 @@ public class AdminContext {
 
 
       cdrDaemon = new CdrDaemon(new File(workDir, "cdr"),
-          new File(webConfig.getCdrProperties().getProperty(CdrDaemon.CDR_DIR)),
+          new File(webConfig.getCdrSettings().getCdrDir()),
           fileSystem,
           new CdrDeliveriesImpl(this), new CdrUsersImpl(this));
       cdrDaemon.start();
@@ -217,21 +222,21 @@ public class AdminContext {
     SiebelRegionManager siebelRegions = new SiebelRegionManagerImpl(this);
     SiebelUserManager userManager = new SiebelUserManagerImpl(this);
 
-    User siebelUser = usersManager.getUser(webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
+    User siebelUser = usersManager.getUser(webConfig.getSiebelSettings().getUser());
 
     if (siebelUser == null) {
-      throw new IntegrityException("user_not_exist", webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
+      throw new IntegrityException("user_not_exist", webConfig.getSiebelSettings().getUser());
     }
 
     siebelManager = new SiebelManager(siebelDeliveries, siebelRegions);
 
     siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries,
         userManager, workDir,
-        Integer.parseInt(webConfig.getSiebelProperties().getProperty(SiebelFinalStateListener.PERIOD_PARAM)));
+        webConfig.getSiebelSettings().getStatsPeriod());
 
     deliveryChangesDetector.addListener(siebelFinalStateListener);
 
-    siebelManager.start(siebelUser, webConfig.getSiebelProperties());
+    siebelManager.start(siebelUser, webConfig.getSiebelSettings());
 
     siebelFinalStateListener.start();
 
@@ -393,7 +398,8 @@ public class AdminContext {
     }
   }
 
-  public boolean checkSiebelProperties(Properties p) {
+  public boolean checkSiebelSettings(SiebelSettings p) throws AdminException{
+    p.validate();
     if(siebelManager != null) {
       try{
         siebelManager.checkProperties(p);
@@ -406,7 +412,7 @@ public class AdminContext {
   public void removeUser(String login) throws AdminException {
     try {
       integrityLock.lock();
-      if (login.equals(webConfig.getSiebelProperties().getProperty(SiebelManager.USER))) {
+      if (login.equals(webConfig.getSiebelSettings().getUser())) {
         throw new IntegrityException("fail.delete.user.siebel", login);
       }
       User user = usersManager.getUser(login);
@@ -912,17 +918,17 @@ public class AdminContext {
     webConfig.setSmsSenderAddress(addr);
   }
 
-  public Properties getCdrProperties() {
-    return webConfig.getCdrProperties();
+  public CdrSettings getCdrSettings() {
+    return webConfig.getCdrSettings();
   }
 
-  public void setCdrProperties(Properties props) throws AdminException {
-    cdrDaemon.setCdrOutputDir(new File(props.getProperty(CdrDaemon.CDR_DIR)));
-    webConfig.setCdrProperties(props);
+  public void setCdrSettings(CdrSettings props) throws AdminException {
+    webConfig.setCdrSettings(props);
+    cdrDaemon.setCdrOutputDir(new File(props.getCdrDir()));
   }
 
-  public Properties getSiebelProperties() {
-    return webConfig.getSiebelProperties();
+  public SiebelSettings getSiebelSettings() {
+    return webConfig.getSiebelSettings();
   }
 
   public boolean isAllowUssdPushDeliveries() {
@@ -931,23 +937,23 @@ public class AdminContext {
 
   /**
    * Сохраняет настройки Siebel
-   * @param props настройик Siebel
+   * @param siebelSettings настройик Siebel
    * @return стартовал ли SiebelManager на новых настройках
    * @throws AdminException ошибка валидации или сохранения
    */
-  public boolean setSiebelProperties(Properties props) throws AdminException {
+  public boolean setSiebelSettings(SiebelSettings siebelSettings) throws AdminException {
     try {
       integrityLock.lock();
-      String u = props.getProperty(SiebelManager.USER);
+      String u = siebelSettings.getUser();
       User user = usersManager.getUser(u);
       if (u == null) {
-        throw new UserException("user_not_exist", u);
+        throw new UserException("user_not_exist", siebelSettings.getUser());
       }
 
-      Properties old = webConfig.getSiebelProperties();
-      if (!old.getProperty(SiebelManager.USER).equals(props.getProperty(SiebelManager.USER))) {
+      SiebelSettings old = webConfig.getSiebelSettings();
+      if (!old.getUser().equals(siebelSettings.getUser())) {
         DeliveryFilter filter = new DeliveryFilter();
-        filter.setUserIdFilter(old.getProperty(SiebelManager.USER));
+        filter.setUserIdFilter(old.getUser());
         final boolean[] notExist = new boolean[]{true};
         deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter, 1, new Visitor<mobi.eyeline.informer.admin.delivery.Delivery>() {
           public boolean visit(Delivery value) throws AdminException {
@@ -959,18 +965,19 @@ public class AdminContext {
           }
         });
         if (!notExist[0]) {
-          throw new SiebelException("can_not_change_user", old.getProperty(SiebelManager.USER));
+          throw new SiebelException("can_not_change_user", old.getUser());
         }
       }
+
 
       boolean siebelStarted = false;
       try {
         siebelFinalStateListener.externalLock();
-        siebelFinalStateListener.setPeriodSec(Integer.parseInt(props.getProperty(SiebelFinalStateListener.PERIOD_PARAM)));
+        webConfig.setSiebelSettings(siebelSettings);
+        siebelFinalStateListener.setPeriodSec(siebelSettings.getStatsPeriod());
         siebelManager.stop();
         try {
-          Properties _p = new Properties();
-          _p.putAll(props);
+          SiebelSettings _p = new SiebelSettings(siebelSettings);
           siebelManager.start(user, _p);
           if(!siebelFinalStateListener.isStarted()) {
             siebelFinalStateListener.start();
@@ -982,7 +989,6 @@ public class AdminContext {
       } finally {
         siebelFinalStateListener.externalUnlock();
       }
-      webConfig.setSiebelProperties(props);
       return siebelStarted;
     } finally {
       integrityLock.unlock();
@@ -1224,8 +1230,8 @@ public class AdminContext {
 
     public void restrictDelivery(String login, String password, Integer deliveryId) throws AdminException {
       synchronized (getLock(deliveryId)) {
-          setDeliveryRestriction(login, password, deliveryId, true);
-          deliveryManager.pauseDelivery(login, password, deliveryId);
+        setDeliveryRestriction(login, password, deliveryId, true);
+        deliveryManager.pauseDelivery(login, password, deliveryId);
       }
     }
 

@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin;
 
+import mobi.eyeline.informer.admin.cdr.CdrSettings;
+import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
@@ -23,8 +25,8 @@ class WebConfigSettings {
   private Properties javaMailProperties;
   private Address smsSenderAddress;
   private Properties notificationTemplates;
-  private Properties siebelProperties;
-  private Properties cdrProperties;
+  private SiebelSettings siebelSettings;
+  private CdrSettings cdrSettings;
   private boolean allowUssdPushDeliveries;
 
   InstallationType getInstallationType() {
@@ -109,7 +111,7 @@ class WebConfigSettings {
     this.smsSenderAddress = new Address(smsSenderAddress);
   }
 
-  void setNotificationTemplates(Properties notificationTemplates) {
+  void setNotificationTemplates(Properties notificationTemplates) throws AdminException{
     validateNotificationTemplates(notificationTemplates);
     this.notificationTemplates = cloneProps(notificationTemplates);
   }
@@ -118,20 +120,22 @@ class WebConfigSettings {
     return cloneProps(notificationTemplates);
   }
 
-  void setSiebelProperties(Properties siebelProperties) {
-    this.siebelProperties = cloneProps(siebelProperties);
+  void setSiebelSettings(SiebelSettings siebelSettings) throws AdminException{
+    siebelSettings.validate();
+    this.siebelSettings = new SiebelSettings(siebelSettings);
   }
 
-  Properties getSiebelProperties() {
-    return cloneProps(siebelProperties);
+  SiebelSettings getSiebelSettings() {
+    return new SiebelSettings(siebelSettings);
   }
 
-  Properties getCdrProperties() {
-    return cloneProps(cdrProperties);
+  CdrSettings getCdrSettings() {
+    return new CdrSettings(cdrSettings);
   }
 
-  void setCdrProperties(Properties cdrProperties) {
-    this.cdrProperties = cloneProps(cdrProperties);
+  void setCdrSettings(CdrSettings cdrSettings) throws AdminException{
+    cdrSettings.validate();
+    this.cdrSettings = new CdrSettings(cdrSettings);
   }
 
   boolean isAllowUssdPushDeliveries() {

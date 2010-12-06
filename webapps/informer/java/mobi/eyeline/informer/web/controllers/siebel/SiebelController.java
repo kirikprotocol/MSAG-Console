@@ -1,15 +1,17 @@
 package mobi.eyeline.informer.web.controllers.siebel;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.siebel.SiebelManager;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelFinalStateListener;
+import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ResourceBundle;
 
 /**
  * @author Aleksandr Khalitov
@@ -36,25 +38,40 @@ public class SiebelController extends InformerController {
 
   private int statsPeriod;
 
+  private boolean init;
+
   public SiebelController() {
 
     config = getConfig();
 
-    Properties ps = config.getSiebelProperties();
+    if(getRequestParameter("siebel_init") == null) {
 
-    timeout = Integer.parseInt(ps.getProperty(SiebelManager.TIMEOUT));
-    jdbcSource = ps.getProperty(SiebelManager.JDBC_SOURCE);
-    jdbcLogin = ps.getProperty(SiebelManager.JDBC_USER);
-    jdbcPassword = ps.getProperty(SiebelManager.JDBC_PASSWORD);
-    dbType = ps.getProperty(SiebelManager.DB_TYPE);
-    siebelUser = ps.getProperty(SiebelManager.USER);
-    removeOnStop = Boolean.valueOf(ps.getProperty(SiebelManager.REMOVE_ON_STOP_PARAM));
-    statsPeriod = Integer.parseInt(ps.getProperty(SiebelFinalStateListener.PERIOD_PARAM));
+      SiebelSettings ps = config.getSiebelSettings();
+
+      timeout = ps.getTimeout();
+      jdbcSource = ps.getJdbcSource();
+      jdbcLogin = ps.getJdbcLogin();
+      jdbcPassword = ps.getJdbcPassword();
+      dbType = ps.getDbType();
+      siebelUser = ps.getUser();
+      removeOnStop = ps.isRemoveOnStop();
+      statsPeriod = ps.getStatsPeriod();
+
+      init = true;
+    }
 
     if (!config.isSiebelDaemonStarted()) {
       ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
       error = bundle.getString("informer.siebel.daemon.offline");
     }
+  }
+
+  public boolean isInit() {
+    return init;
+  }
+
+  public void setInit(boolean init) {
+    this.init = init;
   }
 
   public List<SelectItem> getUniqueDBTypes() {
@@ -88,7 +105,7 @@ public class SiebelController extends InformerController {
 
   public String save() {
     try {
-      if(!config.setSiebelProperties(getProperties(), getUserName())) {
+      if(!config.setSiebelSettings(getSettings(), getUserName())) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.applying.not.started");
         return null;
       }
@@ -99,24 +116,28 @@ public class SiebelController extends InformerController {
     }
   }
 
-  private Properties getProperties() {
-    Properties ps = config.getSiebelProperties();
-    ps.setProperty(SiebelManager.TIMEOUT, Integer.toString(timeout));
-    ps.setProperty(SiebelManager.JDBC_SOURCE, jdbcSource);
-    ps.setProperty(SiebelManager.JDBC_USER, jdbcLogin);
-    ps.setProperty(SiebelManager.JDBC_PASSWORD, jdbcPassword);
-    ps.setProperty(SiebelManager.DB_TYPE, dbType);
-    ps.setProperty(SiebelManager.USER, siebelUser);
-    ps.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.toString(removeOnStop));
-    ps.setProperty(SiebelFinalStateListener.PERIOD_PARAM, Integer.toString(statsPeriod));
+  private SiebelSettings getSettings() {
+    SiebelSettings ps = config.getSiebelSettings();
+    ps.setTimeout(timeout);
+    ps.setJdbcSource(jdbcSource);
+    ps.setJdbcLogin(jdbcLogin);
+    ps.setJdbcPassword(jdbcPassword);
+    ps.setDbType(dbType);
+    ps.setUser(siebelUser);
+    ps.setRemoveOnStop(removeOnStop);
+    ps.setStatsPeriod(statsPeriod);
     return ps;
   }
 
   public String check() {
-    if(config.checkSiebelProperties(getProperties())) {
-      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "informer.siebel.props.correct");
-    }else {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.props.illegal");
+    try {
+      if(config.checkSiebelSettings(getSettings())) {
+        addLocalizedMessage(FacesMessage.SEVERITY_INFO, "informer.siebel.props.correct");
+      }else {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.siebel.props.illegal");
+      }
+    } catch (AdminException e) {
+      addError(e);
     }
     return null;
   }

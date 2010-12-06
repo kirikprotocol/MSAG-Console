@@ -2,7 +2,6 @@ package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
 import mobi.eyeline.informer.admin.cdr.CdrDaemon;
-import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.contentprovider.TestContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.TestDeliveryChangesDetector;
@@ -20,11 +19,6 @@ import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
 import mobi.eyeline.informer.admin.restriction.TestRestrictionsManager;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
-import mobi.eyeline.informer.admin.siebel.SiebelManager;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelDeliveries;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelFinalStateListener;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelUserManager;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
@@ -263,7 +257,7 @@ public class TestAdminContext extends AdminContext {
         logger.error(e,e);
       }
       cdrDaemon = new CdrDaemon(new File(workDir, "cdr"),
-          new File(webConfig.getCdrProperties().getProperty(CdrDaemon.CDR_DIR)),
+          new File(webConfig.getCdrSettings().getCdrDir()),
           fileSystem,
           new CdrDeliveriesImpl(this), new CdrUsersImpl(this));
       cdrDaemon.start();
@@ -289,31 +283,6 @@ public class TestAdminContext extends AdminContext {
     }
   }};
 
-  @Override
-  protected void initSiebel(File workFile) throws AdminException, InitException {
-    SiebelDeliveries siebelDeliveries = new SiebelDeliveriesImpl(this);
-    SiebelRegionManager siebelRegions = new SiebelRegionManagerImpl(this);
-    SiebelUserManager userManager = new SiebelUserManagerImpl(this);
-
-    User siebelUser = usersManager.getUser(webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
-
-    if (siebelUser == null) {
-      throw new IntegrityException("user_not_exist", webConfig.getSiebelProperties().getProperty(SiebelManager.USER));
-    }
-
-    siebelManager = new SiebelManager(siebelDeliveries, siebelRegions);
-
-    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries,
-        userManager, workDir,
-        Integer.parseInt(webConfig.getSiebelProperties().getProperty(SiebelFinalStateListener.PERIOD_PARAM)));
-
-    deliveryChangesDetector.addListener(siebelFinalStateListener);
-
-    siebelManager.start(siebelUser, webConfig.getSiebelProperties());
-
-    siebelFinalStateListener.start();
-
-  }
 
   @Override
   public List<Daemon> getDaemons() {

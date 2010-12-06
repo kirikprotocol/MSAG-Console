@@ -34,33 +34,29 @@
 
       <eye:delimiter/>
 
+      <tr:inputHidden value="#{siebel.init}" id="siebel_init"/>
 
-      <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
+      <h:panelGrid style="padding-left:10px;" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
-        <tr:panelLabelAndMessage label="#{msg['informer.siebel.user']}" labelStyle="text-align:left">
-          <h:selectOneMenu value="#{siebel.siebelUser}">
-            <f:selectItems value="#{siebel.uniqueUsers}"/>
-          </h:selectOneMenu>
-        </tr:panelLabelAndMessage>
+        <h:outputText value="#{siebelBundle.user}" style="white-space:nowrap;"/>
+        <h:selectOneMenu value="#{siebel.siebelUser}">
+          <f:selectItems value="#{siebel.uniqueUsers}"/>
+        </h:selectOneMenu>
 
 
-        <tr:panelLabelAndMessage label="#{msg['informer.siebel.timeout']}" labelStyle="text-align:left">
-          <tr:inputText value="#{siebel.timeout}" required="true" simple="true">
-            <eye:validatePositive/>
-          </tr:inputText>
-        </tr:panelLabelAndMessage>
+        <h:outputText value="#{siebelBundle.timeout}" style="white-space:nowrap;"/>
+        <h:inputText value="#{siebel.timeout}"
+                     converterMessage="#{msg['invalid_param_value']} #{siebelBundle.timeout}"/>
 
-        <tr:panelLabelAndMessage label="#{msg['informer.siebel.statsPeriod']}" labelStyle="text-align:left">
-          <tr:inputText value="#{siebel.statsPeriod}" required="true" simple="true">
-            <eye:validatePositive/>
-          </tr:inputText>
-        </tr:panelLabelAndMessage>
+        <h:outputText value="#{siebelBundle.statsPeriod}" style="white-space:nowrap;"/>
+        <h:inputText value="#{siebel.statsPeriod}"
+                     converterMessage="#{msg['invalid_param_value']} #{siebelBundle.statsPeriod}"/>
 
-        <tr:panelLabelAndMessage label="#{msg['informer.siebel.remove.on.stop']}" labelStyle="text-align:left">
-          <tr:selectBooleanCheckbox value="#{siebel.removeOnStop}" simple="true"/>
-        </tr:panelLabelAndMessage>
 
-      </tr:panelFormLayout>
+        <h:outputText value="#{siebelBundle.removeOnStop}" style="white-space:nowrap;"/>
+        <tr:selectBooleanCheckbox value="#{siebel.removeOnStop}" simple="true"/>
+
+      </h:panelGrid>
 
       <eye:delimiter/>
 
@@ -68,22 +64,22 @@
 
         <tr:panelFormLayout inlineStyle="padding-left:10px; align:left; width:35%" labelWidth="30%">
 
-          <tr:panelLabelAndMessage label="#{msg['informer.siebel.db.type']}" labelStyle="text-align:left">
+          <tr:panelLabelAndMessage label="#{siebelBundle.dbType}" labelStyle="text-align:left">
             <h:selectOneMenu value="#{siebel.dbType}">
               <f:selectItems value="#{siebel.uniqueDBTypes}"/>
             </h:selectOneMenu>
           </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.source']}" labelStyle="text-align:left">
-            <tr:inputText columns="100" value="#{siebel.jdbcSource}" required="true" simple="true"/>
+          <tr:panelLabelAndMessage label="#{siebelBundle.jdbcSource}" labelStyle="text-align:left">
+            <tr:inputText columns="100" value="#{siebel.jdbcSource}" simple="true"/>
           </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.login']}" labelStyle="text-align:left">
-            <tr:inputText value="#{siebel.jdbcLogin}" required="true" simple="true"/>
+          <tr:panelLabelAndMessage label="#{siebelBundle.jdbcLogin}" labelStyle="text-align:left">
+            <tr:inputText value="#{siebel.jdbcLogin}" simple="true"/>
           </tr:panelLabelAndMessage>
 
-          <tr:panelLabelAndMessage label="#{msg['informer.siebel.jdbc.password']}" labelStyle="text-align:left">
-            <tr:inputText secret="true" value="#{siebel.jdbcPassword}" required="true" simple="true"/>
+          <tr:panelLabelAndMessage label="#{siebelBundle.jdbcPassword}" labelStyle="text-align:left">
+            <h:inputSecret redisplay="true" value="#{siebel.jdbcPassword}" />
           </tr:panelLabelAndMessage>
 
         </tr:panelFormLayout>

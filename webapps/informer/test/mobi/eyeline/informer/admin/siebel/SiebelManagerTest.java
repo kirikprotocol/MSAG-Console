@@ -58,11 +58,11 @@ public class SiebelManagerTest {
     });
 
     Properties props = new Properties();
-    props.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.FALSE.toString());
-    props.setProperty(SiebelManager.TIMEOUT, Integer.toString(TIMEOUT));
+    props.setProperty("removeOnStop", Boolean.FALSE.toString());
+    props.setProperty("timeout", Integer.toString(TIMEOUT));
 
 
-    siebel.start(siebelUser, props);
+    siebel.start(siebelUser, new SiebelSettings(props));
   }
 
 
@@ -218,10 +218,11 @@ public class SiebelManagerTest {
     siebel.stop();
 
     Properties props = new Properties();
-    props.setProperty(SiebelManager.REMOVE_ON_STOP_PARAM, Boolean.TRUE.toString());
-    props.setProperty(SiebelManager.TIMEOUT, Integer.toString(TIMEOUT));
+    props.setProperty("removeOnStop", Boolean.TRUE.toString());
+    props.setProperty("timeout", Integer.toString(TIMEOUT));
 
-    siebel.start(siebelUser, props);
+
+    siebel.start(siebelUser, new SiebelSettings(props));
 
     dataProvider.setDeliveryStatus(wid, SiebelDelivery.Status.STOPPED);
 

@@ -52,14 +52,6 @@ public class SiebelManager {
 
   private Date lastUpdate;
 
-  public static final String TIMEOUT = "timeout";
-  public static final String USER = "siebelUser";
-  public static final String REMOVE_ON_STOP_PARAM = "removeOnStop";
-  public static final String JDBC_SOURCE = "jdbc.source";
-  public static final String JDBC_USER = "jdbc.user";
-  public static final String JDBC_PASSWORD = "jdbc.password";
-  public static final String DB_TYPE = "jdbc.pool.type";
-
   public SiebelManager(SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
     this.provider = new SiebelDataProviderImpl();
     this.deliveries = deliveries;
@@ -120,17 +112,17 @@ public class SiebelManager {
     provider.setDeliveryStatuses(statuses);
   }
 
-  public void checkProperties(Properties p) throws AdminException {
-    provider.check(p);
+  public void checkProperties(SiebelSettings p) throws AdminException {
+    provider.check(p.getAllProperties());
   }
 
-  public synchronized void start(User siebelUser, Properties ps) throws AdminException {
+  public synchronized void start(User siebelUser, SiebelSettings ps) throws AdminException {
     if (shutdown) {
       lastUpdate = new Date(0);
       this.siebelUser = siebelUser;
-      timeout = Integer.parseInt(ps.getProperty(TIMEOUT));
-      removeOnStop = Boolean.valueOf(ps.getProperty(REMOVE_ON_STOP_PARAM));
-      provider.connect(ps);
+      timeout = ps.getTimeout();
+      removeOnStop = ps.isRemoveOnStop();
+      provider.connect(ps.getAllProperties());
       executor = new ThreadPoolExecutor(5, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
           new LinkedBlockingQueue<Runnable>(), new ThreadFactoryWithCounter("Siebel-Delivery-Processor", 0));
       listenerThread = new Thread(new ProviderListener(), "SiebelProviderListener");

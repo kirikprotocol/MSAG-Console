@@ -47,6 +47,16 @@
       <var>deliveryBundle</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.siebel.SiebelSettings</base-name>
+      <var>siebelBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.cdr.CdrSettings</base-name>
+      <var>cdrBundle</var>
+    </resource-bundle>
+
   </application>
 
   <converter>

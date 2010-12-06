@@ -51,8 +51,6 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   private int periodSec;
 
-  public static final String PERIOD_PARAM = "statsPeriod";
-
   private boolean stop = true;
 
   public SiebelFinalStateListener(SiebelManager siebelManager, SiebelDeliveries deliveries,

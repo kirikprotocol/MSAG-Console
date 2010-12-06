@@ -27,8 +27,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class CdrDaemon implements DeliveryChangeListener{
 
-  public static final String CDR_DIR = "dir";
-
   private static final Logger logger = Logger.getLogger("CDR");
 
   private int fileCompletedInterval = 60000;
