@@ -606,10 +606,10 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
             --end;
             *end = htons(*end);
         }
-        sbm.get_optional().set_messagePayload(ucstext.get(),buflen);
+        sbm.get_optional().set_messagePayload(ucstext.get(),int(buflen));
     } else {
         msg.set_dataCoding(DataCoding::LATIN1);
-        sbm.get_optional().set_messagePayload(text,textLen);
+        sbm.get_optional().set_messagePayload(text,int(textLen));
     }
     sbm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
 
