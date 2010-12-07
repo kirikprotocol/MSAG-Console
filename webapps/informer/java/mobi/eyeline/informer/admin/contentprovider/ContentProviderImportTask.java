@@ -368,6 +368,8 @@ class ContentProviderImportTask implements Runnable {
             abonent = line.substring(0,inx).trim();
             Address ab;
             try {
+              if(abonent.startsWith("7"))      abonent="+"+abonent;
+              else if(abonent.startsWith("8")) abonent="+7"+abonent.substring(1);
               ab = new Address(abonent);
             }
             catch (Exception e) {
