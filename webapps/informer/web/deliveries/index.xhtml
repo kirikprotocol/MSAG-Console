@@ -60,7 +60,9 @@
               <eye:menubaritem><tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}" onclick="if (!confirm('#{msg['informer.deliveries.pause.confirm']}')) return false"/></eye:menubaritem>
               <eye:menubaritem><tr:commandLink text="#{msg['edit.button']}" action="#{deliveries.editGroup}"/></eye:menubaritem>
               <eye:menubaritem><tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:menubaritem>
-              <eye:menubaritem><tr:commandLink text="#{msg['informer.stats']}" action="#{deliveries.statForSelected}"/></eye:menubaritem>
+              <eye:menubaritem>
+                <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" actionListener="#{deliveries.statForSelected}"/>
+              </eye:menubaritem>
             </eye:menubar>
           </eye:button>
           <eye:space/>
@@ -120,7 +122,9 @@
               <eye:menubaritem><tr:commandLink text="#{msg['pause.button']}" action="#{deliveries.pause}" onclick="if (!confirm('#{msg['informer.deliveries.pause.confirm']}')) return false"/></eye:menubaritem>
               <eye:menubaritem><tr:commandLink text="#{msg['edit.button']}" action="#{deliveries.editGroup}"/></eye:menubaritem>
               <eye:menubaritem><tr:commandLink text="#{msg['delete.button']}" action="#{deliveries.delete}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:menubaritem>
-              <eye:menubaritem><tr:commandLink text="#{msg['informer.stats']}" action="#{deliveries.statForSelected}"/></eye:menubaritem>
+              <eye:menubaritem>
+                <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" actionListener="#{deliveries.statForSelected}"/>
+              </eye:menubaritem>
             </eye:menubar>
           </eye:button>
           <eye:space/>

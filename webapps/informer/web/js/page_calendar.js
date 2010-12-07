@@ -2,7 +2,7 @@ function PageCalendar(contentId) {
 
   var bodyElement = document.getElementById(contentId);
   var dateElement = document.getElementById(contentId + '_date');
-  var updateUsingSubmit = navigator.appName == 'Microsoft Internet Explorer';
+  var updateUsingSubmit = false;
 
   /**
    * Ищет форму, которая содержит элемент с указанным идентификатором
@@ -41,11 +41,16 @@ function PageCalendar(contentId) {
       var el = rootElement.children[i];
 
       var pname = el.getAttribute("id");
-      if (pname == null)
+      if (pname == null || pname.length == 0)
         pname = el.getAttribute("name");
-      if (pname != null) {
+      if (pname == null || pname.length == 0)
+        pname = el.id;
+      if (pname == null || pname.length == 0)
+        pname = el.name;
+
+      if (pname != null && pname.length != 0) {
         if (el.tagName == "INPUT" && el.getAttribute("type") == "checkbox") {
-          if (el.getAttribute("checked") != null)
+          if (el.getAttribute("checked") != null && el.getAttribute("checked") == "true")
             args += pname + '=true';
           continue;
         }

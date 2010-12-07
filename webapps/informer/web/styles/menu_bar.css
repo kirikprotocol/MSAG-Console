@@ -1,0 +1,48 @@
+div.menubardiv,
+div.menubardivover {
+  white-space: nowrap;
+  z-index: 10;
+  border: none;
+  visibility: visible;
+}
+
+div.menudiv {
+  cursor: default;
+  padding-bottom: 1px;
+  padding-top: 1px;
+  position: absolute;
+  margin-left: 3px;
+  overflow: auto;
+  z-index: 10;
+}
+
+div.menuitem,
+div.menuitemover {
+  border: none;
+
+  padding-bottom: 1px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 1px;
+
+  position: relative; /* Do not alter this line! */
+
+  white-space: nowrap;
+  z-index: 11;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+div.menuitem *,
+div.menuitemover * {
+  text-decoration: none;
+}
+
+div.menubardiv  {
+  cursor: default;
+}
+
+div.menubardivover {
+  cursor: pointer;
+}
+

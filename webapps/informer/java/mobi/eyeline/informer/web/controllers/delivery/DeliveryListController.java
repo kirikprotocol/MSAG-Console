@@ -7,6 +7,7 @@ import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
 
+import javax.faces.event.ActionEvent;
 import java.util.*;
 
 /**
@@ -128,6 +129,7 @@ public class DeliveryListController extends DeliveryController {
         sb.append(',');
       sb.append(s);
     }
+    
     return sb.toString();
   }
 
@@ -172,13 +174,12 @@ public class DeliveryListController extends DeliveryController {
     return "DELIVERY_EDIT_GROUP";
   }
 
-  public String statForSelected() {
+  public void statForSelected(ActionEvent e) {
     if(selected == null || selected.isEmpty())
-      return null;
+      return;
 
     getRequest().put("delivery", getSelectedAsString());
-    selected = null;
-    return "STATS_MESSAGES_BY_PERIOD_FOR_DELIVERIES";
+    selected = null;    
   }
 
   public String pause() {
