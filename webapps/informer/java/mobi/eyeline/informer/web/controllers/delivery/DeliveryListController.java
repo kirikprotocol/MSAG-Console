@@ -142,6 +142,7 @@ public class DeliveryListController extends DeliveryController {
           addError(e);
         }
       }
+      selected = null;
     }
     return null;
   }
@@ -157,6 +158,7 @@ public class DeliveryListController extends DeliveryController {
           addError(e);
         }
       }
+      selected = null;
     }
     return null;
   }
