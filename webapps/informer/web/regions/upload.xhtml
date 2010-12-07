@@ -26,6 +26,11 @@
           <h:outputText style="white-space:nowrap;" value="#{msg['informer.upload.label']}"/>
           <tr:inputFile columns="50" value="#{regionsUpload.file}" simple="true"/>
 
+          <h:outputText style="white-space:nowrap;" value="#{msg['regions.upload.encoding']}"/>
+          <h:selectOneMenu value="#{regionsUpload.charset}">
+            <f:selectItems value="#{regionsUpload.charsets}"/>            
+          </h:selectOneMenu>
+
         </h:panelGrid>
 
         <eye:delimiter/>

@@ -6,9 +6,11 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.UploadController;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
+import javax.faces.model.SelectItem;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -76,6 +78,28 @@ public class RegionsUploadController extends UploadController {
     return r;
   }
 
+  private String charset;
+
+  public String getCharset() {
+    return charset;
+  }
+
+  public void setCharset(String charset) {
+    this.charset = charset;
+  }
+
+  public List<SelectItem> getCharsets() {
+    Locale l = getLocale();
+    List<SelectItem> result = new ArrayList<SelectItem>(4);
+    Charset c = Charset.forName("utf-8");
+    result.add(new SelectItem(c.name(), c.displayName(l)));
+    c = Charset.forName("windows-1251");
+    result.add(new SelectItem(c.name(), c.displayName(l)));
+    c = Charset.forName("koi8-r");
+    result.add(new SelectItem(c.name(), c.displayName(l)));
+    return result;
+  }
+
   @SuppressWarnings({"EmptyCatchBlock"})
   @Override
   protected void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception {
@@ -83,7 +107,7 @@ public class RegionsUploadController extends UploadController {
     maximum = 3 * ((int) file.getLength());
     BufferedReader is = null;
     try {
-      is = new BufferedReader(new InputStreamReader(file.getInputStream()));
+      is = new BufferedReader(new InputStreamReader(file.getInputStream(), Charset.forName(charset)));
       String line;
       Region r = null;
       while ((line = is.readLine()) != null && !isStoped()) {
