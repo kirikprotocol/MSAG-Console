@@ -39,6 +39,13 @@ Region::~Region()
 }
 
 
+void Region::setSmscId( const char* smscId )
+{
+    MutexGuard mg(lock_);
+    smscId_ = smscId;
+}
+
+
 void Region::swap( Region& r )
 {
     MutexGuard mg(lock_);

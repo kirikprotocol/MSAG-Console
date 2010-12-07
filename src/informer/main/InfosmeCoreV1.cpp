@@ -854,11 +854,16 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
     if (!ptr) {
         throw InfosmeException(EXC_NOTFOUND,"smsc '%s' not found",smscId);
     }
+    RegionPtr* rptr = regions_.GetPtr(0);
+    if (!rptr) {
+        throw InfosmeException(EXC_NOTFOUND,"default region is not found");
+    }
     RegionSenderPtr* regptr = regSends_.GetPtr(0);
     if (!regptr) {
         throw InfosmeException(EXC_LOGICERROR,"default RS is not found");
     }
     defaultSmscId_ = smscId;
+    (*rptr)->setSmscId(smscId);
     (*regptr)->assignSender(*ptr);
 }
 

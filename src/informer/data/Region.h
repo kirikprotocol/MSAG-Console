@@ -34,6 +34,7 @@ public:
     const std::vector<std::string>& getMasks() const { return masks_; }
 
     void setDeleted( bool del ) { deleted_ = del; }
+    void setSmscId( const char* smscId );
 
     void swap( Region& r );
 
