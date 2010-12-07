@@ -582,8 +582,11 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
         addr = subscriberToAddress(subscriber,len,da.type,da.plan);
         sprintf(buf,"%*.*llu",len,len,ulonglong(addr));
         da.setValue(len,buf);
+        smsc_log_info(log_,"== sendTestSms(%s,.%u.%u.%*.*llu,'%s')",
+                      sourceAddress, ton, npi, len, len, ulonglong(addr),
+                      text );
     }
-    
+
     PduSubmitSm sbm;
     PduPartSm& msg = sbm.get_message();
     msg.set_source(smsc::smpp::Address2PduAddress(oa));
