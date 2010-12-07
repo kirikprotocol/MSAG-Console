@@ -116,9 +116,24 @@ void AdminServer::handle(const messages::LoggerSetCategories& cmd)
 
 void AdminServer::handle(const messages::SendTestSms& cmd)
 {
-  int code=0; //TODO:send sms in sync mode
+  int code;
   messages::SendTestSmsResp resp;
   resp.messageSetSeqNum(cmd.messageGetSeqNum());
+  try{
+    personid_type abnt=parseAddress(cmd.getAbonent().c_str());
+    DlvMode dlvMode;
+    switch(cmd.getDeliveryMode().getValue())
+    {
+      case messages::DeliveryMode::SMS:dlvMode=DLVMODE_SMS;break;
+      case messages::DeliveryMode::USSD_PUSH:dlvMode=DLVMODE_USSDPUSH;break;
+      case messages::DeliveryMode::USSD_PUSH_VLR:dlvMode=DLVMODE_USSDPUSHVLR;break;
+      default:throw InfosmeException(EXC_GENERIC,"Invalid delivery mode value:%d",cmd.getDeliveryMode().getValue());
+    }
+    code=core->sendTestSms(cmd.getSourceAddr().c_str(),abnt,cmd.getText().c_str(),cmd.getFlash(),dlvMode);
+  }catch(InfosmeException& e)
+  {
+    code=-e.getCode();
+  }
   resp.setRespCode(code);
   enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
 }

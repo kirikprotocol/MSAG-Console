@@ -18,7 +18,6 @@ class AdminServer:public eyeline::protogen::ServerBase,public AdminCommandsHandl
 public:
   AdminServer():ServerBase("admin")
   {
-    log=smsc::logger::Logger::getInstance("admin");
     proto.assignHandler(this);
   }
   void assignCore(InfosmeCore* argCore)
@@ -30,8 +29,6 @@ protected:
   InformerAdminProto proto;
 
   InfosmeCore* core;
-
-  smsc::logger::Logger* log;
 
   virtual eyeline::protogen::ProtocolSocketBase* onConnect(net::Socket* clnt,int connId);
   virtual void onHandleCommand(eyeline::protogen::ProtocolSocketBase::Packet& pkt);
