@@ -24,7 +24,7 @@ namespace informer {
 
 typedef enum
 {
-    EXC_GENERIC = 0,
+    EXC_GENERIC = 1,
 
     EXC_DLVLIMITEXCEED,    // number of deliveries exceeded
     EXC_NOTFOUND,          // item not found by id

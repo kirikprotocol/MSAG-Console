@@ -302,7 +302,8 @@ void InfosmeCoreV1::init()
         if (!adminServer_) {
             smsc_log_info(log_,"--- creating admin server ---");
             adminServer_ = new admin::AdminServer();
-            adminServer_->assignCore(this);
+            // NOTE: moved below
+            // adminServer_->assignCore(this);
             adminServer_->Init( cfg->getString("adminHost"),
                                 cfg->getInt("adminPort"),
                                 cfg->getInt("adminHandlers") );
@@ -364,6 +365,10 @@ void InfosmeCoreV1::init()
         }
 
         dlvMgr_->init();
+
+        if (adminServer_) {
+            adminServer_->assignCore(this);
+        }
 
         filename = mainfilename;
         section = "informer";
