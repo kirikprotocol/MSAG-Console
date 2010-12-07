@@ -583,7 +583,7 @@ int SmscSender::sendTestSms( const char*        sourceAddress,
         sprintf(buf,"%*.*llu",len,len,ulonglong(addr));
         da.setValue(len,buf);
         smsc_log_info(log_,"== sendTestSms(%s,.%u.%u.%*.*llu,'%s')",
-                      sourceAddress, ton, npi, len, len, ulonglong(addr),
+                      sourceAddress, da.type, da.plan, len, len, ulonglong(addr),
                       text );
     }
 
