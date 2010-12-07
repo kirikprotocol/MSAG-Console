@@ -1197,34 +1197,13 @@ unsigned SmscSender::scoredObjIsReady( unsigned, ScoredPtrType regionSender )
 }
 
 
-int SmscSender::processScoredObj( unsigned, ScoredPtrType regionSender )
+int SmscSender::processScoredObj( unsigned, ScoredPtrType regionSender, unsigned& objSleep )
 {
     // unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
     const int ret = int(maxScoreIncrement / regionSender->getBandwidth());
-    if ( regionSender->processRegion(currentTime_) ) {
-        return ret;
-    } else {
-        return -ret;
-    }
+    objSleep = regionSender->processRegion(currentTime_);
+    return ( objSleep > 0 ? -ret : ret );
 }
-/*
-        smsc_log_debug(log_,"R=%u processRegion finished, sleep=%u", regionSender.getRegionId(), wantToSleep);
-        if (wantToSleep>0) {
-            // all deliveries want to sleep
-            regionSender.suspend(currentTime_ + wantToSleep);
-            return -inc;
-        } else {
-            // success
-            regionSender.consumeQuant();
-            return inc;
-        }
-    } catch ( std::exception& e ) {
-        smsc_log_debug(log_,"R=%u send exc: %s", regionSender.getRegionId(), e.what());
-        regionSender.suspend(currentTime_ + 1000000U);
-    }
-    return inc;
-}
- */
 
 
 void SmscSender::scoredObjToString( std::string& s, ScoredPtrType regionSender )

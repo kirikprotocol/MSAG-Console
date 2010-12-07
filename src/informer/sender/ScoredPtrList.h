@@ -117,7 +117,11 @@ public:
                 }
 
                 // object is ready
-                const int increment = proc_.processScoredObj( deltaTime, i->second );
+                const int increment = proc_.processScoredObj( deltaTime, i->second, objSleep );
+                if ( objSleep < wantToSleep ) {
+                    // taking actual sleeping time of the object
+                    wantToSleep = objSleep;
+                }
                 ScoreUnit score;
                 if ( increment < 0 ) {
                     score = i->first + ScoreUnit(-increment);

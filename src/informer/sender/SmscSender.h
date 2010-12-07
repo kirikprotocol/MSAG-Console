@@ -124,7 +124,7 @@ private:
     typedef RegionSender* ScoredPtrType;
 
     unsigned scoredObjIsReady( unsigned unused, ScoredPtrType regionSender );
-    int processScoredObj( unsigned unused, ScoredPtrType regionSender );
+    int processScoredObj( unsigned unused, ScoredPtrType regionSender, unsigned& objSleep );
     void scoredObjToString( std::string& s, ScoredPtrType regionSender );
 
     void processExpiredTimers();

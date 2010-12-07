@@ -47,7 +47,9 @@ public:
         return unsigned(speedControl_.isReady(currentTime % flipTimePeriod, maxSnailDelay));
     }
 
-    bool processRegion(usectime_type currentTime);
+    /// process region and return the number of seconds to wait until
+    /// the region is ready (or 0 if the next attept should be immediate).
+    unsigned processRegion(usectime_type currentTime);
 
     void addDelivery( RegionalStorage& ptr );
     void removeDelivery( dlvid_type dlvId );
@@ -64,7 +66,7 @@ private:
     }
 
     unsigned scoredObjIsReady( unsigned unused, ScoredPtrType& dlv );
-    int processScoredObj( unsigned unused, ScoredPtrType& dlv );
+    int processScoredObj( unsigned unused, ScoredPtrType& dlv, unsigned& objSleep );
 
     inline void ref() {
         MutexGuard mg(reflock_);

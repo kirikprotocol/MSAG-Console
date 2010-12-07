@@ -66,7 +66,7 @@ std::string RegionSender::toString() const
 }
 
 
-bool RegionSender::processRegion( usectime_type currentTime )
+unsigned RegionSender::processRegion( usectime_type currentTime )
 {
     try {
         smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
@@ -87,9 +87,11 @@ bool RegionSender::processRegion( usectime_type currentTime )
                           region_->getTimezone()) % aweek );
         MutexGuard mg(lock_);
         // check speed control
-        if ( speedControl_.isReady( currentTime % flipTimePeriod,
-                                    maxSnailDelay ) > 0 ) {
-            return false;
+        const usectime_type delay = 
+            speedControl_.isReady( currentTime % flipTimePeriod,
+                                   maxSnailDelay );
+        if ( delay > 0 ) {
+            return unsigned(delay);
         }
         
         const unsigned toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
@@ -97,17 +99,18 @@ bool RegionSender::processRegion( usectime_type currentTime )
             smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
                            getRegionId(),toSleep);
             speedControl_.suspend((currentTime + toSleep) % flipTimePeriod);
-            return false;
+            return toSleep;
         } else {
             smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
             speedControl_.consumeQuant();
-            return true;
+            return 0;
         }
     } catch ( std::exception& e ) {
         smsc_log_debug(log_,"R=%u send exc: %s",getRegionId(),e.what());
         speedControl_.suspend( (currentTime + tuPerSec) % flipTimePeriod);
     }
-    return false;
+    // wait one second
+    return unsigned(tuPerSec);
 }
 
 
@@ -195,7 +198,7 @@ unsigned RegionSender::scoredObjIsReady( unsigned unused, ScoredPtrType& ptr )
 }
 
 
-int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
+int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr, unsigned& objSleep)
 {
     int nchunks = 0;
     int res;
@@ -211,8 +214,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
                            unsigned(getRegionId()),
                            unsigned(ptr->getDlvId()),
                            ulonglong(msg_.msgId), nchunks);
-            // message is considered to be sent only on response
-            // ptr.messageSent(msg_.msgId, msgtime_type(currentTime_/tuPerSec));
+            objSleep = 0;
             return inc * nchunks;
         } else {
             smsc_log_warn(log_,"R=%u/D=%u/M=%llu send failed, res=%d, nchunks=%d",
@@ -231,6 +233,7 @@ int RegionSender::processScoredObj(unsigned, ScoredPtrType& ptr)
     ptr->retryMessage( msg_.msgId, conn_->getRetryPolicy(),
                        msgtime_type(currentTime_/tuPerSec),
                        res, nchunks);
+    objSleep = 0;
     return -inc;
 }
 
