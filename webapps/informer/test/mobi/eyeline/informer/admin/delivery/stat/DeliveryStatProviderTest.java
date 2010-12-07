@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.delivery.stat;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.util.Functions;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,6 +13,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -25,6 +27,9 @@ import static org.junit.Assert.assertEquals;
 public class DeliveryStatProviderTest {
 
   File statDir;
+  private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
+  private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
+
 
   @Before
   public void before() throws Exception {
@@ -103,7 +108,7 @@ public class DeliveryStatProviderTest {
 
      Calendar c1 = Calendar.getInstance();
      c1.set(2010,10-1,16,12,12);
-     filter.setFromDate(c1.getTime());
+     filter.setFromDate(Functions.convertTime(c1.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE));
      statProvider.accept(filter,new DeliveryStatVisitor(){
        public boolean visit(DeliveryStatRecord rec, int total, int current) {
          records.add(rec);
@@ -114,7 +119,7 @@ public class DeliveryStatProviderTest {
 
     records.clear();
     c1.set(2010,10-1,16,12,14);
-    filter.setFromDate(c1.getTime());
+    filter.setFromDate(Functions.convertTime(c1.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE));
     statProvider.accept(filter,new DeliveryStatVisitor(){
       public boolean visit(DeliveryStatRecord rec, int total, int current) {
         records.add(rec);
@@ -127,7 +132,7 @@ public class DeliveryStatProviderTest {
     records.clear();
     c1.set(2010,10-1,16,12,14);
     filter.setFromDate(null);
-    filter.setTillDate(c1.getTime());
+    filter.setTillDate(Functions.convertTime(c1.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE));
     statProvider.accept(filter,new DeliveryStatVisitor(){
       public boolean visit(DeliveryStatRecord rec, int total, int current) {
         records.add(rec);
@@ -139,9 +144,9 @@ public class DeliveryStatProviderTest {
 
     records.clear();
     c1.set(2010,10-1,16,12,15);
-    filter.setFromDate(c1.getTime());
+    filter.setFromDate(Functions.convertTime(c1.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE));
     c1.set(2010,10-1,16,14,30);
-    filter.setTillDate(c1.getTime());
+    filter.setTillDate(Functions.convertTime(c1.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE));
     statProvider.accept(filter,new DeliveryStatVisitor(){
       public boolean visit(DeliveryStatRecord rec, int total, int current) {
         records.add(rec);
@@ -153,9 +158,9 @@ public class DeliveryStatProviderTest {
 
     records.clear();
     c1.set(2010,10-1,16,12,15);
-    filter.setFromDate(c1.getTime());
+    filter.setFromDate(Functions.convertTime(c1.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE));
     c1.set(2010,10-1,16,14,30);
-    filter.setTillDate(c1.getTime());
+    filter.setTillDate(Functions.convertTime(c1.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE));
     filter.setUser("b");
     statProvider.accept(filter,new DeliveryStatVisitor(){
       public boolean visit(DeliveryStatRecord rec, int total, int current) {

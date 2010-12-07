@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.util.Functions;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import static junit.framework.Assert.*;
 
@@ -29,6 +31,9 @@ public class DeliveriesChangesDetectorTest implements DeliveryChangeListener {
   static File dstStatDir;
   static TestDeliveryChangesDetector producer;
   List stateEventChanges = new ArrayList();
+
+  private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
+  private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
 
   @BeforeClass
   public static void init() throws Exception{
@@ -69,14 +74,14 @@ public class DeliveriesChangesDetectorTest implements DeliveryChangeListener {
     //15,1,"a",1
 
     ChangeDeliveryStatusEvent n = (ChangeDeliveryStatusEvent)stateEventChanges.get(0);
-    assertTrue(n.getEventDate().equals(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083015")));
+    assertTrue(n.getEventDate().equals(Functions.convertTime(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083015"), STAT_TIMEZONE, LOCAL_TIMEZONE)));
     assertTrue(n.getDeliveryId()==1);
     assertTrue(n.getUserId().equals("a"));
     assertTrue(n.getStatus() == DeliveryStatus.Active);
 
     //18,1,"a",0,1,D,0,+79130000001,userdata1
     ChangeMessageStateEvent m = (ChangeMessageStateEvent) stateEventChanges.get(1);
-    assertTrue(m.getEventDate().equals(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083018")));
+    assertTrue(m.getEventDate().equals(Functions.convertTime(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083018"), STAT_TIMEZONE, LOCAL_TIMEZONE)));
     assertTrue(m.getDeliveryId()==1);
     assertTrue(m.getUserId().equals("a"));
     assertTrue(m.getMessageState() == MessageState.Delivered);
@@ -87,7 +92,7 @@ public class DeliveriesChangesDetectorTest implements DeliveryChangeListener {
 
     //18,1,"a",0,2,F,1,+79130000002,userdata2
     m = (ChangeMessageStateEvent) stateEventChanges.get(2);
-    assertTrue(m.getEventDate().equals(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083018")));
+    assertTrue(m.getEventDate().equals(Functions.convertTime(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083018"), STAT_TIMEZONE, LOCAL_TIMEZONE)));
     assertTrue(m.getDeliveryId()==1);
     assertTrue(m.getUserId().equals("a"));
     assertTrue(m.getMessageId()==2);
@@ -98,7 +103,7 @@ public class DeliveriesChangesDetectorTest implements DeliveryChangeListener {
 
     //20,1,"a",0,3,E,2,+79130000003
     m = (ChangeMessageStateEvent) stateEventChanges.get(3);
-    assertTrue(m.getEventDate().equals(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083020")));
+    assertTrue(m.getEventDate().equals(Functions.convertTime(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083020"), STAT_TIMEZONE, LOCAL_TIMEZONE)));
     assertTrue(m.getDeliveryId()==1);
     assertTrue(m.getUserId().equals("a"));
     assertTrue(m.getMessageId()==3);
@@ -109,7 +114,7 @@ public class DeliveriesChangesDetectorTest implements DeliveryChangeListener {
 
     //35,2,"b",2
     n = (ChangeDeliveryStatusEvent)stateEventChanges.get(4);
-    assertTrue(n.getEventDate().equals(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083035")));
+    assertTrue(n.getEventDate().equals(Functions.convertTime(new SimpleDateFormat("yyyyMMddHHmmss").parse("20101112083035"), STAT_TIMEZONE, LOCAL_TIMEZONE)));
     assertTrue(n.getDeliveryId()==2);
     assertTrue(n.getUserId().equals("b"));
     assertTrue(n.getStatus() == DeliveryStatus.Finished);
