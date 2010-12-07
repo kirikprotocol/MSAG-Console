@@ -30,7 +30,7 @@ public:
     }
 
 
-    std::string getDump()
+    std::string getDump(int maxSize=512)
     {
       char buf[32];
       std::string rv;
@@ -40,6 +40,11 @@ public:
       {
         sprintf(buf,"%02x ",(unsigned int)(unsigned char)data[i]);
         rv+=buf;
+        if(rv.length()>maxSize)
+        {
+          rv+="...";
+          break;
+        }
       }
       return rv;
     }

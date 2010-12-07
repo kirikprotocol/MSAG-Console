@@ -96,7 +96,10 @@ void ServerBase::readPackets()
           {
             MutexGuard hmg(handlers[hIdx].mon);
             ProtocolSocketBase::Packet pck=ps->getPacket();
-            smsc_log_debug(log,"read packet:%s",pck.getDump().c_str());
+            if(log->isDebugEnabled())
+            {
+              smsc_log_debug(log,"read packet connId=%d:%s",pck.connId,pck.getDump().c_str());
+            }
             handlers[hIdx].queue.Push(pck);
             handlers[hIdx].mon.notify();
             ps->resetPacket();
@@ -363,7 +366,7 @@ bool ProtocolSocketBase::Write()
     if(outQueue.Count())
     {
       ProtocolSocketBase::Packet p;
-      smsc_log_debug(log,"writing to connId=%d:%s",connId,p.getDump().c_str());
+      smsc_log_debug(log,"writing to connId=%d:%s",connId,p.getDump(256).c_str());
       outQueue.Pop(p);
       wrBuffer=p.data;
       wrBufferSize=p.dataSize;
