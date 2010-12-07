@@ -39,6 +39,19 @@ Region::~Region()
 }
 
 
+void Region::swap( Region& r )
+{
+    MutexGuard mg(lock_);
+    std::swap(regionId_,r.regionId_);
+    name_.swap(r.name_);
+    smscId_.swap(r.smscId_);
+    std::swap(bw_,r.bw_);
+    std::swap(deleted_, r.deleted_ );
+    std::swap(timezone_,r.timezone_);
+    masks_.swap(r.masks_);
+}
+
+
 bool Region::hasEqualMasks( const Region& r ) const
 {
     return ( r.masks_ == masks_ );

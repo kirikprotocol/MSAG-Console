@@ -35,15 +35,7 @@ public:
 
     void setDeleted( bool del ) { deleted_ = del; }
 
-    void swap( Region& r ) {
-        std::swap(regionId_,r.regionId_);
-        name_.swap(r.name_);
-        smscId_.swap(r.smscId_);
-        std::swap(bw_,r.bw_);
-        std::swap(deleted_, r.deleted_ );
-        std::swap(timezone_,r.timezone_);
-        masks_.swap(r.masks_);
-    }
+    void swap( Region& r );
 
     bool hasEqualMasks( const Region& r ) const;
 

@@ -52,6 +52,9 @@ void RegionSender::assignSender( SmscSender* conn )
         conn_ = conn;
         if (conn_) conn_->attachRegionSender(*this);
     }
+    // reset speed control
+    speedControl_.setSpeed(region_->getBandwidth(),
+                           currentTimeMicro() % flipTimePeriod );
 }
 
 
