@@ -6,13 +6,17 @@
 #include "InfosmeException.h"
 #include "util/TimeSource.h"
 #include "core/synchronization/Mutex.hpp"
+#include "logger/Logger.h"
+
+namespace eyeline {
+namespace informer {
 
 namespace {
-using namespace eyeline::informer;
-
 int locoffset = -100000;
 smsc::core::synchronization::Mutex offsetLock_;
-int localOffset()
+}
+
+int getLocalTimezone()
 {
     if (locoffset == -100000 ) {
         smsc::core::synchronization::MutexGuard mg(offsetLock_);
@@ -27,16 +31,13 @@ int localOffset()
             const int res(int(mktime(&now)));
             locoffset = int(curTime) - res;
             assert(locoffset % 3600 == 0);
+            smsc_log_info(smsc::logger::Logger::getInstance("core"),
+                          "local timezone = %d",locoffset);
         }
     }
     return locoffset;
 }
 
-}
-
-
-namespace eyeline {
-namespace informer {
 
 ulonglong msgTimeToYmd( msgtime_type tmp, std::tm* tmb )
 {
@@ -95,7 +96,7 @@ msgtime_type ymdToMsgTime( ulonglong tmp, std::tm* tmb )
         throw InfosmeException(EXC_SYSTEM,"invalid year %d in time buf %llu",tmb->tm_year,tmp);
     }
     tmb->tm_isdst = 0;
-    return msgtime_type(mktime(tmb)+localOffset());
+    return msgtime_type(mktime(tmb) + getLocalTimezone());
 }
 
 

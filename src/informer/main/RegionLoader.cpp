@@ -47,12 +47,19 @@ log_(smsc::logger::Logger::getInstance("regloader"))
                                        sbandwidth.c_str(),rid);
             }
             const XmlStr stimezone = region->getAttribute(XmlStr("timezone"));
-            int timezone, shift = 0;
-            sscanf(stimezone.c_str(),"%d,%n",&timezone,&shift);
-            if (shift == 0) {
-                throw InfosmeException(EXC_CONFIG,"invalid timezone='%s' for region id=%u",
-                                       stimezone.c_str(),rid);
-            } else if ( timezone/3600*3600 != timezone ) {
+            int timezone;
+            if ( strlen(stimezone.c_str()) == 0 ) {
+                // empty
+                timezone = getLocalTimezone();
+            } else {
+                int shift = 0;
+                sscanf(stimezone.c_str(),"%d,%n",&timezone,&shift);
+                if (shift == 0) {
+                    throw InfosmeException(EXC_CONFIG,"invalid timezone='%s' for region id=%u",
+                                           stimezone.c_str(),rid);
+                }
+            }
+            if ( timezone/3600*3600 != timezone ) {
                 throw InfosmeException(EXC_CONFIG,"invalid timezone=%d, it does not divisable by 3600 w/o remainder");
             }
             Region* r = new Region(rid,"default",defaultSmscId,bandwidth,timezone,false,0);

@@ -29,6 +29,9 @@ static const regionid_type anyRegionId = regionid_type(-1);
 /// NOTE: special value 0 is returned as 0.
 ulonglong msgTimeToYmd( msgtime_type theTime, std::tm *tmb = 0 );
 
+/// get local timezone
+int getLocalTimezone();
+
 /// convert YMDHMS time into message time (reverse of msgTimeToYmd).
 /// @param tmb is used as working struct (if supplied), it will be filled
 /// as if gmtime_r(resulte) is invoked.
