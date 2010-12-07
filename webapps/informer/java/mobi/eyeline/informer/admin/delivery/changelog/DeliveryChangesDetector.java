@@ -125,7 +125,8 @@ public class DeliveryChangesDetector implements Runnable {
     BufferedReader reader = null;
     try {
       Calendar c = Calendar.getInstance();
-      c.setTime(new SimpleDateFormat(FILE_NAME_DATE_PATTERN).parse(fileName));
+      c.setTimeZone(STAT_TIMEZONE);
+      c.setTime(Functions.convertTime(new SimpleDateFormat(FILE_NAME_DATE_PATTERN).parse(fileName), STAT_TIMEZONE, LOCAL_TIMEZONE));
       reader = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f)));
       String line = reader.readLine(); // Skip header
       if (line == null)
@@ -189,12 +190,12 @@ public class DeliveryChangesDetector implements Runnable {
           if (userData != null)
             props.putAll(convertUserData(userData));
 
-          notifyListenersOnMessage(new ChangeMessageStateEvent(Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), deliveryId, userId,
+          notifyListenersOnMessage(new ChangeMessageStateEvent(c.getTime(), deliveryId, userId,
               msgId, messageState, smpp_status, addr, props));
         }
         else {
           DeliveryStatus state = type == DeliveryNotificationType.DELIVERY_START ? DeliveryStatus.Active : DeliveryStatus.Finished;
-          stateEventChange = new ChangeDeliveryStatusEvent(state, Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), deliveryId, userId);
+          stateEventChange = new ChangeDeliveryStatusEvent(state, c.getTime(), deliveryId, userId);
           notifyListeners(stateEventChange);
         }
       }
