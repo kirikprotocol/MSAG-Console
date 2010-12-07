@@ -989,7 +989,7 @@ int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
                                rId, ton, npi, len, len, ulonglong(addr));
     }
     const std::string smscId = region->get()->getSmscId();
-    smsc_log_debug(log_,"R=0 is connected to S='%s'", rId, smscId.c_str());
+    smsc_log_debug(log_,"R=%u is connected to S='%s'", rId, smscId.c_str());
     SmscSender** sender = smscs_.GetPtr(smscId.c_str());
     if ( !sender ) {
         throw InfosmeException(EXC_NOTFOUND,"Smsc '%s' is not found",smscId.c_str());
