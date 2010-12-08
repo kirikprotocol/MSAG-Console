@@ -137,30 +137,30 @@ public class CdrDaemonTest {
   public void test() throws Exception{
     CdrDaemon cdr = new CdrDaemon(workDir, dir, FileSystem.getFSForSingleInst(), deliveries, users);
     ChangeMessageStateEvent e = new ChangeMessageStateEvent(
-        sdf.parse("20101112030210"), deliveryId, "a", 1, MessageState.Delivered, 0, new Address("+79529223755"), null
+        sdf.parse("20101112030210"), deliveryId, "a", 1, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
     );
     cdr.messageStateChanged(e);
 
     e = new ChangeMessageStateEvent(
-        sdf.parse("20101112030410"), deliveryId, "a", 2, MessageState.Delivered, 0, new Address("+79529223755"), null
+        sdf.parse("20101112030410"), deliveryId, "a", 2, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
     );
     cdr.messageStateChanged(e);
 
     e = new ChangeMessageStateEvent(
-        sdf.parse("20101112030410"), deliveryId, "a", 3, MessageState.Delivered, 0, new Address("+79529223755"), null
+        sdf.parse("20101112030410"), deliveryId, "a", 3, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
     );
     cdr.messageStateChanged(e);
 
 
     e = new ChangeMessageStateEvent(
-        sdf.parse("20101112030410"), deliveryId, "a", 4, MessageState.Delivered, 0, new Address("+79529223755"), null
+        sdf.parse("20101112030410"), deliveryId, "a", 4, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
     );
     cdr.messageStateChanged(e);
 
 
     Date now = new Date();
     e = new ChangeMessageStateEvent(
-        now, deliveryId, "a", 5, MessageState.Delivered, 0, new Address("+79529223755"), null
+        now, deliveryId, "a", 5, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
     );
     cdr.messageStateChanged(e);
 
@@ -190,7 +190,7 @@ public class CdrDaemonTest {
 
     cdr.setFileCompletedInterval(100000);
     e = new ChangeMessageStateEvent(
-        new Date(), deliveryId, "a", 7, MessageState.Delivered, 0, new Address("+79529223755"), null
+        new Date(), deliveryId, "a", 7, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
     );
     cdr.messageStateChanged(e);
     cdr.roll();       
@@ -198,7 +198,7 @@ public class CdrDaemonTest {
     assertEquals(fs.length, 3);
 
     e = new ChangeMessageStateEvent(
-        new Date(), deliveryId, "a", 8, MessageState.Delivered, 0, new Address("+79529223755"), null
+        new Date(), deliveryId, "a", 8, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
     );
     cdr.messageStateChanged(e);
     fs = dir.listFiles();

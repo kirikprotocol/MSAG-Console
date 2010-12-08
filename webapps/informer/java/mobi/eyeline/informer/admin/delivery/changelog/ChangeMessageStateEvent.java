@@ -22,9 +22,10 @@ public class ChangeMessageStateEvent  {
   private final MessageState messageState;
   private final int smppStatus;
   private final Address address;
+  private final int nsms;
   private final Properties properties;
 
-  public ChangeMessageStateEvent(Date eventDate, int deliveryId, String userId, long messageId, MessageState messageState, int smppStatus, Address address, Properties properties) {
+  public ChangeMessageStateEvent(Date eventDate, int deliveryId, String userId, long messageId, MessageState messageState, int smppStatus, Address address, int nsms, Properties properties) {
     this.eventDate = eventDate;
     this.deliveryId = deliveryId;
     this.userId = userId;
@@ -33,6 +34,11 @@ public class ChangeMessageStateEvent  {
     this.smppStatus = smppStatus;
     this.address = address;
     this.properties = properties;
+    this.nsms = nsms;
+  }
+
+  public int getNsms() {
+    return nsms;
   }
 
   public long getMessageId() {
@@ -78,6 +84,7 @@ public class ChangeMessageStateEvent  {
     sb.append(", messageState=").append(messageState);
     sb.append(", smppStatus=").append(smppStatus);
     sb.append(", address=").append(address);
+    sb.append(", nsms=").append(nsms);
     sb.append(", properties=").append(properties);
     sb.append('}');
     return sb.toString();

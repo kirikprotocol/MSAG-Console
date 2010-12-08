@@ -157,10 +157,12 @@ public class CdrDaemon implements DeliveryChangeListener{
     writer.print(u.getCdrDestination());
     writer.print(',');
     switch (e.getMessageState()) {
-      case Delivered : writer.println('D'); break;
-      case Failed : writer.println('F'); break;
-      case Expired: writer.println('E'); break;
+      case Delivered : writer.print('D'); break;
+      case Failed : writer.print('F'); break;
+      case Expired: writer.print('E'); break;
     }
+    writer.print(',');
+    writer.println(e.getNsms());
     writer.flush();
   }
 

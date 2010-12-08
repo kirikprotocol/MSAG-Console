@@ -18,7 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * Copyright Eyeline.mobi
@@ -89,6 +90,7 @@ public class DeliveriesChangesDetectorTest implements DeliveryChangeListener {
     assertTrue(m.getSmppStatus()==0);
     assertTrue(m.getAddress().getSimpleAddress().equals("+79130000001"));
     assertEquals("1", m.getProperties().getProperty("userdata1"));
+    assertEquals(3, m.getNsms());
 
     //18,1,"a",0,2,F,1,+79130000002,userdata2
     m = (ChangeMessageStateEvent) stateEventChanges.get(2);
@@ -100,6 +102,7 @@ public class DeliveriesChangesDetectorTest implements DeliveryChangeListener {
     assertTrue(m.getSmppStatus()==1);
     assertTrue(m.getAddress().getSimpleAddress().equals("+79130000002"));
     assertEquals("2", m.getProperties().getProperty("userdata2"));
+    assertEquals(4, m.getNsms());
 
     //20,1,"a",0,3,E,2,+79130000003
     m = (ChangeMessageStateEvent) stateEventChanges.get(3);
@@ -111,6 +114,7 @@ public class DeliveriesChangesDetectorTest implements DeliveryChangeListener {
     assertTrue(m.getSmppStatus()==2);
     assertTrue(m.getAddress().getSimpleAddress().equals("+79130000003"));
     assertEquals(0, m.getProperties().size());
+    assertEquals(5, m.getNsms());
 
     //35,2,"b",2
     n = (ChangeDeliveryStatusEvent)stateEventChanges.get(4);

@@ -179,11 +179,12 @@ public class DeliveryChangesDetector implements Runnable {
         String userId = t.nextToken();
         DeliveryNotificationType type = getTypeByInt(Integer.valueOf(t.nextToken()));
         if (type == DeliveryNotificationType.MESSAGE_FINISHED) {
-          //MSG_ID, STATUS, SMPP_STATUS, ADDRESS, USER_DATA
+          //MSG_ID, STATUS, SMPP_STATUS, ADDRESS, NSMS, USER_DATA
           long msgId = Long.valueOf(t.nextToken());
           MessageState messageState = getMessageState(t.nextToken());
           int smpp_status = Integer.valueOf(t.nextToken());
           Address addr = new Address(t.nextToken());
+          int nsms = Integer.parseInt(t.nextToken());
           String userData = null;
           if (t.hasMoreTokens()) userData = t.nextToken();
           Properties props = new Properties();
@@ -191,7 +192,7 @@ public class DeliveryChangesDetector implements Runnable {
             props.putAll(convertUserData(userData));
 
           notifyListenersOnMessage(new ChangeMessageStateEvent(c.getTime(), deliveryId, userId,
-              msgId, messageState, smpp_status, addr, props));
+              msgId, messageState, smpp_status, addr, nsms, props));
         }
         else {
           DeliveryStatus state = type == DeliveryNotificationType.DELIVERY_START ? DeliveryStatus.Active : DeliveryStatus.Finished;
