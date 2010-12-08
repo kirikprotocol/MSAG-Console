@@ -139,6 +139,15 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     });
   }
 
+
+  public String getWorkDir() {
+    return readSettings(new SettingsReader<WebConfigSettings, String>() {
+      public String executeRead(WebConfigSettings settings) {
+        return settings.getWorkDir();
+      }
+    });
+  }
+
   public Properties getJavaMailProperties() {
     return readSettings(new SettingsReader<WebConfigSettings, Properties>() {
       public Properties executeRead(WebConfigSettings settings) {

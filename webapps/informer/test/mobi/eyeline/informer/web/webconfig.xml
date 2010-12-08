@@ -19,6 +19,7 @@
 
   <section name="system">
     <param name="journal dir" type="string">journal</param>
+    <param name="work dir" type="string">work</param>
   </section>
 
   <section name="javamail">

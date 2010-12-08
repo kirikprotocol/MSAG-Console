@@ -101,6 +101,7 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
       XmlConfigSection system = webconfig.getSection("system");
       settings.setJournalDir(system.getString("journal dir"));
+      settings.setWorkDir(system.getString("work dir"));
 
       XmlConfigSection javamail = webconfig.getSection("javamail");
       settings.setJavaMailProperties(javamail.toProperties("", null));

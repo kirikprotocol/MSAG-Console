@@ -197,7 +197,9 @@ public class TestAdminContext extends AdminContext {
       File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
       File statDir = new File(appBaseDir, "stat");
       File statusLogsDir = new File(appBaseDir, "statuslogs");
-      workDir = new File(appBaseDir, "work");
+
+      workDir = new File(webConfig.getWorkDir());
+      
       if(!workDir.exists() && !workDir.mkdirs()) {
         throw new InitException("Can't create work dir: "+workDir.getAbsolutePath());
       }

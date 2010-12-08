@@ -28,6 +28,15 @@ class WebConfigSettings {
   private SiebelSettings siebelSettings;
   private CdrSettings cdrSettings;
   private boolean allowUssdPushDeliveries;
+  private String workDir;
+
+  public String getWorkDir() {
+    return workDir;
+  }
+
+  public void setWorkDir(String workDir) {
+    this.workDir = workDir;
+  }
 
   InstallationType getInstallationType() {
     return installationType;

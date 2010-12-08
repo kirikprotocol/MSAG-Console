@@ -127,7 +127,8 @@ public class AdminContext {
 
       File confDir = new File(servicesDir, "Informer" + File.separatorChar + "conf");
 
-      workDir = new File(appBaseDir, "work");
+      workDir = new File(webConfig.getWorkDir());
+
       if (!workDir.exists() && !workDir.mkdirs()) {
         throw new InitException("Can't create work dir: " + workDir.getAbsolutePath());
       }
