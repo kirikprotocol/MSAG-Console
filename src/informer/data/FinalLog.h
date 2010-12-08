@@ -20,6 +20,7 @@ public:
     FinalLog();
     ~FinalLog();
 
+    /// NOTE: msg.retryCount contains Nsms
     void addMsgRecord( msgtime_type         currentTime,
                        dlvid_type           dlvId,
                        const char*          userId,

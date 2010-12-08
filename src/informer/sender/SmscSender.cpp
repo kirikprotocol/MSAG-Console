@@ -270,9 +270,14 @@ isStopping_(true)
     wQueue_.reset(new DataQueue());
     journal_->init();
     // restore receipt wait queue
+    const msgtime_type curTime = currentTimeSeconds();
     for ( ReceiptList::iterator i = receiptList_.begin();
           i != receiptList_.end(); ++i ) {
         rcptWaitQueue_.insert(std::make_pair(i->endTime,i->rcptId));
+        smsc_log_debug(log_,"S='%s' restore rcpt timer=%+d msgid='%s' R=%u/D=%u/M=%llu",
+                       smscId_.c_str(),
+                       int(i->endTime - curTime), i->rcptId.msgId,
+                       i->drmId.regId, i->drmId.dlvId, i->drmId.msgId );
     }
     retryPolicy_.init(retryConfig);
 }
@@ -377,6 +382,10 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
         if (drm) {
             // we have to cleanup respTimer
             if (drm->respTimer != respWaitQueue_.end()) {
+                smsc_log_debug(log_,"S='%s' clean spurious resp timer seq=%u R=%u/D=%u/M=%llu",
+                               smscId_.c_str(),
+                               drm->respTimer->second,
+                               drm->regId, drm->dlvId, drm->msgId );
                 respWaitQueue_.erase(drm->respTimer);
             }
         } else {
@@ -400,6 +409,12 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
         drm->nchunks = 0;
         drm->trans = info.isTransactional();
         drm->endTime = now + validityTime + getCS()->getReceiptExtraWaitTime();
+        smsc_log_debug(log_,"S='%s' add resp timer=%+d seq=%u R=%u/D=%u/M=%llu, rcpt.endTime=%+d",
+                       smscId_.c_str(),
+                       int(drm->respTimer->first - now),
+                       seqNum,
+                       drm->regId, drm->dlvId, drm->msgId,
+                       int(drm->endTime - now) );
 
         // prepare the sms
         try {
@@ -532,6 +547,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
         DRMTrans drm;
         if (seqnumHash_.Pop(seqNum,drm)) {
             if (drm.respTimer != respWaitQueue_.end()) {
+                smsc_log_debug(log_,"S='%s' on fail remove resp timer seq=%u R=%u/D=%u/M=%llu",
+                               smscId_.c_str(), seqNum,
+                               drm.regId, drm.dlvId, drm.msgId );
                 respWaitQueue_.erase(drm.respTimer);
             }
         }
@@ -895,6 +913,9 @@ bool SmscSender::processQueue( DataQueue& queue )
             }
             if (drm.respTimer != respWaitQueue_.end()) {
                 // remove timer
+                smsc_log_debug(log_,"S='%s' remove resp timer seq=%u R=%u/D=%u/M=%llu",
+                               smscId_.c_str(), rd.seqNum,
+                               drm.regId, drm.dlvId, drm.msgId );
                 respWaitQueue_.erase(drm.respTimer);
             }
 
@@ -974,6 +995,11 @@ bool SmscSender::processQueue( DataQueue& queue )
             }
 
             // adding receipt wait timer
+            smsc_log_debug(log_,"S='%s' adding rcpt timer=%+d msgid='%s' R=%u/D=%u/M=%llu",
+                           smscId_.c_str(),
+                           int(drm.endTime - currentTimeSeconds()),
+                           rd.rcptId.msgId,
+                           drm.regId, drm.dlvId, drm.msgId );
             rcptWaitQueue_.insert(std::make_pair(drm.endTime,rd.rcptId));
 
         } else {
@@ -1237,8 +1263,10 @@ void SmscSender::processExpiredTimers()
                 rt.drmPtr->respTimer = respWaitQueue_.end();
             }
             queueData(rd);
-            smsc_log_debug(log_,"S='%s' expired (%u sec) resp seq=%u",
-                           smscId_.c_str(), unsigned(now - iter->first), rd.seqNum);
+            smsc_log_debug(log_,"S='%s' expired resp timer=%+d seq=%u",
+                           smscId_.c_str(),
+                           int(iter->first - now),
+                           rd.seqNum);
         }
         respWaitQueue_.erase(respWaitQueue_.begin(),iter);
     }
@@ -1256,9 +1284,9 @@ void SmscSender::processExpiredTimers()
             rd.rcptId.setMsgId(iter->second.msgId);
             rd.retry = true;
             queueData(rd);
-            smsc_log_debug(log_,"S='%s' expired (%u sec) rcpt.msgId='%s'",
-                           smscId_.c_str(), unsigned(now - iter->first),
-                           rd.rcptId.msgId);
+            smsc_log_debug(log_,"S='%s' expired rcpt timer=%+d msgId='%s'",
+                           smscId_.c_str(), int(iter->first - now),
+                           rd.rcptId.msgId );
         }
         rcptWaitQueue_.erase(rcptWaitQueue_.begin(),iter);
     }
