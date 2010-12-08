@@ -21,6 +21,19 @@ struct ReceiptId
         *p = '\0';
     }
     char msgId[MSGIDSIZE];
+
+    inline bool operator == ( const ReceiptId& r ) const {
+        register const char* b = msgId;
+        register const char* p = r.msgId;
+        if (b == p) return true;
+        while (true) {
+            if ( *b != *p ) return false;
+            if ( !*b ) return true;
+            ++b;
+            ++p;
+        }
+        return true;
+    }
 };
 
 

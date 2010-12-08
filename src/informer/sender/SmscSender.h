@@ -47,6 +47,7 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
 
     struct ResponseTimer;
     typedef std::multimap< msgtime_type, ResponseTimer > RespWaitQueue;
+    typedef std::multimap< msgtime_type, ReceiptId >     RcptWaitQueue;
 
     struct DRMTrans : public DlvRegMsgId {
         unsigned                nchunks;
@@ -146,9 +147,8 @@ private:
     usectime_type                                     currentTime_;
 
     smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;
-    std::multimap<msgtime_type, ResponseTimer>        respWaitQueue_;
-    // FIXME: optimize make timers ala resptimer
-    std::multimap<msgtime_type, ReceiptId>            rcptWaitQueue_;
+    RespWaitQueue                                     respWaitQueue_;
+    RcptWaitQueue                                     rcptWaitQueue_;
 
     // when process receipt/response.
     smsc::core::synchronization::EventMonitor          receiptMon_;

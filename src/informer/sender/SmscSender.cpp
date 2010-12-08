@@ -896,6 +896,7 @@ bool SmscSender::processQueue( DataQueue& queue )
     ResponseData rd;
     // FIXME: optimize queue (preprocess) to match resp+rcpt
     bool throttled = false;
+    const msgtime_type now = currentTimeSeconds();
     while ( queue.Pop(rd) ) {
 
         smsc_log_debug(log_,"S='%s' processing RD(seq=%u,status=%d,msgid='%s',retry=%d)",
@@ -951,12 +952,14 @@ bool SmscSender::processQueue( DataQueue& queue )
             ReceiptList::iterator iter;
             if ( receiptHash_.Pop(rd.rcptId.msgId,iter) ) {
                 // receipt found in cache, so
+
                 // message is finalized as it has both receipt and response
                 {
                     smsc::core::synchronization::MutexGuard mg(receiptMon_);
                     if (iter == rollingIter_) { ++rollingIter_; }
                     rcptList.splice(rcptList.begin(),receiptList_,iter);
                 }
+                // receipt timer removal is not needed here, as it ain't yet
 
                 // finalize message, ignoring resp status
                 smsc_log_info(log_,"S='%s' R=%u/D=%u/M=%llu ignoring resp status=%d,retry=%d, using status=%d,retry=%d",
@@ -979,7 +982,7 @@ bool SmscSender::processQueue( DataQueue& queue )
                 continue;
             }
 
-            // receipt hash has not been receipt, adding one
+            // receipt hash has not been received, adding one
             iter = rcptList.insert(rcptList.begin(),ReceiptData());
             iter->drmId = drm;
             iter->endTime = drm.endTime;
@@ -997,7 +1000,7 @@ bool SmscSender::processQueue( DataQueue& queue )
             // adding receipt wait timer
             smsc_log_debug(log_,"S='%s' adding rcpt timer=%+d msgid='%s' R=%u/D=%u/M=%llu",
                            smscId_.c_str(),
-                           int(drm.endTime - currentTimeSeconds()),
+                           int(drm.endTime - now),
                            rd.rcptId.msgId,
                            drm.regId, drm.dlvId, drm.msgId );
             rcptWaitQueue_.insert(std::make_pair(drm.endTime,rd.rcptId));
@@ -1009,8 +1012,35 @@ bool SmscSender::processQueue( DataQueue& queue )
             ReceiptList::iterator* piter = receiptHash_.GetPtr(rd.rcptId.msgId);
             if (piter) {
                 ReceiptList::iterator iter = *piter;
+
                 if (iter->responded) {
                     // we have already received a response, finalize
+
+                    // remove the receipt wait timer
+                    {
+                        std::pair<RcptWaitQueue::iterator, RcptWaitQueue::iterator>
+                            range = rcptWaitQueue_.equal_range( iter->endTime );
+                        RcptWaitQueue::iterator ir = range.first;
+                        for ( ; ir != range.second; ++ir ) {
+                            if ( ir->second == iter->rcptId ) {
+                                smsc_log_debug(log_,"S='%s' remove rcpt timer=%+d msgid='%s' R=%u/D=%u/M=%llu",
+                                               smscId_.c_str(),
+                                               int(iter->endTime - now),
+                                               iter->rcptId.msgId,
+                                               iter->drmId.regId, iter->drmId.dlvId, iter->drmId.msgId );
+                                rcptWaitQueue_.erase(ir);
+                                break;
+                            }
+                        }
+                        if ( ir == range.second ) {
+                            smsc_log_debug(log_,"S='%s' notfound rcpt timer=%+d msgid='%s' R=%u/D=%u/M=%llu",
+                                           smscId_.c_str(),
+                                           int(iter->endTime - now),
+                                           iter->rcptId.msgId,
+                                           iter->drmId.regId, iter->drmId.dlvId, iter->drmId.msgId );
+                        }
+                    }
+
                     receiptHash_.Delete(rd.rcptId.msgId);
                     {
                         smsc::core::synchronization::MutexGuard mg(receiptMon_);
@@ -1018,8 +1048,10 @@ bool SmscSender::processQueue( DataQueue& queue )
                         rcptList.splice(rcptList.begin(),receiptList_,iter);
                     }
                     rproc_.receiveReceipt(iter->drmId, retryPolicy_, rd.status, rd.retry, iter->responded );
+
                 } else {
                     // still not responded, modify receipt status
+                    // note: we don't need to clean up rcpt timer here as it is not set yet
                     iter->status = rd.status;
                     iter->retry = rd.retry;
                 }
