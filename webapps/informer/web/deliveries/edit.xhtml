@@ -48,7 +48,7 @@
       <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;border-bottom: 1px solid #E6E3D8;" columnClasses="column100Width, columnTopLeftAlign" >
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.name}"/>
-        <tr:inputText value="#{deliveryEdit.delivery.name}" required="true" simple="true"/>
+        <tr:inputText value="#{deliveryEdit.delivery.name}" simple="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.owner}" rendered="#{deliveryEdit.userInAdminRole}"/>
 
@@ -69,7 +69,7 @@
         </tr:panelGroupLayout>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
-        <tr:inputText converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" required="true" simple="true"/>
+        <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}" converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
         <tr:outputText value="#{deliveryEdit.delivery.startDate}">
@@ -81,7 +81,8 @@
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
-          <h:selectManyCheckbox value="#{deliveryEdit.delivery.activeWeekDays}" required="true" requiredMessage="#{deliveryBundle.activeWeekDays}" converter="weekDaysConverter">
+          <h:selectManyCheckbox converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.activeWeekDays}"
+              value="#{deliveryEdit.delivery.activeWeekDays}" converter="weekDaysConverter">
             <f:selectItems value="#{deliveryEdit.allDays}"/>
           </h:selectManyCheckbox>
           <h:outputText value="&#160;"/>
@@ -89,15 +90,13 @@
 
         <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
         <h:panelGroup>
-          <eye:inputDate value="#{deliveryEdit.activePeriodStart}" required="true" type="short_time"/>
+          <eye:inputDate value="#{deliveryEdit.activePeriodStart}" type="short_time"/>
           <h:outputText value=" - "/>
-          <eye:inputDate value="#{deliveryEdit.activePeriodEnd}" required="true" type="short_time"/>
+          <eye:inputDate value="#{deliveryEdit.activePeriodEnd}" type="short_time"/>
         </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
-        <tr:inputText value="#{deliveryEdit.delivery.priority}" simple="true" required="true" columns="5">
-          <tr:validateLongRange minimum="1" maximum="1000"/>
-        </tr:inputText>
+        <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}" value="#{deliveryEdit.delivery.priority}" size="5"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
         <h:panelGroup>
@@ -116,7 +115,7 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
         <h:panelGroup>
           <h:selectBooleanCheckbox id="smsNotif" value="#{deliveryEdit.smsNotificationCheck}" onchange="document.getElementById('sms').disabled = !this.checked;" style="position: relative; top: 2px; left: -3px;"/>
-          <tr:inputText id="sms" converter="addressConverter" value="#{deliveryEdit.smsNotificationAddress}" simple="true"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.smsNotificationAddress}" id="sms" converter="addressConverter" value="#{deliveryEdit.smsNotificationAddress}"/>
         </h:panelGroup>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
@@ -127,7 +126,7 @@
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.singleText}" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}"/>
         <h:panelGrid columns="1" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}">
-          <tr:inputText value="#{deliveryEdit.delivery.singleText}" rows="3" simple="true" required="true"/>
+          <tr:inputText value="#{deliveryEdit.delivery.singleText}" rows="3" simple="true"/>
           <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}"/>
         </h:panelGrid>
 
@@ -138,7 +137,7 @@
         <tr:selectBooleanCheckbox readOnly="true" value="#{deliveryEdit.flashSecret}" simple="true" rendered="#{deliveryEdit.secret}"/>
 
         <h:outputText style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
-        <h:selectOneMenu id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter"
+        <h:selectOneMenu converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.deliveryMode}" id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" converter="deliveryTypeConverter"
                          onchange="dModeChanged()"
                          style="display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}">
           <f:selectItems value="#{deliveryEdit.uniqueDeliveryModes}"/>

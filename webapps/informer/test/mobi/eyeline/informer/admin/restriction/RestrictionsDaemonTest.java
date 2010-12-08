@@ -305,7 +305,7 @@ public class RestrictionsDaemonTest {
     d.setPriority(15);
     d.setReplaceMessage(true);
     d.setRetryOnFail(true);
-    d.setRetryPolicy("policy1");
+    d.setRetryPolicy("1h");
 
     d.setSvcType("svc1");
     d.setValidityPeriod(new Time(1,0,0));

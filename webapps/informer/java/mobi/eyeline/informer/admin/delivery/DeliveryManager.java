@@ -121,25 +121,18 @@ public class DeliveryManager {
   }
 
 
-  private static void validateDelivery(final Delivery delivery) throws AdminException {
-    if (delivery.isReplaceMessage() && (delivery.getSvcType() == null || delivery.getSvcType().length() == 0)) {
-      throw new DeliveryException("replace_illegal");
-    }
-    if ((delivery.getActivePeriodStart() == null || delivery.getActivePeriodEnd() == null)) {
-      throw new DeliveryException("active_period_illegal");
-    }
-    if (delivery.getSourceAddress() == null) {
-      throw new DeliveryException("source_address_empty");
-    }
-    if (delivery.getStartDate() == null) {
-      throw new DeliveryException("start_date_empty");
-    }
-    if (delivery.getOwner() == null) {
-      throw new DeliveryException("owner_empty");
-    }
-    if (delivery.getName() == null) {
-      throw new DeliveryException("name_empty");
-    }
+  public static void validateDeliveryWithIndividualTexts(DeliveryPrototype delivery) throws AdminException {
+    Delivery d = new Delivery();
+    d.setType(Delivery.Type.IndividualTexts);
+    d.copyFrom(delivery);
+    d.validate();
+  }
+
+  public static void validateDeliveryWithSingleText(DeliveryPrototype delivery) throws AdminException {
+    Delivery d = new Delivery();
+    d.setType(Delivery.Type.SingleText);
+    d.copyFrom(delivery);
+    d.validate();
   }
 
   private void silentDropDelivery(DcpConnection conn, int id) {
@@ -160,14 +153,14 @@ public class DeliveryManager {
     if (delivery.getType() == Delivery.Type.SingleText)
       delivery.setProperty("singleText", "true");
 
-    validateDelivery(delivery);
+    delivery.validate();
     final DcpConnection conn = getDcpConnection(login, password);
     final int id = conn.createDelivery(delivery);
 
     DeliveryState state = new DeliveryState();
     state.setStatus(DeliveryStatus.Paused);
     state.setDate(new Date());
-    conn.changeDeliveryState(id, state);  
+    conn.changeDeliveryState(id, state);
 
     delivery.setId(id);
     if (msDataSource != null) {
@@ -246,7 +239,7 @@ public class DeliveryManager {
       logger.debug("Modify delivery: " + delivery.getName());
     }
 
-    validateDelivery(delivery);
+    delivery.validate();
     DcpConnection conn = getDcpConnection(login, password);
     conn.modifyDelivery(delivery);
 

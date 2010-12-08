@@ -9,7 +9,11 @@ import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * Настройки рассылки
@@ -21,6 +25,12 @@ public class Delivery implements Serializable {
   private static final Logger logger = Logger.getLogger(Delivery.class);
 
   private static final ValidationHelper vh = new ValidationHelper(Delivery.class);
+
+
+  private static final String LAST = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}|:\\*))";
+  private static final String MEDIUM = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}))";
+  public static final Pattern RETRY_POLICY_PATTERN = Pattern.compile("(" + LAST + "|" + MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
+
 
   public static enum Type {
     /**
@@ -99,9 +109,8 @@ public class Delivery implements Serializable {
 
   private void loadDelivery() {
     if (m != null && !loaded) {
-      Delivery d = null;
       try {
-        d = m.getDelivery(login, password, id);
+        Delivery d = m.getDelivery(login, password, id);
         copyFrom(d);
       } catch (AdminException e) {
         logger.error(e);
@@ -148,27 +157,48 @@ public class Delivery implements Serializable {
     this.type = type;
   }
 
+  public void validate() throws AdminException {
+    vh.checkNotNull("sourceAddress", sourceAddress);
+    vh.checkNotEmpty("name", name);
+    vh.checkBetween("priority", priority, 1, 1000);
+    vh.checkNotNull("startDate", startDate);
+    vh.checkNotNull("activePeriodEnd", activePeriodEnd);
+    vh.checkNotNull("activePeriodStart", activePeriodStart);
+    vh.checkSizeGreaterThen("activeWeekDays", activeWeekDays, 0);
+    vh.checkNotEmpty("owner", owner);
+    vh.checkNotNull("deliveryMode", deliveryMode);
+    if (type == Type.SingleText) {
+      vh.checkNotEmpty("singleText", singleText);
+    }
+    if (isReplaceMessage() && (svcType == null || svcType.length() == 0)) {
+      throw new DeliveryException("replace_illegal");
+    }
+    if(retryOnFail) {
+      if(retryPolicy != null &&  retryPolicy.length()>0) {
+        vh.checkMatches("retryPolicy", retryPolicy, RETRY_POLICY_PATTERN);
+      }
+    }
+    if(validityPeriod != null) {
+      vh.checkPositive("validityPeriod", validityPeriod.getHour());
+    }
+  }
+
 
   public Address getSourceAddress() {
     loadDelivery();
     return sourceAddress;
   }
 
-  public void setSourceAddress(Address sourceAddress) throws AdminException {
-    vh.checkNotNull("sourceAddress", sourceAddress);
+  public void setSourceAddress(Address sourceAddress) {
     this.sourceAddress = sourceAddress;
   }
 
   public String getSingleText() {
-      loadDelivery();
+    loadDelivery();
     return singleText;
   }
 
-  public void setSingleText(String singleText) throws AdminException {
-    if (type == Type.IndividualTexts) {
-      throw new DeliveryException("illegal_delivery_type");
-    }
-    vh.checkNotEmpty("singleText", singleText);
+  public void setSingleText(String singleText) {
     this.singleText = singleText;
   }
 
@@ -184,8 +214,7 @@ public class Delivery implements Serializable {
     return name;
   }
 
-  public void setName(String name) throws AdminException {
-    vh.checkNotEmpty("name", name);
+  public void setName(String name) {
     this.name = name;
   }
 
@@ -194,8 +223,7 @@ public class Delivery implements Serializable {
     return priority;
   }
 
-  public void setPriority(int priority) throws AdminException {
-    vh.checkBetween("priority", priority, 1, 1000);
+  public void setPriority(int priority) {
     this.priority = priority;
   }
 
@@ -212,8 +240,7 @@ public class Delivery implements Serializable {
     return startDate;
   }
 
-  public void setStartDate(Date startDate) throws AdminException {
-    vh.checkNotNull("startDate", startDate);
+  public void setStartDate(Date startDate) {
     this.startDate = startDate;
   }
 
@@ -229,8 +256,7 @@ public class Delivery implements Serializable {
     return activePeriodEnd;
   }
 
-  public void setActivePeriodEnd(Time activePeriodEnd) throws AdminException {
-    vh.checkNotNull("activePeriodEnd", activePeriodEnd);
+  public void setActivePeriodEnd(Time activePeriodEnd) {
     this.activePeriodEnd = activePeriodEnd;
   }
 
@@ -238,8 +264,7 @@ public class Delivery implements Serializable {
     return activePeriodStart;
   }
 
-  public void setActivePeriodStart(Time activePeriodStart) throws AdminException {
-    vh.checkNotNull("activePeriodStart", activePeriodStart);
+  public void setActivePeriodStart(Time activePeriodStart) {
     this.activePeriodStart = activePeriodStart;
   }
 
@@ -248,8 +273,7 @@ public class Delivery implements Serializable {
     return activeWeekDays;
   }
 
-  public void setActiveWeekDays(Day[] days) throws AdminException {
-    vh.checkSizeGreaterThen("activeWeekDays", days, 0);
+  public void setActiveWeekDays(Day[] days) {
     this.activeWeekDays = days;
   }
 
@@ -258,9 +282,7 @@ public class Delivery implements Serializable {
     return validityPeriod;
   }
 
-  public void setValidityPeriod(Time validityPeriod) throws AdminException{
-    if (validityPeriod != null)
-      vh.checkPositive("validityPeriod", validityPeriod.getHour());
+  public void setValidityPeriod(Time validityPeriod){
     this.validityPeriod = validityPeriod;
   }
 
@@ -287,8 +309,7 @@ public class Delivery implements Serializable {
     return deliveryMode;
   }
 
-  public void setDeliveryMode(DeliveryMode deliveryMode) throws AdminException {
-    vh.checkNotNull("deliveryMode", deliveryMode);
+  public void setDeliveryMode(DeliveryMode deliveryMode) {
     this.deliveryMode = deliveryMode;
   }
 
@@ -296,8 +317,7 @@ public class Delivery implements Serializable {
     return owner;
   }
 
-  public void setOwner(String owner) throws AdminException {
-    vh.checkNotEmpty("owner", owner);
+  public void setOwner(String owner) {
     this.owner = owner;
   }
 
@@ -389,7 +409,7 @@ public class Delivery implements Serializable {
     if (useDataSm != delivery.useDataSm) return false;
     if (!activePeriodEnd.equals(delivery.activePeriodEnd)) return false;
     if (!activePeriodStart.equals(delivery.activePeriodStart)) return false;
-    
+
     if (!Arrays.equals(activeWeekDays, delivery.activeWeekDays)) return false;
     if (deliveryMode != delivery.deliveryMode) return false;
     if (endDate != null ? !dateFormat.format(endDate).equals(delivery.endDate == null ? null : dateFormat.format(delivery.endDate)) : delivery.endDate != null)
@@ -508,7 +528,7 @@ public class Delivery implements Serializable {
     enableStateChangeLogging = d.enableStateChangeLogging;
     properties.putAll(d.properties);
   }
-  
+
   void copyFrom(DeliveryPrototype d) {
 
     name = d.name;

@@ -120,8 +120,8 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
-  public void checkMaches(String argName, String value, Pattern pattern) throws AdminException {
-    if (!pattern.matcher(value).matches())
+  public void checkMatches(String argName, String value, Pattern pattern) throws AdminException {
+    if (value == null || !pattern.matcher(value).matches())
       throw new ValidationException(paramNameBundle, argName);
   }
 

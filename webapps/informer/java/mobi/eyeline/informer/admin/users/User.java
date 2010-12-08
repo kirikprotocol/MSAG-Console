@@ -406,9 +406,9 @@ public class User implements Serializable {
     vh.checkNotEmpty("firstName", firstName);
     vh.checkNotEmpty("lastName", lastName);
     vh.checkNotEmpty("phone", phone);
-    vh.checkMaches("phone", phone, phonePattern);
+    vh.checkMatches("phone", phone, phonePattern);
     vh.checkNotEmpty("email", email);
-    vh.checkMaches("email", email, emailPattern);
+    vh.checkMatches("email", email, emailPattern);
     vh.checkNotNull("status", status);
     vh.checkNotEmpty("organization", organization);
     vh.checkPositive("smsPerSec", smsPerSec);

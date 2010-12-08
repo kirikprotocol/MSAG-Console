@@ -34,7 +34,8 @@
 
       <h:selectBooleanCheckbox id="editSourceAddr" value="#{deliveryGroupEdit.editSourceAddress}" onchange="document.getElementById('sourceAddr').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
-      <tr:inputText id="sourceAddr" value="#{deliveryGroupEdit.sourceAddress}" simple="true" columns="15" converter="addressConverter"/>
+      <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.sourceAddress}"
+                   id="sourceAddr" value="#{deliveryGroupEdit.sourceAddress}" size="15" converter="addressConverter"/>
 
       <h:selectBooleanCheckbox id="editDeliveryDays" value="#{deliveryGroupEdit.editActiveWeekDays}" onchange="
           for (var i = 0; i&lt;7; i++)
@@ -72,7 +73,7 @@
 
       <h:selectBooleanCheckbox id="editPriority" value="#{deliveryGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
-      <tr:inputText id="priority" value="#{deliveryGroupEdit.priority}" simple="true"  columns="3"/>
+      <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}" id="priority" value="#{deliveryGroupEdit.priority}" size="3"/>
 
       <h:selectBooleanCheckbox id="editRetryPolicy" value="#{deliveryGroupEdit.editRetryPolicy}" onchange="
           document.getElementById('retryPolicy').disabled=!this.checked;
@@ -100,7 +101,8 @@
 
       <h:selectBooleanCheckbox id="editSmsNotification" value="#{deliveryGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
-      <tr:inputText id="smsNotification" value="#{deliveryGroupEdit.smsNotification}" simple="true" converter="addressConverter"/>
+      <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.smsNotificationAddress}"
+                   id="smsNotification" value="#{deliveryGroupEdit.smsNotification}" converter="addressConverter"/>
 
       <h:selectBooleanCheckbox id="editEmailNotification" value="#{deliveryGroupEdit.editEmailNotification}" onchange="document.getElementById('emailNotification').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>

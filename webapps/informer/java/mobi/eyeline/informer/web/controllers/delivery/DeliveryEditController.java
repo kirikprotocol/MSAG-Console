@@ -160,17 +160,9 @@ public class DeliveryEditController extends DeliveryController {
       delivery.setRetryOnFail(true);
       delivery.setRetryPolicy("");
     } else {
-      if (delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
-        return null;
-      }
       delivery.setRetryOnFail(true);
     }
-    
-    if (delivery.getType() == Delivery.Type.SingleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
-      return null;
-    }
+
 
     if (emailNotificationCheck && emailNotificationAddress != null && (emailNotificationAddress = emailNotificationAddress.trim()).length() != 0) {
       delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotificationAddress);
@@ -245,7 +237,7 @@ public class DeliveryEditController extends DeliveryController {
   public void setId(Integer id) {
     this.id = id;
   }
-  
+
   public void setActivePeriodEnd(Date t) throws AdminException {
     if(t==null) delivery.setActivePeriodEnd(null);
     else delivery.setActivePeriodEnd(new Time(t));
@@ -271,7 +263,7 @@ public class DeliveryEditController extends DeliveryController {
     else
       delivery.setValidityPeriod(new Time(period));
   }
-  
+
   public Date getValidityPeriod() {
     if (delivery.getValidityPeriod() == null)
       return null;

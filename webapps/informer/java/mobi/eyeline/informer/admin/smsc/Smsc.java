@@ -159,7 +159,7 @@ public class Smsc {
     for(Map.Entry<String, Collection<Integer>> e : temporaryErrors.entrySet()) {
       String period = e.getKey();
       vh.checkNotEmpty("temporaryErrors", period);
-      vh.checkMaches("temporaryErrors", period, RETRY_POLICY_PATTERN);
+      vh.checkMatches("temporaryErrors", period, RETRY_POLICY_PATTERN);
       vh.checkSizeGreaterThan("temporaryErrors", e.getValue(), 0);
     }
 

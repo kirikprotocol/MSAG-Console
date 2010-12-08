@@ -240,7 +240,7 @@ class ContentProviderImportTask implements Runnable {
               log.debug("Rename remote file at " + ucps + ". Old name: '" + delivery + ".csv.active" + "' new name: '" + delivery+".csv.finished" + "'.");
             connection.rename(delivery + ".csv.active", delivery+".csv.finished");
           } catch (Exception e) {
-            log.error("Unable rename remote file to finished state="+baseName+".csv.planned",e);
+            log.error("Unable rename remote file to finished state="+baseName+".csv.active",e);
           }
         }
 

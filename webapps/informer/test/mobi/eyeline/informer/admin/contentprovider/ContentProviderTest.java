@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.*;
-
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.regions.Region;
@@ -14,8 +13,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.TestUtils;
 
-
-import java.io.*;
+import java.io.File;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -116,11 +116,11 @@ public class ContentProviderTest {
     String[] files = context.getFileSystem().list(userSrcDir);
     String fn=null;
     for(String fName : files) {
-      if(fName.indexOf(".planned")>=0) {
+      if(fName.indexOf(".active")>=0) {
         fn = fName;
       }
     }
-    assertEquals("test.csv.planned",fn);
+    assertEquals("test.csv.active",fn);
 
     files = context.getFileSystem().list(userLocalDir);
     fn=null;

@@ -50,7 +50,7 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     this.delivery = new DeliveryPrototype();
     this.delivery.setStartDate(new Date());
     config.copyUserSettingsToDeliveryPrototype(user, delivery);
-    
+
     this.fact = fact;
     this.singleText = singleText;
     this.config = config;
@@ -130,6 +130,11 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
   }
 
   public CreateDeliveryPage process(String user, Configuration config, Locale locale) throws AdminException {
+    if(delivery.getName() == null || delivery.getName().length() == 0) {
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.name.empty");
+      return null;
+
+    }
     if (secret && (secretMessage == null || (secretMessage = secretMessage.trim()).length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.secret.message.empty");
       return null;
@@ -159,18 +164,16 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     } else if (retryOnFail.equals("default")) {
       delivery.setRetryOnFail(true);
       delivery.setRetryPolicy("");
-    } else if(delivery.getRetryPolicy() == null || !getRetryPoliciesPattern().matcher(delivery.getRetryPolicy()).matches()) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", delivery.getRetryPolicy() == null ? "" : delivery.getRetryPolicy());
-      return null;
     } else {
       delivery.setRetryOnFail(true);
     }
 
-
-    if (singleText && (delivery.getSingleText() == null || delivery.getSingleText().length() == 0)) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_single_text");
-      return null;
+    if(singleText) {
+      config.validateDeliveryWithSingleText(delivery);
+    }else {
+      config.validateDeliveryWithIndividualTexts(delivery);
     }
+
     User u = config.getUser(user);
     DeliveryFilter filter = new DeliveryFilter();
     filter.setNameFilter(delivery.getName());

@@ -79,12 +79,7 @@ public class DeliveryEditGroupController extends DeliveryController{
           addLocalizedMessage(FacesMessage.SEVERITY_WARN, "informer.deliveries.delivery.not.found", i);
         } else {
           if(editSourceAddress) {
-            if(sourceAddress == null) {
-              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.source_address.required");
-              return null;
-            }else {
-              d.setSourceAddress(sourceAddress);
-            }
+            d.setSourceAddress(sourceAddress);
           }
           if(editPriority) {
             d.setPriority(priority);
@@ -93,18 +88,18 @@ public class DeliveryEditGroupController extends DeliveryController{
             d.setEndDate(endDate);
           }
           if(editActivePeriodStart) {
-            if(activePeriodStart == null) {
-              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.active.period.start.required");
-              return null;
+            if(activePeriodStart != null) {
+              d.setActivePeriodStart(new Time(activePeriodStart));
+            }else {
+              d.setActivePeriodStart(null);
             }
-            d.setActivePeriodStart(new Time(activePeriodStart));
           }
           if(editActivePeriodEnd) {
-            if(activePeriodEnd == null) {
-              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.active.period.end.required");
-              return null;
+            if(activePeriodEnd != null) {
+              d.setActivePeriodEnd(new Time(activePeriodEnd));
+            }else {
+              d.setActivePeriodEnd(null);
             }
-            d.setActivePeriodEnd(new Time(activePeriodEnd));
           }
           if(editActiveWeekDays) {
             d.setActiveWeekDays(activeWeekDays);
@@ -129,7 +124,7 @@ public class DeliveryEditGroupController extends DeliveryController{
               d.setValidityPeriod(null);
             }
           }
-          
+
           if(editRetryPolicy) {
             if (retryOnFail.equals("off")) {
               d.setRetryPolicy(null);
@@ -137,9 +132,6 @@ public class DeliveryEditGroupController extends DeliveryController{
             } else if (retryOnFail.equals("default")) {
               d.setRetryPolicy("");
               d.setRetryOnFail(true);
-            } else if (retryPolicy == null || !getRetryPoliciesPattern().matcher(retryPolicy).matches()) {
-              addLocalizedMessage(FacesMessage.SEVERITY_WARN, "deliver.illegal_retry_policy", retryPolicy == null ? "" : retryPolicy);
-              return null;
             } else {
               d.setRetryOnFail(true);
               d.setRetryPolicy(retryPolicy);

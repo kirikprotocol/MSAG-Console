@@ -1,6 +1,5 @@
 package mobi.eyeline.informer.admin.delivery;
 
-import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
@@ -17,7 +16,7 @@ import java.util.Properties;
 public class DeliveryPrototype {
 
   private static final ValidationHelper vh = new ValidationHelper(Delivery.class);
-  
+
   protected String name;
   protected int priority;
   protected boolean transactionMode;
@@ -80,8 +79,7 @@ public class DeliveryPrototype {
     return sourceAddress;
   }
 
-  public void setSourceAddress(Address sourceAddress) throws AdminException {
-    vh.checkNotNull("sourceAddress", sourceAddress);
+  public void setSourceAddress(Address sourceAddress) {
     this.sourceAddress = sourceAddress;
   }
 
@@ -89,8 +87,7 @@ public class DeliveryPrototype {
     return singleText;
   }
 
-  public void setSingleText(String singleText) throws AdminException {
-    vh.checkNotEmpty("singleText", singleText);
+  public void setSingleText(String singleText) {
     this.singleText = singleText;
   }
 
@@ -98,8 +95,7 @@ public class DeliveryPrototype {
     return name;
   }
 
-  public void setName(String name) throws AdminException {
-    vh.checkNotEmpty("name", name);
+  public void setName(String name) {
     this.name = name;
   }
 
@@ -107,8 +103,7 @@ public class DeliveryPrototype {
     return priority;
   }
 
-  public void setPriority(int priority) throws AdminException {
-    vh.checkBetween("priority", priority, 1, 1000);
+  public void setPriority(int priority) {
     this.priority = priority;
   }
 
@@ -124,8 +119,7 @@ public class DeliveryPrototype {
     return startDate;
   }
 
-  public void setStartDate(Date startDate) throws AdminException {
-    vh.checkNotNull("startDate", startDate);
+  public void setStartDate(Date startDate) {
     this.startDate = startDate;
   }
 
@@ -141,8 +135,7 @@ public class DeliveryPrototype {
     return activePeriodEnd;
   }
 
-  public void setActivePeriodEnd(Time activePeriodEnd) throws AdminException {
-    vh.checkNotNull("activePeriodEnd", activePeriodEnd);
+  public void setActivePeriodEnd(Time activePeriodEnd) {
     this.activePeriodEnd = activePeriodEnd;
   }
 
@@ -150,8 +143,7 @@ public class DeliveryPrototype {
     return activePeriodStart;
   }
 
-  public void setActivePeriodStart(Time activePeriodStart) throws AdminException {
-    vh.checkNotNull("activePeriodStart", activePeriodStart);
+  public void setActivePeriodStart(Time activePeriodStart) {
     this.activePeriodStart = activePeriodStart;
   }
 
@@ -159,8 +151,7 @@ public class DeliveryPrototype {
     return activeWeekDays;
   }
 
-  public void setActiveWeekDays(Day[] days) throws AdminException {
-    vh.checkSizeGreaterThen("activeWeekDays", days, 0);
+  public void setActiveWeekDays(Day[] days) {
     this.activeWeekDays = days;
   }
 
@@ -168,9 +159,7 @@ public class DeliveryPrototype {
     return validityPeriod;
   }
 
-  public void setValidityPeriod(Time validityPeriod) throws AdminException{
-    if (validityPeriod != null)
-      vh.checkPositive("validityPeriod", validityPeriod.getHour());
+  public void setValidityPeriod(Time validityPeriod) {
     this.validityPeriod = validityPeriod;
   }
 
@@ -194,8 +183,7 @@ public class DeliveryPrototype {
     return deliveryMode;
   }
 
-  public void setDeliveryMode(DeliveryMode deliveryMode) throws AdminException {
-    vh.checkNotNull("deliveryMode", deliveryMode);
+  public void setDeliveryMode(DeliveryMode deliveryMode) {
     this.deliveryMode = deliveryMode;
   }
 
@@ -203,8 +191,7 @@ public class DeliveryPrototype {
     return owner;
   }
 
-  public void setOwner(String owner) throws AdminException {
-    vh.checkNotEmpty("owner", owner);
+  public void setOwner(String owner) {
     this.owner = owner;
   }
 

@@ -831,11 +831,8 @@ public class AdminContext {
       delivery.setRetryPolicy(u.getPolicyId());
       delivery.setRetryOnFail(true);
     }
-    try {
-      delivery.setPriority(u.getPriority());
-    } catch (AdminException ignored) {
-    }
-
+    
+    delivery.setPriority(u.getPriority());
     Time t;
     if((t = u.getDeliveryStartTime()) != null) {
       delivery.setActivePeriodStart(t);
@@ -1005,6 +1002,14 @@ public class AdminContext {
   }
   public void sendTestSMSNotification(User user, Address address, DeliveryStatus status, Properties notificationTemplates) throws AdminException {
     deliveryNotificationsDaemon.sendTestSMSNotification(user,address,status,notificationTemplates);
+  }
+
+  public void validateDeliveryWithIndividualTexts(DeliveryPrototype delivery) throws AdminException {
+    DeliveryManager.validateDeliveryWithIndividualTexts(delivery);
+  }
+
+  public void validateDeliveryWithSingleText(DeliveryPrototype delivery) throws AdminException {
+    DeliveryManager.validateDeliveryWithSingleText(delivery);
   }
 
   protected static class SiebelUserManagerImpl implements SiebelUserManager {

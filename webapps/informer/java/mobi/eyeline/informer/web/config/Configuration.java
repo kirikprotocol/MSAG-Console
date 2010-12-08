@@ -513,6 +513,14 @@ public class Configuration {
     context.verifyCPSettings(u, ucps);
   }
 
+  public void validateDeliveryWithSingleText(DeliveryPrototype delivery) throws AdminException {
+    context.validateDeliveryWithSingleText(delivery);
+  }
+
+  public void validateDeliveryWithIndividualTexts(DeliveryPrototype delivery) throws AdminException {
+    context.validateDeliveryWithIndividualTexts(delivery);
+  }
+
   public enum ConfigType {
     CONFIG, USERS
   }
