@@ -61,11 +61,24 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       retryOnFail = "off";
     }
 
+    User u = config.getUser(user);
+
     String p = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
     if (p != null) {
       smsNotificationAddress = new Address(p);
+      smsNotificationCheck = true;
+    } else if (u.getPhone() != null) {
+      smsNotificationAddress = new Address(u.getPhone());
     }
-    emailNotificationAddress = delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
+
+    p = delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
+    if (p != null) {
+      emailNotificationAddress = p;
+      emailNotificationCheck = true;
+    } else if (u.getEmail() != null) {
+      emailNotificationAddress = u.getEmail();
+    }
+
     secret = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET));
     secretFlash = Boolean.valueOf(delivery.getProperty(UserDataConsts.SECRET_FLASH));
     secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);

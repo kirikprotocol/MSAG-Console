@@ -270,7 +270,8 @@ class DcpConverter {
     }
     if (di.hasUserData()) {
       Map<String, String> uD = convertUserData(di.getUserData());
-      result.addProperties(uD);
+      if (uD != null)
+        result.addProperties(uD);
     }
     return result;
   }

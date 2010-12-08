@@ -275,7 +275,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         s.setString("host",ucps.getHost());
         if(ucps.getPort()!=null) s.setInt("port",ucps.getPort());
         s.setString("login",ucps.getLogin());
-        s.setString("password",ucps.getLogin());
+        s.setString("password",ucps.getPassword());
       }
       s.setString("directory",ucps.getDirectory());
       s.setString("encoding",ucps.getEncoding());

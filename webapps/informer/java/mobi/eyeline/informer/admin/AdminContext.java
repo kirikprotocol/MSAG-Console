@@ -194,6 +194,8 @@ public class AdminContext {
 
       contentProviderDaemon.start();
 
+      deliveryChangesDetector.addListener(contentProviderDaemon);
+
 
       cdrDaemon = new CdrDaemon(new File(workDir, "cdr"),
           new File(webConfig.getCdrSettings().getCdrDir()),
@@ -803,10 +805,10 @@ public class AdminContext {
     if (u.getSourceAddr() != null) {
       delivery.setSourceAddress(u.getSourceAddr());
     }
-    if (u.getEmail() != null) {
+    if (u.getEmail() != null && u.isEmailNotification()) {
       delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, u.getEmail());
     }
-    if (u.getPhone() != null) {
+    if (u.getPhone() != null && u.isSmsNotification()) {
       delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, u.getPhone());
     }
     if (u.getDeliveryType() != null) {

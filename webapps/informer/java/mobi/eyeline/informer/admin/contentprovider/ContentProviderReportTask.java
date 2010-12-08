@@ -43,7 +43,7 @@ class ContentProviderReportTask implements Runnable{
           int deliveryId = Integer.valueOf(sId);
           reader = new BufferedReader(new InputStreamReader(context.getFileSystem().getInputStream(f), "utf-8"));
           String userName = reader.readLine().trim();
-          createReport(deliveryId, userName);
+          handleDeliveryFinalization(deliveryId, userName);
         }
         catch (Exception e) {
           log.error("error processing file " + f.getAbsolutePath());
@@ -71,46 +71,74 @@ class ContentProviderReportTask implements Runnable{
     }
   }
 
-  private void createReport(int deliveryId, String userName) throws AdminException, UnsupportedEncodingException {
+  private void handleDeliveryFinalization(int deliveryId, String userName) throws AdminException, UnsupportedEncodingException {
     User user = context.getUser(userName);
-    if (user != null && user.isCreateReports() && user.getCpSettings()!=null) {
+    if (user != null && user.getCpSettings()!=null) {
+
       Delivery d = context.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
+
       for(UserCPsettings ucps : user.getCpSettings()) {
+
         File userDir = userDirResolver.getUserLocalDir(userName,ucps);
         if(userDir.exists()) {
+
           //check was imported
           File reportFile = new File(userDir, d.getName() + ".rep." + deliveryId);
+
           if (context.getFileSystem().exists(reportFile)) {
-            PrintStream ps = null;
-            try {
-              String encoding = ucps.getEncoding();
-              if(encoding==null) encoding="UTF-8";
-              ps = new PrintStream(context.getFileSystem().getOutputStream(reportFile, true), true, encoding);
-              final PrintStream psFinal = ps;
-              MessageFilter filter = new MessageFilter(deliveryId, d.getStartDate(), new Date());
-              context.getMessagesStates(user.getLogin(), user.getPassword(), filter, 1000, new Visitor<Message>() {
-                public boolean visit(Message mi) throws AdminException {
-                  String result = "";
-                  result = mi.getState().toString() + ((mi.getErrorCode()) != null ? (" errCode=" + mi.getErrorCode()) : "");
-                  ContentProviderReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);
-                  return true;
-                }
-              });
-            }
-            finally {
-              if (ps != null) try {
-                ps.close();
-              }
-              catch (Exception e) {
-              }
+            if (user.isCreateReports()) {
+              createReport(deliveryId, reportFile, user, d, ucps);
               File finReportFile = new File(userDir, d.getName() + ".report");
               context.getFileSystem().rename(reportFile, finReportFile);
 
+            } else {
+              createFinalizationFile(new File(userDir, d.getName() + ".fin"));
+              context.getFileSystem().delete(reportFile);
             }
-            break;
+            return;
           }
         }
       }
+    }
+  }
+
+  private void createFinalizationFile(File file) throws AdminException {
+    OutputStream os = null;
+    try {
+      os = context.getFileSystem().getOutputStream(file, false);
+    } finally {
+      if (os != null)
+        try {
+          os.close();
+        } catch (IOException ignored) {}
+    }
+  }
+
+  private void createReport(int deliveryId, File reportFile, User user, Delivery d, UserCPsettings ucps) throws AdminException, UnsupportedEncodingException {
+
+    PrintStream ps = null;
+    try {
+      String encoding = ucps.getEncoding();
+      if(encoding==null) encoding="UTF-8";
+
+      ps = new PrintStream(context.getFileSystem().getOutputStream(reportFile, true), true, encoding);
+      final PrintStream psFinal = ps;
+      MessageFilter filter = new MessageFilter(deliveryId, d.getStartDate(), new Date());
+      context.getMessagesStates(user.getLogin(), user.getPassword(), filter, 1000, new Visitor<Message>() {
+        public boolean visit(Message mi) throws AdminException {
+          String result = "";
+          result = mi.getState().toString() + ((mi.getErrorCode()) != null ? (" errCode=" + mi.getErrorCode()) : "");
+          ContentProviderReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);
+          return true;
+        }
+      });
+
+    } finally {
+      if (ps != null) try {
+        ps.close();
+      } catch (Exception ignored) {}
+
+
     }
   }
 

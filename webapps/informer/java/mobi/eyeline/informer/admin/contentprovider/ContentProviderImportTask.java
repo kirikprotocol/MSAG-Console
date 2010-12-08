@@ -14,9 +14,7 @@ import mobi.eyeline.informer.util.FileUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,13 +67,19 @@ class ContentProviderImportTask implements Runnable {
     List<String> userDirsNames = new ArrayList<String>();
     if(u.isImportDeliveriesFromDir() && u.getCpSettings()!=null) {
       for(UserCPsettings ucps : u.getCpSettings()) {
+
+        if (log.isDebugEnabled())
+          log.debug("Processing start: '" + ucps + "'. User: '" + u.getLogin() + "'...");
+
         File userDir = userDirResolver.getUserLocalDir(u.getLogin(), ucps);
         try {
           if(!fileSys.exists(userDir)) {
             fileSys.mkdirs(userDir);
           }
           userDirsNames.add(userDir.getName());
+
           downloadUserFilesToLocalDir(u, userDir,ucps);
+
           processFilesInLocalDir(u, userDir, ucps);
         }
         catch (Exception e) {
@@ -87,6 +91,9 @@ class ContentProviderImportTask implements Runnable {
         catch (Exception e) {
           log.error("Result upload error u="+u.getLogin()+" ucps="+ucps.toString(),e);
         }
+
+        if (log.isDebugEnabled())
+          log.debug("Processing finished: '" + ucps + "'. User: '" + u.getLogin() + "'...");
       }
     }
     //clean up unused dirs for this user
@@ -102,40 +109,64 @@ class ContentProviderImportTask implements Runnable {
     }
   }
 
-  private void downloadFile(ContentProviderConnection connection, String remoteFile, File toDit) throws AdminException {
+  private boolean downloadFile(ContentProviderConnection connection, String remoteFile, File toDit) throws AdminException {
     File localTmpFile = new File(toDit, remoteFile + ".tmp");
     if (fileSys.exists(localTmpFile))
       fileSys.delete(localTmpFile);
 
     try {
+      if (log.isDebugEnabled())
+        log.debug("  Download remote file: '" + remoteFile + "' to local '" + localTmpFile + "'.");
       connection.get(remoteFile,localTmpFile);
-      connection.rename(remoteFile, remoteFile+".planned");
-      fileSys.rename(localTmpFile,new File(localTmpFile.getParentFile(), localTmpFile.getName().substring(0,localTmpFile.getName().length()-4)));
+
+      String renameRemoteTo = remoteFile + ".active";
+      if (log.isDebugEnabled())
+        log.debug("  Rename remote file: '" + remoteFile + "' to '" + renameRemoteTo + "'.");
+      connection.rename(remoteFile, renameRemoteTo);
+
+      File renameLocalTmpTo = new File(localTmpFile.getParentFile(), localTmpFile.getName().substring(0,localTmpFile.getName().length()-4));
+      if (log.isDebugEnabled())
+        log.debug("  Rename local file: '" + localTmpFile + "' to '" + renameLocalTmpTo.getName() + "'.");
+      fileSys.rename(localTmpFile,renameLocalTmpTo);
+
+      return true;
     } catch (Exception e) {
       try {fileSys.delete(localTmpFile);} catch (Exception ignored){}
       log.error("Error loading file: " + toDit.getName() + File.separator + remoteFile,e);
+      return false;
     }
   }
 
 
 
   void downloadUserFilesToLocalDir(User user, File userDir, UserCPsettings ucps) throws Exception {
+    if (log.isDebugEnabled())
+      log.debug("Downloading files...");
+
+    int counter = 0;
     ContentProviderConnection connection = null;
     try {
       connection = userDirResolver.getConnection(user,ucps);
       connection.connect();
 
       List<String> remoteFiles = connection.listCSVFiles();
-      for (String remoteFile : remoteFiles)
-        downloadFile(connection, remoteFile, userDir);
+      for (String remoteFile : remoteFiles) {
+        if (downloadFile(connection, remoteFile, userDir))
+          counter++;
+      }
 
     } finally {
+      if (log.isDebugEnabled())
+        log.debug(counter + " files downloaded.");
       if (connection != null) connection.close();
     }
   }
 
 
   private void processFilesInLocalDir(User u, File userDir, UserCPsettings ucps) {
+    if (log.isDebugEnabled())
+      log.debug("Process local files...");
+
     File[] files = fileSys.listFiles(userDir);
     if(files==null) {
       log.error("Can't get directory listing for user="+u.getLogin()+" Dir="+userDir.getAbsolutePath());
@@ -165,48 +196,57 @@ class ContentProviderImportTask implements Runnable {
     }
 
     List<File> uploadFiles = new ArrayList<File>();
+    List<File> files2remove = new ArrayList<File>();
+    Set<String> finishedDeliveries = new HashSet<String>();
     for(File f : files) {
-        if(f.getName().endsWith(".err") || f.getName().endsWith(".errLog") || (u.isCreateReports() && f.getName().endsWith(".report"))) {
-          uploadFiles.add(f);
-        }
+      String fileName = f.getName();
+      if (fileName.endsWith(".err")) {
+        finishedDeliveries.add(fileName.substring(0,fileName.length()-".err".length()));
+        uploadFiles.add(f);
+      } else if (fileName.endsWith(".errLog")) {
+        finishedDeliveries.add(fileName.substring(0,fileName.length()-".errLog".length()));
+        uploadFiles.add(f);
+      } else if (fileName.endsWith(".report")) {
+        finishedDeliveries.add(fileName.substring(0,fileName.length()-".report".length()));
+        uploadFiles.add(f);
+      } else if (fileName.endsWith(".fin")) {
+        finishedDeliveries.add(fileName.substring(0,fileName.length()-".fin".length()));
+        files2remove.add(f);
+      }
     }
 
-    if(!uploadFiles.isEmpty()) {
+    if(!uploadFiles.isEmpty() || !finishedDeliveries.isEmpty()) {
       ContentProviderConnection connection = null;
       String baseName=null;
       try {
         connection = userDirResolver.getConnection(u,ucps);
         connection.connect();
+
         for(File f : uploadFiles) {
           try {
+            if (log.isDebugEnabled())
+              log.debug("Upload file: '" + f.getAbsolutePath() + "' to remote dir: '" + ucps + "'.");
             connection.put(f,f.getName());
-            fileSys.delete(f);
+            files2remove.add(f);
           }
           catch (Exception e) {
             log.error("Unable to upload file="+f.getAbsolutePath()+" to u="+u.getLogin()+" ucps="+ucps.toString(),e);
           }
+        }
+
+        for (String delivery : finishedDeliveries) {
           try {
-            baseName=null;
-            if(f.getName().endsWith(".report")) {
-              baseName = f.getName().substring(0,f.getName().length()-".report".length());
-            }
-            else if(f.getName().endsWith(".err")) {
-              baseName = f.getName().substring(0,f.getName().length()-".err".length());
-            }
-            if(baseName!=null) {
-              String remoteFile = baseName+".csv.planned";
-              connection.rename(remoteFile, baseName+".csv.finished");
-            }
-          }
-          catch (Exception e) {
+            if (log.isDebugEnabled())
+              log.debug("Rename remote file at " + ucps + ". Old name: '" + delivery + ".csv.active" + "' new name: '" + delivery+".csv.finished" + "'.");
+            connection.rename(delivery + ".csv.active", delivery+".csv.finished");
+          } catch (Exception e) {
             log.error("Unable rename remote file to finished state="+baseName+".csv.planned",e);
           }
         }
-        //clean user dir
-        File[] list = fileSys.listFiles(userDir);
-        if(list!=null && list.length==0) {
-          fileSys.delete(userDir);
-        }
+
+        for (File file : files2remove)
+          fileSys.delete(file);
+
       }
       finally {
         if (connection != null) connection.close();
@@ -266,6 +306,9 @@ class ContentProviderImportTask implements Runnable {
     Matcher unfinishedMatcher = unfinishedFileName.matcher(f.getName());
 
     if(unfinishedMatcher.matches()) {
+      if (log.isDebugEnabled())
+        log.debug("  Unfinished file found: '" + f.getAbsolutePath() + "'. According delivery will be deleted.");
+
       File userDir = f.getParentFile();
       String ext = unfinishedMatcher.group();
       String baseName = f.getName().substring(0,f.getName().length()-ext.length());
@@ -301,11 +344,15 @@ class ContentProviderImportTask implements Runnable {
       String baseName = fileName.substring(0,fileName.length()-4);
       Integer deliveryId=null;
       try {
+        if (log.isDebugEnabled())
+          log.debug("  Try to create delivery from file: '" + f.getAbsolutePath() + "'. User: '" + u.getLogin() + "'.");
+
         DeliveryPrototype delivery = new DeliveryPrototype();
         delivery.setName(baseName);
-        delivery.setStartDate(new Date(System.currentTimeMillis()));
+        delivery.setStartDate(new Date());
         context.copyUserSettingsToDeliveryPrototype(u.getLogin(),delivery);
         delivery.setSourceAddress(ucps.getSourceAddress());
+        delivery.setEnableStateChangeLogging(true);
         Delivery d = context.createDelivery(u.getLogin(),u.getPassword(),delivery,null);
         deliveryId = d.getId();
         //rename to .csv.<id>
@@ -325,13 +372,16 @@ class ContentProviderImportTask implements Runnable {
               is,
               reportWriter
           ),deliveryId);
-          context.activateDelivery(u.getLogin(),u.getPassword(),deliveryId);
-          fileSys.delete(f);
         }
         finally {
           if(is!=null) try {is.close();} catch (Exception e){}
           if(reportWriter!=null) try {reportWriter.close();} catch (Exception e){}
         }
+        context.activateDelivery(u.getLogin(),u.getPassword(),deliveryId);
+        fileSys.delete(f);
+
+        if (log.isDebugEnabled())
+          log.debug("  Delivery successfully created from file: '" + f.getAbsolutePath() + "'. File was removed.");
       }
       catch (Exception e) {
         handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), u.getPassword(), deliveryId);

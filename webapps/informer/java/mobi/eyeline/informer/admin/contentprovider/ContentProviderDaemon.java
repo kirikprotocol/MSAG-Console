@@ -51,7 +51,7 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
   }
 
   public String getName() {
-    return NAME;  //To change body of implemented methods use File | Settings | File Templates.
+    return NAME;
   }
 
   public synchronized void start() throws AdminException {

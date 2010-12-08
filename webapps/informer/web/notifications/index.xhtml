@@ -31,9 +31,7 @@
       <eye:collapsingGroup label="#{msg['notifications.config.sms']}" opened="true">
         <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.sms.sender.addr']}"/>
-          <tr:inputText id="SMSaddr" value="#{notificationSettings.smsSenderAddress}" simple="true" required="true">
-              <eye:validatePhone/>
-            </tr:inputText>
+          <tr:inputText id="SMSaddr" value="#{notificationSettings.smsSenderAddress}" simple="true" required="true"/>
 
           <h:outputText style="white-space:nowrap;" value="#{msg['notifications.config.delivery.state.activated.sms.template']}"/>
           <tr:inputText rows="3" id="SMStemplateActivated" value="#{notificationSettings.smsTemplateActivated}" simple="true" required="true">

@@ -177,15 +177,15 @@ public class UserEditController extends UserController {
         return null;
       }
 
+      List<UserCPsettings> cpSettings = buildUCPSList();
+      userToEdit.setCpSettings(cpSettings.isEmpty()?null:cpSettings);
+
       if (userId == null) {
         getConfig().addUser(userToEdit, getUserName());
       } else {
         getConfig().updateUser(userToEdit, getUserName());
       }
 
-
-      List<UserCPsettings> cpSettings = buildUCPSList();
-      userToEdit.setCpSettings(cpSettings.isEmpty()?null:cpSettings);
     }
     catch (IllegalArgumentException e) {
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR,"user.edit.invalid.sourceAddress",e.getMessage());
