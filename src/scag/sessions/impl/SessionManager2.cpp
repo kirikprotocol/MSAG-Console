@@ -588,7 +588,7 @@ bool SessionManagerImpl::finalize( Session& session )
     try {
 
         RuleStatus rs;
-        re::RuleEngine::Instance().processSession( session, rs );
+        re::RuleEngine::Instance().finalizeSession( session, rs );
         LongCallContext& lcmCtx = session.getLongCallContext();
         if ( rs.status == STATUS_LONG_CALL ) {
 

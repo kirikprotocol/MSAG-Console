@@ -392,7 +392,9 @@ operationScopes_(0),
 quiet_(quiet)
 {
     ::getlog();
-    if (!quiet_) smsc_log_debug( logc_, "session=%p/%s +1", this, key.toString().c_str() );
+    if (!quiet_) {
+        smsc_log_debug( logc_, "session=%p/%s +1", this, key.toString().c_str() );
+    }
     // clear();
 }
 
@@ -931,6 +933,16 @@ bool Session::getRuleKey( int& serv, int& trans ) const
     serv = st.first;
     trans = st.second;
     return true;
+}
+
+
+bool Session::hasRuleKey( int serv, int trans ) const
+{
+    for ( std::list< std::pair<int,int> >::const_iterator i = initrulekeys_.begin();
+          i != initrulekeys_.end(); ++i ) {
+        if ( i->first == serv && i->second == trans ) return true;
+    }
+    return false;
 }
 
 

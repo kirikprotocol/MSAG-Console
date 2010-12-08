@@ -36,16 +36,6 @@ void Rule::process( SCAGCommand& command, Session& session, RuleStatus& rs, acti
 {
     // smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
 
-    // moved to ruleengine
-    /*
-    if ( session.isNew() )
-    {
-        processSession(session, rs);
-        if(rs.status != STATUS_OK)
-           return;
-    }
-     */
-
     EventHandlerType handlerType = CommandBridge::getHandlerType(command);
 
     // smsc_log_debug(logger,"Event Handlers found. (id=%d)", handlerType);
@@ -78,31 +68,25 @@ void Rule::process( SCAGCommand& command, Session& session, RuleStatus& rs, acti
 }
 
 
-void Rule::processSession( Session& session, RuleStatus& rs )
+void Rule::processSession( Session& session, RuleStatus& rs, const RuleKey& rk )
 {
     // smsc_log_debug(logger,"Process session rule... (%d Event Handlers registered)", Handlers.Count());
 
     try
     {
-        int servid;
-        int transport;
-        // try to obtain the last servid/transport
-        if ( ! session.getRuleKey(servid,transport) ) return;
+        // does session has this key?
+        if ( ! session.hasRuleKey(rk.serviceId,rk.transport) ) return;
 
-        const EventHandlerType eht = (session.isNew(servid,transport) ? EH_SESSION_INIT : EH_SESSION_DESTROY );
+        const EventHandlerType eht = (session.isNew(rk.serviceId,rk.transport) ? EH_SESSION_INIT : EH_SESSION_DESTROY );
 
         if ( Handlers.Exist(eht) ) {
 
             SessionEventHandler* eh = (SessionEventHandler*)Handlers.Get(eht);
-            eh->_process(session, rs);
+            eh->_process(session, rs, rk);
         }
 
         if (rs.status == STATUS_OK) {
-
             session.getLongCallContext().continueExec = false;
-            // setNew is done in RuleEngine
-            // if (session.isNew(servid,transport)) session.setNew(servid,transport,false);
-
         }
 
 //        smsc_log_warn(logger,"session rule: cannot find EventHandler for command");

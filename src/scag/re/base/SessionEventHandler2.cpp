@@ -10,9 +10,14 @@ namespace re {
 
 using namespace session;
 
-void SessionEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming* ) { _process(session, rs); };
+void SessionEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming* ) {
+    throw SCAGException("session event handler should not be invoked directly");
+    // _process(session, rs);
+}
 
-void SessionEventHandler::_process(Session& session, RuleStatus& rs)
+void SessionEventHandler::_process(Session& session,
+                                   RuleStatus& rs,
+                                   const RuleKey& key )
 {
     // smsc_log_debug(logger, "Process SessionEventHandler...");
 
@@ -21,9 +26,8 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
 
     Address abonentAddr( session.sessionKey().toString().c_str() );
 
-    RuleKey key;
-    if ( ! session.getRuleKey( key.serviceId, key.transport ) ) {
-        throw SCAGException("SessionEventHandler: no rule key is set, session=%p", &session);
+    if ( ! session.hasRuleKey( key.serviceId, key.transport ) ) {
+        throw SCAGException("SessionEventHandler: rule key is not found in session=%p", &session);
     }
     int providerId = istr.GetProviderID(key.serviceId);
     if (providerId == 0) {

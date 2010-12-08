@@ -197,6 +197,7 @@ public:
     /// push a rule key onto the rulekey stack
     void pushInitRuleKey( int serviceId, int transport );
     bool getRuleKey( int& serviceId, int& transport ) const;
+    bool hasRuleKey( int serviceId, int transport ) const;
 
     /// drop the given rule and reset expiration time to wait if possible.
     /// expiration time cannot be lowered if there are living services.

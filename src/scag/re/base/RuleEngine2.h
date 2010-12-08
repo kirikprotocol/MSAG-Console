@@ -35,8 +35,8 @@ public:
 
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, actions::CommandProperty& cp, util::HRTiming* hrt = 0 ) = 0;
 
-    /// NOTE: this method is invoked (directly) for session destruction only!
-    virtual void processSession(Session& session, RuleStatus& rs) = 0;
+    /// this method is invoked (directly) for session destruction only!
+    virtual void finalizeSession(Session& session, RuleStatus& rs) = 0;
 
     virtual void updateRule(RuleKey& key) = 0;
     virtual void removeRule(RuleKey& key) = 0;

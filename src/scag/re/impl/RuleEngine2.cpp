@@ -220,7 +220,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
             session.pushInitRuleKey( key.serviceId, key.transport );
             if ( rulePtr ) {
 
-                rulePtr->processSession( session, rs );
+                rulePtr->processSession( session, rs, key );
                 if ( rs.status == STATUS_FAILED ) {
                     session.dropInitRuleKey( key.serviceId, key.transport );
                 }
@@ -257,7 +257,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
         if ( rs.status == STATUS_OK && ac ) {
             int wtime = ac->getDestroyService();
             if ( wtime >= 0 ) {
-                if ( rulePtr ) rulePtr->processSession( session, rs );
+                if ( rulePtr ) rulePtr->processSession( session, rs, key );
                 if ( rs.status == STATUS_OK ) 
                     session.dropInitRuleKey( key.serviceId, key.transport, wtime );
             }
@@ -277,7 +277,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
 }
 
 
-void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
+void RuleEngineImpl::finalizeSession(Session& session, RuleStatus& rs)
 {
     RulesReference rulesRef = getRules();
 
@@ -310,7 +310,7 @@ void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
 
         if (rulePtr) {
 
-            rulePtr->processSession( session, rs );
+            rulePtr->processSession(session, rs, key);
             if ( rs.status == STATUS_LONG_CALL ) {
                 // session.getLongCallContext().continueExec = true;
                 session.getLongCallContext().getActionContext()->setRule( *rulePtr );

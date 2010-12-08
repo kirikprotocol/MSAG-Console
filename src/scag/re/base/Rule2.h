@@ -6,6 +6,7 @@
 // #include "EventHandler2.h"
 #include "IParserHandler2.h"
 #include "RuleStatus2.h"
+#include "RuleKey2.h"
 
 namespace scag2 {
 
@@ -77,7 +78,9 @@ public:
      */
     virtual void process( SCAGCommand& command, sessions::Session& session,
                           RuleStatus& rs, actions::CommandProperty& cp, util::HRTiming* hrt = 0 );
-    virtual void processSession(sessions::Session& session, RuleStatus& rs);
+    virtual void processSession( sessions::Session& session,
+                                 RuleStatus& rs,
+                                 const RuleKey& rk );
 
     Rule(): useCounter(1), transportType(SMPP),logger(0) {logger = Logger::getInstance("scag.re");};
     virtual ~Rule();

@@ -41,7 +41,7 @@ public:
     virtual void updateRule(RuleKey& key);
     virtual void removeRule(RuleKey& key);
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, actions::CommandProperty& cp, util::HRTiming* hrt = 0);
-    virtual void processSession(Session& session, RuleStatus& rs);
+    virtual void finalizeSession(Session& session, RuleStatus& rs);
 
     virtual Hash<TransportType>& getTransportTypeHash() {return TransportTypeHash;}
     virtual Hash<Property>& getConstants() { return ConstantsHash; };

@@ -11,7 +11,7 @@ class SessionEventHandler : public EventHandler
 {
 public:
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming* hrt = 0 );
-    void _process(Session& session, RuleStatus& rs);
+    void _process(Session& session, RuleStatus& rs, const RuleKey& key);
     
     virtual int StrToHandlerId(const std::string& str); //Method return HandlerId from string
 };
