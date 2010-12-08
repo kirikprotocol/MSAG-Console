@@ -527,31 +527,18 @@ public class DeliveryManager {
     userStatsProvider.accept(filter, visitor);
   }
 
-  /**
-   * Возвращает список файлов статистики, удовлетворяющие условиям, накладываемыми в filter.
-   * Если filter == null, то провайдер перебирает все записи.
-   * @param filter  фильтр, описывающий ограничения на файлы
-   * @param endDateInclusive - Включтительно или нет по верхней границе даты фильтра
-   * @throws AdminException если произошла ошибка при обращении к стораджу статистики
-   */
-  public List<File> getStatisticsFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
-    return statsProvider.filterFiles(filter, endDateInclusive);
+
+  public void getStatEntities(StatEntityProvider.EntityVisitor v, Date from, Date till) throws AdminException {
+    userStatsProvider.visitEntities(from, till, v);
+    statsProvider.visitEntities(from, till,  v);
+
   }
 
-  public List<File> getStatisticsFiles(UserStatFilter filter, boolean endDateInclusive) throws AdminException {
-     return userStatsProvider.filterFiles(filter, endDateInclusive);
-   }
-
-
-  /**
-   * Парсит дату из имени файла статистики
-   * @param f - Файл статистики
-   * @return Дата из имени файла
-   * @throws AdminException
-   */
-  public Calendar getCalendarOfStatFile(File f) throws AdminException {
-    return statsProvider.getCalendarOfStatFile(f);
+  public void dropStatEntities(Date from, Date till) throws AdminException {
+    userStatsProvider.dropEntities(from, till);
+    statsProvider.dropEntities(from, till);
   }
+
 
   /**
    * Завершение работы менеджера

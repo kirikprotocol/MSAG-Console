@@ -16,10 +16,7 @@ import java.util.*;
 /**
  * @author Artem Snopkov
  */
-public class UserStatProvider {
-
-  private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
-  private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
+public class UserStatProvider extends StatEntityProvider{
 
   private final File baseDir;
   private final FileSystem fileSys;
@@ -35,31 +32,62 @@ public class UserStatProvider {
     this.filePathFormat = subDirNameFormat + File.separatorChar + "'dlv'HH'.log'";
   }
 
-  private static Date prepareDateForFilesLookup(Date date) {
-    if (date == null)
-      return null;
-    date = Functions.convertTime(date, LOCAL_TIMEZONE, STAT_TIMEZONE);
+  public void visitEntities(Date from, Date till, StatEntityProvider.EntityVisitor visitor) throws AdminException {
+    Date fromDate = prepareDateForFilesLookup(from);
+    Date tillDate = prepareDateForFilesLookup(till);
+
+    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+
+    for (StatFile statFile : files) {
+      if (!visitor.visit(
+          new StatEntity(prepareDateForEntitiesView(statFile.getDate()),
+              new File(baseDir, statFile.getFileName()).length()))) {
+        break;
+      }
+    }
+  }
+
+
+  @Override
+  public synchronized void dropEntities(Date from, Date till) throws AdminException {
+    Date fromDate = prepareDateForFilesLookup(from);
+    Date tillDate = prepareDateForFilesLookup(till);
+
+    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+
     Calendar c = Calendar.getInstance();
-    c.setTime(date);
+    c.setTime(Functions.convertTime(new Date(), LOCAL_TIMEZONE, STAT_TIMEZONE));
+    c.set(Calendar.HOUR_OF_DAY, 0);
     c.set(Calendar.MINUTE, 0);
     c.set(Calendar.SECOND, 0);
     c.set(Calendar.MILLISECOND, 0);
-    return c.getTime();
-  }
+    Date today = c.getTime();
 
-  public List<File> filterFiles(UserStatFilter filter, boolean endDateInclusive) throws AdminException {
-    Date fromDate = prepareDateForFilesLookup(filter.getFromDate());
-    Date tillDate = prepareDateForFilesLookup(filter.getTillDate());
+    Set<File> parents = new HashSet<File>();
+    for (StatFile f : files) {
+      if(f.getDate().before(today)) {
+        File _f = new File(baseDir, f.getFileName());
+        if (_f.exists()) {
+          if (!_f.delete()) {
+            logger.error("Can't remove file: " + _f.getAbsolutePath());
+            throw new DeliveryException("internal_error");
+          }
+        }
+        File _p = _f.getParentFile();
+        if (_p != null) {
+          parents.add(_f.getParentFile());
+        }
+      }
+    }
 
-    List<String> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
-    int last = files.size();
-    if (!endDateInclusive)
-      last--;
-
-    List<File> result = new ArrayList<File>();
-    for (int i=0; i<last; i++)
-      result.add(new File(baseDir, files.get(i)));
-    return result;
+    for(File _p : parents) {
+      if(_p.exists() && _p.list().length == 0) {
+        if(!_p.delete()) {
+          logger.error("Can't remove file: "+_p.getAbsolutePath());
+          throw new DeliveryException("internal_error");
+        }
+      }
+    }
   }
 
   public void accept(UserStatFilter filter, UserStatVisitor visitor) throws AdminException {
@@ -67,7 +95,7 @@ public class UserStatProvider {
     Date fromDate = prepareDateForFilesLookup(filter.getFromDate());
     Date tillDate = prepareDateForFilesLookup(filter.getTillDate());
 
-    List<String> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
     int total = files.size();
 
     UserStatFilter convertedFilter = new UserStatFilter();
@@ -79,7 +107,7 @@ public class UserStatProvider {
 
     try {
       for (int i=0; i<files.size(); i++)
-        processFile(convertedFilter, visitor, total, i, files.get(i));
+        processFile(convertedFilter, visitor, total, i, files.get(i).getFileName());
     } catch (IOException e) {
       throw new DeliveryException("filesys.ioexception", e);
     }
@@ -150,4 +178,5 @@ public class UserStatProvider {
     }
     return true;
   }
+
 }

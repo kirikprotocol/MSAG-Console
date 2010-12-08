@@ -2,18 +2,16 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.StatEntity;
+import mobi.eyeline.informer.admin.delivery.stat.StatEntityProvider;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.notifications.DateAndFile;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
-import java.io.File;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Copyright Eyeline.mobi
@@ -35,35 +33,47 @@ public class StatsSizeController extends DeliveryStatController  {
 
   @Override
   void loadRecords(Configuration config, Locale locale) throws AdminException, InterruptedException {
-    FileSystem fileSys = getConfig().getFileSystem();
-    List<File> files = getConfig().getStatisticFiles(getFilter(),false);
+
+    DeliveryStatFilter filter = getFilter();
+    final List<StatEntity> files = new LinkedList<StatEntity>();
+    config.getStatEntities(new StatEntityProvider.EntityVisitor() {
+      @Override
+      public boolean visit(StatEntity entity) throws AdminException {
+        files.add(entity);
+        return true;
+      }
+    }, filter.getFromDate(), filter.getTillDate()
+    );
     setCurrentAndTotal(0, files.size()==0 ? 1:files.size());
-    for(File f : files) {
 
-        Calendar c = getConfig().getCalendarOfStatFile(f);
+    for(StatEntity f : files) {
 
-        AggregatedRecord newRecord = new StatsSizeRecord(c, getAggregation(), true,1,fileSys.length(f));
-        AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
-        if (oldRecord == null) {
-          putRecord(newRecord);
-        } else {
-          oldRecord.add(newRecord);
-        }
-        getTotals().add(newRecord);
-        setCurrent(getCurrent() + 1);
+      Calendar c = Calendar.getInstance();
+      c.setTime(f.getDate());
+      AggregatedRecord newRecord = new StatsSizeRecord(c, getAggregation(), true,1,f.getSize());
+      AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
+      if (oldRecord == null) {
+        putRecord(newRecord);
+      } else {
+        oldRecord.add(newRecord);
+      }
+      getTotals().add(newRecord);
+      setCurrent(getCurrent() + 1);
 
     }
+
+    FileSystem fileSys = config.getFileSystem();
     List<DateAndFile> dfiles = getConfig().getProcessedNotificationsFiles(getFilter().getFromDate(),getFilter().getTillDate());
-    for(DateAndFile df : dfiles) {              
-        AggregatedRecord newRecord = new StatsSizeRecord(df.getCalendar(), getAggregation(), true,1,fileSys.length(df.getFile()));
-        AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
-        if (oldRecord == null) {
-          putRecord(newRecord);
-        } else {
-          oldRecord.add(newRecord);
-        }
-        getTotals().add(newRecord);
-        setCurrent(getCurrent() + 1);
+    for(DateAndFile df : dfiles) {
+      AggregatedRecord newRecord = new StatsSizeRecord(df.getCalendar(), getAggregation(), true,1,fileSys.length(df.getFile()));
+      AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
+      if (oldRecord == null) {
+        putRecord(newRecord);
+      } else {
+        oldRecord.add(newRecord);
+      }
+      getTotals().add(newRecord);
+      setCurrent(getCurrent() + 1);
     }
   }
 
@@ -86,29 +96,27 @@ public class StatsSizeController extends DeliveryStatController  {
   }
 
   public String removeSelected() {
+    if(selectedRows == null || selectedRows.isEmpty()) {
+      return null;
+    }
     if (logger.isDebugEnabled())
       logger.debug("Start remove statistics.");
 
     FileSystem fileSys = getConfig().getFileSystem();
     DeliveryStatFilter filter = new DeliveryStatFilter();
+    boolean addAttention = false;
+    Date now = new Date();
     for(String s : selectedRows) {
       try {
         String[] pair = s.split("-");
         if (logger.isDebugEnabled())
-          logger.debug("Removing statistict for period: " + s);
-        filter.setFromDate(StatsSizeRecord.getPeriodIdFormat().parse(pair[0]));
-        filter.setTillDate(StatsSizeRecord.getPeriodIdFormat().parse(pair[1]));
-        List<File> files = getConfig().getStatisticFiles(filter,false);
-        for(File f : files) {
-          try {
-            if (logger.isDebugEnabled())
-              logger.debug("Remove file: " + f);
-            fileSys.delete(f);
-          }
-          catch (AdminException e) {
-            addError(e);
-          }
+          logger.debug("Removing statistics for period: " + s);
+        Date from = StatsSizeRecord.getPeriodIdFormat().parse(pair[0]);
+        Date till = StatsSizeRecord.getPeriodIdFormat().parse(pair[1]);
+        if(till == null || (now.compareTo(till) < 0 && (from == null || from.compareTo(now) <= 0))) {
+          addAttention = true;
         }
+        getConfig().dropStatEntities(from, till);
         List<DateAndFile> dfiles = getConfig().getProcessedNotificationsFiles(filter.getFromDate(),filter.getTillDate());
         for(DateAndFile f : dfiles) {
           try {
@@ -127,12 +135,21 @@ public class StatsSizeController extends DeliveryStatController  {
       }
       catch (AdminException e) {
         addError(e);
-      }      
+      }
     }
     start();
+    if(addAttention) {
+      addLocalizedMessage(FacesMessage.SEVERITY_INFO, "stat.clean.today.attention");
+    }
 
     if (logger.isDebugEnabled())
       logger.debug("Finish remove statistics.");
     return null;
+  }
+
+  @Override
+  public String start() {
+    selectedRows = null;
+    return super.start();
   }
 }

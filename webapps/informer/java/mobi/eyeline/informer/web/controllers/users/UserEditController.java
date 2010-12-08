@@ -23,7 +23,9 @@ public class UserEditController extends UserController {
 
   private String userId;
   private User userToEdit;
-  private static final String USER_ID_PARAMETER = "userId";
+  public static final String USER_ID_PARAMETER = "userId";
+  public static final String COME_BACK_ACTION = "user_edit_comeback";
+  public static final String COME_BACK_PARAMS = "user_edit_comeback_params";
   private static final String initParam = "init";
 
   private boolean init;
@@ -32,10 +34,33 @@ public class UserEditController extends UserController {
   private DynamicTableModel dynamicFileModel = new DynamicTableModel();
   private String retryOnFail;
 
+  private String comeBack;
+
+  private String comeBackParams;
+
   public UserEditController() {
     super();
     init = Boolean.valueOf(getRequestParameter(initParam));
     setUserId(getRequestParameter(USER_ID_PARAMETER));
+    comeBack = getRequestParameter(COME_BACK_ACTION);
+    comeBackParams = getRequestParameter(COME_BACK_PARAMS);
+    System.out.println();
+  }
+
+  public String getComeBackParams() {
+    return comeBackParams;
+  }
+
+  public void setComeBackParams(String comeBackParams) {
+    this.comeBackParams = comeBackParams;
+  }
+
+  public String getComeBack() {
+    return comeBack;
+  }
+
+  public void setComeBack(String comeBack) {
+    this.comeBack = comeBack;
   }
 
   public boolean isInit() {
@@ -110,6 +135,14 @@ public class UserEditController extends UserController {
     return userToEdit.getDeliveryDays().toArray(new Integer[userToEdit.getDeliveryDays().size()]);
   }
 
+  public String cancel() {
+    if(comeBack != null && comeBack.length()>0) {
+      return comeBack;
+    }else {
+      return "USERS";
+    }
+  }
+
   public String save() {
 
     try {
@@ -162,7 +195,11 @@ public class UserEditController extends UserController {
       addError(e);
       return null;
     }
-    return "USERS";  //To change body of created methods use File | Settings | File Templates.
+    if(comeBack != null && comeBack.length()>0) {
+      return comeBack;
+    }else {
+      return "USERS";
+    }
   }
 
   private List<UserCPsettings> buildUCPSList() throws AdminException,IllegalArgumentException {

@@ -14,8 +14,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Copyright Eyeline.mobi
@@ -104,7 +104,7 @@ public class DeliveryStatProviderTest {
 
      Calendar c1 = Calendar.getInstance();
      c1.setTimeZone(TimeZone.getTimeZone("UTC"));
-     c1.set(2010,10-1,16,12,12);
+     c1.set(2010,10-1,16,12,11);
      filter.setFromDate(c1.getTime());
      statProvider.accept(filter,new DeliveryStatVisitor(){
        public boolean visit(DeliveryStatRecord rec, int total, int current) {

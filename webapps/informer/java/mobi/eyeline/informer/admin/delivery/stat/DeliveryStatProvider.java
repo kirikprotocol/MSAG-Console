@@ -5,32 +5,25 @@ import mobi.eyeline.informer.admin.delivery.DeliveryException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.CSVTokenizer;
 import mobi.eyeline.informer.util.Functions;
-import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Интерфейс, обеспечивающий досуп к статистике
  *
  * @author Artem Snopkov
  */
-public class DeliveryStatProvider {
-
-  Logger log = Logger.getLogger(this.getClass());
-
-  private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
-
-  private static final TimeZone LOCAL_TIMEZONE=TimeZone.getDefault();
+public class DeliveryStatProvider extends StatEntityProvider{
 
   private File baseDir;
   private FileSystem fileSys;
-  private String subDirNameFormat;
   private String filePathFormat;
-  private Pattern fileNamePattern;
 
   public DeliveryStatProvider(File directory, FileSystem fileSys) {
     this(directory, fileSys, "yyyy.MM.dd");
@@ -39,143 +32,103 @@ public class DeliveryStatProvider {
   protected DeliveryStatProvider(File directory, FileSystem fileSys, String subDirNamePattern) {
     baseDir = directory;
     this.fileSys = fileSys;
-    this.subDirNameFormat = subDirNamePattern;
-    this.fileNamePattern = Pattern.compile("msg\\d\\d\\.log");
-    this.filePathFormat = subDirNameFormat + File.separatorChar + "'msg'HH'.log'";
+    this.filePathFormat = subDirNamePattern + File.separatorChar + "'msg'HH'.log'";
 
   }
 
-  /**
-   * Поочередно передает в visitor все записи статистики, удовлетворяющие условиям, накладываемыми в filter.
-   * Процесс продолжается до тех пор, пока метод visit в visitor возвращает true, либо записи не закончатся.
-   * Если filter == null, то провайдер перебирает все записи.
-   *
-   * @param filter  фильтр, описывающий ограничения на записи
-   * @param visitor визитор, обрабатывающий найденные записи
-   * @throws AdminException если произошла ошибка при обращении к стораджу статистики
-   */
+  public void visitEntities(Date from, Date till, StatEntityProvider.EntityVisitor visitor) throws AdminException {
+    Date fromDate = prepareDateForFilesLookup(from);
+    Date tillDate = prepareDateForFilesLookup(till);
+
+    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+
+    for (StatFile statFile : files) {
+      if (!visitor.visit(new StatEntity(
+          prepareDateForEntitiesView(statFile.getDate()),
+          new File(baseDir, statFile.getFileName()).length()))
+          ) {
+        break;
+      }
+    }
+  }
+
+  @Override
+  public synchronized void dropEntities(Date from, Date till) throws AdminException {
+    Date fromDate = prepareDateForFilesLookup(from);
+    Date tillDate = prepareDateForFilesLookup(till);
+
+    List<StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+
+    Calendar c = Calendar.getInstance();
+    c.setTime(Functions.convertTime(new Date(), LOCAL_TIMEZONE, STAT_TIMEZONE));
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    Date today = c.getTime();
+
+    Set<File> parents = new HashSet<File>();
+    for (StatFile f : files) {
+      if(f.getDate().before(today)) {
+        File _f = new File(baseDir, f.getFileName());
+        if (_f.exists()) {
+          if (!_f.delete()) {
+            logger.error("Can't remove file: " + _f.getAbsolutePath());
+            throw new DeliveryException("internal_error");
+          }
+        }
+        File _p = _f.getParentFile();
+        if (_p != null) {
+          parents.add(_f.getParentFile());
+        }
+      }
+    }
+
+    for(File _p : parents) {
+      if(_p.exists() && _p.list().length == 0) {
+        if(!_p.delete()) {
+          logger.error("Can't remove file: "+_p.getAbsolutePath());
+          throw new DeliveryException("internal_error");
+        }
+      }
+    }
+  }
+
   public void accept(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
-    try {
-      int minMinute = 0;
-      int maxMinute = 59;
 
+    Date fromDate = filter == null ? null : prepareDateForFilesLookup(filter.getFromDate());
+    Date tillDate = filter == null ? null : prepareDateForFilesLookup(filter.getTillDate());
 
-      if (filter != null && filter.getFromDate() != null) {
-        Calendar c = Calendar.getInstance();
-        c.setTime(filter.getFromDate());
-        minMinute = c.get(Calendar.MINUTE);
-      }
-      if (filter != null && filter.getTillDate() != null) {
-        Calendar c = Calendar.getInstance();
-        c.setTime(filter.getTillDate());
-        maxMinute = c.get(Calendar.MINUTE);
-      }
+    List<mobi.eyeline.informer.admin.delivery.stat.StatFile> files = StatUtils.lookupFiles(baseDir, new SimpleDateFormat(filePathFormat), fromDate, tillDate);
+    int total = files.size();
 
-      List<File> files = filterFiles(filter,true);
-      Collections.sort(files);
-      int total = files.size();
-      for (int i = 0; i < total; i++) {
-        StatFile f = (StatFile) files.get(i);
-        try {
-          if (!process(f, filter, visitor, i, total, f.minFile ? minMinute : 0, f.maxFile ? maxMinute : 59)) {
-            break;
-          }
-        }
-        catch (ParseException e) {
-          log.error("Unparseable file path: " + f.getParent() + File.separatorChar + f.getName());
-        }
-      }
+    DeliveryStatFilter convertedFilter = new DeliveryStatFilter();
+    if(filter != null) {
+      convertedFilter.setUser(filter.getUser());
+      convertedFilter.setTaskIds(filter.getTaskIds());
+      if (filter.getFromDate() != null)
+        convertedFilter.setFromDate(Functions.convertTime(filter.getFromDate(), LOCAL_TIMEZONE, STAT_TIMEZONE));
+      if (filter.getTillDate() != null)
+        convertedFilter.setTillDate(Functions.convertTime(filter.getTillDate(), LOCAL_TIMEZONE, STAT_TIMEZONE));
     }
-    catch (IOException e) {
-      throw new DeliveryException("filesys.ioexception");
+
+    try {
+      for (int i=0; i<files.size(); i++)
+        processFile(convertedFilter, visitor, total, i, files.get(i).getFileName());
+    } catch (IOException e) {
+      throw new DeliveryException("filesys.ioexception", e);
     }
   }
 
+  public boolean processFile(DeliveryStatFilter filter, DeliveryStatVisitor visitor, int total, int current, String f) throws AdminException, IOException {
 
+    BufferedReader reader = null;
 
-  public List<File> filterFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
-
-    String minSubDirName = null;
-    String maxSubDirName = null;
-    String minFilePath = null;
-    String maxFilePath = null;
-    if (filter != null) {
-      if (filter.getFromDate() != null) {
-        Date fromDate = Functions.convertTime(filter.getFromDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
-        minSubDirName = new SimpleDateFormat(subDirNameFormat).format(fromDate);
-        minFilePath = new SimpleDateFormat(filePathFormat).format(fromDate);
-      }
-      if (filter.getTillDate() != null) {
-        Date tillDate = Functions.convertTime(filter.getTillDate(), LOCAL_TIMEZONE, STAT_TIMEZONE);
-        maxSubDirName = new SimpleDateFormat(subDirNameFormat).format(tillDate);
-        maxFilePath = new SimpleDateFormat(filePathFormat).format(tillDate);
-      }
-    }
-
-
-    List<File> files = new ArrayList<File>();
-    if (fileSys.exists(baseDir)) {
-      for (String subDirName : fileSys.list(baseDir)) {
-
-        File subDir = new File(baseDir, subDirName);
-        if (!subDir.isDirectory())
-          continue;
-
-        if (minSubDirName != null) {
-          if (subDirName.compareTo(minSubDirName) < 0) {
-            continue;
-          }
-        }
-        if (maxSubDirName != null) {
-          if (subDirName.compareTo(maxSubDirName) > 0) {
-            continue;
-          }
-        }
-
-
-        for (String fileName : fileSys.list(subDir)) {
-          boolean isMinFile=false;
-          boolean isMaxFile=false;
-          if (!fileNamePattern.matcher(fileName).matches())
-            continue;
-
-          String filePath = subDirName + File.separatorChar + fileName;
-          if (minFilePath != null) {
-            if (filePath.compareTo(minFilePath) < 0) {
-              continue;
-            }
-            isMinFile = filePath.compareTo(minFilePath) == 0;
-          }
-          if (maxFilePath != null && !endDateInclusive) {
-            if (filePath.compareTo(maxFilePath) >= 0) {
-              continue;
-            }
-          }
-          if (maxFilePath != null && endDateInclusive) {
-            if (filePath.compareTo(maxFilePath) > 0) {
-              continue;
-            }
-            isMaxFile = filePath.compareTo(maxFilePath) == 0;
-          }
-
-          files.add(new StatFile(subDir, fileName, isMinFile, isMaxFile));
-        }
-      }
-    } else {
-      log.error("Delivery statictics baseDir not exists:" + baseDir.getAbsolutePath());
-    }
-    return files;
-  }
-
-
-  boolean process(File file, DeliveryStatFilter filter, DeliveryStatVisitor visitor, int currentFile, int totalFilesCount, int fromMin, int toMin) throws AdminException, IOException, ParseException {
-    InputStream is = null;
     try {
 
-      Calendar c= getCalendarOfStatFile(file);
+      Calendar c= StatUtils.getCalendarOfStatFile(f, new SimpleDateFormat(filePathFormat));
 
-      is = fileSys.getInputStream(file);
-      BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+      reader = new BufferedReader(new InputStreamReader(fileSys.getInputStream(new File(baseDir, f))));
 
       //skip first line
       if (reader.readLine() == null) return true;
@@ -184,13 +137,21 @@ public class DeliveryStatProvider {
       while ((line = reader.readLine()) != null) {
         try {
           CSVTokenizer tokenizer = new CSVTokenizer(line);
-          //# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,DLVDSMS,FAILSMS,EXPDSMS
+
+          //#1 MINSEC,USER,PAUSED,PLANNED,ACTIVE,FINISH,CANCEL,CREATED,DELETED
+
           if (tokenizer.hasMoreTokens()) {
             String minsec = tokenizer.nextToken();
             int minute = Integer.parseInt(minsec.substring(0, minsec.length() - 2));
-            if (minute < fromMin) continue;
-            if (minute > toMin) break;
             c.set(Calendar.MINUTE, minute);
+            c.set(Calendar.SECOND, 0);
+
+            Date date = c.getTime();
+            if (filter.getFromDate() != null && date.before(filter.getFromDate()))
+              continue;
+
+            if (filter.getTillDate() != null && date.after(filter.getTillDate()))
+              continue;
 
             int taskId = Integer.parseInt(tokenizer.nextToken());
             if (filter != null && filter.getTaskIds() != null && !filter.getTaskIds().contains(taskId)) continue;
@@ -212,25 +173,88 @@ public class DeliveryStatProvider {
                 deliveredSms, failedSms, expiredSms
             );
 
-            if (!visitor.visit(rec, totalFilesCount, currentFile)) {
+            if (!visitor.visit(rec, total, current)) {
               return false;
             }
           }
-        }
-        catch (Exception e) {
-          throw new DeliveryStatException("error.parsing.stat.line", file.getAbsolutePath(), line);
+        } catch (Exception e) {
+          throw new DeliveryStatException("error.parsing.stat.line", f, line);
         }
       }
-    }
-    finally {
-      if (is != null) try {
-        is.close();
+    } finally {
+      if (reader != null) try {
+        reader.close();
       }
       catch (IOException ignored) {
       }
     }
     return true;
   }
+
+
+//  boolean process(File file, DeliveryStatFilter filter, DeliveryStatVisitor visitor, int currentFile, int totalFilesCount, int fromMin, int toMin) throws AdminException, IOException, ParseException {
+//    InputStream is = null;
+//    try {
+//
+//      Calendar c= getCalendarOfStatFile(file);
+//
+//      is = fileSys.getInputStream(file);
+//      BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+//
+//      //skip first line
+//      if (reader.readLine() == null) return true;
+//
+//      String line;
+//      while ((line = reader.readLine()) != null) {
+//        try {
+//          CSVTokenizer tokenizer = new CSVTokenizer(line);
+//          //# MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,DLVDSMS,FAILSMS,EXPDSMS
+//          if (tokenizer.hasMoreTokens()) {
+//            String minsec = tokenizer.nextToken();
+//            int minute = Integer.parseInt(minsec.substring(0, minsec.length() - 2));
+//            if (minute < fromMin) continue;
+//            if (minute > toMin) break;
+//            c.set(Calendar.MINUTE, minute);
+//
+//            int taskId = Integer.parseInt(tokenizer.nextToken());
+//            if (filter != null && filter.getTaskIds() != null && !filter.getTaskIds().contains(taskId)) continue;
+//
+//            String user = tokenizer.nextToken();
+//            if (filter != null && filter.getUser() != null && !filter.getUser().equals(user)) continue;
+//
+//            int newmessages = Integer.parseInt(tokenizer.nextToken());
+//            int processing = Integer.parseInt(tokenizer.nextToken());
+//            int delivered = Integer.parseInt(tokenizer.nextToken());
+//            int failed = Integer.parseInt(tokenizer.nextToken());
+//            int expired = Integer.parseInt(tokenizer.nextToken());
+//            int deliveredSms = Integer.parseInt(tokenizer.nextToken());
+//            int failedSms = Integer.parseInt(tokenizer.nextToken());
+//            int expiredSms = Integer.parseInt(tokenizer.nextToken());
+//
+//            DeliveryStatRecord rec = new DeliveryStatRecord(user, Functions.convertTime(c.getTime(), STAT_TIMEZONE, LOCAL_TIMEZONE), taskId,
+//                newmessages, processing, delivered, failed, expired,
+//                deliveredSms, failedSms, expiredSms
+//            );
+//
+//            if (!visitor.visit(rec, totalFilesCount, currentFile)) {
+//              return false;
+//            }
+//          }
+//        }
+//        catch (Exception e) {
+//          throw new DeliveryStatException("error.parsing.stat.line", file.getAbsolutePath(), line);
+//        }
+//      }
+//    }
+//    finally {
+//      if (is != null) try {
+//        is.close();
+//      }
+//      catch (IOException ignored) {
+//      }
+//    }
+//    return true;
+//  }
 
   public Calendar getCalendarOfStatFile(File file) throws AdminException {
     try {
@@ -246,16 +270,5 @@ public class DeliveryStatProvider {
     }
   }
 
-
-  private class StatFile extends File {
-    private boolean minFile;
-    private boolean maxFile;
-
-    public StatFile(File file, String s, boolean minFile, boolean maxFile) {
-      super(file, s);
-      this.minFile = minFile;
-      this.maxFile = maxFile;
-    }
-  }
 
 }

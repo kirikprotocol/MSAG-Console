@@ -12,10 +12,7 @@ import mobi.eyeline.informer.admin.contentprovider.ContentProviderContext;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
-import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
-import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
-import mobi.eyeline.informer.admin.delivery.stat.UserStatFilter;
-import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
+import mobi.eyeline.informer.admin.delivery.stat.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
@@ -615,12 +612,12 @@ public class AdminContext {
     deliveryManager.statisticsByUser(filter, visitor);
   }
 
-  public List<File> getStatisticsFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
-    return deliveryManager.getStatisticsFiles(filter, endDateInclusive);
+  public void getStatEntities(StatEntityProvider.EntityVisitor v, Date from, Date till) throws AdminException {
+    deliveryManager.getStatEntities(v, from, till);
   }
 
-  public Calendar getCalendarOfStatFile(File f) throws AdminException {
-    return deliveryManager.getCalendarOfStatFile(f);
+  public void dropStatEntities(Date from, Date till) throws AdminException {
+    deliveryManager.dropStatEntities(from, till);
   }
 
   public List<DateAndFile> getProcessedNotificationsFiles(Date startDate,Date endDate) throws AdminException {

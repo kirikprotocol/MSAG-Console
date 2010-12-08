@@ -12,18 +12,18 @@ import java.util.*;
  */
 class StatUtils {
 
-  static List<String> lookupFiles(File baseDir, SimpleDateFormat filePathFormat, Date fromDate, Date tillDate) {
+  static List<StatFile> lookupFiles(File baseDir, SimpleDateFormat filePathFormat, Date fromDate, Date tillDate) {
     if (baseDir == null || !baseDir.isDirectory())
       return Collections.emptyList();
 
-    List<String> result = new ArrayList<String>();
-    
+    List<StatFile> result = new ArrayList<StatFile>();
+
     recursivellyLookupFiles(baseDir, null, filePathFormat, fromDate, tillDate, result);
 
     return result;
   }
 
-  private static void recursivellyLookupFiles(File baseDir, String prefix, SimpleDateFormat filePathFormat, Date fromDate, Date tillDate, List<String> result) {
+  private static void recursivellyLookupFiles(File baseDir, String prefix, SimpleDateFormat filePathFormat, Date fromDate, Date tillDate, List<StatFile> result) {
 
     File[] files = baseDir.listFiles();
     if (files == null)
@@ -49,7 +49,7 @@ class StatUtils {
           continue;
         if (tillDate != null && fileDate.after(tillDate))
           continue;
-        result.add(fileName);
+        result.add(new StatFile(fileDate, fileName));
       }
     }
   }

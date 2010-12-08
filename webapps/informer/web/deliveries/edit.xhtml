@@ -40,7 +40,7 @@
       <tr:inputHidden id="delivery_comeback" value="#{deliveryEdit.comeBackParam}"/>
 
       <eye:delimiter/>
-      
+
       <eye:pageSubtitle value="#{msg['delivery.edit.settings']}"/>
 
       <eye:delimiter/>
@@ -51,7 +51,22 @@
         <tr:inputText value="#{deliveryEdit.delivery.name}" required="true" simple="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.owner}" rendered="#{deliveryEdit.userInAdminRole}"/>
-        <h:outputText value="#{deliveryEdit.delivery.owner}" rendered="#{deliveryEdit.userInAdminRole}"/>
+
+        <tr:panelGroupLayout rendered="#{deliveryEdit.userInAdminRole}">
+
+          <h:outputText value="#{deliveryEdit.delivery.owner}"/>
+
+          <tr:panelGroupLayout rendered="#{userSession.userInAdminRole}" shortDesc="#{msg['user.edit.title']}">
+            <h:outputText value="&#160;"/>
+            <h:outputText value="&#160;"/>
+            <h:commandLink value=">>" action="USER_EDIT" immediate="true">
+              <f:param name="user_edit_comeback" value="DELIVERY_EDIT"/>
+              <f:param name="userId" value="#{deliveryEdit.delivery.owner}"/>
+              <f:param name="user_edit_comeback_params" value="#{deliveryEdit.userComeBackParams}"/>
+            </h:commandLink>
+          </tr:panelGroupLayout>
+
+        </tr:panelGroupLayout>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
         <tr:inputText converter="addressConverter" value="#{deliveryEdit.delivery.sourceAddress}" required="true" simple="true"/>
@@ -121,7 +136,7 @@
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretFlash}" rendered="#{deliveryEdit.secret}"/>
         <tr:selectBooleanCheckbox readOnly="true" value="#{deliveryEdit.flashSecret}" simple="true" rendered="#{deliveryEdit.secret}"/>
-      
+
         <h:outputText style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
         <h:selectOneMenu id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" required="true" converter="deliveryTypeConverter"
                          onchange="dModeChanged()"

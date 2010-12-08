@@ -163,9 +163,6 @@ public abstract class DeliveryStatController extends LongOperationController {
     if (getState() != 2)
       return new EmptyDataTableModel();
 
-    System.out.println("GET MODEL: " + getState());
-    System.out.println("GET MODEL1: " + isFullMode());
-
     //loadRecords();
     return new DataTableModel() {
 

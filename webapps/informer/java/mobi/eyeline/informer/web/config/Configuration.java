@@ -6,10 +6,7 @@ import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
-import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
-import mobi.eyeline.informer.admin.delivery.stat.UserStatFilter;
-import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
+import mobi.eyeline.informer.admin.delivery.stat.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
@@ -349,12 +346,12 @@ public class Configuration {
     context.statisticByUsers(filter, visitor);
   }
 
-  public List<File> getStatisticFiles(DeliveryStatFilter filter, boolean endDateInclusive) throws AdminException {
-    return context.getStatisticsFiles(filter,endDateInclusive);
+  public void dropStatEntities(Date from, Date till) throws AdminException {
+    context.dropStatEntities(from, till);
   }
 
-  public Calendar getCalendarOfStatFile(File f) throws AdminException {
-    return context.getCalendarOfStatFile(f);
+  public void getStatEntities(StatEntityProvider.EntityVisitor v, Date from, Date till) throws AdminException {
+    context.getStatEntities(v, from, till);
   }
 
   public List<DateAndFile> getProcessedNotificationsFiles(Date startDate,Date endDate) throws AdminException {

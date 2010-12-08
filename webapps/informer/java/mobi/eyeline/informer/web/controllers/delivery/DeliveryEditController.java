@@ -9,6 +9,7 @@ import mobi.eyeline.informer.admin.delivery.DeliveryStatusHistory;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
+import mobi.eyeline.informer.web.controllers.users.UserEditController;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
@@ -40,6 +41,16 @@ public class DeliveryEditController extends DeliveryController {
     String p = getRequestParameter(DELIVERY_PARAM);
     id = p == null || (p = p.trim()).length() == 0 ? null : Integer.parseInt(p);
 
+    if(id == null) {
+      p = getRequestParameter(UserEditController.COME_BACK_PARAMS);
+      if(p != null) {
+        String[] s = p.split("=");
+        if(s.length>1) {
+          id = Integer.parseInt(s[1]);
+        }
+      }
+    }
+
     p = getRequestParameter(DELIVERY_COMEBACK_PARAM);
     if (p != null && p.length() != 0) {
       comeBackParam = p;
@@ -58,6 +69,10 @@ public class DeliveryEditController extends DeliveryController {
 
   public void setComeBackParam(String comeBackParam) {
     this.comeBackParam = comeBackParam;
+  }
+
+  public String getUserComeBackParams() {
+    return "id="+delivery.getId();
   }
 
   private void reload() throws AdminException {
