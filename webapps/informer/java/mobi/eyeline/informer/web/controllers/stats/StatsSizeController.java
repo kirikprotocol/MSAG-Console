@@ -44,13 +44,19 @@ public class StatsSizeController extends DeliveryStatController  {
       }
     }, filter.getFromDate(), filter.getTillDate()
     );
-    setCurrentAndTotal(0, files.size()==0 ? 1:files.size());
+
+    FileSystem fileSys = config.getFileSystem();
+    List<DateAndFile> dfiles = getConfig().getProcessedNotificationsFiles(getFilter().getFromDate(),getFilter().getTillDate());
+
+    int total = files.size() + dfiles.size();
+
+    setCurrentAndTotal(0, total == 0 ? 1 : total);
 
     for(StatEntity f : files) {
 
       Calendar c = Calendar.getInstance();
       c.setTime(f.getDate());
-      AggregatedRecord newRecord = new StatsSizeRecord(c, getAggregation(), true,1,f.getSize());
+      AggregatedRecord newRecord = new StatsSizeRecord(c, getAggregation(), true, 1, f.getSize());
       AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
       if (oldRecord == null) {
         putRecord(newRecord);
@@ -62,9 +68,7 @@ public class StatsSizeController extends DeliveryStatController  {
 
     }
 
-    FileSystem fileSys = config.getFileSystem();
-    List<DateAndFile> dfiles = getConfig().getProcessedNotificationsFiles(getFilter().getFromDate(),getFilter().getTillDate());
-    for(DateAndFile df : dfiles) {
+      for(DateAndFile df : dfiles) {
       AggregatedRecord newRecord = new StatsSizeRecord(df.getCalendar(), getAggregation(), true,1,fileSys.length(df.getFile()));
       AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
       if (oldRecord == null) {

@@ -59,10 +59,11 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
       if (isParent) childAggreagtionType = TimeAggregationType.WEEK;
     } else if (type == TimeAggregationType.WEEK) {
 
-      if (startCalendar.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY < 0) {
-        startCalendar.add(Calendar.DATE, -7);
-      }
+      Date curDate = startCalendar.getTime();
       startCalendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+      if (curDate.before(startCalendar.getTime()))
+        startCalendar.add(Calendar.DATE, -7);
+
       startCalendar.set(Calendar.HOUR_OF_DAY, 0);
       startCalendar.set(Calendar.MINUTE, 0);
       endCalendar = (Calendar) startCalendar.clone();
@@ -173,6 +174,4 @@ public abstract class TimeAggregatedStatRecord extends AggregatedRecord {
       }
     }
   }
-
-
 }

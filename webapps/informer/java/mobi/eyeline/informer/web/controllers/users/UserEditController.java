@@ -44,7 +44,6 @@ public class UserEditController extends UserController {
     setUserId(getRequestParameter(USER_ID_PARAMETER));
     comeBack = getRequestParameter(COME_BACK_ACTION);
     comeBackParams = getRequestParameter(COME_BACK_PARAMS);
-    System.out.println();
   }
 
   public String getComeBackParams() {

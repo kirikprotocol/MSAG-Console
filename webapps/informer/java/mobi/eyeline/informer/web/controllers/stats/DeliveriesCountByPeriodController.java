@@ -1,9 +1,7 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
-import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.delivery.stat.UserStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.UserStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.UserStatVisitor;
@@ -50,16 +48,18 @@ public class DeliveriesCountByPeriodController extends DeliveryStatController im
 
   public boolean visit(UserStatRecord rec, int total, int current) {
     setCurrentAndTotal(current, total);
-    Calendar c = Calendar.getInstance();
-    c.setTime(rec.getDate());
-    AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c, getAggregation(), rec.getCreated(), true);
-    AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
-    if (oldRecord == null) {
-      putRecord(newRecord);
-    } else {
-      oldRecord.add(newRecord);
+    if (rec.getCreated() > 0) {
+      Calendar c = Calendar.getInstance();
+      c.setTime(rec.getDate());
+      AggregatedRecord newRecord = new DeliveriesCountByPeriodRecord(c, getAggregation(), rec.getCreated(), true);
+      AggregatedRecord oldRecord = getRecord(newRecord.getAggregationKey());
+      if (oldRecord == null) {
+        putRecord(newRecord);
+      } else {
+        oldRecord.add(newRecord);
+      }
+      getTotals().add(newRecord);
     }
-    getTotals().add(newRecord);
 //    setCurrent(getCurrent() + 1);
     return !isCancelled();
   }
