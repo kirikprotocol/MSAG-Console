@@ -98,11 +98,12 @@ void FinalLog::addMsgRecord(msgtime_type         currentTime,
     char caddr[30];
     printSubscriber(caddr,msg.subscriber);
     char buf[200];
-    const int bufsize = sprintf(buf,"%02u,%u,%s,0,%llu,%c,%d,%s,%s,%u\n",
+    const int bufsize = sprintf(buf,"%02u,%u,%s,0,%llu,%c,%d,%s,%u,%s\n",
                                 currentTime % 60, dlvId, userId, msg.msgId,
                                 cstate,
-                                smppStatus, caddr, msg.userData.c_str(),
-                                msg.retryCount );
+                                smppStatus, caddr,
+                                msg.retryCount,
+                                msg.userData.c_str() );
     if (bufsize < 0) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf to final.log: %d",bufsize);
     }
@@ -174,7 +175,7 @@ void FinalLog::doCheckRollFile( msgtime_type currentTime, bool create )
         createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
         fg_.seek(0, SEEK_END);
         if (fg_.getPos() == 0) {
-            const char* header = "#1 SEC,DLVID,USERID,RECTYPE,MSGID,STATE,SMPP,SUBSCRIBER,USERDATA,NSMS\n";
+            const char* header = "#1 SEC,DLVID,USERID,RECTYPE,MSGID,STATE,SMPP,SUBSCRIBER,NSMS,USERDATA\n";
             fg_.write(header,strlen(header));
         }
     }
