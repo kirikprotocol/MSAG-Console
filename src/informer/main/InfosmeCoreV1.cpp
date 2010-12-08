@@ -71,13 +71,15 @@ class PvssBlockRequest : public ProfileRequest
 public:
     PvssBlockRequest( const ProfileKey& pkey,
                       ProfileCommand* cmd,
-                      Message& msg ) :
-    ProfileRequest(pkey,cmd), msg_(&msg) {}
+                      Message& msg,
+                      DeliveryActivator::PvssNotifyee& pn ) :
+    ProfileRequest(pkey,cmd), msg_(&msg), pn_(pn) {}
 
     virtual ~PvssBlockRequest() {
     }
 
     inline Message& getMsg() { return *msg_; }
+    inline DeliveryActivator::PvssNotifyee& getPN() { return pn_; }
 
     virtual PvssBlockRequest* clone() const {
         throw InfosmeException(EXC_NOTIMPL, "pvss block request clone() is forbidden");
@@ -85,6 +87,7 @@ public:
 
 private:
     Message* msg_;
+    DeliveryActivator::PvssNotifyee& pn_;
 };
 
 }
@@ -95,6 +98,13 @@ protected smsc::core::threads::Thread,
 public scag2::pvss::core::client::Client::ResponseHandler
 {
 public:
+    struct NM {
+        NM() : ipn(0), msg(0) {}
+        NM( DeliveryActivator::PvssNotifyee* i, Message* m ) : ipn(i), msg(m) {}
+        DeliveryActivator::PvssNotifyee* ipn;
+        Message*                         msg;
+    };
+
     PvssRespHandler( InfosmeCoreV1& core ) :
     core_(core), log_(smsc::logger::Logger::getInstance("pvss")),
     stopping_(false) {}
@@ -115,15 +125,15 @@ public:
 
     virtual int Execute()
     {
-        Message* msg;
+        NM nm;
         while (!stopping_) {
             queue_.waitForItem();
-            while (queue_.Pop(msg)) {
-                core_.startPvssCheck(*msg);
+            while (queue_.Pop(nm)) {
+                core_.startPvssCheck(*nm.ipn,*nm.msg);
             }
         }
-        while (queue_.Pop(msg)) {
-            core_.startPvssCheck(*msg);
+        while (queue_.Pop(nm)) {
+            core_.startPvssCheck(*nm.ipn,*nm.msg);
         }
         return 0;
     }
@@ -145,6 +155,7 @@ public:
             if (resp->getStatus() == scag2::pvss::StatusType::PROPERTY_NOT_FOUND ) {
                 smsc_log_debug(log_,"PVSS property not found, ok");
                 pbr->getMsg().timeLeft = 1;
+                pbr->getPN().notify();
                 return;
             }
             if (resp->getStatus() != scag2::pvss::StatusType::OK ) {
@@ -162,10 +173,12 @@ public:
                 smsc_log_debug(log_,"allowed by pvss");
                 pbr->getMsg().timeLeft = 1;
             }
+            pbr->getPN().notify();
             return;
 
         } while (false);
-        queue_.Push( & pbr->getMsg());
+        // resubmit
+        queue_.Push(NM(&pbr->getPN(),&pbr->getMsg()));
     }
 
 
@@ -178,13 +191,13 @@ public:
             return;
         }
         smsc_log_warn(log_,"failed (to be retried) exc: %s",exc.what());
-        queue_.Push( & pbr->getMsg() );
+        queue_.Push( NM(&pbr->getPN(),&pbr->getMsg()) );
     }
 
 private:
     InfosmeCoreV1&                               core_;
     smsc::logger::Logger*                        log_;
-    smsc::core::buffers::FastMTQueue< Message* > queue_;
+    smsc::core::buffers::FastMTQueue< NM >       queue_;
     bool                                         stopping_;
 };
 
@@ -750,26 +763,29 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
 }
 
 
-void InfosmeCoreV1::startPvssCheck( Message& msg )
+void InfosmeCoreV1::startPvssCheck( PvssNotifyee& pn, Message& msg )
 {
     if (!pvss_) {
         msg.timeLeft = 1;
+        pn.notify();
         return;
     }
     scag2::pvss::PvssException exc;
 
     int pass = 0;
-    static smsc::core::synchronization::EventMonitor emon;
+    // static smsc::core::synchronization::EventMonitor emon;
     while ( true ) {
         if ( stopping_ ) {
             msg.timeLeft = 1;
+            pn.notify();
             break;
         }
+        static smsc::core::synchronization::EventMonitor emon;
         try {
 
             if ( ! pvss_->canProcessRequest(&exc) ) {
                 MutexGuard mg(emon);
-                emon.wait(10);
+                emon.wait(100);
                 continue;
             }
 
@@ -783,7 +799,7 @@ void InfosmeCoreV1::startPvssCheck( Message& msg )
             scag2::pvss::GetCommand* cmd = new scag2::pvss::GetCommand;
             cmd->setVarName("infosme_black_list");
             std::auto_ptr< scag2::pvss::Request > 
-                preq( new PvssBlockRequest(pkey,cmd,msg) );
+                preq( new PvssBlockRequest(pkey,cmd,msg,pn) );
             pvss_->processRequestAsync(preq,*pvssHandler_);
             break;
 
@@ -793,7 +809,7 @@ void InfosmeCoreV1::startPvssCheck( Message& msg )
                 ++pass;
             }
             MutexGuard mg(emon);
-            emon.wait(10);
+            emon.wait(100);
         }
     }
 }

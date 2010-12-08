@@ -28,16 +28,41 @@ const uint16_t defaultVersion = 1;
 namespace eyeline {
 namespace informer {
 
+namespace {
+class InputPvssNotifyee : public DeliveryActivator::PvssNotifyee
+{
+public:
+    virtual void notify() {
+        MutexGuard mg(mon_);
+        mon_.notify();
+    }
+
+    void waitOn( Message& msg ) {
+        if (msg.timeLeft != -1) return;
+        MutexGuard mg(mon_);
+        while (msg.timeLeft == -1) {
+            mon_.wait(20);
+        }
+    }
+
+private:
+    smsc::core::synchronization::EventMonitor mon_;
+};
+
+} // namespace 
+
+
 class InputStorage::IReader : public FileReader::RecordReader
 {
 public:
     IReader( InputStorage& is,
              MessageList& ml,
              InputRegionRecord& iro,
-             regionid_type regId ) :
+             regionid_type regId,
+             InputPvssNotifyee& ipn ) :
     is_(is), msglist_(ml), ro_(iro),
     regId_(regId),
-    currentTime_(currentTimeSeconds()) {}
+    currentTime_(currentTimeSeconds()), ipn_(ipn) {}
 
     virtual bool isStopping() {
         return is_.core_.isStopping();
@@ -96,7 +121,7 @@ public:
             // we have to add kill record in activity log
             is_.activityLog_->addRecord(currentTime_,regId_,msg,0,MSGSTATE_INPUT);
         } else {
-            is_.core_.startPvssCheck(msg);
+            is_.core_.startPvssCheck(ipn_,msg);
         }
         return true;
     }
@@ -106,6 +131,7 @@ private:
     InputRegionRecord& ro_;
     regionid_type      regId_;
     msgtime_type       currentTime_;
+    InputPvssNotifyee& ipn_;
 };
 
 
@@ -399,6 +425,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
     FileGuard fg;
     MessageList msglist;
     smsc::core::buffers::TmpBuf<char,8192> buf;
+    InputPvssNotifyee ipn;
     while (reqCount>0) {
 
         try {
@@ -439,7 +466,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
 
             try {
                 FileReader fileReader(fg);
-                IReader recordReader(*this,msglist,ro,regId);
+                IReader recordReader(*this,msglist,ro,regId,ipn);
                 reqCount -= fileReader.readRecords(buf,recordReader,reqCount);
                 fg.close();
                 if (reqCount>0 && ro.rfn<ro.wfn) {
@@ -486,15 +513,9 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                 // wait until all pvss requests finish
                 const msgtime_type currentTime(msgtime_type(currentTimeMicro()/tuPerSec));
                 for ( MsgIter i = msglist.begin(); i != msglist.end(); ) {
-                    timediff_type ttl;
-                    while ( (ttl = i->msg.timeLeft) == -1 ) {
-                        // wait until pvss request is finished
-                        // struct timespec ts = {0, 3000000};
-                        // nanosleep(&ts,0);
-                        smsc_log_debug(log_,"R=%u/D=%u/M=%llu waits until PVSS result",
-                                       regId, getDlvId(), i->msg.msgId );
-                        smsc::core::threads::Thread::Yield();
-                    }
+
+                    ipn.waitOn(i->msg);
+                    const timediff_type ttl = i->msg.timeLeft;
                     if ( ttl == 0 ) {
                         // message should be removed from list
                         uint8_t len, ton, npi;
@@ -530,6 +551,12 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
             setRecord(ro,0);
 
         } catch (std::exception& e) {
+
+            // wait until all pvss request finishes
+            for ( MsgIter i = msglist.begin(); i != msglist.end(); ++i ) {
+                ipn.waitOn(i->msg);
+            }
+
             smsc_log_error(log_,"R=%u/D=%u transfer exc: %s",
                            regId, getDlvId(), e.what());
             break;

@@ -122,7 +122,7 @@ public:
                                     BindSignal&     bs,
                                     const Delivery& dlv );
 
-    virtual void startPvssCheck( Message& msg );
+    virtual void startPvssCheck( PvssNotifyee& notifyee, Message& msg );
 
     // --- end of delivery activator iface
 
@@ -180,6 +180,9 @@ private:
     admin::AdminServer*                           adminServer_;  // owned
     dcp::DcpServer*                               dcpServer_;    // owned
     alm::IActivityLogMiner*                       alm_;          // owned
+
+    // FIXME: optimize - decrease lock contention by splitting mon between each pvss requester.
+    smsc::core::synchronization::EventMonitor     pvssMon_;
 
     scag2::pvss::core::client::Client*            pvss_;         // owned
     PvssRespHandler*                              pvssHandler_;  // owned

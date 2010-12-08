@@ -131,8 +131,7 @@ public:
     }
 
     inline unsigned getInputStorageFileSize() const {
-        // FIXME: optimize increase this size after I fix the bug in inputstorage
-        return 2000;
+        return 20000;
     }
 
     /// incremental statistics bank index

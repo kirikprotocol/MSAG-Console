@@ -42,12 +42,18 @@ public:
                                     BindSignal&        bs,
                                     const Delivery&    dlv ) = 0;
 
+    struct PvssNotifyee
+    {
+        virtual ~PvssNotifyee() {}
+        virtual void notify() = 0;
+    };
+
     /// start checking of message via pvss.
     /// NOTE: msg.timeLeft should be set to -1 on input (waiting for pvss reply),
     /// and it will be set to some result value after pvss check is finished:
     ///  0 - message is blocked by pvss;
     ///  1 - message is allowed by pvss.
-    virtual void startPvssCheck( Message& msg ) = 0;
+    virtual void startPvssCheck( PvssNotifyee& notifyee, Message& msg ) = 0;
 };
 
 } // informer
