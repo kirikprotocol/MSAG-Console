@@ -859,7 +859,7 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
 
 void DeliveryMgr::startCancelThread( dlvid_type dlvId )
 {
-    smsc_log_info(log_,"FIXME: D=%u start cancellation thread",dlvId);
+    smsc_log_info(log_,"D=%u start cancellation task",dlvId);
     ctp_.startTask( new CancelTask(dlvId,*this) );
 }
 
