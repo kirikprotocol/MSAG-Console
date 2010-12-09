@@ -2,7 +2,8 @@ package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.DeliveryMode;
+import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -172,24 +173,6 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
       config.validateDeliveryWithSingleText(delivery);
     }else {
       config.validateDeliveryWithIndividualTexts(delivery);
-    }
-
-    User u = config.getUser(user);
-    DeliveryFilter filter = new DeliveryFilter();
-    filter.setNameFilter(delivery.getName());
-    final boolean[] intersection = new boolean[]{false};
-    config.getDeliveries(u.getLogin(), u.getPassword(), filter, 1, new Visitor<Delivery>() {
-      public boolean visit(Delivery value) throws AdminException {
-        if(value.getName().equals(delivery.getName())) {
-          intersection[0] = true;
-          return false;
-        }
-        return true;
-      }
-    });
-    if (intersection[0]) {
-      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "delivery.name.exist");
-      return null;
     }
 
     delivery.setProperty(UserDataConsts.SECRET, Boolean.toString(secret));

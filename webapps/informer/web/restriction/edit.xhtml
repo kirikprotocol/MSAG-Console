@@ -36,9 +36,7 @@
       <h:panelGrid style="padding-left:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
 
         <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.name']}"/>
-        <tr:inputText value="#{restrictionEdit.restriction.name}"  simple="true">
-          <tr:validateLength minimum="1"/>
-        </tr:inputText>
+        <tr:inputText value="#{restrictionEdit.restriction.name}"  simple="true"/>
 
         <h:outputText style="white-space:nowrap;" value="#{msg['restriction.page.startDate']}"/>
         <eye:inputDate value="#{restrictionEdit.restriction.startDate}" type="both" />

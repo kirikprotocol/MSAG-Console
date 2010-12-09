@@ -28,7 +28,7 @@ class RestrictionSettings {
   }
 
   public synchronized int addRestriction(Restriction r) throws AdminException {
-    checkRestriction(r);
+    r.validate();
     lastId++;
     r.setId(lastId);
     r = new Restriction(r);
@@ -37,7 +37,7 @@ class RestrictionSettings {
   }
 
   public synchronized void updateRestriction(Restriction r) throws AdminException {
-    checkRestriction(r);
+    r.validate();
     Restriction old = restrictions.remove(r.getId());
     if (old == null) {
       throw new RestrictionException("restrictions.not.found", r.getId() + "");
@@ -74,15 +74,5 @@ class RestrictionSettings {
       ret.add(new Restriction(r));
     }
     return ret;
-  }
-
-  void checkRestriction(Restriction r) throws AdminException {
-    if (r.getName() == null || r.getName().trim().length() == 0) throw new RestrictionException("error.empty.name");
-    if (r.getStartDate() == null) throw new RestrictionException("error.startDate.null");
-    if (r.getEndDate() == null) throw new RestrictionException("error.endDate.null");
-    if (r.getEndDate().getTime() <= r.getStartDate().getTime()) throw new RestrictionException("error.reverse.dates");
-    if (!r.isAllUsers() && (r.getUserIds() == null || r.getUserIds().size() == 0)) {
-      throw new RestrictionException("error.empty.users.list");
-    }
   }
 }

@@ -1,5 +1,8 @@
 package mobi.eyeline.informer.admin.restriction;
 
+import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -18,6 +21,7 @@ public class Restriction {
   private boolean allUsers;
   private List<String> userIds;
 
+  private final ValidationHelper vh = new ValidationHelper(Restriction.class);
 
   public Restriction() {
   }
@@ -30,6 +34,16 @@ public class Restriction {
     this.endDate = other.getEndDate();
     this.userIds = other.userIds == null ? null : new ArrayList<String>(other.getUserIds());
     this.allUsers = other.allUsers;
+  }
+
+  void validate() throws AdminException {
+    vh.checkNotEmpty("name", name);
+    vh.checkNotNull("startDate", startDate);
+    vh.checkNotNull("endDate", endDate);
+    vh.checkGreaterThan("endDate", endDate, startDate);
+    if (!allUsers) {
+      vh.checkSizeGreaterThan("users", userIds, 0);
+    }
   }
 
   public Integer getId() {
