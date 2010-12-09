@@ -69,7 +69,7 @@ std::string RegionSender::toString() const
 unsigned RegionSender::processRegion( usectime_type currentTime )
 {
     try {
-        smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
+        // smsc_log_debug(log_,"R=%u processing at %llu",getRegionId(),currentTime);
         currentTime_ = currentTime;
         const msgtime_type now = msgtime_type(currentTime_ / tuPerSec);
         struct tm tmnow;
@@ -96,12 +96,12 @@ unsigned RegionSender::processRegion( usectime_type currentTime )
         
         const unsigned toSleep = taskList_.processOnce(0/*not used*/,tuPerSec);
         if (toSleep>0) {
-            smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
-                           getRegionId(),toSleep);
+            // smsc_log_debug(log_,"R=%u deliveries are not ready, sleep=%u",
+            // getRegionId(),toSleep);
             speedControl_.suspend((currentTime + toSleep) % flipTimePeriod);
             return toSleep;
         } else {
-            smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
+            // smsc_log_debug(log_,"R=%u delivery processed",getRegionId());
             speedControl_.consumeQuant();
             return 0;
         }

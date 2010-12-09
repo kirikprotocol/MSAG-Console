@@ -259,7 +259,7 @@ rproc_(core),
 parser_(0),
 smscId_(smscId),
 smscConfig_(cfg),
-scoredList_(*this, 2*maxScoreIncrement,log_),
+scoredList_(*this, 2*maxScoreIncrement,0/*log_*/),
 journal_(0),
 awaken_(false),
 isStopping_(true)
@@ -1203,8 +1203,8 @@ void SmscSender::sendLoop()
                 int waitTime = int((nextWakeTime - currentTime_ + 1000)/1000U); // in msec
                 if (waitTime>0) {
                     if (waitTime < 5) waitTime = 5;
-                    smsc_log_debug(log_,"S='%s' is going to sleep %d msec",
-                                   smscId_.c_str(),waitTime);
+                    // smsc_log_debug(log_,"S='%s' is going to sleep %d msec",
+                    // smscId_.c_str(),waitTime);
                     queueMon_.wait(waitTime);
                     if (wQueue_->Count()>0) {
                         std::swap(rQueue,wQueue_);
@@ -1252,8 +1252,8 @@ void SmscSender::sendLoop()
 unsigned SmscSender::scoredObjIsReady( unsigned, ScoredPtrType regionSender )
 {
     const unsigned ret = regionSender->isReady(currentTime_);
-    smsc_log_debug(log_,"R=%u waits %u usec until ready()",
-                   regionSender->getRegionId(), ret);
+    // smsc_log_debug(log_,"R=%u waits %u usec until ready()",
+    // regionSender->getRegionId(), ret);
     return ret;
 }
 
