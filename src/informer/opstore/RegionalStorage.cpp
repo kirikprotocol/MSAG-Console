@@ -952,12 +952,13 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
         smsc_log_info(log_,"R=%u/D=%u resend-out writing %u records in '%s'",
                       regionId_, dlvId, count, fpath );
         FileGuard fg;
+        size_t oldFilePos = 0;
         try {
 
             // FIXME: optimize writing by big buffer
             fg.create( (getCS()->getStorePath() + fpath).c_str(),
                        0666, true );
-            fg.seek(0,SEEK_END);
+            oldFilePos = fg.seek(0,SEEK_END);
             static const uint8_t version = 1;
             for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
                 Message& msg = i->msg;
@@ -988,6 +989,18 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
         } catch ( std::exception& e ) {
             smsc_log_warn(log_,"R=%u/D=%u resend-out writing '%s' exc: %s",
                           regionId_, getDlvId(), fpath, e.what());
+            // cleanup the file
+            if ( oldFilePos == 0 ) {
+                try {
+                    FileGuard::unlink((getCS()->getStorePath() + fpath).c_str());
+                } catch ( std::exception& ex ) {
+                    smsc_log_warn(log_,"R=%u/D=%u resend-out cannot unlink '%s'",
+                                  regionId_, getDlvId(), fpath );
+                }
+            } else {
+                fg.truncate(oldFilePos);
+            }
+
             mg.Lock();
             // restoring resend queue from msgList
             for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {

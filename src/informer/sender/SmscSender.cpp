@@ -207,7 +207,7 @@ protected:
                 if (isStopping_) { break; }
                 if (!rd.responded) { continue; }
                 journalReceiptData(rd);
-                smsc_log_debug(sender_.log_,"FIXME: optimize S='%s' place limit on throughput",sender_.smscId_.c_str());
+                // FIXME: optimize place limit on throughput
                 MutexGuard mg(mon_);
                 mon_.wait(30);
             } while (true);

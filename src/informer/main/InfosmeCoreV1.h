@@ -181,9 +181,6 @@ private:
     dcp::DcpServer*                               dcpServer_;    // owned
     alm::IActivityLogMiner*                       alm_;          // owned
 
-    // FIXME: optimize - decrease lock contention by splitting mon between each pvss requester.
-    smsc::core::synchronization::EventMonitor     pvssMon_;
-
     scag2::pvss::core::client::Client*            pvss_;         // owned
     PvssRespHandler*                              pvssHandler_;  // owned
 };

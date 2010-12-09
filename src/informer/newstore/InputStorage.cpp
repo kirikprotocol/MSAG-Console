@@ -353,7 +353,6 @@ void InputStorage::dispatchMessages( MsgIter begin,
         for ( MsgIter i = begin; i != end; ++i ) {
             if (i->serial != regId) continue;
             if (ro.count % fileSize == 0) {
-                // FIXME: should we write a record here, no?
                 // need to create new file.
                 ro.wfn = ++lastfn_;
                 ro.woff = 0;
