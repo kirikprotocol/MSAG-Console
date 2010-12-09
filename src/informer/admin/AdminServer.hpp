@@ -16,7 +16,7 @@ namespace net=smsc::core::network;
 
 class AdminServer:public eyeline::protogen::ServerBase,public AdminCommandsHandler{
 public:
-  AdminServer():ServerBase("admin")
+  AdminServer():ServerBase("admin"),core(0)
   {
     proto.assignHandler(this);
   }

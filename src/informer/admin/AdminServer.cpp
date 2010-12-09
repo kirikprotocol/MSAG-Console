@@ -25,6 +25,10 @@ void AdminServer::handle(const messages::ConfigOp& cmd)
   messages::ConfigOpResult resp;
   resp.messageSetSeqNum(cmd.messageGetSeqNum());
   try{
+    if(!core)
+    {
+      throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+    }
     switch(cmd.getCfgId().getValue())
     {
       case messages::ConfigId::ciRegion:
@@ -56,9 +60,13 @@ void AdminServer::handle(const messages::ConfigOp& cmd)
       }break;
     }
     resp.setStatus(0);
+  }catch(InfosmeException& e)
+  {
+    resp.setStatus(e.getCode());
+    resp.setMsg(e.what());
   }catch(std::exception& e)
   {
-    resp.setStatus(1);
+    resp.setStatus(EXC_GENERIC);
     resp.setMsg(e.what());
   }
   enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
@@ -69,11 +77,18 @@ void AdminServer::handle(const messages::SetDefaultSmsc& cmd)
   messages::SetDefaultSmscResp resp;
   resp.messageSetSeqNum(cmd.messageGetSeqNum());
   try{
+    if(!core)
+    {
+      throw InfosmeException(EXC_SYSTEM,"Not ready yet.");
+    }
     core->updateDefaultSmsc(cmd.getId().c_str());
     resp.setStatus(0);
+  }catch(InfosmeException& e)
+  {
+    resp.setStatus(e.getCode());
   }catch(std::exception& e)
   {
-    resp.setStatus(1);
+    resp.setStatus(EXC_GENERIC);
   }
 
   enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
@@ -120,6 +135,10 @@ void AdminServer::handle(const messages::SendTestSms& cmd)
   messages::SendTestSmsResp resp;
   resp.messageSetSeqNum(cmd.messageGetSeqNum());
   try{
+    if(!core)
+    {
+      throw InfosmeException(EXC_SYSTEM,"Not ready yet.");
+    }
     personid_type abnt=parseAddress(cmd.getAbonent().c_str());
     DlvMode dlvMode;
     switch(cmd.getDeliveryMode().getValue())
@@ -133,6 +152,9 @@ void AdminServer::handle(const messages::SendTestSms& cmd)
   }catch(InfosmeException& e)
   {
     code=-e.getCode();
+  }catch(std::exception& e)
+  {
+    code=-EXC_GENERIC;
   }
   resp.setRespCode(code);
   enqueueCommand(cmd.messageGetConnId(),resp,proto,false);
