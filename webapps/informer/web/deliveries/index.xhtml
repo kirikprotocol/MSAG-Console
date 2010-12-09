@@ -52,7 +52,7 @@
         <eye:delimiter/>
         <eye:buttons>
           <eye:button>
-            <tr:commandLink text="#{msg['create.button']}" action="DELIVERY_CREATE"/>
+            <tr:commandLink text="#{msg['create.button']}" action="DELIVERY_CREATE" shortDesc="#{msg['delivery.details.create']}"/>
           </eye:button>
           <eye:button>
             <eye:menubar label="#{msg['informer.deliveries.selected']}...">
@@ -77,10 +77,10 @@
             <h:outputText value="#{m.id}"/>
           </eye:column>
           <eye:column name="name" title="#{deliveryBundle.name}" sortable="true" width="19%">
-            <h:commandLink value="#{m.name}" action="DELIVERY_EDIT">
+            <tr:commandLink text="#{m.name}" action="DELIVERY_EDIT"  shortDesc="#{msg['delivery.details.show']}">
               <f:param name="#{deliveries.deliveryParam}" value="#{m.deliveryId}"/>
               <f:param name="init" value="#{deliveries.init}"/>
-            </h:commandLink>
+            </tr:commandLink>
           </eye:column>
           <eye:column name="userId" title="#{deliveryBundle.owner}" sortable="true" width="19%" align="center">
             <h:outputText value="#{m.userId}"/>
@@ -114,7 +114,7 @@
         <eye:delimiter/>
         <eye:buttons>
           <eye:button>
-            <tr:commandLink text="#{msg['create.button']}" action="DELIVERY_CREATE"/>
+            <tr:commandLink text="#{msg['create.button']}" action="DELIVERY_CREATE" shortDesc="#{msg['delivery.details.create']}"/>
           </eye:button>
           <eye:button>
             <eye:menubar label="#{msg['informer.deliveries.selected']} ...">

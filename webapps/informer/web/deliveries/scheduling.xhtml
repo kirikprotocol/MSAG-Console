@@ -37,7 +37,7 @@
           <h:outputText value="&#160;"/>
           <tr:iterator value="#{list}" var="m">
             <br/>
-            <tr:commandLink text="#{m.name}" action="DELIVERY_EDIT">
+            <tr:commandLink text="#{m.name}" action="DELIVERY_EDIT" shortDesc="#{msg['delivery.details.show']}">
               <f:param name="#{deliveriesWeekly.deliveryParam}" value="#{m.id}"/>
               <f:param name="#{deliveriesWeekly.deliveryComeBackParam}" value="DELIVERIES_WEEKLY"/>
             </tr:commandLink>

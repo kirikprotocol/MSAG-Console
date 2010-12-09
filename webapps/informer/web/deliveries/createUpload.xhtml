@@ -49,7 +49,7 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" action="#{createDelivery.cancel}" immediate="true" shortDesc="#{msg['delivery.create.details.cancel']}"/>
         </eye:button>
         <eye:button>
           <tr:commandLink text="#{msg['next.button']} &gt;" action="#{createDelivery.activePage.upload}"/>
@@ -95,7 +95,7 @@
 
       <eye:buttons>
         <eye:button rendered="#{createDelivery.activePage.finished}">
-          <tr:commandLink text="&lt; #{msg['back.button']}" action="#{createDelivery.returnToStart}" immediate="true"/>
+          <tr:commandLink text="&lt; #{msg['back.button']}" action="#{createDelivery.returnToStart}" immediate="true" shortDesc="#{msg['delivery.create.details.cancel']}"/>
         </eye:button>
         <eye:button rendered="#{!createDelivery.activePage.finished}">
           <tr:commandLink text="#{msg['stop.button']}" action="#{createDelivery.activePage.stop}"/>

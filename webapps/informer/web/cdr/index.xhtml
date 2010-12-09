@@ -18,10 +18,10 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" action="#{cdr.save}"/>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{cdr.save}" shortDesc="#{msg['cdr.details.save']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="CDR" immediate="true"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="CDR" immediate="true" shortDesc="#{msg['cdr.details.cancel']}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -47,14 +47,13 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" action="#{cdr.save}"/>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{cdr.save}" shortDesc="#{msg['cdr.details.save']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="CDR" immediate="true"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="CDR" immediate="true" shortDesc="#{msg['cdr.details.cancel']}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
-
 
     </tr:form>
 

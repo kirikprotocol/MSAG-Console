@@ -18,19 +18,19 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{deliveryEdit.save}"/>
+          <tr:commandLink text="#{msg['done.button']}" action="#{deliveryEdit.save}" shortDesc="#{msg['delivery.details.save']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="#{deliveryEdit.cancel}" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" action="#{deliveryEdit.cancel}" immediate="true" shortDesc="#{msg['delivery.details.cancel']}"/>
         </eye:button>
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}">
+          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
           </tr:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES">
+          <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
           </tr:commandLink>
         </eye:button>
@@ -59,11 +59,11 @@
           <tr:panelGroupLayout rendered="#{userSession.userInAdminRole}" shortDesc="#{msg['user.edit.title']}">
             <h:outputText value="&#160;"/>
             <h:outputText value="&#160;"/>
-            <h:commandLink value=">>" action="USER_EDIT" immediate="true">
+            <tr:commandLink text=">>" action="USER_EDIT" immediate="true" shortDesc="#{msg['user.details.show']}">
               <f:param name="user_edit_comeback" value="DELIVERY_EDIT"/>
               <f:param name="userId" value="#{deliveryEdit.delivery.owner}"/>
               <f:param name="user_edit_comeback_params" value="#{deliveryEdit.userComeBackParams}"/>
-            </h:commandLink>
+            </tr:commandLink>
           </tr:panelGroupLayout>
 
         </tr:panelGroupLayout>
@@ -127,7 +127,7 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.singleText}" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}"/>
         <h:panelGrid columns="1" rendered="#{deliveryEdit.delivery.type.value == 'SingleText'}">
           <tr:inputText value="#{deliveryEdit.delivery.singleText}" rows="3" simple="true"/>
-          <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}"/>
+          <tr:commandLink text="#{msg['test.button']}" action="#{deliveryEdit.sendTest}" shortDesc="#{msg['delivery.details.test.sms']}"/>
         </h:panelGrid>
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretMessage}" rendered="#{deliveryEdit.secret}"/>
@@ -216,19 +216,19 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['done.button']}" action="#{deliveryEdit.save}"/>
+          <tr:commandLink text="#{msg['done.button']}" action="#{deliveryEdit.save}" shortDesc="#{msg['delivery.details.save']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['cancel.button']}" action="#{deliveryEdit.cancel}" immediate="true"/>
+          <tr:commandLink text="#{msg['cancel.button']}" action="#{deliveryEdit.cancel}" immediate="true" shortDesc="#{msg['delivery.details.cancel']}"/>
         </eye:button>
         <eye:space/>
         <eye:button>
-          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}">
+          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
           </tr:commandLink>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES">
+          <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
             <f:param name="delivery" value="#{deliveryEdit.delivery.id}"/>
           </tr:commandLink>
         </eye:button>

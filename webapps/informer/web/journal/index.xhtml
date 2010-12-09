@@ -63,9 +63,9 @@
         <eye:buttons>
           <eye:space/>
           <eye:button>
-            <h:commandLink value="#{msg['download.button']}">
+            <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['journal.details.download']}">
               <tr:fileDownloadActionListener method="#{journal.download}" contentType="application/csv" filename="journal.csv"/>
-            </h:commandLink>
+            </tr:commandLink>
           </eye:button>
         </eye:buttons>
       </h:panelGroup>

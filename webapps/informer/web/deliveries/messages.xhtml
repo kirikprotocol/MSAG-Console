@@ -84,16 +84,16 @@
         <h:panelGroup style="#{messages.init ? '' : 'display:none'}">
           <eye:buttons>
             <eye:button>
-              <tr:commandLink text="#{msg['resend.button']}" action="#{messages.resend}"
+              <tr:commandLink text="#{msg['resend.button']}" action="#{messages.resend}" shortDesc="#{msg['messages.details.resend']}"
                               onclick="if (!confirm('#{msg['informer.deliveries.messages.resend.confirm']}')) return false"/>
             </eye:button>
             <eye:button>
-              <tr:commandLink text="#{msg['resend.all.button']}" action="#{messages.resendAll}"
+              <tr:commandLink text="#{msg['resend.all.button']}" action="#{messages.resendAll}" shortDesc="#{msg['messages.details.resend.all']}"
                               onclick="if (!confirm('#{msg['informer.deliveries.messages.resend.confirm']}')) return false"/>
             </eye:button>
             <eye:space/>
             <eye:button>
-              <tr:commandLink text="#{msg['download.button']}">
+              <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['messages.details.download']}">
                 <tr:fileDownloadActionListener method="#{messages.download}" contentType="application/csv" filename="messages.csv"/>
               </tr:commandLink>
             </eye:button>

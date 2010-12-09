@@ -103,16 +103,15 @@
           
           <eye:buttons rendered="#{longOpState == 2}">
             <eye:button>
-              <tr:commandLink text="#{msg['delete.button']}" action="#{statsSize.removeSelected}"
+              <tr:commandLink text="#{msg['delete.button']}" action="#{statsSize.removeSelected}"  shortDesc="#{msg['stat.clean.details.delete']}"
                           onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
-                          
               />
             </eye:button>
             <eye:space/>
             <eye:button>
-              <h:commandLink value="#{msg['download.button']}"  >
+              <tr:commandLink text="#{msg['download.button']}"  shortDesc="#{msg['stat.clean.details.download']}">
                 <tr:fileDownloadActionListener method="#{statsSize.download}" contentType="application/csv" filename="statSizes.csv"/>
-              </h:commandLink>
+              </tr:commandLink>
             </eye:button>
           </eye:buttons>
         </eye:updatableContent>

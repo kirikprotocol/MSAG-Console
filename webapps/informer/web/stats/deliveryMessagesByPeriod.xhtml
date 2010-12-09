@@ -177,9 +177,9 @@
           <eye:buttons rendered="#{longOpState == 2}">
             <eye:space/>
             <eye:button >
-              <h:commandLink value="#{msg['download.button']}" >
+              <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['stat.details.download']}">
                 <tr:fileDownloadActionListener method="#{deliveryMessagesByPeriod.download}" contentType="application/csv" filename="deliveryCommonStat.csv"/>
-              </h:commandLink>
+              </tr:commandLink>
             </eye:button>
           </eye:buttons>
 

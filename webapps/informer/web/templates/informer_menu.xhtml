@@ -46,7 +46,8 @@
         <td width="100%">&#160;</td>
         <td style="white-space:nowrap">
           <div>
-          <h:commandLink id="MENU0_LOGOUT" rendered="#{userSession.userName != null}" value="#{msg['informer.logout']} &quot;#{userSession.userName}&quot;" action="#{userSession.logout}"/>
+          <tr:commandLink id="MENU0_LOGOUT" rendered="#{userSession.userName != null}" shortDesc="#{msg['informer.main.details.logout']}" 
+                          text="#{msg['informer.logout']} &quot;#{userSession.userName}&quot;" action="#{userSession.logout}"/>
           </div>
         </td>
         <td width="52">&#160;</td>

@@ -1,7 +1,8 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.DeliveryPrototype;
+import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
@@ -105,7 +106,7 @@ public class ProcessDeliveryPage extends InformerController implements CreateDel
     public void run() {
       try {
         _process();
-      } catch (AdminException e) {
+      } catch (LocalizedException e) {
         error = e.getMessage(locale);
         logger.warn(e, e);
       } catch (InterruptedException e) {
