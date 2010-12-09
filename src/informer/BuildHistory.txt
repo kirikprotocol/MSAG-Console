@@ -1,0 +1,5 @@
+=====================================================================
+2010-12-09 10:20 bukind informer-build-20101209
+  The first official build.
+
+History in reverse order please.  Builds are separated by ==== line.
