@@ -10,7 +10,8 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.PrintStream;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -30,7 +31,7 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
   private ScheduledExecutorService reportScheduler;
   static final String NAME = "ContentProviderDaemon";
   static final String NAME_REPORT = "ContentProviderDaemonReports";
-  private static final long PERIOD_MSEC = 300000L;
+  private int periodSec;
   private static final long SHUTDOWN_WAIT_TIME = 2000L;
   FileSystem fileSys;
   ContentProviderContext context;
@@ -39,10 +40,11 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
 
 
 
-  public ContentProviderDaemon(ContentProviderContext context, File informerBase, File workDir) throws AdminException {  
+  public ContentProviderDaemon(ContentProviderContext context, File informerBase, File workDir, int periodSec) throws AdminException {  
     this.context = context;
     this.informerBase = informerBase;
     this.workDir = new File(workDir,"contentProvider");
+    this.periodSec = periodSec;
 
     fileSys=context.getFileSystem();
     if(!fileSys.exists(this.workDir)) {
@@ -71,7 +73,7 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
       }
     });
 
-    scheduler.scheduleAtFixedRate(new ContentProviderImportTask(context,this,workDir),0,getPeriod(),TimeUnit.MILLISECONDS);
+    scheduler.scheduleAtFixedRate(new ContentProviderImportTask(context,this,workDir),0, periodSec,TimeUnit.SECONDS);
 
     reportScheduler.schedule(new ContentProviderReportTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
 
@@ -154,9 +156,5 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
     finally {
       try {if(con!=null) con.close();} catch (Exception ignored){}
     }
-  }
-
-  protected long getPeriod() {
-    return PERIOD_MSEC;
   }
 }

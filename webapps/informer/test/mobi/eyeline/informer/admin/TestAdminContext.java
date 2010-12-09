@@ -244,8 +244,7 @@ public class TestAdminContext extends AdminContext {
       restrictionDaemon.start();
 
       contentProviderDaemon = new TestContentProviderDaemon(
-          new ContentProviderContextImpl(this),appBaseDir, workDir
-      );
+          new ContentProviderContextImpl(this),appBaseDir, workDir);
 
       contentProviderDaemon.start();
 

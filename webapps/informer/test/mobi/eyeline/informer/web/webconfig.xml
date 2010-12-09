@@ -30,6 +30,10 @@
     <param name="mail.from" type="string">admin@informer.com</param>
   </section>
 
+  <section name="contentProvider">
+    <param name="period" type="int">300</param> <!-- sec -->
+  </section>
+
   <section name="sms">
     <param name="senderAddress" type="string">+79130000000</param>
   </section>

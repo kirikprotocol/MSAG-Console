@@ -31,6 +31,17 @@ class WebConfigSettings {
   private boolean allowUssdPushDeliveries;
   private String workDir;
 
+  private int contentProviderPeriod;
+
+  int getContentProviderPeriod() {
+    return contentProviderPeriod;
+  }
+
+  void setContentProviderPeriod(int contentProviderPeriod) {
+    this.contentProviderPeriod = contentProviderPeriod;
+  }
+
+
   public String getWorkDir() {
     return workDir;
   }

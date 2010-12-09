@@ -179,7 +179,7 @@ public class AdminContext {
       restrictionDaemon = new RestrictionDaemon(new RestrictionDaemonContextImpl(this));
 
 
-      contentProviderDaemon = new ContentProviderDaemon(new ContentProviderContextImpl(this),appBaseDir,workDir);
+      contentProviderDaemon = new ContentProviderDaemon(new ContentProviderContextImpl(this), appBaseDir, workDir, webConfig.getContentProviderPeriod());
 
 
       deliveryChangesDetector = new DeliveryChangesDetector(new File(is.getStoreDir(), "final_log"), fileSystem);

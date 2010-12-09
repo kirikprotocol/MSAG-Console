@@ -1,8 +1,6 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.admin.users.UserCPsettings;
 
 import java.io.File;
 
@@ -16,9 +14,6 @@ public class TestContentProviderDaemon extends ContentProviderDaemon{
 
 
   public TestContentProviderDaemon(ContentProviderContext context, File informerBase, File appWorkDir) throws AdminException {
-    super(context, informerBase, appWorkDir);
-  }
-  protected long getPeriod() {
-    return 1000;
+    super(context, informerBase, appWorkDir, 1);
   }
 }
