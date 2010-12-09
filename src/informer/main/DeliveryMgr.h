@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "core/threads/Thread.hpp"
+#include "core/threads/ThreadPool.hpp"
 #include "informer/data/DeliveryInfo.h"
 #include "informer/data/SpeedControl.h"
 #include "informer/io/Typedefs.h"
@@ -24,6 +25,7 @@ class DeliveryMgr : public ReceiptProcessor, public smsc::core::threads::Thread
     class InputJournalRoller;
     class StoreJournalRoller;
     class StatsDumper;
+    class CancelTask;
 
 public:
     DeliveryMgr( InfosmeCoreV1& core, CommonSettings& cs );
@@ -118,6 +120,8 @@ private:
 
     smsc::core::synchronization::EventMonitor     trafficMon_;
     SpeedControl<usectime_type,tuPerSec>          trafficSpeed_;
+
+    smsc::core::threads::ThreadPool               ctp_;
 };
 
 } // informer

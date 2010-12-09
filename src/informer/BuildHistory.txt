@@ -1,3 +1,6 @@
+2010-12-09 17:45 bukind
+  Cancel task impl to remove messages of cancelled dlv from opstore.
+
 =====================================================================
 2010-12-09 10:20 bukind informer-build-20101209
   The first official build.

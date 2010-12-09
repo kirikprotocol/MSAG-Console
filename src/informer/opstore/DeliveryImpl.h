@@ -90,6 +90,9 @@ public:
     /// check if all regional storages is empty, and no messages in retries.
     void checkFinalize();
 
+    /// invoked to cancel all messages from operative storage
+    void cancelOperativeStorage();
+
 private:
     typedef std::list< RegionalStoragePtr >            StoreList;
     typedef smsc::core::buffers::IntHash< StoreList::iterator > StoreHash;

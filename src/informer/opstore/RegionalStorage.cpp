@@ -10,6 +10,7 @@
 #include "informer/data/RetryPolicy.h"
 #include "DeliveryImpl.h"
 #include "StoreJournal.h"
+#include "system/status.h"
 
 namespace eyeline {
 namespace informer {
@@ -707,6 +708,23 @@ bool RegionalStorage::postInit()
     dlv_->activityLog_.incStats(MSGSTATE_SENT,sent);
     dlv_->activityLog_.incStats(MSGSTATE_PROCESS,process);
     return ( !messageList_.empty() || nextResendFile_);
+}
+
+
+void RegionalStorage::cancelOperativeStorage()
+{
+    RelockMutexGuard mg(cacheMon_);
+    // cleanup the resend queue and the messageHash_ first
+    resendQueue_.clear();
+    messageHash_.Empty();
+    nextResendFile_ = 0;
+    const msgtime_type currentTime = currentTimeSeconds();
+    const int smppState = smsc::system::Status::CANCELFAIL;
+    while ( ! messageList_.empty() ) {
+        MsgIter iter = messageList_.begin();
+        doFinalize(mg,iter,currentTime,MSGSTATE_FAILED,smppState,0);
+        mg.Lock();
+    }
 }
 
 

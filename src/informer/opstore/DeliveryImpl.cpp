@@ -420,6 +420,7 @@ void DeliveryImpl::detachEverything( bool cleanDirectory )
 
 void DeliveryImpl::checkFinalize()
 {
+    if ( state_ != DLVSTATE_ACTIVE ) return;
     const dlvid_type dlvId = getDlvInfo()->getDlvId();
     smsc_log_debug(log_,"D=%u check finalize invoked",dlvId);
     DeliveryStats ds;
@@ -450,6 +451,22 @@ void DeliveryImpl::checkFinalize()
                           ds.killedMessages );
         }
     }
+}
+
+
+void DeliveryImpl::cancelOperativeStorage()
+{
+    dlvid_type dlvId = getDlvId();
+    smsc_log_debug(log_,"D=%u cancellation of operative storage started",dlvId);
+    std::vector< regionid_type > regIds;
+    getRegionList(regIds);
+    for ( std::vector<regionid_type>::const_iterator i = regIds.begin();
+          i != regIds.end(); ++i ) {
+        RegionalStoragePtr ptr = getRegionalStorage(*i,false);
+        if (ptr.get()) { ptr->cancelOperativeStorage(); }
+        if (source_->getDlvActivator().isStopping()) break;
+    }
+    smsc_log_debug(log_,"D=%u cancellation of operative storage finished",dlvId);
 }
 
 

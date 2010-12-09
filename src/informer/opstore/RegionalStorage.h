@@ -110,6 +110,9 @@ public:
     /// into newQueue and resendQueue.
     bool postInit();
 
+    /// cancel operative storage messages.
+    void cancelOperativeStorage();
+
 protected:
     /// invoked when upload task has finished.
     virtual void transferFinished( InputTransferTask* );

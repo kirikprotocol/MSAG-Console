@@ -350,6 +350,28 @@ private:
     smsc::logger::Logger* log_;
 };
 
+
+class DeliveryMgr::CancelTask : public smsc::core::threads::ThreadedTask
+{
+public:
+    CancelTask( dlvid_type dlvId, DeliveryMgr& mgr ) :
+    dlvId_(dlvId), mgr_(mgr) {}
+
+    virtual ~CancelTask() {}
+    virtual const char* taskName() { return "cancel"; }
+    virtual int Execute() {
+        DeliveryImplPtr ptr;
+        if (!mgr_.getDelivery(dlvId_,ptr) || !ptr ) { return 1; }
+        ptr->cancelOperativeStorage();
+        return 0;
+    }
+
+private:
+    dlvid_type   dlvId_;
+    DeliveryMgr& mgr_;
+};
+
+
 // ============================================================================
 
 DeliveryMgr::DeliveryMgr( InfosmeCoreV1& core, CommonSettings& cs ) :
@@ -370,6 +392,7 @@ lastDlvId_(0),
 trafficSpeed_(cs_.getLicenseLimit())
 {
     smsc_log_debug(log_,"ctor");
+    ctp_.setMaxThreads(10);
 }
 
 
@@ -500,6 +523,7 @@ void DeliveryMgr::stop()
         stopping_ = true;
         mon_.notifyAll();
     }
+    ctp_.stopNotify();
     {
         MutexGuard mg(trafficMon_);
         trafficMon_.notifyAll();
@@ -509,6 +533,7 @@ void DeliveryMgr::stop()
     if (statsDumper_) statsDumper_->WaitFor();
 
     WaitFor();
+    ctp_.shutdown(0);
     smsc_log_debug(log_,"leaving stop()");
 }
 
@@ -835,6 +860,7 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
 void DeliveryMgr::startCancelThread( dlvid_type dlvId )
 {
     smsc_log_info(log_,"FIXME: D=%u start cancellation thread",dlvId);
+    ctp_.startTask( new CancelTask(dlvId,*this) );
 }
 
 
