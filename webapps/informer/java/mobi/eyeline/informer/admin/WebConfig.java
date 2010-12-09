@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
+import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.util.config.ManagedConfigFile;
 import mobi.eyeline.informer.util.Address;
@@ -30,16 +31,16 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
 
     XmlConfigSection javamail = config.getOrCreateSection("javamail");
 
-    Properties props = settings.getJavaMailProperties();
+    Properties props = settings.getNotificationSettings().getMailProperties();
     for (Object s : props.keySet()) {
       javamail.addParam(new XmlConfigParam((String) s, (String) props.get(s), XmlConfigParam.Type.STRING));
     }
 
     XmlConfigSection sms = config.getSection("sms");
-    sms.addParam(new XmlConfigParam("senderAddress", settings.getSmsSenderAddress().getSimpleAddress(), XmlConfigParam.Type.STRING));
+    sms.addParam(new XmlConfigParam("senderAddress", settings.getNotificationSettings().getSmsSenderAddress().getSimpleAddress(), XmlConfigParam.Type.STRING));
 
     XmlConfigSection notificationTemplates = config.getSection("notificationTemplates");
-    props = settings.getNotificationTemplates();
+    props = settings.getNotificationSettings().getNotificationTemplates();
     for (Object s : props.keySet()) {
       notificationTemplates.addParam(new XmlConfigParam((String) s, (String) props.get(s), XmlConfigParam.Type.STRING));
     }
@@ -103,14 +104,17 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       settings.setJournalDir(system.getString("journal dir"));
       settings.setWorkDir(system.getString("work dir"));
 
+
       XmlConfigSection javamail = webconfig.getSection("javamail");
-      settings.setJavaMailProperties(javamail.toProperties("", null));
+      Properties jmp = javamail.toProperties("", null);
 
       XmlConfigSection sms = webconfig.getSection("sms");
-      settings.setSmsSenderAddress(new Address(sms.getString("senderAddress")));
+      Address smsAddress = new Address(sms.getString("senderAddress"));
 
       XmlConfigSection notificationTemplates = webconfig.getSection("notificationTemplates");
-      settings.setNotificationTemplates(notificationTemplates.toProperties("", null));
+      Properties nt = notificationTemplates.toProperties("", null);
+
+      settings.setNotificationSettings(new NotificationSettings(jmp, nt, smsAddress));
 
       XmlConfigSection siebel = webconfig.getSection("siebel");
       settings.setSiebelSettings(new SiebelSettings(siebel.toProperties("", null)));

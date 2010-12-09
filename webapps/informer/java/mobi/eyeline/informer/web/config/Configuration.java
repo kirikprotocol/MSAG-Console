@@ -12,6 +12,7 @@ import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.notifications.DateAndFile;
+import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionException;
@@ -411,35 +412,17 @@ public class Configuration {
     context.sendTestSms(sms);
   }
 
-  public Properties getJavaMailProperties() {
-    return context.getJavaMailProperties();
+
+  public NotificationSettings getNotificationSettings() {
+    return context.getNotificationSettings();
   }
 
-  public void updateJavaMailProperties(Properties props, String user) throws AdminException {
-    Properties old = context.getJavaMailProperties();
-    context.setJavaMailProperties(props);
-    journal.logUpdateJavaMailProps(props, old, user);
+  public void updateNotificationSettings(NotificationSettings props, String user) throws AdminException {
+    NotificationSettings old = context.getNotificationSettings();
+    context.setNotificationSettings(props);
+    journal.logUpdateNotificationSettings(props, old, user);
   }
 
-  public Properties getNotificationTemplates() {
-    return context.getNotificationTemplates();
-  }
-
-  public void updateNotificationTemplates(Properties props, String user) throws AdminException {
-    Properties old = context.getNotificationTemplates();
-    context.setNotificationTemplates(props);
-    journal.logUpdateNotificationTemplates(props, old, user);
-  }
-
-  public Address getSmsSenderAddress() {
-    return context.getSmsSenderAddress();
-  }
-
-  public void setSmsSenderAddress(Address addr, String user) throws AdminException {
-    Address old = getSmsSenderAddress();
-    context.setSmsSenderAddress(addr);
-    journal.logUpdateSmsSenderAddress(addr, old, user);
-  }
 
   public boolean isCdrStarted() {
     return context.isCdrStarted();
@@ -460,13 +443,13 @@ public class Configuration {
   public void setCdrSettings(CdrSettings props, String user) throws AdminException {
     CdrSettings old = context.getCdrSettings();
     context.setCdrSettings(props);
-    journal.logUpdateCdrProps(props.getAllProperties(), old.getAllProperties(), user);
+    journal.logUpdateCdrProps(props, old, user);
   }
 
   public boolean setSiebelSettings(SiebelSettings props, String user) throws AdminException {
     SiebelSettings old = context.getSiebelSettings();
     boolean res =  context.setSiebelSettings(props);
-    journal.logUpdateSiebelProps(props.getAllProperties(), old.getAllProperties(), user);
+    journal.logUpdateSiebelProps(props, old, user);
     return res;
   }
 
@@ -478,12 +461,12 @@ public class Configuration {
     return context.isAllowUssdPushDeliveries();
   }
 
-  public void sendTestEmailNotification(User user, String email, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
-    context.sendTestEmailNotification(user,email,javaMailProps, notificationTemplates);
+  public void sendTestEmailNotification(User user, String email, NotificationSettings settings) throws AdminException {
+    context.sendTestEmailNotification(user,email,settings);
   }
 
-  public void sendTestSmsNotification(User user, Address address, DeliveryStatus status, Properties templates) throws AdminException {
-    context.sendTestSMSNotification(user,address,status,templates);  
+  public void sendTestSmsNotification(User user, Address address, DeliveryStatus status, NotificationSettings settings) throws AdminException {
+    context.sendTestSMSNotification(user,address,status,settings);
   }
 
   private final Lock lock = new ReentrantLock();

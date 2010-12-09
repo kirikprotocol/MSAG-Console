@@ -4,10 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.util.Address;
-
-import java.lang.reflect.Field;
-import java.util.Properties;
 
 /**
  * Copyright Eyeline.mobi
@@ -21,13 +17,9 @@ public interface DeliveryNotificationsContext {
 
   Delivery getDelivery(String login, String password, int deliveryId) throws AdminException;
 
-  Address getSmsSenderAddress() throws AdminException;
-
-  Properties getNotificationTemplates() ;
+  NotificationSettings getNotificationSettings();
 
   void sendTestSms(TestSms testSms) throws AdminException;
-
-  Properties getJavaMailProperties();
 
 
 }

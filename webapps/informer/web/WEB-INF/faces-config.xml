@@ -57,6 +57,11 @@
       <var>cdrBundle</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.notifications.NotificationSettings</base-name>
+      <var>notificationBundle</var>
+    </resource-bundle>
+
   </application>
 
   <converter>

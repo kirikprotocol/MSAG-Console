@@ -1,20 +1,21 @@
 package mobi.eyeline.informer.admin.journal;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
+import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
+import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
-import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Журнал операций Informer
@@ -364,24 +365,15 @@ public class Journal {
     restrictions.logDeleteRestriction(this, user, r);
   }
 
-  public void logUpdateJavaMailProps(Properties props, Properties old, String user) throws AdminException {
-    webconfig.logUpdateJavaMailProps(this, props, old, user);
+  public void logUpdateNotificationSettings(NotificationSettings props, NotificationSettings old, String user) throws AdminException {
+    webconfig.logUpdateNotificationSettings(this, props, old, user);
   }
 
-  public void logUpdateNotificationTemplates(Properties props, Properties old, String user) throws AdminException {
-    webconfig.logUpdateNotificationTemplates(this, props, old, user);
-  }
-
-  public void logUpdateSmsSenderAddress(Address addr, Address old, String user) throws AdminException {
-    webconfig.logUpdateSmsSenderAddress(this, addr, old, user);
-
-  }
-
-  public void logUpdateSiebelProps(Properties props, Properties old, String user) throws AdminException {
+  public void logUpdateSiebelProps(SiebelSettings props, SiebelSettings old, String user) throws AdminException {
     webconfig.logUpdateSiebelProps(this, props, old, user);
   }
 
-  public void logUpdateCdrProps(Properties props, Properties old, String user) throws AdminException {
+  public void logUpdateCdrProps(CdrSettings props, CdrSettings old, String user) throws AdminException {
     webconfig.logUpdateCdrProps(this, props, old, user);
   }
 }

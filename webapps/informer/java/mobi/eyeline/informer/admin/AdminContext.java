@@ -24,6 +24,7 @@ import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.notifications.DateAndFile;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsContext;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
+import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
 import mobi.eyeline.informer.admin.restriction.*;
@@ -891,28 +892,12 @@ public class AdminContext {
     infosme.sendTestSms(sms);
   }
 
-  public Properties getJavaMailProperties() {
-    return webConfig.getJavaMailProperties();
+  public NotificationSettings getNotificationSettings() {
+    return webConfig.getNotificationSettings();
   }
 
-  public void setJavaMailProperties(Properties props) throws AdminException {
-    webConfig.setJavaMailProperties(props);
-  }
-
-  public Properties getNotificationTemplates() {
-    return webConfig.getNotificationTemplates();
-  }
-
-  public void setNotificationTemplates(Properties props) throws AdminException {
-    webConfig.setNotificationTemplates(props);
-  }
-
-  public Address getSmsSenderAddress() {
-    return webConfig.getSmsSenderAddress();
-  }
-
-  public void setSmsSenderAddress(Address addr) throws AdminException {
-    webConfig.setSmsSenderAddress(addr);
+  public void setNotificationSettings(NotificationSettings props) throws AdminException {
+    webConfig.setNotificationSettings(props);
   }
 
   public CdrSettings getCdrSettings() {
@@ -997,11 +982,11 @@ public class AdminContext {
     contentProviderDaemon.verifyConnection(u,ucps);
   }
 
-  public void sendTestEmailNotification(User user, String email, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
-    deliveryNotificationsDaemon.sendTestEmailNotification(user,email,javaMailProps, notificationTemplates);
+  public void sendTestEmailNotification(User user, String email, NotificationSettings settings) throws AdminException {
+    deliveryNotificationsDaemon.sendTestEmailNotification(user,email,settings);
   }
-  public void sendTestSMSNotification(User user, Address address, DeliveryStatus status, Properties notificationTemplates) throws AdminException {
-    deliveryNotificationsDaemon.sendTestSMSNotification(user,address,status,notificationTemplates);
+  public void sendTestSMSNotification(User user, Address address, DeliveryStatus status, NotificationSettings settings) throws AdminException {
+    deliveryNotificationsDaemon.sendTestSMSNotification(user,address,status, settings);
   }
 
   public void validateDeliveryWithIndividualTexts(DeliveryPrototype delivery) throws AdminException {
@@ -1164,20 +1149,12 @@ public class AdminContext {
       return context.getDelivery(login,password,deliveryId);
     }
 
-    public Address getSmsSenderAddress() throws AdminException {
-      return context.getSmsSenderAddress();
-    }
-
-    public Properties getNotificationTemplates() {
-      return context.getNotificationTemplates();
+    public NotificationSettings getNotificationSettings() {
+      return context.getNotificationSettings();
     }
 
     public void sendTestSms(TestSms testSms) throws AdminException {
       context.sendTestSms(testSms);
-    }
-
-    public Properties getJavaMailProperties() {
-      return context.getJavaMailProperties();
     }
   }
 

@@ -3,13 +3,13 @@ package mobi.eyeline.informer.web.controllers.notifications;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationTemplatesConstants;
+import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.InformerController;
 
 import javax.faces.application.FacesMessage;
-import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * Copyright Eyeline.mobi
@@ -19,114 +19,70 @@ import java.util.Properties;
  */
 public class NotificationSettingsController extends InformerController {
 
-  private final Properties javaMailProps;
-  private final Properties notificationTemplates;
-  private Address smsSenderAddress;
   private String testEmail;
   private Address testAddress;
 
+  private Address smsSenderAddress;
+
+  public String smsTemplateActivated;
+
+  public String smsTemplateFinished;
+
+  public String emailTemplateActivated;
+
+  public String emailTemplateFinished;
+
+  public String emailSubjectTemplate;
+
+  public String mailFrom;
+
+  public String mailHost;
+
+  public String mailUser;
+
+  public String mailPassword;
+
+  private static final Pattern emailPattern =
+      Pattern.compile("^[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*@[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*$");
+
 
   public NotificationSettingsController() {
-    super();
-    javaMailProps = getConfig().getJavaMailProperties();
-    notificationTemplates = getConfig().getNotificationTemplates();
-    smsSenderAddress = getConfig().getSmsSenderAddress();
-  }
 
+    super();
+
+    NotificationSettings settings = getConfig().getNotificationSettings();
+
+    smsSenderAddress = settings.getSmsSenderAddress();
+
+    smsTemplateActivated = settings.getSmsTemplateActivated();
+
+    smsTemplateFinished = settings.getSmsTemplateFinished();
+
+    emailTemplateActivated = settings.getEmailTemplateActivated();
+
+    emailTemplateFinished = settings.getEmailTemplateFinished();
+
+    emailSubjectTemplate = settings.getEmailSubjectTemplate();
+
+    mailFrom = settings.getMailFrom();
+
+    mailHost = settings.getMailHost();
+
+    mailUser = settings.getMailUser();
+
+    mailPassword = settings.getMailPassword();
+
+  }
 
   public String save() {
     try {
-      getConfig().updateJavaMailProperties(javaMailProps, getUserName());
-      getConfig().updateNotificationTemplates(notificationTemplates, getUserName());
-      getConfig().setSmsSenderAddress(smsSenderAddress, getUserName());
+      getConfig().updateNotificationSettings(createSettings(), getUserName());
     }
     catch (AdminException e) {
       addError(e);
       return null;
     }
     return "INDEX";
-  }
-
-  public String getSmsSenderAddress() {
-    return smsSenderAddress.getSimpleAddress();
-  }
-
-  public void setSmsSenderAddress(String sAddr) {
-    smsSenderAddress = new Address(sAddr);
-  }
-
-
-  public void setSmsTemplateActivated(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED, smsTemplate);
-  }
-
-  public void setSmsTemplateFinished(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED, smsTemplate);
-  }
-
-  public String getSmsTemplateActivated() {
-    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED);
-  }
-
-  public String getSmsTemplateFinished() {
-    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED);
-  }
-
-
-  public void setEmailTemplateActivated(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED, smsTemplate);
-  }
-
-  public void setEmailTemplateFinished(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED, smsTemplate);
-  }
-
-  public String getEmailTemplateActivated() {
-    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED);
-  }
-
-  public String getEmailTemplateFinished() {
-    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED);
-  }
-
-  public void setEmailSubjectTemplate(String smsTemplate) {
-    notificationTemplates.put(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT, smsTemplate);
-  }
-
-  public String getEmailSubjectTemplate() {
-    return (String) notificationTemplates.get(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT);
-  }
-
-  public String getMailFrom() {
-    return (String) javaMailProps.get("mail.from");
-  }
-
-  public void setMailFrom(String from) {
-    javaMailProps.put("mail.from", from);
-  }
-
-  public void setMailHost(String mailHost) {
-    javaMailProps.put("mail.host", mailHost);
-  }
-
-  public String getMailHost() {
-    return (String) javaMailProps.get("mail.host");
-  }
-
-  public void setMailUser(String mailUser) {
-    javaMailProps.put("mail.user", mailUser);
-  }
-
-  public String getMailUser() {
-    return (String) javaMailProps.get("mail.user");
-  }
-
-  public void setMailPassword(String mailPassword) {
-    javaMailProps.put("mail.password", mailPassword);
-  }
-
-  public String getMailPassword() {
-    return (String) javaMailProps.get("mail.password");
   }
 
 
@@ -138,14 +94,30 @@ public class NotificationSettingsController extends InformerController {
     this.testEmail = testEmail;
   }
 
+  private NotificationSettings createSettings() {
+    NotificationSettings settings = getConfig().getNotificationSettings();
+    settings.setSmsSenderAddress(smsSenderAddress);
+    settings.setSmsTemplateActivated(smsTemplateActivated);
+    settings.setSmsTemplateFinished(smsTemplateFinished);
+    settings.setEmailTemplateActivated(emailTemplateActivated);
+    settings.setEmailTemplateFinished(emailTemplateFinished);
+    settings.setEmailSubjectTemplate(emailSubjectTemplate);
+    settings.setMailFrom(mailFrom);
+    settings.setMailHost(mailHost);
+    settings.setMailUser(mailUser);
+    settings.setMailPassword(mailPassword);
+    return settings;
+
+  }
+
   public String sendTestEmail() {
-    if(testEmail==null) {
+    if(testEmail==null || !emailPattern.matcher(testEmail).matches()) {
       addMessage(FacesMessage.SEVERITY_WARN,"notifications.test.email.required");
       return null;
     }
     try {
       User user = getConfig().getUser(getUserName());
-      getConfig().sendTestEmailNotification(user,testEmail,javaMailProps,notificationTemplates);
+      getConfig().sendTestEmailNotification(user,testEmail, createSettings());
       addLocalizedMessage(FacesMessage.SEVERITY_INFO,"notifications.test.ok",testEmail);
     }
     catch (AdminException e) {
@@ -154,12 +126,108 @@ public class NotificationSettingsController extends InformerController {
     return null;
   }
 
-  public String getTestSmsAddress() {
-    return testAddress==null ? null : testAddress.getSimpleAddress();
+  public Address getTestSmsAddress() {
+    return testAddress;
   }
 
-  public void setTestSmsAddress(String testAddress) {
-    this.testAddress  = (testAddress==null || testAddress.length()==0) ?  null:new Address(testAddress);
+  public void setTestSmsAddress(Address testAddress) {
+    this.testAddress  = testAddress;
+  }
+
+  public String getTestEmail() {
+    return testEmail;
+  }
+
+  public void setTestEmail(String testEmail) {
+    this.testEmail = testEmail;
+  }
+
+  public Address getTestAddress() {
+    return testAddress;
+  }
+
+  public void setTestAddress(Address testAddress) {
+    this.testAddress = testAddress;
+  }
+
+  public Address getSmsSenderAddress() {
+    return smsSenderAddress;
+  }
+
+  public void setSmsSenderAddress(Address smsSenderAddress) {
+    this.smsSenderAddress = smsSenderAddress;
+  }
+
+  public String getSmsTemplateActivated() {
+    return smsTemplateActivated;
+  }
+
+  public void setSmsTemplateActivated(String smsTemplateActivated) {
+    this.smsTemplateActivated = smsTemplateActivated;
+  }
+
+  public String getSmsTemplateFinished() {
+    return smsTemplateFinished;
+  }
+
+  public void setSmsTemplateFinished(String smsTemplateFinished) {
+    this.smsTemplateFinished = smsTemplateFinished;
+  }
+
+  public String getEmailTemplateActivated() {
+    return emailTemplateActivated;
+  }
+
+  public void setEmailTemplateActivated(String emailTemplateActivated) {
+    this.emailTemplateActivated = emailTemplateActivated;
+  }
+
+  public String getEmailTemplateFinished() {
+    return emailTemplateFinished;
+  }
+
+  public void setEmailTemplateFinished(String emailTemplateFinished) {
+    this.emailTemplateFinished = emailTemplateFinished;
+  }
+
+  public String getEmailSubjectTemplate() {
+    return emailSubjectTemplate;
+  }
+
+  public void setEmailSubjectTemplate(String emailSubjectTemplate) {
+    this.emailSubjectTemplate = emailSubjectTemplate;
+  }
+
+  public String getMailFrom() {
+    return mailFrom;
+  }
+
+  public void setMailFrom(String mailFrom) {
+    this.mailFrom = mailFrom;
+  }
+
+  public String getMailHost() {
+    return mailHost;
+  }
+
+  public void setMailHost(String mailHost) {
+    this.mailHost = mailHost;
+  }
+
+  public String getMailUser() {
+    return mailUser;
+  }
+
+  public void setMailUser(String mailUser) {
+    this.mailUser = mailUser;
+  }
+
+  public String getMailPassword() {
+    return mailPassword;
+  }
+
+  public void setMailPassword(String mailPassword) {
+    this.mailPassword = mailPassword;
   }
 
   public String sendTestSms() {
@@ -169,8 +237,9 @@ public class NotificationSettingsController extends InformerController {
     }
     try {
       User user = getConfig().getUser(getUserName());
-      getConfig().sendTestSmsNotification(user,testAddress, DeliveryStatus.Active,notificationTemplates);
-      getConfig().sendTestSmsNotification(user,testAddress, DeliveryStatus.Finished,notificationTemplates);
+      NotificationSettings settings = createSettings();
+      getConfig().sendTestSmsNotification(user,testAddress, DeliveryStatus.Active, settings);
+      getConfig().sendTestSmsNotification(user,testAddress, DeliveryStatus.Finished, settings);
       addLocalizedMessage(FacesMessage.SEVERITY_INFO,"notifications.test.ok",testAddress.getSimpleAddress());
     }
     catch (AdminException e) {

@@ -1,8 +1,8 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
+import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
-import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,15 +16,16 @@ import java.util.Properties;
  * Time: 15:09:49
  */
 class WebConfigSettings {
+  
   private InstallationType installationType;
   private String daemonHost;
   private Integer daemonPort;
   private File[] appMirrorDirs;
   private Collection<String> HSDaemonHosts;
   private String journalDir;
-  private Properties javaMailProperties;
-  private Address smsSenderAddress;
-  private Properties notificationTemplates;
+
+  private NotificationSettings notificationSettings;  
+
   private SiebelSettings siebelSettings;
   private CdrSettings cdrSettings;
   private boolean allowUssdPushDeliveries;
@@ -103,30 +104,13 @@ class WebConfigSettings {
   }
 
 
-  Properties getJavaMailProperties() {
-    return cloneProps(javaMailProperties);
+  NotificationSettings getNotificationSettings() {
+    return new NotificationSettings(notificationSettings);
   }
 
-  void setJavaMailProperties(Properties javaMailProperties) {
-    validateJavaMailProperties(javaMailProperties);
-    this.javaMailProperties = cloneProps(javaMailProperties);
-  }
-
-  Address getSmsSenderAddress() {
-    return new Address(smsSenderAddress);
-  }
-
-  void setSmsSenderAddress(Address smsSenderAddress) {
-    this.smsSenderAddress = new Address(smsSenderAddress);
-  }
-
-  void setNotificationTemplates(Properties notificationTemplates) throws AdminException{
-    validateNotificationTemplates(notificationTemplates);
-    this.notificationTemplates = cloneProps(notificationTemplates);
-  }
-
-  Properties getNotificationTemplates() {
-    return cloneProps(notificationTemplates);
+  void setNotificationSettings(NotificationSettings settings) throws AdminException{
+    settings.validate();
+    this.notificationSettings = new NotificationSettings(settings);
   }
 
   void setSiebelSettings(SiebelSettings siebelSettings) throws AdminException{
@@ -153,14 +137,6 @@ class WebConfigSettings {
 
   void setAllowUssdPushDeliveries(boolean allowUssdPushDeliveries) {
     this.allowUssdPushDeliveries = allowUssdPushDeliveries;
-  }
-
-  private void validateNotificationTemplates(Properties notificationTemplates) {
-    //todo check required properties
-  }
-
-  private void validateJavaMailProperties(Properties javaMailProperties) {
-    //todo check required properties
   }
 
   private Properties cloneProps(Properties other) {

@@ -396,8 +396,8 @@ public class User implements Serializable {
     }
   }
 
-  private static Pattern emailPattern = Pattern.compile("^[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*@[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*$");
-  private static Pattern phonePattern = Pattern.compile("^(\\+)?\\d{1,20}$");
+  private static final Pattern emailPattern = Pattern.compile("^[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*@[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*$");
+  private static final Pattern phonePattern = Pattern.compile("^(\\+)?\\d{1,20}$");
 
   void validate() throws AdminException{
     vh.checkNotEmpty("login", login);

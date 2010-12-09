@@ -17,8 +17,14 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -126,9 +132,9 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
       );
   }
 
-  public void sendTestEmailNotification(User user, String toEmail, Properties javaMailProps, Properties notificationTemplates) throws AdminException {
+  public void sendTestEmailNotification(User user, String toEmail, NotificationSettings settings) throws AdminException {
     try {
-      AggregatedEmailNotificationTask task = new AggregatedEmailNotificationTask(toEmail, user, javaMailProps, notificationTemplates);
+      AggregatedEmailNotificationTask task = new AggregatedEmailNotificationTask(toEmail, user, settings);
       task.addNotification(new ChangeDeliveryStatusEvent(DeliveryStatus.Active,new Date(),1,user.getLogin())
       ,"EmailTestActivate");
       task.addNotification(new ChangeDeliveryStatusEvent(DeliveryStatus.Finished,new Date(),2,user.getLogin())
@@ -140,10 +146,11 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
     }
   }
 
-  public void sendTestSMSNotification(User user, Address toAddress, DeliveryStatus status, Properties notificationTemplates) throws AdminException {
+  public void sendTestSMSNotification(User user, Address toAddress, DeliveryStatus status, NotificationSettings settings) throws AdminException {
     try {
       ChangeDeliveryStatusEvent event = new ChangeDeliveryStatusEvent(status,new Date(),1,user.getLogin());
-      SMSNotificationTask task = new SMSNotificationTask(toAddress,user,event,status==DeliveryStatus.Active ? "SmsTestActivate":"SmsTestFinished",notificationTemplates);
+      SMSNotificationTask task = new SMSNotificationTask(toAddress,user,event,
+          status==DeliveryStatus.Active ? "SmsTestActivate":"SmsTestFinished", settings);
       task.call();
     }
     catch (Exception e) {
@@ -159,36 +166,30 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
     private final User user;
     private final ChangeDeliveryStatusEvent notification;
     private final String deliveryName;
-    private Properties templates;
+    private NotificationSettings settings;
 
 
     public SMSNotificationTask(Address address, User user, ChangeDeliveryStatusEvent notification, String deliveryName) {
-      this(address,user,notification,deliveryName,context.getNotificationTemplates());
+      this(address, user, notification, deliveryName, context.getNotificationSettings());
     }
-
-    public SMSNotificationTask(Address address, User user, ChangeDeliveryStatusEvent notification, String deliveryName, Properties templates) {
+    public SMSNotificationTask(Address address, User user, ChangeDeliveryStatusEvent notification, String deliveryName, NotificationSettings settings) {
       this.address = address;
       this.user = user;
       this.notification = notification;
       this.deliveryName = deliveryName;
-      this.templates = templates;
+      this.settings = settings;
     }
 
     public Object call() throws Exception {
       try {
         TestSms testSms = new TestSms();
         testSms.setDestAddr(address);
-        testSms.setSourceAddr(context.getSmsSenderAddress());
+        testSms.setSourceAddr(context.getNotificationSettings().getSmsSenderAddress());
         testSms.setFlash(false);
         testSms.setMode(TestSms.Mode.SMS);
 
-        String template = (String) templates.get(
-            notification.getStatus() == DeliveryStatus.Active
-                ?
-                DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_ACTIVATED
-                :
-                DeliveryNotificationTemplatesConstants.SMS_TEMPLATE_FINISHED
-        );
+        String template = notification.getStatus() == DeliveryStatus.Active ? settings.getSmsTemplateActivated() :
+            settings.getSmsTemplateFinished();
 
         String text = formatTemplate(template, notification, deliveryName, user);
         testSms.setText(text);
@@ -210,30 +211,24 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
     private final String email;
     private final User user;
     private final LinkedList<String> notifications;
-    private Properties mailProps;
-    private Properties templates;
+    private NotificationSettings settings;
 
 
 
     public AggregatedEmailNotificationTask(String email, User user) {
-      this(email,user,context.getJavaMailProperties(),context.getNotificationTemplates());
+      this(email,user,context.getNotificationSettings());
     }
 
-    AggregatedEmailNotificationTask(String email, User user,  Properties mailProps, Properties templates) {
+    AggregatedEmailNotificationTask(String email, User user,  NotificationSettings settings) {
       this.email = email;
       this.user = user;
-      this.mailProps = mailProps;
-      this.templates = templates;
+      this.settings = settings;
       this.notifications = new LinkedList<String>();
     }
 
     public void addNotification(ChangeDeliveryStatusEvent n, String deliveryName) {
 
-      String template = n.getStatus() == DeliveryStatus.Active
-          ?
-          templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_ACTIVATED)
-          :
-          templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_FINISHED);
+      String template = n.getStatus() == DeliveryStatus.Active ? settings.getEmailTemplateActivated() : settings.getEmailTemplateFinished();
 
       synchronized (notifications) {
         notifications.add(formatTemplate(template, n, deliveryName, user));
@@ -252,10 +247,10 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
           sb.append(n).append("\n");
 
 
-        Session session = Session.getDefaultInstance(mailProps);
+        Session session = Session.getDefaultInstance(settings.getMailProperties());
         MimeMessage message = new MimeMessage(session);
         message.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(email));
-        message.setSubject(templates.getProperty(DeliveryNotificationTemplatesConstants.EMAIL_TEMPLATE_SUBJECT), "UTF-8");
+        message.setSubject(settings.getEmailSubjectTemplate(), "UTF-8");
         message.setText(sb.toString(), "UTF-8");
 
         Transport transport = session.getTransport();

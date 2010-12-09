@@ -3,15 +3,14 @@ package mobi.eyeline.informer.admin;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
+import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.util.config.BaseManager;
 import mobi.eyeline.informer.admin.util.config.SettingsReader;
 import mobi.eyeline.informer.admin.util.config.SettingsWriter;
-import mobi.eyeline.informer.util.Address;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Properties;
 
 /**
  * Copyright Eyeline.mobi
@@ -148,44 +147,22 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     });
   }
 
-  public Properties getJavaMailProperties() {
-    return readSettings(new SettingsReader<WebConfigSettings, Properties>() {
-      public Properties executeRead(WebConfigSettings settings) {
-        return settings.getJavaMailProperties();
+
+
+  public NotificationSettings getNotificationSettings() {
+    return readSettings(new SettingsReader<WebConfigSettings, NotificationSettings>() {
+      public NotificationSettings executeRead(WebConfigSettings settings) {
+        return settings.getNotificationSettings();
       }
     });
 
   }
 
-  public void setJavaMailProperties(final Properties props) throws AdminException {
-
-    updateSettings(new SettingsWriter<WebConfigSettings>() {
-
-      public void changeSettings(WebConfigSettings settings) throws AdminException {
-        settings.setJavaMailProperties(props);
-      }
-
-      public void infosmeCommand(Infosme infosme) throws AdminException {
-        //dummy
-      }
-    });
-  }
-
-
-  public Properties getNotificationTemplates() {
-    return readSettings(new SettingsReader<WebConfigSettings, Properties>() {
-      public Properties executeRead(WebConfigSettings settings) {
-        return settings.getNotificationTemplates();
-      }
-    });
-
-  }
-
-  public void setNotificationTemplates(final Properties props) throws AdminException {
+  public void setNotificationSettings(final NotificationSettings props) throws AdminException {
 
     updateSettings(new SettingsWriter<WebConfigSettings>() {
       public void changeSettings(WebConfigSettings settings) throws AdminException {
-        settings.setNotificationTemplates(props);
+        settings.setNotificationSettings(props);
       }
 
       public void infosmeCommand(Infosme infosme) throws AdminException {
@@ -230,27 +207,6 @@ public class WebConfigManager extends BaseManager<WebConfigSettings> {
     updateSettings(new SettingsWriter<WebConfigSettings>() {
       public void changeSettings(WebConfigSettings settings) throws AdminException {
         settings.setCdrSettings(props);
-      }
-
-      public void infosmeCommand(Infosme infosme) throws AdminException {
-        //dummy
-      }
-    });
-  }
-
-  public Address getSmsSenderAddress() {
-    return readSettings(new SettingsReader<WebConfigSettings, Address>() {
-      public Address executeRead(WebConfigSettings settings) {
-        return settings.getSmsSenderAddress();
-      }
-    });
-
-  }
-
-  public void setSmsSenderAddress(final Address addr) throws AdminException {
-    updateSettings(new SettingsWriter<WebConfigSettings>() {
-      public void changeSettings(WebConfigSettings settings) throws AdminException {
-        settings.setSmsSenderAddress(addr);
       }
 
       public void infosmeCommand(Infosme infosme) throws AdminException {
