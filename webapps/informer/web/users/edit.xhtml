@@ -16,12 +16,12 @@
 
 <eye:buttons>
   <eye:button>
-    <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}">
+    <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}" shortDesc="#{msg['user.details.save']}">
       <f:param name="user_edit_comeback_params" value="#{userEdit.comeBackParams}"/>
     </tr:commandLink>
   </eye:button>
   <eye:button>
-    <tr:commandLink text="#{msg['cancel.button']}" action="#{userEdit.cancel}" immediate="true">
+    <tr:commandLink text="#{msg['cancel.button']}" action="#{userEdit.cancel}" shortDesc="#{msg['user.details.cancel']}" immediate="true">
       <f:param name="user_edit_comeback_params" value="#{userEdit.comeBackParams}"/>
     </tr:commandLink>
   </eye:button>
@@ -238,12 +238,12 @@
 
 <eye:buttons>
   <eye:button>
-    <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}">         
+    <tr:commandLink text="#{msg['done.button']}" action="#{userEdit.save}" shortDesc="#{msg['user.details.save']}">
       <f:param name="user_edit_comeback_params" value="#{userEdit.comeBackParams}"/>
     </tr:commandLink>
   </eye:button>
   <eye:button>
-    <tr:commandLink text="#{msg['cancel.button']}" action="#{userEdit.cancel}" immediate="true">
+    <tr:commandLink text="#{msg['cancel.button']}" action="#{userEdit.cancel}" shortDesc="#{msg['user.details.cancel']}" immediate="true">
       <f:param name="user_edit_comeback_params" value="#{userEdit.comeBackParams}"/>
     </tr:commandLink>
   </eye:button>

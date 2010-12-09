@@ -17,7 +17,7 @@
       
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="SMSC_EDIT"/>
+          <tr:commandLink shortDesc="#{msg['smsc.details.add']}" text="#{msg['add.button']}" action="SMSC_EDIT"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -38,7 +38,7 @@
           <f:facet name="header">
             <h:outputText value="#{smscBundle['name']}"/>
           </f:facet>
-          <tr:commandLink text="#{g.name}" action="SMSC_EDIT">
+          <tr:commandLink text="#{g.name}" action="SMSC_EDIT" shortDesc="#{msg['smsc.details.show']}">
             <f:param name="smsc_name" value="#{g.name}"/>
           </tr:commandLink>
         </h:column>
@@ -61,7 +61,8 @@
           <f:facet name="header">
             <h:outputText value="&#160;"/>
           </f:facet>
-          <tr:commandLink rendered="#{smsc.defaultSmsc != g.name}" text="#{msg['delete.button']}" action="#{smsc.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false">
+          <tr:commandLink rendered="#{smsc.defaultSmsc != g.name}" text="#{msg['delete.button']}"  shortDesc="#{msg['smsc.details.delete']}"
+                          action="#{smsc.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false">
             <f:param name="smsc_name" value="#{g.name}"/>
           </tr:commandLink>
         </h:column>
@@ -72,7 +73,7 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="SMSC_EDIT"/>
+          <tr:commandLink shortDesc="#{msg['smsc.details.add']}" text="#{msg['add.button']}" action="SMSC_EDIT"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

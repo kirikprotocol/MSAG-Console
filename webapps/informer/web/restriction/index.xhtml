@@ -43,10 +43,10 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT"/>
+          <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT" shortDesc="#{msg['restriction.details.add']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{restrictionsList.removeSelected}"
+          <tr:commandLink text="#{msg['delete.button']}" action="#{restrictionsList.removeSelected}"  shortDesc="#{msg['restriction.details.delete']}"
                           onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
               />
         </eye:button>
@@ -58,9 +58,9 @@
       <eye:dataTable value="#{restrictionsList.restrictionsModel}" selectedRows="#{restrictionsList.selectedRows}" var="r">
         <eye:row rowId="#{r.id}" innerData="#{!r.allUsers}">
           <eye:column name="name" title="#{msg['restriction.page.name']}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
-            <h:commandLink value="#{r.name}" action="RESTRICTION_EDIT">
+            <tr:commandLink text="#{r.name}" action="RESTRICTION_EDIT" shortDesc="#{msg['restriction.details.show']}">
               <f:param name="restrictionId" value="#{r.id}"/>
-            </h:commandLink>
+            </tr:commandLink>
           </eye:column>
           <eye:column name="startDate" title="#{msg['restriction.page.startDate']}" sortable="true" width="20%" align="center">
             <h:outputText value="#{r.startDate}"><f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/></h:outputText>
@@ -77,9 +77,9 @@
               <h:outputText value="#{msg['restriction.page.users']}: " style="font-weight:bold;"/>
               <c:set var="mx" value="#{fn:length(r.userIds)}"/>
               <tr:iterator value="#{r.userIds}" var="user" varStatus="cnt">
-                <h:commandLink value="#{user}" action="USER_EDIT">
+                <tr:commandLink text="#{user}" action="USER_EDIT"  shortDesc="#{msg['user.details.show']}">
                   <f:param name="userId" value="#{user}"/>
-                </h:commandLink>                
+                </tr:commandLink>
                 <h:outputText value=", " rendered="#{ (mx) gt cnt.count}"/>
               </tr:iterator>
             </h:panelGroup>
@@ -92,10 +92,10 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT"/>
+          <tr:commandLink text="#{msg['add.button']}" action="RESTRICTION_EDIT"  shortDesc="#{msg['restriction.details.add']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{restrictionsList.removeSelected}"
+          <tr:commandLink text="#{msg['delete.button']}" action="#{restrictionsList.removeSelected}"  shortDesc="#{msg['restriction.details.delete']}"
                           onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"
               />
         </eye:button>

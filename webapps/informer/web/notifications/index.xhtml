@@ -18,10 +18,10 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" action="#{notificationSettings.save}"/>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{notificationSettings.save}" shortDesc="#{msg['notifications.details.save']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="NOTIFICATIONS" immediate="true"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="NOTIFICATIONS" immediate="true" shortDesc="#{msg['notifications.details.cancel']}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -44,7 +44,8 @@
           <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
           <h:inputText id="testSmsAddr" value="#{notificationSettings.testSmsAddress}" converter="addressConverter"
               converterMessage="#{msg['invalid_param_value']} #{msg['notifications.config.testSMS']}"/>
-          <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.sendTestSms}" styleClass="linkButton"/>
+          <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.sendTestSms}" styleClass="linkButton"
+                          shortDesc="#{msg['notifications.details.test.sms']}"/>
           </h:panelGrid>
 
         </h:panelGrid>
@@ -81,7 +82,8 @@
 
           <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
             <tr:inputText id="testEmailAddr" value="#{notificationSettings.testEmailAddr}" simple="true"/>
-            <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.sendTestEmail}" styleClass="linkButton"/>
+            <tr:commandLink text="#{msg['test.button']}" action="#{notificationSettings.sendTestEmail}" styleClass="linkButton"
+                 shortDesc="#{msg['notifications.details.test.email']}"/>
           </h:panelGrid>
 
         </h:panelGrid>
@@ -94,10 +96,10 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['submit.button']}" action="#{notificationSettings.save}"/>
+          <tr:commandLink text="#{msg['submit.button']}" action="#{notificationSettings.save}" shortDesc="#{msg['notifications.details.save']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="NOTIFICATIONS" immediate="true"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="NOTIFICATIONS" immediate="true" shortDesc="#{msg['notifications.details.cancel']}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

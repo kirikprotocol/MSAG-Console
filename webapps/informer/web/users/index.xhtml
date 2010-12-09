@@ -47,13 +47,14 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
+          <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT" shortDesc="#{msg['user.details.add']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" />
+          <tr:commandLink text="#{msg['delete.button']}"  shortDesc="#{msg['user.details.delete.selected']}"
+                          action="#{usersList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" />
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['edit.selected.button']}" action="#{usersList.editSelected}"/>
+          <tr:commandLink text="#{msg['edit.selected.button']}"  shortDesc="#{msg['user.details.edit.selected']}" action="#{usersList.editSelected}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
@@ -63,9 +64,9 @@
       <eye:dataTable value="#{usersList.usersModel}" selectedRows="#{usersList.selectedRows}" var="u">
         <eye:row rowId="#{u.login}">
           <eye:column name="login" title="#{userBundle.login}" sortable="true" width="20%" align="left" defaultSortOrder="asc">
-            <h:commandLink value="#{u.login}" action="USER_EDIT">
+            <tr:commandLink text="#{u.login}" action="USER_EDIT" shortDesc="#{msg['user.details.show']}">
               <f:param name="userId" value="#{u.login}"/>
-            </h:commandLink>
+            </tr:commandLink>
           </eye:column>
           <eye:column name="status" title="#{msg['user.list.enabled']}" sortable="true" width="1%" align="center">
             <h:graphicImage value="/images/ic_checked.gif" rendered="#{u.active}"/>
@@ -86,16 +87,16 @@
       </eye:dataTable>
 
       <eye:delimiter/>
-
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT"/>
+          <tr:commandLink text="#{msg['add.button']}" action="USER_EDIT" shortDesc="#{msg['user.details.add']}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}" action="#{usersList.removeSelected}"  onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
+          <tr:commandLink text="#{msg['delete.button']}"  shortDesc="#{msg['user.details.delete.selected']}"
+                          action="#{usersList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" />
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['edit.selected.button']}" action="#{usersList.editSelected}"/>
+          <tr:commandLink text="#{msg['edit.selected.button']}"  shortDesc="#{msg['user.details.edit.selected']}" action="#{usersList.editSelected}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

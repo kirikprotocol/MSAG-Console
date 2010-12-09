@@ -2,8 +2,6 @@ package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
-import mobi.eyeline.informer.admin.delivery.DeliveryException;
-import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.web.config.Configuration;
@@ -24,7 +22,10 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public MessagesByPeriodController() {
     super(new MessagesByPeriodTotals());
-    setDeliveryParam();
+    setDeliveryParam(); 
+    Calendar c = getLastWeekStart();
+    getFilter().setFromDate(c.getTime());
+    start();
   }
 
   public String getDeliveryName() {
