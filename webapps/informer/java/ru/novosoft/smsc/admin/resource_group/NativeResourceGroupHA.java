@@ -1,15 +1,17 @@
-package mobi.eyeline.informer.admin.service.resource_group;
+package ru.novosoft.smsc.admin.resource_group;
 
-import mobi.eyeline.informer.admin.AdminException;
 
+/**
+ * ВНИМАНИЕ! Этот класс нельзя переименовывать и перемещать в другие пакеты!
+ */
 public final class NativeResourceGroupHA {
 
-  public static void LoadLibrary() throws AdminException {
+  public static void LoadLibrary() throws LibNotFoundException {
     try {
       System.loadLibrary("NativeResourceGroupHA");
     } catch (UnsatisfiedLinkError e) {
       e.printStackTrace();
-      throw new ResourceGroupException("jni_lib_not_found");
+      throw new LibNotFoundException();
     }
   }
 
