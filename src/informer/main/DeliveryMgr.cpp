@@ -101,23 +101,6 @@ public:
     }
 
 
-    /*
-    virtual void setNextResendAtInit( dlvid_type    dlvId,
-                                      regionid_type regId,
-                                      msgtime_type  nextResend )
-    {
-        smsc_log_debug(log_,"load next resend record R=%u/D=%u resend=%llu",
-                       regId, dlvId, msgTimeToYmd(nextResend));
-        DeliveryList::iterator* iter = mgr_.deliveryHash_.GetPtr(dlvId);
-        if (!iter) {
-            smsc_log_info(log_,"delivery D=%u is not found, ok",dlvId);
-            return;
-        }
-        (**iter)->setNextResendAtInit(regId,nextResend);
-    }
-     */
-
-
     virtual void postInit()
     {
         BindSignal bsEmpty, bsFilled;
@@ -444,7 +427,6 @@ void DeliveryMgr::init()
         dlvs.clear();
         smsc_log_debug(log_,"listing delivery chunk '%s'",buf.get());
         makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), dlvs);
-//        const size_t buflen = strlen(buf.get());
         for ( std::vector<std::string>::iterator idlv = dlvs.begin();
               idlv != dlvs.end();
               ++idlv ) {
@@ -470,6 +452,9 @@ void DeliveryMgr::init()
 
                 DeliveryInfo* info = new DeliveryInfo(dlvId, data );
                 addDelivery(*user.get(), info, state, planTime, false);
+                if ( state == DLVSTATE_CANCELLED ) {
+                    startCancelThread(dlvId);
+                }
 
             } catch (std::exception& e) {
                 smsc_log_error(log_,"D=%u cannot read/add dlvInfo, exc: %s",dlvId,e.what());
@@ -711,31 +696,6 @@ int DeliveryMgr::Execute()
             }
             wakeList.clear();
         }
-        /*
-        if ( !stopList.empty() ) {
-            struct ::tm tmnow;
-            const time_t tmp(now);
-            if ( !gmtime_r(&tmp,&tmnow) ) {
-                throw InfosmeException(EXC_SYSTEM,"gmtime_r");
-            }
-            for ( DeliveryWakeQueue::const_iterator i = stopList.begin();
-                  i != stopList.end(); ++i ) {
-                DeliveryImplPtr dlv;
-                if ( !getDelivery(i->second,dlv) ||
-                     (DLVSTATE_ACTIVE != dlv->getState()) ) {
-                    continue;
-                }
-                const timediff_type planTime = 
-                    dlv->getDlvInfo().nextActiveTime(tmnow.tm_wday,now);
-                if ( planTime <= 0 ) {
-                    // should not stop
-                    continue;
-                }
-                dlv->setState(DLVSTATE_PLANNED,now+planTime);
-            }
-            stopList.clear();
-        }
-         */
 
         MutexGuard mg(mon_);
         DeliveryWakeQueue::iterator uptoNow = deliveryWakeQueue_.upper_bound(now);
@@ -743,14 +703,7 @@ int DeliveryMgr::Execute()
             wakeList.insert(deliveryWakeQueue_.begin(),uptoNow);
             deliveryWakeQueue_.erase(deliveryWakeQueue_.begin(), uptoNow);
         }
-        /*
-        uptoNow = deliveryStopQueue_.upper_bound(now);
-        if ( uptoNow != deliveryStopQueue_.begin() ) {
-            stopList.insert(deliveryStopQueue_.begin(),uptoNow);
-            deliveryStopQueue_.erase(deliveryStopQueue_.begin(), uptoNow);
-        }
-         */
-        if (!wakeList.empty() /*|| !stopList.empty()*/) continue;
+        if (!wakeList.empty()) continue;
 
         msectime_type wakeTime = 10000;
         if (!deliveryWakeQueue_.empty()) {
@@ -758,13 +711,6 @@ int DeliveryMgr::Execute()
                 msectime_type(deliveryWakeQueue_.begin()->first)*1000 - curTime;
             if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
         }
-        /*
-        if (!deliveryStopQueue_.empty()) {
-            msectime_type thisWakeTime =
-                msectime_type(deliveryStopQueue_.begin()->first)*1000 - curTime;
-            if (wakeTime > thisWakeTime) {wakeTime = thisWakeTime;}
-        }
-         */
         if (wakeTime>0) { mon_.wait(int(wakeTime)); }
     }
     return 0;
@@ -839,14 +785,9 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
         MutexGuard mg(mon_);
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
         mon_.notify();
+    } else if (newState == DLVSTATE_CANCELLED) {
+        startCancelThread(dlvId);
     }
-    /*
-    if (newState == DLVSTATE_ACTIVE && planTime != 0) {
-        MutexGuard mg(mon_);
-        deliveryStopQueue_.insert(std::make_pair(planTime,dlvId));
-        mon_.notify();
-    }
-     */
     // return true if we need to activate delivery regions
     return newState == DLVSTATE_ACTIVE;
 }
@@ -888,6 +829,12 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
     }
     mon_.notify();
+}
+
+
+void DeliveryMgr::startCancelThread( dlvid_type dlvId )
+{
+    smsc_log_info(log_,"FIXME: D=%u start cancellation thread",dlvId);
 }
 
 

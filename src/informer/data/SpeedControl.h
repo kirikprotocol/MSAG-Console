@@ -55,14 +55,6 @@ public:
         nextTime_ = wouldSend_ / speed_;
     }
 
-    /*
-    inline void speedToString( std::string& s ) const {
-        char buf[50];
-        sprintf(buf," spd=%u next=%u",speed_,nextTime_);
-        s.append(buf);
-    }
-     */
-
     inline int compare( const SpeedControl& other ) const {
         if ( nextTime_ < other.nextTime_ ) return -1;
         if ( nextTime_ > other.nextTime_ ) return 1;

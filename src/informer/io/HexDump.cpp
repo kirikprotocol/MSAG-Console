@@ -3,39 +3,14 @@
 #include "HexDump.h"
 #include "core/synchronization/Mutex.hpp"
 
-/*
-namespace {
-smsc::core::synchronization::Mutex mtx;
-
-std::auto_ptr<char> getDigits()
-{
-    std::auto_ptr<char> res( new char[256*3+1]);
-    for ( unsigned i = 0; i < 256; ++i ) {
-        snprintf( res.get()+i*3, 4, "%02x ", i );
-    }
-    return res;
-}
-
-}
- */
-
 namespace eyeline {
 namespace informer {
-
-// std::auto_ptr< char > HexDump::digits_;
 
 char* HexDump::hexdump( register char* outbuf,
                         const void* inBuf,
                         size_t insize )
 {
     register const unsigned char* inbuf = reinterpret_cast<const unsigned char*>(inBuf);
-    /*
-    if ( ! digits_.get() ) {
-        smsc::core::synchronization::MutexGuard mg(::mtx);
-        digits_ = ::getDigits();
-    }
-     const char* digits = digits_.get();
-     */
     const unsigned char* endbuf = inbuf + insize;
     while ( inbuf < endbuf ) {
         register unsigned char c = *inbuf;

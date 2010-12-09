@@ -95,8 +95,8 @@ public:
                           unsigned     nchunks );
 
 
-    /// notify transfer thread that it should be stopped.
-    void stopTransfer( bool finalizeAll = false );
+    /// notify transfer threads that they should be stopped.
+    void stopTransfer();
 
     /// rolling over the storage
     /// @return number of bytes written

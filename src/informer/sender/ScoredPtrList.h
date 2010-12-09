@@ -35,21 +35,6 @@ public:
     typedef TU       TimeUnit;    // time units
 
 private:
-    /*
-    struct ScoredPtr {
-        Ptr       ptr;
-        ScoreUnit score;
-
-        inline ScoredPtr( const Ptr& thePtr, ScoreUnit theScore ) :
-        ptr(thePtr), score(theScore) {}
-
-        inline bool operator < ( const ScoredPtr& p ) const {
-            if ( score < p.score ) return true;
-            return false;
-        }
-    };
-     */
-
     typedef std::multimap< ScoreUnit, Ptr >  PtrMap;
 
 public:
@@ -87,13 +72,6 @@ public:
                 typename PtrMap::iterator i = j;
                 ++j;
                 ++position;
-
-                /*
-                if ( ! i->second ) {
-                    needsClean = true;
-                    continue;
-                }
-                 */
 
                 TimeUnit objSleep = proc_.scoredObjIsReady( deltaTime, i->second );
 
@@ -219,26 +197,6 @@ public:
     }
 
     inline size_t size() const { return objects_.size(); }
-
-    /*
-    inline Ptr operator [] ( size_t i ) const {
-        const ScoredPtr& o = objects_[i];
-        return o.ptr;
-    }
-     */
-
-    /*
-    ScoredPtrList< Proc > copy() const {
-        ScoredPtrList< Proc > ret(proc_,maxdiff_,log_);
-        ret.objects_ = objects_;
-        for ( typename ObjVector::iterator i = ret.objects_.begin();
-              i != ret.objects_.end();
-              ++i ) {
-            i->score = 0;
-        }
-        return ret;
-    }
-     */
 
 protected:
 

@@ -653,26 +653,6 @@ void InfosmeCoreV1::selfTest()
             dlv->getGlossary( glotexts );
         }
 
-        /*
-        {
-            smsc_log_debug(log_,"--- dropping messages for D=%u ---", dlvId);
-            std::vector<msgid_type> msgIds;
-            for ( int i = 0; i < 5000; ++i ) {
-                msgIds.push_back(i+1);
-            }
-            dlv->dropMessages(msgIds);
-        }
-         */
-
-
-        /*
-        {
-            const char* smscId = "selftestsmsc";
-            smsc_log_debug(log_,"--- destroying smsc '%s' ---", smscId);
-            this->deleteSmsc(smscId);
-        }
-         */
-
     } catch ( std::exception& e ) {
         smsc_log_debug(log_,"--- selftest failed, exc: %s",e.what());
     }

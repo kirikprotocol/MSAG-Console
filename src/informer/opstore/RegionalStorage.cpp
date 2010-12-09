@@ -574,7 +574,7 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
 }
 
 
-void RegionalStorage::stopTransfer( bool finalizeAll )
+void RegionalStorage::stopTransfer()
 {
     MutexGuard mg(cacheMon_);
     if ( inputTransferTask_ ) {
@@ -585,10 +585,6 @@ void RegionalStorage::stopTransfer( bool finalizeAll )
     }
     while ( inputTransferTask_ || resendTransferTask_ ) {
         cacheMon_.wait(100);
-    }
-    if ( finalizeAll ) {
-        smsc_log_warn(log_,"R=%u/D=%u FIXME make all messages fail (state=cancel?)",
-                      regionId_, dlv_->getDlvId() );
     }
 }
 
@@ -665,16 +661,6 @@ void RegionalStorage::setRecordAtInit( Message& msg, regionid_type serial )
         m.state = msg.state;
         (*iter)->serial = serial;
     }
-    /*
-    if (iter) {
-        Message& m = (*iter)->msg;
-        smsc_log_debug(log_,"R=%u/D=%u/M=%llu after add: state=%s txt=%d/'%s'",
-                       regionId_, getDlvId(), ulonglong(m.msgId),
-                       msgStateToString(MsgState(m.state)),
-                       m.text.getTextId(),
-                       m.text.getText() ? m.text.getText() : "");
-    }
-     */
 }
 
 

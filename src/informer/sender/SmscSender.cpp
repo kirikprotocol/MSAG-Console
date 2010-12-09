@@ -288,16 +288,9 @@ SmscSender::~SmscSender()
     stop();
     if (session_.get()) session_->close();
     if (parser_) delete parser_;
-    /*
-    if (rQueue_) {
-        assert(rQueue_->Count() == 0);
-        delete rQueue_;
-    }
-     */
     if (wQueue_.get()) {
         assert(wQueue_->Count() == 0);
         wQueue_.reset(0);
-        // delete wQueue_;
     }
     if (journal_) {
         delete journal_;

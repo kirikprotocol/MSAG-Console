@@ -252,7 +252,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         case DLVSTATE_CANCELLED: {
             MutexGuard cmg(cacheLock_);
             for ( StoreList::iterator i = storeList_.begin(); i != storeList_.end(); ++i ) {
-                (*i)->stopTransfer(newState == DLVSTATE_CANCELLED);
+                (*i)->stopTransfer();
             }
             break;
         }
@@ -307,13 +307,6 @@ RegionalStoragePtr DeliveryImpl::getRegionalStorage( regionid_type regId, bool c
             return RegionalStoragePtr();
         }
         ptr = createRegionalStorage( regId );
-        /*
-        StoreList::iterator iter = 
-            storeList_.insert(storeList_.begin(),
-                              RegionalStoragePtr(new RegionalStorage(*this,
-                                                                     regId )));
-        ptr = storeHash_.Insert(regId,iter);
-         */
     }
     return **ptr;
 }
@@ -370,29 +363,9 @@ void DeliveryImpl::setRecordAtInit( regionid_type            regionId,
     StoreList::iterator* ptr = storeHash_.GetPtr(regionId);
     if (!ptr) {
         ptr = createRegionalStorage(regionId);
-        /*
-        StoreList::iterator iter =
-            storeList_.insert( storeList_.begin(),
-                               RegionalStoragePtr(new RegionalStorage(*this,
-                                                                      regionId)) );
-        ptr = storeHash_.Insert(regionId,iter);
-         */
     }
     (**ptr)->setRecordAtInit(msg,serial);
 }
-
-
-/*
-void DeliveryImpl::setNextResendAtInit( regionid_type       regionId,
-                                        msgtime_type        nextResend )
-{
-    StoreList::iterator* ptr = storeHash_.GetPtr(regionId);
-    if (!ptr) {
-        ptr = createRegionalStorage(regionId);
-    }
-    (**ptr)->setNextResendAtInit(nextResend);
-}
- */
 
 
 void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,

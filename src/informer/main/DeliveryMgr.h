@@ -78,6 +78,10 @@ protected:
                       msgtime_type  planTime,
                       bool          checkDlvLimit );
 
+    /// this methods adds a threaded task which is going to cancel
+    /// all messages in the delivery.
+    void startCancelThread( dlvid_type dlvId );
+
     dlvid_type getNextDlvId();
     
 private:

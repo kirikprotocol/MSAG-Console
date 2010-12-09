@@ -49,11 +49,6 @@ public smsc::core::threads::Thread
 {
     class PvssRespHandler;
 public:
-    /*
-    static void readSmscConfig( SmscConfig& cfg,
-                                const smsc::util::config::Config& cv );
-     */
-
     InfosmeCoreV1( unsigned maxsms );
 
     virtual ~InfosmeCoreV1();

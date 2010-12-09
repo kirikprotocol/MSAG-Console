@@ -149,14 +149,6 @@ void RegionSender::removeDelivery( dlvid_type dlvId )
         taskList_.remove(EqualById(dlvId));
         dlvList_.erase(iter);
     }
-    /*
-    if (log_->isDebugEnabled()) {
-        std::string dumpstring;
-        dumpstring.reserve(200);
-        taskList_.dump(dumpstring);
-        smsc_log_debug(log_,"list after remove: %s",dumpstring.c_str());
-    }
-     */
 }
 
 
