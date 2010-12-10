@@ -4,28 +4,30 @@
 #include <memory>
 #include "core/synchronization/Mutex.hpp"
 #include "informer/io/EmbedRefPtr.h"
-#include "ActivityLog.h"
+#include "DeliveryInfo.h"
 #include "InputMessageSource.h"
 
 namespace eyeline {
 namespace informer {
 
 class UserInfo;
+class ActivityLog;
 
 class Delivery
 {
     friend class EmbedRefPtr< Delivery >;
 protected:
     Delivery( DeliveryInfo*               dlvInfo,
-              UserInfo&                   userInfo,
               InputMessageSource*         source );
 
 public:
     virtual ~Delivery();
 
-    inline dlvid_type getDlvId() const { return activityLog_.getDlvId(); }
-    inline const DeliveryInfo& getDlvInfo() const { return activityLog_.getDlvInfo(); }
-    inline const UserInfo& getUserInfo() const { return activityLog_.getUserInfo(); }
+    inline dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
+    inline const DeliveryInfo& getDlvInfo() const { return *dlvInfo_; }
+    inline const UserInfo& getUserInfo() const {
+        return dlvInfo_->getUserInfo();
+    }
 
     virtual void updateDlvInfo( const DeliveryInfoData& data ) = 0;
 
@@ -40,8 +42,6 @@ public:
 
     void addNewMessages( MsgIter begin, MsgIter end );
     void dropMessages( const std::vector< msgid_type >& msgids );
-
-    inline void getStats( DeliveryStats& ds ) { return activityLog_.getStats(ds); }
 
     void getGlossary( std::vector< std::string >& texts ) const;
     void setGlossary( const std::vector< std::string >& texts );
@@ -71,7 +71,8 @@ protected:
     DlvState                                           state_;
     msgtime_type                                       planTime_;
 
-    ActivityLog                                        activityLog_;
+    std::auto_ptr<DeliveryInfo>                        dlvInfo_;
+    ActivityLog*                                       activityLog_;
     InputMessageSource*                                source_;       // owned
 
     smsc::core::synchronization::Mutex                 lock_;

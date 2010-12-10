@@ -237,7 +237,7 @@ public:
         MutexGuard mg(mgr_.mon_);
         for ( DeliveryList::iterator i = mgr_.deliveryList_.begin();
               i != mgr_.deliveryList_.end(); ++i ) {
-            (*i)->popIncrementalStats(ds);
+            (*i)->popMsgStats(ds);
         }
         smsc_log_debug(log_,"stats dumper inited");
     }
@@ -307,7 +307,7 @@ public:
                 if (iter == mgr_.deliveryList_.end()) { break; }
                 dlvId = (*iter)->getDlvId();
                 userId = (*iter)->getUserInfo().getUserId();
-                (*iter)->popIncrementalStats(ds);
+                (*iter)->popMsgStats(ds);
                 ++iter;
             }
             if ( ds.isEmpty() ) continue;
@@ -480,8 +480,8 @@ void DeliveryMgr::init()
                     planTime = 0;
                 }
 
-                DeliveryInfo* info = new DeliveryInfo(dlvId, data );
-                addDelivery(*user.get(), info, state, planTime, false);
+                DeliveryInfo* info = new DeliveryInfo(dlvId, data, *user.get());
+                addDelivery(info, state, planTime, false);
                 if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() ) {
                     startCancelThread(dlvId);
                 }
@@ -657,7 +657,7 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
                                         const DeliveryInfoData& infoData )
 {
     const dlvid_type dlvId = getNextDlvId();
-    DeliveryInfo* info = new DeliveryInfo(dlvId,infoData);
+    DeliveryInfo* info = new DeliveryInfo(dlvId,infoData,userInfo);
     DlvState state = DLVSTATE_PAUSED;
     msgtime_type planTime = 0;
     if (info->getStartDate()) {
@@ -667,7 +667,7 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
             planTime = info->getStartDate();
         }
     }
-    addDelivery(userInfo,info,state,planTime,true);
+    addDelivery(info,state,planTime,true);
     userInfo.incDlvStats(DLVSTATE_CREATED);
     return dlvId;
 }
@@ -815,12 +815,12 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
 }
 
 
-void DeliveryMgr::addDelivery( UserInfo&     userInfo,
-                               DeliveryInfo* info,
+void DeliveryMgr::addDelivery( DeliveryInfo* info,
                                DlvState      state,
                                msgtime_type  planTime,
                                bool          checkDlvLimit )
 {
+    UserInfo& userInfo = info->getUserInfo();
     std::auto_ptr< DeliveryInfo > infoptr(info);
     if (!info) {
         throw InfosmeException(EXC_LOGICERROR,"delivery info is NULL");
@@ -842,7 +842,6 @@ void DeliveryMgr::addDelivery( UserInfo&     userInfo,
         ims = new InputStorage(core_,*inputJournal_);
     }
     dlv.reset( new DeliveryImpl(infoptr.release(),
-                                userInfo,
                                 storeJournal_,
                                 ims,
                                 state,

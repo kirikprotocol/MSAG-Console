@@ -6,6 +6,7 @@
 #include "informer/data/BindSignal.h"
 #include "util/config/Config.h"
 #include "informer/io/ConfigWrapper.h"
+#include "informer/io/FileGuard.h"
 
 using smsc::util::config::Config;
 
@@ -101,17 +102,16 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
 
 
 DeliveryImpl::DeliveryImpl( DeliveryInfo*               dlvInfo,
-                            UserInfo&                   userInfo,
                             StoreJournal*               journal,
                             InputMessageSource*         source,
                             DlvState                    state,
                             msgtime_type                planTime ) :
-Delivery(dlvInfo,userInfo,source),
+Delivery(dlvInfo,source),
 storeJournal_(journal)
 {
     state_ = state;
     planTime_ = planTime;
-    const dlvid_type dlvId = getDlvInfo()->getDlvId();
+    const dlvid_type dlvId = dlvInfo_->getDlvId();
     writeDeliveryInfoData();
     smsc_log_debug(log_,"ctor D=%u done",dlvId);
 }
@@ -203,7 +203,7 @@ void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
     }
     // should we unbind first?
     MutexGuard mg(stateLock_);
-    getDlvInfo()->update( data );
+    dlvInfo_->update( data );
     writeDeliveryInfoData();
 }
 
@@ -213,7 +213,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
     if ( getCS()->isArchive() ) {
         throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
     }
-    const dlvid_type dlvId = getDlvInfo()->getDlvId();
+    const dlvid_type dlvId = dlvInfo_->getDlvId();
     BindSignal bs;
     msgtime_type now;
     ulonglong ymd;
@@ -248,7 +248,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             newState = DLVSTATE_FINISHED;
         }
         bs.bind = (newState == DLVSTATE_ACTIVE);
-        activityLog_.getUserInfo().incDlvStats(newState,state_); // may NOT throw
+        dlvInfo_->getUserInfo().incDlvStats(newState,state_); // may NOT throw
         state_ = newState;
         planTime_ = planTime;
         switch (newState) {
@@ -280,7 +280,7 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
             fg.write(header,strlen(header));
         }
         DeliveryStats ds;
-        activityLog_.getStats(ds);
+        dlvInfo_->getMsgStats(ds);
         int buflen = sprintf(buf,"%llu,%c,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
                              ymd,
                              dlvStateToString(newState)[0],
@@ -336,7 +336,7 @@ void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
 size_t DeliveryImpl::rollOverStore()
 {
     size_t written = 0;
-    smsc_log_debug(log_,"D=%u rolling store",getDlvInfo()->getDlvId());
+    smsc_log_debug(log_,"D=%u rolling store",dlvInfo_->getDlvId());
     bool firstPass = true;
     do {
         RegionalStoragePtr ptr;
@@ -353,7 +353,7 @@ size_t DeliveryImpl::rollOverStore()
         written += ptr->rollOver();
         if (getCS()->isStopping()) { break; }
     } while ( true );
-    smsc_log_debug(log_,"D=%u rolling store done, written=%u",getDlvInfo()->getDlvId(),written);
+    smsc_log_debug(log_,"D=%u rolling store done, written=%u",dlvInfo_->getDlvId(),written);
     return written;
 }
 
@@ -395,9 +395,9 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
         }
     }
     DeliveryStats ds;
-    activityLog_.getStats(ds);
+    dlvInfo_->getMsgStats(ds);
     smsc_log_info(log_,"D=%u stats: total=%u proc=%u sent=%u retry=%u dlvd=%u fail=%u expd=%u kill=%u",
-                  getDlvInfo()->getDlvId(),
+                  dlvInfo_->getDlvId(),
                   ds.totalMessages, ds.procMessages,
                   ds.sentMessages, ds.retryMessages,
                   ds.dlvdMessages, ds.failedMessages,
@@ -407,10 +407,10 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 
 void DeliveryImpl::detachEverything( bool cleanDirectory )
 {
-    const dlvid_type dlvId = getDlvInfo()->getDlvId();
+    const dlvid_type dlvId = dlvInfo_->getDlvId();
     smsc_log_debug(log_,"D=%u detaching everything",dlvId);
     {
-        activityLog_.getUserInfo().detachDelivery(dlvId);
+        dlvInfo_->getUserInfo().detachDelivery(dlvId);
         MutexGuard mg(cacheLock_);
         storeHash_.Empty();
         storeList_.clear();
@@ -432,7 +432,7 @@ void DeliveryImpl::detachEverything( bool cleanDirectory )
 void DeliveryImpl::checkFinalize()
 {
     if ( state_ != DLVSTATE_ACTIVE ) return;
-    const dlvid_type dlvId = getDlvInfo()->getDlvId();
+    const dlvid_type dlvId = dlvInfo_->getDlvId();
     smsc_log_debug(log_,"D=%u check finalize invoked",dlvId);
     DeliveryStats ds;
     bool finalize = true;
@@ -447,7 +447,7 @@ void DeliveryImpl::checkFinalize()
                 break;
             }
         }
-        activityLog_.getStats(ds);
+        dlvInfo_->getMsgStats(ds);
     }
     if (finalize) {
         if (ds.isFinished()) {
@@ -484,7 +484,7 @@ void DeliveryImpl::cancelOperativeStorage()
 void DeliveryImpl::writeDeliveryInfoData()
 {
     DeliveryInfoData data;
-    getDlvInfo()->getDeliveryData(data);
+    dlvInfo_->getDeliveryData(data);
     Config config;
     config.setString("name",data.name.c_str());
     config.setInt("priority",data.priority);
@@ -523,7 +523,7 @@ void DeliveryImpl::writeDeliveryInfoData()
         }
         config.setString("deliveryMode",what);
     }
-    config.setString("owner",activityLog_.getUserInfo().getUserId());
+    config.setString("owner",dlvInfo_->getUserInfo().getUserId());
     config.setBool("retryOnFail",data.retryOnFail);
     if (!data.retryPolicy.empty()) {
         config.setString("retryPolicy",data.retryPolicy.c_str());

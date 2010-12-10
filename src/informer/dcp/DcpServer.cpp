@@ -364,7 +364,7 @@ void DcpServer::handle(const messages::GetUserStats& inmsg)
     }
   }
   UserDlvStats stats;
-  ui->getStats(stats);
+  ui->getDlvStats(stats);
   resp.setCurrentActiveDeliveriesCount(stats.active);
   resp.setCurrentCancelledDeliveriesCount(stats.cancelled);
   resp.setCurrentFinishedDeliveriesCount(stats.finished);
@@ -527,7 +527,7 @@ void DcpServer::handle(const messages::GetDeliveryState& inmsg)
   }
 
   DeliveryStats ds;
-  dlv->getStats(ds);
+  dlv->getDlvInfo().getMsgStats(ds);
   respStats.setDeliveredMessages(ds.dlvdMessages);
   respStats.setExpiredMessages(ds.expiredMessages);
   respStats.setFailedMessage(ds.failedMessages);

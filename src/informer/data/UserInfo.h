@@ -126,7 +126,7 @@ public:
     }
 
     /// get current stats
-    inline void getStats( UserDlvStats& stats ) {
+    inline void getDlvStats( UserDlvStats& stats ) {
         MutexGuard mg(statLock_);
         stats = stats_;
     }
@@ -139,7 +139,7 @@ public:
                       uint8_t fromState = 0,
                       bool checkDlvLimit = false );
 
-    void popIncrementalStats( UserDlvStats& ds );
+    void popDlvStats( UserDlvStats& ds );
 
     /// NOTE: service methods, do not invoke!
     void attachDelivery( const DeliveryPtr& dlv );

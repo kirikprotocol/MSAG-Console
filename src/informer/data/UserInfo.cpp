@@ -1,4 +1,5 @@
 #include <cassert>
+#include <algorithm>
 #include "logger/Logger.h"
 #include "UserInfo.h"
 #include "informer/io/InfosmeException.h"
@@ -181,7 +182,7 @@ void UserInfo::incDlvStats( uint8_t state,
 }
 
 
-void UserInfo::popIncrementalStats( UserDlvStats& ds )
+void UserInfo::popDlvStats( UserDlvStats& ds )
 {
     MutexGuard mg(statLock_);
     const unsigned idx = 1 - getCS()->getStatBankIndex();

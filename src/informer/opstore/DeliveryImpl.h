@@ -30,7 +30,6 @@ public:
                                       DeliveryInfoData&     data );
 
     DeliveryImpl( DeliveryInfo*               dlvInfo,
-                  UserInfo&                   userInfo,
                   StoreJournal*               journal,
                   InputMessageSource*         source,
                   DlvState                    state,
@@ -53,8 +52,8 @@ public:
 
     virtual void getRegionList( std::vector<regionid_type>& regIds ) const;
 
-    inline void popIncrementalStats( DeliveryStats& ds ) {
-        activityLog_.popIncrementalStats(ds);
+    inline void popMsgStats( DeliveryStats& ds ) {
+        dlvInfo_->popMsgStats(ds);
     }
 
     /// slowly dump all regions to storage
@@ -97,8 +96,8 @@ private:
     typedef std::list< RegionalStoragePtr >            StoreList;
     typedef smsc::core::buffers::IntHash< StoreList::iterator > StoreHash;
 
-    inline DeliveryInfo* getDlvInfo() { return &activityLog_.getDlvInfo(); }
-    inline const DeliveryInfo* getDlvInfo() const { return &activityLog_.getDlvInfo(); }
+    // inline DeliveryInfo* getDlvInfo() { return &activityLog_.getDlvInfo(); }
+    // inline const DeliveryInfo* getDlvInfo() const { return &activityLog_.getDlvInfo(); }
 
     void writeDeliveryInfoData();
 

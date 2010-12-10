@@ -73,8 +73,7 @@ public:
 
 protected:
     /// used internally
-    void addDelivery( UserInfo&     userInfo,
-                      DeliveryInfo* info,
+    void addDelivery( DeliveryInfo* info,
                       DlvState      state,
                       msgtime_type  planTime,
                       bool          checkDlvLimit );

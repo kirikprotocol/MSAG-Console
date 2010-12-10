@@ -1156,7 +1156,7 @@ void InfosmeCoreV1::initUserStats()
     UserDlvStats ds;
     MutexGuard mg(userLock_);
     for ( smsc::core::buffers::Hash<UserInfoPtr>::Iterator i(&users_); i.Next(userid,ptr); ) {
-        ptr->get()->popIncrementalStats(ds);
+        ptr->get()->popDlvStats(ds);
     }
     smsc_log_debug(log_,"user stats cleared");
 }
@@ -1184,7 +1184,7 @@ void InfosmeCoreV1::dumpUserStats( msgtime_type currentTime )
     for ( std::vector< UserInfoPtr >::iterator i = users.begin();
           i != users.end(); ++i ) {
         UserDlvStats ds;
-        (*i)->popIncrementalStats(ds);
+        (*i)->popDlvStats(ds);
         if ( ds.isEmpty() ) continue;
         if (!fg.isOpened()) {
             char fpath[100];

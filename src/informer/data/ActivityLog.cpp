@@ -2,8 +2,6 @@
 #include "ActivityLog.h"
 #include "CommonSettings.h"
 #include "informer/io/TextEscaper.h"
-#include "informer/io/DirListing.h"
-#include "core/buffers/TmpBuf.hpp"
 #include "UserInfo.h"
 #include "FinalLog.h"
 
@@ -14,9 +12,7 @@ namespace {
 const char* statsFormat = "# TOTAL=%u,PROC=%u,SENT=%u,RTRY=%u,DLVD=%u,FAIL=%u,EXPD=%u,SMSDLVD=%u,SMSFAIL=%u,SMSEXPD=%u,KILL=%u%n";
 }
 
-ActivityLog::ActivityLog( UserInfo& userInfo,
-                          DeliveryInfo* info ) :
-userInfo_(&userInfo),
+ActivityLog::ActivityLog( DeliveryInfo* info ) :
 dlvInfo_(info),
 createTime_(0)
 {
@@ -26,9 +22,6 @@ createTime_(0)
         log_ = smsc::logger::Logger::getInstance(buf);
     }
 
-    stats_.clear();
-    incstats_[0].clear();
-    incstats_[1].clear();
     period_ = 60;
     {
         if (period_ > 3600) period_ = 3600;
@@ -36,7 +29,9 @@ createTime_(0)
         period_ = 3600 / nslices;
         if (period_ < 60) period_ = 60;
     }
-    // reading the last file in activity logs subdirs
+
+    // FIXME: reading the last file in activity logs subdirs (move to a separate routine)
+    /*
     bool statsLoaded = false;
     try {
         DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
@@ -86,11 +81,13 @@ createTime_(0)
     if (!statsLoaded) {
         smsc_log_debug(log_,"D=%u statistics is not found", getDlvId());
     }
+     */
 }
 
 
 bool ActivityLog::readStatistics( const std::string& filename,
-                                  smsc::core::buffers::TmpBuf<char, 8192>& buf )
+                                  smsc::core::buffers::TmpBuf<char, 8192>& buf,
+                                  DeliveryStats& ods )
 {
     FileGuard fg;
     fg.ropen( filename.c_str() );
@@ -204,9 +201,8 @@ bool ActivityLog::readStatistics( const std::string& filename,
         }
     } while (true);
     if (statLineHasBeenRead) {
-        stats_ = ds;
-        // they will be supplied later
-        stats_.sentMessages = stats_.procMessages = 0;
+        ods = ds;
+        ods.sentMessages = ods.procMessages = 0;
     }
     return statLineHasBeenRead;
 }
@@ -278,15 +274,15 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
-        doIncStats(msg.state,1,fromState,retryCount);
+        dlvInfo_->incMsgStats(msg.state,1,fromState,retryCount);
     }
 
     // writing final log
     if ( msg.state >= MSGSTATE_FINAL &&
-         getDlvInfo().wantFinalMsgRecords() ) {
+         dlvInfo_->wantFinalMsgRecords() ) {
         FinalLog::getFinalLog()->addMsgRecord(currentTime,
                                               getDlvId(),
-                                              getUserInfo().getUserId(),
+                                              dlvInfo_->getUserInfo().getUserId(),
                                               msg,
                                               smppStatus);
     }
@@ -349,16 +345,17 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
         char headbuf[200];
         int headlen;
         {
-            MutexGuard lmg(statLock_);
+            DeliveryStats ds;
+            dlvInfo_->getMsgStats(ds);
             int shift;
             headlen = sprintf(headbuf,
                               statsFormat,
-                              stats_.totalMessages, stats_.procMessages,
-                              stats_.sentMessages, stats_.retryMessages,
-                              stats_.dlvdMessages, stats_.failedMessages,
-                              stats_.expiredMessages, stats_.dlvdSms,
-                              stats_.failedSms, stats_.expiredSms,
-                              stats_.killedMessages,
+                              ds.totalMessages, ds.procMessages,
+                              ds.sentMessages, ds.retryMessages,
+                              ds.dlvdMessages, ds.failedMessages,
+                              ds.expiredMessages, ds.dlvdSms,
+                              ds.failedSms, ds.expiredSms,
+                              ds.killedMessages,
                               &shift );
             if (headlen<0) {
                 throw InfosmeException(EXC_SYSTEM,"cannot sprintf header");
@@ -370,6 +367,7 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
 }
 
 
+/*
 void ActivityLog::incStats( uint8_t state, int value, uint8_t fromState, int smsValue )
 {
     MutexGuard mg(statLock_);
@@ -393,6 +391,7 @@ void ActivityLog::popIncrementalStats( DeliveryStats& ds )
     ds = incstats_[idx];
     incstats_[idx].clear();
 }
+ */
 
 }
 }

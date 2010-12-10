@@ -22,8 +22,8 @@ namespace informer {
 
 class StoreJournal;
 class DeliveryImpl;
-class DeliveryInfo;
 class RetryPolicy;
+class DeliveryInfo;
 
 /// Working storage for messages for one Delivery/Region
 class RegionalStorage : protected TransferRequester

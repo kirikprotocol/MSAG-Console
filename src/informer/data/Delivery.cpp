@@ -3,17 +3,18 @@
 #include "UserInfo.h"
 #include "CommonSettings.h"
 #include "MessageGlossary.h"
+#include "ActivityLog.h"
 
 namespace eyeline {
 namespace informer {
 
 Delivery::Delivery( DeliveryInfo*               dlvInfo,
-                    UserInfo&                   userInfo,
                     InputMessageSource*         source ) :
 log_(0),
 state_(DlvState(0)),
 planTime_(0),
-activityLog_(userInfo,dlvInfo),
+dlvInfo_(dlvInfo),
+activityLog_(0),
 source_(source),
 ref_(0)
 {
@@ -22,11 +23,13 @@ ref_(0)
     log_ = smsc::logger::Logger::getInstance(buf);
     if (source_) {
         try {
-            source_->init(activityLog_);
+            activityLog_ = new ActivityLog(dlvInfo);
+            source_->init(*activityLog_);
         } catch ( std::exception& e ) {
             smsc_log_error(log_,"D=%u inputstorage init failed, exc: %s",
                            getDlvId(), e.what());
             delete source_;
+            delete activityLog_;
             throw;
         }
     }
@@ -36,8 +39,7 @@ ref_(0)
 Delivery::~Delivery()
 {
     delete source_;
-    // const dlvid_type dlvId = getDlvId();
-    // dlvInfo_.reset(0);
+    delete activityLog_;
     smsc_log_info(log_,"dtor D=%u done",getDlvId());
 }
 

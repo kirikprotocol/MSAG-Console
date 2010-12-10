@@ -7,6 +7,10 @@
 #include "util/smstext.h"
 #include "informer/io/UTF8.h"
 #include "informer/data/MessageText.h"
+#include "ActivityLog.h"
+#include "UserInfo.h"
+#include "informer/io/DirListing.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace eyeline {
 namespace informer {
@@ -56,8 +60,10 @@ const size_t DeliveryInfoData::USERDATA_LENGTH;
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
 DeliveryInfo::DeliveryInfo( dlvid_type              dlvId,
-                            const DeliveryInfoData& data ) :
+                            const DeliveryInfoData& data,
+                            UserInfo&               userInfo ) :
 dlvId_(dlvId),
+userInfo_(&userInfo),
 startDate_(0),
 endDate_(0),
 activePeriodStart_(-1),
@@ -69,6 +75,12 @@ activeWeekDays_(-1)
         log_ = smsc::logger::Logger::getInstance("dlvinfo");
     }
     updateData( data, 0 );
+
+    // stats
+    stats_.clear();
+    incstats_[0].clear();
+    incstats_[1].clear();
+    readStats();
 }
 
 
@@ -214,6 +226,33 @@ unsigned DeliveryInfo::evaluateNchunks( const char*     outText,
 }
 
 
+void DeliveryInfo::incMsgStats( uint8_t state, int value, uint8_t fromState, int smsValue )
+{
+    MutexGuard mg(statLock_);
+    stats_.incStat(state,value,smsValue);
+    if (fromState) {stats_.incStat(fromState,-value,0);}
+    const unsigned idx = getCS()->getStatBankIndex();
+    incstats_[idx].incStat(state,value,smsValue);
+    // doIncStats(state,value,fromState,smsValue);
+}
+
+
+/*
+void ActivityLog::doIncStats( uint8_t state, int value, uint8_t fromState, int smsValue )
+{
+}
+ */
+
+
+void DeliveryInfo::popMsgStats( DeliveryStats& ds )
+{
+    MutexGuard mg(statLock_);
+    const unsigned idx = 1 - getCS()->getStatBankIndex();
+    ds = incstats_[idx];
+    incstats_[idx].clear();
+}
+
+
 void DeliveryInfo::updateData( const DeliveryInfoData& data,
                                const DeliveryInfoData* old )
 {
@@ -322,6 +361,188 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (newRetryPolicy) { retryPolicy_ = retryPolicy; }
     data_ = data;
 }
+
+
+/// read the statistics
+void DeliveryInfo::readStats()
+{
+    bool statsLoaded = false;
+    try {
+        DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
+        std::vector< std::string > dirs;
+        char fnbuf[150];
+        makeDeliveryPath(fnbuf,dlvId_);
+        const std::string actpath = getCS()->getStorePath() + fnbuf + "activity_log/";
+        dl.list( actpath.c_str(), dirs );
+        std::sort( dirs.begin(), dirs.end() );
+        std::vector< std::string > subdirs;
+        subdirs.reserve(24);
+        smsc::core::buffers::TmpBuf<char,8192> buf;
+        for ( std::vector<std::string>::reverse_iterator i = dirs.rbegin();
+              i != dirs.rend(); ++i ) {
+            subdirs.clear();
+            const std::string daypath = actpath + *i;
+            dl.list( daypath.c_str(), subdirs );
+            std::sort( subdirs.begin(), subdirs.end() );
+            for ( std::vector<std::string>::reverse_iterator j = subdirs.rbegin();
+                  j != subdirs.rend(); ++j ) {
+                std::vector< std::string > logfiles;
+                logfiles.reserve(60);
+                const std::string hourpath = daypath + "/" + *j;
+                makeDirListing( NoDotsNameFilter(), S_IFREG ).list( hourpath.c_str(), logfiles );
+                std::sort(logfiles.begin(), logfiles.end());
+                for ( std::vector< std::string >::reverse_iterator k = logfiles.rbegin();
+                      k != logfiles.rend(); ++k ) {
+                    
+                    const std::string filename = hourpath + "/" + *k;
+                    try {
+                        if ( ActivityLog::readStatistics( filename,
+                                                          buf,
+                                                          stats_ ) ) {
+                            statsLoaded = true;
+                            break;
+                        }
+                    } catch ( std::exception& e ) {
+                        smsc_log_warn(log_,"D=%u, file '%s' exc: %s",
+                                      getDlvId(), filename.c_str(), e.what());
+                    }
+                }
+                if (statsLoaded) break;
+            }
+            if (statsLoaded) break;
+        }
+    } catch (std::exception& e) {
+        smsc_log_debug(log_,"D=%u stats, exc: %s", getDlvId(), e.what());
+    }
+    if (!statsLoaded) {
+        smsc_log_debug(log_,"D=%u statistics is not found", getDlvId());
+    }
+}
+
+/*
+bool DeliveryInfo::readStatistics( const std::string& filename,
+                                   smsc::core::buffers::TmpBuf<char, 8192 >& buf,
+                                   DeliveryStats& ods )
+{
+    FileGuard fg;
+    fg.ropen( filename.c_str() );
+    buf.SetPos(0);
+    bool statLineHasBeenRead = false;
+    DeliveryStats ds;
+    ds.clear();
+    do {
+        char* ptr = buf.get();
+        const size_t wasread = fg.read( buf.GetCurPtr(), buf.getSize() - buf.GetPos() );
+        if (wasread==0) {
+            // EOF
+            if (ptr < buf.GetCurPtr()) {
+                // FIXME: the activity log is corrupted, should we truncate?
+                throw InfosmeException(EXC_BADFILE,"file is not terminated with LF");
+            }
+            break;
+        }
+        buf.SetPos(buf.GetPos()+wasread);
+        while ( ptr < buf.GetCurPtr() ) {
+            char* end = const_cast<char*>
+                (reinterpret_cast<const char*>
+                    (memchr(ptr,'\n',buf.GetCurPtr()-ptr)));
+            if (!end) break; // EOL not found yet
+            
+            // EOL found
+            *end = '\0';
+            const char* line = ptr;
+            ptr = end+1;
+            if ( *line == '#' ) {
+                // head comment, trying to read statline
+                int shift = 0;
+                sscanf(line, statsFormat,
+                       &ds.totalMessages, &ds.procMessages,
+                       &ds.sentMessages, &ds.retryMessages,
+                       &ds.dlvdMessages, &ds.failedMessages,
+                       &ds.expiredMessages, &ds.dlvdSms,
+                       &ds.failedSms, &ds.expiredSms,
+                       &ds.killedMessages,
+                       &shift );
+                if (shift==0) {
+                    // not a stat line
+                    continue;
+                }
+                if (statLineHasBeenRead) {
+                    throw InfosmeException(EXC_BADFILE,"duplicate stat line");
+                }
+                statLineHasBeenRead = true;
+                continue;
+
+            }
+
+            // record line, trying to read its head
+            if (!statLineHasBeenRead) {
+                throw InfosmeException(EXC_BADFILE,"no stat line before the first record");
+            }
+            int shift = 0;
+            unsigned seconds;
+            char cstate;
+            sscanf(line,"%02u,%c,%n",&seconds,&cstate,&shift);
+            if (!shift) {
+                throw InfosmeException(EXC_BADFILE,"wrong record: '%s'",line);
+            }
+            switch (cstate) {
+            case 'N' : ++ds.totalMessages;   break;
+            case 'P' : ++ds.procMessages;    break;
+            case 'R' : ++ds.retryMessages;   break;
+            case 'B' : break; // skip record - do nothing
+            case 'D' :
+            case 'E' :
+            case 'F' :
+            case 'K': {
+                unsigned regId;
+                ulonglong msgId;
+                unsigned nchunks;
+                int shift2 = 0;
+                sscanf(line+shift,"%u,%llu,%u,%n",&regId,&msgId,&nchunks,&shift2);
+                if (!shift2 || !nchunks) {
+                    throw InfosmeException(EXC_BADFILE,"cannot parse the number of sms in '%s'",line);
+                }
+                switch (cstate) {
+                case 'D': ++ds.dlvdMessages; ds.dlvdSms += nchunks; break;
+                case 'E': ++ds.failedMessages; ds.failedSms += nchunks; break;
+                case 'F': ++ds.expiredMessages; ds.expiredSms += nchunks; break;
+                case 'K': ++ds.killedMessages; break;
+                default: break;
+                }
+                break;
+            }
+            default:
+                throw InfosmeException(EXC_BADFILE,"unknown record state in '%s'",line);
+            }
+
+        } // while there is LF in buffer
+
+        if (ptr > buf.get()) {
+            // shifting buffer
+            char* o = buf.get();
+            const char* i = ptr;
+            const char* e = buf.GetCurPtr();
+            for ( ; i < e; ) {
+                *o++ = *i++;
+            }
+            buf.SetPos(o-buf.get());
+        } else {
+            // buffer is too small
+            if (buf.getSize() > 100000) {
+                throw InfosmeException(EXC_BADFILE,"too big record");
+            }
+            buf.reserve(buf.getSize()+buf.getSize()/2+100);
+        }
+    } while (true);
+    if (statLineHasBeenRead) {
+        ods = ds;
+        // they will be supplied later
+        ods.sentMessages = ods.procMessages = 0;
+    }
+    return statLineHasBeenRead;
+}
+ */
 
 }
 }

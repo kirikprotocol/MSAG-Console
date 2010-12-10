@@ -3,20 +3,23 @@
 
 #include <vector>
 #include "informer/io/Typedefs.h"
+#include "informer/io/EmbedRefPtr.h"
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
 #include "RetryString.h"
+#include "DeliveryStats.h"
 #include "sms/sms.h"
 
 namespace eyeline {
 namespace informer {
+
+class UserInfo;
 
 enum DlvMode{
     DLVMODE_SMS = 0,
     DLVMODE_USSDPUSH = 1,
     DLVMODE_USSDPUSHVLR = 2
 };
-
 
 /// the structure holding data from dcp protocol.
 struct DeliveryInfoData
@@ -55,11 +58,15 @@ class DeliveryInfo
 public:
     // constructor from file system
     DeliveryInfo( dlvid_type              dlvId,
-                  const DeliveryInfoData& data );
+                  const DeliveryInfoData& data,
+                  UserInfo&               userInfo );
 
     dlvid_type getDlvId() const { return dlvId_; }
 
     void update( const DeliveryInfoData& data );
+
+    inline const UserInfo& getUserInfo() const { return *userInfo_; }
+    UserInfo& getUserInfo() { return *userInfo_; }
 
     inline void getDeliveryData( DeliveryInfoData& data ) const {
         MutexGuard mg(lock_);
@@ -140,19 +147,39 @@ public:
 
     // ============ end of delivery settings ==========================
 
+    // --- stats
+    void getMsgStats( DeliveryStats& ds ) const
+    {
+        MutexGuard mg(statLock_);
+        ds = stats_;
+    }
+
+    /// increment stats, optionally decrementing fromState
+    void incMsgStats( uint8_t state,
+                      int     value = 1,
+                      uint8_t fromState = 0,
+                      int     smsValue = 0 );
+
+    /// the method pops released incremental stats and then clear it.
+    void popMsgStats( DeliveryStats& ds );
+
 protected:
     /// update cached fields from data
     void updateData( const DeliveryInfoData& data,
                      const DeliveryInfoData* old );
 
+    /// read the statistics
+    void readStats();
+
 private:
     static smsc::logger::Logger* log_;
 
 private:
-    dlvid_type            dlvId_;
+    dlvid_type               dlvId_;
+    EmbedRefPtr< UserInfo >  userInfo_;
 
     mutable smsc::core::synchronization::Mutex lock_;
-    DeliveryInfoData                   data_;
+    DeliveryInfoData                           data_;
 
     // cached things updated from data_
     msgtime_type          startDate_;
@@ -163,6 +190,10 @@ private:
     int                   activeWeekDays_;
     smsc::sms::Address    sourceAddress_;
     RetryString           retryPolicy_;
+
+    mutable smsc::core::synchronization::Mutex statLock_;
+    DeliveryStats                      stats_;
+    DeliveryStats                      incstats_[2];
 };
 
 } // informer

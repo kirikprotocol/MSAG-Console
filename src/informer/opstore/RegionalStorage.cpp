@@ -8,6 +8,7 @@
 #include "informer/data/UserInfo.h"
 #include "informer/data/MessageGlossary.h"
 #include "informer/data/RetryPolicy.h"
+#include "informer/data/ActivityLog.h"
 #include "DeliveryImpl.h"
 #include "StoreJournal.h"
 #include "system/status.h"
@@ -192,7 +193,7 @@ dlvid_type RegionalStorage::getDlvId() const
 
 const DeliveryInfo& RegionalStorage::getDlvInfo() const
 {
-    return *dlv_->getDlvInfo();
+    return dlv_->getDlvInfo();
 }
 
 
@@ -219,7 +220,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     MsgIter iter;
     RelockMutexGuard mg(cacheMon_);
     const char* from;
-    const DeliveryInfo& info = *dlv_->getDlvInfo();
+    const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
 
     if ( dlv_->getState() != DLVSTATE_ACTIVE ) {
@@ -238,7 +239,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 
     /// check speed control
     {
-        usectime_type ret = dlv_->activityLog_.getUserInfo().isReadyAndConsumeQuant(usecTime);
+        usectime_type ret = dlv_->dlvInfo_->getUserInfo().isReadyAndConsumeQuant(usecTime);
         if (ret>0) {
             smsc_log_debug(log_,"R=%u/D=%u not ready by user limit, wait=%lluus",
                            regionId_, dlvId, ret);
@@ -369,7 +370,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                    ulonglong(m.msgId),from);
     if (prevState != m.state) {
         dlv_->storeJournal_->journalMessage(dlvId,regionId_,m,ml.serial);
-        dlv_->activityLog_.incStats(m.state,1,prevState);
+        dlv_->dlvInfo_->incMsgStats(m.state,1,prevState);
     }
     return secondsReady;
 }
@@ -380,7 +381,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
 {
     RelockMutexGuard mg(cacheMon_);
     MsgIter* ptr = messageHash_.GetPtr(msgId);
-    const DeliveryInfo& info = *dlv_->getDlvInfo();
+    const DeliveryInfo& info = dlv_->getDlvInfo();
     if (!ptr) {
         throw InfosmeException(EXC_NOTFOUND,"message R=%u/D=%u/M=%llu is not found (messageSent)",
                                unsigned(regionId_),
@@ -393,7 +394,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_SENT;
     dlv_->storeJournal_->journalMessage(info.getDlvId(),regionId_,m,ml.serial);
-    dlv_->activityLog_.incStats(m.state,1,prevState);
+    dlv_->dlvInfo_->incMsgStats(m.state,1,prevState);
 }
 
 
@@ -403,7 +404,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                                     int                smppState,
                                     unsigned           nchunks )
 {
-    const DeliveryInfo& info = *dlv_->getDlvInfo();
+    const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
 
     RelockMutexGuard mg(cacheMon_);
@@ -517,7 +518,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                        regionId_, dlvId, ulonglong(msgId),
                        msgTimeToYmd(m.lastTime) );
         dlv_->storeJournal_->journalMessage(info.getDlvId(),regionId_,m,ml.serial);
-        dlv_->activityLog_.incStats(m.state,1,prevState);
+        dlv_->dlvInfo_->incMsgStats(m.state,1,prevState);
         return;
 
     } while ( false );
@@ -531,7 +532,7 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
                                        int          smppState,
                                        unsigned     nchunks )
 {
-    const DeliveryInfo& info = *dlv_->getDlvInfo();
+    const DeliveryInfo& info = dlv_->getDlvInfo();
     RelockMutexGuard mg(cacheMon_);
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
@@ -569,7 +570,7 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
                    m.timeLeft,
                    nchunks,
                    checkFinal);
-    dlv_->activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
+    dlv_->activityLog_->addRecord(currentTime,regionId_,m,smppState,prevState);
     dlv_->storeJournal_->journalMessage(dlvId,regionId_,m,ml.serial);
     if (checkFinal) dlv_->checkFinalize();
 }
@@ -592,7 +593,7 @@ void RegionalStorage::stopTransfer()
 
 size_t RegionalStorage::rollOver()
 {
-    const DeliveryInfo& info = *dlv_->getDlvInfo();
+    const DeliveryInfo& info = dlv_->getDlvInfo();
     const dlvid_type dlvId = info.getDlvId();
     RelockMutexGuard mg(cacheMon_);
     while (stopRolling_) {
@@ -704,9 +705,8 @@ bool RegionalStorage::postInit()
         }
     }
     // syncing stats
-    // dlv_->activityLog_.incStats(MSGSTATE_RETRY,retry); taking from actlog
-    dlv_->activityLog_.incStats(MSGSTATE_SENT,sent);
-    dlv_->activityLog_.incStats(MSGSTATE_PROCESS,process);
+    dlv_->dlvInfo_->incMsgStats(MSGSTATE_SENT,sent);
+    dlv_->dlvInfo_->incMsgStats(MSGSTATE_PROCESS,process);
     return ( !messageList_.empty() || nextResendFile_);
 }
 
@@ -770,7 +770,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                        unsigned(regionId_), dlvId,
                        ulonglong(m.msgId));
         regionid_type serial = 0;
-        dlv_->activityLog_.addRecord(currentTime,regionId_,m,0);
+        dlv_->activityLog_->addRecord(currentTime,regionId_,m,0);
         dlv_->storeJournal_->journalMessage(dlvId,regionId_,m,serial);
         i->serial = serial;
     }
