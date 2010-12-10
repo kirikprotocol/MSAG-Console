@@ -231,6 +231,8 @@ void StoreJournal::rollOver()
     std::string jpath = makePath(getCS()->getStorePath());
     smsc_log_debug(log_,"rolling over '%s'",jpath.c_str());
     if ( -1 == rename( jpath.c_str(), (jpath + ".old").c_str() ) ) {
+        struct stat st;
+        if ( -1 == ::stat( jpath.c_str(), &st ) ) { return; }
         throw ErrnoException(errno,"rename('%s')",jpath.c_str());
     }
     FileGuard fg;

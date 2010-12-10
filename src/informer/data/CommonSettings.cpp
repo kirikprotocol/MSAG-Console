@@ -13,7 +13,8 @@ CommonSettings* CommonSettings::instance_ = 0;
 CommonSettings::CommonSettings( unsigned licenseLimit ) :
 utf8_(0),
 incStatBank_(0),
-licenseLimit_(licenseLimit)
+licenseLimit_(licenseLimit),
+stopping_(false)
 {
     assert(instance_ == 0);
     instance_ = this;

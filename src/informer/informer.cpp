@@ -229,7 +229,7 @@ int main( int argc, const char** argv )
                 }
             }
 
-            while ( isStarted ) {
+            while ( isStarted && !getCS()->isStopping() ) {
                 MutexGuard mg(startMon);
                 startMon.wait(1000);
             }
