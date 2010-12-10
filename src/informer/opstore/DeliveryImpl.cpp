@@ -102,7 +102,7 @@ void DeliveryImpl::readDeliveryInfoData( dlvid_type            dlvId,
 
 DeliveryImpl::DeliveryImpl( DeliveryInfo*               dlvInfo,
                             UserInfo&                   userInfo,
-                            StoreJournal&               journal,
+                            StoreJournal*               journal,
                             InputMessageSource*         source,
                             DlvState                    state,
                             msgtime_type                planTime ) :
@@ -198,6 +198,9 @@ DlvState DeliveryImpl::readState( dlvid_type            dlvId,
 
 void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
 {
+    if ( getCS()->isArchive() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     // should we unbind first?
     MutexGuard mg(stateLock_);
     getDlvInfo()->update( data );
@@ -207,6 +210,9 @@ void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
 
 void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 {
+    if ( getCS()->isArchive() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     const dlvid_type dlvId = getDlvInfo()->getDlvId();
     BindSignal bs;
     msgtime_type now;
@@ -314,6 +320,9 @@ RegionalStoragePtr DeliveryImpl::getRegionalStorage( regionid_type regId, bool c
 
 void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
 {
+    if ( getCS()->isArchive() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     MutexGuard mg(cacheLock_);
     regIds.reserve(storeHash_.Count());
     int regId;
@@ -352,7 +361,9 @@ size_t DeliveryImpl::rollOverStore()
 void DeliveryImpl::setRecordAtInit( const InputRegionRecord& rec,
                                     uint64_t                 maxMsgId )
 {
-    source_->setRecordAtInit(rec,maxMsgId);
+    if (source_) {
+        source_->setRecordAtInit(rec,maxMsgId);
+    }
 }
 
 

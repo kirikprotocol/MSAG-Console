@@ -280,7 +280,7 @@ InfosmeCoreV1::~InfosmeCoreV1()
 }
 
 
-void InfosmeCoreV1::init()
+void InfosmeCoreV1::init( bool archive )
 {
     smsc_log_info(log_,"--- initing core ---");
 
@@ -298,12 +298,12 @@ void InfosmeCoreV1::init()
         section = "informer";
         std::auto_ptr<Config> cfg(maincfg->getSubConfig(section,true));
 
-        cs_.init( *cfg );
+        cs_.init( *cfg, archive );
 
         itp_.setMaxThreads(cs_.getInputTransferThreadCount());
         rtp_.setMaxThreads(cs_.getResendIOThreadCount());
 
-        finalLog_ = new FinalLog();
+        if (!archive) { finalLog_ = new FinalLog(); }
 
         if (!dlvMgr_) {
             smsc_log_info(log_,"--- creating delivery mgr ---");
@@ -326,54 +326,56 @@ void InfosmeCoreV1::init()
         loadUsers("");
 
         // create smscs
-        smsc_log_info(log_,"--- loading smscs ---");
-        loadSmscs("");
+        if (!archive) {
+            smsc_log_info(log_,"--- loading smscs ---");
+            loadSmscs("");
 
-        // create regions
-        smsc_log_info(log_,"--- loading regions ---");
-        loadRegions(anyRegionId);
+            // create regions
+            smsc_log_info(log_,"--- loading regions ---");
+            loadRegions(anyRegionId);
 
-        try {
-            // creating pvss client
-            smsc_log_info(log_,"--- creating pvss client ---");
-            const char* pvssSectName = "pvss";
-            if (!maincfg->findSection(pvssSectName)) {
-                throw InfosmeException(EXC_CONFIG,"subsection '%s' is not found",pvssSectName);
+            try {
+                // creating pvss client
+                smsc_log_info(log_,"--- creating pvss client ---");
+                const char* pvssSectName = "pvss";
+                if (!maincfg->findSection(pvssSectName)) {
+                    throw InfosmeException(EXC_CONFIG,"subsection '%s' is not found",pvssSectName);
+                }
+                std::auto_ptr<Config> pcfg(maincfg->getSubConfig(pvssSectName,true));
+                std::auto_ptr<scag2::pvss::core::client::ClientConfig> 
+                    pvssConfig(new scag2::pvss::core::client::ClientConfig);
+                ConfigWrapper cwrap(*pcfg.get(),smsc::logger::Logger::getInstance("pvss"));
+                pvssConfig->setPort(cwrap.getInt("asyncPort",0,1024,100000,false));
+                pvssConfig->setHost(cwrap.getString("host"));
+                pvssConfig->setEnabled(cwrap.getBool("enabled",true));
+                if ( !pvssConfig->isEnabled() ) {
+                    throw InfosmeException(EXC_CONFIG,"disabled in config");
+                }
+
+                pvssConfig->setConnectionsCount(cwrap.getInt("connections",3,1,10));
+                pvssConfig->setChannelQueueSizeLimit(cwrap.getInt("queueSize",100,50,1000));
+                pvssConfig->setPacketSizeLimit(cwrap.getInt("maxPacketSize",1000,100,10000));
+                pvssConfig->setIOTimeout(cwrap.getInt("ioTimeout",100,50,1000));
+                pvssConfig->setInactivityTime(cwrap.getInt("inactiveTimeout",60000,10000,100000));
+                pvssConfig->setConnectTimeout(cwrap.getInt("connectTimeout",60000,1000,100000));
+                pvssConfig->setProcessTimeout(cwrap.getInt("processTimeout",500,100,10000));
+                pvssConfig->setMaxReaderChannelsCount(cwrap.getInt("connPerThread",5,1,20));
+                pvssConfig->setMaxWriterChannelsCount(pvssConfig->getMaxReaderChannelsCount());
+                pvssConfig->setReadersCount(cwrap.getInt("ioThreads",2,1,10));
+                pvssConfig->setWritersCount(pvssConfig->getReadersCount());
+                pvssConfig->setStatisticsInterval(cwrap.getInt("statInterval",60000,5000,3600000));
+
+                std::auto_ptr<scag2::pvss::Protocol> 
+                    pvssProto( new scag2::pvss::pvap::PvapProtocol );
+                
+                pvssHandler_ = new PvssRespHandler(*this);
+                pvss_ = new scag2::pvss::core::client::ClientCore( pvssConfig.release(),
+                                                                   pvssProto.release() );
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"PvssClient (to be disabled) exc: %s",e.what());
+                delete pvssHandler_; pvssHandler_ = 0;
+                delete pvss_; pvss_ = 0;
             }
-            std::auto_ptr<Config> pcfg(maincfg->getSubConfig(pvssSectName,true));
-            std::auto_ptr<scag2::pvss::core::client::ClientConfig> 
-                pvssConfig(new scag2::pvss::core::client::ClientConfig);
-            ConfigWrapper cwrap(*pcfg.get(),smsc::logger::Logger::getInstance("pvss"));
-            pvssConfig->setPort(cwrap.getInt("asyncPort",0,1024,100000,false));
-            pvssConfig->setHost(cwrap.getString("host"));
-            pvssConfig->setEnabled(cwrap.getBool("enabled",true));
-            if ( !pvssConfig->isEnabled() ) {
-                throw InfosmeException(EXC_CONFIG,"disabled in config");
-            }
-
-            pvssConfig->setConnectionsCount(cwrap.getInt("connections",3,1,10));
-            pvssConfig->setChannelQueueSizeLimit(cwrap.getInt("queueSize",100,50,1000));
-            pvssConfig->setPacketSizeLimit(cwrap.getInt("maxPacketSize",1000,100,10000));
-            pvssConfig->setIOTimeout(cwrap.getInt("ioTimeout",100,50,1000));
-            pvssConfig->setInactivityTime(cwrap.getInt("inactiveTimeout",60000,10000,100000));
-            pvssConfig->setConnectTimeout(cwrap.getInt("connectTimeout",60000,1000,100000));
-            pvssConfig->setProcessTimeout(cwrap.getInt("processTimeout",500,100,10000));
-            pvssConfig->setMaxReaderChannelsCount(cwrap.getInt("connPerThread",5,1,20));
-            pvssConfig->setMaxWriterChannelsCount(pvssConfig->getMaxReaderChannelsCount());
-            pvssConfig->setReadersCount(cwrap.getInt("ioThreads",2,1,10));
-            pvssConfig->setWritersCount(pvssConfig->getReadersCount());
-            pvssConfig->setStatisticsInterval(cwrap.getInt("statInterval",60000,5000,3600000));
-
-            std::auto_ptr<scag2::pvss::Protocol> 
-                pvssProto( new scag2::pvss::pvap::PvapProtocol );
-
-            pvssHandler_ = new PvssRespHandler(*this);
-            pvss_ = new scag2::pvss::core::client::ClientCore( pvssConfig.release(),
-                                                               pvssProto.release() );
-        } catch ( std::exception& e ) {
-            smsc_log_warn(log_,"PvssClient (to be disabled) exc: %s",e.what());
-            delete pvssHandler_; pvssHandler_ = 0;
-            delete pvss_; pvss_ = 0;
         }
 
         dlvMgr_->init();
@@ -486,6 +488,9 @@ void InfosmeCoreV1::deleteUser( const char* login )
 {
     smsc_log_debug(log_,"== deleteUser(%s)",login ? login : "");
     if (!login) throw InfosmeException(EXC_LOGICERROR,"deluser NULL passed");
+    if ( getCS()->isArchive() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     UserInfoPtr user;
     {
         MutexGuard mg(userLock_);
@@ -544,6 +549,11 @@ void InfosmeCoreV1::updateUserInfo( const char* login )
 void InfosmeCoreV1::selfTest()
 {
     smsc_log_debug(log_,"--- selfTest started ---");
+    if ( getCS()->isArchive() ) {
+        // special self test
+        return;
+    }
+
     try {
 
         const char* userId = "selftestuser";
@@ -798,6 +808,9 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
 {
     smsc_log_debug(log_,"== addSmsc(%s)",smscId ? smscId : "");
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
+    if ( getCS()->isArchive() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     {
         MutexGuard mg(startMon_);
         SmscSender** ptr = smscs_.GetPtr(smscId);
@@ -815,6 +828,9 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
 void InfosmeCoreV1::updateSmsc(const char* smscId)
 {
     smsc_log_debug(log_,"== updateSmsc(%s)",smscId ? smscId : "");
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
     {
         MutexGuard mg(startMon_);
@@ -832,6 +848,9 @@ void InfosmeCoreV1::updateSmsc(const char* smscId)
 
 void InfosmeCoreV1::deleteSmsc( const char* smscId )
 {
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     smsc_log_debug(log_,"== deleteSmsc(%s)",smscId ? smscId : "");
     updateSmsc(smscId,0,0);
 }
@@ -840,6 +859,9 @@ void InfosmeCoreV1::deleteSmsc( const char* smscId )
 void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 {
     smsc_log_debug(log_,"== updateDefaultSmsc(%s)",smscId ? smscId : "");
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     MutexGuard mg(startMon_);
     if (!smscId || !smscId[0] || !isGoodAsciiName(smscId)) {
         throw InfosmeException(EXC_BADNAME,"invalid default smsc name '%s'",smscId ? smscId : "");
@@ -866,6 +888,9 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 void InfosmeCoreV1::addRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== addRegion(R=%u)",regionId);
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     if (regionId == anyRegionId) {
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
     }
@@ -885,6 +910,9 @@ void InfosmeCoreV1::addRegion( regionid_type regionId )
 void InfosmeCoreV1::updateRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== updateRegion(R=%u)",regionId);
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     if (regionId == anyRegionId) {
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
     }
@@ -907,6 +935,9 @@ void InfosmeCoreV1::updateRegion( regionid_type regionId )
 void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== deleteRegion(R=%u)",regionId);
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     if (regionId == anyRegionId || regionId == defaultRegionId ) {
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
     }
@@ -930,6 +961,9 @@ dlvid_type InfosmeCoreV1::addDelivery( UserInfo& userInfo,
                                        const DeliveryInfoData& info )
 {
     smsc_log_debug(log_,"== addDelivery(U='%s')",userInfo.getUserId());
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     return dlvMgr_->createDelivery(userInfo,info);
 }
 
@@ -938,6 +972,9 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
                                     dlvid_type      dlvId )
 {
     smsc_log_debug(log_,"== deleteDelivery(U='%s',D=%u)",userInfo.getUserId(),dlvId);
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     BindSignal bs;
     bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
@@ -979,6 +1016,9 @@ int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
                                 DlvMode            deliveryMode )
 {
     // find region
+    if ( getCS()->isArchive()) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     MutexGuard mg(startMon_);
     const regionid_type rId = rf_.findRegion(subscriber);
     RegionPtr* region = regions_.GetPtr(rId);

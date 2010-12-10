@@ -20,13 +20,15 @@ ref_(0)
     char buf[20];
     sprintf(buf,"d.%u",getDlvId() % 1000);
     log_ = smsc::logger::Logger::getInstance(buf);
-    try {
-        source_->init(activityLog_);
-    } catch ( std::exception& e ) {
-        smsc_log_error(log_,"D=%u inputstorage init failed, exc: %s",
-                       getDlvId(), e.what());
-        delete source_;
-        throw;
+    if (source_) {
+        try {
+            source_->init(activityLog_);
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"D=%u inputstorage init failed, exc: %s",
+                           getDlvId(), e.what());
+            delete source_;
+            throw;
+        }
     }
 }
 
@@ -40,20 +42,38 @@ Delivery::~Delivery()
 }
 
 
-void Delivery::updateDlvInfo( const DeliveryInfoData& infoData )
+void Delivery::addNewMessages( MsgIter begin, MsgIter end )
 {
-    activityLog_.getDlvInfo().update( infoData );
+    if ( !source_ ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
+    source_->addNewMessages(begin,end);
+}
+
+
+void Delivery::dropMessages( const std::vector< msgid_type >& msgids )
+{
+    if ( !source_ ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
+    source_->dropMessages(msgids);
 }
 
 
 void Delivery::getGlossary( std::vector< std::string >& texts ) const
 {
+    if (!source_) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     source_->getGlossary().getTexts( texts );
 }
 
 
 void Delivery::setGlossary( const std::vector< std::string >& texts )
 {
+    if (!source_) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    }
     source_->getGlossary().setTexts( texts );
 }
 

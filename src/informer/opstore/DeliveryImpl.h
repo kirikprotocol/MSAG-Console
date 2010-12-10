@@ -31,7 +31,7 @@ public:
 
     DeliveryImpl( DeliveryInfo*               dlvInfo,
                   UserInfo&                   userInfo,
-                  StoreJournal&               journal,
+                  StoreJournal*               journal,
                   InputMessageSource*         source,
                   DlvState                    state,
                   msgtime_type                planTime );
@@ -111,7 +111,7 @@ private:
     StoreHash                                          storeHash_;
     StoreList::iterator                                rollingIter_;
 
-    StoreJournal&                                      storeJournal_;
+    StoreJournal*                                      storeJournal_;
 };
 
 typedef EmbedRefPtr< DeliveryImpl >  DeliveryImplPtr;

@@ -14,7 +14,8 @@ CommonSettings::CommonSettings( unsigned licenseLimit ) :
 utf8_(0),
 incStatBank_(0),
 licenseLimit_(licenseLimit),
-stopping_(false)
+stopping_(false),
+archive_(false)
 {
     assert(instance_ == 0);
     instance_ = this;
@@ -29,8 +30,9 @@ CommonSettings::~CommonSettings()
 
 
 // void CommonSettings::init( const std::string& path, const std::string& statpath )
-void CommonSettings::init( smsc::util::config::Config& cfg )
+void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
 {
+    archive_ = archive;
     utf8_ = new UTF8();
 
     const ConfigWrapper conf(cfg, smsc::logger::Logger::getInstance("config"));

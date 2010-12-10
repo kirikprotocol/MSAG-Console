@@ -26,8 +26,11 @@ public:
     CommonSettings( unsigned licenseLimit );
     ~CommonSettings();
 
-    // void init( const std::string& path, const std::string& statpath );
-    void init( smsc::util::config::Config& cfg );
+    void init( smsc::util::config::Config& cfg, bool archive );
+
+    inline bool isArchive() const {
+        return archive_;
+    }
 
     inline bool isStopping() const {
         return stopping_;
@@ -176,6 +179,7 @@ private:
     unsigned unrespondedMessagesMax_;
     unsigned validityPeriodDefault_;
     volatile bool stopping_;
+    bool     archive_;
 };
 
 inline const CommonSettings* getCS() { return CommonSettings::getCS(); }

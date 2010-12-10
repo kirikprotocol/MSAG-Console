@@ -38,13 +38,8 @@ public:
     virtual void setState( DlvState state, msgtime_type planTime = 0 ) = 0;
     virtual void getRegionList( std::vector< regionid_type >& regIds ) const = 0;
 
-    void addNewMessages( MsgIter begin, MsgIter end ) {
-        source_->addNewMessages(begin,end);
-    }
-
-    void dropMessages( const std::vector< msgid_type >& msgids ) {
-        source_->dropMessages(msgids);
-    }
+    void addNewMessages( MsgIter begin, MsgIter end );
+    void dropMessages( const std::vector< msgid_type >& msgids );
 
     inline void getStats( DeliveryStats& ds ) { return activityLog_.getStats(ds); }
 

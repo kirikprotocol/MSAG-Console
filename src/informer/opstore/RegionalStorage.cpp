@@ -368,7 +368,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                    dlvId,
                    ulonglong(m.msgId),from);
     if (prevState != m.state) {
-        dlv_->storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
+        dlv_->storeJournal_->journalMessage(dlvId,regionId_,m,ml.serial);
         dlv_->activityLog_.incStats(m.state,1,prevState);
     }
     return secondsReady;
@@ -392,7 +392,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
     m.lastTime = currentTime;
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_SENT;
-    dlv_->storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
+    dlv_->storeJournal_->journalMessage(info.getDlvId(),regionId_,m,ml.serial);
     dlv_->activityLog_.incStats(m.state,1,prevState);
 }
 
@@ -516,7 +516,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
         smsc_log_debug(log_,"put message R=%u/D=%u/M=%llu into retry at %llu",
                        regionId_, dlvId, ulonglong(msgId),
                        msgTimeToYmd(m.lastTime) );
-        dlv_->storeJournal_.journalMessage(info.getDlvId(),regionId_,m,ml.serial);
+        dlv_->storeJournal_->journalMessage(info.getDlvId(),regionId_,m,ml.serial);
         dlv_->activityLog_.incStats(m.state,1,prevState);
         return;
 
@@ -570,7 +570,7 @@ void RegionalStorage::doFinalize(RelockMutexGuard& mg,
                    nchunks,
                    checkFinal);
     dlv_->activityLog_.addRecord(currentTime,regionId_,m,smppState,prevState);
-    dlv_->storeJournal_.journalMessage(dlvId,regionId_,m,ml.serial);
+    dlv_->storeJournal_->journalMessage(dlvId,regionId_,m,ml.serial);
     if (checkFinal) dlv_->checkFinalize();
 }
 
@@ -612,8 +612,8 @@ size_t RegionalStorage::rollOver()
         ++storingIter_;
         {
             MsgLock ml(iter,this,mg);
-            written += dlv_->storeJournal_.journalMessage(info.getDlvId(),
-                                                         regionId_,iter->msg,ml.serial);
+            written += dlv_->storeJournal_->journalMessage(info.getDlvId(),
+                                                           regionId_,iter->msg,ml.serial);
         }
         if ( getCS()->isStopping() ) {
             storingIter_ = messageList_.end();
@@ -771,7 +771,7 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
                        ulonglong(m.msgId));
         regionid_type serial = 0;
         dlv_->activityLog_.addRecord(currentTime,regionId_,m,0);
-        dlv_->storeJournal_.journalMessage(dlvId,regionId_,m,serial);
+        dlv_->storeJournal_->journalMessage(dlvId,regionId_,m,serial);
         i->serial = serial;
     }
     mg.Lock();
@@ -855,7 +855,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                         if ( ! i->msg.text.isUnique() ) {
                             dlv_->source_->getGlossary().fetchText(i->msg.text);
                         }
-                        dlv_->storeJournal_.journalMessage(dlvId,regionId_,i->msg,serial);
+                        dlv_->storeJournal_->journalMessage(dlvId,regionId_,i->msg,serial);
                         i->serial = serial;
                         if (stopFlag) {
                             throw InfosmeException(EXC_EXPIRED,"stop flagged");

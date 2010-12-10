@@ -53,7 +53,7 @@ public:
 
     virtual ~InfosmeCoreV1();
 
-    void init();
+    void init( bool archive );
     void start();
     void stop();
 

@@ -142,6 +142,7 @@ unsigned checkLicenseFile()
 int main( int argc, const char** argv )
 {
     bool selftest = false;
+    bool archive = false;
     try {
 
         for ( const char** arg = argv+1; *arg != 0; ++arg ) {
@@ -151,6 +152,8 @@ int main( int argc, const char** argv )
                 printf(" Options:\n");
                 printf(" -h --help   \tThis help\n");
                 printf(" -v --version\tShow program version\n");
+                printf("    --selftest\tExecute self-test upon program startup\n");
+                printf("    --archive\tRun in archive regime\n");
                 return 0;
             }
 
@@ -161,7 +164,14 @@ int main( int argc, const char** argv )
 
             if (!strcmp(*arg,"--selftest")) {
                 selftest = true;
+                continue;
             }
+
+            if (!strcmp(*arg,"--archive")) {
+                archive = true;
+                continue;
+            }
+
         }
 
         // infrastructure
@@ -214,7 +224,7 @@ int main( int argc, const char** argv )
             const unsigned maxsms = checkLicenseFile();
 
             core.reset( new InfosmeCoreV1(maxsms) );
-            core->init();
+            core->init( archive );
 
             // enter main loop
             core->start();
