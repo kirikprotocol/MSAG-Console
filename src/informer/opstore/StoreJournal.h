@@ -19,7 +19,6 @@ class StoreJournal
 public:
     struct Reader {
         virtual ~Reader() {}
-        virtual bool isStopping() const = 0;
         // NOTE: message is not bound to glossary yet.
         virtual void setRecordAtInit( dlvid_type     dlvId,
                                       regionid_type  regionId,

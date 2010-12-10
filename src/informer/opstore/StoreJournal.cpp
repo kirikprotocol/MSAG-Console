@@ -45,7 +45,7 @@ public:
 
     /// check if reader is stopping
     virtual bool isStopping() {
-        return reader_.isStopping();
+        return getCS()->isStopping();
     }
     /// return the size of record length in octets.
     virtual size_t recordLengthSize() const {
@@ -208,7 +208,7 @@ void StoreJournal::init( Reader& jr )
     std::string jpath = makePath(getCS()->getStorePath());
     readRecordsFrom(jpath+".old",jr);
     readRecordsFrom(jpath,jr);
-    if (jr.isStopping()) return;
+    if (getCS()->isStopping()) return;
     fg_.create(jpath.c_str(),0666,true);
     if ( 0 == fg_.seek(0,SEEK_END) ) {
         // new file
@@ -256,7 +256,7 @@ void StoreJournal::rollOver()
 
 void StoreJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
-    if (reader.isStopping()) return;
+    if (getCS()->isStopping()) return;
     FileGuard fg;
     SJReader sjreader(reader,log_);
     try {

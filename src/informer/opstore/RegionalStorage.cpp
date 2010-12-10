@@ -615,7 +615,7 @@ size_t RegionalStorage::rollOver()
             written += dlv_->storeJournal_.journalMessage(info.getDlvId(),
                                                          regionId_,iter->msg,ml.serial);
         }
-        if ( dlv_->source_->getDlvActivator().isStopping() ) {
+        if ( getCS()->isStopping() ) {
             storingIter_ = messageList_.end();
             break;
         }

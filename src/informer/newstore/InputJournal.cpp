@@ -24,7 +24,7 @@ class IJReader : public FileReader::RecordReader
 public:
     IJReader( InputJournal::Reader& reader, uint32_t version ) : reader_(reader), version_(version) {}
 
-    virtual bool isStopping() { return reader_.isStopping(); }
+    virtual bool isStopping() { return getCS()->isStopping(); }
     /// return the size of record length in octets.
     virtual size_t recordLengthSize() const { return LENSIZE; }
     /// read record length from fb and checks its validity.
@@ -106,7 +106,7 @@ void InputJournal::init( Reader& reader )
     readRecordsFrom(jpath+".old",reader);
     readRecordsFrom(jpath,reader);
     // reopen journal
-    if (reader.isStopping()) return;
+    if (getCS()->isStopping()) return;
     jnl_.create(jpath.c_str(),0666,true,true);
     if ( 0 == jnl_.seek(0,SEEK_END) ) {
         // new file
@@ -146,7 +146,7 @@ void InputJournal::rollOver()
 
 void InputJournal::readRecordsFrom( const std::string& jpath, Reader& reader )
 {
-    if (reader.isStopping()) return;
+    if (getCS()->isStopping()) return;
     FileGuard fg;
     try {
         fg.ropen(jpath.c_str());

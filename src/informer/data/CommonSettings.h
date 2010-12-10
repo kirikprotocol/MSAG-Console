@@ -29,6 +29,14 @@ public:
     // void init( const std::string& path, const std::string& statpath );
     void init( smsc::util::config::Config& cfg );
 
+    inline bool isStopping() const {
+        return stopping_;
+    }
+
+    void setStopping() {
+        stopping_ = true;
+    }
+
     // --- configurable parameters
 
     inline const std::string& getStorePath() const {
@@ -167,6 +175,7 @@ private:
     unsigned slicedMessageSize_;
     unsigned unrespondedMessagesMax_;
     unsigned validityPeriodDefault_;
+    volatile bool stopping_;
 };
 
 inline const CommonSettings* getCS() { return CommonSettings::getCS(); }

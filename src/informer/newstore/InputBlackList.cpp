@@ -192,7 +192,7 @@ bool InputStorage::BlackList::isMessageDropped( msgid_type msgId )
                     fg.seek(dropFileOffset_);
                 }
                 Buf buf;
-                while ( !is_.core_.isStopping() ) {
+                while ( ! getCS()->isStopping() ) {
                     if (!readChunk(fg,buf)) { break; }
                     if (dropFileOffset_ >= maxSize) {
                         dropFileOffset_ = size_t(-1);
@@ -259,7 +259,7 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
         bool* ref_;
     };
     ChangeGuard cg;
-    while (!is_.core_.isStopping()) {
+    while (!getCS()->isStopping()) {
         MutexGuard mg(dropMon_);
         if (!changing_) {
             cg.ref_ = &changing_;
@@ -268,7 +268,7 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
         }
         dropMon_.wait(300);
     }
-    if (is_.core_.isStopping()) {
+    if (getCS()->isStopping()) {
         return false;
     }
     // locked
@@ -324,7 +324,7 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
     ToBuf tb(tobuf.get(),tobuf.getSize());
     std::vector<msgid_type>::iterator it = dropped.begin();
     while (true) {
-        if (is_.core_.isStopping()) { return false; }
+        if ( getCS()->isStopping()) { return false; }
         if (ofg.isOpened() && fb.getPos() >= fb.getLen()) {
             const size_t wasread = readBuf(ofg,buf);
             if (ofg.getPos() >= maxSize) {
@@ -367,7 +367,7 @@ bool InputStorage::BlackList::addMessages( std::vector<msgid_type>& dropped )
     // writing the tail of the file
     if (ofg.isOpened()) {
         while (true) {
-            if (!is_.core_.isStopping()) return false;
+            if (! getCS()->isStopping()) return false;
             const size_t wasread = readBuf(ofg,buf);
             if (!wasread) break;
             nfg.write(buf.get(),wasread);
@@ -520,7 +520,7 @@ void InputStorage::BlackList::writeActLog( unsigned sleepTime )
     smsc::core::buffers::TmpBuf<char,2048> buf;
     std::vector<msgid_type> msgIds;
     while (true) {
-        if (is_.core_.isStopping()) break;
+        if ( getCS()->isStopping()) { break; }
         const size_t wasread = fg.read(buf.get(),buf.getSize());
         if (wasread == 0) {
             // eof

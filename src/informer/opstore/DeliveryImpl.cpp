@@ -342,7 +342,7 @@ size_t DeliveryImpl::rollOverStore()
             ++rollingIter_;
         }
         written += ptr->rollOver();
-        if (source_->getDlvActivator().isStopping()) { break; }
+        if (getCS()->isStopping()) { break; }
     } while ( true );
     smsc_log_debug(log_,"D=%u rolling store done, written=%u",getDlvInfo()->getDlvId(),written);
     return written;
@@ -464,7 +464,7 @@ void DeliveryImpl::cancelOperativeStorage()
           i != regIds.end(); ++i ) {
         RegionalStoragePtr ptr = getRegionalStorage(*i,false);
         if (ptr.get()) { ptr->cancelOperativeStorage(); }
-        if (source_->getDlvActivator().isStopping()) break;
+        if (getCS()->isStopping()) { break; }
     }
     smsc_log_debug(log_,"D=%u cancellation of operative storage finished",dlvId);
 }

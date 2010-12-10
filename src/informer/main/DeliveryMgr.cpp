@@ -30,7 +30,6 @@ public:
     InputJournalReader( DeliveryMgr& mgr ) :
     mgr_(mgr),
     log_(smsc::logger::Logger::getInstance("ijreader")) {}
-    virtual bool isStopping() const { return mgr_.isCoreStopping(); }
     virtual void setRecordAtInit( dlvid_type               dlvId,
                                   const InputRegionRecord& rec,
                                   uint64_t                 maxMsgId )
@@ -53,7 +52,7 @@ public:
         DeliveryList::iterator iter;
         smsc_log_debug(log_,"invoking postInit to bind filled regions");
         for ( DeliveryHash::Iterator i(mgr_.deliveryHash_); i.Next(dlvId,iter); ) {
-            if (mgr_.isCoreStopping()) break;
+            if (getCS()->isStopping()) { break; }
             bs.regIds.clear();
             (*iter)->postInitInput(bs.regIds);
             if (!bs.regIds.empty()) {
@@ -75,7 +74,6 @@ class DeliveryMgr::StoreJournalReader : public StoreJournal::Reader
 public:
     StoreJournalReader( DeliveryMgr& mgr ) : mgr_(mgr),
     log_(smsc::logger::Logger::getInstance("sjreader")) {}
-    virtual bool isStopping() const { return mgr_.isCoreStopping(); }
     virtual void setRecordAtInit( dlvid_type    dlvId,
                                   regionid_type regionId,
                                   Message&      msg,
@@ -110,7 +108,7 @@ public:
         DeliveryList::iterator iter;
         smsc_log_debug(log_,"invoking postInit to bind/unbind regions");
         for ( DeliveryHash::Iterator i(mgr_.deliveryHash_); i.Next(dlvId,iter); ) {
-            if (mgr_.isCoreStopping()) break;
+            if (getCS()->isStopping()) { break; }
             bsEmpty.regIds.clear();
             bsFilled.regIds.clear();
             (*iter)->postInitOperative(bsFilled.regIds,bsEmpty.regIds);
@@ -143,13 +141,12 @@ public:
     {
         smsc_log_debug(log_,"input journal roller started");
         DeliveryList::iterator& iter = mgr_.inputRollingIter_;
-        while (! mgr_.isCoreStopping()) { // never ending loop
+        while (! getCS()->isStopping() ) {
             bool firstPass = true;
             size_t written = 0;
             do {
                 DeliveryImplPtr ptr;
                 {
-                    if (mgr_.isCoreStopping()) { break; }
                     smsc::core::synchronization::MutexGuard mg(mgr_.mon_);
                     if (firstPass) {
                         iter = mgr_.deliveryList_.begin();
@@ -164,7 +161,7 @@ public:
             } while (true);
             smsc_log_debug(log_,"input rolling pass done, written=%llu",ulonglong(written));
             MutexGuard mg(mgr_.mon_);
-            if (!mgr_.isCoreStopping()) {
+            if (!getCS()->isStopping()) {
                 mgr_.inputJournal_->rollOver(); // change files
                 mgr_.mon_.wait(getCS()->getInputJournalRollingPeriod()*1000);
             }
@@ -188,13 +185,13 @@ public:
     {
         smsc_log_debug(log_,"store journal roller started");
         DeliveryList::iterator& iter = mgr_.storeRollingIter_;
-        while (! mgr_.isCoreStopping()) { // never ending loop
+        while (! getCS()->isStopping()) { // never ending loop
             bool firstPass = true;
             size_t written = 0;
             do {
                 DeliveryImplPtr ptr;
                 {
-                    if (mgr_.isCoreStopping()) { break; }
+                    if ( getCS()->isStopping()) { break; }
                     smsc::core::synchronization::MutexGuard mg(mgr_.mon_);
                     if (firstPass) {
                         iter = mgr_.deliveryList_.begin();
@@ -209,7 +206,7 @@ public:
             } while (true);
             smsc_log_debug(log_,"store rolling pass done, written=%llu",ulonglong(written));
             MutexGuard mg(mgr_.mon_);
-            if (!mgr_.isCoreStopping()) {
+            if (! getCS()->isStopping()) {
                 mgr_.storeJournal_->rollOver(); // change files
                 mgr_.mon_.wait(getCS()->getOpJournalRollingPeriod()*1000);
             }
@@ -267,7 +264,7 @@ public:
                 nextTime += msecDelta;
             }
         }
-        while (!mgr_.isCoreStopping()) {
+        while (! getCS()->isStopping()) {
             {
                 MutexGuard mg(mgr_.mon_);
                 const msectime_type now = msectime_type(currentTimeMicro()/1000);
@@ -378,7 +375,6 @@ DeliveryMgr::DeliveryMgr( InfosmeCoreV1& core, CommonSettings& cs ) :
 log_(smsc::logger::Logger::getInstance("dlvmgr")),
 core_(core),
 cs_(cs),
-stopping_(true),
 inputRollingIter_(deliveryList_.end()),
 storeRollingIter_(deliveryList_.end()),
 statsDumpingIter_(deliveryList_.end()),
@@ -502,10 +498,7 @@ void DeliveryMgr::init()
 
 void DeliveryMgr::start()
 {
-    if (!stopping_) return;
     MutexGuard mg(mon_);
-    if (!stopping_) return;
-    stopping_ = false;
     inputRoller_->Start();
     storeRoller_->Start();
     statsDumper_->Start();
@@ -515,12 +508,9 @@ void DeliveryMgr::start()
 
 void DeliveryMgr::stop()
 {
-    if (stopping_) return;
     {
         MutexGuard mg(mon_);
-        if (stopping_) return;
         smsc_log_info(log_,"stop() received");
-        stopping_ = true;
         mon_.notifyAll();
     }
     ctp_.stopNotify();
@@ -535,12 +525,6 @@ void DeliveryMgr::stop()
     WaitFor();
     ctp_.shutdown(0);
     smsc_log_debug(log_,"leaving stop()");
-}
-
-
-bool DeliveryMgr::isCoreStopping() const
-{
-    return core_.isStopping();
 }
 
 
@@ -647,7 +631,7 @@ void DeliveryMgr::incOutgoing( unsigned nchunks )
         const usectime_type currentTime = currentTimeMicro() % flipTimePeriod;
         const usectime_type delay = trafficSpeed_.isReady(currentTime,maxSnailDelay);
         if ( delay == 0 ) { break; }
-        if (stopping_) { break; }
+        if (getCS()->isStopping()) { break; }
         int waitTime = int(delay / 1000) + 1;
         smsc_log_debug(log_,"waiting %lluusec/%umsec on license",
                        ulonglong(delay),waitTime);
@@ -702,7 +686,7 @@ int DeliveryMgr::Execute()
 
     DeliveryWakeQueue wakeList;
     // DeliveryWakeQueue stopList;
-    while ( !stopping_ ) {
+    while ( !getCS()->isStopping() ) {
 
         const msectime_type curTime = msectime_type(currentTimeMicro() / 1000);
         const msgtime_type now(msgtime_type(curTime/1000));

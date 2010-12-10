@@ -24,8 +24,8 @@ class InfosmeCore
 public:
     virtual ~InfosmeCore() {}
 
-    /// check if stopping
-    virtual bool isStopping() const = 0;
+    // check if stopping
+    // virtual bool isStopping() const = 0;
 
     /// get user info (a stub for now)
     virtual void addUser( const char* user ) = 0;

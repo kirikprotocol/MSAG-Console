@@ -207,7 +207,6 @@ private:
 InfosmeCoreV1::InfosmeCoreV1( unsigned maxsms ) :
 log_(smsc::logger::Logger::getInstance("core")),
 cs_(maxsms),
-stopping_(false),
 started_(false),
 dlvMgr_(0),
 finalLog_(0),
@@ -434,12 +433,12 @@ void InfosmeCoreV1::start()
 void InfosmeCoreV1::stop()
 {
     {
-        if (stopping_) return;
+        if (getCS()->isStopping()) return;
         {
             MutexGuard mg(startMon_);
-            if (stopping_) return;
+            if (getCS()->isStopping()) return;
             smsc_log_info(log_,"--- stopping core ---");
-            stopping_ = true;
+            cs_.setStopping();
             startMon_.notifyAll();
         }
 
@@ -612,7 +611,7 @@ void InfosmeCoreV1::selfTest()
             smsc_log_info(log_,"--- adding messages to D=%u ---",dlvId);
             for ( int pass = 0; pass < 5; ++pass ) {
                 MessageList msgList;
-                if (stopping_) break;
+                if (getCS()->isStopping()) break;
                 for ( int j = 0; j < 1000; ++j ) {
 
                     const int i = pass*1000 + j;
@@ -755,7 +754,7 @@ void InfosmeCoreV1::startPvssCheck( PvssNotifyee& pn, Message& msg )
     int pass = 0;
     // static smsc::core::synchronization::EventMonitor emon;
     while ( true ) {
-        if ( stopping_ ) {
+        if ( getCS()->isStopping() ) {
             msg.timeLeft = 1;
             pn.notify();
             break;
@@ -1010,7 +1009,7 @@ int InfosmeCoreV1::Execute()
         started_ = true;
     }
     smsc_log_info(log_,"starting main loop");
-    while ( !stopping_ ) {
+    while ( !getCS()->isStopping() ) {
 
         BindSignal bs;
         while ( bindQueue_.Pop(bs) ) {

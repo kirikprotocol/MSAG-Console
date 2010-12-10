@@ -35,7 +35,6 @@ public:
     void init();
     void start();
     void stop();
-    inline bool isCoreStopping() const;
 
     /// final state response/receipt has been received
     virtual void receiveReceipt( const DlvRegMsgId& drmId,
@@ -91,8 +90,6 @@ private:
     InfosmeCoreV1&                             core_;
     CommonSettings&                            cs_;
     smsc::core::synchronization::EventMonitor  mon_;
-
-    bool                                       stopping_;
 
     typedef std::list<DeliveryImplPtr>                             DeliveryList;
     typedef smsc::core::buffers::IntHash< DeliveryList::iterator > DeliveryHash;

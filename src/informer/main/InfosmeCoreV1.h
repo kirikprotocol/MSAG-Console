@@ -59,8 +59,6 @@ public:
 
     // --- infosmecore iface
 
-    virtual bool isStopping() const { return stopping_; }
-
     virtual void addUser( const char* user );
     virtual void deleteUser( const char* login );
     virtual UserInfoPtr getUserInfo( const char* login );
@@ -94,8 +92,6 @@ public:
     // --- end of infosme core iface
 
     // --- delivery activator iface
-
-    // bool isStopping() above
 
     virtual RegionFinder& getRegionFinder() { return rf_; }
 
@@ -154,7 +150,6 @@ private:
     CommonSettings                             cs_;
 
     smsc::core::synchronization::EventMonitor  startMon_;
-    bool                                       stopping_;
     bool                                       started_;
     std::string                                     defaultSmscId_;
     smsc::core::buffers::Hash< SmscSender* >        smscs_;        // owned

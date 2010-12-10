@@ -20,7 +20,7 @@ class DeliveryActivator
 public:
     virtual ~DeliveryActivator() {}
 
-    virtual bool isStopping() const = 0;
+    // virtual bool isStopping() const = 0;
 
     /// get region finder
     virtual RegionFinder& getRegionFinder() = 0;
