@@ -13,6 +13,9 @@ hexdmp(const uint8_t* buf, size_t bufSz);
 char*
 hexdmp(char* dumpBuf, size_t dumpBufSz, const uint8_t* buf, size_t bufSz);
 
+size_t
+hexbuf2bin(const char* hex_val, uint8_t* buf, size_t buf_sz);
+
 }}
 
 #endif

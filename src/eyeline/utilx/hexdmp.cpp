@@ -24,5 +24,20 @@ hexdmp(char* dumpBuf, size_t dumpBufSz, const uint8_t* buf, size_t bufSz)
   return dumpBuf;
 }
 
+size_t
+hexbuf2bin(const char* hex_val, uint8_t* buf, size_t buf_sz)
+{
+  const char* ptr= hex_val;
+  uint8_t* buf_ptr= buf;
+  while(*ptr) {
+    unsigned val;
+    sscanf(ptr, "%02X", &val);
+    *buf_ptr++ = (uint8_t)val;
+    if ( *++ptr == 0 || *++ptr == 0 )
+      break;
+  }
+  return buf_ptr - buf;
+}
+
 }}
 
