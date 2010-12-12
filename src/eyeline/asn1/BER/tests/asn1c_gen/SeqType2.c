@@ -12,12 +12,19 @@ static asn_TYPE_member_t asn_MBR_SeqType2_1[] = {
 		0,	/* Defer constraints checking to the member type */
 		"a"
 		},
-	{ ATF_POINTER, 1, offsetof(struct SeqType2, b),
+	{ ATF_POINTER, 2, offsetof(struct SeqType2, b),
 		(ASN_TAG_CLASS_CONTEXT | (3 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_NativeInteger,
 		0,	/* Defer constraints checking to the member type */
 		"b"
+		},
+	{ ATF_POINTER, 1, offsetof(struct SeqType2, c),
+		(ASN_TAG_CLASS_CONTEXT | (7 << 2)),
+		-1,	/* IMPLICIT tag at current level */
+		&asn_DEF_NativeInteger,
+		0,	/* Defer constraints checking to the member type */
+		"c"
 		},
 };
 static ber_tlv_tag_t asn_DEF_SeqType2_1_tags[] = {
@@ -25,13 +32,14 @@ static ber_tlv_tag_t asn_DEF_SeqType2_1_tags[] = {
 };
 static asn_TYPE_tag2member_t asn_MAP_SeqType2_1_tag2el[] = {
     { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* a at 17 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 1, 0, 0 } /* b at 18 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 1, 0, 0 }, /* b at 18 */
+    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 2, 0, 0 } /* c at 19 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_SeqType2_1_specs = {
 	sizeof(struct SeqType2),
 	offsetof(struct SeqType2, _asn_ctx),
 	asn_MAP_SeqType2_1_tag2el,
-	2,	/* Count of tags in the map */
+	3,	/* Count of tags in the map */
 	-1,	/* Start extensions */
 	-1	/* Stop extensions */
 };
@@ -57,7 +65,7 @@ asn_TYPE_descriptor_t asn_DEF_SeqType2 = {
 	sizeof(asn_DEF_SeqType2_1_tags)
 		/sizeof(asn_DEF_SeqType2_1_tags[0]), /* 1 */
 	asn_MBR_SeqType2_1,
-	2,	/* Elements count */
+	3,	/* Elements count */
 	&asn_SPC_SeqType2_1_specs	/* Additional specs */
 };
 

@@ -24,8 +24,8 @@ static ber_tlv_tag_t asn_DEF_SeqType3_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_SeqType3_1_tag2el[] = {
-    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* a at 22 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 1, 0, 0 } /* b at 23 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* a at 23 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 1, 0, 0 } /* b at 24 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_SeqType3_1_specs = {
 	sizeof(struct SeqType3),

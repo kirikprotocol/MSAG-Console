@@ -18,6 +18,7 @@ extern "C" {
 typedef struct SeqType2 {
 	long	 a;
 	long	*b	/* OPTIONAL */;
+	long	*c	/* OPTIONAL */;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
