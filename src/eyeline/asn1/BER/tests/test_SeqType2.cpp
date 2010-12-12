@@ -8,6 +8,7 @@
 #include "eyeline/utilx/hexdmp.hpp"
 #include "SeqType2.hpp"
 #include "enc/MESeqType2.hpp"
+#include "TestPatternsRegistry.hpp"
 
 extern FILE* logfile;
 
@@ -18,7 +19,7 @@ namespace tests {
 
 // return true on success or false on error
 bool
-test_SeqType2(char* err_msg)
+test_SeqType2_enc(char* err_msg)
 {
   SeqType2_t value;
   asn_enc_rval_t retVal;
@@ -27,14 +28,15 @@ test_SeqType2(char* err_msg)
   value.a= 0xAA;
   value.b= new long(0xBB);
 
-  printf("test_SeqType2:\t\t\t");
+  printf("test_SeqType2_enc:\t\t\t");
   retVal = der_encode(&asn_DEF_SeqType2,
                       &value, write_transfer_syntax, patternTrSyntax_1);
   if (retVal.encoded == -1)
     return false;
 
-  fprintf(logfile, "test_SeqType2:: SeqType2_t={a=0xAA,b=0xBB}, trSyntax=%s, retVal=%ld\n",
+  fprintf(logfile, "test_SeqType2_enc:: SeqType2_t={a=0xAA,b=0xBB}, trSyntax=%s, retVal=%ld\n",
           patternTrSyntax_1, retVal.encoded);
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType2", "{AA,BB}", patternTrSyntax_1);
 
   SeqType2_t value_2;
   char patternTrSyntax_2[MAX_PATTERN_LEN]={0};
@@ -47,9 +49,9 @@ test_SeqType2(char* err_msg)
   if (retVal.encoded == -1)
     return false;
 
-  fprintf(logfile, "test_SeqType2:: SeqType2_t={a=0xAA}, trSyntax=%s, retVal=%ld\n",
+  fprintf(logfile, "test_SeqType2_enc:: SeqType2_t={a=0xAA}, trSyntax=%s, retVal=%ld\n",
           patternTrSyntax_2, retVal.encoded);
-
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType2", "{AA,NULL}", patternTrSyntax_2);
   try {
     SeqType2 copy_value;
     copy_value.a = value.a;
@@ -61,22 +63,22 @@ test_SeqType2(char* err_msg)
     char trSyntaxAsStr[MAX_PATTERN_LEN];
 
     ENCResult encResult= encSeqType2.encode(encodedBuf, MAX_ENCODED_LEN);
-    fprintf(logfile, "test_SeqType2:: ENCResult.status=%d\n", encResult.status);
+    fprintf(logfile, "test_SeqType2_enc:: ENCResult.status=%d\n", encResult.status);
     if (encResult.status != ENCResult::encOk) {
       snprintf(err_msg, MAX_ERR_MESSAGE, "ENCResult.status=%d", encResult.status);
       return false;
     }
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
-    fprintf(logfile, "test_SeqType2:: SeqType2Value={a=0xAA,b=0xBB}, trSyntax=%s\n",
+    fprintf(logfile, "test_SeqType2_enc:: SeqType2Value={a=0xAA,b=0xBB}, trSyntax=%s\n",
             trSyntaxAsStr);
     if (strcmp(trSyntaxAsStr, patternTrSyntax_1)) {
       snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_1, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqType2:: expected value='%s', calculated value='%s'\n", patternTrSyntax_1, trSyntaxAsStr);
+      fprintf(logfile, "test_SeqType2_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax_1, trSyntaxAsStr);
       return false;
     }
   } catch (std::exception& ex) {
     snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
-    fprintf(logfile, "test_SeqType2::caught exception [%s]\n", ex.what());
+    fprintf(logfile, "test_SeqType2_enc::caught exception [%s]\n", ex.what());
     return false;
   }
 
@@ -91,22 +93,22 @@ test_SeqType2(char* err_msg)
     char trSyntaxAsStr[MAX_PATTERN_LEN];
 
     ENCResult encResult= encSeqType2.encode(encodedBuf, MAX_ENCODED_LEN);
-    fprintf(logfile, "test_SeqType2:: ENCResult.status=%d\n", encResult.status);
+    fprintf(logfile, "test_SeqType2_enc:: ENCResult.status=%d\n", encResult.status);
     if (encResult.status != ENCResult::encOk) {
       snprintf(err_msg, MAX_ERR_MESSAGE, "ENCResult.status=%d", encResult.status);
       return false;
     }
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
-    fprintf(logfile, "test_SeqType2:: SeqType2Value={ 0xAA}, trSyntax=%s\n",
+    fprintf(logfile, "test_SeqType2_enc:: SeqType2Value={ 0xAA}, trSyntax=%s\n",
             trSyntaxAsStr);
     if (strcmp(trSyntaxAsStr, patternTrSyntax_2)) {
       snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_2, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqType2:: expected value='%s', calculated value='%s'\n", patternTrSyntax_2, trSyntaxAsStr);
+      fprintf(logfile, "test_SeqType2_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax_2, trSyntaxAsStr);
       return false;
     }
   } catch (std::exception& ex) {
     snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
-    fprintf(logfile, "test_SeqType2::caught exception [%s]\n", ex.what());
+    fprintf(logfile, "test_SeqType2_enc::caught exception [%s]\n", ex.what());
     return false;
   }
 

@@ -7,6 +7,7 @@
 #include "eyeline/utilx/hexdmp.hpp"
 #include "enc/MESeqOfType1.hpp"
 #include "SeqOfType1.hpp"
+#include "TestPatternsRegistry.hpp"
 
 extern FILE* logfile;
 
@@ -17,7 +18,7 @@ namespace tests {
 
 // return true on success or false on error
 bool
-test_SeqOfType1(char* err_msg)
+test_SeqOfType1_enc(char* err_msg)
 {
   SeqOfType1_t value;
   memset(&value, 0, sizeof(value));
@@ -44,14 +45,15 @@ test_SeqOfType1(char* err_msg)
   element4.b= 0x77;
   asn_sequence_add(&value, &element4);
 
-  printf("test_SeqOfType1:\t\t");
+  printf("test_SeqOfType1_enc:\t\t\t");
   retVal = der_encode(&asn_DEF_SeqOfType1,
                       &value, write_transfer_syntax, patternTrSyntax);
   if (retVal.encoded == -1)
     return false;
 
-  fprintf(logfile, "test_SeqOfType1:: SeqOfType1_t={{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}} trSyntax=%s, retVal=%ld\n",
+  fprintf(logfile, "test_SeqOfType1_enc:: SeqOfType1_t={{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}} trSyntax=%s, retVal=%ld\n",
           patternTrSyntax, retVal.encoded);
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqOfType1", "{{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}}", patternTrSyntax);
 
   try {
     SeqOfType1 value_2;
@@ -68,23 +70,23 @@ test_SeqOfType1(char* err_msg)
     char trSyntaxAsStr[MAX_PATTERN_LEN];
 
     ENCResult encResult= encSeqOfType1.encode(encodedBuf, MAX_ENCODED_LEN);
-    fprintf(logfile, "test_SeqOfType1:: ENCResult.status=%d\n", encResult.status);
+    fprintf(logfile, "test_SeqOfType1_enc:: ENCResult.status=%d\n", encResult.status);
     if (encResult.status != ENCResult::encOk) {
       snprintf(err_msg, MAX_ERR_MESSAGE, "ENCResult.status=%d", encResult.status);
       return false;
     }
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
-    fprintf(logfile, "test_SeqOfType1:: SeqOfType1Value={{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}}, trSyntax=%s\n",
+    fprintf(logfile, "test_SeqOfType1_enc:: SeqOfType1Value={{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}}, trSyntax=%s\n",
             trSyntaxAsStr);
     if (strcmp(trSyntaxAsStr, patternTrSyntax)) {
       snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqOfType1:: expected value='%s', calculated value='%s'\n", patternTrSyntax, trSyntaxAsStr);
+      fprintf(logfile, "test_SeqOfType1_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax, trSyntaxAsStr);
       return false;
     }
 
   } catch (std::exception& ex) {
     snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
-    fprintf(logfile, "test_SeqOfType1::caught exception [%s]\n", ex.what());
+    fprintf(logfile, "test_SeqOfType1_enc::caught exception [%s]\n", ex.what());
     return false;
   }
 

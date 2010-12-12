@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "common.hpp"
+#include "TestPatternsRegistry.hpp"
 
 FILE* logfile;
 
@@ -12,55 +13,69 @@ void test_runtime()
   char errMsg[MAX_ERR_MESSAGE];
   logfile= fopen("test_runtime.log", "w");
 
-  if (!eyeline::asn1::ber::tests::test_BOOL(errMsg)) {
+  eyeline::asn1::ber::tests::TestPatternsRegistry::init();
+
+  if (!eyeline::asn1::ber::tests::test_BOOL_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_INT(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_INT_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_INT_edgeValue(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_INT32_edgeValue_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_OCTET_STRING(errMsg)) {
-    printf ("failed: %s\n", errMsg);
-  } else
-    printf("ok\n");
-  if (!eyeline::asn1::ber::tests::test_OCTET_STRING_constructed(errMsg)) {
-    printf ("failed: %s\n", errMsg);
-  } else
-    printf("ok\n");
-  if (!eyeline::asn1::ber::tests::test_BIT_STRING(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_INT16_edgeValue_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_SeqType1(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_INT8_edgeValue_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_SeqTypeExplicit1(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_OCTET_STRING_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_SeqType2(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_OCTET_STRING_constructed_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_SeqType3(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_BIT_STRING_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_SeqType4(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_SeqType1_enc(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqTypeExplicit1_enc(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqType2_enc(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqType3_enc(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqType4_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
@@ -70,10 +85,40 @@ void test_runtime()
   } else
     printf("ok\n");
 
-  if (!eyeline::asn1::ber::tests::test_SeqOfType1(errMsg)) {
+  if (!eyeline::asn1::ber::tests::test_SeqOfType1_enc(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else
     printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_BOOL_dec(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_INT_dec(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_INT32_edgeValue_dec(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_INT16_edgeValue_dec(errMsg)) {
+     printf ("failed: %s\n", errMsg);
+   } else
+     printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_INT8_edgeValue_dec(errMsg)) {
+     printf ("failed: %s\n", errMsg);
+   } else
+     printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqType1_dec(errMsg)) {
+     printf ("failed: %s\n", errMsg);
+   } else
+     printf("ok\n");
 }
 
 int main()

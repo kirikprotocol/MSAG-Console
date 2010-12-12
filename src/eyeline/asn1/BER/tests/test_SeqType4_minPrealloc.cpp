@@ -28,7 +28,7 @@ test_SeqType4_minPrealloc(char* err_msg)
   value.b= new long(0x77);
   value.c= new long(0xDD);
 
-  printf("test_SeqType4_minPrealloc:\t");
+  printf("test_SeqType4_minPrealloc:\t\t");
   retVal = der_encode(&asn_DEF_SeqType4,
                       &value, write_transfer_syntax, patternTrSyntax_1);
   if (retVal.encoded == -1)
