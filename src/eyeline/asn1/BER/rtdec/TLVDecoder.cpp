@@ -80,7 +80,7 @@ DECResult TaggingDecoder::decodeBOC(const uint8_t * use_enc, TSLength max_len,
 
   //traverse 'TL'-pairs from first to last
   for (ASTagging::size_type i = (_outerTL ? 1 : 0); i < _effTags->size(); ++i) {
-    rval += _tlws[i].decodeTOC(use_enc - rval.nbytes, max_len + rval.nbytes);
+    rval += _tlws[i].decodeTOC(use_enc + rval.nbytes, max_len - rval.nbytes);
     if (!rval.isOk())
       break;
     if (_tlws[i]._tag != (*_effTags)[i]) {
@@ -92,7 +92,7 @@ DECResult TaggingDecoder::decodeBOC(const uint8_t * use_enc, TSLength max_len,
                                 (*_effTags)[i].toString().c_str());
       */
     }
-    rval += _tlws[i].decodeLOC(use_enc - rval.nbytes, max_len + rval.nbytes);
+    rval += _tlws[i].decodeLOC(use_enc + rval.nbytes, max_len - rval.nbytes);
     if (!rval.isOk(relaxed_rule))
       break;
   }
@@ -103,11 +103,11 @@ DECResult TaggingDecoder::decodeBOC(const uint8_t * use_enc, TSLength max_len,
 DECResult TaggingDecoder::decodeEOC(const uint8_t * use_enc, TSLength max_len) const
 {
   DECResult rval(DECResult::decOk);
-  if (!_effTags->size())
+  if (!_effTags->size() || !max_len)
     return rval;
 
   //traverse 'TL'-pairs from last to first
-  for (ASTagging::size_type i = _effTags->size() - 1; ((i >= (_outerTL ? 1 : 0)) && rval.isOk()); --i) {
+  for (long i = _effTags->size() - 1; ((i >= (_outerTL ? 1 : 0)) && rval.isOk()); --i) {
     rval += _tlws[i].decodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
   }
   return rval;
