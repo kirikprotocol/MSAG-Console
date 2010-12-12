@@ -50,8 +50,6 @@ DECResult DecoderOfINTEGER::decodeVAL(
   default: //szo8
     rval = decodeCOC_UINTEGER(*_pVal.u8, use_enc, valLen);
   }
-  if (rval.isOk(relaxed_rule) && (rval.nbytes < valLen))
-    rval.status = DECResult::decBadVal; //too long integer
 
   return rval;
 }
