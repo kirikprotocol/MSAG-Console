@@ -25,24 +25,24 @@ DECResult decodeCOC_UINTEGER(_TArg & use_val, const uint8_t * use_enc, TSLength 
 {
   DECResult rval(DECResult::decOk, 
                  (sizeof(_TArg) < max_len) ? (TSLength)sizeof(_TArg) : max_len);
+  if (sizeof(_TArg) < max_len && use_enc[0]) {
+    rval.status = DECResult::decBadVal; //too long integer
+    return rval;
+  }
 
   if (rval.nbytes) {
     use_val = use_enc[0];
     if (rval.nbytes > 1) {
-      for (TSLength i = 1; i < rval.nbytes; ++i)
+      for (TSLength i = 1; i < max_len; ++i)
         use_val = (use_val << 8) + use_enc[i];
-      if (!use_enc[0]) {
-        if (!(use_enc[1] & 0x80)) //9 higher bits are all 0s !!!
-          rval.status = DECResult::decOkRelaxed;
-      } else {
-        //check for two's complement encoding
-        if (use_enc[0] & 0x80) { //signed number, coorect signedness of value
-          for (unsigned i = (unsigned)rval.nbytes; i < (unsigned)sizeof(_TArg); ++i)
-            use_val |= (_TArg)0xFF << (i<<3);
-        }
-        if ((use_enc[0] == 0xFF) && (use_enc[1] & 0x80)) //9 higher bits are all 1s !!!
-          rval.status = DECResult::decOkRelaxed;
-      }
+      if ( (!use_enc[0] && !(use_enc[1] & 0x80)) //9 higher bits are all 0s !!!
+          || ((use_enc[0] == 0xFF) && (use_enc[1] & 0x80)) ) //9 higher bits are all 1s !!!
+        rval.status = DECResult::decOkRelaxed;
+    }
+    //check for two's complement encoding
+    if (use_enc[0] & 0x80) { //signed number, correct signedness of value
+      for (unsigned i = (unsigned)rval.nbytes; i < (unsigned)sizeof(_TArg); ++i)
+        use_val |= (_TArg)0xFF << (i<<3);
     }
   } else
     rval.status = DECResult::decMoreInput;
