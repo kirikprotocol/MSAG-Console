@@ -104,8 +104,8 @@ test_SeqType1_dec(char* err_msg)
     fprintf(logfile, "test_SeqType1_dec:: caught exception [%s]\n", ex.what());
     return false;
   }
-  return true;
 
+  return true;
 }
 
 }}}}

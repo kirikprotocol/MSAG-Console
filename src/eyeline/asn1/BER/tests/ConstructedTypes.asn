@@ -15,7 +15,8 @@ BEGIN
 
         SeqType2 ::= SEQUENCE {
             a         INTEGER,
-            b [3]     INTEGER OPTIONAL
+            b [3]     INTEGER OPTIONAL,
+            c [7]     INTEGER OPTIONAL
         }
 
         SeqType3 ::= SEQUENCE {

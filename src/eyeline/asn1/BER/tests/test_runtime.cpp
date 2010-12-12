@@ -119,6 +119,17 @@ void test_runtime()
      printf ("failed: %s\n", errMsg);
    } else
      printf("ok\n");
+
+//  if (!eyeline::asn1::ber::tests::test_SeqType2_dec(errMsg)) {
+//     printf ("failed: %s\n", errMsg);
+//   } else
+//     printf("ok\n");
+
+//  if (!eyeline::asn1::ber::tests::test_SeqType3_dec(errMsg)) {
+//     printf ("failed: %s\n", errMsg);
+//   } else
+//     printf("ok\n");
+
 }
 
 int main()

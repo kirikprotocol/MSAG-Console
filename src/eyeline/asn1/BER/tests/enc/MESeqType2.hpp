@@ -13,17 +13,17 @@ namespace ber {
 namespace tests {
 namespace enc {
 
-class MESeqType2 : public EncoderOfSequence_T<2> {
+class MESeqType2 : public EncoderOfSequence_T<3> {
 public:
   explicit MESeqType2(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-  : EncoderOfSequence_T<2>(use_rule), _eA(use_rule)
+  : EncoderOfSequence_T<3>(use_rule), _eA(use_rule)
   {
     construct();
   }
 
   MESeqType2(const ASTag & use_tag, ASTagging::Environment_e tag_env,
              TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-  : EncoderOfSequence_T<2>(use_tag, tag_env, use_rule)
+  : EncoderOfSequence_T<3>(use_tag, tag_env, use_rule)
   {
     construct();
   }
@@ -34,9 +34,11 @@ private:
   void construct();
 
   static const ASTag _tag_b;
+  static const ASTag _tag_c;
 
   EncoderOfINTEGER _eA;
   asn1::ber::EncoderProducer_T<EncoderOfINTEGER> _eB;
+  asn1::ber::EncoderProducer_T<EncoderOfINTEGER> _eC;
 };
 
 }}}}}

@@ -18,6 +18,7 @@ struct SeqType2 {
 
   int a;
   util::OptionalObj_T<int> b;
+  util::OptionalObj_T<int> c;
 };
 
 }}}}

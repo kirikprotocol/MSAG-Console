@@ -7,6 +7,7 @@
 #include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
 #include "eyeline/utilx/hexdmp.hpp"
 #include "SeqType3.hpp"
+#include "dec/MDSeqType3.hpp"
 #include "enc/MESeqType3.hpp"
 #include "TestPatternsRegistry.hpp"
 
@@ -109,6 +110,122 @@ test_SeqType3_enc(char* err_msg)
   } catch (std::exception& ex) {
     snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
     fprintf(logfile, "test_SeqType3_enc::caught exception [%s]\n", ex.what());
+    return false;
+  }
+
+  return true;
+}
+
+// return true on success or false on error
+bool
+test_SeqType3_dec(char* err_msg)
+{
+  try {
+    printf("test_SeqType3_dec:\t\t\t");
+    const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType3", "{AA,BB}");
+    fprintf(logfile, "test_SeqType3_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
+    uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
+    size_t patternLen= utilx::hexbuf2bin(patternTrSyntax.c_str(), patternTrSyntaxBin, sizeof(patternTrSyntaxBin));
+
+    dec::MDSeqType3 decSeqType3;
+    SeqType3 expectedValue;
+    decSeqType3.setValue(expectedValue);
+    DECResult decResult= decSeqType3.decode(patternTrSyntaxBin, patternLen);
+    fprintf(logfile, "test_SeqType3_dec:: DECResult.status=%d\n", decResult.status);
+    if (decResult.status != DECResult::decOk) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d", decResult.status);
+      return false;
+    }
+
+    if (!expectedValue.b.get())
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+    else
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+
+    if (expectedValue.a != 0xAA || !expectedValue.b.get() || *expectedValue.b.get() != 0xBB)
+    {
+      if (!expectedValue.b.get())
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+      else
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+      return false;
+    }
+  } catch (std::exception& ex) {
+    snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
+    fprintf(logfile, "test_SeqType2_dec:: caught exception [%s]\n", ex.what());
+    return false;
+  }
+
+  try {
+    printf("test_SeqType3_dec:\t\t\t");
+    const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType3", "{AA,NULL}");
+    fprintf(logfile, "test_SeqType3_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
+    uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
+    size_t patternLen= utilx::hexbuf2bin(patternTrSyntax.c_str(), patternTrSyntaxBin, sizeof(patternTrSyntaxBin));
+
+    dec::MDSeqType3 decSeqType3;
+    SeqType3 expectedValue;
+    decSeqType3.setValue(expectedValue);
+    DECResult decResult= decSeqType3.decode(patternTrSyntaxBin, patternLen);
+    fprintf(logfile, "test_SeqType2_dec:: DECResult.status=%d\n", decResult.status);
+    if (decResult.status != DECResult::decOk) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d", decResult.status);
+      return false;
+    }
+
+    if (!expectedValue.b.get())
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+    else
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+
+    if (expectedValue.a != 0xAA || expectedValue.b.get())
+    {
+      if (expectedValue.b.get())
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+      else
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+      return false;
+    }
+  } catch (std::exception& ex) {
+    snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
+    fprintf(logfile, "test_SeqType3_dec:: caught exception [%s]\n", ex.what());
+    return false;
+  }
+
+  try {
+    printf("test_SeqType3_dec:\t\t\t");
+    // get encoding for SeqType2 containing three fields of INTEGER and try decode it using extensible sequence SeqType3
+    const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType2", "{AA,BB,CC}");
+    fprintf(logfile, "test_SeqType3_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
+    uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
+    size_t patternLen= utilx::hexbuf2bin(patternTrSyntax.c_str(), patternTrSyntaxBin, sizeof(patternTrSyntaxBin));
+
+    dec::MDSeqType3 decSeqType3;
+    SeqType3 expectedValue;
+    decSeqType3.setValue(expectedValue);
+    DECResult decResult= decSeqType3.decode(patternTrSyntaxBin, patternLen);
+    fprintf(logfile, "test_SeqType2_dec:: DECResult.status=%d\n", decResult.status);
+    if (decResult.status != DECResult::decOk) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d", decResult.status);
+      return false;
+    }
+
+    if (!expectedValue.b.get())
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+    else
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+
+    if (expectedValue.a != 0xAA || !expectedValue.b.get() || *expectedValue.b.get() != 0xBB)
+    {
+      if (expectedValue.b.get())
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+      else
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+      return false;
+    }
+  } catch (std::exception& ex) {
+    snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
+    fprintf(logfile, "test_SeqType3_dec:: caught exception [%s]\n", ex.what());
     return false;
   }
 
