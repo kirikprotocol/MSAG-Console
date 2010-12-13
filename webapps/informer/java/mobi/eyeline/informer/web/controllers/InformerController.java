@@ -2,6 +2,7 @@ package mobi.eyeline.informer.web.controllers;
 
 
 import mobi.eyeline.informer.admin.smsc.Smsc;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.web.LocaleFilter;
 import mobi.eyeline.informer.web.WebContext;
@@ -14,6 +15,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.servlet.http.HttpSession;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.Locale;
@@ -206,7 +208,9 @@ public abstract class InformerController implements Serializable {
    * @throws java.io.IOException ошибка записи
    */
   public void download(FacesContext context, OutputStream out) throws IOException {
-    PrintWriter w = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
+    User user = getConfig().getUser(getUserName());
+    Charset charset = user == null || user.getFileCharset() == null ? Charset.forName("windows-1251") : user.getFileCharset();
+    PrintWriter w = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, charset)));
     _download(w);
     w.flush();
   }

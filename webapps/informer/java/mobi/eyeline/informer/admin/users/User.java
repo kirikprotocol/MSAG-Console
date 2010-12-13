@@ -6,6 +6,7 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -62,6 +63,8 @@ public class User implements Serializable {
 
   private List<UserCPsettings> cpSettings;
 
+  private Charset fileCharset = Charset.forName("windows-1251");
+
   public User() {
   }
 
@@ -102,7 +105,16 @@ public class User implements Serializable {
     this.cdrOriginator = user.cdrOriginator;
 
     this.cpSettings = user.getCpSettings()==null ? null : new ArrayList<UserCPsettings>(user.getCpSettings());
+    this.fileCharset = user.getFileCharset();
 
+  }
+
+  public Charset getFileCharset() {
+    return fileCharset;
+  }
+
+  public void setFileCharset(Charset fileCharset) {
+    this.fileCharset = fileCharset;
   }
 
   public String getCdrOriginator() {
