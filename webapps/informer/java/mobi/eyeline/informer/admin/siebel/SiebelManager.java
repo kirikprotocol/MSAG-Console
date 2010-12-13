@@ -77,14 +77,14 @@ public class SiebelManager {
 
   public synchronized void stop() {
     shutdown = true;
-    if (listenerThread != null) {
-      listenerThread.interrupt();
-    }
     if (executor != null) {
       executor.shutdown();
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: delivery manager has shutdowned");
       }
+    }
+    if (listenerThread != null) {
+      listenerThread.interrupt();
     }
     try {
       lockShutdown();
@@ -101,7 +101,7 @@ public class SiebelManager {
   }
 
   public void setMessageStates(Map<String, SiebelMessage.DeliveryState> deliveryStates) throws AdminException {
-    if (isStarted()) {
+    if (provider != null && !provider.isShutdowned()) {
       provider.setMessageStates(deliveryStates);
     } else {
       throw new SiebelException("offline");
@@ -109,12 +109,18 @@ public class SiebelManager {
   }
 
   public void setDeliveryStatuses(Map<String, SiebelDelivery.Status> statuses) throws AdminException {
-    provider.setDeliveryStatuses(statuses);
+    if (provider != null && !provider.isShutdowned()) {
+      provider.setDeliveryStatuses(statuses);
+    } else {
+      throw new SiebelException("offline");
+    }
   }
 
   public void checkProperties(SiebelSettings p) throws AdminException {
     provider.check(p.getAllProperties());
   }
+
+  private Properties siebelProperties;
 
   public synchronized void start(User siebelUser, SiebelSettings ps) throws AdminException {
     if (shutdown) {
@@ -122,10 +128,11 @@ public class SiebelManager {
       this.siebelUser = siebelUser;
       timeout = ps.getTimeout();
       removeOnStop = ps.isRemoveOnStop();
-      provider.connect(ps.getAllProperties());
+      siebelProperties = new Properties();
+      siebelProperties.putAll(ps.getAllProperties());
       executor = new ThreadPoolExecutor(5, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
           new LinkedBlockingQueue<Runnable>(), new ThreadFactoryWithCounter("Siebel-Delivery-Processor", 0));
-      listenerThread = new Thread(new ProviderListener(), "SiebelProviderListener");
+      listenerThread = new ProviderListener("SiebelProviderListener");
       listenerThread.start();
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: delivery manager has started");
@@ -193,64 +200,81 @@ public class SiebelManager {
     }
   }
 
-  private class ProviderListener implements Runnable {
+  private class ProviderListener extends Thread{
+
+    private ProviderListener(String name) {
+      super(name);
+    }
 
     public void run() {
       try {
         lockShutdown();
         shutdown = false;
         while (!shutdown) {
-          ResultSet<SiebelDelivery> rs = null;
-          try {
-            rs = provider.getDeliveriesToUpdate(lastUpdate);
-            while (rs.next()) {
-              final SiebelDelivery st = rs.get();
-
-              if (logger.isDebugEnabled())
-                logger.debug("Siebel: found delivery to update: waveId=" + st.getWaveId());
-
-              if (!isInProcessing(st)) {
-                process(st);
-                if(st.getLastUpdate().after(lastUpdate)) {
-                  lastUpdate = new Date(st.getLastUpdate().getTime());
-                }
-              }else{
-                if (logger.isDebugEnabled())
-                  logger.debug("Siebel: delivery (waveId=" + st.getWaveId() + ") is already in processing...");
-              }
-            }
-
-          } catch (Exception e) {
-            logger.error(e, e);
-          } finally {
-            if (rs != null) {
-              rs.close();
+          boolean connectionError = false;
+          if(provider.isShutdowned()) {
+            try{
+              provider.connect(siebelProperties);
+            }catch (Exception e){
+              logger.error(e, e);
+              connectionError = true;
             }
           }
 
-          for(String e : getErrors()) {
-            if(!isInProcessing(e)) {
-              if(logger.isDebugEnabled()) {
-                logger.debug("Try to repair operation with wave: waveId="+e);
-              }
-              try{
-                final SiebelDelivery st = provider.getDelivery(e);
-                if(st != null) {
+          if(!connectionError) {
+
+            ResultSet<SiebelDelivery> rs = null;
+            try {
+              rs = provider.getDeliveriesToUpdate(lastUpdate);
+              while (rs.next()) {
+                final SiebelDelivery st = rs.get();
+
+                if (logger.isDebugEnabled())
+                  logger.debug("Siebel: found delivery to update: waveId=" + st.getWaveId());
+
+                if (!isInProcessing(st)) {
                   process(st);
-                }else {
-                  if(logger.isDebugEnabled()) {
-                    logger.debug("Wave hasn't been found: waveId="+e);
+                  if(st.getLastUpdate().after(lastUpdate)) {
+                    lastUpdate = new Date(st.getLastUpdate().getTime());
                   }
+                }else{
+                  if (logger.isDebugEnabled())
+                    logger.debug("Siebel: delivery (waveId=" + st.getWaveId() + ") is already in processing...");
                 }
-              }catch (Exception ex){
-                logger.error(ex,ex);
+              }
+
+            } catch (Exception e) {
+              logger.error(e, e);
+            } finally {
+              if (rs != null) {
+                rs.close();
+              }
+            }
+
+            for(String e : getErrors()) {
+              if(!isInProcessing(e)) {
+                if(logger.isDebugEnabled()) {
+                  logger.debug("Try to repair operation with wave: waveId="+e);
+                }
+                try{
+                  final SiebelDelivery st = provider.getDelivery(e);
+                  if(st != null) {
+                    process(st);
+                  }else {
+                    if(logger.isDebugEnabled()) {
+                      logger.debug("Wave hasn't been found: waveId="+e);
+                    }
+                  }
+                }catch (Exception ex){
+                  logger.error(ex,ex);
+                  addError(e);
+                }
+              }else {
                 addError(e);
               }
-            }else {
-              addError(e);
             }
-          }
 
+          }
           try {
             Thread.sleep(timeout * 1000);
           } catch (InterruptedException ignored) {
