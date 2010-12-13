@@ -51,6 +51,8 @@ DECResult DecoderOfINTEGER::decodeVAL(
     rval = decodeCOC_UINTEGER(*_pVal.u8, use_enc, valLen);
   }
 
+  if ((rval.status == DECResult::decOkRelaxed) && relaxed_rule && (rval.nbytes < valLen))
+    rval.status = DECResult::decBadVal;
   return rval;
 }
 
