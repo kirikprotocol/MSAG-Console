@@ -22,7 +22,7 @@ MDSeqType3::prepareAlternative(uint16_t unique_idx)
 {
   if (!_value)
     throw smsc::util::Exception("MDSeqType2::prepareAlternative: value isn't set!");
-  if (unique_idx > 1)
+  if (unique_idx > 2)
     throw smsc::util::Exception("MDSeqType2::prepareAlternative: undefined UId=%d", unique_idx);
 
   if (unique_idx == 0) {
