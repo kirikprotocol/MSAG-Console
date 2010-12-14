@@ -56,7 +56,7 @@ function UpdateContent(contentId, updatePeriod) {
       if (pname != null && pname.length != 0) {
 
         if (el.tagName == "INPUT" && el.getAttribute("type") == "checkbox") {
-          if (el.getAttribute("checked") != null && el.getAttribute("checked") == "true")
+          if (el.getAttribute("checked") != null && (el.getAttribute("checked") || el.getAttribute("checked") == "checked"))
             args += pname + '=true';
 
           continue;
