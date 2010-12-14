@@ -123,19 +123,18 @@ protected:
     }
   }
 
-  void reallocBuf(_SizeTypeArg req_octs)
+  void reallocBuf(_SizeTypeArg req_bits)
   {
     _SizeTypeArg maxStackOcts = bitsNum2Octs(_orgBits);
-    _SizeTypeArg factor = (req_octs + maxStackOcts - 1)/maxStackOcts;
+    _SizeTypeArg factor = (bitsNum2Octs(req_bits) + maxStackOcts - 1)/maxStackOcts;
     factor += (factor+3)>>2;
     _SizeTypeArg newOctSz = (factor > _MAX_FACTOR()) ? _MAX_SIZE()/8 : maxStackOcts * factor;
 
     uint8_t * hbuf = new uint8_t[newOctSz];
     _SizeTypeArg nb = numOcts();
-    if (nb <= sizeof(void*)) {
-      for (_SizeTypeArg i = 0; i < nb; ++i)
-        hbuf[i] = _buf[i];
-    } else
+    if (nb == 1)
+      hbuf[0] = 0;
+    else
       memcpy(hbuf, _buf, nb);
 
     if (_heapBufSz)
@@ -162,14 +161,15 @@ protected:
   {
     clearUnused();
     if (((bit_idx + 1) - _numBits) > unusedBits()) {
-      _SizeTypeArg bit2set = (bit_idx + 1) - _numBits - unusedBits();
-      _SizeTypeArg oct2set = bitsNum2Octs(bit2set) + ((bit2set%8) ? 1 : 0);
-      if (oct2set <= sizeof(void*)) {
-        for (_SizeTypeArg i = 0; i < oct2set; ++i)
-          _buf[numOcts() + i] = 0;
-      } else
-        memset(_buf + numOcts(), 0, oct2set);
+      //more octets should be zeroed
+      _numBits += unusedBits();
+      _SizeTypeArg octs2set = bitsNum2Octs(bit_idx + 1) - numOcts();
+      if (octs2set == 1)
+        _buf[numOcts()] = 0;
+      else
+        memset(_buf + numOcts(), 0, octs2set);
     }
+    _numBits = bit_idx + 1;
   }
 
   //NOTE: it's a responsibility of a successor copying constructor
@@ -189,6 +189,9 @@ public:
   typedef _SizeTypeArg  size_type;
 
   _SizeTypeArg _MAX_SIZE(void) const { return (_SizeTypeArg)(-1); }
+  //Special Not-a-Position marker
+  _SizeTypeArg npos(void) const { return (_SizeTypeArg)(-1); }
+
 
   BITArrayExtension_T() //throw()
     : _orgBits(0), _buf(0), _heapBufSz(0), _numBits(0)
@@ -234,35 +237,49 @@ public:
   //Returns available capacity in bits of allocated array
   _SizeTypeArg capacity(void) const { return _heapBufSz ? _heapBufSz<<3 : _orgBits; }
 
-
   //Returns initialized/assigned element of array.
   //Throws if specified index is beyond of the space of initialized elemens.
-  bool at(_SizeTypeArg bit_idx) const //throw(std::exception)
+  bool getBit(_SizeTypeArg bit_idx) const
   {
     if (bit_idx >= _numBits)
       denyIndex(bit_idx);
     return getBitValue(bit_idx);
   }
-
   //Returns initialized/assigned element of array at specified index.
   //Throws if specified index exceeds array capacity. 
   //if specified index is beyond of the space of initialized elemens
   //but within capacity, all elements up to specified one are initialized.
   void setBit(_SizeTypeArg bit_idx, bool use_val = true) //throw(std::exception)
   {
-    if (bit_idx >= capacity())
+    if (bit_idx < npos()) {
+      if (bit_idx >= capacity())
+        reallocBuf(bit_idx + 1);
+    } else
       denyIndex(bit_idx);
-    initBits(bit_idx);
+
+    if (bit_idx >= _numBits)
+      initBits(bit_idx);
     setBitValue(bit_idx, use_val);
+  }
+
+  //Returns initialized/assigned element of array at specified index.
+  //Throws if specified index exceeds maximal allowed array capacity.
+  //if specified index is beyond of the space of initialized elemens
+  //but within capacity, all elements up to specified one are initialized.
+  bool at(_SizeTypeArg bit_idx) //throw(std::exception)
+  {
+    if (bit_idx < _numBits)
+      return getBitValue(bit_idx);
+    setBit(bit_idx, false);
+    return false;
   }
 
   void clear(void)
   {
     _SizeTypeArg nb = numOcts();
-    if (nb < sizeof(void*)) {
-      for (_SizeTypeArg i = 0; i < nb; ++i)
-        _buf[i] = 0;
-    } else
+    if (nb == 1)
+      _buf[0] = 0;
+    else
       memset(_buf, 0, nb);
     _numBits = 0;
   }
@@ -277,16 +294,16 @@ public:
       return false;
 
     if (req_bits > capacity())
-      reallocBuf(bitsNum2Octs(req_bits));
+      reallocBuf(req_bits);
     return true;
   }
 
   //Reserves space for storing given number of elements
   //Returns false if requested capacity exceeds _MAX_SIZE().
-  bool reserve(_SizeTypeArg num_to_reserve)
+  bool reserve(_SizeTypeArg bits_to_reserve)
   {
-    if (num_to_reserve > capacity())
-      reallocBuf(bitsNum2Octs(num_to_reserve));
+    if (bits_to_reserve > capacity())
+      reallocBuf(bits_to_reserve);
     return true;
   }
 
