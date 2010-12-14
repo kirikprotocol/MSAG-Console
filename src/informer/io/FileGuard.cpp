@@ -2,6 +2,7 @@
 #include <cstring>
 #include "FileGuard.h"
 #include "Typedefs.h"
+#include "DirListing.h"
 
 namespace eyeline {
 namespace informer {
@@ -157,6 +158,108 @@ void FileGuard::makedirs( const std::string& dir )
         } else {
             throw ErrnoException(errno,"mkdir('%s')",wk->c_str());
         }
+    }
+}
+
+
+void FileGuard::rmdirs( const char* path, bool rmself )
+{
+    getlog();
+    smsc_log_debug(log_,"rmdirs('%s',self=%u)",path,rmself);
+    std::vector< std::string > contents;
+    makeDirListing( NoDotsNameFilter() ).list( path, contents );
+    if ( !contents.empty() ) {
+        smsc::core::buffers::TmpBuf<char,256> fpath;
+        const size_t pathlen = strlen(path);
+        if (path[pathlen-1] != '/') {
+            throw InfosmeException(EXC_LOGICERROR,"rmdirs('%s') should ends with /",path);
+        }
+        fpath.setSize(pathlen+30);
+        sprintf(fpath.get(),path);
+        for ( std::vector<std::string>::const_iterator i = contents.begin();
+              i != contents.end(); ++i ) {
+            fpath.SetPos(pathlen);
+            fpath.Append(i->c_str(),i->size()+1);
+            struct stat st;
+            if ( -1 == ::lstat(fpath.get(),&st) ) {
+                throw ErrnoException(errno,"lstat('%s')",fpath.get());
+            }
+            if ( S_ISDIR(st.st_mode) ) {
+                // directory, must be deleted recursively
+                fpath.SetPos(fpath.GetPos()-1);
+                fpath.Append("/",2);
+                rmdirs(fpath.get(),true);
+            } else {
+                if ( -1 == ::unlink(fpath.get()) ) {
+                    throw ErrnoException(errno,"unlink('%s')",fpath.get());
+                }
+            }
+        }
+    }
+    if (rmself) {
+        if ( -1 == ::rmdir(path) ) {
+            throw ErrnoException(errno,"rmdir('%s')",path);
+        }
+    }
+}
+
+
+void FileGuard::copydir( const char* from,
+                         const std::string& to,
+                         unsigned maxdepth )
+{
+    getlog();
+    smsc_log_debug(log_,"copydir('%s','%s')",from,to.c_str());
+    struct stat st;
+    if ( -1 == ::stat(from,&st) ) {
+        throw InfosmeException(EXC_BADNAME,"copydir('%s') does not exist",from);
+    } else if ( !S_ISDIR(st.st_mode) ) {
+        throw InfosmeException(EXC_BADNAME,"copydir('%s') is not a dir",from);
+    }
+    makedirs(to);
+    std::vector< std::string > contents;
+    makeDirListing( NoDotsNameFilter() ).list(from,contents);
+    if ( ! contents.empty() && maxdepth > 0 ) {
+        // copying contents
+        smsc::core::buffers::TmpBuf<char,256> fpath;
+        const size_t fromlen = strlen(from);
+        if ( from[fromlen-1] != '/' ) {
+            throw InfosmeException(EXC_LOGICERROR,"copydir('%s') should ends with /",from);
+        }
+        fpath.setSize(fromlen+30);
+        sprintf(fpath.get(),from);
+        for ( std::vector< std::string >::const_iterator i = contents.begin();
+              i != contents.end(); ++i ) {
+            fpath.SetPos(fromlen);
+            fpath.Append( i->c_str(), i->size()+1 );
+            if ( -1 == ::stat(fpath.get(),&st) ) {
+                throw ErrnoException(errno,"stat('%s')",fpath.get());
+            }
+            if ( S_ISDIR(st.st_mode) ) {
+                fpath.SetPos(fpath.GetPos()-1);
+                fpath.Append("/",2);
+                copydir(fpath.get(), to + *i + "/", maxdepth-1);
+            } else if ( S_ISREG(st.st_mode) ) {
+                copyfile(fpath.get(), (to+*i).c_str());
+            }
+        }
+    }
+}
+
+
+void FileGuard::copyfile( const char* from,
+                          const char* to )
+{
+    FileGuard fg, fd;
+    fg.ropen(from);
+    struct stat st;
+    fd.create(to, fg.getStat(st).st_mode & (S_IRWXU|S_IRWXG|S_IRWXO),
+              true, true );
+    char buf[8192];
+    while ( true ) {
+        const size_t wasread = fg.read(buf,sizeof(buf));
+        if (wasread == 0) { break; }
+        fd.write(buf,wasread);
     }
 }
 

@@ -18,6 +18,9 @@ struct NumericNameFilter {
     }
 };
 
+const char* archiveName = "deliveries/incoming.txt";
+const char* archiveExt = ".new";
+
 }
 
 namespace eyeline {
@@ -458,43 +461,19 @@ void DeliveryMgr::init()
                 lastDlvId_ = dlvId;
             }
             try {
-
-                DeliveryInfoData data;
-                DeliveryImpl::readDeliveryInfoData(dlvId, data);
-
-                UserInfoPtr user(core_.getUserInfo(data.owner.c_str()));
-                if (!user.get()) {
-                    throw InfosmeException(EXC_CONFIG,"D=%u has unknown user: '%s'",
-                                           dlvId,data.owner.c_str());
-                }
-
-                // read state
-                msgtime_type planTime = 0;
-                DlvState state = DeliveryImpl::readState(dlvId, planTime );
-                if ( getCS()->isArchive() ) {
-                    switch (state) {
-                    case DLVSTATE_PLANNED:
-                    case DLVSTATE_ACTIVE: state = DLVSTATE_FINISHED; break;
-                    default: break;
-                    }
-                    planTime = 0;
-                }
-
-                DeliveryInfo* info = new DeliveryInfo(dlvId, data, *user.get());
-                addDelivery(info, state, planTime, false);
-                if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() ) {
-                    startCancelThread(dlvId);
-                }
-
+                readDelivery( dlvId );
             } catch (std::exception& e) {
                 smsc_log_error(log_,"D=%u cannot read/add dlvInfo, exc: %s",dlvId,e.what());
-                continue;
             }
         }
     }
 
     // reading journals and binding deliveries and regions
     if ( ! getCS()->isArchive() ) {
+
+        // signalling archive
+        signalArchive(0);
+
         smsc_log_info(log_,"--- reading journals ---");
         StoreJournalReader sjr(*this);
         storeJournal_->init(sjr);
@@ -673,7 +652,9 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
 }
 
 
-void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& regIds )
+void DeliveryMgr::deleteDelivery( dlvid_type dlvId,
+                                  std::vector<regionid_type>& regIds,
+                                  bool moveToArchive )
 {
     DeliveryList tokill;
     DeliveryList::iterator iter;
@@ -687,9 +668,14 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId, std::vector<regionid_type>& 
         if (statsDumpingIter_ == iter) ++statsDumpingIter_;
         tokill.splice(tokill.begin(),deliveryList_,iter);
     }
-    (*iter)->setState(DLVSTATE_CANCELLED);
+    if (!moveToArchive) {
+        (*iter)->setState(DLVSTATE_CANCELLED);
+    }
     (*iter)->getRegionList(regIds);
-    (*iter)->detachEverything(true);
+    (*iter)->detachEverything(!moveToArchive,moveToArchive);
+    if (moveToArchive) {
+        signalArchive(dlvId);
+    }
 }
 
 
@@ -717,6 +703,13 @@ int DeliveryMgr::Execute()
                 }
             }
             wakeList.clear();
+        }
+
+        // read archive signals
+        try {
+            readFromArchive();
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"reading from archive, exc: %s", e.what());
         }
 
         MutexGuard mg(mon_);
@@ -872,6 +865,148 @@ dlvid_type DeliveryMgr::getNextDlvId()
         if (!iter) return lastDlvId_;
     }
     throw InfosmeException(EXC_SYSTEM,"no more free delivery ids, try again");
+}
+
+
+void DeliveryMgr::signalArchive( dlvid_type dlvId )
+{
+    // signal the archive instance
+    const std::string fname = getCS()->getArchivePath() + ::archiveName;
+    MutexGuard mg(archiveLock_);
+    bool fileExist = false;
+    if (dlvId) {
+        FileGuard fg;
+        fg.create((fname+::archiveExt).c_str(),0666,true);
+        fg.seek(0,SEEK_END);
+        char buf[30];
+        const int buflen = sprintf(buf,"%u\n",dlvId);
+        assert(buflen>0);
+        fg.write(buf,size_t(buflen));
+        fileExist = true;
+        fg.close();
+    }
+    struct stat st;
+    if (!fileExist) {
+        if ( -1 != ::stat((fname+archiveExt).c_str(),&st) &&
+             S_ISREG(st.st_mode) ) {
+            fileExist = true;
+        }
+    }
+    if ( fileExist ) {
+        if ( -1 == ::stat(fname.c_str(),&st) ) {
+            // destination is not found, renaming
+            if ( -1 == ::rename((fname+archiveExt).c_str(),fname.c_str()) ) {
+                throw ErrnoException(errno,"rename('%s')",fname.c_str());
+            }
+        }
+    }
+}
+
+
+void DeliveryMgr::readFromArchive()
+{
+    const std::string fname = getCS()->getStorePath() + archiveName;
+    FileGuard fg;
+    struct stat st;
+    if ( -1 == ::stat(fname.c_str(),&st) ) {
+        return;
+    }
+    fg.ropen(fname.c_str());
+    char buf[256];
+    char* ptr = buf;
+    std::vector<dlvid_type> dlvs;
+    while (true) {
+        const size_t wasread = fg.read(ptr,sizeof(buf)-(ptr-buf));
+        if ( 0 == wasread ) {
+            if ( ptr != buf ) {
+                throw InfosmeException(EXC_BADFILE,"file '%s' is corrupted",archiveName);
+            }
+            break;
+        }
+        ptr += wasread;
+        char* p = buf;
+        while ( p < ptr ) {
+            char* eol = static_cast<char*>(memchr(p,'\n',ptr-p));
+            if (!eol) {break;}
+            if ( (eol - p) > 30 ) {
+                throw InfosmeException(EXC_BADFILE,"too big record '%*s'",eol-p,p);
+            }
+            *eol = '\0';
+            unsigned dlvId;
+            int shift = 0;
+            sscanf(p,"%u%n",&dlvId,&shift);
+            if ( shift == 0 || p[shift] != '\0' ) {
+                throw InfosmeException(EXC_BADFILE,"bad record '%s'",p);
+            }
+            dlvs.push_back(dlvId);
+            p = eol + 1;
+        }
+        if ( p < ptr ) {
+            memcpy(buf,p,ptr-p);
+        }
+        ptr = buf + (ptr-p);
+    }
+    fg.close();
+    // delete the incoming file
+    FileGuard::unlink(fname.c_str());
+
+    // processing dlvs
+    for ( std::vector<dlvid_type>::const_iterator i = dlvs.begin();
+          i != dlvs.end(); ++i ) {
+        // first of all checks if we have a delivery already
+        DeliveryImplPtr ptr;
+        if ( ! getDelivery(*i,ptr) ) {
+            try {
+                char dname[100];
+                *(makeDeliveryPath(dname,*i)-1) = '\0';
+                FileGuard::copydir( (getCS()->getArchivePath() + dname + ".out/").c_str(),
+                                    getCS()->getStorePath() + dname + ".in/",
+                                    10 );
+                if ( -1 == ::rename( (getCS()->getStorePath() + dname + ".in").c_str(),
+                                     (getCS()->getStorePath() + dname).c_str()) ) {
+                    throw ErrnoException(errno,"rename('%s')",dname);
+                }
+                FileGuard::rmdirs( (getCS()->getArchivePath() + dname + ".out/").c_str() );
+
+                readDelivery(*i);
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"D=%u cannot attach, exc: %s", *i, e.what());
+            }
+        } else {
+            smsc_log_warn(log_,"D=%u is already attached",*i);
+        }
+    }
+}
+
+
+void DeliveryMgr::readDelivery( dlvid_type dlvId )
+{
+    DeliveryInfoData data;
+    DeliveryImpl::readDeliveryInfoData(dlvId, data);
+
+    UserInfoPtr user(core_.getUserInfo(data.owner.c_str()));
+    if (!user.get()) {
+        throw InfosmeException(EXC_CONFIG,"D=%u has unknown user: '%s'",
+                               dlvId,data.owner.c_str());
+    }
+
+    // read state
+    msgtime_type planTime = 0;
+    DlvState state = DeliveryImpl::readState(dlvId, planTime );
+    if ( getCS()->isArchive() ) {
+        switch (state) {
+        case DLVSTATE_PLANNED:
+        case DLVSTATE_ACTIVE: state = DLVSTATE_FINISHED; break;
+        default: break;
+        }
+        planTime = 0;
+    }
+
+    DeliveryInfo* info = new DeliveryInfo(dlvId, data, *user.get());
+    addDelivery(info, state, planTime, false);
+    if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() ) {
+        startCancelThread(dlvId);
+    }
 }
 
 }

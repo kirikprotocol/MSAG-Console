@@ -66,10 +66,22 @@ public:
         pos_ = 0;
     }
 
+    /// unlink a file
     static void unlink( const char* fname );
 
     static void makedirs( const std::string& dir );
 
+    /// unlink directory contents recursively (optionally).
+    /// @param path must ends with '/'
+    static void rmdirs( const char* path, bool rmself = true );
+
+    /// copy directory recursively, both from and to must ends with '/'
+    static void copydir( const char* from,
+                         const std::string& to,
+                         unsigned maxdepth );
+
+    static void copyfile( const char* from, const char* to );
+    
 private:
     inline static void getlog() {
         if (!log_) {

@@ -46,6 +46,10 @@ public:
         return path_;
     }
 
+    inline const std::string& getArchivePath() const {
+        return archivePath_;
+    }
+
     inline const std::string& getStatPath() const {
         return statpath_;
     }
@@ -157,6 +161,7 @@ public:
 
 private:
     std::string path_;
+    std::string archivePath_;
     std::string statpath_;
     UTF8*       utf8_;        // owned converter
     unsigned    incStatBank_;

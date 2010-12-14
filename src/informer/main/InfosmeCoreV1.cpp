@@ -662,6 +662,16 @@ void InfosmeCoreV1::selfTest()
             dlv->getGlossary( glotexts );
         }
 
+        {
+            smsc_log_info(log_,"--- pausing the delivery D=%u ---",dlvId);
+            dlv->setState(DLVSTATE_PAUSED);
+        }
+
+        {
+            smsc_log_info(log_,"--- archivating the delivery D=%u ---",dlvId);
+            deleteDelivery( *user, dlvId, true );
+        }
+
     } catch ( std::exception& e ) {
         smsc_log_debug(log_,"--- selftest failed, exc: %s",e.what());
     }
@@ -969,7 +979,8 @@ dlvid_type InfosmeCoreV1::addDelivery( UserInfo& userInfo,
 
 
 void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
-                                    dlvid_type      dlvId )
+                                    dlvid_type      dlvId,
+                                    bool            moveToArchive )
 {
     smsc_log_debug(log_,"== deleteDelivery(U='%s',D=%u)",userInfo.getUserId(),dlvId);
     if ( getCS()->isArchive()) {
@@ -978,17 +989,20 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
     BindSignal bs;
     bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
-    {
-        DeliveryImplPtr ptr;
-        if ( !dlvMgr_->getDelivery(dlvId,ptr) ) {
-            throw InfosmeException(EXC_NOTFOUND,"no such delivery %u",dlvId);
-        }
-        if ( &(ptr->getUserInfo()) != &userInfo &&
-             !userInfo.hasRole(USERROLE_ADMIN)) {
-            throw InfosmeException(EXC_ACCESSDENIED,"access denied to delivery %u",dlvId);
-        }
+
+    DeliveryImplPtr ptr;
+    if ( !dlvMgr_->getDelivery(dlvId,ptr) ) {
+        throw InfosmeException(EXC_NOTFOUND,"no such delivery %u",dlvId);
     }
-    dlvMgr_->deleteDelivery(dlvId,bs.regIds);
+    if ( &(ptr->getUserInfo()) != &userInfo &&
+         !userInfo.hasRole(USERROLE_ADMIN)) {
+        throw InfosmeException(EXC_ACCESSDENIED,"access denied to delivery %u",dlvId);
+    }
+    if ( moveToArchive &&
+         ptr->getState() == DLVSTATE_ACTIVE ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"cannot archivate an active delivery %u",dlvId);
+    }
+    dlvMgr_->deleteDelivery(dlvId,bs.regIds,moveToArchive);
     bindDeliveryRegions(bs);
 }
 

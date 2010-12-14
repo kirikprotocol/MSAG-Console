@@ -77,7 +77,8 @@ public:
     virtual dlvid_type addDelivery( UserInfo& userInfo,
                                     const DeliveryInfoData& info );
     virtual void deleteDelivery( const UserInfo& userInfo,
-                                 dlvid_type      dlvId );
+                                 dlvid_type      dlvId,
+                                 bool            moveToArchive = false );
     virtual DeliveryPtr getDelivery( const UserInfo& userInfo,
                                      dlvid_type   dlvId );
 

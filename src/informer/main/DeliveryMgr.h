@@ -52,7 +52,8 @@ public:
     dlvid_type createDelivery( UserInfo& userInfo,
                                const DeliveryInfoData& info );
     void deleteDelivery( dlvid_type dlvId,
-                         std::vector<regionid_type>& regIds );
+                         std::vector<regionid_type>& regIds,
+                         bool moveToArchive );
 
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
@@ -84,6 +85,14 @@ protected:
 
     dlvid_type getNextDlvId();
     
+    /// signal archive, optionally writing delivery id
+    void signalArchive( dlvid_type dlvId = 0 );
+
+    /// read signals from archive
+    void readFromArchive();
+
+    void readDelivery( dlvid_type dlvId );
+
 private:
     smsc::logger::Logger*                      log_;
     InfosmeCoreV1&                             core_;
@@ -118,6 +127,8 @@ private:
     SpeedControl<usectime_type,tuPerSec>          trafficSpeed_;
 
     smsc::core::threads::ThreadPool               ctp_;
+
+    smsc::core::synchronization::Mutex            archiveLock_;
 };
 
 } // informer

@@ -29,59 +29,6 @@ createTime_(0)
         period_ = 3600 / nslices;
         if (period_ < 60) period_ = 60;
     }
-
-    // FIXME: reading the last file in activity logs subdirs (move to a separate routine)
-    /*
-    bool statsLoaded = false;
-    try {
-        DirListing< NoDotsNameFilter > dl( NoDotsNameFilter(), S_IFDIR );
-        std::vector< std::string > dirs;
-        char fnbuf[150];
-        makeDeliveryPath(fnbuf,getDlvId());
-        const std::string actpath = getCS()->getStorePath() + fnbuf + "activity_log/";
-        dl.list( actpath.c_str(), dirs );
-        std::sort( dirs.begin(), dirs.end() );
-        std::vector< std::string > subdirs;
-        subdirs.reserve(24);
-        smsc::core::buffers::TmpBuf<char,8192> buf;
-        for ( std::vector<std::string>::reverse_iterator i = dirs.rbegin();
-              i != dirs.rend(); ++i ) {
-            subdirs.clear();
-            const std::string daypath = actpath + *i;
-            dl.list( daypath.c_str(), subdirs );
-            std::sort( subdirs.begin(), subdirs.end() );
-            for ( std::vector<std::string>::reverse_iterator j = subdirs.rbegin();
-                  j != subdirs.rend(); ++j ) {
-                std::vector< std::string > logfiles;
-                logfiles.reserve(60);
-                const std::string hourpath = daypath + "/" + *j;
-                makeDirListing( NoDotsNameFilter(), S_IFREG ).list( hourpath.c_str(), logfiles );
-                std::sort(logfiles.begin(), logfiles.end());
-                for ( std::vector< std::string >::reverse_iterator k = logfiles.rbegin();
-                      k != logfiles.rend(); ++k ) {
-                    
-                    const std::string filename = hourpath + "/" + *k;
-                    try {
-                        if ( readStatistics( filename, buf ) ) {
-                            statsLoaded = true;
-                            break;
-                        }
-                    } catch ( std::exception& e ) {
-                        smsc_log_warn(log_,"D=%u, file '%s' exc: %s",
-                                      getDlvId(), filename.c_str(), e.what());
-                    }
-                }
-                if (statsLoaded) break;
-            }
-            if (statsLoaded) break;
-        }
-    } catch (std::exception& e) {
-        smsc_log_debug(log_,"D=%u actlog, exc: %s", getDlvId(), e.what());
-    }
-    if (!statsLoaded) {
-        smsc_log_debug(log_,"D=%u statistics is not found", getDlvId());
-    }
-     */
 }
 
 
@@ -365,33 +312,6 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
         fg_.write(headbuf,size_t(headlen));
     }
 }
-
-
-/*
-void ActivityLog::incStats( uint8_t state, int value, uint8_t fromState, int smsValue )
-{
-    MutexGuard mg(statLock_);
-    doIncStats(state,value,fromState,smsValue);
-}
-
-
-void ActivityLog::doIncStats( uint8_t state, int value, uint8_t fromState, int smsValue )
-{
-    stats_.incStat(state,value,smsValue);
-    if (fromState) {stats_.incStat(fromState,-value,0);}
-    const unsigned idx = getCS()->getStatBankIndex();
-    incstats_[idx].incStat(state,value,smsValue);
-}
-
-
-void ActivityLog::popIncrementalStats( DeliveryStats& ds )
-{
-    MutexGuard mg(statLock_);
-    const unsigned idx = 1 - getCS()->getStatBankIndex();
-    ds = incstats_[idx];
-    incstats_[idx].clear();
-}
- */
 
 }
 }

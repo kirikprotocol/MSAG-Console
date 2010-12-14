@@ -84,7 +84,8 @@ public:
                             std::vector<regionid_type>& emptyRegs );
 
 
-    void detachEverything( bool cleanDirectory = false );
+    void detachEverything( bool cleanDirectory = false,
+                           bool moveToArchive = false );
 
     /// check if all regional storages is empty, and no messages in retries.
     void checkFinalize();

@@ -53,7 +53,8 @@ public:
                                     const DeliveryInfoData& info ) = 0;
 
     virtual void deleteDelivery( const UserInfo&  userInfo,
-                                 dlvid_type       dlvId ) = 0;
+                                 dlvid_type       dlvId,
+                                 bool             moveToArchive = false ) = 0;
 
     virtual DeliveryPtr getDelivery( const UserInfo&  userInfo,
                                      dlvid_type       dlvId ) = 0;

@@ -405,7 +405,8 @@ void DeliveryImpl::postInitOperative( std::vector<regionid_type>& filledRegs,
 }
 
 
-void DeliveryImpl::detachEverything( bool cleanDirectory )
+void DeliveryImpl::detachEverything( bool cleanDirectory,
+                                     bool moveToArchive )
 {
     const dlvid_type dlvId = dlvInfo_->getDlvId();
     smsc_log_debug(log_,"D=%u detaching everything",dlvId);
@@ -418,11 +419,20 @@ void DeliveryImpl::detachEverything( bool cleanDirectory )
     }
     if (cleanDirectory) {
         char buf[100];
-        sprintf(makeDeliveryPath(buf,dlvId),"config.xml");
+        makeDeliveryPath(buf,dlvId);
         try {
-            FileGuard::unlink((getCS()->getStorePath() + buf).c_str());
+            FileGuard::rmdirs((getCS()->getStorePath() + buf).c_str());
         } catch ( ErrnoException& e ) {
             smsc_log_warn(log_,"D=%u exc: %s",dlvId,e.what());
+        }
+    } else if (moveToArchive) {
+        char buf[100];
+        *(makeDeliveryPath(buf,dlvId)-1) = '\0';
+        try {
+            ::rename((getCS()->getStorePath()+buf).c_str(),
+                     (getCS()->getStorePath()+buf+".out").c_str());
+        } catch ( ErrnoException& e ) {
+            smsc_log_warn(log_,"D=%u exc: %u",dlvId,e.what());
         }
     }
     smsc_log_debug(log_,"D=%u detached",dlvId);

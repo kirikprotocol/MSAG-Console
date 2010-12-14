@@ -40,6 +40,16 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     if (path_.empty()) path_ = "./";
     else if (path_[path_.size()-1] != '/') path_.append("/");
 
+    archivePath_ = conf.getString("archivePath");
+    if (archivePath_.empty()) archivePath_ = "./";
+    else if (archivePath_[archivePath_.size()-1] != '/') {
+        archivePath_.append("/");
+    }
+
+    if ( archive_ ) {
+        path_.swap(archivePath_);
+    }
+
     statpath_ = conf.getString("statPath");
     if (statpath_.empty()) statpath_ = "./";
     else if (statpath_[statpath_.size()-1] != '/') statpath_.append("/");
