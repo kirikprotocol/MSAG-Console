@@ -61,15 +61,36 @@ protected:
   {
     _tag._single = new (_memTag._buf)ASTag(use_tag);
   }
-
+  void clearTag(void)
+  {
+    if ((_kind != altChoice) && _tag._single) {
+      _tag._single->~ASTag();
+      _tag._single = NULL;
+    }
+  }
+  void copyTag(const EDAlternative & cp_obj)
+  {
+    _tag._none = _memTag._aligner = 0;
+    if (_kind == altChoice)
+      _tag._opts = cp_obj._tag._opts;
+    else if (cp_obj._tag._single)
+      setTag(*cp_obj._tag._single);
+  }
 public:
   //default constructor for containers
   EDAlternative()
-    : _kind(altNone), _uniqueId(0)
-    , _optional(true), _tagEnv(atgUntagged)
+    : _kind(altNone), _uniqueId(0), _optional(true), _tagEnv(atgUntagged)
   {
     _tag._none = _memTag._aligner = 0;
   }
+  //copying constructor for containers
+  EDAlternative(const EDAlternative & cp_obj)
+    : _kind(cp_obj._kind), _uniqueId(cp_obj._uniqueId)
+    , _optional(cp_obj._optional), _tagEnv(cp_obj._tagEnv)
+  {
+    copyTag(cp_obj);
+  }
+
   //alternative of Unknown_extensions_entry
   EDAlternative(uint16_t unique_id)
     : _kind(altUExtension), _uniqueId(unique_id)
@@ -110,7 +131,9 @@ public:
     setTag(use_tag);
   }
   ~EDAlternative()
-  { }
+  {
+    clearTag();
+  }
 
   Kind_e getKind(void) const { return _kind; }
   //
@@ -138,15 +161,13 @@ public:
   //
   uint16_t numTags(void) const
   {
-    if (_kind == altChoice)
-      return (uint16_t)(_tag._opts->size());
-    return _tag._single ? 1 : 0;
+    return (_kind == altChoice) ? (uint16_t)(_tag._opts->size())
+                                : (_tag._single ? 1 : 0);
   }
 
   void resetTag(const ASTag & use_tag)
   {
-    if ((_kind != altChoice) && _tag._single)
-      _tag._single->~ASTag();
+    clearTag();
     setTag(use_tag);
   }
 
@@ -154,6 +175,16 @@ public:
   bool operator<(const EDAlternative & cmp_obj) const
   {
     return _uniqueId < cmp_obj._uniqueId;
+  }
+
+  EDAlternative & operator=(const EDAlternative & cp_obj)
+  {
+    _kind = cp_obj._kind;
+    _uniqueId = cp_obj._uniqueId;
+    _optional = cp_obj._optional;
+    _tagEnv = cp_obj._tagEnv;
+    copyTag(cp_obj);
+    return *this;
   }
 };
 

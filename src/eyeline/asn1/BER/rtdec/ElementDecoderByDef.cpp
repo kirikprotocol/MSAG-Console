@@ -50,16 +50,15 @@ uint16_t ElementDecoderByTDef::buildTDMatrixRow(
   while (endIdx < _altsArr->size()) {
     if (_altsArr->at(endIdx).empty())
       throw ElementDecoderAC::UndefinedUIdException(endIdx);
-    if (!_altsArr->at(endIdx).isOptional())
-      break;
     numTags += _altsArr->at(endIdx).numTags();
-    ++endIdx;
+    if (!_altsArr->at(endIdx++).isOptional())
+      break;
   }
 
   TDMatrixRow & tdRow = _tdMatrix->at(row_idx);
   tdRow.reserve(numTags);
 
-  for (; start_idx <= endIdx; ++start_idx) {
+  for (; start_idx < endIdx; ++start_idx) {
     const EDAlternative & alt = _altsArr->get()[start_idx];
     _occArr->at(start_idx)._tdRowIdx = row_idx;
     _occArr->at(start_idx)._isSingle = 
@@ -71,7 +70,7 @@ uint16_t ElementDecoderByTDef::buildTDMatrixRow(
   if ((numTags > 1) && (tdRow.atLast()._tag == asn1::_tagANYTYPE))
     throw ElementDecoderAC::AmbiguousCtxException(tdRow.atLast()._altIdx);
 
-  return endIdx + 1;
+  return endIdx;
 }
 
 

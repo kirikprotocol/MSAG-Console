@@ -28,7 +28,7 @@ DECResult DecoderOfChoiceAC::decodeElement(
     TypeDecoderAC * tDec =  prepareAlternative(edRes._alt->getUId());
 
     if (edRes._alt->getEnv() != EDAlternative::atgExplicit)
-      tDec->setOutermostTL(vtl);
+      tDec->setOutermostTL(&vtl);
     rval += tDec->decode(use_enc + rval.nbytes, max_len - rval.nbytes);
 
     if (rval.isOk(relaxed_rule)) {

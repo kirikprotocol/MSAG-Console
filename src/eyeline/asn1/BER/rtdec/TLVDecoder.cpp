@@ -3,6 +3,7 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
 #include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
+#include "eyeline/asn1/BER/rtdec/TaggingDecoder.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -15,6 +16,9 @@ bool checkEOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/
 
 //Searches 'content octets' of primitive encoding for EOC octets (two zeroes)
 //Returns number of bytes preceeding EOC if it's found
+//
+// T,L, COC, EOC
+//    ^ --> ^
 DECResult searchEOC(const uint8_t * use_enc, TSLength max_len)
 {
   for (TSLength i = 0; i < max_len; ++i) {
@@ -26,15 +30,30 @@ DECResult searchEOC(const uint8_t * use_enc, TSLength max_len)
 
 //Searches 'content octets' of constructed encoding for outermost EOC octets (two zeroes)
 //Returns number of bytes preceeding outermost EOC if it's found
+//
+// T,L
+// --> T,L, COC, EOC
+//  |  T,L, COC, EOC
+// --> T,L, COC, EOC
+// EOC 
+//     
 DECResult searchEOCconstructed(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule/* = true */)
 {
   DECResult rval(DECResult::decOk);
-  while ((rval.nbytes < max_len) && rval.isOk(relaxed_rule))
+  while (rval.isOk(relaxed_rule)) {
+    if ((max_len - rval.nbytes) < 2)
+      return DECResult(DECResult::decMoreInput);
+    if (checkEOC(use_enc + rval.nbytes, max_len - rval.nbytes))
+      break;
     rval += skipTLV(use_enc + rval.nbytes, max_len - rval.nbytes, relaxed_rule);
+  }
   return rval;
 }
 
 //Returns number of bytes TLV occupies.
+//
+// T,L, COC, EOC
+// ^    -->    ^
 DECResult skipTLV(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule/* = true */)
 {
   TLParser  tlProp;
@@ -52,7 +71,7 @@ DECResult skipTLV(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule/*
     return rval;
   }
   //indefinite LDForm_e, search for EOCs
-  if (!tlProp._isConstructed)
+  if (tlProp._isConstructed)
     rval += searchEOCconstructed(use_enc + rval.nbytes, max_len - rval.nbytes, relaxed_rule);
   else
     rval += searchEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
@@ -63,71 +82,20 @@ DECResult skipTLV(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule/*
 }
 
 /* ************************************************************************* *
- * Class TaggingDecoder implementation:
- * ************************************************************************* */
-
-//Decodes all TL-pairs of TLV layout
-DECResult TaggingDecoder::decodeBOC(const uint8_t * use_enc, TSLength max_len,
-                                      bool relaxed_rule/* = false*/)
-  /* throw(BERDecoderException) */
-{
-  if (!max_len)
-    return DECResult(_effTags ? DECResult::decMoreInput : DECResult::decOk);
-
-  DECResult rval(DECResult::decOk);
-  if (!_effTags)
-    return rval;
-
-  //traverse 'TL'-pairs from first to last
-  for (ASTagging::size_type i = (_outerTL ? 1 : 0); i < _effTags->size(); ++i) {
-    rval += _tlws[i].decodeTOC(use_enc + rval.nbytes, max_len - rval.nbytes);
-    if (!rval.isOk())
-      break;
-    if (_tlws[i]._tag != (*_effTags)[i]) {
-      rval.status = DECResult::decBadEncoding;
-      break;
-      /* TODO:
-        throw TLVParserException(rval, "TaggingDecoder: tag[%u] = %s instead of %s",
-                                i, _tlws[i]._tag.toString().c_str(),
-                                (*_effTags)[i].toString().c_str());
-      */
-    }
-    rval += _tlws[i].decodeLOC(use_enc + rval.nbytes, max_len - rval.nbytes);
-    if (!rval.isOk(relaxed_rule))
-      break;
-  }
-  return rval;
-}
-
-//Decodes all 'end-of-content' octets of TLV layout
-DECResult TaggingDecoder::decodeEOC(const uint8_t * use_enc, TSLength max_len) const
-{
-  DECResult rval(DECResult::decOk);
-  if (!_effTags->size() || !max_len)
-    return rval;
-
-  //traverse 'TL'-pairs from last to first
-  for (long i = _effTags->size() - 1; ((i >= (_outerTL ? 1 : 0)) && rval.isOk()); --i) {
-    rval += _tlws[i].decodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
-  }
-  return rval;
-}
-
-/* ************************************************************************* *
  * Class TypeDecoderAC implementation:
  * ************************************************************************* */
 DECResult TypeDecoderAC::decode(const uint8_t * use_enc, TSLength max_len)
   /*throw(BERDecoderException)*/
 {
-  DECResult rval(DECResult::decOk);
+  DECResult       rval(DECResult::decOk);
+  TaggingDecoder  tagDec(refreshTagging(), _outerTL);
 
-  _tagDec.init(refreshTagging());
-  rval += _tagDec.decodeBOC(use_enc, max_len, _relaxedRule); //throws
+  rval += tagDec.decodeBOC(use_enc, max_len, _relaxedRule); //throws
   if (rval.isOk(_relaxedRule)) {
-    rval += _valDec->decodeVAL(_tagDec.getVProperties(), use_enc + rval.nbytes, max_len - rval.nbytes,
+    rval += _valDec->decodeVAL(tagDec.getVProperties(), use_enc + rval.nbytes, max_len - rval.nbytes,
                              getVALRule(), _relaxedRule); //throws
     if (rval.isOk(_relaxedRule))
-      rval += _tagDec.decodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
+      rval += tagDec.decodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
   }
   return rval;
 }

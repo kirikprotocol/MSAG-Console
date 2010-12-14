@@ -29,68 +29,8 @@ extern DECResult searchEOC(const uint8_t * use_enc, TSLength max_len);
 extern DECResult searchEOCconstructed(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule = true);
 //Returns number of bytes TLV occupies.
 extern DECResult skipTLV(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule = true);
-//Returns true if EOC prsent at given encoding position
+//Returns true if EOC present at given encoding position
 extern bool checkEOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/;
-/*
-class TLVParserException : public smsc::util::Exception {
-protected:
-  DECResult _dRes;
-
-public:
-  TLVParserException(const DECResult & dec_res, const char* const fmt, ...)
-    : _dRes(dec_res)
-  {
-    SMSC_UTIL_EX_FILL(fmt);
-  }
-
-  const DECResult & getResult(void) const throw() { return _dRes; }
-};
-*/
-
-class TaggingDecoder {
-private:
-  eyeline::util::LWArray_T<TLParser, uint8_t, _ASTaggingDFLT_SZ> _tlws;
-  const ASTagging * _effTags; //original complete tagging of type
-  const TLParser *  _outerTL; //either outermost tag or implicit tag
-
-protected:
-  void resetLayout(void)
-  {
-    _tlws.clear(); _outerTL = 0;
-    _tlws.reserve(_effTags->size());
-  }
-
-public:
-  //Empty constructor: for later initialization
-  explicit TaggingDecoder(const ASTagging * use_tags = NULL)
-    : _tlws(use_tags ? use_tags->size() : 0)
-    , _effTags(use_tags), _outerTL(0)
-  { }
-
-  void init(const ASTagging * use_tags)
-  {
-    _effTags = use_tags; resetLayout(); 
-  }
-
-  //
-  void setOutermostTL(const TLParser & use_tl) { _outerTL = &use_tl; }
-
-  //Decodes all TL-pairs of TLV layout
-  DECResult decodeBOC(const uint8_t * use_enc, TSLength max_len,
-                      bool relaxed_rule = false) /*throw(std::exception)*/;
-
-  //Decodes all 'end-of-content' octets of TLV layout
-  DECResult decodeEOC(const uint8_t * use_enc, TSLength max_len) const /*throw()*/;
-
-  //Returns 'V'-part encoding properties.
-  //NOTE: decodeBOC() or setOutermostTag() MUST be called prior to this call.
-  const TLVProperty * getVProperties(void) const /*throw()*/
-  {
-    return (_outerTL && (_tlws.size() < 2)) ? 
-            _outerTL : (_tlws.empty() ? NULL : &_tlws.atLast());
-  } 
-};
-
 
 /* ************************************************************************* *
  * Abstract class that decodes BER/DER/CER encoding of the generic ASN.1 type
@@ -142,10 +82,10 @@ public:
 class TypeDecoderAC : public ASTypeDecoderAC, public TypeTagging {
 protected:
   bool                _relaxedRule;
-  TaggingDecoder      _tagDec;
   ValueDecoderIface * _valDec;  //NOTE: it may be just a reference to a successor
                                 //memer, so its copying constructor should care
                                 //about proper _valDec setting.
+  const TLParser *    _outerTL;
 
   //NOTE.1: in case of CHOICE/Opentype the copying constructor of successsor
   //        MUST properly set _optTags  by setOptions().
@@ -153,7 +93,8 @@ protected:
   //        by calling init()
   TypeDecoderAC(const TypeDecoderAC & use_obj)
     : ASTypeDecoderAC(use_obj), TypeTagging(use_obj)
-    , _relaxedRule(use_obj._relaxedRule), _tagDec(use_obj._tagDec), _valDec(0)
+    , _relaxedRule(use_obj._relaxedRule), _valDec(0)
+    , _outerTL(use_obj._outerTL)
   { }
 
 public:
@@ -162,13 +103,13 @@ public:
   explicit TypeDecoderAC(const ASTagging & eff_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(eff_tags)
-    , _relaxedRule(false), _valDec(0)
+    , _relaxedRule(false), _valDec(0), _outerTL(0)
   { }
   //'Untagged CHOICE/Opentype type decoder' constructor
   explicit TypeDecoderAC(const TaggingOptions * base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(base_tags)
-    , _relaxedRule(false), _valDec(0)
+    , _relaxedRule(false), _valDec(0), _outerTL(0)
   { }
   //'Tagged Type decoder' constructor
   //NOTE: base_tags must be a complete tagging of base type!
@@ -176,34 +117,30 @@ public:
                 const ASTagging & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
-    , _relaxedRule(false), _valDec(0)
+    , _relaxedRule(false), _valDec(0), _outerTL(0)
   { }
   //'Tagged Type referencing untagged CHOICE/Opentype decoder' constructor
   TypeDecoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                 const TaggingOptions & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
-    , _relaxedRule(false), _valDec(0)
+    , _relaxedRule(false), _valDec(0), _outerTL(0)
   { }
   //'Tagged Type referencing untagged CHOICE/Opentype decoder' constructor
   TypeDecoderAC(const ASTagging & use_tags, const TaggingOptions & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(use_tags, base_tags)
-    , _relaxedRule(false), _valDec(0)
+    , _relaxedRule(false), _valDec(0), _outerTL(0)
   { }
   //
   virtual ~TypeDecoderAC()
   { }
 
-  void init(ValueDecoderIface & use_vdec)
-  {
-    _valDec = &use_vdec;
-    _tagDec.init(getTagging());
-  }
+  void init(ValueDecoderIface & use_vdec) { _valDec = &use_vdec; }
   //
   void setRelaxedRule(bool relaxed_rule) { _relaxedRule = relaxed_rule; }
   //
-  void setOutermostTL(const TLParser & use_tl) { _tagDec.setOutermostTL(use_tl); }
+  void setOutermostTL(const TLParser * outer_tl) { _outerTL  = outer_tl; }
   //
   TSGroupBER::Rule_e getVALRule(void) const /*throw(std::exception)*/
   {
