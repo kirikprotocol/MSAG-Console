@@ -36,23 +36,31 @@ DECResult DecoderOfINTEGER::decodeVAL(
       valLen = reoc.nbytes;
     }
   }
+  if (!valLen)
+    return DECResult(DECResult::decBadEncoding);
+
+  if ((*use_enc & 0x80) && !_vSigned) //positive value only is expected
+    return DECResult(DECResult::decBadVal);
+
 
   DECResult rval(DECResult::decOk);
   switch (_vSzo) {
   case szo32: {
-    rval = decodeCOC_UINTEGER(*_pVal.u32, use_enc, valLen);
+    rval = _vSigned ? decodeIntCOC_signed(*_pVal.i32, use_enc, valLen)
+                    : decodeIntCOC_unsigned(*_pVal.u32, use_enc, valLen);
   } break;
 
   case szo16: {
-    rval = decodeCOC_UINTEGER(*_pVal.u16, use_enc, valLen);
+    rval = _vSigned ? decodeIntCOC_signed(*_pVal.i16, use_enc, valLen)
+                    : decodeIntCOC_unsigned(*_pVal.u16, use_enc, valLen);
   } break;
 
   default: //szo8
-    rval = decodeCOC_UINTEGER(*_pVal.u8, use_enc, valLen);
+    rval = _vSigned ? decodeIntCOC_signed(*_pVal.i8, use_enc, valLen)
+                    : decodeIntCOC_unsigned(*_pVal.u8, use_enc, valLen);
   }
-
-  if ((rval.status == DECResult::decOkRelaxed) && relaxed_rule && (rval.nbytes < valLen))
-    rval.status = DECResult::decBadVal;
+  if ((rval.status == DECResult::decOkRelaxed) && !relaxed_rule)
+    return DECResult(DECResult::decBadEncoding);
   return rval;
 }
 

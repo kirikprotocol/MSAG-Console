@@ -62,7 +62,7 @@ DECResult TLParser::decode_ld(LDeterminant & use_ld,
     rval.status = DECResult::decMoreInput;
     return rval;
   }
-  return rval += decodeCOC_UINTEGER(use_ld._valLen, use_enc + 1, ldLen);
+  return rval += decodeIntCOC_unsigned(use_ld._valLen, use_enc + 1, ldLen);
 }
 
 //Decodes 'begin-of-content' octets ('T'+'L') of TLV encoding
@@ -83,14 +83,13 @@ DECResult TLParser::decodeEOC(const uint8_t * use_enc, TSLength max_len) const
     return rval;
 
   if (max_len < 2) {
-    rval.nbytes += 1;
-    rval.status = use_enc[0] ?
+    rval.status = (!max_len || use_enc[0]) ?
                   DECResult::decBadEncoding : DECResult::decMoreInput;
   } else {
-    rval.nbytes += 2;
-
-    rval.status = !(use_enc[0] || use_enc[1]) ? 
-                  DECResult::decBadEncoding : DECResult::decMoreInput;
+    if ((use_enc[0] || use_enc[1]))
+      rval.status = DECResult::decBadEncoding;
+    else
+      rval.nbytes += 2;
   }
   return rval;
 }
