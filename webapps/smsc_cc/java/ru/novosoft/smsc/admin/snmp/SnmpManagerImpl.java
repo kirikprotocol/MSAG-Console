@@ -4,7 +4,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.config.ConfigFileManager;
-import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 
@@ -22,9 +21,23 @@ public class SnmpManagerImpl implements SnmpManager {
   private final ClusterController cc;
   private final ConfigFileManager<SnmpSettings> cfgFileManager;
 
-  public SnmpManagerImpl(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
+  private final TrapDataSource dataSource;
+
+  public SnmpManagerImpl(File configFile, File backupDir, File snmpDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
     this.cfgFileManager = new ConfigFileManager<SnmpSettings>(configFile, backupDir, fileSystem, new SnmpConfigFile());
     this.cc = cc;
+    this.dataSource = new TrapDataSourceImpl(snmpDir, fileSystem);
+  }
+
+  public void getTraps(SnmpFilter filter, SnmpTrapVisitor visitor) throws AdminException {
+    TrapDataSource dataSource;
+    switch (filter.getType()) {
+      case ALL: dataSource = this.dataSource; break;
+      case OPENED: dataSource = new OpenedTrapDataSource(this.dataSource); break;
+      case CLOSED: dataSource = new ClosedTrapDataSource(this.dataSource); break;
+      default: throw new IllegalArgumentException("Unknown traps type: "+filter.getType());
+    }
+    dataSource.getTraps(filter.getFrom(), filter.getTill(), visitor);
   }
 
   public SnmpSettings getSettings() throws AdminException {

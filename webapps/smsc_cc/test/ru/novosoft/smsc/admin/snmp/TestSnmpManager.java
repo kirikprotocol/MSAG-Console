@@ -11,7 +11,7 @@ import java.io.File;
  */
 public class TestSnmpManager extends SnmpManagerImpl {
 
-  public TestSnmpManager(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
-    super(configFile, backupDir, cc, fileSystem);
+  public TestSnmpManager(File configFile, File backupDir, File snmpDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
+    super(configFile, backupDir, snmpDir, cc, fileSystem);
   }
 }

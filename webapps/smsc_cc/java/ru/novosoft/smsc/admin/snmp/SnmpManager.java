@@ -11,4 +11,6 @@ public interface SnmpManager extends SmscConfiguration {
   SnmpSettings getSettings() throws AdminException;
 
   void updateSettings(SnmpSettings settings) throws AdminException;
+
+  void getTraps(SnmpFilter filter, SnmpTrapVisitor visitor) throws AdminException;
 }

@@ -139,11 +139,12 @@ public class AdminContext {
 
     mapLimitManager = new MapLimitManagerImpl(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    snmpManager = new SnmpManagerImpl(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    SmscSettings s = smscManager.getSettings();
+
+    snmpManager = new SnmpManagerImpl(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir,
+        new File(s.getCommonSettings().getSnmpCsvFileDir()), clusterController, fileSystem);
 
     closedGroupManager = new ClosedGroupManagerImpl(new File(smscConfigDir, "ClosedGroups.xml"), smscConfigBackupDir, clusterController, fileSystem);
-
-    SmscSettings s = smscManager.getSettings();
 
     mscManager = new MscManagerImpl(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
 

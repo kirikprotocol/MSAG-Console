@@ -4,10 +4,11 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.snmp.*;
 import ru.novosoft.smsc.web.config.BaseSettingsManager;
-import static ru.novosoft.smsc.web.config.DiffHelper.*;
 import ru.novosoft.smsc.web.journal.Journal;
 
 import java.util.Map;
+
+import static ru.novosoft.smsc.web.config.DiffHelper.*;
 
 /**
  * @author Artem Snopkov
@@ -21,6 +22,11 @@ public class WSnmpManager extends BaseSettingsManager<SnmpSettings> implements S
     super(user);
     this.wrapped = wrapped;
     this.j = j;
+  }
+
+  @Override
+  public void getTraps(SnmpFilter filter, SnmpTrapVisitor visitor) throws AdminException {
+    wrapped.getTraps(filter, visitor);
   }
 
   @Override

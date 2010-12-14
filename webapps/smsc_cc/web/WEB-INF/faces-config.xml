@@ -165,6 +165,12 @@
 
 
   <managed-bean>
+    <managed-bean-name>traps</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.snmp.SnmpTrapsController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
     <managed-bean-name>mapLimits</managed-bean-name>
     <managed-bean-class>ru.novosoft.smsc.web.controllers.map_limit.MapLimitController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
@@ -452,6 +458,10 @@
     <navigation-case>
         <from-outcome>SNMP_EDIT</from-outcome>
         <to-view-id>/smsc/snmp/edit.faces</to-view-id>
+    </navigation-case>
+    <navigation-case>
+        <from-outcome>SNMP_TRAPS</from-outcome>
+        <to-view-id>/smsc/snmp/traps.faces</to-view-id>
     </navigation-case>
     <navigation-case>
       <from-outcome>SERVICE_EDIT</from-outcome>

@@ -1,0 +1,5 @@
+SUBMIT_TIME,ALARM_ID,ALARMCATEGORY,SEVERITY,TEXT
+09.11.2010 22:10:54,"pspaural","ESME",1,"CLEARED ESME pspaural registration successful (AlaramID=pspaural; severity=1)"
+09.11.2010 22:13:04,"pspaural","ESME",2,"ACTIVE ESME pspaural unregistered successfully (AlaramID=pspaural; severity=2)"
+09.11.2010 22:13:46,"pspaural","ESME",1,"CLEARED ESME pspaural registration successful (AlaramID=pspaural; severity=1)"
+09.11.2010 22:15:56,"pspaural","ESME",2,"ACTIVE ESME pspaural unregistered successfully (AlaramID=pspaural; severity=2)"

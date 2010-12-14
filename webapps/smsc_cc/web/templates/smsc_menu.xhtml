@@ -51,6 +51,7 @@
         <td width="1%">
           <eye:menubar label="#{msg['smsc.snmp']}" rendered="#{facesContext.externalContext.userPrincipal != null}">
             <eye:menubaritem><h:commandLink value="#{msg['smsc.snmp.config']}" action="SNMP"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['smsc.snmp.traps']}" action="SNMP_TRAPS"/></eye:menubaritem>
           </eye:menubar>
         </td>
         <td width="1%">

@@ -89,6 +89,13 @@ public class TestAdminContext extends AdminContext {
     File operStoreDir = new File(servicesDir, "SMSC1/store/operative");
     operStoreDir.mkdirs();
     TestUtils.exportResource(OperativeStoreProviderTest.class.getResourceAsStream("store.bin"), new File(operStoreDir, "store.bin"), false);
+
+    File snmp = new File(servicesDir, "snmp");
+    if(!snmp.exists()) {
+      snmp.mkdirs();
+    }
+    TestUtils.exportResource(SnmpManagerImplTest.class.getResourceAsStream("20101109_220719.ucs.csv"), new File(snmp, "20101109_220719.ucs.csv"), false);
+
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
@@ -143,11 +150,12 @@ public class TestAdminContext extends AdminContext {
 
     mapLimitManager = new TestMapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    snmpManager = new TestSnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    SmscSettings s = smscManager.getSettings();
+
+    snmpManager = new TestSnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir,
+        new File(servicesDir, "snmp"), clusterController, fileSystem);
 
     closedGroupManager = new TestClosedGroupManager(new File(smscConfigDir, "ClosedGroups.xml"), smscConfigBackupDir, clusterController, fileSystem);
-
-    SmscSettings s = smscManager.getSettings();
 
     mscManager = new TestMscManager(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
 

@@ -41,7 +41,7 @@ public class SnmpManagerImplTest {
   }
 
   private SnmpManagerImpl getManager(ClusterController cc) throws AdminException {
-    SnmpManagerImpl m = new SnmpManagerImpl(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+    SnmpManagerImpl m = new SnmpManagerImpl(configFile, backupDir, new File(""), cc, FileSystem.getFSForSingleInst());
     return m;
   }
 

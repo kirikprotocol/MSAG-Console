@@ -1,0 +1,77 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smsc.snmp.traps']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <tr:inputHidden value="#{traps.init}" id="snmp_traps_init"/>
+
+      <p/>
+
+      <eye:dataTableFilter bean="#{traps}" applyAction="query">
+
+        <tr:panelFormLayout labelAlignment="left" inlineStyle="padding: 5px 5px 5px 5px">
+
+          <tr:panelLabelAndMessage  label="#{msg['smsc.snmp.traps.date']}">
+            <t:inputDate type="date" value="#{traps.dateToView}" popupCalendar="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{msg['smsc.snmp.traps.type']}">
+            <h:selectOneMenu value="#{traps.type}">
+              <f:selectItems value="#{traps.availableTypes}"/>
+            </h:selectOneMenu>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+
+      </eye:dataTableFilter>
+
+      <eye:dataTable value="#{traps.traps}" var="u" rendered="#{traps.init}">
+
+        <eye:row>
+
+          <eye:column name="date" title="#{msg['smsc.snmp.traps.submitTime']}" width="15%" sortable="true" defaultSortOrder="asc">
+            <h:outputText value="#{u.submitDate}">
+              <f:convertDateTime dateStyle="short" type="both"/>
+            </h:outputText>
+          </eye:column>
+
+          <eye:column name="alarmId" title="#{msg['smsc.snmp.traps.alarmId']}" width="15%" sortable="true">
+            <h:outputText value="#{u.alarmId}"/>
+          </eye:column>
+
+          <eye:column name="alarmCategory" title="#{msg['smsc.snmp.traps.alarmCategory']}" width="15%" sortable="true">
+            <h:outputText value="#{u.alarmCategory}"/>
+          </eye:column>
+
+          <eye:column name="severity" title="#{msg['smsc.snmp.traps.severity']}" width="5%" sortable="true">
+            <h:outputText value="#{u.severity}"/>
+          </eye:column>
+
+          <eye:column name="text" title="#{msg['smsc.snmp.traps.text']}" width="50%">
+            <h:outputText value="#{u.text}"/>
+          </eye:column>
+
+        </eye:row>
+
+      </eye:dataTable>
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
