@@ -11,7 +11,6 @@ extern "C"
 void test_runtime()
 {
   char errMsg[MAX_ERR_MESSAGE];
-  logfile= fopen("test_runtime.log", "w");
 
   eyeline::asn1::ber::tests::TestPatternsRegistry::init();
 
@@ -120,20 +119,24 @@ void test_runtime()
    } else
      printf("ok\n");
 
-//  if (!eyeline::asn1::ber::tests::test_SeqType2_dec(errMsg)) {
-//     printf ("failed: %s\n", errMsg);
-//   } else
-//     printf("ok\n");
+  if (!eyeline::asn1::ber::tests::test_SeqType2_dec(errMsg)) {
+     printf ("failed: %s\n", errMsg);
+   } else
+     printf("ok\n");
 
-//  if (!eyeline::asn1::ber::tests::test_SeqType3_dec(errMsg)) {
-//     printf ("failed: %s\n", errMsg);
-//   } else
-//     printf("ok\n");
+  if (!eyeline::asn1::ber::tests::test_SeqType3_dec(errMsg)) {
+     printf ("failed: %s\n", errMsg);
+   } else
+     printf("ok\n");
 
 }
 
 int main()
 {
+  logfile = fopen("test_runtime.log", "w");
+  setvbuf(stdout, NULL, _IOLBF, 0);
+  setvbuf(logfile, NULL, _IOLBF, 0);
+
   test_runtime();
   return 0;
 }
