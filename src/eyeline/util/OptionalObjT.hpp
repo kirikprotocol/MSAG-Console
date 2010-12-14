@@ -43,20 +43,38 @@ public:
   }
 
   //
+  void clear(void)
+  {
+    if (_ptr)
+      _ptr->~_TArg();
+  }
+
+  //
   _TArg  & init(void)
   {
     clear();
     return *(_ptr = new (_mem._buf)_TArg());
   }
   //
-  _TArg  * get(void) { return _ptr; }
+  _TArg  & init(const _TArg & use_obj)
+  {
+    clear();
+    return *(_ptr = new (_mem._buf)_TArg(use_obj));
+  }
+
   //
+  _TArg  * get(void) { return _ptr; }
   const _TArg  * get(void) const { return _ptr; }
   //
-  void clear(void)
+  _TArg * operator->() { return _ptr; }
+  const _TArg * operator->() const { return _ptr; }
+
+  //
+  OptionalObj_T & operator=(const OptionalObj_T & cp_obj)
   {
-    if (_ptr)
-      _ptr->~_TArg();
+    _mem._aligner = _ptr = 0;
+    if (cp_obj._ptr)
+      _ptr = new (_mem._buf)_TArg(*cp_obj._ptr);
   }
 };
 
