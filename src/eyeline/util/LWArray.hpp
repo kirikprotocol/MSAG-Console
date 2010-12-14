@@ -99,7 +99,7 @@ protected:
   _SizeTypeArg lower_bound_pos(const _TArg & use_val) const //throw()
   {
     const _TArg * pNext = std::lower_bound(get(), get() + size(), use_val);
-    return (pNext - get())/sizeof(_TArg);
+    return (pNext - get());
   }
 
   //NOTE: it's a responsibility of a successor copying constructor
