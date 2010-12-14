@@ -16,6 +16,8 @@ using smsc::util::encode;
 using namespace xercesc;
 using namespace smsc::util::xml;
 
+smsc::logger::Logger* RouteConfig::logger = 0;
+
 RouteConfig::RouteIterator::RouteIterator(RoutePVector const &records_vector)
 {
   iter = records_vector.begin();
@@ -37,8 +39,10 @@ RouteConfig::status RouteConfig::RouteIterator::fetchNext(Route *&record)
 }
 
 RouteConfig::RouteConfig()
-    : logger(smsc::logger::Logger::getInstance("smsc.util.config.route.RouteConfig"))
 {
+    if (!logger) {
+        logger = smsc::logger::Logger::getInstance("smsc.util.config.route.RouteConfig");
+    }
 }
 
 RouteConfig::~RouteConfig()
@@ -86,7 +90,9 @@ Subject *RouteConfig::createSubjectDef(const DOMElement &elem)
     masks.push_back(Mask(XmlStr(mask->getAttribute(XmlStr("value")))));
   }
 
-  return new Subject(XmlStr(elem.getAttribute(XmlStr("id"))).c_str(), masks);
+  Subject* ret = new Subject(XmlStr(elem.getAttribute(XmlStr("id"))).c_str(), masks);
+  smsc_log_debug(logger,"subject loaded: '%s'",ret->getId());
+  return ret;
 }
 
 void RouteConfig::createRouteSource(const DOMElement &srcElem, const SubjectPHash &subjects, Route * r)
@@ -97,7 +103,7 @@ throw (SubjectNotFoundException)
     DOMElement *subjElem = (DOMElement *) srcElem.getElementsByTagName(XmlStr("subject"))->item(0);
     XmlStr subId(subjElem->getAttribute(XmlStr("id")));
     if (!subjects.Exists(subId))
-      throw SubjectNotFoundException();
+      throw SubjectNotFoundException(subId.c_str(),r->getId());
     r->sources[subId] = *subjects[subId];
   }
   else
@@ -117,7 +123,7 @@ throw (SubjectNotFoundException)
     DOMElement *subjElem = (DOMElement *) dstElem.getElementsByTagName(XmlStr("subject"))->item(0);
     XmlStr subId(subjElem->getAttribute(XmlStr("id")));
     if (!subjects.Exists(subId))
-      throw SubjectNotFoundException();
+      throw SubjectNotFoundException(subId.c_str(),r->getId());
     r->destinations[subId] = Destination(*subjects[subId], smeId.c_str());
   }
   else
@@ -215,6 +221,7 @@ throw (SubjectNotFoundException)
                                     getAttribStr(elem, "slicing"),
                                     getAttribStr(elem, "slicedRespPolicy") )
                          );
+  smsc_log_debug(logger,"loading route '%s'",r->getId());
 
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
@@ -275,7 +282,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
       catch (SubjectNotFoundException &ex)
       {
-        smsc_log_error(logger, "incorrect subject id: subject not defined");
+        smsc_log_error(logger, "incorrect subject id: %s", ex.what());
       }
     }
   }

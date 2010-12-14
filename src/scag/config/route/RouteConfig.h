@@ -10,7 +10,17 @@ namespace config {
 
 using namespace xercesc;
 
-class SubjectNotFoundException {};
+class SubjectNotFoundException : public std::exception {
+public:
+    SubjectNotFoundException( const char* subId,
+                              const char* routeId ) {
+        what_ = std::string(subId) + " in route " + routeId;
+    }
+    virtual ~SubjectNotFoundException() throw () {}
+    virtual const char* what() const throw () { return what_.c_str(); }
+private:
+    std::string what_;
+};
 
 class RouteConfig{
 public:
@@ -43,7 +53,7 @@ public:
   RouteIterator getRouteIterator() const;
 
 protected:
-  smsc::logger::Logger *logger;
+  static smsc::logger::Logger *logger;
   scag::config::RoutePVector routes;
   scag::config::SubjectPHash subjects;
   std::auto_ptr<char> config_filename;
