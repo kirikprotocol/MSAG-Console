@@ -107,7 +107,7 @@ public class StatsSizeController extends DeliveryStatController  {
       logger.debug("Start remove statistics.");
 
     FileSystem fileSys = getConfig().getFileSystem();
-    DeliveryStatFilter filter = new DeliveryStatFilter();
+    DeliveryStatFilter filter = getFilter();
     boolean addAttention = false;
     Date now = new Date();
     for(String s : selectedRows) {
@@ -117,9 +117,16 @@ public class StatsSizeController extends DeliveryStatController  {
           logger.debug("Removing statistics for period: " + s);
         Date from = StatsSizeRecord.getPeriodIdFormat().parse(pair[0]);
         Date till = StatsSizeRecord.getPeriodIdFormat().parse(pair[1]);
-        if(till == null || (now.compareTo(till) < 0 && (from == null || from.compareTo(now) <= 0))) {
+        if (filter.getFromDate() != null && from.before(filter.getFromDate()))
+          from = filter.getFromDate();
+
+        if (filter.getTillDate() != null && till.after(filter.getTillDate()))
+          till = filter.getTillDate();
+
+        if(filter.getTillDate() == null || (now.compareTo(filter.getTillDate()) < 0 && (filter.getFromDate() == null || filter.getFromDate().compareTo(now) <= 0))) {
           addAttention = true;
         }
+
         getConfig().dropStatEntities(from, till);
         List<DateAndFile> dfiles = getConfig().getProcessedNotificationsFiles(filter.getFromDate(),filter.getTillDate());
         for(DateAndFile f : dfiles) {

@@ -16,7 +16,7 @@
 
     <tr:form id="smsc" rendered="#{!statsSize.initError}">
 
-      <c:set var="longOpState" value="#{statsSize.state}"/>
+      <eye:set var="longOpState" value="#{statsSize.state}"/>
 
 
         <eye:dataTableFilter bean="#{statsSize}" clearAction="clearFilter" applyAction="start">
