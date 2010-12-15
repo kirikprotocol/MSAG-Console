@@ -28,7 +28,7 @@ public:
     , blockItself = 0x01      //single occurence alternative, doesn't affect others 
     , blockPreceeding = 0x02  //alternative blocks all preceeding alternatives
     , blockFollowing = 0x04   //alternative blocks all following alternatives
-    , blockALL = 0x07         //alternative blocks all following alternatives
+    , blockALL = 0x07         //single occurence alternative that blocks all others
   };
   enum Tagging_e {
       atgUntagged = 0 //alternative is identified by tag that is outermost tag
