@@ -107,7 +107,7 @@ class DeliveriesDiffHelper extends DiffHelper {
     if("".equals(temp2)) {
       temp2 = "default";
     }
-    if((temp1 == null && temp2 != null) || (temp1 != null && temp2 == null) || temp1 != null) {
+    if((temp1 == null && temp2 != null) || (temp1 != null && temp2 == null) || (temp1 != null && !temp1.equals(temp2))) {
       j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "retryPolicy",
           temp1 == null ? "" : temp1, temp2 == null ? "" : temp2, oldDelivery.getName());
     }
