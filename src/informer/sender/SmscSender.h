@@ -59,7 +59,6 @@ class SmscSender : public smsc::core::threads::Thread, public smsc::sme::SmppPdu
     struct ResponseTimer
     {
         int                      seqNum;
-        DRMTrans*                drmPtr;
     };
 
 public:
@@ -146,7 +145,7 @@ private:
     ScoredPtrList< SmscSender >                       scoredList_; // not owned
     usectime_type                                     currentTime_;
 
-    smsc::core::buffers::IntHash< DRMTrans* >         seqnumHash_;
+    smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;
     RespWaitQueue                                     respWaitQueue_;
     RcptWaitQueue                                     rcptWaitQueue_;
 
