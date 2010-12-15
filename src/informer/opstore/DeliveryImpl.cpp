@@ -225,8 +225,8 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         struct tm tmnow;
         ymd = msgTimeToYmd(now,&tmnow);
         if (newState == DLVSTATE_PLANNED) {
-            if (planTime < now) {
-                planTime = now;
+            if (planTime <= now) {
+                planTime = now+1;
             }
         } else {
             planTime = 0;
