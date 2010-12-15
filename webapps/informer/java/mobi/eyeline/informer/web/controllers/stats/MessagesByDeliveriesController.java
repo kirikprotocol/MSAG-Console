@@ -116,7 +116,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
 
     final Map<Integer, MessagesByDeliveriesRecord> recsMap = new HashMap<Integer, MessagesByDeliveriesRecord>();
 
-    config.statistics(new DeliveryStatFilter(), new DeliveryStatVisitor() {
+    config.statistics(deliveryFilter, new DeliveryStatVisitor() {
 
       public boolean visit(DeliveryStatRecord rec, int total, int current) {
         setCurrentAndTotal(current, total);

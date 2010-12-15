@@ -11,8 +11,11 @@ public class MessagesByDeliveriesTotals implements DeliveryStatTotals{
   private long newMessages;
   private long processMessages;
   private long deliveredMessages;
+  private long deliveredSms;
   private long failedMessages;
+  private long failedSms;
   private long expiredMessages;
+  private long expiredSms;
 
   public MessagesByDeliveriesTotals() {
     reset();
@@ -22,8 +25,11 @@ public class MessagesByDeliveriesTotals implements DeliveryStatTotals{
     newMessages=0;
     processMessages=0;
     deliveredMessages=0;
+    deliveredSms=0;
     failedMessages=0;
+    failedSms=0;
     expiredMessages=0;
+    expiredSms=0;
   }
 
   public void add(AggregatedRecord ar) {
@@ -31,8 +37,11 @@ public class MessagesByDeliveriesTotals implements DeliveryStatTotals{
     newMessages+=r.getNewMessages();
     processMessages+=r.getProcMessages();
     deliveredMessages+=r.getDeliveredMessages();
+    deliveredSms+=r.getDeliveredSms();
     failedMessages+=r.getFailedMessages();
+    failedSms+=r.getFailedSms();
     expiredMessages+=r.getExpiredMessages();
+    expiredSms+=r.getExpiredSms();
   }
 
   public long getNewMessages() {
@@ -53,5 +62,17 @@ public class MessagesByDeliveriesTotals implements DeliveryStatTotals{
 
   public long getExpiredMessages() {
     return expiredMessages;
+  }
+
+  public long getDeliveredSms() {
+    return deliveredSms;
+  }
+
+  public long getFailedSms() {
+    return failedSms;
+  }
+
+  public long getExpiredSms() {
+    return expiredSms;
   }
 }
