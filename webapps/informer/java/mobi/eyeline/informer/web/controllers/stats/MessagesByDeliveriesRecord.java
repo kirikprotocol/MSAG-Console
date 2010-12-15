@@ -258,7 +258,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
 
         final int mul = sortOrder.isAsc() ? 1 : -1;
         if (sortOrder.getColumnId().equals("name")) {
-          return mul * o1.getDelivery().getName().compareTo(o2.getDelivery().getName());
+          return mul * o1.getDeliveryName().compareTo(o2.getDeliveryName());
         } else if (sortOrder.getColumnId().equals("userId")) {
           return mul * o1.getLogin().compareTo(o2.getLogin());
         } else if (sortOrder.getColumnId().equals("new")) {
