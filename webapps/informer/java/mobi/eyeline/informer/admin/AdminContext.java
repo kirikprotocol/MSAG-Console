@@ -410,6 +410,33 @@ public class AdminContext {
     return false;
   }
 
+
+  private void removeRestrictions(String login) throws AdminException {
+    RestrictionsFilter rFilter = new RestrictionsFilter();
+    rFilter.setUserId(login);
+
+    List<Restriction> rs = restrictionsManager.getRestrictions(rFilter);
+
+    boolean rebuild = false;
+    for(Restriction r : rs) {
+      if(!r.isAllUsers()) {
+        List<String> users = r.getUserIds();
+        if(users.size() == 1) {
+          restrictionsManager.deleteRestriction(r.getId());
+        }else {
+          users.remove(login);
+          r.setUserIds(users);
+          restrictionsManager.updateRestriction(r);
+        }
+        rebuild = true;
+      }
+    }
+
+    if(rebuild) {
+      restrictionDaemon.rebuildSchedule();
+    }
+  }
+
   public void removeUser(String login) throws AdminException {
     try {
       integrityLock.lock();
@@ -429,6 +456,9 @@ public class AdminContext {
       if (exist[0] != null) {
         throw new IntegrityException("fail.delete.user.by.delivery", login, exist[0]);
       }
+
+      removeRestrictions(login);
+
       usersManager.removeUser(login);
     }
     finally {
@@ -832,7 +862,7 @@ public class AdminContext {
       delivery.setRetryPolicy(u.getPolicyId());
       delivery.setRetryOnFail(true);
     }
-    
+
     delivery.setPriority(u.getPriority());
     Time t;
     if((t = u.getDeliveryStartTime()) != null) {
@@ -875,13 +905,23 @@ public class AdminContext {
   }
 
   public void updateRestriction(Restriction r) throws AdminException {
-    restrictionsManager.updateRestriction(r);
-    restrictionDaemon.rebuildSchedule();
+    try{
+      integrityLock.lock();
+      restrictionsManager.updateRestriction(r);
+      restrictionDaemon.rebuildSchedule();
+    }finally {
+      integrityLock.unlock();
+    }
   }
 
   public void deleteRestriction(int id) throws AdminException {
-    restrictionsManager.deleteRestriction(id);
-    restrictionDaemon.rebuildSchedule();
+    try{
+      integrityLock.lock();
+      restrictionsManager.deleteRestriction(id);
+      restrictionDaemon.rebuildSchedule();
+    }finally {
+      integrityLock.unlock();
+    }
   }
 
   public boolean isRestrictionDaemonStarted() {

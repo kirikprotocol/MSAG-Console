@@ -2,7 +2,7 @@ package mobi.eyeline.informer.admin.restriction;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -55,7 +55,7 @@ class RestrictionSettings {
   }
 
   public synchronized List<Restriction> getRestrictions(RestrictionsFilter filter) {
-    List<Restriction> ret = new ArrayList<Restriction>();
+    List<Restriction> ret = new LinkedList<Restriction>();
     for (Restriction r : restrictions.values()) {
       if (filter != null) {
         if (filter.getStartDate() != null) {
