@@ -9,6 +9,7 @@
 
 #include "eyeline/asn1/BER/rtdec/ElementDecoderOfSETOF.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeStruct.hpp"
+#include "eyeline/asn1/BER/rtdec/DecoderProducer.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -25,47 +26,17 @@ template <
   , class _DecoderOfTArg /* : public TypeValueDecoder_T<_TArg>*/
 >
 class DecoderOfSeqOfAC_T : public DecoderOfStructAC {
-private:
-  union {
-    void * _aligner;
-    uint8_t _buf[sizeof(_DecoderOfTArg)];
-  } _memDec;
-
-  void allcValDecoder(void)
-  {
-    if (_pDec)
-      _pDec->~_DecoderOfTArg();
-    _pDec = new (_memDec._buf) _DecoderOfTArg();
-    _pDec->setTSRule(getTSRule());
-  }
-  void allcValDecoder(const ASTag & fld_tag, ASTagging::Environment_e tag_env)
-  {
-    if (_pDec)
-      _pDec->~_DecoderOfTArg();
-    _pDec = new (_memDec._buf) _DecoderOfTArg(fld_tag, tag_env);
-    _pDec->setTSRule(getTSRule());
-  }
-  
-  void allcValDecoder(const _DecoderOfTArg & use_obj)
-  {
-    if (_pDec)
-      _pDec->~_DecoderOfTArg();
-    _pDec = new (_memDec._buf) _DecoderOfTArg(use_obj);
-    _pDec->setTSRule(getTSRule());
-  }
-
 protected:
   SETOFElementDecoder _setofDec;
-  _DecoderOfTArg *    _pDec;
   uint16_t            _maxNum;
   uint16_t            _curNum;
+  DecoderProducer_T<_DecoderOfTArg> _pDec;
 
   //
   void initElementDecoder(const ASTag & fld_tag, ASTagging::Environment_e tag_env,
-                          uint16_t max_sz)
-    /*throw(std::exception)*/
+                          uint16_t max_sz)  /*throw(std::exception)*/
   {
-    allcValDecoder(fld_tag, tag_env);
+    _pDec.init(fld_tag, tag_env, getTSRule());
     _setofDec.erase();
     _setofDec.setAlternative(0, fld_tag, tag_env, EDAlternative::altOPTIONAL);
     _maxNum = max_sz; _curNum = 0;
@@ -73,7 +44,7 @@ protected:
   //
   void initElementDecoder(uint16_t max_sz) /*throw(std::exception)*/
   {
-    allcValDecoder();
+    _pDec.init(getTSRule());
     _setofDec.erase();
     if (_pDec->isTagged()) {
       _setofDec.setAlternative(0, *(_pDec->getTag()), EDAlternative::altOPTIONAL);
@@ -104,7 +75,7 @@ protected:
       return NULL;
     //allocate next element and initialize decoder
     setNextValue();
-    return _pDec;
+    return _pDec.get();
   }
   //Performs actions upon successfull optional element decoding
   virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ { ++_curNum; }
@@ -113,28 +84,29 @@ protected:
   DecoderOfSeqOfAC_T(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfStructAC(_setofDec, eff_tags, use_rule)
-    , _pDec(0), _maxNum(0), _curNum(0)
+    , _maxNum(0), _curNum(0)
   { }
 
 public:
   // constructor for untagged SEQUENCE OF
   explicit DecoderOfSeqOfAC_T(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfStructAC(_setofDec, asn1::_tagsSEQOF, use_rule)
-    , _pDec(0), _maxNum(0), _curNum(0)
+    , _maxNum(0), _curNum(0)
   { }
   // constructor for tagged SEQUENCE OF
   DecoderOfSeqOfAC_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : DecoderOfStructAC(_setofDec, ASTagging(use_tag, tag_env, asn1::_tagsSEQOF), use_rule)
-    , _pDec(0), _maxNum(0), _curNum(0)
+    , _maxNum(0), _curNum(0)
   { }
   DecoderOfSeqOfAC_T(const DecoderOfSeqOfAC_T & use_obj)
     : DecoderOfStructAC(use_obj)
     , _setofDec(use_obj._setofDec)
-    , _pDec(0), _maxNum(use_obj._maxNum), _curNum(use_obj._curNum)
+    , _maxNum(use_obj._maxNum), _curNum(use_obj._curNum)
   {
     setElementDecoder(_setofDec);
-    allcValDecoder(*use_obj._pDec);
+    if (use_obj._pDec.get())
+      _pDec.init(*use_obj._pDec.get());
   }
   //
   virtual ~DecoderOfSeqOfAC_T()
