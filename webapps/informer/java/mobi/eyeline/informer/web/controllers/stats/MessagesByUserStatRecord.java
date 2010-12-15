@@ -152,6 +152,10 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
     return expiredMessagesSMS;
   }
 
+  public User getUser() {
+    return user;
+  }
+
   public String getUserDetails() {
     return user == null ? "" : user.getFirstName() + " " + user.getLastName();
   }
