@@ -91,9 +91,9 @@ public class RegionsUploadController extends UploadController {
   public List<SelectItem> getCharsets() {
     Locale l = getLocale();
     List<SelectItem> result = new ArrayList<SelectItem>(3);
-    Charset c = Charset.forName("utf-8");
+    Charset c = Charset.forName("windows-1251");
     result.add(new SelectItem(c.name(), c.displayName(l)));
-    c = Charset.forName("windows-1251");
+    c = Charset.forName("utf-8");
     result.add(new SelectItem(c.name(), c.displayName(l)));
     c = Charset.forName("koi8-r");
     result.add(new SelectItem(c.name(), c.displayName(l)));
