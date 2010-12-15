@@ -39,7 +39,6 @@ private:
   const TLParser *  _outerTL; //either outermost tag or implicit tag
 
 public:
-  //Empty constructor: for later initialization
   explicit TaggingDecoder(const ASTagging * use_tags = NULL,
                           const TLParser * outer_tl = NULL)
     : _tlws(use_tags ? use_tags->size() : 0)
@@ -62,11 +61,10 @@ public:
   DECResult decodeEOC(const uint8_t * use_enc, TSLength max_len) const /*throw()*/;
 
   //Returns 'V'-part encoding properties.
-  //NOTE: decodeBOC() or setOutermostTag() MUST be called prior to this call.
+  //NOTE: may called only after decodeBOC() call.
   const TLVProperty * getVProperties(void) const /*throw()*/
   {
-    return (_outerTL && (_tlws.size() < 2)) ? 
-            _outerTL : (_tlws.empty() ? NULL : &_tlws.atLast());
+    return _tlws.empty() ? NULL : &_tlws.atLast();
   } 
 };
 

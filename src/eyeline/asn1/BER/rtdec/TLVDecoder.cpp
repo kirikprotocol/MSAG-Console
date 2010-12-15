@@ -36,7 +36,6 @@ DECResult searchEOC(const uint8_t * use_enc, TSLength max_len)
 //  |  T,L, COC, EOC
 // --> T,L, COC, EOC
 // EOC 
-//     
 DECResult searchEOCconstructed(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule/* = true */)
 {
   DECResult rval(DECResult::decOk);
@@ -50,35 +49,47 @@ DECResult searchEOCconstructed(const uint8_t * use_enc, TSLength max_len, bool r
   return rval;
 }
 
-//Returns number of bytes TLV occupies.
+
+//Returns number of bytes rest of TLV occupies, basing on previously
+//decoded outer TL-pair.
+//
+// T,L, COC, EOC
+//     ^ -->   ^
+DECResult skipTLV(const TLParser & outer_tl, const uint8_t * use_enc,
+                  TSLength max_len, bool relaxed_rule/* = true */)
+{
+  DECResult rval(DECResult::decOk);
+
+  if (outer_tl.isDefinite()) {
+    if (outer_tl._valLen < max_len)
+      rval.status = DECResult::decMoreInput;
+    else
+      rval.nbytes += outer_tl._valLen;
+    return rval;
+  }
+  //indefinite LDForm_e, search for EOCs
+  if (outer_tl._isConstructed)
+    rval += searchEOCconstructed(use_enc, max_len, relaxed_rule);
+  else
+    rval += searchEOC(use_enc, max_len);
+
+  if (rval.isOk(relaxed_rule))
+    rval.nbytes += 2;   //count EOCs
+  return rval;
+}
+
+//Returns number of bytes whole TLV occupies.
 //
 // T,L, COC, EOC
 // ^    -->    ^
 DECResult skipTLV(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule/* = true */)
 {
   TLParser  tlProp;
-  DECResult rval(DECResult::decOk);
-
-  tlProp.decodeBOC(use_enc, max_len);
+  DECResult rval = tlProp.decodeBOC(use_enc, max_len);
   if (!rval.isOk(relaxed_rule))
     return rval;
 
-  if (tlProp.isDefinite()) {
-    if ((rval.nbytes + tlProp._valLen) < max_len)
-      rval.status = DECResult::decMoreInput;
-    else
-      rval.nbytes += tlProp._valLen;
-    return rval;
-  }
-  //indefinite LDForm_e, search for EOCs
-  if (tlProp._isConstructed)
-    rval += searchEOCconstructed(use_enc + rval.nbytes, max_len - rval.nbytes, relaxed_rule);
-  else
-    rval += searchEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
-
-  if (rval.isOk(relaxed_rule))
-    rval.nbytes += 2;   //count EOCs
-  return rval;
+  return rval += skipTLV(tlProp, use_enc + rval.nbytes, max_len - rval.nbytes, relaxed_rule);
 }
 
 /* ************************************************************************* *

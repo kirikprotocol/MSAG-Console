@@ -14,24 +14,20 @@ namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-class DecoderOfUExtension : public TypeValueDecoderAC {
-protected:
-  asn1::UnknownExtensions * _valDec;
-
-  DECResult decodeVAL(const TLVProperty * val_prop,
-                      const uint8_t * use_enc, TSLength max_len,
-                      TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
-                      bool relaxed_rule = false)
-    /*throw(BERDecoderException)*/;
-
+//UnknownExtension is encoded as untagged Opentype
+class DecoderOfUExtension : public DecoderOfASType {
 public:
   explicit DecoderOfUExtension(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(0, use_rule), _valDec(0)
+    : DecoderOfASType(use_rule)
   { }
   ~DecoderOfUExtension()
   { }
 
-  void setValue(asn1::UnknownExtensions & use_val) { _valDec = &use_val; }
+  void setValue(asn1::UnknownExtensions & use_val)
+  {
+    use_val._tsList.push_back(TransferSyntax());
+    DecoderOfASType::setValue(use_val._tsList.back());
+  }
 };
 
 } //ber

@@ -16,25 +16,27 @@ DECResult DecoderOfASType::decodeVAL(const TLVProperty * val_prop,
                     bool relaxed_rule/* = false*/)
   /*throw(BERDecoderException)*/
 {
+  uint16_t  shift = 0;
   DECResult rval(DECResult::decOk);
 
-  if (!val_prop) {
+  _valDec->_rule = TSGroupBER::getTSRule(use_rule);
+  if (isTagged()) {
+    if (!val_prop)
+      throw smsc::util::Exception("ber::DecoderOfASType::decodeVal(): V-part properties isn't decoded");
+
     rval += skipTLV(use_enc, max_len, relaxed_rule);
-  } else {
-    if (val_prop->isDefinite()) {
-      if (val_prop->_valLen < max_len)
-        rval.status = DECResult::decMoreInput;
-      else
-        rval.nbytes = val_prop->_valLen;
-    } else {
-      rval += !val_prop->_isConstructed ? searchEOC(use_enc, max_len) :
-                            searchEOCconstructed(use_enc, max_len, relaxed_rule);
+  } else { //untagged Opentype
+    if (!val_prop) { //Opentype is a PDU
+      rval += skipTLV(use_enc, max_len, relaxed_rule);
+    } else { // _outerTL is set and is a part of Opentype encoding
+      rval += skipTLV(*_outerTL, use_enc, max_len, relaxed_rule);
+      shift = _outerTL->getBOCsize();
     }
   }
+
   if (rval.isOk(relaxed_rule)) {
-    _valDec->_rule = TSGroupBER::getTSRule(use_rule);
-    _valDec->setPtr(use_enc);
-    _valDec->_maxlen = rval.nbytes;
+    _valDec->setPtr(use_enc - shift);
+    _valDec->_maxlen = rval.nbytes + shift;
   }
   return rval;
 }

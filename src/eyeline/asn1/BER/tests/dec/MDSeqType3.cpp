@@ -35,7 +35,12 @@ MDSeqType3::prepareAlternative(uint16_t unique_idx)
     return _dB.get();
   }
 
-  _uext.init(getTSRule()).setValue(_value->_unkExt);
+  //NOTE: unknown extension is a repeatition type
+  if (!_uext.get())
+    _uext.init(getTSRule()).setValue(_value->_unkExt);
+  else
+    _uext->setValue(_value->_unkExt);
+
   return _uext.get();
 }
 

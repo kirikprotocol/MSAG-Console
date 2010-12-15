@@ -23,11 +23,32 @@ using eyeline::asn1::ASTypeDecoderAC;
 
 //Searches 'content octets' of primitive encoding for EOC octets (two zeroes)
 //Returns number of bytes preceeding EOC if it's found
+//
+// T,L, COC, EOC
+//    ^ --> ^
 extern DECResult searchEOC(const uint8_t * use_enc, TSLength max_len);
 //Searches 'content octets' of constructed encoding for outermost EOC octets (two zeroes)
 //Returns number of bytes preceeding outermost EOC if it's found
+//
+// T,L
+// --> T,L, COC, EOC
+//  |  T,L, COC, EOC
+// --> T,L, COC, EOC
+// EOC 
 extern DECResult searchEOCconstructed(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule = true);
-//Returns number of bytes TLV occupies.
+
+//Returns number of bytes rest of TLV occupies, basing on previously
+//decoded outer TL-pair.
+//
+// T,L, COC, EOC
+//     ^ -->   ^
+extern DECResult skipTLV(const TLParser & outer_tl, const uint8_t * use_enc,
+                         TSLength max_len, bool relaxed_rule = true);
+
+//Returns number of bytes whole TLV occupies.
+//
+// T,L, COC, EOC
+// ^    -->    ^
 extern DECResult skipTLV(const uint8_t * use_enc, TSLength max_len, bool relaxed_rule = true);
 //Returns true if EOC present at given encoding position
 extern bool checkEOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/;
@@ -88,7 +109,7 @@ protected:
   const TLParser *    _outerTL;
 
   //NOTE.1: in case of CHOICE/Opentype the copying constructor of successsor
-  //        MUST properly set _optTags  by setOptions().
+  //        MUST properly set _optTags  by TypeTagging::setOptions().
   //NOTE.2: the copying constructor of successsor MUST properly set _valDec
   //        by calling init()
   TypeDecoderAC(const TypeDecoderAC & use_obj)
@@ -97,7 +118,6 @@ protected:
     , _outerTL(use_obj._outerTL)
   { }
 
-public:
   //'Generic type decoder' constructor
   // NOTE: eff_tags is a complete effective tagging of type!
   explicit TypeDecoderAC(const ASTagging & eff_tags,
@@ -132,11 +152,13 @@ public:
     : ASTypeDecoderAC(use_rule), TypeTagging(use_tags, base_tags)
     , _relaxedRule(false), _valDec(0), _outerTL(0)
   { }
+
+  void init(ValueDecoderIface & use_vdec) { _valDec = &use_vdec; }
+
+public:
   //
   virtual ~TypeDecoderAC()
   { }
-
-  void init(ValueDecoderIface & use_vdec) { _valDec = &use_vdec; }
   //
   void setRelaxedRule(bool relaxed_rule) { _relaxedRule = relaxed_rule; }
   //
@@ -164,9 +186,6 @@ public:
  * value of some ASN.1 type according to appropriate clause of X.690.
  * ************************************************************************* */
 class TypeValueDecoderAC : public TypeDecoderAC, protected ValueDecoderIface {
-private:
-  using TypeDecoderAC::init;
-
 protected:
   // -- ************************************************* --
   // -- ValueDecoderIface abstract methods are to implement

@@ -18,12 +18,13 @@ DECResult TaggingDecoder::decodeBOC(const uint8_t * use_enc, TSLength max_len,
   /* throw(BERDecoderException) */
 {
   DECResult rval(DECResult::decOk);
+
+  if (_outerTL)
+    _tlws[0] = *_outerTL;
   if (!_effTags)
     return rval;
 
   //traverse 'TL'-pairs from first to last
-  if (_outerTL)
-    _tlws[0] = *_outerTL;
   for (ASTagging::size_type i = (_outerTL ? 1 : 0); i < _effTags->size(); ++i) {
     rval += _tlws[i].decodeTOC(use_enc + rval.nbytes, max_len - rval.nbytes);
     if (!rval.isOk())
@@ -49,12 +50,12 @@ DECResult TaggingDecoder::decodeBOC(const uint8_t * use_enc, TSLength max_len,
 DECResult TaggingDecoder::decodeEOC(const uint8_t * use_enc, TSLength max_len) const
 {
   DECResult rval(DECResult::decOk);
-  if (_effTags->empty())
+  if (_tlws.empty())
     return rval;
 
   //NOTE: traverse 'TL'-pairs from last to first even if max_len == 0
   //in order to detect missed EOCs for indefinite LDs
-  ASTagging::size_type i = _effTags->size();
+  ASTagging::size_type i = _tlws.size();
   do {
     rval += _tlws[--i].decodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
   } while (i && rval.isOk());
