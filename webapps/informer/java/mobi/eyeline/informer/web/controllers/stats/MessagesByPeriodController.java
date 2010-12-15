@@ -22,10 +22,10 @@ public class MessagesByPeriodController extends DeliveryStatController implement
 
   public MessagesByPeriodController() {
     super(new MessagesByPeriodTotals());
-    setDeliveryParam(); 
     Calendar c = getLastWeekStart();
     getFilter().setFromDate(c.getTime());
-    start();
+    setDeliveryParam();
+//    start();
   }
 
   public String getDeliveryName() {
@@ -96,7 +96,7 @@ public class MessagesByPeriodController extends DeliveryStatController implement
           firstTime = true;
         }
         else {
-          for(Integer id : newIds) {
+          for(int id : newIds) {
             if(!deliveriesIds.contains(id)) {
               firstTime = true;
             }
@@ -109,13 +109,15 @@ public class MessagesByPeriodController extends DeliveryStatController implement
           List<Integer> taskIds = new ArrayList<Integer>();
           taskIds.addAll(newIds);
           getFilter().setTaskIds(taskIds);
+          Date from = new Date();
           for(Integer id : deliveriesIds) {
             Delivery d = getConfig().getDelivery(getUser().getLogin(), getUser().getPassword(), id);
             Date startDate = d.getStartDate();
-            if(getFilter().getFromDate()==null || getFilter().getFromDate().after(startDate)) {
-              getFilter().setFromDate(startDate);
+            if(from.after(startDate)) {
+              from = startDate;
             }
           }
+          getFilter().setFromDate(from);
 
           reset();
           start();
