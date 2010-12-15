@@ -377,10 +377,17 @@ public class DeliveryManager {
     if (logger.isDebugEnabled()) {
       logger.debug("Activate delivery: " + deliveryId);
     }
-    DeliveryState state = new DeliveryState();
-    state.setStatus(DeliveryStatus.Planned);
-    state.setDate(new Date());
-    changeDeliveryState(login, password, deliveryId, state);
+    Delivery d = getDelivery(login, password, deliveryId);
+    if (d != null) {
+      Date planDate = d.getStartDate();
+      if (planDate.getTime() < System.currentTimeMillis())
+        planDate = new Date();
+      DeliveryState state = new DeliveryState();
+      state.setStatus(DeliveryStatus.Planned);
+      state.setDate(planDate);
+      changeDeliveryState(login, password, deliveryId, state);
+    } else
+      throw new DeliveryException("delivery_not_found");
   }
 
   private void changeDeliveryState(String login, String password, int deliveryId, DeliveryState state) throws AdminException {
