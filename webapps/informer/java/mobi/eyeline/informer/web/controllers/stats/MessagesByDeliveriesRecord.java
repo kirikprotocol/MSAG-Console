@@ -33,6 +33,9 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   private Delivery delivery;
   private User user;
 
+  private Date minDate;
+  private Date maxDate;
+
   public MessagesByDeliveriesRecord(String login, long deliveryId) {
     this.login = login;
     this.deliveryId = deliveryId;
@@ -150,6 +153,21 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
     this.expiredSms += expiredSms;
   }
 
+  public void updateTime(Date date) {
+    if (minDate == null || minDate.after(date))
+      minDate = date;
+    if (maxDate == null || maxDate.before(date))
+      maxDate = date;
+  }
+
+  public Date getMinDate() {
+    return minDate;
+  }
+
+  public Date getMaxDate() {
+    return maxDate;
+  }
+
   public Delivery getDelivery() {
     return delivery;
   }
@@ -215,7 +233,11 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   }
 
   public String getUserDetails() {
-    return login == null ? "" : user.getFirstName() + " " + user.getLastName();
+    return user == null ? "" : user.getFirstName() + " " + user.getLastName();
+  }
+
+  public String getDeliveryName() {
+    return delivery == null ? "" : delivery.getName();
   }
 
 

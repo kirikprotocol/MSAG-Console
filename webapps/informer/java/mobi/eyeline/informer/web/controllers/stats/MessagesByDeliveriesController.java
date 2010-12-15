@@ -124,21 +124,18 @@ public class MessagesByDeliveriesController extends LongOperationController {
         MessagesByDeliveriesRecord r = recsMap.get(rec.getTaskId());
         if (r == null) {
           User user = config.getUser(rec.getUser());
-          if (user == null)
-            return !isCancelled();
 
-          Delivery delivery;
-          try {
-            delivery = config.getDelivery(user.getLogin(), user.getPassword(), rec.getTaskId());
-            if (delivery == null)
-              return !isCancelled();
-
-          } catch (AdminException e) {
-            logger.error(e,e);
-            return !isCancelled();
+          Delivery delivery = null;
+          if (user != null) {
+            try {
+              delivery = config.getDelivery(user.getLogin(), user.getPassword(), rec.getTaskId());
+            } catch (AdminException e) {
+              addError(e);
+              return false;
+            }
           }
 
-          if (nameFilter != null && nameFilter.trim().length() > 0 && !delivery.getName().contains(nameFilter))
+          if (nameFilter != null && nameFilter.trim().length() > 0 && (delivery == null || !delivery.getName().contains(nameFilter)))
             return !isCancelled();
 
           r = new MessagesByDeliveriesRecord(rec.getUser(), rec.getTaskId());
@@ -154,6 +151,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
         r.incFailedSms(rec.getFailedSMS());
         r.incExpiredMessages(rec.getExpired());
         r.incExpiredSms(rec.getExpiredSMS());
+        r.updateTime(rec.getDate());
 
         return !isCancelled();
       }
