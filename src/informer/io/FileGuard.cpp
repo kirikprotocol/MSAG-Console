@@ -212,9 +212,9 @@ void FileGuard::copydir( const char* from,
     smsc_log_debug(log_,"copydir('%s','%s')",from,to.c_str());
     struct stat st;
     if ( -1 == ::stat(from,&st) ) {
-        throw InfosmeException(EXC_BADNAME,"copydir('%s') does not exist",from);
+        throw InfosmeException(EXC_SYSTEM,"copydir('%s') does not exist",from);
     } else if ( !S_ISDIR(st.st_mode) ) {
-        throw InfosmeException(EXC_BADNAME,"copydir('%s') is not a dir",from);
+        throw InfosmeException(EXC_SYSTEM,"copydir('%s') is not a dir",from);
     }
     makedirs(to);
     std::vector< std::string > contents;

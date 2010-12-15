@@ -26,7 +26,7 @@ typedef enum
 {
     EXC_GENERIC = 1,
 
-    EXC_DLVLIMITEXCEED,    // number of deliveries exceeded
+    EXC_DLVLIMITEXCEED,    // number of deliveries exceeded for the user
     EXC_NOTFOUND,          // item not found by id
     EXC_ALREADYEXIST,      // item already exists
 
@@ -40,9 +40,9 @@ typedef enum
     EXC_NOTIMPL,           // not implemented
     EXC_NOTAUTH,           // not authorized
     EXC_ACCESSDENIED,      // access denied
-    EXC_BADADDRESS,        // invalid address
+    EXC_BADADDRESS,        // invalid srd/dst address
     EXC_EXPIRED,           // request/resource expired
-    EXC_BADFORMAT          // parsing failed
+    EXC_BADFORMAT          // parsing failed (in alm)
 } ErrorCode;
 
 

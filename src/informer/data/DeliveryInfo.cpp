@@ -302,7 +302,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         try {
             sourceAddress = smsc::sms::Address( data.sourceAddress.c_str() );
         } catch ( std::exception& e ) {
-            throw InfosmeException(EXC_BADFORMAT,"invalid source address '%s': %s",data.sourceAddress.c_str(),e.what());
+            throw InfosmeException(EXC_BADADDRESS,"invalid source address '%s': %s",data.sourceAddress.c_str(),e.what());
         }
         sourceAddressChanged = true;
     }
