@@ -3,6 +3,8 @@ package mobi.eyeline.informer.web.controllers.stats;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
+import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -105,45 +107,62 @@ public class MessagesByDeliveriesController extends LongOperationController {
     totals.reset();
     records.clear();
 
-    DeliveryFilter deliveryFilter = new DeliveryFilter();
-    deliveryFilter.setStartDateFrom(filter.getFromDate());
-    deliveryFilter.setEndDateTo(filter.getTillDate());
+    DeliveryStatFilter deliveryFilter = new DeliveryStatFilter();
+    deliveryFilter.setFromDate(filter.getFromDate());
+    deliveryFilter.setTillDate(filter.getTillDate());
     if (filter.getUser() != null) {
-      deliveryFilter.setUserIdFilter(filter.getUser());
-    }
-    if (nameFilter != null && nameFilter.trim().length() > 0) {
-      deliveryFilter.setNameFilter(nameFilter);
+      deliveryFilter.setUser(filter.getUser());
     }
 
+    final Map<Integer, MessagesByDeliveriesRecord> recsMap = new HashMap<Integer, MessagesByDeliveriesRecord>();
 
-    setCurrentAndTotal(0, config.countDeliveries(getCurrentUser().getLogin(), getCurrentUser().getPassword(), deliveryFilter));
+    config.statistics(new DeliveryStatFilter(), new DeliveryStatVisitor() {
 
-    config.getDeliveries(getCurrentUser().getLogin(), getCurrentUser().getPassword(), deliveryFilter, 1000,
-        new Visitor<Delivery>() {
-          public boolean visit(Delivery deliveryInfo) throws AdminException {
-            final int deliveryId = deliveryInfo.getId();
-            DeliveryStatistics stat = config.getDeliveryStats(getCurrentUser().getLogin(), getCurrentUser().getPassword(), deliveryId);
-            DeliveryStatusHistory hist = config.getDeliveryStatusHistory(getCurrentUser().getLogin(), getCurrentUser().getPassword(), deliveryId);
-            Date startDate = null;
-            Date endDate = null;
-            for (DeliveryStatusHistory.Item item : hist.getHistoryItems()) {
-              if (item.getStatus() == DeliveryStatus.Active) {
-                startDate = item.getDate();
-                endDate = null;
-              } else if (item.getStatus() == DeliveryStatus.Finished) {
-                endDate = item.getDate();
-              }
-            }
+      public boolean visit(DeliveryStatRecord rec, int total, int current) {
+        setCurrentAndTotal(current, total);
 
-            User owner = config.getUser(deliveryInfo.getOwner());
-            MessagesByDeliveriesRecord r = new MessagesByDeliveriesRecord(owner, deliveryInfo, stat, startDate, endDate);
-            records.add(r);
-            getTotals().add(r);
-            setCurrent(getCurrent() + 1);
+        MessagesByDeliveriesRecord r = recsMap.get(rec.getTaskId());
+        if (r == null) {
+          User user = config.getUser(rec.getUser());
+          if (user == null)
+            return !isCancelled();
+
+          Delivery delivery;
+          try {
+            delivery = config.getDelivery(user.getLogin(), user.getPassword(), rec.getTaskId());
+            if (delivery == null)
+              return !isCancelled();
+
+          } catch (AdminException e) {
+            logger.error(e,e);
             return !isCancelled();
           }
+
+          if (nameFilter != null && nameFilter.trim().length() > 0 && !delivery.getName().contains(nameFilter))
+            return !isCancelled();
+
+          r = new MessagesByDeliveriesRecord(rec.getUser(), rec.getTaskId());
+          r.setDelivery(delivery);
+          r.setUser(user);
+          recsMap.put(rec.getTaskId(), r);
         }
-    );
+        r.incNewMessages(rec.getNewmessages());
+        r.incProcMessages(rec.getProcessing());
+        r.incDeliveredMessages(rec.getDelivered());
+        r.incDeliveredSms(rec.getDeliveredSMS());
+        r.incFailedMessages(rec.getFailed());
+        r.incFailedSms(rec.getFailedSMS());
+        r.incExpiredMessages(rec.getExpired());
+        r.incExpiredSms(rec.getExpiredSMS());
+
+        return !isCancelled();
+      }
+    });
+
+    for (MessagesByDeliveriesRecord r : recsMap.values()) {
+      records.add(r);
+      getTotals().add(r);
+    }
   }
 
   public DataTableModel getRecords() {

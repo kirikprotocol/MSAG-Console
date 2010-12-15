@@ -28,11 +28,11 @@ public class MessagesByDeliveriesTotals implements DeliveryStatTotals{
 
   public void add(AggregatedRecord ar) {
     MessagesByDeliveriesRecord r = (MessagesByDeliveriesRecord) ar;
-    newMessages+=r.getStat().getNewMessages();
-    processMessages+=r.getStat().getProcessMessages();
-    deliveredMessages+=r.getStat().getDeliveredMessages();
-    failedMessages+=r.getStat().getFailedMessages();
-    expiredMessages+=r.getStat().getExpiredMessages();            
+    newMessages+=r.getNewMessages();
+    processMessages+=r.getProcMessages();
+    deliveredMessages+=r.getDeliveredMessages();
+    failedMessages+=r.getFailedMessages();
+    expiredMessages+=r.getExpiredMessages();
   }
 
   public long getNewMessages() {
