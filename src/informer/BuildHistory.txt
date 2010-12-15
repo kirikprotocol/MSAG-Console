@@ -2,6 +2,10 @@
   Cancel task impl to remove messages of cancelled dlv from opstore.
 
 =====================================================================
+2010-12-15 15:50 bukind informer-build-20101215
+  Backported fix for outdated planTime.
+
+=====================================================================
 2010-12-14 12:10 bukind informer-build-20101214
   The build with fix for xml UTF8 strings.
 
