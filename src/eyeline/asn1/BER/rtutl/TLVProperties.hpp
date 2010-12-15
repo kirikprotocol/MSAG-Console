@@ -72,7 +72,7 @@ struct TLVStruct : public TLVProperty {
   { }
 
   //Returns number of 'begin-of-content' octets ('Tag & Length' octets)
-  uint8_t getBOCsize(void) const { return _szoTag + _szoLOC; }
+  uint16_t getBOCsize(void) const { return (uint16_t)_szoTag + _szoLOC; }
   //Returns number of 'end-of-content' octets
   uint8_t getEOCsize(void) const { return (isDefinite() || !_szoTag) ? 0 : 2; }
 
