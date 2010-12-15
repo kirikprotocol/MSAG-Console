@@ -34,7 +34,7 @@ class DeliveriesDiffHelper extends DiffHelper {
   }
 
   void logChanges(Journal j, String user, Delivery oldDelivery, Delivery newDelivery) throws AdminException {
-    List<Method> getters = getGetters(Delivery.class, "getProperty", "getProperties", "getActivePeriodEnd", "getActivePeriodStart", "getStartDate", "getEndDate", "getValidityDate");
+    List<Method> getters = getGetters(Delivery.class, "getProperty", "getProperties", "getActivePeriodEnd", "getActivePeriodStart", "getStartDate", "getEndDate", "getValidityDate", "getRetryPolicy");
     List<Object> oldValues = callGetters(getters, oldDelivery);
     List<Object> newValues = callGetters(getters, newDelivery);
     logChanges(j, oldValues, newValues, getters, user, "delivery_property_changed", newDelivery.getName());
@@ -99,6 +99,18 @@ class DeliveriesDiffHelper extends DiffHelper {
           temp1 == null ? "" : temp1, temp2 == null ? "" : temp2, oldDelivery.getName());
     }
 
+    temp1 = oldDelivery.getRetryPolicy();
+    if("".equals(temp1)) {
+      temp1 = "default";
+    }
+    temp2 = newDelivery.getRetryPolicy();
+    if("".equals(temp2)) {
+      temp2 = "default";
+    }
+    if((temp1 == null && temp2 != null) || (temp1 != null && temp2 == null) || temp1 != null) {
+      j.addRecord(JournalRecord.Type.CHANGE, subject, user, "delivery_property_changed", "retryPolicy",
+          temp1 == null ? "" : temp1, temp2 == null ? "" : temp2, oldDelivery.getName());
+    }
 
   }
 
