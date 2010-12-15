@@ -640,11 +640,11 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
     DlvState state = DLVSTATE_PAUSED;
     msgtime_type planTime = 0;
     if (info->getStartDate()) {
-        msgtime_type now = currentTimeSeconds();
-        if (info->getStartDate() > now + 5) {
-            state = DLVSTATE_PLANNED;
-            planTime = info->getStartDate();
-        }
+        // msgtime_type now = currentTimeSeconds();
+        // if (info->getStartDate() > now + 5) {
+        state = DLVSTATE_PLANNED;
+        planTime = info->getStartDate();
+        // }
     }
     addDelivery(info,state,planTime,true);
     userInfo.incDlvStats(DLVSTATE_CREATED);

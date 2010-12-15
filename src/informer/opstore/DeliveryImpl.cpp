@@ -232,11 +232,12 @@ void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
         ymd = msgTimeToYmd(now,&tmnow);
         if (newState == DLVSTATE_PLANNED) {
             if (planTime < now) {
-                throw InfosmeException(EXC_LOGICERROR,
-                                       "D=%u cannot plan delivery into past %llu",
-                                       dlvId,msgTimeToYmd(planTime));
+                // throw InfosmeException(EXC_LOGICERROR,
+                // "D=%u cannot plan delivery into past %llu",
+                // dlvId,msgTimeToYmd(planTime));
+                planTime = now;
             }
-            planTime -= now;
+            // planTime -= now;
         } else {
             planTime = 0;
         }
