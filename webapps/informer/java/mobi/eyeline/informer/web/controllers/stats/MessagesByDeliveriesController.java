@@ -130,8 +130,8 @@ public class MessagesByDeliveriesController extends LongOperationController {
             try {
               delivery = config.getDelivery(user.getLogin(), user.getPassword(), rec.getTaskId());
             } catch (AdminException e) {
-              addError(e);
-              return false;
+              logger.error(e,e);
+              return !isCancelled();
             }
           }
 
