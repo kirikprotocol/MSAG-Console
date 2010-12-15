@@ -16,7 +16,9 @@
 
     <eye:pageSubtitle value="#{msg['informer.deliveries.create.upload']}"/>
 
-    <h:panelGroup rendered="#{createDelivery.activePage.state == 0}">
+    <eye:set var="curState" value="#{createDelivery.activePage.state}"/>
+
+    <h:panelGroup rendered="#{curState == 0}">
 
       <h:panelGrid columns="2" style="padding-left:10px" columnClasses="column50Width,columnTopLeftAlign">
         <h:outputText style="white-space:nowrap;" value="#{msg['informer.upload.file.content']}"/>
@@ -60,7 +62,7 @@
     </h:panelGroup>
 
 
-    <eye:updatableContent updatePeriod="1" rendered="#{createDelivery.activePage.state == 1}" enabled="#{!createDelivery.activePage.finished}">
+    <eye:updatableContent updatePeriod="1" rendered="#{curState == 1}" enabled="#{!createDelivery.activePage.finished}">
 
       <eye:message level="warn" rendered="#{createDelivery.activePage.error != null}">
         <h:outputText value="#{createDelivery.activePage.error}"/>
@@ -73,8 +75,10 @@
 
       <eye:delimiter/>
 
+      <eye:set var="regs" value="#{createDelivery.activePage.regions}"/>
       <h:panelGrid columns="2" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign">
-        <c:forEach items="#{createDelivery.activePage.regions}" var="reg">
+
+        <c:forEach items="#{regs}" var="reg">
           <h:outputText style="white-space: nowrap; font-weight: bold;" value="#{reg.name}"/>
           <h:outputText style="white-space: nowrap;" value="#{reg.abonentsNumber}"/>
         </c:forEach>
