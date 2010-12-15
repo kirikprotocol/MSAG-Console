@@ -9,11 +9,11 @@ import java.util.Map;
 /**
  * @author Aleksandr Khalitov
  */
-public class OpenedTrapDataSource implements TrapDataSource {
+class OpenedTrapDataSource implements TrapDataSource {
 
   private TrapDataSource dataSource;
 
-  public OpenedTrapDataSource(TrapDataSource dataSource) {
+  OpenedTrapDataSource(TrapDataSource dataSource) {
     this.dataSource = dataSource;
   }
 

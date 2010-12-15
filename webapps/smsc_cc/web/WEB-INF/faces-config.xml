@@ -462,6 +462,7 @@
     <navigation-case>
         <from-outcome>SNMP_TRAPS</from-outcome>
         <to-view-id>/smsc/snmp/traps.faces</to-view-id>
+        <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>SERVICE_EDIT</from-outcome>

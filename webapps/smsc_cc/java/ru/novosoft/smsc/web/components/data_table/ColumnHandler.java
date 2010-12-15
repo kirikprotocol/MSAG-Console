@@ -32,7 +32,7 @@ public class ColumnHandler extends ComponentHandler {
 
   @Override
   protected UIComponent createComponent(FaceletContext ctx) {
-    Column c = new Column();
+    Column  c = new Column();
     c.setName(name.getValue(ctx));
     c.setTitle(title.getValue(ctx));
     if (width != null)
@@ -47,6 +47,25 @@ public class ColumnHandler extends ComponentHandler {
     return c;
   }
 
-  
-  
+  protected void applyNextHandler(FaceletContext ctx, UIComponent component) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
+
+    Column c = (Column)component;
+
+    c.setName(name.getValue(ctx));
+    c.setTitle(title.getValue(ctx));
+    if (width != null)
+      c.setWidth(width.getValue(ctx));
+    if (sortable != null)
+      c.setSortable(sortable.getBoolean(ctx));
+    if (align != null)
+      c.setAlign(align.getValue(ctx));
+    if (defaultSortOrder != null)
+      c.setDefaultSortOrder(defaultSortOrder.getValue());
+
+
+    nextHandler.apply(ctx, c);
+  }
+
+
+
 }

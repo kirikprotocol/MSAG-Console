@@ -21,9 +21,9 @@ public class SnmpTrapsController extends SmscController{
 
   private static final Logger logger = Logger.getLogger(SnmpTrapsController.class);
 
-  private Date dateToView;
+  private Date dateToView = new Date();
 
-  private SnmpFilter.Type type;
+  private SnmpFilter.Type type = SnmpFilter.Type.ALL;
 
   private boolean init;
 
@@ -65,6 +65,10 @@ public class SnmpTrapsController extends SmscController{
       types.add(new SelectItem(toS, getLocalizedString("smsc.snmp.traps."+toS.toLowerCase())));
     }
     return types;
+  }
+
+  public boolean isSortAvailable() {
+    return type != SnmpFilter.Type.CLOSED;
   }
 
   public DataTableModel getTraps() {

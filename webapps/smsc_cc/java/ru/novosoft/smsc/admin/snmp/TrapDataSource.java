@@ -12,7 +12,7 @@ import java.util.Date;
 interface TrapDataSource {
 
   /**
-   * Возвращает записи за данный и предыдущий дни
+   * Возвращает записи за данный период
    * @param from начиная с даты
    * @param till по
    * @param visitor "посетитель" записей

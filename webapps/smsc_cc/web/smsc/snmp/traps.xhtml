@@ -17,6 +17,12 @@
       <tr:inputHidden value="#{traps.init}" id="snmp_traps_init"/>
 
       <p/>
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink value="Test"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
 
       <eye:dataTableFilter bean="#{traps}" applyAction="query">
 
@@ -27,9 +33,9 @@
           </tr:panelLabelAndMessage>
 
           <tr:panelLabelAndMessage label="#{msg['smsc.snmp.traps.type']}">
-            <h:selectOneMenu value="#{traps.type}">
+            <tr:selectOneChoice value="#{traps.type}" required="true" simple="true">
               <f:selectItems value="#{traps.availableTypes}"/>
-            </h:selectOneMenu>
+            </tr:selectOneChoice>
           </tr:panelLabelAndMessage>
 
         </tr:panelFormLayout>
@@ -40,21 +46,21 @@
 
         <eye:row>
 
-          <eye:column name="date" title="#{msg['smsc.snmp.traps.submitTime']}" width="15%" sortable="true" defaultSortOrder="asc">
+          <eye:column name="date" title="#{msg['smsc.snmp.traps.submitTime']}" width="15%" sortable="#{traps.sortAvailable}">
             <h:outputText value="#{u.submitDate}">
               <f:convertDateTime dateStyle="short" type="both"/>
             </h:outputText>
           </eye:column>
 
-          <eye:column name="alarmId" title="#{msg['smsc.snmp.traps.alarmId']}" width="15%" sortable="true">
+          <eye:column name="alarmId" title="#{msg['smsc.snmp.traps.alarmId']}" width="15%" sortable="#{traps.sortAvailable}">
             <h:outputText value="#{u.alarmId}"/>
           </eye:column>
 
-          <eye:column name="alarmCategory" title="#{msg['smsc.snmp.traps.alarmCategory']}" width="15%" sortable="true">
+          <eye:column name="alarmCategory" title="#{msg['smsc.snmp.traps.alarmCategory']}" width="15%" sortable="#{traps.sortAvailable}">
             <h:outputText value="#{u.alarmCategory}"/>
           </eye:column>
 
-          <eye:column name="severity" title="#{msg['smsc.snmp.traps.severity']}" width="5%" sortable="true">
+          <eye:column name="severity" title="#{msg['smsc.snmp.traps.severity']}" width="5%" sortable="#{traps.sortAvailable}">
             <h:outputText value="#{u.severity}"/>
           </eye:column>
 
