@@ -65,6 +65,24 @@ DECResult TLParser::decode_ld(LDeterminant & use_ld,
   return rval += decodeIntCOC_unsigned(use_ld._valLen, use_enc + 1, ldLen);
 }
 
+//Decodes 'Tag' octets of TLV encoding
+DECResult TLParser::decodeTOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/
+{
+  DECResult rval = decode_tag(_tag, _isConstructed, use_enc, max_len);
+  if (rval.isOk())
+    _szoTag = rval.nbytes;
+  return rval;
+}
+//Decodes 'Length' octets of TLV encoding
+DECResult TLParser::decodeLOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/
+{
+  DECResult rval = decode_ld(*this, use_enc, max_len);
+  if (rval.isOk())
+    _szoLOC = rval.nbytes;
+  return rval;
+}
+
+
 //Decodes 'begin-of-content' octets ('T'+'L') of TLV encoding
 //NOTE: result may be DECResult::decOkRelaxed!
 DECResult TLParser::decodeBOC(const uint8_t * use_enc, TSLength max_len)

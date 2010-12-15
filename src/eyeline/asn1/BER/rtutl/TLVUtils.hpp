@@ -38,23 +38,15 @@ struct TLParser : public TLVStruct {
                              const uint8_t * use_enc, TSLength max_len);
 
   //Decodes 'Tag' octets of TLV encoding
-  DECResult decodeTOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/
-  {
-    return decode_tag(_tag, _isConstructed, use_enc, max_len);
-  }
+  DECResult decodeTOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/;
   //Decodes 'Length' octets of TLV encoding
-  DECResult decodeLOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/
-  {
-    return decode_ld(*this, use_enc, max_len);
-  }
-
+  DECResult decodeLOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/;
   //Decodes 'begin-of-content' octets ('T'+'L') of TLV encoding
   //NOTE: result may be DECResult::decOkRelaxed!
   DECResult decodeBOC(const uint8_t * use_enc, TSLength max_len) /*throw()*/;
   //Decodes 'end-of-content' octets of TLV encoding
   DECResult decodeEOC(const uint8_t * use_enc, TSLength max_len) const /*throw()*/;
 };
-
 
 } //ber
 } //asn1
