@@ -26,8 +26,8 @@
             <h:outputText style="white-space:nowrap" value="#{msg['stat.page.deliveryName']}"/>
             <t:inputText id="Name" value="#{messagesByDeliveries.nameFilter}"/>
 
-            <h:outputText value="&#160;"/>
-            <h:outputText value="&#160;"/>
+            <h:outputText style="white-space:nowrap" value="#{msg['stat.page.hideDeleted']}"/>
+            <h:selectBooleanCheckbox value="#{messagesByDeliveries.hideDeleted}"/>
 
             <h:outputText style="white-space:nowrap" value="#{msg['stat.page.till_date']}"/>
             <eye:inputDate value="#{messagesByDeliveries.filter.tillDate}"  type="both"/>
@@ -100,11 +100,11 @@
                 </f:facet>
               </eye:column>
 
-              <eye:column name="startDate" title="#{msg['stat.page.startDate']}" width="10%" align="center">
+              <eye:column name="startDate" title="#{msg['stat.page.activityStart']}" width="10%" align="center">
                 <h:outputText value="#{row.minDate}"/>
               </eye:column>
 
-              <eye:column name="endDate" title="#{msg['stat.page.endDate']}" width="10%" align="center">
+              <eye:column name="endDate" title="#{msg['stat.page.activityEnd']}" width="10%" align="center">
                 <h:outputText value="#{row.maxDate}"/>
               </eye:column>
 
@@ -172,11 +172,11 @@
                 </f:facet>
               </eye:column>
 
-              <eye:column name="startDate" title="#{msg['stat.page.startDate']}" width="10%" align="center">
+              <eye:column name="startDate" title="#{msg['stat.page.activityStart']}" width="10%" align="center">
                 <h:outputText value="#{row.minDate}"/>
               </eye:column>
 
-              <eye:column name="endDate" title="#{msg['stat.page.endDate']}" width="10%" align="center">
+              <eye:column name="endDate" title="#{msg['stat.page.activityEnd']}" width="10%" align="center">
                 <h:outputText value="#{row.maxDate}"/>
               </eye:column>
 

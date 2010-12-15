@@ -30,6 +30,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
   private List<MessagesByDeliveriesRecord> records;
   private DeliveryStatFilter filter;
   boolean fullMode = false;
+  private boolean hideDeleted;
 
   private String nameFilter;
 
@@ -38,7 +39,19 @@ public class MessagesByDeliveriesController extends LongOperationController {
     totals = new MessagesByDeliveriesTotals();
     records = Collections.synchronizedList(new ArrayList<MessagesByDeliveriesRecord>());
     filter = new DeliveryStatFilter();
-    initUser();    
+    initUser();
+    filter.setFromDate(getLastWeekStart().getTime());
+    start();
+  }
+
+  protected static Calendar getLastWeekStart() {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.HOUR_OF_DAY,0);
+    c.set(Calendar.MINUTE,0);
+    c.set(Calendar.SECOND,0);
+    c.set(Calendar.MILLISECOND,0);
+    c.add(Calendar.DATE,-7);
+    return c;
   }
 
   private void initUser() {
@@ -63,6 +76,8 @@ public class MessagesByDeliveriesController extends LongOperationController {
     filter.setFromDate(null);
     filter.setTillDate(null);
     nameFilter = null;
+    hideDeleted = false;
+    fullMode = false;
   }
 
 
@@ -86,6 +101,13 @@ public class MessagesByDeliveriesController extends LongOperationController {
     this.initError = initError;
   }
 
+  public boolean isHideDeleted() {
+    return hideDeleted;
+  }
+
+  public void setHideDeleted(boolean hideDeleted) {
+    this.hideDeleted = hideDeleted;
+  }
 
   public boolean isAdmin() {
     return currentUser.hasRole(User.INFORMER_ADMIN_ROLE);
@@ -134,9 +156,6 @@ public class MessagesByDeliveriesController extends LongOperationController {
             }
           }
 
-          if (nameFilter != null && nameFilter.trim().length() > 0 && (delivery == null || !delivery.getName().contains(nameFilter)))
-            return !isCancelled();
-
           r = new MessagesByDeliveriesRecord(rec.getUser(), rec.getTaskId());
           r.setDelivery(delivery);
           r.setUser(user);
@@ -157,6 +176,10 @@ public class MessagesByDeliveriesController extends LongOperationController {
     });
 
     for (MessagesByDeliveriesRecord r : recsMap.values()) {
+      if (hideDeleted && r.getDelivery() == null)
+        continue;
+      if (nameFilter != null && nameFilter.trim().length() > 0 && (r.getDelivery() == null || !r.getDelivery().getName().contains(nameFilter)))
+        continue;
       records.add(r);
       getTotals().add(r);
     }
