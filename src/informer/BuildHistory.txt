@@ -1,3 +1,6 @@
+2010-12-15 17:05 bukind
+  Fix for seqnumHash_ resize + respTimer
+
 2010-12-14 17:00 bukind
   Archive is working
 
@@ -7,6 +10,7 @@
 =====================================================================
 2010-12-15 15:50 bukind informer-build-20101215
   Backported fix for outdated planTime.
+  Backported fix for seqnumHash_ resize + respTimer
 
 =====================================================================
 2010-12-14 12:10 bukind informer-build-20101214
