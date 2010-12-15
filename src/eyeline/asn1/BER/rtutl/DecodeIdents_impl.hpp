@@ -16,7 +16,7 @@ namespace ber {
 using eyeline::asn1::TSLength;
 using eyeline::asn1::DECResult;
 /* ************************************************************************* *
- * Decodes by BER the unsigned value that is on of:
+ * Decodes by BER the unsigned value that is one of:
  * - Tag value grater than 30 (X.690 cl. 8.1.2.4)
  * - OID subId value (X.690 cl. 8.19.2)
 * Returns number of bytes processed from encoding or zero in case of failure.
@@ -40,15 +40,16 @@ DECResult decode_identifier(_TArg & use_val, const uint8_t * use_enc, TSLength e
   }
 
   uint8_t l7b = *use_enc;
-  uint8_t i = 1;
-  while ((i < enc_len) && ((i < ((sizeof(_TArg) << 3) + 6)/7))
-         && ((l7b = use_enc[i++]) & 0x80) ) {
+  uint16_t i = 1;
+  //maximum number of bytes, that encoded _TArg may occupy
+  uint16_t max_szo = ((sizeof(_TArg) << 3) + 6)/7;
+  while ((i < enc_len) && (i < max_szo) && ((l7b = use_enc[i++]) & 0x80)) {
     use_val <<= 7;
     use_val |= (_TArg)(l7b & 0x7F);
   }
   rval.nbytes = i;
   if (l7b & 0x80)
-    rval.status = DECResult::decMoreInput;
+    rval.status = (i < max_szo) ? DECResult::decMoreInput : DECResult::decBadVal;
   return rval;
 }
 
