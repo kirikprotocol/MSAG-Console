@@ -154,7 +154,7 @@ public class UploadFilePage extends UploadController implements CreateDeliveryPa
   }
 
   public Collection<RegionInfo> getRegions() {
-    return regions.values();
+    return new ArrayList<RegionInfo>(regions.values());
   }
 
   public void downloadRejectedLines(FacesContext context, OutputStream out) throws IOException {
