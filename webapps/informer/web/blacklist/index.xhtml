@@ -21,12 +21,12 @@
 
 
         <tr:panelFormLayout inlineStyle="padding-left:20px">
-          <tr:panelLabelAndMessage label="#{msg['blacklist.address']}">
-            <tr:inputText value="#{blacklist.msisdn}" simple="true"/>
+          <tr:panelLabelAndMessage label="#{msg['blacklist.address']}">  <!-- todo -->
+            <h:inputText value="#{blacklist.msisdn}" converter="addressConverter" converterMessage="#{msg['invalid_param_value']} #{msg['blacklist.address']}"/>
           </tr:panelLabelAndMessage>
           <h:panelGroup>
-            <tr:outputText inlineStyle="font-weight:bold;" value="#{blacklist.msisdn} #{msg['blacklist.contains']}" rendered="#{blacklist.init and blacklist.contains}"/>
-            <tr:outputText inlineStyle="font-weight:bold" value="#{blacklist.msisdn} #{msg['blacklist.not.contains']}" rendered="#{blacklist.init and !blacklist.contains}"/>
+            <tr:outputText inlineStyle="font-weight:bold;" value="#{blacklist.msisdn.simpleAddress} #{msg['blacklist.contains']}" rendered="#{blacklist.init and blacklist.contains}"/>
+            <tr:outputText inlineStyle="font-weight:bold" value="#{blacklist.msisdn.simpleAddress} #{msg['blacklist.not.contains']}" rendered="#{blacklist.init and !blacklist.contains}"/>
           </h:panelGroup>
         </tr:panelFormLayout>
 

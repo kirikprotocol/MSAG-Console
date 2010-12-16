@@ -11,7 +11,7 @@ import javax.faces.application.FacesMessage;
  */
 public class BlacklistController extends InformerController {
 
-  private String msisdn;
+  private Address msisdn;
 
   private boolean init = false;
 
@@ -70,16 +70,16 @@ public class BlacklistController extends InformerController {
     this.contains = contains;
   }
 
-  public String getMsisdn() {
+  public Address getMsisdn() {
     return msisdn;
   }
 
-  public void setMsisdn(String msisdn){
+  public void setMsisdn(Address msisdn){
     this.msisdn = msisdn;
   }
 
   private boolean validateMsisdn() {
-    if (msisdn == null || !Address.validate(msisdn)) {
+    if (msisdn == null) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "validation.msisdn");
       return false;
     }

@@ -478,35 +478,35 @@ public class AdminContext {
     return informerManager.getConfigSettings().isPvssEnabledBL();
   }
 
-  public void addInBlacklist(String msisdn) throws AdminException {
+  public void addInBlacklist(Address msisdn) throws AdminException {
     if(!isBlackListEnabled()) {
       throw new IntegrityException("blacklist.disabled");
     }
     blacklistManager.add(msisdn);
   }
 
-  public void addInBlacklist(Collection<String> msisdn) throws AdminException {
+  public void addInBlacklist(Collection<Address> msisdns) throws AdminException {
     if(!isBlackListEnabled()) {
       throw new IntegrityException("blacklist.disabled");
     }
-    blacklistManager.add(msisdn);
+    blacklistManager.add(msisdns);
   }
 
-  public void removeFromBlacklist(String msisdn) throws AdminException {
+  public void removeFromBlacklist(Address msisdn) throws AdminException {
     if(!isBlackListEnabled()) {
       throw new IntegrityException("blacklist.disabled");
     }
     blacklistManager.remove(msisdn);
   }
 
-  public void removeFromBlacklist(Collection<String> msisdns) throws AdminException {
+  public void removeFromBlacklist(Collection<Address> msisdns) throws AdminException {
     if(!isBlackListEnabled()) {
       throw new IntegrityException("blacklist.disabled");
     }
     blacklistManager.remove(msisdns);
   }
 
-  public boolean blacklistContains(String msisdn) throws AdminException {
+  public boolean blacklistContains(Address msisdn) throws AdminException {
     if(!isBlackListEnabled()) {
       throw new IntegrityException("blacklist.disabled");
     }
@@ -841,7 +841,7 @@ public class AdminContext {
       delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, u.getEmail());
     }
     if (u.getPhone() != null && u.isSmsNotification()) {
-      delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, u.getPhone());
+      delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, u.getPhone().getSimpleAddress());
     }
     if (u.getDeliveryType() != null) {
       switch (u.getDeliveryType()) {

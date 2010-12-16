@@ -7,7 +7,6 @@ import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 
-import javax.faces.application.FacesMessage;
 import javax.faces.model.SelectItem;
 import java.util.*;
 
@@ -26,7 +25,7 @@ public class RegionsListController extends RegionsController {
 
   private String smscPrefix;
 
-  private String address;
+  private Address address;
 
   private final List<SelectItem> smscs = new LinkedList<SelectItem>();
 
@@ -83,25 +82,21 @@ public class RegionsListController extends RegionsController {
     this.smscPrefix = smsc;
   }
 
-  public String getAddress() {
+  public Address getAddress() {
     return address;
   }
 
-  public void setAddress(String address) {
+  public void setAddress(Address address) {
     this.address = address;
   }
 
   private List<Region> getRegions() {
     if (regions == null) {
       regions = new LinkedList<Region>();
-      if (address != null && (address = address.trim()).length() > 0) {
-        if (!Address.validate(address)) {
-          addLocalizedMessage(FacesMessage.SEVERITY_WARN, "validation.msisdn");
-        } else {
-          Region r = getConfig().getRegion(new Address(address));
-          if (r != null) {
-            regions.add(r);
-          }
+      if (address != null) {
+        Region r = getConfig().getRegion(address);
+        if (r != null) {
+          regions.add(r);
         }
       } else {
         for (Region r : getConfig().getRegions()) {

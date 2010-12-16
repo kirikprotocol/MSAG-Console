@@ -11,6 +11,20 @@ import static org.junit.Assert.assertEquals;
 public class AddressTest {
 
   @Test
+  public void test8() {
+    String expected = "+79139489906";
+    assertEquals(expected, new Address("+79139489906").getSimpleAddress());
+    assertEquals(expected, new Address("79139489906").getSimpleAddress());
+    assertEquals(expected, new Address("89139489906").getSimpleAddress());
+    expected = ".5.0.MTC";
+    assertEquals(expected, new Address(".5.0.MTC").getSimpleAddress());
+    assertEquals(expected, new Address(".5.0.MTC").getNormalizedAddress());
+    expected = "123";
+    assertEquals(expected, new Address(expected).getSimpleAddress());
+    assertEquals(".0.1."+expected, new Address(expected).getNormalizedAddress());
+  }
+
+  @Test
   public void createOkTest()  {
     new Address("+79139495113");
     new Address(".0.1.79139495113");
@@ -43,7 +57,7 @@ public class AddressTest {
   @Test
   public void getToneTest() {
     assertEquals(1, new Address("+79139495113").getTone());
-    assertEquals(0, new Address("79139495113").getTone());
+    assertEquals(1, new Address("79139495113").getTone());
     assertEquals(5, new Address(".5.0.HelloWorld").getTone());
   }
 

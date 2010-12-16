@@ -42,7 +42,7 @@
           </h:selectOneMenu>
 
           <h:outputText value="#{regionBundle.mask}"/>
-          <h:inputText value="#{regions.address}"/>
+          <h:inputText value="#{regions.address}" converter="addressConverter" converterMessage="#{msg['invalid_param_value']} #{regionBundle.mask}"/>
 
           <h:outputText value="&#160;"/>
           <h:outputText value="&#160;"/>

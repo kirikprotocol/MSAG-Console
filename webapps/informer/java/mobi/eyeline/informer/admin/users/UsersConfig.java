@@ -43,7 +43,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setStatus(User.Status.valueOf(section.getString("status")));
     u.setFirstName(section.getString("firstName"));
     u.setLastName(section.getString("lastName"));
-    u.setPhone(section.getString("phone"));
+    u.setPhone(new Address(section.getString("phone")));
     u.setEmail(section.getString("email"));
     u.setOrganization(section.getString("organization"));
     u.setCreateCDR(section.getBool("createCDR", false));
@@ -183,7 +183,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     userSection.setString("status",user.getStatus().toString());
     userSection.setString("firstName",user.getFirstName());
     userSection.setString("lastName",user.getLastName());
-    userSection.setString("phone",user.getPhone());
+    userSection.setString("phone",user.getPhone() == null ? null : user.getPhone().getSimpleAddress());
     userSection.setString("email",user.getEmail());
     userSection.setString("organization",user.getOrganization());
     if(user.getCdrDestination() != null) {

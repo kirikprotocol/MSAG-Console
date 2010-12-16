@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.blacklist;
 import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.util.Address;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -46,52 +47,52 @@ public class BlacklistManagerImplTest {
   @Test
   public void addGetRemove() throws AdminException {
     
-    manager.add("79139489906");
-    assertTrue(manager.contains("+79139489906"));
-    assertTrue(manager.contains("89139489906"));
-    assertTrue(manager.contains("79139489906"));
-    manager.remove("79139489906");
-    assertFalse(manager.contains("79139489906"));
-    assertFalse(manager.contains("89139489906"));
-    assertFalse(manager.contains("+79139489906"));
+    manager.add(new Address("79139489906"));
+    assertTrue(manager.contains(new Address("+79139489906")));
+    assertTrue(manager.contains(new Address("89139489906")));
+    assertTrue(manager.contains(new Address("79139489906")));
+    manager.remove(new Address("79139489906"));
+    assertFalse(manager.contains(new Address("79139489906")));
+    assertFalse(manager.contains(new Address("89139489906")));
+    assertFalse(manager.contains(new Address("+79139489906")));
 
-    manager.add("+79139489906");
-    assertTrue(manager.contains("+79139489906"));
-    assertTrue(manager.contains("89139489906"));
-    assertTrue(manager.contains("79139489906"));
-    manager.remove("+79139489906");
-    assertFalse(manager.contains("79139489906"));
-    assertFalse(manager.contains("89139489906"));
-    assertFalse(manager.contains("+79139489906"));
+    manager.add(new Address("+79139489906"));
+    assertTrue(manager.contains(new Address("+79139489906")));
+    assertTrue(manager.contains(new Address("89139489906")));
+    assertTrue(manager.contains(new Address("79139489906")));
+    manager.remove(new Address("+79139489906"));
+    assertFalse(manager.contains(new Address("79139489906")));
+    assertFalse(manager.contains(new Address("89139489906")));
+    assertFalse(manager.contains(new Address("+79139489906")));
 
-    manager.add("89139489906");
-    assertTrue(manager.contains("+79139489906"));
-    assertTrue(manager.contains("89139489906"));
-    assertTrue(manager.contains("79139489906"));
-    manager.remove("89139489906");
-    assertFalse(manager.contains("79139489906"));
-    assertFalse(manager.contains("89139489906"));
-    assertFalse(manager.contains("+79139489906"));
+    manager.add(new Address("89139489906"));
+    assertTrue(manager.contains(new Address("+79139489906")));
+    assertTrue(manager.contains(new Address("89139489906")));
+    assertTrue(manager.contains(new Address("79139489906")));
+    manager.remove(new Address("89139489906"));
+    assertFalse(manager.contains(new Address("79139489906")));
+    assertFalse(manager.contains(new Address("89139489906")));
+    assertFalse(manager.contains(new Address("+79139489906")));
 
-    manager.add("19139489906");
-    assertTrue(manager.contains("19139489906"));
-    manager.remove("19139489906");
-    assertFalse(manager.contains("19139489906"));
+    manager.add(new Address("19139489906"));
+    assertTrue(manager.contains(new Address("19139489906")));
+    manager.remove(new Address("19139489906"));
+    assertFalse(manager.contains(new Address("19139489906")));
   }
 
   @Test
   public void addAllGetRemove() throws AdminException {
-    List<String> list = new ArrayList<String>(2){{
-      add("+79529223755"); add("+79139489906");
+    List<Address> list = new ArrayList<Address>(2){{
+      add(new Address("+79529223755")); add(new Address("+79139489906"));
     }};
     manager.add(list);
-    assertTrue(manager.contains("+79139489906"));
-    assertTrue(manager.contains("+79529223755"));
+    assertTrue(manager.contains(new Address("+79139489906")));
+    assertTrue(manager.contains(new Address("+79529223755")));
 
     manager.remove(list);
 
-    assertFalse(manager.contains("+79139489906"));
-    assertFalse(manager.contains("+79529223755"));
+    assertFalse(manager.contains(new Address("+79139489906")));
+    assertFalse(manager.contains(new Address("+79529223755")));
 
   }
 

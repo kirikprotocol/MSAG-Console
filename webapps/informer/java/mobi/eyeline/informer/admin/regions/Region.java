@@ -117,7 +117,7 @@ public class Region {
     r.name = name;
     r.timeZone = timeZone == null ? null : TimeZone.getTimeZone(timeZone.getID());
     for (Address a : masks) {
-      r.masks.add(new Address(a.getTone(), a.getNpi(), a.getAddress()));
+      r.masks.add(new Address(a));
     }
     return r;
   }

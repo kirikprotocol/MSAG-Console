@@ -39,18 +39,6 @@ public class Address implements Serializable {
     this.address = addr.address;
   }
 
-  /**
-   * Создаёт адрес
-   *
-   * @param tone    tone
-   * @param npi     npi
-   * @param address адрес
-   */
-  public Address(int tone, int npi, String address) {
-    this.tone = (byte) tone;
-    this.npi = (byte) npi;
-    this.address = address;
-  }
 
   /**
    * Создаёт адрес из строки
@@ -82,13 +70,20 @@ public class Address implements Serializable {
         throw new IllegalArgumentException("Mask \"" + address + "\" is not valid, nested: " + e.getMessage());
       }
 
-    } else if (address.startsWith("+")) {
-      this.tone = 1;
-      this.npi = 1;
-      this.address = address.substring(1);
-
     } else {
-      this.tone = 0;
+      if (address.startsWith("+")) {
+        address = address.substring(1);
+        tone = 1;
+      }else {
+        tone = 0;
+      }
+      if(address.startsWith("7")) {
+        this.tone = 1;
+      }else if(address.startsWith("8")) {
+        address =  new StringBuffer(address.length()).append('7').append(address.substring(1)).toString();
+        this.tone = 1;
+      }
+
       this.npi = 1;
       this.address = address;
     }
@@ -119,23 +114,6 @@ public class Address implements Serializable {
    */
   public static String toNormalizedAddress(int tone, int npi, String address) {
     return "." + tone + "." + npi + "." + address;
-  }
-
-  /**
-   * Преобразует адрес в строку
-   *
-   * @param tone    tone
-   * @param npi     npi
-   * @param address address
-   * @return строку с адресом
-   */
-  public static String toSimpleAddress(int tone, int npi, String address) {
-    if (tone == 1 && npi == 1)
-      return "+" + address;
-    else if (tone == 0 && npi == 1)
-      return (address);
-    else
-      return toNormalizedAddress(tone, npi, address);
   }
 
   /**

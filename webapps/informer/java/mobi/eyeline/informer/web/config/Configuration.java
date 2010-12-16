@@ -82,10 +82,10 @@ public class Configuration {
     return journal;
   }
 
-  public void addInBlacklist(Collection<String> msisdns, String user) throws AdminException {
+  public void addInBlacklist(Collection<Address> msisdns, String user) throws AdminException {
     context.addInBlacklist(msisdns);
-    for (String msisdn : msisdns) {
-      journal.logAddBlacklist(msisdn, user);
+    for (Address msisdn : msisdns) {
+      journal.logAddBlacklist(msisdn.getSimpleAddress(), user);
     }
   }
 
@@ -93,24 +93,24 @@ public class Configuration {
     return context.isBlackListEnabled();
   }
 
-  public void addInBlacklist(String msisdn, String user) throws AdminException {
+  public void addInBlacklist(Address msisdn, String user) throws AdminException {
     context.addInBlacklist(msisdn);
-    journal.logAddBlacklist(msisdn, user);
+    journal.logAddBlacklist(msisdn.getSimpleAddress(), user);
   }
 
-  public void removeFromBlacklist(String msisdn, String user) throws AdminException {
+  public void removeFromBlacklist(Address msisdn, String user) throws AdminException {
     context.removeFromBlacklist(msisdn);
-    journal.logRemoveBlacklist(msisdn, user);
+    journal.logRemoveBlacklist(msisdn.getSimpleAddress(), user);
   }
 
-  public void removeFromBlacklist(Collection<String> msisdns, String user) throws AdminException {
+  public void removeFromBlacklist(Collection<Address> msisdns, String user) throws AdminException {
     context.removeFromBlacklist(msisdns);
-    for (String msisdn : msisdns) {
-      journal.logRemoveBlacklist(msisdn, user);
+    for (Address msisdn : msisdns) {
+      journal.logRemoveBlacklist(msisdn.getSimpleAddress(), user);
     }
   }
 
-  public boolean blacklistContains(String msisdn) throws AdminException {
+  public boolean blacklistContains(Address msisdn) throws AdminException {
     return context.blacklistContains(msisdn);
   }
 

@@ -17,24 +17,18 @@ public class UserTest {
 
   @Test
   public void testSetPhone() throws AdminException{
-    User o = createUser();;
-    try{
-      o.setPhone("");
-      o.validate(); assertTrue(false);
-    }catch (AdminException e) {}
+    User o = createUser();
     try{
       o.setPhone(null);
       o.validate(); assertTrue(false);
     }catch (AdminException e) {}
-    try{
-      o.setPhone("dasdasdasdasda");
-      o.validate(); assertTrue(false);
-    }catch (AdminException e) {}
+    o.setPhone(new Address("+79139489906"));
+    o.validate();
   }
 
   @Test
   public void testSetEmail() throws AdminException {
-    User o = createUser();;
+    User o = createUser();
     try{
       o.setEmail("");
       o.validate(); assertTrue(false);
@@ -51,7 +45,7 @@ public class UserTest {
 
   @Test
   public void testSetFirstName() throws AdminException {
-    User o = createUser();;
+    User o = createUser();
     try{
       o.setFirstName("");
       o.validate(); assertTrue(false);
@@ -255,7 +249,7 @@ public class UserTest {
 
     o.setRegions(null);
     assertTrue(o.getRegions()==null);
-       
+
     try {
       regions.add(null);
       o.setRegions(regions);
@@ -351,7 +345,7 @@ public class UserTest {
 
   private User createUser() {
     User o = new User();
-    o.setPhone("1");
+    o.setPhone(new Address("+79529223755"));
     o.setOrganization("2");
     o.setEmail("3@dasdsa.re");
     o.setFirstName("4");
@@ -394,7 +388,7 @@ public class UserTest {
     ucps.setProtocol(UserCPsettings.Protocol.file);
     ucps.setDirectory("/home/fio");
     ucps.setHost("some.fio.host");
-    ucps.setPort(3333);       
+    ucps.setPort(3333);
     ucpsn.setSourceAddress(new Address("+79130000222"));
     ucps.setEncoding("cp1251");
     cpSettings.add(ucpsn);
@@ -406,7 +400,7 @@ public class UserTest {
     User n = new User(o);
 
     n.validate();
-    
+
     UserTestUtils.compareUsers(o,n);
 
 

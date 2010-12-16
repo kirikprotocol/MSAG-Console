@@ -26,7 +26,8 @@
             <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width, columnTopLeftAlign">
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.abonent']}"/>
-              <h:inputText id="msisdn" value="#{messages.msgFilter.msisdn}"/>
+              <h:inputText id="msisdn" value="#{messages.msgFilter.msisdn}" converter="addressConverter"
+                           converterMessage="#{msg['invalid_param_value']} #{msg['informer.deliveries.message.abonent']}"/>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.message.state']}"/>
               <h:selectOneMenu id="state"  value="#{messages.msgFilter.state}" converter="msgStateConverter">

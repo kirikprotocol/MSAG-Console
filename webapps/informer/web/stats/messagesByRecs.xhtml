@@ -21,9 +21,9 @@
           <h:panelGrid columns="4" columnClasses="column50Width, column300Width, column50Width, columnTopLeftAlign">
 
             <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.recMsisdn']}"/>
-            <t:inputText id="Recipient" value="#{statsMessagesByRec.msisdn}" required="true">
-              <eye:validateMask/>
-            </t:inputText>
+            <h:inputText id="Recipient" value="#{statsMessagesByRec.msisdn}" required="true"
+                         converterMessage="#{msg['invalid_param_value']} #{msg['stat.page.recMsisdn']}"
+                         converter="addressConverter"/>
 
             <h:outputText value="&#160;"/>
             <h:outputText value="&#160;"/>

@@ -22,7 +22,7 @@ public class User implements Serializable {
   private Status status;
   private String firstName;
   private String lastName;
-  private String phone;
+  private Address phone;
   private String email;
   private String organization;
   private Locale locale;
@@ -74,7 +74,7 @@ public class User implements Serializable {
     this.roles = user.getRoles() == null ? null : new TreeSet<String>(user.getRoles());
     this.firstName = user.firstName;
     this.lastName = user.lastName;
-    this.phone = user.phone;
+    this.phone = user.phone == null ? null : new Address(user.phone);
     this.email = user.email;
     this.status = user.status;
     this.organization = user.organization;
@@ -174,11 +174,11 @@ public class User implements Serializable {
   }
 
 
-  public String getPhone() {
+  public Address getPhone() {
     return phone;
   }
 
-  public void setPhone(String phone) {
+  public void setPhone(Address phone) {
     this.phone = phone;
   }
 
@@ -409,7 +409,6 @@ public class User implements Serializable {
   }
 
   private static final Pattern emailPattern = Pattern.compile("^[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*@[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*$");
-  private static final Pattern phonePattern = Pattern.compile("^(\\+)?\\d{1,20}$");
 
   void validate() throws AdminException{
     vh.checkNotEmpty("login", login);
@@ -417,8 +416,7 @@ public class User implements Serializable {
     vh.checkNotNull("roles", roles);
     vh.checkNotEmpty("firstName", firstName);
     vh.checkNotEmpty("lastName", lastName);
-    vh.checkNotEmpty("phone", phone);
-    vh.checkMatches("phone", phone, phonePattern);
+    vh.checkNotNull("phone", phone);
     vh.checkNotEmpty("email", email);
     vh.checkMatches("email", email, emailPattern);
     vh.checkNotNull("status", status);

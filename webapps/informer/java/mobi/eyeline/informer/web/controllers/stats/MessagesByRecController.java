@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.controllers.stats;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
+import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.config.Configuration;
@@ -28,7 +29,7 @@ public class MessagesByRecController extends LongOperationController {
 
   private Date fromDate;
   private Date tillDate;
-  private String msisdn;
+  private Address msisdn;
   private String allowedUser;
 
   public MessagesByRecController() {
@@ -112,7 +113,7 @@ public class MessagesByRecController extends LongOperationController {
 
             MessageFilter messageFilter = new MessageFilter(deliveryId, fromDate == null ? Delivery.getStartDate() : fromDate,
                 tillDate != null ? tillDate : Delivery.getEndDate() != null ? Delivery.getEndDate() : new Date());
-            messageFilter.setMsisdnFilter(msisdn);
+            messageFilter.setMsisdnFilter(msisdn.getSimpleAddress());
 
             config.getMessagesStates(getUser().getLogin(), getUser().getPassword(), messageFilter, 1000,
                 new Visitor<Message>() {
@@ -221,11 +222,11 @@ public class MessagesByRecController extends LongOperationController {
     return tillDate;
   }
 
-  public String getMsisdn() {
+  public Address getMsisdn() {
     return msisdn;
   }
 
-  public void setMsisdn(String msisdn) {
+  public void setMsisdn(Address msisdn) {
     this.msisdn = msisdn;
   }
 

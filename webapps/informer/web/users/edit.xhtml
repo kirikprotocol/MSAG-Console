@@ -57,7 +57,7 @@
   <tr:inputText simple="true" value="#{userEdit.userToEdit.organization}"  />
 
   <h:outputText style="white-space:nowrap;" value="#{userBundle.phone}"/>
-  <tr:inputText simple="true" value="#{userEdit.userToEdit.phone}" />
+  <h:inputText value="#{userEdit.userToEdit.phone}" converter="addressConverter" converterMessage="#{msg['invalid_param_value']} #{userBundle.phone}"/>
 
   <h:outputText style="white-space:nowrap;" value="#{userBundle.email}"/>
   <tr:inputText simple="true" value="#{userEdit.userToEdit.email}" />

@@ -73,7 +73,7 @@ public class BlacklistUploadController extends UploadController {
     maximum = (int) file.getLength();
     boolean add = requestParams.get("file_add") != null;
     String line;
-    List<String> list = new ArrayList<String>(1000);
+    List<Address> list = new ArrayList<Address>(1000);
     BufferedReader reader = null;
     try {
       reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
@@ -84,7 +84,7 @@ public class BlacklistUploadController extends UploadController {
           unrecognized++;
           continue;
         }
-        list.add(line);
+        list.add(new Address(line));
         if (list.size() == 1000) {
           if (add) {
             getConfig().addInBlacklist(list, user);

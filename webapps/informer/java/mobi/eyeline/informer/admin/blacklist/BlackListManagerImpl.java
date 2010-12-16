@@ -6,6 +6,7 @@ import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.Property;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.util.Address;
 
 import java.util.Collection;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -26,17 +27,16 @@ public class BlackListManagerImpl implements BlacklistManager {
     this.pool = pool;
   }
 
-  public void add(String msisdn) throws AdminException {
-    if (msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
+  public void add(Address msisdn) throws AdminException {
+    if (msisdn == null) {
       throw new IllegalArgumentException("Argument is empty: " + msisdn);
     }
-    msisdn = convertNumber(msisdn);
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
       try {
         lock.writeLock().lock();
-        client.setProperty(msisdn, new Property(INFOSME_BLACK_LIST, true, new InfinitTimePolicy()));
+        client.setProperty(msisdn.getSimpleAddress(), new Property(INFOSME_BLACK_LIST, true, new InfinitTimePolicy()));
       } finally {
         lock.writeLock().unlock();
       }
@@ -48,7 +48,7 @@ public class BlackListManagerImpl implements BlacklistManager {
   }
 
 
-  public void add(Collection<String> msisdns) throws AdminException {
+  public void add(Collection<Address> msisdns) throws AdminException {
     if (msisdns == null) {
       throw new IllegalArgumentException("Argument is null");
     }
@@ -57,10 +57,9 @@ public class BlackListManagerImpl implements BlacklistManager {
       client = pool.getClient();
       try {
         lock.writeLock().lock();
-        for (String msisdn : msisdns) {
-          if (msisdn != null && (msisdn = msisdn.trim()).length() != 0) {
-            msisdn = convertNumber(msisdn);
-            client.setProperty(msisdn, new Property(INFOSME_BLACK_LIST, true, new InfinitTimePolicy()));
+        for (Address msisdn : msisdns) {
+          if (msisdn != null) {
+            client.setProperty(msisdn.getSimpleAddress(), new Property(INFOSME_BLACK_LIST, true, new InfinitTimePolicy()));
           }
         }
       } finally {
@@ -73,18 +72,17 @@ public class BlackListManagerImpl implements BlacklistManager {
     }
   }
 
-  public void remove(String msisdn) throws AdminException {
-    if (msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
+  public void remove(Address msisdn) throws AdminException {
+    if (msisdn == null) {
       throw new IllegalArgumentException("Argument is empty: " + msisdn);
     }
-    msisdn = convertNumber(msisdn);
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
 
       try {
         lock.writeLock().lock();
-        client.deleteProperty(msisdn, INFOSME_BLACK_LIST);
+        client.deleteProperty(msisdn.getSimpleAddress(), INFOSME_BLACK_LIST);
       } finally {
         lock.writeLock().unlock();
 
@@ -96,7 +94,7 @@ public class BlackListManagerImpl implements BlacklistManager {
     }
   }
 
-  public void remove(Collection<String> msisdns) throws AdminException {
+  public void remove(Collection<Address> msisdns) throws AdminException {
     if (msisdns == null) {
       throw new IllegalArgumentException("Argument is null");
     }
@@ -106,10 +104,9 @@ public class BlackListManagerImpl implements BlacklistManager {
 
       try {
         lock.writeLock().lock();
-        for (String msisdn : msisdns) {
-          if (msisdn != null && (msisdn = msisdn.trim()).length() != 0) {
-            msisdn = convertNumber(msisdn);
-            client.deleteProperty(msisdn, INFOSME_BLACK_LIST);
+        for (Address msisdn : msisdns) {
+          if (msisdn != null) {
+            client.deleteProperty(msisdn.getSimpleAddress(), INFOSME_BLACK_LIST);
           }
         }
       } finally {
@@ -123,17 +120,16 @@ public class BlackListManagerImpl implements BlacklistManager {
     }
   }
 
-  public boolean contains(String msisdn) throws AdminException {
-    if (msisdn == null || (msisdn = msisdn.trim()).length() == 0) {
+  public boolean contains(Address msisdn) throws AdminException {
+    if (msisdn == null) {
       throw new IllegalArgumentException("Arguemnt is empty: " + msisdn);
     }
-    msisdn = convertNumber(msisdn);
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
       try {
         lock.readLock().lock();
-        return client.getProperty(msisdn, INFOSME_BLACK_LIST) != null;
+        return client.getProperty(msisdn.getSimpleAddress(), INFOSME_BLACK_LIST) != null;
       } finally {
         lock.readLock().unlock();
       }
@@ -154,16 +150,5 @@ public class BlackListManagerImpl implements BlacklistManager {
     }
   }
 
-  private static String convertNumber(String ms) {
-    char c = ms.charAt(0);
-    switch (c) {
-      case '7':
-        return '+' + ms;
-      case '8':
-        return "+7" + ms.substring(1);
-      default:
-        return ms;
-    }
-  }
 
 }

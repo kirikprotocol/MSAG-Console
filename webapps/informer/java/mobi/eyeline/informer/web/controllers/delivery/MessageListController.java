@@ -233,8 +233,8 @@ public class MessageListController extends InformerController {
     if (msgFilter.getState() != null ) {
       filter.setStates(msgFilter.getState().toMessageStates());
     }
-    if (msgFilter.getMsisdn() != null && msgFilter.getMsisdn().length() > 0) {
-      filter.setMsisdnFilter(msgFilter.getMsisdn());
+    if (msgFilter.getMsisdn() != null) {
+      filter.setMsisdnFilter(msgFilter.getMsisdn().getSimpleAddress());
     }
     if (msgFilter.getErrorCode() != null) {
       filter.setErrorCodes(msgFilter.getErrorCode());

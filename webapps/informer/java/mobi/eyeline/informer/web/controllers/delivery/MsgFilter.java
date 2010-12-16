@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.web.controllers.delivery;
 
-import mobi.eyeline.informer.admin.delivery.MessageState;
+import mobi.eyeline.informer.util.Address;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -10,7 +10,7 @@ import java.util.Date;
  */
 public class MsgFilter implements Serializable {
 
-  private String msisdn;
+  private Address msisdn;
 
   private MsgState state;
 
@@ -24,18 +24,18 @@ public class MsgFilter implements Serializable {
   }
 
   public MsgFilter(MsgFilter filter) {
-    msisdn = filter.msisdn;
+    msisdn = filter.msisdn == null ? null : new Address(filter.msisdn);
     state = filter.state;
     fromDate = filter.fromDate == null ? null : new Date(fromDate.getTime());
     tillDate = filter.tillDate == null ? null : new Date(tillDate.getTime());
     errorCode = filter.errorCode;
   }
 
-  public String getMsisdn() {
+  public Address getMsisdn() {
     return msisdn;
   }
 
-  public void setMsisdn(String msisdn) {
+  public void setMsisdn(Address msisdn) {
     this.msisdn = msisdn;
   }
 
