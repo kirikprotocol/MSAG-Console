@@ -65,7 +65,7 @@ public:
     currentTime_(currentTimeSeconds()), ipn_(ipn) {}
 
     virtual bool isStopping() {
-        return getCS()->isStopping();
+        return is_.core_.isStopping();
     }
 
     /// return the size of record length in octets.
@@ -114,10 +114,10 @@ public:
         } else {
             MessageText(0,int32_t(fb.get32())).swap(msg.text);
         }
+        msg.retryCount = 0;
         if (isDropped) {
             msg.lastTime = currentTime_;
             msg.timeLeft = 0;
-            msg.retryCount = 0;
             // we have to add kill record in activity log
             is_.activityLog_->addRecord(currentTime_,regId_,msg,0,MSGSTATE_INPUT);
         } else {
@@ -270,7 +270,7 @@ size_t InputStorage::rollOver()
     bool firstPass = true;
     size_t written = 0;
     do {
-        if ( getCS()->isStopping() ) break;
+        if ( core_.isStopping() ) break;
         InputRegionRecord ro;
         msgid_type maxMsgId;
         {
@@ -490,7 +490,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
             }
             buf.SetPos(0);
 
-            if (getCS()->isStopping()) {
+            if (core_.isStopping()) {
                 smsc_log_debug(log_,"R=%u/D=%u transfer cancelled at stop",
                                regId, getDlvId() );
                 ok = false;
@@ -500,7 +500,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
             // we have read things
             if ( ! msglist.empty() ) {
 
-                if ( ! getCS()->isStopping() ) {
+                if ( ! core_.isStopping() ) {
                     for ( MsgIter i = msglist.begin(); i != msglist.end(); ++i ) {
                         if (!i->msg.text.isUnique()) {
                             // NOTE: replacing input ids with real ids here!
@@ -534,7 +534,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                     }
                 }
 
-                if (getCS()->isStopping()) {
+                if (core_.isStopping()) {
                     smsc_log_debug(log_,"R=%u/D=%u transfer cancelled at stop",
                                    regId, getDlvId() );
                     ok = false;
