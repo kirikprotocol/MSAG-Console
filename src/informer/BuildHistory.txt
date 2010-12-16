@@ -1,3 +1,6 @@
+2010-12-16 17:30 bukind
+  fix for bad (not inited) number of _SMS_ when pvss blocks the message
+
 2010-12-15 17:05 bukind
   Fix for seqnumHash_ resize + respTimer
 
