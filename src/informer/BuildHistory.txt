@@ -11,6 +11,10 @@
   Cancel task impl to remove messages of cancelled dlv from opstore.
 
 =====================================================================
+2010-12-16 17:35 bukind informer-build-20101216
+  backported fix for bad number of sms
+
+=====================================================================
 2010-12-15 15:50 bukind informer-build-20101215
   Backported fix for outdated planTime.
   Backported fix for seqnumHash_ resize + respTimer
