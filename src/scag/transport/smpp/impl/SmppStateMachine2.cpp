@@ -766,13 +766,36 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
                 break;
             }
 
-            dst = routeMan_->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+            dst = routeMan_->RouteSms(src->getSystemId(),
+                                      sms.getOriginatingAddress(),
+                                      sms.getDestinationAddress(),ri,0);
             smsc_log_debug(log_, "%s: orig_route_id=%s, new_route_id=%s",
                            where, routeId.c_str(), ri.routeId.c_str());
             {
                 const char* fail = 0;
                 if (!dst) {
                     fail = "no route";
+                    static smsc::logger::Logger* badrlog = smsc::logger::Logger::getInstance("smpp.noroute");
+                    if (badrlog->isDebugEnabled()) {
+                        std::vector< std::string > traceit;
+                        routeMan_->RouteSms(src->getSystemId(),
+                                            sms.getOriginatingAddress(),
+                                            sms.getDestinationAddress(),
+                                            ri, &traceit );
+                        size_t len = 0;
+                        for ( std::vector< std::string >::const_iterator i = traceit.begin();
+                              i != traceit.end(); ++i ) {
+                            len += i->size() + 1;
+                        }
+                        std::string result;
+                        result.reserve(len+5);
+                        for ( std::vector< std::string >::const_iterator i = traceit.begin();
+                              i != traceit.end(); ++i ) {
+                            result.push_back('\n');
+                            result.append(*i);
+                        }
+                        smsc_log_debug(badrlog,"no route trace follows: %s",result.c_str());
+                    }
                     st.result = smsc::system::Status::NOROUTE;
                 } else if ( routeId == ri.routeId ) {
                     fail = "redirect to the same route";
@@ -1020,7 +1043,7 @@ void StateMachine::processAlertNotification( std::auto_ptr<SmppCommand> aucmd)
     SmppEntity *dst;
     dst = routeMan_->RouteSms( cmd->getEntity()->getSystemId(),
                                cmd->get_alertNotification().src,
-                               cmd->get_alertNotification().dst,ri );
+                               cmd->get_alertNotification().dst,ri, 0);
     if(!dst)
     {
         smsc_log_warn( log_,"Route not found for alert notification %s->%s",

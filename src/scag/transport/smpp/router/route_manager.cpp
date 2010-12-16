@@ -573,7 +573,7 @@ int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_
   return addRouteIntoTreeRecurse(node,rec,trace_,dup);
 }
 
-void RouteManager::commit(bool traceit)
+void RouteManager::commit(std::vector<std::string>* traceit)
 {
   __trace__("commit!");
   RouteRecord** nfr_ptr=&new_first_record;
@@ -625,7 +625,7 @@ void RouteManager::commit(bool traceit)
       if ( table[i] != 0 )
       {
         int dup=0;
-        addRouteIntoTree(root_ptr,table[i],traceit?&trace_:0,dup);
+        addRouteIntoTree(root_ptr,table[i],traceit,dup);
         if(dup)
         {
           DupsMap::iterator it=dups.find(table[i]->info.routeId.str);
@@ -664,11 +664,15 @@ void RouteManager::cancel()
 }
 
 // RoutingTable implementation
-bool RouteManager::lookup(SmeIndex srcidx, const Address& source, const Address& dest, RouteInfo& info)
+bool RouteManager::lookup(SmeIndex srcidx,
+                          const Address& source,
+                          const Address& dest,
+                          RouteInfo& info,
+                          std::vector<std::string>* traceit )
 {
-  if ( trace_enabled_ )
+  if ( traceit )
   {
-    trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+
+    traceit->push_back(string("lookup for: ")+AddrToString(source)+"("+
       (srcidx?srcidx:string("default"))
       +") -> "+AddrToString(dest));
   }
@@ -679,24 +683,24 @@ bool RouteManager::lookup(SmeIndex srcidx, const Address& source, const Address&
     SmeRoute* ptr=smeRoutes.GetPtr(srcidx);
     if(ptr)
     {
-      rec=findInTree(&ptr->root,&source,&dest,trace_enabled_?&trace_:0);
+      rec=findInTree(&ptr->root,&source,&dest,traceit);
     }
   }
 
   if(!rec)
   {
-    rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
+    rec =  findInTree(&root,&source,&dest,traceit);
   }
   if ( !rec )
   {
-    if(trace_enabled_)
+    if(traceit)
     {
-      trace_.push_back("route not found");
+      traceit->push_back("route not found");
     }
     return false;
   }
 
-  if ( trace_enabled_ )
+  if ( traceit )
   {
     std::string res;
     res.reserve(128);
@@ -709,18 +713,21 @@ bool RouteManager::lookup(SmeIndex srcidx, const Address& source, const Address&
     res+='(';
     res+=rec->info.smeSystemId.c_str();
     res+=')';
-    trace_.push_back(res);
+    traceit->push_back(res);
   }
   info = rec->info;
   return rec->info.enabled;
 }
 
 // RoutingTable implementation
-bool RouteManager::lookup(const Address& source, const Address& dest, RouteInfo& info)
+bool RouteManager::lookup(const Address& source, const Address& dest,
+                          RouteInfo& info,
+                          std::vector<std::string>* traceit )
 {
-  return lookup(0,source,dest,info);
+  return lookup(0,source,dest,info,traceit);
 }
 
+/*
 void RouteManager::getTrace(vector<string>& tracelist)
 {
   tracelist.swap(trace_);
@@ -735,7 +742,7 @@ void RouteManager::enableTrace(bool val)
     vector<string>().swap(trace_);
   }
 }
-
+ */
 
 }//namespace scag
 }//namespace transport

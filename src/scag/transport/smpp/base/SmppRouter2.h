@@ -16,7 +16,8 @@ public:
     virtual SmppEntity* RouteSms( router::SmeIndex srcidx,
                                   const smsc::sms::Address& source,
                                   const smsc::sms::Address& dest,
-                                  router::RouteInfo& info)=0;
+                                  router::RouteInfo& info,
+                                  std::vector< std::string >* traceit )=0;
     virtual SmppEntity* getSmppEntity(const char* sysId, bool* isEnabled = 0) const=0;
 };
 

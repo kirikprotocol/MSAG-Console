@@ -15,6 +15,39 @@ using namespace scag::exceptions;
 
 const char* TimeFormat = "%A, %d - %B - %Y.\n";
 
+Property::Property() :
+sync(false), type(pt_str), i_val(0) { show("ctor"); }
+
+Property::Property( int64_t v ) :
+sync(false), type(pt_int), i_val(v) { show("ctor"); }
+
+Property::Property( const string_type& v ) :
+sync(false), type(pt_str), i_val(0), s_val(v) { show("ctor"); }
+
+Property::Property( const char* v ) :
+sync(false), type(pt_str), i_val(0), s_val(v) { show("ctor"); }
+
+
+namespace {
+smsc::logger::Logger* log_ = 0;
+}
+
+void Property::show( const char* where ) const
+{
+    if (!log_) log_ = smsc::logger::Logger::getInstance("prop");
+    const char* stype;
+    switch (type) {
+    case pt_int: stype="int"; break;
+    case pt_str: stype="str"; break;
+    case pt_bool: stype="bool"; break;
+    case pt_date: stype="date"; break;
+    default: stype="???"; break;
+    }
+    smsc_log_debug(log_,"%s@%p sync=%d type=%s i=%lld s='%s'",
+                   where, this, sync, stype, i_val, s_val.empty() ? "" : s_val.c_str() );
+}
+
+
 int64_t Property::convertToInt() const
 {
     if (sync) return i_val;
@@ -24,17 +57,14 @@ int64_t Property::convertToInt() const
     case pt_bool:
     case pt_int:
     case pt_date:
+        throw SCAGException("convertToInt: unsupported type");
         break;
     case pt_str:
         i_val = atoi(s_val.c_str());
         break;
-        /*
-    case pt_date:
-        throw ConvertException("date","int");
-        break;
-         */
     }
     sync = true;
+    show("cvtToInt");
     return i_val;
 }
 
@@ -42,12 +72,23 @@ const Property::string_type& Property::convertToStr() const
 {
     if (sync) return s_val;
 
-    char buff[128];
+    char buff[64];
 
     switch (type) 
     {
     case pt_str:
+        throw SCAGException("convertToStr: unsupported type");
         break;
+    case pt_date: {
+        const time_t tmp = time_t(i_val);
+        tm tmb;
+        if ( ! localtime_r(&tmp,&tmb) ) {
+            throw SCAGException("localtime_r");
+        }
+        strftime(buff,sizeof(buff),TimeFormat,&tmb);
+        s_val.assign(buff);
+        break;
+    }
     case pt_bool: 
     case pt_int:
         sprintf(buff, "%lld", i_val);
@@ -55,9 +96,11 @@ const Property::string_type& Property::convertToStr() const
         break;
     }
     sync = true;
+    show("cvtToStr");
     return s_val;
 }
 
+/*
 bool Property::convertToBool() const
 {
     if (sync) return bool(i_val);
@@ -71,8 +114,10 @@ bool Property::convertToBool() const
         break;
     }
     sync = true;
+    show("cvtToBool");
     return bool(i_val);
 }
+ */
 
 time_t Property::convertToDate() const
 {
@@ -81,9 +126,13 @@ time_t Property::convertToDate() const
 
     switch (type) 
     {
+    case pt_int:
+    case pt_bool:
+    case pt_date:
+        throw SCAGException("convertToDate: unsupported type");
+        break;
     case pt_str: 
         tm time;
-
         strptime(s_val.c_str(),TimeFormat,&time);
         i_val = mktime(&time);
         break;
@@ -91,6 +140,7 @@ time_t Property::convertToDate() const
     sync = true;
 
     val = (time_t) i_val;
+    show("cvtToDate");
     return val;
 }
 
@@ -102,6 +152,7 @@ void Property::setInt(int64_t val)
     sync = false;
     i_val = val;
     type = pt_int;
+    show("setInt");
 }
 
 void Property::setStr(const string_type& val)
@@ -110,6 +161,7 @@ void Property::setStr(const string_type& val)
     sync = false;
     s_val = val;
     type = pt_str;
+    show("setStr");
 }
 
 void Property::setBool( bool val )
@@ -118,6 +170,7 @@ void Property::setBool( bool val )
     sync = false; 
     i_val = val;
     type = pt_bool;
+    show("setBool");
 }
 
 void Property::setDate(time_t val) 
@@ -126,6 +179,7 @@ void Property::setDate(time_t val)
     sync = false; 
     i_val = val;
     type = pt_date;
+    show("setDate");
 }
 
 

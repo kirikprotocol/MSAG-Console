@@ -106,6 +106,7 @@ public:
     abort();
   }
 
+    /*
   RefferGuard<RouteManager> getTestRouterInstance()
   {
     MutexGuard g(routerSwitchMutex);
@@ -120,6 +121,7 @@ public:
   }
 
   void reloadTestRoutes(const RouteConfig& rcfg);
+     */
 
     transport::smpp::SmppManagerAdmin* getSmppManagerAdmin()
     {
@@ -155,8 +157,8 @@ protected:
 
   //smsc::core::threads::ThreadPool tp,tp2;
 
-  Mutex routerSwitchMutex;
-  Reffer<RouteManager>* testRouter_;
+  // Mutex routerSwitchMutex;
+  // Reffer<RouteManager>* testRouter_;
 
   friend class StatusSme;
 

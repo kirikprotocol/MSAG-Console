@@ -61,9 +61,12 @@ public:
     virtual unsigned pushSessionCommand( SmppCommand* cmd,
                                          int action = SCAGCommandQueue::PUSH );
 
-  void reloadTestRoutes(const RouteConfig& rcfg);
-    util::RefferGuard<router::RouteManager> getTestRouterInstance();
+    virtual void reloadTestRoutes(const RouteConfig& rcfg,
+                        std::vector< std::string >* traceit );
+    virtual util::RefferGuard<router::RouteManager> getTestRouterInstance();
+private:
     void ResetTestRouteManager(router::RouteManager* manager);
+public:
 
   void getQueueLen(uint32_t& reqQueueLen, uint32_t& respQueueLen, uint32_t& lcmQueueLen);
 
@@ -72,7 +75,11 @@ public:
 
 
   //SmppRouter
-  virtual SmppEntity* RouteSms(router::SmeIndex srcidx, const smsc::sms::Address& source, const smsc::sms::Address& dest, router::RouteInfo& info)
+  virtual SmppEntity* RouteSms(router::SmeIndex srcidx,
+                               const smsc::sms::Address& source,
+                               const smsc::sms::Address& dest,
+                               router::RouteInfo& info,
+                               std::vector<std::string>* traceit = 0 )
   {
     {
       RouterRef ref;
@@ -80,7 +87,7 @@ public:
         smsc::core::synchronization::MutexGuard rsmg(routerSwitchMtx);
         ref=routeMan;
       }
-      if(!ref->lookup(srcidx,source,dest,info))return 0;
+      if(!ref->lookup(srcidx,source,dest,info,traceit))return 0;
     }
     MutexGuard mg(regMtx);
     SmppEntity** ptr=registry.GetPtr(info.smeSystemId.c_str());
@@ -88,14 +95,19 @@ public:
     {
       if((*ptr)->info.enabled)
       {
+        if (traceit) { traceit->push_back("sme enabled"); }
         return *ptr;
       }else
       {
+        if (traceit) { traceit->push_back("sme disabled"); }
         return 0;
       }
     }
     MetaEntity** pme=metaRegistry.GetPtr(info.smeSystemId.c_str());
-    if(!pme)return 0;
+    if(!pme) {
+        if (traceit) { traceit->push_back("sme/meta not found"); }
+        return 0;
+    }
     MetaEntity& me=**pme;
     SmppEntity* rv=0;
     if(me.info.persistanceEnabled)
@@ -103,14 +115,17 @@ public:
       if(me.info.type==mtMetaService)
       {
         rv=me.getEntity(source);
+        if (traceit) { traceit->push_back("meta by src");}
       }else
       {
         rv=me.getEntity(dest);
+        if (traceit) { traceit->push_back("meta by dst");}
       }
     }else
     {
       const time_t now = time(0);
       rv=me.getEntity(now);
+      if (traceit) { traceit->push_back("meta by time");}
     }
     if(rv)
     {

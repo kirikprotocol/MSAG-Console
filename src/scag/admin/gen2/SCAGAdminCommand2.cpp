@@ -235,9 +235,9 @@ Response * CommandLoadSmppTraceRoutes::CreateResponse(Scag * ScagApp)
 
   try {
 
-      SmppManager::Instance().reloadTestRoutes(cfg);
-      SmppManager::Instance().getTestRouterInstance()->enableTrace(true);
-      SmppManager::Instance().getTestRouterInstance()->getTrace(traceBuff);
+      SmppManager::Instance().reloadTestRoutes(cfg,&traceBuff);
+      // SmppManager::Instance().getTestRouterInstance()->enableTrace(true);
+      // SmppManager::Instance().getTestRouterInstance()->getTrace(traceBuff);
 
       // 0:   Message (Routes successfully loaded)
       // 1..: Trace (if any)
@@ -351,15 +351,15 @@ Response * CommandTraceSmppRoute::CreateResponse(Scag * ScagApp)
 
     if (!ScagApp) throw Exception("Scag undefined");
 
+    std::vector<std::string> traceBuff;
     if (_srcSysId)
-          found = SmppManager::Instance().getTestRouterInstance()->lookup(_srcSysId, Address(_srcAddr), Address(_dstAddr), info);
+          found = SmppManager::Instance().getTestRouterInstance()->lookup(_srcSysId, Address(_srcAddr), Address(_dstAddr), info, &traceBuff);
     else
-          found = SmppManager::Instance().getTestRouterInstance()->lookup(Address(_srcAddr), Address(_dstAddr), info);
+          found = SmppManager::Instance().getTestRouterInstance()->lookup(Address(_srcAddr), Address(_dstAddr), info, &traceBuff);
 
     fprintf(stderr,"---- Passed lookup");
 
-    std::vector<std::string> traceBuff;
-    SmppManager::Instance().getTestRouterInstance()->getTrace(traceBuff);
+    // SmppManager::Instance().getTestRouterInstance()->getTrace(traceBuff);
 
     if (!found) {
         if (info.enabled == false)

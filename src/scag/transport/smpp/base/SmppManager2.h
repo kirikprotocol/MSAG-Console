@@ -72,9 +72,10 @@ public:
 
     // virtual void continueExecution( LongCallContext* lcmCtx, bool dropped ) = 0;
 
-    virtual void reloadTestRoutes(const RouteConfig& rcfg) = 0;
+    virtual void reloadTestRoutes(const RouteConfig& rcfg,
+                                  std::vector< std::string >* traceit ) = 0;
     virtual util::RefferGuard<router::RouteManager> getTestRouterInstance() = 0;
-    virtual void ResetTestRouteManager(router::RouteManager* manager) = 0;
+    // virtual void ResetTestRouteManager(router::RouteManager* manager) = 0;
     virtual void getQueueLen( uint32_t& reqQueueLen,
                               uint32_t& respQueueLen,
                               uint32_t& lcmQueueLen) = 0;

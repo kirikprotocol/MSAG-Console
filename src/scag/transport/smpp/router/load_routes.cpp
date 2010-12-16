@@ -14,7 +14,8 @@ static inline void makeAddress(Address& addr,const string& mask)
   addr=Address(mask.c_str());
 }
 
-void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool traceit)
+void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,
+                std::vector<std::string>* traceit )
 {
   try
   {

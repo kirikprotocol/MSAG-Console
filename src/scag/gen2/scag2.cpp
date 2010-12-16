@@ -117,7 +117,7 @@ using namespace xercesc;
 
 Scag::Scag() :
 stopFlag(false),
-testRouter_(0),
+// testRouter_(0),
 pvssInited_(false),
 lcmInited_(false),
 billInited_(false),

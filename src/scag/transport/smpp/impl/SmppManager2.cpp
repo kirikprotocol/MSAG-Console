@@ -1312,10 +1312,11 @@ unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
 }
 
 
-void SmppManagerImpl::reloadTestRoutes(const RouteConfig& rcfg)
+void SmppManagerImpl::reloadTestRoutes(const RouteConfig& rcfg,
+                                       std::vector<std::string>* traceit )
 {
     auto_ptr<router::RouteManager> router(new router::RouteManager());
-  loadRoutes(router.get(),rcfg,true);
+    loadRoutes(router.get(),rcfg,traceit);
   ResetTestRouteManager(router.release());
 }
 

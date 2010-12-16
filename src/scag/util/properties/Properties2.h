@@ -42,11 +42,10 @@ public:
         return memory::MemoryPoolT< Property >::Instance().deallocate( p, sz );
     }
 
-    Property(): sync(false), type(pt_str), i_val(0) {}
-    Property( int64_t v ) : sync(false), type(pt_int), i_val(v) {}
-    Property( const string_type& v ) : sync(false), type(pt_str), s_val(v) {}
-    // back compatible version
-    Property( const char* v ) : sync(false), type(pt_str), s_val(v) {}
+    Property();
+    Property( int64_t v );
+    Property( const string_type& v );
+    Property( const char* v );
     virtual ~Property() {}
 
     inline const string_type& getStr() const {
@@ -54,15 +53,15 @@ public:
         else return convertToStr();
     }
     inline int64_t getInt () const {
-        if (type==pt_int) return i_val;
+        if (type!=pt_str) return i_val;
         else return convertToInt();
     }
     inline bool getBool() const {
-        if (type==pt_bool) return bool(i_val);
-        else return convertToBool();
+        if (type!=pt_str) return bool(i_val);
+        else return bool(convertToInt());
     }
     inline time_t getDate() const {
-        if (type==pt_date) return time_t(i_val);
+        if (type!=pt_str) return time_t(i_val);
         else return convertToDate();
     }
     inline PropertyType getType() const { return type; }
@@ -81,15 +80,16 @@ public:
     int Compare( const Property& val, bool reqcast ) const;
 
 protected:
+    void show( const char* where ) const;
+
     const string_type& convertToStr() const;
+    // the following methods only converts from string
     int64_t convertToInt () const;
-    bool    convertToBool() const;
     time_t  convertToDate() const;
 
 protected:
     mutable bool         sync;
     mutable PropertyType type;
-    // db: I removed the 'constant' field
     mutable int64_t      i_val;
     mutable string_type  s_val;
 };

@@ -107,8 +107,6 @@ class RouteManager
   RouteRecord* first_record;
   RouteRecord* new_first_record;
   RouteTreeNode  root;
-  vector<string> trace_;
-  bool trace_enabled_;
 
   void clear_list(RouteRecord*& lst)
   {
@@ -121,7 +119,7 @@ class RouteManager
   }
 
 public :
-  RouteManager() : first_record(0),new_first_record(0),trace_enabled_(false)
+  RouteManager() : first_record(0),new_first_record(0)
   {}
 
   virtual ~RouteManager()
@@ -139,13 +137,18 @@ public :
   }
 
   void addRoute(const RouteInfo& routeInfo);
-  void commit(bool = false);
+  void commit( std::vector< std::string >* traceit = 0 );
   void cancel();
 
-  bool lookup(const smsc::sms::Address& source, const smsc::sms::Address& dest, RouteInfo& info);
-  bool lookup(SmeIndex srcidx, const smsc::sms::Address& source, const smsc::sms::Address& dest, RouteInfo& info);
-  void getTrace(vector<string>&);
-  void enableTrace(bool);
+  bool lookup( const smsc::sms::Address& source,
+               const smsc::sms::Address& dest,
+               RouteInfo& info,
+               std::vector<std::string>* traceit );
+  bool lookup( SmeIndex srcidx,
+               const smsc::sms::Address& source,
+               const smsc::sms::Address& dest,
+               RouteInfo& info,
+               std::vector< std::string >* traceit );
 };
 
 }//namespace scag
