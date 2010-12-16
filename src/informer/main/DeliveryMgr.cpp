@@ -912,43 +912,46 @@ void DeliveryMgr::readFromArchive()
         return;
     }
     fg.ropen(fname.c_str());
-    char buf[256];
-    char* ptr = buf;
     std::vector<dlvid_type> dlvs;
-    while (true) {
-        const size_t wasread = fg.read(ptr,sizeof(buf)-(ptr-buf));
-        if ( 0 == wasread ) {
-            if ( ptr != buf ) {
-                throw InfosmeException(EXC_BADFILE,"file '%s' is corrupted",archiveName);
+    {
+        char buf[256];
+        char* ptr = buf;
+        while (true) {
+            const size_t wasread = fg.read(ptr,sizeof(buf)-(ptr-buf));
+            if ( 0 == wasread ) {
+                if ( ptr != buf ) {
+                    throw InfosmeException(EXC_BADFILE,"file '%s' is corrupted",
+                                           archiveName);
+                }
+                break;
             }
-            break;
-        }
-        ptr += wasread;
-        char* p = buf;
-        while ( p < ptr ) {
-            char* eol = static_cast<char*>(memchr(p,'\n',ptr-p));
-            if (!eol) {break;}
-            if ( (eol - p) > 30 ) {
-                throw InfosmeException(EXC_BADFILE,"too big record '%*s'",eol-p,p);
+            ptr += wasread;
+            char* p = buf;
+            while ( p < ptr ) {
+                char* eol = static_cast<char*>(memchr(p,'\n',ptr-p));
+                if (!eol) {break;}
+                if ( (eol - p) > 30 ) {
+                    throw InfosmeException(EXC_BADFILE,"too big record '%*s'",eol-p,p);
+                }
+                *eol = '\0';
+                unsigned dlvId;
+                int shift = 0;
+                sscanf(p,"%u%n",&dlvId,&shift);
+                if ( shift == 0 || p[shift] != '\0' ) {
+                    throw InfosmeException(EXC_BADFILE,"bad record '%s'",p);
+                }
+                dlvs.push_back(dlvId);
+                p = eol + 1;
             }
-            *eol = '\0';
-            unsigned dlvId;
-            int shift = 0;
-            sscanf(p,"%u%n",&dlvId,&shift);
-            if ( shift == 0 || p[shift] != '\0' ) {
-                throw InfosmeException(EXC_BADFILE,"bad record '%s'",p);
+            if ( p < ptr ) {
+                memcpy(buf,p,ptr-p);
             }
-            dlvs.push_back(dlvId);
-            p = eol + 1;
+            ptr = buf + (ptr-p);
         }
-        if ( p < ptr ) {
-            memcpy(buf,p,ptr-p);
-        }
-        ptr = buf + (ptr-p);
+        fg.close();
+        // delete the incoming file
+        FileGuard::unlink(fname.c_str());
     }
-    fg.close();
-    // delete the incoming file
-    FileGuard::unlink(fname.c_str());
 
     // processing dlvs
     for ( std::vector<dlvid_type>::const_iterator i = dlvs.begin();
