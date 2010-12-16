@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.web.controllers.stats;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatRecord;
 import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatVisitor;
@@ -156,7 +156,7 @@ public class MessagesByDeliveriesController extends LongOperationController {
             }
           }
 
-          r = new MessagesByDeliveriesRecord(rec.getUser(), rec.getTaskId());
+          r = new MessagesByDeliveriesRecord(rec.getUser(), rec.getTaskId(), locale);
           r.setDelivery(delivery);
           r.setUser(user);
           recsMap.put(rec.getTaskId(), r);

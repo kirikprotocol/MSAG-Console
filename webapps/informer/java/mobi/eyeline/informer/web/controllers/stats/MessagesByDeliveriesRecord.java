@@ -10,6 +10,8 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 /**
  * Copyright Eyeline.mobi
@@ -36,9 +38,12 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   private Date minDate;
   private Date maxDate;
 
-  public MessagesByDeliveriesRecord(String login, long deliveryId) {
+  private final ResourceBundle bundle;
+
+  public MessagesByDeliveriesRecord(String login, long deliveryId, Locale locale) {
     this.login = login;
     this.deliveryId = deliveryId;
+    bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);   //todo make it more cleaver!!
   }
 
   public String getLogin() {
@@ -210,8 +215,10 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
   }
 
   public void printWithChildrenToCSV(PrintWriter writer, boolean fullMode) {
+
+    String dName = delivery != null ? delivery.getName() : bundle.getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';     //todo make it more cleaver!!
     if (fullMode) {
-      writer.println(StringEncoderDecoder.toCSVString(delivery.getName(),
+      writer.println(StringEncoderDecoder.toCSVString(dName,
           login,
           newMessages,
           procMessages,
@@ -219,7 +226,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           failedMessages,
           expiredMessages));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString(delivery.getName(),
+      writer.println(StringEncoderDecoder.toCSVString(dName,
           login,
           newMessages,
           deliveredMessages,
