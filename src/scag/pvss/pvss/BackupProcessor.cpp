@@ -345,6 +345,9 @@ int BackupProcessor::BackupProcessingTask::Execute()
                         cmd = kmd;
                         break;
                     }
+                    case 'G' :
+                        smsc_log_debug(log_,"get action in '%s'",line.c_str());
+                        continue;
                     default:
                         smsc_log_warn(log_,"unknown action '%c' in %s",act,line.c_str());
                         continue;
