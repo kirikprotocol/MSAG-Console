@@ -356,6 +356,7 @@ int Socket::InitServer(const char *host,int port,int timeout,int lng,bool force)
   if(bind(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr)))
   {
     closesocket(sock);
+    sock = INVALID_SOCKET;
     return -1;
   }
   linger l;
@@ -370,7 +371,7 @@ int Socket::StartServer()
   if(listen(sock,SOMAXCONN))
   {
     closesocket(sock);
-    sock=0;
+    sock = INVALID_SOCKET;
     return -1;
   }
   connected=1;
