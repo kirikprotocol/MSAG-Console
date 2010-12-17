@@ -74,7 +74,8 @@ public:
     Close();
   }
 
-    bool isConnected() const { return connected; }
+  bool isOpened(void) const { return (sock != INVALID_SOCKET); }
+  bool isConnected() const { return connected; }
 
   void setConnectTimeout(int to)
   {
