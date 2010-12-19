@@ -36,8 +36,10 @@ private:
 
   DecoderOfINTEGER _dA;
   asn1::ber::DecoderProducer_T<DecoderOfINTEGER> _dB;
+  asn1::ber::DecoderProducer_T<DecoderOfINTEGER> _dC;
 
   static const asn1::ASTag _tag_B;
+  static const asn1::ASTag _tag_C;
 };
 
 }}}}}

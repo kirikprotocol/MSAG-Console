@@ -142,7 +142,7 @@ test_SeqType2_dec(char* err_msg)
     }
 
     if (!expectedValue.b.get() || !expectedValue.c.get()) {
-      fprintf(logfile, "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{,");
+      fprintf(logfile, "test_SeqType2_dec:: expected value='{0xAA,0xBB}', calculated value='{,");
       if (expectedValue.b.get())
         fprintf(logfile, "0x%x,'", *expectedValue.b.get());
       else
@@ -153,12 +153,12 @@ test_SeqType2_dec(char* err_msg)
       else
         fprintf(logfile, "NULL}'\n");
     } else
-      fprintf(logfile, "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get(), *expectedValue.c.get());
+      fprintf(logfile, "test_SeqType2_dec:: expected value='{0xAA,0xBB}', calculated value='{0x%x,0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get(), *expectedValue.c.get());
 
     if (expectedValue.a != 0xAA || !expectedValue.b.get() || *expectedValue.b.get() != 0xBB ||
         !expectedValue.c.get() || *expectedValue.c.get() != 0xCC)
     {
-      int off= snprintf(err_msg, sizeof(err_msg),  "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{");
+      int off= snprintf(err_msg, sizeof(err_msg),  "test_SeqType2_dec:: expected value='{0xAA,0xBB}', calculated value='{");
       if (expectedValue.b.get())
         off+= snprintf(err_msg + off, sizeof(err_msg) - off, "0x%x,'", *expectedValue.b.get());
       else
@@ -178,8 +178,7 @@ test_SeqType2_dec(char* err_msg)
   }
 
   try {
-    printf("test_SeqType2_dec:\t\t\t");
-    const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType2", "{AA,NULL}");
+    const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType2", "{AA,NULL,NULL}");
     fprintf(logfile, "test_SeqType2_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
     uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
     size_t patternLen= utilx::hexbuf2bin(patternTrSyntax.c_str(), patternTrSyntaxBin, sizeof(patternTrSyntaxBin));
@@ -195,16 +194,16 @@ test_SeqType2_dec(char* err_msg)
     }
 
     if (!expectedValue.b.get())
-      fprintf(logfile, "test_SeqType2_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+      fprintf(logfile, "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
     else
-      fprintf(logfile, "test_SeqType2_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+      fprintf(logfile, "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
 
     if (expectedValue.a != 0xAA || expectedValue.b.get())
     {
       if (expectedValue.b.get())
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
       else
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
       return false;
     }
   } catch (std::exception& ex) {

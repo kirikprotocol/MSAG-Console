@@ -157,7 +157,6 @@ test_SeqType3_dec(char* err_msg)
   }
 
   try {
-    printf("test_SeqType3_dec:\t\t\t");
     const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType3", "{AA,NULL}");
     fprintf(logfile, "test_SeqType3_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
     uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
@@ -193,7 +192,6 @@ test_SeqType3_dec(char* err_msg)
   }
 
   try {
-    printf("test_SeqType3_dec:\t\t\t");
     // get encoding for SeqType2 containing three fields of INTEGER and try decode it using extensible sequence SeqType3
     const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType2", "{AA,BB,CC}");
     fprintf(logfile, "test_SeqType3_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
