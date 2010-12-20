@@ -515,10 +515,25 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
 {
     smsc_log_debug(log_,"== getUserInfo(%s)",login ? login : "");
     if (!login) throw InfosmeException(EXC_LOGICERROR,"userid NULL passed");
-    MutexGuard mg(userLock_);
-    UserInfoPtr* ptr = users_.GetPtr(login);
-    if (!ptr || (*ptr)->isDeleted() ) return UserInfoPtr();
-    return *ptr;
+    UserInfoPtr* ptr = 0;
+    {
+        MutexGuard mg(userLock_);
+        ptr = users_.GetPtr(login);
+        if (ptr && !(*ptr)->isDeleted() ) return *ptr;
+    }
+    if ( getCS()->isArchive() ) {
+        // trying to reload the user
+        try {
+            loadUsers("");
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"cannot load all users, exc: %s", e.what());
+        }
+        MutexGuard mg(userLock_);
+        ptr = users_.GetPtr(login);
+        if (ptr && !(*ptr)->isDeleted()) return *ptr;
+    }
+    // if (!ptr || (*ptr)->isDeleted() ) return UserInfoPtr();
+    return UserInfoPtr();
 }
 
 
@@ -982,9 +997,9 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
                                     bool            moveToArchive )
 {
     smsc_log_debug(log_,"== deleteDelivery(U='%s',D=%u)",userInfo.getUserId(),dlvId);
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
-    }
+    // if ( getCS()->isArchive()) {
+    // throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    // }
     BindSignal bs;
     bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
