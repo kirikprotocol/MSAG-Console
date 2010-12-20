@@ -627,11 +627,11 @@ void InfosmeCoreV1::selfTest()
                     const int i = pass*1000 + j;
                     
                     ulonglong address;
-                    // if ( i % 2 ) {
-                    // address = 79130000000ULL + i;
-                    // } else {
+                    if ( i % 2 ) {
+                        address = 79130000000ULL + i;
+                    } else {
                         address = 79530000000ULL + i;
-                    // }
+                    }
                     msgList.push_back(MessageLocker());
                     MessageLocker& mlk = msgList.back();
                     mlk.msg.subscriber = addressToSubscriber(11,1,1,address);
@@ -662,15 +662,14 @@ void InfosmeCoreV1::selfTest()
             dlv->getGlossary( glotexts );
         }
 
+        /*
         {
             smsc_log_info(log_,"--- pausing the delivery D=%u ---",dlvId);
             dlv->setState(DLVSTATE_PAUSED);
-        }
-
-        {
             smsc_log_info(log_,"--- archivating the delivery D=%u ---",dlvId);
             deleteDelivery( *user, dlvId, true );
         }
+         */
 
     } catch ( std::exception& e ) {
         smsc_log_debug(log_,"--- selftest failed, exc: %s",e.what());
