@@ -401,10 +401,8 @@ public class InfoSmeConfig {
   public synchronized void addAndApplyTask(Task t) throws AdminException {
     validate(t);
     try {
-      Config cfg = ctx.loadCurrentConfig();
       boolean modified = t.getId() != null && taskManager.containsTaskWithId(t.getId());
-      taskManager.addTask(t, cfg);
-      cfg.save();
+      taskManager.addAndStoreTask(t);
       ctx.getAppContext().getJournal().append(t.getOwner(), "", SubjectTypes.TYPE_infosme, t.getId(), modified ? Actions.ACTION_MODIFY : Actions.ACTION_ADD, "Type", "Task");
     } catch (Throwable e) {
       e.printStackTrace();
@@ -486,8 +484,14 @@ public class InfoSmeConfig {
   public void removeAndApplyTask(String user, String id) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
+      Task t = taskManager.getTask(id);
+      boolean useSeparateConfig = false;
+      if (t != null)
+        useSeparateConfig = t.isUserSeparateConfig();
+
       if (taskManager.removeTask(id, cfg)) {
-        cfg.save();
+        if (!useSeparateConfig)
+          cfg.save();
         ctx.getAppContext().getJournal().append(user, "", SubjectTypes.TYPE_infosme, id, Actions.ACTION_DEL, "Type", "Task");
       }
     } catch (Throwable e) {
@@ -499,8 +503,15 @@ public class InfoSmeConfig {
   public void archivateAndApplyTask(String user, String id) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
+      Task t = taskManager.getTask(id);
+      boolean useSeparateConfig = false;
+      if (t != null)
+        useSeparateConfig = t.isUserSeparateConfig();
+
       if (taskManager.archivateTask(id, cfg)) {
-        cfg.save();
+        if (!useSeparateConfig)
+          cfg.save();
+
         ctx.getAppContext().getJournal().append(user, "", SubjectTypes.TYPE_infosme, id, Actions.ACTION_ARCHIVATE, "Type", "Task");
       }
     } catch (Throwable e) {

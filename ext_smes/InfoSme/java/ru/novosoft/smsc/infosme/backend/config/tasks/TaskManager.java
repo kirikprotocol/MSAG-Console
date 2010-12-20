@@ -177,7 +177,7 @@ public class TaskManager {
     tasks.put(t.getId(), t);
   }
 
-  public synchronized void addTask(Task t, Config cfg) throws AdminException {
+  public synchronized void addAndStoreTask(Task t) throws AdminException {
     try {
       addTask(t);
       t.storeToConfig();

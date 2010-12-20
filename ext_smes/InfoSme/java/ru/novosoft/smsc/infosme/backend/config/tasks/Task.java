@@ -341,6 +341,11 @@ public class Task extends Observable
     config.save();
   }
 
+  public boolean isUserSeparateConfig() {
+    File configFile = new File(location, CONFIG_FILE_NAME);
+    return configFile.exists();
+  }
+
   public void remove(Config config) {
     if(id == null) {
       throw new IllegalArgumentException("Id is not set");
