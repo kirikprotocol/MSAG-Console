@@ -550,6 +550,44 @@ public class AdminContext {
     return smscManager.getDefaultSmsc();
   }
 
+  public void updateRegionsConfiguration(Collection<Region> regions) throws AdminException {
+    try {
+      integrityLock.lock();
+      for (Region region : regions) {
+        if (smscManager.getSmsc(region.getSmsc()) == null)
+          throw new IntegrityException("smsc_not_exist", region.getSmsc());
+      }
+      regionsManager.checkRegionsConfiguration(regions);
+
+      Collection<Region> toAdd = new ArrayList<Region>();
+      Collection<Region> toUpdate = new ArrayList<Region>();
+      Collection<Region> toRemove = new ArrayList<Region>();
+
+      for (Region r : regions) {
+        if (regionsManager.containsRegionWithName(r.getName()))
+          toUpdate.add(r);
+        else
+          toAdd.add(r);
+      }
+
+      toRemove.addAll(regionsManager.getRegions());
+      toRemove.removeAll(toUpdate);
+      toRemove.removeAll(toAdd);
+
+      for (Region r : toRemove)
+        removeRegion(r.getRegionId());
+
+      for (Region r : toUpdate)
+        updateRegion(r);
+
+      for (Region r : toAdd)
+        addRegion(r);
+
+    } finally {
+      integrityLock.unlock();
+    }
+  }
+
   public void addRegion(Region region) throws AdminException {
     try {
       integrityLock.lock();

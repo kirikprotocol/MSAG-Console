@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 
@@ -15,12 +16,12 @@ import static org.junit.Assert.*;
 public class RegionsSettingTest {
 
   private RegionsSettings settings = new RegionsSettings(Collections.<Region>emptyList(), 100, 0);
+  private static final AtomicInteger regNameSyffix = new AtomicInteger(0);
 
-
-  private static Region buildRegion() throws AdminException{
+  private static Region buildRegion() {
     Region r = new Region();
     r.setMaxSmsPerSecond(200);
-    r.setName("MR SIBIR'");
+    r.setName("MR SIBIR'" + regNameSyffix.incrementAndGet());
     r.setSmsc("SMSC2");
     r.setTimeZone(TimeZone.getDefault());
     r.addMask(new Address("+791394899??"));
@@ -30,12 +31,26 @@ public class RegionsSettingTest {
   private static Region buildRegionWOMask() throws AdminException{
     Region r = new Region();
     r.setMaxSmsPerSecond(200);
-    r.setName("MR SIBIR'");
+    r.setName("MR SIBIR'" + regNameSyffix.incrementAndGet());
     r.setSmsc("SMSC2");
     r.setTimeZone(TimeZone.getDefault());
     return r;
   }
 
+  @Test
+  public void addSameName() throws AdminException {
+    Region r2 = buildRegion();
+
+    settings.addRegion(r2);
+
+    Region r3 = buildRegionWOMask();
+    r3.setName(r2.getName());
+
+    try{
+      settings.addRegion(r3);
+      assertTrue(false);
+    }catch (Exception e){}
+  }
 
   @Test
   public void addGetRemove() throws AdminException{

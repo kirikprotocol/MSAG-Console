@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.web.controllers.regions;
 
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.regions.RegionException;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.web.controllers.UploadController;
 import org.apache.myfaces.trinidad.model.UploadedFile;
@@ -26,7 +25,6 @@ public class RegionsUploadController extends UploadController {
 
   private int maximum = Integer.MAX_VALUE;
 
-  private Map<String, Region> regions = new HashMap<String, Region>();
 
 
   public int getUploaded() {
@@ -45,7 +43,6 @@ public class RegionsUploadController extends UploadController {
 
   @Override
   protected String _next() {
-    regions.clear();
     uploaded = 0;
     current = 0;
     maximum = Integer.MAX_VALUE;
@@ -104,7 +101,11 @@ public class RegionsUploadController extends UploadController {
   @Override
   protected void _process(UploadedFile file, String user, Map<String, String> requestParams) throws Exception {
 
-    maximum = 3 * ((int) file.getLength());
+    maximum = 2;
+    current = 0;
+
+    List<Region> regions = new ArrayList<Region>();
+
     BufferedReader is = null;
     try {
       is = new BufferedReader(new InputStreamReader(file.getInputStream(), Charset.forName(charset)));
@@ -114,9 +115,7 @@ public class RegionsUploadController extends UploadController {
         line = line.trim();
         if (line.indexOf(',') != -1) {
           r = readRegion(line);
-          if (getConfig().getSmsc(r.getSmsc()) == null) {
-            throw new RegionException("smsc_not_exist", r.getSmsc());
-          }
+          regions.add(r);
         } else {
           if (r == null) {
             throw new IllegalArgumentException("Illegal file format");
@@ -126,36 +125,15 @@ public class RegionsUploadController extends UploadController {
           }
           r.addMask(new Address(line));
 
-          if (regions.containsKey(line)) {
-            throw new RegionException("masks_intersection", line);
-          }
-          regions.put(line, r);
-        }
-        current += line.length();
-      }
-      Collection<Region> oldRegions = getConfig().getRegions();
-      for (Region region : oldRegions) {
-        if (!isStoped()) {
-          getConfig().removeRegion(region.getRegionId(), user);
-          current += maximum / 3 / oldRegions.size();
-        } else {
-          break;
         }
       }
 
-      Set<Region> newRegions = new HashSet<Region>(regions.values());
-      for (Region region : newRegions) {
-        if (!isStoped()) {
-          getConfig().addRegion(region, user);
-          current += maximum / 3 / newRegions.size();
-          uploaded++;
-        } else {
-          break;
-        }
-      }
-      if (!isStoped()) {
-        current = maximum;
-      }
+      current = 1;
+
+      if (!isStoped())
+        getConfig().updateRegionsConfiguration(regions);
+
+      current = maximum;
 
     } finally {
       if (is != null) {

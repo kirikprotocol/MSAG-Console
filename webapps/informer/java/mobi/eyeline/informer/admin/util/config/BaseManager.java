@@ -12,6 +12,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
+ * Базовый менеджер настроек. Выполняет 2 функции:
+ * 1. Синхронизирует доступ к настройкам.
+ * 2. Описывает алгоритм сохранения и применения настроек.
+ *
  * Copyright Eyeline.mobi
  * User: vmax
  * Date: 12.10.2010

@@ -64,7 +64,7 @@ class RegionsConfig implements ManagedConfigFile<RegionsSettings> {
     XmlUtils.storeConfig(newFile, d, System.getProperty("file.encoding"), "regions.dtd");
   }
 
-  private void fillElement(Document d, Element region, Region r) {
+  private static void fillElement(Document d, Element region, Region r) {
     region.setAttribute("id", Integer.toString(r.getRegionId()));
     region.setAttribute("name", r.getName());
     region.setAttribute("timezone", new StringBuilder(50).
@@ -78,7 +78,7 @@ class RegionsConfig implements ManagedConfigFile<RegionsSettings> {
     }
   }
 
-  private void readRegion(Region r, Element region) throws AdminException {
+  private static void readRegion(Region r, Element region) throws AdminException {
     r.setName(region.getAttribute("name"));
     r.setMaxSmsPerSecond(Integer.parseInt(region.getAttribute("bandwidth")));
     r.setSmsc(region.getAttribute("infosme_smsc"));

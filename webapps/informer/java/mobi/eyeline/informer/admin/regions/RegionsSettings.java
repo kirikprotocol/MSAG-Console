@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.util.Address;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Aleksandr Khalitov
@@ -11,11 +12,11 @@ import java.util.*;
 class RegionsSettings {
 
   private final Map<String, Region> regionsByMasks = new HashMap<String, Region>();
-  private final Map<Integer, Region> regions = new LinkedHashMap<Integer, Region>();
+  private final Map<Integer, Region> regions = new LinkedHashMap<Integer, Region>(); // todo Почему здесь используется LinkedHashMap а не HashMap ?
 
   private int defaultMaxPerSecond;
 
-  private int lastId;
+  private final AtomicInteger lastId;
 
   RegionsSettings(Collection<Region> regions, int defaultMaxPerSecond, int lastId) {
     for (Region r : regions) {
@@ -25,11 +26,12 @@ class RegionsSettings {
       }
     }
     this.defaultMaxPerSecond = defaultMaxPerSecond;
-    this.lastId = lastId;
+    this.lastId = new AtomicInteger(lastId);
   }
 
-  private synchronized Integer getNextId() {
-    return lastId = lastId + 1;
+  RegionsSettings() {
+    this.defaultMaxPerSecond = 0;
+    this.lastId = new AtomicInteger(1);
   }
 
   private void checkMask(Region region) throws AdminException {
@@ -41,10 +43,18 @@ class RegionsSettings {
     }
   }
 
+  private void checkName(Region region) throws AdminException {
+    for (Region r : regions.values()) {
+      if (!r.equals(region) && r.getName().equals(region.getName()))
+        throw new RegionException("dublicate_name");
+    }
+  }
+
   void addRegion(Region region) throws AdminException {
-    checkMask(region);
     region.validate();
-    region.setRegionId(getNextId());
+    checkMask(region);
+    checkName(region);
+    region.setRegionId(lastId.incrementAndGet());
     for (Address a : region.getMasks()) {
       regionsByMasks.put(a.getSimpleAddress(), region);
     }
@@ -61,8 +71,10 @@ class RegionsSettings {
   }
 
   void updateRegion(Region region) throws AdminException {
-    checkMask(region);
     region.validate();
+    checkMask(region);
+    checkName(region);
+
     Region old = regions.remove(region.getRegionId());
     if (old == null) {
       throw new RegionException("region_not_exist", region.getName());
@@ -100,6 +112,7 @@ class RegionsSettings {
   List<Region> getRegions() {
     return new ArrayList<Region>(regions.values());
   }
+
   Map<Integer, Region> getRegionsMap() {
     return new HashMap<Integer, Region>(regions);
   }

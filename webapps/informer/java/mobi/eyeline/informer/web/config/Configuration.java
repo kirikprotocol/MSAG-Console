@@ -178,6 +178,10 @@ public class Configuration {
     journal.logAddUser(u.getLogin(), user);
   }
 
+  public void updateRegionsConfiguration(Collection<Region> regions) throws AdminException {
+    context.updateRegionsConfiguration(regions);
+    //todo addrecord to journal
+  }
 
   public void removeRegion(Integer regionId, String user) throws AdminException {
     Region r = getRegion(regionId);

@@ -7,11 +7,11 @@ import mobi.eyeline.informer.admin.AdminException;
  */
 public class RegionException extends AdminException {
 
-  public RegionException(String key, Throwable cause, String... args) {
+  RegionException(String key, Throwable cause, String... args) {
     super(key, cause, args);
   }
 
-  public RegionException(String key, String... args) {
+  RegionException(String key, String... args) {
     super(key, args);
   }
 }

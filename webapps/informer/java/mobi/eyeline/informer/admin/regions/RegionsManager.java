@@ -26,12 +26,23 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
   }
 
   /**
+   * Проверяет, будет ли корректна конфигурация, состоящая из указанных регионов.
+   * @param regions список регионов, входящих в конфигурацию
+   * @throws AdminException если конфигурация будет некорректна
+   */
+  public void checkRegionsConfiguration(Collection<Region> regions) throws AdminException {
+    RegionsSettings settings = new RegionsSettings();
+    for (Region r : regions)
+      settings.addRegion(r);
+  }
+
+  /**
    * Добавляет новый регион
    *
    * @param r регион
    * @throws AdminException ошибка сохранения
    */
-  public void addRegion(final Region r) throws AdminException {
+  public void addRegion(Region r) throws AdminException {
     final Region region = r.cloneRegion();
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
@@ -50,7 +61,7 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
    * @param r регион
    * @throws AdminException ошибка сохранения
    */
-  public void updateRegion(final Region r) throws AdminException {
+  public void updateRegion(Region r) throws AdminException {
     final Region region = r.cloneRegion();
     updateSettings(new SettingsWriter<RegionsSettings>() {
       public void changeSettings(RegionsSettings settings) throws AdminException {
@@ -81,10 +92,10 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
   }
 
   /**
-   * Возвращает регион по id
+   * Возвращает регион по id или null, если регион не найден
    *
    * @param id id региона
-   * @return регион
+   * @return регион с указанным идентификатором или null, если регион не найден.
    */
   public Region getRegion(final Integer id) {
     return readSettings(new SettingsReader<RegionsSettings, Region>() {
@@ -115,9 +126,9 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
   }
 
   /**
-   * Установка максимального кол-ва смс по умолчанию
+   * Установка скорости отправки сообщений в дефолтный регион
    *
-   * @param defMaxPerSecond максимального кол-ва смс по умолчанию
+   * @param defMaxPerSecond скорость отправки сообщений в дефолтный регион
    * @throws AdminException ошибка сохранения
    */
   public void setDefaultMaxPerSecond(final int defMaxPerSecond) throws AdminException {
@@ -133,9 +144,9 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
   }
 
   /**
-   * Возвращает максимальное кол-во смс по умолчанию
+   * Возвращает скорость отправки сообщений в дефолтный регион
    *
-   * @return максимального кол-ва смс по умолчанию
+   * @return скорость отправки сообщений в дефолтный регион
    */
   public int getDefaultMaxPerSecond() {
     return readSettings(new SettingsReader<RegionsSettings, Integer>() {
@@ -145,11 +156,12 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
     });
   }
 
+
   /**
-   * Возвращает регион по маске
+   * Возвращает регион по маске или null, если регион не найден
    *
    * @param address маска
-   * @return регион
+   * @return регион или null, если регион не найден.
    */
   public Region getRegion(final Address address) {
     return readSettings(new SettingsReader<RegionsSettings, Region>() {
@@ -175,6 +187,24 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
         }
 
         return result;
+      }
+    });
+  }
+
+  /**
+   * Проверяет наличие в конфигурации региона с указанным именем
+   * @param name имя региона
+   * @return true, если регион присутствует, иначе - false
+   */
+  public boolean containsRegionWithName(final String name) {
+    if (name == null)
+      return false;
+    return readSettings(new SettingsReader<RegionsSettings, Boolean>() {
+      public Boolean executeRead(RegionsSettings settings) {
+        for (Region r : settings.getRegions())
+          if (r.getName().equals(name))
+            return true;
+        return false;
       }
     });
   }
