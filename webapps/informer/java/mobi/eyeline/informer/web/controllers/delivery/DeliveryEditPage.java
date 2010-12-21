@@ -285,20 +285,18 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     }
     try {
       User u = config.getUser(getUserName());
-      TestSms sms = new TestSms();
-      sms.setDestAddr(new Address(u.getPhone()));
-      sms.setFlash(delivery.isFlash());
+      TestSms sms;
       switch (delivery.getDeliveryMode()) {
         case USSD_PUSH:
-          sms.setMode(TestSms.Mode.USSD_PUSH);
+          sms = TestSms.ussdPush();
           break;
         case SMS:
-          sms.setMode(TestSms.Mode.SMS);
+          sms = TestSms.sms(delivery.isFlash());
           break;
-        case USSD_PUSH_VLR:
-          sms.setMode(TestSms.Mode.USSD_PUSH_VLR);
-          break;
+        default:
+          sms = TestSms.ussdPushViaVlr();
       }
+      sms.setDestAddr(new Address(u.getPhone()));
       sms.setSourceAddr(delivery.getSourceAddress());
       sms.setText(delivery.getSingleText());
       config.sendTestSms(sms);

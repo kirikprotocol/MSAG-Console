@@ -1,8 +1,6 @@
-package mobi.eyeline.informer.admin.infosme.protogen;
+package mobi.eyeline.informer.admin.infosme;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.infosme.InfosmeException;
-import mobi.eyeline.informer.admin.infosme.OfflineException;
 import mobi.eyeline.informer.admin.infosme.protogen.protocol.*;
 import mobi.eyeline.informer.admin.protogen.ServerOfflineException;
 import mobi.eyeline.informer.admin.protogen.SyncProtogenConnection;
@@ -15,7 +13,7 @@ import java.io.IOException;
  */
 class InfosmeClient extends SyncProtogenConnection {
 
-  private static final int RESPONSE_TIMEOUT = 5000;
+  private static final int RESPONSE_TIMEOUT = 30000;
 
   InfosmeClient(String host, int port) {
     super(host, port, RESPONSE_TIMEOUT);
@@ -27,11 +25,11 @@ class InfosmeClient extends SyncProtogenConnection {
 
   private <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
     try {
-      return (T)request(request, response);
+      return request(request, response);
     } catch (ServerOfflineException e) {
       throw new OfflineException("server_offline");
     } catch (IOException e) {
-      throw new InfosmeException("interaction_error", e, e.getMessage());
+      throw new InfosmeException("io_error", e, e.getMessage());
     }
   }
 
@@ -39,11 +37,11 @@ class InfosmeClient extends SyncProtogenConnection {
     return sendPdu(req, new ConfigOpResult());
   }
 
-  protected LoggerGetCategoriesResp send(LoggerGetCategories req) throws AdminException{
+  LoggerGetCategoriesResp send(LoggerGetCategories req) throws AdminException{
     return sendPdu(req, new LoggerGetCategoriesResp());
   }
 
-  protected LoggerSetCategoriesResp send(LoggerSetCategories req) throws AdminException {
+  LoggerSetCategoriesResp send(LoggerSetCategories req) throws AdminException {
     return sendPdu(req, new LoggerSetCategoriesResp());
   }
 

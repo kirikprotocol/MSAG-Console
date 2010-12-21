@@ -127,6 +127,7 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
       }
 
       public void infosmeCommand(Infosme infosme) throws AdminException {
+        infosme.updateRegion(0);  // Default region has id=0
       }
     });
   }

@@ -1,14 +1,15 @@
 package mobi.eyeline.informer.admin.infosme;
 
 /**
+ * Информер offline
  * @author Artem Snopkov
  */
 public class OfflineException extends InfosmeException {
-  public OfflineException(String key, Throwable cause) {
+  OfflineException(String key, Throwable cause) {
     super(key, cause);
   }
 
-  public OfflineException(String key, String... args) {
+  OfflineException(String key, String... args) {
     super(key, args);
   }
 }

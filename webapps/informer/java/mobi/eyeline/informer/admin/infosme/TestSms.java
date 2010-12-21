@@ -5,7 +5,7 @@ import mobi.eyeline.informer.util.Address;
 /**
  * @author Aleksandr Khalitov
  */
-public class TestSms {
+public final class TestSms {
 
   private Address sourceAddr;
 
@@ -14,6 +14,52 @@ public class TestSms {
   private boolean flash;
 
   private Mode mode;
+
+  private TestSms() {
+  }
+
+  public static TestSms sms(boolean flash) {
+    TestSms sms = new TestSms();
+    sms.mode = Mode.SMS;
+    sms.flash = flash;
+    return sms;
+  }
+
+  public static TestSms sms(Address src, Address dst, String text, boolean flash) {
+    TestSms sms = sms(flash);
+    sms.setSourceAddr(src);
+    sms.setDestAddr(dst);
+    sms.setText(text);
+    return sms;
+  }
+
+  public static TestSms ussdPush() {
+    TestSms sms = new TestSms();
+    sms.mode = Mode.USSD_PUSH;
+    return sms;
+  }
+
+  public static TestSms ussdPush(Address src, Address dst, String text) {
+    TestSms sms = ussdPush();
+    sms.setSourceAddr(src);
+    sms.setDestAddr(dst);
+    sms.setText(text);
+    return sms;
+  }
+
+  public static TestSms ussdPushViaVlr() {
+    TestSms sms = new TestSms();
+    sms.mode = Mode.USSD_PUSH_VLR;
+    return sms;
+  }
+
+  public static TestSms ussdPushViaVlr(Address src, Address dst, String text) {
+    TestSms sms = ussdPushViaVlr();
+    sms.setSourceAddr(src);
+    sms.setDestAddr(dst);
+    sms.setText(text);
+    return sms;
+  }
 
   public Address getSourceAddr() {
     return sourceAddr;
@@ -43,16 +89,10 @@ public class TestSms {
     return flash;
   }
 
-  public void setFlash(boolean flash) {
-    this.flash = flash;
-  }
 
-  public Mode getMode() {
+
+  Mode getMode() {
     return mode;
-  }
-
-  public void setMode(Mode mode) {
-    this.mode = mode;
   }
 
   @Override
@@ -68,7 +108,7 @@ public class TestSms {
     return sb.toString();
   }
 
-  public static enum Mode {
+  protected static enum Mode {
     SMS,
     USSD_PUSH,
     USSD_PUSH_VLR

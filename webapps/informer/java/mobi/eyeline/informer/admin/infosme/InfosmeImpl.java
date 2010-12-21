@@ -1,9 +1,6 @@
-package mobi.eyeline.informer.admin.infosme.protogen;
+package mobi.eyeline.informer.admin.infosme;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.infosme.Infosme;
-import mobi.eyeline.informer.admin.infosme.InfosmeException;
-import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.infosme.protogen.protocol.*;
 
 /**
@@ -20,8 +17,10 @@ public class InfosmeImpl implements Infosme {
   }
 
   protected void checkResponse(int status) throws InfosmeException {
-    if (status != 0) {
-      throw new InfosmeException("interaction_error", status + "");
+    switch (status) {
+      case 0 : return;
+      case 6 : throw new InfosmeException("server_not_ready");
+      default: throw new InfosmeException("interaction_error", status + "");
     }
   }
 

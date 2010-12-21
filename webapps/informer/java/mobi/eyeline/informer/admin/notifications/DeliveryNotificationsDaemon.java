@@ -182,11 +182,9 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
 
     public Object call() throws Exception {
       try {
-        TestSms testSms = new TestSms();
+        TestSms testSms = TestSms.sms(false);
         testSms.setDestAddr(address);
         testSms.setSourceAddr(context.getNotificationSettings().getSmsSenderAddress());
-        testSms.setFlash(false);
-        testSms.setMode(TestSms.Mode.SMS);
 
         String template = notification.getStatus() == DeliveryStatus.Active ? settings.getSmsTemplateActivated() :
             settings.getSmsTemplateFinished();

@@ -3,7 +3,6 @@ package mobi.eyeline.informer.admin.smsc;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
-import mobi.eyeline.informer.admin.infosme.InfosmeException;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -23,11 +22,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class SmscManagerTest {
 
-  private boolean infosmeError = false;
-
   private static File configFile, backupDir;
-
-  private SmscManager smscManager;
 
   @BeforeClass
   public static void init() throws Exception{
@@ -35,42 +30,12 @@ public class SmscManagerTest {
     backupDir = TestUtils.createRandomDir(".config.backup");
   }
 
-  @Before
-  public void before() throws Exception {
-    Infosme infosem = new TestInfosme() {
-      @Override
-      public void addSmsc(String smscId) throws AdminException {
-        if(infosmeError) {
-          throw new InfosmeException("interaction_error","");
-        }
-        super.addSmsc(smscId);
-      }
-      @Override
-      public void removeSmsc(String smscId) throws AdminException {
-        if(infosmeError) {
-          throw new InfosmeException("interaction_error","");
-        }
-        super.removeSmsc(smscId);
-      }
-      @Override
-      public void updateSmsc(String smscId) throws AdminException {
-        if(infosmeError) {
-          throw new InfosmeException("interaction_error","");
-        }
-        super.updateSmsc(smscId);
-      }
-      @Override
-      public void setDefaultSmsc(String smscId) throws AdminException {
-        if(infosmeError) {
-          throw new InfosmeException("interaction_error","");
-        }
-        super.setDefaultSmsc(smscId);
-      }
-    };
-    smscManager = new SmscManager(infosem, configFile, backupDir, FileSystem.getFSForSingleInst());
-    for(Smsc s : smscManager.getSmscs()) {
-      infosem.addSmsc(s.getName());
-    }
+  public SmscManager createManager(boolean errorMode) throws Exception {
+    Infosme infosem = new TestInfosme(errorMode);
+    return new SmscManager(infosem, configFile, backupDir, FileSystem.getFSForSingleInst());
+//    for(Smsc s : smscManager.getSmscs()) {
+//      infosem.addSmsc(s.getName());
+//    }
   }
 
   @SuppressWarnings({"ResultOfMethodCallIgnored"})
@@ -86,6 +51,7 @@ public class SmscManagerTest {
 
   @Test
   public void update() throws Exception {
+    SmscManager smscManager = createManager(false);
     Smsc smsc = smscManager.getSmsc("SMSC0");
     assertTrue(smsc != null);
     assertEquals(smsc.getName(), "SMSC0");
@@ -112,7 +78,7 @@ public class SmscManagerTest {
 
     smscManager.updateSmsc(smsc);
 
-    before();
+    smscManager = createManager(false);
 
     Smsc s1 = smscManager.getSmsc(smsc.getName());
     assertTrue(s1.equals(smsc));
@@ -134,15 +100,16 @@ public class SmscManagerTest {
     smsc.setTimeout(2);
     smsc.setRangeOfAddress(3);
 
+    SmscManager smscManager = createManager(false);
     smscManager.addSmsc(smsc);
 
-    before();
+    smscManager = createManager(false);
 
     Smsc s1 = smscManager.getSmsc(smsc.getName());
     assertTrue(s1.equals(smsc));
     smscManager.removeSmsc("SMSC8");
 
-    before();
+    smscManager = createManager(false);
 
     s1 = smscManager.getSmsc("SMSC8");
     assertTrue(s1 == null);
@@ -150,107 +117,90 @@ public class SmscManagerTest {
 
 
   @Test
-  public void testAddRollback() throws AdminException {
+  public void testAddRollback() throws Exception {
+    SmscManager smscManager = createManager(true);
+    Smsc smsc = new Smsc("SMSC_ERROR");
+
+    smsc.setHost("niagara1");
+    smsc.setInterfaceVersion(3113);
+    smsc.setPassword("ewqeq");
+    smsc.setPort(132);
+    smsc.setSystemType("sT");
+    smsc.setUssdServiceOp(46);
+    smsc.setVlrUssdServiceOp(634);
+    smsc.setSystemId("sid2");
+    smsc.setTimeout(2);
+    smsc.setRangeOfAddress(3);
+
+    long beforeLenght = configFile.length();
     try{
-      infosmeError = true;
-      Smsc smsc = new Smsc("SMSC_ERROR");
+      smscManager.addSmsc(smsc);
+      assertTrue(false);
+    }catch (AdminException e){}
 
-      smsc.setHost("niagara1");
-      smsc.setInterfaceVersion(3113);
-      smsc.setPassword("ewqeq");
-      smsc.setPort(132);
-      smsc.setSystemType("sT");
-      smsc.setUssdServiceOp(46);
-      smsc.setVlrUssdServiceOp(634);
-      smsc.setSystemId("sid2");
-      smsc.setTimeout(2);
-      smsc.setRangeOfAddress(3);
-
-      long beforeLenght = configFile.length();
-      try{
-        smscManager.addSmsc(smsc);
-        assertTrue(false);
-      }catch (AdminException e){}
-
-      long afterLenght = configFile.length();
-      assertEquals(beforeLenght, afterLenght);
-      assertEquals(smscManager.getSmsc(smsc.getName()), null);
-    }finally {
-      infosmeError = false;
-    }
+    long afterLenght = configFile.length();
+    assertEquals(beforeLenght, afterLenght);
+    assertEquals(smscManager.getSmsc(smsc.getName()), null);
   }
 
   @Test
-  public void testRemoveRollback() throws AdminException {
+  public void testRemoveRollback() throws Exception {
+    SmscManager smscManager = createManager(true);
+    Smsc smsc = smscManager.getSmscs().iterator().next();
+
+    long beforeLenght = configFile.length();
     try{
-      infosmeError = true;
+      smscManager.removeSmsc(smsc.getName());
+      assertTrue(false);
+    }catch (AdminException e){}
 
-      Smsc smsc = smscManager.getSmscs().iterator().next();
-
-      long beforeLenght = configFile.length();
-      try{
-        smscManager.removeSmsc(smsc.getName());
-        assertTrue(false);
-      }catch (AdminException e){}
-
-      long afterLenght = configFile.length();
-      assertEquals(beforeLenght, afterLenght);
-      assertTrue(smscManager.getSmsc(smsc.getName()) != null);
-    }finally {
-      infosmeError = false;
-    }
+    long afterLenght = configFile.length();
+    assertEquals(beforeLenght, afterLenght);
+    assertTrue(smscManager.getSmsc(smsc.getName()) != null);
   }
 
   @Test
-  public void testUpdateRollback() throws AdminException {
+  public void testUpdateRollback() throws Exception {
+    SmscManager smscManager = createManager(true);
+
+    Smsc smsc = smscManager.getSmscs().iterator().next();
+    smsc.setHost(smsc.getHost()+"-");
+
+    long beforeLenght = configFile.length();
     try{
-      infosmeError = true;
+      smscManager.updateSmsc(smsc);
+      assertTrue(false);
+    }catch (AdminException e){}
 
-      Smsc smsc = smscManager.getSmscs().iterator().next();
-      smsc.setHost(smsc.getHost()+"-");
-
-      long beforeLenght = configFile.length();
-      try{
-        smscManager.updateSmsc(smsc);
-        assertTrue(false);
-      }catch (AdminException e){}
-
-      long afterLenght = configFile.length();
-      assertEquals(beforeLenght, afterLenght);
-      assertTrue(smscManager.getSmsc(smsc.getName()) != null);
-      assertEquals(smscManager.getSmsc(smsc.getName()).getHost(),smsc.getHost().substring(0, smsc.getHost().length()-1));
-    }finally {
-      infosmeError = false;
-    }
+    long afterLenght = configFile.length();
+    assertEquals(beforeLenght, afterLenght);
+    assertTrue(smscManager.getSmsc(smsc.getName()) != null);
+    assertEquals(smscManager.getSmsc(smsc.getName()).getHost(),smsc.getHost().substring(0, smsc.getHost().length()-1));
   }
 
   @Test
-  public void testSetDefault() throws AdminException {
+  public void testSetDefault() throws Exception {
+    SmscManager smscManager = createManager(true);
+
+    Collection<Smsc> smscs = smscManager.getSmscs();
+    assertTrue(smscs.size() >= 2);
+    Iterator<Smsc> i = smscs.iterator();
+
+    Smsc s1 = i.next();
+    Smsc s2 = i.next();
+
+    String oldDefault = smscManager.getDefaultSmsc();
+    String newDefault = s1.getName().equals(oldDefault) ? s2.getName() : s1.getName();
+
+    long beforeLenght = configFile.length();
     try{
-      infosmeError = true;
+      smscManager.setDefaultSmsc(newDefault);
+      assertTrue(false);
+    }catch (AdminException e){}
 
-      Collection<Smsc> smscs = smscManager.getSmscs();
-      assertTrue(smscs.size() >= 2);
-      Iterator<Smsc> i = smscs.iterator();
-
-      Smsc s1 = i.next();
-      Smsc s2 = i.next();
-
-      String oldDefault = smscManager.getDefaultSmsc();
-      String newDefault = s1.getName().equals(oldDefault) ? s2.getName() : s1.getName();
-
-      long beforeLenght = configFile.length();
-      try{
-        smscManager.setDefaultSmsc(newDefault);
-        assertTrue(false);
-      }catch (AdminException e){}
-
-      long afterLenght = configFile.length();
-      assertEquals(beforeLenght, afterLenght);
-      assertTrue(smscManager.getDefaultSmsc().equals(oldDefault));
-    }finally {
-      infosmeError = false;
-    }
+    long afterLenght = configFile.length();
+    assertEquals(beforeLenght, afterLenght);
+    assertTrue(smscManager.getDefaultSmsc().equals(oldDefault));
   }
 
 

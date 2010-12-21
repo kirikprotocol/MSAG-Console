@@ -4,7 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 
 
 /**
- * Администрирование Informer
+ * Клиент для работы с админским протоколом Информера
  *
  * @author Aleksandr Khalitov
  */

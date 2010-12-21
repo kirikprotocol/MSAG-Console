@@ -197,22 +197,22 @@ public class DeliveryEditController extends DeliveryController {
       return null;
     }
     try {
-      TestSms sms = new TestSms();
-      sms.setDestAddr(new Address(user.getPhone()));
-      sms.setFlash(delivery.isFlash());
+      Address src = delivery.getSourceAddress();
+      Address dst = new Address(user.getPhone());
+      boolean flash = delivery.isFlash();
+      String text = delivery.getSingleText();
+
+      TestSms sms;
       switch (delivery.getDeliveryMode()) {
         case USSD_PUSH:
-          sms.setMode(TestSms.Mode.USSD_PUSH);
+          sms = TestSms.ussdPush(src, dst, text);
           break;
         case SMS:
-          sms.setMode(TestSms.Mode.SMS);
+          sms = TestSms.sms(src, dst, text, flash);
           break;
-        case USSD_PUSH_VLR:
-          sms.setMode(TestSms.Mode.USSD_PUSH_VLR);
-          break;
+        default:
+          sms = TestSms.ussdPushViaVlr(src, dst, text);
       }
-      sms.setSourceAddr(delivery.getSourceAddress());
-      sms.setText(delivery.getSingleText());
       config.sendTestSms(sms);
       addLocalizedMessage(FacesMessage.SEVERITY_INFO, "delivery.test.sms", user.getPhone());
     } catch (AdminException e) {

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -91,7 +92,7 @@ public abstract class SyncProtogenConnection {
     throw new IOException("Unexpected response tag: " + tag + ". Expected tags: " + expectedTags.toString());
   }
 
-  protected PDU request(PDU request, PDU... expectedResponsesInst) throws IOException {
+  protected <T extends PDU> T request(PDU request, T... expectedResponsesInst) throws IOException {
 
     try {
       sendLock.lock();
@@ -102,10 +103,13 @@ public abstract class SyncProtogenConnection {
       if (socket == null)
         reconnect();
 
-      PDU resp;
+      T resp;
       // При первой попытке отправки допустима ошибка
       try {
         resp = sendPDU(request, expectedResponsesInst);
+      } catch (SocketTimeoutException e) {
+        logger.error("Response wait timeout reached for seq=" + request.getSeqNum() + ".");
+        throw new ResponseWaitTimeoutException();
       } catch (IOException ignored) {
         logger.error("Connection lost. Cause: " + ignored.getClass() + " : "+ ignored.getMessage() + ". Try to reconnect.");
         // Если отправить не удалось, реконнектимся и снова отправляем
