@@ -6,124 +6,286 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.TestInfosme;
 import mobi.eyeline.informer.util.Address;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 import testutils.TestUtils;
 
 import java.io.File;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Aleksandr Khalitov
  */
+
 public class RegionsManagerTest {
 
-  private static File configFile, backupDir;
+  private static final AtomicInteger regNameSyffix = new AtomicInteger(0);
 
-  @BeforeClass
-  public static void init() throws Exception{
+  protected File configFile, backupDir;
+
+  @Before
+  public void init() throws Exception {
     configFile = TestUtils.exportResourceToRandomFile(RegionsManager.class.getResourceAsStream("regions.xml"), ".regions");
     backupDir = TestUtils.createRandomDir(".config.backup");
   }
 
-  private RegionsManager createManager(boolean errorMode) throws AdminException, InitException {
+  @SuppressWarnings({"ResultOfMethodCallIgnored"})
+  @After
+  public void shutdown() {
+    if (configFile != null) {
+      configFile.delete();
+    }
+    if (backupDir != null) {
+      TestUtils.recursiveDeleteFolder(backupDir);
+    }
+  }
+
+  protected Region getExistedRegion() throws AdminException, InitException {
+    return createManager().getRegions().get(0);
+  }
+
+  protected Region getExistedRegion1() throws AdminException, InitException {
+    return createManager().getRegions().get(1);
+  }
+
+  protected RegionsManager createManager() throws AdminException, InitException {
+    return createManager(false);
+  }
+
+  protected RegionsManager createManager(boolean errorMode) throws AdminException, InitException {
     Infosme infosem = new TestInfosme(errorMode);
     return new RegionsManager(infosem, configFile, backupDir, FileSystem.getFSForSingleInst());
-//    for(Region s : regionsManager.getRegions()) {
-//      infosem.addRegion(s.getRegionId());
-//    }
-//    return regionsManager;
   }
 
+  private static Region createValidRegion() {
+    Region r = buildRegionWOMask();
+    r.addMask(new Address("+791394899??"));
+    r.addMask(new Address("+791394898??"));
+    return r;
+  }
 
+  private static Region buildRegionWOMask() {
+    Region r = new Region();
+    r.setMaxSmsPerSecond(200);
+    r.setName("MR SIBIR'" + regNameSyffix.incrementAndGet());
+    r.setSmsc("SMSC2");
+    r.setTimeZone(TimeZone.getDefault());
+    return r;
+  }
 
-  @Test
-  public void update() throws Exception {
-    RegionsManager regionsManager = createManager(false);
-    Region region = regionsManager.getRegion(new Address("+79139??????"));
-    assertTrue(region != null);
-    assertEquals(region.getName(), "МР Москва");
-    assertEquals(region.getTimeZone(), TimeZone.getTimeZone("Europe/Moscow"));
-    assertEquals(region.getMaxSmsPerSecond(), 200);
-    assertEquals(region.getSmsc(), "SMSC2");
-    assertEquals(region.getMasks().size(), 2);
-
-    for(Address a : region.getMasks()) {
-      assertTrue(a.getSimpleAddress().equals("+79139??????") || a.getSimpleAddress().equals("+79137??????"));
-    }
-
-    region.setName("МР Москва 2");
-
-    regionsManager.updateRegion(region);
-
-    regionsManager = createManager(false);
-
-    Region r1 = regionsManager.getRegion(region.getRegionId());
-
-    assertEquals(r1.getName(), "МР Москва 2");
-    assertEquals(r1.getTimeZone(), TimeZone.getTimeZone("Europe/Moscow"));
-    assertEquals(r1.getMaxSmsPerSecond(), 200);
-    assertEquals(r1.getSmsc(), "SMSC2");
-    assertEquals(r1.getMasks().size(), 2);
-
-    for(Address a : r1.getMasks()) {
-      assertTrue(a.getSimpleAddress().equals("+79139??????") || a.getSimpleAddress().equals("+79137??????"));
+  private void assertAddRegionFailed(Region r) throws Exception {
+    RegionsManager regionsManager = createManager();
+    try {
+      regionsManager.addRegion(r);
+      assertTrue(false);
+    } catch (AdminException e) {
     }
   }
 
+  private void assertUpdateRegionFailed(Region r) throws Exception {
+    RegionsManager regionsManager = createManager();
+    try {
+      regionsManager.updateRegion(r);
+      assertTrue(false);
+    } catch (AdminException e) {
+    }
+  }
+
+
+  // ПРОВЕРКА ПАРАМЕТРОВ
+
   @Test
-  public void addRemove() throws Exception {
+  public void testAddRegionWithInvalidName() throws Exception {
+    Region r = createValidRegion();
+    Region r1 = getExistedRegion();
 
-    RegionsManager regionsManager = createManager(false);
+    r.setName("");
+    r1.setName("");
+    assertAddRegionFailed(r);
+    assertUpdateRegionFailed(r1);
 
-    Region r1 = new Region();
-
-    r1.setName("МР СИБИРЬ");
-    r1.setMaxSmsPerSecond(3113);
-    r1.setSmsc("SMSC3");
-    r1.setTimeZone(TimeZone.getDefault());
-
-    r1.addMask(new Address("+79239??????"));
-
-    regionsManager.addRegion(r1);
-
-    regionsManager = createManager(false);
-
-    r1 = regionsManager.getRegion(r1.getMasks().iterator().next());
-    assertEquals(r1.getName(), "МР СИБИРЬ");
-    assertEquals(r1.getTimeZone(), TimeZone.getDefault());
-    assertEquals(r1.getMaxSmsPerSecond(), 3113);
-    assertEquals(r1.getSmsc(), "SMSC3");
-    assertEquals(r1.getMasks().size(), 1);
-
-    assertTrue(r1.getMasks().iterator().next().getSimpleAddress().equals("+79239??????"));
-
-    regionsManager.removeRegion(r1.getRegionId());
-
-    regionsManager = createManager(false);
-
-    r1 = regionsManager.getRegion(r1.getRegionId());
-    assertTrue(r1 == null);
+    r.setName(null);
+    r1.setName(null);
+    assertAddRegionFailed(r);
+    assertUpdateRegionFailed(r1);
   }
 
   @Test
-  public void setDef() throws Exception {
+  public void testAddRegionWithInvalidSmsc() throws Exception {
+    Region r = createValidRegion();
+    Region r1 = getExistedRegion();
 
-    RegionsManager regionsManager = createManager(false);
+    r.setSmsc("");
+    r1.setSmsc("");
+    assertAddRegionFailed(r);
+    assertUpdateRegionFailed(r1);
 
-    int newDef = regionsManager.getDefaultMaxPerSecond() != 532 ? 532 : 674;
-
-    regionsManager.setDefaultMaxPerSecond(newDef);
-
-    regionsManager = createManager(false);
-
-    assertTrue(regionsManager.getDefaultMaxPerSecond() == newDef);
+    r.setSmsc(null);
+    r1.setSmsc(null);
+    assertAddRegionFailed(r);
+    assertUpdateRegionFailed(r1);
   }
+
+  @Test
+  public void testAddRegionWithInvalidMaxSmsPerSecond() throws Exception {
+    Region r = createValidRegion();
+    Region r1 = getExistedRegion();
+
+    r.setMaxSmsPerSecond(-1);
+    r1.setMaxSmsPerSecond(-1);
+    assertAddRegionFailed(r);
+    assertUpdateRegionFailed(r1);
+  }
+
+  @Test
+  public void testAddRegionWithZeroMaxSmsPerSecond() throws Exception {
+    Region r = createValidRegion();
+    Region r1 = getExistedRegion();
+
+    r.setMaxSmsPerSecond(0);
+    r1.setMaxSmsPerSecond(0);
+
+    RegionsManager manager = createManager();
+    manager.addRegion(r);
+    manager.updateRegion(r1);
+  }
+
+  @Test
+  public void testAddRegionWithInvalidTimezone() throws Exception {
+    Region r = createValidRegion();
+    Region r1 = getExistedRegion();
+
+    r.setTimeZone(null);
+    r1.setTimeZone(null);
+    assertAddRegionFailed(r);
+    assertUpdateRegionFailed(r1);
+  }
+
+  @Test
+  public void testAddRegionWithSameName() throws Exception {
+    Region r = createValidRegion();
+    Region r1 = getExistedRegion();
+    Region r2 = getExistedRegion1();
+
+    r.setName(r1.getName());
+    r2.setName(r1.getName());
+    assertAddRegionFailed(r);
+    assertUpdateRegionFailed(r2);
+  }
+
+  @Test
+  public void testAddRegionWithSameMask() throws Exception {
+    Region r = createValidRegion();
+    Region r1 = getExistedRegion();
+    Region r2 = getExistedRegion1();
+
+    r.addMasks(r1.getMasks());
+    r2.addMasks(r1.getMasks());
+    assertAddRegionFailed(r);
+    assertUpdateRegionFailed(r2);
+  }
+
+  @Test
+  public void testSetInvalidDefaultMaxPerSecond() throws AdminException, InitException {
+    RegionsManager manager = createManager();
+    try {
+      manager.setDefaultMaxPerSecond(-1);
+      assertTrue(false);
+    } catch (AdminException e) {
+    }
+
+    try {
+      manager.setDefaultMaxPerSecond(0);
+      assertTrue(false);
+    } catch (AdminException e) {
+    }
+  }
+
+  @Test
+  public void testSetZeroValueToDefaultMaxPerSecond() throws Exception {
+    RegionsManager manager = createManager();
+    manager.setDefaultMaxPerSecond(0);
+  }
+
+  // ПРОВЕРКА ОПЕРАЦИЙ
+
+  @Test
+  public void testAddRegion() throws AdminException, InitException {
+    RegionsManager manager = createManager();
+
+    Region r = createValidRegion();
+    manager.addRegion(r);
+    assertNotNull(r.getRegionId());
+
+    assertTrue(manager.getRegion(r.getRegionId()) != null);
+    assertTrue(manager.getRegions().contains(r));
+    assertTrue(manager.getRegion(r.getMasks().iterator().next()) != null);
+    assertTrue(!manager.getRegionsBySmsc(r.getSmsc()).isEmpty());
+    assertTrue(manager.containsRegionWithName(r.getName()));
+  }
+
+  @Test
+  public void testRemoveRegion() throws AdminException, InitException {
+    RegionsManager manager = createManager();
+    Region r = getExistedRegion();
+
+    manager.removeRegion(r.getRegionId());
+
+    assertTrue(manager.getRegion(r.getRegionId()) == null);
+    assertFalse(manager.getRegions().contains(r));
+    assertTrue(manager.getRegion(r.getMasks().iterator().next()) == null);
+    assertTrue(manager.getRegionsBySmsc(r.getSmsc()).isEmpty());
+    assertFalse(manager.containsRegionWithName(r.getName()));
+  }
+
+  @Test
+  public void testUpdateRegion() throws AdminException, InitException {
+    RegionsManager manager = createManager();
+    Region r = getExistedRegion();
+
+    String oldName = r.getName();
+
+    r.setName("MYREGION");
+    r.setSmsc("MYSMSC");
+    r.addMask(new Address("+79999999999"));
+
+    manager.updateRegion(r);
+
+    assertTrue(manager.getRegion(r.getRegionId()) != null);
+    assertTrue(manager.getRegions().contains(r));
+    assertTrue(manager.getRegion(new Address("+79999999999")) != null);
+    assertTrue(manager.getRegionsBySmsc("MYSMSC").contains(r));
+    assertTrue(manager.containsRegionWithName("MYREGION"));
+    assertFalse(manager.containsRegionWithName(oldName));
+    assertTrue(manager.getRegion(r.getRegionId()).getName().equals(r.getName()));
+  }
+
+  @Test
+  public void testGetSetDefaultMaxPerSecond() throws Exception {
+    RegionsManager manager = createManager();
+
+    manager.setDefaultMaxPerSecond(143);
+    assertEquals(143, manager.getDefaultMaxPerSecond());
+  }
+
+  @Test
+  public void testContainsRegionWithName() throws Exception {
+    RegionsManager manager = createManager();
+    Region r = getExistedRegion();
+
+    assertTrue(manager.containsRegionWithName(r.getName()));
+    assertFalse(manager.containsRegionWithName("dfga"));
+    assertFalse(manager.containsRegionWithName(null));
+    assertFalse(manager.containsRegionWithName(""));
+  }
+
+
+  // ПРОВЕРКА ОСОБЕННОСТЕЙ РЕАЛИЗАЦИИ
 
 
   @Test
@@ -139,10 +301,11 @@ public class RegionsManagerTest {
     r1.addMask(new Address("+79039??????"));
 
     long beforeLenght = configFile.length();
-    try{
+    try {
       regionsManager.addRegion(r1);
       assertTrue(false);
-    }catch (AdminException e){}
+    } catch (AdminException e) {
+    }
 
     long afterLenght = configFile.length();
     assertEquals(beforeLenght, afterLenght);
@@ -156,10 +319,11 @@ public class RegionsManagerTest {
     Region r1 = regionsManager.getRegions().iterator().next();
 
     long beforeLenght = configFile.length();
-    try{
+    try {
       regionsManager.removeRegion(r1.getRegionId());
       assertTrue(false);
-    }catch (AdminException e){}
+    } catch (AdminException e) {
+    }
 
     long afterLenght = configFile.length();
     assertEquals(beforeLenght, afterLenght);
@@ -171,31 +335,38 @@ public class RegionsManagerTest {
     RegionsManager regionsManager = createManager(true);
 
     Region r1 = regionsManager.getRegions().iterator().next();
-    r1.setName(r1.getName()+"-");
+    r1.setName(r1.getName() + "-");
 
     long beforeLenght = configFile.length();
-    try{
+    try {
       regionsManager.updateRegion(r1);
       assertTrue(false);
-    }catch (AdminException e){}
+    } catch (AdminException e) {
+    }
 
     long afterLenght = configFile.length();
     assertEquals(beforeLenght, afterLenght);
     assertTrue(regionsManager.getRegion(r1.getRegionId()) != null);
-    assertTrue(regionsManager.getRegion(r1.getRegionId()).getName().equals(r1.getName().substring(0, r1.getName().length()-1)));
+    assertTrue(regionsManager.getRegion(r1.getRegionId()).getName().equals(r1.getName().substring(0, r1.getName().length() - 1)));
   }
 
-  @SuppressWarnings({"ResultOfMethodCallIgnored"})
-  @AfterClass
-  public static void shutdown() {
-    if(configFile != null) {
-      configFile.delete();
-    }
-    if(backupDir != null) {
-      TestUtils.recursiveDeleteFolder(backupDir);
-    }
+  @Test
+  public void testPersistence() throws Exception {
+    RegionsManager regionsManager = createManager();
+
+    Region r = createValidRegion();
+    regionsManager.addRegion(r);
+
+    regionsManager = createManager();
+    assertTrue(regionsManager.containsRegionWithName(r.getName()));
+    assertTrue(regionsManager.getRegion(r.getRegionId()) != null);
+    assertTrue(regionsManager.getRegionsBySmsc(r.getSmsc()).contains(r));
+
+    regionsManager.removeRegion(r.getRegionId());
+
+    regionsManager = createManager();
+    assertFalse(regionsManager.containsRegionWithName(r.getName()));
+    assertFalse(regionsManager.getRegion(r.getRegionId()) != null);
+    assertFalse(regionsManager.getRegionsBySmsc(r.getSmsc()).contains(r));
   }
-
-
-
 }

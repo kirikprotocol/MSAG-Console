@@ -36,7 +36,7 @@ public class Region implements Serializable {
     vh.checkNotEmpty("name", name);
     vh.checkNotEmpty("smsc", smsc);
     vh.checkNotNull("timeZone", timeZone);
-    vh.checkGreaterThan("maxSmsPerSecond", maxSmsPerSecond, 0);
+    vh.checkGreaterOrEqualsTo("maxSmsPerSecond", maxSmsPerSecond, 0);
 
     for (Address ad : masks) {
       vh.checkNotNull("masks", ad);
@@ -91,15 +91,13 @@ public class Region implements Serializable {
     }
   }
 
+  public void addMasks(Collection<Address> masks) {
+    this.masks.addAll(masks);
+  }
+
   public void removeMask(Address r) {
-    Iterator<Address> i = masks.iterator();
-    while (i.hasNext()) {
-      Address a = i.next();
-      if (a.getSimpleAddress().equals(r.getSimpleAddress())) {
-        i.remove();
-        break;
-      }
-    }
+    if (r != null)
+      masks.remove(r);
   }
 
   public void clearMasks() {

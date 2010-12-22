@@ -53,6 +53,7 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
         infosme.addRegion(region.getRegionId());
       }
     });
+    r.setRegionId(region.getRegionId());
   }
 
   /**

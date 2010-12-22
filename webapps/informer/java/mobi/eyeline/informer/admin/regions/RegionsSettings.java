@@ -134,7 +134,7 @@ class RegionsSettings {
   }
 
   void setDefaultMaxPerSecond(int defaultMaxPerSecond) throws AdminException {
-    if (defaultMaxPerSecond <= 0) {
+    if (defaultMaxPerSecond < 0) {
       throw new RegionException("def_region_incorrect");
     }
     this.defaultMaxPerSecond = defaultMaxPerSecond;
