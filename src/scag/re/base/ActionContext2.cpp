@@ -98,6 +98,7 @@ void ActionContext::resetContext( Hash<Property>*  constants,
                                   CommandProperty* commandProperty,
                                   RuleStatus*      rs )
 {
+    CHECKMAGTC;
     isTrueCondition = false;
     status_ = rs;
     constants_ = constants;
@@ -115,6 +116,7 @@ void ActionContext::resetContext( Hash<Property>*  constants,
 
 void ActionContext::clearLongCallContext()
 {
+    CHECKMAGTC;
     while ( ! getSession().getLongCallContext().ActionStack.empty() ) {
         getSession().getLongCallContext().ActionStack.pop();        
     }
@@ -123,6 +125,7 @@ void ActionContext::clearLongCallContext()
 
 void ActionContext::setContextScope( int id )
 {
+    CHECKMAGTC;
     contextScopeId_ = id;
     if (session_->getCurrentOperation()) {
         session_->getCurrentOperation()->setContextScope( id );
@@ -132,6 +135,7 @@ void ActionContext::setContextScope( int id )
 
 int ActionContext::getContextScope() const
 {
+    CHECKMAGTC;
     int id = contextScopeId_;
     if (session_->getCurrentOperation()) {
         id = session_->getCurrentOperation()->getContextScope();
@@ -143,6 +147,7 @@ int ActionContext::getContextScope() const
 
 Property* ActionContext::getProperty( const std::string& var )
 {
+    CHECKMAGTC;
     FieldType prefix;
     const char* name;
     Property*              propertyPtr = 0;
@@ -211,6 +216,7 @@ Property* ActionContext::getProperty( const std::string& var )
 
 void ActionContext::delProperty( const std::string& var )
 {
+    CHECKMAGTC;
     FieldType prefix;
     const char* name;
     prefix = Separate(var,name);
@@ -258,6 +264,7 @@ void ActionContext::delProperty( const std::string& var )
 
 void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )
 {
+    CHECKMAGTC;
     bis.AbonentNumber = commandProperty_->abonentAddr.toString().c_str();
     bis.serviceId = commandProperty_->serviceId;
     bis.protocol = commandProperty_->protocol;
@@ -271,6 +278,7 @@ void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )
 bill::infrastruct::TariffRec* ActionContext::getTariffRec( uint32_t category,
                                                            uint32_t medyaType)
 {
+    CHECKMAGTC;
     if ( tariffRec_.get() ) {
         if ( tariffRec_->CategoryId != category ||
              tariffRec_->MediaTypeId != medyaType ||
@@ -296,6 +304,7 @@ bill::infrastruct::TariffRec* ActionContext::getTariffRec( uint32_t category,
 
 Property* ActionContext::getInfrastructConstant( const char* pname )
 {
+    CHECKMAGTC;
     // determine the validity of the name
     Property* ret = 0;
     if ( pname ) {
@@ -358,32 +367,6 @@ Property* ActionContext::getInfrastructConstant( const char* pname )
     } // if pname
     return ret;
 }
-
-/*
-void ActionContext::setInfrastructureConstants() {
-    if (!commandProperty_) {
-        throw SCAGException("ActionContext: commandProperty is not set");
-        return;
-    }
-    Property property;
-    property.setInt(commandProperty_->serviceId);
-    infrastructConstants_["service_id"] = property;
-
-    property.setInt(commandProperty_->providerId);
-    infrastructConstants_["provider_id"] = property;
-
-    property.setInt(commandProperty_->operatorId);
-    infrastructConstants_["operator_id"] = property;
-
-    property.setInt(session_->getCurrentOperationId());
-    infrastructConstants_["operation_id"] = property;
-
-    // property.setInt(session_->sessionKey().toIndex());
-    // infrastructConstants_["abonent"] = property;
-
-    infrastructConstants_["route_id"] = commandProperty_->routeId;
-}
- */
 
 }}}
 

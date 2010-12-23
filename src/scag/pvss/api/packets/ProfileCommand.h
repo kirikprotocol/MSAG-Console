@@ -3,6 +3,7 @@
 
 #include "scag/pvss/common/PvapException.h"
 #include "logger/Logger.h"
+#include "util/TypeInfo.h"
 
 namespace scag2 {
 namespace pvss {
@@ -57,6 +58,9 @@ protected:
 
 private:
     ProfileCommand& operator = ( const ProfileCommand& );
+
+private:
+    DECLMAGTC(ProfileCommand);
 };
 
 } // namespace pvss

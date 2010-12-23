@@ -89,6 +89,7 @@ public:
 
     virtual Property* getProperty( const std::string& name )
     {
+        CHECKMAGTC;
         Property* p;
         if ( isReadonly(name) ) {
             p = processReadonly( name );
@@ -100,6 +101,7 @@ public:
 
     virtual void delProperty( const std::string& name )
     {
+        CHECKMAGTC;
         if ( !isReadonly(name) ) {
             SessionPropertyScope::delProperty(name);
         }
@@ -107,12 +109,14 @@ public:
 
 protected:
     virtual bool isReadonly( const std::string& name ) const {
+        CHECKMAGTC;
         return ( readonly_->find( name ) == readonly_->end() ? false : true );
     }
 
     // only a few readonly items are expected
     Property* processReadonly( const std::string& name )
     {
+        CHECKMAGTC;
         AdapterProperty** p = properties_.GetPtr( name.c_str() );
         AdapterProperty* np = 0;
         if ( name == "ICC_STATUS" ||
@@ -226,6 +230,7 @@ SessionPropertyScope::~SessionPropertyScope()
 
 Property* SessionPropertyScope::getProperty( const std::string& name )
 {
+    CHECKMAGTC;
     AdapterProperty* res;
     AdapterProperty** ptr = properties_.GetPtr( name.c_str() );
     if ( ptr ) {
@@ -240,12 +245,14 @@ Property* SessionPropertyScope::getProperty( const std::string& name )
 
 void SessionPropertyScope::delProperty( const std::string& name )
 {
+    CHECKMAGTC;
     properties_.Delete( name.c_str() );
 }
 
 
 Serializer& SessionPropertyScope::serialize( Serializer& o ) const
 {
+    CHECKMAGTC;
     uint32_t sz = size();
     o << sz;
     if ( sz > 0 ) {
@@ -287,6 +294,7 @@ Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) /* throw (Des
 
 void SessionPropertyScope::clear()
 {
+    CHECKMAGTC;
     char* key;
     AdapterProperty* value;
     for ( Hash< AdapterProperty* >::Iterator i( &properties_ ); i.Next(key,value); ) {
@@ -401,6 +409,7 @@ quiet_(quiet)
 
 Session::~Session()
 {
+    CHECKMAGTC;
     try {
         clear();
         if ( cmdQueue_.size() > 0 ) {
@@ -426,6 +435,7 @@ Session::~Session()
 
 Serializer& Session::serialize( Serializer& s ) const
 {
+    CHECKMAGTC;
     const int32_t oldVersion = s.version();
     s.setVersion(::serializationVersion);
     s << ::serializationVersion;
@@ -602,6 +612,7 @@ Deserializer& Session::deserialize( Deserializer& s ) /* throw (DeserializerExce
 
 void Session::clear()
 {
+    CHECKMAGTC;
     // if (!quiet_) smsc_log_debug( logc_, "session=%p/%s clear", this, sessionKey().toString().c_str() );
 
     pkey_ = SessionPrimaryKey(key_); // to reset born time
@@ -698,6 +709,7 @@ void Session::print( util::Print& p ) const
 /// transaction methods
 ExternalTransaction* Session::getTransaction( const char* id )
 {
+    CHECKMAGTC;
     if ( !id || !transactions_ ) return 0;
     ExternalTransaction** ptr = transactions_->GetPtr( id );
     return ( ptr ? *ptr : 0 );
@@ -706,6 +718,7 @@ ExternalTransaction* Session::getTransaction( const char* id )
 
 bool Session::addTransaction( const char* id, std::auto_ptr<ExternalTransaction> tr )
 {
+    CHECKMAGTC;
     if ( ! tr.get() ) return false;
     do {
         if ( !id ) break;
@@ -726,6 +739,7 @@ bool Session::addTransaction( const char* id, std::auto_ptr<ExternalTransaction>
 
 std::auto_ptr< ExternalTransaction > Session::releaseTransaction( const char* id )
 {
+    CHECKMAGTC;
     std::auto_ptr< ExternalTransaction > ret;
     if ( id && transactions_ ) {
         ExternalTransaction** ptr = transactions_->GetPtr(id);
@@ -741,6 +755,7 @@ std::auto_ptr< ExternalTransaction > Session::releaseTransaction( const char* id
 /// operation methods
 Operation* Session::setCurrentOperation( opid_type opid, bool updateExpire )
 {
+    CHECKMAGTC;
     do {
 
         if ( opid == invalidOpId() ) {
@@ -789,6 +804,7 @@ Operation* Session::setCurrentOperation( opid_type opid, bool updateExpire )
 
 Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 {
+    CHECKMAGTC;
     const time_t now = time(0);
     std::auto_ptr< Operation > auop( new Operation(this, operationType, now) );
     Operation* op = auop.get();
@@ -832,6 +848,7 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 
 void Session::closeCurrentOperation()
 {
+    CHECKMAGTC;
     if ( ! currentOperation_ ) return;
     
     const Operation* prevop = currentOperation_;
@@ -888,6 +905,7 @@ void Session::closeCurrentOperation()
 
 bool Session::hasPersistentOperation() const
 {
+    CHECKMAGTC;
     int opid;
     Operation* op;
     for ( IntHash< Operation* >::Iterator i(operations_);
@@ -901,6 +919,7 @@ bool Session::hasPersistentOperation() const
 
 
 bool Session::isNew( int serv, int trans ) const {
+    CHECKMAGTC;
     TransportNewFlag* f = isnew_.GetPtr( serv );
     if ( ! f ) return true;
     return f->isNew( trans );
@@ -908,6 +927,7 @@ bool Session::isNew( int serv, int trans ) const {
 
 
 void Session::setNew( int serv, int trans, bool an ) {
+    CHECKMAGTC;
     TransportNewFlag* f = isnew_.GetPtr( serv );
     if ( f ) {
         f->setNew( trans, an );
@@ -921,6 +941,7 @@ void Session::setNew( int serv, int trans, bool an ) {
 
 void Session::pushInitRuleKey( int serv, int trans )
 {
+    CHECKMAGTC;
     std::pair<int,int> st(serv,trans);
     if ( ! initrulekeys_.empty() && st == initrulekeys_.front() ) return;
     initrulekeys_.push_front( st );
@@ -928,6 +949,7 @@ void Session::pushInitRuleKey( int serv, int trans )
 
 bool Session::getRuleKey( int& serv, int& trans ) const
 {
+    CHECKMAGTC;
     if ( initrulekeys_.empty() ) return false;
     const std::pair<int,int>& st = initrulekeys_.front();
     serv = st.first;
@@ -938,6 +960,7 @@ bool Session::getRuleKey( int& serv, int& trans ) const
 
 bool Session::hasRuleKey( int serv, int trans ) const
 {
+    CHECKMAGTC;
     for ( std::list< std::pair<int,int> >::const_iterator i = initrulekeys_.begin();
           i != initrulekeys_.end(); ++i ) {
         if ( i->first == serv && i->second == trans ) return true;
@@ -948,6 +971,7 @@ bool Session::hasRuleKey( int serv, int trans ) const
 
 void Session::dropInitRuleKey( int serviceId, int transport, int wtime )
 {
+    CHECKMAGTC;
     if ( ! initrulekeys_.empty() ) {
 
         const std::pair<int,int> st(serviceId,transport);
@@ -988,6 +1012,7 @@ void Session::dropInitRuleKey( int serviceId, int transport, int wtime )
 /// create context Scope.
 int Session::createContextScope()
 {
+    CHECKMAGTC;
     if ( ! contextScopes_ ) contextScopes_ = new IntHash< SessionPropertyScope* >;
     int16_t cid = ++nextContextId_;
     if ( ! cid ) cid = ++nextContextId_;
@@ -999,6 +1024,7 @@ int Session::createContextScope()
 /// delete context Scope.
 bool Session::deleteContextScope( int ctxid )
 {
+    CHECKMAGTC;
     if ( ! contextScopes_ ) return false;
     SessionPropertyScope** sptr = contextScopes_->GetPtr( ctxid );
     if ( sptr ) {
@@ -1013,6 +1039,7 @@ bool Session::deleteContextScope( int ctxid )
 /// @return session global Scope
 SessionPropertyScope* Session::getGlobalScope()
 {
+    CHECKMAGTC;
     if ( ! globalScope_ ) {
         globalScope_ = ::makeGlobalScope(this);
     }
@@ -1023,6 +1050,7 @@ SessionPropertyScope* Session::getGlobalScope()
 /// @return service Scope by id (created on-demand)
 SessionPropertyScope* Session::getServiceScope( int servid )
 {
+    CHECKMAGTC;
     SessionPropertyScope* res;
     if ( ! serviceScopes_ ) serviceScopes_ = new IntHash< SessionPropertyScope* >;
     SessionPropertyScope** sptr = serviceScopes_->GetPtr( servid );
@@ -1039,6 +1067,7 @@ SessionPropertyScope* Session::getServiceScope( int servid )
 /// @return context Scope by id (may return NULL)
 SessionPropertyScope* Session::getContextScope( int ctxid )
 {
+    CHECKMAGTC;
     SessionPropertyScope* res = 0;
     if ( contextScopes_ ) {
         SessionPropertyScope** sptr = contextScopes_->GetPtr( ctxid );
@@ -1051,6 +1080,7 @@ SessionPropertyScope* Session::getContextScope( int ctxid )
 /// @return current operation Scope (created on-demand)
 SessionPropertyScope* Session::getOperationScope()
 {
+    CHECKMAGTC;
     SessionPropertyScope* res;
     if ( getCurrentOperation() == 0 )
         throw SCAGException( "session=%p/%s cannot get operation scope, op=0",
@@ -1072,6 +1102,7 @@ SessionPropertyScope* Session::getOperationScope()
 
 void Session::waitAtLeast( unsigned sec )
 {
+    CHECKMAGTC;
     const time_t now = time(0);
     const time_t t = now + sec;
     if ( t > expirationTimeAtLeast_ ) {
@@ -1090,6 +1121,7 @@ void Session::waitAtLeast( unsigned sec )
 
 unsigned Session::appendCommand( SCAGCommand* cmd )
 {
+    CHECKMAGTC;
     if (cmd) cmdQueue_.push_back( cmd );
     return unsigned(cmdQueue_.size());
 }
@@ -1097,6 +1129,7 @@ unsigned Session::appendCommand( SCAGCommand* cmd )
 
 SCAGCommand* Session::popCommand()
 {
+    CHECKMAGTC;
     SCAGCommand* cmd = 0; 
     if ( ! cmdQueue_.empty() ) {
         cmd = cmdQueue_.front();
@@ -1108,6 +1141,7 @@ SCAGCommand* Session::popCommand()
 
 void Session::serializeScope( Serializer& o, const SessionPropertyScope* s ) const
 {
+    CHECKMAGTC;
     const uint32_t sz = s ? s->size() : 0;
     if (!sz) {
         o << sz;

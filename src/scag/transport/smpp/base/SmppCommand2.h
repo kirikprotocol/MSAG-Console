@@ -20,6 +20,7 @@
 #include "util/Exception.hpp"
 #include "util/int.h"
 #include "SmppCommandIds.h"
+#include "util/TypeInfo.h"
 
 namespace scag2 {
 namespace transport {
@@ -77,6 +78,7 @@ const char* ussdOpName( int );
 /// shared data for commands
 struct SmppCommandData
 {
+    DECLMAGTC(SmppCommandData);
     int        priority;
     uint32_t   uid;       // serial number
     uint32_t   dialogId;
@@ -378,12 +380,14 @@ struct SmsCommand : public SmppCommandData
     hasroute_(false) {}
 
     void setSlicingParams( uint8_t srp, uint32_t cnt) {
+        CHECKMAGTC;
         slicingRespPolicy_ = srp;
         sliceCount_ = cnt;
     }
 
     bool essentialSlicedResponse( bool failed )
     {
+        CHECKMAGTC;
         MutexGuard mg(slicedMutex_);
         if ( slicedRespSent_ ) return true;
         if ( failed ||
@@ -394,28 +398,39 @@ struct SmsCommand : public SmppCommandData
     }
 
     unsigned ref() {
+        CHECKMAGTC;
         MutexGuard mg(mtx_);
         __require__(ref_ > 0);
         return ++ref_;
     }
 
     unsigned unref() {
+        CHECKMAGTC;
         MutexGuard mg(mtx_);
         __require__(ref_ > 0);
         return --ref_;
     }
 
-    uint32_t get_orgDialogId() const { return orgDialogId_; }
-    void set_orgDialogId( uint32_t dlgId ) { orgDialogId_ = dlgId; }
+    uint32_t get_orgDialogId() const {
+        CHECKMAGTC;
+        return orgDialogId_;
+    }
+    void set_orgDialogId( uint32_t dlgId ) {
+        CHECKMAGTC;
+        orgDialogId_ = dlgId;
+    }
 
     bool hasRouteSet() const {
+        CHECKMAGTC;
         return hasroute_;
     }
 
     void getRouteInfo( router::RouteInfo& ri ) const {
+        CHECKMAGTC;
         ri = routeInfo_;
     }
     void setRouteInfo( router::RouteInfo& ri ) {
+        CHECKMAGTC;
         hasroute_ = true;
         routeInfo_ = ri;
     }
@@ -474,6 +489,8 @@ private:
     _SmppCommand& operator = ( const _SmppCommand& );
 
 protected:
+    DECLMAGTC(_SmppCommand);
+
     // -- generic stuff
     CommandId        cmdid_;
     int              serviceId_;
@@ -570,29 +587,67 @@ public:
         return shared_->uid;
     }
     
-    virtual scag2::sessions::Session* getSession() { return session_; };
+    virtual scag2::sessions::Session* getSession() {
+        CHECKMAGTC;
+        return session_; 
+    };
 
     virtual void print( util::Print& p ) const;
 
     /// === SMPP specific
 
-    SmppEntity* getEntity() const { return src_ent_; }
-    void setEntity(SmppEntity* newent){ src_ent_ = newent; }
+    SmppEntity* getEntity() const {
+        CHECKMAGTC;
+        return src_ent_; }
+    void setEntity(SmppEntity* newent){
+        CHECKMAGTC;
+        src_ent_ = newent;
+    }
 
-    SmppEntity* getDstEntity() const { return dst_ent_; }
-    void setDstEntity(SmppEntity* newent) { dst_ent_ = newent; }
+    SmppEntity* getDstEntity() const {
+        CHECKMAGTC;
+        return dst_ent_; 
+    }
+    void setDstEntity(SmppEntity* newent) {
+        CHECKMAGTC;
+        dst_ent_ = newent;
+    }
 
-    void setFlag(uint32_t f) { shared_->flags |= f; }
-    bool flagSet(uint32_t f) { return shared_->flags & f; }
+    void setFlag(uint32_t f) {
+        CHECKMAGTC;
+        shared_->flags |= f; 
+    }
+    bool flagSet(uint32_t f) {
+        CHECKMAGTC;
+        return shared_->flags & f;
+    }
 
-    uint32_t get_dialogId() const { return shared_->dialogId; }
-    void set_dialogId(uint32_t dlgId) { shared_->dialogId = dlgId; }
+    uint32_t get_dialogId() const {
+        CHECKMAGTC;
+        return shared_->dialogId;
+    }
+    void set_dialogId(uint32_t dlgId) {
+        CHECKMAGTC;
+        shared_->dialogId = dlgId;
+    }
 
-    int get_status() const { return int(shared_->status); } // for enquirelink and unbind
-    void set_status( int st ) { shared_->status = uint32_t(st); }
+    int get_status() const {
+        CHECKMAGTC;
+        return int(shared_->status);
+    } // for enquirelink and unbind
+    void set_status( int st ) {
+        CHECKMAGTC;
+        shared_->status = uint32_t(st);
+    }
 
-    int get_priority() const { return shared_->priority; }
-    void set_priority( int prio ) { shared_->priority = prio; }
+    int get_priority() const {
+        CHECKMAGTC;
+        return shared_->priority;
+    }
+    void set_priority( int prio ) {
+        CHECKMAGTC;
+        shared_->priority = prio; 
+    }
 
     inline bool isResp() const {
         return ( cmdid_ == SUBMIT_RESP ||
@@ -605,6 +660,7 @@ public:
     inline SMS* get_sms();
 
     SmsCommand& get_smsCommand() {
+        CHECKMAGTC;
         __require__(cmdid_ == SUBMIT || cmdid_ == DELIVERY || cmdid_ == DATASM );
         return * reinterpret_cast<SmsCommand*>(dta_);
     }
@@ -646,6 +702,7 @@ public:
     // === ctors, dtors, copying
 
     virtual ~SmppCommand() {
+        CHECKMAGTC;
         dispose();
     }
     SmppCommand( SmppHeader* pdu);

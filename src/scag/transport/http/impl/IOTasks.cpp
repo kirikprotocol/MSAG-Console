@@ -281,7 +281,7 @@ int HttpWriterTask::Execute()
     unsigned int i;
     time_t now;
 
-    smsc_log_debug(logger, "%p started");
+    smsc_log_debug(logger, "%p started",this);
     
     for (;;) {
         {

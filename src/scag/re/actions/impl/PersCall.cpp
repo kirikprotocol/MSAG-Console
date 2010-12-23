@@ -49,6 +49,7 @@ exc_(std::string(),PvssException::OK), req_(req) {}
 
 void PersCall::handleResponse( std::auto_ptr< Request > request, std::auto_ptr< Response > response )
 {
+    CHECKMAGTC;
     assert( lcc_ );
     ERVisitor erv;
     if ( response->visit( erv ) ) {
@@ -71,6 +72,7 @@ void PersCall::handleResponse( std::auto_ptr< Request > request, std::auto_ptr< 
 
 void PersCall::handleError( const pvss::PvssException& exc, std::auto_ptr< pvss::Request > request )
 {
+    CHECKMAGTC;
     assert( lcc_ );
     setError( exc, request );
     // continue lcm execution
@@ -81,6 +83,7 @@ void PersCall::handleError( const pvss::PvssException& exc, std::auto_ptr< pvss:
 
 void PersCall::setError( const pvss::PvssException& exc, std::auto_ptr< pvss::Request > request )
 {
+    CHECKMAGTC;
     req_.reset( static_cast< ProfileRequest* >(request.release()));
     exc_ = exc;
 }
@@ -88,6 +91,7 @@ void PersCall::setError( const pvss::PvssException& exc, std::auto_ptr< pvss::Re
 
 bool PersCall::doCallPvss()
 {
+    CHECKMAGTC;
     std::auto_ptr< Request > request(req_.release());
     try {
 

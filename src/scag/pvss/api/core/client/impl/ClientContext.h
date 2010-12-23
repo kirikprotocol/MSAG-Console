@@ -35,7 +35,8 @@ public:
     }
     void setError( const PvssException& exc ) {
         if ( handler != 0 ) {
-            smsc_log_debug(log_,"notifying handler of error");
+            smsc_log_info(log_,"clnt ctx @%p, req@%p, notifying handler of error: %s",
+                          this, getRequest().get(), exc.what());
             handler->handleError(exc,getRequest());
         }
     }

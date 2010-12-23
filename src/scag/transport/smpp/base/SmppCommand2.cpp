@@ -596,6 +596,7 @@ void SmppCommand::changeSliceRefNum( SMS& sms, uint32_t sarmr )
 
 void SmppCommand::print( util::Print& p ) const
 {
+    CHECKMAGTC;
     if ( ! p.enabled() ) return;
     SmppCommand* that = const_cast< SmppCommand* >( this );
     switch ( cmdid_ ) {
@@ -878,6 +879,7 @@ SCAGCommand(), _SmppCommand()
 
 SmppHeader* SmppCommand::makePdu()
 {
+    CHECKMAGTC;
     switch ( getCommandId() )
     {
     case SUBMIT:
@@ -1210,6 +1212,7 @@ SmppHeader* SmppCommand::makePdu()
 
 std::auto_ptr< SmppCommand > SmppCommand::clone()
 {
+    CHECKMAGTC;
     if ( cmdid_ != SUBMIT && cmdid_ != DELIVERY && cmdid_ != DATASM ) {
         smsc_log_error(log_, "cloning is allowed for submit/deliver/datasm only" );
         ::abort();

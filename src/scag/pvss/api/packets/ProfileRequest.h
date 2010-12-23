@@ -26,13 +26,26 @@ public:
     }
     virtual ~ProfileRequest();
 
-    const ProfileKey& getProfileKey() const { return profileKey_; }
+    const ProfileKey& getProfileKey() const {
+        CHECKMAGTC;
+        return profileKey_;
+    }
     ProfileKey& getProfileKey() { return profileKey_; }
-    void setProfileKey( const ProfileKey& key ) { profileKey_ = key; }
+    void setProfileKey( const ProfileKey& key ) {
+        CHECKMAGTC;
+        profileKey_ = key; 
+    }
 
-    inline const ProfileCommand* getCommand() const { return command_; }
-    inline ProfileCommand* getCommand() { return command_; }
+    inline const ProfileCommand* getCommand() const {
+        CHECKMAGTC;
+        return command_;
+    }
+    inline ProfileCommand* getCommand() {
+        CHECKMAGTC;
+        return command_; 
+    }
     void setCommand( ProfileCommand* cmd ) {
+        CHECKMAGTC;
         if (command_==cmd) return;
         if (command_) delete command_;
         command_ = cmd; 
@@ -41,6 +54,7 @@ public:
     virtual ProfileRequest* clone() const { return new ProfileRequest(*this); }
 
     virtual bool isValid( PvssException* exc = 0 ) const {
+        CHECKMAGTC;
         do {
             if ( !profileKey_.isValid() ) {
                 if (exc) {*exc = PvssException("prof key is invalid",PvssException::BAD_REQUEST);}
@@ -62,6 +76,7 @@ public:
     }
 
     virtual std::string toString() const {
+        CHECKMAGTC;
         std::string rv(Request::toString());
         rv.reserve(100);
         rv += " ";
@@ -77,10 +92,12 @@ public:
 
     virtual bool visit( RequestVisitor& visitor ) /* throw (PvapException) */ 
     {
+        CHECKMAGTC;
         return visitor.visitProfileRequest(*this);
     }
 
     void clear() {
+        CHECKMAGTC;
         if ( getCommand() ) getCommand()->clear();
     }
 
@@ -115,6 +132,7 @@ private:
     Request(other), profileKey_(other.profileKey_), command_(other.command_->clone()), timing_(0) {}
 
 private:
+    DECLMAGTC(ProfileRequest);
     ProfileKey       profileKey_;
     ProfileCommand*  command_;
     mutable Timing*  timing_;

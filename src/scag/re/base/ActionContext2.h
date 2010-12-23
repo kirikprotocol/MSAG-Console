@@ -14,6 +14,7 @@
 #include "scag/transport/smpp/base/SmppCommandIds.h"
 #include "scag/bill/base/BillingInfoStruct.h"
 #include "scag/bill/base/Infrastructure.h"
+#include "util/TypeInfo.h"
 
 namespace scag2 {
 
@@ -53,35 +54,35 @@ public:
 };
 
    
-    struct CommandProperty
-    {
-        const smsc::sms::Address abonentAddr;
-        int status;
-        int protocol;
-        int serviceId;
+struct CommandProperty
+{
+    const smsc::sms::Address abonentAddr;
+    int status;
+    int protocol;
+    int serviceId;
 
-        int providerId;
-        int operatorId;
-        int msgRef;
-        uint8_t commandId;
-        uint8_t handlerId;
-        transport::CommandOperation cmdType;
-        transport::smpp::DataSmDirection direction;
+    int providerId;
+    int operatorId;
+    int msgRef;
+    uint8_t commandId;
+    uint8_t handlerId;
+    transport::CommandOperation cmdType;
+    transport::smpp::DataSmDirection direction;
 
-        Property routeId;
-        std::string keywords;
+    Property routeId;
+    std::string keywords;
 
-        CommandProperty( SCAGCommand* command,
-                         int commandStatus,
-                         const smsc::sms::Address& addr,
-                         int ProviderId,
-                         int OperatorId,
-                         int ServiceId,
-                         int msgRef,
-                         transport::CommandOperation CmdType,
-                         const Property& routeId,
-                         uint8_t hi );
-    };
+    CommandProperty( SCAGCommand* command,
+                     int commandStatus,
+                     const smsc::sms::Address& addr,
+                     int ProviderId,
+                     int OperatorId,
+                     int ServiceId,
+                     int msgRef,
+                     transport::CommandOperation CmdType,
+                     const Property& routeId,
+                     uint8_t hi );
+};
 
 
     struct InfrastructIDs
@@ -109,12 +110,14 @@ public:
                    RuleStatus*      rs);
 
     ~ActionContext() {
+        CHECKMAGTC;
         if ( rule_ ) rule_->unref();
         if ( infrastructConstants_ ) delete infrastructConstants_;
     }
 
 
     void setRule( Rule& r ) {
+        CHECKMAGTC;
         r.ref();
         if ( rule_ ) rule_->unref();
         rule_ = &r;
@@ -122,6 +125,7 @@ public:
 
 
     Rule* getRule() const {
+        CHECKMAGTC;
         return rule_;
     }
 
@@ -134,11 +138,13 @@ public:
 
     SCAGCommand& getSCAGCommand()
     {
+        CHECKMAGTC;
         if (!command_) throw scag::exceptions::SCAGException("ActionContext: command is not set");
         return command_->getSCAGCommand();
     }
 
     inline RuleStatus& getRuleStatus() {
+        CHECKMAGTC;
         return *status_;
     }
 
@@ -153,11 +159,15 @@ public:
         // static bool StrToPeriod(CheckTrafficPeriod& period, std::string& str);
 
     CommandAccessor* getCommand() {
+        CHECKMAGTC;
         if (!command_) throw scag::exceptions::SCAGException("ActionContext: command is not set");
         return command_;
     };
 
-    Session& getSession() { return *session_; };
+    Session& getSession() {
+        CHECKMAGTC;
+        return *session_;
+    };
 
     /// return the flag of destroying service:
     /// <0 -- do not destroy the service;
@@ -175,7 +185,10 @@ public:
     /// delete property by name, variable prefix defines the scope
     void delProperty( const std::string& var );
 
-    CommandProperty& getCommandProperty() { return *commandProperty_; }
+    CommandProperty& getCommandProperty() {
+        CHECKMAGTC;
+        return *commandProperty_; 
+    }
 
     /// fill billing infostructure with data
     void getBillingInfoStruct( bill::BillingInfoStruct& billingInfoStruct );
@@ -185,6 +198,9 @@ public:
 
 private:
     Property* getInfrastructConstant( const char* pname );
+
+private:
+    DECLMAGTC(ActionContext);
 
 public:
     bool                    isTrueCondition;

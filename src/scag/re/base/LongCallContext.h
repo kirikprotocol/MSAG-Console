@@ -40,6 +40,7 @@ public:
 
     void addAction(PostProcessAction* p)
     {
+        CHECKMAGTC;
         if(actions)
             actionsTail->next = p;
         else
@@ -49,6 +50,7 @@ public:
 
     void runPostProcessActions()
     {
+        CHECKMAGTC;
         PostProcessAction* p;
         while(actions)
         {
@@ -64,6 +66,7 @@ public:
 
     ~LongCallContext();
 
+private:
 
 public:
     uint32_t systemType;
@@ -72,7 +75,6 @@ public:
 private:
     ActionContext  *actionContext;
     PostProcessAction *actions, *actionsTail;
-
 };
 
 }

@@ -5,6 +5,7 @@
 #include <stack>
 #include <string>
 #include "util/int.h"
+#include "util/TypeInfo.h"
 
 namespace scag2 {
 namespace lcm {
@@ -27,9 +28,11 @@ enum LongCallCommandId
 
 class LongCallParams
 {
+private:
+    DECLMAGTC(LongCallParams);
 public:
     std::string exception;
-    virtual ~LongCallParams() {};
+    virtual ~LongCallParams() {}
 };
 
 class LongCallInitiator;
@@ -39,28 +42,36 @@ class LongCallContextBase
 public:
     LongCallContextBase(): initiator(NULL), next(NULL), stateMachineContext(NULL), continueExec(false), params(NULL) {}
 
-    LongCallParams* getParams() { return params; }
+    LongCallParams* getParams() {
+        CHECKMAGTC;
+        return params;
+    }
 
     void setParams(LongCallParams* p)
     {
+        CHECKMAGTC;
         if (params != p) delete params;
         params = p;
     }
 
     void freeParams()
     {
+        CHECKMAGTC;
         if(params) delete params;
         params = NULL;
     }
 
     virtual ~LongCallContextBase()
     {
+        CHECKMAGTC;
         if (params) {
           delete params;
         }
     }
 
 
+protected:
+    DECLMAGTC(LongCallContextBase);
 public:
     uint32_t callCommandId;
     LongCallInitiator *initiator;
@@ -75,6 +86,7 @@ private:
 class LongCallInitiator
 {
 public:
+    virtual ~LongCallInitiator() {}
     virtual void continueExecution(LongCallContextBase* context, bool dropped) = 0;
 };
 

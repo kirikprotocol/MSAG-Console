@@ -5,6 +5,7 @@ namespace lcm {
 
 void LongCallContext::setActionContext( ActionContext* context )
 {
+    CHECKMAGTC;
     if ( actionContext != context ) delete actionContext;
     actionContext = context;
 }
@@ -12,12 +13,14 @@ void LongCallContext::setActionContext( ActionContext* context )
 
 ActionContext* LongCallContext::getActionContext()
 {
+    CHECKMAGTC;
     return actionContext;
 }
 
 
 void LongCallContext::clear()
 {
+    CHECKMAGTC;
     continueExec =false;
     while(actions)
     {
@@ -30,6 +33,7 @@ void LongCallContext::clear()
 
 LongCallContext::~LongCallContext()
 {
+    CHECKMAGTC;
     if(actionContext) delete actionContext;
     clear();
 }

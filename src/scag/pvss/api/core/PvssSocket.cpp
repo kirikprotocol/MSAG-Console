@@ -19,6 +19,7 @@ core_(core),
 sock_( new smsc::core::network::Socket ),
 host_( core.getConfig().getHost() ),
 port_( core.getConfig().getPort() ),
+connectionTmo_(5),
 rdBuflen_(0),
 writer_(0),
 reader_(0),
@@ -225,7 +226,7 @@ void PvssSocket::connect() /* throw (exceptions::IOException) */
         if ( isConnected() ) return;
     }
     smsc_log_info(log_,"Connecting channel %p to host=%s:%d tmo=%d", this,
-                  host_.c_str(), port_, connectionTmo_ );
+                  host_.c_str(), int(port_), connectionTmo_ );
     if ( sock_->Init(host_.c_str(),port_,connectionTmo_) == -1 ) {
         smsc_log_warn(log_,"cannot init socket %p on channel %p", socket(), this );
         throw exceptions::IOException("cannot init socket %p on channel %p", socket(), this);

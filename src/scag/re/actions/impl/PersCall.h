@@ -17,8 +17,14 @@ public:
 
     inline pvss::ProfileKey*   getProfileKey() { return req_.get() ? &req_->getProfileKey() : 0; }
     inline pvss::ProfileRequest*      getRequest() { return req_.get(); }
-    inline pvss::ProfileResponse*     getResponse() { return resp_.get(); }
-    inline const pvss::PvssException& getException() { return exc_; }
+    inline pvss::ProfileResponse*     getResponse() {
+        CHECKMAGTC;
+        return resp_.get(); 
+    }
+    inline const pvss::PvssException& getException() {
+        CHECKMAGTC;
+        return exc_; 
+    }
 
     /// these two methods are invoked from pvss::ClientCore
     /// NOTE: they pass pers call back to lcm initiator.
@@ -33,6 +39,7 @@ protected:
     virtual bool doCallPvss();
 
 private:
+    DECLMAGTC(PersCall);
     pvss::PvssException                  exc_;
     std::auto_ptr<pvss::ProfileRequest>  req_;
     std::auto_ptr<pvss::ProfileResponse> resp_;

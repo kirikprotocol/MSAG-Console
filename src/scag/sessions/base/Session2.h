@@ -58,6 +58,7 @@ protected:
     virtual bool isReadonly( const std::string& ) const { return false; }
 
 protected:
+    DECLMAGTC(SessionPropertyScope);
     Session*                         session_;
     mutable Hash< AdapterProperty* > properties_; // owned
 };
@@ -97,10 +98,12 @@ public:
     virtual void changed( AdapterProperty& prop );
 
     inline const SessionKey& sessionKey() const {
+        CHECKMAGTC;
         return key_;
     }
 
     inline const SessionPrimaryKey& sessionPrimaryKey() const {
+        CHECKMAGTC;
         return pkey_;
     }
 
@@ -134,9 +137,11 @@ public:
     /// === operations methods
     /// NOTE: invalidOpId() denotes invalid operation
     inline opid_type getCurrentOperationId() const {
+        CHECKMAGTC;
         return currentOperationId_;
     }
     inline Operation* getCurrentOperation() const { 
+        CHECKMAGTC;
         return currentOperation_;
     }
 
@@ -145,34 +150,12 @@ public:
 
     /// return ussd operation id or invalidOpId()
     opid_type getUSSDOperationId() const {
+        CHECKMAGTC;
         return ussdOperationId_;
     }
 
     /// create a new operation and set it as current
     Operation* createOperation( SCAGCommand& cmd, int operationType );
-
-    /*
-    class operation_iterator
-    {
-    public:
-        operation_iterator( Session& s ) :
-        id_(int(SCAGCommand::invalidOpId())),
-        op_(0),
-        i_(s.operations_) {}
-
-        bool next() {
-            return i_.Next(id_,op_);
-        }
-
-        inline opid_type opid() const { return id_; }
-        inline Operation* operation() const { return op_; }
-
-    private:
-        int        id_;
-        Operation* op_;
-        IntHash< Operation* >::Iterator i_;
-    };
-     */
 
     /// destroy current operation
     void closeCurrentOperation();
@@ -187,6 +170,7 @@ public:
 
     /// FIXME: should it be here?
     lcm::LongCallContext& getLongCallContext() {
+        CHECKMAGTC;
         return lcmCtx_;
     }
 
@@ -255,6 +239,7 @@ public:
     /// \return the previous owned command.
     /// It gives the possibility to destroy it after unlocking.
     inline uint32_t setCurrentCommand( uint32_t cmd ) {
+        CHECKMAGTC;
         uint32_t prev = command_;
         if ( command_ ) {
             if ( command_ == cmd ) {
@@ -276,6 +261,7 @@ public:
     /// 2 -- locked for disk i/o
     /// 3-9 -- reserved
     inline uint32_t currentCommand() {
+        CHECKMAGTC;
         return command_;
     }
 
@@ -321,6 +307,8 @@ private: // statics
     static opid_type newopid_;
 
 private:
+    DECLMAGTC(Session);
+
     /// session key (msisdn)
     SessionKey     key_;                          // (pers)
 
