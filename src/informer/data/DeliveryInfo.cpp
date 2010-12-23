@@ -69,6 +69,7 @@ endDate_(0),
 activePeriodStart_(-1),
 activePeriodEnd_(-1),
 validityPeriod_(-1),
+archivationTime_(0),
 activeWeekDays_(-1)
 {
     if (!log_) {
@@ -269,6 +270,8 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     timediff_type activePeriodStart = activePeriodStart_;
     timediff_type activePeriodEnd = activePeriodEnd_;
     timediff_type validityPeriod = validityPeriod_;
+    // FIXME: configure archivationTime_ when infodata will have it
+
     int activeWeekDays = activeWeekDays_;
     smsc::sms::Address sourceAddress(sourceAddress_);
     RetryString retryPolicy;
@@ -344,6 +347,9 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     // filling
     if (startDate != 0) {
         startDate_ = startDate;
+    } else {
+        // treat it as now
+        startDate_ = currentTimeSeconds();
     }
     if (endDate != 0) { endDate_ = endDate; }
     if (activePeriodStart != -1) { activePeriodStart_ = activePeriodStart; }

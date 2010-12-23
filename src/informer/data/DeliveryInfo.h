@@ -88,7 +88,7 @@ public:
     inline bool wantFinalMsgRecords() const { return data_.finalMsgRecords; }
     inline bool wantFinalDlvRecords() const { return data_.finalDlvRecords; }
 
-    /// return start date or 0
+    /// return the start date
     inline msgtime_type getStartDate() const { return startDate_; }
 
     /// return end date or 0
@@ -113,6 +113,12 @@ public:
 
     /// get validity period or -1
     inline timediff_type getValidityPeriod() const { return validityPeriod_; }
+
+    /// return the archivation time or <=0.
+    /// the actual date is calculated from startDate.
+    inline timediff_type getArchivationTime() const {
+        return archivationTime_;
+    }
 
     inline bool isFlash() const { return data_.flash; }
 
@@ -187,6 +193,7 @@ private:
     timediff_type         activePeriodStart_;
     timediff_type         activePeriodEnd_;
     timediff_type         validityPeriod_;
+    timediff_type         archivationTime_;
     int                   activeWeekDays_;
     smsc::sms::Address    sourceAddress_;
     RetryString           retryPolicy_;

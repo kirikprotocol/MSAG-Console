@@ -302,6 +302,7 @@ public:
             DeliveryStats   ds;
             dlvid_type      dlvId;
             userid_type     userId;
+            bool archivate = false;
             {
                 smsc::core::synchronization::MutexGuard mg(mgr_.mon_);
                 if (firstPass) {
@@ -309,10 +310,24 @@ public:
                     firstPass = false;
                 }
                 if (iter == mgr_.deliveryList_.end()) { break; }
-                dlvId = (*iter)->getDlvId();
-                userId = (*iter)->getUserInfo().getUserId();
-                (*iter)->popMsgStats(ds);
+                const DeliveryInfo& info = (*iter)->getDlvInfo();
+                dlvId = info.getDlvId();
+                const timediff_type arcTime = info.getArchivationTime();
+                if ( arcTime > 0 && currentTime < info.getStartDate()+arcTime ) {
+                    archivate = true;
+                } else {
+                    userId = info.getUserInfo().getUserId();
+                    (*iter)->popMsgStats(ds);
+                }
                 ++iter;
+            }
+            if ( archivate ) {
+                DeliveryImplPtr dlv;
+                mgr_.getDelivery(dlvId,dlv);
+                if (dlv.get()) {
+                    mgr_.core_.deleteDelivery(dlv->getUserInfo(),dlvId,true);
+                }
+                continue;
             }
             if ( ds.isEmpty() ) continue;
             if (!fg.isOpened()) {
