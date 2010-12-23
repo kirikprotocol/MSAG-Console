@@ -19,6 +19,7 @@ public:
     }
 
     void setSpeed( T speed, T currentTime ) {
+        assert( speed > 0 );
         speed_ = speed;
         suspend(currentTime);
     }

@@ -35,7 +35,7 @@ public:
         return region_.get() ? region_->getRegionId() : 0;
     }
 
-    /// in sms/sec
+    /// in sms/sec, may be 0
     inline unsigned getBandwidth() const {
         return region_->getBandwidth();
     }

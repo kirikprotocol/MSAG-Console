@@ -1243,6 +1243,9 @@ void SmscSender::sendLoop()
 
 unsigned SmscSender::scoredObjIsReady( unsigned, ScoredPtrType regionSender )
 {
+    if ( ! regionSender->getBandwidth() ) {
+        return 10000000U; // waits ten seconds
+    }
     const unsigned ret = regionSender->isReady(currentTime_);
     // smsc_log_debug(log_,"R=%u waits %u usec until ready()",
     // regionSender->getRegionId(), ret);
@@ -1253,7 +1256,9 @@ unsigned SmscSender::scoredObjIsReady( unsigned, ScoredPtrType regionSender )
 int SmscSender::processScoredObj( unsigned, ScoredPtrType regionSender, unsigned& objSleep )
 {
     // unsigned inc = maxScoreIncrement/regionSender.getBandwidth();
-    const int ret = int(maxScoreIncrement / regionSender->getBandwidth());
+    unsigned bw = regionSender->getBandwidth();
+    if (bw==0) { bw = 1; }
+    const int ret = int(maxScoreIncrement/bw);
     objSleep = regionSender->processRegion(currentTime_);
     return ( objSleep > 0 ? -ret : ret );
 }

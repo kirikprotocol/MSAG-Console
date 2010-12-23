@@ -121,6 +121,7 @@ private:
     smsc::core::synchronization::Mutex            logStateLock_;
     ulonglong                                     logStateTime_;
     FileGuard                                     logStateFile_;
+
     dlvid_type                                    lastDlvId_;
 
     smsc::core::synchronization::EventMonitor     trafficMon_;
@@ -129,6 +130,7 @@ private:
     smsc::core::threads::ThreadPool               ctp_;
 
     smsc::core::synchronization::Mutex            archiveLock_;
+    FileGuard                                     lastidFile_;
 };
 
 } // informer

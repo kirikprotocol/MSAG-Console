@@ -1,3 +1,9 @@
+2010-12-23 15:00 bukind
+  saving lastDlvId into deliveries/lastid
+
+2010-12-23 13:50 bukind
+  region bandwidth=0 is allowed
+
 2010-12-16 17:30 bukind
   fix for bad (not inited) number of _SMS_ when pvss blocks the message
 

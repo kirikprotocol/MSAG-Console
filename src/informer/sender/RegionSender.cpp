@@ -38,7 +38,7 @@ ref_(0),
 conn_(0),
 region_(r),
 taskList_(*this,2*maxScoreIncrement,log_),
-speedControl_(region_->getBandwidth())
+speedControl_(std::max(region_->getBandwidth(),1U))
 {
     smsc_log_debug(log_,"ctor S='%s' R=%u",conn.getSmscId().c_str(),unsigned(r->getRegionId()));
     assignSender(&conn);
@@ -53,7 +53,7 @@ void RegionSender::assignSender( SmscSender* conn )
         if (conn_) conn_->attachRegionSender(*this);
     }
     // reset speed control
-    speedControl_.setSpeed(region_->getBandwidth(),
+    speedControl_.setSpeed(std::max(region_->getBandwidth(),1U),
                            currentTimeMicro() % flipTimePeriod );
 }
 

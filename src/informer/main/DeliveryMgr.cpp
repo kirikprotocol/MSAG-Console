@@ -20,6 +20,7 @@ struct NumericNameFilter {
 
 const char* archiveName = "deliveries/incoming.txt";
 const char* archiveExt = ".new";
+const char* lastidpath = "deliveries/lastid";
 
 }
 
@@ -426,11 +427,29 @@ DeliveryMgr::~DeliveryMgr()
 
 void DeliveryMgr::init()
 {
+    const std::string& path = cs_.getStorePath();
+
     // loading deliveries
+    do {
+        smsc_log_debug(log_,"--- loading last dlvid ---");
+        FileGuard fg;
+        try {
+            fg.ropen((path+lastidpath).c_str());
+        } catch ( std::exception& e ) {
+            smsc_log_debug(log_,"cannot open '%s', ok",lastidpath);
+            break;
+        }
+        char buf[30];
+        size_t wasread = fg.read(buf,sizeof(buf)-1);
+        buf[wasread] = '\0';
+        char* endptr;
+        dlvid_type last = strtoul(buf,&endptr,10);
+        if ( last > lastDlvId_ ) { lastDlvId_ = last; }
+    } while (false);
+
     smsc_log_debug(log_,"--- loading deliveries ---");
 
     smsc::core::buffers::TmpBuf<char,250> buf;
-    const std::string& path = cs_.getStorePath();
     buf.setSize(path.size()+100);
     strcpy(buf.get(),path.c_str());
     strcat(buf.get(),"deliveries/");
@@ -648,6 +667,20 @@ dlvid_type DeliveryMgr::createDelivery( UserInfo& userInfo,
     }
     addDelivery(info,state,planTime,true);
     userInfo.incDlvStats(DLVSTATE_CREATED);
+    char buf[30];
+    MutexGuard mg(archiveLock_);
+    size_t buflen;
+    {
+        MutexGuard mmg(mon_);
+        buflen = sprintf(buf,"%u\n",lastDlvId_);
+    }
+    FileGuard fg;
+    const char* tempext = ".tmp";
+    fg.create((getCS()->getStorePath() + lastidpath + tempext).c_str(),0666,true,true);
+    fg.write(buf,buflen);
+    fg.close();
+    ::rename( (getCS()->getStorePath() + lastidpath + tempext).c_str(),
+              (getCS()->getStorePath() + lastidpath).c_str() );
     return dlvId;
 }
 
