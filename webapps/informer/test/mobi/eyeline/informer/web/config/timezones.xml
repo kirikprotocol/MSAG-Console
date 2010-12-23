@@ -1,0 +1,17 @@
+<config>
+
+  <section name="Europe/Moscow">
+    <section name="aliases">
+      <param name="ru">(UTC+3) Москва</param>
+      <param name="en">(UTC+3) Moscow</param>
+    </section>
+  </section>
+
+  <section name="Asia/Novosibirsk">
+    <section name="aliases">
+      <param name="ru">(UTC+6) Новосибирск</param>
+      <param name="en">(UTC+6) Novosibirsk</param>
+    </section>
+  </section>
+
+</config>

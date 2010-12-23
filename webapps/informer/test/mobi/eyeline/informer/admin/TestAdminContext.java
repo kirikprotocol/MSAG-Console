@@ -26,7 +26,6 @@ import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
-import mobi.eyeline.informer.web.TestWebConfigManager;
 import testutils.TestUtils;
 
 import java.io.File;

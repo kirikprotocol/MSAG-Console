@@ -8,9 +8,14 @@ import mobi.eyeline.informer.web.auth.Authenticator;
 import mobi.eyeline.informer.web.auth.impl.AuthenticatorImpl;
 import mobi.eyeline.informer.web.auth.impl.Users;
 import mobi.eyeline.informer.web.config.Configuration;
+import mobi.eyeline.informer.web.config.InformerTimezone;
+import mobi.eyeline.informer.web.config.TimezonesConfig;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -24,7 +29,7 @@ public class WebContext {
 
   private static WebContext instance;
 
-  private final WebXml webXml;
+  protected WebXml webXml;
 
   private Authenticator authenticator;
 
@@ -34,9 +39,24 @@ public class WebContext {
 
   private Configuration configuration;
 
+  private List<InformerTimezone> webTimezones;
+
   public static void init(WebXml webXml, File baseDir) throws InitException {
     if (instance == null) {
-      instance = new WebContext(webXml, baseDir);
+
+      if (Mode.testMode) {
+        if (logger.isInfoEnabled()) {
+          logger.info(" -- TEST MODE -- TEST MODE -- TEST MODE -- TEST MODE -- ");
+        }
+        try {
+          instance = (WebContext) Class.forName("mobi.eyeline.informer.web.TestWebContext").getConstructor(WebXml.class, File.class).newInstance(webXml, baseDir);
+        } catch (Exception e) {
+          throw new InitException(e);
+        }
+      } else {
+        instance = new WebContext(webXml, baseDir);
+      }
+
       initLatch.countDown();
     }
   }
@@ -50,21 +70,11 @@ public class WebContext {
     }
   }
 
-  private WebContext(WebXml webXml, File baseDir) throws InitException {
+  protected void init(WebXml webXml, File baseDir, final AdminContext adminContext) throws InitException {
     this.webXml = webXml;
+    this.adminContext = adminContext;
+
     try {
-
-
-      if (Mode.testMode) {
-        if (logger.isInfoEnabled()) {
-          logger.info(" -- TEST MODE -- TEST MODE -- TEST MODE -- TEST MODE -- ");
-        }
-        this.adminContext = (AdminContext) Class.forName("mobi.eyeline.informer.admin.TestAdminContext").
-            getConstructor(File.class).newInstance(baseDir);
-      } else {
-        this.adminContext = new AdminContext(baseDir);
-      }
-
       this.authenticator = new AuthenticatorImpl(new Users() {
         public User getUser(String login) {
           try {
@@ -76,11 +86,25 @@ public class WebContext {
         }
       });
       configuration = new Configuration(adminContext);
+
+      webTimezones = Collections.unmodifiableList(new TimezonesConfig(new File(baseDir, "conf" + File.separator + "timezones.xml")).getTimezones());
+
     } catch (InitException e) {
       throw e;
     } catch (Exception e) {
       throw new InitException(e);
     }
+  }
+
+  protected WebContext() throws InitException {
+  }
+
+  private WebContext(WebXml webXml, File baseDir) throws InitException {
+    init(webXml, baseDir, new AdminContext(baseDir));
+  }
+
+  public List<InformerTimezone> getWebTimezones() {
+    return webTimezones;
   }
 
   public Authenticator getAuthenticator() {

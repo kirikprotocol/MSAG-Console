@@ -1,9 +1,5 @@
-package mobi.eyeline.informer.web;
+package mobi.eyeline.informer.admin;
 
-import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.InitException;
-import mobi.eyeline.informer.admin.InstallationType;
-import mobi.eyeline.informer.admin.WebConfigManager;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import org.junit.AfterClass;

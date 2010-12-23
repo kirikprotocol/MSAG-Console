@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.web;
+package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.WebConfigManager;

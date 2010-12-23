@@ -12,8 +12,8 @@ import java.util.*;
 
 public class XmlConfigSection {
 
-  protected Map<String, XmlConfigSection> sections = new HashMap<String, XmlConfigSection>(10);
-  protected Map<String, XmlConfigParam> params = new HashMap<String, XmlConfigParam>(10);
+  protected Map<String, XmlConfigSection> sections = new LinkedHashMap<String, XmlConfigSection>(10);
+  protected Map<String, XmlConfigParam> params = new LinkedHashMap<String, XmlConfigParam>(10);
 
   protected String name;
 

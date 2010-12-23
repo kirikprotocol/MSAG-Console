@@ -198,12 +198,6 @@ public class RegionsManagerTest {
       assertTrue(false);
     } catch (AdminException e) {
     }
-
-    try {
-      manager.setDefaultMaxPerSecond(0);
-      assertTrue(false);
-    } catch (AdminException e) {
-    }
   }
 
   @Test
