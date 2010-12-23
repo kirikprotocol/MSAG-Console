@@ -1,6 +1,7 @@
 package mobi.eyeline.informer.web.config;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -24,8 +25,18 @@ public class InformerTimezone {
     return timezone;
   }
 
+  public String getId() {
+    return timezone.getID();
+  }
+
   public Map<String, String> getAliases() {
     return aliases;
+  }
+
+  public String getAlias(Locale locale) {
+    if (locale == null)
+      return null;
+    return aliases.get(locale.getLanguage());
   }
 
   @Override

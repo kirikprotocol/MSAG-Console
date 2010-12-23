@@ -24,7 +24,7 @@ public class TimezonesConfig {
    * @return список часовых поясов из файла в том же порядке, в котором они находятся в файле
    * @throws ConfigException если произошла ошибка при чтении конфигурационного файла
    */
-  public List<InformerTimezone> getTimezones() throws ConfigException {
+  public InformerTimezones getTimezones() throws ConfigException {
     XmlConfig cfg = new XmlConfig();
     try {
       cfg.load(file);
@@ -37,7 +37,7 @@ public class TimezonesConfig {
     for (XmlConfigSection t : cfg.sections())
       result.add(deserializeTimezone(t));
 
-    return result;
+    return new InformerTimezones(result);
   }
 
   private static boolean isTimezoneExists(String name) {
@@ -59,6 +59,13 @@ public class TimezonesConfig {
         XmlConfigSection aliasesSec = s.getSection("aliases");
         for (XmlConfigParam p : aliasesSec.params())
           aliases.put(p.getName(), p.getString());
+
+        if (!aliases.containsKey("en"))
+          throw new ConfigException("No alias found for tz: " + s.getName() + " and locale: en");
+
+        if (!aliases.containsKey("ru"))
+          throw new ConfigException("No alias found for tz: " + s.getName() + " and locale: ru");
+
       } catch (XmlConfigException e) {
         throw new ConfigException(e);
       }

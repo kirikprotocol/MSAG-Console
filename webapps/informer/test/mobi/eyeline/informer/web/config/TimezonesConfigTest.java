@@ -38,7 +38,7 @@ public class TimezonesConfigTest {
   public void testGetTimezones() throws Exception {
     TimezonesConfig cfg = new TimezonesConfig(configFile);
 
-    List<InformerTimezone> timezones = cfg.getTimezones();
+    List<InformerTimezone> timezones = cfg.getTimezones().getTimezones();
     assertNotNull(timezones);
     assertEquals(2, timezones.size());
 

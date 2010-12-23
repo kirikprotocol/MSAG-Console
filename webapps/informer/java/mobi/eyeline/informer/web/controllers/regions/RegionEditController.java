@@ -4,9 +4,11 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableRow;
 import mobi.eyeline.informer.web.config.Configuration;
+import mobi.eyeline.informer.web.config.InformerTimezone;
 import org.apache.log4j.Logger;
 
 import javax.faces.application.FacesMessage;
@@ -29,26 +31,7 @@ public class RegionEditController extends RegionsController {
 
   private final List<SelectItem> timeZones = new LinkedList<SelectItem>();
 
-  private static final List<TimeZone> tZones = new LinkedList<TimeZone>();
 
-  static {
-    tZones.add(TimeZone.getTimeZone("Europe/Kaliningrad"));
-    tZones.add(TimeZone.getTimeZone("Europe/Moscow"));
-    tZones.add(TimeZone.getTimeZone("Europe/Volgograd"));
-    tZones.add(TimeZone.getTimeZone("Europe/Samara"));
-    tZones.add(TimeZone.getTimeZone("Asia/Yekaterinburg"));
-    tZones.add(TimeZone.getTimeZone("Asia/Omsk"));
-    tZones.add(TimeZone.getTimeZone("Asia/Novosibirsk"));
-    tZones.add(TimeZone.getTimeZone("Asia/Novokuznetsk"));
-    tZones.add(TimeZone.getTimeZone("Asia/Krasnoyarsk"));
-    tZones.add(TimeZone.getTimeZone("Asia/Irkutsk"));
-    tZones.add(TimeZone.getTimeZone("Asia/Yakutsk"));
-    tZones.add(TimeZone.getTimeZone("Asia/Vladivostok"));
-    tZones.add(TimeZone.getTimeZone("Asia/Sakhalin"));
-    tZones.add(TimeZone.getTimeZone("Asia/Magadan"));
-    tZones.add(TimeZone.getTimeZone("Asia/Kamchatka"));
-    tZones.add(TimeZone.getTimeZone("Asia/Anadyr"));
-  }
 
   private final Collection<Smsc> ss;
 
@@ -72,9 +55,8 @@ public class RegionEditController extends RegionsController {
 
 
     Locale l = getLocale();
-    for (TimeZone t : tZones) {
-      timeZones.add(new SelectItem(t, t.getDisplayName(l)));
-    }
+    for (InformerTimezone t : WebContext.getInstance().getWebTimezones().getTimezones())
+      timeZones.add(new SelectItem(t.getTimezone(), t.getAlias(l)));
   }
 
   private void reload() {

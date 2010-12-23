@@ -9,6 +9,7 @@ import mobi.eyeline.informer.web.auth.impl.AuthenticatorImpl;
 import mobi.eyeline.informer.web.auth.impl.Users;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.config.InformerTimezone;
+import mobi.eyeline.informer.web.config.InformerTimezones;
 import mobi.eyeline.informer.web.config.TimezonesConfig;
 import org.apache.log4j.Logger;
 
@@ -39,7 +40,7 @@ public class WebContext {
 
   private Configuration configuration;
 
-  private List<InformerTimezone> webTimezones;
+  private InformerTimezones webTimezones;
 
   public static void init(WebXml webXml, File baseDir) throws InitException {
     if (instance == null) {
@@ -87,7 +88,7 @@ public class WebContext {
       });
       configuration = new Configuration(adminContext);
 
-      webTimezones = Collections.unmodifiableList(new TimezonesConfig(new File(baseDir, "conf" + File.separator + "timezones.xml")).getTimezones());
+      webTimezones = new TimezonesConfig(new File(baseDir, "conf" + File.separator + "timezones.xml")).getTimezones();
 
     } catch (InitException e) {
       throw e;
@@ -103,7 +104,7 @@ public class WebContext {
     init(webXml, baseDir, new AdminContext(baseDir));
   }
 
-  public List<InformerTimezone> getWebTimezones() {
+  public InformerTimezones getWebTimezones() {
     return webTimezones;
   }
 
