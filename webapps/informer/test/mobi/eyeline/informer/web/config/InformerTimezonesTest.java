@@ -60,5 +60,6 @@ public class InformerTimezonesTest {
 
     assertNotNull(timezones.getTimezoneByAlias("a", new Locale("en")));
     assertEquals("Asia/Novosibirsk", timezones.getTimezoneByAlias("a", new Locale("en")).getId());
+    assertEquals("Asia/Novosibirsk", timezones.getTimezoneByAlias("a").getId());
   }
 }

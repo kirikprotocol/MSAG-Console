@@ -53,6 +53,13 @@ public class InformerTimezones {
     return getTimezoneByAlias(timezones, alias, locale);
   }
 
+  public InformerTimezone getTimezoneByAlias(String alias) {
+    InformerTimezone tz = getTimezoneByAlias(alias, new Locale("en"));
+    if (tz == null)
+      tz = getTimezoneByAlias(alias, new Locale("ru"));
+    return tz;
+  }
+
   public List<InformerTimezone> getTimezones() {
     return timezones;
   }

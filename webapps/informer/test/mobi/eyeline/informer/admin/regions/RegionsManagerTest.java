@@ -268,6 +268,17 @@ public class RegionsManagerTest {
   }
 
   @Test
+  public void testGetRegionByName() throws Exception {
+    RegionsManager manager = createManager();
+    Region r = getExistedRegion();
+
+    assertNotNull(manager.getRegionByName(r.getName()));
+    assertNull(manager.getRegionByName("dfga"));
+    assertNull(manager.getRegionByName(null));
+    assertNull(manager.getRegionByName(""));
+  }
+
+  @Test
   public void testContainsRegionWithName() throws Exception {
     RegionsManager manager = createManager();
     Region r = getExistedRegion();

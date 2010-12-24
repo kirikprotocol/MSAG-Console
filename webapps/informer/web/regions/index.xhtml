@@ -60,6 +60,11 @@
         </eye:button>
         <eye:space/>
         <eye:button>
+          <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['region.download.desc']}">
+            <tr:fileDownloadActionListener method="#{regions.download}" contentType="application/csv" filename="regions.csv"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:button>
           <tr:commandLink text="#{msg['upload.button']}" shortDesc="#{msg['region.upload.desc']}" action="REGION_UPLOAD"/>
         </eye:button>
       </eye:buttons>
@@ -112,6 +117,11 @@
           <tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['region.delete.desc']}" action="#{regions.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/>
         </eye:button>
         <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['region.download.desc']}">
+            <tr:fileDownloadActionListener method="#{regions.download}" contentType="application/csv" filename="regions.csv"/>
+          </tr:commandLink>
+        </eye:button>
         <eye:button>
           <tr:commandLink text="#{msg['upload.button']}" shortDesc="#{msg['region.upload.desc']}" action="REGION_UPLOAD"/>
         </eye:button>

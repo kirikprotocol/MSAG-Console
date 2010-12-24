@@ -4,10 +4,13 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
+import mobi.eyeline.informer.web.config.InformerTimezone;
 
 import javax.faces.model.SelectItem;
+import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -195,6 +198,20 @@ public class RegionsListController extends RegionsController {
         return getRegions().size();
       }
     };
+  }
+
+  protected void _download(PrintWriter writer) {
+    List<Region> regions = getRegions();
+
+    for (Region r : regions) {
+      InformerTimezone tz = WebContext.getInstance().getWebTimezones().getTimezoneByID(r.getTimeZone().getID());
+      String tzName = tz.getAlias(getLocale());
+      writer.append(r.getName()).append(',').append(r.getSmsc()).append(',').append(String.valueOf(r.getMaxSmsPerSecond())).append(',').append(tzName).println();
+      for (Address addr : r.getMasks())
+        writer.println(addr.getSimpleAddress());
+    }
+
+    writer.flush();
   }
 
 }

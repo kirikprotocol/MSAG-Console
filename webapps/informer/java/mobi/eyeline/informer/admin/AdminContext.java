@@ -563,16 +563,21 @@ public class AdminContext {
       Collection<Region> toUpdate = new ArrayList<Region>();
       Collection<Region> toRemove = new ArrayList<Region>();
 
+      toRemove.addAll(regionsManager.getRegions());
+
       for (Region r : regions) {
-        if (regionsManager.containsRegionWithName(r.getName()))
-          toUpdate.add(r);
-        else
+        Region existedR = regionsManager.getRegionByName(r.getName());
+        if (existedR != null) {
+          toRemove.remove(existedR);
+          existedR.setSmsc(r.getSmsc());
+          existedR.clearMasks();
+          existedR.addMasks(r.getMasks());
+          existedR.setMaxSmsPerSecond(r.getMaxSmsPerSecond());
+          toUpdate.add(existedR);
+
+        } else
           toAdd.add(r);
       }
-
-      toRemove.addAll(regionsManager.getRegions());
-      toRemove.removeAll(toUpdate);
-      toRemove.removeAll(toAdd);
 
       for (Region r : toRemove)
         removeRegion(r.getRegionId());

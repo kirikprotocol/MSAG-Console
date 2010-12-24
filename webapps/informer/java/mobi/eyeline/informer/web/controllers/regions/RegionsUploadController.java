@@ -2,6 +2,8 @@ package mobi.eyeline.informer.web.controllers.regions;
 
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.web.WebContext;
+import mobi.eyeline.informer.web.config.InformerTimezone;
 import mobi.eyeline.informer.web.controllers.UploadController;
 import org.apache.myfaces.trinidad.model.UploadedFile;
 
@@ -59,14 +61,18 @@ public class RegionsUploadController extends UploadController {
   }
 
 
-  private static Region readRegion(String line) throws Exception {
+  private Region readRegion(String line) throws Exception {
     Region r = new Region();
     StringTokenizer t = new StringTokenizer(line, ",");
     try {
       r.setName(readProperty(t));
       r.setSmsc(readProperty(t));
       r.setMaxSmsPerSecond(Integer.parseInt(readProperty(t)));
-      r.setTimeZone(TimeZone.getTimeZone(readProperty(t)));
+      String alias = readProperty(t);
+      InformerTimezone tz = WebContext.getInstance().getWebTimezones().getTimezoneByAlias(alias);
+      if (tz == null)
+        throw new IllegalArgumentException(alias);
+      r.setTimeZone(tz.getTimezone());
     } catch (NumberFormatException ex) {
       throw new IllegalArgumentException(ex);
     } catch (NoSuchElementException ex) {

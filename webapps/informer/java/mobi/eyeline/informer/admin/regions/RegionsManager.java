@@ -192,6 +192,19 @@ public class RegionsManager extends BaseManager<RegionsSettings> {
     });
   }
 
+  public Region getRegionByName(final String name) {
+    if (name == null)
+      return null;
+    return readSettings(new SettingsReader<RegionsSettings, Region>() {
+      public Region executeRead(RegionsSettings settings) {
+        for (Region r : settings.getRegions())
+          if (r.getName().equals(name))
+            return r;
+        return null;
+      }
+    });
+  }
+
   /**
    * Проверяет наличие в конфигурации региона с указанным именем
    * @param name имя региона
