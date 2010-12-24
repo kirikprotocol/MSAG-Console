@@ -138,7 +138,6 @@ class WebConfigSettings {
   }
 
   void setCdrSettings(CdrSettings cdrSettings) throws AdminException{
-    cdrSettings.validate();
     this.cdrSettings = new CdrSettings(cdrSettings);
   }
 

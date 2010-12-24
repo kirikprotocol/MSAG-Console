@@ -25,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Aleksandr Khalitov
  */
-public class CdrDaemon implements DeliveryChangeListener{
+class CdrDaemon implements DeliveryChangeListener{
 
   private static final Logger logger = Logger.getLogger("CDR");
 
@@ -46,18 +46,15 @@ public class CdrDaemon implements DeliveryChangeListener{
 
   private File cdrOutputDir;
 
-  private CdrDeliveries deliveries;
+  private CdrProviderContext context;
 
-  private CdrUsers cdrUsers;
-
-  public CdrDaemon(File workDir, File cdrOutputDir, FileSystem fs, CdrDeliveries deliveries, CdrUsers users) throws InitException{
+  public CdrDaemon(File workDir, File cdrOutputDir, FileSystem fs, CdrProviderContext context) throws InitException{
     if(!cdrOutputDir.exists() && !cdrOutputDir.mkdirs())  {
       throw new InitException("Can't create dir: "+ cdrOutputDir.getAbsolutePath());
     }
     this.fs = fs;
     this.cdrOutputDir = cdrOutputDir;
-    this.deliveries = deliveries;
-    this.cdrUsers = users;
+    this.context = context;
     this.workDir = workDir;
     if(!this.workDir.exists() && !this.workDir.mkdirs()) {
       throw new InitException("Can't create dir: "+ this.workDir.getAbsolutePath());
@@ -123,7 +120,7 @@ public class CdrDaemon implements DeliveryChangeListener{
   private synchronized Delivery getDelivery(int deliveryId, String user) throws AdminException {
     Delivery d = deliveryCache.get(deliveryId);
     if(d == null) {
-      d = deliveries.getDelviery(user, deliveryId);
+      d = context.getDelviery(user, deliveryId);
       if(d != null) {
         deliveryCache.put(deliveryId, d);
       }
@@ -227,7 +224,7 @@ public class CdrDaemon implements DeliveryChangeListener{
   private final Lock writeLock = new ReentrantLock();
 
   public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
-    User u = cdrUsers.getUser(e.getUserId());
+    User u = context.getUser(e.getUserId());
     if(u == null) {
       logger.error("User hasn't been found with id: "+e.getUserId());
       throw new CdrDaemonException("internal_error");

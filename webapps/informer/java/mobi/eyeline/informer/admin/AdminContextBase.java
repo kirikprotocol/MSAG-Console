@@ -4,9 +4,8 @@ import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
-import mobi.eyeline.informer.admin.cdr.CdrDaemon;
 import mobi.eyeline.informer.admin.delivery.DeliveryManager;
-import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
@@ -65,17 +64,12 @@ class AdminContextBase {
 
 
 
-  protected DeliveryChangesDetector deliveryChangesDetector;
+  protected DeliveryChangesDetectorImpl deliveryChangesDetector;
 
   protected SiebelManager siebelManager;
 
   protected SiebelFinalStateListener siebelFinalStateListener;
 
-
-
-
-
-  protected CdrDaemon cdrDaemon;
 
 // delivery ->user ->region->smsc
 

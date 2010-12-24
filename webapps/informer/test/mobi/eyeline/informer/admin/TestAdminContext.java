@@ -1,7 +1,7 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
-import mobi.eyeline.informer.admin.cdr.CdrDaemon;
+import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.contentprovider.TestContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.TestDeliveryChangesDetector;
@@ -256,14 +256,9 @@ public class TestAdminContext extends AdminContext {
       }catch (AdminException e){
         logger.error(e,e);
       }
-      cdrDaemon = new CdrDaemon(new File(workDir, "cdr"),
-          new File(webConfig.getCdrSettings().getCdrDir()),
-          fileSystem,
-          new CdrDeliveriesImpl(this), new CdrUsersImpl(this));
-      cdrDaemon.start();
 
-      deliveryChangesDetector.addListener(cdrDaemon);
-      
+      cdrProvider = new CdrProvider(new CdrProviderContextImpl(this, deliveryChangesDetector), webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
+
       deliveryChangesDetector.start();
 
     } catch (IOException e) {

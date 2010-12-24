@@ -1,10 +1,10 @@
 package mobi.eyeline.informer.admin;
 
-import mobi.eyeline.informer.admin.cdr.CdrDaemon;
+import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.delivery.stat.*;
 import mobi.eyeline.informer.admin.dep.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
@@ -51,6 +51,7 @@ public class AdminContext extends AdminContextBase {
   protected RestrictionDaemon restrictionDaemon;
   protected ContentProviderDaemon contentProviderDaemon;
   protected DeliveryNotificationsDaemon deliveryNotificationsDaemon;
+  protected CdrProvider cdrProvider;
 
   public AdminContext() {
   }
@@ -70,7 +71,7 @@ public class AdminContext extends AdminContextBase {
       restrictionDaemon.start();
 
       InformerSettings is = informerManager.getConfigSettings();
-      deliveryChangesDetector = new DeliveryChangesDetector(new File(is.getStoreDir(), "final_log"), fileSystem);
+      deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(is.getStoreDir(), "final_log"), fileSystem);
 
       try {
         initSiebel(workDir);
@@ -82,14 +83,7 @@ public class AdminContext extends AdminContextBase {
 
       deliveryChangesDetector.addListener(contentProviderDaemon);
 
-      cdrDaemon = new CdrDaemon(new File(workDir, "cdr"),
-          new File(webConfig.getCdrSettings().getCdrDir()),
-          fileSystem,
-          new CdrDeliveriesImpl(this), new CdrUsersImpl(this));
-      cdrDaemon.start();
-
-      deliveryChangesDetector.addListener(cdrDaemon);
-
+      cdrProvider = new CdrProvider(new CdrProviderContextImpl(this, deliveryChangesDetector), webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
 
       deliveryChangesDetector.start();
 
@@ -156,24 +150,9 @@ public class AdminContext extends AdminContextBase {
     }
   }
 
-  private void shutdownCdr() {
-    if (cdrDaemon != null) {
-      if (deliveryChangesDetector != null) {
-        try {
-          deliveryChangesDetector.removeListener(cdrDaemon);
-        } catch (Exception ignored) {
-        }
-      }
-      try {
-        cdrDaemon.stop();
-      } catch (Exception ignored) {
-      }
-    }
-  }
-
   public void shutdown() {
     shutdownSiebel();
-    shutdownCdr();
+    cdrProvider.shutdown();
     if(contentProviderDaemon!= null) {
       try{
         contentProviderDaemon.stop();
@@ -203,8 +182,9 @@ public class AdminContext extends AdminContextBase {
 
 
 
+  @Deprecated
   public boolean isCdrStarted() {
-    return cdrDaemon != null && cdrDaemon.istStrated();
+    return true;
   }
 
   public File getWorkDir() {
@@ -707,7 +687,7 @@ public class AdminContext extends AdminContextBase {
 
   public void setCdrSettings(CdrSettings props) throws AdminException {
     webConfig.setCdrSettings(props);
-    cdrDaemon.setCdrOutputDir(new File(props.getCdrDir()));
+    cdrProvider.updateSettings(props);
   }
 
   public boolean isAllowUssdPushDeliveries() {

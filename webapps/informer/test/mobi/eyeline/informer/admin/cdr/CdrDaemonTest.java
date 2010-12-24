@@ -3,6 +3,8 @@ package mobi.eyeline.informer.admin.cdr;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
@@ -31,9 +33,7 @@ public class CdrDaemonTest {
 
   private static File dir;
 
-  private static CdrDeliveries deliveries;
-
-  private static CdrUsers users;
+  private static CdrProviderContext context;
 
   private static int deliveryId;
 
@@ -62,11 +62,6 @@ public class CdrDaemonTest {
     user.setCreateCDR(true);
     user.setCdrDestination("dest");
     user.setCdrOriginator("orig");
-    users = new CdrUsers() {
-      public User getUser(String login) {
-        return user;
-      }
-    };
 
     final DeliveryPrototype p = new DeliveryPrototype();
     p.setOwner("a");
@@ -81,8 +76,8 @@ public class CdrDaemonTest {
 
 
     manager = new TestDeliveryManager(null, null);
-    deliveries = new CdrDeliveries() {
 
+    context = new CdrProviderContext() {
       {
         deliveryId = manager.createDeliveryWithIndividualTexts("a","1", p, null).getId();
       }
@@ -90,9 +85,15 @@ public class CdrDaemonTest {
       public Delivery getDelviery(String user, int deliveryId) throws AdminException {
         return manager.getDelivery("a","1", deliveryId);
       }
+
+      public User getUser(String login) {
+        return user;
+      }
+
+      public DeliveryChangesDetector getDeliveryChangesDetector() {
+        return null;
+      }
     };
-
-
   }
 
 
@@ -135,7 +136,7 @@ public class CdrDaemonTest {
 
   @Test
   public void test() throws Exception{
-    CdrDaemon cdr = new CdrDaemon(workDir, dir, FileSystem.getFSForSingleInst(), deliveries, users);
+    CdrDaemon cdr = new CdrDaemon(workDir, dir, FileSystem.getFSForSingleInst(), context);
     ChangeMessageStateEvent e = new ChangeMessageStateEvent(
         sdf.parse("20101112030210"), deliveryId, "a", 1, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
     );
@@ -212,9 +213,6 @@ public class CdrDaemonTest {
     assertEquals(fs.length, 1);
 
   }
-
-
-
 
   @AfterClass
   public static void shutdown() throws Exception {

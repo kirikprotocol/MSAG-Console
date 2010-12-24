@@ -10,12 +10,11 @@ import java.util.Properties;
  */
 public class CdrSettings {
 
-  private final  ValidationHelper vh =
-      new ValidationHelper(this.getClass());
+  private final  ValidationHelper vh = new ValidationHelper(this.getClass());
 
   private final Properties properties;
 
-  public CdrSettings(Properties properties) {
+  public CdrSettings(Properties properties) { // todo надо убрать этот конструктор
     this.properties = properties;
   }
 
@@ -23,7 +22,7 @@ public class CdrSettings {
     this(s.getAllProperties());
   }
 
-  public void validate() throws AdminException {
+  void validate() throws AdminException {
     vh.checkNotEmpty("dir", getCdrDir());
   }
 
