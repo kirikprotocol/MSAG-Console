@@ -1663,6 +1663,7 @@ public:
           bin+=2;len-=2;
           uint16_t length;
           memcpy(&length,bin,2);
+          length=ntohs(length);
           bin+=2;len-=2;
           std::string dump;
           if(length>len)
