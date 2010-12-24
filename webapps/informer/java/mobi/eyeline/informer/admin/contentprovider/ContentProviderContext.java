@@ -23,26 +23,27 @@ public interface ContentProviderContext {
   // todo зависимость от юзеров надо убрать
   List<User> getUsers();
 
-  User getUser(String userName);
+  User getUser(String login);
 
+  // todo зависимость от регионов надо убрать. Нужно унифицировать процесс создания рассылки в каком-нить одном месте.
   Region getRegion(Address ab);
 
 
-  Delivery createDelivery(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
+  Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException;
 
-  Delivery getDelivery(String login, String password, int deliveryId) throws AdminException;
+  Delivery getDelivery(String login,  int deliveryId) throws AdminException;
 
-  void activateDelivery(String login, String password, int deliveryId) throws AdminException;
+  void activateDelivery(String login,  int deliveryId) throws AdminException;
 
-  void dropDelivery(String username, String password, int deliveryId) throws AdminException;
+  void dropDelivery(String login,  int deliveryId) throws AdminException;
 
   void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException;
 
 
 
-  void addMessages(String login, String password, DataSource<Message> messageSource, int deliveryId) throws AdminException;
+  void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException;
 
-  void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
+  void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
 
   DeliveryChangesDetector getDeliveryChangesDetector();
 }

@@ -256,7 +256,7 @@ class MainLoopTask implements Runnable {
   }
 
 
-  private void handleErrorProccessingFile(Exception e, File userDir, File f, String baseName, String username, String password, Integer deliveryId) {
+  private void handleErrorProccessingFile(Exception e, File userDir, File f, String baseName, String username,  Integer deliveryId) {
     File errLogFile = new File(userDir,baseName+".errLog");
     try {
       PrintWriter pw = null;
@@ -294,7 +294,7 @@ class MainLoopTask implements Runnable {
 
     if(deliveryId!=null) {
       try {
-        context.dropDelivery(username,password,deliveryId);
+        context.dropDelivery(username,deliveryId);
       }
       catch (Exception ex) {
         log.error("Error removing delivery "+deliveryId,ex);
@@ -316,7 +316,7 @@ class MainLoopTask implements Runnable {
       Integer deliveryId =null;
       try {
         deliveryId = Integer.valueOf(ext.substring(5));
-        context.dropDelivery(u.getLogin(),u.getPassword(),deliveryId);
+        context.dropDelivery(u.getLogin(),deliveryId);
         //rename .csv.<id> to .csv
         File newFile = new File(userDir,baseName+".csv");
         if(fileSys.exists(newFile)){
@@ -331,7 +331,7 @@ class MainLoopTask implements Runnable {
         }
       }
       catch (Exception e) {
-        handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), u.getPassword(), deliveryId);
+        handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), deliveryId);
       }
     }
   }
@@ -354,7 +354,7 @@ class MainLoopTask implements Runnable {
         context.copyUserSettingsToDeliveryPrototype(u.getLogin(),delivery);
         delivery.setSourceAddress(ucps.getSourceAddress());
         delivery.setEnableStateChangeLogging(true);
-        Delivery d = context.createDelivery(u.getLogin(),u.getPassword(),delivery,null);
+        Delivery d = context.createDeliveryWithIndividualTexts(u.getLogin(), delivery, null);
         deliveryId = d.getId();
         //rename to .csv.<id>
         File newFile = new File(userDir,baseName+".csv."+deliveryId);
@@ -368,7 +368,7 @@ class MainLoopTask implements Runnable {
           if(encoding==null) encoding="UTF-8";
           is = new BufferedReader(new InputStreamReader(fileSys.getInputStream(f),encoding));
           reportWriter = new PrintStream(fileSys.getOutputStream(reportFile,true),true,encoding);
-          context.addMessages(u.getLogin(),u.getPassword(),new CPMessageSource(
+          context.addMessages(u.getLogin(),new CPMessageSource(
               u.isAllRegionsAllowed() ? null : u.getRegions(),
               is,
               reportWriter
@@ -378,14 +378,14 @@ class MainLoopTask implements Runnable {
           if(is!=null) try {is.close();} catch (Exception e){}
           if(reportWriter!=null) try {reportWriter.close();} catch (Exception e){}
         }
-        context.activateDelivery(u.getLogin(),u.getPassword(),deliveryId);
+        context.activateDelivery(u.getLogin(),deliveryId);
         fileSys.delete(f);
 
         if (log.isDebugEnabled())
           log.debug("  Delivery successfully created from file: '" + f.getAbsolutePath() + "'. File was removed.");
       }
       catch (Exception e) {
-        handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), u.getPassword(), deliveryId);
+        handleErrorProccessingFile(e, userDir, f, baseName, u.getLogin(), deliveryId);
       }
     }
   }

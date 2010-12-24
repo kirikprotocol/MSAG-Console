@@ -1,9 +1,12 @@
 package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.cdr.CdrProvider;
+import mobi.eyeline.informer.admin.cdr.CdrProviderContext;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
+import mobi.eyeline.informer.admin.contentprovider.ContentProviderContext;
 import mobi.eyeline.informer.admin.contentprovider.FileDeliveriesProvider;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.delivery.stat.*;
 import mobi.eyeline.informer.admin.dep.*;
@@ -40,7 +43,7 @@ import java.util.*;
  *
  * @author Aleksandr Khalitov
  */
-public class AdminContext extends AdminContextBase {
+public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext {
 
 
   protected User2RegionDep user2regionDep;
@@ -62,7 +65,7 @@ public class AdminContext extends AdminContextBase {
     try {
       restrictionDaemon = new RestrictionDaemon(new RestrictionDaemonContextImpl(this));
 
-      fileDeliveriesProvider = new FileDeliveriesProvider(new ContentProviderContextImpl(this, deliveryChangesDetector), appBaseDir, workDir, webConfig.getContentProviderPeriod());
+      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getContentProviderPeriod());
 
       deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
 
@@ -79,7 +82,7 @@ public class AdminContext extends AdminContextBase {
         logger.error(e, e);
       }
 
-      cdrProvider = new CdrProvider(new CdrProviderContextImpl(this, deliveryChangesDetector), webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
+      cdrProvider = new CdrProvider(this, webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
 
       deliveryChangesDetector.start();
 
@@ -192,6 +195,11 @@ public class AdminContext extends AdminContextBase {
 
   public FileSystem getFileSystem() {
     return fileSystem;
+  }
+
+  @Override
+  public DeliveryChangesDetector getDeliveryChangesDetector() {
+    return deliveryChangesDetector;
   }
 
   // USERS =======================================================================================
@@ -439,6 +447,32 @@ public class AdminContext extends AdminContextBase {
 
   // DELIVERIES ====================================================================================================================
 
+  //todo Надо бы убрать пароль из всех методов по работе с рассылками.
+
+  @Override
+  public Delivery getDelivery(String user, int deliveryId) throws AdminException {
+    User u = usersManager.getUser(user);
+    return getDelivery(user, u.getPassword(), deliveryId);
+  }
+
+  @Override
+  public void activateDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    activateDelivery(login, u.getPassword(), deliveryId);
+  }
+
+  @Override
+  public void dropDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    dropDelivery(login, u.getPassword(), deliveryId);
+  }
+
+  @Override
+  public Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
+    User u = getUser(login);
+    return createDeliveryWithIndividualTexts(u.getLogin(), u.getPassword(), delivery, msDataSource);
+  }
+
   public synchronized Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
     if (restrictionsManager.hasActiveRestriction(login)) {
       throw new DeliveryException("creation_restricted");
@@ -493,6 +527,18 @@ public class AdminContext extends AdminContextBase {
       setDeliveryRestriction(login, password, deliveryId, false);
       deliveryManager.dropDelivery(login, password, deliveryId);
     }
+  }
+
+  @Override
+  public void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    addMessages(login, u.getPassword(), messageSource, deliveryId);
+  }
+
+  @Override
+  public void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException {
+    User u = getUser(login);
+    getMessagesStates(login, u.getPassword(), filter, deliveryId, visitor);
   }
 
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {

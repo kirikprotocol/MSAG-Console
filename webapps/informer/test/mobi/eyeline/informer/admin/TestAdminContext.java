@@ -3,7 +3,6 @@ package mobi.eyeline.informer.admin;
 import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
 import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.contentprovider.FileDeliveriesProvider;
-import mobi.eyeline.informer.admin.contentprovider.TestContentProviderDaemon;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.TestDeliveryChangesDetector;
 import mobi.eyeline.informer.admin.delivery.stat.TestDeliveryStatProvider;
@@ -247,7 +246,7 @@ public class TestAdminContext extends AdminContext {
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
       deliveryChangesDetector.addListener(deliveryNotificationsDaemon);
 
-      fileDeliveriesProvider = new FileDeliveriesProvider(new ContentProviderContextImpl(this, deliveryChangesDetector), appBaseDir, workDir, webConfig.getContentProviderPeriod());
+      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getContentProviderPeriod());
 
       try{
         initSiebel(workDir);
@@ -255,7 +254,7 @@ public class TestAdminContext extends AdminContext {
         logger.error(e,e);
       }
 
-      cdrProvider = new CdrProvider(new CdrProviderContextImpl(this, deliveryChangesDetector), webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
+      cdrProvider = new CdrProvider(this, webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
 
       deliveryChangesDetector.start();
 

@@ -73,7 +73,7 @@ class ProcessNotificationsTask implements Runnable{
     User user = context.getUser(userName);
     if (user != null && user.getCpSettings()!=null) {
 
-      Delivery d = context.getDelivery(user.getLogin(), user.getPassword(), deliveryId);
+      Delivery d = context.getDelivery(user.getLogin(), deliveryId);
 
       for(UserCPsettings ucps : user.getCpSettings()) {
 
@@ -122,7 +122,7 @@ class ProcessNotificationsTask implements Runnable{
       ps = new PrintStream(context.getFileSystem().getOutputStream(reportFile, true), true, encoding);
       final PrintStream psFinal = ps;
       MessageFilter filter = new MessageFilter(deliveryId, d.getStartDate(), new Date());
-      context.getMessagesStates(user.getLogin(), user.getPassword(), filter, 1000, new Visitor<Message>() {
+      context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
         public boolean visit(Message mi) throws AdminException {
           String result = "";
           result = mi.getState().toString() + ((mi.getErrorCode()) != null ? (" errCode=" + mi.getErrorCode()) : "");

@@ -82,7 +82,7 @@ public class CdrDaemonTest {
         deliveryId = manager.createDeliveryWithIndividualTexts("a","1", p, null).getId();
       }
 
-      public Delivery getDelviery(String user, int deliveryId) throws AdminException {
+      public Delivery getDelivery(String user, int deliveryId) throws AdminException {
         return manager.getDelivery("a","1", deliveryId);
       }
 

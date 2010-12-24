@@ -120,7 +120,7 @@ class CdrDaemon implements DeliveryChangeListener{
   private synchronized Delivery getDelivery(int deliveryId, String user) throws AdminException {
     Delivery d = deliveryCache.get(deliveryId);
     if(d == null) {
-      d = context.getDelviery(user, deliveryId);
+      d = context.getDelivery(user, deliveryId);
       if(d != null) {
         deliveryCache.put(deliveryId, d);
       }

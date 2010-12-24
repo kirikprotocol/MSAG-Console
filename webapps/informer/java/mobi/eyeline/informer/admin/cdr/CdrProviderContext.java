@@ -10,7 +10,7 @@ import mobi.eyeline.informer.admin.users.User;
  */
 public interface CdrProviderContext {
 
-  public Delivery getDelviery(String user, int deliveryId) throws AdminException;
+  public Delivery getDelivery(String user, int deliveryId) throws AdminException;
 
   public User getUser(String login);
 
