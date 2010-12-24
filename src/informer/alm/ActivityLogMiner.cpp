@@ -92,7 +92,7 @@ std::string::size_type skipField(const std::string& str,std::string::size_type p
 }
 
 
-bool ActivityLogMiner::getNext(int reqId,std::vector<ALMResult>& result,int count)
+bool ActivityLogMiner::getNext(int reqId,ALMResult& result)
 {
   sync::MutexGuard mg(mtx);
   ReqMap::iterator it=reqMap.find(reqId);
@@ -100,8 +100,7 @@ bool ActivityLogMiner::getNext(int reqId,std::vector<ALMResult>& result,int coun
   {
     throw InfosmeException(EXC_EXPIRED,"request with id=%d expired or doesn't exists",reqId);
   }
-  result.reserve(count);
-  return parseFiles(it->second,&result,count,false)==count;
+  return parseRecord(it->second,result);
 }
 
 int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filter)
@@ -111,14 +110,20 @@ int ActivityLogMiner::countRecords(dlvid_type dlvId,const ALMRequestFilter& filt
   req.filter=filter;
   req.curDate=filter.startDate;
   req.offset=0;
-  return parseFiles(&req,0,0,true);
+  int rv=0;
+  ALMResult res;
+  while(parseRecord(&req,res))
+  {
+    rv++;
+  }
+  return rv;
 }
 
 
-int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int count,bool countOnly)
+bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
 {
   using smsc::core::buffers::File;
-  File f;
+  File& f=req->f;
   std::string filePath;
   bool nextFile=false;
 
@@ -126,21 +131,19 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
   std::string::size_type pos;
   int sec;
 
-  int rv=0;
-
-  bool dayChecked=false;
-  bool hourChecked=false;
-  int day=-1;
-  int hour=-1;
+  bool& dayChecked=req->dayChecked;
+  bool& hourChecked=req->hourChecked;
+  int& day=req->day;
+  int& hour=req->hour;
 
 
-  while(countOnly || rv<count)
+  for(;;)
   {
     if(!f.isOpened())
     {
       if(req->curDate>req->filter.endDate)
       {
-        return rv;
+        return false;
       }
       ::tm tm;
       msgTimeToYmd(req->curDate,&tm);
@@ -199,7 +202,7 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
     }
 
     //parse and push
-    ALMResult rec;
+    ALMResult& rec=result;
     rec.resultFields=req->filter.resultFields;
     int n;
     pos=0;
@@ -299,6 +302,7 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
       {
         throw InfosmeException(EXC_BADFORMAT,"expected message text in line '%s' (%d)",line.c_str(),pos);
       }
+      rec.text.clear();
       rec.text.reserve(line.length()-pos);
       for(;;pos++)
       {
@@ -335,15 +339,23 @@ int ActivityLogMiner::parseFiles(Request* req,std::vector<ALMResult>* result,int
         }
       }
     }
-    if(result)
-    {
-      result->push_back(rec);
-    }
-    rv++;
+    break;
   }
   req->offset=f.Pos();
-  return rv;
+  return true;
 }
+
+void ActivityLogMiner::pauseReq(int reqId)
+{
+  sync::MutexGuard mg(mtx);
+  ReqMap::iterator it=reqMap.find(reqId);
+  if(it==reqMap.end())
+  {
+    throw InfosmeException(EXC_EXPIRED,"request with id=%d expired or doesn't exists",reqId);
+  }
+  it->second->f.Close();
+}
+
 
 
 }

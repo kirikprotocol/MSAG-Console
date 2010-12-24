@@ -6,6 +6,7 @@
 #include "informer/data/DeliveryInfo.h"
 #include "informer/data/CommonSettings.h"
 #include "core/buffers/File.hpp"
+#include "eyeline/protogen/framework/SerializerBuffer.hpp"
 
 namespace eyeline{
 namespace informer{
@@ -916,29 +917,34 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   messages::GetNextMessagesPackResp resp;
-  std::vector<alm::ALMResult> result;
-  resp.setMoreMessages(core->getALM().getNext(inmsg.getReqId(),result,inmsg.getCount()));
+  alm::IActivityLogMiner& alm=core->getALM();
+
+  //resp.setMoreMessages(.getNext(inmsg.getReqId(),result));
   std::vector<messages::MessageInfo>& miv=resp.getInfoRef();
-  VECLOOP(it,alm::ALMResult,result)
+  int cnt=0;
+  int sz=0;
+  alm::ALMResult res;
+  bool more=false;
+  while(cnt<inmsg.getCount() && sz<65536 && (more=alm.getNext(inmsg.getReqId(),res)))
   {
     miv.push_back(messages::MessageInfo());
     messages::MessageInfo& mi=miv.back();
-    mi.setId(it->id);
-    if(it->resultFields&alm::rfAbonent)
+    mi.setId(res.id);
+    if(res.resultFields&alm::rfAbonent)
     {
-      mi.setAbonent(it->abonent.c_str());
+      mi.setAbonent(res.abonent.c_str());
     }
-    if(it->resultFields&alm::rfDate)
+    if(res.resultFields&alm::rfDate)
     {
-      mi.setDate(msgTimeToDateTimeStr(it->date));
+      mi.setDate(msgTimeToDateTimeStr(res.date));
     }
-    if(it->resultFields&alm::rfErrorCode)
+    if(res.resultFields&alm::rfErrorCode)
     {
-      mi.setErrorCode(it->code);
+      mi.setErrorCode(res.code);
     }
-    if(it->resultFields&alm::rfState)
+    if(res.resultFields&alm::rfState)
     {
-      switch(it->state)
+      switch(res.state)
       {
         case MSGSTATE_INPUT:mi.setState(messages::DeliveryMessageState::New);break;
         case MSGSTATE_PROCESS:mi.setState(messages::DeliveryMessageState::Process);break;
@@ -950,15 +956,19 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
         default:break;
       }
     }
-    if(it->resultFields&alm::rfText)
+    if(res.resultFields&alm::rfText)
     {
-      mi.setText(it->text);
+      mi.setText(res.text);
     }
-    if(it->resultFields&alm::rfUserData)
+    if(res.resultFields&alm::rfUserData)
     {
-      mi.setUserData(it->userData);
+      mi.setUserData(res.userData);
     }
+    cnt++;
+    sz+=mi.length<eyeline::protogen::framework::SerializerBuffer>();
   }
+  alm.pauseReq(inmsg.getReqId());
+  resp.setMoreMessages(more);
   enqueueResp(resp,inmsg);
 }
 

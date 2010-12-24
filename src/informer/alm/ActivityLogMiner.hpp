@@ -6,6 +6,7 @@
 #include <map>
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
+#include "core/buffers/File.hpp"
 
 namespace eyeline{
 namespace informer{
@@ -21,7 +22,8 @@ public:
   void init(const std::string& argPath,time_t argRequestTimeout);
 
   int createRequest(dlvid_type dlvId,const ALMRequestFilter& filter);
-  bool getNext(int reqId,std::vector<ALMResult>& result,int count);
+  bool getNext(int reqId,ALMResult& result);
+  void pauseReq(int reqId);
 
   int countRecords(dlvid_type dlvId,const ALMRequestFilter& filter);
 
@@ -39,6 +41,20 @@ protected:
     msgtime_type curDate;
     uint64_t offset;
     TimeMap::iterator timeIt;
+
+    Request()
+    {
+      dayChecked=false;
+      hourChecked=false;
+      day=-1;
+      hour=-1;
+    }
+
+    smsc::core::buffers::File f;
+    bool dayChecked;
+    bool hourChecked;
+    int day;
+    int hour;
   };
 
   typedef std::map<int,Request*> ReqMap;
@@ -51,7 +67,7 @@ protected:
   std::string mkDatePath(dlvid_type dlvId,const ::tm& date);
   std::string mkHourPath(dlvid_type dlvId,const ::tm& date);
 
-  int parseFiles(Request* req,std::vector<ALMResult>* result,int count,bool countOnly);
+  bool parseRecord(Request* req,ALMResult& result);
 
 };
 
