@@ -9,7 +9,7 @@ import mobi.eyeline.informer.admin.AdminException;
  */
 public class SmscException extends AdminException {
 
-  public SmscException(String key, String... args) {
+  SmscException(String key, String... args) {
     super(key, args);
   }
 

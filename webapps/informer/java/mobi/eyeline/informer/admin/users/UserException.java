@@ -10,11 +10,11 @@ import mobi.eyeline.informer.admin.AdminException;
  */
 public class UserException extends AdminException {
 
-  public UserException(String key, String... args) {
+  UserException(String key, String... args) {
     super(key, args);
   }
 
-  protected UserException(String key, Throwable cause, String... args) {
+  UserException(String key, Throwable cause, String... args) {
     super(key, cause, args);
   }
 }

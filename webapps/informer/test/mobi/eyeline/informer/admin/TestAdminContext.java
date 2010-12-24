@@ -274,6 +274,8 @@ public class TestAdminContext extends AdminContext {
     catch (URISyntaxException e) {
       throw new InitException(e);
     }
+
+    initDependencies();
   }
 
 

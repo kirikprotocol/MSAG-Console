@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.controllers.smsc;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.SmscException;
+import mobi.eyeline.informer.util.LocalizedException;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableModel;
 import mobi.eyeline.informer.web.components.dynamic_table.model.DynamicTableRow;
 import mobi.eyeline.informer.web.config.Configuration;
@@ -74,14 +75,14 @@ public class SmscEditController extends SmscController {
     return errors.length() > 0 ? errors.substring(1) : "";
   }
 
-  private static Set<Integer> parseFromCSV(String s) throws AdminException {
+  private static Set<Integer> parseFromCSV(String s) throws  SmscControllerException {
     String[] cs = s.split(",");
     Set<Integer> result = new HashSet<Integer>(cs.length);
     for (String c : cs) {
       try {
         result.add(Integer.parseInt(c.trim()));
       } catch (NumberFormatException e) {
-        throw new SmscException("illegal_code", c);
+        throw new SmscControllerException("illegal_code", c);
       }
     }
     return result;
@@ -110,7 +111,7 @@ public class SmscEditController extends SmscController {
   }
 
 
-  private static Smsc convert(SmscInfo smsc) throws AdminException {
+  private static Smsc convert(SmscInfo smsc) throws LocalizedException {
     Smsc s = new Smsc(smsc.name);
     s.setHost(smsc.host);
     s.setInterfaceVersion(smsc.interfaceVersion);
@@ -152,10 +153,10 @@ public class SmscEditController extends SmscController {
         String errors = (String) r.getValue("errors");
         if (interval == null || (interval = interval.trim()).length() == 0
             || !Smsc.RETRY_POLICY_PATTERN.matcher(interval).matches()) {
-          throw new SmscException("illegal_intervals", interval);
+          throw new SmscControllerException("illegal_intervals", interval);
         }
         if (errors == null || (errors = errors.trim()).length() == 0) {
-          throw new SmscException("illegal_code", "");
+          throw new SmscControllerException("illegal_code", "");
         }
         s.addTempError(interval, parseFromCSV(errors));
       }
@@ -178,7 +179,7 @@ public class SmscEditController extends SmscController {
       }
 
       return "SMSC";
-    } catch (AdminException e) {
+    } catch (LocalizedException e) {
       addError(e);
       return null;
     } finally {

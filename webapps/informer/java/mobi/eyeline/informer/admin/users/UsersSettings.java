@@ -78,6 +78,8 @@ class UsersSettings {
 
   public void addUser(User user) throws AdminException{
     user.validate();
+    if (users.containsKey(user.getLogin()))
+      throw new UserException("user_already_exist", user.getLogin());
     users.put(user.getLogin(), user);
   }
 }
