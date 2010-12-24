@@ -13,10 +13,10 @@ import java.io.File;
  * Date: 30.11.2010
  * Time: 14:12:49
  */
-interface ContentProviderUserDirResolver {
+interface UserDirResolver {
 
   public File getUserLocalDir(String login, UserCPsettings ucps) throws AdminException;
 
-  public ContentProviderConnection getConnection(User user, UserCPsettings ucps) throws AdminException;
+  public FileResource getConnection(User user, UserCPsettings ucps) throws AdminException;
 
 }

@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 17.11.2010
  * Time: 16:21:41
  */
-public class ContentProviderDaemon extends DeliveryChangeListenerStub implements Daemon, ContentProviderUserDirResolver {
+class ContentProviderDaemon extends DeliveryChangeListenerStub implements Daemon, UserDirResolver {
 
   private static Logger log = Logger.getLogger("CONTENT_PROVIDER");
 
@@ -73,9 +73,9 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
       }
     });
 
-    scheduler.scheduleAtFixedRate(new ContentProviderImportTask(context,this,workDir),0, periodSec,TimeUnit.SECONDS);
+    scheduler.scheduleAtFixedRate(new MainLoopTask(context,this,workDir),0, periodSec,TimeUnit.SECONDS);
 
-    reportScheduler.schedule(new ContentProviderReportTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
+    reportScheduler.schedule(new ProcessNotificationsTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
 
     if (log.isDebugEnabled())
       log.debug("Content Provider Daemon successfully started.");
@@ -120,7 +120,7 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
       ps.println(e.getUserId());
       synchronized (this) {
         if(isStarted()) {
-          reportScheduler.schedule(new ContentProviderReportTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
+          reportScheduler.schedule(new ProcessNotificationsTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
         }
       }
     }
@@ -136,21 +136,21 @@ public class ContentProviderDaemon extends DeliveryChangeListenerStub implements
     return new File(workDir,login+"_"+ucps.getHashId());
   }
 
-  public ContentProviderConnection getConnection(User user, UserCPsettings ucps) throws AdminException {
+  public FileResource getConnection(User user, UserCPsettings ucps) throws AdminException {
     if(ucps.getProtocol()==UserCPsettings.Protocol.sftp) {
-      return new ContentProviderConnectionSFTP(fileSys,ucps);
+      return new SFTPResource(fileSys,ucps);
     }
     else {
-      return new ContentProviderConnectionLocalFilesys(informerBase,fileSys,ucps);
+      return new LocalResource(informerBase,fileSys,ucps);
     }
   }
 
   public void verifyConnection(User u, UserCPsettings ucps) throws AdminException {
-    
-    ContentProviderConnection con = null;
+
+    FileResource con = null;
     try {
       con = getConnection(u,ucps);
-      con.connect();
+      con.open();
       con.listCSVFiles();
     }
     finally {

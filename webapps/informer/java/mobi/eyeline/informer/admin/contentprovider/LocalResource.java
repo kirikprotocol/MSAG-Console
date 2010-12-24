@@ -17,11 +17,11 @@ import java.util.List;
  * Date: 30.11.2010
  * Time: 18:34:53
  */
-public class ContentProviderConnectionLocalFilesys implements ContentProviderConnection {
+class LocalResource implements FileResource {
   private FileSystem fileSys;
   private File userSrcDir;
 
-  public ContentProviderConnectionLocalFilesys(File informerBase, FileSystem fileSys, UserCPsettings ucps) {    
+  public LocalResource(File informerBase, FileSystem fileSys, UserCPsettings ucps) {
     this.fileSys = fileSys;
     if(ucps.getDirectory().indexOf(File.separatorChar)==0) {
       this.userSrcDir = new File(ucps.getDirectory());
@@ -31,16 +31,14 @@ public class ContentProviderConnectionLocalFilesys implements ContentProviderCon
     }
   }
 
-  public void connect() throws AdminException {
-
+  public void open() throws AdminException {
+    if (!fileSys.exists(userSrcDir))
+      throw new ContentProviderException("userDirNotFound","",userSrcDir.getAbsolutePath());
   }
 
   public List<String> listCSVFiles() throws AdminException {
     String[] files = fileSys.list(userSrcDir);
-    if(files==null) {
-      throw new ContentProviderException("userDirNotFound","",userSrcDir.getAbsolutePath());
-    }
-    List<String> ret = new ArrayList();
+    List<String> ret = new ArrayList<String>();
     for(String f: files) {
       if(f.endsWith(".csv")) {
         ret.add(f);
@@ -93,7 +91,6 @@ public class ContentProviderConnectionLocalFilesys implements ContentProviderCon
   }
 
   public void close() throws AdminException {
-    //To change body of implemented methods use File | Settings | File Templates.
   }
 
   private void pump(InputStream is, OutputStream os) throws IOException {

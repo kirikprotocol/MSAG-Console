@@ -2,7 +2,7 @@ package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
-import mobi.eyeline.informer.admin.contentprovider.ContentProviderDaemon;
+import mobi.eyeline.informer.admin.contentprovider.FileDeliveriesProvider;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.delivery.stat.*;
@@ -49,9 +49,9 @@ public class AdminContext extends AdminContextBase {
   protected Region2SmscDep region2smscDep;
 
   protected RestrictionDaemon restrictionDaemon;
-  protected ContentProviderDaemon contentProviderDaemon;
   protected DeliveryNotificationsDaemon deliveryNotificationsDaemon;
   protected CdrProvider cdrProvider;
+  protected FileDeliveriesProvider fileDeliveriesProvider;
 
   public AdminContext() {
   }
@@ -62,7 +62,7 @@ public class AdminContext extends AdminContextBase {
     try {
       restrictionDaemon = new RestrictionDaemon(new RestrictionDaemonContextImpl(this));
 
-      contentProviderDaemon = new ContentProviderDaemon(new ContentProviderContextImpl(this), appBaseDir, workDir, webConfig.getContentProviderPeriod());
+      fileDeliveriesProvider = new FileDeliveriesProvider(new ContentProviderContextImpl(this, deliveryChangesDetector), appBaseDir, workDir, webConfig.getContentProviderPeriod());
 
       deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
 
@@ -78,10 +78,6 @@ public class AdminContext extends AdminContextBase {
       } catch (Exception e) {
         logger.error(e, e);
       }
-
-      contentProviderDaemon.start();
-
-      deliveryChangesDetector.addListener(contentProviderDaemon);
 
       cdrProvider = new CdrProvider(new CdrProviderContextImpl(this, deliveryChangesDetector), webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
 
@@ -153,11 +149,8 @@ public class AdminContext extends AdminContextBase {
   public void shutdown() {
     shutdownSiebel();
     cdrProvider.shutdown();
-    if(contentProviderDaemon!= null) {
-      try{
-        contentProviderDaemon.stop();
-      }catch(Exception e){}
-    }
+    fileDeliveriesProvider.shutdown();
+
     if(restrictionDaemon != null) {
       try{
         restrictionDaemon.stop();
@@ -437,7 +430,6 @@ public class AdminContext extends AdminContextBase {
   public List<Daemon> getDaemons() {
     List<Daemon> ret = new LinkedList<Daemon>();
     ret.add(restrictionDaemon);
-    ret.add(contentProviderDaemon);
     return ret;
   }
 
@@ -765,7 +757,7 @@ public class AdminContext extends AdminContextBase {
   }
 
   public void verifyCPSettings(User u, UserCPsettings ucps) throws AdminException {
-    contentProviderDaemon.verifyConnection(u, ucps);
+    fileDeliveriesProvider.verifyConnection(u, ucps);
   }
 
   public void sendTestSms(TestSms sms) throws AdminException {

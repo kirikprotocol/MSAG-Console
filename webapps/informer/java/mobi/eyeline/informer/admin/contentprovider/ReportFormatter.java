@@ -13,7 +13,7 @@ import java.util.Date;
  * Date: 25.11.2010
  * Time: 12:46:26
  */
-class ContentProviderReportFormatter {
+class ReportFormatter {
 
   static ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>(){
     @Override protected DateFormat initialValue() {

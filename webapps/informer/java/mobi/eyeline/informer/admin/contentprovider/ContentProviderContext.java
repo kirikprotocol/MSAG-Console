@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
@@ -19,7 +20,7 @@ public interface ContentProviderContext {
 
   FileSystem getFileSystem();
 
-
+  // todo зависимость от юзеров надо убрать
   List<User> getUsers();
 
   User getUser(String userName);
@@ -42,4 +43,6 @@ public interface ContentProviderContext {
   void addMessages(String login, String password, DataSource<Message> messageSource, int deliveryId) throws AdminException;
 
   void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
+
+  DeliveryChangesDetector getDeliveryChangesDetector();
 }

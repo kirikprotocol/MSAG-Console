@@ -10,19 +10,17 @@ import mobi.eyeline.informer.admin.users.UserCPsettings;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 
-class ContentProviderReportTask implements Runnable{
-  Logger log = Logger.getLogger(this.getClass());
+class ProcessNotificationsTask implements Runnable{
+  private static final Logger log = Logger.getLogger("CONTENT_PROVIDER");
 
-  private ContentProviderUserDirResolver userDirResolver;
+  private UserDirResolver userDirResolver;
   private ContentProviderContext context;
   File workDir;
 
-  public ContentProviderReportTask(ContentProviderContext context,ContentProviderUserDirResolver userDirResolver, File workDir) {
+  public ProcessNotificationsTask(ContentProviderContext context, UserDirResolver userDirResolver, File workDir) {
     this.context = context;
     this.workDir = workDir;
     this.userDirResolver = userDirResolver;
@@ -128,7 +126,7 @@ class ContentProviderReportTask implements Runnable{
         public boolean visit(Message mi) throws AdminException {
           String result = "";
           result = mi.getState().toString() + ((mi.getErrorCode()) != null ? (" errCode=" + mi.getErrorCode()) : "");
-          ContentProviderReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);
+          ReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);
           return true;
         }
       });

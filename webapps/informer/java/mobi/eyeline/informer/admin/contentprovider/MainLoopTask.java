@@ -20,13 +20,14 @@ import java.util.regex.Pattern;
 
 
 /**
+ *
  * Copyright Eyeline.mobi
  * User: vmax
  * Date: 17.11.2010
  * Time: 18:29:48
  */
-class ContentProviderImportTask implements Runnable {
-  private static Logger log = Logger.getLogger("CONTENT_PROVIDER");
+class MainLoopTask implements Runnable {
+  private static final Logger log = Logger.getLogger("CONTENT_PROVIDER");
 
   private ContentProviderContext context;
   private FileSystem fileSys;
@@ -34,9 +35,9 @@ class ContentProviderImportTask implements Runnable {
 
 
   Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
-  private ContentProviderUserDirResolver userDirResolver;
+  private UserDirResolver userDirResolver;
 
-  public ContentProviderImportTask(ContentProviderContext context,ContentProviderUserDirResolver userDirResolver, File workDir) throws AdminException {
+  public MainLoopTask(ContentProviderContext context, UserDirResolver userDirResolver, File workDir) throws AdminException {
     this.context = context;
     this.fileSys=context.getFileSystem();
     this.workDir=workDir;
@@ -109,7 +110,7 @@ class ContentProviderImportTask implements Runnable {
     }
   }
 
-  private boolean downloadFile(ContentProviderConnection connection, String remoteFile, File toDit) throws AdminException {
+  private boolean downloadFile(FileResource connection, String remoteFile, File toDit) throws AdminException {
     File localTmpFile = new File(toDit, remoteFile + ".tmp");
     if (fileSys.exists(localTmpFile))
       fileSys.delete(localTmpFile);
@@ -144,10 +145,10 @@ class ContentProviderImportTask implements Runnable {
       log.debug("Downloading files...");
 
     int counter = 0;
-    ContentProviderConnection connection = null;
+    FileResource connection = null;
     try {
       connection = userDirResolver.getConnection(user,ucps);
-      connection.connect();
+      connection.open();
 
       List<String> remoteFiles = connection.listCSVFiles();
       for (String remoteFile : remoteFiles) {
@@ -216,11 +217,11 @@ class ContentProviderImportTask implements Runnable {
     }
 
     if(!uploadFiles.isEmpty() || !finishedDeliveries.isEmpty()) {
-      ContentProviderConnection connection = null;
+      FileResource connection = null;
       String baseName=null;
       try {
         connection = userDirResolver.getConnection(u,ucps);
-        connection.connect();
+        connection.open();
 
         for(File f : uploadFiles) {
           try {
@@ -423,7 +424,7 @@ class ContentProviderImportTask implements Runnable {
               ab = new Address(abonent);
             }
             catch (Exception e) {
-              ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"INVALID ABONENT");
+              ReportFormatter.writeReportLine(reportWriter, abonent, new Date(), "INVALID ABONENT");
               continue;
             }
             boolean skip = false;
@@ -434,14 +435,14 @@ class ContentProviderImportTask implements Runnable {
               }
             }
             if(skip) {
-              ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"NOT ALLOWED REGION");
+              ReportFormatter.writeReportLine(reportWriter, abonent, new Date(), "NOT ALLOWED REGION");
               continue;
             }
             String  text = line.substring(inx+1).trim();
             return Message.newMessage(ab,text);
           }
           catch(Exception e) {
-            ContentProviderReportFormatter.writeReportLine(reportWriter,abonent,new Date(),"ERROR PARSING LINE :"+line);
+            ReportFormatter.writeReportLine(reportWriter, abonent, new Date(), "ERROR PARSING LINE :" + line);
           }
         }
       }

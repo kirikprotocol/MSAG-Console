@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin;
 
 import mobi.eyeline.informer.admin.contentprovider.ContentProviderContext;
 import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
@@ -15,9 +16,11 @@ import java.util.List;
 class ContentProviderContextImpl implements ContentProviderContext {
 
   private AdminContext context;
+  private DeliveryChangesDetector detector;
 
-  ContentProviderContextImpl(AdminContext context) {
+  ContentProviderContextImpl(AdminContext context, DeliveryChangesDetector detector) {
     this.context = context;
+    this.detector = detector;
   }
 
 
@@ -63,5 +66,10 @@ class ContentProviderContextImpl implements ContentProviderContext {
 
   public void getMessagesStates(String login, String password, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException {
     this.context.getMessagesStates(login, password, filter, deliveryId, visitor);
+  }
+
+  @Override
+  public DeliveryChangesDetector getDeliveryChangesDetector() {
+    return detector;
   }
 }

@@ -20,7 +20,7 @@ import java.util.List;
  * Date: 30.11.2010
  * Time: 17:00:06
  */
-class ContentProviderConnectionSFTP implements ContentProviderConnection {
+class SFTPResource implements FileResource {
   private JSch jsch;
   private Session session = null;
   private ChannelSftp channel = null;
@@ -28,7 +28,7 @@ class ContentProviderConnectionSFTP implements ContentProviderConnection {
   private UserCPsettings ucps;
 
 
-  ContentProviderConnectionSFTP(FileSystem fileSysLocal,UserCPsettings ucps) throws AdminException {
+  SFTPResource(FileSystem fileSysLocal, UserCPsettings ucps) throws AdminException {
     this.fileSysLocal = fileSysLocal;
     this.ucps = ucps;
     jsch = new JSch();
@@ -42,7 +42,7 @@ class ContentProviderConnectionSFTP implements ContentProviderConnection {
   }
 
 
-  public void connect() throws AdminException {
+  public void open() throws AdminException {
     try {
       session = jsch.getSession(ucps.getLogin(), ucps.getHost());
       if(ucps.getPort()!=null) session.setPort(ucps.getPort());
