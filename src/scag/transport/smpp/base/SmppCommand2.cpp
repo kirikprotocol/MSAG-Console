@@ -529,7 +529,7 @@ void SmppCommand::changeSliceRefNum( SMS& sms, uint32_t sarmr )
         std::auto_ptr<unsigned char> newbuf(new unsigned char[len]);
         memcpy(newbuf.get(),buff,len);
         unsigned char* udh = newbuf.get();
-        const size_t udhl = unsigned(newbuf.get()[0]) + 1;
+        const size_t udhl = unsigned(*udh) + 1;
         if ( udhl < 6 ) {
             smsc_log_warn(log_,"cannot change too small udh: sz=%u", udhl);
             break;

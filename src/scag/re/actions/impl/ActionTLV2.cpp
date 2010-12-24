@@ -54,8 +54,9 @@ bool ActionTLV::getOptionalProperty(SMS& data, const char*& buff, uint32_t& len)
 uint32_t ActionTLV::findField(const char* buff, uint32_t len, uint16_t fieldId)
 {
     uint32_t i = 0;
-    while (i <= len - 4 && *(uint16_t *)(buff + i) != fieldId)
-        i = i + 4 + *(uint16_t *)(buff + i + 2);
+    while (i <= len - 4 && EndianConverter::get16(buff+i) != fieldId) {
+        i = i + 4 + EndianConverter::get16(buff + i + 2);
+    }
     if(i > len) smsc_log_warn(logger, "Error in TLV field. Index out of bounds.");
     return i;
 }
@@ -66,9 +67,10 @@ void ActionTLV::cutField(const char* buff, uint32_t len, uint16_t fieldId, std::
     tmp.assign(buff, i < len ? i : len);
     if(i <= len - 4)
     {
-        i = i + 4 + *(uint16_t *)(buff + i + 2);
-        if(i < len)
+        i = i + 4 + EndianConverter::get16(buff + i + 2);
+        if(i < len) {
             tmp.append(buff + i, len - i);
+        }
     }
 }
 
@@ -96,7 +98,7 @@ bool ActionTLV::getUnknown(SMS& data, uint16_t fieldId, Property* prop)
     const char* buff;
     if(getOptionalProperty(data, buff, len) && (i = findField(buff, len, fieldId)) <= len - 4)
     {
-        uint16_t valueLen = *(uint16_t *)(buff + i + 2);
+        uint16_t valueLen = EndianConverter::get16(buff + i + 2);
         if(i + 4 + valueLen > len) return false;
         getBinTag(buff + i + 4, valueLen, prop, fieldId);
         return true;
@@ -119,9 +121,10 @@ bool ActionTLV::delUnknown(SMS& data, uint16_t fieldId)
     {
         std::string tmp;
         tmp.assign(buff, i);
-        i = i + 4 + *(uint16_t *)(buff + i + 2);
-        if(i < len)
+        i = i + 4 + EndianConverter::get16(buff + i + 2);
+        if(i < len) {
             tmp.append(buff + i, len - i);
+        }
         data.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
         return true;
     }
@@ -175,8 +178,9 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
     std::string tmp;
     const char* buff;
 
-    if(getOptionalProperty(data, buff, len))
+    if(getOptionalProperty(data, buff, len)) {
         cutField(buff, len, fieldId, tmp);
+    }
 
     getPropertyValue(prop, fieldId, var, int_val, str_val);
 
@@ -230,7 +234,8 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
       valueLen = sizeof(int64_t);
       uint16_t netValueLen = htons(valueLen);
       tmp.append((char*)&netValueLen, 2);
-      uint64_t val = smsc::util::Uint64Converter::toNetworkOrder((uint64_t)int_val);
+      uint64_t val;
+      EndianConverter::set64(&val,(uint64_t)int_val);
       tmp.append((char*)&val, valueLen);
       break;
     }

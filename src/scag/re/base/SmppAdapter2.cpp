@@ -4,6 +4,7 @@
 #include "CommandBridge.h"
 #include "scag/transport/smpp/base/SmppEntity2.h"
 #include "scag/util/encodings/Encodings.h"
+#include "scag/util/io/EndianConverter.h"
 #include "scag/sessions/base/Session2.h"
 #include "system/status.h"
 
@@ -15,6 +16,7 @@ namespace smpp {
 using namespace util::properties;
 using namespace util::encodings;
 using namespace smsc::system::Status;
+using util::io::EndianConverter;
 
 // === fields
 
@@ -539,8 +541,8 @@ AdapterProperty* SmppCommandAdapter::getUnknownProperty(SMS& data, const std::st
     unsigned int i = 0;
     while (i < (len - 4)) 
     {
-        value = *((uint16_t *)(buff + i));
-        valueLen = *((uint16_t *)(buff + i + 2));
+        value = EndianConverter::get16(buff + i);
+        valueLen = EndianConverter::get16(buff + i + 2);
 
         if (valueLen <=0) return 0;
         if ((i + 4 + valueLen) > len) return 0;

@@ -282,7 +282,7 @@ bill::infrastruct::TariffRec* ActionContext::getTariffRec( uint32_t category,
     if ( tariffRec_.get() ) {
         if ( tariffRec_->CategoryId != category ||
              tariffRec_->MediaTypeId != medyaType ||
-             tariffOperId_ != commandProperty_->operatorId ) {
+             tariffOperId_ != uint32_t(commandProperty_->operatorId) ) {
             tariffRec_.reset(0);
         }
     }
