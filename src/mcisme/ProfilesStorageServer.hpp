@@ -34,33 +34,33 @@ const uint8_t MSG_ID_PROFILE = 0;
 const uint8_t MSG_ID_GETPROF = 1;
 const uint8_t MSG_ID_SETPROF = 2;
 
-const uint8_t STATUS_OK			= 0;
-const uint8_t STATUS_ERRROR		= 1;
-const uint8_t STATUS_BADMSG		= 2;
-const uint8_t STATUS_NO_ABNT	= 3;
+const uint8_t STATUS_OK         = 0;
+const uint8_t STATUS_ERRROR     = 1;
+const uint8_t STATUS_BADMSG     = 2;
+const uint8_t STATUS_NO_ABNT    = 3;
 
 struct ProfileHeader
 {
-  uint8_t	msgId;
-  uint8_t	SeqNum;
-  uint8_t	Status;
+  uint8_t       msgId;
+  uint8_t       SeqNum;
+  uint8_t       Status;
 };
 
 struct ProfileBody
 {
-  char	abnt[32];
-  uint8_t	eventMask;
-  uint8_t	inform;
-  uint8_t	notify;
-  uint8_t	wantNotifyMe;
-  int8_t	informTemplateId;
-  int8_t	notifyTemplateId;
+  char  abnt[32];
+  uint8_t       eventMask;
+  uint8_t       inform;
+  uint8_t       notify;
+  uint8_t       wantNotifyMe;
+  int8_t        informTemplateId;
+  int8_t        notifyTemplateId;
 };
 
 struct ProfileMessage
 {
-  ProfileHeader	hdr;
-  ProfileBody		body;
+  ProfileHeader hdr;
+  ProfileBody   body;
 };
 
 class ProfStorageCommandDispatcher: public ThreadedTask 
@@ -179,19 +179,10 @@ protected:
       msg.body.notifyTemplateId = prof.notifyTemplateId;
       msg.body.wantNotifyMe = prof.wantNotifyMe;
 
-      smsc_log_info(logger, "Get:--------------------------------");
-      smsc_log_info(logger, "msg.hdr.msgId = %d", msg.hdr.msgId);
-      smsc_log_info(logger, "msg.hdr.SeqNum = %d", msg.hdr.SeqNum);
-      smsc_log_info(logger, "msg.hdr.Status = %d", msg.hdr.Status);
-
-      smsc_log_info(logger, "msg.body.abnt = %s", msg.body.abnt);
-      smsc_log_info(logger, "msg.body.eventMask = %d", msg.body.eventMask);
-      smsc_log_info(logger, "msg.body.inform = %d", msg.body.inform);
-      smsc_log_info(logger, "msg.body.informTemplateId = %d", msg.body.informTemplateId);
-      smsc_log_info(logger, "msg.body.notify = %d", msg.body.notify);
-      smsc_log_info(logger, "msg.body.notifyTemplateId = %d", msg.body.notifyTemplateId);
-      smsc_log_info(logger, "msg.body.wantNotifyMe = %d", msg.body.wantNotifyMe);
-      smsc_log_info(logger, "------------------------------------------");
+      smsc_log_info(logger, "Get: msg.hdr.msgId = %d,msg.hdr.SeqNum = %d,msg.hdr.Status = %d,msg.body.abnt = %s,msg.body.eventMask = %d,"
+                    "msg.body.inform = %d,msg.body.informTemplateId = %d,msg.body.notify = %d,msg.body.notifyTemplateId = %d,msg.body.wantNotifyMe = %d",
+                    msg.hdr.msgId, msg.hdr.SeqNum, msg.hdr.Status, msg.body.abnt, msg.body.eventMask, msg.body.inform,
+                    msg.body.informTemplateId, msg.body.notify, msg.body.notifyTemplateId, msg.body.wantNotifyMe);
 
       sendnbytes((char*)&msg, sizeof(ProfileMessage));
     }
