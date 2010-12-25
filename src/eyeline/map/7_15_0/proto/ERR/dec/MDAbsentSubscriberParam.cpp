@@ -43,9 +43,13 @@ MDAbsentSubscriberParam::prepareAlternative(uint16_t unique_idx)
     _dAbsentSubscriberReason.init(getTSRule()).setValue(_value->absentSubscriberReason.init());
     return _dAbsentSubscriberReason.get();
   }
-  _uext.init(getTSRule()).setValue(_value->_unkExt);
-  return _uext.get();
 
+  if (!_uext.get())
+    _uext.init(getTSRule()).setValue(_value->_unkExt);
+  else
+    _uext->setValue(_value->_unkExt);
+
+  return _uext.get();
 }
 
 }}}}

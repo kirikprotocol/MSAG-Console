@@ -57,7 +57,12 @@ MDExtensibleSystemFailureParam::prepareAlternative(uint16_t unique_idx)
     _dFailureCauseParam.init(getTSRule()).setValue(_value->failureCauseParam.init());
     return _dFailureCauseParam.get();
   }
-  _uext.init(getTSRule()).setValue(_value->_unkExt);
+
+  if (!_uext.get())
+    _uext.init(getTSRule()).setValue(_value->_unkExt);
+  else
+    _uext->setValue(_value->_unkExt);
+
   return _uext.get();
 }
 

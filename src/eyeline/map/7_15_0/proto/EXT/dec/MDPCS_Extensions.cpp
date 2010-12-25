@@ -26,9 +26,12 @@ MDPCS_Extensions::prepareAlternative(uint16_t unique_idx)
   if (unique_idx > 0)
     throw smsc::util::Exception("MDPCS_Extensions::prepareAlternative: undefined UId");
 
-  _uext.init(getTSRule()).setValue(_value->_unkExt);
-  return _uext.get();
+  if (!_uext.get())
+    _uext.init(getTSRule()).setValue(_value->_unkExt);
+  else
+    _uext->setValue(_value->_unkExt);
 
+  return _uext.get();
 }
 
 }}}}

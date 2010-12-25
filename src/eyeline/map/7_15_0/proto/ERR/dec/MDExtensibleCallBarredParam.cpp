@@ -33,7 +33,7 @@ MDExtensibleCallBarredParam::prepareAlternative(uint16_t unique_idx)
 {
   if (!_value)
     throw smsc::util::Exception("MDExtensibleCallBarredParam::prepareAlternative: value isn't set!");
-  if (unique_idx > 2)
+  if (unique_idx > 3)
     throw smsc::util::Exception("MDExtensibleCallBarredParam::prepareAlternative: undefined UId");
 
   if (unique_idx == 0) {
@@ -49,7 +49,11 @@ MDExtensibleCallBarredParam::prepareAlternative(uint16_t unique_idx)
     return _dUnauthMsgOrig.get();
   }
 
-  _uext.init(getTSRule()).setValue(_value->_unkExt);
+  if (!_uext.get())
+    _uext.init(getTSRule()).setValue(_value->_unkExt);
+  else
+    _uext->setValue(_value->_unkExt);
+
   return _uext.get();
 }
 
