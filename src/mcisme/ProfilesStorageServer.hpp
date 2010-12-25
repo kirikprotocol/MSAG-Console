@@ -149,19 +149,10 @@ protected:
     //	smsc_log_info(logger, "ProfileServer: RecvMsg failed.");
     //	return false;
     //}
-    smsc_log_info(logger, "Recieved:--------------------------------");
-    smsc_log_info(logger, "msg.hdr.msgId = %d", msg.hdr.msgId);
-    smsc_log_info(logger, "msg.hdr.SeqNum = %d", msg.hdr.SeqNum);
-    smsc_log_info(logger, "msg.hdr.Status = %d", msg.hdr.Status);
-
-    smsc_log_info(logger, "msg.body.abnt = %s", msg.body.abnt);
-    smsc_log_info(logger, "msg.body.eventMask = %d", msg.body.eventMask);
-    smsc_log_info(logger, "msg.body.inform = %d", msg.body.inform);
-    smsc_log_info(logger, "msg.body.informTemplateId = %d", msg.body.informTemplateId);
-    smsc_log_info(logger, "msg.body.notify = %d", msg.body.notify);
-    smsc_log_info(logger, "msg.body.notifyTemplateId = %d", msg.body.notifyTemplateId);
-    smsc_log_info(logger, "msg.body.wantNotifyMe = %d", msg.body.wantNotifyMe);
-    smsc_log_info(logger, "------------------------------------------");
+    smsc_log_info(logger, "Recieved: msg.hdr.msgId = %d,msg.hdr.SeqNum = %d,msg.hdr.Status = %d,msg.body.abnt = %s,msg.body.eventMask = %d,msg.body.inform = %d,"
+                  "msg.body.informTemplateId = %d,msg.body.notify = %d,msg.body.notifyTemplateId = %d,msg.body.wantNotifyMe = %d",
+                  msg.hdr.msgId, msg.hdr.SeqNum, msg.hdr.Status,msg.body.abnt, msg.body.eventMask, msg.body.inform,
+                  msg.body.informTemplateId, msg.body.notify, msg.body.notifyTemplateId, msg.body.wantNotifyMe);
 
     if(msg.hdr.msgId == MSG_ID_GETPROF)			// Getting profile
     {
@@ -179,8 +170,8 @@ protected:
       msg.body.notifyTemplateId = prof.notifyTemplateId;
       msg.body.wantNotifyMe = prof.wantNotifyMe;
 
-      smsc_log_info(logger, "Get: msg.hdr.msgId = %d,msg.hdr.SeqNum = %d,msg.hdr.Status = %d,msg.body.abnt = %s,msg.body.eventMask = %d,"
-                    "msg.body.inform = %d,msg.body.informTemplateId = %d,msg.body.notify = %d,msg.body.notifyTemplateId = %d,msg.body.wantNotifyMe = %d",
+      smsc_log_info(logger, "Get: msg.hdr.msgId = %d,msg.hdr.SeqNum = %d,msg.hdr.Status = %d,msg.body.abnt = %s,msg.body.eventMask = %d,msg.body.inform = %d,"
+                    "msg.body.informTemplateId = %d,msg.body.notify = %d,msg.body.notifyTemplateId = %d,msg.body.wantNotifyMe = %d",
                     msg.hdr.msgId, msg.hdr.SeqNum, msg.hdr.Status, msg.body.abnt, msg.body.eventMask, msg.body.inform,
                     msg.body.informTemplateId, msg.body.notify, msg.body.notifyTemplateId, msg.body.wantNotifyMe);
 
