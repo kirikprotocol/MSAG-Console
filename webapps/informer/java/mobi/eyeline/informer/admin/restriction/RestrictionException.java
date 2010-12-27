@@ -10,11 +10,11 @@ import mobi.eyeline.informer.admin.AdminException;
  */
 public class RestrictionException extends AdminException {
 
-  public RestrictionException(String key, Throwable cause, String... args) {
+  RestrictionException(String key, Throwable cause, String... args) {
     super(key, cause, args);
   }
 
-  public RestrictionException(String key, String... args) {
+  RestrictionException(String key, String... args) {
     super(key, args);
   }
 }

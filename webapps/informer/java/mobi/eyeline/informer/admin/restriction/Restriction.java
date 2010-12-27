@@ -21,7 +21,7 @@ public class Restriction {
   private boolean allUsers;
   private List<String> userIds;
 
-  private final ValidationHelper vh = new ValidationHelper(Restriction.class);
+  private static final ValidationHelper vh = new ValidationHelper(Restriction.class);
 
   public Restriction() {
   }

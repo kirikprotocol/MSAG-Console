@@ -45,10 +45,5 @@ public class RestrictionsFilter {
   public void setUserId(String userId) {
     this.userId = userId;
   }
-
-
-  public RestrictionsFilter() {
-
-  }
-
 }
+

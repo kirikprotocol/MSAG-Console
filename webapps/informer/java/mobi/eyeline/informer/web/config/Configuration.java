@@ -383,11 +383,9 @@ public class Configuration {
 
   public void updateRestriction(Restriction r, String user) throws AdminException {
     Restriction oldr = context.getRestriction(r.getId());
-    if (oldr == null) {
-      throw new RestrictionException("restriction.not.found");
-    }
     context.updateRestriction(r);
-    journal.logUpdateRestriction(r, oldr, user);
+    if (oldr != null)
+      journal.logUpdateRestriction(r, oldr, user);
   }
 
   public void deleteRestriction(int id, String user) throws AdminException {
