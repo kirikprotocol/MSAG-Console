@@ -18,10 +18,10 @@ import java.util.List;
  * Date: 03.11.2010
  * Time: 17:56:17
  */
-public class RestrictionsManager extends BaseManager<RestrictionSettings> {
+class RestrictionsManager extends BaseManager<RestrictionSettings> {
 
-  public RestrictionsManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException {
-    super(infosme, config, backup, fileSystem, new RestrictionsConfig());
+  public RestrictionsManager(File config, File backup, FileSystem fileSystem) throws InitException {
+    super(null, config, backup, fileSystem, new RestrictionsConfig());
   }
 
   public Restriction getRestriction(final int id) {

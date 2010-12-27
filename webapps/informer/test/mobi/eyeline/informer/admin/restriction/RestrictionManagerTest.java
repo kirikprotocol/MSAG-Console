@@ -42,8 +42,7 @@ public class RestrictionManagerTest {
 
   @Before
   public void before() throws Exception {
-    Infosme infosem = new TestInfosme();
-    restrictionsManager = new TestRestrictionsManager(infosem, configFile, backupDir, FileSystem.getFSForSingleInst());
+    restrictionsManager = new TestRestrictionsManager(configFile, backupDir, FileSystem.getFSForSingleInst());
   }
 
   @Test

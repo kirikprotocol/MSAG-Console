@@ -14,8 +14,8 @@ import java.io.File;
  */
 public class TestRestrictionsManager extends RestrictionsManager {
 
-  public TestRestrictionsManager(Infosme infosme, File config, File backup, FileSystem fileSystem) throws InitException {
-    super(infosme, config, backup, fileSystem);
+  public TestRestrictionsManager(File config, File backup, FileSystem fileSystem) throws InitException {
+    super(config, backup, fileSystem);
   }
   
 }

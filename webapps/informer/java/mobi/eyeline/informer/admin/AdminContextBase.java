@@ -14,7 +14,6 @@ import mobi.eyeline.informer.admin.infosme.Infosme;
 import mobi.eyeline.informer.admin.infosme.InfosmeImpl;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
-import mobi.eyeline.informer.admin.restriction.RestrictionsManager;
 import mobi.eyeline.informer.admin.service.ServiceManager;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
 import mobi.eyeline.informer.admin.users.UsersManager;
@@ -57,10 +56,6 @@ class AdminContextBase {
   protected DeliveryManager deliveryManager;
 
   protected File workDir;
-
-  protected RestrictionsManager restrictionsManager;
-
-
 
   protected DeliveryChangesDetectorImpl deliveryChangesDetector;
 
@@ -129,10 +124,6 @@ class AdminContextBase {
           new File(confDir, "backup"), fileSystem);
 
       deliveryManager = new DeliveryManager(is.getDcpHost(), is.getDcpPort(), new File(is.getStatDir()), fileSystem);
-
-      restrictionsManager = new RestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
-          new File(confDir, "backup"), fileSystem);
-
 
     } catch (AdminException e) {
       throw new InitException(e);

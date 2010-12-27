@@ -19,9 +19,7 @@ import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsContext;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.restriction.Restriction;
-import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
-import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
+import mobi.eyeline.informer.admin.restriction.*;
 import mobi.eyeline.informer.admin.siebel.*;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
@@ -38,7 +36,7 @@ import java.util.*;
  *
  * @author Aleksandr Khalitov
  */
-public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext, DeliveryNotificationsContext, SiebelContext {
+public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext, DeliveryNotificationsContext, SiebelContext, RestrictionContext {
 
 
   protected User2RegionDep user2regionDep;
@@ -46,7 +44,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   protected Restriction2UserDep restriction2UserDep;
   protected Region2SmscDep region2smscDep;
 
-  protected RestrictionDaemon restrictionDaemon;
+  protected RestrictionProvider restrictionProvider;
   protected DeliveryNotificationsDaemon deliveryNotificationsDaemon;
   protected CdrProvider cdrProvider;
   protected FileDeliveriesProvider fileDeliveriesProvider;
@@ -59,15 +57,17 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     super(appBaseDir);
 
     try {
-      restrictionDaemon = new RestrictionDaemon(new RestrictionDaemonContextImpl(this));
+      File servicesDir = new File(appBaseDir, "services");
+
+      File confDir = new File(servicesDir, "Informer" + File.separatorChar + "conf");
+
+      restrictionProvider = new RestrictionProvider(this, new File(confDir, "restrictions.csv"), new File(confDir, "backup"), fileSystem);
 
       fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getContentProviderPeriod());
 
       deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(this);
 
       deliveryChangesDetector.addListener(deliveryNotificationsDaemon);
-
-      restrictionDaemon.start();
 
       InformerSettings is = informerManager.getConfigSettings();
       deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(is.getStoreDir(), "final_log"), fileSystem);
@@ -88,7 +88,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   protected void initDependencies() {
     user2regionDep = new User2RegionDep(usersManager, regionsManager);
     delivery2UserDep = new Delivery2UserDep(deliveryManager, usersManager);
-    restriction2UserDep = new Restriction2UserDep(restrictionsManager, restrictionDaemon, usersManager);
+    restriction2UserDep = new Restriction2UserDep(restrictionProvider, usersManager);
     region2smscDep = new Region2SmscDep(regionsManager, smscManager);
   }
 
@@ -96,13 +96,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     siebelProvider.shutdown();
     cdrProvider.shutdown();
     fileDeliveriesProvider.shutdown();
+    restrictionProvider.shutdown();
 
-    if(restrictionDaemon != null) {
-      try{
-        restrictionDaemon.stop();
-      } catch (Exception e) {
-      }
-    }
     if (deliveryChangesDetector != null) {
       try {
         deliveryChangesDetector.shutdown();
@@ -378,9 +373,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
 
+  @Deprecated
   public List<Daemon> getDaemons() {
     List<Daemon> ret = new LinkedList<Daemon>();
-    ret.add(restrictionDaemon);
     return ret;
   }
 
@@ -394,31 +389,14 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   //todo Надо бы убрать пароль из всех методов по работе с рассылками.
 
   @Override
-  public Delivery getDelivery(String user, int deliveryId) throws AdminException {
-    User u = usersManager.getUser(user);
-    return getDelivery(user, u.getPassword(), deliveryId);
-  }
-
-  @Override
-  public void activateDelivery(String login, int deliveryId) throws AdminException {
-    User u = getUser(login);
-    activateDelivery(login, u.getPassword(), deliveryId);
-  }
-
-  @Override
-  public void dropDelivery(String login, int deliveryId) throws AdminException {
-    User u = getUser(login);
-    dropDelivery(login, u.getPassword(), deliveryId);
-  }
-
-  @Override
   public Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
     User u = getUser(login);
     return createDeliveryWithIndividualTexts(u.getLogin(), u.getPassword(), delivery, msDataSource);
   }
 
+  @Deprecated
   public synchronized Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
-    if (restrictionsManager.hasActiveRestriction(login)) {
+    if (restrictionProvider.hasActiveRestriction(login)) {
       throw new DeliveryException("creation_restricted");
     }
 
@@ -431,8 +409,14 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return deliveryManager.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
   }
 
+  public Delivery createDeliveryWithSingleText(String login, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
+    User u = getUser(login);
+    return createDeliveryWithSingleText(login, u.getPassword(), delivery, msDataSource);
+  }
+
+  @Deprecated
   public synchronized Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
-    if (restrictionsManager.hasActiveRestriction(login)) {
+    if (restrictionProvider.hasActiveRestriction(login)) {
       throw new DeliveryException("creation_restricted");
     }
 
@@ -459,6 +443,12 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
   }
 
+  public Delivery setDeliveryRestriction(String login, int deliveryId, boolean restriction) throws AdminException {
+    User user = getUser(login);
+    return setDeliveryRestriction(login, user.getPassword(), deliveryId, restriction);
+  }
+
+  @Deprecated
   public Delivery setDeliveryRestriction(String login, String password, int deliveryId, boolean restriction) throws AdminException {
     synchronized (getLock(deliveryId)) {
       Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
@@ -468,6 +458,13 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
   }
 
+  @Override
+  public void dropDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    dropDelivery(login, u.getPassword(), deliveryId);
+  }
+
+  @Deprecated
   public void dropDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
       Delivery d = deliveryManager.getDelivery(login, password, deliveryId);
@@ -514,6 +511,13 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return deliveryManager.countDeliveries(login, password, deliveryFilter);
   }
 
+  @Override
+  public Delivery getDelivery(String user, int deliveryId) throws AdminException {
+    User u = usersManager.getUser(user);
+    return getDelivery(user, u.getPassword(), deliveryId);
+  }
+
+  @Deprecated
   public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException {
     return deliveryManager.getDelivery(login, password, deliveryId);
   }
@@ -544,9 +548,16 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
   }
 
+  @Override
+  public void activateDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    activateDelivery(login, u.getPassword(), deliveryId);
+  }
+
+  @Deprecated
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
-      if (restrictionsManager.hasActiveRestriction(login)) {
+      if (restrictionProvider.hasActiveRestriction(login)) {
         throw new DeliveryException("activation_restricted");
       }
       deliveryManager.activateDelivery(login, password, deliveryId);
@@ -650,32 +661,30 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   // RESTRICTIONS ================================================================================================================================
 
   public Restriction getRestriction(int id) {
-    return restrictionsManager.getRestriction(id);
+    return restrictionProvider.getRestriction(id);
   }
 
   public List<Restriction> getRestrictions(RestrictionsFilter filter) {
-    return restrictionsManager.getRestrictions(filter);
+    return restrictionProvider.getRestrictions(filter);
   }
 
   public synchronized void addRestriction(Restriction r) throws AdminException {
     restriction2UserDep.updateRestriction(r);
-    restrictionsManager.addRestriction(r);
-    restrictionDaemon.rebuildSchedule();
+    restrictionProvider.addRestriction(r);
   }
 
   public synchronized void updateRestriction(Restriction r) throws AdminException {
     restriction2UserDep.updateRestriction(r);
-    restrictionsManager.updateRestriction(r);
-    restrictionDaemon.rebuildSchedule();
+    restrictionProvider.updateRestriction(r);
   }
 
   public synchronized void deleteRestriction(int id) throws AdminException {
-    restrictionsManager.deleteRestriction(id);
-    restrictionDaemon.rebuildSchedule();
+    restrictionProvider.deleteRestriction(id);
   }
 
+  @Deprecated
   public boolean isRestrictionDaemonStarted() {
-    return restrictionDaemon.isStarted();
+    return true;
   }
 
 

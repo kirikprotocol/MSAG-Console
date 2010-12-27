@@ -15,7 +15,7 @@ import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.regions.TestRegionsManager;
-import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
+import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
 import mobi.eyeline.informer.admin.restriction.TestRestrictionsManager;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
@@ -237,11 +237,7 @@ public class TestAdminContext extends AdminContext {
       deliveryManager = new TestDeliveryManager(new TestDeliveryStatProvider(statDir, fileSystem), new TestUserStatProvider(statDir, fileSystem));
       createDeliveries();
 
-      restrictionsManager = new TestRestrictionsManager(infosme, new File(confDir, "restrictions.csv"),
-          new File(confDir, "backup"), fileSystem);
-
-      restrictionDaemon = new RestrictionDaemon(new RestrictionDaemonContextImpl(this));
-      restrictionDaemon.start();
+      restrictionProvider = new RestrictionProvider(this, new File(confDir, "restrictions.csv"), new File(confDir, "backup"), fileSystem);
 
       deliveryChangesDetector = new TestDeliveryChangesDetector(statusLogsDir,fileSystem);
       deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);

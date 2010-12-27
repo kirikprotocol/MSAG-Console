@@ -20,22 +20,24 @@ import java.util.concurrent.*;
  * Date: 08.11.2010
  * Time: 16:35:50
  */
-public class RestrictionDaemon implements Daemon{
+class RestrictionDaemon implements Daemon{
 
   Logger log = Logger.getLogger(NAME);
 
 
   public static final String NAME = "RestrictionDaemon";
 
-  private RestrictionDaemonContext context;
+  private RestrictionContext context;
+  private final RestrictionsManager manager;
   ScheduledExecutorService scheduler = null;
   ScheduledFuture task;
   long startDate;
   int taskNum;
 
 
-  public RestrictionDaemon(RestrictionDaemonContext context) {
-    this.context= context;
+  public RestrictionDaemon(RestrictionContext context, RestrictionsManager manager) {
+    this.context = context;
+    this.manager = manager;
   }
 
 
@@ -67,7 +69,7 @@ public class RestrictionDaemon implements Daemon{
     log.debug("next schedule<-");
     if (isStarted()) {
       RestrictionsFilter rFilter = new RestrictionsFilter();
-      List<Restriction> restrictions = context.getRestrictions(rFilter);
+      List<Restriction> restrictions = manager.getRestrictions(rFilter);
       RestrictionTask rTask;
       long delay;
 
@@ -122,7 +124,7 @@ public class RestrictionDaemon implements Daemon{
       dFilter.setUserIdFilter(u.getLogin());
       dFilter.setStatusFilter(DeliveryStatus.Planned, DeliveryStatus.Active, DeliveryStatus.Paused);
       log.debug("get deliveries for user = "+u.getLogin());
-      context.getDeliveries(u.getLogin(), u.getPassword(), dFilter, 1000,
+      context.getDeliveries(u.getLogin(), dFilter,
           new Visitor<Delivery>() {
             public boolean visit(Delivery di) throws AdminException {
               log.debug("check state for delivery "+di);
@@ -153,7 +155,7 @@ public class RestrictionDaemon implements Daemon{
     rFilter.setStartDate(new Date(startDate));
     rFilter.setEndDate(new Date(startDate + 1));
     rFilter.setUserId(u.getLogin());
-    return context.getRestrictions(rFilter);
+    return manager.getRestrictions(rFilter);
   }
 
   private void adjustDeliveryState(User u, Delivery di, boolean shouldBeRestricted) throws AdminException {
@@ -161,15 +163,16 @@ public class RestrictionDaemon implements Daemon{
     try {
       if (shouldBeRestricted) {
         if (di.getStatus() != DeliveryStatus.Paused) {
-          log.debug("pause delivery "+di);          
-          context.restrictDelivery(u.getLogin(), u.getPassword(), di.getId());
+          log.debug("pause delivery "+di);
+          context.setDeliveryRestriction(u.getLogin(), di.getId(), true);
+          context.pauseDelivery(u.getLogin(), di.getId());
         }
       }
       else {
         if ( (di.getStatus() == DeliveryStatus.Paused) && Boolean.valueOf(di.getProperty(UserDataConsts.RESTRICTION))) {
-            log.debug("activate delivery "+di);
-            context.setDeliveryRestriction(u.getLogin(), u.getPassword(), di.getId(), false);
-            context.activateDelivery(u.getLogin(), u.getPassword(), di.getId());
+          log.debug("activate delivery "+di);
+          context.setDeliveryRestriction(u.getLogin(), di.getId(), false);
+          context.activateDelivery(u.getLogin(), di.getId());
         }
       }
     }
