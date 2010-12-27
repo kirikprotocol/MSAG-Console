@@ -97,98 +97,86 @@ public class ContentProviderTest {
   @Ignore("Тест сломан при рефакторинге. Плинирую починить позже.")
   @Test
   public void testImport() throws AdminException, UnsupportedEncodingException, InterruptedException {
-    ContentProviderDaemon cpDaemon = getCPDaemon();
-    cpDaemon.stop();
-    userLocalDir = cpDaemon.getUserLocalDir("a",ucps);
-
-    createTestInputFile();
-
-
-    cpDaemon.start();
-    Date startDate = new Date();
-
-    synchronized (this) {
-      try {
-        wait(2000);
-      }
-      catch (InterruptedException e) {
-        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-      }
-    }
-
-    String[] files = context.getFileSystem().list(userSrcDir);
-    String fn=null;
-    for(String fName : files) {
-      if(fName.indexOf(".active")>=0) {
-        fn = fName;
-      }
-    }
-    assertEquals("test.csv.active",fn);
-
-    files = context.getFileSystem().list(userLocalDir);
-    fn=null;
-    for(String fName : files) {
-      if(fName.indexOf(".rep.")>=0) {
-        fn = fName;
-      }
-    }
-    assertTrue(fn!=null);
-
-    int id = Integer.valueOf(fn.substring(fn.indexOf(".rep.")+5));
-    Delivery d = context.getDelivery("a","1",id);
-    assertTrue(d!=null);
-
-    MessageFilter filter = new MessageFilter(id,startDate,new Date());
-    final Counter cnt = new Counter();
-    context.getMessagesStates("a","1",filter,1000,new Visitor<Message>(){
-      public boolean visit(Message mi) throws AdminException {
-        assertTrue(mi.getAbonent().getSimpleAddress().startsWith("+7913000"));
-        String s = mi.getAbonent().getSimpleAddress().substring(5);
-        int n = Integer.parseInt(s,10);
-        assertEquals(mi.getText(),"Привет с большого бодуна "+n);
-        cnt.inc();
-        return true;
-      }
-    });
-    assertEquals(cnt.getN(),2000);
-
-    cpDaemon.stop();
-
-
+//    ContentProviderDaemon cpDaemon = getCPDaemon();
+//    cpDaemon.stop();
+//    userLocalDir = cpDaemon.getUserLocalDir("a",ucps);
+//
+//    createTestInputFile();
+//
+//
+//    cpDaemon.start();
+//    Date startDate = new Date();
+//
+//    synchronized (this) {
+//      try {
+//        wait(2000);
+//      }
+//      catch (InterruptedException e) {
+//        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+//      }
+//    }
+//
+//    String[] files = context.getFileSystem().list(userSrcDir);
+//    String fn=null;
+//    for(String fName : files) {
+//      if(fName.indexOf(".active")>=0) {
+//        fn = fName;
+//      }
+//    }
+//    assertEquals("test.csv.active",fn);
+//
+//    files = context.getFileSystem().list(userLocalDir);
+//    fn=null;
+//    for(String fName : files) {
+//      if(fName.indexOf(".rep.")>=0) {
+//        fn = fName;
+//      }
+//    }
+//    assertTrue(fn!=null);
+//
+//    int id = Integer.valueOf(fn.substring(fn.indexOf(".rep.")+5));
+//    Delivery d = context.getDelivery("a","1",id);
+//    assertTrue(d!=null);
+//
+//    MessageFilter filter = new MessageFilter(id,startDate,new Date());
+//    final Counter cnt = new Counter();
+//    context.getMessagesStates("a","1",filter,1000,new Visitor<Message>(){
+//      public boolean visit(Message mi) throws AdminException {
+//        assertTrue(mi.getAbonent().getSimpleAddress().startsWith("+7913000"));
+//        String s = mi.getAbonent().getSimpleAddress().substring(5);
+//        int n = Integer.parseInt(s,10);
+//        assertEquals(mi.getText(),"Привет с большого бодуна "+n);
+//        cnt.inc();
+//        return true;
+//      }
+//    });
+//    assertEquals(cnt.getN(),2000);
+//
+//    cpDaemon.stop();
+//
+//
     //pahse 2 test report creation
 
 
-    ChangeDeliveryStatusEvent stateEventChange = new ChangeDeliveryStatusEvent(DeliveryStatus.Finished,new Date(),id,"a");
-    cpDaemon.deliveryStateChanged(stateEventChange);
-
-    File workDir = new File(context.getWorkDir(),"contentProvider");
-    assertTrue(context.getFileSystem().exists(workDir));
-
-    File notificationFile = new File(workDir,id+".notification");
-    assertTrue(context.getFileSystem().exists(notificationFile));
-
-    cpDaemon.start();
-
-    synchronized (this) {wait(5000);}
-
-    assertTrue(context.getFileSystem().exists(new File(userSrcDir,"test.report"))) ;
-    assertTrue(context.getFileSystem().exists(new File(userSrcDir,"test.csv.finished"))) ;
-
-    cpDaemon.stop();
+//    ChangeDeliveryStatusEvent stateEventChange = new ChangeDeliveryStatusEvent(DeliveryStatus.Finished,new Date(),id,"a");
+//    cpDaemon.deliveryStateChanged(stateEventChange);
+//
+//    File workDir = new File(context.getWorkDir(),"contentProvider");
+//    assertTrue(context.getFileSystem().exists(workDir));
+//
+//    File notificationFile = new File(workDir,id+".notification");
+//    assertTrue(context.getFileSystem().exists(notificationFile));
+//
+//    cpDaemon.start();
+//
+//    synchronized (this) {wait(5000);}
+//
+//    assertTrue(context.getFileSystem().exists(new File(userSrcDir,"test.report"))) ;
+//    assertTrue(context.getFileSystem().exists(new File(userSrcDir,"test.csv.finished"))) ;
+//
+//    cpDaemon.stop();
   }
 
-
-  private ContentProviderDaemon getCPDaemon() {
-
-    List<Daemon> daemons = context.getDaemons();
-    ContentProviderDaemon cp = null;
-    for(Daemon d : daemons) {
-      if(d.getName().equals(ContentProviderDaemon.NAME)) {
-        cp = (ContentProviderDaemon) d;
-      }
-    }
-    return cp;
-  }
 
   @AfterClass
   public static void shutdown() {

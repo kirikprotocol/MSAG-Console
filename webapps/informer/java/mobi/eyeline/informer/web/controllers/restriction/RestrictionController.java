@@ -7,7 +7,4 @@ import mobi.eyeline.informer.web.controllers.InformerController;
  */
 public class RestrictionController extends InformerController {
 
-  public boolean isRestrictionDaemonStarted() {
-    return getConfig().isResctictionDaemonStarted();
-  }
 }

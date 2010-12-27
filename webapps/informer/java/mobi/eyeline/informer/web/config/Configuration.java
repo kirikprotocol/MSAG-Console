@@ -313,35 +313,6 @@ public class Configuration {
     return context.getInformerHosts();
   }
 
-  public List<Daemon> getDaemons(final String user) {
-    List<Daemon> ds = context.getDaemons();
-    List<Daemon> result = new ArrayList<Daemon>(ds.size());
-
-    for (final Daemon d : ds) {
-      result.add(new Daemon() {
-        public String getName() {
-          return d.getName();
-        }
-
-        public void start() throws AdminException {
-          d.start();
-          journal.logDaemonrStart(getName(), user);
-        }
-
-        public void stop() throws AdminException {
-          d.stop();
-          journal.logDaemonStop(getName(), user);
-        }
-
-        public boolean isStarted() {
-          return d.isStarted();
-        }
-      });
-    }
-
-    return result;
-  }
-
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     context.statistics(filter, visitor);
   }
@@ -393,10 +364,6 @@ public class Configuration {
     journal.logDeleteRestriction(oldr, user);
   }
 
-  public boolean isResctictionDaemonStarted() {
-    return context.isRestrictionDaemonStarted();
-  }
-
   public void addMessages(String login, String password, DataSource<Message> msDataSource, int deliveryId) throws AdminException {
     context.addMessages(login, password, msDataSource, deliveryId);
   }
@@ -424,14 +391,6 @@ public class Configuration {
     journal.logUpdateNotificationSettings(props, old, user);
   }
 
-
-  public boolean isCdrStarted() {
-    return context.isCdrStarted();
-  }
-
-  public boolean isSiebelDaemonStarted() {
-    return context.isSiebelDaemonStarted();
-  }
 
   public CdrSettings getCdrProperties() {
     return context.getCdrSettings();

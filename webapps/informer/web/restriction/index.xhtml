@@ -16,10 +16,6 @@
 
     <tr:form id="smsc">
 
-      <eye:message level="warn" rendered="#{!restrictionEdit.restrictionDaemonStarted}">
-        <h:outputText value="#{msg['restriction.edit.daemon.over.warn']}"/>
-      </eye:message>
-      <eye:delimiter rendered="#{!restrictionEdit.restrictionDaemonStarted}"/>
 
       <eye:dataTableFilter bean="#{restrictionsList}" clearAction="clearFilter">
         <h:panelGrid columns="4" columnClasses="column50WidthNoWrap, column400Width, column50WidthNoWrap, columnTopLeftAlign">

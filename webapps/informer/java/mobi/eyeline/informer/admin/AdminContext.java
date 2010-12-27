@@ -108,14 +108,6 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
 
-
-
-
-  @Deprecated
-  public boolean isCdrStarted() {
-    return true;
-  }
-
   public File getWorkDir() {
     return new File(workDir.getAbsolutePath());
   }
@@ -175,6 +167,10 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   public void updateConfigSettings(InformerSettings informerSettings) throws AdminException {
     informerManager.updateSettings(informerSettings);
+  }
+
+  public boolean isAllowUssdPushDeliveries() {
+    return webConfig.isAllowUssdPushDeliveries();
   }
 
   // BLACK LIST  =======================================================================================
@@ -344,8 +340,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return informerManager.getInformerHosts();
   }
 
-
-
+  // STATISTICS ====================================================================================================================
 
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
     deliveryManager.statistics(filter, visitor);
@@ -367,17 +362,6 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return deliveryChangesDetector.getProcessedNotificationsFiles(startDate,endDate);
   }
 
-
-  @Deprecated
-  public List<Daemon> getDaemons() {
-    List<Daemon> ret = new LinkedList<Daemon>();
-    return ret;
-  }
-
-  @Deprecated
-  public boolean isSiebelDaemonStarted() {
-    return true;
-  }
 
   // DELIVERIES ====================================================================================================================
 
@@ -653,6 +637,14 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     getDefaultDelivery(u, delivery);
   }
 
+  public void validateDeliveryWithIndividualTexts(DeliveryPrototype delivery) throws AdminException {
+    DeliveryManager.validateDeliveryWithIndividualTexts(delivery);
+  }
+
+  public void validateDeliveryWithSingleText(DeliveryPrototype delivery) throws AdminException {
+    DeliveryManager.validateDeliveryWithSingleText(delivery);
+  }
+
   // RESTRICTIONS ================================================================================================================================
 
   public Restriction getRestriction(int id) {
@@ -677,10 +669,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     restrictionProvider.deleteRestriction(id);
   }
 
-  @Deprecated
-  public boolean isRestrictionDaemonStarted() {
-    return true;
-  }
+  // NOTIFICATIONS ==================================================================================================
 
 
   public NotificationSettings getNotificationSettings() {
@@ -692,6 +681,20 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     webConfig.setNotificationSettings(props);
   }
 
+  public void sendTestSms(TestSms sms) throws AdminException {
+    infosme.sendTestSms(sms);
+  }
+
+  public void sendTestEmailNotification(User user, String email, NotificationSettings settings) throws AdminException {
+    deliveryNotificationsProvider.sendTestEmailNotification(user, email, settings);
+  }
+
+  public void sendTestSMSNotification(User user, Address address, DeliveryStatus status, NotificationSettings settings) throws AdminException {
+    deliveryNotificationsProvider.sendTestSMSNotification(user,address,status, settings);
+  }
+
+  // CDR ==============================================================================================================
+
   public CdrSettings getCdrSettings() {
     return webConfig.getCdrSettings();
   }
@@ -699,10 +702,6 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   public void setCdrSettings(CdrSettings props) throws AdminException {
     webConfig.setCdrSettings(props);
     cdrProvider.updateSettings(props);
-  }
-
-  public boolean isAllowUssdPushDeliveries() {
-    return webConfig.isAllowUssdPushDeliveries();
   }
 
   // SIEBEL =========================================================================================================
@@ -727,27 +726,10 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return siebelProvider.updateSettings(siebelSettings);
   }
 
+  // FILE DELIVERIES ==============================================================================================
+
   public void verifyCPSettings(User u, UserCPsettings ucps) throws AdminException {
     fileDeliveriesProvider.verifyConnection(u, ucps);
-  }
-
-  public void sendTestSms(TestSms sms) throws AdminException {
-    infosme.sendTestSms(sms);
-  }
-
-  public void sendTestEmailNotification(User user, String email, NotificationSettings settings) throws AdminException {
-    deliveryNotificationsProvider.sendTestEmailNotification(user, email, settings);
-  }
-  public void sendTestSMSNotification(User user, Address address, DeliveryStatus status, NotificationSettings settings) throws AdminException {
-    deliveryNotificationsProvider.sendTestSMSNotification(user,address,status, settings);
-  }
-
-  public void validateDeliveryWithIndividualTexts(DeliveryPrototype delivery) throws AdminException {
-    DeliveryManager.validateDeliveryWithIndividualTexts(delivery);
-  }
-
-  public void validateDeliveryWithSingleText(DeliveryPrototype delivery) throws AdminException {
-    DeliveryManager.validateDeliveryWithSingleText(delivery);
   }
 
 }

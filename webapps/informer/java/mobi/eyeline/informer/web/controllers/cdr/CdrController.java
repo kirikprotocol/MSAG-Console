@@ -24,10 +24,6 @@ public class CdrController extends InformerController{
       CdrSettings p = getConfig().getCdrProperties();
       cdrDir = p.getCdrDir();
     }
-    if(!getConfig().isCdrStarted()) {
-      ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
-      warn = bundle.getString("informer.cdr.daemon.offline");
-    }
   }
 
   public boolean isInit() {

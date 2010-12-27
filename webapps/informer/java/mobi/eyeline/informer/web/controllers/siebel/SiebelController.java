@@ -59,11 +59,6 @@ public class SiebelController extends InformerController {
 
       init = true;
     }
-
-    if (!config.isSiebelDaemonStarted()) {
-      ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", getLocale());
-      error = bundle.getString("informer.siebel.daemon.offline");
-    }
   }
 
   public boolean isInit() {

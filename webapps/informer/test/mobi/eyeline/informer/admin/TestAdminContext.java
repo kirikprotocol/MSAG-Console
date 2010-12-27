@@ -269,14 +269,6 @@ public class TestAdminContext extends AdminContext {
       add(new TestDaemon(i));
     }
   }};
-
-
-  @Override
-  public List<Daemon> getDaemons() {
-    List<Daemon> ds = super.getDaemons();
-    ds.addAll(testDaemons);
-    return ds;
-  }
   
 
   private static class TestDaemon implements Daemon {
