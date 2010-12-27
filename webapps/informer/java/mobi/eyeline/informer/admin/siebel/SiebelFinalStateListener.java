@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.siebel.impl;
+package mobi.eyeline.informer.admin.siebel;
 
 import com.eyeline.utils.FileUtils;
 import mobi.eyeline.informer.admin.AdminException;
@@ -10,10 +10,7 @@ import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
-import mobi.eyeline.informer.admin.siebel.SiebelDelivery;
-import mobi.eyeline.informer.admin.siebel.SiebelException;
-import mobi.eyeline.informer.admin.siebel.SiebelManager;
-import mobi.eyeline.informer.admin.siebel.SiebelMessage;
+import mobi.eyeline.informer.admin.siebel.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import org.apache.log4j.Logger;
@@ -27,15 +24,13 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Aleksandr Khalitov
  */
-public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
+class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   private static final Logger logger = Logger.getLogger("SIEBEL");
 
   private final SiebelManager siebelManager;
 
-  private final SiebelDeliveries deliveries;
-
-  private final SiebelUserManager users;
+  private final SiebelContext context;
 
   private Thread processor;
 
@@ -53,15 +48,13 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
 
   private boolean stop = true;
 
-  public SiebelFinalStateListener(SiebelManager siebelManager, SiebelDeliveries deliveries,
-                                  SiebelUserManager users, File workDir, int periodSec) throws InitException{
+  public SiebelFinalStateListener(SiebelManager siebelManager, SiebelContext context, File workDir, int periodSec) throws InitException{
     this.dir = new File(workDir, "siebel");
     if(!dir.exists() && !dir.mkdirs()) {
       throw new InitException("Can't create file: "+dir.getAbsolutePath());
     }
     this.siebelManager = siebelManager;
-    this.deliveries = deliveries;
-    this.users = users;
+    this.context = context;
     this.smppStatuses = ResourceBundle.getBundle("mobi.eyeline.informer.admin.SmppStatus", Locale.ENGLISH);
     this.periodSec = periodSec;
   }
@@ -145,12 +138,12 @@ public class SiebelFinalStateListener extends DeliveryChangeListenerStub {
       logger.warn("Listener is stopped, can't process event");
       return;
     }
-    User u = users.getUser(stateEventChange.getUserId());
+    User u = context.getUser(stateEventChange.getUserId());
     if (u == null) {
       logger.error("Can't find user with id: " + stateEventChange.getUserId());
       return;
     }
-    Delivery d = deliveries.getDelivery(u.getLogin(), u.getPassword(), stateEventChange.getDeliveryId());
+    Delivery d = context.getDelivery(u.getLogin(), stateEventChange.getDeliveryId());
     String waveId;
     if (d != null && (waveId = d.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID)) != null) {
       if(logger.isDebugEnabled()) {

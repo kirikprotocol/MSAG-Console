@@ -5,9 +5,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelDataProviderImpl;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelDeliveries;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
@@ -24,13 +21,11 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Aleksandr Khalitov
  */
-public class SiebelManager {
+class SiebelManager {
 
   private static final Logger logger = Logger.getLogger("SIEBEL");
 
   private SiebelDataProvider provider;
-
-  private SiebelRegionManager regionManager;
 
   private boolean shutdown = true;
 
@@ -40,7 +35,7 @@ public class SiebelManager {
 
   private final Lock lock = new ReentrantLock();
 
-  protected SiebelDeliveries deliveries;
+  protected SiebelContext context;
 
   private User siebelUser;
 
@@ -52,16 +47,14 @@ public class SiebelManager {
 
   private Date lastUpdate;
 
-  public SiebelManager(SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
+  public SiebelManager(SiebelContext context) throws AdminException {
     this.provider = new SiebelDataProviderImpl();
-    this.deliveries = deliveries;
-    this.regionManager = regionManager;
+    this.context = context;
   }
 
-  SiebelManager(SiebelDataProvider provider, SiebelDeliveries deliveries, SiebelRegionManager regionManager) throws AdminException {
+  SiebelManager(SiebelDataProvider provider, SiebelContext context) throws AdminException {
     this.provider = provider;
-    this.deliveries = deliveries;
-    this.regionManager = regionManager;
+    this.context = context;
   }
 
   private final Lock shutdownLock = new ReentrantLock();
@@ -318,21 +311,21 @@ public class SiebelManager {
 
     String generationFlag = "message_generation_in_process";
 
-    Delivery delivery = info == null ? null : deliveries.getDelivery(siebelUser.getLogin(), siebelUser.getPassword(), info.getId());
+    Delivery delivery = info == null ? null : context.getDelivery(siebelUser.getLogin(), info.getId());
 
     if (delivery != null) {
       if (info.getProperty(generationFlag) == null) {
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: delivery already exists and has generated, waveId='" + st.getWaveId() + "'. Activate it");
         }
-        deliveries.activateDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
+        context.activateDelivery(siebelUser.getLogin(), delivery.getId());
         _setDeliveryStatusInProcess(st);
         return;
       } else {
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: delivery is damaged. Recreate it. WaveId=" + st.getWaveId());
         }
-        deliveries.dropDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
+        context.dropDelivery(siebelUser.getLogin(), delivery.getId());
       }
     }
 
@@ -340,7 +333,7 @@ public class SiebelManager {
 
     proto.setProperty(generationFlag, "true");
 
-    delivery = deliveries.createDelivery(siebelUser.getLogin(), siebelUser.getPassword(), proto, null);
+    delivery = context.createDeliveryWithIndividualTexts(siebelUser.getLogin(), proto, null);
 
     ResultSet<SiebelMessage> messages = null;
     boolean hasMessages;
@@ -352,9 +345,9 @@ public class SiebelManager {
       hasMessages = addMessages(delivery, messages) != 0;
 
       delivery.removeProperty(generationFlag);
-      deliveries.modifyDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery);
+      context.modifyDelivery(siebelUser.getLogin(), delivery);
 
-      deliveries.activateDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
+      context.activateDelivery(siebelUser.getLogin(), delivery.getId());
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: Delivery has been created: waveId=" + st.getWaveId()+" informerId="+delivery.getId()+" name="+delivery.getName());
       }
@@ -387,12 +380,12 @@ public class SiebelManager {
 
     try {
       if (remove) {
-        deliveries.dropDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
+        context.dropDelivery(siebelUser.getLogin(), delivery.getId());
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: delivery has been removed name=" + delivery.getName()+" waveId="+st.getWaveId()+" informerId="+delivery.getId());
         }
       } else {
-        deliveries.cancelDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
+        context.cancelDelivery(siebelUser.getLogin(), delivery.getId());
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: delivery has been canceled name=" + delivery.getName()+" waveId="+st.getWaveId()+" informerId="+delivery.getId());
         }
@@ -423,7 +416,7 @@ public class SiebelManager {
     }
 
     try {
-      deliveries.pauseDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
+      context.pauseDelivery(siebelUser.getLogin(), delivery.getId());
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: delivery has been paused=" + delivery.getName()+" waveId="+st.getWaveId()+" informerId="+delivery.getId());
       }
@@ -516,7 +509,7 @@ public class SiebelManager {
 
       final Collection<String> unloaded = new ArrayList<String>(10001);
 
-      deliveries.addMessages(siebelUser.getLogin(), siebelUser.getPassword(), new DataSource<Message>() {
+      context.addMessages(siebelUser.getLogin(), new DataSource<Message>() {
         public Message next() throws AdminException {
           Message msg;
           while (messages.next()) {
@@ -525,7 +518,7 @@ public class SiebelManager {
             if (msisdn != null && Address.validate(msisdn = convertMsisdn(msisdn))) {
               Address abonent = new Address(msisdn);
               Region r;
-              if (siebelUser.isAllRegionsAllowed() || ((r = regionManager.getRegion(abonent)) != null
+              if (siebelUser.isAllRegionsAllowed() || ((r = context.getRegion(abonent)) != null
                   && siebelUser.getRegions() != null && siebelUser.getRegions().contains(r.getRegionId()))) {
                 msg = Message.newMessage(abonent, sM.getMessage());
                 msg.setProperty(UserDataConsts.SIEBEL_MESSAGE_ID, sM.getClcId());
@@ -560,7 +553,7 @@ public class SiebelManager {
         logger.debug("Error during adding messages. Drop delivery: " + delivery.getName());
       }
       try {
-        deliveries.dropDelivery(siebelUser.getLogin(), siebelUser.getPassword(), delivery.getId());
+        context.dropDelivery(siebelUser.getLogin(), delivery.getId());
       } catch (Exception ex) {
         logger.error(ex, ex);
       }
@@ -583,7 +576,7 @@ public class SiebelManager {
 
   private DeliveryPrototype createDelivery(SiebelDelivery siebelDelivery, String deliveryName) throws AdminException {
     DeliveryPrototype delivery = new DeliveryPrototype();
-    deliveries.getDefaultDelivery(siebelUser.getLogin(), delivery);
+    context.copyUserSettingsToDeliveryPrototype(siebelUser.getLogin(), delivery);
     delivery.setEnableMsgFinalizationLogging(true);
     delivery.setEnableStateChangeLogging(true);
     delivery.setName(deliveryName);
@@ -608,7 +601,7 @@ public class SiebelManager {
   private Delivery getExistingDelivery(final String waveId) throws AdminException {
     DeliveryFilter filter = new DeliveryFilter();
     final Delivery[] infos = new Delivery[1];
-    deliveries.getDeliveries(siebelUser.getLogin(), siebelUser.getPassword(), filter, 1000,
+    context.getDeliveries(siebelUser.getLogin(), filter,
         new Visitor<mobi.eyeline.informer.admin.delivery.Delivery>() {
           public boolean visit(Delivery value) throws AdminException {
             if (waveId.equals(value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID))) {

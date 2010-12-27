@@ -7,7 +7,7 @@ import java.util.Date;
  *
  * @author Aleksandr Khalitov
  */
-public class SiebelMessage {
+class SiebelMessage {
 
   private String clcId;  //unique
   private Date created;

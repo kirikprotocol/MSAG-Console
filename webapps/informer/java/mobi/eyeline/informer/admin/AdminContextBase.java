@@ -16,8 +16,6 @@ import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.regions.RegionsManager;
 import mobi.eyeline.informer.admin.restriction.RestrictionsManager;
 import mobi.eyeline.informer.admin.service.ServiceManager;
-import mobi.eyeline.informer.admin.siebel.SiebelManager;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelFinalStateListener;
 import mobi.eyeline.informer.admin.smsc.SmscManager;
 import mobi.eyeline.informer.admin.users.UsersManager;
 import org.apache.log4j.Logger;
@@ -65,10 +63,6 @@ class AdminContextBase {
 
 
   protected DeliveryChangesDetectorImpl deliveryChangesDetector;
-
-  protected SiebelManager siebelManager;
-
-  protected SiebelFinalStateListener siebelFinalStateListener;
 
 
 // delivery ->user ->region->smsc

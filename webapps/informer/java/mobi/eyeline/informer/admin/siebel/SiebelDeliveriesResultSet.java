@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.siebel.impl;
+package mobi.eyeline.informer.admin.siebel;
 
 import mobi.eyeline.informer.admin.siebel.ResultSet;
 import mobi.eyeline.informer.admin.siebel.SiebelDelivery;
@@ -14,7 +14,7 @@ import java.util.Properties;
 /**
  * @author Aleksandr Khalitov
  */
-public class SiebelDeliveriesResultSet implements ResultSet<SiebelDelivery> {
+class SiebelDeliveriesResultSet implements ResultSet<SiebelDelivery> {
 
   private static final Logger logger = Logger.getLogger("SIEBEL");
   private final java.sql.ResultSet sqlResult;
@@ -22,7 +22,7 @@ public class SiebelDeliveriesResultSet implements ResultSet<SiebelDelivery> {
   private final PreparedStatement prepStatement;
   private final Properties sql;
 
-  public SiebelDeliveriesResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql) {
+  SiebelDeliveriesResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql) {
     this.connection = connection;
     this.sqlResult = resultSet;
     this.prepStatement = prepStatement;

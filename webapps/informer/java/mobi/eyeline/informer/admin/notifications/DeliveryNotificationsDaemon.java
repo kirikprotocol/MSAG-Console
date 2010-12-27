@@ -69,7 +69,7 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
         try {
           User user = context.getUser(notification.getUserId());
           if (user != null) {
-            Delivery delivery = context.getDelivery(user.getLogin(), user.getPassword(), notification.getDeliveryId());
+            Delivery delivery = context.getDelivery(user.getLogin(), notification.getDeliveryId());
             String sAddr = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
             if (sAddr != null && sAddr.length() > 0) {
               Address smsNotificationAddress = new Address(sAddr);

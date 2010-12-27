@@ -7,7 +7,7 @@ import mobi.eyeline.informer.admin.AdminException;
  */
 public class SiebelException extends AdminException {
 
-  public SiebelException(String key, String... args) {
+  SiebelException(String key, String... args) {
     super(key, args);
   }
 }

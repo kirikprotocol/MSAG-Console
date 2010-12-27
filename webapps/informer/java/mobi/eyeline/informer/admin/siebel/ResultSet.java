@@ -5,7 +5,7 @@ package mobi.eyeline.informer.admin.siebel;
  *
  * @author Aleksandr Khalitov
  */
-public interface ResultSet<T> {
+interface ResultSet<T> {
 
   /**
    * Если ли ещё данные в этом множестве

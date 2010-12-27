@@ -11,7 +11,7 @@ import java.util.Properties;
  *
  * @author Aleksandr Khalitov
  */
-public interface SiebelDataProvider {
+interface SiebelDataProvider {
 
   /**
    * Возвращает сообщение по его идентификатору

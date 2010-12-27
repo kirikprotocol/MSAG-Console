@@ -125,7 +125,6 @@ class WebConfigSettings {
   }
 
   void setSiebelSettings(SiebelSettings siebelSettings) throws AdminException{
-    siebelSettings.validate();
     this.siebelSettings = new SiebelSettings(siebelSettings);
   }
 

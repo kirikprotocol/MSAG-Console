@@ -15,19 +15,14 @@ import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
 import mobi.eyeline.informer.admin.notifications.DateAndFile;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsContext;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
-import mobi.eyeline.informer.admin.siebel.SiebelException;
-import mobi.eyeline.informer.admin.siebel.SiebelManager;
-import mobi.eyeline.informer.admin.siebel.SiebelSettings;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelDeliveries;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelFinalStateListener;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelRegionManager;
-import mobi.eyeline.informer.admin.siebel.impl.SiebelUserManager;
+import mobi.eyeline.informer.admin.siebel.*;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
@@ -43,7 +38,7 @@ import java.util.*;
  *
  * @author Aleksandr Khalitov
  */
-public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext {
+public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext, DeliveryNotificationsContext, SiebelContext {
 
 
   protected User2RegionDep user2regionDep;
@@ -55,6 +50,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   protected DeliveryNotificationsDaemon deliveryNotificationsDaemon;
   protected CdrProvider cdrProvider;
   protected FileDeliveriesProvider fileDeliveriesProvider;
+  protected SiebelProvider siebelProvider;
 
   public AdminContext() {
   }
@@ -67,7 +63,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
       fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getContentProviderPeriod());
 
-      deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
+      deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(this);
 
       deliveryChangesDetector.addListener(deliveryNotificationsDaemon);
 
@@ -76,11 +72,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       InformerSettings is = informerManager.getConfigSettings();
       deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(is.getStoreDir(), "final_log"), fileSystem);
 
-      try {
-        initSiebel(workDir);
-      } catch (Exception e) {
-        logger.error(e, e);
-      }
+      siebelProvider = new SiebelProvider(this, webConfig.getSiebelSettings(), workDir);
 
       cdrProvider = new CdrProvider(this, webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
 
@@ -100,57 +92,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     region2smscDep = new Region2SmscDep(regionsManager, smscManager);
   }
 
-  protected void initSiebel(File workDir) throws AdminException, InitException {
-
-    SiebelDeliveries siebelDeliveries = new SiebelDeliveriesImpl(this);
-    SiebelRegionManager siebelRegions = new SiebelRegionManagerImpl(this);
-    SiebelUserManager userManager = new SiebelUserManagerImpl(this);
-
-    User siebelUser = usersManager.getUser(webConfig.getSiebelSettings().getUser());
-
-    if (siebelUser == null) {
-      throw new IntegrityException("user_not_exist", webConfig.getSiebelSettings().getUser());
-    }
-
-    siebelManager = new SiebelManager(siebelDeliveries, siebelRegions);
-
-    siebelFinalStateListener = new SiebelFinalStateListener(siebelManager, siebelDeliveries,
-        userManager, workDir,
-        webConfig.getSiebelSettings().getStatsPeriod());
-
-    deliveryChangesDetector.addListener(siebelFinalStateListener);
-
-    siebelManager.start(siebelUser, webConfig.getSiebelSettings());
-
-    siebelFinalStateListener.start();
-
-  }
-
-  private void shutdownSiebel() {
-    if (siebelFinalStateListener != null) {
-      if (deliveryChangesDetector != null) {
-        try {
-          deliveryChangesDetector.removeListener(siebelFinalStateListener);
-        } catch (Exception ignored) {
-        }
-      }
-
-      try {
-        siebelFinalStateListener.shutdown();
-      } catch (Exception ignored) {
-      }
-    }
-
-    if (siebelManager != null) {
-      try {
-        siebelManager.stop();
-      } catch (Exception ignored) {
-      }
-    }
-  }
-
   public void shutdown() {
-    shutdownSiebel();
+    siebelProvider.shutdown();
     cdrProvider.shutdown();
     fileDeliveriesProvider.shutdown();
 
@@ -441,8 +384,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return ret;
   }
 
+  @Deprecated
   public boolean isSiebelDaemonStarted() {
-    return siebelManager.isStarted();
+    return true;
   }
 
   // DELIVERIES ====================================================================================================================
@@ -501,6 +445,12 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return deliveryManager.createDeliveryWithSingleText(login, password, delivery, msDataSource);
   }
 
+  public synchronized void modifyDelivery(String login, Delivery delivery) throws AdminException {
+    User user = getUser(login);
+    modifyDelivery(login, user.getPassword(), delivery);
+  }
+
+  @Deprecated
   public synchronized void modifyDelivery(String login, String password, Delivery delivery) throws AdminException {
     delivery2UserDep.checkDelivery(delivery);
 
@@ -568,6 +518,12 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return deliveryManager.getDelivery(login, password, deliveryId);
   }
 
+  public void cancelDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    cancelDelivery(login, u.getPassword(), deliveryId);
+  }
+
+  @Deprecated
   public void cancelDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
       setDeliveryRestriction(login, password, deliveryId, false);
@@ -575,6 +531,12 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
   }
 
+  public void pauseDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    pauseDelivery(login, u.getPassword(), deliveryId);
+  }
+
+  @Deprecated
   public void pauseDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
       setDeliveryRestriction(login, password, deliveryId, false);
@@ -597,6 +559,12 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     }
   }
 
+  public void getDeliveries(String login, DeliveryFilter deliveryFilter, Visitor<Delivery> visitor) throws AdminException {
+    User u = getUser(login);
+    getDeliveries(login, u.getPassword(), deliveryFilter, 1000, visitor);
+  }
+
+  @Deprecated
   public void getDeliveries(String login, String password, DeliveryFilter deliveryFilter, int _pieceSize, Visitor<Delivery> visitor) throws AdminException {
     deliveryManager.getDeliveries(login, password, deliveryFilter, _pieceSize, visitor);
   }
@@ -739,14 +707,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public boolean checkSiebelSettings(SiebelSettings p) throws AdminException{
-    p.validate();
-    if(siebelManager != null) {
-      try{
-        siebelManager.checkProperties(p);
-        return true;
-      }catch (AdminException ignored) {}
-    }
-    return false;
+    siebelProvider.checkSettings(p);
+    return true;
   }
 
   /**
@@ -756,50 +718,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
    * @throws AdminException ошибка валидации или сохранения
    */
   public synchronized boolean setSiebelSettings(SiebelSettings siebelSettings) throws AdminException {
-
-    String u = siebelSettings.getUser();
-    User user = usersManager.getUser(u);
-
-    SiebelSettings old = webConfig.getSiebelSettings();
-    if (!old.getUser().equals(siebelSettings.getUser())) {
-      DeliveryFilter filter = new DeliveryFilter();
-      filter.setUserIdFilter(old.getUser());
-      final boolean[] notExist = new boolean[]{true};
-      deliveryManager.getDeliveries(user.getLogin(), user.getPassword(), filter, 1, new Visitor<mobi.eyeline.informer.admin.delivery.Delivery>() {
-        public boolean visit(Delivery value) throws AdminException {
-          if (value.getStatus() != DeliveryStatus.Finished && value.getProperty(UserDataConsts.SIEBEL_DELIVERY_ID) != null) {
-            notExist[0] = false;
-            return false;
-          }
-          return true;
-        }
-      });
-      if (!notExist[0]) {
-        throw new SiebelException("can_not_change_user", old.getUser());
-      }
-    }
-
-
-    boolean siebelStarted = false;
-    try {
-      siebelFinalStateListener.externalLock();
-      webConfig.setSiebelSettings(siebelSettings);
-      siebelFinalStateListener.setPeriodSec(siebelSettings.getStatsPeriod());
-      siebelManager.stop();
-      try {
-        SiebelSettings _p = new SiebelSettings(siebelSettings);
-        siebelManager.start(user, _p);
-        if(!siebelFinalStateListener.isStarted()) {
-          siebelFinalStateListener.start();
-        }
-        siebelStarted = true;
-      } catch (Exception e) {
-        logger.error("Applying of new properties has failed. Siebel is down.", e);
-      }
-    } finally {
-      siebelFinalStateListener.externalUnlock();
-    }
-    return siebelStarted;
+    webConfig.setSiebelSettings(siebelSettings);
+    return siebelProvider.updateSettings(siebelSettings);
   }
 
   public void verifyCPSettings(User u, UserCPsettings ucps) throws AdminException {

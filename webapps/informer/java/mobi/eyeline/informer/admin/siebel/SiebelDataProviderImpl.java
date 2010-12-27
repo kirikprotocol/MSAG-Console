@@ -1,8 +1,6 @@
-package mobi.eyeline.informer.admin.siebel.impl;
+package mobi.eyeline.informer.admin.siebel;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.siebel.ResultSet;
-import mobi.eyeline.informer.admin.siebel.*;
 import org.apache.log4j.Logger;
 import ru.sibinco.util.conpool.ConnectionPool;
 
@@ -16,7 +14,7 @@ import java.util.Properties;
 /**
  * @author Aleksandr Khalitov
  */
-public class SiebelDataProviderImpl implements SiebelDataProvider {
+class SiebelDataProviderImpl implements SiebelDataProvider {
 
   private static final Logger logger = Logger.getLogger("SIEBEL");
 

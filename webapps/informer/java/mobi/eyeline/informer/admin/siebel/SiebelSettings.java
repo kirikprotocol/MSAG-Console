@@ -10,8 +10,7 @@ import java.util.Properties;
  */
 public class SiebelSettings {
 
-  private final ValidationHelper vh =
-      new ValidationHelper(this.getClass());
+  private final ValidationHelper vh = new ValidationHelper(this.getClass());
 
   private final Properties properties;
 
@@ -23,7 +22,7 @@ public class SiebelSettings {
     this(s.getAllProperties());
   }
 
-  public void validate() throws AdminException{
+  void validate() throws AdminException{
     vh.checkNotEmpty("dbType", getDbType());
     vh.checkNotEmpty("jdbcLogin", getJdbcLogin());
     vh.checkNotEmpty("jdbcSource", getJdbcSource());

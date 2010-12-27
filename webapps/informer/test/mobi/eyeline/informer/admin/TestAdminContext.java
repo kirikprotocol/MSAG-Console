@@ -19,6 +19,7 @@ import mobi.eyeline.informer.admin.restriction.RestrictionDaemon;
 import mobi.eyeline.informer.admin.restriction.TestRestrictionsManager;
 import mobi.eyeline.informer.admin.service.TestServiceManagerHA;
 import mobi.eyeline.informer.admin.service.TestServiceManagerSingle;
+import mobi.eyeline.informer.admin.siebel.SiebelProvider;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.smsc.TestSmscManager;
 import mobi.eyeline.informer.admin.users.TestUsersManager;
@@ -243,16 +244,12 @@ public class TestAdminContext extends AdminContext {
       restrictionDaemon.start();
 
       deliveryChangesDetector = new TestDeliveryChangesDetector(statusLogsDir,fileSystem);
-      deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(new DeliveryNotificationsContextImpl(this));
+      deliveryNotificationsDaemon    = new DeliveryNotificationsDaemon(this);
       deliveryChangesDetector.addListener(deliveryNotificationsDaemon);
 
       fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getContentProviderPeriod());
 
-      try{
-        initSiebel(workDir);
-      }catch (AdminException e){
-        logger.error(e,e);
-      }
+      siebelProvider = new SiebelProvider(this, webConfig.getSiebelSettings(), workDir);
 
       cdrProvider = new CdrProvider(this, webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
 

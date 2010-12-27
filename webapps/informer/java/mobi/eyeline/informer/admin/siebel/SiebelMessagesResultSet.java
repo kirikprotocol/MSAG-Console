@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.siebel.impl;
+package mobi.eyeline.informer.admin.siebel;
 
 import mobi.eyeline.informer.admin.siebel.ResultSet;
 import mobi.eyeline.informer.admin.siebel.SiebelException;

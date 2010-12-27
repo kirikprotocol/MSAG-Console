@@ -15,7 +15,7 @@ public interface DeliveryNotificationsContext {
 
   User getUser(String userId) throws AdminException;
 
-  Delivery getDelivery(String login, String password, int deliveryId) throws AdminException;
+  Delivery getDelivery(String login, int deliveryId) throws AdminException;
 
   NotificationSettings getNotificationSettings();
 

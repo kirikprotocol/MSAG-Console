@@ -7,7 +7,7 @@ import java.util.Date;
  *
  * @author Aleksandr Khalitov
  */
-public class SiebelDelivery {
+class SiebelDelivery {
 
   private String waveId;   //unique
   private String campaignId;
