@@ -33,13 +33,15 @@ import java.util.concurrent.TimeUnit;
  * Date: 13.11.2010
  * Time: 13:46:28
  */
-public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
+public class DeliveryNotificationsProvider extends DeliveryChangeListenerStub {
   private final Logger log = Logger.getLogger("NOTIFICATION_DAEMON");
 
   private final DeliveryNotificationsContext context;
   private final Map<String, AggregatedEmailNotificationTask> userEmailNotifications = new HashMap<String, AggregatedEmailNotificationTask>();
 
   private final Object lock = new Object();
+
+  private NotificationSettings notificationSettings;
 
   private final ScheduledThreadPoolExecutor scheduler;
   private static final long AGGREGATE_TIME = 60;
@@ -48,8 +50,9 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
   private static final int MAX_QUEUE_SIZE = 10000;
 
 
-  public DeliveryNotificationsDaemon(DeliveryNotificationsContext context) {      
+  public DeliveryNotificationsProvider(DeliveryNotificationsContext context, NotificationSettings notificationSettings) {
     this.context = context;
+    this.notificationSettings = notificationSettings;
     scheduler = new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactory() {
       int n = 0;
 
@@ -58,10 +61,17 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
         return new Thread(runnable, "DeliveryNotificationDaemon-" + n);
       }
     });
+    context.getDeliveryChangesDetector().addListener(this);
+
   }
 
   public void deliveryStateChanged(ChangeDeliveryStatusEvent e) throws AdminException {
     processDeliveryNotification(e);
+  }
+
+  public void updateSettings(NotificationSettings settings) throws AdminException {
+    settings.validate();
+    this.notificationSettings = settings;
   }
 
 
@@ -112,15 +122,18 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
   }
 
 
-  public void shutdown() throws InterruptedException {
-    scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(true);
-    scheduler.shutdown();
+  public void shutdown() {
     try {
-      scheduler.awaitTermination(SHUTDOWN_WAIT_TIME, TimeUnit.SECONDS);
-    }
-    catch (InterruptedException e) {
-      scheduler.shutdownNow();
-    }
+      this.context.getDeliveryChangesDetector().removeListener(this);
+      scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(true);
+      scheduler.shutdown();
+      try {
+        scheduler.awaitTermination(SHUTDOWN_WAIT_TIME, TimeUnit.SECONDS);
+      }
+      catch (InterruptedException e) {
+        scheduler.shutdownNow();
+      }
+    } catch (Exception ignored) {}
   }
 
   private static String formatTemplate(String template, ChangeDeliveryStatusEvent n, String deliveryName, User user) {
@@ -170,7 +183,7 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
 
 
     public SMSNotificationTask(Address address, User user, ChangeDeliveryStatusEvent notification, String deliveryName) {
-      this(address, user, notification, deliveryName, context.getNotificationSettings());
+      this(address, user, notification, deliveryName, notificationSettings);
     }
     public SMSNotificationTask(Address address, User user, ChangeDeliveryStatusEvent notification, String deliveryName, NotificationSettings settings) {
       this.address = address;
@@ -184,7 +197,7 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
       try {
         TestSms testSms = TestSms.sms(false);
         testSms.setDestAddr(address);
-        testSms.setSourceAddr(context.getNotificationSettings().getSmsSenderAddress());
+        testSms.setSourceAddr(notificationSettings.getSmsSenderAddress());
 
         String template = notification.getStatus() == DeliveryStatus.Active ? settings.getSmsTemplateActivated() :
             settings.getSmsTemplateFinished();
@@ -214,7 +227,7 @@ public class DeliveryNotificationsDaemon extends DeliveryChangeListenerStub {
 
 
     public AggregatedEmailNotificationTask(String email, User user) {
-      this(email,user,context.getNotificationSettings());
+      this(email,user,notificationSettings);
     }
 
     AggregatedEmailNotificationTask(String email, User user,  NotificationSettings settings) {

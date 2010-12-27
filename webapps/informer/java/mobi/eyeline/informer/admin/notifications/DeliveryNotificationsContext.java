@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin.notifications;
 
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.users.User;
 
@@ -17,9 +18,8 @@ public interface DeliveryNotificationsContext {
 
   Delivery getDelivery(String login, int deliveryId) throws AdminException;
 
-  NotificationSettings getNotificationSettings();
-
   void sendTestSms(TestSms testSms) throws AdminException;
 
+  DeliveryChangesDetector getDeliveryChangesDetector();
 
 }

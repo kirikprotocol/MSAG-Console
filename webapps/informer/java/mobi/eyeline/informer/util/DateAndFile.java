@@ -1,4 +1,4 @@
-package mobi.eyeline.informer.admin.notifications;
+package mobi.eyeline.informer.util;
 
 import java.io.File;
 import java.util.Calendar;
@@ -10,8 +10,8 @@ import java.util.Calendar;
  * Time: 15:27:29
  */
 public class DateAndFile {
-  private Calendar calendar;
-  private File file;
+  private final Calendar calendar;
+  private final File file;
 
   public DateAndFile(Calendar calendar, File f) {
     this.calendar = calendar;
@@ -22,15 +22,8 @@ public class DateAndFile {
     return calendar;
   }
 
-  public void setCalendar(Calendar c) {
-    this.calendar = calendar;
-  }
-
   public File getFile() {
     return file;
   }
 
-  public void setFile(File file) {
-    this.file = file;
-  }
 }

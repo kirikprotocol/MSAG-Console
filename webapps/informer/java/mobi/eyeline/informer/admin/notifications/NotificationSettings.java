@@ -40,7 +40,7 @@ public class NotificationSettings {
   private static final Pattern emailPattern =
       Pattern.compile("^[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*@[A-Za-z0-9]+[\\.\\-_A-Za-z0-9!#$&'*+/=?^_`{|}~:]*$");
 
-  public void validate() throws AdminException {
+  void validate() throws AdminException {
     vh.checkNotNull("smsSenderAddr", smsSenderAddress);
     vh.checkNotEmpty("activatedSmsTemplate", getSmsTemplateActivated());
     vh.checkNotEmpty("finishedSmsTemplate", getSmsTemplateFinished());

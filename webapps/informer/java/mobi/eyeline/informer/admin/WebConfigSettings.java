@@ -120,7 +120,6 @@ class WebConfigSettings {
   }
 
   void setNotificationSettings(NotificationSettings settings) throws AdminException{
-    settings.validate();
     this.notificationSettings = new NotificationSettings(settings);
   }
 

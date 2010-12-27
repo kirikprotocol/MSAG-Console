@@ -14,9 +14,9 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
-import mobi.eyeline.informer.admin.notifications.DateAndFile;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsProvider;
+import mobi.eyeline.informer.util.DateAndFile;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsContext;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsDaemon;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.*;
@@ -45,7 +45,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   protected Region2SmscDep region2smscDep;
 
   protected RestrictionProvider restrictionProvider;
-  protected DeliveryNotificationsDaemon deliveryNotificationsDaemon;
+  protected DeliveryNotificationsProvider deliveryNotificationsProvider;
   protected CdrProvider cdrProvider;
   protected FileDeliveriesProvider fileDeliveriesProvider;
   protected SiebelProvider siebelProvider;
@@ -65,9 +65,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
       fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getContentProviderPeriod());
 
-      deliveryNotificationsDaemon = new DeliveryNotificationsDaemon(this);
-
-      deliveryChangesDetector.addListener(deliveryNotificationsDaemon);
+      deliveryNotificationsProvider = new DeliveryNotificationsProvider(this, webConfig.getNotificationSettings());
 
       InformerSettings is = informerManager.getConfigSettings();
       deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(is.getStoreDir(), "final_log"), fileSystem);
@@ -97,6 +95,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     cdrProvider.shutdown();
     fileDeliveriesProvider.shutdown();
     restrictionProvider.shutdown();
+    deliveryNotificationsProvider.shutdown();
 
     if (deliveryChangesDetector != null) {
       try {
@@ -104,15 +103,11 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       } catch (Exception e) {
       }
     }
-    if (deliveryNotificationsDaemon != null) {
-      try {
-        deliveryNotificationsDaemon.shutdown();
-      } catch (Exception e) {
-      }
-    }
 
     super.shutdown();
   }
+
+
 
 
 
@@ -693,6 +688,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public void setNotificationSettings(NotificationSettings props) throws AdminException {
+    deliveryNotificationsProvider.updateSettings(props);
     webConfig.setNotificationSettings(props);
   }
 
@@ -740,10 +736,10 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   }
 
   public void sendTestEmailNotification(User user, String email, NotificationSettings settings) throws AdminException {
-    deliveryNotificationsDaemon.sendTestEmailNotification(user, email, settings);
+    deliveryNotificationsProvider.sendTestEmailNotification(user, email, settings);
   }
   public void sendTestSMSNotification(User user, Address address, DeliveryStatus status, NotificationSettings settings) throws AdminException {
-    deliveryNotificationsDaemon.sendTestSMSNotification(user,address,status, settings);
+    deliveryNotificationsProvider.sendTestSMSNotification(user,address,status, settings);
   }
 
   public void validateDeliveryWithIndividualTexts(DeliveryPrototype delivery) throws AdminException {

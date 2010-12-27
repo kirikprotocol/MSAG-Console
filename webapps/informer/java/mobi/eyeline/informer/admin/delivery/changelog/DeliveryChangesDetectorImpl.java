@@ -5,7 +5,7 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.notifications.DateAndFile;
+import mobi.eyeline.informer.util.DateAndFile;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.CSVTokenizer;
 import mobi.eyeline.informer.util.Functions;

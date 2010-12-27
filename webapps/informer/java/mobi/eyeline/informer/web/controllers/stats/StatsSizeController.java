@@ -5,7 +5,7 @@ import mobi.eyeline.informer.admin.delivery.stat.DeliveryStatFilter;
 import mobi.eyeline.informer.admin.delivery.stat.StatEntity;
 import mobi.eyeline.informer.admin.delivery.stat.StatEntityProvider;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
-import mobi.eyeline.informer.admin.notifications.DateAndFile;
+import mobi.eyeline.informer.util.DateAndFile;
 import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.application.FacesMessage;
