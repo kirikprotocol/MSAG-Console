@@ -55,6 +55,9 @@ DECResult RCSTRValueDecoder::decodeVAL(const TLVProperty * val_prop,
 
     TSLength  prevFragmSz = 0;
     rval.status = DECResult::decOk;
+
+    static const unsigned EOC_LEN = 2;
+    max_len -= EOC_LEN;
     while (rval.nbytes < max_len) {
       TLParser fragm;
 
@@ -76,7 +79,7 @@ DECResult RCSTRValueDecoder::decodeVAL(const TLVProperty * val_prop,
         if (!reoc.isOk())
           return reoc;
         fragm._valLen = reoc.nbytes;
-      } else if (fragm._valLen < (max_len - rval.nbytes)) {
+      } else if (fragm._valLen > (max_len - rval.nbytes)) {
         rval.status = DECResult::decMoreInput;
         return rval;
       }
