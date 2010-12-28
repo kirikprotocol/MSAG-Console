@@ -20,7 +20,7 @@ namespace ber {
  * ************************************************************************* */
 class RCSDecConverterIface {
 protected:
-  virtual ~RCSDecConverterIface();
+  virtual ~RCSDecConverterIface() {}
 
 public:
   //Returns universal tag of fragment in case of fragmented string encoding
