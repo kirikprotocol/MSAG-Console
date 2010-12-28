@@ -13,7 +13,7 @@ public:
   explicit BITFragment(TSLength val_len = 1000) : TLComposer()
   {
     init(LDeterminant::frmDefinite, val_len, false);
-    calculate(_tagBITSTR);
+    calculate(ASTag(ASTag::tagUniversal, 3));
   }
 };
 
