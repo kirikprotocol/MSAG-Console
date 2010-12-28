@@ -57,6 +57,7 @@ DECResult TLParser::decode_ld(LDeterminant & use_ld,
     return rval;
   }
   //if (enc[0] > 0x80) //definite, long form
+  use_ld._ldForm = LDeterminant::frmDefinite;
   TSLength ldLen = use_enc[0] & 0x7F;
   if (ldLen > (max_len - 1)) {
     rval.status = DECResult::decMoreInput;
