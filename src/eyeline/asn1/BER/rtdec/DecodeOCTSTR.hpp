@@ -41,7 +41,7 @@ public:
   // RCSDecConverterIface implementation
   // -------------------------------------------
   //Returns universal tag of fragment in case of fragmented string encoding
-  const ASTag & fragmentTag(void) const /* throw()*/ { return _tagBITSTR; }
+  const ASTag & fragmentTag(void) const /* throw()*/ { return _tagOCTSTR; }
   //Incrementally converts next fragment of string encoding to
   //characters from associated alphabet.
   //Returns number of bytes consumed from buffer.
