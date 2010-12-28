@@ -13,7 +13,7 @@ public:
   explicit OCTFragment(TSLength val_len = 1000) : TLComposer()
   {
     init(LDeterminant::frmDefinite, val_len, false);
-    calculate(_tagOCTSTR);
+    calculate(ASTag(ASTag::tagUniversal, 4));
   }
 };
 
@@ -26,7 +26,7 @@ TSLength EncoderOfRCSTR::calculateFragments(void) const
   /*throw(std::exception)*/
 {
   OCTFragment lastFrag(_encValSz%1000);
-  TSLength rval = lastFrag.getTLVsize() + _octFragm.getTLVsize()*numFragments();
+  TSLength rval = lastFrag.getTLVsize() + _octFragm.getTLVsize()*(numFragments() - 1);
   if (rval < _encValSz) //check for TSLength overloading
     throw smsc::util::Exception("EncoderOfRCSTR: value is too large");
   return rval;
