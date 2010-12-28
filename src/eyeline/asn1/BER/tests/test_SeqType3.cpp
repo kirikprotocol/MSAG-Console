@@ -138,16 +138,16 @@ test_SeqType3_dec(char* err_msg)
     }
 
     if (!expectedValue.b.get())
-      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,NULL}'\n", expectedValue.a);
     else
-      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get());
 
     if (expectedValue.a != 0xAA || !expectedValue.b.get() || *expectedValue.b.get() != 0xBB)
     {
       if (!expectedValue.b.get())
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,NULL}'\n", expectedValue.a);
       else
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get());
       return false;
     }
   } catch (std::exception& ex) {
@@ -173,16 +173,16 @@ test_SeqType3_dec(char* err_msg)
     }
 
     if (!expectedValue.b.get())
-      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%x,NULL}'\n", expectedValue.a);
     else
-      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get());
 
     if (expectedValue.a != 0xAA || expectedValue.b.get())
     {
       if (expectedValue.b.get())
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%x,NULL}'\n", expectedValue.a);
       else
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,NULL}', calculated value='{0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get());
       return false;
     }
   } catch (std::exception& ex) {
@@ -192,7 +192,7 @@ test_SeqType3_dec(char* err_msg)
   }
 
   try {
-    // get encoding for SeqType2 containing three fields of INTEGER and try decode it using extensible sequence SeqType3
+    // get encoding for SeqType2 containing three fields of INTEGER and try to decode it using extensible sequence SeqType3
     const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType2", "{AA,BB,CC}");
     fprintf(logfile, "test_SeqType3_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
     uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
@@ -202,23 +202,23 @@ test_SeqType3_dec(char* err_msg)
     SeqType3 expectedValue;
     decSeqType3.setValue(expectedValue);
     DECResult decResult= decSeqType3.decode(patternTrSyntaxBin, patternLen);
-    fprintf(logfile, "test_SeqType2_dec:: DECResult.status=%d\n", decResult.status);
+    fprintf(logfile, "test_SeqType3_dec:: DECResult.status=%d\n", decResult.status);
     if (decResult.status != DECResult::decOk) {
       snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d", decResult.status);
       return false;
     }
 
     if (!expectedValue.b.get())
-      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,NULL}'\n", expectedValue.a);
     else
-      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+      fprintf(logfile, "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get());
 
     if (expectedValue.a != 0xAA || !expectedValue.b.get() || *expectedValue.b.get() != 0xBB)
     {
       if (expectedValue.b.get())
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,NULL}'\n", expectedValue.a);
       else
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType3_enc:: expected value='{0xAA,0xBB}', calculated value='{0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get());
       return false;
     }
   } catch (std::exception& ex) {

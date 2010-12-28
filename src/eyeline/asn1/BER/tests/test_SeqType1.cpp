@@ -92,11 +92,11 @@ test_SeqType1_dec(char* err_msg)
       return false;
     }
 
-    fprintf(logfile, "test_SeqType1_enc:: expected value='{0x%u,0x%u}'\n", expectedValue.a, expectedValue.b);
+    fprintf(logfile, "test_SeqType1_dec:: expected value='{0x%x,0x%x}'\n", expectedValue.a, expectedValue.b);
     if (expectedValue.a != 0xEE || expectedValue.b != 0x11)
     {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='{0xEE,0x11}', calculated value='{0x%u,0x%u}'", expectedValue.a, expectedValue.b);
-      fprintf(logfile, "test_SeqType1_dec:: expected value='{0xEE,0x11}', calculated value='{0x%u,0x%u}'", expectedValue.a, expectedValue.b);
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='{0xEE,0x11}', calculated value='{0x%x,0x%x}'", expectedValue.a, expectedValue.b);
+      fprintf(logfile, "test_SeqType1_dec:: expected value='{0xEE,0x11}', calculated value='{0x%x,0x%x}'", expectedValue.a, expectedValue.b);
       return false;
     }
   } catch (std::exception& ex) {

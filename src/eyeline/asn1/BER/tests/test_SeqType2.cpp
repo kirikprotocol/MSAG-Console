@@ -194,16 +194,16 @@ test_SeqType2_dec(char* err_msg)
     }
 
     if (!expectedValue.b.get())
-      fprintf(logfile, "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+      fprintf(logfile, "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%x,NULL}'\n", expectedValue.a);
     else
-      fprintf(logfile, "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+      fprintf(logfile, "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get());
 
     if (expectedValue.a != 0xAA || expectedValue.b.get())
     {
       if (expectedValue.b.get())
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%u,NULL}'\n", expectedValue.a);
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%x,NULL}'\n", expectedValue.a);
       else
-        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%u,0x%u}'\n", expectedValue.a, *expectedValue.b.get());
+        snprintf(err_msg, sizeof(err_msg), "test_SeqType2_dec:: expected value='{0xAA,NULL}', calculated value='{0x%x,0x%x}'\n", expectedValue.a, *expectedValue.b.get());
       return false;
     }
   } catch (std::exception& ex) {
