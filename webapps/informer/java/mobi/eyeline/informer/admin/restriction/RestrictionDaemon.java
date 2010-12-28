@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin.restriction;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryFilter;
@@ -20,7 +19,7 @@ import java.util.concurrent.*;
  * Date: 08.11.2010
  * Time: 16:35:50
  */
-class RestrictionDaemon implements Daemon{
+class RestrictionDaemon {
 
   Logger log = Logger.getLogger(NAME);
 

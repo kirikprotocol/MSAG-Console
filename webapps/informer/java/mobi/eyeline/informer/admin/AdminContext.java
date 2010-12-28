@@ -97,11 +97,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     restrictionProvider.shutdown();
     deliveryNotificationsProvider.shutdown();
 
-    if (deliveryChangesDetector != null) {
-      try {
-        deliveryChangesDetector.shutdown();
-      } catch (Exception e) {
-      }
+    try {
+      deliveryChangesDetector.shutdown();
+    } catch (Exception ignored) {
     }
 
     super.shutdown();

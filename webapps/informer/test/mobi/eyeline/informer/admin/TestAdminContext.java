@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.admin;
 
-import mobi.eyeline.informer.admin.blacklist.TestBlacklistManager;
+import mobi.eyeline.informer.admin.blacklist.BlacklistManagerStub;
 import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.contentprovider.FileDeliveriesProvider;
 import mobi.eyeline.informer.admin.delivery.*;
@@ -222,7 +222,7 @@ public class TestAdminContext extends AdminContext {
       infosme = new TestInfosme();
       usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
 
-      blacklistManager = new TestBlacklistManager();
+      blacklistManager = new BlacklistManagerStub();
       smscManager = new TestSmscManager(infosme, new File(confDir, "smsc.xml"),
           new File(confDir, "backup"), fileSystem);
       for(Smsc s : smscManager.getSmscs()) {
@@ -263,38 +263,4 @@ public class TestAdminContext extends AdminContext {
     initDependencies();
   }
 
-
-  private static final List<Daemon> testDaemons = new ArrayList<Daemon>(3) {{
-    for(int i =0; i<3; i++) {
-      add(new TestDaemon(i));
-    }
-  }};
-  
-
-  private static class TestDaemon implements Daemon {
-
-    private boolean isStarted = false;
-
-    private String name;
-
-    private TestDaemon(int index ) {
-      name = "TestDaemon"+index;
-    }
-
-    public String getName() {
-      return name;
-    }
-
-    public void start() throws AdminException {
-      isStarted = true;
-    }
-
-    public void stop() throws AdminException {
-      isStarted = false;
-    }
-
-    public boolean isStarted() {
-      return isStarted;
-    }
-  }
 }

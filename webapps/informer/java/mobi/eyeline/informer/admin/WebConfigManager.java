@@ -18,7 +18,7 @@ import java.util.Collection;
  * Date: 11.11.2010
  * Time: 15:07:16
  */
-public class WebConfigManager extends BaseManager<WebConfigSettings> {
+class WebConfigManager extends BaseManager<WebConfigSettings> {
 
 
   public WebConfigManager(File config, File backup, FileSystem fileSys) throws InitException {

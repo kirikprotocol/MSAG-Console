@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * @author Aleksandr Khalitov                           
  */
-public class TestBlacklistManager implements BlacklistManager{
+public class BlacklistManagerStub implements BlacklistManager{
 
   private Set<String> blacklist = new HashSet<String>();
 

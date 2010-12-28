@@ -2,7 +2,6 @@ package mobi.eyeline.informer.web.config;
 
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.delivery.*;

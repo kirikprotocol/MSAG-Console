@@ -2,7 +2,7 @@ package mobi.eyeline.informer.admin;
 
 import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
-import mobi.eyeline.informer.admin.blacklist.BlackListManagerImpl;
+import mobi.eyeline.informer.admin.blacklist.BlacklistManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
 import mobi.eyeline.informer.admin.delivery.DeliveryManager;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
@@ -116,7 +116,7 @@ class AdminContextBase {
 
       personalizationClientPool = new PersonalizationClientPool(pers);
 
-      blacklistManager = new BlackListManagerImpl(personalizationClientPool);
+      blacklistManager = new BlacklistManagerImpl(personalizationClientPool);
 
       smscManager = new SmscManager(infosme, new File(confDir, "smsc.xml"),
           new File(confDir, "backup"), fileSystem);

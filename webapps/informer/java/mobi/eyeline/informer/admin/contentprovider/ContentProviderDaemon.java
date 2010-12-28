@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.Daemon;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatus;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
@@ -23,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 17.11.2010
  * Time: 16:21:41
  */
-class ContentProviderDaemon extends DeliveryChangeListenerStub implements Daemon, UserDirResolver {
+class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDirResolver {
 
   private static Logger log = Logger.getLogger("CONTENT_PROVIDER");
 
