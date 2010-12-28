@@ -54,6 +54,7 @@ public:
     }
     _prvUnused = *use_buf & 0x07;
     ++rval.nbytes;
+    --numOcts; // actual len is numOcts-first octet that contains number of unused bits
     if (_dVal->append(use_buf + 1, (numOcts<<3) - _prvUnused)) {
       rval.nbytes += numOcts;
       if (rval.nbytes < req_bytes)
