@@ -1,0 +1,21 @@
+scag/tests/testRouteManager testRouteManager \
+  -lscag-transport-smpp-router \
+  -lscag-config-impl \
+  -lscag-config-smpp -lscag-config-stat -lscag-config-bill \
+  -lscag-config-sessn -lscag-config-route -lscag-config-http \
+  -lscag-config-pers -lscag-config-lcm \
+  -lscag-config-base \
+  -lscag-util-singleton \
+  -lscag-util-io \
+  \
+  -llicense-check \
+  -lutil-xml \
+  $(XERCES_LIB) \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil \
+  $(SSL_LIB) \
+  $(SOCKETLIB)
+
+  
+  
+  

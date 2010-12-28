@@ -28,6 +28,7 @@ struct RouteRecord
   uint8_t dest_def;
   RouteRecord* next;
   RouteRecord() : next(0) {}
+  std::string dumpIntoString() const;
 };
 
 struct RouteSrcTreeNode
@@ -54,6 +55,9 @@ struct RouteSrcTreeNode
       { if ( child[i] ) delete child[i]; }
     child.clear();
   }
+  void dumpInto( std::vector< std::string >& trace,
+                 const RouteRecord* oldrec, 
+                 const char* pfx ) const;
 };
 
 struct RouteTreeNode
@@ -91,6 +95,10 @@ struct RouteTreeNode
       { if ( sources[i] ) delete sources[i]; }
     sources.clear();
   }
+
+  void dumpInto( std::vector< std::string >& trace,
+                 const RouteRecord* oldrec,
+                 const char* pfx ) const;
 };
 
 
@@ -139,6 +147,8 @@ public :
   void addRoute(const RouteInfo& routeInfo);
   void commit( std::vector< std::string >* traceit = 0 );
   void cancel();
+
+  void dumpInto( std::vector<std::string>& trace );
 
   bool lookup( const smsc::sms::Address& source,
                const smsc::sms::Address& dest,

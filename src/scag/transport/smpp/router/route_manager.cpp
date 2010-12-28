@@ -663,6 +663,82 @@ void RouteManager::cancel()
   }
 }
 
+
+std::string RouteRecord::dumpIntoString() const
+{
+    char buf[256];
+    snprintf(buf, sizeof(buf),
+             "'%s' ena/trs=%u/%u ssme='%s' dsme='%s' ssbj='%s' dsbj='%s' src='%s' dst='%s' svc=%u pxy='%s' sdef=%u ddef=%u",
+             info.routeId.c_str(),
+             info.enabled, info.transit,
+             info.srcSmeSystemId.c_str(), info.smeSystemId.c_str(),
+             info.srcSubj.c_str(), info.dstSubj.c_str(),
+             AddrToString(info.source).c_str(), AddrToString(info.dest).c_str(),
+             info.serviceId,
+             proxyIdx, src_def, dest_def);
+    return buf;
+}
+
+
+void RouteSrcTreeNode::dumpInto( std::vector< std::string >& trace,
+                                 const RouteRecord* oldrec,
+                                 const char* prefix ) const
+{
+    std::string pfx(prefix);
+    if (record) {
+        trace.push_back( pfx + "src " + AddrToString(record->info.source));
+        if (oldrec != record || child.empty() ) {
+            trace.push_back( pfx + " => " + record->dumpIntoString());
+        }
+    }
+    pfx += "  ";
+    for ( std::vector< RouteSrcTreeNode* >::const_iterator i = child.begin();
+          i != child.end();
+          ++i ) {
+        (*i)->dumpInto(trace,record,pfx.c_str());
+    }
+}
+
+
+void RouteTreeNode::dumpInto( std::vector< std::string >& trace,
+                              const RouteRecord* oldrec,
+                              const char* prefix ) const
+{
+    std::string pfx(prefix);
+    if (record) {
+        trace.push_back(pfx + "dst " + AddrToString(record->info.dest) );
+        if (child.empty() && sources.empty() ) {
+            trace.push_back( pfx + " => " + record->dumpIntoString());
+        }
+    }
+    pfx += "  ";
+    for ( std::vector< RouteTreeNode* >::const_iterator i = child.begin();
+          i != child.end();
+          ++i ) {
+        (*i)->dumpInto(trace,record,pfx.c_str());
+    }
+    for ( std::vector< RouteSrcTreeNode* >::const_iterator i = sources.begin();
+          i != sources.end();
+          ++i ) {
+        (*i)->dumpInto(trace,record,pfx.c_str());
+    }
+}
+
+
+void RouteManager::dumpInto( std::vector<std::string>& trace )
+{
+    char* key = const_cast<char*>("root");
+    RouteTreeNode* r = &root;
+    smsc::core::buffers::Hash<SmeRoute>::Iterator iter(&smeRoutes);
+    SmeRoute* sr = 0;
+    do {
+        if (sr) { r = &sr->root; }
+        trace.push_back( std::string("--- ") + key + " ---");
+        r->dumpInto( trace, 0, "" );
+    } while ( iter.Next(key,sr) );
+}
+
+
 // RoutingTable implementation
 bool RouteManager::lookup(SmeIndex srcidx,
                           const Address& source,
