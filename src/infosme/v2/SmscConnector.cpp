@@ -373,13 +373,16 @@ int SmscConnector::Execute() {
             {
                 MutexGuard mg(stateMonitor_);
                 connected_ = false;
+                int tmo = timeout_;
                 if (exc.getReason() == SmppConnectException::Reason::bindFailed) {
-                    stopped_ = true;
-                    smsc_log_error(log_, "SMSC Connector id='%s' disabled!", smscId_.c_str());
-                    break;
+                    tmo *= 5;
+                    // smsc_log_error(log_, "SMSC Connector id='%s' bind failed!", smscId_.c_str());
+                    // stopped_ = true;
+                    // smsc_log_error(log_, "SMSC Connector id='%s' disabled!", smscId_.c_str());
+                    // break;
                 }
-                smsc_log_debug(log_,"going to sleep for %u seconds",timeout_);
-                stateMonitor_.wait(timeout_*1000);
+                smsc_log_debug(log_,"going to sleep for %u seconds",tmo);
+                stateMonitor_.wait(tmo*1000);
             }
         } // if exception occured
     } // while is not stopped
