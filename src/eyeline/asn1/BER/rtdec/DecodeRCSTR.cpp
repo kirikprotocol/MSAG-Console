@@ -50,14 +50,20 @@ DECResult RCSTRValueDecoder::decodeVAL(const TLVProperty * val_prop,
       rval.status = DECResult::decBadEncoding;
     /**/
   } else { //constructed encoding, several fragments follow
-    if (strictDER || (val_prop->isDefinite() && strictCER))
+    //NOTE: content octets [+ EOC] cann't be < 2 octets length ({Tag, 0} || EOC)
+    if ((max_len < 2) || strictDER || (val_prop->isDefinite() && strictCER))
       return rval;
+
+    if (val_prop->isIndefinite()) {
+      //check for degenerate case: empty constructed encoding with indefinite LD
+      if (checkEOC(use_enc, max_len))
+        return strictCER ? rval : DECResult(DECResult::decOk);
+      max_len -= 2; //exclude outermost EOC
+    }
 
     TSLength  prevFragmSz = 0;
     rval.status = DECResult::decOk;
 
-    static const unsigned EOC_LEN = 2;
-    max_len -= EOC_LEN;
     while (rval.nbytes < max_len) {
       TLParser fragm;
 
