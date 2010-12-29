@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20101229 11:20 bukind (v2)
+
 2010-12-29 11:05 bukind
   bugfix: #4601 v2 don't disable smscconnector after bind failed
 
