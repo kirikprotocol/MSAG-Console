@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.StringEncoderDecoder;
 import mobi.eyeline.informer.web.WebContext;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableModel;
 import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
@@ -206,7 +207,7 @@ public class RegionsListController extends RegionsController {
     for (Region r : regions) {
       InformerTimezone tz = WebContext.getInstance().getWebTimezones().getTimezoneByID(r.getTimeZone().getID());
       String tzName = tz.getAlias(getLocale());
-      writer.append(r.getName()).append(',').append(r.getSmsc()).append(',').append(String.valueOf(r.getMaxSmsPerSecond())).append(',').append(tzName).println();
+      writer.println(StringEncoderDecoder.toCSVString(r.getName(), r.getSmsc(), r.getMaxSmsPerSecond(), tzName));
       for (Address addr : r.getMasks())
         writer.println(addr.getSimpleAddress());
     }

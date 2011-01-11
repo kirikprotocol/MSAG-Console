@@ -35,7 +35,7 @@ class RestrictionsConfig implements ManagedConfigFile<RestrictionSettings> {
           args[i++] = userId;
         }
       }
-      pw.println(StringEncoderDecoder.toCSVString(args));
+      pw.println(StringEncoderDecoder.toCSVString(',', args));
     }
     pw.flush();
   }
@@ -46,7 +46,7 @@ class RestrictionsConfig implements ManagedConfigFile<RestrictionSettings> {
     BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
     String line;
     while ((line = reader.readLine()) != null) {
-      List<String> vals = StringEncoderDecoder.csvDecode(line);
+      List<String> vals = StringEncoderDecoder.csvDecode(',',line);
       Restriction r = new Restriction();
       r.setId(Integer.parseInt(vals.get(0)));
       r.setName(vals.get(1));

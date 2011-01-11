@@ -267,10 +267,15 @@ public class StringEncoderDecoder {
     return outBuffer.toString();
   }
 
+  private static final char cvsSep = ';';
+
   public static String csvEscape(Object obj) {
+    return csvEscape(cvsSep, obj);
+  }
+  public static String csvEscape(char sep, Object obj) {
     if (obj == null) return "";
     String s = obj.toString();
-    if (s.indexOf(",") != -1 || s.indexOf("\"") != -1) {
+    if (s.indexOf(sep) != -1 || s.indexOf("\"") != -1) {
       s = s.replace("\"", "\"\"");
       s = "\"" + s + "\"";
     }
@@ -278,7 +283,11 @@ public class StringEncoderDecoder {
   }
 
   public static List<String> csvDecode(String line) {
-    List<String> out = csvSplit(line);
+    return csvDecode(cvsSep, line);
+  }
+
+  public static List<String> csvDecode(char sep, String line) {
+    List<String> out = csvSplit(sep, line);
     for (int i = 0; i < out.size(); i++) {
       String s = out.get(i);
       if (s.startsWith("\"") && s.endsWith("\""))
@@ -290,6 +299,9 @@ public class StringEncoderDecoder {
   }
 
   public static List<String> csvSplit(String line) {
+    return csvSplit(cvsSep, line);
+  }
+  public static List<String> csvSplit(char sep, String line) {
     List<String> out = new ArrayList<String>();
     int start = 0;
     boolean inQuot = false;
@@ -298,7 +310,7 @@ public class StringEncoderDecoder {
       if (c == '\"') {
         inQuot = !inQuot;
       } else {
-        if (!inQuot && c == ',') {
+        if (!inQuot && c == sep) {
           out.add(line.substring(start, i));
           start = i + 1;
         }
@@ -309,23 +321,15 @@ public class StringEncoderDecoder {
   }
 
   public static String toCSVString(Object... args) {
-    StringBuilder sb = new StringBuilder();
-    String sep = "";
-    for (Object s : args) {
-      sb.append(sep).append(csvEscape(s));
-      sep = ",";
-    }
-    return sb.toString();
+    return toCSVString(cvsSep, args);
   }
 
-  public static String toCSVString(List<Object> args) {
+  public static String toCSVString(char sep, Object... args) {
     StringBuilder sb = new StringBuilder();
-    String sep = "";
     for (Object s : args) {
       sb.append(sep).append(csvEscape(s));
-      sep = ",";
     }
-    return sb.toString();
+    return sb.length() > 0 ? sb.substring(1) : "";
   }
 
 
