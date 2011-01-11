@@ -14,22 +14,31 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
-import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsProvider;
-import mobi.eyeline.informer.util.DateAndFile;
 import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsContext;
+import mobi.eyeline.informer.admin.notifications.DeliveryNotificationsProvider;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
-import mobi.eyeline.informer.admin.restriction.*;
-import mobi.eyeline.informer.admin.siebel.*;
+import mobi.eyeline.informer.admin.restriction.Restriction;
+import mobi.eyeline.informer.admin.restriction.RestrictionContext;
+import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
+import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
+import mobi.eyeline.informer.admin.siebel.SiebelContext;
+import mobi.eyeline.informer.admin.siebel.SiebelProvider;
+import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.DateAndFile;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 
 import java.io.File;
-import java.util.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Класс для управления моделью
@@ -371,11 +380,25 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return createDeliveryWithIndividualTexts(u.getLogin(), u.getPassword(), delivery, msDataSource);
   }
 
+
+  private void checkHasNotRestriction(String errorMessage, String login) throws AdminException {
+    RestrictionsFilter filter = new RestrictionsFilter();
+    Date startDate = new Date();
+    filter.setUserId(login);
+    filter.setStartDate(startDate);
+    filter.setEndDate(startDate);
+    List<Restriction> rs = restrictionProvider.getRestrictions(filter);
+    if(!rs.isEmpty()) {
+      Restriction r = rs.get(0);
+      SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+      throw new DeliveryException(errorMessage, sdf.format(r.getStartDate()), sdf.format(r.getEndDate()), r.getName());
+    }
+  }
+
+
   @Deprecated
   public synchronized Delivery createDeliveryWithIndividualTexts(String login, String password, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
-    if (restrictionProvider.hasActiveRestriction(login)) {
-      throw new DeliveryException("creation_restricted");
-    }
+    checkHasNotRestriction("creation_restricted", login);
 
     delivery2UserDep.checkDelivery(delivery);
 
@@ -393,9 +416,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   @Deprecated
   public synchronized Delivery createDeliveryWithSingleText(String login, String password, DeliveryPrototype delivery, DataSource<Address> msDataSource) throws AdminException {
-    if (restrictionProvider.hasActiveRestriction(login)) {
-      throw new DeliveryException("creation_restricted");
-    }
+    checkHasNotRestriction("creation_restricted", login);
 
     delivery2UserDep.checkDelivery(delivery);
     User u = usersManager.getUser(delivery.getOwner());
@@ -534,9 +555,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   @Deprecated
   public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
     synchronized (getLock(deliveryId)) {
-      if (restrictionProvider.hasActiveRestriction(login)) {
-        throw new DeliveryException("activation_restricted");
-      }
+      checkHasNotRestriction("activation_restricted", login);
       deliveryManager.activateDelivery(login, password, deliveryId);
     }
   }

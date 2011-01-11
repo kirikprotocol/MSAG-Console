@@ -54,8 +54,4 @@ public class RestrictionProvider {
   public void reschedule() {
     daemon.rebuildSchedule();
   }
-
-  public boolean hasActiveRestriction(String userId) {
-    return manager.hasActiveRestriction(userId);
-  }
 }
