@@ -39,6 +39,10 @@
         <h:outputText value="&#160;"/>
       </h:panelGrid>
 
+      </h:panelGrid>
+
+      <h:panelGrid columns="2" style="padding-left:10px" columnClasses="column50Width, columnTopLeftAlign" rendered="#{createDelivery.activePage.userInAdminRole}">
+
       <h:outputText style="white-space: nowrap;" value="#{msg['informer.deliveries.create.activePeriod']}"/>
       <h:panelGroup>
         <eye:inputDate value="#{createDelivery.activePage.activePeriodStart}" type="short_time"/>
@@ -64,7 +68,13 @@
       <h:outputText id="vPeriodLabel" style="white-space: nowrap;" value="#{deliveryBundle.validityPeriod}"/>
       <eye:inputDate id="vPeriod" value="#{createDelivery.activePage.validityPeriod}" type="short_time"/>
 
+      <h:outputText id="trModeLabel" style="white-space: nowrap;" value="#{deliveryBundle.transactionMode}"/>
+      <tr:selectBooleanCheckbox id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"/>
 
+
+      </h:panelGrid>
+
+      <h:panelGrid columns="2" style="padding-left:10px" columnClasses="column50Width, columnTopLeftAlign">
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
       <h:panelGroup>
@@ -102,9 +112,6 @@
 
       <h:outputText id="flashLabel" style="white-space: nowrap;" value="#{deliveryBundle.flash}"/>
       <h:selectBooleanCheckbox id="flash" value="#{createDelivery.activePage.delivery.flash}"/>
-
-      <h:outputText id="trModeLabel" style="white-space: nowrap;" value="#{deliveryBundle.transactionMode}"/>
-      <tr:selectBooleanCheckbox id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"/>
 
     </h:panelGrid>
 

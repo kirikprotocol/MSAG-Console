@@ -1,9 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:c="http://java.sun.com/jstl/core"
-      xmlns:fn="http://java.sun.com/jstl/functions"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi">
@@ -45,7 +43,7 @@
 
       <eye:delimiter/>
 
-      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;border-bottom: 1px solid #E6E3D8;" columnClasses="column100Width, columnTopLeftAlign" >
+      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;" columnClasses="column100Width, columnTopLeftAlign" >
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.name}"/>
         <tr:inputText value="#{deliveryEdit.delivery.name}" simple="true"/>
@@ -88,29 +86,40 @@
           <h:outputText value="&#160;"/>
         </h:panelGrid>
 
-        <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
-        <h:panelGroup>
-          <eye:inputDate value="#{deliveryEdit.activePeriodStart}" type="short_time"/>
-          <h:outputText value=" - "/>
-          <eye:inputDate value="#{deliveryEdit.activePeriodEnd}" type="short_time"/>
-        </h:panelGroup>
+      </h:panelGrid>
 
-        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
-        <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}" value="#{deliveryEdit.delivery.priority}" size="5"/>
+      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;" columnClasses="column100Width, columnTopLeftAlign" rendered="#{deliveryEdit.userInAdminRole}">
 
-        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
-        <h:panelGroup>
-          <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{deliveryEdit.retryOnFail}">
-            <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
-            <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
-            <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
-          </h:selectOneMenu>
-          <h:outputText value=" "/>
-          <h:inputText value="#{deliveryEdit.delivery.retryPolicy}" id="retryPolicy1"/>
-        </h:panelGroup>
+          <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
+          <h:panelGroup>
+            <eye:inputDate value="#{deliveryEdit.activePeriodStart}" type="short_time"/>
+            <h:outputText value=" - "/>
+            <eye:inputDate value="#{deliveryEdit.activePeriodEnd}" type="short_time"/>
+          </h:panelGroup>
 
-        <h:outputText id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-        <eye:inputDate id="vPeriod" value="#{deliveryEdit.validityPeriod}" type="short_time"/>
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}" value="#{deliveryEdit.delivery.priority}" size="5"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
+          <h:panelGroup>
+            <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{deliveryEdit.retryOnFail}">
+              <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
+              <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
+              <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
+            </h:selectOneMenu>
+            <h:outputText value=" "/>
+            <h:inputText value="#{deliveryEdit.delivery.retryPolicy}" id="retryPolicy1"/>
+          </h:panelGroup>
+
+          <h:outputText id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+          <eye:inputDate id="vPeriod" value="#{deliveryEdit.validityPeriod}" type="short_time"/>
+
+          <h:outputText id="trModeLabel" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+          <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
+
+      </h:panelGrid>
+
+      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;border-bottom: 1px solid #E6E3D8;" columnClasses="column100Width, columnTopLeftAlign">
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
         <h:panelGroup>
@@ -145,9 +154,6 @@
 
         <h:outputText id="flashLabel" style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
         <tr:selectBooleanCheckbox id="flash" value="#{deliveryEdit.delivery.flash}" simple="true"/>
-
-        <h:outputText id="trModeLabel" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
-        <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
 
       </h:panelGrid>
 
@@ -240,13 +246,19 @@
           var d = (document.getElementById('dMode').value != 'SMS') ? 'none' : '';
           document.getElementById('flashLabel').style.display = d;
           document.getElementById('flash').style.display = d;
-          document.getElementById('trModeLabel').style.display = d;
-          document.getElementById('trMode').style.display = d;
+          var e = document.getElementById('trMode');
+          if(e != null) {
+            e.style.display = d;
+            document.getElementById('trModeLabel').style.display = d;
+          }
         }
 
         function retryOnFailChanged() {
-          var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
-          document.getElementById('retryPolicy1').style.display=d;
+          var e = document.getElementById('retryOnFail');
+          if(e != null) {
+            var d = e.options[2].selected ? '' : 'none';
+            document.getElementById('retryPolicy1').style.display=d;
+          }
         }
 
         retryOnFailChanged();
