@@ -43,6 +43,9 @@
             <eye:menubaritem><h:commandLink value="#{msg['informer.stats.messages.byUser']}" action="STATS_DELIVERY_MESSAGES_BY_USER" rendered="#{userSession.userInAdminRole}"/></eye:menubaritem>
           </eye:menubar>
         </td>
+        <td width="1%" nowrap="true">
+          <h:commandLink value="#{msg['informer.admin.create.delivery']}" action="DELIVERY_CREATE"/>
+        </td>
         <td width="100%">&#160;</td>
         <td style="white-space:nowrap">
           <div>
