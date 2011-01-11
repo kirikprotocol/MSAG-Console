@@ -28,9 +28,9 @@ import java.util.concurrent.TimeUnit;
  * Date: 12.11.2010
  * Time: 16:52:38
  */
-public class DeliveryChangesDetectorImpl implements Runnable, DeliveryChangesDetector {
+public class DeliveryChangesDetectorImpl extends AbstractDeliveryChangesDetector implements Runnable {
 
-  Logger log = Logger.getLogger(this.getClass());
+
 
   private static final TimeZone STAT_TIMEZONE=TimeZone.getTimeZone("UTC");
 
@@ -40,7 +40,7 @@ public class DeliveryChangesDetectorImpl implements Runnable, DeliveryChangesDet
   private File backupDir;
   private FileSystem fileSys;
   ScheduledExecutorService scheduler;
-  final List<DeliveryChangeListener> listeners = Collections.synchronizedList(new LinkedList<DeliveryChangeListener>());
+
   private static final String FILE_NAME_DATE_PATTERN = "yyyyMMddHHmm'.csv'";
 
 
@@ -59,20 +59,7 @@ public class DeliveryChangesDetectorImpl implements Runnable, DeliveryChangesDet
 
   }
 
-  @Override
-  public void addListener(DeliveryChangeListener listener) {
-    listeners.add(listener);
-  }
 
-  @Override
-  public void removeListener(DeliveryChangeListener listener) {
-    listeners.remove(listener);
-  }
-
-  @Override
-  public void removeAllListeners() {
-    listeners.clear();
-  }
 
 
   public synchronized void start() {
@@ -194,40 +181,18 @@ public class DeliveryChangesDetectorImpl implements Runnable, DeliveryChangesDet
           if (userData != null)
             props.putAll(convertUserData(userData));
 
-          notifyListenersOnMessage(new ChangeMessageStateEvent(c.getTime(), deliveryId, userId,
+          fireEvent(new ChangeMessageStateEvent(c.getTime(), deliveryId, userId,
               msgId, messageState, smpp_status, addr, nsms, props));
         }
         else {
           DeliveryStatus state = type == DeliveryNotificationType.DELIVERY_START ? DeliveryStatus.Active : DeliveryStatus.Finished;
           stateEventChange = new ChangeDeliveryStatusEvent(state, c.getTime(), deliveryId, userId);
-          notifyListeners(stateEventChange);
+          fireEvent(stateEventChange);
         }
       }
     }
     catch (Exception e) {
       log.error("Error processing log " + fileName + " line : " + line, e);
-    }
-  }
-
-  private void notifyListenersOnMessage(ChangeMessageStateEvent stateEvent) {
-    for (DeliveryChangeListener listener : listeners) {
-      try {
-        listener.messageStateChanged(stateEvent);
-      }
-      catch (Throwable e) {
-        log.error("error in listener", e);
-      }
-    }
-  }
-
-  private void notifyListeners(ChangeDeliveryStatusEvent stateEventChange) {
-    for (DeliveryChangeListener listener : listeners) {
-      try {
-        listener.deliveryStateChanged(stateEventChange);
-      }
-      catch (Throwable e) {
-        log.error("error in listener", e);
-      }
     }
   }
 

@@ -37,96 +37,83 @@ public class CdrDaemonTest {
 
   private static int deliveryId;
 
-  private static TestDeliveryManager manager;
-
 
   @BeforeClass
-  public static void init() throws Exception{
+  public static void init() throws Exception {
 
-    workDir = new File("cdr_"+System.currentTimeMillis());
-    workDir.mkdirs();
-    dir = new File(workDir, "cdrOut");
-    dir.mkdirs();
+    workDir = TestUtils.createRandomDir("_cdr");
+    dir = TestUtils.createRandomDir("_cdrOut");
 
     prepareRestoringFiles();
 
     Set<Long> s = new HashSet<Long>();
-    String date = CdrDaemon.restore(FileSystem.getFSForSingleInst(), workDir,s);
+    String date = CdrDaemon.restore(FileSystem.getFSForSingleInst(), workDir, s);
 
     assertEquals(s.size(), 2);
     assertEquals(date, "20101112030410");
 
-    final User user = new User();
-    user.setLogin("a");
-    user.setPassword("1");
-    user.setCreateCDR(true);
-    user.setCdrDestination("dest");
-    user.setCdrOriginator("orig");
+    TestDeliveryManager manager = null;
+    try {
+      manager = new TestDeliveryManager(null, null);
 
-    final DeliveryPrototype p = new DeliveryPrototype();
-    p.setOwner("a");
-    p.setSourceAddress(new Address("+79139489906"));
-    p.setActivePeriodStart(new Time(10,0,0));
-    p.setActivePeriodEnd(new Time(22,0,0));
-    p.setActiveWeekDays(Day.values());
-    p.setDeliveryMode(DeliveryMode.SMS);
-    p.setStartDate(new Date());
-    p.setName("Delivery1");
-    p.setPriority(10);
+      final User user = new User();
+      user.setLogin("a");
+      user.setPassword("1");
+      user.setCreateCDR(true);
+      user.setCdrDestination("dest");
+      user.setCdrOriginator("orig");
 
+      final DeliveryPrototype p = new DeliveryPrototype();
+      p.setOwner("a");
+      p.setSourceAddress(new Address("+79139489906"));
+      p.setActivePeriodStart(new Time(10, 0, 0));
+      p.setActivePeriodEnd(new Time(22, 0, 0));
+      p.setActiveWeekDays(Day.values());
+      p.setDeliveryMode(DeliveryMode.SMS);
+      p.setStartDate(new Date());
+      p.setName("Delivery1");
+      p.setPriority(10);
 
-    manager = new TestDeliveryManager(null, null);
+      final Delivery delivery = manager.createDeliveryWithIndividualTexts("a", "1", p, null);
+      deliveryId = delivery.getId();
 
-    context = new CdrProviderContext() {
-      {
-        deliveryId = manager.createDeliveryWithIndividualTexts("a","1", p, null).getId();
-      }
+      context = new CdrProviderContext() {
+        public Delivery getDelivery(String user, int deliveryId) throws AdminException {
+          return delivery;
+        }
 
-      public Delivery getDelivery(String user, int deliveryId) throws AdminException {
-        return manager.getDelivery("a","1", deliveryId);
-      }
+        public User getUser(String login) {
+          return user;
+        }
 
-      public User getUser(String login) {
-        return user;
-      }
+        public DeliveryChangesDetector getDeliveryChangesDetector() {
+          return null;
+        }
+      };
+    } finally {
+      if (manager != null)
+        manager.shutdown();
+    }
+  }
 
-      public DeliveryChangesDetector getDeliveryChangesDetector() {
-        return null;
-      }
-    };
+  @AfterClass
+  public static void shutdown() throws Exception {
+    if (workDir != null)
+      TestUtils.recursiveDeleteFolder(workDir);
+    if (dir != null)
+      TestUtils.recursiveDeleteFolder(dir);
   }
 
 
-  private static void prepareRestoringFiles() throws Exception{
+  private static void prepareRestoringFiles() throws Exception {
     PrintWriter writer = null;
-    try{
+    try {
       writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(workDir, "20101112030210.csv"))));
-      writer.print("20101112030210");
-      writer.print(',');
-      writer.print("a");
-      writer.print(',');
-      writer.print("1");
-      writer.print(',');
-      writer.println("1");
-
-      writer.print("20101112030410");
-      writer.print(',');
-      writer.print("a");
-      writer.print(',');
-      writer.print("1");
-      writer.print(',');
-      writer.println("2");
-
-      writer.print("20101112030410");
-      writer.print(',');
-      writer.print("a");
-      writer.print(',');
-      writer.print("1");
-      writer.print(',');
-      writer.println("3");
-
-    }finally {
-      if(writer != null) {
+      writer.println("20101112030210,a,1,1");
+      writer.println("20101112030410,a,1,2");
+      writer.println("20101112030410,a,1,3");
+    } finally {
+      if (writer != null) {
         writer.close();
       }
     }
@@ -134,93 +121,76 @@ public class CdrDaemonTest {
 
   private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
-  @Test
-  public void test() throws Exception{
-    CdrDaemon cdr = new CdrDaemon(workDir, dir, FileSystem.getFSForSingleInst(), context);
-    ChangeMessageStateEvent e = new ChangeMessageStateEvent(
-        sdf.parse("20101112030210"), deliveryId, "a", 1, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
-    );
-    cdr.messageStateChanged(e);
+  private void fireMsgDeliveredEvent(CdrDaemon cdr, Date date, long msgId, String address) throws AdminException {
+    cdr.messageStateChanged(new ChangeMessageStateEvent(
+        date, deliveryId, "a", msgId, MessageState.Delivered, 0, new Address(address), 3, null
+    ));
+  }
 
-    e = new ChangeMessageStateEvent(
-        sdf.parse("20101112030410"), deliveryId, "a", 2, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
-    );
-    cdr.messageStateChanged(e);
-
-    e = new ChangeMessageStateEvent(
-        sdf.parse("20101112030410"), deliveryId, "a", 3, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
-    );
-    cdr.messageStateChanged(e);
-
-
-    e = new ChangeMessageStateEvent(
-        sdf.parse("20101112030410"), deliveryId, "a", 4, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
-    );
-    cdr.messageStateChanged(e);
-
-
-    Date now = new Date();
-    e = new ChangeMessageStateEvent(
-        now, deliveryId, "a", 5, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
-    );
-    cdr.messageStateChanged(e);
-
-    cdr.setFileCompletedInterval(1);
-    cdr.roll();
-
-    File[] fs = dir.listFiles();
-    assertEquals(fs.length, 3);
-
-    File f = new File(dir, "201011120304.csv");
-    assertTrue(f.exists());
+  private static int countLines(File f) throws IOException {
     int countLines = 0;
     BufferedReader reader = null;
-    try{
+    try {
       reader = new BufferedReader(new FileReader(f));
-      while(reader.readLine() != null) {
+      while (reader.readLine() != null)
         countLines++;
-      }
-    }finally {
-      if(reader != null) {
-        try{
+    } finally {
+      if (reader != null) {
+        try {
           reader.close();
-        }catch (IOException ex){}
+        } catch (IOException ex) {
+        }
       }
     }
-    assertEquals(countLines, 1);
-
-    cdr.setFileCompletedInterval(100000);
-    e = new ChangeMessageStateEvent(
-        new Date(), deliveryId, "a", 7, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
-    );
-    cdr.messageStateChanged(e);
-    cdr.roll();       
-    fs = dir.listFiles();
-    assertEquals(fs.length, 3);
-
-    e = new ChangeMessageStateEvent(
-        new Date(), deliveryId, "a", 8, MessageState.Delivered, 0, new Address("+79529223755"), 3, null
-    );
-    cdr.messageStateChanged(e);
-    fs = dir.listFiles();
-    assertEquals(fs.length, 3);
-
-    fs = workDir.listFiles(new FileFilter() {
-      public boolean accept(File pathname) {
-        return pathname.isFile();
-      }
-    });
-    assertEquals(fs.length, 1);
-
+    return countLines;
   }
 
-  @AfterClass
-  public static void shutdown() throws Exception {
-    if(workDir != null) {
-      TestUtils.recursiveDeleteFolder(workDir);
-    }
-    if(manager != null) {
-      manager.shutdown();      
+  @Test
+  public void test() throws Exception {
+    CdrDaemon cdr = null;
+    try {
+      cdr = new CdrDaemon(workDir, dir, FileSystem.getFSForSingleInst(), context);
+
+      fireMsgDeliveredEvent(cdr, sdf.parse("20101112030210"), 1, "+79529223755");
+      fireMsgDeliveredEvent(cdr, sdf.parse("20101112030410"), 2, "+79529223755");
+      fireMsgDeliveredEvent(cdr, sdf.parse("20101112030410"), 3, "+79529223755");
+      fireMsgDeliveredEvent(cdr, sdf.parse("20101112030410"), 4, "+79529223755");
+      fireMsgDeliveredEvent(cdr, new Date(), 5, "+79529223755");
+
+      cdr.setFileCompletedInterval(1);
+      cdr.roll();
+
+      File[] fs = dir.listFiles();
+      assertEquals(fs.length, 3);
+
+      File f = new File(dir, "201011120304.csv");
+      assertTrue(f.exists());
+      assertEquals(countLines(f), 1);
+
+      cdr.setFileCompletedInterval(100000);
+
+      fireMsgDeliveredEvent(cdr, new Date(), 7, "+79529223755");
+
+      cdr.roll();
+      fs = dir.listFiles();
+      assertEquals(fs.length, 3);
+
+      fireMsgDeliveredEvent(cdr, new Date(), 8, "+79529223755");
+
+      fs = dir.listFiles();
+      assertEquals(fs.length, 3);
+
+      fs = workDir.listFiles(new FileFilter() {
+        public boolean accept(File pathname) {
+          return pathname.isFile();
+        }
+      });
+      assertEquals(fs.length, 1);
+    } finally {
+      if (cdr != null)
+        cdr.stop();
     }
   }
+
+
 }

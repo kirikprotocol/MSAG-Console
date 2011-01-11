@@ -102,10 +102,6 @@ class CdrDaemon implements DeliveryChangeListener{
     }
   }
 
-  public boolean istStrated() {
-    return started;
-  }
-
   public void stop() {
     if(started) {
       if(roller != null) {
@@ -115,6 +111,8 @@ class CdrDaemon implements DeliveryChangeListener{
         logger.debug("CDR-DAEMON has been shutdowned");
       }
     }
+    if (writer != null)
+      writer.close();
   }
 
   private synchronized Delivery getDelivery(int deliveryId, String user) throws AdminException {
@@ -225,20 +223,12 @@ class CdrDaemon implements DeliveryChangeListener{
 
   public void messageStateChanged(ChangeMessageStateEvent e) throws AdminException {
     User u = context.getUser(e.getUserId());
-    if(u == null) {
-      logger.error("User hasn't been found with id: "+e.getUserId());
-      throw new CdrDaemonException("internal_error");
-    }
-    if(!u.isCreateCDR()) {
+    if(u == null || !u.isCreateCDR())
       return;
-    }
 
     Delivery d = getDelivery(e.getDeliveryId(), e.getUserId());
-
-    if(d == null) {
-      logger.error("Delivery hasn't been found with id: "+e.getDeliveryId());
-      throw new CdrDaemonException("internal_error");
-    }
+    if(d == null)
+      return;
 
     if(!lastEventsBeforeCrash.isEmpty()) {
       if(lastEventsBeforeCrash.contains(e.getMessageId())) {
