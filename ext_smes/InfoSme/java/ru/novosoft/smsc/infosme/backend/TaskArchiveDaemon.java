@@ -112,4 +112,9 @@ public class TaskArchiveDaemon implements Runnable {
       logger.error(e, e);
     }
   }
+
+  public static void main(String[] args) {
+    System.out.println(new Date().getTime());
+    System.out.println(System.currentTimeMillis());
+  }
 }
