@@ -404,45 +404,63 @@ class MainLoopTask implements Runnable {
       this.reportWriter=reportWriter;
     }
 
+    /**
+     * Десериализует сообщение из строки
+     * @param line строка
+     * @return сообщение или null, если строка не содержит сообщения
+     * @throws IllegalArgumentException если строка имеет некорректный формат
+     */
+    private Message parseLine(String line) {
+      int inx = line.indexOf('|');
+      if (inx < 0)
+        return null;
+
+      String  abonent = line.substring(0,inx).trim();
+      Address ab;
+      try {
+        ab = new Address(abonent);
+      } catch (Exception e) {
+        throw new IllegalArgumentException("INVALID ABONENT");
+      }
+
+      if(regions!=null) {
+        Region r = context.getRegion(ab);
+        if(r==null || !regions.contains(r.getRegionId()))
+          throw new IllegalArgumentException("NOT ALLOWED REGION");
+      }
+
+      String text, userData = null;
+      int nextInx = line.indexOf('|', inx+1);
+      if (nextInx < 0)
+        text = line.substring(inx+1).trim();
+      else {
+        userData = line.substring(inx+1, nextInx);
+        text = line.substring(nextInx+1).trim();
+      }
+
+      Message m = Message.newMessage(ab,text);
+      if (userData != null)
+        m.setProperty("userData", userData);
+      return m;
+    }
+
 
 
     public Message next() throws AdminException {
       try {
-        int inx;
         String line;
         while( (line = reader.readLine())!=null ) {
           line = line.trim();
-          String abonent="";
           if(line.length()==0) continue;
           try {
-            inx = line.indexOf('|');
-            abonent = line.substring(0,inx).trim();
-            Address ab;
-            try {
-              if(abonent.startsWith("7"))      abonent="+"+abonent;
-              else if(abonent.startsWith("8")) abonent="+7"+abonent.substring(1);
-              ab = new Address(abonent);
-            }
-            catch (Exception e) {
-              ReportFormatter.writeReportLine(reportWriter, abonent, new Date(), "INVALID ABONENT");
+            Message m = parseLine(line);
+            if (m == null)
               continue;
-            }
-            boolean skip = false;
-            if(regions!=null) {
-              Region r = context.getRegion(ab);
-              if(r==null || !regions.contains(r.getRegionId())) {
-                skip = true;
-              }
-            }
-            if(skip) {
-              ReportFormatter.writeReportLine(reportWriter, abonent, new Date(), "NOT ALLOWED REGION");
-              continue;
-            }
-            String  text = line.substring(inx+1).trim();
-            return Message.newMessage(ab,text);
-          }
-          catch(Exception e) {
-            ReportFormatter.writeReportLine(reportWriter, abonent, new Date(), "ERROR PARSING LINE :" + line);
+            return m;
+          } catch (IllegalArgumentException e) {
+            ReportFormatter.writeReportLine(reportWriter, line, new Date(), e.getMessage());
+          } catch(Exception e) {
+            ReportFormatter.writeReportLine(reportWriter, line, new Date(), "ERROR PARSING LINE :" + line);
           }
         }
       }

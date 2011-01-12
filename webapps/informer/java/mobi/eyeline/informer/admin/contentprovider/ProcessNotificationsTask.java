@@ -125,7 +125,10 @@ class ProcessNotificationsTask implements Runnable{
       context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
         public boolean visit(Message mi) throws AdminException {
           String result = "";
-          result = mi.getState().toString() + ((mi.getErrorCode()) != null ? (" errCode=" + mi.getErrorCode()) : "");
+          String userData = mi.getProperty("userData");
+          if (userData != null)
+            result = userData + '|';
+          result += mi.getState().toString() + '|' + ((mi.getErrorCode()) != null ? (mi.getErrorCode()) : "0");
           ReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);
           return true;
         }
