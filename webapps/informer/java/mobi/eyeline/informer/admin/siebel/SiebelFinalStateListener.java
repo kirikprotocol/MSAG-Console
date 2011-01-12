@@ -10,7 +10,6 @@ import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListenerStub;
-import mobi.eyeline.informer.admin.siebel.*;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.StringEncoderDecoder;
 import org.apache.log4j.Logger;
@@ -122,7 +121,7 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
     try {
       writeLock();
       if(!stop) {
-        String line = StringEncoderDecoder.toCSVString(0, clcId, state, errCode);
+        String line = StringEncoderDecoder.toCSVString(',',0, clcId, state, errCode);
         writer.println(line);
         writer.flush();
       }else {
@@ -152,7 +151,7 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
       try {
         writeLock();
         if(!stop) {
-          writer.println(StringEncoderDecoder.toCSVString(1, waveId));
+          writer.println(StringEncoderDecoder.toCSVString(',',1, waveId));
           writer.flush();
         }
       } finally {
@@ -247,7 +246,7 @@ class SiebelFinalStateListener extends DeliveryChangeListenerStub {
       int countMessages = 0;
       String line;
       while((line = reader.readLine()) != null) {
-        List<String> list = StringEncoderDecoder.csvDecode(line);
+        List<String> list = StringEncoderDecoder.csvDecode(',',line);
         if(list.get(0).equals("0")) {
           states.put(list.get(1),
               new SiebelMessage.DeliveryState(getState(list.get(2)), list.get(3), getErrorDescr(list.get(3))));

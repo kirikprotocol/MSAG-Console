@@ -267,11 +267,6 @@ public class StringEncoderDecoder {
     return outBuffer.toString();
   }
 
-  private static final char cvsSep = ';';
-
-  public static String csvEscape(Object obj) {
-    return csvEscape(cvsSep, obj);
-  }
   public static String csvEscape(char sep, Object obj) {
     if (obj == null) return "";
     String s = obj.toString();
@@ -282,9 +277,6 @@ public class StringEncoderDecoder {
     return s;
   }
 
-  public static List<String> csvDecode(String line) {
-    return csvDecode(cvsSep, line);
-  }
 
   public static List<String> csvDecode(char sep, String line) {
     List<String> out = csvSplit(sep, line);
@@ -298,9 +290,6 @@ public class StringEncoderDecoder {
     return out;
   }
 
-  public static List<String> csvSplit(String line) {
-    return csvSplit(cvsSep, line);
-  }
   public static List<String> csvSplit(char sep, String line) {
     List<String> out = new ArrayList<String>();
     int start = 0;
@@ -320,14 +309,10 @@ public class StringEncoderDecoder {
     return out;
   }
 
-  public static String toCSVString(Object... args) {
-    return toCSVString(cvsSep, args);
-  }
-
   public static String toCSVString(char sep, Object... args) {
     StringBuilder sb = new StringBuilder();
     for (Object s : args) {
-      sb.append(sep).append(csvEscape(s));
+      sb.append(sep).append(csvEscape(sep, s));
     }
     return sb.length() > 0 ? sb.substring(1) : "";
   }

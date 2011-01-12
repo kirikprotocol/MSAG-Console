@@ -191,7 +191,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
 
   public void printCSVheader(PrintWriter writer, boolean fullMode) {
     if (fullMode) {
-      writer.println(StringEncoderDecoder.toCSVString("NAME",
+      writer.println(StringEncoderDecoder.toCSVString(';',"NAME",
           "USER",
           "STATUS",
           "STARTDATE",
@@ -202,7 +202,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           "FAILED",
           "EXPIRED"));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString("NAME",
+      writer.println(StringEncoderDecoder.toCSVString(';',"NAME",
           "USER",
           "STATUS",
           "STARTDATE",
@@ -218,7 +218,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
 
     String dName = delivery != null ? delivery.getName() : bundle.getString("stat.page.deletedDelivery") +" (id="+deliveryId+')';     //todo make it more cleaver!!
     if (fullMode) {
-      writer.println(StringEncoderDecoder.toCSVString(dName,
+      writer.println(StringEncoderDecoder.toCSVString(';',dName,
           login,
           newMessages,
           procMessages,
@@ -226,7 +226,7 @@ public class MessagesByDeliveriesRecord extends AggregatedRecord {
           failedMessages,
           expiredMessages));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString(dName,
+      writer.println(StringEncoderDecoder.toCSVString(';',dName,
           login,
           newMessages,
           deliveredMessages,

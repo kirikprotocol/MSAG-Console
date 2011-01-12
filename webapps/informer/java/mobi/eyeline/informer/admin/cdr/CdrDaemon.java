@@ -137,7 +137,7 @@ class CdrDaemon implements DeliveryChangeListener{
   private void write(ChangeMessageStateEvent e, Delivery d, User u) {
     writer.print(sdf.format(e.getEventDate()));
     writer.print(',');
-    writer.print(StringEncoderDecoder.csvEscape(e.getUserId()));
+    writer.print(StringEncoderDecoder.csvEscape(',',e.getUserId()));
     writer.print(',');
     writer.print(e.getDeliveryId());
     writer.print(',');
@@ -193,7 +193,7 @@ class CdrDaemon implements DeliveryChangeListener{
         String date = null;
         Set<Long> lastEvents = new HashSet<Long>();
         while((line = r.readLine()) != null) {
-          List<String> decoded = StringEncoderDecoder.csvDecode(line);
+          List<String> decoded = StringEncoderDecoder.csvDecode(',',line);
           if(date == null || date.compareTo(decoded.get(0)) < 0) {     // new date > old date
             date = decoded.get(0);
             lastEvents.clear();

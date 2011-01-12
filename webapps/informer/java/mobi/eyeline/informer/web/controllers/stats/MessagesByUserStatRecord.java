@@ -90,10 +90,10 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
   @Override
   void printCSVheader(PrintWriter writer, boolean detalized) {
     if (detalized) {
-      writer.println(StringEncoderDecoder.toCSVString(
+      writer.println(StringEncoderDecoder.toCSVString(';',
           "USER", "NEW", "PROCESS", "DELIVERED", "DELIVERED_SMS", "FAILED", "FAILED_SMS", "EXPIRED", "EXPIRED_SMS"));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString(
+      writer.println(StringEncoderDecoder.toCSVString(';',
           "USER", "WAIT", "DELIVERED", "DELIVERED_SMS", "NOTDELIVERED", "NOTDELIVERED_SMS"));
     }
   }
@@ -102,10 +102,10 @@ public class MessagesByUserStatRecord extends AggregatedRecord {
   @Override
   void printWithChildrenToCSV(PrintWriter writer, boolean detalized) {
     if (detalized) {
-      writer.println(StringEncoderDecoder.toCSVString(
+      writer.println(StringEncoderDecoder.toCSVString(';',
           userId, newMessages, processMessages, deliveredMessages, deliveredMessagesSMS, failedMessages, failedMessagesSMS, expiredMessages, expiredMessagesSMS));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString(
+      writer.println(StringEncoderDecoder.toCSVString(';',
           userId,
           newMessages + processMessages,
           deliveredMessages,

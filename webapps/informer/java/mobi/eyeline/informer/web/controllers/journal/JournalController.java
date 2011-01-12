@@ -207,7 +207,7 @@ public class JournalController extends InformerController {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     Locale locale = getLocale();
     for (JournalRecord r : records) {
-      writer.println(StringEncoderDecoder.toCSVString(
+      writer.println(StringEncoderDecoder.toCSVString(';',
           r.getUser(), sdf.format(new Date(r.getTime())),
           r.getSubject() == null ? "" : r.getSubject().getSubject(locale),
           r.getType(), r.getDescription(locale)));

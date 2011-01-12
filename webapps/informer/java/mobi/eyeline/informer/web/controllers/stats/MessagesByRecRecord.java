@@ -82,7 +82,7 @@ public class MessagesByRecRecord {
   }
 
   public void printCSV(PrintWriter writer) {
-    writer.println(StringEncoderDecoder.toCSVString(recipient,name,
+    writer.println(StringEncoderDecoder.toCSVString(';',recipient,name,
         userId,
         text,
         getDeliveryDateString(),

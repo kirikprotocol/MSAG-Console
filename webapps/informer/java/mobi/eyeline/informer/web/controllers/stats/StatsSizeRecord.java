@@ -10,7 +10,6 @@ import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Locale;
 
 /**
@@ -84,15 +83,15 @@ public class StatsSizeRecord extends TimeAggregatedStatRecord {
 
   @Override
   public void printCSVheader(PrintWriter writer, boolean detalised) {
-    writer.println(StringEncoderDecoder.toCSVString("DATE","","FILES","SIZE"));
+    writer.println(StringEncoderDecoder.toCSVString(';',"DATE","","FILES","SIZE"));
   }
 
   @Override
   void printCSV(PrintWriter writer, boolean detalized) {
     if (isParent()) {
-      writer.println(StringEncoderDecoder.toCSVString(getPeriodString(), "", count,size));
+      writer.println(StringEncoderDecoder.toCSVString(';',getPeriodString(), "", count,size));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString("", getPeriodString(), count,size));
+      writer.println(StringEncoderDecoder.toCSVString(';',"", getPeriodString(), count,size));
     }
   }
 

@@ -207,7 +207,7 @@ public class RegionsListController extends RegionsController {
     for (Region r : regions) {
       InformerTimezone tz = WebContext.getInstance().getWebTimezones().getTimezoneByID(r.getTimeZone().getID());
       String tzName = tz.getAlias(getLocale());
-      writer.println(StringEncoderDecoder.toCSVString(r.getName(), r.getSmsc(), r.getMaxSmsPerSecond(), tzName));
+      writer.println(StringEncoderDecoder.toCSVString(';',r.getName(), r.getSmsc(), r.getMaxSmsPerSecond(), tzName));
       for (Address addr : r.getMasks())
         writer.println(addr.getSimpleAddress());
     }

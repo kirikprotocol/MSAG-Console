@@ -60,7 +60,7 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
   void printCSV(PrintWriter writer, boolean detalized) {
     if (detalized) {
       if (isParent()) {
-        writer.println(StringEncoderDecoder.toCSVString(
+        writer.println(StringEncoderDecoder.toCSVString(';',
             getPeriodString(), "",
             getNewMessages(),
             getProcessMessages(),
@@ -68,7 +68,7 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
             getFailedMessages(), getFailedMessagesSMS(),
             getExpiredMessages(), getExpiredMessagesSMS()));
       } else {
-        writer.println(StringEncoderDecoder.toCSVString(
+        writer.println(StringEncoderDecoder.toCSVString(';',
             "", getPeriodString(),
             getNewMessages(),
             getProcessMessages(),
@@ -78,13 +78,13 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
       }
     } else {
       if (isParent()) {
-        writer.println(StringEncoderDecoder.toCSVString(
+        writer.println(StringEncoderDecoder.toCSVString(';',
             getPeriodString(), "",
             getNewMessages() + getProcessMessages(),
             getDeliveredMessages(), getDeliveredMessagesSMS(),
             getFailedMessages() + getExpiredMessages(), getFailedMessagesSMS() + getExpiredMessagesSMS()));
       } else {
-        writer.println(StringEncoderDecoder.toCSVString(
+        writer.println(StringEncoderDecoder.toCSVString(';',
             "", getPeriodString(),
             getNewMessages() + getProcessMessages(),
             getDeliveredMessages(), getDeliveredMessagesSMS(),
@@ -96,7 +96,7 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
   @Override
   void printCSVheader(PrintWriter writer, boolean detalized) {
     if (detalized) {
-      writer.println(StringEncoderDecoder.toCSVString(
+      writer.println(StringEncoderDecoder.toCSVString(';',
           "PERIOD", "",
           "NEW",
           "PROCESS",
@@ -104,7 +104,7 @@ public class MessagesByPeriodRecord extends TimeAggregatedStatRecord {
           "FAILED", "FAILED SMS",
           "EXPIRED", "EXPIRED SMS"));
     } else {
-      writer.println(StringEncoderDecoder.toCSVString(
+      writer.println(StringEncoderDecoder.toCSVString(';',
           "PERIOD", "",
           "WAIT",
           "DELIVERED", "DELIVERED SMS",
