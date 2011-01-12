@@ -44,13 +44,13 @@
           </eye:menubar>
         </td>
         <td width="1%" nowrap="true">
-          <h:commandLink value="#{msg['informer.admin.create.delivery']}" action="DELIVERY_CREATE"/>
+          <h:commandLink value="#{msg['informer.admin.create.delivery']}" action="DELIVERY_CREATE" onmouseout="this.style.color = '#F2E275'" onmouseover="this.style.color = 'yellow';"/>
         </td>
         <td width="100%">&#160;</td>
         <td style="white-space:nowrap">
           <div>
           <tr:commandLink id="MENU0_LOGOUT" rendered="#{userSession.userName != null}" shortDesc="#{msg['informer.main.details.logout']}" 
-                          text="#{msg['informer.logout']} &quot;#{userSession.userName}&quot;" action="#{userSession.logout}"/>
+                          text="#{msg['informer.logout']} &quot;#{userSession.userName}&quot;" action="#{userSession.logout}" onmouseout="this.style.color = '#F2E275'" onmouseover="this.style.color = 'yellow';"/>
           </div>
         </td>
         <td width="52">&#160;</td>
