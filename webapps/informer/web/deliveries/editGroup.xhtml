@@ -56,34 +56,31 @@
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
       <eye:inputDate id="endDate" value="#{deliveryGroupEdit.endDate}" type="both"/>
 
-    </h:panelGrid>
 
-    <h:panelGrid rendered="#{deliveryGroupEdit.userInAdminRole}" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
-
-      <h:selectBooleanCheckbox id="editDeliveryStartTime" value="#{deliveryGroupEdit.editActivePeriodStart}" onchange="
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editDeliveryStartTime" value="#{deliveryGroupEdit.editActivePeriodStart}" onchange="
           document.getElementById('deliveryStartTime.hours').disabled=!this.checked;
           document.getElementById('deliveryStartTime.minutes').disabled=!this.checked"
           />
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodStart}"/>
-      <eye:inputDate id="deliveryStartTime" value="#{deliveryGroupEdit.activePeriodStart}" type="short_time"/>
+      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.activePeriodStart}"/>
+      <eye:inputDate rendered="#{deliveryGroupEdit.userInAdminRole}" id="deliveryStartTime" value="#{deliveryGroupEdit.activePeriodStart}" type="short_time"/>
 
-      <h:selectBooleanCheckbox id="editDeliveryEndTime" value="#{deliveryGroupEdit.editActivePeriodEnd}" onchange="
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editDeliveryEndTime" value="#{deliveryGroupEdit.editActivePeriodEnd}" onchange="
           document.getElementById('deliveryEndTime.hours').disabled=!this.checked;
           document.getElementById('deliveryEndTime.minutes').disabled=!this.checked;
           "/>
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodEnd}"/>
-      <eye:inputDate id="deliveryEndTime" value="#{deliveryGroupEdit.activePeriodEnd}" type="short_time"/>
+      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.activePeriodEnd}"/>
+      <eye:inputDate rendered="#{deliveryGroupEdit.userInAdminRole}" id="deliveryEndTime" value="#{deliveryGroupEdit.activePeriodEnd}" type="short_time"/>
 
-      <h:selectBooleanCheckbox id="editPriority" value="#{deliveryGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
-      <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}" id="priority" value="#{deliveryGroupEdit.priority}" size="3"/>
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editPriority" value="#{deliveryGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
+      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
+      <h:inputText rendered="#{deliveryGroupEdit.userInAdminRole}" converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}" id="priority" value="#{deliveryGroupEdit.priority}" size="3"/>
 
-      <h:selectBooleanCheckbox id="editRetryPolicy" value="#{deliveryGroupEdit.editRetryPolicy}" onchange="
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editRetryPolicy" value="#{deliveryGroupEdit.editRetryPolicy}" onchange="
           document.getElementById('retryPolicy').disabled=!this.checked;
           document.getElementById('retryOnFail').disabled=!this.checked;
           "/>
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
-      <h:panelGroup>
+      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
+      <h:panelGroup rendered="#{deliveryGroupEdit.userInAdminRole}">
         <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{deliveryGroupEdit.retryOnFail}">
             <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
             <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
@@ -93,17 +90,14 @@
         <h:inputText id="retryPolicy" value="#{deliveryGroupEdit.retryPolicy}" />
       </h:panelGroup>
 
-      <h:selectBooleanCheckbox id="editValidHours" value="#{deliveryGroupEdit.editValidityPeriod}"
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editValidHours" value="#{deliveryGroupEdit.editValidityPeriod}"
                                onchange="
                                    document.getElementById('validityPeriod.hours').disabled=!this.checked;
                                    document.getElementById('validityPeriod.minutes').disabled=!this.checked;
                                    "/>
-      <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <eye:inputDate id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" type="short_time"/>
+      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+      <eye:inputDate rendered="#{deliveryGroupEdit.userInAdminRole}" id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" type="short_time"/>
 
-    </h:panelGrid>
-
-    <h:panelGrid style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
 
       <h:selectBooleanCheckbox id="editSmsNotification" value="#{deliveryGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>

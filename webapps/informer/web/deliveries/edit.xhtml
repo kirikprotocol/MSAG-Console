@@ -86,22 +86,19 @@
           <h:outputText value="&#160;"/>
         </h:panelGrid>
 
-      </h:panelGrid>
 
-      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;" columnClasses="column100Width, columnTopLeftAlign" rendered="#{deliveryEdit.userInAdminRole}">
-
-          <h:outputText style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
-          <h:panelGroup>
+          <h:outputText rendered="#{deliveryEdit.userInAdminRole}" style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
+          <h:panelGroup rendered="#{deliveryEdit.userInAdminRole}" >
             <eye:inputDate value="#{deliveryEdit.activePeriodStart}" type="short_time"/>
             <h:outputText value=" - "/>
             <eye:inputDate value="#{deliveryEdit.activePeriodEnd}" type="short_time"/>
           </h:panelGroup>
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
-          <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}" value="#{deliveryEdit.delivery.priority}" size="5"/>
+          <h:outputText rendered="#{deliveryEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
+          <h:inputText rendered="#{deliveryEdit.userInAdminRole}" converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}" value="#{deliveryEdit.delivery.priority}" size="5"/>
 
-          <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
-          <h:panelGroup>
+          <h:outputText rendered="#{deliveryEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
+          <h:panelGroup rendered="#{deliveryEdit.userInAdminRole}">
             <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{deliveryEdit.retryOnFail}">
               <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
               <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
@@ -111,15 +108,9 @@
             <h:inputText value="#{deliveryEdit.delivery.retryPolicy}" id="retryPolicy1"/>
           </h:panelGroup>
 
-          <h:outputText id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-          <eye:inputDate id="vPeriod" value="#{deliveryEdit.validityPeriod}" type="short_time"/>
+        <h:outputText rendered="#{deliveryEdit.userInAdminRole}"  id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+        <eye:inputDate rendered="#{deliveryEdit.userInAdminRole}" id="vPeriod" value="#{deliveryEdit.validityPeriod}" type="short_time"/>
 
-          <h:outputText id="trModeLabel" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
-          <tr:selectBooleanCheckbox id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
-
-      </h:panelGrid>
-
-      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;border-bottom: 1px solid #E6E3D8;" columnClasses="column100Width, columnTopLeftAlign">
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
         <h:panelGroup>
@@ -154,6 +145,11 @@
 
         <h:outputText id="flashLabel" style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
         <tr:selectBooleanCheckbox id="flash" value="#{deliveryEdit.delivery.flash}" simple="true"/>
+
+
+        <h:outputText rendered="#{deliveryEdit.userInAdminRole}" id="trModeLabel" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+        <tr:selectBooleanCheckbox rendered="#{deliveryEdit.userInAdminRole}"  id="trMode" value="#{deliveryEdit.delivery.transactionMode}" simple="true"/>
+
 
       </h:panelGrid>
 

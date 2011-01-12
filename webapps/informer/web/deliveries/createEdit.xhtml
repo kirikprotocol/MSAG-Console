@@ -39,23 +39,20 @@
         <h:outputText value="&#160;"/>
       </h:panelGrid>
 
-      </h:panelGrid>
 
-      <h:panelGrid columns="2" style="padding-left:10px" columnClasses="column50Width, columnTopLeftAlign" rendered="#{createDelivery.activePage.userInAdminRole}">
-
-      <h:outputText style="white-space: nowrap;" value="#{msg['informer.deliveries.create.activePeriod']}"/>
-      <h:panelGroup>
+      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" style="white-space: nowrap;" value="#{msg['informer.deliveries.create.activePeriod']}"/>
+      <h:panelGroup rendered="#{createDelivery.activePage.userInAdminRole}">
         <eye:inputDate value="#{createDelivery.activePage.activePeriodStart}" type="short_time"/>
         <h:outputText style="white-space: nowrap;" value=" - "/>
         <eye:inputDate value="#{createDelivery.activePage.activePeriodEnd}" type="short_time"/>
       </h:panelGroup>
 
-      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.priority}"/>
-      <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}"
+      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" style="white-space: nowrap;" value="#{deliveryBundle.priority}"/>
+      <h:inputText rendered="#{createDelivery.activePage.userInAdminRole}" converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.priority}"
                    value="#{createDelivery.activePage.delivery.priority}"/>
 
-      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.retryOnFail}"/>
-      <h:panelGroup>
+      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" style="white-space: nowrap;" value="#{deliveryBundle.retryOnFail}"/>
+      <h:panelGroup rendered="#{createDelivery.activePage.userInAdminRole}">
         <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{createDelivery.activePage.retryOnFail}">
             <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
             <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
@@ -65,16 +62,8 @@
         <h:inputText value="#{createDelivery.activePage.delivery.retryPolicy}" id="retryPolicy1"/>
       </h:panelGroup>
 
-      <h:outputText id="vPeriodLabel" style="white-space: nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <eye:inputDate id="vPeriod" value="#{createDelivery.activePage.validityPeriod}" type="short_time"/>
-
-      <h:outputText id="trModeLabel" style="white-space: nowrap;" value="#{deliveryBundle.transactionMode}"/>
-      <tr:selectBooleanCheckbox id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"/>
-
-
-      </h:panelGrid>
-
-      <h:panelGrid columns="2" style="padding-left:10px" columnClasses="column50Width, columnTopLeftAlign">
+      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" id="vPeriodLabel" style="white-space: nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+      <eye:inputDate rendered="#{createDelivery.activePage.userInAdminRole}" id="vPeriod" value="#{createDelivery.activePage.validityPeriod}" type="short_time"/>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
       <h:panelGroup>
@@ -82,7 +71,7 @@
         <h:inputText converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.smsNotificationAddress}" id="sms" converter="addressConverter" value="#{createDelivery.activePage.smsNotificationAddress}"/>
       </h:panelGroup>
 
-      <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
+      <h:outputText  style="white-space: nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
       <h:panelGroup>
         <h:selectBooleanCheckbox id="emailNotif" value="#{createDelivery.activePage.emailNotificationCheck}" onchange="document.getElementById('email').disabled = !this.checked;"/>
         <h:inputText id="email"  value="#{createDelivery.activePage.emailNotificationAddress}"/>
@@ -112,6 +101,11 @@
 
       <h:outputText id="flashLabel" style="white-space: nowrap;" value="#{deliveryBundle.flash}"/>
       <h:selectBooleanCheckbox id="flash" value="#{createDelivery.activePage.delivery.flash}"/>
+
+      <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" id="trModeLabel" style="white-space: nowrap;" value="#{deliveryBundle.transactionMode}"/>
+      <tr:selectBooleanCheckbox rendered="#{createDelivery.activePage.userInAdminRole}" id="trMode" value="#{createDelivery.activePage.delivery.transactionMode}" simple="true"/>
+
+
 
     </h:panelGrid>
 
