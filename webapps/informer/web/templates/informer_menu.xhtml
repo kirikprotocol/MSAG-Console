@@ -42,7 +42,7 @@
           </eye:menubar>
         </td>
         <td width="1%" nowrap="true">
-          <h:commandLink value="#{msg['informer.admin.create.delivery']}" action="DELIVERY_CREATE" onmouseout="this.style.color = '#F2E275'" onmouseover="this.style.color = 'yellow';"/>
+          <h:commandLink  rendered="#{userSession.logined}" value="#{msg['informer.admin.create.delivery']}" action="DELIVERY_CREATE" onmouseout="this.style.color = '#F2E275'" onmouseover="this.style.color = 'yellow';"/>
         </td>
         <td width="100%">&#160;</td>
         <td style="white-space:nowrap">
