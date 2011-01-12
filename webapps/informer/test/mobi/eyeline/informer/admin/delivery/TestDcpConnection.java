@@ -25,7 +25,7 @@ public class TestDcpConnection extends DcpConnection{
 
   private Map<Integer, Delivery> deliveries = new LinkedHashMap<Integer, Delivery>();
 
-  private Map<Integer, List<Message>> messages = new HashMap<Integer, List<Message>>();
+  private Map<Integer, List<Message>> messages = new HashMap<Integer, List<Message>>();          //todo В информере одно сообщение хранится в нескольких статусах. К примеру, new, process, delivered. Надо и здесь сделать также!!
 
   private Map<Integer, DeliveryStatusHistory> histories = new HashMap<Integer, DeliveryStatusHistory>();
 

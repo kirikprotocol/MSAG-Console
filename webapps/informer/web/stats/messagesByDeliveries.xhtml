@@ -108,31 +108,31 @@
                 <h:outputText value="#{row.maxDate}"/>
               </eye:column>
 
-              <eye:column name="new" title="#{msg['stat.page.newMessages']}" sortable="true" width="10%" align="center">
+              <eye:column name="new" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.newMessages}"/>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.newMessages}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
-              <eye:column name="process" title="#{msg['stat.page.processMessages']}" sortable="true" width="10%" align="center">
+              <eye:column name="process" title="#{msg['message.state.Process']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.procMessages}"/>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.processMessages}" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
-              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
+              <eye:column name="delivered" title="#{msg['message.state.Delivered']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.deliveredMessages}(#{messagesByDeliveries.totals.deliveredSms})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
-              <eye:column name="failed" title="#{msg['stat.page.failed']}" sortable="true" width="10%" align="center">
+              <eye:column name="failed" title="#{msg['message.state.Failed']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.failedMessages}(#{row.failedSms})"/>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.failedMessages}(#{messagesByDeliveries.totals.failedSms})" style="font-weight:bold;"/>
                 </f:facet>
               </eye:column>
-              <eye:column name="expired" title="#{msg['stat.page.expiredMessages']}" sortable="true" width="10%" align="center">
+              <eye:column name="expired" title="#{msg['message.state.Expired']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.expiredMessages}(#{row.expiredSms})"/>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.expiredMessages}(#{messagesByDeliveries.totals.expiredSms})" style="font-weight:bold;"/>
@@ -180,14 +180,14 @@
                 <h:outputText value="#{row.maxDate}"/>
               </eye:column>
 
-              <eye:column name="wait" title="#{msg['stat.page.indelivery']}" sortable="true" width="10%" align="center">
+              <eye:column name="wait" title="#{msg['message.state.New']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.newMessages}"/>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.newMessages}" style="font-weight:bold;"/>
                 </f:facet>
 
               </eye:column>
-              <eye:column name="delivered" title="#{msg['stat.page.delivered']}" sortable="true" width="10%" align="center">
+              <eye:column name="delivered" title="#{msg['message.state.Delivered']}" sortable="true" width="10%" align="center">
                 <h:outputText value="#{row.deliveredMessages}(#{row.deliveredSms})"/>
                 <f:facet name="footer">
                   <h:outputText value="#{messagesByDeliveries.totals.deliveredMessages}(#{messagesByDeliveries.totals.deliveredSms})" style="font-weight:bold;"/>
