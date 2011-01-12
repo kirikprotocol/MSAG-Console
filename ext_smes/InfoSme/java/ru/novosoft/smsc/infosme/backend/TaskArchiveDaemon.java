@@ -5,13 +5,10 @@ import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Iterator;
 
 /**
- * alkhal: alkhal
+ * author: alkhal
  */
 public class TaskArchiveDaemon implements Runnable {
 
