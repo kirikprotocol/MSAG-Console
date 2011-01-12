@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -64,6 +65,8 @@ public class TaskArchiveDaemon implements Runnable {
             UserPreferences prefs = owner.getPrefs();
             if (prefs.isInfosmeArchive() &&
                 (t.getStartDate().getTime() + (60 * 60 * 1000 * prefs.getInfosmeArchiveTimeout()) < System.currentTimeMillis())) {
+              System.out.println("new Date() = "+new Date());
+              System.out.println("new Date(System.currentTimeMillis()) = "+new Date(System.currentTimeMillis()));
               System.out.println("Current time="+System.currentTimeMillis());
               System.out.println("Task time=" + (t.getStartDate().getTime() + 60 * 60 * 1000 * prefs.getInfosmeArchiveTimeout()));
               if (logger.isDebugEnabled()) {
