@@ -65,7 +65,7 @@ public class TaskArchiveDaemon implements Runnable {
               continue;
             UserPreferences prefs = owner.getPrefs();
             if (prefs.isInfosmeArchive() && prefs.getInfosmeArchiveTimeout() > 0 &&
-                (t.getStartDate().getTime() + (60L * 60L * 1000L * ((long)prefs.getInfosmeArchiveTimeout())) < System.currentTimeMillis())){
+                (t.getStartDate().getTime() + (60L * 60 * 1000 * prefs.getInfosmeArchiveTimeout()) < System.currentTimeMillis())){
               if (logger.isDebugEnabled()) {
                 logger.debug("Moving task to archive: " + t.getId() + " (" + t.getName() + ") "+" startTime="+t.getStartDate()+" userArchiveTime="+prefs.getInfosmeArchiveTimeout()+" h");
               }
