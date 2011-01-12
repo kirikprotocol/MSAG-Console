@@ -30,7 +30,7 @@
 
     <eye:delimiter/>
 
-    <h:panelGrid id="default" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
+    <h:panelGrid style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
 
       <h:selectBooleanCheckbox id="editSourceAddr" value="#{deliveryGroupEdit.editSourceAddress}" onchange="document.getElementById('sourceAddr').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
@@ -46,6 +46,20 @@
         <f:selectItems value="#{deliveryGroupEdit.allDays}"/>
       </h:selectManyCheckbox>
 
+      <h:selectBooleanCheckbox id="editEndDate" value="#{deliveryGroupEdit.editEndDate}" onchange="
+          document.getElementById('endDate.day').disabled=!this.checked;
+          document.getElementById('endDate.month').disabled=!this.checked;
+          document.getElementById('endDate.year').disabled=!this.checked;
+          document.getElementById('endDate.hours').disabled=!this.checked;
+          document.getElementById('endDate.minutes').disabled=!this.checked;
+          "/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
+      <eye:inputDate id="endDate" value="#{deliveryGroupEdit.endDate}" type="both"/>
+
+    </h:panelGrid>
+
+    <h:panelGrid rendered="#{deliveryGroupEdit.userInAdminRole}" style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
+
       <h:selectBooleanCheckbox id="editDeliveryStartTime" value="#{deliveryGroupEdit.editActivePeriodStart}" onchange="
           document.getElementById('deliveryStartTime.hours').disabled=!this.checked;
           document.getElementById('deliveryStartTime.minutes').disabled=!this.checked"
@@ -59,17 +73,6 @@
           "/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activePeriodEnd}"/>
       <eye:inputDate id="deliveryEndTime" value="#{deliveryGroupEdit.activePeriodEnd}" type="short_time"/>
-
-      <h:selectBooleanCheckbox id="editEndDate" value="#{deliveryGroupEdit.editEndDate}" onchange="
-          document.getElementById('endDate.day').disabled=!this.checked;
-          document.getElementById('endDate.month').disabled=!this.checked;
-          document.getElementById('endDate.year').disabled=!this.checked;
-          document.getElementById('endDate.hours').disabled=!this.checked;
-          document.getElementById('endDate.minutes').disabled=!this.checked;
-          "/>
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
-      <eye:inputDate id="endDate" value="#{deliveryGroupEdit.endDate}" type="both"/>
-
 
       <h:selectBooleanCheckbox id="editPriority" value="#{deliveryGroupEdit.editPriority}" onchange="document.getElementById('priority').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
@@ -98,6 +101,9 @@
       <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
       <eye:inputDate id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" type="short_time"/>
 
+    </h:panelGrid>
+
+    <h:panelGrid style="padding-left:10px; padding-top:10px" columns="3" columnClasses="column20Width,column100WidthNoWrap, columnTopLeftAlign">
 
       <h:selectBooleanCheckbox id="editSmsNotification" value="#{deliveryGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
@@ -116,9 +122,15 @@
           document.getElementById('smsSettings').style.display=disp;
           if(!dt.options[0].selected ) {
             document.getElementById('editFlash').checked = false;
-            document.getElementById('editTransactionMode').checked = false;            
+            var e = document.getElementById('editTransactionMode');
+            if(e != null) {
+              e.checked = false;
+            }
             document.getElementById('flash').disabled=true;
-            document.getElementById('transactionMode').disabled=true;
+            e = document.getElementById('transactionMode');
+            if(e != null) {
+              e.disabled=true;
+            }
           }
           ">
         <f:selectItems value="#{deliveryGroupEdit.uniqueDeliveryModes}"/>
@@ -135,9 +147,9 @@
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
       <tr:selectBooleanCheckbox id="flash" value="#{deliveryGroupEdit.flash}" simple="true"/>
 
-      <h:selectBooleanCheckbox id="editTransactionMode" value="#{deliveryGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
-      <h:selectBooleanCheckbox id="transactionMode" value="#{deliveryGroupEdit.transactionMode}"/>
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editTransactionMode" value="#{deliveryGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
+      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+      <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="transactionMode" value="#{deliveryGroupEdit.transactionMode}"/>
 
     </h:panelGrid>
 
@@ -156,8 +168,11 @@
     <script type="text/javascript" language="javascript">
 
       function retryOnFailChanged() {
-        var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
-        document.getElementById('retryPolicy').style.display=d;
+        var e = document.getElementById('retryOnFail');
+        if( e != null ) {
+          var d = e.options[2].selected ? '' : 'none';
+          document.getElementById('retryPolicy').style.display=d;
+        }
       }
 
       retryOnFailChanged();
@@ -168,10 +183,12 @@
       for (var i = 0; i&lt;7; i++)
         document.getElementById('deliveryDays:' + i).disabled=deliveryDaysDisabled;
 
-      var deliveryStartTimeDisabled = !document.getElementById('editDeliveryStartTime').checked;
-      document.getElementById('deliveryStartTime.hours').disabled=deliveryStartTimeDisabled;
-      document.getElementById('deliveryStartTime.minutes').disabled=deliveryStartTimeDisabled;
-
+      var e = document.getElementById('editDeliveryStartTime');
+      if(e != null){
+        var deliveryStartTimeDisabled = !e.checked;
+        document.getElementById('deliveryStartTime.hours').disabled=deliveryStartTimeDisabled;
+        document.getElementById('deliveryStartTime.minutes').disabled=deliveryStartTimeDisabled;
+      }
       var endDateDisabled = !document.getElementById('editEndDate').checked;
       document.getElementById('endDate.day').disabled=endDateDisabled;
       document.getElementById('endDate.month').disabled=endDateDisabled;
@@ -179,30 +196,43 @@
       document.getElementById('endDate.hours').disabled=endDateDisabled;
       document.getElementById('endDate.minutes').disabled=endDateDisabled;
 
-      var deliveryEndTimeDisabled = !document.getElementById('editDeliveryEndTime').checked;
-      document.getElementById('deliveryEndTime.hours').disabled=deliveryEndTimeDisabled;
-      document.getElementById('deliveryEndTime.minutes').disabled=deliveryEndTimeDisabled;
-
-      document.getElementById('priority').disabled = !document.getElementById('editPriority').checked;
-
-      var retryPolicyDisabled = !document.getElementById('editRetryPolicy').checked;
-      document.getElementById('retryPolicy').disabled=retryPolicyDisabled;
-      document.getElementById('retryOnFail').disabled=retryPolicyDisabled;
-
+      e = document.getElementById('editDeliveryEndTime');
+      if(e != null) {
+        var deliveryEndTimeDisabled = !e.checked;
+        document.getElementById('deliveryEndTime.hours').disabled=deliveryEndTimeDisabled;
+        document.getElementById('deliveryEndTime.minutes').disabled=deliveryEndTimeDisabled;
+      }
+      e = document.getElementById('priority');
+      if( e != null) {
+        e.disabled = !document.getElementById('editPriority').checked;
+      }
+      e = document.getElementById('editRetryPolicy');
+      if(e != null) {
+        var retryPolicyDisabled = !e.checked;
+        document.getElementById('retryPolicy').disabled=retryPolicyDisabled;
+        document.getElementById('retryOnFail').disabled=retryPolicyDisabled;
+      }
       document.getElementById('smsNotification').disabled = !document.getElementById('editSmsNotification').checked;
       document.getElementById('emailNotification').disabled = !document.getElementById('editEmailNotification').checked;
       document.getElementById('flash').disabled = !document.getElementById('editFlash').checked;
 
       document.getElementById('deliveryType').disabled=!document.getElementById('editDeliveryType').checked;
-      document.getElementById('transactionMode').disabled=!document.getElementById('editTransactionMode').checked;
-      document.getElementById('validityPeriod.hours').disabled=!document.getElementById('editValidHours').checked;
-      document.getElementById('validityPeriod.minutes').disabled=!document.getElementById('editValidHours').checked;
-
-      var d = document.getElementById('transactionMode').checked ? 'none' : '';
-      document.getElementById('editValidHours').style.display=d;
-      document.getElementById('validHoursLabel').style.display=d;
-      document.getElementById('validityPeriod').style.display=d;
-
+      e = document.getElementById('transactionMode');
+      if(e != null) {
+        e.disabled=!document.getElementById('editTransactionMode').checked;
+      }
+      e = document.getElementById('validityPeriod.hours');
+      if(e != null) {
+        e.disabled=!document.getElementById('editValidHours').checked;
+        document.getElementById('validityPeriod.minutes').disabled=!document.getElementById('editValidHours').checked;
+      }
+      e = document.getElementById('transactionMode');
+      if(e != null) {
+        var d = e.checked ? 'none' : '';
+        document.getElementById('editValidHours').style.display=d;
+        document.getElementById('validHoursLabel').style.display=d;
+        document.getElementById('validityPeriod').style.display=d;
+      }
       var dt = document.getElementById('deliveryType');
       var disp = dt.options[0].selected ? '' : 'none';
       document.getElementById('smsSettings').style.display=disp;
