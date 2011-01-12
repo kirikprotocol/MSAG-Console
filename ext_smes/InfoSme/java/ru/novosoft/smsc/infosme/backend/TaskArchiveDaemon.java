@@ -63,8 +63,10 @@ public class TaskArchiveDaemon implements Runnable {
             if (owner == null)
               continue;
             UserPreferences prefs = owner.getPrefs();
+
             if (prefs.isInfosmeArchive() &&
-                (t.getStartDate().getTime() + (60 * 60 * 1000 * prefs.getInfosmeArchiveTimeout()) < System.currentTimeMillis())) {
+//                (t.getStartDate().getTime() + (60 * 60 * 1000 * prefs.getInfosmeArchiveTimeout()) < System.currentTimeMillis())) {
+                new Date(t.getStartDate().getTime() + (60 * 60 * 1000 * prefs.getInfosmeArchiveTimeout())).before(new Date())) {
               System.out.println("new Date() = "+new Date());
               System.out.println("new Date(System.currentTimeMillis()) = "+new Date(System.currentTimeMillis()));
               System.out.println("Current time="+System.currentTimeMillis());
