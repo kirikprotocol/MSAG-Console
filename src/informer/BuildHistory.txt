@@ -1,3 +1,6 @@
+2011-01-13 12:35 bukind
+  put resp awaiting messages into immediate retry on disconnect
+
 2010-12-23 15:00 bukind
   saving lastDlvId into deliveries/lastid
 

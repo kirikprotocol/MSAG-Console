@@ -1125,6 +1125,28 @@ int SmscSender::Execute()
         } catch ( std::exception& e ) {
             smsc_log_warn(log_,"S='%s' sendLoop exc: %s", smscId_.c_str(), e.what());
         }
+        // we have broken connection here, so we have to report all waiting resps
+        // unless we are in stopping state.
+        std::multimap<msgtime_type, ResponseTimer>::iterator iter = respWaitQueue_.begin();
+        for ( ; iter != respWaitQueue_.end(); ++iter ) {
+            if (isStopping_) break;
+            ResponseData rd;
+            ResponseTimer& rt = iter->second;
+            rd.seqNum = rt.seqNum;
+            rd.status = smsc::system::Status::SMENOTCONNECTED;
+            rd.rcptId.setMsgId("");
+            rd.retry = true;
+            DRMTrans* drm = seqnumHash_.GetPtr(rd.seqNum);
+            if (drm && drm->respTimer == iter) {
+                // remove ref to this timer
+                drm->respTimer = respWaitQueue_.end();
+            }
+            queueData(rd);
+            smsc_log_debug(log_,"S='%s' disconnected resp timer seq=%u",
+                           smscId_.c_str(),
+                           rd.seqNum);
+        }
+        respWaitQueue_.erase( respWaitQueue_.begin(), iter );
         journal_->stop();
     }
     return 0;
