@@ -71,7 +71,7 @@ public class RegionsUploadController extends UploadController {
       String alias = readProperty(t);
       InformerTimezone tz = WebContext.getInstance().getWebTimezones().getTimezoneByAlias(alias);
       if (tz == null)
-        throw new IllegalArgumentException(alias);
+        throw new RegionsControllerException("unknown_timezone", alias);
       r.setTimeZone(tz.getTimezone());
     } catch (NumberFormatException ex) {
       throw new IllegalArgumentException(ex);
