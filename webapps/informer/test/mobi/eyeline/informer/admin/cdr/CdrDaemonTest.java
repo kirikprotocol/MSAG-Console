@@ -112,6 +112,7 @@ public class CdrDaemonTest {
       writer.println("20101112030210,a,1,1");
       writer.println("20101112030410,a,1,2");
       writer.println("20101112030410,a,1,3");
+      writer.flush();
     } finally {
       if (writer != null) {
         writer.close();

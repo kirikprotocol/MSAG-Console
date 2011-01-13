@@ -472,7 +472,7 @@ class SiebelManager {
           }
         };
       } else {
-        throw new SiebelException("Siebel: Illegal delivery's status: " + st.getStatus());
+        throw new SiebelException("proc_error", "Siebel: Illegal delivery's status: " + st.getStatus());
       }
 
       setInProcessing(st);

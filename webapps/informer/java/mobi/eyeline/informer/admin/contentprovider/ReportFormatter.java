@@ -23,9 +23,9 @@ class ReportFormatter {
 
   static void writeReportLine(PrintStream reportWriter, String abonent, Date date, String s) {
     reportWriter.print(abonent);
-    reportWriter.print(" | ");
+    reportWriter.print("|");
     reportWriter.print(dateFormat.get().format(date));
-    reportWriter.print(" | ");
+    reportWriter.print("|");
     reportWriter.println(s);
   }
 
