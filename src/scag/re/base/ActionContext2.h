@@ -109,11 +109,7 @@ public:
                    CommandProperty* commandProperty,
                    RuleStatus*      rs);
 
-    ~ActionContext() {
-        CHECKMAGTC;
-        if ( rule_ ) rule_->unref();
-        if ( infrastructConstants_ ) delete infrastructConstants_;
-    }
+    ~ActionContext();
 
 
     void setRule( Rule& r ) {
@@ -199,6 +195,8 @@ public:
 private:
     Property* getInfrastructConstant( const char* pname );
 
+    struct PrivatePropertyScope;
+
 private:
     DECLMAGTC(ActionContext);
 
@@ -221,6 +219,7 @@ private:
     mutable int             contextScopeId_; // or 0
 
     Rule*                   rule_;        // a rule from long call context
+    PrivatePropertyScope*   privateScope_;
 };
 
 }

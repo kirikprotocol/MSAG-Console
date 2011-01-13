@@ -51,6 +51,49 @@ routeId(_routeId)
 }
 
 
+struct ActionContext::PrivatePropertyScope : public util::properties::Changeable
+{
+    virtual ~PrivatePropertyScope()
+    {
+        char* name;
+        AdapterProperty* ptr;
+        for ( smsc::core::buffers::Hash<AdapterProperty*>::Iterator iter(&hash_);
+              iter.Next(name,ptr); ) {
+            delete ptr;
+        }
+        hash_.Empty();
+    }
+
+    Property* getProperty( const char* name )
+    {
+        AdapterProperty** ptr = hash_.GetPtr(name);
+        if (!ptr) {
+            return *hash_.SetItem(name, new AdapterProperty(name,this,"") );
+        } else if ( !*ptr ) {
+            return (*ptr = new AdapterProperty(name,this,""));
+        } else {
+            return *ptr;
+        }
+    }
+
+    void delProperty( const char* name )
+    {
+        AdapterProperty* ptr;
+        if ( hash_.Pop(name,ptr) ) {
+            delete ptr;
+        }
+    }
+
+    virtual void changed( AdapterProperty& ) {}
+
+private:
+    smsc::core::buffers::Hash<AdapterProperty*> hash_;
+};
+
+
+// ===============================================================
+
+
 ActionContext::ActionContext( Hash<Property>*  constants,
                               Session*         session, 
                               CommandAccessor* command,
@@ -66,11 +109,21 @@ ActionContext::ActionContext( Hash<Property>*  constants,
     tariffOperId_(uint32_t(-1)),
     destroyService_(-1),
     contextScopeId_(0),
-    rule_(0)
+    rule_(0),
+    privateScope_(0)
 {
     if (session_ && session_->getCurrentOperation()) {
         contextScopeId_ = session_->getCurrentOperation()->getContextScope();
     }
+}
+
+
+ActionContext::~ActionContext()
+{
+    CHECKMAGTC;
+    if ( rule_ ) rule_->unref();
+    if ( privateScope_ ) delete privateScope_;
+    if ( infrastructConstants_ ) delete infrastructConstants_;
 }
 
 
@@ -176,7 +229,13 @@ Property* ActionContext::getProperty( const std::string& var )
     }
 
     case ftOperation: {
-        scope = session_->getOperationScope();
+        if ( session_->getCurrentOperation() ) {
+            scope = session_->getOperationScope();
+        } else {
+            // using private scope
+            if ( ! privateScope_ ) { privateScope_ = new PrivatePropertyScope(); }
+            propertyPtr = privateScope_->getProperty(name);
+        }
         break;
     }
         /*
@@ -240,7 +299,11 @@ void ActionContext::delProperty( const std::string& var )
         break;
     }
     case ftOperation: {
-        scope = session_->getOperationScope();
+        if (session_->getCurrentOperation()) {
+            scope = session_->getOperationScope();
+        } else if (privateScope_) {
+            privateScope_->delProperty(name);
+        }
         break;
     }
     case ftConst: {
