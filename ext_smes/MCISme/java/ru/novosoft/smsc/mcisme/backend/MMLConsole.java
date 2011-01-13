@@ -7,7 +7,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.net.ServerSocket;
@@ -51,6 +51,8 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
   String  pass;
   ServerSocket ssock;
 
+  private final Vector processors = new Vector();
+
   public void start(SMSCAppContext ctx) {
     try {
       File folder = ctx.getHostsManager().getServiceInfo("MCISme").getServiceFolder();
@@ -84,21 +86,31 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
   }
 
   public void run() {
-    while( ssock != null ) {
-      Socket sock = null;
-      try {
-        sock = ssock.accept();
-      } catch (IOException e) {
-        if( ssock != null ) logger.error("Socket accept failed", e);
-        break;
-      }
+    try {
+      while( ssock != null ) {
+        Socket sock = null;
+        try {
+          sock = ssock.accept();
+        } catch (Exception e) {
+          if( ssock != null ) logger.error("Socket accept failed", e);
+          break;
+        }
 
-      try {
-        MMLProcessor proc = new MMLProcessor(sock);
-        proc.start();
-      } catch (IOException e) {
-        logger.error("", e);
+        try {
+          MMLProcessor proc = new MMLProcessor(sock);
+          processors.add(proc);
+          proc.start();
+        } catch (Exception e) {
+          logger.error("", e);
+        }
       }
+    } finally {
+      // Shutdown all mml processors
+      Object[] processorObjects = processors.toArray();
+      for (int i=0; i<processorObjects.length; i++) {
+        ((MMLProcessor)processorObjects[i]).shutdown();
+      }
+      processors.clear();
     }
     close();
     synchronized (this ) {
@@ -285,24 +297,34 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
         }
       } catch (IOException e) {
         logger.error("I/O error while communicating with client", e);
-      }
-      if( rd != null ) {
-        try {
-          rd.close();
-        } catch (IOException e) {
+      } finally {
+        if( rd != null ) {
+          try {
+            rd.close();
+          } catch (IOException e) {
+          }
         }
-      }
-      if( wr != null ) {
-        try {
-          wr.close();
-        } catch (IOException e) {
+        if( wr != null ) {
+          try {
+            wr.close();
+          } catch (IOException e) {
+          }
         }
-      }
-      if( sock != null ) {
-        try {
-          sock.close();
-        } catch (IOException e) {
+        if( sock != null ) {
+          try {
+            sock.close();
+          } catch (IOException e) {
+          }
         }
+        processors.remove(this);
+      }
+    }
+
+    public void shutdown() {
+      try {
+        sock.close();
+        interrupt();
+      } catch (Exception e) {
       }
     }
   }
