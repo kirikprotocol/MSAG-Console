@@ -63,7 +63,7 @@ public class RegionsUploadController extends UploadController {
 
   private Region readRegion(String line) throws Exception {
     Region r = new Region();
-    StringTokenizer t = new StringTokenizer(line, ",");
+    StringTokenizer t = new StringTokenizer(line, ";");
     try {
       r.setName(readProperty(t));
       r.setSmsc(readProperty(t));
@@ -119,7 +119,7 @@ public class RegionsUploadController extends UploadController {
       Region r = null;
       while ((line = is.readLine()) != null && !isStoped()) {
         line = line.trim();
-        if (line.indexOf(',') != -1) {
+        if (line.indexOf(';') != -1) {
           r = readRegion(line);
           regions.add(r);
         } else {
@@ -138,6 +138,8 @@ public class RegionsUploadController extends UploadController {
 
       if (!isStoped())
         getConfig().updateRegionsConfiguration(regions);
+
+      uploaded = regions.size();
 
       current = maximum;
 
