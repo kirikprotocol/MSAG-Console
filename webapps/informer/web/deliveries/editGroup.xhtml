@@ -113,7 +113,7 @@
       <h:selectOneMenu id="deliveryType" value="#{deliveryGroupEdit.deliveryMode}" style="align:left;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"  onchange="
           var dt = document.getElementById('deliveryType');
           var disp = dt.options[0].selected ? '' : 'none';
-          document.getElementById('smsSettings').style.display=disp;
+          displaySmsSettings(disp);
           if(!dt.options[0].selected ) {
             document.getElementById('editFlash').checked = false;
             var e = document.getElementById('editTransactionMode');
@@ -130,19 +130,15 @@
         <f:selectItems value="#{deliveryGroupEdit.uniqueDeliveryModes}"/>
       </h:selectOneMenu>
 
-    </h:panelGrid>
-
-    <h:panelGrid id="smsSettings" style="padding-left:10px; display: #{deliveryGroupEdit.smsDeliveryMode == true ? '' : 'none'}" columns="3" columnClasses="column20Width, column100Width, columnTopLeftAlign">
-
 
       <h:selectBooleanCheckbox id="editFlash" value="#{deliveryGroupEdit.editFlash}" onchange="
           document.getElementById('flash').disabled=!this.checked;
           "/>
-      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
+      <h:outputText id="editFlashLabel" style="white-space:nowrap;" value="#{deliveryBundle.flash}"/>
       <tr:selectBooleanCheckbox id="flash" value="#{deliveryGroupEdit.flash}" simple="true"/>
 
       <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="editTransactionMode" value="#{deliveryGroupEdit.editTransactionMode}" onchange="document.getElementById('transactionMode').disabled=!this.checked"/>
-      <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+      <h:outputText id="editTransactionModeLabel" rendered="#{deliveryGroupEdit.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
       <h:selectBooleanCheckbox rendered="#{deliveryGroupEdit.userInAdminRole}" id="transactionMode" value="#{deliveryGroupEdit.transactionMode}"/>
 
     </h:panelGrid>
@@ -160,6 +156,18 @@
     </eye:buttons>
 
     <script type="text/javascript" language="javascript">
+
+      function displaySmsSettings(d) {
+        document.getElementById('editFlash').style.display=d;
+        document.getElementById('editFlashLabel').style.display=d;
+        document.getElementById('flash').style.display=d;
+        var e  = document.getElementById('editTransactionMode');
+        if(e != null) {
+         e.style.display = d;
+        document.getElementById('editTransactionModeLabel').style.display=d;
+        document.getElementById('transactionMode').style.display=d;
+        }
+      }
 
       function retryOnFailChanged() {
         var e = document.getElementById('retryOnFail');
@@ -229,7 +237,7 @@
       }
       var dt = document.getElementById('deliveryType');
       var disp = dt.options[0].selected ? '' : 'none';
-      document.getElementById('smsSettings').style.display=disp;
+      displaySmsSettings(disp);
     </script>
 
   </h:panelGroup>
