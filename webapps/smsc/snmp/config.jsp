@@ -171,7 +171,7 @@ function sectionValue(sectionName, fullName)
             + " onclick=\"collasping_tree_showhide_section('" + fullName + ".severity')\"><%=getLocString("snmp.severities")%></div>"
             + "<table cellspacing=0 cellpadding=0 id=\"sectionValue_" + fullName + ".severity\"><col width='56px'/><tr><th/><td>"
             + "<div>"
-            + "<select class=select id=\"newSeverityInput_" + fullName + "\" name=\"newSeverityInput_" + fullName + ".severity\">"
+            + "<select class=select id=\"newSeverityInput_" + fullName + ".severity\" name=\"newSeverityInput_" + fullName + ".severity\">"
             <%for (Iterator iter = ConfigBean.SEVERITY_NAMES.iterator(); iter.hasNext();) {
                 String value = (String)iter.next();%>
             + "<option value=\"<%=value%>\"><%=value%></option>"

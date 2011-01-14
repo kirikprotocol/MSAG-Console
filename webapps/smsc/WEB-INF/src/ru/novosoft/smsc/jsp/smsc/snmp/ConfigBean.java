@@ -124,7 +124,13 @@ public class ConfigBean extends PageBean {
                   SnmpObject.setCounter(counters, thirdToken, fourthToken, value);
 
                 } else if (secondToken.equals("enabled")) {
-                    ((SnmpObject) objects.get(firstToken)).enabled = Boolean.valueOf(value).booleanValue();
+                  SnmpObject obj = ((SnmpObject) objects.get(firstToken));
+                  if (obj == null) {
+                    obj = new SnmpObject();
+                    obj.id = firstToken;
+                    objects.put(firstToken, obj);
+                  }
+                  obj.enabled = Boolean.valueOf(value).booleanValue();
 
                 } else if (secondToken.equals("severity")) {
                   Map severities = null;
