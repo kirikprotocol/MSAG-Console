@@ -29,6 +29,8 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
   public final static int ERRC_COMMUNICATION_ERROR = 5;   // error communicating with profile server
   public final static int ERRC_INVALID_SERVICE = 6;   // error communicating with profile server
 
+  private static final int CLIENT_INACTIVITY_TIMEOUT = 60000; // after this timeout client will be disconnected
+
   public final static String  serviceNotify = "restr_notif";
   public final static String  serviceWantNotify = "in_network";
 
@@ -150,6 +152,7 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
 
     public MMLProcessor( Socket sock ) throws IOException {
       this.sock = sock;
+      this.sock.setSoTimeout(CLIENT_INACTIVITY_TIMEOUT);
       rd = new BufferedReader(new InputStreamReader(sock.getInputStream()));
       wr = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
       client = sock.getInetAddress().getHostAddress()+":"+sock.getPort();
