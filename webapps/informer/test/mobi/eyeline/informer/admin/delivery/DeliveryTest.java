@@ -11,6 +11,7 @@ import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Aleksandr Khalitov
@@ -100,15 +101,26 @@ public class DeliveryTest {
 
     try{
       d.setActivePeriodStart(null);
-      d.validate(); assertTrue(false);
+      d.validate(); fail();
+    }catch (AdminException e){}
+
+    try{
+      d.setActivePeriodStart(new Time(24,0,0));
+      d.validate(); fail();
     }catch (AdminException e){}
 
     d.setActivePeriodStart(new Time(1,0,0));
 
     try{
       d.setActivePeriodEnd(null);
-      d.validate(); assertTrue(false);
+      d.validate(); fail();
     }catch (AdminException e){}
+
+    try{
+      d.setActivePeriodEnd(new Time(25,0,0));
+      d.validate(); fail();
+    }catch (AdminException e){}
+
     d.setActivePeriodEnd(new Time(1,0,0));
   }
 
@@ -132,10 +144,13 @@ public class DeliveryTest {
   public void testValidity() throws AdminException{
 
     try{
-      d.setValidityPeriod(new Time(0,0,0));
-      d.validate(); assertTrue(false);
+      d.setValidityPeriod(new Time(0,0,1));
+      d.validate(); fail();
     }catch (AdminException e){}
+
     d.setValidityPeriod(new Time(23,0,0));
+    d.setValidityPeriod(new Time(25,0,0));
+    d.setValidityPeriod(new Time(0,1,0));
   }
 
   @Test

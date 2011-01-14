@@ -9,6 +9,7 @@ import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * author: alkhal
@@ -154,6 +155,10 @@ public class UserTest {
     assertEquals(o.getDeliveryStartTime().getMin(),30);
     assertEquals(o.getDeliveryStartTime().getSec(),15);
     assertEquals(o.getDeliveryStartTime().getTimeString(),"09:30:15");
+    try{
+      o.setDeliveryStartTime(new Time("24:00:00"));
+      o.validate(); fail();
+    }catch (AdminException e) {}
     o.setDeliveryStartTime(null);
   }
 
@@ -168,8 +173,8 @@ public class UserTest {
     o.setDeliveryEndTime(null);
     try{
       o.setDeliveryEndTime(new Time("24:00:00"));
-      o.validate(); assertTrue(false);
-    }catch (IllegalArgumentException e) {}
+      o.validate(); fail();
+    }catch (AdminException e) {}
     try{
       o.setDeliveryEndTime(new Time("00:99:00"));
       o.validate(); assertTrue(false);
@@ -213,12 +218,15 @@ public class UserTest {
 
   @Test
   public void testValidHours() throws AdminException {
-    User o = createUser();;
+    User o = createUser();
     try {
-      o.setValidityPeriod(new Time(0,50,30));
-      o.validate(); assertTrue(false);
+      o.setValidityPeriod(new Time(0,0,30));
+      o.validate(); fail();
     }
     catch (AdminException e){}
+
+    o.setValidityPeriod(new Time(0,1,0));
+    o.setValidityPeriod(new Time(25,0,0));
   }
 
   @Test

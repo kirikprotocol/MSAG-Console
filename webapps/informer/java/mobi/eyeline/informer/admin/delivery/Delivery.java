@@ -163,7 +163,9 @@ public class Delivery implements Serializable {
     vh.checkBetween("priority", priority, 1, 1000);
     vh.checkNotNull("startDate", startDate);
     vh.checkNotNull("activePeriodEnd", activePeriodEnd);
+    vh.checkLessThan("activePeriodEnd", activePeriodEnd, new Time(24,0,0));
     vh.checkNotNull("activePeriodStart", activePeriodStart);
+    vh.checkLessThan("activePeriodStart", activePeriodStart, new Time(24,0,0));
     vh.checkSizeGreaterThen("activeWeekDays", activeWeekDays, 0);
     vh.checkNotEmpty("owner", owner);
     vh.checkNotNull("deliveryMode", deliveryMode);
@@ -179,7 +181,7 @@ public class Delivery implements Serializable {
       }
     }
     if(validityPeriod != null) {
-      vh.checkPositive("validityPeriod", validityPeriod.getHour());
+      vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,59));
     }
   }
 

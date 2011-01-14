@@ -424,9 +424,11 @@ public class User implements Serializable {
     vh.checkPositive("smsPerSec", smsPerSec);
     vh.checkNotNull("sourceAddr", sourceAddr);
     vh.checkNotNull("deliveryStartTime",deliveryStartTime);
+    vh.checkLessThan("deliveryEndTime", deliveryStartTime, new Time(24,0,0));
     vh.checkNotNull("deliveryEndTime",deliveryEndTime);
+    vh.checkLessThan("deliveryEndTime", deliveryEndTime, new Time(24,0,0));
     if (validityPeriod != null)
-      vh.checkPositive("validityPeriod", validityPeriod.getHour());
+      vh.checkGreaterThan("validityPeriod", validityPeriod, new Time(0,0,59));
 
     if (deliveryDays != null) {
       for (Integer day1 : deliveryDays) {

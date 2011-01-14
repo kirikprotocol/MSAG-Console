@@ -74,7 +74,7 @@ public class ContentProviderTest {
     u.setDeliveryDays(days);
 
     u.setDeliveryStartTime(new Time(0,0,0));
-    u.setDeliveryEndTime(new Time(24,0,0));
+    u.setDeliveryEndTime(new Time(23,59,59));
     context.updateUser(u);
 
 
