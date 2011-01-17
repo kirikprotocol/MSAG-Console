@@ -886,7 +886,9 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st, cp, &hrt );
         if ( st.status == re::STATUS_LONG_CALL ) {
-            smscmd.setRouteInfo( ri );
+            // we don't need to set route info as we have done it before
+            // moreover: DO NOT ACCESS NEITHER SESSION NOR COMMAND AFTER LONGCALL.
+            // smscmd.setRouteInfo( ri );
             hrt.stop();
             return;
         }

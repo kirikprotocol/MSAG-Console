@@ -748,3 +748,7 @@ TO ALL: Insert log record for all significant changes & fixes here.
 
 2011-01-13 14:30 bukind
   msag feature: %vars are now available in service_destroy block
+2011-01-17 20:15 bukind
+  msag bug #4670: there was a race in longcall invocation which
+  triggered under heavy load, i.e. msag was writing to a smscmd
+  after the longcall had already finished and command had been destroyed.
