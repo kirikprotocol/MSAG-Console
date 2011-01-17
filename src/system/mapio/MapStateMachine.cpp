@@ -2066,7 +2066,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           const char* val=cmd->get_sms()->getBinProperty(Tag::SMPP_CALLBACK_NUM,&len);
           if(len<4 || *val!=1)
           {
-            SendStatusToSmsc(dialogid_smsc,Status::INVOPTPARAMVAL,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+            SendStatusToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::INVOPTPARAMVAL),true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
             return;
           }
           SendStatusToSmsc(dialogid_smsc,Status::OK,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
@@ -3583,7 +3583,7 @@ USHORT_T Et96MapDelimiterInd(
     } else {
       if(!dialog.isnull())
       {
-        TryDestroyDialog(dialogueId,dialog->dialogid_smsc!=0,Status::MAPINTERNALFAILURE,localSsn,INSTARG0(rinst));
+        TryDestroyDialog(dialogueId,dialog->dialogid_smsc!=0,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MAPINTERNALFAILURE),localSsn,INSTARG0(rinst));
       }
     }
   }
@@ -3604,7 +3604,7 @@ USHORT_T Et96MapDelimiterInd(
     } else {
       if(!dialog.isnull())
       {
-        TryDestroyDialog(dialogueId,dialog->dialogid_smsc!=0,Status::MAPINTERNALFAILURE,localSsn,INSTARG0(rinst));
+        TryDestroyDialog(dialogueId,dialog->dialogid_smsc!=0,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MAPINTERNALFAILURE),localSsn,INSTARG0(rinst));
       }
     }
   }
@@ -4513,7 +4513,7 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
 {
   if ( cmd->get_commandId() == QUERYABONENTSTATUS )
   {
-    SmscCommand xcmd = SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),AbonentStatus::ONLINE,"","");
+    SmscCommand xcmd = SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),AbonentStatus::ONLINE,0,"","");
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(xcmd);
   }
 }
