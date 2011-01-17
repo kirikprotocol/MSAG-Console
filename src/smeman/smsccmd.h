@@ -1143,7 +1143,7 @@ public:
     //(SMS*)_cmd->dta =  new SMS;
     fetchSmsFromSmppPdu((PduXSm*)xsm,sms,smeFlags);
     SMS &s=*sms;//((SMS*)_cmd->dta);
-    if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+    if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && (s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40))
     {
       unsigned len;
       const unsigned char* data;
