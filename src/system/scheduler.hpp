@@ -114,7 +114,7 @@ public:
     lastRejectReschedule=0;
     delayInit=false;
   }
-  ~Scheduler()
+  virtual ~Scheduler()
   {
     localFileStore.Stop();
     localFileStore.WaitFor();
@@ -208,7 +208,7 @@ public:
     Chain* c=GetChain(addr);
     if(!c)
     {
-      warn2(log,"CancelSms: chain for %s not found",addr.toString().c_str());
+      debug2(log,"CancelSms: chain for %s not found",addr.toString().c_str());
       return;
     }
     debug2(log,"CancelSms: id=%lld, c=%p, addr=%s",id,c,addr.toString().c_str());
@@ -262,7 +262,7 @@ public:
       IdToTimeMap::iterator it=firstQueueProcessing.find(id);
       if(it==firstQueueProcessing.end())
       {
-        warn2(log,"InvalidSms: processing chain for %lld not found!",id);
+        debug2(log,"InvalidSms: processing chain for %lld not found!",id);
         return;
       }
       firstQueueProcessing.erase(it);
