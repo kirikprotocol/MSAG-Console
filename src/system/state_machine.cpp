@@ -1609,30 +1609,6 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnDelivery);
   }
 
-  ////
-  //
-  //  Merging
-  //
-
-  if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
-  {
-    if(!processMerge(c))
-    {
-      if(sms->getIntProperty(Tag::SMSC_CHARGINGPOLICY)!=Smsc::chargeOnSubmit)
-      {
-        return c.rvstate;
-      }
-      c.generateDeliver=false;
-      c.createSms=scsDoNotCreate;
-    }
-  }
-
-  //
-  //  End of merging
-  //
-  ////
-
-
   if(aclCheck && c.rr.info.aclId!=-1 && !smsc->getAclMgr()->isGranted(c.rr.info.aclId,aclAddr.c_str()))
   {
     submitResp(t,sms,Status::NOROUTE);
@@ -1787,6 +1763,36 @@ StateType StateMachine::submit(Tuple& t)
     }
     return ERROR_STATE;
   }
+
+
+  ////
+  //
+  //  Merging
+  //
+
+  if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    if(!processMerge(c))
+    {
+      if(c.rvstate!=ENROUTE_STATE || sms->getIntProperty(Tag::SMSC_CHARGINGPOLICY)!=Smsc::chargeOnSubmit)
+      {
+        if(c.rvstate==ENROUTE_STATE)
+        {
+          onSubmitOk(t.msgId,*sms);
+        }
+        return c.rvstate;
+      }
+      c.generateDeliver=false;
+      c.createSms=scsDoNotCreate;
+    }
+  }
+
+  //
+  //  End of merging
+  //
+  ////
+
+
   if(dstSmeInfo.hasFlag(sfCarryOrgAbonentInfo))
   {
     sms->setStrProperty(Tag::SMSC_SUPPORTED_LOCALE,orgprofile.locale.c_str());
@@ -2101,7 +2107,8 @@ StateType StateMachine::submit(Tuple& t)
 #ifdef SMSEXTRA
   ctx.noDestChange=c.noDestChange;
 #endif
-  if(sms->billingRequired())
+  if(sms->billingRequired() &&
+      (c.generateDeliver || sms->getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit))
   {
     try{
       smsc->ChargeSms(t.msgId,*sms,ctx);
@@ -4956,6 +4963,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
 
       sms.setEServiceType(serviceType.c_str());
       sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
+      sms.setIntProperty(Tag::SMSC_ORIGINALPARTSNUM,1);
 
       Profile profile=smsc->getProfiler()->lookup(dst);
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
@@ -5189,6 +5197,7 @@ bool StateMachine::processMerge(SbmContext& c)
   uint16_t mr;
   uint8_t idx,num;
   bool havemoreudh;
+  c.rvstate=ENROUTE_STATE;
   smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
 
   int dc=c.sms->getIntProperty(Tag::SMPP_DATA_CODING);
@@ -5678,10 +5687,26 @@ void StateMachine::onDeliveryFail(SMSId id,SMS& sms)
 
 void StateMachine::onUndeliverable(SMSId id,SMS& sms)
 {
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && strcmp(sms.getSourceSmeId(),"MAP_PROXY")==0)
+  {
+    unsigned len;
+    ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
+    int i=sms.getConcatSeqNum();
+    int mx=ci->num;
+    for(;i<mx;i++)
+    {
+      smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+#ifdef SNMP
+      SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
+#endif
+    }
+  }else
+  {
   smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
 #ifdef SNMP
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
 #endif
+  }
 }
 
 }//system
