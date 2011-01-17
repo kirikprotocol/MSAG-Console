@@ -19,6 +19,15 @@
   </tag>
 
   <tag>
+    <tag-name>inputTime</tag-name>
+    <component>
+      <component-type>inputTime</component-type>
+      <renderer-type>inputTime</renderer-type>
+      <handler-class>mobi.eyeline.informer.web.components.input_time.InputTimeHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
     <tag-name>delimiter</tag-name>
     <source>delimiter.xhtml</source>
   </tag>

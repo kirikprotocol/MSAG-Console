@@ -70,6 +70,31 @@
 
   </tag>
 
+  <tag>
+    <name>inputTime</name>
+    <description>Ввод времени</description>
+
+    <attribute>
+      <name>value</name>
+      <description>Значение</description>
+      <type>mobi.eyeline.informer.util.Time</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>rendered</name>
+      <description>Отрисовывать компонент (по умолчанию: true)</description>
+      <type>boolean</type>
+    </attribute>
+
+    <attribute>
+      <name>errorMessage</name>
+      <description>Сообщение об ошибке в случае некорректно введенного значения</description>
+      <type>String</type>
+    </attribute>
+
+  </tag>
+
 
   <!-- STATUS -->
   <tag>
