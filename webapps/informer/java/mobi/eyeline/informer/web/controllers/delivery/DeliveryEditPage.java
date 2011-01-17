@@ -248,17 +248,17 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     return delivery.getActivePeriodStart().getTimeDate();
   }
 
-  public void setValidityPeriod(Date period) throws AdminException {
+  public void setValidityPeriod(Time period) throws AdminException {
     if (period == null)
       delivery.setValidityPeriod(null);
     else
       delivery.setValidityPeriod(new Time(period));
   }
 
-  public Date getValidityPeriod() {
+  public Time getValidityPeriod() {
     if (delivery.getValidityPeriod() == null)
       return null;
-    return delivery.getValidityPeriod().getTimeDate();
+    return delivery.getValidityPeriod();
   }
 
   public String getRetryOnFail() {

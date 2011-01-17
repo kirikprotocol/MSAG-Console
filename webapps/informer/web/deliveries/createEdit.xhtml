@@ -63,7 +63,7 @@
       </h:panelGroup>
 
       <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" id="vPeriodLabel" style="white-space: nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <eye:inputDate rendered="#{createDelivery.activePage.userInAdminRole}" id="vPeriod" value="#{createDelivery.activePage.validityPeriod}" type="short_time"/>
+      <eye:inputTime rendered="#{createDelivery.activePage.userInAdminRole}" id="vPeriod" value="#{createDelivery.activePage.validityPeriod}"/>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
       <h:panelGroup>

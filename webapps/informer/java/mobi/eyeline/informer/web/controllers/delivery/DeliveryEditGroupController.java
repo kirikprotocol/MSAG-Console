@@ -39,7 +39,7 @@ public class DeliveryEditGroupController extends DeliveryController{
   private Day[] activeWeekDays;
   private boolean editActiveWeekDays;
 
-  private Date validityPeriod;
+  private Time validityPeriod;
   private boolean editValidityPeriod;
 
   private boolean flash;
@@ -317,11 +317,11 @@ public class DeliveryEditGroupController extends DeliveryController{
     this.activeWeekDays = activeWeekDays;
   }
 
-  public Date getValidityPeriod() {
+  public Time getValidityPeriod() {
     return validityPeriod;
   }
 
-  public void setValidityPeriod(Date validityPeriod) {
+  public void setValidityPeriod(Time validityPeriod) {
     this.validityPeriod = validityPeriod;
   }
 

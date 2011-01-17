@@ -96,7 +96,7 @@
                                    document.getElementById('validityPeriod.minutes').disabled=!this.checked;
                                    "/>
       <h:outputText rendered="#{deliveryGroupEdit.userInAdminRole}" id="validHoursLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-      <eye:inputDate rendered="#{deliveryGroupEdit.userInAdminRole}" id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}" type="short_time"/>
+      <eye:inputTime rendered="#{deliveryGroupEdit.userInAdminRole}" id="validityPeriod" value="#{deliveryGroupEdit.validityPeriod}"/>
 
 
       <h:selectBooleanCheckbox id="editSmsNotification" value="#{deliveryGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>

@@ -109,7 +109,7 @@
           </h:panelGroup>
 
         <h:outputText rendered="#{deliveryEdit.userInAdminRole}"  id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
-        <eye:inputDate rendered="#{deliveryEdit.userInAdminRole}" id="vPeriod" value="#{deliveryEdit.validityPeriod}" type="short_time"/>
+        <eye:inputTime rendered="#{deliveryEdit.userInAdminRole}" id="vPeriod" value="#{deliveryEdit.validityPeriod}" />
 
 
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
