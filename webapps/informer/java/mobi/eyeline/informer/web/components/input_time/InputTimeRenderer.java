@@ -22,8 +22,8 @@ public class InputTimeRenderer extends Renderer {
   }
 
   static void decodeTime(FacesContext context, InputTime cg) {
-    String hours = context.getExternalContext().getRequestParameterMap().get("hours_" + cg.getId());
-    String minutes = context.getExternalContext().getRequestParameterMap().get("minutes_" + cg.getId());
+    String hours = context.getExternalContext().getRequestParameterMap().get(cg.getId()+".hours");
+    String minutes = context.getExternalContext().getRequestParameterMap().get(cg.getId()+".minutes");
     if (hours != null && minutes != null) {
       try {
         cg.setValue(new Time(hours + ':' + minutes));
@@ -42,10 +42,16 @@ public class InputTimeRenderer extends Renderer {
     InputTime t = (InputTime) component;
     ResponseWriter w = context.getResponseWriter();
 
-    String hoursId = "\"hours_" + t.getId() + "\"";
+    String hoursId = "\"" + t.getId() + ".hours\"";
     String hoursVal = t.getValue() == null ? "" : String.valueOf(t.getValue().getHour());
-    String minId = "\"minutes_" + t.getId() + "\"";
+    if (hoursVal.length() == 1)
+      hoursVal = '0' + hoursVal;
+
+    String minId = "\"" + t.getId() + ".minutes\"";
     String minVal = t.getValue() == null ? "" : String.valueOf(t.getValue().getMin());
+    if (minVal.length() == 1)
+      minVal = '0' + minVal;
+
     w.append("<div>");
     w.append("<input type=\"text\" id=").append(hoursId).append("\" name=").append(hoursId).append(" value=\"").append(hoursVal).append("\" maxlength=\"3\" size=\"2\">");
     w.append(":");

@@ -75,6 +75,12 @@
     <description>Ввод времени</description>
 
     <attribute>
+      <name>id</name>
+      <description>id</description>
+      <type>java.lang.String</type>
+    </attribute>
+
+    <attribute>
       <name>value</name>
       <description>Значение</description>
       <type>mobi.eyeline.informer.util.Time</type>
