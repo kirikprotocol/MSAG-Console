@@ -59,7 +59,7 @@ public class UserGroupEditController extends UserController {
   private boolean transactionMode;
 
   private boolean editValidityPeriod;
-  private Date validityPeriod;
+  private Time validityPeriod;
 
   private boolean editSmsPerSec;
   private int smsPerSec;
@@ -97,7 +97,7 @@ public class UserGroupEditController extends UserController {
     deliveryStartTime = new Time(9,0,0).getTimeDate();
     deliveryEndTime = new Time(22,0,0).getTimeDate();
     deliveryType=User.DeliveryType.SMS;
-    validityPeriod=new Time(1,0,0).getTimeDate();
+    validityPeriod=new Time(1,0,0);
     smsPerSec=10;
     priority=1;
     deliveryLifetime=72;
@@ -302,11 +302,11 @@ public class UserGroupEditController extends UserController {
     this.deliveryStartTime = deliveryStartTime;
   }
 
-  public Date getValidityPeriod() {
+  public Time getValidityPeriod() {
     return validityPeriod;
   }
 
-  public void setValidityPeriod(Date validHours) {
+  public void setValidityPeriod(Time validHours) {
     this.validityPeriod = validHours;
   }
 

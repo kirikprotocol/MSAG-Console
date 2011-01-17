@@ -97,7 +97,7 @@
           document.getElementById('validityPeriod.minutes').disabled=!this.checked;
           "/>
           <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
-          <eye:inputDate id="validityPeriod" value="#{userGroupEdit.validityPeriod}" type="short_time"/>
+          <eye:inputTime id="validityPeriod" value="#{userGroupEdit.validityPeriod}"/>
 
           <h:selectBooleanCheckbox id="editSmsNotification" value="#{userGroupEdit.editSmsNotification}" onchange="document.getElementById('smsNotification').disabled=!this.checked"/>
           <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>

@@ -113,7 +113,7 @@
 
 
     <h:outputText id="validHoursLabel" style="white-space:nowrap;" value="#{userBundle.validityPeriod}"/>
-    <eye:inputDate id="validityPeriod" value="#{userEdit.validityPeriod}"   type="short_time"/>
+    <eye:inputTime id="validityPeriod" value="#{userEdit.validityPeriod}"/>
 
     <h:outputText style="white-space:nowrap;" value="#{userBundle.smsNotification}"/>
     <h:selectBooleanCheckbox value="#{userEdit.userToEdit.smsNotification}" style="position: relative;  left: -3px;"/>

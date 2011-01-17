@@ -314,17 +314,17 @@ public class UserEditController extends UserController {
     return userToEdit.getDeliveryStartTime().getTimeDate();
   }
 
-  public void setValidityPeriod(Date period) throws AdminException {
+  public void setValidityPeriod(Time period) throws AdminException {
     if (period == null)
       userToEdit.setValidityPeriod(null);
     else
-      userToEdit.setValidityPeriod(new Time(period));
+      userToEdit.setValidityPeriod(period);
   }
 
-  public Date getValidityPeriod() {
+  public Time getValidityPeriod() {
     if (userToEdit.getValidityPeriod() == null)
       return null;
-    return userToEdit.getValidityPeriod().getTimeDate();
+    return userToEdit.getValidityPeriod();
   }
 
   public boolean isBlocked() {
