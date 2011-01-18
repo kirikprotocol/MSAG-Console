@@ -32,7 +32,7 @@ void IAPQueryAC::mkTaskName(void)
 {
     char buf[sizeof("[%u:%lu]") + 1];
     snprintf(buf, sizeof(buf), "[%u:%lu]", _qId, usage);
-    tName = taskType();
+    tName = taskType().c_str();
     tName += buf;
 }
 
