@@ -1,3 +1,6 @@
+=====================================================================
+2011-01-18 12:50 bukind informer-build-20110118
+
 2011-01-18 12:15 bukind
   validityTime of more than 24 hrs is now allowed
 
