@@ -1,3 +1,6 @@
+2011-01-18 12:15 bukind
+  validityTime of more than 24 hrs is now allowed
+
 2011-01-13 12:35 bukind
   put resp awaiting messages into immediate retry on disconnect
 

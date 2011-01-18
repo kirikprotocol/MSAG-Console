@@ -131,7 +131,7 @@ msgtime_type parseDate( const char* date )
 }
 
 
-timediff_type parseTime( const char* theTime )
+timediff_type parseTime( const char* theTime, bool allowMoreThan24Hours )
 {
     int shift = 0;
     unsigned hour, minute, second;
@@ -139,7 +139,7 @@ timediff_type parseTime( const char* theTime )
     if (!shift) {
         throw InfosmeException(EXC_IOERROR,"invalid time '%s'",theTime);
     }
-    if (hour > 23) {
+    if (hour > 23 && !allowMoreThan24Hours ) {
         throw InfosmeException(EXC_IOERROR,"invalid hour %u in '%s'",hour,theTime);
     }
     if (minute > 59) {

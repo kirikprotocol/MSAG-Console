@@ -293,7 +293,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         activeWeekDays = parseWeekDays(data.activeWeekDays);
     }
     if ((!old || old->validityPeriod != data.validityPeriod) && !data.validityPeriod.empty() ) {
-        validityPeriod = parseTime(data.validityPeriod.c_str());
+        validityPeriod = parseTime(data.validityPeriod.c_str(), true);
     }
     if (!old || old->retryPolicy != data.retryPolicy) {
         retryPolicy.init(data.retryPolicy.c_str());

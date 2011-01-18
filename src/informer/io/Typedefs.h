@@ -48,7 +48,7 @@ msgtime_type parseDateTime( const char* datetime );
 msgtime_type parseDate( const char* date );
 
 /// parse time in form 'HH:MM:SS'
-timediff_type parseTime( const char* theTime );
+timediff_type parseTime( const char* theTime, bool allowMoreThan24Hours = false );
 
 // collect week days into one integer, where each bit corresponds to one day.
 // 2^0 -- monday, 2^1 -- tuesday, etc.
