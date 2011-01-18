@@ -30,18 +30,27 @@ class DcpConverter {
 
   private static final String DATE_FORMAT_YY = "dd.MM.yy HH:mm:ss";
 
-  public static Date convertTimeFromDcpFormat(String time) throws AdminException {
-    SimpleDateFormat format = new SimpleDateFormat(TIME_FORMAT);
-    try {
-      return format.parse(time) ;
-    } catch (ParseException e) {
-      throw new DeliveryException("unparsable_date", time);
-    }
+  public static Time convertTimeFromDcpFormat(String time) throws AdminException {
+    return new Time(time);
   }
 
-  public static String convertTimeToDcpFormat(Date time) {
-    SimpleDateFormat format = new SimpleDateFormat(TIME_FORMAT);
-    return format.format(time);
+//  public static String convertTimeToDcpFormat(Date time) {
+//    SimpleDateFormat format = new SimpleDateFormat(TIME_FORMAT);
+//    return format.format(time);
+//  }
+
+  public static String convertTimeToDcpFormat(Time time) { //todo
+    String hoursStr = String.valueOf(time.getHour());
+    if (hoursStr.length() == 1)
+      hoursStr = '0' + hoursStr;
+    String minStr = String.valueOf(time.getMin());
+    if (minStr.length() == 1)
+      minStr = '0' + minStr;
+    String secStr = String.valueOf(time.getSec());
+    if (secStr.length() == 1)
+      secStr = '0' + secStr;
+
+    return hoursStr + ':' + minStr + ':' + secStr;
   }
 
   public static Date convertDateFromDcpFormat(String date) throws AdminException {
@@ -281,8 +290,8 @@ class DcpConverter {
       return null;
     }
     mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo delivery = new mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryInfo();
-    delivery.setActivePeriodEnd(convertTimeToDcpFormat(di.getActivePeriodEnd().getTimeDate()));
-    delivery.setActivePeriodStart(convertTimeToDcpFormat(di.getActivePeriodStart().getTimeDate()));
+    delivery.setActivePeriodEnd(convertTimeToDcpFormat(di.getActivePeriodEnd()));
+    delivery.setActivePeriodStart(convertTimeToDcpFormat(di.getActivePeriodStart()));
     delivery.setActiveWeekDays(convertDays(di.getActiveWeekDays()));
     delivery.setDeliveryMode(convert(di.getDeliveryMode()));
     if (di.getEndDate() != null) {
@@ -307,7 +316,7 @@ class DcpConverter {
     delivery.setUseDataSm(di.isUseDataSm());
 
     if (di.getValidityPeriod() != null)
-      delivery.setValidityPeriod(convertTimeToDcpFormat(di.getValidityPeriod().getTimeDate()));
+      delivery.setValidityPeriod(convertTimeToDcpFormat(di.getValidityPeriod()));
 
     delivery.setFinalDlvRecords(di.isEnableStateChangeLogging());
     delivery.setFinalMsgRecords(di.isEnableMsgFinalizationLogging());

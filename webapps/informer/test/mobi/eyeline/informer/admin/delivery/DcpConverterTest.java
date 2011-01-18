@@ -121,8 +121,8 @@ public class DcpConverterTest {
   @Test
   public void testConvertDeliveryInfo() throws AdminException {
     DeliveryListInfo di = new DeliveryListInfo();
-    di.setActivityPeriodEnd(DcpConverter.convertTimeToDcpFormat(new Date()));
-    di.setActivityPeriodStart(DcpConverter.convertTimeToDcpFormat(new Date(1000003231L)));
+    di.setActivityPeriodEnd(DcpConverter.convertTimeToDcpFormat(new Time(new Date())));
+    di.setActivityPeriodStart(DcpConverter.convertTimeToDcpFormat(new Time(new Date(1000003231L))));
     di.setDeliveryId(45);
     di.setEndDate(DcpConverter.convertDateToDcpFormat(new Date(System.currentTimeMillis() + 1000000)));
     di.setName("test delivery");
@@ -130,8 +130,8 @@ public class DcpConverterTest {
     di.setStatus(DcpConverter.convert(DeliveryStatus.Cancelled));
     di.setUserId("user2");
     Delivery info = DcpConverter.convert(di);
-    assertEquals(DcpConverter.convertTimeToDcpFormat(info.getActivePeriodEnd().getTimeDate()), di.getActivityPeriodEnd());
-    assertEquals(DcpConverter.convertTimeToDcpFormat(info.getActivePeriodStart().getTimeDate()), di.getActivityPeriodStart());
+    assertEquals(DcpConverter.convertTimeToDcpFormat(info.getActivePeriodEnd()), di.getActivityPeriodEnd());
+    assertEquals(DcpConverter.convertTimeToDcpFormat(info.getActivePeriodStart()), di.getActivityPeriodStart());
     assertEquals(DcpConverter.convertDateToDcpFormat(info.getStartDate()), di.getStartDate());
     assertEquals(DcpConverter.convertDateToDcpFormat(info.getEndDate()), di.getEndDate());
     assertEquals(DcpConverter.convert(info.getStatus()), di.getStatus());
