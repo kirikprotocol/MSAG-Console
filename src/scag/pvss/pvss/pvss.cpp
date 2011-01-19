@@ -526,11 +526,11 @@ int main(int argc, char* argv[]) {
             smsc_log_info(logger,"switching to backup mode");
             backupProcessor.reset(new BackupProcessor(pvssDispatcher,
                                                       backupJournalDir,
-                                                      propPerSec,
-                                                      abonentBackup,
-                                                      serviceBackup,
-                                                      providerBackup,
-                                                      operatorBackup));
+                                                      propPerSec));
+            backupProcessor->startTask( SCOPE_ABONENT, abonentBackup );
+            backupProcessor->startTask( SCOPE_SERVICE, serviceBackup );
+            backupProcessor->startTask( SCOPE_PROVIDER, providerBackup );
+            backupProcessor->startTask( SCOPE_OPERATOR, operatorBackup );
             backupProcessor->process();
             backupProcessor.reset(0);
             return 0;            

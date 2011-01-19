@@ -22,24 +22,22 @@ private:
 public:
     BackupProcessor( PvssDispatcher& dispatcher,
                      const std::string& journalDir,
-                     size_t propertiesPerSec,
-                     const std::string& abonentBackup,
-                     const std::string& serviceBackup,
-                     const std::string& providerBackup,
-                     const std::string& operatorBackup );
+                     size_t propertiesPerSec );
     virtual ~BackupProcessor();
 
     /// start processor and lock until exited
     void process();
     void stop();
-
-    // static time_t readTime( const char* timestring );
+    void startTask( ScopeType scope, const std::string& backup );
 
 private:
-    void startTask( const std::string& backup, ScopeType scope );
-    void setFileProcessed( ScopeType scope, const char* fname );
-    bool isFileProcessed( ScopeType scope, const char* fname ) const;
-    void loadJournalDir( ScopeType scope );
+    // void setFileProcessed( ScopeType scope, const char* fname );
+    // bool isFileProcessed( ScopeType scope, const char* fname ) const;
+    // void loadJournalDir( ScopeType scope, const std::string& backup );
+    // const std::string& getPath( ScopeType scope ) const;
+    // const std::string& getFileFormat( ScopeType scope ) const;
+    // time_t getLastTime( ScopeType scope ) const;
+    // time_t readTime( ScopeType scope, const char* fname ) const;
 
 private:
     PvssDispatcher*                           dispatcher_; // not owned
@@ -49,11 +47,6 @@ private:
     smsc::core::threads::ThreadPool           threadPool_;
     smsc::core::synchronization::EventMonitor stopMon_;
     std::string                               journalDir_;
-    std::string                               abonentBackup_;
-    std::string                               serviceBackup_;
-    std::string                               providerBackup_;
-    std::string                               operatorBackup_;
-    std::vector< std::set< std::string >* >   processedFiles_;
 };
 
 } // namespace pvss

@@ -18,27 +18,50 @@ class BackupProcessor::BackupProcessingTask : public smsc::core::threads::Thread
 {
 public:
     BackupProcessingTask( BackupProcessor&   processor,
-                          const std::string& backup,
-                          ScopeType scope ) :
+                          ScopeType scope,
+                          const std::string& backup ) :
     processor_(processor),
     scope_(scope),
-    log_(0)
+    log_(0),
+    lastTime_(0)
     {
         std::string logName(taskName());
         logName.push_back(scopeTypeToString(scope_)[0]);
         log_ = smsc::logger::Logger::getInstance(logName.c_str());
 
-        // dirname
-        dirname_ = backup;
-        const size_t slash = dirname_.rfind('/');
+        const size_t slash = backup.rfind('/');
         if ( slash != std::string::npos ) {
-            filename_ = dirname_.substr(slash+1);
-            dirname_.erase(slash);
+            fileFormat_ = backup.substr(slash+1);
+            dirname_ = backup.substr(0,slash);
         } else {
-            filename_ = dirname_;
+            fileFormat_ = backup;
             dirname_ = ".";
         }
+        fileFormat_ += ".%04u-%02u-%02u-%02u.log%n";
 
+        std::string fulldir( processor_.journalDir_ + "/" + scopeTypeToString(scope) );
+        if ( ! smsc::core::buffers::File::Exists( fulldir.c_str() ) ) {
+            try {
+                smsc::core::buffers::File::MkDir( fulldir.c_str() );
+                return;
+            } catch ( std::exception& e ) {
+                smsc_log_error(log_,"cannot create dir %s: %s", fulldir.c_str(), e.what());
+                fprintf(stderr,"cannot create dir %s: %s\n", fulldir.c_str(), e.what());
+                exit(-1);
+            }
+        }
+        std::vector< std::string > entries;
+        entries.reserve(50);
+        smsc::core::buffers::File::ReadDir( fulldir.c_str(), entries );
+        processed_.insert( entries.begin(), entries.end() );
+
+        // get the last time of the files
+        if ( ! processed_.empty() ) {
+            const time_t last = readTime(processed_.rbegin()->c_str());
+            if (last > lastTime_) {
+                lastTime_ = last;
+            }
+        }
     }
 
     virtual const char* taskName() { return "bck.task"; }
@@ -50,39 +73,40 @@ public:
     }
 
     void readDir( std::vector< std::string >& files );
+    time_t readTime( const char* fname ) const;
+    void setFileProcessed( const char* fname, time_t nextTime );
 
 private:
     BackupProcessor&                          processor_;
-    std::string                               dirname_;
-    std::string                               filename_;
     ScopeType                                 scope_;
     smsc::core::synchronization::EventMonitor mon_;
     smsc::logger::Logger*                     log_;
+    std::string                               dirname_;
+    std::string                               fileFormat_;
+    time_t                                    lastTime_;
+    std::set<std::string>                     processed_;
 };
 
 
 BackupProcessor::BackupProcessor( PvssDispatcher& dispatcher,
                                   const std::string& journalDir,
-                                  size_t propertiesPerSec,
-                                  const std::string& abonentBackup,
-                                  const std::string& serviceBackup,
-                                  const std::string& providerBackup,
-                                  const std::string& operatorBackup ) :
-dispatcher_(&dispatcher), stopping_(true),
+                                  size_t propertiesPerSec ) :
+dispatcher_(&dispatcher), stopping_(false),
 propertiesPerSec_(propertiesPerSec),
 log_(0),
-journalDir_(journalDir),
-abonentBackup_(abonentBackup),
-serviceBackup_(serviceBackup),
-providerBackup_(providerBackup),
-operatorBackup_(operatorBackup)
+journalDir_(journalDir)
 {
     log_ = smsc::logger::Logger::getInstance("bck.proc");
-    processedFiles_.resize(5,0);
-    loadJournalDir( SCOPE_ABONENT );
-    loadJournalDir( SCOPE_SERVICE );
-    loadJournalDir( SCOPE_OPERATOR );
-    loadJournalDir( SCOPE_PROVIDER );
+
+    if ( ! smsc::core::buffers::File::Exists( journalDir_.c_str() ) ) {
+        try {
+            smsc::core::buffers::File::MkDir( journalDir_.c_str() );
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"cannot create dir %s: %s", journalDir_.c_str(), e.what());
+            fprintf(stderr,"cannot create dir %s: %s\n", journalDir_.c_str(), e.what());
+            exit(-1);
+        }
+    }
 }
 
 
@@ -90,7 +114,6 @@ BackupProcessor::~BackupProcessor()
 {
     threadPool_.stopNotify();
     threadPool_.shutdown();
-    std::for_each( processedFiles_.begin(), processedFiles_.end(), smsc::util::PtrDestroy() );
 }
 
 
@@ -98,13 +121,6 @@ void BackupProcessor::process()
 {
     smsc_log_info(log_,"backup processor is started");
     MutexGuard mg(stopMon_);
-    stopping_ = false;
-
-    startTask( abonentBackup_, SCOPE_ABONENT );
-    startTask( operatorBackup_, SCOPE_OPERATOR );
-    startTask( serviceBackup_, SCOPE_SERVICE );
-    startTask( providerBackup_, SCOPE_PROVIDER );
-
     while ( ! stopping_ ) {
         stopMon_.wait(1000);
     }
@@ -122,67 +138,52 @@ void BackupProcessor::stop()
 }
 
 
-/*
-time_t BackupProcessor::readTime( const char* timestring )
-{
-    if ( !timestring ) return time_t(-1);
-    unsigned year, month, day, hour;
-    if ( 4 == sscanf(timestring,"%04u-%02u-%02u-%02u",&year,&month,&day,&hour) ) {
-        smsc_log_debug(smsc::logger::Logger::getInstance("bck.proc"),
-                       "readTime(\"%s\"): year=%u month=%u day=%u hour=%u",
-                       timestring, year, month, day, hour );
-        struct tm tmRead;
-        ::memset(&tmRead,0,sizeof(tmRead));
-        tmRead.tm_hour = hour;
-        tmRead.tm_mday = day;
-        tmRead.tm_mon = month-1;
-        tmRead.tm_year = year-1900;
-        time_t retval = mktime(&tmRead);
-        return retval;
-    }
-    return time_t(-1);
-}
- */
-
-
-void BackupProcessor::startTask( const std::string& backup, ScopeType scope )
+void BackupProcessor::startTask( ScopeType scope, const std::string& backup )
 {
     if ( backup.empty() ) {
         smsc_log_warn(log_,"not starting task %s as backup is empty", scopeTypeToString(scope) );
         return;
     }
-    threadPool_.startTask( new BackupProcessingTask(*this,backup,scope) );
+    threadPool_.startTask( new BackupProcessingTask(*this,scope,backup) );
 }
 
 
-void BackupProcessor::setFileProcessed( ScopeType scope, const char* fname )
+void BackupProcessor::BackupProcessingTask::setFileProcessed( const char* fname,
+                                                              time_t nextTime )
 {
-    unsigned idx = scope;
-    if ( idx >= processedFiles_.size() ) return;
     smsc::core::buffers::File fd;
-    std::string fullname(journalDir_ + "/" + scopeTypeToString(scope) + "/" + fname);
+    std::string fullname(processor_.journalDir_ + "/" + scopeTypeToString(scope_) + "/" + fname);
     try {
         fd.RWCreate(fullname.c_str());
     } catch( std::exception& e ) {
         smsc_log_warn(log_,"cannot create file %s",fullname.c_str());
     }
-    processedFiles_[idx]->insert(fname);
+    processed_.insert(fname);
+    if ( nextTime > lastTime_ ) {
+        lastTime_ = nextTime;
+    }
     smsc_log_info(log_,"file %s has been processed",fname);
 }
 
 
-bool BackupProcessor::isFileProcessed( ScopeType scope, const char* fname ) const
+/*
+void BackupProcessor::loadJournalDir( ScopeType scope, const std::string& backup )
 {
-    unsigned idx = scope;
-    if ( idx >= processedFiles_.size() ) return false;
-    std::set< std::string >* theset = processedFiles_[idx];
-    return ( theset->find(fname) != theset->end() );
-}
+    // setting prefixes
+    const unsigned idx = scope;
+    backupPath_[idx] = backup;
+    if ( backup.empty() ) return;
 
+    const size_t slash = backup.rfind('/');
+    if ( slash != std::string::npos ) {
+        backupFileFormat_[idx] = backup.substr(slash+1);
+        backupPath_[idx].erase(slash);
+    } else {
+        backupFileFormat_[idx] = backup;
+        backupPath_[idx] = ".";
+    }
+    backupFileFormat_[idx] += ".%04u-%02u-%02u-%02u.log%n";
 
-void BackupProcessor::loadJournalDir( ScopeType scope )
-{
-    unsigned idx = scope;
     assert( idx < processedFiles_.size() );
     if ( processedFiles_[idx] == 0 ) {
         processedFiles_[idx] = new std::set< std::string >();
@@ -201,6 +202,7 @@ void BackupProcessor::loadJournalDir( ScopeType scope )
     if ( ! smsc::core::buffers::File::Exists( fulldir.c_str() ) ) {
         try {
             smsc::core::buffers::File::MkDir( fulldir.c_str() );
+            return;
         } catch ( std::exception& e ) {
             smsc_log_error(log_,"cannot create dir %s: %s", fulldir.c_str(), e.what());
             fprintf(stderr,"cannot create dir %s: %s\n", fulldir.c_str(), e.what());
@@ -211,11 +213,41 @@ void BackupProcessor::loadJournalDir( ScopeType scope )
     entries.reserve(50);
     smsc::core::buffers::File::ReadDir( fulldir.c_str(), entries );
     theset->insert( entries.begin(), entries.end() );
+
+    // get the last time of the files
+    if ( ! theset->empty() ) {
+        const time_t last = readTime( scope, theset->rbegin()->c_str() );
+        if (last > lastTime_[idx]) {
+            lastTime_[idx] = last;
+        }
+    }
+}
+ */
+
+
+time_t BackupProcessor::BackupProcessingTask::readTime( const char* fname ) const
+{
+    int pos = 0;
+    struct tm tmo;
+    sscanf( fname,
+            fileFormat_.c_str(),
+            &tmo.tm_year, &tmo.tm_mon, &tmo.tm_mday, &tmo.tm_hour, &pos );
+
+    if (!pos) {
+        throw smsc::util::Exception("the file %s has wrong name", fname);
+    }
+
+    tmo.tm_year -= 1900;
+    --tmo.tm_mon;
+    tmo.tm_isdst = -1;
+    return mktime(&tmo);
 }
 
 
 int BackupProcessor::BackupProcessingTask::Execute()
 {
+    const static time_t interval = 3600;
+
     smsc_log_info(log_,"staring processing task %s",scopeTypeToString(scope_));
 
     while ( ! isStopping ) {
@@ -236,8 +268,22 @@ int BackupProcessor::BackupProcessingTask::Execute()
         for ( std::vector< std::string >::const_iterator i = logFiles.begin();
               i != logFiles.end();
               ++i ) {
+
+            // checking the order of the next file
+            const time_t nextTime = readTime(i->c_str());
+            if ( lastTime_ ) {
+                if ( lastTime_ + interval + interval/2 < nextTime ) {
+                    processor_.stop();
+                    fprintf(stderr,"the file '%s' seems to be misordered by +%u seconds\n",
+                            i->c_str(), unsigned(nextTime-lastTime_));
+                    throw smsc::util::Exception("the file '%s' seems to be misordered by +%u seconds",
+                                                i->c_str(), unsigned(nextTime-lastTime_) );
+                }
+            }
+
             const std::string fullname( dirname_ + "/" + i->c_str() );
-            smsc_log_info(log_,"processing %s",fullname.c_str());
+            smsc_log_info(log_,"processing %s, time=%ld, last=%ld",
+                          fullname.c_str(), long(nextTime), long(lastTime_));
 
             if ( isStopping ) break;
 
@@ -390,7 +436,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
                 smsc_log_warn(log_,"cannot process %s", fullname.c_str());
             }
             
-            processor_.setFileProcessed( scope_, i->c_str() );
+            setFileProcessed( i->c_str(), nextTime );
 
         } // loop over file names
     }
@@ -401,37 +447,38 @@ int BackupProcessor::BackupProcessingTask::Execute()
 
 void BackupProcessor::BackupProcessingTask::readDir( std::vector< std::string >& files )
 {
-    std::string format(filename_ + ".%[0123456789-].log%n");
     DIR* dir = opendir( dirname_.c_str() );
     if ( !dir ) {
-        smsc_log_debug(log_,"cannot open dir %s", dirname_.c_str());
+        smsc_log_debug(log_,"cannot open dir '%s'", dirname_.c_str());
         return;
     }
     smsc::core::buffers::TmpBuf<char,512> dirbuf(sizeof(dirent)+
                                                  pathconf(dirname_.c_str(),_PC_NAME_MAX)+1);
     dirent* entry = reinterpret_cast<dirent*>(dirbuf.get());
     dirent* result;
-    std::auto_ptr<char> tail;
-    size_t taillen = 0;
+    // std::auto_ptr<char> tail;
+    // size_t taillen = 0;
     while ( 0 == readdir_r(dir,entry,&result) && result != 0 ) {
+        if ( strcmp(".",result->d_name) == 0 ||
+             strcmp("..",result->d_name) == 0 ) continue;
         // dir entry is read
         smsc_log_debug(log_,"entry: %s",result->d_name);
+        /*
         const size_t reslen = ::strlen(result->d_name) + 1;
         if ( taillen < reslen ) {
             taillen = reslen;
             tail.reset( new char[reslen]);
         }
-        int shift = 0;
-        int rv = sscanf(result->d_name,format.c_str(),tail.get(),&shift);
-        if ( rv <= 0 ) {
-            smsc_log_debug(log_,"sscanf returned %d",rv);
+         */
+        try {
+            // const time_t nextTime = 
+            readTime(result->d_name);
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"wrong file '%s'",result->d_name);
             continue;
         }
-        if (shift == 0) {
-            continue;
-        }
-        if ( processor_.isFileProcessed(scope_,result->d_name) ) {
-            smsc_log_debug(log_,"file %s is already processed",result->d_name);
+        if ( processed_.find(result->d_name) != processed_.end() ) {
+            smsc_log_debug(log_,"file '%s' is already processed",result->d_name);
             continue;
         }
         files.push_back( result->d_name );
