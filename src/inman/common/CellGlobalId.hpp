@@ -13,7 +13,7 @@
 namespace smsc {
 namespace inman {
 
-/* The internal structure is defined as follows:
+/* The internal structure is defined in 3GPP TS 23.003 as follows:
    octet 1 bits 4321    Mobile Country Code 1st digit
            bits 8765    Mobile Country Code 2nd digit
    octet 2 bits 4321    Mobile Country Code 3rd digit
