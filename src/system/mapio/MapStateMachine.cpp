@@ -373,6 +373,10 @@ static unsigned MakeMrRef()
 
 static inline void eraseUssdLock(MapDialog *dialog, const char* function)
 {
+  if(dialog->ussdSequence==0)
+  {
+    return;
+  }
   MutexGuard mg(ussd_map_lock);
   USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
   uint32_t val=dialog->dialogid_map|(dialog->ssn<<16)|(dialog->instanceId<<24);
@@ -3045,7 +3049,7 @@ USHORT_T Et96MapPAbortInd(
       dialog->id_opened = false;
       if( dialog->isUSSD )
       {
-        if(Smsc::getInstance().getSmeInfo(dialog->sms->getSourceSmeId()).hasFlag(sfSmppPlus))
+        if(*dialog->sms->getSourceSmeId() && Smsc::getInstance().getSmeInfo(dialog->sms->getSourceSmeId()).hasFlag(sfSmppPlus))
         {
           SMS& orgsms=*dialog->sms.get();
           SMS sms=orgsms;
@@ -3918,6 +3922,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     }
     __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
+    dialog->ussdSequence=0;
     __dialogid_map = dialogueId;
     dialog->invokeId = invokeId;
     dialog->origInvokeId = invokeId;
