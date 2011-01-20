@@ -227,7 +227,8 @@ void ATSIRes::decode(const std::vector<unsigned char>& buf) throw(CustomExceptio
 
   _csInfo.clear();
   _scfCsi.clear();
-  try { //for now process only camel_SubscriptionInfo for BS and SM
+  _odbGD.clear();
+  try { //for now process only camel_SubscriptionInfo for BC and SM
     CAMEL_SubscriptionInfo_t * cs = dcmd->camel_SubscriptionInfo;
     if (cs) {
       //Basic Call CSIs
@@ -249,6 +250,12 @@ void ATSIRes::decode(const std::vector<unsigned char>& buf) throw(CustomExceptio
           && parse_SM_CSI(cs->mt_sms_CSI, _scfCsi[UnifiedCSI::csi_MT_SM],
                           _mtSmsTDP, compLogger))
         _csInfo.setCSI(UnifiedCSI::csi_MT_SM);
+    }
+    //process ODB-GenaralData only
+    if (dcmd->odb_Info && dcmd->odb_Info->odb_Data.odb_GeneralData.size) {
+      ODB_GeneralData_t & dOdb = dcmd->odb_Info->odb_Data.odb_GeneralData;
+      _odbGD.init(dOdb.buf, (uint16_t)(dOdb.size * 8 - dOdb.bits_unused));
+      _csInfo.setRequestedODB();
     }
     asn_DEF_AnyTimeSubscriptionInterrogationRes.free_struct(&asn_DEF_AnyTimeSubscriptionInterrogationRes, dcmd, 0);
   } catch (const CustomException & exc) {

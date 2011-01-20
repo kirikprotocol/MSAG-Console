@@ -40,8 +40,12 @@ public:
   TCSessionMA *   mapSess;
 
   IAPQueryATSI_CFG()
-    : RequestedSubscription(UnifiedCSI::csi_MO_SM)
+    : RequestedSubscription(UnifiedCSI::csi_O_BC)
     , mapTimeout(20), mapSess(NULL)
+  {
+    setRequestedODB();
+  }
+  ~IAPQueryATSI_CFG()
   { }
 };
 

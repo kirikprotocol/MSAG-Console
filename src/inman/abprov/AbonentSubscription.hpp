@@ -12,10 +12,13 @@
 
 #include "inman/abprov/CSIRecordsMap.hpp"
 #include "inman/AbntContract.hpp"
+#include "inman/comp/ODBDefs.hpp"
 
 namespace smsc {
 namespace inman {
 namespace iaprvd {
+
+using smsc::inman::comp::ODBGeneralData;
 
 typedef smsc::util::TonNpiAddress AbonentId; //isdn international number assumed
 
@@ -25,6 +28,7 @@ private:
 
 public:
   CSIRecordsMap   csiSCF;
+  ODBGeneralData  odbGD;
   TonNpiAddress   vlrNum;
   time_t          tmQueried;
 

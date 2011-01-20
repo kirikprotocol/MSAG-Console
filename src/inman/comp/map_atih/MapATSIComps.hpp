@@ -13,6 +13,7 @@
 #include "inman/comp/compdefs.hpp"
 #include "inman/comp/MapOpErrors.hpp"
 #include "inman/comp/map_atih/RequestedSubscription.hpp"
+#include "inman/comp/ODBDefs.hpp"
 
 namespace smsc {
 namespace inman {
@@ -25,6 +26,7 @@ using smsc::inman::comp::Component;
 using smsc::inman::comp::MAPOpErrorId;
 using smsc::inman::comp::UnifiedCSI;
 using smsc::inman::comp::CSIUid_e;
+using smsc::inman::comp::ODBGeneralData;
 
 //MAP anyTimeInfohandling service
 struct MAP_ATIH {
@@ -109,6 +111,7 @@ public:
 
   const CSIScfsMap & getCSIScfs(void) const { return _scfCsi; }
 
+  const ODBGeneralData * getODB(void) const { return _odbGD.empty() ? NULL : &_odbGD; }
 
   virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
@@ -116,6 +119,7 @@ private:
   Logger *                compLogger;
   RequestedSubscription   _csInfo;
   CSIScfsMap              _scfCsi;
+  ODBGeneralData          _odbGD;
 };
 
 }//namespace atih

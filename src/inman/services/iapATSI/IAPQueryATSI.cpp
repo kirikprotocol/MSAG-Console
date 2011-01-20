@@ -105,6 +105,8 @@ void IAPQueryATSI::onATSIResult(ATSIRes & res)
   } else {
     abInfo.abType = AbonentContractInfo::abtPostpaid;
   }
+  if (res.getODB())
+    abInfo.odbGD = *res.getODB();
   smsc_log_debug(logger, "%s(%s): %s", taskName(), abonent.getSignals(),
                  abInfo.toString().c_str());
 }

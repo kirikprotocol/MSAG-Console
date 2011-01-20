@@ -37,6 +37,12 @@ IAPAbilityStr_t IAPAbility::toString(void) const
     }
     str += "VLR";
   }
+  if (value.st.odbGD) {
+    if (!first) {
+      str += ',';  first = false;
+    }
+    str += "ODB";
+  }
   str += '}';
   return str;
 }
@@ -49,7 +55,7 @@ IAPProperty  _knownIAPType[] = {
   , IAPProperty(IAPProperty::iapDB, "iapDB", IAPAbility::abContract)
   , IAPProperty(IAPProperty::iapCHSRI, "iapCHSRI", IAPAbility::abContract | IAPAbility::abSCF
                        | IAPAbility::abIMSI | IAPAbility::abVLR)
-  , IAPProperty(IAPProperty::iapATSI, "iapATSI", IAPAbility::abContract | IAPAbility::abSCF)
+  , IAPProperty(IAPProperty::iapATSI, "iapATSI", IAPAbility::abContract | IAPAbility::abSCF | IAPAbility::abODB)
 };
 
 

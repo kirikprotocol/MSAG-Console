@@ -14,18 +14,19 @@ namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
 
 struct IAPAbility {
-  enum Option_e { abContract = 0x80, abSCF = 0x40, abIMSI = 0x20, abVLR = 0x10 };
+  enum Option_e { abContract = 0x80, abSCF = 0x40, abIMSI = 0x20, abVLR = 0x10, abODB = 0x08 };
 
   struct AbilityFlags {
     uint8_t contract : 1;
     uint8_t gsmSCF   : 1;
     uint8_t imsi     : 1;
     uint8_t vlrNum   : 1;
+    uint8_t odbGD    : 1; //Operator Determined Barring general data
     /* -- */
     uint8_t reserved : 4;
   };
 
-  static const size_t _maxIAPAbilityStrSZ = sizeof("{contract,gsmSCF,IMSI,VLR}") + 1;
+  static const size_t _maxIAPAbilityStrSZ = sizeof("{contract,gsmSCF,IMSI,VLR,ODB}") + 1;
   typedef smsc::core::buffers::FixedLengthString<_maxIAPAbilityStrSZ>
     AbilityStr_t;
 
@@ -49,6 +50,8 @@ struct IAPAbility {
       value.st.imsi = 1;
     if (op_flags & abVLR)
       value.st.vlrNum = 1;
+    if (op_flags & abODB)
+      value.st.odbGD = 1;
   }
 
   AbilityStr_t toString(void) const;

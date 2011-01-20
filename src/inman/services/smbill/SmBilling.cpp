@@ -27,9 +27,14 @@ using smsc::inman::smbill::_SMSubmitOK;
 using smsc::inman::smbill::_SMSubmitNO;
 
 using smsc::inman::comp::UnifiedCSI;
+using smsc::inman::comp::ODBGeneralData;
 
 #include "inman/comp/cap_sms/MOSM_RPCauses.hpp"
 using smsc::inman::comp::_RCS_MOSM_RPCause;
+
+#include "inman/comp/MapOpErrors.hpp"
+using smsc::inman::comp::_RCS_MAPOpErrors;
+using smsc::inman::comp::MAPOpErrorId;
 
 //#include "inman/INManErrors.hpp"
 using smsc::inman::inap::_RCS_TC_Dialog;
@@ -626,12 +631,6 @@ Billing::PGraphState Billing::onChargeSms(void)
     else if (chrgFlags & ChargeSms::chrgCDR)
         billMode = ChargeParm::bill2CDR;
 
-#ifdef SMSEXTRA
-    //TMP_PATCH: Use bill2CDR mode in case of special MSC address reserved for SMSX WEB gateway
-    if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT))
-      billMode = ChargeParm::bill2CDR;
-#endif /* SMSEXTRA */
-
     //check for SMS extra sevice number being set
     if ((xsmsSrv && xsmsSrv->adr.empty())) {
         billMode = ChargeParm::bill2CDR;
@@ -645,13 +644,24 @@ Billing::PGraphState Billing::onChargeSms(void)
         abCsi.Merge(cacheRec);     //merge available abonent info
     }
 
+    bool askProvider = false;
+#ifdef SMSEXTRA
+    //Special processing for SMSX WEB gateway: 
+    // 1) billing mode bill2CDR
+    // 2) callBarred state denies processing 
+    if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)) {
+      billMode = ChargeParm::bill2CDR;
+      if (abCsi.isUnknown())
+        askProvider = true; //check for callBarred state
+    }
+#endif /* SMSEXTRA */
+
     if (abCsi.isPostpaid() && abCsi.getImsi()) {
         billMode = ChargeParm::bill2CDR;
         //do not interact IN platform, just create CDR
         return chargeResult(true);
     }
 
-    bool askProvider = false;
     const AbonentPolicy * iapPolicy = determinePolicy();
     const IAProviderInfo *
       prmPrvd = iapPolicy ? iapPolicy->getIAProvider(AbonentPolicy::iapPrimary) : NULL;
@@ -1049,17 +1059,42 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
     StopTimer(state);
 
     if (qry_status) {
+#ifdef SMSEXTRA
+      //Special processing in case of SMSX WEB gateway
+      if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)
+          && (qry_status == _RCS_MAPOpErrors->mkhash(MAPOpErrorId::informationNotAvailable))) {
+        //non-barred non-prepraid abonent - allow processing
+        state = bilQueried;
+        if (chargeResult(true, qry_status) == Billing::pgEnd)
+          doFinalize();
+        return;
+      }
+#endif /* SMSEXTRA */
       billErr = qry_status;
       if (startIAPQuery()) //check if next IAProvider may ne requested
         return;            //keep bilStarted state
-    } else  {
+    }
+    state = bilQueried;
+
+    if (!qry_status) {
 #ifdef SMSEXTRA
-      //TMP_PATCH: Keep MSC address in case of special value reserved for SMSX WEB gateway
-      if (!ab_info.vlrNum.empty()
-          && !strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)) {
+      //Special processing in case of SMSX WEB gateway
+      if (!strcmp(abCsi.vlrNum.getSignals(), SMSX_WEB_GT)) {
         TonNpiAddress orgVLR = abCsi.vlrNum;
+
         abCsi.Merge(ab_info); //merge known abonent info
-        abCsi.vlrNum = orgVLR;
+        if (!ab_info.vlrNum.empty()) {
+          //Keep MSC address in case of special value reserved for SMSX WEB gateway
+          abCsi.vlrNum = orgVLR;
+        }
+        //Forbid billing in case of barred state
+        if (ab_info.odbGD.hasBit(ODBGeneralData::bit_allOG_CallsBarred)) {
+          smsc_log_info(logger, "%s: allOG_CallsBarred is set for %s", _logId,
+                        abNumber.toString().c_str());
+          if (chargeResult(false, _RCS_MAPOpErrors->mkhash(MAPOpErrorId::callBarred)) == Billing::pgEnd)
+            doFinalize();
+          return;
+        }
       } else
 #endif /* SMSEXTRA */
         abCsi.Merge(ab_info); //merge known abonent info
@@ -1067,7 +1102,6 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
       if (_cfg.abCache)
         _cfg.abCache->setAbonentInfo(abNumber, abCsi);
     }
-    state = bilQueried;
     if (ConfigureSCFandCharge() == Billing::pgEnd)
       doFinalize();
     return;

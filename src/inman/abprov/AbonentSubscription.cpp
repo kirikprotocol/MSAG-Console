@@ -58,6 +58,10 @@ bool AbonentSubscription::Merge(const AbonentSubscription & use_rcd)
     vlrNum = use_rcd.vlrNum;
     rval = true;
   }
+  if (!use_rcd.odbGD.empty()) {
+    odbGD = use_rcd.odbGD;
+    rval = true;
+  }
   if (rval && use_rcd.tmQueried)
     tmQueried = use_rcd.tmQueried;
   return rval;
