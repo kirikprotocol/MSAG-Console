@@ -1817,6 +1817,75 @@ struct SMS
   }
 };
 
+struct SMSPartInfo{
+  enum{
+    flPartPresent=1,
+    flHasSRR=2
+  };
+  SMSPartInfo():fl(flPartPresent){}
+  uint8_t fl;//flags
+  uint8_t dc;//dc of part
+  uint8_t mr;//mr of part
+  enum{SIZE=3};
+};
+
+inline int getSMSPartsCount(SMS& sms)
+{
+  if(!sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+  {
+    throw smsc::util::Exception("sms part info requested, but not present");
+  }
+  unsigned len;
+  const uint8_t* data=(const uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
+  if(data[0]==0)
+  {
+    throw smsc::util::Exception("invalid sms part info detected");
+  }
+  return (len-1)/data[0];
+}
+
+inline SMSPartInfo getSMSPartInfo(SMS& sms,int partIdx)
+{
+  if(!sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+  {
+    throw smsc::util::Exception("sms part info requested, but not present");
+  }
+  SMSPartInfo rv;
+  unsigned len;
+  const uint8_t* data=(const uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
+  uint8_t sz=*data;
+  data++;
+  if((partIdx+1)*sz>len)
+  {
+    throw smsc::util::Exception("sms part info index is out of range (idx=%d, len=%u)",partIdx,len);
+  }
+  data+=partIdx*sz;
+  rv.fl=data[0];
+  rv.dc=data[1];
+  rv.mr=data[2];
+  return rv;
+}
+
+inline void fillSMSPartInfo(SMS& sms,int partsNum,int partIdx,SMSPartInfo partInfo)
+{
+  if(!sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
+  {
+    char buf[SMSPartInfo::SIZE*256]={SMSPartInfo::SIZE,0,};
+    sms.setBinProperty(Tag::SMSC_ORGPARTS_INFO,buf,partsNum*SMSPartInfo::SIZE);
+  }
+  unsigned len;
+  uint8_t* data=(uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
+  if((partIdx+1)*SMSPartInfo::SIZE>len)
+  {
+    throw smsc::util::Exception("sms part info index is out of range (idx=%d, len=%u)",partIdx,len);
+  }
+  data++;
+  data+=partIdx*SMSPartInfo::SIZE;
+  data[0]=partInfo.fl;
+  data[1]=partInfo.dc;
+  data[2]=partInfo.mr;
+}
+
 }//sms
 }//smsc
 
