@@ -187,6 +187,9 @@ ICSrvCfgReaderAC::CfgState
   icsCfg->maxTimeout =  tmo ? (uint16_t)tmo : _DFLT_BILL_TIMEOUT;
   smsc_log_info(logger, "  maxTimeout: %u secs%s", icsCfg->maxTimeout,
                 !tmo ? " (default)":"");
+  if (icsCfg->maxTimeout < _MIN_BILL_TIMEOUT) {
+    smsc_log_warn(logger, "  maxTimeout is lesser than recommended minimum %u secs", _MIN_BILL_TIMEOUT);
+  }
 
   //cache parameters
   {

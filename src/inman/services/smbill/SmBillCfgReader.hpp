@@ -63,7 +63,9 @@ protected:
   static const uint16_t   _MAX_ABTYPE_TIMEOUT = 0xFFFF;   //units: seconds
   static const uint16_t   _DFLT_ABTYPE_TIMEOUT = 8;       //units: seconds
   static const uint16_t   _MAX_DELAY_SECS = 0xFFFF;       //units: seconds
-  static const uint16_t   _DFLT_BILL_TIMEOUT = 120;       // >= 3*30 (Tssf)
+  static const uint16_t   _MIN_BILL_TIMEOUT = 90;         // 30 + 60: as min guards message
+                                                          //delivery report from SMSC to SCF
+  static const uint16_t   _DFLT_BILL_TIMEOUT = 120;       //
 
   // --------------------------------------
   // ICSrvCfgReaderAC interface methods
