@@ -582,7 +582,7 @@ protected:
 
   void processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTaskVector& ftv);
 
-  void generateAlert(SMSId id,SMS* sms,int);
+  void generateAlert(SMSId id,SMS* sms,int,bool);
 
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
