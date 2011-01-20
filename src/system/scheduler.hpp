@@ -355,7 +355,7 @@ public:
 
     UpdateChainChedule(c);
     RescheduleChain(c,c->headTime);
-    info2(log,"Resched: smsId=%lld,oa=%s,oldntt=%lu,newntt=%lu,hdt=%lu,sethead=%s",id,sms.getOriginatingAddress().toString().c_str(),oldntt,sms.getNextTime(),c->headTime,sethead?"true":"false");
+    debug2(log,"Resched: smsId=%lld,oa=%s,oldntt=%lu,newntt=%lu,hdt=%lu,sethead=%s",id,sms.getOriginatingAddress().toString().c_str(),oldntt,sms.getNextTime(),c->headTime,sethead?"true":"false");
 
     if(c->timedQueue.size()>0)
       return c->headTime;

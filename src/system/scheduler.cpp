@@ -509,7 +509,7 @@ void Scheduler::Init(Smsc* psmsc,smsc::util::config::Manager* cfgman)
   localFileStore.Init(cfgman,psmsc);
   //billingStorage.init(*cfgman);
   archiveStorage.init(cfgman->getString("MessageStore.archiveDir"),cfgman->getInt("MessageStore.archiveInterval"));
-  
+
 }
 
 
@@ -728,6 +728,26 @@ void Scheduler::retriveSms(SMSId id, SMS &sms)
   //(*ptr)->LoadSms(sms);
 }
 
+static void addHistoryItem(SMS& sms,const char* item)
+{
+  if(!sms.hasStrProperty(Tag::SMSC_HISTORY))
+  {
+    sms.setStrProperty(Tag::SMSC_HISTORY,item);
+  }else
+  {
+    char buf[129];
+    int itemLength=(int)strlen(item);
+    const SmsPropertyBuf& hst=sms.getStrProperty(Tag::SMSC_HISTORY);
+    if(hst.length()+itemLength<128)
+    {
+      memcpy(buf,hst.c_str(),hst.length());
+      memcpy(buf+hst.length(),item,itemLength);
+      buf[hst.length()+itemLength]=0;
+      sms.setStrProperty(Tag::SMSC_HISTORY,buf);
+    }
+  }
+}
+
 void Scheduler::changeSmsStateToEnroute(SMSId id,
     const Descriptor& dst, uint32_t failureCause,
     time_t nextTryTime, uint32_t attempts)
@@ -746,6 +766,13 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
   //SMS& sms=(*ptr)->sms;
   SMS sms;
   sd->LoadSms(sms);
+  char buf[32];
+  struct tm tm;
+  time_t now=time(0);
+  localtime_r(&now,&tm);
+  sprintf(buf,"T%02d%02d%02d%02d:%d\n",tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec,failureCause);
+  addHistoryItem(sms,buf);
+
   sms.state = ENROUTE;
   sms.destinationDescriptor=dst;
   sms.lastTime=time(NULL);
@@ -802,6 +829,13 @@ void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
   SMS sms;
   sd->LoadSms(sms);
   sms.setConcatSeqNum(sms.getConcatSeqNum()+inc);
+  char buf[32];
+  struct tm tm;
+  time_t now=time(0);
+  localtime_r(&now,&tm);
+  sprintf(buf,"P%02d%02d%02d%02d\n",tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+  addHistoryItem(sms,buf);
+
   sd->it->second=++sd->seq;
   sd->SaveSms(sms);
   LocalFileStoreSave(id,sd);
