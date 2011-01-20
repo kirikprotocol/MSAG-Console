@@ -208,7 +208,7 @@ void Smsc::mainLoop(int idx)
           debug2(log,"enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
             task.sequenceNumber,task.proxy_id);
           //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
-          generateAlert(id,task.sms,task.inDlgId);
+          generateAlert(id,task.sms,task.inDlgId,task.diverted);
         }
         {
           MutexGuard mg(mergeCacheMtx);
@@ -433,9 +433,14 @@ void Smsc::mainLoop(int idx)
 }
 
 
-void Smsc::generateAlert(SMSId id,SMS* sms,int inDlgId)
+void Smsc::generateAlert(SMSId id,SMS* sms,int inDlgId,bool diverted)
 {
-  eventqueue.enqueue(id,SmscCommand::makeAlert(sms,inDlgId));
+  //eventqueue.enqueue(id,SmscCommand::makeAlert(sms,inDlgId));
+  SmscCommand resp=SmscCommand::makeDeliverySmResp(0,0,MAKE_COMMAND_STATUS(CMD_ERR_TEMP,Status::DELIVERYTIMEDOUT));
+  resp->get_resp()->set_inDlgId(inDlgId);
+  resp->get_resp()->set_sms(sms);
+  resp->get_resp()->set_diverted(diverted);
+  eventqueue.enqueue(id,resp);
 }
 
 
