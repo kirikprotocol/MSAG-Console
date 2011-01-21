@@ -221,7 +221,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
             ::memcpy(buf.get(),"00",2);
         }
         fg_.write(buf.get(),buf.GetPos());
-        dlvInfo_->incMsgStats(msg.state,1,fromState,retryCount);
+        dlvInfo_->incMsgStats(regId,msg.state,1,fromState,retryCount);
     }
 
     // writing final log

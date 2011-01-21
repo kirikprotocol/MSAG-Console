@@ -176,6 +176,13 @@ protected:
     return sck->getUserInfo();
   }
 
+  inline InfosmeCore* getCore() const {
+      if (!core) {
+          throw InfosmeException(EXC_SYSTEM,"Not ready yet");
+      }
+      return core;
+  }
+
   /*
   template <class MSG>
   UserInfoPtr getUserInfoAdmin(const MSG& msg)

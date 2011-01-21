@@ -370,7 +370,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                    ulonglong(m.msgId),from);
     if (prevState != m.state) {
         dlv_->storeJournal_->journalMessage(dlvId,regionId_,m,ml.serial);
-        dlv_->dlvInfo_->incMsgStats(m.state,1,prevState);
+        dlv_->dlvInfo_->incMsgStats(regionId_,m.state,1,prevState);
     }
     return secondsReady;
 }
@@ -394,7 +394,7 @@ void RegionalStorage::messageSent( msgid_type msgId,
     const uint8_t prevState = m.state;
     m.state = MSGSTATE_SENT;
     dlv_->storeJournal_->journalMessage(info.getDlvId(),regionId_,m,ml.serial);
-    dlv_->dlvInfo_->incMsgStats(m.state,1,prevState);
+    dlv_->dlvInfo_->incMsgStats(regionId_,m.state,1,prevState);
 }
 
 
@@ -518,7 +518,7 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
                        regionId_, dlvId, ulonglong(msgId),
                        msgTimeToYmd(m.lastTime) );
         dlv_->storeJournal_->journalMessage(info.getDlvId(),regionId_,m,ml.serial);
-        dlv_->dlvInfo_->incMsgStats(m.state,1,prevState);
+        dlv_->dlvInfo_->incMsgStats(regionId_,m.state,1,prevState);
         return;
 
     } while ( false );
@@ -705,8 +705,8 @@ bool RegionalStorage::postInit()
         }
     }
     // syncing stats
-    dlv_->dlvInfo_->incMsgStats(MSGSTATE_SENT,sent);
-    dlv_->dlvInfo_->incMsgStats(MSGSTATE_PROCESS,process);
+    dlv_->dlvInfo_->incMsgStats(regionId_,MSGSTATE_SENT,sent);
+    dlv_->dlvInfo_->incMsgStats(regionId_,MSGSTATE_PROCESS,process);
     return ( !messageList_.empty() || nextResendFile_);
 }
 

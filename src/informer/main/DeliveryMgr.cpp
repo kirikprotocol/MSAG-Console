@@ -241,7 +241,10 @@ public:
         MutexGuard mg(mgr_.mon_);
         for ( DeliveryList::iterator i = mgr_.deliveryList_.begin();
               i != mgr_.deliveryList_.end(); ++i ) {
-            (*i)->popMsgStats(ds);
+            regionid_type regId = anyRegionId;
+            do {
+                regId = (*i)->popMsgStats(regId,ds);
+            } while ( regId != anyRegionId );
         }
         smsc_log_debug(log_,"stats dumper inited");
     }
@@ -299,10 +302,7 @@ public:
         DeliveryList::iterator& iter = mgr_.statsDumpingIter_;
         bool firstPass = true;
         do {
-            DeliveryStats   ds;
-            dlvid_type      dlvId;
-            userid_type     userId;
-            bool archivate = false;
+            DeliveryImplPtr dlv;
             {
                 smsc::core::synchronization::MutexGuard mg(mgr_.mon_);
                 if (firstPass) {
@@ -310,54 +310,56 @@ public:
                     firstPass = false;
                 }
                 if (iter == mgr_.deliveryList_.end()) { break; }
-                const DeliveryInfo& info = (*iter)->getDlvInfo();
-                dlvId = info.getDlvId();
-                const timediff_type arcTime = info.getArchivationTime();
-                if ( arcTime > 0 && currentTime < info.getStartDate()+arcTime ) {
-                    archivate = true;
-                } else {
-                    userId = info.getUserInfo().getUserId();
-                    (*iter)->popMsgStats(ds);
-                }
+                dlv = *iter;
                 ++iter;
             }
-            if ( archivate ) {
-                DeliveryImplPtr dlv;
-                mgr_.getDelivery(dlvId,dlv);
-                if (dlv.get()) {
-                    mgr_.core_.deleteDelivery(dlv->getUserInfo(),dlvId,true);
-                }
+            if ( !dlv.get() ) { continue; }
+
+            const DeliveryInfo& info = dlv->getDlvInfo();
+            const dlvid_type dlvId = info.getDlvId();
+            const timediff_type arcTime = info.getArchivationTime();
+            if ( arcTime > 0 && currentTime < info.getStartDate()+arcTime ) {
+                mgr_.core_.deleteDelivery(dlv->getUserInfo(),dlvId,true);
                 continue;
             }
-            if ( ds.isEmpty() ) continue;
-            if (!fg.isOpened()) {
-                // open file
-                char fpath[200];
-                const unsigned dayhour = unsigned(ymd/10000);
-                sprintf(fpath,"%04u.%02u.%02u/msg%02u.log",
-                        dayhour / 1000000,
-                        dayhour / 10000 % 100,
-                        dayhour / 100 % 100,
-                        dayhour % 100);
-                fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
-                fg.seek(0,SEEK_END);
-                if (fg.getPos() == 0) {
-                    const char* header = "#1 MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL\n";
-                    fg.write(header,strlen(header));
+            const userid_type userId = info.getUserInfo().getUserId();
+
+            DeliveryStats ds;
+            for ( regionid_type regId = anyRegionId; 
+                  (regId = dlv->popMsgStats(regId,ds)) != anyRegionId; ) {
+
+                if ( ds.isEmpty() ) { continue; }
+
+                if (!fg.isOpened()) {
+                    // open file
+                    char fpath[200];
+                    const unsigned dayhour = unsigned(ymd/10000);
+                    sprintf(fpath,"%04u.%02u.%02u/msg%02u.log",
+                            dayhour / 1000000,
+                            dayhour / 10000 % 100,
+                            dayhour / 100 % 100,
+                            dayhour % 100);
+                    fg.create((getCS()->getStatPath()+fpath).c_str(),0666,true);
+                    fg.seek(0,SEEK_END);
+                    if (fg.getPos() == 0) {
+                        const char* header = "#1 MINSEC,DLVID,USER,NEW,PROC,DLVD,FAIL,EXPD,SMSDLVD,SMSFAIL,SMSEXPD,KILL,REGID\n";
+                        fg.write(header,strlen(header));
+                    }
                 }
-            }
-            char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
-                                       dlvId, userId.c_str(),
-                                       ds.totalMessages,
-                                       ds.procMessages,
-                                       ds.dlvdMessages,
-                                       ds.failedMessages,
-                                       ds.expiredMessages,
-                                       ds.dlvdSms,
-                                       ds.failedSms,
-                                       ds.expiredSms,
-                                       ds.killedMessages );
-            fg.write(buf,p-buf);
+                char* p = bufpos + sprintf(bufpos,"%u,%s,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
+                                           dlvId, userId.c_str(),
+                                           ds.totalMessages,
+                                           ds.procMessages,
+                                           ds.dlvdMessages,
+                                           ds.failedMessages,
+                                           ds.expiredMessages,
+                                           ds.dlvdSms,
+                                           ds.failedSms,
+                                           ds.expiredSms,
+                                           ds.killedMessages,
+                                           unsigned(regId) );
+                fg.write(buf,p-buf);
+            } // for regionid
         } while (true);
     }
 

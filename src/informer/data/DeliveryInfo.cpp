@@ -79,8 +79,8 @@ activeWeekDays_(-1)
 
     // stats
     stats_.clear();
-    incstats_[0].clear();
-    incstats_[1].clear();
+    // incstats_[0].clear();
+    // incstats_[1].clear();
     readStats();
 }
 
@@ -227,23 +227,34 @@ unsigned DeliveryInfo::evaluateNchunks( const char*     outText,
 }
 
 
-void DeliveryInfo::incMsgStats( uint8_t state, int value, uint8_t fromState, int smsValue )
+void DeliveryInfo::incMsgStats( regionid_type regionId,
+                                uint8_t state,
+                                int value, uint8_t fromState, int smsValue )
 {
     MutexGuard mg(statLock_);
     stats_.incStat(state,value,smsValue);
     if (fromState) {stats_.incStat(fromState,-value,0);}
     const unsigned idx = getCS()->getStatBankIndex();
-    incstats_[idx].incStat(state,value,smsValue);
-    // doIncStats(state,value,fromState,smsValue);
+    // search for the position in the map
+    StatMap::iterator iter = statmap_.lower_bound(regionId);
+    if ( iter == statmap_.end() || iter->first != regionId ) {
+        iter = statmap_.insert( iter, std::make_pair(regionId,IncStat()) );
+        iter->second.clear();
+    }
+    iter->second.s[idx].incStat(state,value,smsValue);
+    // incstats_[idx].incStat(state,value,smsValue);
 }
 
 
-void DeliveryInfo::popMsgStats( DeliveryStats& ds )
+regionid_type DeliveryInfo::popMsgStats( regionid_type regionId, DeliveryStats& ds )
 {
     MutexGuard mg(statLock_);
+    StatMap::iterator iter = statmap_.lower_bound(regionId);
+    if (iter == statmap_.end()) return anyRegionId;
     const unsigned idx = 1 - getCS()->getStatBankIndex();
-    ds = incstats_[idx];
-    incstats_[idx].clear();
+    ds = iter->second.s[idx];
+    iter->second.s[idx].clear();
+    return iter->first;
 }
 
 

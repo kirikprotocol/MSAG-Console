@@ -290,7 +290,7 @@ void DcpServer::onDisconnect(eyeline::protogen::ProtocolSocketBase* sck)
 void DcpServer::handle(const messages::UserAuth& inmsg)
 {
   dumpMsg(inmsg);
-  UserInfoPtr ui=core->getUserInfo(inmsg.getUserId().c_str());
+  UserInfoPtr ui=getCore()->getUserInfo(inmsg.getUserId().c_str());
   int connId=inmsg.messageGetConnId();
   char pwd[UserInfo::PASSWORD_LENGTH];
   if(!ui.get() || inmsg.getPassword()!=ui->getPassword(pwd))
@@ -346,7 +346,7 @@ void DcpServer::handle(const messages::GetUserStats& inmsg)
       {
         return;
       }
-      ui=core->getUserInfo(inmsg.getUserId().c_str());
+      ui=getCore()->getUserInfo(inmsg.getUserId().c_str());
     }else
     {
       ui=sck->getUserInfo();
@@ -383,7 +383,7 @@ void DcpServer::handle(const messages::CreateDelivery& inmsg)
   const messages::DeliveryInfo& di=inmsg.getInfo();
   fillDeliveryInfoDataFromMsg(did,di);
 
-  dlvid_type id=core->addDelivery(*ui.get(),did);
+  dlvid_type id=getCore()->addDelivery(*ui.get(),did);
 
   messages::CreateDeliveryResp resp;
   resp.setDeliveryId(id);
@@ -397,7 +397,7 @@ void DcpServer::handle(const messages::ModifyDelivery& inmsg)
   DeliveryInfoData did;
   const messages::DeliveryInfo& di=inmsg.getInfo();
   fillDeliveryInfoDataFromMsg(did,di);
-  core->getDelivery(*ui.get(),inmsg.getDeliveryId())->updateDlvInfo(did);
+  getCore()->getDelivery(*ui.get(),inmsg.getDeliveryId())->updateDlvInfo(did);
   mkOkResponse(inmsg);
 }
 
@@ -405,7 +405,7 @@ void DcpServer::handle(const messages::DropDelivery& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  core->deleteDelivery(*ui.get(),inmsg.getDeliveryId());
+  getCore()->deleteDelivery(*ui.get(),inmsg.getDeliveryId());
   mkOkResponse(inmsg);
 }
 
@@ -444,7 +444,7 @@ void DcpServer::handle(const messages::ChangeDeliveryState& inmsg)
       }
       break;
   }
-  core->getDelivery(*ui.get(),inmsg.getDeliveryId())->setState(state,date);
+  getCore()->getDelivery(*ui.get(),inmsg.getDeliveryId())->setState(state,date);
   mkOkResponse(inmsg);
 }
 
@@ -452,7 +452,7 @@ void DcpServer::handle(const messages::AddDeliveryMessages& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   MessageList lst;
   for(std::vector<messages::DeliveryMessage>::const_iterator it=inmsg.getMessages().begin(),end=inmsg.getMessages().end();it!=end;it++)
   {
@@ -485,7 +485,7 @@ void DcpServer::handle(const messages::DropDeliveryMessages& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
 
   dlv->dropMessages(reinterpret_cast<const std::vector< msgid_type >&>(inmsg.getMessageIds()));
 
@@ -496,7 +496,7 @@ void DcpServer::handle(const messages::GetDeliveryGlossary& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   messages::GetDeliveryGlossaryResp resp;
   dlv->getGlossary(resp.getGlossaryRef().getMessagesRef());
   enqueueResp(resp,inmsg);
@@ -506,7 +506,7 @@ void DcpServer::handle(const messages::ModifyDeliveryGlossary& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   dlv->setGlossary(inmsg.getGlossary().getMessages());
   mkOkResponse(inmsg);
 }
@@ -515,7 +515,7 @@ void DcpServer::handle(const messages::GetDeliveryState& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   //const DeliveryInfo& di=dlv->getDlvInfo();
   messages::GetDeliveryStateResp resp;
   messages::DeliveryState& respState=resp.getStateRef();
@@ -544,7 +544,7 @@ void DcpServer::handle(const messages::GetDeliveryInfo& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   DeliveryInfoData did;
   dlv->getDlvInfo().getDeliveryData(did);
   messages::GetDeliveryInfoResp resp;
@@ -649,11 +649,11 @@ void DcpServer::handle(const messages::GetDeliveriesList& inmsg)
     {
       VECLOOP(it,std::string,inmsg.getFilter().getUserIdFilter())
       {
-        users.push_back(core->getUserInfo(it->c_str()));
+        users.push_back(getCore()->getUserInfo(it->c_str()));
       }
     }else
     {
-      core->getUsers(users);
+      getCore()->getUsers(users);
     }
   }
   std::vector<DeliveryPtr> dlvLst;
@@ -820,11 +820,11 @@ void DcpServer::handle(const messages::CountDeliveries& inmsg)
     {
       VECLOOP(it,std::string,inmsg.getFilter().getUserIdFilter())
       {
-        users.push_back(core->getUserInfo(it->c_str()));
+        users.push_back(getCore()->getUserInfo(it->c_str()));
       }
     }else
     {
-      core->getUsers(users);
+      getCore()->getUsers(users);
     }
   }
   int result=0;
@@ -892,7 +892,7 @@ void DcpServer::handle(const messages::RequestMessagesState& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   alm::ALMRequestFilter filter;
   fillFilter(inmsg,filter);
   VECLOOP(it,messages::ReqField,inmsg.getFields())
@@ -908,7 +908,7 @@ void DcpServer::handle(const messages::RequestMessagesState& inmsg)
     }
   }
   messages::RequestMessagesStateResp resp;
-  resp.setReqId(core->getALM().createRequest(inmsg.getDeliveryId(),filter));
+  resp.setReqId(getCore()->getALM().createRequest(inmsg.getDeliveryId(),filter));
   enqueueResp(resp,inmsg);
 }
 
@@ -917,7 +917,7 @@ void DcpServer::handle(const messages::GetNextMessagesPack& inmsg)
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
   messages::GetNextMessagesPackResp resp;
-  alm::IActivityLogMiner& alm=core->getALM();
+  alm::IActivityLogMiner& alm=getCore()->getALM();
 
   //resp.setMoreMessages(.getNext(inmsg.getReqId(),result));
   std::vector<messages::MessageInfo>& miv=resp.getInfoRef();
@@ -976,11 +976,11 @@ void DcpServer::handle(const messages::CountMessages& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   alm::ALMRequestFilter filter;
   fillFilter(inmsg,filter);
   messages::CountMessagesResp resp;
-  resp.setCount(core->getALM().countRecords(inmsg.getDeliveryId(),filter));
+  resp.setCount(getCore()->getALM().countRecords(inmsg.getDeliveryId(),filter));
   enqueueResp(resp,inmsg);
 }
 
@@ -988,7 +988,7 @@ void DcpServer::handle(const messages::GetDeliveryHistory& inmsg)
 {
   dumpMsg(inmsg);
   UserInfoPtr ui=getUserInfo(inmsg);
-  DeliveryPtr dlv=core->getDelivery(*ui,inmsg.getDeliveryId());
+  DeliveryPtr dlv=getCore()->getDelivery(*ui,inmsg.getDeliveryId());
   std::string path=getCS()->getStorePath();
   char buf[64];
   makeDeliveryPath(buf,inmsg.getDeliveryId());

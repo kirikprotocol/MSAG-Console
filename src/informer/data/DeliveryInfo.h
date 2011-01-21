@@ -2,6 +2,7 @@
 #define _INFORMER_DELIVERYINFO_H
 
 #include <vector>
+#include <map>
 #include "informer/io/Typedefs.h"
 #include "informer/io/EmbedRefPtr.h"
 #include "logger/Logger.h"
@@ -161,13 +162,17 @@ public:
     }
 
     /// increment stats, optionally decrementing fromState
-    void incMsgStats( uint8_t state,
+    void incMsgStats( regionid_type regId,
+                      uint8_t state,
                       int     value = 1,
                       uint8_t fromState = 0,
                       int     smsValue = 0 );
 
-    /// the method pops released incremental stats and then clear it.
-    void popMsgStats( DeliveryStats& ds );
+    /// the method pops released incremental stats and then clears it.
+    /// @param prevRegId - previous regionid, (anyRegionId before the first iteration);
+    /// @return current regionId or anyRegionId when the iteration is stopped.
+    regionid_type popMsgStats( regionid_type prevRegId,
+                               DeliveryStats& ds );
 
 protected:
     /// update cached fields from data
@@ -200,7 +205,12 @@ private:
 
     mutable smsc::core::synchronization::Mutex statLock_;
     DeliveryStats                      stats_;
-    DeliveryStats                      incstats_[2];
+    struct IncStat {
+        DeliveryStats s[2];
+        inline void clear() { s[0].clear(); s[1].clear(); }
+    };
+    typedef std::map< regionid_type, IncStat > StatMap;
+    StatMap                            statmap_;
 };
 
 } // informer

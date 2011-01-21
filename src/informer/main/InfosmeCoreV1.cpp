@@ -314,11 +314,17 @@ void InfosmeCoreV1::init( bool archive )
         if (!adminServer_) {
             smsc_log_info(log_,"--- creating admin server ---");
             adminServer_ = new admin::AdminServer();
-            // NOTE: moved below
-            // adminServer_->assignCore(this);
             adminServer_->Init( cfg->getString("adminHost"),
                                 cfg->getInt("adminPort"),
                                 cfg->getInt("adminHandlers") );
+        }
+
+        if (!dcpServer_) {
+            smsc_log_info(log_,"--- creating dcp server ---");
+            dcpServer_ = new dcp::DcpServer();
+            dcpServer_->Init( cfg->getString("dcpHost"),
+                              cfg->getInt("dcpPort"),
+                              cfg->getInt("dcpHandlers") );
         }
 
         // load all users
@@ -394,12 +400,8 @@ void InfosmeCoreV1::init( bool archive )
                       cfg->getInt("almRequestTimeout"));
         }
 
-        if (!dcpServer_) {
-            dcpServer_ = new dcp::DcpServer();
+        if (dcpServer_) {
             dcpServer_->assignCore(this);
-            dcpServer_->Init( cfg->getString("dcpHost"),
-                              cfg->getInt("dcpPort"),
-                              cfg->getInt("dcpHandlers") );
         }
 
     } catch ( InfosmeException& e ) {

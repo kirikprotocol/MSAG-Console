@@ -52,8 +52,8 @@ public:
 
     virtual void getRegionList( std::vector<regionid_type>& regIds ) const;
 
-    inline void popMsgStats( DeliveryStats& ds ) {
-        dlvInfo_->popMsgStats(ds);
+    inline regionid_type popMsgStats( regionid_type regId, DeliveryStats& ds ) {
+        return dlvInfo_->popMsgStats(regId,ds);
     }
 
     /// slowly dump all regions to storage

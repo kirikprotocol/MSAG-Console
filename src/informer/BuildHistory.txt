@@ -1,3 +1,7 @@
+2011-01-21 13:00 bukind
+  msg* aggregation statistics records are now by regions;
+  dcp starts early.
+
 =====================================================================
 2011-01-18 12:50 bukind informer-build-20110118
 
