@@ -40,6 +40,7 @@
 #include "sms/sms_tags.h"
 #include "sms/sms_buf.h"
 #include "core/buffers/FixedLengthString.hpp"
+#include "util/Exception.hpp"
 
 namespace smsc {
 
