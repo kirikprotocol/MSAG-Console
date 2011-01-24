@@ -1871,8 +1871,8 @@ inline void fillSMSPartInfo(SMS& sms,int partsNum,int partIdx,SMSPartInfo partIn
 {
   if(!sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
   {
-    char buf[SMSPartInfo::SIZE*256]={SMSPartInfo::SIZE,0,};
-    sms.setBinProperty(Tag::SMSC_ORGPARTS_INFO,buf,partsNum*SMSPartInfo::SIZE);
+    char buf[1+SMSPartInfo::SIZE*256]={SMSPartInfo::SIZE,0,};
+    sms.setBinProperty(Tag::SMSC_ORGPARTS_INFO,buf,1+partsNum*SMSPartInfo::SIZE);
   }
   unsigned len;
   uint8_t* data=(uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
