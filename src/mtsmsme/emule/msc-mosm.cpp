@@ -35,14 +35,14 @@ using smsc::mtsmsme::processor::BeginMsg;
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
 using smsc::mtsmsme::processor::util::dump;
 
-static char msca[] = "791398699923"; // MSC address
+static char msca[] = "791398699873"; // MSC address
 static char vlra[] = "79139860004"; //VLR address
 static char hlra[] = "79139860004"; //HLR address
-//static char sca[]  = "791398699926"; // service center address SCS HD
+//static char sca[]  = "791398699876"; // service center address SCS HD
 static char sca[]  = "79139869990"; // service center address
-static char rndmsto_pattern[]   = "791398699922%04d";
-static char rndmsfrom_pattern[] = "791398699921%04d";
-static int speed = 300;
+static char rndmsto_pattern[]   = "791398699872%04d";
+static char rndmsfrom_pattern[] = "791398699871%04d";
+static int speed = 1450;
 static int slowstartperiod = 60; //in seconds
 
 
