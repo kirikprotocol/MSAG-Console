@@ -149,37 +149,42 @@ RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const
 
 void RollingIntervalAppender::rollover(time_t dat, bool useLast) throw()
 {
-  std::string currentName = file.getFileName();
-  file.Close();
+  try{
+    std::string currentName = file.getFileName();
+    file.Close();
 
-  struct ::tm rtm;
-  memset(&rtm, 0, sizeof(rtm));
-  lastIntervalStart = roundTime(dat, &rtm);
+    struct ::tm rtm;
+    memset(&rtm, 0, sizeof(rtm));
+    lastIntervalStart = roundTime(dat, &rtm);
 
-  char name_[128];
-  memset(name_, 0, 128);
-  int suffixSize = sprintf(name_, suffixFormat.c_str(), rtm.tm_year, rtm.tm_mon, rtm.tm_mday, rtm.tm_hour, rtm.tm_min, rtm.tm_sec);
+    char name_[128];
+    memset(name_, 0, 128);
+    int suffixSize = sprintf(name_, suffixFormat.c_str(), rtm.tm_year, rtm.tm_mon, rtm.tm_mday, rtm.tm_hour, rtm.tm_min, rtm.tm_sec);
 
-  if(maxBackupIndex > 0)
-    clearLogDir(lastIntervalStart);
+    if(maxBackupIndex > 0)
+      clearLogDir(lastIntervalStart);
 
-  if(useLast)
-  {
-    std::string lastFile;
-    if(findLastFile(dat, suffixSize, lastFile))
+    if(useLast)
     {
-      file.Append((path+'/'+lastFile).c_str());
-    } else {
-      lastIntervalStart = 0;
+      std::string lastFile;
+      if(findLastFile(dat, suffixSize, lastFile))
+      {
+        file.Append((path+'/'+lastFile).c_str());
+      } else {
+        lastIntervalStart = 0;
+      }
+      return;
     }
-    return;
-  }
 
-  if (!currentName.empty() && File::Exists(currentName.c_str())) {
-    File::Rename(currentName.c_str(), (currentName + postfix_).c_str());
+    if (!currentName.empty() && File::Exists(currentName.c_str())) {
+      File::Rename(currentName.c_str(), (currentName + postfix_).c_str());
+    }
+    std::string p = fullFileName + name_;
+    file.WOpen(p.c_str());
+  }catch(std::exception& e)
+  {
+    fprintf(stderr,"RollingIntervalAppender::rollover exception: %s\n",e.what());
   }
-  std::string p = fullFileName + name_;
-  file.WOpen(p.c_str());
 }
 
 void RollingIntervalAppender::log(timeval tp,const char logLevelName, const char * const category, const char * const message) throw()
