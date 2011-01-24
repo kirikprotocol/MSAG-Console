@@ -1936,7 +1936,7 @@ StateType StateMachine::submit(Tuple& t)
       }
     }
 
-    if((isDatagram || isTransaction) && sms->hasBinProperty(Tag::SMSC_MERGE_CONCAT))
+    if((isDatagram || isTransaction) && sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
     {
       try
       {
