@@ -1,7 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi">
@@ -156,47 +155,47 @@
 
 <eye:delimiter/>
 
-<eye:collapsingGroup label="#{msg['user.edit.import']}" opened="true">
+<!--<eye:collapsingGroup label="#{msg['user.edit.import']}" opened="true">-->
 
-  <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
-    <h:outputText style="white-space:nowrap;" value="#{msg['user.edit.enable.import']}"/>
-    <h:selectBooleanCheckbox value="#{userEdit.userToEdit.importDeliveriesFromDir}"
-                             id="importDeliveriesFromDir"
-                             onchange="document.getElementById('importDeliveriesSettings').style.display=this.checked ? '' : 'none';"
-        />
-  </h:panelGrid>
+  <!--<h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">-->
+    <!--<h:outputText style="white-space:nowrap;" value="#{msg['user.edit.enable.import']}"/>-->
+    <!--<h:selectBooleanCheckbox value="#{userEdit.userToEdit.importDeliveriesFromDir}"-->
+                             <!--id="importDeliveriesFromDir"-->
+                             <!--onchange="document.getElementById('importDeliveriesSettings').style.display=this.checked ? '' : 'none';"-->
+        <!--/>-->
+  <!--</h:panelGrid>-->
 
-  <h:panelGrid id="importDeliveriesSettings" style="padding-left:10px; display: #{userEdit.userToEdit.importDeliveriesFromDir ? '':'none'};" columns="1" columnClasses="columnTopLeftAlign">
-    <p/>
-    <h:outputText style="white-space:nowrap;  font-weight:bold;" value="#{msg['user.edit.import.sftpsources']}"/>
-    <eye:dynamicTable value="#{userEdit.dynamicSfptModel}">
-      <eye:textColumn width="25%" title="#{msg['user.edit.import.host']}"   name="host" maxLength="50" allowEditAfterAdd="true"/>
-      <eye:textColumn width="5%"  title="#{msg['user.edit.import.port']}"   name="port" maxLength="8" allowEditAfterAdd="true"/>
-      <eye:textColumn width="10%" title="#{msg['user.edit.import.login']}"   name="login" maxLength="20" allowEditAfterAdd="true"/>
-      <eye:textColumn width="10%" title="#{msg['user.edit.import.password']}"   name="password" maxLength="20" allowEditAfterAdd="true"/>
-      <eye:textColumn width="35%" title="#{msg['user.edit.import.directory']}"   name="directory" maxLength="1024" allowEditAfterAdd="true"/>
-      <eye:selectColumn width="5%" title="#{msg['user.edit.import.encoding']}" name="encoding" allowEditAfterAdd="true" values="#{userEdit.fileEncodings}"/>
-      <eye:textColumn width="10%" title="#{msg['user.edit.import.sourceAddress']}"   name="sourceAddress" maxLength="15" allowEditAfterAdd="true"/>
-    </eye:dynamicTable>
-    <p/>
-    <h:outputText style="white-space:nowrap; font-weight:bold;" value="#{msg['user.edit.import.filesources']}" />
-    <eye:dynamicTable value="#{userEdit.dynamicFileModel}">
-      <eye:textColumn width="85%" title="#{msg['user.edit.import.directory']}"   name="directory" maxLength="1024" allowEditAfterAdd="true"/>
-      <eye:selectColumn width="5%" title="#{msg['user.edit.import.encoding']}"   name="encoding" allowEditAfterAdd="true" values="#{userEdit.fileEncodings}"/>
-      <eye:textColumn width="10%" title="#{msg['user.edit.import.sourceAddress']}"  name="sourceAddress" maxLength="15" allowEditAfterAdd="true"/>
-    </eye:dynamicTable>
-    <p/>
-    <tr:commandLink text="#{msg['testconnect.button']}" action="#{userEdit.verifyUcps}" styleClass="linkButton"/>
-    <p/>
-    <h:panelGrid columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">
-      <h:outputText style="white-space:nowrap;" value="#{userBundle.createReports}"/>
-      <h:selectBooleanCheckbox id="createReports" value="#{userEdit.userToEdit.createReports}"/>
-    </h:panelGrid>
-  </h:panelGrid>
+  <!--<h:panelGrid id="importDeliveriesSettings" style="padding-left:10px; display: #{userEdit.userToEdit.importDeliveriesFromDir ? '':'none'};" columns="1" columnClasses="columnTopLeftAlign">-->
+    <!--<p/>-->
+    <!--<h:outputText style="white-space:nowrap;  font-weight:bold;" value="#{msg['user.edit.import.sftpsources']}"/>-->
+    <!--<eye:dynamicTable value="#{userEdit.dynamicSfptModel}">-->
+      <!--<eye:textColumn width="25%" title="#{msg['user.edit.import.host']}"   name="host" maxLength="50" allowEditAfterAdd="true"/>-->
+      <!--<eye:textColumn width="5%"  title="#{msg['user.edit.import.port']}"   name="port" maxLength="8" allowEditAfterAdd="true"/>-->
+      <!--<eye:textColumn width="10%" title="#{msg['user.edit.import.login']}"   name="login" maxLength="20" allowEditAfterAdd="true"/>-->
+      <!--<eye:textColumn width="10%" title="#{msg['user.edit.import.password']}"   name="password" maxLength="20" allowEditAfterAdd="true"/>-->
+      <!--<eye:textColumn width="35%" title="#{msg['user.edit.import.directory']}"   name="directory" maxLength="1024" allowEditAfterAdd="true"/>-->
+      <!--<eye:selectColumn width="5%" title="#{msg['user.edit.import.encoding']}" name="encoding" allowEditAfterAdd="true" values="#{userEdit.fileEncodings}"/>-->
+      <!--<eye:textColumn width="10%" title="#{msg['user.edit.import.sourceAddress']}"   name="sourceAddress" maxLength="15" allowEditAfterAdd="true"/>-->
+    <!--</eye:dynamicTable>-->
+    <!--<p/>-->
+    <!--<h:outputText style="white-space:nowrap; font-weight:bold;" value="#{msg['user.edit.import.filesources']}" />-->
+    <!--<eye:dynamicTable value="#{userEdit.dynamicFileModel}">-->
+      <!--<eye:textColumn width="85%" title="#{msg['user.edit.import.directory']}"   name="directory" maxLength="1024" allowEditAfterAdd="true"/>-->
+      <!--<eye:selectColumn width="5%" title="#{msg['user.edit.import.encoding']}"   name="encoding" allowEditAfterAdd="true" values="#{userEdit.fileEncodings}"/>-->
+      <!--<eye:textColumn width="10%" title="#{msg['user.edit.import.sourceAddress']}"  name="sourceAddress" maxLength="15" allowEditAfterAdd="true"/>-->
+    <!--</eye:dynamicTable>-->
+    <!--<p/>-->
+    <!--<tr:commandLink text="#{msg['testconnect.button']}" action="#{userEdit.verifyUcps}" styleClass="linkButton"/>-->
+    <!--<p/>-->
+    <!--<h:panelGrid columns="2" columnClasses="column100WidthNoWrap, columnTopLeftAlign">-->
+      <!--<h:outputText style="white-space:nowrap;" value="#{userBundle.createReports}"/>-->
+      <!--<h:selectBooleanCheckbox id="createReports" value="#{userEdit.userToEdit.createReports}"/>-->
+    <!--</h:panelGrid>-->
+  <!--</h:panelGrid>-->
 
-</eye:collapsingGroup>
+<!--</eye:collapsingGroup>-->
 
-<eye:delimiter/>
+<!--<eye:delimiter/>-->
 
 <eye:collapsingGroup label="#{msg['user.edit.archive']}" opened="true">
 
@@ -275,8 +274,9 @@
 
   allRegionsChanged();
 
-  d = document.getElementById('importDeliveriesFromDir').checked ? '':'none';
-  document.getElementById('importDeliveriesSettings').style.display=d;
+//
+//  d = document.getElementById('importDeliveriesFromDir').checked ? '':'none';
+//  document.getElementById('importDeliveriesSettings').style.display=d;
 
   var cdr = document.getElementById('createCDR').checked;
   document.getElementById('cdrOpts').style.display = cdr ? '' : 'none';

@@ -37,7 +37,6 @@ public class UserTestUtils {
     assertEquals(o.isCreateArchive(),n.isCreateArchive());
     assertEquals(o.getDeliveryLifetime(),n.getDeliveryLifetime());
 
-    assertEquals(o.isCreateReports(),n.isCreateReports());
     assertEquals(o.isCreateCDR(),n.isCreateCDR());
     assertEquals(o.getCdrDestination(),n.getCdrDestination());
     assertEquals(o.getCdrOriginator(),n.getCdrOriginator());

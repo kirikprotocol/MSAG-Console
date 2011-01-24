@@ -45,6 +45,13 @@ interface FileResource {
   public void rename(String fromPath, String toPath) throws AdminException;
 
   /**
+   * Удаляет файл на файловом ресурсе
+   * @param path путь к файлу на ресурсе
+   * @throws AdminException ошибка
+   */
+  public void remove(String path) throws AdminException;
+
+  /**
    * Аплоадит файл на файловый ресурс
    * @param localFile локальный файл
    * @param toPath путь на ресурсе, куда надо загрузить файл

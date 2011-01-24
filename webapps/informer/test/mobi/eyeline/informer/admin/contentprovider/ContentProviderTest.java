@@ -1,8 +1,9 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
-import mobi.eyeline.informer.admin.*;
-import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.delivery.changelog.ChangeDeliveryStatusEvent;
+import mobi.eyeline.informer.admin.AdminContext;
+import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.InitException;
+import mobi.eyeline.informer.admin.TestAdminContext;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
@@ -18,11 +19,7 @@ import java.io.File;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 
 /**
  * Copyright Eyeline.mobi
@@ -44,9 +41,7 @@ public class ContentProviderTest {
     userSrcDir = new File(appDir,"userSrcDir");
     context.getFileSystem().mkdirs(userSrcDir);
     User u= context.getUser("a");
-    u.setImportDeliveriesFromDir(true);
     u.setAllRegionsAllowed(false);
-    u.setCreateReports(true);
     List<Integer> regions = new ArrayList<Integer>();
     regions.add(0);
     u.setRegions(regions);

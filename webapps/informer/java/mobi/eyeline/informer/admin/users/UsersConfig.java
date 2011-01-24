@@ -81,12 +81,6 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setCreateArchive(section.getBool("createArchive", false));
     u.setDeliveryLifetime(section.getInt("deliveryLifetime"));
 
-    u.setImportDeliveriesFromDir(section.getBool("importDeliveriesFromDir", false));
-
-
-    u.setCreateReports(section.getBool("createReports",false));
-
-
     u.setCpSettings(loadUserCpSettings(section));
     return u;
   }
@@ -99,15 +93,29 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         UserCPsettings ucps = new UserCPsettings();
         UserCPsettings.Protocol protocol = UserCPsettings.Protocol.valueOf(s.getString("protocol","sftp"));
         ucps.setProtocol(protocol);
-        if(protocol==UserCPsettings.Protocol.sftp) {
+        if(protocol!=UserCPsettings.Protocol.file) {
           ucps.setHost(s.getString("host"));
           if(s.containsParam("port")) {ucps.setPort(s.getInt("port"));}
           ucps.setLogin(s.getString("login"));
           ucps.setPassword(s.getString("password"));
         }
+        String wT = s.getString("workType", null);
+        ucps.setWorkType(wT == null || wT.length() == 0 ? UserCPsettings.WorkType.detailed : UserCPsettings.WorkType.valueOf(wT));
+
+        String period = s.getString("activePeriodStart", null);
+        ucps.setActivePeriodStart(new Time(period == null || period.length() == 0 ? "10:00:00" : period));
+
+        period = s.getString("activePeriodEnd", null);
+        ucps.setActivePeriodEnd(new Time(period == null || period.length() == 0 ? "20:00:00" : period));
+
+        period = s.getString("periodInMin", null);
+        ucps.setPeriodInMin(period == null || period.length() == 0 ? 5 : Long.parseLong(period));
+
         ucps.setDirectory(s.getString("directory"));
         ucps.setEncoding(s.getString("encoding","UTF-8"));
         ucps.setSourceAddress(new Address(s.getString("sourceAddress")));
+        ucps.setCreateReports(s.getBool("createReports", false));
+        ucps.setName(s.getString("name"));
         ucpsList.add(ucps);
       }
       return ucpsList.isEmpty() ? null : ucpsList;
@@ -240,11 +248,6 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     }
 
     userSection.setInt("deliveryLifetime", user.getDeliveryLifetime());
-    userSection.setBool("importDeliveriesFromDir", user.isImportDeliveriesFromDir());
-
-    if(user.isCreateReports()) {
-      userSection.setBool("createReports",true);
-    }
 
 
     if (user.getCpSettings() != null && !user.getCpSettings().isEmpty()) {
@@ -271,15 +274,25 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       XmlConfigSection s = new XmlConfigSection(user.getLogin()+"_"+ucps.getHashId());
       section.addSection(s);
       s.setString("protocol",ucps.getProtocol().toString());
-      if(ucps.getProtocol()==UserCPsettings.Protocol.sftp) {
+      if(ucps.getProtocol() != UserCPsettings.Protocol.file) {
         s.setString("host",ucps.getHost());
-        if(ucps.getPort()!=null) s.setInt("port",ucps.getPort());
+        if(ucps.getPort()!=null && ucps.getPort()!=0){
+          s.setInt("port",ucps.getPort());
+        }
         s.setString("login",ucps.getLogin());
         s.setString("password",ucps.getPassword());
       }
+      if(ucps.isCreateReports()) {
+        s.setBool("createReports",true);
+      }
+      s.setString("workType", ucps.getWorkType() == null ? "" : ucps.getWorkType().toString());
+      s.setString("periodInMin", ucps.getPeriodInMin() == 0 ? "" : Long.toString(ucps.getPeriodInMin()));
+      s.setString("activePeriodStart", ucps.getActivePeriodStart() == null ? "" : ucps.getActivePeriodStart().toString());
+      s.setString("activePeriodEnd", ucps.getActivePeriodEnd() == null ? "" : ucps.getActivePeriodEnd().toString());
       s.setString("directory",ucps.getDirectory());
       s.setString("encoding",ucps.getEncoding());
       s.setString("sourceAddress",ucps.getSourceAddress().getSimpleAddress());
+      s.setString("name", ucps.getName());
     }
     return section;
   }

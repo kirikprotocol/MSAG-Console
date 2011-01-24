@@ -89,9 +89,6 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       settings.setDaemonHost(daemon.getString("host"));
       settings.setDaemonPort(daemon.getInt("port"));
 
-      XmlConfigSection contentProvider = webconfig.getSection("contentProvider");
-      settings.setContentProviderPeriod(contentProvider.getInt("period"));
-
       XmlConfigSection installation = webconfig.getSection("installation");
       File mirrorPath = new File(installation.getString("mirrorpath"));
       settings.setAppMirrorDirs(new File[]{mirrorPath});

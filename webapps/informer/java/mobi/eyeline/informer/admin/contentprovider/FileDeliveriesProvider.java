@@ -14,8 +14,8 @@ public class FileDeliveriesProvider {
   private ContentProviderDaemon daemon;
   private ContentProviderContext context;
 
-  public FileDeliveriesProvider(ContentProviderContext context, File baseDir, File workDir, int periodSec) throws AdminException {
-    daemon = new ContentProviderDaemon(context, baseDir, workDir, periodSec);
+  public FileDeliveriesProvider(ContentProviderContext context, File baseDir, File workDir) throws AdminException {
+    daemon = new ContentProviderDaemon(context, baseDir, workDir);
     this.context = context;
     context.getDeliveryChangesDetector().addListener(daemon);
     daemon.start();

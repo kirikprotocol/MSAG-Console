@@ -32,19 +32,6 @@ class WebConfigManager extends BaseManager<WebConfigSettings> {
   }
 
   /**
-   * Возвращает период синхронизации контент-провайдера
-   *
-   * @return тип установки
-   */
-  public int getContentProviderPeriod() {
-    return readSettings(new SettingsReader<WebConfigSettings, Integer>() {
-      public Integer executeRead(WebConfigSettings settings) {
-        return settings.getContentProviderPeriod();
-      }
-    });
-  }
-
-  /**
    * Возвращает тип установки Informer: SINGLE, HA или HS
    *
    * @return тип установки

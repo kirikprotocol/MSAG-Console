@@ -313,7 +313,18 @@ public class TestDcpConnection extends DcpConnection{
       for(Message m : ms) {
         switch (m.getState()) {
           case Delivered: delivered++; break;
-          case New: newD++; break;
+          case New:
+            boolean finished = false;
+            for(Message _m : ms) {
+              if(_m != m && _m.getId().equals(m.getId())) {
+                finished = true;
+                break;
+              }
+            }
+            if(!finished) {
+              newD++;
+            }
+            break;
           case Failed: failed++; break;
           case Process: exp++; break;
           case Expired: proc++; break;
@@ -427,7 +438,7 @@ public class TestDcpConnection extends DcpConnection{
       if(d.getStatus() == DeliveryStatus.Planned) {
         d.setStatus(DeliveryStatus.Active);
       }
-    }     
+    }
   }
 
 
@@ -466,14 +477,19 @@ public class TestDcpConnection extends DcpConnection{
       if(d.getActivePeriodEnd().getTimeDate().before(now)) {
         continue;
       }
+      List<Message> copy = null;
       List<Message> ms = messages.get(d.getId());
       if(ms == null) {
         continue;
+      }else {
+        copy = new ArrayList<Message>(ms);
       }
       int count = 0;
-      for(Message m : ms) {
+      for(Message m : copy) {
         if(m.getState() == MessageState.New) {
           if(count<100) {
+            m = m.cloneMessage();
+            ms.add(m);
             boolean delivered = r.nextBoolean();
             if(delivered) {
               m.setState(MessageState.Delivered);

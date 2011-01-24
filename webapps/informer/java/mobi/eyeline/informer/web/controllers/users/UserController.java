@@ -15,6 +15,7 @@ import java.util.List;
  * Time: 15:16:30
  */
 public class UserController extends InformerController {
+
   public UserController() {
     super();
   }

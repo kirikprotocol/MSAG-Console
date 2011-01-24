@@ -20,7 +20,7 @@ public class TestDeliveryManager extends DeliveryManager{
     return connection;
   }
 
-  void forceModifyDeliveries() throws AdminException {
+  public void forceModifyDeliveries() throws AdminException {
     connection.modifyAll();
   }
 

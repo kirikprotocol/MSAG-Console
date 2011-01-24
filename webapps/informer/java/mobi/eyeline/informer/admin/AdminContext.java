@@ -75,7 +75,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       InformerSettings is = informerManager.getConfigSettings();
       deliveryChangesDetector = new DeliveryChangesDetectorImpl(new File(is.getStoreDir(), "final_log"), fileSystem);
 
-      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getContentProviderPeriod());
+      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir);
 
       deliveryNotificationsProvider = new DeliveryNotificationsProvider(this, webConfig.getNotificationSettings());
 

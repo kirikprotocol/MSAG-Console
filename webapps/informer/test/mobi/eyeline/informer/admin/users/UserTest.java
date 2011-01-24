@@ -7,9 +7,7 @@ import org.junit.Test;
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * author: alkhal
@@ -316,7 +314,7 @@ public class UserTest {
 
   @Test
   public void testCPSettings() throws AdminException {
-    User o = createUser();;
+    User o = createUser();
     List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
     UserCPsettings ucps = new UserCPsettings();
     ucps.setProtocol(UserCPsettings.Protocol.sftp);
@@ -327,6 +325,10 @@ public class UserTest {
     ucps.setEncoding("UTF-8");
     ucps.setLogin("user1");
     ucps.setPassword("pwd1");
+    ucps.setActivePeriodEnd(new Time(10, 10, 10));
+    ucps.setActivePeriodEnd(new Time(20, 10, 10));
+    ucps.setWorkType(UserCPsettings.WorkType.simple);
+    ucps.setPeriodInMin(100);
 
     UserCPsettings ucpsn = new UserCPsettings(ucps);
     assertEquals(ucps,ucpsn);

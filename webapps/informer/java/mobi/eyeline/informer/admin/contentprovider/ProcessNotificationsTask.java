@@ -84,7 +84,7 @@ class ProcessNotificationsTask implements Runnable{
           File reportFile = new File(userDir, d.getName() + ".rep." + deliveryId);
 
           if (context.getFileSystem().exists(reportFile)) {
-            if (user.isCreateReports()) {
+            if (ucps.isCreateReports()) {
               createReport(deliveryId, reportFile, user, d, ucps);
               File finReportFile = new File(userDir, d.getName() + ".report");
               context.getFileSystem().rename(reportFile, finReportFile);

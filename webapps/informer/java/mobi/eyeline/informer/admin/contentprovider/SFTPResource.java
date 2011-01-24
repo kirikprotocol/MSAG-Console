@@ -6,6 +6,7 @@ import com.jcraft.jsch.Session;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +22,9 @@ import java.util.List;
  * Time: 17:00:06
  */
 class SFTPResource implements FileResource {
+
+  private static final Logger log = Logger.getLogger(SFTPResource.class);
+
   private JSch jsch;
   private Session session = null;
   private ChannelSftp channel = null;
@@ -45,7 +49,7 @@ class SFTPResource implements FileResource {
   public void open() throws AdminException {
     try {
       session = jsch.getSession(ucps.getLogin(), ucps.getHost());
-      if(ucps.getPort()!=null) session.setPort(ucps.getPort());
+      if(ucps.getPort()!=null && ucps.getPort() != 0) session.setPort(ucps.getPort());
       session.setPassword(ucps.getPassword());
       session.setTimeout(5000);
       session.connect();
@@ -72,6 +76,9 @@ class SFTPResource implements FileResource {
   }
 
   public void get(String fileName, File localFile) throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug("  Download remote file: '" + fileName + "' to local '" + localFile.getAbsolutePath() + "'.");
+
     OutputStream os = null;
     try {
       os = fileSysLocal.getOutputStream(localFile,false);
@@ -86,6 +93,8 @@ class SFTPResource implements FileResource {
   }
 
   public void rename(String fromFileName, String toFileName) throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug("  Rename remote file: '" + fromFileName + "' to '" + toFileName + "'.");
     try {
       channel.rename(ucps.getDirectory() + "/" +fromFileName,ucps.getDirectory() + "/" +toFileName);
     }
@@ -94,7 +103,20 @@ class SFTPResource implements FileResource {
     }
   }
 
+  @Override
+  public void remove(String path) throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug("  Remove remote file: '" + path+ "'.");
+    try {
+      channel.rm(ucps.getDirectory() + "/" + path);
+    } catch (Exception e) {
+      throw new ContentProviderException("connectionError",e);
+    }
+  }
+
   public void put(File localFile, String toFileName) throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug(" Upload local file: '" + localFile.getAbsolutePath() + "' to remote '" + toFileName + "'.");
     InputStream is = null;
     try {
       is = fileSysLocal.getInputStream(localFile);

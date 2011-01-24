@@ -1,9 +1,9 @@
 package mobi.eyeline.informer.admin.users;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.util.validation.ValidationException;
-import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.Time;
+
 import java.io.Serializable;
 import java.security.MessageDigest;
 
@@ -15,6 +15,7 @@ import java.security.MessageDigest;
  */
 public class UserCPsettings implements Serializable {
   private Protocol protocol;
+  private WorkType workType;
   private String host;
   private Integer port;
   private String directory;
@@ -24,14 +25,20 @@ public class UserCPsettings implements Serializable {
   private String password;
   private String hashId;
 
+  private Time activePeriodStart;
+  private Time activePeriodEnd;
 
-  private final ValidationHelper vh = new ValidationHelper(User.class);
+  private long periodInMin;
 
+  private boolean createReports;
+
+  private String name;
 
   public UserCPsettings() {
   }
 
   public UserCPsettings(UserCPsettings other) {
+    this.name = other.name;
     this.protocol = other.protocol;
     this.host = other.host;
     this.port = other.port;
@@ -41,6 +48,59 @@ public class UserCPsettings implements Serializable {
     this.login = other.login;
     this.password = other.password;
     this.hashId=other.hashId;
+    this.workType = other.workType;
+    this.activePeriodEnd = other.activePeriodEnd;
+    this.activePeriodStart = other.activePeriodStart;
+    this.periodInMin = other.periodInMin;
+    this.createReports = other.createReports;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public boolean isCreateReports() {
+    return createReports;
+  }
+
+  public void setCreateReports(boolean createReports) {
+    this.createReports = createReports;
+  }
+
+  public long getPeriodInMin() {
+    return periodInMin;
+  }
+
+  public void setPeriodInMin(long periodInMin) {
+    this.periodInMin = periodInMin;
+  }
+
+  public Time getActivePeriodStart() {
+    return activePeriodStart;
+  }
+
+  public void setActivePeriodStart(Time activePeriodStart) {
+    this.activePeriodStart = activePeriodStart;
+  }
+
+  public Time getActivePeriodEnd() {
+    return activePeriodEnd;
+  }
+
+  public void setActivePeriodEnd(Time activePeriodEnd) {
+    this.activePeriodEnd = activePeriodEnd;
+  }
+
+  public WorkType getWorkType() {
+    return workType;
+  }
+
+  public void setWorkType(WorkType workType) {
+    this.workType = workType;
   }
 
   public String getHost() {
@@ -74,8 +134,7 @@ public class UserCPsettings implements Serializable {
     return sourceAddress;
   }
 
-  public void setSourceAddress(Address sourceAddress) throws AdminException {
-    vh.checkNotNull("sourceAddr", sourceAddress);
+  public void setSourceAddress(Address sourceAddress) {
     this.sourceAddress = sourceAddress;
     hashId=null;
   }
@@ -84,10 +143,7 @@ public class UserCPsettings implements Serializable {
     return encoding;
   }
 
-  public void setEncoding(String encoding) throws ValidationException {
-    if(encoding!=null) {
-      vh.checkSupportedEncoding("fileEncoding",encoding);
-    }
+  public void setEncoding(String encoding){
     this.encoding = encoding;
     hashId=null;
   }
@@ -125,14 +181,22 @@ public class UserCPsettings implements Serializable {
 
     UserCPsettings that = (UserCPsettings) o;
 
+    if (createReports != that.createReports) return false;
+    if (periodInMin != that.periodInMin) return false;
+    if (activePeriodEnd != null ? !activePeriodEnd.equals(that.activePeriodEnd) : that.activePeriodEnd != null)
+      return false;
+    if (activePeriodStart != null ? !activePeriodStart.equals(that.activePeriodStart) : that.activePeriodStart != null)
+      return false;
     if (directory != null ? !directory.equals(that.directory) : that.directory != null) return false;
     if (encoding != null ? !encoding.equals(that.encoding) : that.encoding != null) return false;
     if (host != null ? !host.equals(that.host) : that.host != null) return false;
     if (login != null ? !login.equals(that.login) : that.login != null) return false;
+    if (name != null ? !name.equals(that.name) : that.name != null) return false;
     if (password != null ? !password.equals(that.password) : that.password != null) return false;
     if (port != null ? !port.equals(that.port) : that.port != null) return false;
     if (protocol != that.protocol) return false;
     if (sourceAddress != null ? !sourceAddress.equals(that.sourceAddress) : that.sourceAddress != null) return false;
+    if (workType != that.workType) return false;
 
     return true;
   }
@@ -140,6 +204,7 @@ public class UserCPsettings implements Serializable {
   @Override
   public int hashCode() {
     int result = protocol != null ? protocol.hashCode() : 0;
+    result = 31 * result + (workType != null ? workType.hashCode() : 0);
     result = 31 * result + (host != null ? host.hashCode() : 0);
     result = 31 * result + (port != null ? port.hashCode() : 0);
     result = 31 * result + (directory != null ? directory.hashCode() : 0);
@@ -147,6 +212,11 @@ public class UserCPsettings implements Serializable {
     result = 31 * result + (sourceAddress != null ? sourceAddress.hashCode() : 0);
     result = 31 * result + (login != null ? login.hashCode() : 0);
     result = 31 * result + (password != null ? password.hashCode() : 0);
+    result = 31 * result + (activePeriodStart != null ? activePeriodStart.hashCode() : 0);
+    result = 31 * result + (activePeriodEnd != null ? activePeriodEnd.hashCode() : 0);
+    result = 31 * result + (int) (periodInMin ^ (periodInMin >>> 32));
+    result = 31 * result + (createReports ? 1 : 0);
+    result = 31 * result + (name != null ? name.hashCode() : 0);
     return result;
   }
 
@@ -163,14 +233,34 @@ public class UserCPsettings implements Serializable {
       }
       sb.append(directory);
     }
+    sb.append('(').
+        append("workType=").append(workType).
+        append(", activePeriodStart=").append(activePeriodStart).
+        append(", activePeriodEnd=").append(activePeriodEnd).
+        append(", periodInMin=").append(periodInMin).
+        append(", createReports=").append(createReports).
+        append(", name=").append(name).
+        append(')');
     return sb.toString();
   }
 
   public String getHashId() throws AdminException {
 
+    StringBuilder sb = new StringBuilder();
+    if(login!=null) sb.append(login).append('@');
+    sb.append(protocol).append("://");
+    if(host!=null) sb.append(host);
+    if(port!=null) sb.append(':').append(port.toString());
+    if(directory!=null) {
+      if(!directory.startsWith("/")) {
+        sb.append("/");
+      }
+      sb.append(directory);
+    }
+
     if(hashId==null) {
       try {
-        byte[] bytes = MessageDigest.getInstance("MD5").digest(toString().getBytes("UTF-8"));
+        byte[] bytes = MessageDigest.getInstance("MD5").digest(sb.toString().getBytes("UTF-8"));
         hashId="";
         for(byte b : bytes) {
           String s = Integer.toHexString(b&0xFF);
@@ -195,10 +285,19 @@ public class UserCPsettings implements Serializable {
     if(directory==null || directory.length()==0) throw new UserException("ucps.directory.invalid");
     if(encoding==null || encoding.length()==0) throw new UserException("ucps.encoding.invalid");
     if(sourceAddress==null) throw new UserException("ucps.sourceaddr.invalid");
+    if(workType == null) throw new UserException("ucps.workType.invalid");
+    if(periodInMin <= 0) throw new UserException("ucps.periodInMin.invalid");
+    if(activePeriodStart == null) throw new UserException("ucps.activePeriodStart.invalid");
+    if(activePeriodEnd == null) throw new UserException("ucps.activePeriodEnd.invalid");
+    if(name == null || name.length() == 0) throw new UserException("ucps.name.invalid");
   }
 
 
   public enum Protocol {
-    sftp,file
+    sftp,file,smb,ftp
+  }
+
+  public enum WorkType {
+    simple, detailed
   }
 }

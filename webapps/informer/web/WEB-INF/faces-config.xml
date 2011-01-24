@@ -123,6 +123,11 @@
     <converter-class>mobi.eyeline.informer.web.components.DateConverter</converter-class>
   </converter>
 
+  <converter>
+    <converter-id>protocolConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.users.CpProtocolConverter</converter-class>
+  </converter>
+
   <render-kit>
     <renderer>
       <component-family>Eyeline</component-family>
@@ -388,6 +393,36 @@
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+      <managed-bean-name>cpFtpEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.FtpResourceEditController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>cpSftpEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.SftpResourceEditController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>cpSmbEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.SmbResourceEditController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>cpFileEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.FileResourceEditController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>cpList</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.CPResourceListController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
 
   <navigation-rule>
     <navigation-case>
@@ -557,6 +592,32 @@
     <navigation-case>
       <from-outcome>CDR</from-outcome>
       <to-view-id>/cdr/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>FTP_RESOURCE_EDIT</from-outcome>
+      <to-view-id>/users/cpFtpEdit.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>SFTP_RESOURCE_EDIT</from-outcome>
+      <to-view-id>/users/cpSftpEdit.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>SMB_RESOURCE_EDIT</from-outcome>
+      <to-view-id>/users/cpSmbEdit.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>FILE_RESOURCE_EDIT</from-outcome>
+      <to-view-id>/users/cpFileEdit.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>CP_RESOURCE_LIST</from-outcome>
+      <to-view-id>/users/cpResourceList.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 

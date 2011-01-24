@@ -36,7 +36,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -243,7 +246,7 @@ public class TestAdminContext extends AdminContext {
       deliveryNotificationsProvider = new DeliveryNotificationsProvider(this, webConfig.getNotificationSettings());
       deliveryChangesDetector.addListener(deliveryNotificationsProvider);
 
-      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir, webConfig.getContentProviderPeriod());
+      fileDeliveriesProvider = new FileDeliveriesProvider(this, appBaseDir, workDir);
 
       siebelProvider = new SiebelProvider(this, webConfig.getSiebelSettings(), workDir);
 

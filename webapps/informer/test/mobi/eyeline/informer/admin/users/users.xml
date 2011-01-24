@@ -37,6 +37,11 @@
           <param name="directory" type="string">/home/path</param>
           <param name="encoding"  type="string">UTF-8</param>
           <param name="sourceAddress"  type="string">+79130000111</param>
+          <param name="name"  type="string">0</param>
+          <param name="activePeriodStart"  type="string">00:00:00</param>
+          <param name="activePeriodEnd"  type="string">00:00:00</param>
+          <param name="workType"  type="string">detailed</param>
+          <param name="periodInMin"  type="int">2</param>
         </section>
         <section name="ucps_1">
           <param name="host" type="string">some.host.2</param>
@@ -46,6 +51,11 @@
           <param name="directory" type="string">/home/path2</param>
           <param name="encoding"  type="string">cp1251</param>
           <param name="sourceAddress"  type="string">+79130000222</param>
+          <param name="name"  type="string">1</param>
+          <param name="activePeriodStart"  type="string">00:00:00</param>
+          <param name="activePeriodEnd"  type="string">00:00:00</param>
+          <param name="workType"  type="string">simple</param>
+          <param name="periodInMin"  type="int">2</param>
         </section>
       </section>
     </section>

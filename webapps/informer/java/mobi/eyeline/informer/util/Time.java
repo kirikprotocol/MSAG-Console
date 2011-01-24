@@ -49,6 +49,43 @@ public class Time implements Comparable {
     init(hour, min, sec);
   }
 
+  /**
+   * Инициализирует объект
+   *
+   * @param timeInMillis  время в секундах
+   */
+  public Time(long timeInMillis) {
+    Calendar c = Calendar.getInstance();
+    c.setTimeInMillis(timeInMillis);
+    hour = c.get(Calendar.HOUR_OF_DAY);
+    min = c.get(Calendar.MINUTE);
+    sec = c.get(Calendar.SECOND);
+  }
+
+  private static Calendar getCalendar(Time t) {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.HOUR_OF_DAY, t.hour);
+    c.set(Calendar.MINUTE, t.min);
+    c.set(Calendar.SECOND, t.sec);
+    return c;
+
+  }
+
+  public boolean isInInterval(Time l, Time r) {
+    if(l.equals(r)) {
+      return true;
+    }
+    Calendar lCal = getCalendar(l);
+    Date rD = r.getTimeDate();
+    Date thisD = getTimeDate();
+    Date lD;
+    if(l.hour > r.hour || (l.hour ==  r.hour && l.min>r.min) || (l.hour ==  r.hour && l.min == r.min && l.sec > r.sec)) { // 21:32 - 6:54
+      lCal.add(Calendar.DAY_OF_YEAR, -1);
+    }
+    lD = lCal.getTime();
+    return lD.compareTo(thisD)<=0 && thisD.compareTo(rD) <= 0;
+  }
+
 
   /**
    * Инициализирует объект, копируя значения из другого объекта типа Time
@@ -127,11 +164,7 @@ public class Time implements Comparable {
    * @return время в виде объекта типа Date
    */
   public Date getTimeDate() {
-    Calendar c = Calendar.getInstance();
-    c.set(Calendar.HOUR_OF_DAY, hour);
-    c.set(Calendar.MINUTE, min);
-    c.set(Calendar.SECOND, sec);
-    return c.getTime();
+    return getCalendar(this).getTime();
   }
 
   @Override

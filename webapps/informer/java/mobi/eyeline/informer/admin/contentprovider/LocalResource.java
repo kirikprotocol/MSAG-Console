@@ -3,6 +3,7 @@ package mobi.eyeline.informer.admin.contentprovider;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +19,9 @@ import java.util.List;
  * Time: 18:34:53
  */
 class LocalResource implements FileResource {
+
+  private static final Logger log = Logger.getLogger(LocalResource.class);
+
   private FileSystem fileSys;
   private File userSrcDir;
 
@@ -48,6 +52,8 @@ class LocalResource implements FileResource {
   }
 
   public void get(String fileName, File localFile) throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug("  Download remote file: '" + fileName + "' to local '" + localFile.getAbsolutePath() + "'.");
     InputStream is = null;
     OutputStream os = null;
     try {
@@ -66,10 +72,21 @@ class LocalResource implements FileResource {
 
 
   public void rename(String fromFileName, String toFileName) throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug("  Rename remote file: '" + fromFileName + "' to '" + toFileName + "'.");
     fileSys.rename(new File(userSrcDir,fromFileName),new File(userSrcDir,toFileName));
   }
 
+  @Override
+  public void remove(String path) throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug("  Remove remote file: '" + path+ "'.");
+    fileSys.delete(new File(userSrcDir, path));
+  }
+
   public void put(File localFile, String fileName) throws AdminException {
+    if (log.isDebugEnabled())
+      log.debug(" Upload local file: '" + localFile.getAbsolutePath() + "' to remote '" + fileName + "'.");
     InputStream is = null;
     OutputStream os = null;
     try {

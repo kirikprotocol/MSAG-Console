@@ -2,14 +2,13 @@ package mobi.eyeline.informer.util;
 
 import org.junit.Test;
 
-import java.util.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * User: artem
@@ -125,6 +124,44 @@ public class TimeTest {
       new Time((Time)null);
       fail("Accept null string in constructor");
     } catch (NullPointerException ignored) {}
+  }
+
+
+  private static Time getTime(String s) {
+    return new Time(s);
+  }
+
+  @Test
+  public void testInInterval() {
+    Time l, r;
+
+    l = getTime("21:56:13");
+    r = getTime("20:42:43");
+    assertTrue(getTime("20:40:43").isInInterval(l,r));
+
+    l = getTime("21:56:13");
+    r = getTime("21:42:43");
+    assertTrue(getTime("20:40:43").isInInterval(l,r));
+
+    l = getTime("21:56:13");
+    r = getTime("21:56:01");
+    assertTrue(getTime("20:40:43").isInInterval(l,r));
+
+    l = getTime("21:56:13");
+    r = getTime("21:56:01");
+    assertTrue(!getTime("21:56:12").isInInterval(l,r));
+
+    l = getTime("10:56:13");
+    r = getTime("21:56:01");
+    assertTrue(getTime("11:56:12").isInInterval(l,r));
+
+    l = getTime("10:56:13");
+    r = getTime("21:56:01");
+    assertTrue(!getTime("22:57:11").isInInterval(l,r));
+
+    l = r;
+    assertTrue(getTime("22:57:11").isInInterval(l,r));
+
   }
 
   @Test

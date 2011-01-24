@@ -1,0 +1,129 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['cp.resource.edit']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:message level="#{cpSftpEdit.messageType}" rendered="#{cpSftpEdit.message != null}">
+        <h:outputText value="#{cpSftpEdit.message}"/>
+      </eye:message>
+
+      <h:panelGroup >
+
+        <h:inputHidden id="edit" value="#{cpSftpEdit.edit}"/>
+
+        <h:inputHidden id="settings_id" value="#{cpSftpEdit.id}"/>
+
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2"
+                     columnClasses="column100Width, columnTopLeftAlign">
+
+          <h:outputText value="#{msg['user.edit.import.name']}"/>
+          <h:inputText value="#{cpSftpEdit.settings.name}"/>
+
+          <h:outputText value="#{msg['user.edit.import.user']}"/>
+
+          <h:panelGroup rendered="#{cpSftpEdit.edit}">
+            <h:inputHidden id="user_ID" value="#{cpSftpEdit.userId}"/>
+            <h:outputText value="#{cpSftpEdit.userId}"/>
+          </h:panelGroup>
+
+          <h:selectOneMenu rendered="#{!cpSftpEdit.edit}" value="#{cpSftpEdit.userId}">
+            <f:selectItems value="#{cpSftpEdit.uniqueUsers}"/>
+          </h:selectOneMenu>
+
+          <h:outputText id="host" value="#{msg['user.edit.import.host']}"/>
+          <h:inputText id="hostLabel" maxlength="50" value="#{cpSftpEdit.settings.host}"/>
+
+          <h:outputText id="port" value="#{msg['user.edit.import.port']}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']}" id="portLabel" maxlength="8" value="#{cpSftpEdit.settings.port}"/>
+
+          <h:outputText id="login" value="#{msg['user.edit.import.login']}"/>
+          <h:inputText id="loginLabel" maxlength="20" value="#{cpSftpEdit.settings.login}"/>
+
+          <h:outputText id="password" value="#{msg['user.edit.import.password']}"/>
+          <h:inputText id="passwordLabel" maxlength="20" value="#{cpSftpEdit.settings.password}"/>
+
+          <h:outputText value="#{msg['user.edit.import.directory']}"/>
+          <h:inputText maxlength="1024" value="#{cpSftpEdit.settings.directory}" size="80"/>
+
+          <h:outputText value="#{msg['user.edit.import.workType']}"/>
+          <h:selectOneMenu id="workType" value="#{cpSftpEdit.settings.workType}" onchange="typeChanged()">
+            <f:selectItems value="#{cpSftpEdit.workTypes}"/>
+          </h:selectOneMenu>
+
+          <h:outputText id="createReportsLabel" value="#{userBundle.createReports}"/>
+          <h:selectBooleanCheckbox id="createReports" value="#{cpSftpEdit.settings.createReports}"/>
+
+          <h:outputText value="#{msg['user.edit.import.encoding']}"/>
+          <h:selectOneMenu value="#{cpSftpEdit.settings.encoding}">
+            <f:selectItems value="#{cpSftpEdit.fileEncodings}"/>
+          </h:selectOneMenu>
+
+          <h:outputText value="#{msg['user.edit.import.sourceAddress']}"/>
+          <h:inputText converter="addressConverter"  converterMessage="#{msg['invalid_param_value']}"
+                       value="#{cpSftpEdit.settings.sourceAddress}" maxlength="15"/>
+
+          <h:outputText value="#{msg['user.edit.import.activePeriod']}"/>
+          <h:panelGroup>
+            <eye:inputDate value="#{cpSftpEdit.activePeriodStart}" type="short_time"/>
+            <h:outputText value=" - "/>
+            <eye:inputDate value="#{cpSftpEdit.activePeriodEnd}" type="short_time"/>
+          </h:panelGroup>
+
+          <h:outputText value="#{msg['user.edit.import.updatePeriodInMin']}"/>
+          <h:inputText converterMessage="#{msg['invalid_param_value']}" value="#{cpSftpEdit.settings.periodInMin}" size="10"/>
+
+        </h:panelGrid>
+
+        <eye:delimiter/>
+
+        <eye:buttons>
+          <eye:button>
+            <h:commandLink value="#{msg['testconnect.button']}" action="#{cpSftpEdit.verifyConnection}"/>
+          </eye:button>
+          <eye:space/>
+          <eye:button>
+            <h:commandLink value="#{msg['save.button']}" action="#{cpSftpEdit.save}">
+              <f:param name="userId" value="#{cpSftpEdit.userId}"/>
+            </h:commandLink>
+          </eye:button>
+          <eye:button>
+            <h:commandLink value="#{msg['cancel.button']}" action="CP_RESOURCE_LIST" immediate="true"/>
+          </eye:button>
+        </eye:buttons>
+
+      </h:panelGroup>
+
+      <script type="text/javascript" language="javascript">
+
+        function typeChanged() {
+          var dt = document.getElementById('workType');
+          var disp = dt.options[0].selected ? 'none' : '';
+          var e = document.getElementById('createReports');
+          if(disp == 'none') {
+            e.checked=false;
+          }
+          e.style.display = disp;
+          document.getElementById('createReportsLabel').style.display = disp;
+        }
+
+        typeChanged();
+
+      </script>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

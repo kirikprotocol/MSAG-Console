@@ -14,6 +14,6 @@ public class TestContentProviderDaemon extends ContentProviderDaemon{
 
 
   public TestContentProviderDaemon(ContentProviderContext context, File informerBase, File appWorkDir) throws AdminException {
-    super(context, informerBase, appWorkDir, 1);
+    super(context, informerBase, appWorkDir);
   }
 }

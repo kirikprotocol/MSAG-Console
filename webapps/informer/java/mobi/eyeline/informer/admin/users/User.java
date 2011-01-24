@@ -47,11 +47,8 @@ public class User implements Serializable {
   private boolean smsNotification;
   private boolean createArchive;
   private int deliveryLifetime;
-
-  private boolean importDeliveriesFromDir;
   //private String directory;
 
-  private boolean createReports;
 
 
   private final ValidationHelper vh = new ValidationHelper(User.class);
@@ -96,9 +93,7 @@ public class User implements Serializable {
     this.createArchive=user.createArchive;
     this.deliveryLifetime=user.deliveryLifetime;
 
-    this.createReports=user.createReports;
     this.allRegionsAllowed=user.allRegionsAllowed;
-    this.importDeliveriesFromDir = user.importDeliveriesFromDir;
     this.retryOnFail = user.retryOnFail;
 
     this.cdrDestination = user.cdrDestination;
@@ -351,18 +346,6 @@ public class User implements Serializable {
     this.deliveryLifetime = deliveryLifetime;
   }
 
-
-
-
-  public boolean isCreateReports() {
-    return createReports;
-  }
-
-  public void setCreateReports(boolean createReports) {
-    this.createReports = createReports;
-  }
-
-
   public boolean isAllRegionsAllowed() {
     return allRegionsAllowed;
   }
@@ -377,14 +360,6 @@ public class User implements Serializable {
 
   public void setAllRegionsAllowed(boolean allRegionsAllowed) {
     this.allRegionsAllowed = allRegionsAllowed;
-  }
-
-  public boolean isImportDeliveriesFromDir() {
-    return importDeliveriesFromDir;
-  }
-
-  public void setImportDeliveriesFromDir(boolean importDeliveriesFromDir) {
-    this.importDeliveriesFromDir = importDeliveriesFromDir;
   }
 
   public List<UserCPsettings> getCpSettings() {

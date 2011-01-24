@@ -30,7 +30,7 @@ class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDi
   private ScheduledExecutorService reportScheduler;
   static final String NAME = "ContentProviderDaemon";
   static final String NAME_REPORT = "ContentProviderDaemonReports";
-  private int periodSec;
+
   private static final long SHUTDOWN_WAIT_TIME = 2000L;
   FileSystem fileSys;
   ContentProviderContext context;
@@ -39,11 +39,10 @@ class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDi
 
 
 
-  public ContentProviderDaemon(ContentProviderContext context, File informerBase, File workDir, int periodSec) throws AdminException {  
+  public ContentProviderDaemon(ContentProviderContext context, File informerBase, File workDir) throws AdminException {
     this.context = context;
     this.informerBase = informerBase;
     this.workDir = new File(workDir,"contentProvider");
-    this.periodSec = periodSec;
 
     fileSys=context.getFileSystem();
     if(!fileSys.exists(this.workDir)) {
@@ -72,7 +71,7 @@ class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDi
       }
     });
 
-    scheduler.scheduleAtFixedRate(new MainLoopTask(context,this,workDir),0, periodSec,TimeUnit.SECONDS);
+    scheduler.scheduleAtFixedRate(new MainLoopTask(context,this,workDir),0, 60, TimeUnit.SECONDS);
 
     reportScheduler.schedule(new ProcessNotificationsTask(context,this,workDir),0,TimeUnit.MILLISECONDS);
 
@@ -136,15 +135,17 @@ class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDi
   }
 
   public FileResource getConnection(User user, UserCPsettings ucps) throws AdminException {
-    if(ucps.getProtocol()==UserCPsettings.Protocol.sftp) {
-      return new SFTPResource(fileSys,ucps);
-    }
-    else {
-      return new LocalResource(informerBase,fileSys,ucps);
+    switch (ucps.getProtocol()) {
+      case sftp: return new SFTPResource(fileSys, ucps);
+      case ftp: return new FTPResource(fileSys, ucps);
+      case smb: return new SMBResource(fileSys, ucps);
+      default: return new LocalResource(informerBase, fileSys, ucps);
     }
   }
 
   public void verifyConnection(User u, UserCPsettings ucps) throws AdminException {
+
+    ucps.checkValid();
 
     FileResource con = null;
     try {

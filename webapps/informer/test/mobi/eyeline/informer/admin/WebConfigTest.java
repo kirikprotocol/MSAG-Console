@@ -68,7 +68,6 @@ public class WebConfigTest {
     assertEquals(config.getHSDaemonHosts().size(), 1);
     assertEquals(config.getHSDaemonHosts().iterator().next(),"sunfire");
     assertEquals(config.getJournalDir(), "journal");
-    assertEquals(config.getContentProviderPeriod(), 300);
 
     props = config.getNotificationSettings();
     assertEquals("kikimora",props.getMailHost());
