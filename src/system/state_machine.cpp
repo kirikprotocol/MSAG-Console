@@ -5285,10 +5285,10 @@ bool StateMachine::processMerge(SbmContext& c)
 
   if(firstPiece) //first piece
   {
-    info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s, first part arrived(%u/%u),mr=%d,dc=%d",c.t.msgId,
+    info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s, first part (%u/%u),mr=%d,dc=%d,srr=%d",c.t.msgId,
         c.sms->getOriginatingAddress().toString().c_str(),
         c.sms->getDestinationAddress().toString().c_str(),
-        idx,num,(int)mr,dc);
+        idx,num,(int)mr,dc,c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
     c.sms->setIntProperty(Tag::SMPP_ESM_CLASS,c.sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
     TmpBuf<char,2048> tmp(0);
     if(!c.isForwardTo)
@@ -5381,10 +5381,10 @@ bool StateMachine::processMerge(SbmContext& c)
     c.createSms=scsCreate;
   }else
   {
-    info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s next part arrived(%u/%u), mr=%d,dc=%d",c.t.msgId,
+    info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s next part (%u/%u), mr=%d,dc=%d,srr=%d",c.t.msgId,
         c.sms->getOriginatingAddress().toString().c_str(),
         c.sms->getDestinationAddress().toString().c_str(),
-        idx,num,(int)mr,dc);
+        idx,num,(int)mr,dc,c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
     SMS newsms;
     try{
       store->retriveSms(c.t.msgId,newsms);
@@ -5526,10 +5526,10 @@ bool StateMachine::processMerge(SbmContext& c)
     }
     */
 
-    //if(c.sms->hasIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) && c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)!=0)
-    //{
-    //  newsms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
-    //}
+    if(c.sms->hasIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) && c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)!=0)
+    {
+      newsms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
+    }
 
     TmpBuf<char,2048> tmp(newlen+len);
     tmp.Append((const char*)newbody,newlen);
