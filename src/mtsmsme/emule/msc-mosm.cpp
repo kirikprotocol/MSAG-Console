@@ -43,6 +43,7 @@ static char sca[]  = "79139869990"; // service center address
 static char rndmsto_pattern[]   = "791398699922%04d";
 static char rndmsfrom_pattern[] = "791398699921%04d";
 static int speed = 300;
+static int slowstartperiod = 60; //in seconds
 
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -192,7 +193,7 @@ int main(int argc, char** argv)
     GopotaListener listener(&mtsms, &fakeHLR);
 
     //inject traffic shaper
-    TrafficShaper shaper((SccpSender*)&listener, speed,120);
+    TrafficShaper shaper((SccpSender*)&listener, speed,slowstartperiod);
     mtsms.setSccpSender((SccpSender*)&shaper);
 
     listener.configure(43, 191, Address((uint8_t)strlen(msca), 1, 1, msca),
