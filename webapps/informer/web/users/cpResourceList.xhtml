@@ -36,7 +36,7 @@
       
       <eye:dataTable value="#{cpList.model}" var="r" selectedRows="#{cpList.selectedRows}">
         <eye:row rowId="#{r.user}|#{r.hashId}">
-          <eye:column name="edit" title="#{msg['user.edit.import.name']}" width="10%" align="center" sortable="true">
+          <eye:column name="name" title="#{msg['user.edit.import.name']}" width="10%" align="center" sortable="true">
             <h:commandLink action="#{r.editAction}" value="#{r.name}">
               <f:param name="user_ID" value="#{r.user}"/>
               <f:param name="cp_settings_ID" value="#{r.hashId}"/>
