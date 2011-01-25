@@ -401,7 +401,7 @@
 
   <managed-bean>
       <managed-bean-name>cpLocalFtpEdit</managed-bean-name>
-      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.FtpResourceEditController</managed-bean-class>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.LocalFtpResourceEditController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
