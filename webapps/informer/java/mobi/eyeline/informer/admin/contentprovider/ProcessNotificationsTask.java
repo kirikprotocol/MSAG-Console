@@ -18,7 +18,7 @@ class ProcessNotificationsTask implements Runnable{
 
   private UserDirResolver userDirResolver;
   private ContentProviderContext context;
-  File workDir;
+  private File workDir;
 
   public ProcessNotificationsTask(ContentProviderContext context, UserDirResolver userDirResolver, File workDir) {
     this.context = context;

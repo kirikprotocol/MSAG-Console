@@ -38,7 +38,7 @@ class MainLoopTask implements Runnable {
   private File workDir;
 
 
-  Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
+  private Pattern unfinishedFileName = Pattern.compile("\\.csv\\.\\d+$");
   private UserDirResolver userDirResolver;
 
   public MainLoopTask(ContentProviderContext context, UserDirResolver userDirResolver, File workDir) throws AdminException {

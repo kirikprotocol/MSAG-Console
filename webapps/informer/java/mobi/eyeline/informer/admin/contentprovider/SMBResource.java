@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * @author Aleksandr Khalitov
  */
-public class SMBResource implements FileResource{
+class SMBResource implements FileResource{
 
   private static final Logger logger = Logger.getLogger(FTPResource.class);
 

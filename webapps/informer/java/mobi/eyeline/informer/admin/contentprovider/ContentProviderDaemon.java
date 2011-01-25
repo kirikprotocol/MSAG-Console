@@ -29,13 +29,13 @@ class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDi
   private ScheduledExecutorService scheduler;
   private ScheduledExecutorService reportScheduler;
   static final String NAME = "ContentProviderDaemon";
-  static final String NAME_REPORT = "ContentProviderDaemonReports";
+  private static final String NAME_REPORT = "ContentProviderDaemonReports";
 
   private static final long SHUTDOWN_WAIT_TIME = 2000L;
-  FileSystem fileSys;
-  ContentProviderContext context;
-  File informerBase;
-  File workDir;
+  private FileSystem fileSys;
+  private ContentProviderContext context;
+  private File informerBase;
+  private File workDir;
 
 
 
@@ -100,7 +100,7 @@ class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDi
       log.debug("Content Provider Daemon shutdowned.");
   }
 
-  public boolean isStarted() {
+  boolean isStarted() {
     return scheduler!=null;
   }
 

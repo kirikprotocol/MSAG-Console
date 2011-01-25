@@ -132,7 +132,7 @@ class SFTPResource implements FileResource {
 
 
   public void close() throws AdminException{
-    if (session != null) try {session.disconnect(); } catch (Exception e){};
+    if (session != null) try {session.disconnect(); } catch (Exception e){}
     if (channel != null) try {channel.exit(); } catch (Exception e){}
     session=null;
     channel=null;

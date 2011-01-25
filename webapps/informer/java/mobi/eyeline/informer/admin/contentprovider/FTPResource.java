@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * @author Aleksandr Khalitov
  */
-public class FTPResource implements FileResource{
+class FTPResource implements FileResource{
 
   private static final Logger logger = Logger.getLogger(FTPResource.class);
 

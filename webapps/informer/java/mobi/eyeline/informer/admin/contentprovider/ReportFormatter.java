@@ -15,7 +15,7 @@ import java.util.Date;
  */
 class ReportFormatter {
 
-  static ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>(){
+  private static ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>(){
     @Override protected DateFormat initialValue() {
       return new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
     }
