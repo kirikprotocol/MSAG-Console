@@ -43,4 +43,8 @@ public class CPResourceController extends InformerController{
     return ret;
   }
 
+  public boolean isLocalFtpDeployed() {
+    return getConfig().isFtpServerDeployed();
+  }
+
 }

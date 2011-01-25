@@ -70,6 +70,7 @@
               <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.sftp']}" action="SFTP_RESOURCE_EDIT"/></eye:menubaritem>
               <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.smb']}" action="SMB_RESOURCE_EDIT"/></eye:menubaritem>
               <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.file']}" action="FILE_RESOURCE_EDIT"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.localFtp']}" rendered="#{cpList.localFtpDeployed}" action="LOCAL_FTP_RESOURCE_EDIT"/></eye:menubaritem>
             </eye:menubar>
         </eye:button>
         <eye:button>

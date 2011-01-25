@@ -279,7 +279,7 @@ public class UserCPsettings implements Serializable {
         }
       }
       catch (Exception e) {
-         throw new UserException("generalError",e);
+        throw new UserException("generalError",e);
       }
     }
     return hashId;
@@ -288,11 +288,18 @@ public class UserCPsettings implements Serializable {
   public void checkValid() throws UserException {
     if(protocol==null) throw new UserException("ucps.protocol.invalid");
     if(protocol != Protocol.file) {
-      if(host==null || host.length()==0)     throw new UserException("ucps.host.invalid");
+      if(protocol != Protocol.localFtp) {
+        if(host==null || host.length()==0)     throw new UserException("ucps.host.invalid");
+      }else {
+        if(directoryMaxSize<=0)     throw new UserException("ucps.directoryMaxSize.invalid");
+
+      }
       if(login==null|| login.length()==0)    throw new UserException("ucps.login.invalid");
       if(password==null || password.length()==0) throw new UserException("ucps.password.invalid");
     }
-    if(directory==null || directory.length()==0) throw new UserException("ucps.directory.invalid");
+    if(protocol != Protocol.localFtp) {
+      if(directory==null || directory.length()==0) throw new UserException("ucps.directory.invalid");
+    }
     if(encoding==null || encoding.length()==0) throw new UserException("ucps.encoding.invalid");
     if(sourceAddress==null) throw new UserException("ucps.sourceaddr.invalid");
     if(workType == null) throw new UserException("ucps.workType.invalid");

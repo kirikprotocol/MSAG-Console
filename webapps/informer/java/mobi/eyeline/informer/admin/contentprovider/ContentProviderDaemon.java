@@ -147,7 +147,9 @@ class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDi
   }
 
   public void verifyConnection(User u, UserCPsettings ucps) throws AdminException {
-
+    if(ucps.getProtocol() == UserCPsettings.Protocol.localFtp) {
+      return;
+    }
     ucps.checkValid();
 
     FileResource con = null;

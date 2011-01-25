@@ -301,7 +301,7 @@ public class MainLoopTaskTest {
 
     @Override
     public Delivery createDeliveryWithIndividualTexts(String login, DeliveryPrototype delivery, DataSource<Message> msDataSource) throws AdminException {
-      return deliveryManager.createDeliveryWithIndividualTexts(login,"", delivery, msDataSource);
+      return deliveryManager.createDeliveryWithIndividualTexts(login, "", delivery, msDataSource);
     }
 
     @Override
@@ -355,6 +355,11 @@ public class MainLoopTaskTest {
 
     @Override
     public DeliveryChangesDetector getDeliveryChangesDetector() {
+      return null;
+    }
+
+    @Override
+    public File getFtpUserHomeDir(String login) throws AdminException {
       return null;
     }
   }

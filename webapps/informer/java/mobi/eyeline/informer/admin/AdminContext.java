@@ -48,6 +48,7 @@ import java.util.List;
 public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext, DeliveryNotificationsContext, SiebelContext, RestrictionContext {
 
 
+
   protected User2RegionDep user2regionDep;
   protected Delivery2UserDep delivery2UserDep;
   protected Restriction2UserDep restriction2UserDep;

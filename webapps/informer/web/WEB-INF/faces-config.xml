@@ -400,6 +400,12 @@
   </managed-bean>
 
   <managed-bean>
+      <managed-bean-name>cpLocalFtpEdit</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.users.FtpResourceEditController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
       <managed-bean-name>cpSftpEdit</managed-bean-name>
       <managed-bean-class>mobi.eyeline.informer.web.controllers.users.SftpResourceEditController</managed-bean-class>
       <managed-bean-scope>request</managed-bean-scope>
@@ -598,6 +604,11 @@
     <navigation-case>
       <from-outcome>FTP_RESOURCE_EDIT</from-outcome>
       <to-view-id>/users/cpFtpEdit.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>LOCAL_FTP_RESOURCE_EDIT</from-outcome>
+      <to-view-id>/users/cpLocalFtpEdit.xhtml</to-view-id>
     </navigation-case>
 
     <navigation-case>

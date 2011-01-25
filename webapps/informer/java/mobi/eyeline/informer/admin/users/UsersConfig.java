@@ -94,8 +94,10 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         UserCPsettings.Protocol protocol = UserCPsettings.Protocol.valueOf(s.getString("protocol","sftp"));
         ucps.setProtocol(protocol);
         if(protocol!=UserCPsettings.Protocol.file) {
-          ucps.setHost(s.getString("host"));
-          if(s.containsParam("port")) {ucps.setPort(s.getInt("port"));}
+          if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {        //todo refactoring (maybe strategy)
+            ucps.setHost(s.getString("host"));
+            if(s.containsParam("port")) {ucps.setPort(s.getInt("port"));}
+          }
           ucps.setLogin(s.getString("login"));
           ucps.setPassword(s.getString("password"));
         }
@@ -111,7 +113,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
         period = s.getString("periodInMin", null);
         ucps.setPeriodInMin(period == null || period.length() == 0 ? 5 : Long.parseLong(period));
 
-        ucps.setDirectory(s.getString("directory"));
+        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {       //todo refactoring (maybe strategy)
+          ucps.setDirectory(s.getString("directory"));
+        }
         ucps.setEncoding(s.getString("encoding","UTF-8"));
         ucps.setSourceAddress(new Address(s.getString("sourceAddress")));
         ucps.setCreateReports(s.getBool("createReports", false));
@@ -275,9 +279,11 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       section.addSection(s);
       s.setString("protocol",ucps.getProtocol().toString());
       if(ucps.getProtocol() != UserCPsettings.Protocol.file) {
-        s.setString("host",ucps.getHost());
-        if(ucps.getPort()!=null && ucps.getPort()!=0){
-          s.setInt("port",ucps.getPort());
+        if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {       //todo refactoring (maybe strategy)
+          s.setString("host",ucps.getHost());
+          if(ucps.getPort()!=null && ucps.getPort()!=0){
+            s.setInt("port",ucps.getPort());
+          }
         }
         s.setString("login",ucps.getLogin());
         s.setString("password",ucps.getPassword());
@@ -289,7 +295,9 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
       s.setString("periodInMin", ucps.getPeriodInMin() == 0 ? "" : Long.toString(ucps.getPeriodInMin()));
       s.setString("activePeriodStart", ucps.getActivePeriodStart() == null ? "" : ucps.getActivePeriodStart().toString());
       s.setString("activePeriodEnd", ucps.getActivePeriodEnd() == null ? "" : ucps.getActivePeriodEnd().toString());
-      s.setString("directory",ucps.getDirectory());
+      if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {               //todo refactoring (maybe strategy)
+        s.setString("directory",ucps.getDirectory());
+      }
       s.setString("encoding",ucps.getEncoding());
       s.setString("sourceAddress",ucps.getSourceAddress().getSimpleAddress());
       s.setString("name", ucps.getName());

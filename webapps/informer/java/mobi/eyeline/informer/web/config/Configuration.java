@@ -10,7 +10,6 @@ import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
-import mobi.eyeline.informer.util.DateAndFile;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.restriction.Restriction;
@@ -20,6 +19,7 @@ import mobi.eyeline.informer.admin.smsc.Smsc;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.admin.users.UserCPsettings;
 import mobi.eyeline.informer.util.Address;
+import mobi.eyeline.informer.util.DateAndFile;
 
 import java.io.File;
 import java.util.*;
@@ -446,6 +446,9 @@ public class Configuration {
     return lastRevisions.get(configType);
   }
 
+  public boolean isFtpServerDeployed() {
+    return context.isFtpServerDeployed();
+  }
 
   public File getWorkDir() {
     return context.getWorkDir();
