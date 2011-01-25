@@ -441,6 +441,12 @@ public class User implements Serializable {
     vh.checkPositive("deliveryLifetime", deliveryLifetime);
     vh.checkBetween("priority", priority, 1, 100);
 
+    if(cpSettings != null) {
+      for(UserCPsettings s : cpSettings) {
+        s.checkValid();
+      }
+    }
+
   }
 
   public enum Status {

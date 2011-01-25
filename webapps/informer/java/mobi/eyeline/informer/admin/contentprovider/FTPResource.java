@@ -38,13 +38,12 @@ public class FTPResource implements FileResource{
     }
     try{
       ftp = new FTPClient();
-      ftp.setType(FTPClient.TYPE_TEXTUAL);
+      ftp.setType(FTPClient.TYPE_BINARY);
       if(ucps.getPort() == null || ucps.getPort() == 0) {
         ftp.connect(ucps.getHost());
       }else {
         ftp.connect(ucps.getHost(), ucps.getPort());
       }
-      ftp.setCharset("windows-1251");
       ftp.login(ucps.getLogin(), ucps.getPassword());
       ftp.changeDirectory(ucps.getDirectory());
     } catch (Exception e) {
