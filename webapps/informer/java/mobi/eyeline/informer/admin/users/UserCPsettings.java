@@ -277,7 +277,7 @@ public class UserCPsettings implements Serializable {
 
   public void checkValid() throws UserException {
     if(protocol==null) throw new UserException("ucps.protocol.invalid");
-    if(protocol==Protocol.sftp) {
+    if(protocol != Protocol.file) {
       if(host==null || host.length()==0)     throw new UserException("ucps.host.invalid");
       if(login==null|| login.length()==0)    throw new UserException("ucps.login.invalid");
       if(password==null || password.length()==0) throw new UserException("ucps.password.invalid");

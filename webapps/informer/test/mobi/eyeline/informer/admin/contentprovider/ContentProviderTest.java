@@ -59,6 +59,11 @@ public class ContentProviderTest {
     ucps.setPassword("");
     ucps.setEncoding("UTF-8");
     ucps.setSourceAddress(new Address("+79130000000"));
+    ucps.setWorkType(UserCPsettings.WorkType.simple);
+    ucps.setPeriodInMin(12);
+    ucps.setActivePeriodEnd(new Time("00:00:00"));
+    ucps.setActivePeriodStart(new Time("00:00:00"));
+    ucps.setName("test!");
     ucpSettings.add(ucps);
     u.setCpSettings(ucpSettings);
 

@@ -391,16 +391,21 @@ public class UserTest {
     ucps.setPort(2222);
     ucps.setSourceAddress(new Address("+79130000111"));
     ucps.setEncoding("UTF-8");
+    ucps.setWorkType(UserCPsettings.WorkType.simple);
+    ucps.setPeriodInMin(12);
+    ucps.setActivePeriodEnd(new Time("12:00:00"));
+    ucps.setActivePeriodStart(new Time("13:00:00"));
+    ucps.setName("test!");
 
     UserCPsettings ucpsn = new UserCPsettings(ucps);
     assertEquals(ucps,ucpsn);
 
-    ucps.setProtocol(UserCPsettings.Protocol.file);
-    ucps.setDirectory("/home/fio");
-    ucps.setHost("some.fio.host");
-    ucps.setPort(3333);
+    ucpsn.setProtocol(UserCPsettings.Protocol.file);
+    ucpsn.setDirectory("/home/fio");
+    ucpsn.setHost("some.fio.host");
+    ucpsn.setPort(3333);
     ucpsn.setSourceAddress(new Address("+79130000222"));
-    ucps.setEncoding("cp1251");
+    ucpsn.setEncoding("cp1251");
     cpSettings.add(ucpsn);
 
     o.setCpSettings(cpSettings);
