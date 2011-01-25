@@ -29,6 +29,7 @@ public class CPResourceListController extends CPResourceController {
       case ftp: return "FTP_RESOURCE_EDIT";
       case file: return "FILE_RESOURCE_EDIT";
       case sftp: return "SFTP_RESOURCE_EDIT";
+      case localFtp: return "LOCAL_FTP_RESOURCE_EDIT";
       default: return "SMB_RESOURCE_EDIT";
     }
   }

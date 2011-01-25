@@ -54,6 +54,7 @@ public class UserCPsettings implements Serializable {
     this.activePeriodStart = other.activePeriodStart;
     this.periodInMin = other.periodInMin;
     this.createReports = other.createReports;
+    this.directoryMaxSize = other.directoryMaxSize;
   }
 
   public String getName() {
@@ -191,6 +192,7 @@ public class UserCPsettings implements Serializable {
     UserCPsettings that = (UserCPsettings) o;
 
     if (createReports != that.createReports) return false;
+    if (directoryMaxSize != that.directoryMaxSize) return false;
     if (periodInMin != that.periodInMin) return false;
     if (activePeriodEnd != null ? !activePeriodEnd.equals(that.activePeriodEnd) : that.activePeriodEnd != null)
       return false;
@@ -198,6 +200,7 @@ public class UserCPsettings implements Serializable {
       return false;
     if (directory != null ? !directory.equals(that.directory) : that.directory != null) return false;
     if (encoding != null ? !encoding.equals(that.encoding) : that.encoding != null) return false;
+    if (hashId != null ? !hashId.equals(that.hashId) : that.hashId != null) return false;
     if (host != null ? !host.equals(that.host) : that.host != null) return false;
     if (login != null ? !login.equals(that.login) : that.login != null) return false;
     if (name != null ? !name.equals(that.name) : that.name != null) return false;
@@ -206,7 +209,6 @@ public class UserCPsettings implements Serializable {
     if (protocol != that.protocol) return false;
     if (sourceAddress != null ? !sourceAddress.equals(that.sourceAddress) : that.sourceAddress != null) return false;
     if (workType != that.workType) return false;
-    if (directoryMaxSize != that.directoryMaxSize) return false;
 
     return true;
   }
@@ -218,10 +220,12 @@ public class UserCPsettings implements Serializable {
     result = 31 * result + (host != null ? host.hashCode() : 0);
     result = 31 * result + (port != null ? port.hashCode() : 0);
     result = 31 * result + (directory != null ? directory.hashCode() : 0);
+    result = 31 * result + directoryMaxSize;
     result = 31 * result + (encoding != null ? encoding.hashCode() : 0);
     result = 31 * result + (sourceAddress != null ? sourceAddress.hashCode() : 0);
     result = 31 * result + (login != null ? login.hashCode() : 0);
     result = 31 * result + (password != null ? password.hashCode() : 0);
+    result = 31 * result + (hashId != null ? hashId.hashCode() : 0);
     result = 31 * result + (activePeriodStart != null ? activePeriodStart.hashCode() : 0);
     result = 31 * result + (activePeriodEnd != null ? activePeriodEnd.hashCode() : 0);
     result = 31 * result + (int) (periodInMin ^ (periodInMin >>> 32));
@@ -292,7 +296,6 @@ public class UserCPsettings implements Serializable {
         if(host==null || host.length()==0)     throw new UserException("ucps.host.invalid");
       }else {
         if(directoryMaxSize<=0)     throw new UserException("ucps.directoryMaxSize.invalid");
-
       }
       if(login==null|| login.length()==0)    throw new UserException("ucps.login.invalid");
       if(password==null || password.length()==0) throw new UserException("ucps.password.invalid");

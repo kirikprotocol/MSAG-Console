@@ -97,6 +97,8 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
           if(ucps.getProtocol() != UserCPsettings.Protocol.localFtp) {        //todo refactoring (maybe strategy)
             ucps.setHost(s.getString("host"));
             if(s.containsParam("port")) {ucps.setPort(s.getInt("port"));}
+          }else {
+            ucps.setDirectoryMaxSize(s.getInt("directoryMaxSize"));
           }
           ucps.setLogin(s.getString("login"));
           ucps.setPassword(s.getString("password"));
@@ -284,6 +286,8 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
           if(ucps.getPort()!=null && ucps.getPort()!=0){
             s.setInt("port",ucps.getPort());
           }
+        }else {
+          s.setInt("directoryMaxSize", ucps.getDirectoryMaxSize());
         }
         s.setString("login",ucps.getLogin());
         s.setString("password",ucps.getPassword());
