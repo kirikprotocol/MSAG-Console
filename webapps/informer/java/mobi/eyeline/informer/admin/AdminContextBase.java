@@ -7,6 +7,8 @@ import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
 import mobi.eyeline.informer.admin.delivery.DeliveryManager;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.ftpserver.FtpServerManager;
+import mobi.eyeline.informer.admin.ftpserver.PureFtpServerManager;
 import mobi.eyeline.informer.admin.informer.InformerManager;
 import mobi.eyeline.informer.admin.informer.InformerManagerImpl;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
@@ -59,6 +61,8 @@ class AdminContextBase {
 
   protected DeliveryChangesDetectorImpl deliveryChangesDetector;
 
+  protected FtpServerManager ftpServerManager;
+
 
 // delivery ->user ->region->smsc
 
@@ -100,6 +104,8 @@ class AdminContextBase {
           fileSystem = FileSystem.getFSForHAInst();
       }
 
+      if (serviceManager.getService("ftpserver") != null)
+        ftpServerManager = new PureFtpServerManager(serviceManager, "ftpserver", fileSystem);
 
       journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
       informerManager = new InformerManagerImpl(new File(confDir, "config.xml"),
@@ -143,7 +149,9 @@ class AdminContextBase {
     return lock;
   }
 
-
+  public boolean isFtpServerDeployed() {
+    return ftpServerManager != null;
+  }
 
 
   @SuppressWarnings({"EmptyCatchBlock"})

@@ -134,6 +134,13 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return deliveryChangesDetector;
   }
 
+  @Override
+  public File getFtpUserHomeDir(String login) throws AdminException {
+    if (ftpServerManager != null)
+      return ftpServerManager.getUserHomeDir(login);
+    return null;
+  }
+
   // USERS =======================================================================================
 
   public User getUser(String login) {

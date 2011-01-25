@@ -19,6 +19,7 @@ public class UserCPsettings implements Serializable {
   private String host;
   private Integer port;
   private String directory;
+  private int directoryMaxSize;
   private String encoding;
   private Address sourceAddress;
   private String login;
@@ -174,6 +175,14 @@ public class UserCPsettings implements Serializable {
     this.protocol = protocol;
   }
 
+  public int getDirectoryMaxSize() {
+    return directoryMaxSize;
+  }
+
+  public void setDirectoryMaxSize(int directoryMaxSize) {
+    this.directoryMaxSize = directoryMaxSize;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -197,6 +206,7 @@ public class UserCPsettings implements Serializable {
     if (protocol != that.protocol) return false;
     if (sourceAddress != null ? !sourceAddress.equals(that.sourceAddress) : that.sourceAddress != null) return false;
     if (workType != that.workType) return false;
+    if (directoryMaxSize != that.directoryMaxSize) return false;
 
     return true;
   }
@@ -294,7 +304,7 @@ public class UserCPsettings implements Serializable {
 
 
   public enum Protocol {
-    sftp,file,smb,ftp
+    sftp,file,smb,ftp,localFtp
   }
 
   public enum WorkType {

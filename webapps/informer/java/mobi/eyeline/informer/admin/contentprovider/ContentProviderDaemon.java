@@ -139,6 +139,9 @@ class ContentProviderDaemon extends DeliveryChangeListenerStub implements UserDi
       case sftp: return new SFTPResource(fileSys, ucps);
       case ftp: return new FTPResource(fileSys, ucps);
       case smb: return new SMBResource(fileSys, ucps);
+      case localFtp:
+        File homeDir = context.getFtpUserHomeDir(ucps.getLogin());
+        return homeDir != null ? new LocalResource(homeDir, fileSys) : new NullResource();
       default: return new LocalResource(informerBase, fileSys, ucps);
     }
   }

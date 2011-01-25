@@ -8,6 +8,7 @@ import mobi.eyeline.informer.admin.regions.Region;
 import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -46,4 +47,6 @@ public interface ContentProviderContext {
   void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
 
   DeliveryChangesDetector getDeliveryChangesDetector();
+
+  File getFtpUserHomeDir(String login) throws AdminException;
 }

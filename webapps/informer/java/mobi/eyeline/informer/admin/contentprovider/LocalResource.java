@@ -25,6 +25,11 @@ class LocalResource implements FileResource {
   private FileSystem fileSys;
   private File userSrcDir;
 
+  public LocalResource(File userSrcDir, FileSystem fs) {
+    this.fileSys = fs;
+    this.userSrcDir = userSrcDir;
+  }
+
   public LocalResource(File informerBase, FileSystem fileSys, UserCPsettings ucps) {
     this.fileSys = fileSys;
     if(ucps.getDirectory().indexOf(File.separatorChar)==0) {
