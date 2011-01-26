@@ -421,6 +421,9 @@ Targets:
     <ant dir="${SRC_DIR}" target="mod">
       <property name="MOD" value="infosme.v2"/>
     </ant>
+        <ant dir="${SRC_DIR}" target="mod">
+            <property name="MOD" value="infosme.v3"/>
+        </ant>
   </target>
   <target name="infosme_update" depends="infosme_build" >
     <ant dir="${SMSC_DIR}/ext_smes" target="infosme_update"/>
