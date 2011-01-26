@@ -422,7 +422,7 @@ Targets:
       <property name="MOD" value="infosme.v2"/>
     </ant>
         <ant dir="${SRC_DIR}" target="mod">
-            <property name="MOD" value="infosme.v3"/>
+            <property name="MOD" value="informer"/>
         </ant>
   </target>
   <target name="infosme_update" depends="infosme_build" >
