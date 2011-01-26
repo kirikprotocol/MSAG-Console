@@ -19,6 +19,7 @@ public enum Subject {
   REGIONS("subject.regions"),
   DAEMONS("subject.daemons"),
   INFORMER("subject.informer"),
+  FTPSERVER("subject.ftpserver"),
   DELIVERIES("subject.deliveries"),
   RESTRICTIONS("subject.restrictions"),
   WEBCONFIG("subject.webconfig");

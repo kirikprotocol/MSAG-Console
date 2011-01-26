@@ -43,6 +43,8 @@ public class Journal {
 
   private final WebconfigDiffHelper webconfig = new WebconfigDiffHelper();
 
+  private final FtpServerDiffHelper ftpserver = new FtpServerDiffHelper();
+
   private final JournalDataSource ds;
 
   public Journal(File journalDir, FileSystem fs) throws AdminException {
@@ -242,6 +244,36 @@ public class Journal {
     this.smsc.logSetDefault(oldSmsc, newSmsc, this, user);
   }
 
+  /**
+   * Добавляет в журнал запись о старте FTP server
+   *
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logFtpServerStart(String user) throws AdminException {
+    ftpserver.logFtpServerStart(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об остановке Ftp server
+   *
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logFtpServerStop(String user) throws AdminException {
+    ftpserver.logFtpServerStop(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись о переключении Ftp server на другой хост
+   *
+   * @param toHost новый хост
+   * @param user   пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logFtpServerSwitch(String toHost, String user) throws AdminException {
+    ftpserver.logFtpServerSwitch(this, toHost, user);
+  }
 
   /**
    * Добавляет в журнал запись о старте Informer

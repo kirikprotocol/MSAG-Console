@@ -11,6 +11,7 @@ import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImp
 import mobi.eyeline.informer.admin.delivery.stat.*;
 import mobi.eyeline.informer.admin.dep.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
+import mobi.eyeline.informer.admin.ftpserver.FtpUser;
 import mobi.eyeline.informer.admin.informer.InformerSettings;
 import mobi.eyeline.informer.admin.infosme.TestSms;
 import mobi.eyeline.informer.admin.journal.Journal;
@@ -142,6 +143,33 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return null;
   }
 
+  public String getFtpServerOnlineHost() throws AdminException {
+    if (!isFtpServerDeployed())
+      return null;
+    return ftpServerManager.getOnlineHost();
+  }
+
+  public List<String> getFtpServerHosts() throws AdminException {
+    if (!isFtpServerDeployed())
+      return null;
+    return ftpServerManager.getServerHosts();
+  }
+
+  public void startFtpServer() throws AdminException {
+    if (isFtpServerDeployed())
+      ftpServerManager.startServer();
+  }
+
+  public void stopFtpServer() throws AdminException {
+    if (isFtpServerDeployed())
+      ftpServerManager.stopServer();
+  }
+
+  public void switchFtpServer(String toHost) throws AdminException {
+    if (isFtpServerDeployed())
+      ftpServerManager.switchServer(toHost);
+  }
+
   // USERS =======================================================================================
 
   public User getUser(String login) {
@@ -152,14 +180,33 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     return usersManager.getUsers();
   }
 
+  private void updateLocalFtpAccounts() throws AdminException {
+    if (!isFtpServerDeployed())
+      return;
+
+    List<FtpUser> ftpUsers = new ArrayList<FtpUser>();
+    for (User u : getUsers()) {
+      if (u.getCpSettings() == null)
+        continue;
+      for (UserCPsettings s : u.getCpSettings()) {
+        if (s.getProtocol() == UserCPsettings.Protocol.localFtp) {
+          ftpUsers.add(new FtpUser(s.getLogin(), s.getPassword(), s.getDirectoryMaxSize()));
+        }
+      }
+    }
+    ftpServerManager.updateUsers(ftpUsers);
+  }
+
   public synchronized void updateUser(User u) throws AdminException {
     user2regionDep.updateUser(u);
     usersManager.updateUser(u);
+    updateLocalFtpAccounts();
     restriction2UserDep.updateUser(u);
   }
 
   public synchronized void addUser(User u) throws AdminException {
     user2regionDep.updateUser(u);
+    updateLocalFtpAccounts();
     usersManager.addUser(u);
   }
 
@@ -171,6 +218,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     delivery2UserDep.removeUser(user);
     restriction2UserDep.removeUser(user);
 
+    updateLocalFtpAccounts();
     usersManager.removeUser(login);
   }
 

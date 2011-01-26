@@ -54,7 +54,7 @@ public class PureFtpServerManager extends AbstractFtpServerManager {
       w = new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(tmpFile, false)));
 
       for (FtpUser u : users) {
-        w.append('"').append(u.getLogin()).append("\",\"").append(u.getPassword()).append("\",\"").append(String.valueOf(u.getMaxDirSize()));
+        w.append(u.getLogin()).append(':').append(u.getPassword()).append(':').append(String.valueOf(u.getMaxDirSize()));
         w.newLine();
       }
 

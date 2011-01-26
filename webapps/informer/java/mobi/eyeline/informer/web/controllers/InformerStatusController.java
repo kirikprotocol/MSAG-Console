@@ -5,6 +5,7 @@ import mobi.eyeline.informer.web.config.Configuration;
 
 import javax.faces.model.SelectItem;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,6 +20,10 @@ public class InformerStatusController extends InformerController {
   private List<String> informerHosts;
   private String informerSwitchTo;
 
+  private String ftpServerOnlineHost;
+  private List<String> ftpServerHosts;
+  private String ftpServerSwitchTo;
+
   public InformerStatusController() {
     try {
       reload();
@@ -31,6 +36,12 @@ public class InformerStatusController extends InformerController {
     Configuration c = getConfig();
     this.informerOnlineHost = c.getInformerOnlineHost();
     this.informerHosts = c.getInformerHosts();
+    if (c.isFtpServerDeployed()) {
+      this.ftpServerHosts = c.getFtpServerHosts();
+      this.ftpServerOnlineHost = c.getFtpServerOnlineHost();
+    } else {
+      ftpServerHosts = Collections.emptyList();
+    }
   }
 
   public String startInformer() {
@@ -90,6 +101,69 @@ public class InformerStatusController extends InformerController {
 
   public void setInformerSwitchTo(String informerSwitchTo) {
     this.informerSwitchTo = informerSwitchTo;
+  }
+
+  public boolean isFtpServerDeployed() {
+    return getConfig().isFtpServerDeployed();
+  }
+
+  public String startFtpServer() {
+    if (ftpServerOnlineHost == null) {
+      try {
+        getConfig().startFtpServer(getUserName());
+        reload();
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return null;
+  }
+
+  public String stopFtpServer() {
+    if (ftpServerOnlineHost != null) {
+      try {
+        getConfig().stopFtpServer(getUserName());
+        reload();
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return null;
+  }
+
+  public String switchFtpServerHost() {
+    try {
+      getConfig().switchInformer(ftpServerSwitchTo, getUserName());
+      reload();
+    } catch (AdminException e) {
+      addError(e);
+    }
+    return null;
+  }
+
+  public String getFtpServerOnlineHost() {
+    return ftpServerOnlineHost;
+  }
+
+  public List<SelectItem> getFtpServerHosts() {
+    List<SelectItem> items = new ArrayList<SelectItem>(ftpServerHosts.size());
+    for (String host : ftpServerHosts) {
+      if (ftpServerOnlineHost == null || !host.equals(ftpServerOnlineHost))
+        items.add(new SelectItem(host, host));
+    }
+    return items;
+  }
+
+  public boolean isFtpServerSwitchAllowed() {
+    return ftpServerHosts != null && ftpServerHosts.size() > 1;
+  }
+
+  public String getFtpServerSwitchTo() {
+    return ftpServerSwitchTo;
+  }
+
+  public void setFtpServerSwitchTo(String ftpServerSwitchTo) {
+    this.ftpServerSwitchTo = ftpServerSwitchTo;
   }
 
 }

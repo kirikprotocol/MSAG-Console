@@ -101,6 +101,8 @@ public class JournalController extends InformerController {
     List<SelectItem> result = new ArrayList<SelectItem>();
     result.add(new SelectItem(null));
     for (Subject s : journal.getSubjects()) {
+      if (s == Subject.FTPSERVER && !getConfig().isFtpServerDeployed())
+        continue;
       result.add(new SelectItem(s.getKey(), s.getSubject(getLocale())));
     }
     return result;

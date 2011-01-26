@@ -289,6 +289,33 @@ public class Configuration {
     return d;
   }
 
+  public boolean isFtpServerDeployed() {
+    return context.isFtpServerDeployed();
+  }
+
+  public String getFtpServerOnlineHost() throws AdminException {
+    return context.getFtpServerOnlineHost();
+  }
+
+  public List<String> getFtpServerHosts() throws AdminException {
+    return context.getFtpServerHosts();
+  }
+
+  public void startFtpServer(String user) throws AdminException {
+    context.startFtpServer();
+    journal.logFtpServerStart(user);
+  }
+
+  public void stopFtpServer(String user) throws AdminException {
+    context.stopFtpServer();
+    journal.logFtpServerStop(user);
+  }
+
+  public void switchFtpServer(String toHost, String user) throws AdminException {
+    context.switchFtpServer(toHost);
+    journal.logFtpServerSwitch(toHost, user);
+  }
+
   public void startInformer(String user) throws AdminException {
     context.startInformer();
     journal.logInformerStart(user);
@@ -444,10 +471,6 @@ public class Configuration {
 
   public Revision getLastRevision(ConfigType configType) {
     return lastRevisions.get(configType);
-  }
-
-  public boolean isFtpServerDeployed() {
-    return context.isFtpServerDeployed();
   }
 
   public File getWorkDir() {

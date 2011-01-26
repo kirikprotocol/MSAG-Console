@@ -4,6 +4,7 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jstl/core"
       xmlns:eye="http://taglib.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
@@ -64,6 +65,38 @@
                 </h:panelGroup>
               </td>
             </tr>
+
+            <c:if test="#{informerStatus.ftpServerDeployed}">
+              <tr class="row1">
+              <td width="center">
+                <h:graphicImage value="/images/ic_internal.gif" rendered="#{informerStatus.ftpServerOnlineHost != null}"/>
+                <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{informerStatus.ftpServerOnlineHost == null}"/>
+              </td>
+              <td width="center"><h:outputText value="#{msg['status.page.service.ftpServer']}"/></td>
+              <td width="center"><h:outputText value="#{informerStatus.ftpServerOnlineHost}" style="color:GREEN"/></td>
+              <td width="center">
+                <h:panelGroup>
+                  <h:panelGroup rendered="#{!informerStatus.ftpServerSwitchAllowed}">
+                    <h:commandLink value="#{msg['status.page.start']}" action="#{informerStatus.startFtpServer}" rendered="#{informerStatus.ftpServerOnlineHost == null}"/>
+                    <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stopFtpServer}" rendered="#{informerStatus.ftpServerOnlineHost != null}"/>
+                  </h:panelGroup>
+
+                  <h:panelGroup rendered="#{informerStatus.ftpServerSwitchAllowed}">
+                    <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stopFtpServer}" rendered="#{informerStatus.ftpServerOnlineHost != null}"/>
+                    <h:outputText value=" #{msg['status.page.or']} " rendered="#{informerStatus.ftpServerOnlineHost != null}"/>
+                    <h:commandLink value="#{msg['status.page.switch']}" action="#{informerStatus.switchFtpServerHost}" rendered="#{informerStatus.ftpServerOnlineHost != null}"/>
+
+                    <h:commandLink value="#{msg['status.page.start_at']}" action="#{informerStatus.switchFtpServerHost}" rendered="#{informerStatus.ftpServerOnlineHost == null}"/>
+                    <h:outputText value="  "/>
+
+                    <h:selectOneMenu value="#{informerStatus.ftpServerSwitchTo}">
+                      <f:selectItems value="#{informerStatus.ftpServerHosts}"/>
+                    </h:selectOneMenu>
+                  </h:panelGroup>
+                </h:panelGroup>
+              </td>
+            </tr>
+            </c:if>
 
           </table>
         </h:panelGroup>
