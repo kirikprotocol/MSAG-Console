@@ -1,11 +1,11 @@
 smsc/smsc smscmain -L$(SMSC_BUILDDIR)/bin \
 -llogger -lstore -lsmsc-router -lsmsc-config-route -lsmsc  \
--lsmsc-acls -lsmsc-router -lsmsc-mapio -lsmsc-profiler -lsmsc-smppio -lcore-threads \
+-lsmsc-acls -lsmsc-router -lsmsc-profiler -lsmsc-smppio -lcore-threads \
 -lpthread $(SOCKETLIB) -lcore-buffers -lcore-network -lsmsc -lsmsc-smppio -lutil-config \
 $(XERCES_LIB) -lutil -lutil-xml -lsmsc-smeman -lsmsc-config-smeman -lrt \
--lutil -lstore -lsms $(MAP_LIBRARIES) $(XERCES_LIB) -ldl -lsmsc-mscman -lutil-recoder-recode_dll \
+-lutil -lstore -lsms $(MAP_LIBRARIES2) $(XERCES_LIB) -ldl -lsmsc-mscman -lutil-recoder-recode_dll \
 -lsmsc-abonentinfo -lutil-templates -lutil-regexp -lsmsc-stat -llicense-check -lsmsc-resourcemanager \
--llogger -lsmsc-common $(SSL_LIB) $(SNMP_LIBS) -lsmsc-mapio -lnsl -linman-storage \
+-llogger -lsmsc-common $(SSL_LIB) $(SNMP_LIBS) -lnsl -linman-storage \
 switch SNMP
 YES:-lsmsc-snmp -lsmsc-snmp-smestattable -lsmsc-snmp-smeerrtable \
 end switch

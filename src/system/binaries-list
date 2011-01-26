@@ -1,19 +1,12 @@
 system/smsc smscmain \
  -L$(SMSC_BUILDDIR)/bin -llogger -lstore -lrouter -lutil-config-route \
  -lsystem -lcluster-listeners -lcluster -lacls -lsystem -lrouter \
-switch NOMAP
-YES: \
-default: -lsystem-mapio \
-endswitch
  -lprofiler -lsystem-smppio \
  -lcore-threads -lpthread $(SOCKETLIB) -lcore-buffers -lcore-network -lsystem \
  -lsystem-smppio -lutil-config $(XERCES_LIB) -lutil -lutil-xml -lsmeman \
  -lutil-config-smeman -lrt -ladmin-util \
  -lutil -lstore -lsms $(__OBJECTS) $(__LIBRARIES) \
-switch NOMAP
-YES: \
-default: $(MAP_LIBRARIES) \
-endswitch
+  $(MAP_LIBRARIES) \
  $(XERCES_LIB) -ldl -ldb \
  -lsystem -lsms -ladmin-util -ladmin-protocol -lmscman \
  -ladmin-service -ladmin-smsc_service \
@@ -24,17 +17,9 @@ endswitch
 switch SNMP
 YES: $(SNMP_LIBS) \
 endswitch
-switch NOMAP
-YES: \
-default: -lsystem-mapio \
-endswitch
  -lnsl \
 switch SNMP
 YES: -lsnmp -lsnmp-smestattable -lsnmp-smeerrtable \
-endswitch
-switch NOMAP
-YES: \
-default: -lsystem-mapio \
 endswitch
  -linman-interaction-msgbill -linman-interaction -linman-common \
  -lutil-mirrorfile -lclosedgroups \
