@@ -36,6 +36,10 @@ public abstract class CPResourceEditController extends CPResourceController{
     this.protocol = protocol;
     loadSettings();
     settings.setProtocol(protocol);
+    settings.setActivePeriodStart(new Time(0,0,0));
+    settings.setActivePeriodEnd(new Time(23,59,59));
+    settings.setPeriodInMin(1);
+    settings.setDirectoryMaxSize(10);
   }
 
   public String verifyConnection() {
