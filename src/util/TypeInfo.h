@@ -93,7 +93,7 @@ private:
 #define DECLMAGTC(x) smsc::util::MagicTICheck< x >  magicticheck_
 #define CHECKMAGTC   magicticheck_.check()
 #else
-#define DECLMAGTC(x)
+#define DECLMAGTC(x) static void magicticheck_()
 #define CHECKMAGTC
 #endif
 
