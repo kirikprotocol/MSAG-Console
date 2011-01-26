@@ -50,7 +50,7 @@ _CB(Et96MapV3SendRInfoForSmConf)
 //_CB(Et96MapV3ForwardSmMOInd)
 _CB(Et96MapV3ReportSmDelStatConf)
 _CB(Et96MapV3InformSCInd)
-_CB(Et96MapV3AnyTimeInterrogationConf)
+//_CB(Et96MapV3AnyTimeInterrogationConf)
 _CB(Et96MapV3AnyTimeInterrogationInd)
 _CB(Et96MapV3ProvideSubscriberInfoConf)
 

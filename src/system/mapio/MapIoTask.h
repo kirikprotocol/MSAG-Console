@@ -64,12 +64,14 @@ extern "C" {
 #include <ss7msg.h>
 #include <et96map_api_defines.h>
 #include <et96map_api_types.h>
+#include <et96map_consts.h>
 #ifdef EIN_HD
 #include <et96map_api.h>
 #else
 #include <et96map_dialogue.h>
 #include <et96map_sms.h>
 #include <et96map_ussd.h>
+#include <et96map_mobility.h>
 #endif
 }
 
@@ -189,7 +191,10 @@ enum MapState{
   MAPST_WaitUssdImsiReq = 49,
   MAPST_MapNoticed = 50,
   MAPST_WaitUssdV1Delimiter = 51,
-  MAPST_WaitUSSDErrorClose = 52
+  MAPST_WaitUSSDErrorClose = 52,
+  MAPST_WaitUssdAtiOpenConf = 53,
+  MAPST_WaitUssdAtiConf = 54,
+  MAPST_WaitUssdAtiClose=55
 };
 
 class hash_func_ET96MAP_DID{

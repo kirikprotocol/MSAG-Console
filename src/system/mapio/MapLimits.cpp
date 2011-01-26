@@ -20,6 +20,21 @@ void MapLimits::Init(const char* fn)
   instance->Reinit();
 }
 
+void MapLimits::parseUssdCodes(const char* name,const std::string& str,StringSet& codes)
+{
+  if(str.length())
+  {
+    std::string::size_type lastPos=0,nextPos;
+    do{
+      nextPos=str.find(',',lastPos);
+      std::string code=str.substr(lastPos,nextPos==std::string::npos?nextPos:nextPos-lastPos);
+      smsc_log_debug(log,"add '%s' ussd code:%s",name,code.c_str());
+      codes.insert(code);
+      lastPos=nextPos+1;
+    }while(nextPos!=std::string::npos);
+  }
+}
+
 void MapLimits::Reinit()
 {
   using namespace xercesc;
@@ -42,17 +57,7 @@ void MapLimits::Reinit()
       noSriUssd.clear();
       std::string noSriUssdStr=config.getString("ussd.no_sri_codes");
       smsc_log_debug(log,"ussd.no_sri_codes=%s",noSriUssdStr.c_str());
-      if(noSriUssdStr.length())
-      {
-        std::string::size_type lastPos=0,nextPos;
-        do{
-          nextPos=noSriUssdStr.find(',',lastPos);
-          std::string code=noSriUssdStr.substr(lastPos,nextPos==std::string::npos?nextPos:nextPos-lastPos);
-          smsc_log_debug(log,"add no sri ussd code:%s",code.c_str());
-          noSriUssd.insert(code);
-          lastPos=nextPos+1;
-        }while(nextPos!=std::string::npos);
-      }
+      parseUssdCodes("no sri",noSriUssdStr,noSriUssd);
     }catch(...)
     {
       smsc_log_info(log,"ussd.no_sri_codes not found and disabled");
@@ -62,20 +67,20 @@ void MapLimits::Reinit()
       condSriUssd.clear();
       std::string condSriUssdStr=config.getString("ussd.cond_sri_codes");
       smsc_log_debug(log,"ussd.cond_sri_codes=%s",condSriUssdStr.c_str());
-      if(condSriUssdStr.length())
-      {
-        std::string::size_type lastPos=0,nextPos;
-        do{
-          nextPos=condSriUssdStr.find(',',lastPos);
-          std::string code=condSriUssdStr.substr(lastPos,nextPos==std::string::npos?nextPos:nextPos-lastPos);
-          smsc_log_debug(log,"add cond sri ussd code:%s",code.c_str());
-          condSriUssd.insert(code);
-          lastPos=nextPos+1;
-        }while(nextPos!=std::string::npos);
-      }
+      parseUssdCodes("cond sri",condSriUssdStr,condSriUssd);
     }catch(...)
     {
-      smsc_log_info(log,"ussd.no_sri_codes not found and disabled");
+      smsc_log_info(log,"ussd.cond_sri_codes not found and disabled");
+    }
+    try{
+      sync::MutexGuard mg(mtx);
+      atiUssd.clear();
+      std::string atiUssdStr=config.getString("ussd.cond_sri_codes");
+      smsc_log_debug(log,"ussd.ati_codes=%s",atiUssdStr.c_str());
+      parseUssdCodes("ati",atiUssdStr,atiUssd);
+    }catch(...)
+    {
+      smsc_log_info(log,"ussd.ati_codes not found and disabled");
     }
     char buf[64];
     for(int i=0;i<maxCLevels;i++)

@@ -95,6 +95,7 @@ static XMOMAP x_momap;
 
 static void ContinueImsiReq(MapDialog* dialog,const String32& s_imsi,const String32& s_msc, const unsigned routeErr);
 static void PauseOnImsiReq(MapDialog* map);
+static void makeAtiRequest(MapDialog* map);
 static const string& SC_ADDRESS() { return MapDialogContainer::GetSCAdress(); }
 static const string& USSD_ADDRESS() { return MapDialogContainer::GetUSSDAdress(); }
 static bool NeedNotifyHLR(MapDialog* dialog);
@@ -2088,16 +2089,16 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           __map_trace2__("ussd redirect: %s->%s",sms.getOriginatingAddress().toString().c_str(),dialog->subsystem.c_str());
           sms.setDestinationAddress(dialog->subsystem.c_str());
           MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
-          int rinst=dialog->instanceId;
+          int rinst2=dialog->instanceId;
           if(dialog->lastUssdMessage)
           {
-            rinst=0xff;
+            rinst2=0xff;
           }
           dialog->state = MAPST_WaitSubmitCmdConf;
-          uint32_t dialogid_smsc=(rinst<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
-          SmscCommand cmd = SmscCommand::makeSumbmitSm(
-            sms,dialogid_smsc);
-          proxy->putIncomingCommand(cmd);
+          uint32_t dialogid_smsc2=(rinst2<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
+          SmscCommand cmd2 = SmscCommand::makeSumbmitSm(
+            sms,dialogid_smsc2);
+          proxy->putIncomingCommand(cmd2);
           return;
         }
 
@@ -2611,6 +2612,7 @@ USHORT_T Et96MapOpenConf (
     case MAPST_WaitSpecOpenConf:
     case MAPST_WaitOpenConf:
     case MAPST_ImsiWaitOpenConf:
+    case MAPST_WaitUssdAtiOpenConf:
       if ( openResult == ET96MAP_RESULT_NOT_OK )
       {
         if ( refuseReason_p && *refuseReason_p == ET96MAP_APP_CONTEXT_NOT_SUPP )
@@ -2685,6 +2687,9 @@ USHORT_T Et96MapOpenConf (
         break;
       case MAPST_WaitUSSDNotifyOpenConf:
         dialog->state = MAPST_WaitUSSDNotifyConf;
+        break;
+      case MAPST_WaitUssdAtiOpenConf:
+        dialog->state = MAPST_WaitUssdAtiConf;
         break;
       }
       break;
@@ -2987,6 +2992,7 @@ USHORT_T Et96MapCloseInd(
       dialog->state = MAPST_WaitSubmitUSSDRequestCloseConf;
       SendSubmitCommand(dialog.get());
       break;
+    case MAPST_WaitUssdAtiClose:
     case MAPST_ImsiWaitCloseInd:
       dialog->associate->hlrVersion = dialog->hlrVersion;
       ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc,dialog->routeErr);
@@ -3474,22 +3480,27 @@ USHORT_T Et96MapDelimiterInd(
         PauseOnImsiReq(dialog.get());
         break;
       case MAPST_WaitUssdDelimiter:
+      {
         reason = ET96MAP_NO_REASON;
         checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
         __map_trace2__("subsystem=%s",dialog->subsystem.c_str());
-        if(smsc::system::mapio::MapLimits::getInstance().isNoSRIUssd(dialog->subsystem) ||
-            ((!dialog->s_imsi.empty() && !dialog->s_msc.empty()) && smsc::system::mapio::MapLimits::getInstance().isCondSRIUssd(dialog->subsystem))
+        smsc::system::mapio::MapLimits& ml=smsc::system::mapio::MapLimits::getInstance();
+        if(ml.isNoSRIUssd(dialog->subsystem) ||
+            ((!dialog->s_imsi.empty() && !dialog->s_msc.empty()) && ml.isCondSRIUssd(dialog->subsystem))
           )
         {
           dialog->noSri=true;
           dialog->state = MAPST_WaitSubmitCmdConf;
           SendSubmitCommand(dialog.get());
+        }else if(ml.isATIUssd(dialog->subsystem))
+        {
+          makeAtiRequest(dialog.get());
         }else
         {
-          dialog->state = MAPST_WaitUssdImsiReq;
+          //dialog->state = MAPST_WaitUssdImsiReq;
           PauseOnImsiReq(dialog.get());
         }
-        break;
+      }break;
       case MAPST_WaitUssdV1Delimiter:
         reason = ET96MAP_NO_REASON;
         checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
@@ -4508,6 +4519,142 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     dialog->state = MAPST_WaitUssdV1Delimiter;
     dialog->invokeId = invokeId;
   }MAP_CATCH(__dialogid_map,0,localSsn,INSTARG0(rinst));
+  return ET96MAP_E_OK;
+}
+
+void makeAtiRequest(MapDialog* dlg)
+{
+  bool success = false;
+  unsigned localSsn = 0;
+  DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,dlg));
+  if (dialog.isnull()) throw runtime_error(
+    FormatText("MAP::%s can't create dialog",__func__));
+  unsigned dialogid_map = dialog->dialogid_map;
+  localSsn = dialog->ssn;
+  MAP_TRY{
+    if ( dlg->sms.get() == 0 )
+    {
+      throw runtime_error(FormatText("MAP::%s has no SMS",__func__));
+    }
+    if (!dlg->hasIndAddress )
+    {
+      throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} has no originating address",__func__,dialogid_map));
+    }
+    dialog->m_msAddr = dlg->m_msAddr;
+    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ USSD_ADDRESS().c_str(), (unsigned)USSD_ADDRESS().length() );
+    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
+    mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+//    __map_trace2__("MAP::%s: Query HLR AC version",__func__);
+    //dialog->mshlrAddr = map->mshlrAddr;
+    dialog->state = MAPST_WaitUssdAtiOpenConf;
+
+    ET96MAP_APP_CNTX_T appContext;
+    appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
+    memset(&dialog->mwdStatus,0,sizeof(dialog->mwdStatus));
+    dialog->memoryExceeded = false;
+    dialog->subscriberAbsent = false;
+    dialog->version=3;
+    SetVersion(appContext,dialog->version);
+    unsigned dialog_id = dialog->dialogid_map;
+    __map_trace2__("%s: dlg 0x%x ssn:%d",__func__,dialog_id,dialog->ssn);
+    checkMapReq( Et96MapOpenReq(
+      dialog->ssn INSTDLGARG(dialog), dialog_id,
+      &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 ), __func__);
+
+    dialog->id_opened = true;
+
+    checkMapReq( Et96MapV3AnyTimeInterrogationReq(dialog->ssn INSTDLGARG(dialog), dialog_id, 0,
+        &dialog->m_scAddr, //ET96MAP_ADDRESS_T       *gsmSCF_sp,
+        0,                 //ET96MAP_IMSI_T          *imsi_sp,
+        &dialog->m_msAddr, //ET96MAP_ADDRESS_T       *msisdn_sp,
+        TRUE,              //BOOLEAN_T               locationInfo,
+        FALSE,             //BOOLEAN_T               subscriberState,
+        TRUE,              //BOOLEAN_T               currentLocation,
+        0,                 //ET96MAP_DOMAIN_TYPE_T   *requestedDomain_p,
+        FALSE,             //BOOLEAN_T               imei,
+        FALSE,             //BOOLEAN_T               msClassmark,
+#ifdef ET96MAP_INTERFACE_VERSION_R14
+        FALSE,             //BOOLEAN_T               mnpRequestedInfo,
+#endif
+        0,                 //ET96MAP_EXTENSIONDATA_T *requestedInfoExtension_sp,
+        0                  //ET96MAP_EXTENSIONDATA_T *anyTimeInterrogationExtension_sp
+         ), __func__);
+    checkMapReq( Et96MapDelimiterReq(dialog->ssn INSTDLGARG(dialog), dialog_id, 0, 0 ), __func__);
+
+  }MAP_CATCH(dialogid_map,0,localSsn,dialog->instanceId);
+}
+
+CALLBACK_DECL
+USHORT_T Et96MapV3AnyTimeInterrogationConf(
+    ET96MAP_LOCAL_SSN_T                    localSsn INSTANCEIDARGDEF(rinst),
+    ET96MAP_DIALOGUE_ID_T                  dialogueId,
+    ET96MAP_INVOKE_ID_T                    invokeId,
+    ET96MAP_AGE_OF_LOCATION_INFO_T         *ageOfLocationInfo_p,
+    ET96MAP_ATI_GEOGRAPHICAL_INFO_T        *geographicalInformation_sp,
+    ET96MAP_ADDRESS_T                      *vlrNumber_sp,
+    ET96MAP_LOCATIONNUMBER_T               *locationNumber_sp,
+    ET96MAP_CELLID_OR_SERVICE_OR_LAI_T     *cellIdOrServiceOrLai_sp,
+    BOOLEAN_T                              saiPresent,
+    ET96MAP_SELECTED_LSA_ID_T              *selectedLSAId_sp,
+    ET96MAP_ADDRESS_T                      *mscNumber_sp,
+    ET96MAP_GEODETICINFO_T                 *geodeticInfo_sp,
+    BOOLEAN_T                              currentLocationRetrived,
+    ET96MAP_ATI_SUBSCRIBER_STATE_T         *subscriberState_sp,
+    ET96MAP_CELLID_OR_SERVICE_OR_LAI_T     *gprsCellIdOrServiceOrLai_sp,
+    ET96MAP_RA_IDENTITY_T                  *gprsRouteingAreaId_sp,
+    ET96MAP_ATI_GEOGRAPHICAL_INFO_T        *gprsGeographicalInformation_sp,
+    ET96MAP_ADDRESS_T                      *gprsSgsnNumber_sp,
+    ET96MAP_SELECTED_LSA_ID_T              *gprsSelectedLSAId_sp,
+    BOOLEAN_T                              gprsSaiPresent,
+    ET96MAP_GEODETICINFO_T                 *gprsGeodeticInfo_sp,
+    BOOLEAN_T                              gprsCurrentLocationRetrived,
+    ET96MAP_AGE_OF_LOCATION_INFO_T         *gprsAgeOfLocationInfo_p,
+    ET96MAP_ATI_PS_SUBSCRIBER_STATE_T      *psSubscriberState_sp,
+    ET96MAP_IMEI_T                         *imei_sp,
+    ET96MAP_MS_CLASSMARK2_T                *msClassmark2_sp,
+    ET96MAP_GPRS_MS_CLASS_T                *gprsMsClass_sp,
+#ifdef ET96MAP_INTERFACE_VERSION_R14
+    ET96MAP_MNP_INFO_RES_T                 *mnpInfoRes_sp,
+#endif
+    ET96MAP_EXTENSIONDATA_T                *locationInfoExtension_sp,
+    ET96MAP_EXTENSIONDATA_T                *locationInfoGprsExtension_sp,
+    ET96MAP_EXTENSIONDATA_T                *subscriberInfoExtension_sp,
+    ET96MAP_EXTENSIONDATA_T                *anyTimeInterrogationExtension_sp,
+    ET96MAP_ERROR_ANY_TIME_INTERROGATION_T *errorAnyTimeInterrogation_sp,
+    ET96MAP_PROV_ERR_T                     *provError_p)
+{
+  int dialogid_map=0;
+  MAP_TRY{
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn,INSTARG0(rinst)));
+    if ( dialog.isnull() )
+    {
+      throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} is not present",__func__,dialogueId));
+    }
+    dialogid_map=dialogueId;
+    __map_trace2__("%s: dlg 0x%x ssn:%d, vlr=%p, msc=%p",__func__,dialogid_map,dialog->ssn,vlrNumber_sp,mscNumber_sp);
+    if(errorAnyTimeInterrogation_sp)
+    {
+      dialog->routeErr = DoMAPErrorProcessor(errorAnyTimeInterrogation_sp->errorCode,0);
+    }else
+    if(provError_p)
+    {
+      dialog->routeErr = DoMAPErrorProcessor(0,provError_p);
+    }else
+    {
+      ET96MAP_ADDRESS_T* addr=vlrNumber_sp;
+      if(!addr)
+      {
+        addr=mscNumber_sp;
+      }
+      if(addr)
+      {
+        Address vlr;
+        ConvAddrMSISDN2Smc(addr,&vlr);
+        dialog->s_msc=vlr.value;
+      }
+    }
+    dialog->state=MAPST_WaitUssdAtiClose;
+  }MAP_CATCH(dialogid_map,0,localSsn,INSTARG0(rinst));
   return ET96MAP_E_OK;
 }
 
