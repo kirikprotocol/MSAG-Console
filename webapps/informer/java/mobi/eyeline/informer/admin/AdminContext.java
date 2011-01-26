@@ -206,8 +206,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   public synchronized void addUser(User u) throws AdminException {
     user2regionDep.updateUser(u);
-    updateLocalFtpAccounts();
     usersManager.addUser(u);
+    updateLocalFtpAccounts();
   }
 
   public synchronized void removeUser(String login) throws AdminException {
@@ -218,8 +218,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     delivery2UserDep.removeUser(user);
     restriction2UserDep.removeUser(user);
 
-    updateLocalFtpAccounts();
     usersManager.removeUser(login);
+    updateLocalFtpAccounts();
   }
 
   // INFORMER CONFIG ==================================================================================
