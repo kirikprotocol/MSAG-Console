@@ -308,11 +308,8 @@ CFLAGS := $(CFLAGS) $(ORACLE_INC)
 
 ifneq ("$(NOMAP)","YES")
 MAP_LIBRARIES := -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME)
-ifeq ("$(CLUSTER)","YES")
-MAP_LIBRARIES += -lsmsc-mapio
-else
-MAP_LIBRARIES += -lsystem-mapio
-endif
+MAP_LIBRARIES2 := -lsmsc-mapio $(MAP_LIBRARIES) -lsmsc-mapio
+MAP_LIBRARIES := -lsystem-mapio $(MAP_LIBRARIES) -lsystem-mapio
 CXXFLAGS := $(CXXFLAGS) -DUSE_MAP
 endif
 
@@ -334,6 +331,7 @@ export CFLAGS
 export LDFLAGS
 export COMPFLAGS
 export MAP_LIBRARIES
+export MAP_LIBRARIES2
 
 #MODULES := $(shell cat modules-list | awk '/^[^\#]./{print $$1}' )
 
