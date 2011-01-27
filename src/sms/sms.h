@@ -1856,7 +1856,7 @@ inline SMSPartInfo getSMSPartInfo(SMS& sms,int partIdx)
   const uint8_t* data=(const uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
   uint8_t sz=*data;
   data++;
-  if((partIdx+1)*sz>len)
+  if((unsigned(partIdx)+1)*sz>len)
   {
     throw smsc::util::Exception("sms part info index is out of range (idx=%d, len=%u)",partIdx,len);
   }
@@ -1876,7 +1876,7 @@ inline void fillSMSPartInfo(SMS& sms,int partsNum,int partIdx,SMSPartInfo partIn
   }
   unsigned len;
   uint8_t* data=(uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
-  if((partIdx+1)*SMSPartInfo::SIZE>len)
+  if((unsigned(partIdx)+1)*SMSPartInfo::SIZE>len)
   {
     throw smsc::util::Exception("sms part info index is out of range (idx=%d, len=%u)",partIdx,len);
   }
