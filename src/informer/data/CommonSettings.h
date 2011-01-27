@@ -61,14 +61,21 @@ public:
         return inputJournalRollingPeriod_;
     }
 
-    /// a number of messages (low mark) when input upload should start.
-    inline unsigned getInputMinQueueSize() const {
-        return inputMinQueueSize_;
+    // a number of messages (low mark) when input upload should start.
+    // inline unsigned getInputMinQueueSize() const {
+    // return inputMinQueueSize_;
+    // }
+
+    /// a number of seconds corresponding to input queue (low mark)
+    /// when input upload should start.
+    inline unsigned getInputMinQueueTime() const {
+        return inputMinQueueTime_;
     }
 
-    /// how many messages to upload from input storage in one chunk.
-    inline unsigned getInputTransferChunkSize() const {
-        return inputTransferChunkSize_;
+    /// how many seconds should cover the messages uploaded from input storage
+    /// in one chunk.
+    inline unsigned getInputTransferChunkTime() const {
+        return inputTransferChunkTime_;
     }
 
     inline unsigned getInputTransferThreadCount() const {
@@ -169,8 +176,8 @@ private:
     std::string svcType_;
     unsigned licenseLimit_;
     unsigned inputJournalRollingPeriod_;
-    unsigned inputMinQueueSize_;
-    unsigned inputTransferChunkSize_;
+    unsigned inputMinQueueTime_;
+    unsigned inputTransferChunkTime_;
     unsigned inputTransferThreadCount_;
     unsigned operationalJournalRollingPeriod_;
     unsigned protocolId_;

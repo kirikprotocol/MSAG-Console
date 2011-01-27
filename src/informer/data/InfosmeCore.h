@@ -48,6 +48,11 @@ public:
     virtual void updateRegion( regionid_type regionId ) = 0;
     virtual void deleteRegion( regionid_type regionId ) = 0;
 
+    /// FIXME: statistics
+    // virtual void getDeliveryStats( CoreDlvStats& cds ) = 0;
+    // virtual void getSmscStats( CoreSmscStats& css ) = 0;
+    // virtual void getRegionStats( CoreRegionStats& crs ) = 0;
+
     /// create delivery bound to given user
     virtual dlvid_type addDelivery( UserInfo& userInfo,
                                     const DeliveryInfoData& info ) = 0;

@@ -59,8 +59,8 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     svcType_ = conf.getString("svcType","Info");
     protocolId_ = conf.getInt("protocolId",1,1,0);
     slicedMessageSize_ = conf.getInt("slicedMessageSize",160,120,250);
-    inputMinQueueSize_ = conf.getInt("inputMinQueueSize",10,0,100);
-    inputTransferChunkSize_ = conf.getInt("inputTransferChunkSize",1000,100,10000);
+    inputMinQueueTime_ = conf.getInt("inputMinQueueSize",5,0,100);
+    inputTransferChunkTime_ = conf.getInt("inputTransferChunkSize",60,10,300);
     receiptExtraWaitTime_ = conf.getInt("receiptExtraWaitTime",30,5,120);
     retryMinTimeToLive_ = conf.getInt("retryMinTimeToLive",30,10,120);
     skippedIdsMinCacheSize_ = conf.getInt("skippedIdsMinCacheSize",5,0,1000);

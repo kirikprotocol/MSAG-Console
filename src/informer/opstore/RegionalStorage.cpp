@@ -171,6 +171,7 @@ resendTransferTask_(0),
 regionId_(regionId),
 stopRolling_(0),
 newOrResend_(0),
+lastInputRequestGranted_(0),
 nextResendFile_(findNextResendFile())
 {
     smsc_log_debug(log_,"ctor @%p R=%u/D=%u",
@@ -253,9 +254,16 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     msgtime_type uploadNextResend = 0;
     do { // fake loop
 
+        /// what is the period b/w messages [100..100M] microseconds
+        const usectime_type requestPeriod = 
+            std::max( std::min( usecTime - lastInputRequestGranted_, 100LL*tuPerSec ),
+                      100LL );
+        const unsigned minQueueSize = 2 + 
+            unsigned(getCS()->getInputMinQueueTime()*tuPerSec / requestPeriod);
+
         /// check if we need to request new messages
         if ( !inputTransferTask_ &&
-             unsigned(newQueue_.Count()) <= getCS()->getInputMinQueueSize() ) {
+             unsigned(newQueue_.Count()) <= minQueueSize ) {
 
             const bool mayDetachRegion = ( newQueue_.Count()==0 &&
                                            resendQueue_.empty() &&
@@ -266,9 +274,11 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                                unsigned(regionId_),
                                dlvId,
                                newQueue_.Count());
+                const unsigned transferChunkSize =
+                    getCS()->getInputTransferChunkTime() / requestPeriod + 1;
                 InputTransferTask* task = 
                     dlv_->source_->createInputTransferTask(*this,
-                                                           getCS()->getInputTransferChunkSize());
+                                                           transferChunkSize );
                 if (task) {
                     dlv_->source_->getDlvActivator().startInputTransfer(task);
                 }
@@ -317,6 +327,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
         /// checking newQueue
         if ( newQueue_.Pop(iter) ) {
             // success
+            lastInputRequestGranted_ = usecTime;
             messageHash_.Insert(iter->msg.msgId,iter);
             from = "newQueue";
             break;

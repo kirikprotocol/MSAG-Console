@@ -1,3 +1,7 @@
+2011-01-27 16:55 bukind
+  dynamic calculation on the input size of operational storage
+  based on input request frequency.
+
 =====================================================================
 2011-01-26 15:45 bukind informer-build-20110126
 
