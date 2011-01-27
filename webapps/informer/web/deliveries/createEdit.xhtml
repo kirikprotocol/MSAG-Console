@@ -78,11 +78,11 @@
       </h:panelGroup>
 
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.singleText}" rendered="#{createDelivery.activePage.deliveryWithSingleText}"/>
-      <h:panelGroup rendered="#{createDelivery.activePage.deliveryWithSingleText}">
-        <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" simple="true"/>
+      <h:panelGrid rendered="#{createDelivery.activePage.deliveryWithSingleText}" columns="2">
+          <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" simple="true"/>
           <tr:outputText value="&#160;"/>
           <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>
-      </h:panelGroup>
+      </h:panelGrid>
 
       <h:outputText style="white-space: nowrap;display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
       <h:selectOneMenu id="dMode" value="#{createDelivery.activePage.delivery.deliveryMode}"
