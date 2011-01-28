@@ -71,6 +71,17 @@
     -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
     -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lrt -lutil \
     -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl
+#mtsmsme/sua/msc-mosm-mpart msc-mosm-mpart     -lmtsmsme-sua \
+    -lmtsmsme-processor \
+    -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
+    -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lrt -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl
 #mtsmsme/sua/msc-sri4sm msc-sri4sm  -lmtsmsme-sua \
     -lmtsmsme-processor \
     -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
