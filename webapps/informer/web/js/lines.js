@@ -5,20 +5,6 @@
  *
  */
 
- function loadJss(requestContextPath) {
-
-  loadJs(requestContextPath, 'raphael-min.js');
-  loadJs(requestContextPath, 'g.raphael-min.js');
-  loadJs(requestContextPath, 'g.line-min.js');
- }
-
-function loadJs(requestContextPath, src) {
-  var thescript = document.createElement('script');
-  thescript.setAttribute('type','text/javascript');
-  thescript.setAttribute('src',requestContextPath+'/js/'+src);
-  document.getElementsByTagName('head')[0].appendChild(thescript);
-}
-
 
 function Lines(contentId, updatePeriod, height, width) {
 

@@ -1,7 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:c="http://java.sun.com/jstl/core"
@@ -13,11 +12,10 @@
 
   <ui:define name="content">
 
-
+    <script type="text/javascript" src="#{facesContext.externalContext.requestContextPath}/js/raphael-min.js"></script>
+    <script type="text/javascript" src="#{facesContext.externalContext.requestContextPath}/js/g.raphael-min.js"></script>
+    <script type="text/javascript" src="#{facesContext.externalContext.requestContextPath}/js/g.line-min.js"></script>
     <script type="text/javascript" src="#{facesContext.externalContext.requestContextPath}/js/lines.js"></script>
-    <script type="text/javascript" language="javascript">
-      loadJss('#{facesContext.externalContext.requestContextPath}')
-    </script>
 
     <h:form>
 
