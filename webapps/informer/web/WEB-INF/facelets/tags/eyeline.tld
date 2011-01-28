@@ -627,4 +627,51 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>lines</name>
+    <attribute>
+      <name>labels</name>
+      <type>java.util.List</type>
+      <required>true</required>
+      <description>Названия для точек оси Х</description>
+    </attribute>
+    <attribute>
+      <name>height</name>
+      <type>int</type>
+      <required>true</required>
+      <description>Высота графика</description>
+    </attribute>
+    <attribute>
+      <name>width</name>
+      <type>int</type>
+      <required>true</required>
+      <description>Ширина графика</description>
+    </attribute>
+    <attribute>
+      <name>updatePeriod</name>
+      <type>int</type>
+      <description>Период обновления в секундах. Если период равен нулю, то компонент не обновляется</description>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>lineChart</name>
+    <attribute>
+      <name>values</name>
+      <required>true</required>
+      <description>Массив координат точек графика (двумерный)</description>
+    </attribute>
+    <attribute>
+      <name>color</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+      <description>Цвет линии (к примеру: #F44)</description>
+    </attribute>
+    <attribute>
+      <name>shade</name>
+      <type>boolean</type>
+      <description>Закрашивать или нет область подграфика</description>
+    </attribute>
+  </tag>
+
 </taglib>

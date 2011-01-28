@@ -18,6 +18,25 @@ public class Index1Controller {
   private Date date = new Date();
 
 
+  public int[][] getValues() {
+    Random r = new Random();
+    int[][] res = new int[10][2];
+    for(int i=0;i<10;i++) {
+      res[i][0] = i;
+      res[i][1] = r.nextInt(100);
+    }
+    return res;
+  }
+
+  public List getLabels() {
+    Random r = new Random();
+    List res = new ArrayList(10);
+    for(int i=0;i<10;i++) {
+      res.add("label"+r.nextInt(10));
+    }
+    return res;
+  }
+
   public Date getDate() {
     return date;
   }

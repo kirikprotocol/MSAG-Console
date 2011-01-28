@@ -13,6 +13,12 @@
 
   <ui:define name="content">
 
+
+    <script type="text/javascript" src="#{facesContext.externalContext.requestContextPath}/js/lines.js"></script>
+    <script type="text/javascript" language="javascript">
+      loadJss('#{facesContext.externalContext.requestContextPath}')
+    </script>
+
     <h:form>
 
       <eye:inputDate value="#{index1.date}" type="full"/>
@@ -64,6 +70,10 @@
         
       </eye:dataTable>
 
+      <eye:lines labels="#{index1.labels}" updatePeriod="3" height="340" width="640">
+        <eye:lineChart values="#{index1.values}" shade="true" color="#F44"/>
+        <eye:lineChart values="#{index1.values}" color="#44F"/>
+      </eye:lines>
 
 
     </h:form>

@@ -204,4 +204,22 @@
     </component>
   </tag>
 
+  <tag>
+    <tag-name>lines</tag-name>
+     <component>
+      <component-type>lines</component-type>
+      <renderer-type>lines</renderer-type>
+      <handler-class>mobi.eyeline.informer.web.components.graph.LinesHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>lineChart</tag-name>
+     <component>
+      <component-type>lineChart</component-type>
+      <renderer-type>lineChart</renderer-type>
+      <handler-class>mobi.eyeline.informer.web.components.graph.LineChartHandler</handler-class>
+    </component>
+  </tag>
+
 </facelet-taglib>

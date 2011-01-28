@@ -188,6 +188,19 @@
       <renderer-type>inputTime</renderer-type>
       <renderer-class>mobi.eyeline.informer.web.components.input_time.InputTimeRenderer</renderer-class>
     </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>lines</renderer-type>
+      <renderer-class>mobi.eyeline.informer.web.components.graph.LinesRenderer</renderer-class>
+    </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>lineChart</renderer-type>
+      <renderer-class>mobi.eyeline.informer.web.components.graph.LinesRenderer</renderer-class>
+    </renderer>
+
   </render-kit>
 
   <managed-bean>
