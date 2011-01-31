@@ -88,7 +88,7 @@ public class User implements Serializable {
     this.policyId = user.policyId;
     this.allowedRegions = user.getRegions() == null ? null : new ArrayList<Integer>(user.getRegions());
     this.priority = user.priority;
-    this.emailNotification = user.smsNotification;
+    this.emailNotification = user.emailNotification;
     this.smsNotification = user.smsNotification;
     this.createArchive=user.createArchive;
     this.deliveryLifetime=user.deliveryLifetime;
