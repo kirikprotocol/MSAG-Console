@@ -78,10 +78,13 @@ public class FileDeliveriesProvider implements UserDirResolver {
     String remoteDir = ucps.getDirectory();
 
     File localDir;
-    if(ucps.getDirectory().indexOf(File.separatorChar)==0) {
-      localDir = new File(ucps.getDirectory());
+    String dir = ucps.getDirectory();
+    if (dir == null)
+      dir = "";
+    if(dir.indexOf(File.separatorChar)==0) {
+      localDir = new File(dir);
     } else {
-      localDir = new File(informerBase,ucps.getDirectory());
+      localDir = new File(informerBase,dir);
     }
 
 
