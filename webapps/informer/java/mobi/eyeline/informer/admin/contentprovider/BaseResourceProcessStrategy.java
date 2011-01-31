@@ -397,7 +397,8 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
     private Message parseLine(String line) {
       int inx = line.indexOf('|');
       if (inx < 0)
-        return null;
+        throw new IllegalArgumentException("INVALID LINE FORMAT");
+
 
       String abonent = line.substring(0, inx).trim();
       Address ab;
