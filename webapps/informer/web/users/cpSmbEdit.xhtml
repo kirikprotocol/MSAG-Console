@@ -23,17 +23,17 @@
         <eye:buttons>
 
           <eye:button>
-            <h:commandLink value="#{msg['save.button']}" action="#{cpSmbEdit.save}">
+            <tr:commandLink text="#{msg['save.button']}" action="#{cpSmbEdit.save}" shortDesc="#{msg['cp.resource.save.desc']}">
               <f:param name="userId" value="#{cpSmbEdit.userId}"/>
-            </h:commandLink>
+            </tr:commandLink>
           </eye:button>
           <eye:button>
-            <h:commandLink value="#{msg['cancel.button']}" action="CP_RESOURCE_LIST" immediate="true"/>
+            <tr:commandLink text="#{msg['cancel.button']}" action="CP_RESOURCE_LIST" immediate="true" shortDesc="#{msg['cp.resource.cancel.desc']}"/>
           </eye:button>
           <eye:space/>
 
           <eye:button>
-            <h:commandLink value="#{msg['testconnect.button']}" action="#{cpSmbEdit.verifyConnection}"/>
+            <tr:commandLink text="#{msg['testconnect.button']}" action="#{cpSmbEdit.verifyConnection}" shortDesc="#{msg['cp.resource.check.desc']}"/>
           </eye:button>
         </eye:buttons>
 
@@ -111,17 +111,17 @@
         <eye:buttons>
 
           <eye:button>
-            <h:commandLink value="#{msg['save.button']}" action="#{cpSmbEdit.save}">
+            <tr:commandLink text="#{msg['save.button']}" action="#{cpSmbEdit.save}" shortDesc="#{msg['cp.resource.save.desc']}">
               <f:param name="userId" value="#{cpSmbEdit.userId}"/>
-            </h:commandLink>
+            </tr:commandLink>
           </eye:button>
           <eye:button>
-            <h:commandLink value="#{msg['cancel.button']}" action="CP_RESOURCE_LIST" immediate="true"/>
+            <tr:commandLink text="#{msg['cancel.button']}" action="CP_RESOURCE_LIST" immediate="true" shortDesc="#{msg['cp.resource.cancel.desc']}"/>
           </eye:button>
           <eye:space/>
 
           <eye:button>
-            <h:commandLink value="#{msg['testconnect.button']}" action="#{cpSmbEdit.verifyConnection}"/>
+            <tr:commandLink text="#{msg['testconnect.button']}" action="#{cpSmbEdit.verifyConnection}" shortDesc="#{msg['cp.resource.check.desc']}"/>
           </eye:button>
         </eye:buttons>
 

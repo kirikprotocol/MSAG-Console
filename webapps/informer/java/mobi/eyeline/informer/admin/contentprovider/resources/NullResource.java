@@ -1,8 +1,10 @@
-package mobi.eyeline.informer.admin.contentprovider;
+package mobi.eyeline.informer.admin.contentprovider.resources;
 
 import mobi.eyeline.informer.admin.AdminException;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -10,7 +12,7 @@ import java.util.List;
  * User: artem
  * Date: 25.01.11
  */
-class NullResource implements FileResource {
+class NullResource extends FileResource {
   @Override
   public void open() throws AdminException {
   }
@@ -21,7 +23,7 @@ class NullResource implements FileResource {
   }
 
   @Override
-  public void get(String path, File localFile) throws AdminException {
+  public void get(String path, OutputStream os) throws AdminException {
   }
 
   @Override
@@ -33,7 +35,7 @@ class NullResource implements FileResource {
   }
 
   @Override
-  public void put(File localFile, String toPath) throws AdminException {
+  public void put(InputStream is, String toPath) throws AdminException {
   }
 
   @Override

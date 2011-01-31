@@ -1,8 +1,8 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
 import mobi.eyeline.informer.admin.AdminException;
+import mobi.eyeline.informer.admin.contentprovider.resources.FileResource;
 import mobi.eyeline.informer.admin.delivery.*;
-import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.filesystem.TestFileSystem;
 import mobi.eyeline.informer.admin.regions.Region;
@@ -115,9 +115,9 @@ public class MainLoopTaskTest {
     User u = prepareUser();
     UserCPsettings settings = prepareSettings(UserCPsettings.WorkType.simple);
 
-    ResourceProcessStrategy strategy = task.getStrategy(settings);
+    ResourceProcessStrategy strategy = task.getStrategy(u, new File(workFile, u.getLogin()), settings, resource);
 
-    strategy.process(u, new File(workFile, u.getLogin()), settings);
+    strategy.process(true);
 
     assertEquals(resource.listCSVFiles().size(), 0);
 
@@ -140,9 +140,9 @@ public class MainLoopTaskTest {
     User u = prepareUser();
     UserCPsettings settings = prepareSettings(UserCPsettings.WorkType.detailed);
 
-    ResourceProcessStrategy strategy = task.getStrategy(settings);
+    ResourceProcessStrategy strategy = task.getStrategy(u, new File(workFile, u.getLogin()), settings, resource);
 
-    strategy.process(u, new File(workFile, u.getLogin()), settings);
+    strategy.process(true);
 
     assertEquals(resource.listCSVFiles().size(), 0);
     assertEquals(resource.deliveryFile, remoteFile+".active");
@@ -153,21 +153,21 @@ public class MainLoopTaskTest {
 
     deliveryManager.forceModifyDeliveries();
 
-    File finished = new File(workFile, u.getLogin()+File.separatorChar+deliveryName+".fin");
-    File report = new File(workFile, u.getLogin()+File.separatorChar+deliveryName+".report");
-
-
-    finished.createNewFile();
-    report.createNewFile();
-
-
-    strategy.process(u, new File(workFile, u.getLogin()), settings);
-
-
-    assertEquals(resource.listCSVFiles().size(),0);
-    assertEquals(resource.deliveryFile, remoteFile+".finished");
-
-    assertEquals(resource.uploaded.size(), 1);
+//    File finished = new File(workFile, u.getLogin()+File.separatorChar+deliveryName+".fin");
+//    File report = new File(workFile, u.getLogin()+File.separatorChar+deliveryName+".report");
+//
+//
+//    finished.createNewFile();
+//    report.createNewFile();
+//
+//
+//    strategy.process(u, new File(workFile, u.getLogin()), settings, true);
+//
+//
+//    assertEquals(resource.listCSVFiles().size(),0);
+//    assertEquals(resource.deliveryFile, remoteFile+".finished");
+//
+//    assertEquals(resource.uploaded.size(), 1);
 
 
 
@@ -184,7 +184,7 @@ public class MainLoopTaskTest {
   }
 
 
-  private static class SingleFileResource implements FileResource {
+  private static class SingleFileResource extends FileResource {
 
     private String deliveryFile;
 
@@ -213,21 +213,18 @@ public class MainLoopTaskTest {
     }
 
     @Override
-    public void get(String path, File localFile) throws AdminException {
+    public void get(String path, OutputStream os) throws AdminException {
       if(deliveryFile == null || !deliveryFile.equals(path)) {
         return;
       }
-      File parent = localFile.getParentFile();
-      if(parent != null && !parent.exists()) {
-        localFile.getParentFile().mkdirs();
-      }
+//      File parent = localFile.getParentFile();
+//      if(parent != null && !parent.exists()) {
+//        localFile.getParentFile().mkdirs();
+//      }
       PrintWriter wr = null;
       try{
-        wr = new PrintWriter(new BufferedWriter(new FileWriter(localFile)));
+        wr = new PrintWriter(new OutputStreamWriter(os));
         wr.println("+79139489906|Hello, world!");
-      }catch (IOException e){
-        e.printStackTrace();
-        throw new ContentProviderException("ioerror");
       }
       finally {
         if(wr != null) {
@@ -253,7 +250,7 @@ public class MainLoopTaskTest {
     }
 
     @Override
-    public void put(File localFile, String toPath) throws AdminException {
+    public void put(InputStream is, String toPath) throws AdminException {
       uploaded.add(toPath);
     }
 
@@ -316,6 +313,11 @@ public class MainLoopTaskTest {
     }
 
     @Override
+    public void pauseDelivery(String login, int deliveryId) throws AdminException {
+      deliveryManager.pauseDelivery(login, "", deliveryId);
+    }
+
+    @Override
     public void dropDelivery(String login, int deliveryId) throws AdminException {
       deliveryManager.dropDelivery(login, "", deliveryId);
     }
@@ -351,11 +353,6 @@ public class MainLoopTaskTest {
     public void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException {
       filter.setDeliveryId(deliveryId);
       deliveryManager.getMessages(login, "", filter, 1000, visitor);
-    }
-
-    @Override
-    public DeliveryChangesDetector getDeliveryChangesDetector() {
-      return null;
     }
 
     @Override

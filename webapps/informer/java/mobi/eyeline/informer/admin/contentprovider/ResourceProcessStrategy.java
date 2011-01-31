@@ -10,15 +10,14 @@ import java.io.File;
  * Стратегия для обработки рассылок на удалённом ресурсе
  * @author Aleksandr Khalitov
  */
-public interface ResourceProcessStrategy {
+interface ResourceProcessStrategy {
 
   /**
    * Обработка рассылок на удаленном ресерсе
-   * @param u пользователь
-   * @param userDir директория пользователя на локальной машине
-   * @param ucps настройки ресурса
+
+   * @param allowDeliveryCreation разрешено ли создавать рассылки
    * @throws AdminException ошибка
    */
-  public void process(User u, File userDir, UserCPsettings ucps) throws AdminException;
+  public void process(boolean allowDeliveryCreation) throws AdminException;
 
 }

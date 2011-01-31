@@ -462,6 +462,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     if(u.isCreateCDR()) {
       delivery.setEnableMsgFinalizationLogging(true);
     }
+    if (delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS) != null || delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS) != null)
+      delivery.setEnableStateChangeLogging(true);
     return deliveryManager.createDeliveryWithIndividualTexts(login, password, delivery, msDataSource);
   }
 
@@ -480,6 +482,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     if(u.isCreateCDR()) {
       delivery.setEnableMsgFinalizationLogging(true);
     }
+    if (delivery.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS) != null || delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS) != null)
+      delivery.setEnableStateChangeLogging(true);
     return deliveryManager.createDeliveryWithSingleText(login, password, delivery, msDataSource);
   }
 

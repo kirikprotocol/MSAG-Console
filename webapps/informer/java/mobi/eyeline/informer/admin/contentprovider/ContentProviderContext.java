@@ -36,6 +36,8 @@ public interface ContentProviderContext {
 
   void activateDelivery(String login,  int deliveryId) throws AdminException;
 
+  void pauseDelivery(String login, int deliveryId) throws AdminException;
+
   void dropDelivery(String login,  int deliveryId) throws AdminException;
 
   void copyUserSettingsToDeliveryPrototype(String login, DeliveryPrototype delivery) throws AdminException;
@@ -45,8 +47,6 @@ public interface ContentProviderContext {
   void addMessages(String login, DataSource<Message> messageSource, int deliveryId) throws AdminException;
 
   void getMessagesStates(String login, MessageFilter filter, int deliveryId, Visitor<Message> visitor) throws AdminException;
-
-  DeliveryChangesDetector getDeliveryChangesDetector();
 
   File getFtpUserHomeDir(String login) throws AdminException;
 }

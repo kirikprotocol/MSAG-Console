@@ -9,7 +9,7 @@ import mobi.eyeline.informer.admin.AdminException;
  * Time: 13:27:30
  */
 public class ContentProviderException extends AdminException {
-  protected ContentProviderException(String key, String... args) {
+  public ContentProviderException(String key, String... args) {
     super(key, args);
   }
 

@@ -322,6 +322,10 @@ public class DeliveryManager {
       return null;
     d.setLoaded(true);
 
+    d.setDeliveryManager(this);
+    d.setLogin(login);
+    d.setPassword(password);
+
     if (d.getProperty("singleText") != null) {
       d.setType(Delivery.Type.SingleText);
       d.setSingleText(conn.getDeliveryGlossary(deliveryId)[0]);

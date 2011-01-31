@@ -37,10 +37,10 @@
       <eye:dataTable value="#{cpList.model}" var="r" selectedRows="#{cpList.selectedRows}">
         <eye:row rowId="#{r.user}|#{r.hashId}">
           <eye:column name="name" title="#{msg['user.edit.import.name']}" width="10%" align="center" sortable="true">
-            <h:commandLink action="#{r.editAction}" value="#{r.name}">
+            <tr:commandLink action="#{r.editAction}" text="#{r.name}" shortDesc="#{msg['cp.resource.edit.desc']}">
               <f:param name="user_ID" value="#{r.user}"/>
               <f:param name="cp_settings_ID" value="#{r.hashId}"/>
-            </h:commandLink>
+            </tr:commandLink>
           </eye:column>
           <eye:column name="user" title="#{msg['user.edit.import.user']}" sortable="true" width="15%" align="center" defaultSortOrder="asc">
             <h:outputText value="#{r.user}"/>
@@ -74,7 +74,7 @@
             </eye:menubar>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['delete.button']}"
+          <tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['cp.resource.delete.selected']}"
                           action="#{cpList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" />
         </eye:button>
         <eye:space/>
