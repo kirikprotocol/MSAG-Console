@@ -133,7 +133,7 @@ public class InformerStatusController extends InformerController {
 
   public String switchFtpServerHost() {
     try {
-      getConfig().switchInformer(ftpServerSwitchTo, getUserName());
+      getConfig().switchFtpServer(ftpServerSwitchTo, getUserName());
       reload();
     } catch (AdminException e) {
       addError(e);
