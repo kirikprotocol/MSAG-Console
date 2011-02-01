@@ -75,6 +75,7 @@
     -lmtsmsme-processor \
     -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
     -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-emule \
     -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
     -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
     -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
@@ -86,6 +87,7 @@
     -lmtsmsme-processor \
     -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
     -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-emule \
     -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
     -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
     -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \

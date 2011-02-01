@@ -12,13 +12,13 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/Message.hpp"
 #include "mtsmsme/processor/util.hpp"
 #include "mtsmsme/processor/ACRepo.hpp"
+#include "mtsmsme/emule/TrafficShaper.hpp"
 
 using std::vector;
 using std::string;
 using smsc::core::threads::Thread;
 using smsc::logger::Logger;
 using smsc::sms::Address;
-using smsc::util::millisleep;
 using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
@@ -34,6 +34,7 @@ using smsc::mtsmsme::comp::MoForwardSmReq;
 using smsc::mtsmsme::processor::BeginMsg;
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
 using smsc::mtsmsme::processor::util::dump;
+using smsc::mtsmsme::processor::TrafficShaper;
 
 static char msca[] = "791398699873"; // MSC address
 static char vlra[] = "79139860004"; //VLR address
@@ -78,69 +79,6 @@ class GopotaListener: public SuaProcessor, public Thread {
       return result;
     }
   };
-class TrafficShaper: public SccpSender {
-  private:
-    SccpSender* adaptee;
-    int delay;
-    int overdelay;
-    hrtime_t msgstart;
-    bool slowstartmode;
-    int slowstartperiod; //in seconds
-    int speed;
-    struct timeval slow_start;
-    void adjustdelay()
-    {
-      if (slowstartmode)
-      {
-        timeval now;
-        if (!slow_start.tv_sec)
-          gettimeofday(&slow_start,NULL);
-        gettimeofday(&now,NULL);
-        if (slow_start.tv_sec + slowstartperiod < now.tv_sec)
-        {
-          slowstartmode = false;
-          delay = 1000000/speed;
-        }
-        else
-        {
-          delay = 1000000/(1+(speed-1)*(now.tv_sec-slow_start.tv_sec)/slowstartperiod);
-        }
-      }
-    }
-    void shape()
-    {
-      adjustdelay();
-      hrtime_t msgproc=gethrtime()-msgstart;
-      msgproc/=1000;
-      if(delay>msgproc+overdelay)
-      {
-        int toSleep=delay-msgproc-overdelay;
-        msgstart=gethrtime();
-        millisleep(toSleep/1000);
-        overdelay=(gethrtime()-msgstart)/1000-toSleep;
-      }else
-      {
-        overdelay-=delay-(int)msgproc;
-      }
-    }
-  public:
-    TrafficShaper(SccpSender* _adaptee, int _speed,int _slowstartperiod) :
-      adaptee(_adaptee),slowstartmode(false),slowstartperiod(_slowstartperiod),
-      overdelay(0)
-    {
-      if (slowstartperiod) slowstartmode = true;
-      slow_start.tv_sec = 0;
-      delay = 1000000/_speed;
-      speed = _speed;
-    }
-    void send(uint8_t cdlen, uint8_t *cd, uint8_t cllen, uint8_t *cl,
-        uint16_t ulen, uint8_t *udp)
-    {
-      msgstart=gethrtime();
-      adaptee->send(cdlen,cd,cllen,cl,ulen,udp);
-      shape();
-    }
-};
 int randint(int min, int max)
 {
   return min+int((max-min+1)*rand()/(RAND_MAX+1.0));
@@ -176,6 +114,64 @@ class StatFlusher: public Thread {
       return 0;
     }
 };
+class Phone {
+    static uint8_t PartsNumber;
+  private:
+    uint8_t MR; //TP Message Reference
+    uint8_t MID;
+    uint8_t MP;
+    uint8_t MPN;
+  public:
+    uint8_t getMessageReference() { return MR++; }
+    uint8_t get();
+};
+class Flooder {
+    string pp;
+  public:
+    string& getPhone() {return pp;}
+};
+void makepdu(char* rndmsfrom,vector<unsigned char>& ui)
+{
+  Phone abnt;
+    uint8_t MR = abnt.getMessageReference(); //TP Message Reference
+    uint8_t MID;
+    uint8_t MP;
+    uint8_t MPN;
+
+    int pos;
+    pos = snprintf(rndmsfrom, 20, rndmsfrom_pattern, randint(0, 9999));
+    rndmsfrom[pos] = 0;
+
+    char rndmsto[20] = {0};
+    pos = snprintf(rndmsto, sizeof (rndmsto), rndmsto_pattern, randint(0, 9999));
+    rndmsto[pos] = 0;
+    string msto(rndmsto); // B-subsriber
+
+    OCTET_STRING_DECL(dest,20);
+    ZERO_OCTET_STRING(dest);
+    dest.size = (int)(packNumString2BCD91(dest.buf, msto.c_str(), (unsigned )(msto.length())));
+    ui.push_back(0x41); //MI = No reply path, UDH is present, SRR not requested, validity period not present, accept duplicates, SUBMIT
+    ui.push_back(MR); //TP Message Reference
+    ui.push_back((uint8_t)(msto.length())); // TP-Destination-Address length in digits
+    ui.insert(ui.end(), dest.buf, dest.buf + dest.size); //TP-Destination-Address
+    ui.push_back(0); //TP-Protocol-Identifier
+    ui.push_back(0x08); //TP-Data_Coding-Scheme = UCS2
+    //ui.push_back(0xFF); //TP-Validity-Period
+    ui.push_back(0x8c); //TP-User-Data-Length = 140 octets
+    ui.push_back(0x05); // UDH length
+    ui.push_back(0x00); // Concat IE tag
+    ui.push_back(0x03); // Concat IE len
+    ui.push_back(MID); // Concat Message identifier
+    ui.push_back(MP); // Concat mesaage parts total
+    ui.push_back(MPN); // Concat mesaage part number
+    // TP-User-Data SMS TEXT
+    for (int i = 0; i < 67; ++i) // 140 - 6 (UDH len + UDH) / 2 (UCS2)
+    {
+      ui.push_back(0x00);
+      ui.push_back(MPN);
+    }
+}
+
 int main(int argc, char** argv)
 {
   try
@@ -208,91 +204,28 @@ int main(int argc, char** argv)
     cllen = packSCCPAddress(cl, 1 /* E.164 */, msca /* MSC E.164 */, 8 /* MSC SSN */);
     while(true)
     {
-      /*
-       pos = snprintf(rndmsto,sizeof(rndmsto),"791398699814%04d",randint(100,9999));
-       rndmsto[pos] = 0;
-       pos = snprintf(rndmsfrom,sizeof(rndmsfrom),"791398699814%04d",randint(0,99));
-       rndmsfrom[pos] = 0;
-       string msto(rndmsto); // B-subsriber e.g. "7913986998140100"
-       string msfrom(rndmsfrom); // A-subscriber e.g. "7913986998140001
-
-       //prepare SMS
-       //FIRST MODE Mega testovajf hren'
-       //0000000    21  2e  0f  91  97  31  89  96  89  41  33  f3  00  08  ff  28
-       //0000020    04  1c  04  35  04  33  04  30  00  20  04  42  04  35  04  41
-       //0000040    04  42  04  3e  04  32  04  30  04  4f  00  20  04  45  04  40
-       //0000060    04  35  04  3d  04  4c  00  21
-       unsigned char smstext[] = { 0x04,0x1c,0x04,0x35,0x04,0x33,0x04,0x30,
-       0x00,0x20,0x04,0x42,0x04,0x35,0x04,0x41,
-       0x04,0x42,0x04,0x3e,0x04,0x32,0x04,0x30,
-       0x04,0x4f,0x00,0x20,0x04,0x45,0x04,0x40,
-       0x04,0x35,0x04,0x3d,0x04,0x4c,0x00,0x21 };
-       OCTET_STRING_DECL(dest,20);
-       ZERO_OCTET_STRING(dest);
-       dest.size = packNumString2BCD91(dest.buf,msto.c_str(), msto.length());
-       vector<unsigned char> ui;
-       ui.push_back(0x11); //MI
-       ui.push_back(0x2E); //TP Message Reference
-       ui.push_back(msto.length()); // TP-Destination-Address length in digits
-       ui.insert(ui.end(),dest.buf,dest.buf+dest.size); //TP-Destination-Address
-       ui.push_back(0); //TP-Protocol-Identifier
-       ui.push_back(0x08); //TP-Data_Coding-Scheme
-       ui.push_back(0xFF); //TP-Validity-Period
-       ui.push_back(sizeof(smstext)); //TP-User-Data-Length
-       ui.insert(ui.end(), smstext, smstext + sizeof(smstext)); // TP-User-Data
-       MoForwardSmReq mosms(sca,msfrom,ui);
-       */
 
       TSM* tsm = 0;
       tsm = mtsms.TC_BEGIN(shortMsgMoRelayContext_v2);
-      //mtsms->
       if (tsm)
       {
-        char rndmsto[20] = {0};
+        ////
         char rndmsfrom[20] = {0};
         int pos;
-        pos = snprintf(rndmsto,sizeof(rndmsto),rndmsto_pattern,randint(0,9999));
-        rndmsto[pos] = 0;
         pos = snprintf(rndmsfrom,sizeof(rndmsfrom),rndmsfrom_pattern,randint(0,9999));
         rndmsfrom[pos] = 0;
-        string msto(rndmsto); // B-subsriber
         string msfrom(rndmsfrom); // A-subscriber
-        //prepare SMS count in message body
-        char smstextlatin1[20] = {0}; int tpos;
-        tpos = snprintf(smstextlatin1,sizeof(smstextlatin1),"%010d",++smscount);
-        smstextlatin1[tpos] = 0;
-        unsigned char smstext[20] = {0};
-        unsigned int escaped_len = 0; // TP-User-Data-Length
-        //unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+1-(pdu->signalInfo+1)));
-        int _newbuflen = ConvertText27bit(
-            (unsigned char *)smstextlatin1,(unsigned)strlen(smstextlatin1),
-            smstext,&escaped_len,0,(unsigned)sizeof(smstext));
-
-        OCTET_STRING_DECL(dest,20);
-        ZERO_OCTET_STRING(dest);
-        dest.size = (int)packNumString2BCD91(dest.buf,msto.c_str(), (unsigned)msto.length());
+        //////
         vector<unsigned char> ui;
-        ui.push_back(0x11); //MI
-        ui.push_back(0x2E); //TP Message Reference
-        ui.push_back((uint8_t)msto.length()); // TP-Destination-Address length in digits
-        ui.insert(ui.end(),dest.buf,dest.buf+dest.size); //TP-Destination-Address
-        ui.push_back(0); //TP-Protocol-Identifier
-        ui.push_back(0x00); //TP-Data_Coding-Scheme
-        ui.push_back(0xFF); //TP-Validity-Period
-        ui.push_back(escaped_len); //TP-User-Data-Length
-        ui.insert(ui.end(), smstext, smstext + _newbuflen); // TP-User-Data
-        MoForwardSmReq mosms(sca,msfrom,ui);
-
-        tsm->TInvokeReq( 1 /* invoke_id */, 46 /* mo-ForwardSM */, mosms);
+        makepdu(rndmsfrom,ui);
+        MoForwardSmReq mosms(sca, msfrom, ui);
+        tsm->TInvokeReq(1, 46, mosms);
         tsm->TBeginReq(cdlen, cd, cllen, cl);
         smsc_log_debug(logger,"sent %010d",smscount);
         invokation_count++;
-      //struct timespec delay = { 0, 5000000}; // nonoseconds
-      //nanosleep(&delay, 0);
       }
       else
       {
-      //sleep(1);
       struct timespec delay = { 0, 500000000}; // nonoseconds
       nanosleep(&delay, 0);
       }
