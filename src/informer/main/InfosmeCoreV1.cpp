@@ -303,7 +303,7 @@ void InfosmeCoreV1::init( bool archive )
         itp_.setMaxThreads(cs_.getInputTransferThreadCount());
         rtp_.setMaxThreads(cs_.getResendIOThreadCount());
 
-        if (!archive) { finalLog_ = new FinalLog(); }
+        if (!archive && !getCS()->isEmergency() ) { finalLog_ = new FinalLog(); }
 
         if (!dlvMgr_) {
             smsc_log_info(log_,"--- creating delivery mgr ---");
@@ -332,7 +332,7 @@ void InfosmeCoreV1::init( bool archive )
         loadUsers("");
 
         // create smscs
-        if (!archive) {
+        if (!archive && !getCS()->isEmergency() ) {
             smsc_log_info(log_,"--- loading smscs ---");
             loadSmscs("");
 
@@ -523,7 +523,7 @@ UserInfoPtr InfosmeCoreV1::getUserInfo( const char* login )
         ptr = users_.GetPtr(login);
         if (ptr && !(*ptr)->isDeleted() ) return *ptr;
     }
-    if ( getCS()->isArchive() ) {
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
         // trying to reload the user
         try {
             loadUsers("");
@@ -565,11 +565,11 @@ void InfosmeCoreV1::updateUserInfo( const char* login )
 
 void InfosmeCoreV1::selfTest()
 {
-    smsc_log_debug(log_,"--- selfTest started ---");
-    if ( getCS()->isArchive() ) {
-        // special self test
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        // special self test not needed
         return;
     }
+    smsc_log_debug(log_,"--- selfTest started ---");
 
     try {
 
@@ -834,8 +834,8 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
 {
     smsc_log_debug(log_,"== addSmsc(%s)",smscId ? smscId : "");
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
-    if ( getCS()->isArchive() ) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     {
         MutexGuard mg(startMon_);
@@ -854,8 +854,8 @@ void InfosmeCoreV1::addSmsc( const char* smscId )
 void InfosmeCoreV1::updateSmsc(const char* smscId)
 {
     smsc_log_debug(log_,"== updateSmsc(%s)",smscId ? smscId : "");
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     if (!smscId) throw InfosmeException(EXC_LOGICERROR,"empty/null smscId passed");
     {
@@ -874,8 +874,8 @@ void InfosmeCoreV1::updateSmsc(const char* smscId)
 
 void InfosmeCoreV1::deleteSmsc( const char* smscId )
 {
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     smsc_log_debug(log_,"== deleteSmsc(%s)",smscId ? smscId : "");
     updateSmsc(smscId,0,0);
@@ -885,8 +885,8 @@ void InfosmeCoreV1::deleteSmsc( const char* smscId )
 void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 {
     smsc_log_debug(log_,"== updateDefaultSmsc(%s)",smscId ? smscId : "");
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     MutexGuard mg(startMon_);
     if (!smscId || !smscId[0] || !isGoodAsciiName(smscId)) {
@@ -914,8 +914,8 @@ void InfosmeCoreV1::updateDefaultSmsc( const char* smscId )
 void InfosmeCoreV1::addRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== addRegion(R=%u)",regionId);
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     if (regionId == anyRegionId) {
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
@@ -936,8 +936,8 @@ void InfosmeCoreV1::addRegion( regionid_type regionId )
 void InfosmeCoreV1::updateRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== updateRegion(R=%u)",regionId);
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     if (regionId == anyRegionId) {
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
@@ -961,8 +961,8 @@ void InfosmeCoreV1::updateRegion( regionid_type regionId )
 void InfosmeCoreV1::deleteRegion( regionid_type regionId )
 {
     smsc_log_debug(log_,"== deleteRegion(R=%u)",regionId);
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     if (regionId == anyRegionId || regionId == defaultRegionId ) {
         throw InfosmeException(EXC_LOGICERROR,"invalid regionid=%u invoked",regionId);
@@ -987,8 +987,8 @@ dlvid_type InfosmeCoreV1::addDelivery( UserInfo& userInfo,
                                        const DeliveryInfoData& info )
 {
     smsc_log_debug(log_,"== addDelivery(U='%s')",userInfo.getUserId());
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     return dlvMgr_->createDelivery(userInfo,info);
 }
@@ -999,9 +999,6 @@ void InfosmeCoreV1::deleteDelivery( const UserInfo& userInfo,
                                     bool            moveToArchive )
 {
     smsc_log_debug(log_,"== deleteDelivery(U='%s',D=%u)",userInfo.getUserId(),dlvId);
-    // if ( getCS()->isArchive()) {
-    // throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
-    // }
     BindSignal bs;
     bs.ignoreState = bs.bind = false;
     bs.dlvId = dlvId;
@@ -1046,8 +1043,8 @@ int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
                                 DlvMode            deliveryMode )
 {
     // find region
-    if ( getCS()->isArchive()) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     MutexGuard mg(startMon_);
     const regionid_type rId = rf_.findRegion(subscriber);

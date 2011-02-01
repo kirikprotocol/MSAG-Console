@@ -15,7 +15,8 @@ utf8_(0),
 incStatBank_(0),
 licenseLimit_(licenseLimit),
 stopping_(false),
-archive_(false)
+archive_(false),
+emergency_(false)
 {
     assert(instance_ == 0);
     instance_ = this;
@@ -34,6 +35,11 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
 {
     archive_ = archive;
     utf8_ = new UTF8();
+
+    emergency_ = conf.getBool("emergency",false);
+    if ( emergency_ && archive_ ) {
+        throw InfosmeException( EXC_CONFIG, "archive daemon can not have 'emergency' flag");
+    }
 
     const ConfigWrapper conf(cfg, smsc::logger::Logger::getInstance("config"));
     path_ = conf.getString("storePath");

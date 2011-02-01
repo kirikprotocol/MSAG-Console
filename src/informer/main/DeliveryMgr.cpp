@@ -413,7 +413,7 @@ lastDlvId_(0),
 trafficSpeed_(cs_.getLicenseLimit())
 {
     smsc_log_debug(log_,"ctor");
-    if ( getCS()->isArchive() ) { return; }
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) { return; }
     storeJournal_ = new StoreJournal;
     inputJournal_ = new InputJournal;
     ctp_.setMaxThreads(10);
@@ -509,20 +509,25 @@ void DeliveryMgr::init()
     }
 
     // reading journals and binding deliveries and regions
-    if ( ! getCS()->isArchive() ) {
+    if ( !getCS()->isArchive() ) {
 
         // signalling archive
         signalArchive(0);
 
-        smsc_log_info(log_,"--- reading journals ---");
-        StoreJournalReader sjr(*this);
-        storeJournal_->init(sjr);
-        InputJournalReader ijr(*this);
-        inputJournal_->init(ijr);
-        inputRoller_ = new InputJournalRoller(*this);
-        storeRoller_ = new StoreJournalRoller(*this);
-        statsDumper_ = new StatsDumper(*this);
-        statsDumper_->init();
+        if ( !getCS()->isEmergency() ) {
+
+            smsc_log_info(log_,"--- reading journals ---");
+            StoreJournalReader sjr(*this);
+            storeJournal_->init(sjr);
+            InputJournalReader ijr(*this);
+            inputJournal_->init(ijr);
+            inputRoller_ = new InputJournalRoller(*this);
+            storeRoller_ = new StoreJournalRoller(*this);
+            statsDumper_ = new StatsDumper(*this);
+            statsDumper_->init();
+
+        }
+
     }
     smsc_log_debug(log_,"--- init done ---");
 }
@@ -885,7 +890,7 @@ void DeliveryMgr::addDelivery( DeliveryInfo* info,
                                userInfo.getUserId(),e.what());
     }
     InputMessageSource* ims;
-    if (!getCS()->isArchive()) {
+    if (!getCS()->isArchive() && !getCS()->isEmergency() ) {
         ims = new InputStorage(core_,*inputJournal_);
     }
     dlv.reset( new DeliveryImpl(infoptr.release(),
@@ -896,7 +901,8 @@ void DeliveryMgr::addDelivery( DeliveryInfo* info,
     userInfo.attachDelivery( dlv );
     MutexGuard mg(mon_);
     deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
-    if (state == DLVSTATE_PLANNED && planTime && !getCS()->isArchive() ) {
+    if (state == DLVSTATE_PLANNED && planTime &&
+        !getCS()->isArchive() && !getCS()->isEmergency() ) {
         deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
     }
     mon_.notify();
@@ -1061,7 +1067,8 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId )
 
     DeliveryInfo* info = new DeliveryInfo(dlvId, data, *user.get());
     addDelivery(info, state, planTime, false);
-    if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() ) {
+    if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() &&
+         !getCS()->isEmergency() ) {
         startCancelThread(dlvId);
     }
 }

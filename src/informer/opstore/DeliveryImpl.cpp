@@ -198,8 +198,8 @@ DlvState DeliveryImpl::readState( dlvid_type            dlvId,
 
 void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
 {
-    if ( getCS()->isArchive() ) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     // should we unbind first?
     MutexGuard mg(stateLock_);
@@ -210,8 +210,8 @@ void DeliveryImpl::updateDlvInfo( const DeliveryInfoData& data )
 
 void DeliveryImpl::setState( DlvState newState, msgtime_type planTime )
 {
-    if ( getCS()->isArchive() ) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     const dlvid_type dlvId = dlvInfo_->getDlvId();
     BindSignal bs;
@@ -317,8 +317,8 @@ RegionalStoragePtr DeliveryImpl::getRegionalStorage( regionid_type regId, bool c
 
 void DeliveryImpl::getRegionList( std::vector< regionid_type >& regIds ) const
 {
-    if ( getCS()->isArchive() ) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
     MutexGuard mg(cacheLock_);
     regIds.reserve(storeHash_.Count());

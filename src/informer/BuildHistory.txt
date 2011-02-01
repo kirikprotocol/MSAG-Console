@@ -1,3 +1,7 @@
+2011-02-01 10:50 bukind
+  "emergency" boolean flag in config.xml allows to run informer
+  in emergency mode to archivate/delete a delivery.
+
 2011-01-27 16:55 bukind
   dynamic calculation on the input size of operational storage
   based on input request frequency.

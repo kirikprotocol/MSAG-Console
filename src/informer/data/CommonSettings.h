@@ -32,6 +32,10 @@ public:
         return archive_;
     }
 
+    inline bool isEmergency() const {
+        return emergency_;
+    }
+
     inline bool isStopping() const {
         return stopping_;
     }
@@ -192,6 +196,7 @@ private:
     unsigned validityPeriodDefault_;
     volatile bool stopping_;
     bool     archive_;
+    bool     emergency_;
 };
 
 inline const CommonSettings* getCS() { return CommonSettings::getCS(); }
