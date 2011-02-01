@@ -256,8 +256,9 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
 
         /// what is the period b/w messages [100..100M] microseconds
         const usectime_type requestPeriod = 
-            std::max( std::min( usecTime - lastInputRequestGranted_, 100LL*tuPerSec ),
-                      100LL );
+            std::max( std::min( usectime_type(usecTime - lastInputRequestGranted_),
+                                usectime_type(100LL*tuPerSec) ),
+                      usectime_type(100LL) );
         const unsigned minQueueSize = 2 + 
             unsigned(getCS()->getInputMinQueueTime()*tuPerSec / requestPeriod);
 
@@ -275,7 +276,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
                                dlvId,
                                newQueue_.Count());
                 const unsigned transferChunkSize =
-                    getCS()->getInputTransferChunkTime() / requestPeriod + 1;
+                    unsigned(getCS()->getInputTransferChunkTime()*tuPerSec/requestPeriod) + 1;
                 InputTransferTask* task = 
                     dlv_->source_->createInputTransferTask(*this,
                                                            transferChunkSize );

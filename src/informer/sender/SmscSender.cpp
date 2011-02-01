@@ -730,16 +730,17 @@ void SmscSender::getSmscStats( usectime_type currentTime,
     MutexGuard mg(reconfLock_);
     if (connTime_) {
         stats.liveTime = 
-            timediff_type( std::max(currentTime-connTime_,0LL) / tuPerSec );
+            timediff_type( std::max(currentTime-connTime_,
+                                    usectime_type(0LL)) / tuPerSec );
     } else {
         stats.liveTime = -1;
     }
-    stats.nRegions = scoredList_.size();
+    stats.nRegions = unsigned(scoredList_.size());
     stats.maxBandwidth = maxBandwidth_;
     stats.avgInterval = msgtime_type(smsCounter_.getInterval() / tuPerSec);
-    stats.currentLoad = smsCounter_.advanceTime(currentTime);
-    stats.nResponses = respWaitQueue_.size();
-    stats.nReceipts = rcptWaitQueue_.size();
+    stats.currentLoad = unsigned(smsCounter_.advanceTime(currentTime));
+    stats.nResponses = unsigned(respWaitQueue_.size());
+    stats.nReceipts = unsigned(rcptWaitQueue_.size());
 }
 
 

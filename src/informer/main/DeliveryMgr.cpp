@@ -241,10 +241,10 @@ public:
         MutexGuard mg(mgr_.mon_);
         for ( DeliveryList::iterator i = mgr_.deliveryList_.begin();
               i != mgr_.deliveryList_.end(); ++i ) {
-            regionid_type regId = anyRegionId;
-            do {
-                regId = (*i)->popMsgStats(regId,ds);
-            } while ( regId != anyRegionId );
+            for ( regionid_type regId = anyRegionId;
+                  (regId = (*i)->popMsgStats(regId,ds)) != anyRegionId;
+                  ++regId ) {
+            }
         }
         smsc_log_debug(log_,"stats dumper inited");
     }
@@ -330,7 +330,8 @@ public:
 
             DeliveryStats ds;
             for ( regionid_type regId = anyRegionId; 
-                  (regId = dlv->popMsgStats(regId,ds)) != anyRegionId; ) {
+                  (regId = dlv->popMsgStats(regId,ds)) != anyRegionId;
+                  ++regId ) {
 
                 if ( ds.isEmpty() ) { continue; }
 
@@ -464,7 +465,7 @@ void DeliveryMgr::init()
         size_t wasread = fg.read(buf,sizeof(buf)-1);
         buf[wasread] = '\0';
         char* endptr;
-        dlvid_type last = strtoul(buf,&endptr,10);
+        dlvid_type last = dlvid_type(strtoul(buf,&endptr,10));
         if ( last > lastDlvId_ ) { lastDlvId_ = last; }
     } while (false);
 
