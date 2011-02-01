@@ -1,3 +1,6 @@
+=====================================================================
+2011-02-01 17:00 bukind informer-build-20110201
+
 2011-02-01 15:30 bukind
   smsc stats method added to InfosmeCore.
 
