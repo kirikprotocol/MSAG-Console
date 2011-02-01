@@ -300,6 +300,7 @@ int main(int argc, char* argv[]) {
     bool recovery = false;
     bool checkIndex = false;
     bool backup = false;
+    bool backupSkipOnce = false;
     int dodump = -2;
     for ( int i = 1; i < argc; ++i ) {
         std::string sarg(argv[i]);
@@ -318,6 +319,11 @@ int main(int argc, char* argv[]) {
             smsc_log_info(logger,"%s on command line", sarg.c_str());
             continue;
         }
+        if ( sarg == "--allow-skip-once" ) {
+            backupSkipOnce = true;
+            smsc_log_info(logger,"%s on command line", sarg.c_str());
+            continue;
+        }
         if ( sarg == "--dump" ) {
             if ( i >= argc ) {
                 smsc_log_error(logger,"--dump requires an argument");
@@ -331,9 +337,9 @@ int main(int argc, char* argv[]) {
         if ( sarg != "--help" ) {
             if (extraMsg.empty()) extraMsg = "Unknown option " + sarg + "\n";
         }
-        fprintf(stderr,"%sUsage: %s [--recovery] [--check-index] [--backup]\n",
+        fprintf(stderr,"%sUsage: %s [--recovery] [--check-index] [--backup [--allow-skip-once]]\n",
                 extraMsg.c_str(), argv[0]);
-        smsc_log_error(logger,"%sUsage: %s [--recovery] [--check-index] [--backup]",
+        smsc_log_error(logger,"%sUsage: %s [--recovery] [--check-index] [--backup [--allow-skip-once]]",
                        extraMsg.c_str(), argv[0]);
         ::exit(1);
     }
@@ -526,7 +532,8 @@ int main(int argc, char* argv[]) {
             smsc_log_info(logger,"switching to backup mode");
             backupProcessor.reset(new BackupProcessor(pvssDispatcher,
                                                       backupJournalDir,
-                                                      propPerSec));
+                                                      propPerSec,
+                                                      backupSkipOnce ));
             backupProcessor->startTask( SCOPE_ABONENT, abonentBackup );
             backupProcessor->startTask( SCOPE_SERVICE, serviceBackup );
             backupProcessor->startTask( SCOPE_PROVIDER, providerBackup );

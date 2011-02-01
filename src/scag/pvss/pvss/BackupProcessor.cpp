@@ -90,11 +90,13 @@ private:
 
 BackupProcessor::BackupProcessor( PvssDispatcher& dispatcher,
                                   const std::string& journalDir,
-                                  size_t propertiesPerSec ) :
+                                  size_t propertiesPerSec,
+                                  bool backupSkipOnce ) :
 dispatcher_(&dispatcher), stopping_(false),
 propertiesPerSec_(propertiesPerSec),
 log_(0),
-journalDir_(journalDir)
+journalDir_(journalDir),
+backupSkipOnce_(backupSkipOnce)
 {
     log_ = smsc::logger::Logger::getInstance("bck.proc");
 
@@ -247,6 +249,7 @@ time_t BackupProcessor::BackupProcessingTask::readTime( const char* fname ) cons
 int BackupProcessor::BackupProcessingTask::Execute()
 {
     const static time_t interval = 3600;
+    bool backupSkipOnce = processor_.backupSkipOnce_;
 
     smsc_log_info(log_,"staring processing task %s",scopeTypeToString(scope_));
 
@@ -272,12 +275,25 @@ int BackupProcessor::BackupProcessingTask::Execute()
             // checking the order of the next file
             const time_t nextTime = readTime(i->c_str());
             if ( lastTime_ ) {
-                if ( lastTime_ + interval + interval/2 < nextTime ) {
+                if ( nextTime < lastTime_ ) {
                     processor_.stop();
-                    fprintf(stderr,"the file '%s' seems to be misordered by +%u seconds\n",
-                            i->c_str(), unsigned(nextTime-lastTime_));
-                    throw smsc::util::Exception("the file '%s' seems to be misordered by +%u seconds",
-                                                i->c_str(), unsigned(nextTime-lastTime_) );
+                    fprintf(stderr,"the file '%s' is older than the last processed file by %u seconds\n",
+                                                i->c_str(), unsigned(lastTime_-nextTime));
+                    throw smsc::util::Exception("the file '%s' is older than the last processed file by %u seconds",
+                                                i->c_str(), unsigned(lastTime_-nextTime));
+                }
+                if ( lastTime_ + interval + interval/2 < nextTime ) {
+                    if (backupSkipOnce) {
+                        smsc_log_error(log_,"the file '%s' seems to be misordered by %+u seconds, but allowed",
+                                       i->c_str(), unsigned(nextTime-lastTime_));
+                    } else {
+                        processor_.stop();
+                        fprintf(stderr,"the file '%s' seems to be misordered by +%u seconds\n",
+                                i->c_str(), unsigned(nextTime-lastTime_));
+                        throw smsc::util::Exception("the file '%s' seems to be misordered by +%u seconds",
+                                                    i->c_str(), unsigned(nextTime-lastTime_) );
+                    }
+                    backupSkipOnce = false;
                 }
             }
 

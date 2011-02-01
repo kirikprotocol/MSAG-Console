@@ -22,7 +22,8 @@ private:
 public:
     BackupProcessor( PvssDispatcher& dispatcher,
                      const std::string& journalDir,
-                     size_t propertiesPerSec );
+                     size_t propertiesPerSec,
+                     bool backupSkipOnce );
     virtual ~BackupProcessor();
 
     /// start processor and lock until exited
@@ -47,6 +48,7 @@ private:
     smsc::core::threads::ThreadPool           threadPool_;
     smsc::core::synchronization::EventMonitor stopMon_;
     std::string                               journalDir_;
+    bool                                      backupSkipOnce_;
 };
 
 } // namespace pvss
