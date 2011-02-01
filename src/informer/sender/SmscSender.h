@@ -9,6 +9,7 @@
 #include "core/threads/Thread.hpp"
 #include "informer/data/RetryPolicy.h"
 #include "informer/io/Typedefs.h"
+#include "informer/io/SnapshotCounter.h"
 #include "informer/opstore/RegionalStorage.h"
 #include "logger/Logger.h"
 #include "sme/SmppBase.hpp"
@@ -25,6 +26,7 @@ namespace informer {
 class ReceiptProcessor;
 class RegionSender;
 class Message;
+struct CoreSmscStats;
 
 struct SmscConfig
 {
@@ -100,6 +102,10 @@ public:
     void detachRegionSender( RegionSender& rs );
     void attachRegionSender( RegionSender& rs );
     void getRegionList( std::vector< regionid_type >& regions );
+    void updateBandwidth();
+
+    /// get stats
+    void getSmscStats( usectime_type currentTime, CoreSmscStats& stats );
 
 private:
     virtual void handleEvent( smsc::sme::SmppHeader* pdu );
@@ -144,6 +150,9 @@ private:
     std::auto_ptr<smsc::sme::SmppSession>             session_;
     ScoredPtrList< SmscSender >                       scoredList_; // not owned
     usectime_type                                     currentTime_;
+    usectime_type                                     connTime_; // or 0
+    unsigned                                          maxBandwidth_;
+    SnapshotCounter                                   smsCounter_;
 
     smsc::core::buffers::IntHash< DRMTrans >          seqnumHash_;
     RespWaitQueue                                     respWaitQueue_;

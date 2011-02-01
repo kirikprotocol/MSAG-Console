@@ -1,23 +1,24 @@
 #include <memory>
-#include "informer/admin/AdminServer.hpp"
-#include "informer/dcp/DcpServer.hpp"
-#include "informer/alm/ActivityLogMiner.hpp"
 #include "DeliveryMgr.h"
 #include "InfosmeCoreV1.h"
 #include "RegionLoader.h"
-#include "informer/data/UserInfo.h"
+#include "core/buffers/FastMTQueue.hpp"
+#include "informer/admin/AdminServer.hpp"
+#include "informer/alm/ActivityLogMiner.hpp"
 #include "informer/data/FinalLog.h"
+#include "informer/data/UserInfo.h"
+#include "informer/data/CoreSmscStats.h"
+#include "informer/dcp/DcpServer.hpp"
+#include "informer/io/ConfigWrapper.h"
 #include "informer/io/InfosmeException.h"
 #include "informer/io/RelockMutexGuard.h"
 #include "informer/sender/RegionSender.h"
 #include "informer/sender/SmscSender.h"
-#include "informer/io/ConfigWrapper.h"
-#include "util/config/Config.h"
 #include "scag/pvss/api/core/client/impl/ClientCore.h"
-#include "scag/pvss/api/pvap/PvapProtocol.h"
 #include "scag/pvss/api/packets/GetCommand.h"
 #include "scag/pvss/api/packets/GetResponse.h"
-#include "core/buffers/FastMTQueue.hpp"
+#include "scag/pvss/api/pvap/PvapProtocol.h"
+#include "util/config/Config.h"
 
 using namespace smsc::util::config;
 
@@ -979,6 +980,25 @@ void InfosmeCoreV1::deleteRegion( regionid_type regionId )
         }
         (*ptr)->setDeleted(true);
         rf_.updateMasks( ptr->get(), **ptr );
+    }
+}
+
+
+void InfosmeCoreV1::getSmscStats( std::vector< CoreSmscStats >& css )
+{
+    css.clear();
+    MutexGuard mg(startMon_);
+    css.reserve( smscs_.GetCount() );
+    char* smscId;
+    SmscSender* ptr;
+    const usectime_type currentTime = currentTimeMicro();
+    for ( smsc::core::buffers::Hash< SmscSender* >::Iterator iter(&smscs_);
+          iter.Next(smscId,ptr); ) {
+        if ( !ptr ) continue;
+        css.push_back( CoreSmscStats() );
+        CoreSmscStats& stat = css.back();
+        stat.smscId = smscId;
+        ptr->getSmscStats( currentTime, stat );
     }
 }
 

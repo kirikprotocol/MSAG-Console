@@ -1,3 +1,6 @@
+2011-02-01 15:30 bukind
+  smsc stats method added to InfosmeCore.
+
 2011-02-01 10:50 bukind
   "emergency" boolean flag in config.xml allows to run informer
   in emergency mode to archivate/delete a delivery.

@@ -74,6 +74,8 @@ public:
     virtual void updateRegion( regionid_type regionId );
     virtual void deleteRegion( regionid_type regionId );
 
+    virtual void getSmscStats( std::vector< CoreSmscStats >& css );
+
     virtual dlvid_type addDelivery( UserInfo& userInfo,
                                     const DeliveryInfoData& info );
     virtual void deleteDelivery( const UserInfo& userInfo,

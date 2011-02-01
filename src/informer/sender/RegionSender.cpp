@@ -47,14 +47,16 @@ speedControl_(std::max(region_->getBandwidth(),1U))
 
 void RegionSender::assignSender( SmscSender* conn )
 {
+    // reset speed control
+    speedControl_.setSpeed(std::max(region_->getBandwidth(),1U),
+                           currentTimeMicro() % flipTimePeriod );
     if ( conn_ != conn ) {
         if (conn_) conn_->detachRegionSender(*this);
         conn_ = conn;
         if (conn_) conn_->attachRegionSender(*this);
+    } else {
+        conn_->updateBandwidth();
     }
-    // reset speed control
-    speedControl_.setSpeed(std::max(region_->getBandwidth(),1U),
-                           currentTimeMicro() % flipTimePeriod );
 }
 
 

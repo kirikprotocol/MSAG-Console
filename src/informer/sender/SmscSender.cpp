@@ -2,6 +2,7 @@
 #include "RegionSender.h"
 #include "SmscSender.h"
 #include "informer/data/CommonSettings.h"
+#include "informer/data/CoreSmscStats.h"
 #include "informer/data/DeliveryInfo.h"
 #include "informer/io/FileGuard.h"
 #include "informer/io/FileReader.h"
@@ -26,6 +27,16 @@ struct RSScan
         return false;
     }
     std::vector< regionid_type >& regions;
+};
+
+struct RSBandwidth
+{
+    RSBandwidth() : bandwidth(0) {}
+    bool operator () ( const RegionSender* rs ) {
+        if (rs) { bandwidth += rs->getBandwidth(); }
+        return false;
+    }
+    unsigned bandwidth;
 };
 
 }
@@ -260,6 +271,9 @@ parser_(0),
 smscId_(smscId),
 smscConfig_(cfg),
 scoredList_(*this, 2*maxScoreIncrement,0/*log_*/),
+connTime_(0),
+maxBandwidth_(0),
+smsCounter_(5*tuPerSec,50),
 journal_(0),
 awaken_(false),
 isStopping_(true)
@@ -510,6 +524,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                 fillSmppPduFromSms(&submitSm, &sms);
                 session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
             }
+            smsCounter_.accumulate(currentTime_,nchunks);
             rproc_.incOutgoing(nchunks);
             break;
 
@@ -667,8 +682,11 @@ void SmscSender::updateConfig( const SmscConfig& config,
 void SmscSender::detachRegionSender( RegionSender& rs )
 {
     smsc_log_debug(log_,"S='%s' detaching regsend R=%u",smscId_.c_str(),unsigned(rs.getRegionId()));
-    MutexGuard mg(reconfLock_);
-    scoredList_.remove(ScoredPtrList<SmscSender>::isEqual(&rs));
+    {
+        MutexGuard mg(reconfLock_);
+        scoredList_.remove(ScoredPtrList<SmscSender>::isEqual(&rs));
+    }
+    updateBandwidth();
 }
 
 
@@ -682,6 +700,7 @@ void SmscSender::attachRegionSender( RegionSender& rs )
         }
         scoredList_.add(&rs);
     }
+    updateBandwidth();
     wakeUp();
 }
 
@@ -693,6 +712,34 @@ void SmscSender::getRegionList( std::vector< regionid_type >& regions )
     ::RSScan rss(regions);
     // we use remove to scan the list
     scoredList_.remove( rss );
+}
+
+
+void SmscSender::updateBandwidth()
+{
+    MutexGuard mg(reconfLock_);
+    ::RSBandwidth rsbw;
+    scoredList_.remove(rsbw);
+    maxBandwidth_ = rsbw.bandwidth;
+}
+
+
+void SmscSender::getSmscStats( usectime_type currentTime,
+                               CoreSmscStats& stats )
+{
+    MutexGuard mg(reconfLock_);
+    if (connTime_) {
+        stats.liveTime = 
+            timediff_type( std::max(currentTime-connTime_,0LL) / tuPerSec );
+    } else {
+        stats.liveTime = -1;
+    }
+    stats.nRegions = scoredList_.size();
+    stats.maxBandwidth = maxBandwidth_;
+    stats.avgInterval = msgtime_type(smsCounter_.getInterval() / tuPerSec);
+    stats.currentLoad = smsCounter_.advanceTime(currentTime);
+    stats.nResponses = respWaitQueue_.size();
+    stats.nReceipts = rcptWaitQueue_.size();
 }
 
 
@@ -1161,17 +1208,22 @@ void SmscSender::connectLoop()
         msgtime_type interConnect;
         {
             MutexGuard mg(reconfLock_);
+            connTime_ = 0;
             smsc_log_debug(log_,"S='%s': trying to connect",smscId_.c_str());
             if ( !session_.get() ) {
                 throw InfosmeException(EXC_LOGICERROR,"session is not configured");
             } else if ( !session_->isClosed() ) {
                 // session connected
+                connTime_ = startingConn;
                 break;
             }
             try {
                 interConnect = smscConfig_.interConnectPeriod;
                 session_->connect();
-                if (!session_->isClosed()) break;
+                if (!session_->isClosed()) {
+                    connTime_ = currentTimeMicro();
+                    break;
+                }
             } catch ( std::exception& e ) {
                 smsc_log_error(log_,"session connect exc: %s", e.what());
             }
