@@ -36,12 +36,12 @@ void CommonSettings::init( smsc::util::config::Config& cfg, bool archive )
     archive_ = archive;
     utf8_ = new UTF8();
 
+    const ConfigWrapper conf(cfg, smsc::logger::Logger::getInstance("config"));
     emergency_ = conf.getBool("emergency",false);
     if ( emergency_ && archive_ ) {
         throw InfosmeException( EXC_CONFIG, "archive daemon can not have 'emergency' flag");
     }
 
-    const ConfigWrapper conf(cfg, smsc::logger::Logger::getInstance("config"));
     path_ = conf.getString("storePath");
     if (path_.empty()) path_ = "./";
     else if (path_[path_.size()-1] != '/') path_.append("/");
