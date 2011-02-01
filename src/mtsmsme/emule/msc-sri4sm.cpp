@@ -79,41 +79,6 @@ class GopotaListener: public SuaProcessor, public Thread {
       return result;
     }
   };
-//class TrafficShaper: public SccpSender {
-//  private:
-//    SccpSender* adaptee;
-//    int delay;
-//    int overdelay;
-//    hrtime_t msgstart;
-//    void shape()
-//    {
-//      hrtime_t msgproc=gethrtime()-msgstart;
-//      msgproc/=1000000;
-//      if(delay>msgproc+overdelay)
-//      {
-//        msgstart=gethrtime();
-//        millisleep((unsigned)(delay-msgproc-overdelay));
-//        overdelay=(int)((gethrtime()-msgstart)/1000000-(delay-msgproc-overdelay));
-//      }else
-//      {
-//        overdelay-=delay;
-//        if(overdelay<0)overdelay=0;
-//      }
-//    }
-//  public:
-//    TrafficShaper(SccpSender* _adaptee, int _speed) :
-//      adaptee(_adaptee)
-//    {
-//      delay=1000/_speed; overdelay = 0;
-//    }
-//    void send(uint8_t cdlen, uint8_t *cd, uint8_t cllen, uint8_t *cl,
-//        uint16_t ulen, uint8_t *udp)
-//    {
-//      msgstart=gethrtime();
-//      adaptee->send(cdlen,cd,cllen,cl,ulen,udp);
-//      shape();
-//    }
-//};
 int randint(int min, int max)
 {
   return min+int((max-min+1)*rand()/(RAND_MAX+1.0));
