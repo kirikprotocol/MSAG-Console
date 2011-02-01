@@ -249,7 +249,10 @@ void DeliveryInfo::incMsgStats( regionid_type regionId,
 regionid_type DeliveryInfo::popMsgStats( regionid_type regionId, DeliveryStats& ds )
 {
     MutexGuard mg(statLock_);
-    StatMap::iterator iter = statmap_.lower_bound(regionId);
+    StatMap::iterator iter = 
+        ( regionId == anyRegionId ?
+          statmap_.begin() :
+          statmap_.lower_bound(regionId) );
     if (iter == statmap_.end()) return anyRegionId;
     const unsigned idx = 1 - getCS()->getStatBankIndex();
     ds = iter->second.s[idx];
