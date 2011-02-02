@@ -144,7 +144,7 @@ public class DeliveryStatProvider extends StatEntityProvider{
             String minsec = tokenizer.nextToken();
             int minute = Integer.parseInt(minsec.substring(0, minsec.length() - 2));
             c.set(Calendar.MINUTE, minute);
-            c.set(Calendar.SECOND, 0);
+            c.set(Calendar.SECOND, 59);
 
             Date date = c.getTime();
             if (filter.getFromDate() != null && date.before(filter.getFromDate()))
