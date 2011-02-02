@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.locks.Lock;
@@ -19,21 +20,28 @@ import java.util.concurrent.locks.ReentrantLock;
 public abstract class SyncProtogenConnection {
 
   private static final Logger logger = Logger.getLogger(SyncProtogenConnection.class);
+  private static final int DEFAULT_CONNECT_TIMEOUT = 5000;
 
   private final Lock sendLock = new ReentrantLock();
 
   private final String host;
   private final int port;
   private final int timeout;
+  private final int connectTimeout;
 
   private Socket socket;
   private InputStream is;
   private OutputStream os;
 
-  protected SyncProtogenConnection(String host, int port, int timeout) {
+  protected SyncProtogenConnection(String host, int port, int timeout, int connectTimeout) {
     this.host = host;
     this.port = port;
     this.timeout = timeout;
+    this.connectTimeout = connectTimeout;
+  }
+
+  protected SyncProtogenConnection(String host, int port, int timeout) {
+    this(host, port, timeout, DEFAULT_CONNECT_TIMEOUT);
   }
 
   private static void serialize(PDU request, OutputStream os) throws IOException {
@@ -137,17 +145,27 @@ public abstract class SyncProtogenConnection {
     try {
       close();
 
-      logger.debug("Connecting to " + host + ':' + port + " ...");
+      if (logger.isDebugEnabled())
+        logger.debug("Connecting to " + host + ':' + port + " ...");
 
-      socket = new Socket(host, port);
+      socket = new Socket();
+      socket.connect(new InetSocketAddress(host, port), connectTimeout);
       socket.setSoTimeout(timeout);
       is = socket.getInputStream();
       os = socket.getOutputStream();
 
-      logger.debug("Connected to " + host + ':' + port + " .");
+      if (logger.isDebugEnabled())
+        logger.debug("Connected to " + host + ':' + port + " .");
 
     } catch (IOException e) {
       logger.error("Could not connect to " + host + ':' + port + ".", e);
+
+      if (socket != null) {
+        try {
+          socket.close();
+        } catch (IOException ignored) {}
+        socket = null;
+      }
       throw new ServerOfflineException();
     }
 
