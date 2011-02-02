@@ -97,7 +97,7 @@ class RegionsConfig implements ManagedConfigFile<RegionsSettings> {
     Document d = XmlUtils.parse(is);
     Element rootElement = d.getDocumentElement();
     NodeList regions = rootElement.getElementsByTagName("region");
-    int lastId = Integer.MIN_VALUE;
+    int lastId = 1;
     for (int i = 0; i < regions.getLength(); i++) {
       Element region = (Element) regions.item(i);
       int id = Integer.parseInt(region.getAttribute("id"));
