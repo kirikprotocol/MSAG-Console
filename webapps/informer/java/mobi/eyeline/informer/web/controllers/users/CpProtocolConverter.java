@@ -38,7 +38,7 @@ public class CpProtocolConverter implements Converter {
   private static String getAsString(Locale locale, UserCPsettings.Protocol pr) {
     ResourceBundle bundle = ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Informer", locale);
     try {
-      return bundle.getString("user.edit.import.protocol." + pr.toString());
+      return bundle.getString("cp.resource.protocol." + pr.toString());
     } catch (MissingResourceException e) {
       return pr.toString();
     }

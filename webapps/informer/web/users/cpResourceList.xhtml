@@ -33,7 +33,27 @@
       </eye:dataTableFilter>
 
       <eye:delimiter/>
-      
+
+      <eye:buttons>
+
+        <eye:button>
+            <eye:menubar label="#{msg['add.button']} ...">
+              <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.ftp']}" action="FTP_RESOURCE_EDIT"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.sftp']}" action="SFTP_RESOURCE_EDIT"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.smb']}" action="SMB_RESOURCE_EDIT"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.file']}" action="FILE_RESOURCE_EDIT"/></eye:menubaritem>
+              <eye:menubaritem><tr:commandLink text="#{msg['cp.resource.protocol.localFtp']}" rendered="#{cpList.localFtpDeployed}" action="LOCAL_FTP_RESOURCE_EDIT"/></eye:menubaritem>
+            </eye:menubar>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" shortDesc="#{msg['cp.resource.delete.selected']}"
+                          action="#{cpList.removeSelected}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false" />
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
       <eye:dataTable value="#{cpList.model}" var="r" selectedRows="#{cpList.selectedRows}">
         <eye:row rowId="#{r.user}|#{r.hashId}">
           <eye:column name="name" title="#{msg['user.edit.import.name']}" width="10%" align="center" sortable="true">
@@ -46,7 +66,7 @@
             <h:outputText value="#{r.user}"/>
           </eye:column>
           <eye:column name="protocol" title="#{msg['user.edit.import.protocol']}"  width="5%" align="center" sortable="true">
-            <h:outputText value="#{r.protocol}" converter="protocolConverter"/>
+            <h:outputText style="white-space:nowrap;" value="#{r.protocol}" converter="protocolConverter"/>
           </eye:column>
           <eye:column name="host" title="#{msg['user.edit.import.host']}" width="20%" align="center">
             <h:outputText value="#{r.host}"/>
