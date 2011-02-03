@@ -3,9 +3,7 @@ package mobi.eyeline.informer.admin.users;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Настройки пользователей
@@ -60,8 +58,54 @@ class UsersSettings {
     return new UsersSettings(this);
   }
 
+  private String getFirstRepeatedValue(List<String> strings) {
+    for (int i=0; i<strings.size(); i++) {
+      for (int j = i+1; j<strings.size(); j++)
+        if (strings.get(i).equals(strings.get(j)))
+          return strings.get(i);
+    }
+    return null;
+  }
+
+  private List<String> getAllLocalFtpAccountsForUser(User u) {
+    List<String> result = new ArrayList<String>();
+    if (u.getCpSettings() != null) {
+      for (UserCPsettings s : u.getCpSettings()) {
+        if (s.getProtocol() == UserCPsettings.Protocol.localFtp)
+          result.add(s.getLogin());
+      }
+    }
+    return result;
+  }
+
+  private List<String> getAllLocalFtpAccounts(User exceptUser) {
+    List<String> result = new ArrayList<String>();
+    for (User u : users.values()) {
+      if (u.getLogin().equals(exceptUser.getLogin()))
+        continue;
+      if (u.getCpSettings() == null)
+        continue;
+
+      for (UserCPsettings s : u.getCpSettings()) {
+        if (s.getProtocol() == UserCPsettings.Protocol.localFtp)
+          result.add(s.getLogin());
+      }
+    }
+    return result;
+  }
+
+
+  private void validateCpSettings(User u) throws AdminException {
+    List<String> localFtpAccounts = getAllLocalFtpAccounts(u);
+    localFtpAccounts.addAll(getAllLocalFtpAccountsForUser(u));
+    String duplicate = getFirstRepeatedValue(localFtpAccounts);
+    if (duplicate != null)
+      throw new UserException("ucps.duplicate.local.ftp.login", duplicate);
+  }
+
   public void updateUser(User user) throws AdminException {
     user.validate();
+    validateCpSettings(user);
     User old = users.remove(user.getLogin());
     if (old == null) {
       throw new UserException("user_not_exist", user.getLogin());
@@ -78,6 +122,7 @@ class UsersSettings {
 
   public void addUser(User user) throws AdminException{
     user.validate();
+    validateCpSettings(user);
     if (users.containsKey(user.getLogin()))
       throw new UserException("user_already_exist", user.getLogin());
     users.put(user.getLogin(), user);
