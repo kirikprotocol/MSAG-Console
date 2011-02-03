@@ -153,7 +153,7 @@ public class DeliveryManager {
     if (delivery.getType() == Delivery.Type.SingleText)
       delivery.setProperty("singleText", "true");
 
-    if (delivery.getStartDate().getTime() < System.currentTimeMillis())
+    if (delivery.getStartDate().getTime() <= System.currentTimeMillis() + 10)
       delivery.setStartDate(new Date(System.currentTimeMillis() + 60000));
 
     delivery.validate();
