@@ -173,7 +173,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
   private Delivery createEmptyDelivery(String fileName) throws AdminException {
     log("create empty delivery: " + fileName);
     DeliveryPrototype delivery = new DeliveryPrototype();
-    delivery.setStartDate(new Date(System.currentTimeMillis() + 60000));
+    delivery.setStartDate(new Date());
     context.copyUserSettingsToDeliveryPrototype(user.getLogin(), delivery);
     delivery.setSourceAddress(sourceAddr);
     String deliveryName = fileName.substring(0, fileName.length() - 4);
@@ -423,10 +423,35 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
         text = line.substring(nextInx + 1).trim();
       }
 
-      Message m = Message.newMessage(ab, text);
+      Message m = Message.newMessage(ab, decodeText(text));
       if (userData != null)
         m.setProperty("userData", userData);
       return m;
+    }
+
+    private String decodeText(String text) {
+      StringBuilder sb = new StringBuilder();
+      boolean screeningCharBefore = false;
+      for (char c : text.toCharArray()) {
+
+        if (screeningCharBefore) {
+          if (c == '\\')
+            sb.append('\\');
+          else if (c == 'n')
+            sb.append('\n');
+          else
+            sb.append('\\').append(c);
+
+          screeningCharBefore = false;
+        } else {
+          if (c == '\\')
+            screeningCharBefore = true;
+          else
+            sb.append(c);
+        }
+      }
+
+      return sb.toString();
     }
 
 
