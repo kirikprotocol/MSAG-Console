@@ -46,3 +46,12 @@ div.menubardivover {
   cursor: pointer;
 }
 
+div.menubardelimitertop {
+  height: 1px;
+  border-bottom:1px outset;
+}
+
+div.menubardelimiterbottom {
+  height: 1px;
+  width:1%
+}

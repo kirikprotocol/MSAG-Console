@@ -196,6 +196,15 @@
     </component>
   </tag>
 
+   <tag>
+    <tag-name>menubardelimiter</tag-name>
+     <component>
+      <component-type>menubardelimiter</component-type>
+      <renderer-type>menuBar</renderer-type>
+      <handler-class>mobi.eyeline.informer.web.components.menubar.MenuBarDelimiterHandler</handler-class>
+    </component>
+  </tag>
+
   <tag>
     <tag-name>set</tag-name>
      <component>

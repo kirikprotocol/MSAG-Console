@@ -164,6 +164,17 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>menubardelimiter</name>
+    <description>Разделитель в меню</description>
+    <attribute>
+      <name>rendered</name>
+      <required>false</required>
+      <type>boolean</type>
+      <description>Отрисовывать элемент или нет. По умолчанию: true</description>
+    </attribute>
+  </tag>
+
 
   <!-- PROGRESS BAR -->
 
