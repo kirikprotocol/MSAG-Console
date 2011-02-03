@@ -153,14 +153,17 @@ public class DeliveryManager {
     if (delivery.getType() == Delivery.Type.SingleText)
       delivery.setProperty("singleText", "true");
 
+    if (delivery.getStartDate().getTime() < System.currentTimeMillis())
+      delivery.setStartDate(new Date(System.currentTimeMillis() + 60000));
+
     delivery.validate();
     final DcpConnection conn = getDcpConnection(login, password);
     final int id = conn.createDelivery(delivery);
 
-    DeliveryState state = new DeliveryState();
-    state.setStatus(DeliveryStatus.Paused);
-    state.setDate(new Date());
-    conn.changeDeliveryState(id, state);
+//    DeliveryState state = new DeliveryState();
+//    state.setStatus(DeliveryStatus.Paused);
+//    state.setDate(new Date());
+//    conn.changeDeliveryState(id, state);
 
     delivery.setId(id);
     if (msDataSource != null) {
@@ -181,7 +184,7 @@ public class DeliveryManager {
       }
     }
     if (logger.isDebugEnabled()) {
-      logger.debug("Delivery is proccessed: " + id);
+      logger.debug("Delivery created: " + id);
     }
 
     return id;
