@@ -465,7 +465,7 @@ void SSNSession::dischargeDlg(Dialog * pDlg, const TCSessionSUID * tc_suid/* = 0
 {
     UNITBinding * ubnd = _cfg.getUnit(pDlg->getId().tcInstId);
     if (ubnd)
-        --(ubnd->numOfDlgs);
+        --(ubnd->_numOfDlgs);
 
     if (tc_suid && (*tc_suid == pDlg->getSUId())) {
         TCSessionsMAP::iterator sit = tcSessions.find(*tc_suid);
@@ -502,16 +502,16 @@ bool SSNSession::nextDialogId(TCDialogID & dId)
     if (!ubnd)
         return false;
 
-    uint16_t attempt = 0, maxIdAtt = (ubnd->maxId - ubnd->numOfDlgs);
-    dId.tcInstId = ubnd->unit.instId;
+    uint16_t attempt = 0, maxIdAtt = (ubnd->_maxId - ubnd->_numOfDlgs);
+    dId.tcInstId = ubnd->getUnit()._instId;
     do {
-        if ((++(ubnd->lastDlgId) > ubnd->maxId) || !ubnd->lastDlgId)
-            ubnd->lastDlgId = 1; //minId
-        dId.dlgId = ubnd->lastDlgId;
+        if ((++(ubnd->_lastDlgId) > ubnd->_maxId) || !ubnd->_lastDlgId)
+            ubnd->_lastDlgId = 1; //minId
+        dId.dlgId = ubnd->_lastDlgId;
     } while (locateDialog(dId) && ((++attempt) < maxIdAtt));
 
     if (attempt < maxIdAtt) { //dlgId is allocated
-        ++(ubnd->numOfDlgs);
+        ++(ubnd->_numOfDlgs);
         return true;
     }
     return false;
@@ -534,7 +534,7 @@ void SSNSession::dumpDialogs(void) const
 {
     std::string dump;
     format(dump, "SSN[%u]: Dialogs [%u of %u], ", (unsigned)_SSN,
-           (unsigned)(dialogs.size() + pending.size()), _cfg.MaxDlgNum());
+           (unsigned)(dialogs.size() + pending.size()), _cfg.maxDlgNum());
 
     if (!pending.empty()) {
         format(dump, "pending(%u): ", (unsigned)pending.size());

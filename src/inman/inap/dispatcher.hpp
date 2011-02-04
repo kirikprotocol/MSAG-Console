@@ -146,7 +146,7 @@ public:
     bool    Start(void);
     //Stops TCAP messages(indications) listener, unbinds all SSNs,
     //if do_wait is set sets ss7INITED state
-    void    Stop(bool do_wait = false);
+    DSPState_e  Stop(bool do_wait = false);
 
     //Notifies dispatcher that broken connection is detected, the connection
     //to given TCAP BE instance will be automatically reestablished.

@@ -184,12 +184,12 @@ bool TCAPDispatcher::Start(void)
 //1) Stops Units autoconnection thread, switches SSNSessions to stopping state 
 //2) Destroys SSNSessions, finishes autoconnection and listener threads, 
 //   switches to ss7INITED state.
-void TCAPDispatcher::Stop(bool do_wait/* = false*/)
+TCAPDispatcherITF::DSPState_e TCAPDispatcher::Stop(bool do_wait/* = false*/)
 {
   {
     MutexGuard grd(_sync);
     if (_dspState == dspStopped)
-      return;
+      return _dspState;
     if (_dspState == dspRunning) {
       //stop reconnection thread, keep listener thread active for a while
       _dspState = dspStopping;
@@ -205,16 +205,14 @@ void TCAPDispatcher::Stop(bool do_wait/* = false*/)
   if (do_wait) {
     { //delete all sessions
       MutexGuard grd(_sync);
-      if (!_sessions.empty()) {
-        do {
-          SSNSession * pSession = _sessions.begin()->second;
-          unbindSSN(pSession);
-          _sessions.erase(_sessions.begin());
-          {
-            ReverseMutexGuard rgrd(_sync);
-            delete pSession;
-          }
-        } while (!_sessions.empty());
+      while (!_sessions.empty()) {
+        SSNSession * pSession = _sessions.begin()->second;
+        unbindSSN(pSession);
+        _sessions.erase(_sessions.begin());
+        {
+          ReverseMutexGuard rgrd(_sync);
+          delete pSession;
+        }
       }
     }
     //wait for Autoconnection and Listener threads
@@ -227,6 +225,7 @@ void TCAPDispatcher::Stop(bool do_wait/* = false*/)
       disconnectCP(ss7INITED);
     }
   }
+  return _dspState;
 }
 
 // -------------------------------------------------------------------------
@@ -471,7 +470,7 @@ bool TCAPDispatcher::unitsNeedBinding(void) const
     if (it->second.connStatus == SS7UnitInstance::uconnOk) {
       for (SSNmap_T::const_iterator sit = _sessions.begin(); sit != _sessions.end(); ++sit) {
         const UNITBinding * unb = sit->second->findUnit(it->second.instId);
-        if (unb && (unb->unit.bindStatus < UNITStatus::unitAwaited))
+        if (unb && (unb->getUnit()._bindStatus < UNITStatus::unitAwaited))
           return true;
       }
     }
@@ -502,26 +501,26 @@ bool TCAPDispatcher::bindSSN(SSNSession * p_session) const
       return false;
 
     bool rval = false;
-    UNITsStatus tcUnits;
+    UnitsStatus tcUnits;
     p_session->getUnitsStatus(tcUnits);
 
-    for (UNITsStatus::const_iterator cit = tcUnits.begin();
+    for (UnitsStatus::const_iterator cit = tcUnits.begin();
                                       cit != tcUnits.end() ; ++cit) {
       const UNITStatus & unit = *cit;
 //smsc_log_debug(logger, "%s: bindSSN(SSN=%u, instId=%u, status=%u)", _logId,
 //               p_session->getSSN(), (unsigned)unit.instId, unit.bindStatus);
-      if (unit.bindStatus >= UNITStatus::unitAwaited)
+      if (unit._bindStatus >= UNITStatus::unitAwaited)
         continue;
-      if (!_unitCfg->instIds.isStatus(unit.instId, SS7UnitInstance::uconnOk))
+      if (!_unitCfg->instIds.isStatus(unit._instId, SS7UnitInstance::uconnOk))
         continue;
-      if (unit.bindStatus == UNITStatus::unitError)
-        p_session->ResetUnit(unit.instId);
+      if (unit._bindStatus == UNITStatus::unitError)
+        p_session->ResetUnit(unit._instId);
 
       USHORT_T result = 0;
       {
         ReverseMutexGuard rgrd(_sync);
         result = EINSS7_I97TBindReq(p_session->getSSN(), _cfg.mpUserId,
-                                              unit.instId, EINSS7_I97TCAP_WHITE_USER
+                                              unit._instId, EINSS7_I97TCAP_WHITE_USER
   #if EIN_HD >= 101
                                               , 0
   #endif /* EIN_HD >= 101 */
@@ -530,14 +529,14 @@ bool TCAPDispatcher::bindSSN(SSNSession * p_session) const
       if (result) {
         smsc_log_error(logger, "%s: TBindReq(SSN=%u, userId=%u,"
                                " instId=%u) failed with code %u (%s)", _logId,
-                        p_session->getSSN(), _cfg.mpUserId, (unsigned)unit.instId,
+                        p_session->getSSN(), _cfg.mpUserId, (unsigned)unit._instId,
                         result, rc2Txt_TC_APIError(result));
          //no confirmation will come from EIN SS7, so rise signal!
-        p_session->SignalUnit(unit.instId, UNITStatus::unitError);
+        p_session->SignalUnit(unit._instId, UNITStatus::unitError);
       } else {
         smsc_log_info(logger, "%s: TBindReq(SSN=%u, userId=%u, instId=%u) Ok!", _logId,
-                       p_session->getSSN(), _cfg.mpUserId, (unsigned)unit.instId);
-        p_session->setUnitStatus(unit.instId, UNITStatus::unitAwaited);
+                       p_session->getSSN(), _cfg.mpUserId, (unsigned)unit._instId);
+        p_session->setUnitStatus(unit._instId, UNITStatus::unitAwaited);
         rval = true;  //await confirmation
       }
     }
@@ -562,28 +561,28 @@ bool TCAPDispatcher::bindSSNs(void) const
 //NOTE: _sync MUST be locked upon entry!
 void TCAPDispatcher::unbindSSN(SSNSession * p_session) const
 {
-    UNITsStatus tcUnits;
+    UnitsStatus tcUnits;
     p_session->getUnitsStatus(tcUnits);
 
-    for (UNITsStatus::const_iterator cit = tcUnits.begin();
+    for (UnitsStatus::const_iterator cit = tcUnits.begin();
                                         cit != tcUnits.end(); ++cit) {
       const UNITStatus & unit = *cit;
-      if (unit.bindStatus == UNITStatus::unitBound) {
+      if (unit._bindStatus == UNITStatus::unitBound) {
         USHORT_T result = 0;
         {
           ReverseMutexGuard rgrd(_sync);
-          result = EINSS7_I97TUnBindReq(p_session->getSSN(), _cfg.mpUserId, unit.instId);
+          result = EINSS7_I97TUnBindReq(p_session->getSSN(), _cfg.mpUserId, unit._instId);
         }
         if (!result)
           smsc_log_debug(logger, "%s: TUnBindReq(SSN=%u, userId=%u, instId=%u)", _logId,
-                         p_session->getSSN(), _cfg.mpUserId, (unsigned)unit.instId);
+                         p_session->getSSN(), _cfg.mpUserId, (unsigned)unit._instId);
         else
           smsc_log_error(logger, "%s: TUnBindReq(SSN=%u, userId=%u, instId=%u)"
                                        " failed with code %u (%s)", _logId,
-                         p_session->getSSN(), _cfg.mpUserId, (unsigned)unit.instId,
+                         p_session->getSSN(), _cfg.mpUserId, (unsigned)unit._instId,
                          result, rc2Txt_TC_APIError(result));
       }
-      p_session->ResetUnit(unit.instId);
+      p_session->ResetUnit(unit._instId);
     }
     return;
 }
@@ -762,38 +761,50 @@ SSNSession* TCAPDispatcher::openSSN(UCHAR_T ssn_id, USHORT_T max_dlg_id/* = 2000
 
 SSNSession* TCAPDispatcher::findSession(UCHAR_T ssn) const
 {
-    MutexGuard tmp(_sync);
-    return lookUpSSN(ssn);
+  MutexGuard tmp(_sync);
+  return lookUpSSN(ssn);
 }
 
 void TCAPDispatcher::confirmSSN(uint8_t ssn, uint8_t tc_inst_id, uint8_t bindResult)
 {
-    SSNSession* pSession = findSession(ssn);
-    if (!pSession) {
-      smsc_log_warn(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) : invalid/inactive SSN",
-                   _logId, (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id);
-      return;
-    }
-    UNITStatus::BindStatus_e rval = UNITStatus::unitError;
-
-    if ((bindResult == TC_BindResult::bindOk)
-        || (bindResult == TC_BindResult::ssnInUse)) {
-      rval = UNITStatus::unitBound;
-      _msgAcq.Notify();
-      smsc_log_info(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) Ok!", _logId,
-                     (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id);
-    } else {
-      smsc_log_error(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) failed: '%s' (code 0x%X)",
-                     _logId, (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id,
-                     rc2Txt_TC_BindResult(bindResult), bindResult);
-    }
-    if (!pSession->SignalUnit(tc_inst_id, rval)) {
-      smsc_log_warn(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) : invalid/inactive instance",
+  SSNSession * pSession = findSession(ssn);
+  if (!pSession) {
+    smsc_log_warn(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) : invalid/inactive SSN",
                  _logId, (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id);
-    }
     return;
-}
+  }
+  const UNITBinding * unb = pSession->findUnit(tc_inst_id);
+  if (!unb) {
+    smsc_log_warn(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) : invalid/inactive instance",
+                  _logId, (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id);
+    return;
+  }
 
+  UNITStatus::BindStatus_e rval = UNITStatus::unitError;
+
+  if ((bindResult == TC_BindResult::bindOk)
+      || (bindResult == TC_BindResult::ssnInUse)) {
+    rval = UNITStatus::unitBound;
+    _msgAcq.Notify();
+    smsc_log_info(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) Ok!", _logId,
+                   (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id);
+  } else {
+    if (bindResult == TC_BindResult::tcUserIdErr) {
+      //NOTE: the EINHD SS7 r4 has a bug that results in a duplicate
+      //      BindConf_Ind{tcUserIdErr} recieved
+      if (unb->isSignaled(UNITStatus::unitBound)) {
+        smsc_log_warn(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) ack: '%s' (code 0x%X)",
+                       _logId, (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id,
+                       rc2Txt_TC_BindResult(bindResult), bindResult);
+        return;
+      }
+    }
+    smsc_log_error(logger, "%s: TBindConf(SSN=%u, userId=%u, instId=%u) failed: '%s' (code 0x%X)",
+                   _logId, (unsigned)ssn, _cfg.mpUserId, (unsigned)tc_inst_id,
+                   rc2Txt_TC_BindResult(bindResult), bindResult);
+  }
+  pSession->SignalUnit(tc_inst_id, rval);
+}
 
 } // namespace inap
 } // namespace inmgr
