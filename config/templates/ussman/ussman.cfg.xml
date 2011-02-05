@@ -17,6 +17,9 @@
     <param name="maxMsgNum" type="int">800</param>     <!--
      max input SS7 messages buffer size,   [1..65535], default: 512,
      NOTE: is overriden by value from cp.cnf  -->
+    <param name="reconnectTimeout" type="int">1100</param> <!--
+    timeout between reconnection attempts, units millisecs
+    [500..65535], default: 800  --> 
   </section>
 
   <section name="TCAPUserUSS"> <!-- USS specific TCUser configuration -->
