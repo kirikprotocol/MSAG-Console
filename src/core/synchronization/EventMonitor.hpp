@@ -36,6 +36,10 @@ public:
     {
         return condVar.WaitOn(*this, use_timeout);
     }
+    int wait(const struct timeval & abs_time)
+    {
+        return condVar.WaitOn(*this, abs_time);
+    }
     int wait(const struct timespec & abs_time)
     {
         return condVar.WaitOn(*this, abs_time);
