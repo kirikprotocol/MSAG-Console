@@ -56,6 +56,16 @@ public:
         return rval;
     }
     //Note: mutex MUST BE LOCKED!
+    int WaitOn(Mutex & use_mtx, const struct timeval & abs_time)
+    {
+        struct timespec tvs;
+        tvs.tv_sec = abs_time.tv_sec;
+        tvs.tv_nsec = abs_time.tv_usec*1000;
+        int rval = pthread_cond_timedwait(&event, &use_mtx.mutex, &tvs);
+        use_mtx.updateThreadId();
+        return rval;
+    }
+    //Note: mutex MUST BE LOCKED!
     int WaitOn(Mutex & use_mtx, const struct timespec & abs_time)
     {
         int rval = pthread_cond_timedwait(&event, &use_mtx.mutex, &abs_time);
