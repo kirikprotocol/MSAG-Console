@@ -43,7 +43,7 @@ static char hlra[] = "79139860004"; //HLR address
 static char sca[]  = "79139869990"; // service center address
 static char rndmsto_pattern[]   = "791398699872%04d";
 static char rndmsfrom_pattern[] = "791398699871%04d";
-static int speed = 1450;
+static int speed = 1;
 static int slowstartperiod = 60; //in seconds
 
 
