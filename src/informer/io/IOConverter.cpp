@@ -71,6 +71,23 @@ uint64_t FromBuf::get64()
 }
 
 
+uint16_t FromBuf::getc16()
+{
+    register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);
+    if (*p > 0x7f) {
+        checksz(3);
+        uint16_t res(*p);
+        res <<= 8;
+        res += *(++p);
+        buf = reinterpret_cast<const unsigned char*>(++p);
+        return res;
+    } else {
+        checksz(1);
+        return *(buf++);
+    }
+}
+
+
 const char* FromBuf::getCString()
 {
     register const unsigned char* bnew = buf;
@@ -154,6 +171,22 @@ void ToBuf::set64( uint64_t c )
     set32(uint32_t(c>>32));
     set32(uint32_t(c));
 #endif
+}
+
+
+void ToBuf::setc16( uint16_t c )
+{
+    if (c>0x7f) {
+        checksz(3);
+        register uint8_t* p = reinterpret_cast<uint8_t*>(buf);
+        *p = 0xcd;
+        *++p = uint8_t(c>>8);
+        *++p = uint8_t(c);
+        buf += 3;
+    } else {
+        checksz(1);
+        *(buf++) = c;
+    }
 }
 
 

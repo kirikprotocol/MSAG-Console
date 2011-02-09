@@ -458,7 +458,7 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                 sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                                     rip ? 1 : 0 );
                 if ( rip ) {
-                    const char* mst = msg.flags.getSvcType(svcType);
+                    const char* mst = msg.flags.getSvcType();
                     if ( mst && mst[0] ) {
                         sms.setEServiceType(mst);
                         break;
