@@ -81,6 +81,7 @@ static const int MAPINTERNALFAILURE=1045;  // map internal exception
 static const int SCHEDULERLIMIT=1046;     //either soft or hard scheduler limit reached
 static const int DPFSMENOTCONNECTED=1047; //failed to send alert notification, sme not connected. pseudoerror.
 static const int BACKUPSMERESCHEDULE=1048; //(noresp|blockedmsc)+(backupsme on route)=>this error
+static const int MISSINGIMSIINNIUSSD=1049; //dest number requires imsi as dest ref, but imsi is empty
 
 
 static const int MAP_UR_NO_REASON=1109;
@@ -1203,7 +1204,7 @@ static const bool errorStatus[1280] = {
 1, // SCHEDULERLIMIT=1046
 0, // DPFSMENOTCONNECTED=1047
 0, // BACKUPSMERESCHEDULE=1048
-1,
+1, // MISSINGIMSIINNIUSSD=1049
 1,
 1,
 1,
