@@ -9,7 +9,7 @@
 namespace {
 const unsigned LENSIZE = 2;
 const unsigned VERSIZE = 4;
-const unsigned defaultVersion = 1;
+const unsigned defaultVersion = 2;
 
 using namespace eyeline::informer;
 
@@ -31,7 +31,7 @@ public:
         fg.read(buf,VERSIZE+4);
         FromBuf fb(buf,VERSIZE+4);
         uint32_t v = fb.get32();
-        if (v != 1) {
+        if (v != 1 && v != 2) {
             throw InfosmeException(EXC_BADFILE,"file '%s': version %u is not supported",jpath.c_str(),v);
         }
         regionid_type s = fb.get32();
@@ -87,6 +87,9 @@ public:
             if (fb.getPos() == fb.getLen()) break;
             msg.subscriber = fb.get64();
             msg.userData = fb.getCString();
+            if (version_ == 2) {
+                MessageFlags(fb.getCString()).swap(msg.flags);
+            }
             if (readstate & 0x80) {
                 MessageText(fb.getCString()).swap(msg.text);
             } else {
@@ -129,9 +132,13 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
     smsc::core::buffers::TmpBuf<unsigned char,200> buf;
     // NOTE: it is a prediction (NOT under lock!)
     const bool equalSerials = (serial == serial_);
-    if (!equalSerials && msg.text.isUnique()) {
-        // need to write text
-        buf.setSize(90+strlen(msg.text.getText()));
+    if (!equalSerials) {
+        if (msg.text.isUnique()) {
+            // need to write text
+            buf.setSize(90+2*msg.flags.bufsize()+strlen(msg.text.getText()));
+        } else {
+            buf.setSize(90+2*msg.flags.bufsize());
+        }
     }
     ToBuf tb(buf.get(),buf.getSize());
     do {
@@ -158,6 +165,9 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         }
         tb.set64(msg.subscriber);
         tb.setCString(msg.userData.c_str());
+        if (version_==2) {
+            tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
+        }
         if (msg.text.isUnique()) {
             tb.setCString(msg.text.getText());
         } else {
@@ -174,12 +184,17 @@ size_t StoreJournal::journalMessage( dlvid_type     dlvId,
         equalSerials && serial != serial_ ) {
         // oops, the serial has changed while we were preparing the buffer
         if (msg.text.isUnique()) {
-            buf.reserve(90+strlen(msg.text.getText()));
-            tb.setBuf(buf.get(),buf.getSize());
+            buf.reserve(90+2*msg.flags.bufsize()+strlen(msg.text.getText()));
+        } else {
+            buf.reserve(90+2*msg.flags.bufsize());
         }
+        tb.setBuf(buf.get(),buf.getSize());
         tb.setPos(buflen);
         tb.set64(msg.subscriber);
         tb.setCString(msg.userData.c_str());
+        if (version_==2) {
+            tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
+        }
         if (msg.text.isUnique()) {
             tb.setCString(msg.text.getText());
         } else {

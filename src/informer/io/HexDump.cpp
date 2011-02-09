@@ -21,7 +21,7 @@ char* HexDump::hexdump( register char* outbuf,
         d = c & 0xf;
         d += (d < 0xa) ? '0' : 0x57;
         *++outbuf = char(d);
-        *++outbuf = ' ';
+        if (spaces_) { *++outbuf = ' '; }
         ++outbuf;
     }
     return outbuf;

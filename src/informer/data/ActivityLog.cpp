@@ -2,6 +2,7 @@
 #include "ActivityLog.h"
 #include "CommonSettings.h"
 #include "informer/io/TextEscaper.h"
+#include "informer/io/HexDump.h"
 #include "UserInfo.h"
 #include "FinalLog.h"
 
@@ -195,16 +196,24 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     printSubscriber(caddr,msg.subscriber);
 
     smsc::core::buffers::TmpBuf<char,1024> buf;
-    const int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,\"",
-                            unsigned(now.tm_sec), cstate, regId,
-                            msg.msgId, retryCount, planTime, 
-                            caddr,
-                            msg.timeLeft, smppStatus,
-                            msg.userData.c_str());
+    int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,\"",
+                      unsigned(now.tm_sec), cstate, regId,
+                      msg.msgId, retryCount, planTime, 
+                      caddr,
+                      msg.timeLeft, smppStatus,
+                      msg.userData.c_str());
     if ( off < 0 ) {
         throw InfosmeException(EXC_SYSTEM,"cannot printf to activity.log: %d",off);
     }
     buf.SetPos(off);
+    if ( ! msg.flags.isEmpty() ) {
+        HexDump hd(false);
+        off += hd.hexdumpsize(msg.flags.bufsize()) + 1;
+        buf.reserve(off);
+        hd.hexdump(buf.GetCurPtr(),msg.flags.buf(),msg.flags.bufsize());
+        buf.SetPos(off);
+    }
+    buf.Append(",",1);
     escapeText(buf, msg.text.getText(),strlen(msg.text.getText()));
     buf.Append("\"\n",2);
 
@@ -287,7 +296,7 @@ void ActivityLog::createFile( msgtime_type currentTime, struct tm& now )
     createTime_ = currentTime - (oldmin - now.tm_min)*60 - now.tm_sec;
     fg_.seek(0, SEEK_END);
     if (fg_.getPos() == 0) {
-        const char* header = "#1 SEC,STATE,REGID,MSGID,RETRY/NSMS,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,TEXT\n";
+        const char* header = "#2 SEC,STATE,REGID,MSGID,RETRY/NSMS,PLAN,SUBSCRIBER,TTL,SMPP,USERDATA,FLAGS,TEXT\n";
         fg_.write(header,strlen(header));
         char headbuf[200];
         int headlen;

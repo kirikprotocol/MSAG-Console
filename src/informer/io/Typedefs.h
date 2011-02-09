@@ -58,11 +58,20 @@ timediff_type parseTime( const char* theTime, bool allowMoreThan24Hours = false 
 /// parse address in one of three form 'NNNNN', '+NNNNN', '.T.P.NNNNN'
 personid_type parseAddress( const char* isdn );
 
-/// some constants
+/// some time constants
 static const unsigned tuPerSec = 1000000U;
 static const unsigned maxScoreIncrement = 10000U;
+
+/// the period of time-wrap
 static const usectime_type flipTimePeriod = 24*3600*tuPerSec;
+
+/// maximum difference between high-freq and low-freq items in scoredlist
 static const usectime_type maxSnailDelay = 5*tuPerSec;
+
+/// sizes of buffers
+static const size_t DLV_NAME_LENGTH = 64;
+static const size_t DLV_SVCTYPE_LENGTH = 32;
+static const size_t DLV_USERDATA_LENGTH = 1024;
 
 inline msgtime_type currentTimeSeconds() { return msgtime_type(currentTimeMicro()/tuPerSec); }
 
@@ -90,6 +99,12 @@ inline char* printSubscriber( char* buf, personid_type subsc ) {
     return buf;
 }
 
+
+typedef enum {
+    DLVMODE_SMS = 0,
+    DLVMODE_USSDPUSH = 1,
+    DLVMODE_USSDPUSHVLR = 2
+} DlvMode;
 
 typedef enum {
     MSGSTATE_INPUT = 1,

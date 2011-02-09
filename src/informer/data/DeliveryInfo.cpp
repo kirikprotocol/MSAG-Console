@@ -53,9 +53,9 @@ int parseWeekDays( const std::vector< std::string >& wd )
 
 } // namespace
 
-const size_t DeliveryInfoData::NAME_LENGTH;
-const size_t DeliveryInfoData::SVCTYPE_LENGTH;
-const size_t DeliveryInfoData::USERDATA_LENGTH;
+// const size_t DeliveryInfoData::NAME_LENGTH;
+// const size_t DeliveryInfoData::SVCTYPE_LENGTH;
+// const size_t DeliveryInfoData::USERDATA_LENGTH;
 
 smsc::logger::Logger* DeliveryInfo::log_ = 0;
 
@@ -265,15 +265,15 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
                                const DeliveryInfoData* old )
 {
     // pre-check
-    if ( data.svcType.size() >= DeliveryInfoData::SVCTYPE_LENGTH ) {
+    if ( data.svcType.size() >= DLV_SVCTYPE_LENGTH ) {
         throw InfosmeException(EXC_BADNAME,"D=%u too long svcType '%s'",
                                dlvId_, data.svcType.c_str());
     }
-    if ( data.name.size() >= DeliveryInfoData::NAME_LENGTH ) {
+    if ( data.name.size() >= DLV_NAME_LENGTH ) {
         throw InfosmeException(EXC_BADNAME,"D=%u too long name '%s'",
                                dlvId_, data.name.c_str());
     }
-    if ( data.userData.size() >= DeliveryInfoData::USERDATA_LENGTH ) {
+    if ( data.userData.size() >= DLV_USERDATA_LENGTH ) {
         throw InfosmeException(EXC_BADNAME,"D=%u too long userdata '%s'",
                                dlvId_, data.userData.c_str());
     }
@@ -323,11 +323,6 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
         }
         sourceAddressChanged = true;
     }
-
-    // NOTE: we don't need this check as we don't use userdata in core
-    // if ( !isGoodAsciiName(data.userData.c_str()) ) {
-    // throw InfosmeException(EXC_BADNAME,"invalid chars in userData '%s'",data.userData.c_str());
-    // }
 
     /// post-parsing check & fill
     if (data.priority < 1 || data.priority > 100 ) {

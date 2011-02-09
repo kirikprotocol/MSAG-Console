@@ -174,6 +174,21 @@ void ToBuf::setCString( const char* s )
 }
 
 
+void ToBuf::setHexCString( const char* s, size_t slen )
+{
+    register const size_t inc = slen*2+1;
+    checksz(inc);
+    register unsigned char* out = buf;
+    for ( ; slen > 0; --slen ) {
+        register uint8_t bt = uint8_t(*s);
+        *out++ = bt >> 4;
+        *out++ = bt & 0xf;
+    }
+    *out = '\0';
+    buf += inc;
+}
+
+
 void ToBuf::skip( size_t bytes )
 {
     checksz(bytes);

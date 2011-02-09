@@ -293,6 +293,7 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
     {
       pos=skipField(line,pos);
     }
+    // FIXME: impl reading FLAGS according to version
     if(req->filter.resultFields&rfText)
     {
       if(line[pos]=='"')

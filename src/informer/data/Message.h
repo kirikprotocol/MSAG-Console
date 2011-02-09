@@ -3,6 +3,7 @@
 
 #include <list>
 #include "MessageText.h"
+#include "MessageFlags.h"
 #include "informer/io/Typedefs.h"
 #include "core/buffers/FixedLengthString.hpp"
 
@@ -21,6 +22,7 @@ struct Message
     smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // (constant)
     MessageText      text;       // message text
     uint16_t         retryCount;
+    MessageFlags     flags;      // message flags
     uint8_t          state;
 
     inline void swap( Message& m ) {
@@ -31,6 +33,7 @@ struct Message
         std::swap(userData,m.userData);
         text.swap(m.text);
         std::swap(retryCount,m.retryCount);
+        flags.swap(m.flags);
         std::swap(state,m.state);
     }
 

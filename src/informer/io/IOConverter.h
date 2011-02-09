@@ -15,6 +15,10 @@ struct FromBuf
     uint16_t get16();
     uint32_t get32();
     uint64_t get64();
+
+    // compressed items (good for tag/length)
+    uint16_t getc16();
+
     const unsigned char* skip( size_t bytes );
     const char* getCString();
     void setPos( size_t newpos );
@@ -44,8 +48,12 @@ struct ToBuf
     void set16( uint16_t );
     void set32( uint32_t );
     void set64( uint64_t );
+
+    void setc16( uint16_t );
+
     void copy( size_t bytes, const void* from );
     void setCString( const char* s );
+    void setHexCString( const char* s, size_t slen );
     void skip( size_t bytes );
     void setPos( size_t newpos );
     void setBuf( void* thebuf, size_t bufLen ) {

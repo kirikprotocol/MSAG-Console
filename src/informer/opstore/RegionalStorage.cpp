@@ -124,12 +124,19 @@ public:
             msgList_.push_back(MessageLocker());
             Message& msg = msgList_.rbegin()->msg;
             const uint8_t stateVersion = fb.get8();
+            const uint8_t version = stateVersion & 0x7f;
             msg.state = MSGSTATE_RETRY;
             msg.msgId = fb.get64();
             msg.lastTime = fb.get32();
             msg.timeLeft = fb.get32();
             msg.subscriber = fb.get64();
             msg.userData = fb.getCString();
+            if ( version == 2 ) {
+                MessageFlags(fb.getCString()).swap(msg.flags);
+            } else if ( version != 1 ) {
+                throw InfosmeException(EXC_BADFILE,"record at %llu has wrong version",
+                                       ulonglong(filePos));
+            }
             if (stateVersion & 0x80) {
                 MessageText(fb.getCString()).swap(msg.text);
             } else {
@@ -431,7 +438,11 @@ void RegionalStorage::retryMessage( msgid_type         msgId,
     if ( info.wantRetryOnFail() ) {
         retryDelay = info.getRetryInterval(iter->msg.retryCount);
         if (retryDelay!=-1) {
-            timediff_type smscrd = policy.getRetryInterval( info.isTransactional(),
+            bool trans;
+            if ( !iter->msg.flags.hasTransactional(trans) ) {
+                trans = info.isTransactional();
+            }
+            timediff_type smscrd = policy.getRetryInterval( trans,
                                                             smppState,
                                                             iter->msg.retryCount );
             if (smscrd==-1) {
@@ -975,7 +986,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
             fg.create( (getCS()->getStorePath() + fpath).c_str(),
                        0666, true );
             oldFilePos = fg.seek(0,SEEK_END);
-            static const uint8_t version = 1;
+            static const uint8_t version = 2;
             for ( MsgIter i = msgList.begin(); i != msgList.end(); ++i ) {
                 Message& msg = i->msg;
                 uint8_t stateVersion = version;
@@ -991,6 +1002,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                 tb.set32(msg.timeLeft);
                 tb.set64(msg.subscriber);
                 tb.setCString(msg.userData.c_str());
+                tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
                 if (stateVersion & 0x80) {
                     tb.setCString(msg.text.getText());
                 } else {

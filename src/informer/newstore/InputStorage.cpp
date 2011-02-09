@@ -21,7 +21,7 @@
 namespace {
 
 const unsigned LENSIZE = 2;
-const uint16_t defaultVersion = 1;
+const uint16_t defaultVersion = 2;
 
 }
 
@@ -84,7 +84,7 @@ public:
     virtual bool readRecordData( size_t filePos, FromBuf& fb ) {
         ro_.roff += fb.getLen();
         const uint16_t version = fb.get16();
-        if (version!=1) {
+        if (version!=1 && version!=2) {
             throw InfosmeException(EXC_BADFILE,"unsupported version %u at %llu",
                                    version,ulonglong(filePos));
         }
@@ -109,6 +109,9 @@ public:
         // msg.lastTime = fb.get32();
         msg.timeLeft = -1; // waiting for pvss
         msg.userData = fb.getCString();
+        if (version==2) {
+            MessageFlags(fb.getCString()).swap(msg.flags);
+        }
         if (state & 0x80) {
             MessageText(fb.getCString()).swap(msg.text);
         } else {
@@ -383,6 +386,9 @@ void InputStorage::dispatchMessages( MsgIter begin,
             // tb.set32(msg.lastTime);
             // tb.set32(msg.timeLeft);
             tb.setCString(msg.userData.c_str());
+            if (::defaultVersion==2) {
+                tb.setHexCString(msg.flags.buf(),msg.flags.bufsize());
+            }
             if (state >= 0x80) {
                 tb.setCString(msg.text.getText());
             } else {
@@ -523,8 +529,7 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
                                       regId, getDlvId(), i->msg.msgId,
                                       ton,npi,len,len,ulonglong(addr));
                         i->msg.state = MSGSTATE_FAILED;
-                        // const int smppState = smsc::system::Status::ILLEGALSUBSCRIBER;
-                        const int smppState = smsc::system::Status::DENIEDBYACCESSMASK;
+                        const int smppState = smsc::system::Status::DENIEDBYGLOBALBL;
                         activityLog_->addRecord(currentTime,regId,i->msg,
                                                 smppState,
                                                 MSGSTATE_INPUT);

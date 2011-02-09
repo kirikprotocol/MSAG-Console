@@ -12,8 +12,10 @@ class HexDump
 public:
     typedef std::vector< char > string_type;
 
+    HexDump( bool usespaces = true ) : spaces_(usespaces) {}
+
     // requested size of the buffer
-    size_t hexdumpsize( size_t insize ) const { return insize*3; }
+    size_t hexdumpsize( size_t insize ) const { return insize*(spaces_?3:2); }
 
     // hex dump insize bytes of inbuf to outbuf and return the position after last dumped
     char* hexdump( char* outbuf, const void* inbuf, size_t insize );
@@ -34,7 +36,7 @@ public:
     const char* c_str( const string_type& str ) const { return str.empty() ? "" : &str[0]; }
 
 private:
-    // static std::auto_ptr<char> digits_;
+    bool spaces_;
 };
 
 }

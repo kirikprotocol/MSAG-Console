@@ -413,7 +413,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
         drm->regId = ptr.getRegionId();
         drm->msgId = msg.msgId;
         drm->nchunks = 0;
-        drm->trans = info.isTransactional();
+        if ( ! msg.flags.hasTransactional(drm->trans) ) {
+            drm->trans = info.isTransactional();
+        }
         drm->endTime = now + validityTime + getCS()->getReceiptExtraWaitTime();
         smsc_log_debug(log_,"S='%s' add resp timer=%+d seq=%u R=%u/D=%u/M=%llu, rcpt.endTime=%+d",
                        smscId_.c_str(),
@@ -438,7 +440,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
 
             smsc::sms::SMS sms;
             smsc::sms::Address oa;
-            info.getSourceAddress(oa);
+            if ( ! msg.flags.getSourceAddress(oa) ) {
+                info.getSourceAddress(oa);
+            }
             sms.setOriginatingAddress(oa);
             sms.setDestinationAddress(da);
             sms.setArchivationRequested(false);
@@ -446,26 +450,41 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
 
             sms.setValidTime(now + validityTime);
 
-            sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
-                                info.isReplaceIfPresent() ? 1 : 0 );
             do {
-                if ( info.isReplaceIfPresent() ) {
-                    char svcType[DeliveryInfoData::SVCTYPE_LENGTH];
-                    info.getSvcType(svcType);
-                    if ( svcType[0] ) {
-                        sms.setEServiceType(svcType);
+                bool rip;
+                if ( ! msg.flags.hasReplaceIfPresent(rip) ) {
+                    rip = info.isReplaceIfPresent();
+                }
+                sms.setIntProperty( smsc::sms::Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
+                                    rip ? 1 : 0 );
+                if ( rip ) {
+                    const char* mst = msg.flags.getSvcType(svcType);
+                    if ( mst && mst[0] ) {
+                        sms.setEServiceType(mst);
                         break;
+                    } else {
+                        char svcType[DLV_SVCTYPE_LENGTH];
+                        info.getSvcType(svcType);
+                        if ( svcType[0] ) {
+                            sms.setEServiceType(svcType);
+                            break;
+                        }
                     }
                 }
                 sms.setEServiceType(getCS()->getSvcType());
             } while (false);
             sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID, getCS()->getProtocolId());
-            sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
-                               info.isTransactional() ? 2 : 0);
+            sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS, drm->trans ? 2 : 0);
             sms.setIntProperty(smsc::sms::Tag::SMPP_PRIORITY, 0);
             sms.setIntProperty(smsc::sms::Tag::SMPP_REGISTRED_DELIVERY, 1);
-            if (info.isFlash()) {
-                sms.setIntProperty(smsc::sms::Tag::SMPP_DEST_ADDR_SUBUNIT,1);
+            {
+                bool flash;
+                if ( ! msg.flags.hasFlash(flash) ) {
+                    flash = info.isFlash();
+                }
+                if (flash) {
+                    sms.setIntProperty(smsc::sms::Tag::SMPP_DEST_ADDR_SUBUNIT,1);
+                }
             }
 
             const char* out = msg.text.getText();
@@ -477,28 +496,41 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                 break;
             }
 
-            if ( info.getDeliveryMode() != DLVMODE_SMS ) {
-                // ussdpush
-                const int ussdop = ( info.getDeliveryMode() == DLVMODE_USSDPUSH ?
-                                     smscConfig_.ussdPushOp : smscConfig_.ussdPushVlrOp );
-                if (ussdop == -1) {
-                    smsc_log_warn(log_,"S='%s': ussd not supported, R=%u/D=%u/M=%llu",
-                                  smscId_.c_str(),
-                                  ptr.getRegionId(),
-                                  info.getDlvId(),
-                                  ulonglong(msg.msgId));
-                    res = smsc::system::Status::SYSERR;
-                    break;
+            {
+                DlvMode dlvMode;
+                if ( ! msg.flags.getDeliveryMode(dlvMode) ) {
+                    dlvMode = info.getDeliveryMode();
                 }
+
+                if ( dlvMode != DLVMODE_SMS ) {
+                    // ussdpush
+                    const int ussdop = ( dlvMode == DLVMODE_USSDPUSH ?
+                                         smscConfig_.ussdPushOp :
+                                         smscConfig_.ussdPushVlrOp );
+                    if (ussdop == -1) {
+                        smsc_log_warn(log_,"S='%s': ussd not supported, R=%u/D=%u/M=%llu",
+                                      smscId_.c_str(),
+                                      ptr.getRegionId(),
+                                      info.getDlvId(),
+                                      ulonglong(msg.msgId));
+                        res = smsc::system::Status::SYSERR;
+                        break;
+                    }
                 
-                try {
-                    sms.setIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP,ussdop);
-                } catch ( std::exception& e ) {
-                    smsc_log_error(log_,"S='%s': ussdpush: cannot set ussd op %u",ussdop);
-                    res = smsc::system::Status::SYSERR;
-                    break;
-                }
-            } // ussdpush
+                    try {
+                        sms.setIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP,ussdop);
+                    } catch ( std::exception& e ) {
+                        smsc_log_error(log_,"S='%s': ussdpush: cannot set ussd op %u",ussdop);
+                        res = smsc::system::Status::SYSERR;
+                        break;
+                    }
+                } // ussdpush
+            }
+
+            bool useDataSm;
+            if ( ! msg.flags.hasUseDataSm(useDataSm) ) {
+                useDataSm = info.useDataSm();
+            }
 
             drm->nchunks = nchunks;
             smsc_log_debug(log_,"S='%s' R=%u/D=%u/M=%llu %s seq=%u .%u.%u.%*.*s -> .%u.%u.%*.*s",
@@ -506,11 +538,11 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                            ptr.getRegionId(),
                            info.getDlvId(),
                            ulonglong(msg.msgId),
-                           info.useDataSm() ? "data_sm" : "submit_sm",
+                           useDataSm ? "data_sm" : "submit_sm",
                            seqNum,
                            oa.type, oa.plan, oa.length, oa.length, oa.value,
                            da.type, da.plan, da.length, da.length, da.value );
-            if (info.useDataSm()) {
+            if (useDataSm) {
                 sms.setIntProperty( smsc::sms::Tag::SMPP_QOS_TIME_TO_LIVE, validityTime );
                 PduDataSm dataSm;
                 dataSm.get_header().set_sequenceNumber(seqNum);

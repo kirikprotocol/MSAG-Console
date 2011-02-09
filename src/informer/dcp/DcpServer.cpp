@@ -558,7 +558,7 @@ static bool isDeliveryMatchFilter(Delivery* dlv,const messages::DeliveriesFilter
 {
   if(flt.hasNameFilter())
   {
-    char nm[DeliveryInfoData::NAME_LENGTH];
+    char nm[DLV_NAME_LENGTH];
     dlv->getDlvInfo().getName(nm);
     bool found=false;
     VECLOOP(it,std::string,flt.getNameFilter())
@@ -760,7 +760,7 @@ void DcpServer::handle(const messages::GetDeliveriesListNext& inmsg)
             }
             break;
           case messages::DeliveryFields::Name: {
-            char nm[DeliveryInfoData::NAME_LENGTH];
+            char nm[DLV_NAME_LENGTH];
             di.getName(nm);
             dli.setName(nm);
             break;

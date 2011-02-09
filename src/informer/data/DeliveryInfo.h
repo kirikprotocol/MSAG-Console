@@ -16,19 +16,9 @@ namespace informer {
 
 class UserInfo;
 
-enum DlvMode{
-    DLVMODE_SMS = 0,
-    DLVMODE_USSDPUSH = 1,
-    DLVMODE_USSDPUSHVLR = 2
-};
-
 /// the structure holding data from dcp protocol.
 struct DeliveryInfoData
 {
-    static const size_t NAME_LENGTH = 64;    // max len (including \0)
-    static const size_t SVCTYPE_LENGTH = 32; // max len (including \0)
-    static const size_t USERDATA_LENGTH = 1024;
-
   std::string name;
   int32_t priority;
   bool transactionMode;
