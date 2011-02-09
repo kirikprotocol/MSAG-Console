@@ -2,7 +2,7 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
 <config>
-  <section name="ussbalance">
+  <section name="ussman">
     <param name="host" type="string">0.0.0.0</param>
     <param name="port" type="int">9687</param> 
     <param name="maxConn" type="int">10</param>
