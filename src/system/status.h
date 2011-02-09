@@ -82,7 +82,8 @@ static const int SCHEDULERLIMIT=1046;     //either soft or hard scheduler limit 
 static const int DPFSMENOTCONNECTED=1047; //failed to send alert notification, sme not connected. pseudoerror.
 static const int BACKUPSMERESCHEDULE=1048; //(noresp|blockedmsc)+(backupsme on route)=>this error
 static const int MISSINGIMSIINNIUSSD=1049; //dest number requires imsi as dest ref, but imsi is empty
-
+static const int DENIEDBYGLOBALBL=1050; // denied by global black list (informer)
+static const int DENIEDBYLOCALBL=1051;  // denied by local black list (informer)
 
 static const int MAP_UR_NO_REASON=1109;
 static const int MAP_USER_REASON_BASE=1110;
