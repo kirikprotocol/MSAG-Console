@@ -57,6 +57,7 @@ private:
 
 
 /// message text.
+/// FIXME: these flags should be masked by/checked against user permissions.
 class MessageFlags : protected MessageTags
 {
 public:

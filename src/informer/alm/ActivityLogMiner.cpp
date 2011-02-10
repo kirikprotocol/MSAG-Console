@@ -130,6 +130,7 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
   std::string line;
   std::string::size_type pos;
   int sec;
+  unsigned version; // the version of the file format
 
   bool& dayChecked=req->dayChecked;
   bool& hourChecked=req->hourChecked;
@@ -187,6 +188,22 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
       }
       smsc_log_debug(log,"reading %s",filePath.c_str());
       f.ROpen(filePath.c_str());
+      if (!f.ReadLine(line)) {
+          f.Close();
+          req->offset=0;
+          nextFile=true;
+          continue;
+      }
+      {
+          int npos = 0;
+          sscanf(line.c_str(),"#%u %n",&version,&npos);
+          if (npos == 0) {
+              f.Close();
+              req->offset=0;
+              nextFile=true;
+              continue;
+          }
+      }
       f.Seek(req->offset);
     }
     if(!f.ReadLine(line))
@@ -293,7 +310,10 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
     {
       pos=skipField(line,pos);
     }
-    // FIXME: impl reading FLAGS according to version
+    if(version>1) {
+        // FIXME: impl reading FLAGS according to version
+        pos=skipField(line,pos);
+    }
     if(req->filter.resultFields&rfText)
     {
       if(line[pos]=='"')
