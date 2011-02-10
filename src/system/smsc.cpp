@@ -44,6 +44,7 @@
 #ifdef USE_MAP
 #include "mapio/FraudControl.hpp"
 #include "mapio/MapLimits.hpp"
+#include "mapio/NetworkProfiles.hpp"
 #endif
 
 #include "license/check/license.hpp"
@@ -488,6 +489,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   {
     mapio::FraudControl::Init(findConfigFile("fraud.xml"));
     mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
+    mapio::NetworkProfiles::init(findConfigFile("network-profiles.xml"));
   }
 #endif
 
@@ -1590,6 +1592,7 @@ void Smsc::shutdown()
     delete mapio;
   }
   mapio::MapLimits::Shutdown();
+  mapio::NetworkProfiles::shutdown();
 #endif
 
 
