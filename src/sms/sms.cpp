@@ -118,7 +118,28 @@ void Body::decode(uint8_t* buffer,int length)
     tag=ntohs(tag);
     int type=tag>>8;
     tag&=0xff;
-    __require__(tag<=SMS_LAST_TAG);
+    //__require__(tag<=SMS_LAST_TAG);
+    if(tag>SMS_LAST_TAG)
+    {
+      __warning2__("Unknown tag %d found in sms and skipped",tag);
+      switch(type)
+      {
+        case SMS_INT_TAG:
+        {
+          offset+=4;
+        }break;
+        case SMS_STR_TAG:
+        case SMS_BIN_TAG:
+        {
+          uint32_t len;
+          memcpy(&len,buffer+offset,4);
+          offset+=4;
+          len=ntohl(len);
+          offset+=len;
+        }break;
+      }
+      continue;
+    }
     if(Tag::tagTypes[tag]!=type)throw Exception("Invalid type for tag %d(%d!=%d)",tag,Tag::tagTypes[tag],type);
     switch(type)
     {
