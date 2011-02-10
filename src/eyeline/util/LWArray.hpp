@@ -19,6 +19,20 @@
 namespace eyeline {
 namespace util {
 
+template <
+  typename _SizeTypeArg //must be an unsigned integer type, implicitly
+                        //restricts maximum number of elements in array!
+>
+struct LWArrayResizerDflt {
+  //always calculate a new size as a multiple of original size
+  static _SizeTypeArg resize(_SizeTypeArg req_sz, _SizeTypeArg org_sz)
+  {
+    _SizeTypeArg maxSize = (_SizeTypeArg)(-1);
+    _SizeTypeArg factor = req_sz/org_sz + (req_sz % org_sz  ? 1 : 0);
+    return (factor > maxSize/org_sz) ? maxSize : org_sz*factor;
+  }
+};
+
 /* ************************************************************************* *
  * Lightweight Extension of array: store elements into referenced array 
  * until its number doesn't exceed specified limit. Afterward allocates 
@@ -31,6 +45,7 @@ template <
                           //constructors (operator<() in case of sorted array)
   , typename _SizeTypeArg //must be an unsigned integer type, implicitly
                           //restricts maximum number of elements in array!
+  , class _ResizerArg = LWArrayResizerDflt<_SizeTypeArg>
 >
 class LWArrayExtension_T {
 private:
@@ -40,8 +55,6 @@ private:
   _SizeTypeArg  _numElem;       //number of initilized/assigned elements
 
 protected:
-  _SizeTypeArg _MAX_FACTOR(void) const { return _MAX_SIZE()/_orgSz; }
-
   void denyIndex(_SizeTypeArg use_idx) const //throw(std::exception)
   {
     UIntToA_T<_SizeTypeArg> v0((_SizeTypeArg)sizeof(_SizeTypeArg));
@@ -67,9 +80,7 @@ protected:
   //Reallocates heap buffer.
   void reallocBuf(_SizeTypeArg req_sz) //throw()
   {
-    _SizeTypeArg factor = (req_sz + _orgSz - 1)/_orgSz;
-    factor += (factor+3)>>2;
-    _SizeTypeArg new_sz = (factor > _MAX_FACTOR()) ? _MAX_SIZE() : _orgSz*factor;
+    _SizeTypeArg new_sz =_ResizerArg::resize(req_sz, _orgSz);
 
     _TArg * hbuf = (_TArg *)(new uint8_t[sizeof(_TArg) * new_sz]);
     //copy initialized elements
@@ -193,6 +204,22 @@ public:
     return ((const _TArg *)_buf)[use_idx];
   }
 
+  //Destroys number of elements at given position within array.
+  //Throws if specified index is beyond of the space of initialized elemens.
+  void erase(_SizeTypeArg at_pos, _SizeTypeArg num_to_erase = 1) //throw(std::exception)
+  {
+    if (at_pos >= _numElem)
+      denyIndex(at_pos);
+    if ((at_pos + num_to_erase) > _numElem)
+      num_to_erase = _numElem - at_pos;
+
+    //copy elements starting from first to last
+    LWArrayTraits<_TArg>::shift_left(_buf + at_pos, _numElem - at_pos, num_to_erase);
+    //destroy excessive elements
+    LWArrayTraits<_TArg>::destroy(_buf + _numElem - num_to_erase, num_to_erase);
+    _numElem -= num_to_erase;
+  }
+
   //Returns last initialized/assigned element of array.
   //If array is empty the first element is initialized.
   _TArg & atLast(void) //throw()
@@ -298,19 +325,19 @@ public:
   }
 
   //shifts array elements to left (shrinks specified number of elements at start)
-  void shiftLeft(_SizeTypeArg shift_sz) //throw()
+  void shiftLeft(_SizeTypeArg shift_sz, _SizeTypeArg at_pos = 0) //throw()
   {
     //copy elements starting from first to last
-    LWArrayTraits<_TArg>::shift_left(_buf, _numElem, shift_sz);
-    //destroy excessive elements
-    LWArrayTraits<_TArg>::destroy(_buf + _numElem - shift_sz, shift_sz);
+    LWArrayTraits<_TArg>::shift_left(_buf + at_pos, _numElem - at_pos, shift_sz);
+    //reset excessive elements
+    LWArrayTraits<_TArg>::reset(_buf + _numElem - shift_sz, shift_sz);
     _numElem -= shift_sz;
   }
 
   //shifts array right (inserts empty elements at start)
-  bool shiftRight(_SizeTypeArg shift_sz) //throw()
+  bool shiftRight(_SizeTypeArg shift_sz, _SizeTypeArg at_pos = 0) //throw()
   {
-    if (!shiftRightOnly(shift_sz))
+    if (!shiftRightOnly(shift_sz, at_pos))
       return false;
     LWArrayTraits<_TArg>::reset(_buf, shift_sz);
     return true;
@@ -456,6 +483,7 @@ template <
   , typename _SizeTypeArg       //must be an unsigned integer type, implicitly
                                 //restricts maximum number of elements in array!
   , _SizeTypeArg _max_STACK_SZ  //maximum number of elements are to store on stack
+  , class _ResizerArg = LWArrayResizerDflt<_SizeTypeArg>
 >
 class LWArray_T : public LWArrayExtension_T<_TArg, _SizeTypeArg> {
 private:
