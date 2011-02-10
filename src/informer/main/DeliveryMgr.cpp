@@ -230,7 +230,7 @@ public:
     StatsDumper( DeliveryMgr& mgr ) :
     mgr_(mgr), log_(smsc::logger::Logger::getInstance("statdump")) {}
     ~StatsDumper() { WaitFor(); }
-
+    
 
     void init()
     {
@@ -476,35 +476,53 @@ void DeliveryMgr::init()
     strcpy(buf.get(),path.c_str());
     strcat(buf.get(),"deliveries/");
     buf.SetPos(strlen(buf.get()));
+    std::vector<std::string> chunks1;
     std::vector<std::string> chunks;
     std::vector<std::string> dlvs;
     smsc_log_debug(log_,"listing deliveries storage '%s'",buf.get());
     try {
-        makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), chunks);
+        makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), chunks1);
     } catch ( std::exception& e ) {
         smsc_log_warn(log_,"directory '%s' does not exist, creating",buf.get());
         FileGuard::makedirs(buf.get());
     }
-    std::sort( chunks.begin(), chunks.end() );
-    for ( std::vector<std::string>::iterator ichunk = chunks.begin();
-          ichunk != chunks.end(); ++ichunk ) {
-        strcpy(buf.GetCurPtr(),ichunk->c_str());
-        strcat(buf.GetCurPtr(),"/");
-        dlvs.clear();
+    std::sort( chunks1.begin(), chunks1.end() );
+    char* bufpos1 = buf.GetCurPtr();
+    for ( std::vector<std::string>::iterator kchunk = chunks1.begin();
+          kchunk != chunks1.end(); ++kchunk ) {
+        std::vector<std::string> chunks;
+        strcpy(bufpos1,kchunk->c_str());
+        strcat(bufpos1,"/");
+        chunks.clear();
         smsc_log_debug(log_,"listing delivery chunk '%s'",buf.get());
-        makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), dlvs);
-        for ( std::vector<std::string>::iterator idlv = dlvs.begin();
-              idlv != dlvs.end();
-              ++idlv ) {
-            // get dlvid
-            const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
-            if (dlvId > lastDlvId_) {
-                lastDlvId_ = dlvId;
-            }
-            try {
-                readDelivery( dlvId );
-            } catch (std::exception& e) {
-                smsc_log_error(log_,"D=%u cannot read/add dlvInfo, exc: %s",dlvId,e.what());
+        try {
+            makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(),chunks);
+        } catch ( std::exception& e ) {
+            smsc_log_warn(log_,"directory '%s' does not exist?",buf.get());
+            continue;
+        }
+        std::sort( chunks.begin(), chunks.end() );
+        char* bufpos2 = bufpos1 + strlen(bufpos1);
+        for ( std::vector<std::string>::iterator ichunk = chunks.begin();
+              ichunk != chunks.end(); ++ichunk ) {
+            strcpy(bufpos2,ichunk->c_str());
+            strcat(bufpos2,"/");
+            dlvs.clear();
+            smsc_log_debug(log_,"listing delivery chunk '%s'",buf.get());
+            makeDirListing(NumericNameFilter(),S_IFDIR).list(buf.get(), dlvs);
+            for ( std::vector<std::string>::iterator idlv = dlvs.begin();
+                  idlv != dlvs.end();
+                  ++idlv ) {
+                // get dlvid
+                const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
+                if (dlvId > lastDlvId_) {
+                    lastDlvId_ = dlvId;
+                }
+                try {
+                    readDelivery( dlvId );
+                } catch (std::exception& e) {
+                    smsc_log_error(log_,"D=%u cannot read/add dlvInfo, exc: %s",dlvId,e.what());
+                }
             }
         }
     }

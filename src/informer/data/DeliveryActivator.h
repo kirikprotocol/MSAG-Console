@@ -34,6 +34,7 @@ public:
     /// start a task transferring messages from inputstore into opstore.
     virtual void startInputTransfer( InputTransferTask* ) = 0;
     virtual void startResendTransfer( ResendTransferTask* ) = 0;
+    virtual void startCancelThread( dlvid_type dlvId ) = 0;
 
     /// finish state change.
     /// NOTE: should be invoked from delivery itself only!

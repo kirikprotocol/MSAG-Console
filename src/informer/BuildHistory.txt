@@ -1,3 +1,8 @@
+2011-02-10 17:45 bukind
+  deliveryPath is now deliveries/AAAA/BBB/AAAABBBCCC, where AAAABBBCCC
+    is delivery id
+  reaction on reaching endDate
+
 2011-02-09 17:20 bukind
   messageFlags to override delivery settings
 

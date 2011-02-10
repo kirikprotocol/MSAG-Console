@@ -110,6 +110,7 @@ public:
     virtual void startResendTransfer( ResendTransferTask* task ) {
         rtp_.startTask(task);
     }
+    virtual void startCancelThread( dlvid_type dlvId );
 
     virtual void finishStateChange( msgtime_type    currentTime,
                                     ulonglong       ymdTime,

@@ -755,6 +755,12 @@ void InfosmeCoreV1::deliveryRegions( dlvid_type dlvId,
 }
 
 
+void InfosmeCoreV1::startCancelThread( dlvid_type dlvId )
+{
+    dlvMgr_->startCancelThread(dlvId);
+}
+
+
 void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
                                        ulonglong       ymdTime,
                                        BindSignal&     bs,

@@ -226,10 +226,11 @@ const char* dlvStateToString( DlvState state )
 
 char* makeDeliveryPath( char* buf, dlvid_type dlvId )
 {
-    const unsigned chunk = unsigned(dlvId/100)*100;
-    const int rv = sprintf(buf,"deliveries/%010u/%u/",chunk,dlvId);
+    const unsigned chunk1 = unsigned(dlvId/1000000);
+    const unsigned chunk2 = unsigned(dlvId/1000) % 1000;
+    const int rv = sprintf(buf,"deliveries/%04u/%03u/%u/",chunk1,chunk2,dlvId);
     if (rv<0) {
-        throw InfosmeException(EXC_SYSTEM,"cannot form delivery path D=%u, chunk=%u",dlvId,chunk);
+        throw InfosmeException(EXC_SYSTEM,"cannot form delivery path D=%u, chunk1=%u,chunk2=%u",dlvId,chunk1,chunk2);
     }
     return buf + rv;
 }
