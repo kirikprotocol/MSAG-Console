@@ -2618,14 +2618,26 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   repGuard.active=false;
 
   sms->lastResult=Status::OK;
-  info2(smsLog,"SBM: submit ok, seqnum=%d Id=%lld;seq=%d;%s;%s;srcprx=%s;dstprx=%s;valid=%lu",
+  char ussdOpBuf[32]={0,};
+  if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  {
+    sprintf(ussdOpBuf,";ussdOp=%d",sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+  }
+  char esmBuf[32]={0,};
+  if(sms->hasIntProperty(Tag::SMPP_ESM_CLASS) && sms->getIntProperty(Tag::SMPP_ESM_CLASS)!=0)
+  {
+    sprintf(esmBuf,"esm=%x",sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+  }
+  info2(smsLog,"SBM: submit ok, seqnum=%d Id=%lld;seq=%d;%s;%s;srcprx=%s;dstprx=%s;valid=%lu%s%s",
     dialogId2,
     t.msgId,dialogId,
     AddrPair("oa",sms->getOriginatingAddress(),"ooa",srcOriginal).c_str(),
     AddrPair("da",dstOriginal,"dda",sms->getDestinationAddress()).c_str(),
     src_proxy->getSystemId(),
     sms->getDestinationSmeId(),
-    sms->getValidTime()
+    sms->getValidTime(),
+    ussdOpBuf,
+    esmBuf
   );
   return DELIVERING_STATE;
 }
@@ -3431,7 +3443,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       partBuf[0]=0;
     }
 
-    info2(smsLog, "DLVRSP: Id=%lld;class=%s;st=%d;oa=%s;%s;srcprx=%s;dstprx=%s;route=%s;%s%s%s",t.msgId,
+    info2(smsLog, "DLVRSP: Id=%lld;class=%s;st=%d;oa=%s;%s;srcprx=%s;dstprx=%s;route=%s%s%s%s",t.msgId,
         statusType==CMD_OK?"OK":
         statusType==CMD_ERR_RESCHEDULENOW?"RESCHEDULEDNOW":
         statusType==CMD_ERR_TEMP?"TEMP ERROR":"PERM ERROR",
