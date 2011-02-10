@@ -90,7 +90,7 @@ void MessageFlagBuilder::setSvcType( const char* value )
     buf_.reserve(buf_.GetPos()+10+vallen);
     ToBuf tb(buf_.GetCurPtr(),buf_.getSize()-buf_.GetPos());
     tb.setc16(TAG_SVCTYPE);
-    tb.setc16(vallen+1);
+    tb.setc16(uint16_t(vallen+1));
     tb.setCString(value);
     buf_.SetPos(buf_.GetPos()+tb.getPos());
 }
@@ -106,7 +106,7 @@ void MessageFlagBuilder::setSourceAddress( const smsc::sms::Address& oa )
     buf_.reserve(buf_.GetPos()+10+oalen);
     ToBuf tb(buf_.GetCurPtr(),buf_.getSize()-buf_.GetPos());
     tb.setc16(TAG_SOURCEADDRESS);
-    tb.setc16(oalen+1);
+    tb.setc16(uint16_t(oalen+1));
     tb.setCString(oabuf);
     buf_.SetPos(buf_.GetPos()+tb.getPos());
 }
@@ -134,7 +134,7 @@ flags_(0), flagsize_(0)
     if ( (len & 1) != 0 ) {
         throw InfosmeException(EXC_IOERROR,"bad msgflags (not even)");
     }
-    flagsize_ = len / 2;
+    flagsize_ = unsigned(len / 2);
     flags_ = new char[flagsize_];
     for ( char* o = flags_; *hexdump != '\0' ; ++o ) {
         uint8_t res;
