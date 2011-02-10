@@ -263,6 +263,7 @@ struct MapDialog{
   bool memoryExceeded:1;
   bool hlrWasNotified:1;
   bool isQueryAbonentStatus:1;
+  bool isAtiDialog:1;
   bool dropChain:1;
   bool id_opened:1;
   bool isLocked:1;
@@ -336,6 +337,7 @@ struct MapDialog{
     memoryExceeded=false;
     hlrWasNotified=false;
     isQueryAbonentStatus=false;
+    isAtiDialog=false;
     callbarred=false;
     teleservicenotprov=false;
     dropChain=false;
@@ -967,6 +969,38 @@ public:
     }catch(...)
     {
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_INSRI);
+      throw;
+    }
+  }
+
+  MapDialog* createAbonentStatusDialog(ET96MAP_LOCAL_SSN_T lssn,const SmscCommand& cmd)
+  {
+    using smsc::system::mapio::MapLimits;
+    if(MAPSTATS_dialogs[MAPSTAT_DLGOUTSRI]>=MapLimits::getInstance().getLimitOutSRI())
+    {
+      MutexGuard g(sync);
+      Dump();
+      throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGOUTSRI],MapLimits::getInstance().getLimitOutSRI());
+    }
+    MutexGuard g(sync);
+    int rinst=getNextRInst();
+    if ( dialogId_pool[lssn][rinst].empty() ) {
+      Dump();
+      throw runtime_error("MAP:: POOL is empty");
+    }
+    try{
+      ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool[lssn][rinst].front();
+      MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUTSRI);
+      MapDialog* dlg=newDialog(map_dialog,lssn,rinst,2);
+      dlg->dlgType=MAPSTAT_DLGOUTSRI;
+      dlg->isQueryAbonentStatus=true;
+      dlg->QueryAbonentCommand=cmd;
+      dialogId_pool[lssn][rinst].pop_front();
+      __mapdlg_trace2__("create new 'abonent status' dialog 0x%p for dialogid 0x%x",dlg,map_dialog);
+      return dlg;
+    }catch(...)
+    {
+      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUTSRI);
       throw;
     }
   }

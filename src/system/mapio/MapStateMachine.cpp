@@ -26,10 +26,12 @@ using namespace std;
 #include "resourcemanager/ResourceManager.hpp"
 #include "util/templates/DummyAdapter.h"
 #include "util/recoder/recode_dll.h"
+#include "NetworkProfiles.hpp"
 
 using namespace smsc::mscman;
 
 using namespace smsc::system;
+using namespace smsc::system::mapio;
 using namespace smsc::util;
 using namespace smsc::resourcemanager;
 using smsc::util::templates::DummyGetAdapter;
@@ -94,6 +96,7 @@ static Mutex x_momap_lock;
 static XMOMAP x_momap;
 
 static void ContinueImsiReq(MapDialog* dialog,const String32& s_imsi,const String32& s_msc, const unsigned routeErr);
+static void PauseOnAtiReq(MapDialog* map);
 static void PauseOnImsiReq(MapDialog* map);
 static void makeAtiRequest(MapDialog* map);
 static const string& SC_ADDRESS() { return MapDialogContainer::GetSCAdress(); }
@@ -518,12 +521,27 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
     __map_trace2__("%s: Abonent Status cmd dlg 0x%x (%d.%d.%s)",__func__,dialog->dialogid_map,(unsigned)as.addr.type,(unsigned)as.addr.plan,as.addr.value);
     mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
-    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), (unsigned)SC_ADDRESS().length() );
-    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
-    mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+    dialog->hasIndAddress = true;
+    if(dialog->isAtiDialog)
+    {
+      mkMapAddress( &dialog->m_scAddr, USSD_ADDRESS().c_str(), (unsigned)USSD_ADDRESS().length() );
+      mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, USSD_SSN );
+      mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, HLR_SSN );
+    }else
+    {
+      mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), (unsigned)SC_ADDRESS().length() );
+      mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
+      mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+    }
   }
   dialog->state = MAPST_WaitHlrVersion;
-  QueryHlrVersion(dialog);
+  if(dialog->isAtiDialog)
+  {
+    makeAtiRequest(dialog);
+  }else
+  {
+    QueryHlrVersion(dialog);
+  }
 }
 
 static void NotifyHLR(MapDialog* dialog);
@@ -1951,8 +1969,30 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &destAddr, GetUSSDAddr(), &destRef, 0/*&origRef*/, 0/*&specificInfo*/ ), __func__);
     }else
     {
-      mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
-      checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, &specificInfo ), __func__);
+      ET96MAP_IMSI_OR_MSISDN_T* destRefPtr=&destRef;
+      DestRefValue drv=NetworkProfiles::getInstance().lookup(dialog->sms->getDestinationAddress()).drv;
+      if(drv==drvDestAddr)
+      {
+        mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
+      }else if(drv==drvDestIMSI)
+      {
+        if( dialog->s_imsi.length() > 0 )
+        {
+          mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
+        }else
+        {
+          __map_warn2__("%s: dlg 0x%x missing imsi for destRef",__func__,dialog->dialogid_map);
+          SendErrToSmsc(dialog,MAKE_ERRORCODE(CMD_ERR_PERM,Status::MISSINGIMSIINNIUSSD));
+          dialog->state = MAPST_END;
+          DropMapDialog(dialog);
+          return;
+        }
+      }else
+      {
+        destRefPtr=0;
+      }
+
+      checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), destRefPtr, &origRef, &specificInfo ), __func__);
     }
   }
   dialog->invokeId++;
@@ -2228,8 +2268,28 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             } else
             {
               // QUERYABONENTSTATUS
-              dialog.assign(MapDialogContainer::getInstance()->createOrAttachSMSCDialog(
-                  dialogid_smsc,SSN,"",cmd));
+              AbonentStatusMethod asMethod=asmSRI4SM;
+              AbonentStatus& as=cmd->get_abonentStatus();
+              if(as.srm==AbonentStatus::srmATI)
+              {
+                asMethod=asmATI;
+              }else if(as.srm==AbonentStatus::srmSRI4SM)
+              {
+                asMethod=asmSRI4SM;
+              }else //default
+              {
+                asMethod=NetworkProfiles::getInstance().lookup(as.addr).asMethod;
+              }
+
+              if(asMethod==asmATI)
+              {
+                dialog.assign(MapDialogContainer::getInstance()->createAbonentStatusDialog(USSD_SSN,cmd));
+                dialog->isAtiDialog=true;
+              }else
+              {
+                dialog.assign(MapDialogContainer::getInstance()->createAbonentStatusDialog(SSN,cmd));
+                dialog->isAtiDialog=false;
+              }
             }
           } catch (ChainIsVeryLong& e) {
             __map_trace2__("%s: %s ",__func__,e.what());
@@ -2242,7 +2302,14 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             return;
           } catch (exception& e) {
             __map_trace2__("%s: %s ",__func__,e.what());
-            SendStatusToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED),false,0);
+            if(cmd->get_commandId()==QUERYABONENTSTATUS)
+            {
+              SmscCommand rsp = SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),smsc::smeman::AbonentStatus::UNKNOWNVALUE,smsc::system::Status::THROTTLED,"","");
+              MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(rsp);
+            }else
+            {
+              SendStatusToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED),false,0);
+            }
             return;//throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
           }
           if ( dialog.isnull() ) {
@@ -2270,13 +2337,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         // command has bean attached by dialog container
       }else
       {
-        dialog->isQueryAbonentStatus = (cmd->get_commandId() == QUERYABONENTSTATUS);
-        if ( dialog->isQueryAbonentStatus )
-        {
-          dialog->QueryAbonentCommand = cmd;
-          if ( dialog->QueryAbonentCommand->get_abonentStatus().addr.getLenght() == 0 )
-            throw MAPDIALOG_FATAL_ERROR("incorrect address");
-        }
         dialogid_map = dialog->dialogid_map;
         if( dialog->state != MAPST_SendNextMMS )
         {
@@ -2994,8 +3054,14 @@ USHORT_T Et96MapCloseInd(
       break;
     case MAPST_WaitUssdAtiClose:
     case MAPST_ImsiWaitCloseInd:
-      dialog->associate->hlrVersion = dialog->hlrVersion;
-      ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc,dialog->routeErr);
+      if(!dialog->isQueryAbonentStatus)
+      {
+        dialog->associate->hlrVersion = dialog->hlrVersion;
+        ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc,dialog->routeErr);
+      }else
+      {
+        SendAbonentStatusToSmsc(dialog.get(),dialog->QueryAbonentCommand->get_abonentStatus().status);
+      }
       dialog->state = MAPST_END;
       DropMapDialog(dialog.get());
       break;
@@ -3494,7 +3560,7 @@ USHORT_T Et96MapDelimiterInd(
           SendSubmitCommand(dialog.get());
         }else if(ml.isATIUssd(dialog->subsystem))
         {
-          makeAtiRequest(dialog.get());
+          PauseOnAtiReq(dialog.get());
         }else
         {
           //dialog->state = MAPST_WaitUssdImsiReq;
@@ -3731,9 +3797,39 @@ static void ContinueImsiReq(MapDialog* dialog,const String32& s_imsi,const Strin
   }
 }
 
+static void PauseOnAtiReq(MapDialog* map)
+{
+  unsigned localSsn = 0;
+  DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(USSD_SSN,map));
+  if (dialog.isnull()) throw runtime_error(
+    FormatText("MAP::%s can't create dialog",__func__));
+  unsigned dialogid_map = dialog->dialogid_map;
+  localSsn = dialog->ssn;
+  MAP_TRY{
+    if ( map->sms.get() == 0 )
+    {
+      throw runtime_error(
+        FormatText("MAP::%s has no SMS",__func__));
+    }
+    if ( !map->isUSSD )
+    {
+      mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress() );
+    }
+    else
+    {
+      if (!map->hasIndAddress )
+        throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
+      dialog->m_msAddr = map->m_msAddr;
+    }
+    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ USSD_ADDRESS().c_str(), (unsigned)USSD_ADDRESS().length() );
+    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, HLR_SSN );
+    mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, USSD_SSN );
+    makeAtiRequest(dialog.get());
+  }MAP_CATCH(dialogid_map,0,localSsn,dialog->instanceId);
+}
+
 static void PauseOnImsiReq(MapDialog* map)
 {
-  bool success = false;
   unsigned localSsn = 0;
   DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,map));
   if (dialog.isnull()) throw runtime_error(
@@ -4526,35 +4622,25 @@ void makeAtiRequest(MapDialog* dlg)
 {
   bool success = false;
   unsigned localSsn = 0;
-  DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,dlg));
-  if (dialog.isnull()) throw runtime_error(
-    FormatText("MAP::%s can't create dialog",__func__));
+  MapDialog* dialog=dlg;
+  if (!dialog) throw runtime_error(
+    FormatText("MAP::%s null dialog",__func__));
   unsigned dialogid_map = dialog->dialogid_map;
   localSsn = dialog->ssn;
   MAP_TRY{
-    if ( dlg->sms.get() == 0 )
-    {
-      throw runtime_error(FormatText("MAP::%s has no SMS",__func__));
-    }
-    if (!dlg->hasIndAddress )
-    {
-      throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} has no originating address",__func__,dialogid_map));
-    }
-    dialog->m_msAddr = dlg->m_msAddr;
-    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ USSD_ADDRESS().c_str(), (unsigned)USSD_ADDRESS().length() );
-    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
-    mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
-//    __map_trace2__("MAP::%s: Query HLR AC version",__func__);
-    //dialog->mshlrAddr = map->mshlrAddr;
+    //mkMapAddress( &dialog->m_scAddr, USSD_ADDRESS().c_str(), (unsigned)USSD_ADDRESS().length() );
+    //mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, USSD_SSN );
+    //mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, HLR_SSN );
     dialog->state = MAPST_WaitUssdAtiOpenConf;
 
     ET96MAP_APP_CNTX_T appContext;
-    appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
+    appContext.acType = ET96MAP_ANY_TIME_INFO_ENQUIRY_CONTEXT;
+    appContext.version=ET96MAP_APP_CNTX_T::ET96MAP_VERSION_3;
     memset(&dialog->mwdStatus,0,sizeof(dialog->mwdStatus));
     dialog->memoryExceeded = false;
     dialog->subscriberAbsent = false;
     dialog->version=3;
-    SetVersion(appContext,dialog->version);
+
     unsigned dialog_id = dialog->dialogid_map;
     __map_trace2__("%s: dlg 0x%x ssn:%d",__func__,dialog_id,dialog->ssn);
     checkMapReq( Et96MapOpenReq(
@@ -4563,12 +4649,14 @@ void makeAtiRequest(MapDialog* dlg)
 
     dialog->id_opened = true;
 
+    BOOLEAN_T ssReq=dialog->isQueryAbonentStatus?TRUE:FALSE;
+
     checkMapReq( Et96MapV3AnyTimeInterrogationReq(dialog->ssn INSTDLGARG(dialog), dialog_id, 0,
         &dialog->m_scAddr, //ET96MAP_ADDRESS_T       *gsmSCF_sp,
         0,                 //ET96MAP_IMSI_T          *imsi_sp,
         &dialog->m_msAddr, //ET96MAP_ADDRESS_T       *msisdn_sp,
         TRUE,              //BOOLEAN_T               locationInfo,
-        FALSE,             //BOOLEAN_T               subscriberState,
+        ssReq,             //BOOLEAN_T               subscriberState,
         TRUE,              //BOOLEAN_T               currentLocation,
         0,                 //ET96MAP_DOMAIN_TYPE_T   *requestedDomain_p,
         FALSE,             //BOOLEAN_T               imei,
@@ -4652,6 +4740,22 @@ USHORT_T Et96MapV3AnyTimeInterrogationConf(
         ConvAddrMSISDN2Smc(addr,&vlr);
         dialog->s_msc=vlr.value;
       }
+    }
+    if(dialog->isQueryAbonentStatus)
+    {
+      int status=AbonentStatus::UNKNOWNVALUE;
+      if(subscriberState_sp)
+      {
+        switch(subscriberState_sp->choiceId)
+        {
+          case ET96MAP_ATI_SUBSCRIBER_STATE_T::ET96MAP_ATI_ASSUMED_IDLE:
+          case ET96MAP_ATI_SUBSCRIBER_STATE_T::ET96MAP_ATI_CAMEL_BUSY:status=AbonentStatus::ONLINE;break;
+          case ET96MAP_ATI_SUBSCRIBER_STATE_T::ET96MAP_ATI_NET_DET_NOT_REACHABLE:status=AbonentStatus::OFFLINE;break;
+          case ET96MAP_ATI_SUBSCRIBER_STATE_T::ET96MAP_ATI_NOT_PROVIDED_FROM_VLR:status=AbonentStatus::UNKNOWNVALUE;break;
+        }
+      }
+      //SendAbonentStatusToSmsc(dialog.get(),status);
+      dialog->QueryAbonentCommand->get_abonentStatus().status=status;
     }
     dialog->state=MAPST_WaitUssdAtiClose;
   }MAP_CATCH(dialogid_map,0,localSsn,INSTARG0(rinst));

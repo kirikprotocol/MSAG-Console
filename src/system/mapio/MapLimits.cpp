@@ -75,7 +75,7 @@ void MapLimits::Reinit()
     try{
       sync::MutexGuard mg(mtx);
       atiUssd.clear();
-      std::string atiUssdStr=config.getString("ussd.cond_sri_codes");
+      std::string atiUssdStr=config.getString("ussd.ati_codes");
       smsc_log_debug(log,"ussd.ati_codes=%s",atiUssdStr.c_str());
       parseUssdCodes("ati",atiUssdStr,atiUssd);
     }catch(...)
