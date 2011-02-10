@@ -10,6 +10,7 @@
 #include "smppgw/gwsme.hpp"
 
 #include "logger/Logger.h"
+#include "util/Exception.hpp"
 
 namespace smsc {
 namespace smeman {
@@ -35,7 +36,10 @@ __synchronized__
   record->deleted = false;
   record->idx = (int)records.size();
   SmeIndex index = internalLookup(info.systemId);
-  if ( index != INVALID_SME_INDEX ) throw runtime_error("Already exists");
+  if ( index != INVALID_SME_INDEX )
+  {
+    throw smsc::util::Exception("SystemId='%d' Already exists",info.systemId.c_str());
+  }
   records.push_back(record.release());
 }
 
@@ -212,7 +216,10 @@ void SmeManager::enableSme(const SmeSystemId& systemId)
 SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 {
   SmeIndex index = internalLookup(systemId);
-  if ( index == INVALID_SME_INDEX ) throw runtime_error("can't find SME Proxy identifier");
+  if ( index == INVALID_SME_INDEX )
+  {
+    throw smsc::util::Exception("Unknown systemId='%s'",systemId.c_str());
+  }
   return index;
 }
 
@@ -220,8 +227,14 @@ SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 {
 //__synchronized__
   SmeRecord* record = (SmeRecord*)(records.at(index));
-  if ( record->deleted ) throw runtime_error("proxy deleted");
-  if ( !record->proxy ) return 0;
+  if ( record->deleted )
+  {
+    throw smsc::util::Exception("proxy with index=%d deleted",index);
+  }
+  if ( !record->proxy )
+  {
+    return 0;
+  }
   return (SmeProxy*)(record);
 }
 
@@ -229,7 +242,10 @@ SmeInfo SmeManager::getSmeInfo(SmeIndex index) const
 {
 //__synchronized__
   const SmeRecord* record = records.at(index);
-  if ( record->deleted ) throw runtime_error("proxy deleted");
+  if ( record->deleted )
+  {
+    throw smsc::util::Exception("proxy with index=%d deleted",index);
+  }
   return record->info;
 }
 
@@ -237,7 +253,10 @@ void SmeManager::updateSmeInfo(const SmeSystemId& systemid,const SmeInfo& newinf
 {
 __synchronized__
   SmeIndex idx=internalLookup(systemid);
-  if ( idx == INVALID_SME_INDEX ) throw runtime_error("can't find SME Proxy identifier");
+  if ( idx == INVALID_SME_INDEX )
+  {
+    throw smsc::util::Exception("updateSmeInfo:Unknown systemId='%s'",systemid.c_str());
+  }
   SmeRecord *r=records.at(idx);
   bool internal=r->info.internal;
   r->info=newinfo;
@@ -273,13 +292,13 @@ __synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX )
   {
-    throw runtime_error(string("unknown systm id:")+systemId.c_str());
+    throw smsc::util::Exception("Unknown systemId='%s'",systemId.c_str());
   }
   if ( records[index]->proxy )
   {
     __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
     __warning__("Sme proxy with this systemId already registered");
-    throw runtime_error(string("proxy with id ")+systemId.c_str()+" already exists");
+    throw smsc::util::Exception("proxy with id %s already exists",systemId.c_str());
   }
   {
     MutexGuard guard(records[index]->mutex);
@@ -373,7 +392,10 @@ void SmeManager::unregisterSmeProxy(SmeProxy* smeProxy)
   SmeIndex index;
   __synchronized__
   index = internalLookup(smeProxy->getSystemId());
-  if ( index == INVALID_SME_INDEX ) throw runtime_error("sme proxy is not registred");
+  if ( index == INVALID_SME_INDEX )
+  {
+    throw smsc::util::Exception("sme proxy with systemId='%s' is not registred",smeProxy->getSystemId());
+  }
 
   MutexGuard guard(records[index]->mutex);
   if ( records[index]->proxy )
