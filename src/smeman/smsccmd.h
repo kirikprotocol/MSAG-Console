@@ -99,6 +99,12 @@ struct AbonentStatus{
   int     userMessageReference;
   string  originalAddr;
   bool isMobileRequest;
+  enum StatusRequestMode{
+    srmDefault,
+    srmSRI4SM,
+    srmATI
+  };
+  StatusRequestMode srm;
   string msc;
   string imsi;
 
@@ -107,7 +113,8 @@ struct AbonentStatus{
     status(0),
     code(0),
     userMessageReference(0),
-    isMobileRequest(false)
+    isMobileRequest(false),
+    srm(srmDefault)
   {
   }
   AbonentStatus(const AbonentStatus& as,int status,int code,const string& _msc,const string& _imsi):
@@ -119,6 +126,7 @@ struct AbonentStatus{
     userMessageReference(as.userMessageReference),
     originalAddr(as.originalAddr),
     isMobileRequest(as.isMobileRequest),
+    srm(as.srm),
     msc(_msc),imsi(_imsi)
   {
   }
