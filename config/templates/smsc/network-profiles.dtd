@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!ELEMENT networks (network* , default,network*)>
+<!ELEMENT network (masks, params)>
+<!ATTLIST network
+	name CDATA #REQUIRED
+>
+<!ELEMENT masks (mask*)>
+<!ELEMENT mask EMPTY>
+<!ATTLIST mask
+	value CDATA #REQUIRED
+>
+<!ELEMENT params (param*)>
+<!ELEMENT param EMPTY>
+<!ATTLIST param
+      name CDATA #REQUIRED
+      value CDATA #REQUIRED
+>
+
+<!ELEMENT default (params)>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE networks SYSTEM "network-profiles.dtd">
+
+<networks>
+<!--
+  <network name="network name">
+    <masks>
+      <mask value="300??????"/>
+    </masks>
+    <params>
+      <param name="ussdOpenDestRef" value="destIMSI"/> 
+      <param name="abonentStatusMethod" value="SRI4SM"/>
+    </params>
+  </network>
+  -->
+  <default>
+    <params>
+      <param name="ussdOpenDestRef" value="destAddr"/> <!-- destAddr, destIMSI or empty -->
+      <param name="abonentStatusMethod" value="SRI4SM"/> <!-- SRI4SM or ATI -->
+    </params>
+  </default>
+</networks>
