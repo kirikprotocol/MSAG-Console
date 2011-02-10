@@ -30,7 +30,7 @@ public:
     prio=SmeProxyPriorityDefault;
   }
 
-  ~AbonentInfoSme()
+  virtual ~AbonentInfoSme()
   {
     __trace__("try to unregister abonentinfo sme");
     try{

@@ -148,6 +148,24 @@ int AbonentInfoSme::Execute()
 
       getSmsText(sms,body,(unsigned)sizeof(body));
       try{
+        char* comma=strchr(body,',');
+        AbonentStatus::StatusRequestMode srm=AbonentStatus::srmDefault;
+        bool isError=false;
+        if(comma)
+        {
+          *comma=0;
+          comma++;
+          if(strcmp(comma,"ATI")==0)
+          {
+            srm=AbonentStatus::srmATI;
+          }else if(strcmp(comma,"SRI4SM")==0)
+          {
+            srm=AbonentStatus::srmSRI4SM;
+          }else
+          {
+            isError=true;
+          }
+        }
         Address a(body);
         Address d;
         if(!smsc->AliasToAddress(a,d))
@@ -171,6 +189,7 @@ int AbonentInfoSme::Execute()
         cmd->get_abonentStatus().destAddr=da;
         cmd->get_abonentStatus().userMessageReference=umr;
         cmd->get_abonentStatus().isMobileRequest=(da==hrSrc);
+        cmd->get_abonentStatus().srm=srm;
 
         int status=AbonentStatus::UNKNOWNVALUE;
         if(!has_route || !rr.destProxy)
