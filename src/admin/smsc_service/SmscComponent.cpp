@@ -1165,7 +1165,7 @@ Variant SmscComponent::traceRoute(const Arguments &args)
 
         if (!found)
         {
-          if (rr.found == false)
+          if (rr.found)
           {
             result.appendValueToStringList("Route found (disabled)");
             found = true;
