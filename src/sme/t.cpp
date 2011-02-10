@@ -2261,7 +2261,7 @@ int main(int argc,char* argv[])
         if(addr)free(addr);
         addr=NULL;
         history_set_history_state(&cmdHist);
-          addr=readline("Address or cmd>");
+        addr=readline("Address or cmd>");
         if(!addr)break;
         if(!*addr)continue;
         add_history(addr);
@@ -2580,6 +2580,11 @@ int main(int argc,char* argv[])
         len=hextmp.length();
       }
       */
+      if(dataCoding!=DataCoding::BINARY && !hexinput && (esmclass&64)!=0)
+      {
+        CmdOut("User data header indicator has no meaning in text mode\n");
+        continue;
+      }
 
       if(dataCoding==DataCoding::BINARY || hexinput)//binary
       {
@@ -2592,6 +2597,16 @@ int main(int argc,char* argv[])
           if(sscanf(ptr,"%02X%n",&c,&n)!=1)break;
           tmp.append(1,(char)c);
           ptr+=n;
+        }
+        if(ptr==message)
+        {
+          CmdOut("Hex input enabled, but input is not hex\n");
+          continue;
+        }
+        if(tmp.length()<=2 && (esmclass&64)!=0)
+        {
+          CmdOut("User data header indicator enabled, but the content do not contain user data header\n");
+          continue;
         }
         s.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
         if(tmp.length()>140 || dataSm)
