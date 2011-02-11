@@ -82,6 +82,16 @@ void MapLimits::Reinit()
     {
       smsc_log_info(log,"ussd.ati_codes not found and disabled");
     }
+    try{
+      sync::MutexGuard mg(mtxOpenResp);
+      openRespRealAddr.clear();
+      std::string orUssdStr=config.getString("ussd.openRespRealAddr");
+      smsc_log_debug(log,"ussd.ati_codes=%s",orUssdStr.c_str());
+      parseUssdCodes("open resp real addr",orUssdStr,openRespRealAddr);
+    }catch(...)
+    {
+      smsc_log_info(log,"ussd.openRespRealAddr not found and disabled");
+    }
     char buf[64];
     for(int i=0;i<maxCLevels;i++)
     {

@@ -79,6 +79,17 @@ public:
     return atiUssd.find(ussd)!=atiUssd.end();
   }
 
+  bool isOpenRespRealAddr(const std::string& ussd)
+  {
+    sync::MutexGuard mg(mtxOpenResp);
+    std::string::size_type pos=ussd.find(':');
+    if(pos!=std::string::npos)
+    {
+      return openRespRealAddr.find(ussd.substr(pos+1))!=openRespRealAddr.end();
+    }
+    return openRespRealAddr.find(ussd)!=openRespRealAddr.end();
+  }
+
   static void Init(const char* fn);
   static void Shutdown()
   {
@@ -191,6 +202,10 @@ protected:
   StringSet atiUssd;
   sync::Mutex mtx;
   void parseUssdCodes(const char* name,const std::string& str,StringSet& codes);
+
+  StringSet openRespRealAddr;
+  sync::Mutex mtxOpenResp;
+
 
   int limitIn;
   int limitInSRI;

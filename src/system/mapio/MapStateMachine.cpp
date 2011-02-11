@@ -2018,7 +2018,8 @@ static bool isValidUssdOp(int serviceOp)
       serviceOp == USSD_PSSR_RESP || serviceOp == USSD_USSR_REQ_LAST ||
       serviceOp == USSD_USSN_REQ_LAST || serviceOp == USSD_USSR_REQ_VLR ||
       serviceOp == USSD_USSR_REQ_VLR_LAST || serviceOp == USSD_USSN_REQ_VLR ||
-      serviceOp == USSD_USSN_REQ_VLR_LAST || serviceOp == USSD_USSREL_REQ;
+      serviceOp == USSD_USSN_REQ_VLR_LAST || serviceOp == USSD_USSREL_REQ ||
+      serviceOp == USSD_REDIRECT;
 }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
@@ -2092,55 +2093,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             ussd_map.erase(sequence);
           }
         }
-        if(dlg_found && serviceOp==USSD_USSREL_REQ)
-        {
-          warnMapReq( Et96MapUAbortReq( dialog_ssn INSTDLGARG(dialog), dialogid_map, 0, 0, 0, 0 ), __func__);
-          if(dialog->state == MAPST_WaitUSSDReqConf || dialog->state == MAPST_WaitUSSDNotifyConf ||
-             dialog->state == MAPST_WaitUSSDReqOpenConf || dialog->state == MAPST_WaitUSSDNotifyOpenConf)
-          {
-            SendErrToSmsc(dialog.get(),MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDSESSIONTERMABN));
-          }
-          SendStatusToSmsc(dialogid_smsc,0,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-          DropMapDialog(dialog.get());
-          return;
-        }
-
-        if(dlg_found && serviceOp==USSD_REDIRECT)
-        {
-          unsigned len;
-          const char* val=cmd->get_sms()->getBinProperty(Tag::SMPP_CALLBACK_NUM,&len);
-          if(len<4 || *val!=1)
-          {
-            SendStatusToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::INVOPTPARAMVAL),true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-            return;
-          }
-          SendStatusToSmsc(dialogid_smsc,Status::OK,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-
-          Address redirectAddr(len-3,val[1],val[2],val+3);///from SMPP_CALLBACK_NUM
-          SMS sms=*cmd->get_sms();
-          sms.setOriginatingAddress(sms.getDestinationAddress());
-          sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
-          Descriptor desc;
-          desc.setImsi((uint8_t)dialog->s_imsi.length(),dialog->s_imsi.c_str());
-          desc.setMsc((uint8_t)dialog->s_msc.length(),dialog->s_msc.c_str());
-          sms.setOriginatingDescriptor(desc);
-          dialog->subsystem=".5.0.ussd:";
-          dialog->subsystem+=redirectAddr.value;
-          __map_trace2__("ussd redirect: %s->%s",sms.getOriginatingAddress().toString().c_str(),dialog->subsystem.c_str());
-          sms.setDestinationAddress(dialog->subsystem.c_str());
-          MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
-          int rinst2=dialog->instanceId;
-          if(dialog->lastUssdMessage)
-          {
-            rinst2=0xff;
-          }
-          dialog->state = MAPST_WaitSubmitCmdConf;
-          uint32_t dialogid_smsc2=(rinst2<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
-          SmscCommand cmd2 = SmscCommand::makeSumbmitSm(
-            sms,dialogid_smsc2);
-          proxy->putIncomingCommand(cmd2);
-          return;
-        }
 
         if(isValidUssdOp(serviceOp))
         {
@@ -2183,6 +2135,56 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               throw MAPDIALOG_BAD_STATE(
                   FormatText("putCommand: ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
             }
+            if(serviceOp==USSD_USSREL_REQ)
+            {
+              warnMapReq( Et96MapUAbortReq( dialog_ssn INSTDLGARG(dialog), dialogid_map, 0, 0, 0, 0 ), __func__);
+              if(dialog->state == MAPST_WaitUSSDReqConf || dialog->state == MAPST_WaitUSSDNotifyConf ||
+                 dialog->state == MAPST_WaitUSSDReqOpenConf || dialog->state == MAPST_WaitUSSDNotifyOpenConf)
+              {
+                SendErrToSmsc(dialog.get(),MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDSESSIONTERMABN));
+              }
+              SendStatusToSmsc(dialogid_smsc,0,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+              DropMapDialog(dialog.get());
+              return;
+            }
+
+            if(serviceOp==USSD_REDIRECT)
+            {
+              unsigned len;
+              const char* val=cmd->get_sms()->getBinProperty(Tag::SMPP_CALLBACK_NUM,&len);
+              if(len<4 || *val!=1)
+              {
+                SendStatusToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::INVOPTPARAMVAL),true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+                return;
+              }
+              SendStatusToSmsc(dialogid_smsc,Status::OK,true,cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+
+              Address redirectAddr(len-3,val[1],val[2],val+3);///from SMPP_CALLBACK_NUM
+              SMS sms=*cmd->get_sms();
+              sms.setOriginatingAddress(sms.getDestinationAddress());
+              sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
+              Descriptor desc;
+              desc.setImsi((uint8_t)dialog->s_imsi.length(),dialog->s_imsi.c_str());
+              desc.setMsc((uint8_t)dialog->s_msc.length(),dialog->s_msc.c_str());
+              sms.setOriginatingDescriptor(desc);
+              dialog->subsystem=".5.0.ussd:";
+              dialog->subsystem+=redirectAddr.value;
+              __map_trace2__("ussd redirect: %s->%s",sms.getOriginatingAddress().toString().c_str(),dialog->subsystem.c_str());
+              sms.setDestinationAddress(dialog->subsystem.c_str());
+              MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
+              int rinst2=dialog->instanceId;
+              if(dialog->lastUssdMessage)
+              {
+                rinst2=0xff;
+              }
+              dialog->state = MAPST_WaitSubmitCmdConf;
+              uint32_t dialogid_smsc2=(rinst2<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
+              SmscCommand cmd2 = SmscCommand::makeSumbmitSm(
+                sms,dialogid_smsc2);
+              proxy->putIncomingCommand(cmd2);
+              return;
+            }
+
             dialog->isQueryAbonentStatus = false;
             dialog->AssignSms(cmd->get_sms_and_forget());
             if(serviceOp == USSD_PSSR_RESP)
@@ -3547,10 +3549,18 @@ USHORT_T Et96MapDelimiterInd(
         break;
       case MAPST_WaitUssdDelimiter:
       {
-        reason = ET96MAP_NO_REASON;
-        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
-        __map_trace2__("subsystem=%s",dialog->subsystem.c_str());
         smsc::system::mapio::MapLimits& ml=smsc::system::mapio::MapLimits::getInstance();
+        reason = ET96MAP_NO_REASON;
+        ET96MAP_SS7_ADDR_T* addrPtr=0;
+        if(ml.isOpenRespRealAddr(dialog->subsystem))
+        {
+          addrPtr=GetUSSDAddr();
+          char addrBuf[32];
+          SS7ToText(addrPtr,addrBuf);
+          __map_trace2__("using real resp addr for ussd code %s:%s",dialog->subsystem,addrBuf);
+        }
+        checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,addrPtr,0,0), __func__);
+        __map_trace2__("subsystem=%s",dialog->subsystem.c_str());
         if(ml.isNoSRIUssd(dialog->subsystem) ||
             ((!dialog->s_imsi.empty() && !dialog->s_msc.empty()) && ml.isCondSRIUssd(dialog->subsystem))
           )
