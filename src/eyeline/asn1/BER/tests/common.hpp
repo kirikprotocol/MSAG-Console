@@ -31,6 +31,9 @@ bool test_SeqType3_enc(char* err_msg);
 bool test_SeqType4_enc(char* err_msg);
 bool test_SeqType4_minPrealloc(char* err_msg);
 bool test_SeqOfType1_enc(char* err_msg);
+bool test_ChoiceType1_enc(char* err_msg);
+bool test_ChoiceType2_enc(char* err_msg);
+bool test_SeqType5_enc(char* err_msg);
 
 bool test_BOOL_dec(char* err_msg);
 bool test_INT_dec(char* err_msg);
@@ -46,6 +49,9 @@ bool test_SeqType2_dec(char* err_msg);
 bool test_SeqType3_dec(char* err_msg);
 bool test_SeqType4_dec(char* err_msg);
 bool test_SeqOfType1_dec(char* err_msg);
+bool test_ChoiceType1_dec(char* err_msg);
+bool test_ChoiceType2_dec(char* err_msg);
+bool test_SeqType5_dec(char* err_msg);
 
 int
 write_transfer_syntax(const void *buffer, size_t size, void *pattern_tr_syntax);

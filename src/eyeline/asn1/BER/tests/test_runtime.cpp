@@ -145,6 +145,21 @@ void test_runtime()
   } else
     printf("ok\n");
 
+  if (!eyeline::asn1::ber::tests::test_ChoiceType1_enc(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_ChoiceType2_enc(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqType5_enc(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
   if (!eyeline::asn1::ber::tests::test_BOOL_dec(errMsg)) {
     printf ("failed: %s\n", errMsg);
   } else

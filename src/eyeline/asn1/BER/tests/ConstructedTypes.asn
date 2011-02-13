@@ -36,4 +36,20 @@ BEGIN
 
         SeqOfType1 ::= SEQUENCE SIZE (1..maxCount) OF SeqType1
 
+        ChoiceType1 ::= CHOICE {
+           case1      INTEGER,
+           case2      BOOLEAN
+        }
+
+        ChoiceType2 ::= [15] CHOICE {
+           case1      INTEGER,
+           case2      BOOLEAN
+        }
+
+        SeqType5 ::= SEQUENCE {
+           a        ChoiceType1,
+           b        ChoiceType2,
+           c [10]   ChoiceType1,
+           d [11]   ChoiceType2
+        }
 END
