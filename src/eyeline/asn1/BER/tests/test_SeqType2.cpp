@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "asn1c_gen/SeqType2.h"
 #include "common.hpp"
 #include "eyeline/asn1/TransferSyntax.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
@@ -22,44 +21,14 @@ namespace tests {
 bool
 test_SeqType2_enc(char* err_msg)
 {
-  SeqType2_t value;
-  asn_enc_rval_t retVal;
-  char patternTrSyntax_1[MAX_PATTERN_LEN]={0};
-
-  value.a= 0xAA;
-  value.b= new long(0xBB);
-  value.c= new long(0xCC);
-
   printf("test_SeqType2_enc:\t\t\t");
-  retVal = der_encode(&asn_DEF_SeqType2,
-                      &value, write_transfer_syntax, patternTrSyntax_1);
-  if (retVal.encoded == -1)
-    return false;
 
-  fprintf(logfile, "test_SeqType2_enc:: SeqType2_t={a=0xAA,b=0xBB,c=0xCC}, trSyntax=%s, retVal=%ld\n",
-          patternTrSyntax_1, retVal.encoded);
-  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType2", "{AA,BB,CC}", patternTrSyntax_1);
-
-  SeqType2_t value_2;
-  char patternTrSyntax_2[MAX_PATTERN_LEN]={0};
-
-  value_2.a= 0xAA;
-  value_2.b= NULL;
-  value_2.c= NULL;
-
-  retVal = der_encode(&asn_DEF_SeqType2,
-                      &value_2, write_transfer_syntax, patternTrSyntax_2);
-  if (retVal.encoded == -1)
-    return false;
-
-  fprintf(logfile, "test_SeqType2_enc:: SeqType2_t={a=0xAA}, trSyntax=%s, retVal=%ld\n",
-          patternTrSyntax_2, retVal.encoded);
-  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType2", "{AA,NULL,NULL}", patternTrSyntax_2);
   try {
+    const std::string& patternTrSyntax = TestPatternsRegistry::getInstance().getResultPattern("test_SeqType2", "{AA,BB,CC}");
     SeqType2 copy_value;
-    copy_value.a = value.a;
-    copy_value.b.init() = *value.b;
-    copy_value.c.init() = *value.c;
+    copy_value.a = 0xAA;
+    copy_value.b.init() = 0xBB;
+    copy_value.c.init() = 0xCC;
 
     enc::MESeqType2 encSeqType2;
     encSeqType2.setValue(copy_value);
@@ -76,9 +45,9 @@ test_SeqType2_enc(char* err_msg)
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
     fprintf(logfile, "test_SeqType2_enc:: SeqType2Value={a=0xAA,b=0xBB,b=0xCC}, trSyntax=%s\n",
             trSyntaxAsStr);
-    if (strcmp(trSyntaxAsStr, patternTrSyntax_1)) {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_1, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqType2_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax_1, trSyntaxAsStr);
+    if (strcmp(trSyntaxAsStr, patternTrSyntax.c_str())) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax.c_str(), trSyntaxAsStr);
+      fprintf(logfile, "test_SeqType2_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax.c_str(), trSyntaxAsStr);
       return false;
     }
   } catch (std::exception& ex) {
@@ -88,8 +57,10 @@ test_SeqType2_enc(char* err_msg)
   }
 
   try {
+    const std::string& patternTrSyntax = TestPatternsRegistry::getInstance().getResultPattern("test_SeqType2", "{AA,NULL,NULL}");
+
     SeqType2 copy_value;
-    copy_value.a = value_2.a;
+    copy_value.a = 0xAA;
 
     enc::MESeqType2 encSeqType2;
     encSeqType2.setValue(copy_value);
@@ -106,9 +77,9 @@ test_SeqType2_enc(char* err_msg)
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
     fprintf(logfile, "test_SeqType2_enc:: SeqType2Value={ 0xAA}, trSyntax=%s\n",
             trSyntaxAsStr);
-    if (strcmp(trSyntaxAsStr, patternTrSyntax_2)) {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_2, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqType2_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax_2, trSyntaxAsStr);
+    if (strcmp(trSyntaxAsStr, patternTrSyntax.c_str())) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax.c_str(), trSyntaxAsStr);
+      fprintf(logfile, "test_SeqType2_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax.c_str(), trSyntaxAsStr);
       return false;
     }
   } catch (std::exception& ex) {

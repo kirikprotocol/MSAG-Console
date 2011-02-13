@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "asn1c_gen/SeqType4.h"
 #include "common.hpp"
 #include "eyeline/asn1/TransferSyntax.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
 #include "eyeline/utilx/hexdmp.hpp"
 #include "SeqType4.hpp"
 #include "enc/MESeqType4_minPrealloc.hpp"
+#include "TestPatternsRegistry.hpp"
 
 extern FILE* logfile;
 
@@ -20,43 +20,14 @@ namespace tests {
 bool
 test_SeqType4_minPrealloc(char* err_msg)
 {
-  SeqType4_t value;
-  asn_enc_rval_t retVal;
-  char patternTrSyntax_1[MAX_PATTERN_LEN]={0};
-
-  value.a= 0xAA;
-  value.b= new long(0x77);
-  value.c= new long(0xDD);
-
   printf("test_SeqType4_minPrealloc:\t\t");
-  retVal = der_encode(&asn_DEF_SeqType4,
-                      &value, write_transfer_syntax, patternTrSyntax_1);
-  if (retVal.encoded == -1)
-    return false;
-
-  fprintf(logfile, "test_SeqType4_minPrealloc:: SeqType4_t={a=0xAA,b=0x77,c=0xDD}, trSyntax=%s, retVal=%ld\n",
-          patternTrSyntax_1, retVal.encoded);
-
-  SeqType4_t value_2;
-  char patternTrSyntax_2[MAX_PATTERN_LEN]={0};
-
-  value_2.a= 0xAA;
-  value_2.b= NULL;
-  value_2.c= new long(0xEE);
-
-  retVal = der_encode(&asn_DEF_SeqType4,
-                      &value_2, write_transfer_syntax, patternTrSyntax_2);
-  if (retVal.encoded == -1)
-    return false;
-
-  fprintf(logfile, "test_SeqType4_minPrealloc:: SeqType4_t={a=0xAA,c=0xEE}, trSyntax=%s, retVal=%ld\n",
-          patternTrSyntax_2, retVal.encoded);
 
   try {
+    const std::string& patternTrSyntax = TestPatternsRegistry::getInstance().getResultPattern("test_SeqType4", "{AA,77,DD}");
     SeqType4 copy_value;
-    copy_value.a = value.a;
-    copy_value.b.init() = *value.b;
-    copy_value.c.init() = *value.c;
+    copy_value.a = 0xAA;
+    copy_value.b.init() = 0x77;
+    copy_value.c.init() = 0xDD;
     enc::MESeqType4_minPrealloc encSeqType4;
     encSeqType4.setValue(copy_value);
 
@@ -72,9 +43,9 @@ test_SeqType4_minPrealloc(char* err_msg)
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
     fprintf(logfile, "test_SeqType4_minPrealloc:: SeqType4Value={a=0xAA,b=0x77,c=0xDD}, trSyntax=%s\n",
             trSyntaxAsStr);
-    if (strcmp(trSyntaxAsStr, patternTrSyntax_1)) {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_1, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqType4_minPrealloc:: expected value='%s', calculated value='%s'\n", patternTrSyntax_1, trSyntaxAsStr);
+    if (strcmp(trSyntaxAsStr, patternTrSyntax.c_str())) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax.c_str(), trSyntaxAsStr);
+      fprintf(logfile, "test_SeqType4_minPrealloc:: expected value='%s', calculated value='%s'\n", patternTrSyntax.c_str(), trSyntaxAsStr);
       return false;
     }
   } catch (std::exception& ex) {
@@ -84,9 +55,10 @@ test_SeqType4_minPrealloc(char* err_msg)
   }
 
   try {
+    const std::string& patternTrSyntax = TestPatternsRegistry::getInstance().getResultPattern("test_SeqType4", "{AA,NULL,EE}");
     SeqType4 copy_value;
-    copy_value.a = value_2.a;
-    copy_value.c.init() = *value_2.c;
+    copy_value.a = 0xAA;
+    copy_value.c.init() = 0xEE;
 
     enc::MESeqType4_minPrealloc encSeqType4;
     encSeqType4.setValue(copy_value);
@@ -103,9 +75,9 @@ test_SeqType4_minPrealloc(char* err_msg)
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
     fprintf(logfile, "test_SeqType4_minPrealloc:: SeqType4Value={a=0xAA,c=0xEE}, trSyntax=%s\n",
             trSyntaxAsStr);
-    if (strcmp(trSyntaxAsStr, patternTrSyntax_2)) {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax_2, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqType4_minPrealloc:: expected value='%s', calculated value='%s'\n", patternTrSyntax_2, trSyntaxAsStr);
+    if (strcmp(trSyntaxAsStr, patternTrSyntax.c_str())) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax.c_str(), trSyntaxAsStr);
+      fprintf(logfile, "test_SeqType4_minPrealloc:: expected value='%s', calculated value='%s'\n", patternTrSyntax.c_str(), trSyntaxAsStr);
       return false;
     }
   } catch (std::exception& ex) {

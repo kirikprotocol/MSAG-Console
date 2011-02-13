@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "asn1c_gen/SeqOfType1.h"
 #include "common.hpp"
 #include "eyeline/asn1/TransferSyntax.hpp"
 #include "eyeline/utilx/hexdmp.hpp"
@@ -20,42 +19,10 @@ namespace tests {
 bool
 test_SeqOfType1_enc(char* err_msg)
 {
-  SeqOfType1_t value;
-  memset(&value, 0, sizeof(value));
-  asn_enc_rval_t retVal;
-  char patternTrSyntax[MAX_PATTERN_LEN]={0};
-
-  SeqType1_t   element1;
-  element1.a= 0xEE;
-  element1.b= 0x11;
-  asn_sequence_add(&value, &element1);
-
-  SeqType1_t   element2;
-  element2.a= 0x33;
-  element2.b= 0xCC;
-  asn_sequence_add(&value, &element2);
-
-  SeqType1_t element3;
-  element3.a= 0x55;
-  element3.b= 0xFF;
-  asn_sequence_add(&value, &element3);
-
-  SeqType1_t element4;
-  element4.a= 0xAA;
-  element4.b= 0x77;
-  asn_sequence_add(&value, &element4);
-
   printf("test_SeqOfType1_enc:\t\t\t");
-  retVal = der_encode(&asn_DEF_SeqOfType1,
-                      &value, write_transfer_syntax, patternTrSyntax);
-  if (retVal.encoded == -1)
-    return false;
-
-  fprintf(logfile, "test_SeqOfType1_enc:: SeqOfType1_t={{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}} trSyntax=%s, retVal=%ld\n",
-          patternTrSyntax, retVal.encoded);
-  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqOfType1", "{{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}}", patternTrSyntax);
 
   try {
+    const std::string& patternTrSyntax = TestPatternsRegistry::getInstance().getResultPattern("test_SeqOfType1", "{{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}}");
     SeqOfType1 value_2;
 
     value_2.push_back(SeqType1(0xEE, 0x11));
@@ -78,9 +45,9 @@ test_SeqOfType1_enc(char* err_msg)
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
     fprintf(logfile, "test_SeqOfType1_enc:: SeqOfType1Value={{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}}, trSyntax=%s\n",
             trSyntaxAsStr);
-    if (strcmp(trSyntaxAsStr, patternTrSyntax)) {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqOfType1_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax, trSyntaxAsStr);
+    if (strcmp(trSyntaxAsStr, patternTrSyntax.c_str())) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax.c_str(), trSyntaxAsStr);
+      fprintf(logfile, "test_SeqOfType1_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax.c_str(), trSyntaxAsStr);
       return false;
     }
 
