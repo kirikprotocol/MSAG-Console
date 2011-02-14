@@ -1,0 +1,11 @@
+ModuleTestSequenceExplicit
+	{ iso org(3) dod(6) internet(1) private(4) enterprise(1)
+		spelio(9363) software(1) asn1c(5) test(1) 25 }
+	DEFINITIONS EXPLICIT TAGS ::=
+BEGIN
+        SeqTypeExplicit1 ::= SEQUENCE {
+            a         INTEGER,
+            b [5]     INTEGER,
+            c [1]     NULL
+        }
+END
