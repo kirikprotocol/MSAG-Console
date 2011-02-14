@@ -15,6 +15,7 @@ public class Command {
   public static final int SOURCE_SOAP = 1;
 
   private int sourceId;
+  private boolean systemMessage = false;
 
   public int getSourceId() {
     return sourceId;
@@ -24,4 +25,11 @@ public class Command {
     this.sourceId = sourceId;
   }
 
+  public boolean isSystemMessage() {
+    return systemMessage;
+  }
+
+  public void setSystemMessage(boolean systemMessage) {
+    this.systemMessage = systemMessage;
+  }
 }

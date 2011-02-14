@@ -18,6 +18,8 @@ CREATE TABLE calendar_messages (
   INDEX(send_time)
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
+ CREATE INDEX cld_msg_send_time USING BTREE ON calendar_messages(send_time);
+
 
 ## TABLES FOR SECRET
 CREATE TABLE sec_users (

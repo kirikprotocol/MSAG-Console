@@ -148,25 +148,35 @@ class SmsXSenderHandler  {
   }
 
   public int sendSysSms(String oa, String da, String message) throws RemoteException {
-    SenderSendMessageCmd c = new SenderSendMessageCmd();
-    c.setSourceAddress(oa);
-    c.setDestinationAddress(da);
-    c.setMessage(message);
-    c.setDestAddressSubunit(-1);
-    c.setStorable(false);
-    c.setSourceId(AsyncCommand.SOURCE_SOAP);
+    final long start = System.currentTimeMillis();
+    try {
+      if (log.isInfoEnabled())
+        log.info("Send System SMS: oa=" + oa + "; da=" + da + "; msg=" + message);
 
-    int status;
-    final CmdStatusObserver observer = new CmdStatusObserver(null);
-    c.addExecutionObserver(observer);
-    Services.getInstance().getSenderService().execute(c);
-    observer.waitStatus();
-    switch (c.getStatus()) {
-      case SenderSendMessageCmd.STATUS_SUCCESS: status = STATUS_ACCEPTED; break;
-      default: status = STATUS_SYSTEM_ERROR;
+      SenderSendMessageCmd c = new SenderSendMessageCmd();
+      c.setSourceAddress(oa);
+      c.setDestinationAddress(da);
+      c.setMessage(message);
+      c.setDestAddressSubunit(-1);
+      c.setStorable(true);
+      c.setSystemMessage(true);
+      c.setSourceId(AsyncCommand.SOURCE_SOAP);
+
+      int status;
+      final CmdStatusObserver observer = new CmdStatusObserver(null);
+      c.addExecutionObserver(observer);
+      Services.getInstance().getSenderService().execute(c);
+      observer.waitStatus();
+      switch (c.getStatus()) {
+        case SenderSendMessageCmd.STATUS_SUCCESS: status = STATUS_ACCEPTED; break;
+        default: status = STATUS_SYSTEM_ERROR;
+      }
+
+      return status;
+    } finally {
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
-
-    return status;
   }
 
   private SmsXSenderResponse sendSenderMessage(String sourceAddress, String destinationAddress, String message, boolean express, String mscAddress, boolean advertising) {

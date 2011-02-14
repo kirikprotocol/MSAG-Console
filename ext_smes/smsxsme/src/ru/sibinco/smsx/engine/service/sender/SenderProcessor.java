@@ -32,14 +32,17 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
   public void execute(SenderSendMessageCmd cmd) {
     try {
       if (log.isInfoEnabled())
-        log.info("Send msg: srcaddr=" + cmd.getSourceAddress() + "; dstaddr=" + cmd.getDestinationAddress() + "; storable=" + cmd.isStorable());
+        log.info("Send msg: srcaddr=" + cmd.getSourceAddress() + "; dstaddr=" + cmd.getDestinationAddress() + "; storable=" + cmd.isStorable() + "; system=" + cmd.isSystemMessage());
       final SenderMessage msg = new SenderMessage();
       msg.setSourceAddress(cmd.getSourceAddress());
       msg.setDestinationAddress(cmd.getDestinationAddress());
       msg.setMessage(cmd.getMessage());
       msg.setDestAddrSubunit(cmd.getDestAddressSubunit());
       msg.setStorable(cmd.isStorable());
-      msg.setConnectionName(cmd.getSourceId() == AsyncCommand.SOURCE_SMPP ? "smsx" : "websms");
+      if (!cmd.isSystemMessage())
+        msg.setConnectionName(cmd.getSourceId() == AsyncCommand.SOURCE_SMPP ? "smsx" : "websms");
+      else
+        msg.setConnectionName("syssms");
       msg.setMscAddress(cmd.getMscAddress());
 
       if (cmd.isStorable())
