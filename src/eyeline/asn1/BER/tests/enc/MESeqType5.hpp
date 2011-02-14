@@ -18,9 +18,9 @@ public:
   : EncoderOfSequence_T<4>(use_rule), _eA(use_rule), _eB(use_rule),
     _eC(_tag_c, ASTagging::tagsIMPLICIT, use_rule),
     _eD(_tag_d, ASTagging::tagsIMPLICIT, use_rule)
-  {
-    construct();
-  }
+  { }
+  ~MESeqType5()
+  { }
 
   void setValue(const SeqType5& value);
 

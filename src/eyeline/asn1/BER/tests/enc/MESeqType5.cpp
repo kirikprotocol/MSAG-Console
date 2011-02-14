@@ -16,6 +16,7 @@ MESeqType5::setValue(const SeqType5& value)
   _eB.setValue(value.b);
   _eC.setValue(value.c);
   _eD.setValue(value.d);
+  construct();
 }
 
 void

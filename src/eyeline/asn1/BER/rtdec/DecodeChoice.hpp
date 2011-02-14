@@ -47,16 +47,17 @@ protected:
 
   //NOTE: copying constructor of successsor MUST properly set _elDec
   //      by calling setElementDecoder()
-  DecoderOfChoiceAC(const DecoderOfChoiceAC & use_obj)
-    : TypeValueDecoderAC(use_obj), _elDec(0)
+  explicit DecoderOfChoiceAC(const DecoderOfChoiceAC & use_obj)
+    : TypeValueDecoderAC(use_obj), _altTags(use_obj._altTags), _elDec(0)
   {
-    setOptions(_altTags);
+    TypeTagging::setOptions(_altTags);
   }
 
   explicit DecoderOfChoiceAC(CHCElementDecoderAC & use_eldec,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(&_altTags, use_rule), _elDec(&use_eldec)
+    : TypeValueDecoderAC(use_rule), _elDec(&use_eldec)
   {
+    TypeTagging::setOptions(_altTags);
     //NOTE.1: in case of untagged CHOICE, tagging of canonical alternative
     //        MUST BE added by setAlternative() to alternative's tagging
     //        options in successor's constructor in order to support CER !!!
@@ -64,8 +65,10 @@ protected:
   // NOTE: eff_tags is a complete effective tagging of type!
   DecoderOfChoiceAC(CHCElementDecoderAC & use_eldec, const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(eff_tags, _altTags, use_rule), _elDec(&use_eldec)
-  { }
+    : TypeValueDecoderAC(eff_tags, use_rule), _elDec(&use_eldec)
+  {
+    TypeTagging::setOptions(_altTags);
+  }
 
   //Sets tagged alternative of some type
   void setAlternative(uint16_t unique_idx, const ASTag & fld_tag, ASTagging::Environment_e fld_env)

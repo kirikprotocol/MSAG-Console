@@ -26,7 +26,7 @@ protected:
 public:
   // constructor for untagged ANY/OpenType
   explicit DecoderOfASType(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(0, use_rule), _valDec(0)
+    : TypeValueDecoderAC(use_rule), _valDec(0)
   { }
   // constructor for tagged ANY/OpenType
   DecoderOfASType(const ASTag & use_tag, ASTagging::Environment_e tag_env,

@@ -6,7 +6,7 @@ namespace ber {
 namespace tests {
 namespace enc {
 
-const ASTag MEChoiceType2::_typeTag= ASTag(ASTag::tagContextSpecific, 15);
+const ASTagging MEChoiceType2::_typeTags(ASTag::tagContextSpecific, 15, ASTagging::tagsIMPLICIT);
 
 void
 MEChoiceType2::setValue(const ChoiceType2& value)

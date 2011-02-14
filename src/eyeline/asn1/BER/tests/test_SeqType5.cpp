@@ -43,7 +43,7 @@ test_SeqType5_enc(char* err_msg)
     return false;
 
   fprintf(logfile, "test_SeqType5_enc:: SeqType5_t={a.case1=100,b.case2=true,c.case2=false,d.case1=200}, trSyntax=%s, retVal=%ld\n",
-          patternTrSyntax, retVal.encoded);
+          patternTrSyntax, (long int)retVal.encoded);
   TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType5", "{a.case1=100,b.case2=true,c.case2=false,d.case1=200}", patternTrSyntax);
 
   try {

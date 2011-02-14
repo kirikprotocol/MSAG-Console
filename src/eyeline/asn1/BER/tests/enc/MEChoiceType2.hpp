@@ -32,13 +32,13 @@ protected:
 
 public:
   explicit MEChoiceType2(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfChoice(_typeTag, asn1::ASTagging::tagsIMPLICIT, use_rule)
+    : asn1::ber::EncoderOfChoice(_typeTags, use_rule)
   {}
 
   MEChoiceType2(const asn1::ASTag& outer_tag,
                 const asn1::ASTagging::Environment_e tag_env,
                 asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfChoice(outer_tag, tag_env, use_rule)
+    : asn1::ber::EncoderOfChoice(ASTagging(outer_tag, tag_env, _typeTags), use_rule)
   {}
 
   void setValue(const ChoiceType2& value);
@@ -46,7 +46,7 @@ private:
   void setCase1(int32_t value);
   void setCase2(bool value);
 
-  static const ASTag _typeTag;
+  static const ASTagging _typeTags;
 };
 
 }}}}}

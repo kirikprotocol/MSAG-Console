@@ -121,7 +121,8 @@ public:
 
 typedef TaggingOptions::TagsMAP TaggingOptionsMAP;
 
-
+//NOTE: Complete tagging of CHOICE/ANY types may be calculated only after value
+//      is to encode is known. In that case use method setOptions().
 class TypeTagging {
 private:
   ASTagging::size_type    _isTagged;
@@ -132,46 +133,34 @@ private:
 protected:
   //NOTE: in case of CHOICE/Opentype the copying constructor of successsor
   //      MUST properly set _optTags by setOptions().
-  TypeTagging(const TypeTagging & use_obj)
+  explicit TypeTagging(const TypeTagging & use_obj)
     : _isTagged(use_obj._isTagged), _optTags(0), _fullTags(use_obj._fullTags)
   { }
   //
-  void setOptions(const TaggingOptions & use_opts) { _optTags = &use_opts; }
+  void setOptions(const TaggingOptions & use_opts)
+  {
+    _optTags = &use_opts;
+    refreshTagging();
+  }
 
 public:
+  //Generic untagged type tagging
+  TypeTagging() : _isTagged(0), _optTags(0)
+  { }
+
   //Ordinary type tagging (type is/or_references ordinary type)
-  TypeTagging(const ASTagging & base_tags)
+  TypeTagging(ASTag use_tag, ASTagging::Environment_e use_env)
+    : _isTagged(1), _optTags(0), _fullTags(use_tag, use_env)
+  { }
+  explicit TypeTagging(const ASTagging & base_tags)
     : _isTagged(base_tags.size()), _optTags(0), _fullTags(base_tags)
   { }
-  //Untagged CHOICE/Opentype type tagging
-  TypeTagging(const TaggingOptions * base_tags = 0)
-    : _isTagged(0), _optTags(base_tags)
-  {
-    if (_optTags && _optTags->getEffective())
-      _fullTags = *(_optTags->getEffective());
-  }
   //Tagged type tagging (type references ordinary type)
   TypeTagging(ASTag use_tag, ASTagging::Environment_e use_env,
               const ASTagging & base_tags)
     : _isTagged(1), _optTags(0), _fullTags(use_tag, use_env, base_tags)
   { }
-  //Tagged type tagging (type references untagged CHOICE/Opentype)
-  TypeTagging(ASTag use_tag, ASTagging::Environment_e use_env,
-              const TaggingOptions & base_tags)
-    : _isTagged(1), _optTags(&base_tags), _fullTags(use_tag, use_env)
-  {
-    if (_optTags->getEffective())
-      _fullTags.conjoin(*(_optTags->getEffective()));
-  }
-  //Tagged type tagging (type references untagged CHOICE/Opentype)
-  TypeTagging(const ASTagging & use_tags,
-              const TaggingOptions & base_tags)
-    : _isTagged(use_tags.size()), _optTags(&base_tags), _fullTags(use_tags)
-  {
-    if (_optTags->getEffective())
-      _fullTags.conjoin(*(_optTags->getEffective()));
-  }
-
+  //
   ~TypeTagging()
   { }
 
@@ -183,7 +172,7 @@ public:
       _fullTags.resize(_isTagged);
       if (_optTags->getEffective()) {
         if (_isTagged)
-          _fullTags.conjoin(*(_optTags->getEffective()));
+          _fullTags.append(*(_optTags->getEffective()));
         else
           _fullTags = *(_optTags->getEffective());
       }

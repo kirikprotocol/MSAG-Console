@@ -112,23 +112,21 @@ protected:
   //        MUST properly set _optTags  by TypeTagging::setOptions().
   //NOTE.2: the copying constructor of successsor MUST properly set _valDec
   //        by calling init()
-  TypeDecoderAC(const TypeDecoderAC & use_obj)
+  explicit TypeDecoderAC(const TypeDecoderAC & use_obj)
     : ASTypeDecoderAC(use_obj), TypeTagging(use_obj)
     , _relaxedRule(use_obj._relaxedRule), _valDec(0)
     , _outerTL(use_obj._outerTL)
   { }
 
   //'Generic type decoder' constructor
+  explicit TypeDecoderAC(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+    : ASTypeDecoderAC(use_rule), TypeTagging()
+    , _relaxedRule(false), _valDec(0), _outerTL(0)
+  { }
   // NOTE: eff_tags is a complete effective tagging of type!
   explicit TypeDecoderAC(const ASTagging & eff_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(eff_tags)
-    , _relaxedRule(false), _valDec(0), _outerTL(0)
-  { }
-  //'Untagged CHOICE/Opentype type decoder' constructor
-  explicit TypeDecoderAC(const TaggingOptions * base_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : ASTypeDecoderAC(use_rule), TypeTagging(base_tags)
     , _relaxedRule(false), _valDec(0), _outerTL(0)
   { }
   //'Tagged Type decoder' constructor
@@ -137,19 +135,6 @@ protected:
                 const ASTagging & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : ASTypeDecoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
-    , _relaxedRule(false), _valDec(0), _outerTL(0)
-  { }
-  //'Tagged Type referencing untagged CHOICE/Opentype decoder' constructor
-  TypeDecoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
-                const TaggingOptions & base_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : ASTypeDecoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
-    , _relaxedRule(false), _valDec(0), _outerTL(0)
-  { }
-  //'Tagged Type referencing untagged CHOICE/Opentype decoder' constructor
-  TypeDecoderAC(const ASTagging & use_tags, const TaggingOptions & base_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : ASTypeDecoderAC(use_rule), TypeTagging(use_tags, base_tags)
     , _relaxedRule(false), _valDec(0), _outerTL(0)
   { }
 
@@ -199,7 +184,7 @@ protected:
 
   //NOTE: in case of CHOICE/Opentype the copying constructor of successsor
   //      MUST properly set _optTags  by setOptions().
-  TypeValueDecoderAC(const TypeValueDecoderAC & use_obj)
+  explicit TypeValueDecoderAC(const TypeValueDecoderAC & use_obj)
     : TypeDecoderAC(use_obj)
   {
     TypeDecoderAC::init(*(ValueDecoderIface*)this);
@@ -207,17 +192,17 @@ protected:
 
 public:
   //'Generic type decoder' constructor
+  explicit TypeValueDecoderAC(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
+    : TypeDecoderAC(use_rule)
+  {
+    TypeDecoderAC::init(*(ValueDecoderIface*)this);
+  }
+
+  //'Generic type decoder' constructor
   // NOTE: eff_tags is a complete effective tagging of type!
   explicit TypeValueDecoderAC(const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeDecoderAC(eff_tags, use_rule)
-  {
-    TypeDecoderAC::init(*(ValueDecoderIface*)this);
-  }
-  //'Untagged CHOICE/Opentype type decoder' constructor
-  explicit TypeValueDecoderAC(const TaggingOptions * base_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeDecoderAC(base_tags, use_rule)
   {
     TypeDecoderAC::init(*(ValueDecoderIface*)this);
   }
@@ -227,21 +212,6 @@ public:
                 const ASTagging & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
     : TypeDecoderAC(use_tag, tag_env, base_tags, use_rule)
-  {
-    TypeDecoderAC::init(*(ValueDecoderIface*)this);
-  }
-  //'Tagged Type referencing untagged CHOICE/Opentype decoder' constructor
-  TypeValueDecoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
-                const TaggingOptions & base_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeDecoderAC(use_tag, tag_env, base_tags, use_rule)
-  {
-    TypeDecoderAC::init(*(ValueDecoderIface*)this);
-  }
-  //'Tagged Type referencing untagged CHOICE/Opentype decoder' constructor
-  TypeValueDecoderAC(const ASTagging & use_tags, const TaggingOptions & base_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeDecoderAC(use_tags, base_tags, use_rule)
   {
     TypeDecoderAC::init(*(ValueDecoderIface*)this);
   }

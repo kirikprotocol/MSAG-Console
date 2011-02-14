@@ -38,21 +38,27 @@ protected:
                               TSLength max_len) const /*throw(std::exception)*/;
 
   // constructor for encoder of tagged type referencing OpenType
-  EncoderOfASType(const ASTagging & eff_tags,
+  explicit EncoderOfASType(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(eff_tags, _altTags, use_rule), _valTS(0)
-  { }
+    : TypeValueEncoderAC(eff_tags, use_rule), _valTS(0)
+  {
+    TypeTagging::setOptions(_altTags);
+  }
 
 public:
   // constructor for encoder of untagged OpenType
-  EncoderOfASType(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(_altTags, use_rule), _valTS(0)
-  { }
+  explicit EncoderOfASType(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(use_rule), _valTS(0)
+  {
+    TypeTagging::setOptions(_altTags);
+  }
   // constructor for encoder of tagged OpenType
   EncoderOfASType(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeValueEncoderAC(use_tag, tag_env, _altTags, use_rule), _valTS(0)
-  { }
+    : TypeValueEncoderAC(ASTagging(use_tag, tag_env), use_rule), _valTS(0)
+  {
+    TypeTagging::setOptions(_altTags);
+  }
   ~EncoderOfASType()
   { }
 

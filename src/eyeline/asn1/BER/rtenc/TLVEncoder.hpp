@@ -227,7 +227,7 @@ protected:
   //NOTE: refreshes tagging and initializes TLVLayoutEncoder
   const TLVStruct & prepareTLV(bool calc_indef) /*throw(std::exception)*/;
 
-  TypeEncoderAC(const TypeEncoderAC & use_obj)
+  explicit TypeEncoderAC(const TypeEncoderAC & use_obj)
     : ASTypeEncoderAC(use_obj._tsRule), TypeTagging(use_obj)
     , _tlvEnc(TSGroupBER::getBERRule(use_obj._tsRule))
   {
@@ -236,17 +236,16 @@ protected:
   }
 
 public:
-  //'Generic type encoder' constructor
-  //NOTE: eff_tags must be a complete tagging of type!
-  TypeEncoderAC(const ASTagging & eff_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : ASTypeEncoderAC(use_rule), TypeTagging(eff_tags)
+  //'Generic untagged type encoder' constructor
+  explicit TypeEncoderAC(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : ASTypeEncoderAC(use_rule), TypeTagging()
     , _tlvEnc(TSGroupBER::getBERRule(use_rule))
   { }
-  //'Untagged CHOICE/Opentype type encoder' constructor
-  TypeEncoderAC(const TaggingOptions & base_tags,
+  //'Generic type encoder' constructor
+  //NOTE: eff_tags must be a complete tagging of type!
+  explicit TypeEncoderAC(const ASTagging & eff_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : ASTypeEncoderAC(use_rule), TypeTagging(&base_tags)
+    : ASTypeEncoderAC(use_rule), TypeTagging(eff_tags)
     , _tlvEnc(TSGroupBER::getBERRule(use_rule))
   { }
   //'Tagged Type encoder' constructor
@@ -255,19 +254,6 @@ public:
                 const ASTagging & base_tags,
                TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : ASTypeEncoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
-    , _tlvEnc(TSGroupBER::getBERRule(use_rule))
-  { }
-  //'Tagged Type referencing untagged CHOICE/Opentype encoder' constructor
-  TypeEncoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
-                const TaggingOptions & base_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : ASTypeEncoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
-    , _tlvEnc(TSGroupBER::getBERRule(use_rule))
-  { }
-  //'Tagged Type referencing untagged CHOICE/Opentype encoder' constructor
-  TypeEncoderAC(const ASTagging & use_tags, const TaggingOptions & base_tags,
-               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : ASTypeEncoderAC(use_rule), TypeTagging(use_tags, base_tags)
     , _tlvEnc(TSGroupBER::getBERRule(use_rule))
   { }
   //
@@ -342,7 +328,7 @@ protected:
   //                            TSLength max_len) const /*throw(std::exception)*/ = 0;
   //virtual bool isPortable(TSGroupBER::Rule_e tgt_rule, TSGroupBER::Rule_e curr_rule) const /*throw()*/; 
 
-  TypeValueEncoderAC(const TypeValueEncoderAC & use_obj)
+  explicit TypeValueEncoderAC(const TypeValueEncoderAC & use_obj)
     : TypeEncoderAC(use_obj)
   {
     TypeEncoderAC::init(*(ValueEncoderIface*)this);
@@ -350,9 +336,16 @@ protected:
     //      MUST properly set options of TypeTagging
   }
 public:
+  //'Generic untagged type value encoder' constructor
+  //NOTE: eff_tags must be a complete tagging of type!
+  TypeValueEncoderAC(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_rule)
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
   //'Generic type value encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
-  TypeValueEncoderAC(const ASTagging & eff_tags,
+  explicit TypeValueEncoderAC(const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeEncoderAC(eff_tags, use_rule)
   {
@@ -364,28 +357,6 @@ public:
                      const ASTagging & base_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeEncoderAC(use_tag, tag_env, base_tags, use_rule)
-  {
-    TypeEncoderAC::init(*(ValueEncoderIface*)this);
-  }
-  //'Untagged CHOICE/Opentype type value encoder' constructor
-  TypeValueEncoderAC(const TaggingOptions & base_tags,
-                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeEncoderAC(base_tags, use_rule)
-  {
-    TypeEncoderAC::init(*(ValueEncoderIface*)this);
-  }
-  //'Tagged Type referencing untagged CHOICE/Opentype value encoder' constructor
-  TypeValueEncoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
-                     const TaggingOptions & base_tags,
-                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeEncoderAC(use_tag, tag_env, base_tags, use_rule)
-  {
-    TypeEncoderAC::init(*(ValueEncoderIface*)this);
-  }
-  //'Tagged Type referencing untagged CHOICE/Opentype value encoder' constructor
-  TypeValueEncoderAC(const ASTagging & use_tags, const TaggingOptions & base_tags,
-                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeEncoderAC(use_tags, base_tags, use_rule)
   {
     TypeEncoderAC::init(*(ValueEncoderIface*)this);
   }
@@ -406,7 +377,7 @@ private:
 public:
   //'Generic type value encoder' constructor
   //NOTE: eff_tags must be a complete tagging of type!
-  TypeValueEncoderOf_T(const ASTagging & eff_tags,
+  explicit TypeValueEncoderOf_T(const ASTagging & eff_tags,
                        TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeEncoderAC(eff_tags, use_rule)
     , _ValueEncoderTArg()
@@ -424,7 +395,7 @@ public:
     TypeEncoderAC::init(*(ValueEncoderIface*)this);
   }
   //'Untagged CHOICE/Opentype type value encoder' constructor
-  TypeValueEncoderOf_T(const TaggingOptions & base_tags,
+  explicit TypeValueEncoderOf_T(const TaggingOptions & base_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
     : TypeEncoderAC(base_tags, use_rule)
     , _ValueEncoderTArg()

@@ -39,23 +39,26 @@ protected:
   }
 
   //
-  EncoderOfChoice(const EncoderOfChoice & use_obj)
+  explicit EncoderOfChoice(const EncoderOfChoice & use_obj)
     : TypeEncoderAC(use_obj), _altTags(use_obj._altTags)
   {
     TypeTagging::setOptions(_altTags);
   }
   // constructor for tagged type referencing CHOICE
   // NOTE: eff_tags must be a complete tagging of type!
-  EncoderOfChoice(const ASTagging & eff_tags,
+  explicit EncoderOfChoice(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeEncoderAC(eff_tags, _altTags, use_rule)
-  { }
+    : TypeEncoderAC(eff_tags, use_rule)
+  {
+    TypeTagging::setOptions(_altTags);
+  }
 
 public:
   // constructor for untagged CHOICE
-  EncoderOfChoice(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeEncoderAC(_altTags, use_rule)
+  explicit EncoderOfChoice(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_rule)
   {
+    TypeTagging::setOptions(_altTags);
     //NOTE.1: in case of untagged CHOICE, tagging of canonical alternative
     //        MUST BE added by addCanonicalAlternative() to alternative's tagging
     //        options in successor's constructor in order to support CER !!!
@@ -63,8 +66,10 @@ public:
   // constructor for tagged CHOICE
   EncoderOfChoice(const ASTag & use_tag, ASTagging::Environment_e tag_env,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
-    : TypeEncoderAC(use_tag, tag_env, _altTags, use_rule)
-  { }
+    : TypeEncoderAC(ASTagging(use_tag, tag_env), use_rule)
+  {
+    TypeTagging::setOptions(_altTags);
+  }
   //
   virtual ~EncoderOfChoice()
   { }
