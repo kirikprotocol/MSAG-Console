@@ -129,7 +129,6 @@ public:
 protected:
   Environment_e _tagEnv;
 
-  using ASTagsArray::append;
   using ASTagsArray::prepend;
   using ASTagsArray::shiftLeft;
   using ASTagsArray::shiftRight;
