@@ -92,7 +92,6 @@ private:
     DeliveryHash                                  deliveryHash_;
     DeliveryList                                  deliveryList_;
     DeliveryWakeQueue                             deliveryWakeQueue_; // on plantime
-    // DeliveryWakeQueue                             deliveryStopQueue_; // on activeend
     DeliveryList::iterator                        inputRollingIter_;
     DeliveryList::iterator                        storeRollingIter_;
     DeliveryList::iterator                        statsDumpingIter_;

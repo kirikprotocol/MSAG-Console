@@ -279,7 +279,6 @@ public:
                     mgr_.mon_.wait(int(nextTime-now));
                     continue;
                 }
-                // core_.cs_.flipStatBank();
             }
             dumpStats( msgtime_type(nextTime / 1000) );
             nextTime += msecDelta;
