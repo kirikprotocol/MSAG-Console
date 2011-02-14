@@ -57,6 +57,19 @@ test_runtime_framework_init()
                                                           "05050505050505050505050505050505050505050505050505050505050505050505050505050505050505050505050505050505"
                                                           "05050505050505050505050505050505050505050505050505050505050505050505050505050505050505050505050505050505"
                                                           "0505050505050505050505050505050505050401050000");
+
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType1", "{EE,11,NULL}", "3009020200EE8501118100");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType2", "{AA,BB,CC}", "300C020200AA830200BB870200CC");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType2", "{AA,NULL,NULL}", "3004020200AA");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType3", "{AA,BB}", "3008020200AA830200BB");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType3", "{AA,NULL}", "3004020200AA");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType4", "{AA,77,DD}", "300B020200AA830177840200DD");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType4", "{AA,NULL,EE}", "3008020200AA840200EE");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqOfType1", "{{a=0xEE,b=0x11,c=NULL},{a=0x33,b=0xCC,c=NULL},{a=0x55,b=0xFF,c=NULL},{a=0xAA,b=0x77,c=NULL}}",
+                                                          "302C3009020200EE85011181003009020133850200CC81003009020155850200FF81003009020200AA8501778100");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqTypeExplicit1", "{EE,11}", "300D020200EEA503020111A1020500");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_ChoiceType1", "{case1=100}", "020164");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_ChoiceType2", "{case1=100}", "AF03020164");
 }
 
 }}}}
