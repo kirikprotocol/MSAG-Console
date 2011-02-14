@@ -16,6 +16,7 @@
 #include "informer/data/InfosmeCore.h"
 #include "informer/data/BindSignal.h"
 #include "informer/sender/RegionSender.h"
+#include "informer/sender/ReceiptProcessor.h"
 #include "logger/Logger.h"
 
 namespace scag2 {
@@ -45,6 +46,7 @@ class FinalLog;
 
 class InfosmeCoreV1 : public InfosmeCore,
 public DeliveryActivator,
+public ReceiptProcessor,
 public smsc::core::threads::Thread
 {
     class PvssRespHandler;
@@ -93,6 +95,21 @@ public:
     virtual alm::IActivityLogMiner& getALM() { return *alm_; }
 
     // --- end of infosme core iface
+
+    // --- receiptprocessor iface
+
+    /// final state response/receipt has been received
+    virtual void receiveReceipt( const DlvRegMsgId& drmId,
+                                 const RetryPolicy& retryPolicy,
+                                 int smppStatus, bool retry,
+                                 unsigned nchunks );
+    virtual bool receiveResponse( const DlvRegMsgId& drmId );
+
+    /// license traffic control
+    virtual void incIncoming();
+    virtual void incOutgoing( unsigned nchunks );
+
+    // --- end of receipt processor iface
 
     // --- delivery activator iface
 
@@ -177,6 +194,9 @@ private:
 
     scag2::pvss::core::client::Client*            pvss_;         // owned
     PvssRespHandler*                              pvssHandler_;  // owned
+
+    smsc::core::synchronization::EventMonitor     trafficMon_;
+    SpeedControl<usectime_type,tuPerSec>          trafficSpeed_;
 };
 
 } // informer

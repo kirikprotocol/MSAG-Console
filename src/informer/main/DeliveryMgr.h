@@ -10,7 +10,6 @@
 #include "informer/newstore/InputJournal.h"
 #include "informer/opstore/DeliveryImpl.h"
 #include "informer/opstore/StoreJournal.h"
-#include "informer/sender/ReceiptProcessor.h"
 
 namespace eyeline {
 namespace informer {
@@ -18,7 +17,7 @@ namespace informer {
 class InfosmeCoreV1;
 class CommonSettings;
 
-class DeliveryMgr : public ReceiptProcessor, public smsc::core::threads::Thread
+class DeliveryMgr : public smsc::core::threads::Thread
 {
     class InputJournalReader;
     class StoreJournalReader;
@@ -35,19 +34,6 @@ public:
     void init();
     void start();
     void stop();
-
-    /// final state response/receipt has been received
-    virtual void receiveReceipt( const DlvRegMsgId& drmId,
-                                 const RetryPolicy& retryPolicy,
-                                 int smppStatus, bool retry,
-                                 unsigned nchunks );
-    virtual bool receiveResponse( const DlvRegMsgId& drmId );
-
-    /// license traffic control
-    virtual void incIncoming();
-    virtual void incOutgoing( unsigned nchunks );
-
-    // --- end of receipt processor iface
 
     dlvid_type createDelivery( UserInfo& userInfo,
                                const DeliveryInfoData& info );
@@ -123,9 +109,6 @@ private:
     FileGuard                                     logStateFile_;
 
     dlvid_type                                    lastDlvId_;
-
-    smsc::core::synchronization::EventMonitor     trafficMon_;
-    SpeedControl<usectime_type,tuPerSec>          trafficSpeed_;
 
     smsc::core::threads::ThreadPool               ctp_;
 

@@ -410,8 +410,7 @@ inputRoller_(0),
 storeRoller_(0),
 statsDumper_(0),
 logStateTime_(0),
-lastDlvId_(0),
-trafficSpeed_(cs_.getLicenseLimit())
+lastDlvId_(0)
 {
     smsc_log_debug(log_,"ctor");
     if ( getCS()->isArchive() || getCS()->isEmergency() ) { return; }
@@ -570,10 +569,6 @@ void DeliveryMgr::stop()
         mon_.notifyAll();
     }
     ctp_.stopNotify();
-    {
-        MutexGuard mg(trafficMon_);
-        trafficMon_.notifyAll();
-    }
     if (inputRoller_) { inputRoller_->WaitFor(); }
     if (storeRoller_) { storeRoller_->WaitFor(); }
     if (statsDumper_) { statsDumper_->WaitFor(); }
@@ -581,118 +576,6 @@ void DeliveryMgr::stop()
     WaitFor();
     ctp_.shutdown(0);
     smsc_log_debug(log_,"leaving stop()");
-}
-
-
-void DeliveryMgr::receiveReceipt( const DlvRegMsgId& drmId,
-                                  const RetryPolicy& policy,
-                                  int      status,
-                                  bool     retry,
-                                  unsigned nchunks )
-{
-    smsc_log_debug(log_,"rcpt received R=%u/D=%u/M=%llu status=%u retry=%d nchunks=%u",
-                   drmId.regId, drmId.dlvId,
-                   drmId.msgId, status, retry, nchunks );
-    try {
-        DeliveryImplPtr dlv;
-        if ( !getDelivery(drmId.dlvId,dlv) ) {
-            smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt: delivery not found",
-                          drmId.regId, drmId.dlvId, drmId.msgId );
-            return;
-        }
-
-        // const DeliveryInfo& info = dlv->getDlvInfo();
-
-        RegionalStoragePtr reg = dlv->getRegionalStorage(drmId.regId);
-        if (!reg.get()) {
-            smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt: region is not found",
-                          drmId.regId, drmId.dlvId, drmId.msgId );
-            return;
-        }
-
-        const msgtime_type now(currentTimeSeconds());
-
-        const bool ok = (status == smsc::system::Status::OK);
-        if (!ok && retry) {
-            // attempt to retry
-            reg->retryMessage( drmId.msgId, policy, now, status, nchunks);
-        } else {
-            reg->finalizeMessage(drmId.msgId, now,
-                                 ok ? MSGSTATE_DELIVERED : MSGSTATE_FAILED,
-                                 status, nchunks );
-        }
-    } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"R=%u/D=%u/M=%llu rcpt process failed, exc: %s",
-                      drmId.regId,
-                      drmId.dlvId,
-                      drmId.msgId, e.what() );
-    }
-}
-
-
-bool DeliveryMgr::receiveResponse( const DlvRegMsgId& drmId )
-{
-    smsc_log_debug(log_,"good resp received R=%u/D=%u/M=%llu",
-                   drmId.regId,
-                   drmId.dlvId,
-                   drmId.msgId);
-    try {
-        DeliveryImplPtr dlv;
-        if ( !getDelivery(drmId.dlvId,dlv) ) {
-            smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp: delivery not found",
-                          drmId.regId,
-                          drmId.dlvId,
-                          drmId.msgId );
-            return false;
-        }
-
-        RegionalStoragePtr reg = dlv->getRegionalStorage(drmId.regId);
-        if (!reg.get()) {
-            smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp: region is not found",
-                          drmId.regId,
-                          drmId.dlvId,
-                          drmId.msgId );
-            return false;
-        }
-
-        const msgtime_type now(currentTimeSeconds());
-
-        reg->messageSent(drmId.msgId,now);
-        return true;
-
-    } catch ( std::exception& e ) {
-        smsc_log_warn(log_,"R=%u/D=%u/M=%llu resp process failed, exc: %s",
-                      drmId.regId,
-                      drmId.dlvId,
-                      drmId.msgId, e.what() );
-    }
-    return false;
-}
-
-
-void DeliveryMgr::incIncoming()
-{
-    // NOTE: we do nothing here right now as incOutgoing
-    // need not to be waked
-}
-
-
-void DeliveryMgr::incOutgoing( unsigned nchunks )
-{
-    // NOTE: this code is taked from infosme v2
-    smsc_log_debug(log_,"incOutgoing(%u)",nchunks);
-    MutexGuard mg(trafficMon_);
-    trafficSpeed_.consumeQuant();
-    do {
-        const usectime_type currentTime = currentTimeMicro() % flipTimePeriod;
-        const usectime_type delay = trafficSpeed_.isReady(currentTime,maxSnailDelay);
-        if ( delay == 0 ) { break; }
-        if (getCS()->isStopping()) { break; }
-        int waitTime = int(delay / 1000) + 1;
-        smsc_log_debug(log_,"waiting %lluusec/%umsec on license",
-                       ulonglong(delay),waitTime);
-        trafficMon_.wait(waitTime);
-    } while (true);
 }
 
 
