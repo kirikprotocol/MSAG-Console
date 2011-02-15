@@ -2,7 +2,21 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
+/* -- automatically generated BUILD number and date -- */
+#include "system/smscBuildId.hpp"
+/* -- -------------------------------------------------- -- */
+
 #include "system/version.h"
+
+/* -- NOTE: these defines are set by developers -- */
+#define SMSC_VER_MAJOR     1    //major verison
+#define SMSC_VER_MINOR     9    //minor version
+#define SMSC_VER_FIX       0    //bug fix version
+/* -- ----------------------------------------- -- */
+
+#define SMSC_VENDOR        "Eyeline"
+#define SMSC_PRODUCT_NAME  "SMSC"
+
 
 #define DEF_TO_STR0(x) #x
 #define DEF_TO_STR(x) DEF_TO_STR0(x)
