@@ -196,10 +196,11 @@ public class SmsOperativeSource extends SmsSource
               continue;
             }
 
-            Message.skip(input, 5); // Skip seq (4 bytes) and finall (1 byte)
+            Message.skip(input, 4); // Skip seq (4 bytes)
+            int fin = Message.readUInt8(input); // finall (1 byte)
             int status = Message.readUInt8(input); // 1 byte
 
-            if (status == SmsRow.MSG_STATE_ENROUTE) {
+            if (fin == 0) {// Not final
               byte[] message = new byte[msgSize1];
               Functions.readBuffer(input, message, msgSize1 - 8 - 5 - 1);
               int msgSize2 = (int) Message.readUInt32(input);
@@ -222,7 +223,7 @@ public class SmsOperativeSource extends SmsSource
                 msgs.put(msgIdLong, sms);
               if (calcExactCount)
                 totalCounter.add(msgIdLong);
-            } else {
+            } else {// Final message
               msgs.remove(msgIdLong);
               finishedMsgs.add(msgIdLong);
               if (calcExactCount)
