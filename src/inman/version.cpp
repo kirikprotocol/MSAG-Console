@@ -2,7 +2,22 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_ON */
 
+/* -- automatically generated BUILD number and date -- */
+#include "inman/inmBuildId.hpp"
+
+/* -- NOTE: these defines are set by developers -- */
+#define INMAN_VER_MAJOR     0    //major verison
+#define INMAN_VER_MINOR     8    //minor version
+#define INMAN_VER_FIX       2    //bug fix version
+#define INMAN_VER_TAG       " alpha"   //release tag: [alpha, beta, RC]N
+/* -- ----------------------------------------- -- */
+
+#define INMAN_VENDOR        "Eyeline"
+#define INMAN_PRODUCT_NAME  "IN Manager"
+
+/* -- -------------------------------------------------- -- */
 #include "inman/version.hpp"
+
 
 #define DEF_TO_STR0(x) #x
 #define DEF_TO_STR(x) DEF_TO_STR0(x)

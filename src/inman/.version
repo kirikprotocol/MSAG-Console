@@ -6,10 +6,10 @@
 #                 repository to extract BuildId tag
 # BUILDID_HEADER = relative to $(SMSC_SRCDIR)/$(PACKAGE) name of .hpp file to write build NUM and DATE defines
 
-#
-#NOTE: spaces in assignments are forbidden !!
-#
 PROD_PREFIX=INMAN
-PROD_VER_FILE=version.hpp
+#
+# NOTE: PROD_VER_FILE must be the only .cpp file that dependens on BUILDID_HEADER file
+#
+PROD_VER_FILE=version.cpp
 BUILDID_HEADER=inmBuildId.hpp
 
