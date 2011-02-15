@@ -247,12 +247,36 @@ sub generate{
     print $mkf "\t\@rm -f $_\n" for @files;
     print $mkf "\n";
     
-    if(-f $dirname.'/version.inc')
+    if(-f $dirname.'/.version')
     {
-      print $mkf "$modname.newbuild:\n";
-      print $mkf "\t\@perl conf/newbuild.pl $modname\n\n";
+      open(my $vf,$dirname.'/.version');
+      my $vars={};
+      while(<$vf>)
+      {
+        s/[\x0d\x0a]//g;
+        s/^\s+//;
+        s/\s+$//;
+        next unless $_;
+        next if /^#/;
+        my ($n,$v)=split(/\s*=\s*/,$_);
+        $vars->{$n}=$v;
+      }
+      for my $var(qw(PROD_PREFIX PROD_VER_FILE BUILDID_HEADER))
+      {
+        unless(exists($vars->{$var}))
+        {
+          die "Var $var not found in $dirname/.version\n";
+        }
+      }
+      system('conf/gen_build_id.sh',$dirname,$vars->{PROD_PREFIX}, $vars->{PROD_VER_FILE},$vars->{BUILDID_HEADER});
+      print $mkf "$modname.check.buildId:\n";
+      print $mkf "\t".'@$(SMSC_SRCDIR)/conf/gen_build_id.sh '.
+        join(' ',($dirname,$vars->{PROD_PREFIX},$vars->{PROD_VER_FILE},$vars->{BUILDID_HEADER}))."\n\n";
+      print $mkf '$(SMSC_SRCDIR)/'."$dirname/".$vars->{PROD_VER_FILE}.": $modname.check.buildId\n";
+      print $mkf "$modname.clean: $modname.clean.buildId\n";
+      print $mkf "$modname.clean.buildId:\n";
+      print $mkf "\t".'@rm -f $(SMSC_BUILDDIR)/deps/'.$dirname.'/'.$vars->{BUILDID_HEADER}."\n\n";
     }
-    
     
     my $mods=[];
     my $allmoddeps = $moddeps;
