@@ -383,7 +383,7 @@ public:
     virtual const char* taskName() { return "cancel"; }
     virtual int Execute() {
         DeliveryImplPtr ptr;
-        if (!mgr_.getDelivery(dlvId_,ptr) || !ptr ) { return 1; }
+        if (!mgr_.innerGetDelivery(dlvId_,ptr) || !ptr ) { return 1; }
         ptr->cancelOperativeStorage();
         return 0;
     }
@@ -620,13 +620,7 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId,
     DeliveryList::iterator iter;
     {
         MutexGuard mg(mon_);
-        if (!deliveryHash_.Pop(dlvId,iter) ) {
-            throw InfosmeException(EXC_NOTFOUND,"delivery %u is not found",dlvId);
-        }
-        if (inputRollingIter_ == iter) ++inputRollingIter_;
-        if (storeRollingIter_ == iter) ++storeRollingIter_;
-        if (statsDumpingIter_ == iter) ++statsDumpingIter_;
-        tokill.splice(tokill.begin(),deliveryList_,iter);
+        iter = popDelivery(dlvId,tokill);
     }
     if (!moveToArchive) {
         (*iter)->setState(DLVSTATE_CANCELLED);
@@ -655,7 +649,7 @@ int DeliveryMgr::Execute()
             for ( DeliveryWakeQueue::const_iterator i = wakeList.begin();
                   i != wakeList.end(); ++i ) {
                 DeliveryImplPtr dlv;
-                if (!getDelivery(i->second,dlv)) {continue;}
+                if (!innerGetDelivery(i->second,dlv)) {continue;}
                 msgtime_type planTime;
                 if ( DLVSTATE_PLANNED == dlv->getState(&planTime) &&
                      planTime == i->first ) {
@@ -689,6 +683,25 @@ int DeliveryMgr::Execute()
         if (wakeTime>0) { mon_.wait(int(wakeTime)); }
     }
     return 0;
+}
+
+
+bool DeliveryMgr::getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr )
+{
+    if (innerGetDelivery(dlvId,ptr)) { return true; }
+    // dlv is not found
+    if ( getCS()->getDlvCacheSize() == 0 ) { return false; }
+    // try to upload
+    try {
+        readDelivery(dlvId,&ptr);
+    } catch ( InfosmeException& e ) {
+        if ( e.getCode() != EXC_ALREADYEXIST ) {
+            return false;
+        }
+    } catch ( std::exception& e ) {
+        return false;
+    }
+    return true;
 }
 
 
@@ -768,10 +781,31 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
 }
 
 
-void DeliveryMgr::addDelivery( DeliveryInfo* info,
-                               DlvState      state,
-                               msgtime_type  planTime,
-                               bool          checkDlvLimit )
+bool DeliveryMgr::innerGetDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr )
+{
+    MutexGuard mg(mon_);
+    DeliveryList::iterator* iter = deliveryHash_.GetPtr(dlvId);
+    if (iter) {
+        ptr = **iter;
+        // move to the beginning of the list
+        if (getCS()->getDlvCacheSize() > 0) {
+            // move to the beginning of the list
+            freeDlvIterator(*iter);
+            deliveryList_.splice(deliveryList_.begin(),
+                                 deliveryList_,
+                                 *iter);
+        }
+        return true;
+    }
+    return false;
+}
+
+
+void DeliveryMgr::addDelivery( DeliveryInfo*    info,
+                               DlvState         state,
+                               msgtime_type     planTime,
+                               bool             checkDlvLimit,
+                               DeliveryImplPtr* dlv )
 {
     UserInfo& userInfo = info->getUserInfo();
     std::auto_ptr< DeliveryInfo > infoptr(info);
@@ -779,10 +813,10 @@ void DeliveryMgr::addDelivery( DeliveryInfo* info,
         throw InfosmeException(EXC_LOGICERROR,"delivery info is NULL");
     }
     const dlvid_type dlvId = info->getDlvId();
-    DeliveryImplPtr dlv;
-    if ( getDelivery(dlvId,dlv) ) {
+    if ( innerGetDelivery(dlvId,*dlv) ) {
         throw InfosmeException(EXC_ALREADYEXIST,"D=%u already exists",dlvId);
     }
+    /// FIXME: do we have a race condition from here upto delivery insertion?
     try {
         userInfo.incDlvStats(state,0,checkDlvLimit);
     } catch (std::exception& e) {
@@ -794,19 +828,30 @@ void DeliveryMgr::addDelivery( DeliveryInfo* info,
     if (!getCS()->isArchive() && !getCS()->isEmergency() ) {
         ims = new InputStorage(core_,*inputJournal_);
     }
-    dlv.reset( new DeliveryImpl(infoptr.release(),
-                                storeJournal_,
-                                ims,
-                                state,
-                                planTime ));
-    userInfo.attachDelivery( dlv );
-    MutexGuard mg(mon_);
-    deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), dlv));
-    if (state == DLVSTATE_PLANNED && planTime &&
-        !getCS()->isArchive() && !getCS()->isEmergency() ) {
-        deliveryWakeQueue_.insert(std::make_pair(planTime,dlv->getDlvId()));
+    dlv->reset( new DeliveryImpl(infoptr.release(),
+                                 storeJournal_,
+                                 ims,
+                                 state,
+                                 planTime ));
+    userInfo.attachDelivery( *dlv );
+    DeliveryList tokill;
+    {
+        MutexGuard mg(mon_);
+        deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), *dlv));
+        if (state == DLVSTATE_PLANNED && planTime &&
+            !getCS()->isArchive() && !getCS()->isEmergency() ) {
+            deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
+        }
+        /// FIXME: limit the number of total deliveries
+        if ( getCS()->getDlvCacheSize() > 0 &&
+             unsigned(deliveryHash_.Count()) > getCS()->getDlvCacheSize() ) {
+            // remove oldest deliveries
+            DeliveryList::iterator iter = 
+                popDelivery((*deliveryList_.rbegin())->getDlvId(),tokill);
+            (*iter)->detachEverything();
+        }
+        mon_.notify();
     }
-    mon_.notify();
 }
 
 
@@ -943,7 +988,7 @@ void DeliveryMgr::readFromArchive()
 }
 
 
-void DeliveryMgr::readDelivery( dlvid_type dlvId )
+void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
 {
     DeliveryInfoData data;
     DeliveryImpl::readDeliveryInfoData(dlvId, data);
@@ -967,12 +1012,27 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId )
     }
 
     DeliveryInfo* info = new DeliveryInfo(dlvId, data, *user.get());
-    addDelivery(info, state, planTime, false);
+    addDelivery(info, state, planTime, false, ptr);
     if ( state == DLVSTATE_CANCELLED && !getCS()->isArchive() &&
          !getCS()->isEmergency() ) {
         startCancelThread(dlvId);
     }
 }
+
+
+DeliveryMgr::DeliveryList::iterator
+    DeliveryMgr::popDelivery( dlvid_type dlvId,
+                              DeliveryList& tokill )
+{
+    DeliveryList::iterator iter;
+    if (!deliveryHash_.Pop(dlvId,iter) ) {
+        throw InfosmeException(EXC_NOTFOUND,"delivery %u is not found",dlvId);
+    }
+    freeDlvIterator(iter);
+    tokill.splice(tokill.begin(),deliveryList_,iter);
+    return iter;
+}
+
 
 }
 }

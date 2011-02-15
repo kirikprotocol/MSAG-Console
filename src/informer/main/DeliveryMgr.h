@@ -44,14 +44,7 @@ public:
     /// enter main loop, exit via 'stop()'
     virtual int Execute();
 
-    inline bool getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr )
-    {
-        MutexGuard mg(mon_);
-        DeliveryList::iterator* iter = deliveryHash_.GetPtr(dlvId);
-        if (!iter) return false;
-        ptr = **iter;
-        return true;
-    }
+    bool getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr );
 
     /// invoked to from infosmecorev1 only!
     bool finishStateChange( msgtime_type    currentTime,
@@ -63,11 +56,15 @@ public:
     void startCancelThread( dlvid_type dlvId );
 
 protected:
+    /// get delivery w/o automatic reading from disk
+    bool innerGetDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr );
+
     /// used internally
-    void addDelivery( DeliveryInfo* info,
-                      DlvState      state,
-                      msgtime_type  planTime,
-                      bool          checkDlvLimit );
+    void addDelivery( DeliveryInfo*    info,
+                      DlvState         state,
+                      msgtime_type     planTime,
+                      bool             checkDlvLimit,
+                      DeliveryImplPtr* ptr = 0 );
 
     dlvid_type getNextDlvId();
     
@@ -77,17 +74,27 @@ protected:
     /// read signals from archive
     void readFromArchive();
 
-    void readDelivery( dlvid_type dlvId );
+    void readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr = 0 );
+
+    typedef std::list<DeliveryImplPtr>                             DeliveryList;
+    typedef smsc::core::buffers::IntHash< DeliveryList::iterator > DeliveryHash;
+    typedef std::multimap< msgtime_type, dlvid_type >         DeliveryWakeQueue;
+
+    DeliveryList::iterator popDelivery( dlvid_type dlvId,
+                                        DeliveryList& tokill );
+
+
+    inline void freeDlvIterator( DeliveryList::iterator iter ) {
+        if (inputRollingIter_ == iter) ++inputRollingIter_;
+        if (storeRollingIter_ == iter) ++storeRollingIter_;
+        if (statsDumpingIter_ == iter) ++statsDumpingIter_;
+    }
 
 private:
     smsc::logger::Logger*                      log_;
     InfosmeCoreV1&                             core_;
     CommonSettings&                            cs_;
     smsc::core::synchronization::EventMonitor  mon_;
-
-    typedef std::list<DeliveryImplPtr>                             DeliveryList;
-    typedef smsc::core::buffers::IntHash< DeliveryList::iterator > DeliveryHash;
-    typedef std::multimap< msgtime_type, dlvid_type >         DeliveryWakeQueue;
 
     DeliveryHash                                  deliveryHash_;
     DeliveryList                                  deliveryList_;

@@ -142,6 +142,10 @@ public:
         return 100;
     }
 
+    inline unsigned getDlvCacheSize() const {
+        return 0;
+    }
+
     // --- non-configurable parameters
 
     /// return a length of period (second) to split resend messages into.
