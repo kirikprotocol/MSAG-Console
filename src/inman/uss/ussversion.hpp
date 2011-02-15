@@ -4,19 +4,6 @@
 #endif
 #define __SMSC_USSMAN_VERSION__
 
-/* -- automatically generated BUILD number and date -- */
-#include "inman/uss/ussBuildId.hpp"
-/* -- -------------------------------------------------- -- */
-
-/* -- NOTE: these defines are set by developers -- */
-#define USSMAN_VER_MAJOR     0    //major verison
-#define USSMAN_VER_MINOR     7    //minor version
-#define USSMAN_VER_FIX       4    //bug fix version
-/* -- ----------------------------------------- -- */
-
-#define USSMAN_VENDOR        "Eyeline"
-#define USSMAN_PRODUCT_NAME  "USS Manager"
-
 #ifdef __cplusplus
 #define EXTERN extern "C"
 #else
