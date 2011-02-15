@@ -147,7 +147,7 @@ class SmsXSenderHandler  {
     }
   }
 
-  public int sendSysSms(String oa, String da, String message) throws RemoteException {
+  public SmsXSenderResponse sendSysSms(String oa, String da, String message) throws RemoteException {
     final long start = System.currentTimeMillis();
     try {
       if (log.isInfoEnabled())
@@ -163,16 +163,20 @@ class SmsXSenderHandler  {
       c.setSourceId(AsyncCommand.SOURCE_SOAP);
 
       int status;
+      String id_message=null;
       final CmdStatusObserver observer = new CmdStatusObserver(null);
       c.addExecutionObserver(observer);
       Services.getInstance().getSenderService().execute(c);
       observer.waitStatus();
       switch (c.getStatus()) {
-        case SenderSendMessageCmd.STATUS_SUCCESS: status = STATUS_ACCEPTED; break;
+        case SenderSendMessageCmd.STATUS_SUCCESS:
+          status = STATUS_ACCEPTED;
+          id_message = SENDER_MSG_ID_PREFIX + c.getMsgId();
+          break;
         default: status = STATUS_SYSTEM_ERROR;
       }
 
-      return status;
+      return new SmsXSenderResponse(id_message, 0, status);
     } finally {
       if (log.isInfoEnabled())
         log.info("Time=" + (System.currentTimeMillis() - start));

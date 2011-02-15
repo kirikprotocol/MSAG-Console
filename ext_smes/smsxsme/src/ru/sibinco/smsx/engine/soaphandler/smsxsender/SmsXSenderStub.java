@@ -235,8 +235,8 @@ public class SmsXSenderStub extends org.apache.axis.client.Stub implements SmsXS
     }
   }
 
-  public int sendSysSms(String oa, String da, String message) throws RemoteException {
-    return 0;
+  public SmsXSenderResponse sendSysSms(String oa, String da, String message) throws RemoteException {
+    return null;
   }
 
   public SmsXSenderResponse checkStatus(java.lang.String SMSXIdMessage) throws java.rmi.RemoteException {

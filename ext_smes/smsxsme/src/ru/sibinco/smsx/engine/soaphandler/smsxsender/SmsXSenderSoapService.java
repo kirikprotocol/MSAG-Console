@@ -127,7 +127,7 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
       new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "Message"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false),
     };
     _oper = new org.apache.axis.description.OperationDesc("sendSysSms", _params, new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "sendSysSmsReturn"));
-    _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+    _oper.setReturnType(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "SmsXSenderResponse"));
     _oper.setElementQName(new javax.xml.namespace.QName("http://sibinco.ru/smsXSend", "sendSysSms"));
     _oper.setSoapAction("");
     _myOperationsList.add(_oper);
@@ -181,7 +181,7 @@ public class SmsXSenderSoapService implements SmsXSender, org.apache.axis.wsdl.S
     return impl.checkBatchSecretStatus(msgId);
   }
 
-  public int sendSysSms(String oa, String da, String message) throws RemoteException {
+  public SmsXSenderResponse sendSysSms(String oa, String da, String message) throws RemoteException {
     return impl.sendSysSms(oa, da, message);
   }
 
