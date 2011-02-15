@@ -35,7 +35,7 @@ extern "C" void sighandler( int signal )
  * USSBalance service entry point. Uses by default config.xml
  * USAGE: ussman [xml_config_file_name]
  */
-static const char * const _ussSrv = "ussman";
+static const char * const _ussSrv = "ussman"; //also names a configuration section in config.xml
 static const char * const _ussLogId = "USSMan";
 int main(int argc, char** argv)
 {
@@ -113,6 +113,6 @@ int main(int argc, char** argv)
     rval = 1;
   }
 
-  smsc_log_info(logger, "%s shutdown complete", USSMAN_PRODUCT_NAME);
+  smsc_log_info(logger, "%s shutdown complete", prodVer.c_str());
   return rval;
 }

@@ -7,6 +7,7 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/version.hpp"
 #include "inman/URCRegInit.hpp"
 #include "inman/services/SvcHost.hpp"
+using smsc::logger::Logger;
 using smsc::inman::ICServiceAC;
 using smsc::inman::SVCHost;
 using smsc::inman::SVCHostProducer;
@@ -110,7 +111,7 @@ int main(int argc, char** argv)
     }
     if (_svcHost)
         delete _svcHost;
-    smsc_log_info(inmanLogger, "%s shutdown complete", INMAN_PRODUCT_NAME);
+    smsc_log_info(inmanLogger, "%s shutdown complete", prodVer.c_str());
     return rval;
 }
 
