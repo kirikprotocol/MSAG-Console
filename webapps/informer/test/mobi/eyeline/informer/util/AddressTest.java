@@ -1,82 +1,89 @@
 package mobi.eyeline.informer.util;
 
-import mobi.eyeline.informer.admin.AdminException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Artem Snopkov
  */
 public class AddressTest {
 
-  @Test
-  public void test8() {
-    String expected = "+79139489906";
-    assertEquals(expected, new Address("+79139489906").getSimpleAddress());
-    assertEquals(expected, new Address("79139489906").getSimpleAddress());
-    assertEquals(expected, new Address("89139489906").getSimpleAddress());
-    expected = ".5.0.MTC";
-    assertEquals(expected, new Address(".5.0.MTC").getSimpleAddress());
-    assertEquals(expected, new Address(".5.0.MTC").getNormalizedAddress());
-    expected = "123";
-    assertEquals(expected, new Address(expected).getSimpleAddress());
-    assertEquals(".0.1."+expected, new Address(expected).getNormalizedAddress());
+  private static void assertAddressParamsEquals(Address address, int tone, int npi, String addr) {
+    assertEquals(addr, address.getAddress());
+    assertEquals(tone, address.getTone());
+    assertEquals(npi, address.getNpi());
   }
 
   @Test
-  public void createOkTest()  {
-    new Address("+79139495113");
-    new Address(".0.1.79139495113");
-    new Address("79139495113");
-    new Address(".1.1.79139495113");
-    new Address(".5.0.HelloWorld");
+  public void testCreateFromStringWithToneAndNpi() {
+    assertAddressParamsEquals(new Address(".5.0.MTC"), 5, 0, "MTC");
+    assertAddressParamsEquals(new Address(".1.1.913"), 1, 1, "913");
+    assertAddressParamsEquals(new Address(".0.0.913"), 0, 0, "913");
   }
 
   @Test
-  public void createCopyTest()  {
-    Address addr = new Address("+79139491513");
-    assertEquals(addr, new Address(addr));
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void createFailedTest1() throws AdminException {
-    new Address("HelloWorld");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void createFailedTest2() throws AdminException {
-    new Address("");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void createFailedTest3() throws AdminException {
-    new Address(".1.1.HelloWorld");
+  public void testCreateFromStringWithoutToneAndNpi() {
+    assertAddressParamsEquals(new Address("913"), 0, 1, "913");
   }
 
   @Test
-  public void getToneTest() {
-    assertEquals(1, new Address("+79139495113").getTone());
-    assertEquals(1, new Address("79139495113").getTone());
-    assertEquals(5, new Address(".5.0.HelloWorld").getTone());
+  public void testCreateFromStringWithPlusPrefix() {
+    assertAddressParamsEquals(new Address("+79139489906"), 1, 1, "79139489906");
   }
 
   @Test
-  public void getNpiTest()  {
-    assertEquals(1, new Address("+79139495113").getNpi());
-    assertEquals(1, new Address("79139495113").getNpi());
-    assertEquals(0, new Address(".5.0.HelloWorld").getNpi());
+  public void testCreateFromStringWithPrefix7() {
+    assertEquals(new Address("79139489906"), new Address("+79139489906"));
+    // Длина менее 11 знаков
+    assertAddressParamsEquals(new Address("713"), 0, 1, "713");
+    // Длина более 11 знаков
+    assertAddressParamsEquals(new Address("7131212121212121212"), 0, 1, "7131212121212121212");
   }
 
   @Test
-  public void getAddressTest() {
-    assertEquals("79139495113", new Address("+79139495113").getAddress());
-    assertEquals("79139495113", new Address("79139495113").getAddress());
-    assertEquals("HelloWorld", new Address(".5.0.HelloWorld").getAddress());
+  public void testCreateFromStringWithPrefix8() {
+    // Длина 11 знаков
+    assertEquals(new Address("89139489906"), new Address("+79139489906"));
+    // Длина менее 11 знаков
+    assertAddressParamsEquals(new Address("813"), 0, 1, "813");
+    // Длина более 11 знаков
+    assertAddressParamsEquals(new Address("8131212121212121212"), 0, 1, "8131212121212121212");
   }
 
   @Test
-  public void hashCodeTest()  {
+  public void testCreateFromAnotherAddress() {
+    String addresses[] = new String[] {".1.1.913", ".0.0.913", ".0.1.913", ".1.0.913"};
+    for (String address : addresses) {
+      Address addr = new Address(address);
+      assertEquals(addr, new Address(addr));
+    }
+  }
+
+  @Test
+  public void testCreateFromIncorrectString() {
+    String[] incorrectAddresses = new String[] {"Hello", ".1.1.Hello", ""};
+    for (String incorrectAddress : incorrectAddresses) {
+      try {
+        new Address(incorrectAddress);
+        fail("Create address for this: " + incorrectAddress);
+      } catch (IllegalArgumentException expected) {}
+    }
+  }
+
+  @Test(expected=NullPointerException.class)
+  public void testCreateFromNullString() {
+    new Address((String)null);
+  }
+
+  @Test(expected=NullPointerException.class)
+  public void testCreateFromNullAddress() {
+    new Address((Address)null);
+  }
+
+  @Test
+  public void testHashCode()  {
     Address addr1 = new Address("+79139495113");
     Address addr2 = new Address("+79139495113");
 

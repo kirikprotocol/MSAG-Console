@@ -77,9 +77,9 @@ public class Address implements Serializable {
       }else {
         tone = 0;
       }
-      if(address.startsWith("7")) {
+      if(address.startsWith("7") && address.length() == 11) {
         this.tone = 1;
-      }else if(address.startsWith("8")) {
+      }else if(address.startsWith("8") && address.length() == 11) {
         address =  new StringBuffer(address.length()).append('7').append(address.substring(1)).toString();
         this.tone = 1;
       }
