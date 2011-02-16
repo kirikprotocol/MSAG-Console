@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin.contentprovider;
 
+import mobi.eyeline.informer.admin.delivery.Message;
+import mobi.eyeline.informer.admin.delivery.MessageState;
 import mobi.eyeline.informer.util.Address;
 
 import java.io.PrintStream;
@@ -21,15 +23,19 @@ class ReportFormatter {
     }
   };
 
-  static void writeReportLine(PrintStream reportWriter, String abonent, Date date, String s) {
-    reportWriter.print(abonent);
+  static void writeReportLine(PrintStream reportWriter, Address abonent, String userData, Date date, MessageState state, Integer smppCode) {
+    reportWriter.print(abonent.getSimpleAddress());
     reportWriter.print("|");
+    if (userData != null) {
+      reportWriter.print(userData);
+      reportWriter.print("|");
+    }
     reportWriter.print(dateFormat.get().format(date));
     reportWriter.print("|");
-    reportWriter.println(s);
-  }
-
-  static void writeReportLine(PrintStream reportWriter, Address abonent, Date date, String s) {
-    writeReportLine(reportWriter, abonent.getSimpleAddress(), date, s);
+    reportWriter.print(state.toString());
+    reportWriter.print("|");
+    if (smppCode == null)
+      smppCode = 0;
+    reportWriter.println(smppCode);
   }
 }

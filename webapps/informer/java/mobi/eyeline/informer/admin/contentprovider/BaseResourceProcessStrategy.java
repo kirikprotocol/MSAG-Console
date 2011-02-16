@@ -358,12 +358,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       MessageFilter filter = new MessageFilter(d.getId(), d.getStartDate(), new Date());
       context.getMessagesStates(user.getLogin(), filter, 1000, new Visitor<Message>() {
         public boolean visit(Message mi) throws AdminException {
-          String result = "";
-          String userData = mi.getProperty("userData");
-          if (userData != null)
-            result = userData + '|';
-          result += mi.getState().toString() + '|' + ((mi.getErrorCode()) != null ? (mi.getErrorCode()) : "0");
-          ReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getDate(), result);
+          ReportFormatter.writeReportLine(psFinal, mi.getAbonent(), mi.getProperty("udata"), new Date(), mi.getState(), mi.getErrorCode());
           return true;
         }
       });
@@ -399,19 +394,12 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       if (inx < 0)
         throw new IllegalArgumentException("INVALID LINE FORMAT");
 
-
       String abonent = line.substring(0, inx).trim();
       Address ab;
       try {
         ab = new Address(abonent);
       } catch (Exception e) {
         throw new IllegalArgumentException("INVALID ABONENT");
-      }
-
-      if (regions != null) {
-        Region r = context.getRegion(ab);
-        if (r == null || !regions.contains(r.getRegionId()))
-          throw new IllegalArgumentException("NOT ALLOWED REGION");
       }
 
       String text, userData = null;
@@ -425,7 +413,7 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
 
       Message m = Message.newMessage(ab, decodeText(text));
       if (userData != null)
-        m.setProperty("userData", userData);
+        m.setProperty("udata", userData);
       return m;
     }
 
@@ -454,6 +442,12 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
       return sb.toString();
     }
 
+    private boolean isRegionAllowed(Address addr) {
+      if (regions == null)
+        return true;
+      Region r = context.getRegion(addr);
+      return (r != null && regions.contains(r.getRegionId()));
+    }
 
     public Message next() throws AdminException {
       try {
@@ -465,11 +459,17 @@ abstract class BaseResourceProcessStrategy implements ResourceProcessStrategy {
             Message m = parseLine(line);
             if (m == null)
               continue;
+
+            if (!isRegionAllowed(m.getAbonent())) {
+              ReportFormatter.writeReportLine(reportWriter, m.getAbonent(), m.getProperty("udata"), new Date(), MessageState.Failed, 9999);
+              continue;
+            }
+
             return m;
           } catch (IllegalArgumentException e) {
-            ReportFormatter.writeReportLine(reportWriter, line, new Date(), e.getMessage());
+            log.error("Error parse line in imported file. Line='" + line + "'. Line will be skipped.",e);
           } catch (Exception e) {
-            ReportFormatter.writeReportLine(reportWriter, line, new Date(), "ERROR PARSING LINE :" + line);
+            log.error("Error parse line in imported file. Line='" + line + "'. Line will be skipped.",e);
           }
         }
       } catch (IOException ioe) {
