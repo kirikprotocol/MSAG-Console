@@ -77,7 +77,7 @@ class SFTPResource extends FileResource {
       session = jsch.getSession(login, host);
       if(port != null && port != 0) session.setPort(port);
       session.setPassword(password);
-      session.setTimeout(5000);
+      session.setTimeout(30000);
       session.connect();
       channel = (ChannelSftp)session.openChannel("sftp");
       channel.connect();
