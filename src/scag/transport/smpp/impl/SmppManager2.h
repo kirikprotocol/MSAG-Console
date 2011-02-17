@@ -121,8 +121,7 @@ public:
         rv=me.getEntity(dest);
         if (traceit) { traceit->push_back("meta by dst");}
       }
-    }else
-    {
+    } else {
       const time_t now = time(0);
       rv=me.getEntity(now);
       if (traceit) { traceit->push_back("meta by time");}
@@ -300,13 +299,15 @@ protected:
             seed=(unsigned int)time(NULL);
         }
 
-        SmppEntity* getStoredMapping(const Address& addr)
+        SmppEntity* getStoredMapping( const Address& addr,
+                                      ValueList::iterator* viter = 0)
         {
             AbonentsMap::iterator it=storedMappings.find(addr);
             if(it==storedMappings.end())return 0;
             ValueList::iterator vit = it->second;
             timeMap.erase(vit->titer);
             vit->titer = timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,vit));
+            if (viter) {*viter = vit;}
             return vit->ptr;
         }
 
@@ -333,17 +334,31 @@ protected:
         {
             const time_t now = time(0);
             smsc::core::synchronization::MutexGuard mg(mtx);
-            SmppEntity* ptr=getStoredMapping(addr);
+            ValueList::iterator vit;
+            SmppEntity* ptr=getStoredMapping(addr,&vit);
+            do {
+                {
+                    smsc::core::synchronization::MutexGuard mg2(ptr->mtx);
+                    if ( ptr->bt!=btNone && ptr->info.enabled ) {
+                        break;
+                    }
+                }
+                // remove bad mapping
+                storedMappings.erase(vit->aiter);
+                timeMap.erase(vit->titer);
+                valueList.erase(vit);
+                ptr = 0;
+            } while (false);
             if(!ptr)
             {
                 mtx.Unlock();
                 try{
                     ptr=getEntity(now);
-                    createStoredMapping(addr,ptr);
-                }catch(...)
-                    {
-                        
+                    if (ptr) {
+                        createStoredMapping(addr,ptr);
                     }
+                } catch(...) {
+                }
                 mtx.Lock();
             }
             expireMappings(now);
