@@ -6,6 +6,7 @@ import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Date;
@@ -33,6 +34,7 @@ public class TestDeliveryManagerTest {
     }
   }
 
+  @Ignore
   @Test
   public void delivery() throws AdminException, InterruptedException {
 
