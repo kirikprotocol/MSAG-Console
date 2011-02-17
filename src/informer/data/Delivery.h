@@ -80,7 +80,18 @@ protected:
 
 };
 
+
+class DeliveryFilter
+{
+public:
+    virtual ~DeliveryFilter() {}
+    virtual bool filter( const Delivery& d ) = 0;
+};
+
+
 typedef EmbedRefPtr< Delivery >  DeliveryPtr;
+
+typedef std::vector< DeliveryPtr > DeliveryList;
 
 } // informer
 } // smsc

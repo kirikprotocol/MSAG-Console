@@ -1180,6 +1180,15 @@ DeliveryPtr InfosmeCoreV1::getDelivery( const UserInfo& userInfo,
 }
 
 
+dlvid_type InfosmeCoreV1::getDeliveries( unsigned        count,
+                                         DeliveryFilter& filter,
+                                         DeliveryList*   result,
+                                         dlvid_type      startId )
+{
+    return dlvMgr_->getDeliveries(count,filter,result,startId);
+}
+
+
 int InfosmeCoreV1::sendTestSms( const char*        sourceAddr,
                                 personid_type      subscriber,
                                 const char*        text,

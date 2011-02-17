@@ -155,6 +155,11 @@ template <typename RegIter> std::string formatRegionList( RegIter begin, RegIter
 }
 
 
+static const dlvid_type deliveryChunkSize = 1000;
+inline dlvid_type getDeliveryChunkStart(dlvid_type dlvId) {
+    return dlvId / deliveryChunkSize * deliveryChunkSize;
+}
+
 /// buf must be at least 40 bytes
 /// @return pointer to trailing \0.
 char* makeDeliveryPath( char* buf, dlvid_type dlvId );

@@ -77,8 +77,6 @@ public:
     static const size_t USERID_LENGTH = userid_type::MAX_SZ;
     static const size_t PASSWORD_LENGTH = 32;
 
-    typedef std::vector< DeliveryPtr > DeliveryList;
-
     UserInfo( const char* id,
               const char* pwd,
               unsigned    priority = 1,

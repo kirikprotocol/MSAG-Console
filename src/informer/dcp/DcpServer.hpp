@@ -212,15 +212,16 @@ protected:
   typedef std::multimap<time_t,int> DlvListReqTimeMap;
 
   struct DlvListRequest{
-    DlvListRequest(int connId,int argReqId):reqId(argReqId)
+    DlvListRequest(int connId,int argReqId):reqId(argReqId),last(0)
     {
 
     }
     int connId;
     int reqId;
     std::vector<messages::DeliveryFields> fields;
-    std::vector<DeliveryPtr>::iterator last;
-    std::vector<DeliveryPtr> dlvLst;
+    std::vector<UserInfoPtr>    userLst;
+    dlvid_type                  last;
+    messages::DeliveriesFilter  filter;
     DlvListReqTimeMap::iterator timeMapIt;
   };
   sync::Mutex dlvReqMtx;

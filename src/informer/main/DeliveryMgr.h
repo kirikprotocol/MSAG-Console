@@ -25,6 +25,7 @@ class DeliveryMgr : public smsc::core::threads::Thread
     class StoreJournalRoller;
     class StatsDumper;
     class CancelTask;
+    class DeliveryChunkList;
 
 public:
     DeliveryMgr( InfosmeCoreV1& core, CommonSettings& cs );
@@ -45,6 +46,11 @@ public:
     virtual int Execute();
 
     bool getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr );
+
+    dlvid_type getDeliveries( unsigned        count,
+                              DeliveryFilter& filter,
+                              DeliveryList*   result,
+                              dlvid_type      startId );
 
     /// invoked to from infosmecorev1 only!
     bool finishStateChange( msgtime_type    currentTime,
@@ -76,15 +82,15 @@ protected:
 
     void readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr = 0 );
 
-    typedef std::list<DeliveryImplPtr>                             DeliveryList;
-    typedef smsc::core::buffers::IntHash< DeliveryList::iterator > DeliveryHash;
+    typedef std::list<DeliveryImplPtr>                              DeliveryIList;
+    typedef smsc::core::buffers::IntHash< DeliveryIList::iterator > DeliveryHash;
     typedef std::multimap< msgtime_type, dlvid_type >         DeliveryWakeQueue;
 
-    DeliveryList::iterator popDelivery( dlvid_type dlvId,
-                                        DeliveryList& tokill );
+    DeliveryIList::iterator popDelivery( dlvid_type dlvId,
+                                         DeliveryIList& tokill );
 
 
-    inline void freeDlvIterator( DeliveryList::iterator iter ) {
+    inline void freeDlvIterator( DeliveryIList::iterator iter ) {
         if (inputRollingIter_ == iter) ++inputRollingIter_;
         if (storeRollingIter_ == iter) ++storeRollingIter_;
         if (statsDumpingIter_ == iter) ++statsDumpingIter_;
@@ -94,14 +100,16 @@ private:
     smsc::logger::Logger*                      log_;
     InfosmeCoreV1&                             core_;
     CommonSettings&                            cs_;
-    smsc::core::synchronization::EventMonitor  mon_;
 
+    DeliveryChunkList*                            deliveryChunkList_;
+
+    smsc::core::synchronization::EventMonitor  mon_;
     DeliveryHash                                  deliveryHash_;
-    DeliveryList                                  deliveryList_;
+    DeliveryIList                                 deliveryList_;
     DeliveryWakeQueue                             deliveryWakeQueue_; // on plantime
-    DeliveryList::iterator                        inputRollingIter_;
-    DeliveryList::iterator                        storeRollingIter_;
-    DeliveryList::iterator                        statsDumpingIter_;
+    DeliveryIList::iterator                       inputRollingIter_;
+    DeliveryIList::iterator                       storeRollingIter_;
+    DeliveryIList::iterator                       statsDumpingIter_;
     
     StoreJournal*                                 storeJournal_; // owned
     InputJournal*                                 inputJournal_; // owned

@@ -39,7 +39,7 @@ public:
                                   uint64_t                 maxMsgId )
     {
         smsc_log_debug(log_,"setting input record R=%u/D=%u",rec.regionId,dlvId);
-        DeliveryList::iterator* iter = mgr_.deliveryHash_.GetPtr(dlvId);
+        DeliveryIList::iterator* iter = mgr_.deliveryHash_.GetPtr(dlvId);
         if (!iter) {
             smsc_log_info(log_,"delivery D=%u is not found, ok",dlvId);
             return;
@@ -53,7 +53,7 @@ public:
         BindSignal bs;
         bs.bind = true;
         int dlvId;
-        DeliveryList::iterator iter;
+        DeliveryIList::iterator iter;
         smsc_log_debug(log_,"invoking postInit to bind filled regions");
         for ( DeliveryHash::Iterator i(mgr_.deliveryHash_); i.Next(dlvId,iter); ) {
             if (getCS()->isStopping()) { break; }
@@ -94,7 +94,7 @@ public:
                            msg.text.getText() ? msg.text.getText() : "",
                            serial);
         }
-        DeliveryList::iterator* iter = mgr_.deliveryHash_.GetPtr(dlvId);
+        DeliveryIList::iterator* iter = mgr_.deliveryHash_.GetPtr(dlvId);
         if (!iter) {
             smsc_log_info(log_,"delivery D=%u is not found, ok",dlvId);
             return;
@@ -109,7 +109,7 @@ public:
         bsEmpty.bind = false;
         bsFilled.bind = true;
         int dlvId;
-        DeliveryList::iterator iter;
+        DeliveryIList::iterator iter;
         smsc_log_debug(log_,"invoking postInit to bind/unbind regions");
         for ( DeliveryHash::Iterator i(mgr_.deliveryHash_); i.Next(dlvId,iter); ) {
             if (getCS()->isStopping()) { break; }
@@ -144,7 +144,7 @@ public:
     virtual int Execute()
     {
         smsc_log_debug(log_,"input journal roller started");
-        DeliveryList::iterator& iter = mgr_.inputRollingIter_;
+        DeliveryIList::iterator& iter = mgr_.inputRollingIter_;
         while (! getCS()->isStopping() ) {
             bool firstPass = true;
             size_t written = 0;
@@ -188,7 +188,7 @@ public:
     virtual int Execute()
     {
         smsc_log_debug(log_,"store journal roller started");
-        DeliveryList::iterator& iter = mgr_.storeRollingIter_;
+        DeliveryIList::iterator& iter = mgr_.storeRollingIter_;
         while (! getCS()->isStopping()) { // never ending loop
             bool firstPass = true;
             size_t written = 0;
@@ -239,7 +239,7 @@ public:
         mgr_.core_.initUserStats();
         DeliveryStats ds;
         MutexGuard mg(mgr_.mon_);
-        for ( DeliveryList::iterator i = mgr_.deliveryList_.begin();
+        for ( DeliveryIList::iterator i = mgr_.deliveryList_.begin();
               i != mgr_.deliveryList_.end(); ++i ) {
             for ( regionid_type regId = anyRegionId;
                   (regId = (*i)->popMsgStats(regId,ds)) != anyRegionId;
@@ -298,7 +298,7 @@ public:
         const ulonglong ymd = msgTimeToYmd(currentTime);
         char* bufpos = buf + sprintf(buf,"%04u,",unsigned(ymd % 10000));
 
-        DeliveryList::iterator& iter = mgr_.statsDumpingIter_;
+        DeliveryIList::iterator& iter = mgr_.statsDumpingIter_;
         bool firstPass = true;
         do {
             DeliveryImplPtr dlv;
@@ -394,6 +394,109 @@ private:
 };
 
 
+namespace {
+class DeliveryChunk
+{
+    static const unsigned perval = 64;
+
+public:
+    DeliveryChunk( dlvid_type dlvId ) : start_(getDeliveryChunkStart(dlvId)) {}
+    /// get the next chunk
+    bool getNextDelivery( dlvid_type& dlvId ) {
+        const size_t pos = size_t(dlvId - start_);
+        size_t idx = pos / perval;
+        unsigned nbit = pos % perval;
+        MutexGuard mg(lock_);
+        for ( ; idx < list_.size(); nbit=0, ++idx ) {
+            uint64_t value = list_[idx];
+            value >>= nbit;
+            if (!value) { continue; }
+            while ( (value & 1) == 0 ) {
+                ++nbit;
+                value >>= 1;
+            }
+            dlvId = nbit + idx*perval;
+            return true;
+        }
+        return false;
+    }
+    void setDelivery( dlvid_type dlvId, bool on ) {
+        const size_t pos = size_t(dlvId-start_);
+        size_t idx = pos / perval;
+        MutexGuard mg(lock_);
+        if ( idx >= list_.size() ) {
+            if (!on) return;
+            list_.resize(idx+1);
+        }
+        const uint64_t bitval = uint64_t(1) << (pos % perval);
+        if ( on ) {
+            list_[idx] |= bitval;
+        } else {
+            list_[idx] &= ~bitval;
+        }
+    }
+    bool hasDelivery( dlvid_type dlvId ) {
+        const size_t pos = size_t(dlvId-start_);
+        size_t idx = pos / perval;
+        MutexGuard mg(lock_);
+        if ( idx < list_.size() ) {
+            uint64_t value = list_[idx];
+            value >>= (pos % perval);
+            if ((value & 1)!=0) return true;
+        }
+        return false;
+    }
+    dlvid_type start() const { return start_; }
+private:
+    dlvid_type start_;
+    smsc::core::synchronization::Mutex lock_;
+    std::vector< uint64_t > list_;
+};
+}
+
+class DeliveryMgr::DeliveryChunkList
+{
+    struct FindByIdx {
+        bool operator () ( const DeliveryChunk* chunk, dlvid_type idx ) const {
+            return chunk->start() < idx;
+        }
+    };
+
+public:
+    DeliveryChunk* getNextChunk(dlvid_type dlvId) {
+        const dlvid_type chunkIdx = getDeliveryChunkStart(dlvId);
+        MutexGuard mg(lock_);
+        ChunkList::iterator i = std::lower_bound(chunks_.begin(),
+                                                 chunks_.end(),
+                                                 chunkIdx,
+                                                 FindByIdx());
+        if ( i == chunks_.end() ) { return 0; }
+        return *i;
+    }
+    DeliveryChunk* getChunk(dlvid_type dlvId, bool create) {
+        const dlvid_type chunkIdx = getDeliveryChunkStart(dlvId);
+        MutexGuard mg(lock_);
+        ChunkList::iterator i = std::lower_bound(chunks_.begin(),
+                                                 chunks_.end(),
+                                                 chunkIdx,
+                                                 FindByIdx());
+        if ( i == chunks_.end() || (*i)->start() != chunkIdx ) {
+            if (!create) { return 0; }
+            DeliveryChunk* res = new DeliveryChunk(chunkIdx);
+            chunks_.insert(i,res);
+            return res;
+        }
+        return *i;
+    }
+
+private:
+    typedef std::vector<DeliveryChunk*> ChunkList;
+
+    smsc::core::synchronization::Mutex lock_;
+    ChunkList                          chunks_;
+};
+
+
 // ============================================================================
 
 DeliveryMgr::DeliveryMgr( InfosmeCoreV1& core, CommonSettings& cs ) :
@@ -437,7 +540,7 @@ DeliveryMgr::~DeliveryMgr()
     smsc_log_info(log_,"--- destroying all deliveries ---");
     deliveryHash_.Empty();
     // detach all deliveries from user infos
-    for ( DeliveryList::iterator i = deliveryList_.begin(); i != deliveryList_.end(); ++i ) {
+    for ( DeliveryIList::iterator i = deliveryList_.begin(); i != deliveryList_.end(); ++i ) {
         (*i)->detachEverything();
     }
     deliveryList_.clear();
@@ -515,6 +618,15 @@ void DeliveryMgr::init()
                 const dlvid_type dlvId(dlvid_type(strtoul(idlv->c_str(),0,10)));
                 if (dlvId > lastDlvId_) {
                     lastDlvId_ = dlvId;
+                }
+                if ( getCS()->isArchive() || getCS()->isEmergency() ) {
+                    // adding a bit
+                    DeliveryChunk* chunk = deliveryChunkList_->getChunk(dlvId,true);
+                    if (!chunk) {
+                        throw InfosmeException(EXC_LOGICERROR,"cannot create a chunk for D=%u",dlvId);
+                    }
+                    chunk->setDelivery(dlvId,true);
+                    continue;
                 }
                 try {
                     readDelivery( dlvId );
@@ -616,8 +728,8 @@ void DeliveryMgr::deleteDelivery( dlvid_type dlvId,
                                   std::vector<regionid_type>& regIds,
                                   bool moveToArchive )
 {
-    DeliveryList tokill;
-    DeliveryList::iterator iter;
+    DeliveryIList tokill;
+    DeliveryIList::iterator iter;
     {
         MutexGuard mg(mon_);
         iter = popDelivery(dlvId,tokill);
@@ -690,18 +802,56 @@ bool DeliveryMgr::getDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr )
 {
     if (innerGetDelivery(dlvId,ptr)) { return true; }
     // dlv is not found
-    if ( getCS()->getDlvCacheSize() == 0 ) { return false; }
+    DeliveryChunk* chunk = deliveryChunkList_->getChunk(dlvId,false);
+    if (!chunk || !chunk->hasDelivery(dlvId)) { return false; }
     // try to upload
     try {
         readDelivery(dlvId,&ptr);
     } catch ( InfosmeException& e ) {
         if ( e.getCode() != EXC_ALREADYEXIST ) {
+            // failed to read
+            chunk->setDelivery(dlvId,false);
             return false;
         }
     } catch ( std::exception& e ) {
+        chunk->setDelivery(dlvId,false);
         return false;
     }
     return true;
+}
+
+
+dlvid_type DeliveryMgr::getDeliveries( unsigned        count,
+                                       DeliveryFilter& filter,
+                                       DeliveryList*   result,
+                                       dlvid_type      startId )
+{
+    do {
+
+        DeliveryChunk* chunk = deliveryChunkList_->getNextChunk(startId);
+        if (!chunk) {
+            // no more chunks and deliveries
+            return 0;
+        }
+        
+        // processing the chunk
+        while ( chunk->getNextDelivery(startId) ) {
+            DeliveryImplPtr ptr;
+            if (getDelivery(startId,ptr)) {
+                if ( filter.filter(*ptr) ) {
+                    if (result) {
+                        result->push_back(ptr);
+                    }
+                    if (count>0) {
+                        if (!--count) return ++startId;
+                    }
+                }
+            }
+            ++startId;
+        }
+
+    } while (true);
+    return startId;
 }
 
 
@@ -755,7 +905,7 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
             char dbuf[100];
             memcpy(dbuf,buf,4);
             MutexGuard dmg(mon_);
-            for ( DeliveryList::iterator i = deliveryList_.begin(); i != deliveryList_.end(); ++i ) {
+            for ( DeliveryIList::iterator i = deliveryList_.begin(); i != deliveryList_.end(); ++i ) {
                 const DeliveryImpl* ptr = i->get();
                 if ( ptr && ptr->getState() == DLVSTATE_ACTIVE ) {
                     const int dbuflen = sprintf(dbuf+4,",a,%u,%s,0\n",
@@ -784,7 +934,7 @@ bool DeliveryMgr::finishStateChange( msgtime_type    currentTime,
 bool DeliveryMgr::innerGetDelivery( dlvid_type dlvId, DeliveryImplPtr& ptr )
 {
     MutexGuard mg(mon_);
-    DeliveryList::iterator* iter = deliveryHash_.GetPtr(dlvId);
+    DeliveryIList::iterator* iter = deliveryHash_.GetPtr(dlvId);
     if (iter) {
         ptr = **iter;
         // move to the beginning of the list
@@ -834,7 +984,7 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
                                  state,
                                  planTime ));
     userInfo.attachDelivery( *dlv );
-    DeliveryList tokill;
+    DeliveryIList tokill;
     {
         MutexGuard mg(mon_);
         deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), *dlv));
@@ -846,12 +996,17 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
         if ( getCS()->getDlvCacheSize() > 0 &&
              unsigned(deliveryHash_.Count()) > getCS()->getDlvCacheSize() ) {
             // remove oldest deliveries
-            DeliveryList::iterator iter = 
+            DeliveryIList::iterator iter = 
                 popDelivery((*deliveryList_.rbegin())->getDlvId(),tokill);
             (*iter)->detachEverything();
         }
         mon_.notify();
     }
+    DeliveryChunk* chunk = deliveryChunkList_->getChunk(dlvId,true);
+    if (!chunk) {
+        throw InfosmeException(EXC_LOGICERROR,"cannot create chunk for D=%u",dlvId);
+    }
+    chunk->setDelivery(dlvId,true);
 }
 
 
@@ -867,7 +1022,7 @@ dlvid_type DeliveryMgr::getNextDlvId()
     MutexGuard mg(mon_);
     for ( int i = 0; i < 1000; ++i ) {
         while ( !++lastDlvId_ ) {}
-        DeliveryList::iterator* iter = deliveryHash_.GetPtr(lastDlvId_);
+        DeliveryIList::iterator* iter = deliveryHash_.GetPtr(lastDlvId_);
         if (!iter) return lastDlvId_;
     }
     throw InfosmeException(EXC_SYSTEM,"no more free delivery ids, try again");
@@ -990,25 +1145,34 @@ void DeliveryMgr::readFromArchive()
 
 void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
 {
+    bool isChunked = false;
+    // FIXME: check delivery chunk index
+
     DeliveryInfoData data;
-    DeliveryImpl::readDeliveryInfoData(dlvId, data);
-
-    UserInfoPtr user(core_.getUserInfo(data.owner.c_str()));
-    if (!user.get()) {
-        throw InfosmeException(EXC_CONFIG,"D=%u has unknown user: '%s'",
-                               dlvId,data.owner.c_str());
-    }
-
-    // read state
+    UserInfoPtr user;
     msgtime_type planTime = 0;
-    DlvState state = DeliveryImpl::readState(dlvId, planTime );
-    if ( getCS()->isArchive() ) {
-        switch (state) {
-        case DLVSTATE_PLANNED:
-        case DLVSTATE_ACTIVE: state = DLVSTATE_FINISHED; break;
-        default: break;
+    DlvState state;
+
+    if ( ! isChunked ) {
+
+        DeliveryImpl::readDeliveryInfoData(dlvId, data);
+
+        user = core_.getUserInfo(data.owner.c_str());
+        if (!user.get()) {
+            throw InfosmeException(EXC_CONFIG,"D=%u has unknown user: '%s'",
+                                   dlvId,data.owner.c_str());
         }
-        planTime = 0;
+
+        // read state
+        state = DeliveryImpl::readState(dlvId, planTime );
+        if ( getCS()->isArchive() ) {
+            switch (state) {
+            case DLVSTATE_PLANNED:
+            case DLVSTATE_ACTIVE: state = DLVSTATE_FINISHED; break;
+            default: break;
+            }
+            planTime = 0;
+        }
     }
 
     DeliveryInfo* info = new DeliveryInfo(dlvId, data, *user.get());
@@ -1020,11 +1184,11 @@ void DeliveryMgr::readDelivery( dlvid_type dlvId, DeliveryImplPtr* ptr )
 }
 
 
-DeliveryMgr::DeliveryList::iterator
+DeliveryMgr::DeliveryIList::iterator
     DeliveryMgr::popDelivery( dlvid_type dlvId,
-                              DeliveryList& tokill )
+                              DeliveryIList& tokill )
 {
-    DeliveryList::iterator iter;
+    DeliveryIList::iterator iter;
     if (!deliveryHash_.Pop(dlvId,iter) ) {
         throw InfosmeException(EXC_NOTFOUND,"delivery %u is not found",dlvId);
     }
