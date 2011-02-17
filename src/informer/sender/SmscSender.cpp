@@ -496,6 +496,11 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                 break;
             }
 
+            bool useDataSm;
+            if ( ! msg.flags.hasUseDataSm(useDataSm) ) {
+                useDataSm = info.useDataSm();
+            }
+
             {
                 DlvMode dlvMode;
                 if ( ! msg.flags.getDeliveryMode(dlvMode) ) {
@@ -503,6 +508,9 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                 }
 
                 if ( dlvMode != DLVMODE_SMS ) {
+                    // force submitsm
+                    useDataSm = false;
+
                     // ussdpush
                     const int ussdop = ( dlvMode == DLVMODE_USSDPUSH ?
                                          smscConfig_.ussdPushOp :
@@ -525,11 +533,6 @@ int SmscSender::send( RegionalStorage& ptr, Message& msg,
                         break;
                     }
                 } // ussdpush
-            }
-
-            bool useDataSm;
-            if ( ! msg.flags.hasUseDataSm(useDataSm) ) {
-                useDataSm = info.useDataSm();
             }
 
             drm->nchunks = nchunks;
