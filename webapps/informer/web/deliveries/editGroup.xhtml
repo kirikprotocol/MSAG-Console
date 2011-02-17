@@ -108,6 +108,10 @@
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
       <tr:inputText id="emailNotification" value="#{deliveryGroupEdit.emailNotification}" simple="true" />
 
+      <h:selectBooleanCheckbox id="editUseDataSm" value="#{deliveryGroupEdit.editUseDataSm}" onchange="document.getElementById('useDataSm').disabled=!this.checked" style="display:#{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
+      <h:outputText style="white-space:nowrap;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.useDataSm}" />
+      <h:selectBooleanCheckbox id="useDataSm" value="#{deliveryGroupEdit.useDataSm}" style="white-space:nowrap;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
+
       <h:selectBooleanCheckbox id="editDeliveryType" value="#{deliveryGroupEdit.editDeliveryMode}" onchange="document.getElementById('deliveryType').disabled=!this.checked" style="display:#{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
       <h:outputText style="white-space:nowrap;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}" />
       <h:selectOneMenu id="deliveryType" value="#{deliveryGroupEdit.deliveryMode}" style="align:left;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"  onchange="
@@ -218,6 +222,7 @@
       document.getElementById('emailNotification').disabled = !document.getElementById('editEmailNotification').checked;
       document.getElementById('flash').disabled = !document.getElementById('editFlash').checked;
 
+      document.getElementById('useDataSm').disabled=!document.getElementById('editUseDataSm').checked;
       document.getElementById('deliveryType').disabled=!document.getElementById('editDeliveryType').checked;
       e = document.getElementById('transactionMode');
       if(e != null) {

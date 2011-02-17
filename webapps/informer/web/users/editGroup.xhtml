@@ -107,6 +107,10 @@
           <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
           <tr:selectBooleanCheckbox simple="true" id="emailNotification" value="#{userGroupEdit.emailNotification}"  />
 
+          <h:selectBooleanCheckbox id="editUseDataSm" value="#{userGroupEdit.editUseDataSm}" onchange="document.getElementById('useDataSm').disabled=!this.checked" style="display:#{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
+          <h:outputText style="white-space:nowrap;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.useDataSm}" />
+          <h:selectBooleanCheckbox id="useDataSm" style="white-space:nowrap;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userGroupEdit.useDataSm}" />
+
           <h:selectBooleanCheckbox id="editDeliveryType" value="#{userGroupEdit.editDeliveryType}" onchange="document.getElementById('deliveryType').disabled=!this.checked" style="display:#{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
           <h:outputText style="white-space:nowrap;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}" />
           <h:selectOneMenu id="deliveryType" value="#{userGroupEdit.deliveryType}" style="align:left;display: #{userGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"
@@ -259,6 +263,7 @@
         document.getElementById('smsNotification').disabled = !document.getElementById('editSmsNotification').checked;
         document.getElementById('emailNotification').disabled = !document.getElementById('editEmailNotification').checked;
 
+        document.getElementById('useDataSm').disabled=!document.getElementById('editUseDataSm').checked;
         document.getElementById('deliveryType').disabled=!document.getElementById('editDeliveryType').checked;
         document.getElementById('transactionMode').disabled=!document.getElementById('editTransactionMode').checked;
         document.getElementById('validityPeriod.hours').disabled=!document.getElementById('editValidHours').checked;

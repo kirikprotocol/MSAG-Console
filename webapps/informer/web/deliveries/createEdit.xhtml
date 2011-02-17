@@ -84,6 +84,9 @@
           <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>
       </h:panelGrid>
 
+      <h:outputText style="white-space:nowrap; display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}" value="#{deliveryBundle.useDataSm}"/>
+        <h:selectBooleanCheckbox value="#{createDelivery.activePage.delivery.useDataSm}" style="white-space:nowrap; display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}"/>
+
       <h:outputText style="white-space: nowrap;display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
       <h:selectOneMenu id="dMode" value="#{createDelivery.activePage.delivery.deliveryMode}"
                        converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.deliveryMode}"

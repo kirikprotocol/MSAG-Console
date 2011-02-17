@@ -136,6 +136,9 @@
         <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretFlash}" rendered="#{deliveryEdit.secret}"/>
         <tr:selectBooleanCheckbox readOnly="true" value="#{deliveryEdit.flashSecret}" simple="true" rendered="#{deliveryEdit.secret}"/>
 
+        <h:outputText style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.useDataSm}"/>
+        <h:selectBooleanCheckbox value="#{deliveryEdit.useDataSm}" style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
+
         <h:outputText style="white-space:nowrap; display: #{deliveryEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
         <h:selectOneMenu converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.deliveryMode}" id="dMode" value="#{deliveryEdit.delivery.deliveryMode}" converter="deliveryTypeConverter"
                          onchange="dModeChanged()"

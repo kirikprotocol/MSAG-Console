@@ -301,4 +301,12 @@ public class DeliveryEditController extends DeliveryController {
   public DeliveryStatusHistory getStatusHistory() {
     return statusHistory;
   }
+
+  public boolean isUseDataSm() {
+    return delivery.isUseDataSm();
+  }
+
+  public void setUseDataSm(boolean useDataSm) {
+    delivery.setUseDataSm(useDataSm);
+  }
 }

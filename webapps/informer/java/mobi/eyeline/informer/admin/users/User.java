@@ -47,6 +47,7 @@ public class User implements Serializable {
   private boolean smsNotification;
   private boolean createArchive;
   private int deliveryLifetime;
+  private boolean useDataSm;
   //private String directory;
 
 
@@ -92,6 +93,7 @@ public class User implements Serializable {
     this.smsNotification = user.smsNotification;
     this.createArchive=user.createArchive;
     this.deliveryLifetime=user.deliveryLifetime;
+    this.useDataSm = user.useDataSm;
 
     this.allRegionsAllowed=user.allRegionsAllowed;
     this.retryOnFail = user.retryOnFail;
@@ -344,6 +346,14 @@ public class User implements Serializable {
 
   public void setDeliveryLifetime(int deliveryLifetime) {
     this.deliveryLifetime = deliveryLifetime;
+  }
+
+  public boolean isUseDataSm() {
+    return useDataSm;
+  }
+
+  public void setUseDataSm(boolean useDataSm) {
+    this.useDataSm = useDataSm;
   }
 
   public boolean isAllRegionsAllowed() {

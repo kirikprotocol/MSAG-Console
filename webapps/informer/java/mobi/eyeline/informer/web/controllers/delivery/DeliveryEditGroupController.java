@@ -45,6 +45,9 @@ public class DeliveryEditGroupController extends DeliveryController{
   private boolean flash;
   private boolean editFlash;
 
+  private boolean useDataSm;
+  private boolean editUseDataSm;
+
   private DeliveryMode deliveryMode;
   private boolean editDeliveryMode;
 
@@ -103,6 +106,10 @@ public class DeliveryEditGroupController extends DeliveryController{
           }
           if(editActiveWeekDays) {
             d.setActiveWeekDays(activeWeekDays);
+          }
+
+          if (editUseDataSm) {
+            d.setUseDataSm(useDataSm);
           }
 
           if(editDeliveryMode) {
@@ -379,6 +386,22 @@ public class DeliveryEditGroupController extends DeliveryController{
 
   public void setSourceAddress(Address sourceAddress) {
     this.sourceAddress = sourceAddress;
+  }
+
+  public boolean isUseDataSm() {
+    return useDataSm;
+  }
+
+  public void setUseDataSm(boolean useDataSm) {
+    this.useDataSm = useDataSm;
+  }
+
+  public boolean isEditUseDataSm() {
+    return editUseDataSm;
+  }
+
+  public void setEditUseDataSm(boolean editUseDataSm) {
+    this.editUseDataSm = editUseDataSm;
   }
 
   public List<String> getIds() {

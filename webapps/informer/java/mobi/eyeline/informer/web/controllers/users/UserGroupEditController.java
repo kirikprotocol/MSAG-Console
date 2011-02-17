@@ -52,6 +52,9 @@ public class UserGroupEditController extends UserController {
   private String retryOnFail = "off";
   private String policyId;
 
+  private boolean editUseDataSm;
+  private boolean useDataSm;
+
   private boolean editDeliveryType;
   private User.DeliveryType deliveryType;
 
@@ -173,6 +176,9 @@ public class UserGroupEditController extends UserController {
             u.setPolicyId(policyId);
           }
         }
+
+        if (editUseDataSm)
+          u.setUseDataSm(useDataSm);
 
         if (editDeliveryType)
           u.setDeliveryType(deliveryType);
@@ -553,5 +559,21 @@ public class UserGroupEditController extends UserController {
 
   public void setEditCreateCdr(boolean editCreateCrd) {
     this.editCreateCdr = editCreateCrd;
+  }
+
+  public boolean isEditUseDataSm() {
+    return editUseDataSm;
+  }
+
+  public void setEditUseDataSm(boolean editUseDataSm) {
+    this.editUseDataSm = editUseDataSm;
+  }
+
+  public boolean isUseDataSm() {
+    return useDataSm;
+  }
+
+  public void setUseDataSm(boolean useDataSm) {
+    this.useDataSm = useDataSm;
   }
 }

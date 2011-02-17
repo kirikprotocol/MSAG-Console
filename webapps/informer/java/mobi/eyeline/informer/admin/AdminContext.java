@@ -666,6 +666,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     if (u.getPhone() != null && u.isSmsNotification()) {
       delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, u.getPhone().getSimpleAddress());
     }
+
+    delivery.setUseDataSm(u.isUseDataSm());
+
     if (u.getDeliveryType() != null) {
       switch (u.getDeliveryType()) {
         case SMS:

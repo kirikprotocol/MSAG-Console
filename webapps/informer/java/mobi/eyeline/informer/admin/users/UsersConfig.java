@@ -80,6 +80,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     u.setSmsNotification(section.getBool("smsNotification", false));
     u.setCreateArchive(section.getBool("createArchive", false));
     u.setDeliveryLifetime(section.getInt("deliveryLifetime"));
+    u.setUseDataSm(section.getBool("useDataSm", false));
 
     u.setCpSettings(loadUserCpSettings(section));
     return u;
@@ -237,6 +238,7 @@ class UsersConfig implements ManagedConfigFile<UsersSettings> {
     if (!user.getDeliveryDays().isEmpty()) {
       userSection.addSection(createDeliveryDaysSection(user));
     }
+    userSection.setBool("useDataSm", user.isUseDataSm());
     userSection.setBool("allRegionsAllowed", user.isAllRegionsAllowed());
     if (user.getRegions() != null && !user.getRegions().isEmpty()) {
       userSection.addSection(createRegionsSection(user));

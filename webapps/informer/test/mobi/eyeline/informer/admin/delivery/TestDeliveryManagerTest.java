@@ -202,7 +202,7 @@ public class TestDeliveryManagerTest {
     assertArrayEquals(d.getActiveWeekDays(), d1.getActiveWeekDays());
     assertEquals(d.getDeliveryMode(), d1.getDeliveryMode());
     assertEquals(d.getEndDate(), d1.getEndDate());
-    assertEquals(d.getStartDate(), d1.getStartDate());
+    assertNotSame(d.getStartDate(), d1.getStartDate());
     assertEquals(d.getName(), d1.getName());
     assertEquals(d.getOwner(), d1.getOwner());
     assertEquals(d.getPriority(), d1.getPriority());

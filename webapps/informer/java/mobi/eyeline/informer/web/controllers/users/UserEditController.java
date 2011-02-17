@@ -31,8 +31,6 @@ public class UserEditController extends UserController {
 
   private boolean init;
   private String passwordConfirm;
-//  private DynamicTableModel dynamicSfptModel = new DynamicTableModel();
-//  private DynamicTableModel dynamicFileModel = new DynamicTableModel();
   private String retryOnFail;
 
   private String comeBack;
@@ -177,9 +175,6 @@ public class UserEditController extends UserController {
         return null;
       }
 
-//      List<UserCPsettings> cpSettings = buildUCPSList();
-//      userToEdit.setCpSettings(cpSettings.isEmpty()?null:cpSettings);
-
       if (userId == null) {
         getConfig().addUser(userToEdit, getUserName());
       } else {
@@ -202,61 +197,9 @@ public class UserEditController extends UserController {
     }
   }
 
-//  private List<UserCPsettings> buildUCPSList() throws AdminException,IllegalArgumentException {
-//    List<UserCPsettings> cpSettings = new ArrayList<UserCPsettings>();
-//    for(DynamicTableRow row : dynamicSfptModel.getRows()) {
-//      UserCPsettings ucps = new UserCPsettings();
-//      ucps.setProtocol(UserCPsettings.Protocol.sftp);
-//      ucps.setHost((String)row.getValue("host"));
-//      String sPort = (String)row.getValue("port");
-//      ucps.setPort( (sPort==null || sPort.length()==0) ? null : Integer.valueOf(sPort));
-//      ucps.setLogin((String) row.getValue("login"));
-//      ucps.setPassword((String) row.getValue("password"));
-//      ucps.setDirectory((String) row.getValue("directory"));
-//      ucps.setEncoding((String) row.getValue("encoding"));
-//      ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
-//      ucps.checkValid();
-//      cpSettings.add(ucps);
-//    }
-//    for(DynamicTableRow row : dynamicFileModel.getRows()){
-//      UserCPsettings ucps = new UserCPsettings();
-//      ucps.setProtocol(UserCPsettings.Protocol.file);
-//      ucps.setDirectory((String) row.getValue("directory"));
-//      ucps.setEncoding((String) row.getValue("encoding"));
-//      ucps.setSourceAddress(new Address((String) row.getValue("sourceAddress")));
-//      ucps.checkValid();
-//      cpSettings.add(ucps);
-//    }
-//    return cpSettings;
-//  }
-
   public User getUserToEdit() {
     return userToEdit;
   }
-
-//  public String verifyUcps() {
-//    try {
-//      List<UserCPsettings> ucpsList = buildUCPSList();
-//      if(ucpsList!=null) {
-//        for(UserCPsettings ucps : ucpsList) {
-//          try {
-//            getConfig().verifyCPSettings(userToEdit,ucps  );
-//          }
-//          catch (AdminException e) {
-//            addLocalizedMessage(FacesMessage.SEVERITY_WARN,"user.edit.connect.fail",ucps.toString());
-//          }
-//        }
-//      }
-//    }
-//    catch (IllegalArgumentException e) {
-//      addLocalizedMessage(FacesMessage.SEVERITY_ERROR,"user.edit.invalid.sourceAddress",e.getMessage());
-//      return null;
-//    }
-//    catch (AdminException  e)  {
-//      addError(e);
-//    }
-//    return null;
-//  }
 
   public boolean isAdmin() {
     return userToEdit.hasRole(User.INFORMER_ADMIN_ROLE);

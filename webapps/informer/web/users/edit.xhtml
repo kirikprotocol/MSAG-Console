@@ -120,6 +120,9 @@
     <h:outputText style="white-space:nowrap;" value="#{userBundle.emailNotification}"/>
     <h:selectBooleanCheckbox value="#{userEdit.userToEdit.emailNotification}" style="position: relative; left: -3px;"/>
 
+    <h:outputText style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.useDataSm}"/>
+    <h:selectBooleanCheckbox style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userEdit.userToEdit.useDataSm}"/>
+
     <h:outputText style="white-space:nowrap;display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{userBundle.deliveryType}"/>
     <h:selectOneMenu id="deliveryType" value="#{userEdit.userToEdit.deliveryType}" style="align:left; display: #{userEdit.allowUssdPushDeliveries ? '' : 'none'}"
                      onchange="deliveryTypeChanged()">
