@@ -2218,10 +2218,12 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       bool rip=sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)!=0;
 
       SMSId replaceId=store->createSms(*sms,t.msgId,rip?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
+      /*
       if(rip && replaceId!=t.msgId)
       {
         smsc->getScheduler()->CancelSms(replaceId,sms->getDealiasedDestinationAddress());
       }
+      */
 
     }catch(...)
     {
