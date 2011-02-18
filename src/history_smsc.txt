@@ -601,3 +601,12 @@ B3127: Sep 28, 2010
 B3128: Oct 14, 2010
     SMSC	locker queue overflow fix for multiple messages containing SAR arrived together
     email	 maxMessageSize fix
+
+B3204:
+    SMSC  new parameter in MapLimits.xml - ussd.ati_codes. Use ati for incoming ussd requests for specified codes
+    SMSC  new config network-profiles.xml - network specific parameters based on abonent mask
+    SMSC  replace if present fixed. now old sms id will be used if message was replaced
+    SMSC  mass cancel is prohibited now
+    SMSC  error prone store startup
+    SMSC  multipart sms billing and statistics fix
+    
