@@ -89,7 +89,7 @@ public:
     fillPduAddress(cfg.destination.c_str(),sbm.get_message().get_dest());
     sbm.get_message().set_esmClass(0);
     sbm.get_message().set_dataCoding(3);
-    sbm.get_message().set_shortMessage(cfg.msg.c_str(),cfg.msg.length());
+    sbm.get_message().set_shortMessage(cfg.msg.c_str(),(int)cfg.msg.length());
     int seq=1;
     while(!stopped)
     {

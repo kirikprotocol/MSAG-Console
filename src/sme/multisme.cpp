@@ -108,7 +108,7 @@ int main(int argc,char* argv[])
       SMS s;
       char msc[]="123";
       char imsi[]="123";
-      s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      s.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
 
       s.setValidTime(0);
 
@@ -159,7 +159,7 @@ int main(int argc,char* argv[])
         s.setOriginatingAddress(dstAddr);
 
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message.c_str(),message.length());
+        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message.c_str(),(int)message.length());
 
         s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
 

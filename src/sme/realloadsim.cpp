@@ -29,7 +29,7 @@ string& trimspaces(string& s)
   int i=0;
   while(i<s.length() && isspace(s[i]))i++;
   if(i>0)s.erase(0,i-1);
-  i=s.length()-1;
+  i=(int)s.length()-1;
   while(i>=0 && isspace(s[i]))i--;
   s.erase(i+1);
   return s;
@@ -67,7 +67,7 @@ struct Config{
     }
     static char* CopyString(const char* str)
     {
-      int l=strlen(str);
+      int l=(int)strlen(str);
       char *rv=new char[l+1];
       memcpy(rv,str,l);
       rv[l]=0;

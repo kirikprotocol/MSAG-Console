@@ -457,7 +457,7 @@ void ReplaceCmd(SmppSession& ss,const string& args)
   r.get_source().set_typeOfNumber(addr.type);
   r.get_source().set_numberingPlan(addr.plan);
   r.get_source().set_value(addr.value);
-  r.shortMessage.copy(msg.c_str(),msg.length());
+  r.shortMessage.copy(msg.c_str(),(int)msg.length());
   SmppTransmitter* tr=ss.getSyncTransmitter();
   PduReplaceSmResp *replresp=tr->replace(r);
   if(replresp)
@@ -870,8 +870,8 @@ void SleepCmd(SmppSession& ss,const string& args)
   {
     timeval tv;
     gettimeofday(&tv,0);
-    defVC.sleepTill=tv.tv_sec+sec;
-    defVC.sleepTillMsec=tv.tv_usec/1000+msec;
+    defVC.sleepTill=(uint32_t)(tv.tv_sec+sec);
+    defVC.sleepTillMsec=(uint32_t)(tv.tv_usec/1000+msec);
     if(defVC.sleepTillMsec>1000)
     {
       defVC.sleepTillMsec-=1000;
@@ -1036,7 +1036,7 @@ void LoadTempErrors(SmppSession& s,const std::string& args)
   FILE *f=fopen(args.c_str(),"rt");
   char buf[128];
   tempErrors.clear();
-  while(fgets(buf,sizeof(buf),f))
+  while(fgets(buf,(int)sizeof(buf),f))
   {
     if(!buf[0])continue;
     int err=atoi(buf);
@@ -1063,7 +1063,7 @@ void LoadPermErrors(SmppSession& s,const std::string& args)
   FILE *f=fopen(args.c_str(),"rt");
   char buf[128];
   permErrors.clear();
-  while(fgets(buf,sizeof(buf),f))
+  while(fgets(buf,(int)sizeof(buf),f))
   {
     if(!buf[0])continue;
     int err=atoi(buf);
@@ -1199,7 +1199,7 @@ std::string vcprefix(int idx,VClientData& vc)
   gettimeofday(&tv,0);
   tm tres;
   tm* t=localtime_r(&tv.tv_sec,&tres);
-  int msec=tv.tv_usec;
+  int msec=(int)tv.tv_usec;
   msec/=1000;
   char buf[128];
   for(int i=0;i<vcprefixtemplate.length();i++)
@@ -1288,7 +1288,7 @@ std::string getTimeStamp()
   gettimeofday(&tv,0);
   tm tres;
   tm* t=localtime_r(&tv.tv_sec,&tres);
-  int msec=tv.tv_usec;
+  int msec=(int)tv.tv_usec;
   msec/=1000;
   char buf[128];
   sprintf(buf,"%02d.%02d.%04d %02d:%02d:%02d.%03d:",t->tm_mday,t->tm_mon+1,t->tm_year+1900,t->tm_hour,t->tm_min,t->tm_sec,msec);
@@ -1357,7 +1357,7 @@ class ResponseProcessor:public Thread{
 
   int TimeValDiff(timeval tv1,timeval tv2)
   {
-    int diff=(tv1.tv_sec-tv2.tv_sec)*1000;
+    int diff=(int)((tv1.tv_sec-tv2.tv_sec)*1000);
     diff+=(tv1.tv_usec-tv2.tv_usec)/1000;
     return diff;
   }
@@ -1673,9 +1673,9 @@ public:
           }
           for(int i=0;i<length;i++)
           {
-            char buf[8];
-            sprintf(buf,"%02x",(unsigned int)(unsigned char)(bin[i]));
-            dump+=buf;
+            char buf2[8];
+            sprintf(buf2,"%02x",(unsigned int)(unsigned char)(bin[i]));
+            dump+=buf2;
           }
           bin+=length;
           len-=length;
@@ -1798,14 +1798,14 @@ protected:
 
 void trimend(char* buf)
 {
-  int l=strlen(buf)-1;
+  int l=(int)strlen(buf)-1;
   while(l>=0 && isspace(buf[l]))l--;
   buf[l+1]=0;
 }
 
 void trimend(std::string& line)
 {
-  int l=line.length()-1;
+  int l=(int)line.length()-1;
   while(l>=0 && isspace(line[l]))l--;
   line.erase(l+1);
 }
@@ -1921,7 +1921,7 @@ int main(int argc,char* argv[])
       fprintf(stderr,"Option argument missing:%s\n",opt);
       return -1;
     }
-    char *optarg=argv[i+1];
+    char *optval=argv[i+1];
     if(opt[0]!='-' || strlen(opt)!=2)
     {
       fprintf(stderr,"Unrecognized option:%s\n",opt);
@@ -1931,8 +1931,8 @@ int main(int argc,char* argv[])
     {
       case 'h':
       {
-        host=optarg;
-        int pos=host.find(":");
+        host=optval;
+        int pos=(int)host.find(":");
         if(pos>0)
         {
           port=atoi(host.substr(pos+1).c_str());
@@ -1941,54 +1941,54 @@ int main(int argc,char* argv[])
       }break;
       case 'a':
       {
-        sourceAddress=optarg;
+        sourceAddress=optval;
       }break;
       case 'p':
       {
-        cfg.password=optarg;
+        cfg.password=optval;
       }break;
       case 't':
       {
-        string t=optarg;
+        string t=optval;
         if(t=="rx")bindType=BindType::Receiver;
         else if(t=="tx")bindType=BindType::Transmitter;
         else if(t=="trx")bindType=BindType::Transceiver;
         else
         {
-          fprintf(stderr,"Unknown bind type:%s\n",optarg);
+          fprintf(stderr,"Unknown bind type:%s\n",optval);
           return -1;
         }
       }break;
       case 'e':
       {
-        temperrProb=atoi(optarg);
+        temperrProb=atoi(optval);
       }break;
       case 'r':
       {
-        permErrProb=atoi(optarg);
+        permErrProb=atoi(optval);
       }break;
       case 'n':
       {
-        dontrespProb=atoi(optarg);
+        dontrespProb=atoi(optval);
       }break;
       case 'l':
       {
-        if(strchr(optarg,':'))
+        if(strchr(optval,':'))
         {
-          sscanf(optarg,"%d:%d",&respDelayMin,&respDelayMax);
+          sscanf(optval,"%d:%d",&respDelayMin,&respDelayMax);
         }else
         {
-          respDelayMin=respDelayMax=atoi(optarg);
+          respDelayMin=respDelayMax=atoi(optval);
         }
       }break;
       case 'm':
       {
-        if(optarg[0]=='D')mode=1;
-        else if(optarg[0]=='T')mode=2;
+        if(optval[0]=='D')mode=1;
+        else if(optval[0]=='T')mode=2;
       }break;
       case 's':
       {
-        ussd=atoi(optarg);
+        ussd=atoi(optval);
       }break;
       default:
       {
@@ -2316,7 +2316,7 @@ int main(int argc,char* argv[])
         message=0;
         cmdfile=0;
 
-        while(fgets(fileBuf,sizeof(fileBuf),f))
+        while(fgets(fileBuf,(int)sizeof(fileBuf),f))
         {
           trimend(fileBuf);
           if(fileBuf[0]==0)continue;
@@ -2499,7 +2499,7 @@ int main(int argc,char* argv[])
         continue;
       }
 
-      int len=strlen(message);
+      int len=(int)strlen(message);
 
       PduSubmitSm sm;
       sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
@@ -2508,7 +2508,7 @@ int main(int argc,char* argv[])
 
       char msc[]="";
       char imsi[]="";
-      s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      s.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
       s.setValidTime(validTime?time(NULL)+validTime:0);
       if(dataSm && validTime)
       {
@@ -2611,13 +2611,13 @@ int main(int argc,char* argv[])
         s.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
         if(tmp.length()>140 || dataSm)
         {
-          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(unsigned)tmp.length());
         }else
         {
-          s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,tmp.c_str(),tmp.length());
-          s.setIntProperty(Tag::SMPP_SM_LENGTH,tmp.length());
+          s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,tmp.c_str(),(unsigned)tmp.length());
+          s.setIntProperty(Tag::SMPP_SM_LENGTH,(unsigned)tmp.length());
         }
-        len=tmp.length();
+        len=(int)tmp.length();
       }else
       if(dataCoding==DataCoding::UCS2)//UCS2
       {
