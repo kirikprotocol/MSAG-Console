@@ -467,6 +467,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
   try{
+    const char* gtFmt=cfg.cfgman->getString("core.gtformat");
+    ansiGt=strcmp(gtFmt,"ansi")==0;
+  }catch(...)
+  {
+
+  }
+
+  try{
     RouteManager::EnableSmeRouters(cfg.cfgman->getBool("core.srcSmeSeparateRouting"));
   }catch(...)
   {

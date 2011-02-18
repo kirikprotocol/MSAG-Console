@@ -165,6 +165,7 @@ public:
     mapioptr=0;
     speedLogFlushPeriod=60;
     nextSpeedLogFlush=0;
+    ansiGt=false;
     if(instance!=0)
     {
       throw smsc::util::Exception("Attempt to init second smsc instance:%p (previous:%p)",this,instance);
@@ -577,6 +578,15 @@ public:
     return nodivertSmes.find(smeId)!=nodivertSmes.end();
   }
 
+  static int getLicenseMax()
+  {
+    return license.maxsms;
+  }
+
+  bool isAnsiGt()const
+  {
+    return ansiGt;
+  }
 
 protected:
 
@@ -738,6 +748,8 @@ protected:
 
   smsc::cluster::AgentListener agentListener;
   bool ishs;
+
+  bool ansiGt;
 
   friend class StatusSme;
 
