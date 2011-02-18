@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     }
     if (_svcHost)
         delete _svcHost;
-    smsc_log_info(inmanLogger, "%s shutdown complete", prodVer.c_str());
+    smsc_log_info(inmanLogger, "INMan: shutdown complete");
     return rval;
 }
 
