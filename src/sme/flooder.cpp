@@ -141,6 +141,7 @@ int probDefault=100;
 int probDatagram=0;
 int probForward=0;
 int probStoreAndForward=0;
+int replaceIfPresent;
 
 int setDpf=-1;
 
@@ -174,7 +175,8 @@ Option options[]=
   {"probDatagram",'i',&probDatagram},
   {"probForward",'i',&probForward},
   {"probStoreAndForward",'i',&probStoreAndForward},
-  {"setdpf",'i',&setDpf}
+  {"setdpf",'i',&setDpf},
+  {"replaceIfPresent",'i',&replaceIfPresent}
 };
 
 int optionsCount=sizeof(options)/sizeof(options[0]);
@@ -207,7 +209,7 @@ void LoadFile(const string& filename,StrList& sl)
   FILE *f=fopen(filename.c_str(),"rb");
   if(!f)throw Exception("Faield to open file %s",filename.c_str());
   fseek(f,0,SEEK_END);
-  int sz=ftell(f);
+  int sz=(int)ftell(f);
   fseek(f,0,SEEK_SET);
   char* buf=new char[sz+1];
   fread(buf,sz,1,f);
@@ -254,13 +256,14 @@ void LoadConfig(const char* filename)
 
 int main(int argc,char* argv[])
 {
-  srand(time(NULL));
+  srand((int)time(NULL));
   if(argc==1)
   {
     printf("usage: %s inifile [param=arg ...]\n",argv[0]);
     return -1;
   }
-  putenv("SMSC_LOGGER_PROPERTIES=flooder.properties");
+  char var[]="SMSC_LOGGER_PROPERTIES=flooder.properties";
+  putenv(var);
   Logger::Init();
   try{
     LoadConfig(argv[1]);
@@ -360,7 +363,7 @@ int main(int argc,char* argv[])
       SMS s;
       char msc[]="123";
       char imsi[]="123";
-      s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      s.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
 
       s.setValidTime(0);
 
@@ -398,7 +401,7 @@ int main(int argc,char* argv[])
           uint64_t addrVal;
           sscanf(curAddr.value,"%llu",&addrVal);
           addrVal++;
-          sprintf(curAddr.value,"%0*llu",strlen(curAddr.value),addrVal);
+          sprintf(curAddr.value,"%0*llu",(int)strlen(curAddr.value),addrVal);
         }
         s.setOriginatingAddress(sources[srcidx].c_str());
 
@@ -426,11 +429,11 @@ int main(int argc,char* argv[])
                                         CONV_ENCODING_CP1251);
 
           s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
-          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)&tmp[0],msgptr->length()*2);
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)&tmp[0],(unsigned)msgptr->length()*2);
         }else
         {
           s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgptr->c_str(),msgptr->length());
+          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgptr->c_str(),(unsigned)msgptr->length());
         }
         s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
 
@@ -465,6 +468,11 @@ int main(int argc,char* argv[])
           s.setIntProperty(Tag::SMPP_SET_DPF,setDpf);
         }
 
+        if(replaceIfPresent)
+        {
+          s.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,replaceIfPresent);
+        }
+
         fillSmppPduFromSms(&sm,&s,0);
         atr->submit(sm);
 
@@ -487,7 +495,7 @@ int main(int argc,char* argv[])
             sokt=sok_time_cnt.Get()/30.0;
           }
           printf("ut:%d sbm:%d sok:%d serr:%d recv:%d avgsp: %lf lstsp:%lf\n",
-                 now-starttime,cnt,sokcnt,serrcnt,reccnt,
+                 (int)(now-starttime),cnt,sokcnt,serrcnt,reccnt,
                  (double)sokcnt/(now-starttime),
                  sokt
                  );
@@ -507,10 +515,10 @@ int main(int argc,char* argv[])
         msgproc/=1000;
         if(delay>msgproc+overdelay)
         {
-          int toSleep=delay-msgproc-overdelay;
+          int toSleep=(int)(delay-msgproc-overdelay);
           msgstart=gethrtime();
           millisleep(toSleep/1000);
-          overdelay=(gethrtime()-msgstart)/1000-toSleep;
+          overdelay=(int)((gethrtime()-msgstart)/1000-toSleep);
         }else
         {
           overdelay-=delay-(int)msgproc;
