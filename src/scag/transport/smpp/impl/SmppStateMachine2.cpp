@@ -725,6 +725,8 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
     // fix for session lockup
     SessionManager::Instance().restoreSession(session,cmd);
 
+    src = cmd->getEntity();
+
     int ussd_op = -1;
     do {
         if ( cmd->getCommandId() == DATASM ) {
@@ -745,7 +747,6 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
         smscmd.orgDst=sms.getDestinationAddress();
     } while ( false );
 
-    src = cmd->getEntity();
     bool routeset = smscmd.hasRouteSet();
     int statevent = stat::events::smpp::GW_REJECTED;
 
