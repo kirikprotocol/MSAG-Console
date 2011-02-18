@@ -370,7 +370,13 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
       {
         MutexGuard mg(sched.storeMtx);
         sched.store.Insert(item.id,sd);
-        sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(sms,item.id));
+        if(sms.getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG))
+        {
+          sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(sms,item.id));
+        }else
+        {
+          sd->rit=sched.replMap.end();
+        }
         sd->it=sched.currentSnap.insert(sched.currentSnap.begin(),IdSeqPair(item.id,item.seq));
       }
     }catch(std::exception& e)
@@ -729,7 +735,8 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
   Serialize(sms,buf);
 
   SDLockGuard lg(storeMtx);
-  StoreData* sd;
+  StoreData* sd=0;
+  bool ripFound=false;
   {
     MutexGuard mg(storeMtx);
 
@@ -738,20 +745,40 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
       ReplaceIfPresentMap::iterator it=replMap.find(sms);
       if(it!=replMap.end())
       {
-        StoreData *ptr=store.Get(it->second);
-        ptr->it->second=++(ptr->seq);
-        LocalFileStoreSave(it->second,ptr,true);
-        currentSnap.erase(ptr->it);
-        replMap.erase(it);
-        store.Delete(it->second);
-        delStoreData(ptr);
+        sd=store.Get(it->second);
+        ripFound=true;
+        sd->CopyBuf(buf);
+        sd->it->second=++(sd->seq);
+        CancelSms(id,sms.getDealiasedDestinationAddress());
+        //StoreData *ptr=store.Get(it->second);
+        //ptr->it->second=++(ptr->seq);
+        //LocalFileStoreSave(it->second,ptr,true);
+        //currentSnap.erase(ptr->it);
+        //replMap.erase(it);
+        //store.Delete(it->second);
+        //delStoreData(ptr);
       }
     }
-    sd=newStoreData(buf);
-    store.Insert(id,sd);
+    if(!sd)
+    {
+      sd=newStoreData(buf);
+      store.Insert(id,sd);
+    }
     lg.Lock(sd);
-    sd->rit=replMap.insert(ReplaceIfPresentMap::value_type(sms,id));
-    sd->it=currentSnap.insert(currentSnap.end(),LocalFileStore::IdSeqPair(id,0));
+    if(flag==smsc::store::SMPP_OVERWRITE_IF_PRESENT)
+    {
+      if(!ripFound)
+      {
+        sd->rit=replMap.insert(ReplaceIfPresentMap::value_type(sms,id));
+      }
+    }else
+    {
+      sd->rit=replMap.end();
+    }
+    if(!ripFound)
+    {
+      sd->it=currentSnap.insert(currentSnap.end(),LocalFileStore::IdSeqPair(id,0));
+    }
   }
 
   LocalFileStoreSave(id,sd);
@@ -897,7 +924,10 @@ void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,con
     currentSnap.erase((*ptr)->it);
     sd=*ptr;
     store.Delete(id);
-    replMap.erase(sd->rit);
+    if(sd->rit!=replMap.end())
+    {
+      replMap.erase(sd->rit);
+    }
   }
   SMS sms;
   sd->LoadSms(sms);

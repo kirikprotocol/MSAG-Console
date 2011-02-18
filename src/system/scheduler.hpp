@@ -491,7 +491,7 @@ public:
     ReplaceIfPresentKey(const SMS& argSms)
     {
       org=argSms.getOriginatingAddress();
-      dst=argSms.getDealiasedDestinationAddress();
+      dst=argSms.getDestinationAddress();
       esvctype=argSms.getEServiceType();
     }
     string dump()const
@@ -801,6 +801,7 @@ public:
         void doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc=Descriptor());
 
 
+        /*
         void getMassCancelIds(const SMS& sms,Array<SMSId>& ids)
         {
           MutexGuard mg(storeMtx);
@@ -818,6 +819,7 @@ public:
             debug2(log,"getMassCancelIds nothing found:%s",ReplaceIfPresentKey(sms).dump().c_str());
           }
         }
+        */
 
         void InitDpfTracker(const char* storeLocation,int to1179,int to1044,int mxch,int mxt)
         {
@@ -837,6 +839,19 @@ public:
         void stopDpfTracker()
         {
           dpfTracker.stop();
+        }
+
+        uint64_t getReplaceIfPresentId(const SMS& sms)
+        {
+          MutexGuard mg(storeMtx);
+          ReplaceIfPresentMap::iterator it=replMap.find(sms);
+          if(it!=replMap.end())
+          {
+            return it->second;
+          }else
+          {
+            return 0;
+          }
         }
 
 public:

@@ -540,7 +540,14 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         }
       }else
       {
-        id=store->getNextId();
+        if(sms.getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG))
+        {
+          id=scheduler->getReplaceIfPresentId(sms);
+        }
+        if(id==0)
+        {
+          id=store->getNextId();
+        }
       }
       //registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
       break;
