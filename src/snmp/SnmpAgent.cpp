@@ -70,6 +70,7 @@ static char const ident[] = "$Id$";
     static oid deliverErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 4, 0 };
     static oid rescheduledOid[] =        { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 5, 0 };
     static oid deliverTmpOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 6, 0 };
+    static oid licenseMaxOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 7, 0 };
     static oid mapStatDlgInSRIOid[] =    { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 1 };
     static oid mapStatDlgInOid[] =       { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 2 };
     static oid mapStatDlgOutSRIOid[] =   { 1, 3, 6, 1, 4, 1, 26757, 1, 12, 3 };
@@ -405,6 +406,8 @@ static char const ident[] = "$Id$";
     netsnmp_register_instance(reginfo);
     reginfo = netsnmp_create_handler_registration("deliverTEMP", smscStatsHandler, deliverTmpOid, OID_LENGTH(deliverTmpOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
+    reginfo = netsnmp_create_handler_registration("licenseMax", smscStatsHandler, licenseMaxOid, OID_LENGTH(licenseMaxOid), HANDLER_CAN_RONLY);
+    netsnmp_register_instance(reginfo);
 
 
     reginfo = netsnmp_create_handler_registration("dlgInSRI", smscStatsHandler, mapStatDlgInSRIOid, OID_LENGTH(mapStatDlgInSRIOid), HANDLER_CAN_RONLY);
@@ -633,6 +636,14 @@ using smsc::snmp::SnmpAgent;
           val.low  = perf[perfBase+3] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
           smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverTEMP req");
+        }
+        else if(snmp_oid_compare(licenseMaxOid,OID_LENGTH(licenseMaxOid),
+                             reginfo->rootoid, reginfo->rootoid_len) ==0)
+        {
+          val.high=0;
+          val.low=smsc::system::Smsc::getLicenseMax();
+          snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
+          smsc_log_debug(((smsc::logger::Logger*)agentlog), "licenseMax req");
         }
         else if (snmp_oid_compare(mapStatDlgInSRIOid,OID_LENGTH(mapStatDlgInSRIOid),
                              reginfo->rootoid, reginfo->rootoid_len) ==0)
