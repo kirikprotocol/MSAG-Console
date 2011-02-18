@@ -55,7 +55,8 @@ public:
             dummySms.getEServiceType()
           );
 
-          sched->getMassCancelIds(dummySms,ids);
+          // mass cancel is no longer supported
+          //sched->getMassCancelIds(dummySms,ids);
 
           __trace2__("CANCELAGENT: found %d ids to cancel",ids.Count());
 
