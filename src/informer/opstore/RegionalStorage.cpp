@@ -259,6 +259,7 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     const msgtime_type currentTime(msgtime_type(usecTime/tuPerSec));
     if ( currentTime > info.getEndDate() ) {
         // the dlv should be stopped
+        mg.Unlock();
         dlv_->source_->getDlvActivator().startCancelThread(dlvId);
         dlv_->setState(DLVSTATE_PAUSED);
         return 10*tuPerSec;

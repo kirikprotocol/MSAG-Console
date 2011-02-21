@@ -407,10 +407,13 @@ public:
         size_t idx = pos / perval;
         unsigned nbit = pos % perval;
         MutexGuard mg(lock_);
-        for ( ; idx < list_.size(); nbit=0, ++idx ) {
+        for ( ; idx < list_.size(); ++idx ) {
             uint64_t value = list_[idx];
             value >>= nbit;
-            if (!value) { continue; }
+            if (!value) {
+                nbit = 0;
+                continue;
+            }
             while ( (value & 1) == 0 ) {
                 ++nbit;
                 value >>= 1;
@@ -418,6 +421,7 @@ public:
             dlvId = nbit + idx*perval;
             return true;
         }
+        dlvId = start_ + deliveryChunkSize;
         return false;
     }
     void setDelivery( dlvid_type dlvId, bool on ) {
@@ -454,6 +458,7 @@ private:
 };
 }
 
+
 class DeliveryMgr::DeliveryChunkList
 {
     struct FindByIdx {
@@ -462,7 +467,15 @@ class DeliveryMgr::DeliveryChunkList
         }
     };
 
+    typedef std::vector<DeliveryChunk*> ChunkList;
+
 public:
+    ~DeliveryChunkList() {
+        for ( ChunkList::iterator i = chunks_.begin(); i != chunks_.end(); ++i ) {
+            delete *i;
+        }
+    }
+
     DeliveryChunk* getNextChunk(dlvid_type dlvId) {
         const dlvid_type chunkIdx = getDeliveryChunkStart(dlvId);
         MutexGuard mg(lock_);
@@ -490,8 +503,6 @@ public:
     }
 
 private:
-    typedef std::vector<DeliveryChunk*> ChunkList;
-
     smsc::core::synchronization::Mutex lock_;
     ChunkList                          chunks_;
 };
@@ -503,6 +514,7 @@ DeliveryMgr::DeliveryMgr( InfosmeCoreV1& core, CommonSettings& cs ) :
 log_(smsc::logger::Logger::getInstance("dlvmgr")),
 core_(core),
 cs_(cs),
+deliveryChunkList_(new DeliveryChunkList),
 inputRollingIter_(deliveryList_.end()),
 storeRollingIter_(deliveryList_.end()),
 statsDumpingIter_(deliveryList_.end()),
@@ -544,6 +556,7 @@ DeliveryMgr::~DeliveryMgr()
         (*i)->detachEverything();
     }
     deliveryList_.clear();
+    if (deliveryChunkList_) delete deliveryChunkList_;
     smsc_log_info(log_,"--- delivery mgr dtor done ---");
 }
 
@@ -963,7 +976,9 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
         throw InfosmeException(EXC_LOGICERROR,"delivery info is NULL");
     }
     const dlvid_type dlvId = info->getDlvId();
-    if ( innerGetDelivery(dlvId,*dlv) ) {
+    DeliveryImplPtr dummy;
+    DeliveryImplPtr* ptr = dlv ? dlv : &dummy;
+    if ( innerGetDelivery(dlvId,*ptr) ) {
         throw InfosmeException(EXC_ALREADYEXIST,"D=%u already exists",dlvId);
     }
     /// FIXME: do we have a race condition from here upto delivery insertion?
@@ -978,16 +993,16 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
     if (!getCS()->isArchive() && !getCS()->isEmergency() ) {
         ims = new InputStorage(core_,*inputJournal_);
     }
-    dlv->reset( new DeliveryImpl(infoptr.release(),
+    ptr->reset( new DeliveryImpl(infoptr.release(),
                                  storeJournal_,
                                  ims,
                                  state,
                                  planTime ));
-    userInfo.attachDelivery( *dlv );
+    userInfo.attachDelivery( *ptr );
     DeliveryIList tokill;
     {
         MutexGuard mg(mon_);
-        deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), *dlv));
+        deliveryHash_.Insert(dlvId, deliveryList_.insert(deliveryList_.begin(), *ptr));
         if (state == DLVSTATE_PLANNED && planTime &&
             !getCS()->isArchive() && !getCS()->isEmergency() ) {
             deliveryWakeQueue_.insert(std::make_pair(planTime,dlvId));
