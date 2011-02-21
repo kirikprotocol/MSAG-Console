@@ -88,77 +88,82 @@ public:
 // --------------------------------------------------------- // 
 class AbntContractRequest : public INPAbntContractCmd {
 protected:
-    bool                useCache;
-    TonNpiAddressString subscrNum;
+  bool                useCache;
+  TonNpiAddressString subscrNum;
 
-    // -----------------------------------------
-    // -- SerializableObjectAC interface methods
-    // -----------------------------------------
-    void load(ObjectBuffer& in) throw(SerializerException)
-    {
-        in >> useCache;
-        in >> subscrNum;
-    }
-    void save(ObjectBuffer& out) const
-    {
-        out << useCache;
-        out << subscrNum;
-    }
+  // -----------------------------------------
+  // -- SerializableObjectAC interface methods
+  // -----------------------------------------
+  virtual void load(ObjectBuffer& in) throw(SerializerException)
+  {
+      in >> useCache;
+      in >> subscrNum;
+  }
+  virtual void save(ObjectBuffer& out) const
+  {
+      out << useCache;
+      out << subscrNum;
+  }
 
 public:
-    AbntContractRequest()
-        : INPAbntContractCmd(INPCSAbntContract::ABNT_CONTRACT_REQUEST_TAG)
-        , useCache(true)
-    { }
-    ~AbntContractRequest() { }
-    //--Setters
-    void setSubscrNumber(const char * subscr_adr) { subscrNum = subscr_adr; }
-    void allowCache(bool use_cache = true)        { useCache = use_cache; }
+  static const INPCSAbntContract::CommandTag
+    _cmdTAG = INPCSAbntContract::ABNT_CONTRACT_REQUEST_TAG;
 
-    //--Getters
-    bool cacheMode(void) const                    { return useCache; }
-    const TonNpiAddressString & subscrAddr(void) const { return subscrNum; }
+  AbntContractRequest() : INPAbntContractCmd(_cmdTAG), useCache(true)
+  { }
+  ~AbntContractRequest()
+  { }
+
+  //--Setters
+  void setSubscrNumber(const char * subscr_adr) { subscrNum = subscr_adr; }
+  void allowCache(bool use_cache = true)        { useCache = use_cache; }
+
+  //--Getters
+  bool cacheMode(void) const                    { return useCache; }
+  const TonNpiAddressString & subscrAddr(void) const { return subscrNum; }
 };
 
 
 class AbntContractResult : public INPAbntContractCmd {
 protected:
-    AbonentContract_e cntrType;
-    uint32_t        errCode;
-    IMSIString      abImsi;
-    GsmSCFinfo      gsmSCF;
-    std::string     nmPolicy;
-    std::string     errMsg;
+  AbonentContract_e cntrType;
+  uint32_t        errCode;
+  IMSIString      abImsi;
+  GsmSCFinfo      gsmSCF;
+  std::string     nmPolicy;
+  std::string     errMsg;
 
-    // -----------------------------------------
-    // -- SerializableObjectAC interface methods
-    // -----------------------------------------
-    void load(ObjectBuffer& in) throw(SerializerException);
-    void save(ObjectBuffer& out) const;
+  // -----------------------------------------
+  // -- SerializableObjectAC interface methods
+  // -----------------------------------------
+  virtual void load(ObjectBuffer& in) throw(SerializerException);
+  virtual void save(ObjectBuffer& out) const;
 
 public:
-    AbntContractResult()
-        : INPAbntContractCmd(INPCSAbntContract::ABNT_CONTRACT_RESULT_TAG)
-        , cntrType(AbonentContractInfo::abtUnknown), errCode(0)
-    { }
-    ~AbntContractResult()
-    { }
+  static const INPCSAbntContract::CommandTag
+    _cmdTAG = INPCSAbntContract::ABNT_CONTRACT_RESULT_TAG;
 
-    //Setters:
-    void setContractInfo(AbonentContract_e cntr_type, const char * ab_imsi = NULL);
-    void setGsmSCF(const GsmSCFinfo & gsm_scf) { gsmSCF = gsm_scf; }
-    void setPolicy(const std::string & nm_policy) { nmPolicy = nm_policy; }
-    void setError(uint32_t err_code, const char * err_msg = NULL);
+  AbntContractResult() : INPAbntContractCmd(_cmdTAG)
+    , cntrType(AbonentContractInfo::abtUnknown), errCode(0)
+  { }
+  ~AbntContractResult()
+  { }
 
-    //Getters:
-    bool  cacheUsed(void) const { return nmPolicy.empty(); }
-    const char * policyUsed(void) const { return nmPolicy.empty() ? NULL : nmPolicy.c_str(); }
-    uint32_t    errorCode(void) const { return errCode; }
-    const char * errorMsg(void) const { return errMsg.c_str(); }
+  //Setters:
+  void setContractInfo(AbonentContract_e cntr_type, const char * ab_imsi = NULL);
+  void setGsmSCF(const GsmSCFinfo & gsm_scf) { gsmSCF = gsm_scf; }
+  void setPolicy(const std::string & nm_policy) { nmPolicy = nm_policy; }
+  void setError(uint32_t err_code, const char * err_msg = NULL);
 
-    AbonentContract_e contractType(void) const { return cntrType; }
-    const char * getSubscrImsi(void) const { return abImsi.empty() ? NULL : abImsi.c_str(); }
-    const GsmSCFinfo * getGsmSCF(void) const { return gsmSCF.empty() ? NULL : &gsmSCF; }
+  //Getters:
+  bool  cacheUsed(void) const { return nmPolicy.empty(); }
+  const char * policyUsed(void) const { return nmPolicy.empty() ? NULL : nmPolicy.c_str(); }
+  uint32_t    errorCode(void) const { return errCode; }
+  const char * errorMsg(void) const { return errMsg.c_str(); }
+
+  AbonentContract_e contractType(void) const { return cntrType; }
+  const char * getSubscrImsi(void) const { return abImsi.empty() ? NULL : abImsi.c_str(); }
+  const GsmSCFinfo * getGsmSCF(void) const { return gsmSCF.empty() ? NULL : &gsmSCF; }
 };
 
 // --------------------------------------------------------- //
