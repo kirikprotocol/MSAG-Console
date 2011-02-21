@@ -602,11 +602,22 @@ B3128: Oct 14, 2010
     SMSC	locker queue overflow fix for multiple messages containing SAR arrived together
     email	 maxMessageSize fix
 
-B3204:
-    SMSC  new parameter in MapLimits.xml - ussd.ati_codes. Use ati for incoming ussd requests for specified codes
-    SMSC  new config network-profiles.xml - network specific parameters based on abonent mask
-    SMSC  replace if present fixed. now old sms id will be used if message was replaced
-    SMSC  mass cancel is prohibited now
-    SMSC  error prone store startup
-    SMSC  multipart sms billing and statistics fix
+B3200: Nov 01, 2010
+    SMSC	Ussd Redirect service op support added, allows to redirect ownership of ussd session from service to service
     
+B3202: Jan 17,2011
+    SMSC	Multipart statistics fix 
+    SMSC	Extra charge request fix
+    
+B3203: Jan 24, 2011
+    SMSC	store SRR bit for all org parts, send receipts only on parts that have SRR bit
+    SMSC	check for early aborted MAP dialogs, Huaiwei fix
+    SMSC	Delivery timeout now generate DLVRSP instead of Alert logic. Code unification
+    SMSC	Store delivery attempts history in SMS to easy analyze delivery
+
+B3204: Feb 21, 2011
+    SMSC	new parameter in MapLimits.xml - ussd.ati_codes. Use ati for incoming ussd requests for specified codes
+    SMSC	new config network-profiles.xml - network specific parameters based on abonent mask
+    SMSC	replace if present fixed. now old sms id will be used if message was replaced
+    SMSC	mass cancel is prohibited now
+    SMSC	error prone store startup
