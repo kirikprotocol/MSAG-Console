@@ -898,8 +898,8 @@ void InfosmeCoreV1::finishStateChange( msgtime_type    currentTime,
     }
     dlvMgr_->finishStateChange( currentTime, ymdTime, dlv );
     if ( bs.regIds.empty() ) return;
-    bs.ignoreState = false;
-    bindDeliveryRegions( bs );
+    // bs.ignoreState = false;
+    deliveryRegions( bs.dlvId, bs.regIds, bs.bind );
 }
 
 

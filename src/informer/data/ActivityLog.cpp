@@ -196,7 +196,7 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     printSubscriber(caddr,msg.subscriber);
 
     smsc::core::buffers::TmpBuf<char,1024> buf;
-    int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,\"",
+    int off = sprintf(buf.get(), "%02u,%c,%u,%llu,%u,%u,%s,%d,%d,%s,",
                       unsigned(now.tm_sec), cstate, regId,
                       msg.msgId, retryCount, planTime, 
                       caddr,
@@ -208,12 +208,12 @@ void ActivityLog::addRecord( msgtime_type currentTime,
     buf.SetPos(off);
     if ( ! msg.flags.isEmpty() ) {
         HexDump hd(false);
-        off += hd.hexdumpsize(msg.flags.bufsize()) + 1;
+        off += int(hd.hexdumpsize(msg.flags.bufsize())) + 1;
         buf.reserve(off);
         hd.hexdump(buf.GetCurPtr(),msg.flags.buf(),msg.flags.bufsize());
         buf.SetPos(off);
     }
-    buf.Append(",",1);
+    buf.Append(",\"",2);
     escapeText(buf, msg.text.getText(),strlen(msg.text.getText()));
     buf.Append("\"\n",2);
 

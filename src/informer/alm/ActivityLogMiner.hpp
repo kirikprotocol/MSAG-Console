@@ -48,9 +48,11 @@ protected:
       hourChecked=false;
       day=-1;
       hour=-1;
+      version=0;
     }
 
     smsc::core::buffers::File f;
+    unsigned version;  // the version of file format
     bool dayChecked;
     bool hourChecked;
     int day;

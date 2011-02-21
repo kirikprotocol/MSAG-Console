@@ -64,19 +64,19 @@ void Delivery::dropMessages( const std::vector< msgid_type >& msgids )
 
 void Delivery::getGlossary( std::vector< std::string >& texts ) const
 {
-    if (!source_) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
-    }
-    source_->getGlossary().getTexts( texts );
+    // if (!source_) {
+    // throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+    // }
+    dlvInfo_->getGlossary().getTexts( texts );
 }
 
 
 void Delivery::setGlossary( const std::vector< std::string >& texts )
 {
     if (!source_) {
-        throw InfosmeException(EXC_ACCESSDENIED,"in archive mode");
+        throw InfosmeException(EXC_ACCESSDENIED,"in archive/emergency mode");
     }
-    source_->getGlossary().setTexts( texts );
+    dlvInfo_->getGlossary().setTexts( texts );
 }
 
 }

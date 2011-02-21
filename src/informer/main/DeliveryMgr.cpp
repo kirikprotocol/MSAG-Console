@@ -405,7 +405,7 @@ public:
     bool getNextDelivery( dlvid_type& dlvId ) {
         const size_t pos = size_t(dlvId - start_);
         size_t idx = pos / perval;
-        unsigned nbit = pos % perval;
+        unsigned nbit = unsigned(pos % perval);
         MutexGuard mg(lock_);
         for ( ; idx < list_.size(); ++idx ) {
             uint64_t value = list_[idx];
@@ -418,7 +418,7 @@ public:
                 ++nbit;
                 value >>= 1;
             }
-            dlvId = nbit + idx*perval;
+            dlvId = dlvid_type(nbit + idx*perval);
             return true;
         }
         dlvId = start_ + deliveryChunkSize;
@@ -604,7 +604,6 @@ void DeliveryMgr::init()
     char* bufpos1 = buf.GetCurPtr();
     for ( std::vector<std::string>::iterator kchunk = chunks1.begin();
           kchunk != chunks1.end(); ++kchunk ) {
-        std::vector<std::string> chunks;
         strcpy(bufpos1,kchunk->c_str());
         strcat(bufpos1,"/");
         chunks.clear();
@@ -989,7 +988,7 @@ void DeliveryMgr::addDelivery( DeliveryInfo*    info,
         throw InfosmeException(EXC_DLVLIMITEXCEED,"U='%s' cannot create delivery, exc: %s",
                                userInfo.getUserId(),e.what());
     }
-    InputMessageSource* ims;
+    InputMessageSource* ims = 0;
     if (!getCS()->isArchive() && !getCS()->isEmergency() ) {
         ims = new InputStorage(core_,*inputJournal_);
     }

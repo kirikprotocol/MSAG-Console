@@ -8,6 +8,7 @@
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
 #include "RetryString.h"
+#include "MessageGlossary.h"
 #include "DeliveryStats.h"
 #include "sms/sms.h"
 
@@ -164,6 +165,9 @@ public:
     regionid_type popMsgStats( regionid_type prevRegId,
                                DeliveryStats& ds );
 
+    /// glossary
+    MessageGlossary& getGlossary() { return glossary_; }
+
 protected:
     /// update cached fields from data
     void updateData( const DeliveryInfoData& data,
@@ -192,6 +196,8 @@ private:
     int                   activeWeekDays_;
     smsc::sms::Address    sourceAddress_;
     RetryString           retryPolicy_;
+
+    MessageGlossary       glossary_;
 
     mutable smsc::core::synchronization::Mutex statLock_;
     DeliveryStats                      stats_;

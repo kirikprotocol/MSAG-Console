@@ -11,7 +11,7 @@ namespace informer {
 
 class InputTransferTask;
 class ResendTransferTask;
-class MessageGlossary;
+// class MessageGlossary;
 struct InputRegionRecord;
 class ActivityLog;
 class DeliveryActivator;
@@ -151,7 +151,7 @@ public:
     virtual InputTransferTask* createInputTransferTask( TransferRequester& requester,
                                                         unsigned           count ) = 0;
 
-    virtual MessageGlossary& getGlossary() = 0;
+    // virtual MessageGlossary& getGlossary() = 0;
 
     /// NOTE: this method is invoked at init ONLY!
     virtual void setRecordAtInit( const InputRegionRecord& rec,

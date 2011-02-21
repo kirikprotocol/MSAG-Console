@@ -257,12 +257,15 @@ int RegionalStorage::getNextMessage( usectime_type usecTime,
     }
 
     const msgtime_type currentTime(msgtime_type(usecTime/tuPerSec));
-    if ( currentTime > info.getEndDate() ) {
-        // the dlv should be stopped
-        mg.Unlock();
-        dlv_->source_->getDlvActivator().startCancelThread(dlvId);
-        dlv_->setState(DLVSTATE_PAUSED);
-        return 10*tuPerSec;
+    {
+        const msgtime_type ed = info.getEndDate();
+        if ( ed != 0 && currentTime > ed ) {
+            // the dlv should be stopped
+            mg.Unlock();
+            dlv_->source_->getDlvActivator().startCancelThread(dlvId);
+            dlv_->setState(DLVSTATE_PAUSED);
+            return 10*tuPerSec;
+        }
     }
 
     msgtime_type uploadNextResend = 0;
@@ -706,7 +709,7 @@ bool RegionalStorage::postInit()
         Message& m = i->msg;
         // bind to glossary
         if ( !m.text.isUnique()) {
-            dlv_->source_->getGlossary().fetchText(m.text);
+            dlv_->dlvInfo_->getGlossary().fetchText(m.text);
         }
         switch (m.state) {
         case MSGSTATE_INPUT:
@@ -883,7 +886,7 @@ void RegionalStorage::resendIO( bool isInputDirection, volatile bool& stopFlag )
                         regionid_type serial = 0;
                         // NOTE: we may avoid locking here, as i is not in msgList_
                         if ( ! i->msg.text.isUnique() ) {
-                            dlv_->source_->getGlossary().fetchText(i->msg.text);
+                            dlv_->dlvInfo_->getGlossary().fetchText(i->msg.text);
                         }
                         dlv_->storeJournal_->journalMessage(dlvId,regionId_,i->msg,serial);
                         i->serial = serial;

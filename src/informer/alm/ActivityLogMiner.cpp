@@ -130,7 +130,6 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
   std::string line;
   std::string::size_type pos;
   int sec;
-  unsigned version; // the version of the file format
 
   bool& dayChecked=req->dayChecked;
   bool& hourChecked=req->hourChecked;
@@ -196,7 +195,7 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
       }
       {
           int npos = 0;
-          sscanf(line.c_str(),"#%u %n",&version,&npos);
+          sscanf(line.c_str(),"#%u %n",&req->version,&npos);
           if (npos == 0) {
               f.Close();
               req->offset=0;
@@ -310,7 +309,7 @@ bool ActivityLogMiner::parseRecord(Request* req,ALMResult& result)
     {
       pos=skipField(line,pos);
     }
-    if(version>1) {
+    if(req->version > 1) {
         // FIXME: impl reading FLAGS according to version
         pos=skipField(line,pos);
     }

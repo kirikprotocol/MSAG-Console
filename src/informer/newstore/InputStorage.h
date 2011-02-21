@@ -2,7 +2,7 @@
 #define _INFORMER_INPUTSTORAGE_H
 
 #include "informer/data/InputMessageSource.h"
-#include "informer/data/MessageGlossary.h"
+// #include "informer/data/MessageGlossary.h"
 #include "informer/data/ActivityLog.h"
 #include "InputJournal.h"
 #include "logger/Logger.h"
@@ -57,7 +57,7 @@ public:
     virtual InputTransferTask* createInputTransferTask( TransferRequester& requester,
                                                         unsigned           count );
 
-    virtual MessageGlossary& getGlossary() { return glossary_; }
+    // virtual MessageGlossary& getGlossary() { return glossary_; }
 
     virtual void setRecordAtInit(const InputRegionRecord& ro, msgid_type maxMsgId);
 
@@ -77,6 +77,7 @@ private:
     std::string makeFilePath(regionid_type regId,uint32_t fn) const;
 
     inline dlvid_type getDlvId() const { return activityLog_->getDlvId(); }
+    inline DeliveryInfo& getDlvInfo() { return activityLog_->getDlvInfo(); }
     msgid_type getMinRlast();
 
 private:
@@ -91,7 +92,7 @@ private:
     uint32_t                                   lastfn_;
     ActivityLog*                               activityLog_; // not owned
     msgid_type                                 lastMsgId_;
-    MessageGlossary                            glossary_;
+    // MessageGlossary                            glossary_;
 
     BlackList*                                 blackList_; // owned
     // smsc::core::synchronization::Mutex         dropLock_;

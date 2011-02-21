@@ -170,12 +170,14 @@ void InputStorage::init( ActivityLog& actLog )
         sprintf(buf,"in.%u",dlvId % 1000);
         log_ = smsc::logger::Logger::getInstance(buf);
     }
+    /*
     try {
         glossary_.init(dlvId);
     } catch ( std::exception& e ) {
         smsc_log_error(log_,"D=%u glossary init exc: %s",dlvId,e.what());
         throw;
     }
+     */
     if (!blackList_) {
         blackList_ = new BlackList(*this);
     }
@@ -189,10 +191,11 @@ void InputStorage::addNewMessages( MsgIter begin, MsgIter end )
     dispatchMessages(begin, end, regs);
     msgtime_type currentTime(currentTimeSeconds());
     // binding to glossary (necessary to write texts to activity log)
+    MessageGlossary& glossary = getDlvInfo().getGlossary();
     for ( MsgIter i = begin; i != end; ++i ) {
         if (!i->msg.text.isUnique()) {
             // necessary to replace text ids with real texts
-            glossary_.fetchText(i->msg.text);
+            glossary.fetchText(i->msg.text);
         }
         activityLog_->addRecord(currentTime,i->serial,i->msg,0);
     }
@@ -507,10 +510,11 @@ void InputStorage::doTransfer( TransferRequester& req, size_t reqCount )
             if ( ! msglist.empty() ) {
 
                 if ( ! getCS()->isStopping() ) {
+                    MessageGlossary& glossary = getDlvInfo().getGlossary();
                     for ( MsgIter i = msglist.begin(); i != msglist.end(); ++i ) {
                         if (!i->msg.text.isUnique()) {
                             // NOTE: replacing input ids with real ids here!
-                            glossary_.fetchText(i->msg.text,true);
+                            glossary.fetchText(i->msg.text,true);
                         }
                     }
                 }

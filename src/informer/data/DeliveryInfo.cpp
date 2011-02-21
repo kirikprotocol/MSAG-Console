@@ -82,6 +82,8 @@ activeWeekDays_(-1)
     // incstats_[0].clear();
     // incstats_[1].clear();
     readStats();
+
+    glossary_.init(dlvId);
 }
 
 
