@@ -13,7 +13,7 @@ const ASTag MDSeqType1::_tag_C= ASTag(ASTag::tagContextSpecific, 1);
 void
 MDSeqType1::construct(void)
 {
-  setField(0, asn1::_tagINTEGER, EDAlternative::altMANDATORY);
+  setField(0, _tagINTEGER, EDAlternative::altMANDATORY);
   setField(1, _tag_B, ASTagging::tagsIMPLICIT, EDAlternative::altMANDATORY);
   setField(2, _tag_C, ASTagging::tagsIMPLICIT, EDAlternative::altMANDATORY);
 }

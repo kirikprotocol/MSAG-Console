@@ -7,6 +7,7 @@
 #include "eyeline/utilx/hexdmp.hpp"
 #include "SeqType4.hpp"
 #include "enc/MESeqType4.hpp"
+#include "dec/MDSeqType4.hpp"
 #include "TestPatternsRegistry.hpp"
 
 extern FILE* logfile;
@@ -83,6 +84,49 @@ test_SeqType4_enc(char* err_msg)
   } catch (std::exception& ex) {
     snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
     fprintf(logfile, "test_SeqType4_enc::caught exception [%s]\n", ex.what());
+    return false;
+  }
+
+  return true;
+}
+
+bool
+test_SeqType4_dec(char* err_msg)
+{
+  printf("test_SeqType4_dec:\t\t\t");
+
+  try {
+    const std::string& patternTrSyntax = TestPatternsRegistry::getInstance().getResultPattern("test_SeqType4", "{AA,77,DD}");
+
+    fprintf(logfile, "test_SeqType4_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
+    uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
+    size_t patternLen= utilx::hexbuf2bin(patternTrSyntax.c_str(), patternTrSyntaxBin, sizeof(patternTrSyntaxBin));
+
+    dec::MDSeqType4 decSeqType4;
+    SeqType4 value;
+    decSeqType4.setValue(value);
+    DECResult decResult= decSeqType4.decode(patternTrSyntaxBin, patternLen);
+    fprintf(logfile, "test_SeqType4_dec:: DECResult.status=%d\n", decResult.status);
+    if (decResult.status != DECResult::decOk) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d", decResult.status);
+      return false;
+    }
+
+    fprintf(logfile, "test_SeqType4_dec:: calculated value='{0x%x,0x%x,0x%x}'\n", value.a, (value.b.get() ? *value.b.get() : 0), (value.c.get() ? *value.c.get() : 0));
+    if (value.a != 0xAA ||
+        !value.b.get() ||
+        *value.b.get() != 0x77 ||
+        !value.c.get() ||
+        *value.c.get() != 0xDD )
+    {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='{0xAA,0x77,0xDD}', calculated value='{0x%x,0x%x,0x%x}'", value.a, (value.b.get() ? *value.b.get() : 0), (value.c.get() ? *value.c.get() : 0));
+      fprintf(logfile, "test_SeqType1_dec:: expected value='{0xAA,0x77,0xDD}', calculated value='{0x%x,0x%x,0x%x}'", value.a, (value.b.get() ? *value.b.get() : 0), (value.c.get() ? *value.c.get() : 0));
+      return false;
+    }
+
+  } catch (std::exception& ex) {
+    snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
+    fprintf(logfile, "test_SeqType4_dec::caught exception [%s]\n", ex.what());
     return false;
   }
 

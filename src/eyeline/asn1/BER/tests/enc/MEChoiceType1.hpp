@@ -14,9 +14,9 @@ namespace ber {
 namespace tests {
 namespace enc {
 
-class MEChoiceType1 : public asn1::ber::EncoderOfChoice {
+class MEChoiceType1 : public EncoderOfChoice {
 private:
-  asn1::ber::EncoderOfChoice::setSelection;
+  EncoderOfChoice::setSelection;
 
 protected:
   class AltEncoder : public ChoiceOfEncoders2_T<EncoderOfINTEGER, EncoderOfBOOL> {
@@ -32,7 +32,7 @@ protected:
 
 public:
   explicit MEChoiceType1(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfChoice(use_rule)
+    : EncoderOfChoice(use_rule)
   {
     addCanonicalAlternative(asn1::_tagBOOL, asn1::ASTagging::tagsIMPLICIT);
   }
@@ -40,7 +40,7 @@ public:
   MEChoiceType1(const asn1::ASTag& outer_tag,
                 const asn1::ASTagging::Environment_e tag_env,
                 asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
-    : asn1::ber::EncoderOfChoice(outer_tag, tag_env, use_rule)
+    : EncoderOfChoice(outer_tag, tag_env, use_rule)
   {
     addCanonicalAlternative(asn1::_tagBOOL, asn1::ASTagging::tagsIMPLICIT);
   }

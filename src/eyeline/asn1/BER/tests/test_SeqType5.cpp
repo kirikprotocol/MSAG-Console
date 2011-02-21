@@ -6,6 +6,7 @@
 
 #include "TestPatternsRegistry.hpp"
 #include "SeqType5.hpp"
+#include "dec/MDSeqType5.hpp"
 #include "enc/MESeqType5.hpp"
 #include "eyeline/utilx/hexdmp.hpp"
 
@@ -22,31 +23,8 @@ test_SeqType5_enc(char* err_msg)
 {
   printf("test_SeqType5_enc:\t\t\t");
 
-  SeqType5_t value;
-
-  memset(&value, 0, sizeof(value));
-  asn_enc_rval_t retVal;
-  char patternTrSyntax[MAX_PATTERN_LEN]={0};
-
-  value.a.choice.case1= 100;
-  value.a.present= ChoiceType1_PR_case1;
-  value.b.choice.case2= true;
-  value.b.present= ChoiceType2_PR_case2;
-  value.c.choice.case2= false;
-  value.c.present= ChoiceType1_PR_case2;
-  value.d.choice.case1= 200;
-  value.d.present= ChoiceType2_PR_case1;
-
-  retVal = der_encode(&asn_DEF_SeqType5,
-                      &value, write_transfer_syntax, patternTrSyntax);
-  if (retVal.encoded == -1)
-    return false;
-
-  fprintf(logfile, "test_SeqType5_enc:: SeqType5_t={a.case1=100,b.case2=true,c.case2=false,d.case1=200}, trSyntax=%s, retVal=%ld\n",
-          patternTrSyntax, (long int)retVal.encoded);
-  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType5", "{a.case1=100,b.case2=true,c.case2=false,d.case1=200}", patternTrSyntax);
-
   try {
+    const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType5", "{a.case1=100,b.case2=true,c.case2=false,d.case1=200}");
     SeqType5 value_2;
     value_2.a.case1().init() = 100;
     value_2.b.case2().init() = true;
@@ -68,9 +46,9 @@ test_SeqType5_enc(char* err_msg)
     utilx::hexdmp(trSyntaxAsStr, sizeof(trSyntaxAsStr), encodedBuf, encResult.nbytes);
     fprintf(logfile, "test_SeqType5_enc:: SeqType5Value={a.case1=100,b.case2=true,c.case2=false,d.case1=200}, trSyntax=%s\n",
             trSyntaxAsStr);
-    if (strcmp(trSyntaxAsStr, patternTrSyntax)) {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax, trSyntaxAsStr);
-      fprintf(logfile, "test_SeqType5_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax, trSyntaxAsStr);
+    if (strcmp(trSyntaxAsStr, patternTrSyntax.c_str())) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='%s', calculated value='%s'", patternTrSyntax.c_str(), trSyntaxAsStr);
+      fprintf(logfile, "test_SeqType5_enc:: expected value='%s', calculated value='%s'\n", patternTrSyntax.c_str(), trSyntaxAsStr);
       return false;
     }
   } catch (std::exception& ex) {
@@ -79,6 +57,49 @@ test_SeqType5_enc(char* err_msg)
     return false;
   }
 
+  return true;
+}
+
+// return true on success or false on error
+bool
+test_SeqType5_dec(char* err_msg)
+{
+  printf("test_SeqType5_dec:\t\t\t");
+  try {
+    const std::string& patternTrSyntax= TestPatternsRegistry::getInstance().getResultPattern("test_SeqType5", "{a.case1=100,b.case2=true,c.case2=false,d.case1=200}");
+
+    fprintf(logfile, "test_SeqType5_dec:: patternTrSyntax=%s\n", patternTrSyntax.c_str());
+    uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
+    size_t patternLen= utilx::hexbuf2bin(patternTrSyntax.c_str(), patternTrSyntaxBin, sizeof(patternTrSyntaxBin));
+
+    dec::MDSeqType5 decSeqType5;
+    SeqType5 expectedValue;
+    decSeqType5.setValue(expectedValue);
+    DECResult decResult= decSeqType5.decode(patternTrSyntaxBin, patternLen);
+    fprintf(logfile, "test_SeqType5_dec:: DECResult.status=%d\n", decResult.status);
+    if (decResult.status != DECResult::decOk) {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d", decResult.status);
+      return false;
+    }
+
+    fprintf(logfile, "test_SeqType5_dec:: calculated value='{%d,%d,%d,%d}'\n", *expectedValue.a.case1().get(),
+            *expectedValue.b.case2().get(), *expectedValue.c.case2().get(), *expectedValue.d.case1().get());
+    if (*expectedValue.a.case1().get() != 100 ||
+        *expectedValue.b.case2().get() != true ||
+        *expectedValue.c.case2().get() != false ||
+        *expectedValue.d.case1().get() != 200)
+    {
+      snprintf(err_msg, MAX_ERR_MESSAGE, "expected value='{100,true,false,200}', calculated value='{%d,%d,%d,%d}'", *expectedValue.a.case1().get(),
+               *expectedValue.b.case2().get(), *expectedValue.c.case2().get(), *expectedValue.d.case2().get());
+      fprintf(logfile, "expected value='{100,true,false,200}', calculated value='{%d,%d,%d,%d}'", *expectedValue.a.case1().get(),
+              *expectedValue.b.case2().get(), *expectedValue.c.case2().get(), *expectedValue.d.case2().get());
+      return false;
+    }
+  } catch (std::exception& ex) {
+    snprintf(err_msg, MAX_ERR_MESSAGE, "caught exception [%s]", ex.what());
+    fprintf(logfile, "test_SeqType5_dec::caught exception [%s]\n", ex.what());
+    return false;
+  }
   return true;
 }
 

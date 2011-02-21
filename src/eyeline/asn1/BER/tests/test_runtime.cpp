@@ -70,6 +70,9 @@ test_runtime_framework_init()
   TestPatternsRegistry::getInstance().insertResultPattern("test_SeqTypeExplicit1", "{EE,11}", "300D020200EEA503020111A1020500");
   TestPatternsRegistry::getInstance().insertResultPattern("test_ChoiceType1", "{case1=100}", "020164");
   TestPatternsRegistry::getInstance().insertResultPattern("test_ChoiceType2", "{case1=100}", "AF03020164");
+  TestPatternsRegistry::getInstance().insertResultPattern("test_SeqType5", "{a.case1=100,b.case2=true,c.case2=false,d.case1=200}",
+                                                          "3013020164AF030101FFAA03010100AB04020200C8");
+
 }
 
 }}}}
@@ -232,6 +235,31 @@ void test_runtime()
      printf ("failed: %s\n", errMsg);
    } else
      printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqType4_dec(errMsg)) {
+     printf ("failed: %s\n", errMsg);
+   } else
+     printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqOfType1_dec(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_ChoiceType1_dec(errMsg)) {
+     printf ("failed: %s\n", errMsg);
+   } else
+     printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_ChoiceType2_dec(errMsg)) {
+     printf ("failed: %s\n", errMsg);
+   } else
+     printf("ok\n");
+
+  if (!eyeline::asn1::ber::tests::test_SeqType5_dec(errMsg)) {
+    printf ("failed: %s\n", errMsg);
+  } else
+    printf("ok\n");
 
 }
 
