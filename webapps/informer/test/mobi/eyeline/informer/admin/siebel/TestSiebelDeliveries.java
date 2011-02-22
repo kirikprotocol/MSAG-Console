@@ -21,7 +21,7 @@ class TestSiebelDeliveries implements SiebelContext {
     this.detector = detector;
   }
 
-  private TestDeliveryManager deliveryManager = new TestDeliveryManager(null, null);
+  private TestDeliveryManager deliveryManager = new TestDeliveryManager();
 
 
   public void addMessages(String login, DataSource<Message> msDataSource, int deliveryId) throws AdminException {

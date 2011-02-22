@@ -41,10 +41,10 @@
               </tr:inputText>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.from_date']}"/>
-              <eye:inputDate id="fromDate" value="#{messages.msgFilter.fromDate}" type="date" autocomplete="true"/>
+              <eye:inputDate required="true" id="fromDate" value="#{messages.msgFilter.fromDate}" type="date" autocomplete="true"/>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.till_date']}"/>
-              <eye:inputDate id="tillDate" value="#{messages.msgFilter.tillDate}" type="date" autocomplete="true"/>
+              <eye:inputDate required="true" id="tillDate" value="#{messages.msgFilter.tillDate}" type="date" autocomplete="true"/>
 
               <h:outputText style="white-space:nowrap" value="#{msg['informer.deliveries.messages.show.texts']}"/>
               <h:selectBooleanCheckbox value="#{messages.showTexts}"/>

@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.admin;
 
+import mobi.eyeline.informer.admin.archive.ArchiveSettings;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
@@ -7,7 +8,6 @@ import mobi.eyeline.informer.admin.siebel.SiebelSettings;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Properties;
 
 /**
  * Copyright Eyeline.mobi
@@ -28,6 +28,7 @@ class WebConfigSettings {
 
   private SiebelSettings siebelSettings;
   private CdrSettings cdrSettings;
+  private ArchiveSettings archiveSettings;
   private boolean allowUssdPushDeliveries;
   private String workDir;
 
@@ -129,6 +130,14 @@ class WebConfigSettings {
     this.cdrSettings = new CdrSettings(cdrSettings);
   }
 
+  ArchiveSettings getArchiveSettings() {
+    return new ArchiveSettings(archiveSettings);
+  }
+
+  void setArchiveSettings(ArchiveSettings archiveSettings) throws AdminException{
+    this.archiveSettings = new ArchiveSettings(archiveSettings);
+  }
+
   boolean isAllowUssdPushDeliveries() {
     return allowUssdPushDeliveries;
   }
@@ -137,11 +146,4 @@ class WebConfigSettings {
     this.allowUssdPushDeliveries = allowUssdPushDeliveries;
   }
 
-  private Properties cloneProps(Properties other) {
-    Properties props = new Properties();
-    for (Object s : other.keySet()) {
-      props.put(s, other.get(s));
-    }
-    return props;
-  }
 }

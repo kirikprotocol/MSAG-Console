@@ -24,7 +24,7 @@ public class TestDeliveryManagerTest {
 
   @BeforeClass
   public static void init() {
-    manager = new TestDeliveryManager(null, null);
+    manager = new TestDeliveryManager();
   }
 
   @AfterClass

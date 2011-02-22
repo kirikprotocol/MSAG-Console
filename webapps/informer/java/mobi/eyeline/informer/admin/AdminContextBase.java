@@ -2,9 +2,10 @@ package mobi.eyeline.informer.admin;
 
 import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
-import mobi.eyeline.informer.admin.blacklist.BlacklistManagerImpl;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
+import mobi.eyeline.informer.admin.blacklist.BlacklistManagerImpl;
 import mobi.eyeline.informer.admin.delivery.DeliveryManager;
+import mobi.eyeline.informer.admin.delivery.StatisticsManager;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetectorImpl;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.ftpserver.FtpServerManager;
@@ -56,6 +57,8 @@ class AdminContextBase {
   protected ServiceManager serviceManager;
 
   protected DeliveryManager deliveryManager;
+
+  protected StatisticsManager statisticsManager;
 
   protected File workDir;
 
@@ -129,7 +132,8 @@ class AdminContextBase {
       regionsManager = new RegionsManager(infosme, new File(confDir, "regions.xml"),
           new File(confDir, "backup"), fileSystem);
 
-      deliveryManager = new DeliveryManager(is.getDcpHost(), is.getDcpPort(), new File(is.getStatDir()), fileSystem);
+      deliveryManager = new DeliveryManager(is.getDcpHost(), is.getDcpPort());
+      statisticsManager = new StatisticsManager(new File(is.getStatDir()), fileSystem);
 
     } catch (AdminException e) {
       throw new InitException(e);

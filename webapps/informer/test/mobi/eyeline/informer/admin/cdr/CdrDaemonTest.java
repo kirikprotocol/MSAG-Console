@@ -3,7 +3,6 @@ package mobi.eyeline.informer.admin.cdr;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.changelog.ChangeMessageStateEvent;
-import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangeListener;
 import mobi.eyeline.informer.admin.delivery.changelog.DeliveryChangesDetector;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.users.User;
@@ -54,7 +53,7 @@ public class CdrDaemonTest {
 
     TestDeliveryManager manager = null;
     try {
-      manager = new TestDeliveryManager(null, null);
+      manager = new TestDeliveryManager();
 
       final User user = new User();
       user.setLogin("a");

@@ -1,5 +1,6 @@
 package mobi.eyeline.informer.admin;
 
+import mobi.eyeline.informer.admin.archive.ArchiveSettings;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.admin.infosme.Infosme;
@@ -209,6 +210,26 @@ class WebConfigManager extends BaseManager<WebConfigSettings> {
         settings.setCdrSettings(props);
       }
 
+      public void infosmeCommand(Infosme infosme) throws AdminException {
+        //dummy
+      }
+    });
+  }
+
+  public ArchiveSettings getArchiveSettings() {
+    return readSettings(new SettingsReader<WebConfigSettings, ArchiveSettings>() {
+      public ArchiveSettings executeRead(WebConfigSettings settings) {
+        return settings.getArchiveSettings();
+      }
+    });
+  }
+
+  public void setArchiveSettings(final ArchiveSettings props) throws AdminException {
+
+    updateSettings(new SettingsWriter<WebConfigSettings>() {
+      public void changeSettings(WebConfigSettings settings) throws AdminException {
+        settings.setArchiveSettings(props);
+      }
       public void infosmeCommand(Infosme infosme) throws AdminException {
         //dummy
       }

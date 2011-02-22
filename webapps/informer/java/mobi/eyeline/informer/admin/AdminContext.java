@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin;
 
+import mobi.eyeline.informer.admin.archive.ArchiveContext;
+import mobi.eyeline.informer.admin.archive.ArchiveManager;
 import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.cdr.CdrProviderContext;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
@@ -23,6 +25,7 @@ import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionContext;
 import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
+import mobi.eyeline.informer.admin.service.ServiceInfo;
 import mobi.eyeline.informer.admin.siebel.SiebelContext;
 import mobi.eyeline.informer.admin.siebel.SiebelProvider;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
@@ -46,7 +49,7 @@ import java.util.List;
  *
  * @author Aleksandr Khalitov
  */
-public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext, DeliveryNotificationsContext, SiebelContext, RestrictionContext {
+public class AdminContext extends AdminContextBase implements CdrProviderContext, ContentProviderContext, DeliveryNotificationsContext, SiebelContext, RestrictionContext, ArchiveContext {
 
 
 
@@ -60,6 +63,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   protected CdrProvider cdrProvider;
   protected FileDeliveriesProvider fileDeliveriesProvider;
   protected SiebelProvider siebelProvider;
+
+  protected ArchiveManager archiveManager;
 
   public AdminContext() {
   }
@@ -87,6 +92,10 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
       deliveryChangesDetector.start();
 
+      if(isArchiveDaemonDeployed()) {
+        archiveManager = new ArchiveManager(this, this.webConfig.getArchiveSettings());
+      }
+
     } catch (AdminException e) {
       throw new InitException(e);
     }
@@ -113,7 +122,16 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     } catch (Exception ignored) {
     }
 
+    if(archiveManager != null) {
+      archiveManager.shutdown();
+    }
+
     super.shutdown();
+  }
+
+  public boolean isArchiveDaemonDeployed() throws AdminException {
+    ServiceInfo info = serviceManager.getService("ArchiveDaemon");
+    return info != null; //todo
   }
 
 
@@ -174,6 +192,11 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   public User getUser(String login) {
     return usersManager.getUser(login);
+  }
+
+  @Override
+  public UnmodifiableDeliveryManager getDeliveryManager() {
+    return null;
   }
 
   public List<User> getUsers() {
@@ -406,24 +429,28 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   // STATISTICS ====================================================================================================================
 
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
-    deliveryManager.statistics(filter, visitor);
+    statisticsManager.statistics(filter, visitor);
   }
 
   public void statisticByUsers(UserStatFilter filter, UserStatVisitor visitor) throws AdminException {
-    deliveryManager.statisticsByUser(filter, visitor);
+    statisticsManager.statisticsByUser(filter, visitor);
   }
 
   public void getStatEntities(StatEntityProvider.EntityVisitor v, Date from, Date till) throws AdminException {
-    deliveryManager.getStatEntities(v, from, till);
+    statisticsManager.getStatEntities(v, from, till);
   }
 
   public void dropStatEntities(Date from, Date till) throws AdminException {
-    deliveryManager.dropStatEntities(from, till);
+    statisticsManager.dropStatEntities(from, till);
   }
 
   public List<DateAndFile> getProcessedNotificationsFiles(Date startDate,Date endDate) throws AdminException {
     return deliveryChangesDetector.getProcessedNotificationsFiles(startDate,endDate);
   }
+
+  // ARCHIVE =======================================================================================================================
+
+
 
 
   // DELIVERIES ====================================================================================================================

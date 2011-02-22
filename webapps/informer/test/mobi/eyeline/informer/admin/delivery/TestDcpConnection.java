@@ -435,7 +435,7 @@ public class TestDcpConnection extends DcpConnection{
 
   synchronized void forceActivate() throws AdminException {
     for(Delivery d : deliveries.values()) {
-      if(d.getStatus() == DeliveryStatus.Planned) {
+      if(d.getStatus() == DeliveryStatus.Planned || d.getStatus() == null) {
         d.setStatus(DeliveryStatus.Active);
       }
     }
@@ -448,7 +448,7 @@ public class TestDcpConnection extends DcpConnection{
     SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
     Date now = new Date();
     for(Delivery d : deliveries.values()) {
-      if(d.getStatus() == DeliveryStatus.Planned) {
+      if(d.getStatus() == DeliveryStatus.Planned || d.getStatus() == null) {
         d.setStatus(DeliveryStatus.Active);
       }else if(d.getStatus() != DeliveryStatus.Active) {
         continue;

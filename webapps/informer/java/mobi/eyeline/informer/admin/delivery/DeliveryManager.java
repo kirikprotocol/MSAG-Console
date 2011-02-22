@@ -1,12 +1,9 @@
 package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.stat.*;
-import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import mobi.eyeline.informer.util.Address;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.*;
 
 /**
@@ -14,7 +11,7 @@ import java.util.*;
  *
  * @author Aleksandr Khalitov
  */
-public class DeliveryManager {
+public class DeliveryManager implements UnmodifiableDeliveryManager{
 
   private static final Logger logger = Logger.getLogger(DeliveryManager.class);
 
@@ -24,21 +21,13 @@ public class DeliveryManager {
 
   private int port;
 
-  private final DeliveryStatProvider statsProvider;
 
-  private final UserStatProvider userStatsProvider;
-
-
-  public DeliveryManager(String host, int port, File statsDirectory, FileSystem fileSys) {
+  public DeliveryManager(String host, int port) {
     this.host = host;
     this.port = port;
-    this.statsProvider = new DeliveryStatProvider(statsDirectory, fileSys);
-    this.userStatsProvider = new UserStatProvider(statsDirectory, fileSys);
   }
 
-  protected DeliveryManager(DeliveryStatProvider statsProvider, UserStatProvider userStatsProvider) {
-    this.statsProvider = statsProvider;
-    this.userStatsProvider = userStatsProvider;
+  protected DeliveryManager() {
   }
 
   protected DcpConnection createConnection(String host, int port, String login, String password) throws AdminException {
@@ -526,26 +515,6 @@ public class DeliveryManager {
    * @param visitor визитор, обрабатывающий найденные записи
    * @throws AdminException если произошла ошибка при обращении к стораджу статистики
    */
-  public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
-    statsProvider.accept(filter, visitor);
-  }
-
-  public void statisticsByUser(UserStatFilter filter, UserStatVisitor visitor) throws AdminException {
-    userStatsProvider.accept(filter, visitor);
-  }
-
-
-  public void getStatEntities(StatEntityProvider.EntityVisitor v, Date from, Date till) throws AdminException {
-    userStatsProvider.visitEntities(from, till, v);
-    statsProvider.visitEntities(from, till,  v);
-
-  }
-
-  public void dropStatEntities(Date from, Date till) throws AdminException {
-    userStatsProvider.dropEntities(from, till);
-    statsProvider.dropEntities(from, till);
-  }
-
 
   /**
    * Завершение работы менеджера

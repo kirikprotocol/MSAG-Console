@@ -32,7 +32,7 @@ public class DeliveryStatusHistory {
     private Date date;
     private DeliveryStatus status;
 
-    Item(Date date, DeliveryStatus status) {
+    public Item(Date date, DeliveryStatus status) {
       this.date = date;
       this.status = status;
     }

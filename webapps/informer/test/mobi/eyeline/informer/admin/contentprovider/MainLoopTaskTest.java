@@ -49,7 +49,7 @@ public class MainLoopTaskTest {
   public static void init() throws Exception{
     workFile = TestUtils.createRandomDir("-cpt");
     resource = new SingleFileResource();
-    deliveryManager = new TestDeliveryManager(null, null);
+    deliveryManager = new TestDeliveryManager();
     context = new SingleUserContentPContext(prepareUser(), deliveryManager);
     task = new MainLoopTask(context, new UserDirResolver() {
       @Override

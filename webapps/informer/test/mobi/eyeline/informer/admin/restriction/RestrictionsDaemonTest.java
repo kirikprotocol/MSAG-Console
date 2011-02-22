@@ -1,8 +1,6 @@
 package mobi.eyeline.informer.admin.restriction;
 
-import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.TestAdminContext;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
@@ -51,7 +49,7 @@ public class RestrictionsDaemonTest {
   @Before
   public void before() throws Exception {
     infosme = new TestInfosme();
-    deliveryManager = new TestDeliveryManager(null, null);
+    deliveryManager = new TestDeliveryManager();
     usersManager = new TestUsersManager(infosme, usersConfigFile, backupDir, FileSystem.getFSForSingleInst());
     for(User u : usersManager.getUsers()) {
       infosme.addUser(u.getLogin());
