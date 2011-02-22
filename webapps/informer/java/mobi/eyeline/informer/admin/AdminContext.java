@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin;
 
-import mobi.eyeline.informer.admin.archive.ArchiveContext;
-import mobi.eyeline.informer.admin.archive.ArchiveManager;
+import mobi.eyeline.informer.admin.archive.*;
 import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.cdr.CdrProviderContext;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
@@ -66,6 +65,8 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   protected ArchiveManager archiveManager;
 
+  protected UnmodifiableDeliveryManager archiveDeliveryManager;
+
   public AdminContext() {
   }
 
@@ -93,6 +94,10 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
       deliveryChangesDetector.start();
 
       if(isArchiveDaemonDeployed()) {
+        if(is.getArchiveHost() == null) {
+          throw new InitException("Archive host is null");
+        }
+        archiveDeliveryManager = new DeliveryManager(is.getArchiveHost(), is.getArchivePort());
         archiveManager = new ArchiveManager(this, this.webConfig.getArchiveSettings());
       }
 
@@ -196,7 +201,7 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
   @Override
   public UnmodifiableDeliveryManager getDeliveryManager() {
-    return null;
+    return archiveDeliveryManager;
   }
 
   public List<User> getUsers() {
@@ -839,4 +844,41 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     fileDeliveriesProvider.verifyConnection(u, ucps);
   }
 
+  // ARCHIVE ======================================================================================================
+
+  public DeliveriesRequest createRequest(String login, DeliveriesRequestPrototype request) throws AdminException {
+    return archiveManager.createRequest(login, request);
+  }
+
+  public MessagesRequest createRequest(String login, MessagesRequestPrototype _request) throws AdminException {
+    return archiveManager.createRequest(login, _request);
+  }
+
+  public Request getRequest(int requestId) throws AdminException {
+    return archiveManager.getRequest(requestId);
+  }
+
+  public Collection<Request> getRequests() throws AdminException {
+    return archiveManager.getRequests();
+  }
+
+  public void modifyRequest(Request request) throws AdminException {
+    archiveManager.modifyRequest(request);
+  }
+
+  public void getDeliveriesResult(int requestId, Visitor<ArchiveDelivery> visitor) throws AdminException {
+    archiveManager.getDeliveriesResult(requestId, visitor);
+  }
+
+  public void getMessagesResult(int requestId, Visitor<ArchiveMessage> visitor) throws AdminException {
+    archiveManager.getMessagesResult(requestId, visitor);
+  }
+
+  public void removeRequest(int requestId) throws AdminException {
+    archiveManager.removeRequest(requestId);
+  }
+
+  public void cancelRequest(int requestId) throws AdminException {
+    archiveManager.cancelRequest(requestId);
+  }
 }

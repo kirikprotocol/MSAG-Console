@@ -12,9 +12,9 @@ public class ArchiveSettings {
 
   private String requestsDir;
 
-  private int chunkSize;
+  private int chunkSize = 10;
 
-  private int executorsSize;
+  private int executorsSize = 10;
 
   public ArchiveSettings(ArchiveSettings settings) {
     this.resultsDir = settings.resultsDir;

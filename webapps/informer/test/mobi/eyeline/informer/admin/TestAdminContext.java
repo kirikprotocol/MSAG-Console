@@ -1,5 +1,7 @@
 package mobi.eyeline.informer.admin;
 
+import mobi.eyeline.informer.admin.archive.ArchiveManager;
+import mobi.eyeline.informer.admin.archive.ArchiveSettings;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManagerStub;
 import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.contentprovider.FileDeliveriesProvider;
@@ -254,6 +256,14 @@ public class TestAdminContext extends AdminContext {
       cdrProvider = new CdrProvider(this, webConfig.getCdrSettings(), new File(workDir, "cdr"), fileSystem);
 
       deliveryChangesDetector.start();
+
+      ArchiveSettings settings = webConfig.getArchiveSettings();
+      settings.setRequestsDir(new File(workDir, "archive_requests").getAbsolutePath());
+      settings.setResultsDir(new File(workDir, "archive_results").getAbsolutePath());
+
+      archiveDeliveryManager = deliveryManager;
+      archiveManager = new ArchiveManager(this, settings);
+
 
     } catch (IOException e) {
       throw new InitException(e);
