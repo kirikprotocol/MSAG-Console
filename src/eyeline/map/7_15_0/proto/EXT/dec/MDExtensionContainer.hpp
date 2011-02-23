@@ -44,6 +44,7 @@ public:
   void setValue(ExtensionContainer& value)
   {
     _value = &value;
+    _seqDec.reset();
   }
 
 protected:

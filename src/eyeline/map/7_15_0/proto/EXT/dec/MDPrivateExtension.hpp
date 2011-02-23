@@ -41,6 +41,7 @@ public:
   void setValue(PrivateExtension& value)
   {
     _value= &value;
+    _seqDec.reset();
   }
 
 protected:
