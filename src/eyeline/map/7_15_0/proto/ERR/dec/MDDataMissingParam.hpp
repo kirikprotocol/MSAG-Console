@@ -40,6 +40,7 @@ public:
 
   void setValue(DataMissingParam& value) {
     _value= &value;
+    _seqDec.reset();
   }
 
 protected:

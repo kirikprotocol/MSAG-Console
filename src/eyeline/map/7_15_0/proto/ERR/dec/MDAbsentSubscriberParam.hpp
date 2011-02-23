@@ -45,6 +45,7 @@ public:
   void setValue(AbsentSubscriberParam& value)
   {
     _value = &value;
+    _seqDec.reset();
   }
 
 protected:

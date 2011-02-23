@@ -48,6 +48,7 @@ public:
   void setValue(ExtensibleSystemFailureParam& value)
   {
     _value = &value;
+    _seqDec.reset();
   }
 
 protected:

@@ -40,7 +40,9 @@ public:
 
   void setValue(UnexpectedDataParam& value) {
     _value= &value;
+    _seqDec.reset();
   }
+
 protected:
   void construct();
   virtual asn1::ber::TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
