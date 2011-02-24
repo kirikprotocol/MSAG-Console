@@ -350,6 +350,10 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                 op->setUSSDref( umr );
                 if ( cmdid == DELIVERY ) op->setFlag(OperationFlags::NEXTUSSDISSUBMIT);
 
+                if ( isUSSDClosed ) {
+                    op->setStatus( OPERATION_COMPLETED );
+                }
+
             } else if ( found_ussd == invalidOpId() ) {
                 // ussd operation not found
                 fail( "USSD: dialog not found", st, 
