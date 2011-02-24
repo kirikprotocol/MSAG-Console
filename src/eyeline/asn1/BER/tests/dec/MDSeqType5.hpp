@@ -24,6 +24,7 @@ public:
   void setValue(SeqType5& value)
   {
     _value = &value;
+    _seqDec.reset();
   }
 
 protected:

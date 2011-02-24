@@ -72,7 +72,7 @@ test_SeqType5_dec(char* err_msg)
     uint8_t patternTrSyntaxBin[MAX_PATTERN_LEN];
     size_t patternLen= utilx::hexbuf2bin(patternTrSyntax.c_str(), patternTrSyntaxBin, sizeof(patternTrSyntaxBin));
 
-    dec::MDSeqType5 decSeqType5;
+    dec::MDSeqType5 decSeqType5(TransferSyntax::ruleDER);
     SeqType5 expectedValue;
     decSeqType5.setValue(expectedValue);
     DECResult decResult= decSeqType5.decode(patternTrSyntaxBin, patternLen);
