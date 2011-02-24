@@ -62,9 +62,9 @@ inline uint8_t encode_identifier(const _TArg & use_val, uint8_t * use_enc, uint8
   uint8_t i = rlen;
 
   use_enc[--i] = ((uint8_t)uValue & 0x7F);
-  while ((--i) >= 1) {
+  while (i >= 1) {
     uValue >>= 7;
-    use_enc[i] = ((uint8_t)uValue & 0x7F) | 0x80;
+    use_enc[--i] = ((uint8_t)uValue & 0x7F) | 0x80;
   }
   return rlen;
 }
