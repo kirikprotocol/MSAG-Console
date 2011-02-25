@@ -35,7 +35,7 @@ public:
                       //of its complete tagging
     , atgImplicit     //alternative is identified by tag that replaces outermost
                       //tag of its complete tagging
-    , atgExplicit     //alternative is identified by tag that isn't part of its
+    , atgExplicit     //alternative is identified by tag that wraps its
                       //complete tagging
   };
   enum Presence_e { altMANDATORY = 0, altOPTIONAL = 1 };

@@ -1,4 +1,8 @@
-#include "MDSeqType4.hpp"
+#ifdef MOD_IDENT_ON
+static const char ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
+#include "eyeline/asn1/BER/tests/dec/MDSeqType4.hpp"
 #include "util/Exception.hpp"
 
 namespace eyeline {

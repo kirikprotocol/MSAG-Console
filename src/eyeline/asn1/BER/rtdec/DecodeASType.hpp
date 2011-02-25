@@ -17,7 +17,7 @@ class DecoderOfASType : public TypeValueDecoderAC {
 protected:
   TransferSyntax * _valDec;
 
-  DECResult decodeVAL(const TLVProperty * val_prop,
+  DECResult decodeVAL(const TLParser & tlv_prop,
                       const uint8_t * use_enc, TSLength max_len,
                       TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
                       bool relaxed_rule = false)

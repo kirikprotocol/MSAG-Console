@@ -19,19 +19,16 @@ namespace ber {
 // -- ValueDecoderIface interface methods
 // -- ************************************* --
 
-DECResult DecoderOfNULL::decodeVAL(const TLVProperty * val_prop,
+DECResult DecoderOfNULL::decodeVAL(const TLParser & tlv_prop,
                     const uint8_t * use_enc, TSLength max_len,
                     TSGroupBER::Rule_e use_rule/* = TSGroupBER::ruleBER*/,
                     bool relaxed_rule/* = false*/)
   /*throw(BERDecoderException)*/
 {
-  if (!val_prop)
-    throw smsc::util::Exception("ber::DecoderOfNULL::decodeVAL(): V-part properties isn't decoded");
-
   DECResult rval(DECResult::decBadEncoding);
-  TSLength  valLen = val_prop->_valLen;
+  TSLength  valLen = tlv_prop._valLen;
 
-  if (val_prop->isIndefinite()) { //check DER/CER restrictions
+  if (tlv_prop.isIndefinite()) { //check DER/CER restrictions
     if (!relaxed_rule && (use_rule != TSGroupBER::ruleBER))
       return rval;
 

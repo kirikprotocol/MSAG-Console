@@ -1,14 +1,16 @@
+#ifdef MOD_IDENT_ON
+static const char ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
 #include <stdio.h>
 #include <string.h>
 
-#include "common.hpp"
-#include "eyeline/asn1/TransferSyntax.hpp"
-#include "eyeline/asn1/BER/rtenc/EncodeSequence.hpp"
+#include "eyeline/asn1/BER/tests/common.hpp"
+#include "eyeline/asn1/BER/tests/dec/MDSeqType1.hpp"
+#include "eyeline/asn1/BER/tests/enc/MESeqType1.hpp"
+#include "eyeline/asn1/BER/tests/TestPatternsRegistry.hpp"
+
 #include "eyeline/utilx/hexdmp.hpp"
-#include "dec/MDSeqType1.hpp"
-#include "enc/MESeqType1.hpp"
-#include "SeqType1.hpp"
-#include "TestPatternsRegistry.hpp"
 
 extern FILE* logfile;
 
@@ -71,9 +73,9 @@ test_SeqType1_dec(char* err_msg)
     SeqType1 expectedValue;
     decSeqType1.setValue(expectedValue);
     DECResult decResult= decSeqType1.decode(patternTrSyntaxBin, patternLen);
-    fprintf(logfile, "test_SeqType1_dec:: DECResult.status=%d\n", decResult.status);
+    fprintf(logfile, "test_SeqType1_dec:: DECResult.status=%d, nbytes=%u\n", decResult.status, decResult.nbytes);
     if (decResult.status != DECResult::decOk) {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d", decResult.status);
+      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d, nbytes=%u", decResult.status, decResult.nbytes);
       return false;
     }
 

@@ -10,6 +10,8 @@ namespace ber {
 namespace tests {
 namespace dec {
 
+const MDChoiceType1::TaggingOptions MDChoiceType1::_tagOptions;
+
 void
 MDChoiceType1::construct()
 {

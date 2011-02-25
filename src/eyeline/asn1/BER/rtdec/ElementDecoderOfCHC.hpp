@@ -13,46 +13,31 @@ namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-class CHCElementDecoderAC : public ElementDecoderByTagAC {
+template <uint16_t _SizeTArg>
+class CHCElementDecoder_T : public ElementDecoderByTagAC {
+private:
+  eyeline::util::LWArray_T<EDAlternative, uint16_t, _SizeTArg> _altStore;
+
 protected:
   // ----------------------------------------------------------
   // ElementDecoderAC Interface methods (protected)
   // ----------------------------------------------------------
   //Returns blocking mode for alternative with given UId
-  uint8_t getBlocking(uint16_t alt_uid) const /*throw(std::exception)*/
+  virtual uint8_t getBlocking(uint16_t alt_uid) const /*throw(std::exception)*/
   {
     return EDAlternative::blockALL;
   }
 
-  //NOTE: copying constructor of successsor MUST properly set _alrArr
-  CHCElementDecoderAC(const CHCElementDecoderAC & use_obj)
-    : ElementDecoderByTagAC(use_obj)
-  { }
-
-public:
-  explicit CHCElementDecoderAC(EDAlternativesArray & alt_store)
-    : ElementDecoderByTagAC(alt_store, ElementDecoderByTagAC::orderNone)
-  { }
-  ~CHCElementDecoderAC()
-  { }
-};
-
-
-template <uint16_t _SizeTArg>
-class CHCElementDecoder_T : public CHCElementDecoderAC {
-private:
-  eyeline::util::LWArray_T<EDAlternative, uint16_t, _SizeTArg> _altStore;
-
 public:
   CHCElementDecoder_T()
-    : CHCElementDecoderAC(_altStore)
+    : ElementDecoderByTagAC(_altStore, ElementDecoderByTagAC::orderNone)
   { }
-  CHCElementDecoder_T(const CHCElementDecoder_T & use_obj)
-    : CHCElementDecoderAC(use_obj)
+  explicit CHCElementDecoder_T(const CHCElementDecoder_T & use_obj)
+    : ElementDecoderByTagAC(use_obj)
   {
     setAltStorage(_altStore);
   }
-
+  //
   ~CHCElementDecoder_T()
   { }
 };

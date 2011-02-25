@@ -20,6 +20,14 @@ private:
   SETElementDecoder_T<_SizeTArg>  _setDec;
 
 protected:
+  // ----------------------------------------
+  // -- DecoderOfStructAC interface methods
+  // ----------------------------------------
+  //If necessary, allocates optional element and initializes associated TypeDecoderAC
+  //virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */ = 0;
+  //Performs actions upon successfull optional element decoding
+  //virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */ = 0;
+
   //constructor for types defined as SET with own tagging
   explicit DecoderOfSet_T(const ASTagging & eff_tags,
                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
@@ -37,7 +45,7 @@ public:
     : DecoderOfSetAC(_setDec, ASTagging(use_tag, tag_env, asn1::_tagsSETOF), use_rule)
   { }
   //
-  DecoderOfSet_T((const DecoderOfSet_T & use_obj)
+  explicit DecoderOfSet_T((const DecoderOfSet_T & use_obj)
     : DecoderOfSetAC(use_obj)
   {
     setElementDecoder(_setDec);

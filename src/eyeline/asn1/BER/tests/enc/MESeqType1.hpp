@@ -1,4 +1,7 @@
 #ifndef __EYELINE_ASN1_BER_TESTS_ENC_MESEQTYPE1_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 # define __EYELINE_ASN1_BER_TESTS_ENC_MESEQTYPE1_HPP__
 
 # include "eyeline/asn1/BER/rtenc/EncodeINT.hpp"
@@ -56,4 +59,5 @@ private:
 
 }}}}}
 
-#endif
+#endif /* __EYELINE_ASN1_BER_TESTS_ENC_MESEQTYPE1_HPP__ */
+

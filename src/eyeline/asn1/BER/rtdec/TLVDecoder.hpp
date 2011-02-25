@@ -65,7 +65,9 @@ public:
   // -----------------------------------------------------------
   // -- ValueDecoderIface interface methods
   // -----------------------------------------------------------
-  virtual DECResult decodeVAL(const TLVProperty * val_prop,
+  //NOTE: in case of Untagged CHOICE/ANY/OpenType the identification tag is a
+  //      part of value encoding.
+  virtual DECResult decodeVAL(const TLParser & tlv_prop,
                               const uint8_t * use_enc, TSLength max_len,
                               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
                               bool relaxed_rule = false)
@@ -80,20 +82,21 @@ protected:
   // -- -------------------------------------------------- --
   // -- ValueDecoderIface abstract methods are to implement
   // -- -------------------------------------------------- --
-  virtual DECResult decodeVAL(const TLVProperty * val_prop,
+  //NOTE: in case of Untagged CHOICE/ANY/OpenType the identification tag is a
+  //      part of value encoding.
+  virtual DECResult decodeVAL(const TLParser & tlv_prop,
                               const uint8_t * use_enc, TSLength max_len,
                               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
                               bool relaxed_rule = false)
     /*throw(std::exception)*/;
 
 public:
-  explicit ValueDecoderOf_T(_TArg * use_val = 0)
-    : _dVal(use_val)
+  ValueDecoderOf_T() : _dVal(NULL)
   { }
-  ~ValueDecoderOf_T()
+  virtual ~ValueDecoderOf_T()
   { }
 
-  void setValue(_TArg & use_val) { _dVal = &use_val; }
+  virtual void setValue(_TArg & use_val) { _dVal = &use_val; }
 };
 
 /* ************************************************************************* *
@@ -105,8 +108,8 @@ protected:
   bool                _relaxedRule;
   ValueDecoderIface * _valDec;  //NOTE: it may be just a reference to a successor
                                 //memer, so its copying constructor should care
-                                //about proper _valDec setting.
-  const TLParser *    _outerTL;
+                                //about proper _valDec setting via init() call.
+  const TLParser *    _outerTL; //overriden outer tag
 
   //NOTE.1: in case of CHOICE/Opentype the copying constructor of successsor
   //        MUST properly set _optTags  by TypeTagging::setOptions().
@@ -175,7 +178,7 @@ protected:
   // -- ************************************************* --
   // -- ValueDecoderIface abstract methods are to implement
   // -- ************************************************* --
-  //virtual DECResult decodeVAL(const TLVProperty * val_prop,
+  //virtual DECResult decodeVAL(const TLParser & tlv_prop,
   //                            const uint8_t * use_enc, TSLength max_len,
   //                            TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
   //                            bool relaxed_rule = false)

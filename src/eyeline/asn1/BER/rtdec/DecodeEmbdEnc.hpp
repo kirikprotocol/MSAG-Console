@@ -86,11 +86,7 @@ public:
   ~DecoderOfEmbdEncoding()
   { }
 
-  void setValue(asn1::EmbeddedEncoding & use_val)
-  {
-    _dVal = &use_val; 
-    _chcDec.reset();
-  }
+  void setValue(asn1::EmbeddedEncoding & use_val) { _dVal = &use_val; }
 };
 
 } //ber

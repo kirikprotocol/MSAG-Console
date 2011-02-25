@@ -53,6 +53,8 @@ public:
     _tlws.reserve(_effTags->size());
   }
 
+  bool empty(void) const { return (!_effTags || _effTags->empty()) && !_outerTL; }
+
   //Decodes all TL-pairs of TLV layout
   DECResult decodeBOC(const uint8_t * use_enc, TSLength max_len,
                       bool relaxed_rule = false) /*throw(std::exception)*/;
@@ -62,7 +64,7 @@ public:
 
   //Returns 'V'-part encoding properties.
   //NOTE: may called only after decodeBOC() call.
-  const TLVProperty * getVProperties(void) const /*throw()*/
+  const TLParser * getVProperties(void) const /*throw()*/
   {
     return _tlws.empty() ? NULL : &_tlws.atLast();
   } 

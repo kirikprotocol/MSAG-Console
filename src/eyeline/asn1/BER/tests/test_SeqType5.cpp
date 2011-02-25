@@ -1,3 +1,7 @@
+#ifdef MOD_IDENT_ON
+static const char ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
 #include <stdio.h>
 #include <string.h>
 
@@ -76,9 +80,9 @@ test_SeqType5_dec(char* err_msg)
     SeqType5 expectedValue;
     decSeqType5.setValue(expectedValue);
     DECResult decResult= decSeqType5.decode(patternTrSyntaxBin, patternLen);
-    fprintf(logfile, "test_SeqType5_dec:: DECResult.status=%d\n", decResult.status);
+    fprintf(logfile, "test_SeqType5_dec:: DECResult.status=%d, nbytes=%u\n", decResult.status, decResult.nbytes);
     if (decResult.status != DECResult::decOk) {
-      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d", decResult.status);
+      snprintf(err_msg, MAX_ERR_MESSAGE, "DECResult.status=%d, nbytes=%u", decResult.status, decResult.nbytes);
       return false;
     }
 

@@ -7,55 +7,40 @@
 #endif
 #define __ASN1_BER_DECODER_CHOICE
 
+#include "eyeline/asn1/BER/rtdec/DecodeConstructed.hpp"
 #include "eyeline/asn1/BER/rtdec/ElementDecoderOfCHC.hpp"
-#include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-class DecoderOfChoiceAC : public TypeValueDecoderAC {
+class DecoderOfChoiceAC : public DecoderOfConstructedAC {
 private:
   TaggingOptions        _altTags; //taggings of CHOICE alternatives
-  CHCElementDecoderAC * _elDec;   //actually it's just a reference to a successor
-                                  //member, so its copying constructor MUST properly
-                                  //that pointer.
 
-  DECResult decodeElement(const uint8_t * use_enc, TSLength max_len,
-                          bool relaxed_rule) /*throw(std::exception)*/;
 protected:
   // -- ************************************************* --
   // -- ValueDecoderIface abstract methods are to implement
   // -- ************************************************* --
-  virtual DECResult decodeVAL(const TLVProperty * val_prop,
-                      const uint8_t * use_enc, TSLength max_len,
-                      TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
-                      bool relaxed_rule = false)
-    /*throw(std::exception)*/;
-
-  // ----------------------------------------
-  // -- DecoderOfChoiceAC interface methods
-  // ----------------------------------------
-  //Allocates alternative data structure and initializes associated TypeDecoderAC
-  virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx)
-    /*throw(throw(std::exception)) */ = 0;
-  //Perfoms actions finalizing alternative decoding
-  virtual void markDecodedAlternative(uint16_t unique_idx)
-    /*throw(throw(std::exception)) */ { return; }
-
-  void setElementDecoder(CHCElementDecoderAC & elm_dec) { _elDec = &elm_dec; }
+  //NOTE: should reset ElementDecoder prior to decoding!
+  //NOTE: in case of Untagged CHOICE/ANY/OpenType the identification tag is a
+  //      part of value encoding.
+  virtual DECResult decodeVAL(const TLParser & tlv_prop, //corresponds to innermost identification tag
+                              const uint8_t * use_enc, TSLength max_len,
+                              TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
+                              bool relaxed_rule = false) /*throw(std::exception)*/;
 
   //NOTE: copying constructor of successsor MUST properly set _elDec
   //      by calling setElementDecoder()
   explicit DecoderOfChoiceAC(const DecoderOfChoiceAC & use_obj)
-    : TypeValueDecoderAC(use_obj), _altTags(use_obj._altTags), _elDec(0)
+    : DecoderOfConstructedAC(use_obj), _altTags(use_obj._altTags)
   {
     TypeTagging::setOptions(_altTags);
   }
 
-  explicit DecoderOfChoiceAC(CHCElementDecoderAC & use_eldec,
+  explicit DecoderOfChoiceAC(ElementDecoderByTagAC & use_eldec,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(use_rule), _elDec(&use_eldec)
+    : DecoderOfConstructedAC(use_eldec, use_rule)
   {
     TypeTagging::setOptions(_altTags);
     //NOTE.1: in case of untagged CHOICE, tagging of canonical alternative
@@ -63,9 +48,9 @@ protected:
     //        options in successor's constructor in order to support CER !!!
   }
   // NOTE: eff_tags is a complete effective tagging of type!
-  DecoderOfChoiceAC(CHCElementDecoderAC & use_eldec, const ASTagging & eff_tags,
+  DecoderOfChoiceAC(ElementDecoderByTagAC & use_eldec, const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(eff_tags, use_rule), _elDec(&use_eldec)
+    : DecoderOfConstructedAC(use_eldec, eff_tags, use_rule)
   {
     TypeTagging::setOptions(_altTags);
   }
@@ -118,9 +103,10 @@ public:
 
 template <uint16_t _SizeTArg>
 class DecoderOfChoice_T : public DecoderOfChoiceAC {
-protected:
+private:
   CHCElementDecoder_T<_SizeTArg>  _chcDec;
 
+protected:
   // ----------------------------------------
   // -- DecoderOfChoiceAC interface methods
   // ----------------------------------------
@@ -128,7 +114,7 @@ protected:
   //virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx)
   //  /*throw(throw(std::exception)) */ = 0;
   //Perfoms actions finalizing alternative decoding
-  //virtual void markDecodedAlternative(uint16_t unique_idx)
+  //virtual void markDecodedOptional(uint16_t unique_idx)
   //  /*throw(throw(std::exception)) */ { return; }
 
 public:

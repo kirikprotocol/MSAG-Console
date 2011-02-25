@@ -10,28 +10,20 @@ namespace ber {
 /* ************************************************************************* *
  * Class DecoderOfASType implementation:
  * ************************************************************************* */
-DECResult DecoderOfASType::decodeVAL(const TLVProperty * val_prop,
+DECResult DecoderOfASType::decodeVAL(const TLParser & tlv_prop,
                     const uint8_t * use_enc, TSLength max_len,
                     TSGroupBER::Rule_e use_rule/* = TSGroupBER::ruleBER*/,
-                    bool relaxed_rule/* = false*/)
-  /*throw(BERDecoderException)*/
+                    bool relaxed_rule/* = false*/) /*throw(std::exception)*/
 {
   uint16_t  shift = 0;
   DECResult rval(DECResult::decOk);
 
   _valDec->_rule = TSGroupBER::getTSRule(use_rule);
   if (isTagged()) {
-    if (!val_prop)
-      throw smsc::util::Exception("ber::DecoderOfASType::decodeVal(): V-part properties isn't decoded");
-
     rval += skipTLV(use_enc, max_len, relaxed_rule);
-  } else { //untagged Opentype
-    if (!val_prop) { //Opentype is a PDU
-      rval += skipTLV(use_enc, max_len, relaxed_rule);
-    } else { // _outerTL is set and is a part of Opentype encoding
-      rval += skipTLV(*_outerTL, use_enc, max_len, relaxed_rule);
-      shift = _outerTL->getBOCsize();
-    }
+  } else { //untagged Opentype, identification tag is a part of value encoding
+    rval += skipTLV(tlv_prop, use_enc, max_len, relaxed_rule);
+    shift = tlv_prop.getBOCsize();
   }
 
   if (rval.isOk(relaxed_rule)) {

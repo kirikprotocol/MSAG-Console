@@ -18,8 +18,10 @@ namespace ber {
 //mandatory fields much lesser than number of optional fields.
 template <uint16_t _SizeTArg, uint16_t _NumOfMandatoryArg = _SizeTArg>
 class DecoderOfSequence_T : public DecoderOfStructAC {
-protected:
+private:
   SEQElementDecoder_T<_SizeTArg, _NumOfMandatoryArg>  _seqDec;
+
+protected:
   // ----------------------------------------
   // -- DecoderOfStructAC interface methods
   // ----------------------------------------
@@ -45,7 +47,7 @@ public:
     : DecoderOfStructAC(_seqDec, ASTagging(use_tag, tag_env, asn1::_tagsSEQOF), use_rule)
   { }
   //copying constructor
-  DecoderOfSequence_T(const DecoderOfSequence_T & use_obj)
+  explicit DecoderOfSequence_T(const DecoderOfSequence_T & use_obj)
     : DecoderOfStructAC(use_obj)
   {
     setElementDecoder(_seqDec);

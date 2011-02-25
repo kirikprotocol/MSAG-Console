@@ -99,14 +99,31 @@ DECResult TypeDecoderAC::decode(const uint8_t * use_enc, TSLength max_len)
   /*throw(BERDecoderException)*/
 {
   DECResult       rval(DECResult::decOk);
-  TaggingDecoder  tagDec(refreshTagging(), _outerTL);
 
-  rval += tagDec.decodeBOC(use_enc, max_len, _relaxedRule); //throws
-  if (rval.isOk(_relaxedRule)) {
-    rval += _valDec->decodeVAL(tagDec.getVProperties(), use_enc + rval.nbytes, max_len - rval.nbytes,
-                             getVALRule(), _relaxedRule); //throws
-    if (rval.isOk(_relaxedRule))
-      rval += tagDec.decodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
+  if (!isTagged()) { //Untagged CHOICE/ANY/OpenType:
+    TLParser  vtl;
+
+    if (!_outerTL) //decode identification tag of value encoding
+      rval = vtl.decodeBOC(use_enc, max_len);
+    else          //identification tag is already decoded
+      vtl = *_outerTL;
+    
+    if (rval.isOk(_relaxedRule)) {
+      rval += _valDec->decodeVAL(vtl, use_enc + rval.nbytes, max_len - rval.nbytes,
+                                 getVALRule(), _relaxedRule); //throws
+//      if (rval.isOk(_relaxedRule) && vtl.isIndefinite())
+//        rval += vtl.decodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
+    }
+  } else {
+    TaggingDecoder  tagDec(getTagging(), _outerTL);
+
+    rval += tagDec.decodeBOC(use_enc, max_len, _relaxedRule); //throws
+    if (rval.isOk(_relaxedRule)) {
+      rval += _valDec->decodeVAL(*tagDec.getVProperties(), use_enc + rval.nbytes, max_len - rval.nbytes,
+                               getVALRule(), _relaxedRule); //throws
+      if (rval.isOk(_relaxedRule))
+        rval += tagDec.decodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
+    }
   }
   return rval;
 }

@@ -8,51 +8,37 @@
 #endif
 #define __ASN1_BER_DECODER_STRUCT
 
-#include "eyeline/asn1/BER/rtdec/ElementDecoder.hpp"
-#include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
+#include "eyeline/asn1/BER/rtdec/DecodeConstructed.hpp"
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-class DecoderOfStructAC : public TypeValueDecoderAC {
-private:
-  ElementDecoderAC * _elDec; //NOTE: actually it's just a reference to a successor
-                             //member, so its copying constructor MUST properly set
-                             //that pointer.
-  DECResult decodeElement(const uint8_t * use_enc, TSLength max_len,
-                          bool relaxed_rule) /*throw(std::exception)*/;
+class DecoderOfStructAC : public DecoderOfConstructedAC {
 protected:
-  // -- ************************************************* --
-  // -- ValueDecoderIface abstract methods are to implement
-  // -- ************************************************* --
-  virtual DECResult decodeVAL(const TLVProperty * val_prop,
+  // ------------------------------------------------
+  // -- ValueDecoderIface interface methods
+  // ------------------------------------------------
+  //NOTE: should reset ElementDecoder prior to decoding!
+  virtual DECResult decodeVAL(const TLParser & tlv_prop, //corresponds to innermost identification tag
                               const uint8_t * use_enc, TSLength max_len,
                               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
-                              bool relaxed_rule = false)
-    /*throw(std::esception)*/;
-
-  // ----------------------------------------
-  // -- DecoderOfStructAC interface methods
-  // ----------------------------------------
-  //If necessary, allocates optional element and initializes associated TypeDecoderAC
-  virtual TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */ = 0;
-  //Performs actions upon successfull optional element decoding
-  virtual void markDecodedOptional(uint16_t unique_idx) /*throw() */  { return; }
-
-
-  void setElementDecoder(ElementDecoderAC & elm_dec) { _elDec = &elm_dec; }
+                              bool relaxed_rule = false) /*throw(std::esception)*/;
 
   //NOTE: copying constructor of successsor MUST properly set _elDec by
   //      calling setElementDecoder()
-  DecoderOfStructAC(const DecoderOfStructAC & use_obj)
-    : TypeValueDecoderAC(use_obj), _elDec(0)
+  explicit DecoderOfStructAC(const DecoderOfStructAC & use_obj)
+    : DecoderOfConstructedAC(use_obj)
   { }
 
   DecoderOfStructAC(ElementDecoderAC & use_eldec, const ASTagging & eff_tags,
                     TransferSyntax::Rule_e use_rule = TransferSyntax::ruleBER)
-    : TypeValueDecoderAC(eff_tags, use_rule), _elDec(&use_eldec)
+    : DecoderOfConstructedAC(use_eldec, eff_tags, use_rule)
   { }
+
+  // ----------------------------------------------------------
+  // Initialization methods for successors
+  // ----------------------------------------------------------
 
   //adds tagged field
   void setField(uint16_t unique_idx, const ASTag & fld_tag,

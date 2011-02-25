@@ -39,8 +39,8 @@ public:
     EDAStatus_e           _status;
     const EDAlternative * _alt;
 
-    EDAResult(EDAStatus_e use_status = ElementDecoderAC::edaOk,
-              const EDAlternative * use_alt = 0)
+    explicit EDAResult(EDAStatus_e use_status = ElementDecoderAC::edaOk,
+                       const EDAlternative * use_alt = 0)
       : _status(use_status), _alt(use_alt)
     { }
     ~EDAResult()
@@ -97,24 +97,17 @@ protected:
   // ----------------------------------------------------------
   // Initialization methods for successors
   // ----------------------------------------------------------
-  void insertAlternative(const EDAlternative & use_alt)
-    /* throw(std::exception)*/
-  {
-    if (!_altsArr->at(use_alt.getUId()).empty())
-      throw DuplicateUIdException(use_alt.getUId());
-    _altsArr->at(use_alt.getUId()) = use_alt;
-    if (use_alt.isUnkExtension())
-      _extensible = true;
-    if (_tdState == tdEmpty)
-      _tdState = tdInit;
-  }
+  void insertAlternative(const EDAlternative & use_alt) /* throw(std::exception)*/;
 
   void setAltStorage(EDAlternativesArray & alt_store) { _altsArr = &alt_store; }
 
   //NOTE: copying constructor of successsor MUST properly set _alrArr
   ElementDecoderAC(const ElementDecoderAC & use_obj)
-    : _tdState(use_obj._tdState), _extensible(use_obj._extensible)
-    , _altsArr(0)
+    : _tdState(use_obj._tdState), _extensible(use_obj._extensible), _altsArr(0)
+  { }
+
+  explicit ElementDecoderAC(EDAlternativesArray & alt_store)
+    : _tdState(tdEmpty), _extensible(false), _altsArr(&alt_store)
   { }
 
   // ----------------------------------------------------------
@@ -136,9 +129,6 @@ protected:
   virtual EDAResult verifyTDCompletion(void) const /*throw()*/ = 0;
 
 public:
-  explicit ElementDecoderAC(EDAlternativesArray & alt_store)
-    : _tdState(tdEmpty), _extensible(false), _altsArr(&alt_store)
-  { }
   virtual ~ElementDecoderAC()
   { }
 
@@ -187,15 +177,7 @@ public:
 
   //Checks if occurence of alternative with given tag is legal at current
   //ElementDecoderAC state updating it if necessary.
-  EDAResult processElement(const ASTag & use_tag) /*throw(std::exception)*/
-  {
-    if (_tdState == tdInit) {
-      buildTagDecoder();
-      _tdState = tdBuilt;
-    }
-    _tdState = tdProcess;
-    return processElementTag(use_tag);
-  }
+  EDAResult processElement(const ASTag & use_tag) /*throw(std::exception)*/;
 
   //Verifies that ElementDecoderAC is in complete state - all mandatory
   //alternatives are processed according to its decoding order.
@@ -205,40 +187,12 @@ public:
   }
 
   //Reverts ElementDecoderAC to its initialized state, making it ready for next decoding.
-  void reset(void) /*throw()*/
-  {
-    if (_tdState == tdProcess) {
-      resetTagDecoder();
-      _tdState = tdBuilt;
-    }
-  }
+  void reset(void) /*throw()*/;
 
   //ElementDecoderAC to its 'just-allocated' state, erases all runtime and
   //initialization data.
-  void erase(void) /*throw()*/
-  {
-    while (_tdState > tdEmpty) {
-      switch (_tdState) {
-      case tdProcess: {
-        resetTagDecoder(); _tdState = tdBuilt; 
-      } break;
-
-      case tdBuilt: {
-        eraseTagDecoder();  _tdState = tdInit;
-      } break;
-
-      case tdInit: {
-        _altsArr->clear();
-        _extensible =  false;
-        _tdState = tdEmpty;
-      } break;
-
-      default:;
-      } //eosw
-    }
-  }
+  void erase(void) /*throw()*/;
 };
-
 
 } //ber
 } //asn1

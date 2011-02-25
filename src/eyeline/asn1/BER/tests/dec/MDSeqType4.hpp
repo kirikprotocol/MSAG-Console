@@ -1,4 +1,7 @@
 #ifndef __EYELINE_ASN1_BER_TESTS_DEC_MDSEQTYPE4_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 # define __EYELINE_ASN1_BER_TESTS_DEC_MDSEQTYPE4_HPP__
 
 # include "eyeline/asn1/BER/rtdec/DecodeINT.hpp"
@@ -22,14 +25,14 @@ public:
     construct();
   }
 
-  void setValue(SeqType4& value)
-  {
-    _value = &value;
-    _seqDec.reset();
-  }
+  void setValue(SeqType4 & value) { _value = &value; }
 
 protected:
   void construct(void);
+  // ----------------------------------------
+  // -- DecoderOfStructAC interface methods
+  // ----------------------------------------
+  //If necessary, allocates optional element and initializes associated TypeDecoderAC
   virtual asn1::ber::TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
 
 private:

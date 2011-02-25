@@ -1,4 +1,8 @@
-#include "MDSeqType5.hpp"
+#ifdef MOD_IDENT_ON
+static const char ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_ON */
+
+#include "eyeline/asn1/BER/tests/dec/MDSeqType5.hpp"
 #include "util/Exception.hpp"
 
 namespace eyeline {
@@ -7,18 +11,14 @@ namespace ber {
 namespace tests {
 namespace dec {
 
-const MDSeqType5::FieldA_TaggingOptions MDSeqType5::_tagOptions;
-
-const ASTag MDSeqType5::_choiceType2Tag= ASTag(ASTag::tagContextSpecific, 15);
-
 const ASTag MDSeqType5::_tag_C= ASTag(ASTag::tagContextSpecific, 10);
 const ASTag MDSeqType5::_tag_D= ASTag(ASTag::tagContextSpecific, 11);
 
 void
 MDSeqType5::construct(void)
 {
-  setField(0, _tagOptions, EDAlternative::altMANDATORY);
-  setField(1, _choiceType2Tag, EDAlternative::altMANDATORY);
+  setField(0, MDChoiceType1::_tagOptions, EDAlternative::altMANDATORY);
+  setField(1, MDChoiceType2::_typeTag, EDAlternative::altMANDATORY);
   setField(2, _tag_C, ASTagging::tagsIMPLICIT, EDAlternative::altMANDATORY);
   setField(3, _tag_D, ASTagging::tagsIMPLICIT, EDAlternative::altMANDATORY);
 }

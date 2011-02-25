@@ -1,4 +1,7 @@
 #ifndef __EYELINE_ASN1_BER_TESTS_DEC_MDCHOICETYPE2_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 # define __EYELINE_ASN1_BER_TESTS_DEC_MDCHOICETYPE2_HPP__
 
 # include <inttypes.h>
@@ -17,19 +20,22 @@ namespace dec {
 
 class MDChoiceType2 : public DecoderOfChoice_T<2> {
 public:
+  static const ASTag _typeTag;
+
   explicit MDChoiceType2(asn1::TransferSyntax::Rule_e use_rule = asn1::TransferSyntax::ruleDER)
     : DecoderOfChoice_T<2>(_typeTag, ASTagging::tagsIMPLICIT, use_rule), _value(NULL)
   {
     construct();
   }
 
-  void setValue(ChoiceType2& value) {
-    _value= &value;
-    _chcDec.reset();
-  }
+  void setValue(ChoiceType2& value) { _value= &value; }
 
 private:
   void construct();
+  // ----------------------------------------
+  // -- DecoderOfChoiceAC interface methods
+  // ----------------------------------------
+  //Allocates alternative data structure and initializes associated TypeDecoderAC
   virtual asn1::ber::TypeDecoderAC * prepareAlternative(uint16_t unique_idx) /*throw(std::exception) */;
 
   class AltDecoder : public ChoiceOfDecoders2_T<DecoderOfINTEGER,
@@ -44,11 +50,9 @@ private:
 
   AltDecoder  _altDec;
   ChoiceType2* _value;
-
-  static const ASTag _typeTag;
-  //static const ASTagging _typeTags;
 };
 
 }}}}}
 
-#endif
+#endif /* __EYELINE_ASN1_BER_TESTS_DEC_MDCHOICETYPE2_HPP__ */
+

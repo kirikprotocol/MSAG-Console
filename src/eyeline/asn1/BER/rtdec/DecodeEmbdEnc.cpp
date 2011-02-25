@@ -11,6 +11,7 @@ namespace ber {
 /* ************************************************************************* *
  * Class DecoderOfEmbdEncoding implementation:
  * ************************************************************************* */
+const DecoderOfEmbdEncoding::TaggingOptions DecoderOfEmbdEncoding::_tagOptions;
 const ASTag DecoderOfEmbdEncoding::_tagSingleASN1Type(ASTag::tagContextSpecific, 0);
 const ASTag DecoderOfEmbdEncoding::_tagOctetAligned(ASTag::tagContextSpecific, 1);
 const ASTag DecoderOfEmbdEncoding::_tagBitAligned(ASTag::tagContextSpecific, 2);

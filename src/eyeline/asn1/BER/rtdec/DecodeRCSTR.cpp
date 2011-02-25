@@ -16,22 +16,19 @@ namespace ber {
 // -- ValueDecoderIface interface methods
 // -- ************************************* --
 
-DECResult RCSTRValueDecoder::decodeVAL(const TLVProperty * val_prop,
+DECResult RCSTRValueDecoder::decodeVAL(const TLParser & tlv_prop,
                     const uint8_t * use_enc, TSLength max_len,
                     TSGroupBER::Rule_e use_rule/* = TSGroupBER::ruleBER*/,
                     bool relaxed_rule/* = false*/)
   /*throw(BERDecoderException)*/
 {
-  if (!val_prop)
-    throw smsc::util::Exception("ber::RCSTRValueDecoder::decodeVal(): V-part properties isn't decoded");
-  
   bool      strictDER = (!relaxed_rule && (use_rule == TSGroupBER::ruleDER));
   bool      strictCER = (!relaxed_rule && (use_rule == TSGroupBER::ruleCER));
   DECResult rval(DECResult::decBadEncoding);
-  TSLength  valLen = val_prop->_valLen;
+  TSLength  valLen = tlv_prop._valLen;
 
-  if (!val_prop->_isConstructed) {
-    if (val_prop->isIndefinite()) { //check DER/CER restrictions
+  if (!tlv_prop._isConstructed) {
+    if (tlv_prop.isIndefinite()) { //check DER/CER restrictions
       if (strictDER || strictCER)
         return rval;
 
@@ -51,10 +48,10 @@ DECResult RCSTRValueDecoder::decodeVAL(const TLVProperty * val_prop,
     /**/
   } else { //constructed encoding, several fragments follow
     //NOTE: content octets [+ EOC] cann't be < 2 octets length ({Tag, 0} || EOC)
-    if ((max_len < 2) || strictDER || (val_prop->isDefinite() && strictCER))
+    if ((max_len < 2) || strictDER || (tlv_prop.isDefinite() && strictCER))
       return rval;
 
-    if (val_prop->isIndefinite()) {
+    if (tlv_prop.isIndefinite()) {
       //check for degenerate case: empty constructed encoding with indefinite LD
       if (checkEOC(use_enc, max_len))
         return strictCER ? rval : DECResult(DECResult::decOk);

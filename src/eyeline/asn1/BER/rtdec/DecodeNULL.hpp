@@ -24,7 +24,7 @@ protected:
   // -- ************************************* --
   // -- ValueDecoderIface interface methods
   // -- ************************************* --
-  virtual DECResult decodeVAL(const TLVProperty * val_prop,
+  virtual DECResult decodeVAL(const TLParser & tlv_prop,
                               const uint8_t * use_enc, TSLength max_len,
                               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleBER,
                               bool relaxed_rule = false)

@@ -1,4 +1,7 @@
 #ifndef __EYELINE_ASN1_BER_TESTS_SEQTYPE1_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
 # define __EYELINE_ASN1_BER_TESTS_SEQTYPE1_HPP__
 
 # include <inttypes.h>
@@ -22,4 +25,5 @@ struct SeqType1 {
 
 }}}}
 
-#endif
+#endif /* __EYELINE_ASN1_BER_TESTS_SEQTYPE1_HPP__ */
+
