@@ -41,11 +41,7 @@ public:
     construct();
   }
 
-  void setValue(ExtensionContainer& value)
-  {
-    _value = &value;
-    _seqDec.reset();
-  }
+  void setValue(ExtensionContainer & value) { _value = &value; }
 
 protected:
   void construct(void);

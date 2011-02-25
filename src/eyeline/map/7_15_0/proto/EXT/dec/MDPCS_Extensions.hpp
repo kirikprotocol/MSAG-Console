@@ -36,11 +36,7 @@ public:
     construct();
   }
 
-  void setValue(PCS_Extensions& value)
-  {
-    _value = &value;
-    _seqDec.reset();
-  }
+  void setValue(PCS_Extensions& value) { _value = &value; }
 
 protected:
   void construct(void);

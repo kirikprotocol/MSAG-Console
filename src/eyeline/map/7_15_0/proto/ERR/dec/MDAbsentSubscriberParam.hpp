@@ -42,11 +42,7 @@ public:
     construct();
   }
 
-  void setValue(AbsentSubscriberParam& value)
-  {
-    _value = &value;
-    _seqDec.reset();
-  }
+  void setValue(AbsentSubscriberParam & value) { _value = &value; }
 
 protected:
   void construct();

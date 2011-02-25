@@ -101,7 +101,6 @@ public:
   void setValue(ros::ROSPduWithArgument & use_val) /*throw(std::exception)*/
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

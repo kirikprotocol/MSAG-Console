@@ -101,7 +101,6 @@ public:
   void setValue(ROSPdu & use_val) /*throw(std::exception)*/
   {
     _dVal = &use_val;
-    _chcDec.reset();
   }
 };
 

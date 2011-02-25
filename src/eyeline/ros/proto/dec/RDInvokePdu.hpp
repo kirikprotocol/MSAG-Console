@@ -76,11 +76,7 @@ public:
   ~RDInvokePdu()
   { }
 
-  void setValue(ROSInvokePdu & use_val)
-  {
-    _dVal = &use_val;
-    _seqDec.reset();
-  }
+  void setValue(ROSInvokePdu & use_val) { _dVal = &use_val; }
 };
 
 }}}}

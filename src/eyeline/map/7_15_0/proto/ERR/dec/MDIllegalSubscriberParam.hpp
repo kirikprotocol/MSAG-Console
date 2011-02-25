@@ -38,10 +38,7 @@ public:
     construct();
   }
 
-  void setValue(IllegalSubscriberParam& value) {
-    _value= &value;
-    _seqDec.reset();
-  }
+  void setValue(IllegalSubscriberParam & value) { _value = &value; }
 
 protected:
   void construct();

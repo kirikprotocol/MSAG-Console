@@ -38,10 +38,7 @@ public:
     construct();
   }
 
-  void setValue(DataMissingParam& value) {
-    _value= &value;
-    _seqDec.reset();
-  }
+  void setValue(DataMissingParam & value) { _value= &value; }
 
 protected:
   void construct(void);

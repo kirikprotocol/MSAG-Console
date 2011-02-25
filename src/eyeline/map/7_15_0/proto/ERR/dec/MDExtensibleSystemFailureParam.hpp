@@ -45,11 +45,7 @@ public:
     construct();
   }
 
-  void setValue(ExtensibleSystemFailureParam& value)
-  {
-    _value = &value;
-    _seqDec.reset();
-  }
+  void setValue(ExtensibleSystemFailureParam& value) { _value = &value; }
 
 protected:
   void construct();

@@ -39,10 +39,7 @@ public:
     construct();
   }
 
-  void setValue(CallBarredParam& value) {
-    _value= &value;
-    _chcDec.reset();
-  }
+  void setValue(CallBarredParam & value) { _value= &value; }
 
 protected:
   void construct();

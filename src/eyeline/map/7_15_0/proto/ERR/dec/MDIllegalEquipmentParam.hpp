@@ -38,10 +38,7 @@ public:
     construct();
   }
 
-  void setValue(IllegalEquipmentParam& value) {
-    _value= &value;
-    _seqDec.reset();
-  }
+  void setValue(IllegalEquipmentParam & value) { _value= &value; }
 
 protected:
   void construct();

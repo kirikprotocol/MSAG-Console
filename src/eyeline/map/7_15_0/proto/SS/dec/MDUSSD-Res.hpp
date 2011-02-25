@@ -71,7 +71,6 @@ public:
   void setValue(USSD_Res & use_val) /*throw(std::exception)*/
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

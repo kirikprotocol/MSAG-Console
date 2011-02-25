@@ -92,7 +92,6 @@ public:
   void setValue(ros::LinkedId & use_val) /*throw(std::exception)*/
   {
     _dVal = &use_val;
-    _chcDec.reset();
   }
 };
 

@@ -38,11 +38,7 @@ public:
     construct();
   }
 
-  void setValue(PrivateExtension& value)
-  {
-    _value= &value;
-    _seqDec.reset();
-  }
+  void setValue(PrivateExtension & value) { _value= &value; }
 
 protected:
   void construct(void);
