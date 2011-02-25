@@ -9,10 +9,11 @@ struct LoadUpInfo;
 typedef std::vector<LoadUpInfo*> LoadUpVector;
 
 struct LoadUpInfo{
+  LoadUpInfo():sms(0),final(false){}
   SMSId id;
   uint32_t seq;
   bool final;
-  SMS sms;
+  SMS* sms;
 };
 
 typedef XHash<SMSId,LoadUpInfo> LoadUpHash;
@@ -27,12 +28,24 @@ int main(int argc,char* argv[])
   smsc::logger::Logger::Init();
   if(argc==1)
   {
-    printf("Usage: %s infile [infiles ...]\n",argv[0]);
+    printf("Usage: %s [-n] [-v] infile [infiles ...]\n\t-n do not load sms\n\t-v verbose\n",argv[0]);
     return -1;
   }
+  bool loadSms=true;
+  bool verbose=false;
   for(int i=1;i<argc;i++)
   {
-
+    if(strcmp(argv[i],"-n")==0)
+    {
+      loadSms=false;
+      continue;
+    }
+    if(strcmp(argv[i],"-v")==0)
+    {
+      printf("verbose!\n");
+      verbose=true;
+      continue;
+    }
     //SMS sms;
     BufOps::SmsBuffer buf(0);
     File f;
@@ -54,23 +67,40 @@ int main(int argc,char* argv[])
       printf("Invalid signature in file %s\n",argv[i]);
       continue;
     }
+    printf("Reading %s\n",argv[i]);
     //printf("sig=%s\n",sig);
     int ver=f.ReadNetInt32();
     //printf("ver=0x%08x\n",ver);
     LoadUpInfo item;
-    while(f.Pos()<f.Size())
+    File::offset_type size=f.Size();
+    File::offset_type off;
+    long bytesSkipped=0;
+    int lastPrc=0;
+    while((off=f.Pos())<size)
     {
-      File::offset_type off=f.Pos();
+      int prc=(int)(10*off/size);
+      if(prc!=lastPrc)
+      {
+        printf("Progress:%d0%%\n",prc);
+        lastPrc=prc;
+      }
+      if(size-off<4)
+      {
+        printf("Extra data at the end of file.\n");
+        break;
+      }
       uint32_t sz=f.ReadNetInt32();
-      if(sz<8+4+1 || off+sz>f.Size())
+      if(sz<8+4+1 || off+sz>size)
       {
         f.Seek(off+1);
-        printf("!");fflush(stdout);
+        //printf("!");fflush(stdout);
+        bytesSkipped++;
         continue;
       }
       item.id=f.ReadNetInt64();
       item.seq=f.ReadNetInt32();
       item.final=f.ReadByte();
+      //printf("id=%lld,seq=%d,final=%d\n",item.id,item.seq,(int)item.final);
 
       //printf("sz1=%d,id=%lld, seq=%d, fin=%s\n",sz,id,seq,fin?"true":"false");fflush(stdout);
       buf.setSize(sz-8-4-1);
@@ -80,7 +110,8 @@ int main(int argc,char* argv[])
       if(sz!=sz2)
       {
         f.Seek(off+1);
-        printf("!");fflush(stdout);
+        //printf("!");fflush(stdout);
+        bytesSkipped++;
         continue;
       }
       if(sz>70000)
@@ -99,7 +130,6 @@ int main(int argc,char* argv[])
       }
 
       try{
-        Deserialize(buf,item.sms,ver);
         if(itemPtr)
         {
           *itemPtr=item;
@@ -109,27 +139,53 @@ int main(int argc,char* argv[])
           itemPtr=luHash.GetPtr(item.id);
           luVector.push_back(itemPtr);
         }
+        if(loadSms)
+        {
+          if(!itemPtr->sms)
+          {
+            itemPtr->sms=new SMS;
+          }
+          Deserialize(buf,*itemPtr->sms,ver);
+        }
       }catch(std::exception& e)
       {
         printf("exception: %s\n",e.what());
       }
+    }
+    if(bytesSkipped)
+    {
+      printf("bytes skipped:%ld\n",bytesSkipped);
     }
     time_t now=time(NULL);
     int cnt=0;
     for(LoadUpVector::iterator it=luVector.begin();it!=luVector.end();it++)
     {
       if((*it)->final)continue;
-      SMS& sms=(*it)->sms;
+      cnt++;
+      if(!loadSms)
+      {
+        continue;
+      }
+      SMS& sms=*(*it)->sms;
       if(!sms.Invalidate(__FILE__,__LINE__))
       {
         printf("Validation failed for msgId=%lld",(*it)->id);
       }
-      cnt++;
+      if(sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
+      {
+        sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,0);
+      }else
+      {
+        sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,0);
+      }
       if(sms.validTime<now)
       {
         tm* t=localtime(&sms.validTime);
-        printf("Expired sms: msgId=%lld, oa=%s, da=%s, validTime=%02d.%02d.%04d %02d:%02d\n",(*it)->id,sms.getOriginatingAddress().toString().c_str(),sms.getDealiasedDestinationAddress().toString().c_str(),
-               t->tm_mday,t->tm_mon+1,t->tm_year+1900,t->tm_hour,t->tm_min);
+        if(verbose)
+        {
+          printf("Expired sms: msgId=%lld, oa=%s, da=%s, validTime=%02d.%02d.%04d %02d:%02d\n",(*it)->id,sms.getOriginatingAddress().toString().c_str(),sms.getDealiasedDestinationAddress().toString().c_str(),
+              t->tm_mday,t->tm_mon+1,t->tm_year+1900,t->tm_hour,t->tm_min);
+        }
       }
     }
     printf("sms found:%d\n",cnt);

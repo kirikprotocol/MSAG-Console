@@ -11,10 +11,13 @@ struct LoadUpInfo;
 typedef std::vector<LoadUpInfo*> LoadUpVector;
 
 struct LoadUpInfo{
+  LoadUpInfo():smsBuf(0),smsBufSize(0){}
   SMSId id;
   uint32_t seq;
   bool final;
-  SMS sms;
+  char* smsBuf;
+  int smsBufSize;
+  int smsSize;
 };
 
 typedef XHash<SMSId,LoadUpInfo> LoadUpHash;
@@ -36,7 +39,7 @@ int main(int argc,char* argv[])
     printf("Output file already exists\n");
     return -1;
   }
-  SMS sms;
+  //SMS sms;
   BufOps::SmsBuffer buf(0);
   File f,g;
   try{
@@ -52,6 +55,8 @@ int main(int argc,char* argv[])
 
   g.Write(storeSig,9);
   g.WriteNetInt32(storeVer);
+
+  int ver;
 
   for(int i=2;i<argc;i++)
   {
@@ -70,17 +75,33 @@ int main(int argc,char* argv[])
       continue;
     }
     //printf("sig=%s\n",sig);
-    int ver=f.ReadNetInt32();
+    ver=f.ReadNetInt32();
     //printf("ver=0x%08x\n",ver);
     LoadUpInfo item;
-    while(f.Pos()<f.Size())
+    File::offset_type off,size=f.Size();
+    long bytesSkipped=0;
+
+    printf("Reading %s\n",argv[i]);
+
+    int lastPrc=0;
+    while((off=f.Pos())<size)
     {
-      File::offset_type off=f.Pos();
+      int prc=(int)(10*off/size);
+      if(prc!=lastPrc)
+      {
+        printf("Progress:%d0%%\n",prc);
+        lastPrc=prc;
+      }
+      if(size-off<4)
+      {
+        printf("Extra bytes at the end of file %s\n",argv[i]);
+        break;
+      }
       uint32_t sz=f.ReadNetInt32();
-      if(sz<8+4+1 || off+sz>f.Size())
+      if(sz<8+4+1 || off+sz>size)
       {
         f.Seek(off+1);
-        printf("!");fflush(stdout);
+        bytesSkipped++;
         continue;
       }
       item.id=f.ReadNetInt64();
@@ -88,14 +109,15 @@ int main(int argc,char* argv[])
       item.final=f.ReadByte();
 
       //printf("sz1=%d,id=%lld, seq=%d, fin=%s\n",sz,id,seq,fin?"true":"false");fflush(stdout);
-      buf.setSize(sz-8-4-1);
-      f.Read(buf.get(),sz-8-4-1);
+      int smsSize=sz-8-4-1;
+      buf.setSize(smsSize);
+      f.Read(buf.get(),smsSize);
       buf.SetPos(0);
       int sz2=f.ReadNetInt32();
       if(sz!=sz2)
       {
         f.Seek(off+1);
-        printf("!");fflush(stdout);
+        bytesSkipped++;
         continue;
       }
       if(sz>70000)
@@ -114,11 +136,11 @@ int main(int argc,char* argv[])
       }
 
       try{
-        Deserialize(buf,item.sms,ver);
-        if(!item.sms.Invalidate(__FILE__,__LINE__))
-        {
-          continue;
-        }
+//        Deserialize(buf,item.sms,ver);
+//        if(!item.sms.Invalidate(__FILE__,__LINE__))
+//        {
+//          continue;
+//        }
         if(itemPtr)
         {
           *itemPtr=item;
@@ -127,6 +149,31 @@ int main(int argc,char* argv[])
           luHash.Insert(item.id,item);
           itemPtr=luHash.GetPtr(item.id);
           luVector.push_back(itemPtr);
+        }
+        if(itemPtr->final)
+        {
+          if(itemPtr->smsBuf)
+          {
+            delete [] itemPtr->smsBuf;
+          }
+          itemPtr->smsBuf=0;
+          itemPtr->smsBufSize=0;
+          itemPtr->smsSize=0;
+        }else
+        {
+          if(!itemPtr->smsBuf)
+          {
+            itemPtr->smsBuf=new char[smsSize];
+            itemPtr->smsBufSize=smsSize;
+            itemPtr->smsSize=smsSize;
+          }else if(itemPtr->smsBufSize<smsSize)
+          {
+            delete [] itemPtr->smsBuf;
+            itemPtr->smsBuf=new char[smsSize];
+            itemPtr->smsBufSize=smsSize;
+          }
+          memcpy(itemPtr->smsBuf,buf.get(),smsSize);
+          itemPtr->smsSize=smsSize;
         }
         /*
         printf("from %s to %s, srcSmeId=%s\n",
@@ -142,23 +189,46 @@ int main(int argc,char* argv[])
       //printf("submit time=%d\n",sms.submitTime);
       //printf("sz2=%d\n",sz,sz2);fflush(stdout);
     }
+    if(bytesSkipped)
+    {
+      printf("bytes skipped:%ld\n",bytesSkipped);
+    }
   }
   int count=0;
+  printf("Writing\n");
+  int prc,prcLast=0;
   for(LoadUpVector::iterator it=luVector.begin();it!=luVector.end();it++)
   {
+    prc=(int)(10l*(it-luVector.begin())/luVector.size());
+    if(prc!=prcLast)
+    {
+      printf("Progress:%d0%%\n",prc);
+      prcLast=prc;
+    }
     if((*it)->final)continue;
+    {
+      buf.setExtBuf((*it)->smsBuf,(*it)->smsSize);
+      SMS sms;
+      Deserialize(buf,sms,ver);
+      if(!sms.Invalidate(__FILE__,__LINE__))
+      {
+        printf("Invalid sms id=%lld skipped\n",(*it)->id);
+        continue;
+      }
+    }
     count++;
     using namespace smsc::sms::BufOps;
     BufOps::SmsBuffer smsbuf(0);
-    uint32_t sz=0;
+    uint32_t sz=8+4+1+(*it)->smsSize;
     smsbuf<<sz<<(*it)->id<<(*it)->seq<<(uint8_t)(*it)->final;
     //printf("%d\n",smsbuf.GetPos());
-    Serialize((*it)->sms,smsbuf);
-    sz=smsbuf.GetPos()-sizeof(sz);
-    smsbuf.SetPos(0);
+    //Serialize((*it)->sms,smsbuf);
+    smsbuf.Append((*it)->smsBuf,(*it)->smsBufSize);
+    //sz=smsbuf.GetPos()-sizeof(sz);
+    //smsbuf.SetPos(0);
     smsbuf<<sz;
-    smsbuf.SetPos(sz+sizeof(sz));
-    smsbuf<<sz;
+    //smsbuf.SetPos(sz+sizeof(sz));
+    //smsbuf<<sz;
     g.Write(smsbuf.get(),smsbuf.GetPos());
   }
   printf("%d sms recovered\n",count);
