@@ -2,7 +2,9 @@
  * TCAP Message Decoder: TC Provider Abort cause type decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_PABORT_CAUSE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_PABORT_CAUSE_HPP
 
 #include "eyeline/tcap/TDialogueDefs.hpp"

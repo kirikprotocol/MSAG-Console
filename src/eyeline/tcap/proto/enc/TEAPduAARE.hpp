@@ -2,7 +2,9 @@
  * TCAP Structured Dialogue Response APDU encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_ENC_AARE_APDU_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_ENC_AARE_APDU_HPP
 
 #include "eyeline/tcap/proto/TCAssociateDiagnostic.hpp"

@@ -2,7 +2,9 @@
  * TCAP Message Decoder: TCAP Component type encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_COMPONENT_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_COMPONENT_HPP__
 
 #include "eyeline/ros/proto/dec/RDRosPdu.hpp"

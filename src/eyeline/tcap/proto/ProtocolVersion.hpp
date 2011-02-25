@@ -2,7 +2,9 @@
  * TCAP Dialogue Protocol version type.
  * ************************************************************************** */
 #ifndef __TCAP_PROTOCOL_VERSION_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __TCAP_PROTOCOL_VERSION_HPP
 
 #include <inttypes.h>

@@ -2,7 +2,9 @@
  * TCAP Message Encoder: encoder of APDUs field UserInformation.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_ENC_USERINFO_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_ENC_USERINFO_HPP
 
 #include "eyeline/tcap/TDlgUserInfo.hpp"

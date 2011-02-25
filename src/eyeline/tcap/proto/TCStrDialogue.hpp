@@ -3,7 +3,9 @@
  * itu-t recommendation q 773 modules(2) dialoguePDUs(2) version1(1).
  * ************************************************************************** */
 #ifndef __TC_STR_DIALOGUE_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __TC_STR_DIALOGUE_DEFS_HPP
 
 #include "eyeline/asn1/EncodedOID.hpp"

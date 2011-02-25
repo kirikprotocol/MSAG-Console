@@ -2,8 +2,10 @@
  * TCAP Message Encoder: TransactionId type encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_ENC_TRANSACTIONID_HPP__
-# ident "@(#)$Id$"
-# define __EYELINE_TCAP_PROTO_ENC_TRANSACTIONID_HPP__
+#ifndef __GNUC__
+#ident "@(#)$Id$"
+#endif
+#define __EYELINE_TCAP_PROTO_ENC_TRANSACTIONID_HPP__
 
 # include <netinet/in.h>
 # include "eyeline/asn1/BER/rtenc/EncodeOCTSTR.hpp"

@@ -2,7 +2,9 @@
  * TCAP Continue Message Encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_TCONT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_TCONT_HPP
 
 #include "eyeline/tcap//TComponentDefs.hpp"

@@ -3,7 +3,9 @@
  *                       application-context-name.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_APPCTX_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_APPCTX_HPP
 
 #include "eyeline/asn1/BER/rtdec/DecodeEOID.hpp"

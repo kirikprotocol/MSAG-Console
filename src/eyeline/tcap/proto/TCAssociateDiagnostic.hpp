@@ -2,7 +2,9 @@
  * TCAP structured dialogue association result diagnostic.
  * ************************************************************************** */
 #ifndef __TC_STR_DIALOGUE_DIAGNOSTIC_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __TC_STR_DIALOGUE_DIAGNOSTIC_HPP
 
 #include "eyeline/tcap/TDialogueDefs.hpp"

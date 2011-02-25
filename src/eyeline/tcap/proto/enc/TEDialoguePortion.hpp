@@ -2,7 +2,9 @@
  *  TCAP Message Dialogue Portion as Structured Dialogue PDUs carrier encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_ENC_DIALOGUE_PORTION_STR_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_ENC_DIALOGUE_PORTION_STR_HPP
 
 #include "eyeline/tcap/proto/TCStrDialogue.hpp" //_ac_tcap_strDialogue_as

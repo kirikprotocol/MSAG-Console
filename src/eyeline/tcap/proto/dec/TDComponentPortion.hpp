@@ -2,7 +2,9 @@
  * TCAP Message Decoder: TCAP ComponentPortion type decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_COMPONENT_PORTION_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_COMPONENT_PORTION_HPP
 
 #include "eyeline/tcap//TComponentDefs.hpp"

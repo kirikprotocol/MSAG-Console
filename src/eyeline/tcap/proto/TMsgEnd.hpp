@@ -3,7 +3,9 @@
  * itu-t(0) recommendation(0) q(17) 773 modules(2) messages(1) version3(3)).
  * ************************************************************************** */
 #ifndef __TCAP_MESSAGE_END_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __TCAP_MESSAGE_END_DEFS_HPP
 
 #include "eyeline/tcap/TComponentDefs.hpp"

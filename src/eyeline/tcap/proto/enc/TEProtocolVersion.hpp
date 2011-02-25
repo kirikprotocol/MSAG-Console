@@ -2,7 +2,9 @@
  * TCAP Message Encoder: encoder of APDUs field ProtocolVersion.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_ENC_PROTOVER_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_ENC_PROTOVER_HPP
 
 #include "eyeline/tcap/proto/ProtocolVersion.hpp"

@@ -2,7 +2,9 @@
  * TCAP Message Dialogue portion definition.
  * ************************************************************************** */
 #ifndef __TC_MSG_DIALOGUE_PORTION_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __TC_MSG_DIALOGUE_PORTION_HPP
 
 #include "eyeline/tcap/TDlgUserInfo.hpp"

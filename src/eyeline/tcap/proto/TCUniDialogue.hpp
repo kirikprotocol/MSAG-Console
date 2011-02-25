@@ -3,7 +3,9 @@
  * itu-t recommendation q 773 modules(2) unidialoguePDUs(3) version1(1).
  * ************************************************************************** */
 #ifndef __TC_DIALOGUE_UNI_DEFS_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __TC_DIALOGUE_UNI_DEFS_HPP
 
 #include "eyeline/asn1/EncodedOID.hpp"

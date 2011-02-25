@@ -2,7 +2,9 @@
  * TCAP Begin Message Encoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_TBEGIN_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_TBEGIN_HPP
 
 #include "eyeline/tcap/proto/enc/TETransactionId.hpp"

@@ -2,7 +2,9 @@
  * TCAP Message Decoder: TransactionId type decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_TRANSACTIONID_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_TRANSACTIONID_HPP
 
 #include <netinet/in.h>
