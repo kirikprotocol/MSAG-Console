@@ -2,7 +2,9 @@
  * TCAP Message Decoder: decoder of Structured Dialogue PDU.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_STRDLG_PDU_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_STRDLG_PDU_HPP
 
 #include "eyeline/tcap/proto/dec/TDAPduAARQ.hpp"
@@ -84,7 +86,6 @@ public:
   void setValue(proto::TCStrDialoguePdu & use_val)
   {
     _dVal = &use_val;
-    _chcDec.reset();
   }
 };
 

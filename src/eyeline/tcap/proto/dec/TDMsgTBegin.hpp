@@ -2,7 +2,9 @@
  * TCAP Begin Message Decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_TBEGIN_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_TBEGIN_HPP
 
 #include "eyeline/tcap/proto/TMsgBegin.hpp"
@@ -67,7 +69,6 @@ public:
   void setValue(proto::TMsgBegin & use_val)
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

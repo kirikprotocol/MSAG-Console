@@ -2,7 +2,9 @@
  * TCAP UniDialogue Datagramm APDU decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_AUDT_APDU_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_AUDT_APDU_HPP
 
 #include "eyeline/tcap/proto/TCUniDialogue.hpp"
@@ -69,7 +71,6 @@ public:
   void setValue(proto::TCPduAUDT & use_val)
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

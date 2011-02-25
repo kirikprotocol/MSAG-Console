@@ -2,7 +2,9 @@
  * TCAP Structured Dialogue Abort APDU decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_ABRT_APDU_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_ABRT_APDU_HPP
 
 #include "eyeline/tcap/proto/TCStrDialogue.hpp"
@@ -68,7 +70,6 @@ public:
   void setValue(proto::TCPduABRT & use_val)
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

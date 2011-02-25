@@ -2,7 +2,9 @@
  * TCAP Message Decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_TCAP_MSG_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_TCAP_MSG_HPP
 
 #include "eyeline/tcap/proto/TCMessage.hpp"
@@ -106,7 +108,6 @@ public:
   void setValue(proto::TCMessage & use_val)
   {
     _dVal = &use_val;
-    _chcDec.reset();
   }
 };
 

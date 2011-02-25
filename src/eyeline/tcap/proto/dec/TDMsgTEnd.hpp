@@ -2,7 +2,9 @@
  * TCAP End Message Decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_TEND_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_TEND_HPP
 
 #include "eyeline/tcap/proto/TMsgEnd.hpp"
@@ -68,7 +70,6 @@ public:
   void setValue(proto::TMsgEnd & use_val)
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

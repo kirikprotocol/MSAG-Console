@@ -2,7 +2,9 @@
  * TCAP Message Decoder: decoder of DialoguePortion field.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_DLG_PORTION_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_DLG_PORTION_HPP
 
 #include "eyeline/tcap/proto/TCDlgPortion.hpp"
@@ -119,7 +121,6 @@ public:
   {
     _dVal = &use_val;
     _dVal->ext().init().push_front(asn1::ASExternal());
-    _seqDec.reset();
   }
 };
 

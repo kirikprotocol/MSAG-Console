@@ -2,7 +2,9 @@
  * TCAP Abort Message Decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_TABORT_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_TABORT_HPP
 
 #include "eyeline/tcap/proto/TMsgAbort.hpp"
@@ -90,7 +92,6 @@ public:
   void setValue(proto::TAbortReason & use_val)
   {
     _dVal = &use_val;
-    _chcDec.reset();
   }
 };
 
@@ -139,7 +140,6 @@ public:
   void setValue(proto::TMsgAbort & use_val)
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

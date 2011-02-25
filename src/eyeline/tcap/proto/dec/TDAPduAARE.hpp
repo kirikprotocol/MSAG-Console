@@ -2,7 +2,9 @@
  * TCAP Structured Dialogue Response APDU decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DNC_AARE_APDU_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DNC_AARE_APDU_HPP
 
 #include "eyeline/tcap/proto/TCStrDialogue.hpp"
@@ -77,7 +79,6 @@ protected:
     void setValue(proto::AssociateSourceDiagnostic & use_val)
     {
       _dVal = &use_val;
-      _chcDec.reset();
     }
   };
 
@@ -126,7 +127,6 @@ public:
   void setValue(proto::TCPduAARE & use_val)
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

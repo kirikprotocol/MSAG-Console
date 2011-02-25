@@ -2,7 +2,9 @@
  * TCAP Unidirectional Message Decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_TUNIDIR_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_TUNIDIR_HPP
 
 #include "eyeline/tcap/proto/TMsgUnidir.hpp"
@@ -64,7 +66,6 @@ public:
   void setValue(proto::TMsgUnidir & use_val)
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 

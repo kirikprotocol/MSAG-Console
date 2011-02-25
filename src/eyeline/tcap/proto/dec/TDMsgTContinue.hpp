@@ -2,7 +2,9 @@
  * TCAP Continue Message Decoder.
  * ************************************************************************* */
 #ifndef __EYELINE_TCAP_PROTO_DEC_TCONTINUE_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __EYELINE_TCAP_PROTO_DEC_TCONTINUE_HPP
 
 #include "eyeline/tcap/proto/TMsgContinue.hpp"
@@ -69,7 +71,6 @@ public:
   void setValue(proto::TMsgContinue & use_val)
   {
     _dVal = &use_val;
-    _seqDec.reset();
   }
 };
 
