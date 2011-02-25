@@ -357,6 +357,16 @@ SmppManagerImpl::~SmppManagerImpl()
                             queue.Count(), respQueue.Count(), lcmQueue.Count() );
         }
     }
+    {
+        // cleaning up metaregistry
+        char* id;
+        MetaEntity* pme;
+        for ( smsc::core::buffers::Hash< MetaEntity* >::Iterator it(&metaRegistry);
+              it.Next(id,pme); ) {
+            delete pme;
+        }
+        metaRegistry.Empty();
+    }
 }
 
 void SmppManagerImpl::Init(const char* cfgFile)
@@ -594,7 +604,7 @@ void SmppManagerImpl::LoadRoutes(const char* cfgFile)
 {
   RouteConfig& cfg = ConfigManager::Instance().getRouteConfig();
   router::RouteManager* newman=new router::RouteManager();
-  router::loadRoutes(newman,cfg,false);
+  router::loadRoutes(newman,cfg,0);
   {
     sync::MutexGuard mg(routerSwitchMtx);
     routeMan=newman;
@@ -605,7 +615,7 @@ void SmppManagerImpl::ReloadRoutes()
 {
     RouteConfig& cfg = ConfigManager::Instance().getRouteConfig();
   router::RouteManager* newman=new router::RouteManager();
-  router::loadRoutes(newman,cfg,false);
+  router::loadRoutes(newman,cfg,0);
   {
     sync::MutexGuard mg(routerSwitchMtx);
     routeMan=newman;

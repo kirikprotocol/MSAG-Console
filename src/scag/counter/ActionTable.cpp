@@ -25,6 +25,10 @@ actions_(list)
 ActionTable::~ActionTable()
 {
     smsc_log_debug(log_,"dtor %p",this);
+    for ( std::list<OldList>::iterator i = oldlists_.begin();
+          i != oldlists_.end(); ++i ) {
+        delete i->second;
+    }
 }
 
 

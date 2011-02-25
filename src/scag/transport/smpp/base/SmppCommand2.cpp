@@ -1322,6 +1322,12 @@ void SmppCommand::dispose()
         delete reinterpret_cast<AlertNotification*>(dta_);
         break;
 
+    case BIND_RECIEVER_RESP:
+    case BIND_TRANSMITTER_RESP:
+    case BIND_TRANCIEVER_RESP:
+        delete reinterpret_cast<BindRespCommand*>(dta_);
+        break;
+
     case UNKNOWN:
     case GENERIC_NACK:
     case UNBIND_RESP:
@@ -1330,9 +1336,6 @@ void SmppCommand::dispose()
     case ENQUIRELINK:
     case ENQUIRELINK_RESP:
     case UNBIND:
-    case BIND_RECIEVER_RESP:
-    case BIND_TRANSMITTER_RESP:
-    case BIND_TRANCIEVER_RESP:
     case PROCESSEXPIREDRESP:
         // nothing to delete
         break;
