@@ -47,9 +47,6 @@ public class InformerSettings {
   private int responseWaitTime;
   private boolean pvssEnabledBL;
 
-  private String archiveHost;
-  private int archivePort;
-
   void validate() throws AdminException {
     vh.checkPositive("resendIOThreadCount", resendIOThreadCount);
     vh.checkPositive("inputMinQueueSize", inputMinQueueSize);
@@ -248,22 +245,6 @@ public class InformerSettings {
     this.adminPort = adminPort;
   }
 
-  public String getArchiveHost() {
-    return archiveHost;
-  }
-
-  public void setArchiveHost(String archiveHost) {
-    this.archiveHost = archiveHost;
-  }
-
-  public int getArchivePort() {
-    return archivePort;
-  }
-
-  public void setArchivePort(int archivePort) {
-    this.archivePort = archivePort;
-  }
-
   public int getDcpPort() {
     return dcpPort;
   }
@@ -331,8 +312,6 @@ public class InformerSettings {
     cs.adminPort = adminPort;
     cs.dcpHost = dcpHost;
     cs.dcpPort = dcpPort;
-    cs.archiveHost = archiveHost;
-    cs.archivePort = archivePort;
     cs.persHost = persHost;
     cs.persSyncPort = persSyncPort;
     cs.persAsyncPort = persAsyncPort;

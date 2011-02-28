@@ -55,6 +55,7 @@ public class ArchiveRequestsManagerTest {
         return fs;
       }
     }, resultDir, 10, 10);
+    assertTrue(resultDir.exists());
   }
 
   @After

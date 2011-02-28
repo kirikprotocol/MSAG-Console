@@ -46,9 +46,6 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     settings.setRetryMinTimeToLive(s.getInt("retryMinTimeToLive"));
     settings.setResponseWaitTime(s.getInt("responseWaitTime"));
 
-    settings.setArchiveHost(s.getString("archiveHost", null));
-    settings.setArchivePort(s.getInt("archivePort", 0));
-
     s = config.getSection("pvss");
     settings.setPersHost(s.getString("host"));
     settings.setPersSyncPort(s.getInt("syncPort"));
@@ -86,10 +83,6 @@ class InformerConfig implements ManagedConfigFile<InformerSettings> {
     s.setInt("adminHandlers", settings.getAdminHandlers());
     s.setInt("retryMinTimeToLive", settings.getRetryMinTimeToLive());
     s.setInt("responseWaitTime", settings.getResponseWaitTime());
-    if(settings.getArchiveHost() != null) {
-      s.setString("archiveHost", settings.getArchiveHost());
-    }
-    s.setInt("archivePort", settings.getArchivePort());
 
 
     s = config.getOrCreateSection("pvss");
