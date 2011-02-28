@@ -11,7 +11,6 @@ import mobi.eyeline.informer.web.components.data_table.model.DataTableSortOrder;
 import mobi.eyeline.informer.web.components.data_table.model.EmptyDataTableModel;
 import mobi.eyeline.informer.web.config.Configuration;
 import mobi.eyeline.informer.web.controllers.InformerController;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.faces.model.SelectItem;
 import javax.servlet.http.HttpSession;
@@ -612,17 +611,17 @@ public class MessageListController extends InformerController {
 
     @Override
     public void addMessages(String login, String password, DataSource<Message> ds, int deliveryId) throws AdminException {
-      throw new NotImplementedException();
+      throw new IllegalAccessError();
     }
 
     @Override
     public void addSingleTextMessages(String login, String password, DataSource<Address> ds, int deliveryId) throws AdminException {
-      throw new NotImplementedException();
+      throw new IllegalAccessError();
     }
 
     @Override
     public void activateDelivery(String login, String password, int deliveryId) throws AdminException {
-      throw new NotImplementedException();
+      throw new IllegalAccessError();
     }
   }
 
