@@ -30,6 +30,7 @@ struct DeliveryInfoData
   std::string activePeriodEnd;   // local time! HH:MM:SS or empty
   std::vector<std::string> activeWeekDays; // local time!
   std::string validityPeriod;
+  std::string archivationPeriod; // HH:MM:SS or empty
   bool flash;
   bool useDataSm;
   DlvMode deliveryMode;

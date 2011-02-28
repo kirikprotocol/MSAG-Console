@@ -40,6 +40,10 @@ void fillDeliveryInfoDataFromMsg(DeliveryInfoData& did,const messages::DeliveryI
   {
     did.validityPeriod=di.getValidityPeriod();
   }
+  if(di.hasArchivationPeriod())
+  {
+    did.archivationPeriod=di.getArchivationPeriod();
+  }
   did.flash=di.getFlash();
   did.useDataSm=di.getUseDataSm();
   switch(di.getDeliveryMode().getValue())
@@ -94,6 +98,10 @@ void fillMsgFromDeliveryInfoData(messages::DeliveryInfo& di,const DeliveryInfoDa
   if(!did.validityPeriod.empty())
   {
     di.setValidityPeriod(did.validityPeriod);
+  }
+  if(!did.archivationPeriod.empty())
+  {
+    di.setArchivationPeriod(did.archivationPeriod);
   }
   di.setFlash(did.flash);
   di.setUseDataSm(did.useDataSm);

@@ -1,3 +1,6 @@
+2011-02-28 16:30 bukind
+  archivationPeriod integrated into dcp
+
 2011-02-17 18:00 bukind
   lazy delivery upload, flushing delivery cache
 

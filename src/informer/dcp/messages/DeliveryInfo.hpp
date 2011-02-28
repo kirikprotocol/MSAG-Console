@@ -49,6 +49,7 @@ public:
     sourceAddressFlag=false;
     finalDlvRecordsFlag=false;
     finalMsgRecordsFlag=false;
+    archivationPeriodFlag=false;
   }
  
 
@@ -273,6 +274,15 @@ public:
       rv+="finalMsgRecords=";
       rv+=finalMsgRecords?"true":"false";
     }
+    if(archivationPeriodFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="archivationPeriod=";
+      rv+=archivationPeriod;
+    }
     return rv;
   }
 
@@ -412,6 +422,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(finalMsgRecords);
+    }
+    if(archivationPeriodFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(archivationPeriod);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -900,6 +916,28 @@ public:
   {
     return finalMsgRecordsFlag;
   }
+  const std::string& getArchivationPeriod()const
+  {
+    if(!archivationPeriodFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("archivationPeriod");
+    }
+    return archivationPeriod;
+  }
+  void setArchivationPeriod(const std::string& argValue)
+  {
+    archivationPeriod=argValue;
+    archivationPeriodFlag=true;
+  }
+  std::string& getArchivationPeriodRef()
+  {
+    archivationPeriodFlag=true;
+    return archivationPeriod;
+  }
+  bool hasArchivationPeriod()const
+  {
+    return archivationPeriodFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -1035,6 +1073,11 @@ public:
     {
       ds.writeTag(userDataTag);
     ds.writeStrLV(userData); 
+    }
+    if(archivationPeriodFlag)
+    {
+      ds.writeTag(archivationPeriodTag);
+    ds.writeStrLV(archivationPeriod); 
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -1260,6 +1303,15 @@ public:
           finalMsgRecords=ds.readBoolLV();
           finalMsgRecordsFlag=true;
         }break;
+        case archivationPeriodTag:
+        {
+          if(archivationPeriodFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("archivationPeriod");
+          }
+          archivationPeriod=ds.readStrLV();
+          archivationPeriodFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -1372,6 +1424,7 @@ protected:
   static const int32_t sourceAddressTag=24;
   static const int32_t finalDlvRecordsTag=25;
   static const int32_t finalMsgRecordsTag=26;
+  static const int32_t archivationPeriodTag=27;
 
   int connId;
 
@@ -1397,6 +1450,7 @@ protected:
   std::string sourceAddress;
   bool finalDlvRecords;
   bool finalMsgRecords;
+  std::string archivationPeriod;
 
   bool nameFlag;
   bool userIdFlag;
@@ -1420,6 +1474,7 @@ protected:
   bool sourceAddressFlag;
   bool finalDlvRecordsFlag;
   bool finalMsgRecordsFlag;
+  bool archivationPeriodFlag;
 };
 
 }

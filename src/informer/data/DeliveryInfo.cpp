@@ -286,7 +286,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     timediff_type activePeriodStart = activePeriodStart_;
     timediff_type activePeriodEnd = activePeriodEnd_;
     timediff_type validityPeriod = validityPeriod_;
-    // FIXME: configure archivationTime_ when infodata will have it
+    timediff_type archivationPeriod = archivationTime_;
 
     int activeWeekDays = activeWeekDays_;
     smsc::sms::Address sourceAddress(sourceAddress_);
@@ -310,6 +310,9 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     }
     if ((!old || old->validityPeriod != data.validityPeriod) && !data.validityPeriod.empty() ) {
         validityPeriod = parseTime(data.validityPeriod.c_str(), true);
+    }
+    if ((!old || old->archivationPeriod != data.archivationPeriod) && !data.archivationPeriod.empty() ) {
+        archivationPeriod = parseTime(data.archivationPeriod.c_str(), true);
     }
     if (!old || old->retryPolicy != data.retryPolicy) {
         retryPolicy.init(data.retryPolicy.c_str());
@@ -366,6 +369,7 @@ void DeliveryInfo::updateData( const DeliveryInfoData& data,
     if (activePeriodStart != -1) { activePeriodStart_ = activePeriodStart; }
     if (activePeriodEnd != -1) { activePeriodEnd_ = activePeriodEnd; }
     if (validityPeriod != -1) { validityPeriod_ = validityPeriod; }
+    if (archivationPeriod != -1) { archivationTime_ = archivationPeriod; }
     if (activeWeekDays != -1) { activeWeekDays_ = activeWeekDays; }
     if (sourceAddressChanged) { sourceAddress_ = sourceAddress; }
     if (newRetryPolicy) { retryPolicy_ = retryPolicy; }
