@@ -3692,6 +3692,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
   //bool skipFinalizing=false;
 
   unsigned char umrList[256]; //umrs of parts of merged message
+  umrList[0]=sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+  uint64_t stimeList[256]; // submit time of merged messages
+  stimeList[0]=sms.getSubmitTime();
   int umrListSize=0;
   //int umrIndex=-1;//index of current umr
   //bool umrLast=true;//need to generate receipts for the rest of umrs
@@ -4010,6 +4013,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       SMSPartInfo spi=getSMSPartInfo(sms,i);
       if(spi.fl&SMSPartInfo::flHasSRR)
       {
+        stimeList[umrListSize]=spi.stime?spi.stime:sms.getSubmitTime();
         umrList[umrListSize++]=spi.mr;
       }
     }
@@ -4020,6 +4024,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
     unsigned char* lst=(unsigned char*)sms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
     if(!sms.hasBinProperty(Tag::SMSC_UMR_LIST_MASK))
     {
+      for(unsigned i=0;i<len;i++)
+      {
+        stimeList[i]=sms.getSubmitTime();
+      }
       memcpy(umrList,lst,len);
       umrListSize=len;
       //umrIndex=sms.hasBinProperty(Tag::SMSC_CONCATINFO)?savedCsn:0;
@@ -4032,6 +4040,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         if(mask[i])
         {
+          stimeList[umrListSize]=sms.getSubmitTime();
           umrList[umrListSize++]=lst[i];
         }
       }
@@ -4152,7 +4161,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
       rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
-      rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)sms.getSubmitTime());
+      rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)stimeList[0]);
       SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
       if(si.hasFlag(sfForceReceiptToSme))
       {
@@ -4179,7 +4188,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       fd.ddest=ddest;
       fd.addr=addr;
       time_t tz=common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress())+timezone;
-      fd.submitDate=sms.getSubmitTime()+tz;
+      fd.submitDate=stimeList[0]+tz;
       fd.date=time(NULL)+tz;
       fd.msgId=msgid;
       fd.err="";
@@ -4207,6 +4216,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
       for(int i=1;i<umrListSize;i++)
       {
+        rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)stimeList[i]);
         rpt.setMessageReference(umrList[i]);
         rpt.setIntProperty(Tag::SMSC_RECEIPT_MR,umrList[i]);
         smsc_log_debug(smsLog,"RECEIPT: set mr[i]=%d",i,rpt.getMessageReference());
@@ -4246,10 +4256,20 @@ void StateMachine::fullReport(SMSId msgId,SMS& sms)
       smsc_log_debug(smsLog,"sending fullreport for msgId=%lld, concatSeq=%d, ci->num=%d, orgparts=%d, repstosend=%d",
           msgId,sms.getConcatSeqNum(),(int)ci->num,sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM),reportsToSend);
     }
+    time_t stime=sms.getSubmitTime();
     for(int i=0;i<reportsToSend;i++)
     {
+      if(sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO) && getSMSPartsCount(sms)>sms.getConcatSeqNum()+i)
+      {
+        SMSPartInfo spi=getSMSPartInfo(sms,sms.getConcatSeqNum()+i);
+        if(spi.stime)
+        {
+          sms.setSubmitTime(spi.stime);
+        }
+      }
       smsc->FullReportDelivery(msgId,sms);
     }
+    sms.setSubmitTime(stime);
   }
 }
 
@@ -4755,6 +4775,9 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
      (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)return;
 
   unsigned char umrList[256];
+  umrList[0]=sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+  time_t stimeList[256];
+  stimeList[0]=sms.getSubmitTime();
   int umrListSize=0;
   if(sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
   {
@@ -4764,6 +4787,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
       SMSPartInfo spi=getSMSPartInfo(sms,i);
       if(spi.fl&SMSPartInfo::flHasSRR)
       {
+        stimeList[umrListSize]=spi.stime?spi.stime:sms.getSubmitTime();
         umrList[umrListSize++]=spi.mr;
       }
     }
@@ -4803,6 +4827,8 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
   rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
+
+  rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)stimeList[0]);
 
   SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
   if(si.hasFlag(sfForceReceiptToSme))
@@ -4855,6 +4881,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   for(int i=1;i<umrListSize;i++)
   {
     rpt.setMessageReference(umrList[i]);
+    rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)stimeList[i]);
     rpt.setIntProperty(Tag::SMSC_RECEIPT_MR,umrList[i]);
     submitReceipt(rpt,0x4);
   }
@@ -4899,6 +4926,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     sms.getDestinationAddress().getText(addr,sizeof(addr));
     rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
     rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
+    rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)sms.getSubmitTime());
 
     SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
     if(si.hasFlag(sfForceReceiptToSme))
@@ -5349,6 +5377,7 @@ bool StateMachine::processMerge(SbmContext& c)
       spi.mr=c.sms->getMessageReference();
     }
     spi.dc=dc;
+    spi.stime=(uint32_t)c.sms->getSubmitTime();
     fillSMSPartInfo(*c.sms,num,idx-1,spi);
     /*
     char dc_list[256];
@@ -5496,6 +5525,7 @@ bool StateMachine::processMerge(SbmContext& c)
     {
       SMSPartInfo spi;
       spi.dc=dc;
+      spi.stime=c.sms->getSubmitTime();
       if(c.sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
         spi.fl|=SMSPartInfo::flHasSRR;
