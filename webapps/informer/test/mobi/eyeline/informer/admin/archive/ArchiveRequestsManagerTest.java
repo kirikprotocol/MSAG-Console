@@ -31,15 +31,16 @@ public class ArchiveRequestsManagerTest {
 
   private File resultDir;
 
-  @Before
-  public void before() throws InitException {
-    resultDir = TestUtils.createRandomDir("-results");
-    dm = new TestDeliveryManager();
-    final RequestStorage rs = new RequestMemoryStorage();
-    final FileSystem fs = new TestFileSystem();
+  private static class Context implements ArchiveContext {
+    private UnmodifiableDeliveryManager dm;
+    private FileSystem fs;
 
-    requestsManager = new ArchiveRequestsManager(rs, new ArchiveContext() {
-//      @Override
+    private Context(UnmodifiableDeliveryManager dm, FileSystem fs) {
+      this.dm = dm;
+      this.fs = fs;
+    }
+
+    @Override
       public User getUser(String login) {
         User u = new User();
         u.setLogin(login);
@@ -54,7 +55,16 @@ public class ArchiveRequestsManagerTest {
       public FileSystem getFileSystem() {
         return fs;
       }
-    }, resultDir, 10, 10);
+  }
+
+  @Before
+  public void before() throws InitException {
+    resultDir = TestUtils.createRandomDir("-results");
+    dm = new TestDeliveryManager();
+    final RequestStorage rs = new RequestMemoryStorage();
+    final FileSystem fs = new TestFileSystem();
+
+    requestsManager = new ArchiveRequestsManager(rs, new Context(dm, fs), resultDir, 10, 10);
     assertTrue(resultDir.exists());
   }
 
