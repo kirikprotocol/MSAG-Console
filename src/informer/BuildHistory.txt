@@ -1,3 +1,6 @@
+=====================================================================
+2011-02-28 16:30 bukind informer-build-20110228
+
 2011-02-28 16:30 bukind
   archivationPeriod integrated into dcp
 
