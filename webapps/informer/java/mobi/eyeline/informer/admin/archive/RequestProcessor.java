@@ -55,7 +55,8 @@ class RequestProcessor {
           }
           r.execute(executor);
           requestStorage.changeStatus(r.getId(), Request.Status.FINISHED);
-        } catch (Exception e) {
+        } catch (Throwable e) {
+          e.printStackTrace();
           logger.error(e, e);
         } finally {
           try {
