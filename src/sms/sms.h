@@ -41,6 +41,8 @@
 #include "sms/sms_buf.h"
 #include "core/buffers/FixedLengthString.hpp"
 #include "util/Exception.hpp"
+#include "util/Uint64Converter.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace smsc {
 
@@ -1827,7 +1829,8 @@ struct SMSPartInfo{
   uint8_t fl;//flags
   uint8_t dc;//dc of part
   uint8_t mr;//mr of part
-  enum{SIZE=3};
+  uint64_t stime;// submit time of part
+  enum{SIZE=11};
 };
 
 inline int getSMSPartsCount(SMS& sms)
@@ -1864,6 +1867,14 @@ inline SMSPartInfo getSMSPartInfo(SMS& sms,int partIdx)
   rv.fl=data[0];
   rv.dc=data[1];
   rv.mr=data[2];
+  if(sz>=11)
+  {
+    memcpy(&rv.stime,data+3,8);
+    rv.stime=smsc::util::Uint64Converter::toHostOrder(rv.stime);
+  }else
+  {
+    rv.stime=0;
+  }
   return rv;
 }
 
@@ -1871,8 +1882,11 @@ inline void fillSMSPartInfo(SMS& sms,int partsNum,int partIdx,SMSPartInfo partIn
 {
   if(!sms.hasBinProperty(Tag::SMSC_ORGPARTS_INFO))
   {
-    char buf[1+SMSPartInfo::SIZE*256]={SMSPartInfo::SIZE,0,};
-    sms.setBinProperty(Tag::SMSC_ORGPARTS_INFO,buf,1+partsNum*SMSPartInfo::SIZE);
+    smsc::core::buffers::TmpBuf<uint8_t,1+SMSPartInfo::SIZE*10> buf(1+partsNum*SMSPartInfo::SIZE);
+    //char buf[1+SMSPartInfo::SIZE*256]={SMSPartInfo::SIZE,0,};
+    buf.get()[0]=SMSPartInfo::SIZE;
+    memset(buf.get()+1,0,partsNum*SMSPartInfo::SIZE);
+    sms.setBinProperty(Tag::SMSC_ORGPARTS_INFO,(char*)buf.get(),1+partsNum*SMSPartInfo::SIZE);
   }
   unsigned len;
   uint8_t* data=(uint8_t*)sms.getBinProperty(Tag::SMSC_ORGPARTS_INFO,&len);
@@ -1880,11 +1894,17 @@ inline void fillSMSPartInfo(SMS& sms,int partsNum,int partIdx,SMSPartInfo partIn
   {
     throw smsc::util::Exception("sms part info index is out of range (idx=%d, len=%u)",partIdx,len);
   }
+  uint8_t sz=*data;
   data++;
-  data+=partIdx*SMSPartInfo::SIZE;
+  data+=partIdx*sz;
   data[0]=partInfo.fl;
   data[1]=partInfo.dc;
   data[2]=partInfo.mr;
+  if(sz>=11)
+  {
+    uint64_t tmp=smsc::util::Uint64Converter::toNetworkOrder(partInfo.stime);
+    memcpy(data+3,&tmp,8);
+  }
 }
 
 }//sms
