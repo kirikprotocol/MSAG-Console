@@ -22,6 +22,7 @@
 #include "system/mapio/FraudControl.hpp"
 #include "system/mapio/MapLimits.hpp"
 #include "system/mapio/MapProxy.h"
+#include "system/mapio/NetworkProfiles.hpp"
 #endif
 
 namespace smsc {
@@ -262,6 +263,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method apply_fraudcontrol    ((unsigned)applyFraudControlMethod,   "apply_fraud",           empty_params, StringType);
 #ifdef USE_MAP
   Method apply_maplimits       ((unsigned)applyMapLimitsMethod,      "apply_maplimits",       empty_params, StringType);
+  Method apply_netprofiles     ((unsigned)applyNetProfilesMethod,    "apply_netprofiles",     empty_params, StringType);
 #endif
 
 #ifdef SNMP
@@ -523,6 +525,9 @@ throw (AdminException)
         return Variant("");
       case applyMapLimitsMethod:
         applyMapLimits();
+        return Variant("");
+      case applyNetProfilesMethod:
+        applyNetProfiles();
         return Variant("");
 #endif
       case mscRegistrateMethod:
@@ -1938,6 +1943,17 @@ void SmscComponent::applyMapLimits()throw(AdminException)
   } catch(std::exception& e)
   {
     throw AdminException("MapLimits::Reinit - %s",e.what());
+  }
+}
+
+void SmscComponent::applyNetProfiles()throw(AdminException)
+{
+  try
+  {
+    smsc::system::mapio::NetworkProfiles::getInstance().reload();
+  } catch(std::exception& e)
+  {
+    throw AdminException("NetworkProfiles::getInstance().reload() - %s",e.what());
   }
 }
 #endif

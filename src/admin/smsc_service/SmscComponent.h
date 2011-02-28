@@ -74,6 +74,7 @@ protected:
 #ifdef USE_MAP
   void applyFraudControl()throw(AdminException);
   void applyMapLimits()throw(AdminException);
+  void applyNetProfiles()throw(AdminException);
 #endif
 
 #ifdef SNMP
@@ -160,8 +161,9 @@ protected:
   Methods methods;
   enum
   {
-    applyRoutesMethod, applyAliasesMethod, applyRescheduleMethod, applyServicesMethod, 
-    applySmscConfigMethod, applyLocaleResourceMethod,applyTimeZonesMethod,applyFraudControlMethod,applyMapLimitsMethod,
+    applyRoutesMethod, applyAliasesMethod, applyRescheduleMethod, applyServicesMethod,
+    applySmscConfigMethod, applyLocaleResourceMethod,applyTimeZonesMethod,
+    applyFraudControlMethod,applyMapLimitsMethod,applyNetProfilesMethod,
     profileLookupMethod, profileUpdateMethod, profileLookupExMethod, profileDeleteMethod,
     flushStatisticsMethod,
     processCancelMessagesMethod,
