@@ -39,7 +39,7 @@ public class ArchiveRequestsManagerTest {
     final FileSystem fs = new TestFileSystem();
 
     requestsManager = new ArchiveRequestsManager(rs, new ArchiveContext() {
-      @Override
+//      @Override
       public User getUser(String login) {
         User u = new User();
         u.setLogin(login);
