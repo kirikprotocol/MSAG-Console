@@ -98,6 +98,38 @@
             </tr>
             </c:if>
 
+            <c:if test="#{informerStatus.archiveDaemonDeployed}">
+              <tr class="row1">
+              <td width="center">
+                <h:graphicImage value="/images/ic_internal.gif" rendered="#{informerStatus.archiveDaemonOnlineHost != null}"/>
+                <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{informerStatus.archiveDaemonOnlineHost == null}"/>
+              </td>
+              <td width="center"><h:outputText value="#{msg['status.page.service.archiveDaemon']}"/></td>
+              <td width="center"><h:outputText value="#{informerStatus.archiveDaemonOnlineHost}" style="color:GREEN"/></td>
+              <td width="center">
+                <h:panelGroup>
+                  <h:panelGroup rendered="#{!informerStatus.archiveDaemonSwitchAllowed}">
+                    <h:commandLink value="#{msg['status.page.start']}" action="#{informerStatus.startArchiveDaemon}" rendered="#{informerStatus.archiveDaemonOnlineHost == null}"/>
+                    <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stopArchiveDaemon}" rendered="#{informerStatus.archiveDaemonOnlineHost != null}"/>
+                  </h:panelGroup>
+
+                  <h:panelGroup rendered="#{informerStatus.archiveDaemonSwitchAllowed}">
+                    <h:commandLink value="#{msg['status.page.stop']}" action="#{informerStatus.stopArchiveDaemon}" rendered="#{informerStatus.archiveDaemonOnlineHost != null}"/>
+                    <h:outputText value=" #{msg['status.page.or']} " rendered="#{informerStatus.archiveDaemonOnlineHost != null}"/>
+                    <h:commandLink value="#{msg['status.page.switch']}" action="#{informerStatus.switchArchiveDaemonHost}" rendered="#{informerStatus.archiveDaemonOnlineHost != null}"/>
+
+                    <h:commandLink value="#{msg['status.page.start_at']}" action="#{informerStatus.switchArchiveDaemonHost}" rendered="#{informerStatus.archiveDaemonOnlineHost == null}"/>
+                    <h:outputText value="  "/>
+
+                    <h:selectOneMenu value="#{informerStatus.archiveDaemonSwitchTo}">
+                      <f:selectItems value="#{informerStatus.archiveDaemonHosts}"/>
+                    </h:selectOneMenu>
+                  </h:panelGroup>
+                </h:panelGroup>
+              </td>
+            </tr>
+            </c:if>
+
           </table>
         </h:panelGroup>
 

@@ -19,6 +19,7 @@ public class TestServiceManagerSingle extends ServiceManager {
     this.servicesDir = servicesDir;
     services = new HashMap<String, ServiceInfo>();
     services.put("Infomer", getInfo("Infomer", true));
+    services.put("ArchiveDaemon", getInfo("ArchiveDaemon", true));
   }
 
   private ServiceInfo getInfo(String serviceId, boolean online) {

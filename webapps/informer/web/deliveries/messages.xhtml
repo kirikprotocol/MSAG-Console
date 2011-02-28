@@ -1,7 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi">
@@ -17,10 +16,11 @@
       <h:inputHidden id="delivery" value="#{messages.deliveryId}"/>
       <h:inputHidden value="#{messages.init}"/>
       <h:inputHidden value="#{messages.deliveryName}"/>
+      <h:inputHidden id="archive" value="#{messages.archive}"/>
 
       <h:panelGroup rendered="#{messages.state == 0}">
 
-        <h:panelGroup  rendered="#{messages.deliveryId!= null}">
+        <h:panelGroup rendered="#{messages.deliveryId!= null}">
 
           <eye:dataTableFilter bean="#{messages}" clearAction="clear" applyAction="query">
             <h:panelGrid columns="6" columnClasses="column50Width, column300Width, column50Width, column300Width, column50Width, columnTopLeftAlign">
@@ -84,11 +84,11 @@
 
         <h:panelGroup style="#{messages.init ? '' : 'display:none'}">
           <eye:buttons>
-            <eye:button>
+            <eye:button rendered="#{messages.resendAllowed}">
               <tr:commandLink text="#{msg['resend.button']}" action="#{messages.resend}" shortDesc="#{msg['messages.details.resend']}"
                               onclick="if (!confirm('#{msg['informer.deliveries.messages.resend.confirm']}')) return false"/>
             </eye:button>
-            <eye:button>
+            <eye:button rendered="#{messages.resendAllowed}">
               <tr:commandLink text="#{msg['resend.all.button']}" action="#{messages.resendAll}" shortDesc="#{msg['messages.details.resend.all']}"
                               onclick="if (!confirm('#{msg['informer.deliveries.messages.resend.confirm']}')) return false"/>
             </eye:button>

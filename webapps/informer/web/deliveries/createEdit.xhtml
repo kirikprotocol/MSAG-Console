@@ -54,11 +54,11 @@
       <h:outputText rendered="#{createDelivery.activePage.userInAdminRole}" style="white-space: nowrap;" value="#{deliveryBundle.retryOnFail}"/>
       <h:panelGroup rendered="#{createDelivery.activePage.userInAdminRole}">
         <h:selectOneMenu id="retryOnFail" onchange="retryOnFailChanged()" value="#{createDelivery.activePage.retryOnFail}">
-            <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
-            <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
-            <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
-          </h:selectOneMenu>
-          <h:outputText value=" "/>
+          <f:selectItem itemValue="off" itemLabel="#{msg['user.edit.retry.off']}"/>
+          <f:selectItem itemValue="default" itemLabel="#{msg['user.edit.retry.default']}"/>
+          <f:selectItem itemValue="custom" itemLabel="#{msg['user.edit.retry.custom']}"/>
+        </h:selectOneMenu>
+        <h:outputText value=" "/>
         <h:inputText value="#{createDelivery.activePage.delivery.retryPolicy}" id="retryPolicy1"/>
       </h:panelGroup>
 
@@ -77,15 +77,23 @@
         <h:inputText id="email"  value="#{createDelivery.activePage.emailNotificationAddress}"/>
       </h:panelGroup>
 
+      <h:outputText value="#{deliveryBundle.archivate}" rendered="#{userSession.userInAdminRole and createDelivery.activePage.archivateAllowed}"/>
+      <h:panelGroup rendered="#{userSession.userInAdminRole and createDelivery.activePage.archivateAllowed}">
+        <h:selectBooleanCheckbox id="archivate" value="#{createDelivery.activePage.archivateCheck}" onchange="archivateChanged()" style="position: relative; top: 2px; left: -3px;"/>
+        <h:inputText validatorMessage="#{msg['invalid_param_value']} #{deliveryBundle.archivate}" id="archiveTime" value="#{createDelivery.activePage.archiveTime}">
+          <f:validateLongRange/>
+        </h:inputText>
+      </h:panelGroup>
+
       <h:outputText style="white-space: nowrap;" value="#{deliveryBundle.singleText}" rendered="#{createDelivery.activePage.deliveryWithSingleText}"/>
       <h:panelGrid rendered="#{createDelivery.activePage.deliveryWithSingleText}" columns="2">
-          <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" simple="true"/>
-          <tr:outputText value="&#160;"/>
-          <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>
+        <tr:inputText rows="5" value="#{createDelivery.activePage.delivery.singleText}" simple="true"/>
+        <tr:outputText value="&#160;"/>
+        <tr:commandLink text="#{msg['test.button']}" action="#{createDelivery.activePage.sendTest}"/>
       </h:panelGrid>
 
       <h:outputText style="white-space:nowrap; display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}" value="#{deliveryBundle.useDataSm}"/>
-        <h:selectBooleanCheckbox value="#{createDelivery.activePage.delivery.useDataSm}" style="white-space:nowrap; display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}"/>
+      <h:selectBooleanCheckbox value="#{createDelivery.activePage.delivery.useDataSm}" style="white-space:nowrap; display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}"/>
 
       <h:outputText style="white-space: nowrap;display: #{createDelivery.allowUssdPushDelivery ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
       <h:selectOneMenu id="dMode" value="#{createDelivery.activePage.delivery.deliveryMode}"
@@ -129,6 +137,16 @@
         var d = document.getElementById('retryOnFail').options[2].selected ? '' : 'none';
         document.getElementById('retryPolicy1').style.display=d;
       }
+
+      function archivateChanged() {
+        var e = document.getElementById('archivate');
+        var e1 = document.getElementById('archiveTime');
+        if(e != null) {
+          e1.disabled = !e.checked;
+        }
+      }
+
+      archivateChanged();
 
       retryOnFailChanged();
 

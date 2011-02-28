@@ -1,7 +1,6 @@
 package mobi.eyeline.informer.admin;
 
-import mobi.eyeline.informer.admin.archive.ArchiveManager;
-import mobi.eyeline.informer.admin.archive.ArchiveSettings;
+import mobi.eyeline.informer.admin.archive.*;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManagerStub;
 import mobi.eyeline.informer.admin.cdr.CdrProvider;
 import mobi.eyeline.informer.admin.contentprovider.FileDeliveriesProvider;
@@ -51,12 +50,13 @@ import static org.junit.Assert.assertNotNull;
  */
 public class TestAdminContext extends AdminContext {
 
-
-  private void prepareServices(File confDir) throws IOException, AdminException {
+  private void prepareServices(File confDir, File archiveConf) throws IOException, AdminException {
     TestUtils.exportResource(TestUsersManager.class.getResourceAsStream("users.xml"), new File(confDir,"users.xml"), false);
     TestUtils.exportResource(TestInformerManager.class.getResourceAsStream("config.xml"), new File(confDir, "config.xml"), false);
+    TestUtils.exportResource(TestArchiveDaemonManager.class.getResourceAsStream("config.xml"), new File(archiveConf, "config.xml"), false);
     TestUtils.exportResource(TestSmscManager.class.getResourceAsStream("smsc.xml"), new File(confDir, "smsc.xml"), false);
     TestUtils.exportResource(TestRegionsManager.class.getResourceAsStream("regions.xml"), new File(confDir, "regions.xml"), false);
+    TestUtils.exportResource(TestRestrictionsManager.class.getResourceAsStream("restrictions.csv"), new File(confDir, "restrictions.csv"), false);
     TestUtils.exportResource(TestRestrictionsManager.class.getResourceAsStream("restrictions.csv"), new File(confDir, "restrictions.csv"), false);
   }
 
@@ -200,6 +200,7 @@ public class TestAdminContext extends AdminContext {
       fileSystem = new TestFileSystem();
       File servicesDir = new File(appBaseDir, "services");
       File confDir = new File(servicesDir, "Informer"+File.separatorChar+"conf");
+      File archiveDaemonConf = new File(servicesDir, "ArchiveDaemon"+File.separatorChar+"conf");
       File statDir = new File(appBaseDir, "stat");
       File statusLogsDir = new File(appBaseDir, "statuslogs");
 
@@ -210,8 +211,9 @@ public class TestAdminContext extends AdminContext {
       }
       servicesDir.mkdirs();
       confDir.mkdirs();
+      archiveDaemonConf.mkdirs();
 
-      prepareServices(confDir);
+      prepareServices(confDir, archiveDaemonConf);
       prepareStat(statDir,fileSystem);
       prepareNotificationLogs(statusLogsDir,fileSystem);
 
@@ -223,6 +225,8 @@ public class TestAdminContext extends AdminContext {
 
       journal = new Journal(new File(webConfig.getJournalDir()), fileSystem);
       informerManager = new TestInformerManager(new File(confDir, "config.xml"),
+          new File(confDir, "backup"), fileSystem, serviceManager);
+      archiveDaemonManager = new TestArchiveDaemonManager(new File(archiveDaemonConf, "config.xml"),
           new File(confDir, "backup"), fileSystem, serviceManager);
       infosme = new TestInfosme();
       usersManager = new TestUsersManager(infosme, new File(confDir, "users.xml"),new File(confDir, "backup"), fileSystem);
@@ -257,12 +261,17 @@ public class TestAdminContext extends AdminContext {
 
       deliveryChangesDetector.start();
 
-      ArchiveSettings settings = webConfig.getArchiveSettings();
-      settings.setRequestsDir(new File(workDir, "archive_requests").getAbsolutePath());
-      settings.setResultsDir(new File(workDir, "archive_results").getAbsolutePath());
+      ArchiveRequestSettings requestSettings = webConfig.getArchiveSettings();
+      requestSettings.setRequestsDir(new File(workDir, "archive_requests").getAbsolutePath());
+      requestSettings.setResultsDir(new File(workDir, "archive_results").getAbsolutePath());
 
       archiveDeliveryManager = deliveryManager;
-      archiveManager = new ArchiveManager(this, settings);
+      archiveRequestsManager = new ArchiveRequestsManager(this, requestSettings);
+      User u = usersManager.getUsers().get(0);
+      archiveRequestsManager.createRequest(u.getLogin(), createDeliveriesPrototype("deliveries 1 "+System.currentTimeMillis()));
+      archiveRequestsManager.createRequest(u.getLogin(), createDeliveriesPrototype("deliveries 2 "+System.currentTimeMillis()));
+      archiveRequestsManager.createRequest(u.getLogin(), createMessagesPrototype("messages 1 "+System.currentTimeMillis(), new Date(0), "+7913182"));
+      archiveRequestsManager.createRequest(u.getLogin(), createMessagesPrototype("messages 2 "+System.currentTimeMillis(), new Date(0), "+7913178"));
 
 
     } catch (IOException e) {
@@ -275,6 +284,24 @@ public class TestAdminContext extends AdminContext {
     }
 
     initDependencies();
+  }
+
+
+
+  private static DeliveriesRequestPrototype createDeliveriesPrototype(String name) {
+    DeliveriesRequestPrototype q = new DeliveriesRequestPrototype();
+    q.setName(name);
+    q.setFrom(new Date(0));
+    return q;
+  }
+
+
+  private static MessagesRequestPrototype createMessagesPrototype(String name, Date from, String address) {
+    MessagesRequestPrototype q = new MessagesRequestPrototype();
+    q.setName(name);
+    q.setFrom(from);
+    q.setAddress(new Address(address));
+    return q;
   }
 
 }

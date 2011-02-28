@@ -5,6 +5,8 @@ import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.users.User;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -26,7 +28,7 @@ class RequestExecutor {
 
   private static DeliveryFilter createFilter(DeliveriesRequest request) {
     DeliveryFilter filter = new DeliveryFilter();
-    filter.setEndDateTo(request.getTill());
+    filter.setStartDateTo(request.getTill());
     filter.setStartDateFrom(request.getFrom());
     if(request.getOwner() != null) {
       filter.setUserIdFilter(request.getOwner());
@@ -38,12 +40,15 @@ class RequestExecutor {
   }
   private static DeliveryFilter createFilter(MessagesRequest request) {
     DeliveryFilter filter = new DeliveryFilter();
-    filter.setEndDateTo(request.getTill());
+    filter.setStartDateTo(request.getTill());
     filter.setStartDateFrom(request.getFrom());
+    if(request.getOwner() != null) {
+      filter.setUserIdFilter(request.getOwner());
+    }
     return filter;
   }
-  private static MessageFilter createFilter(MessagesRequest request, int deliveryId, Date endDate) {
-    MessageFilter filter = new MessageFilter(deliveryId, request.getStartDate(), endDate == null ? new Date() : endDate);
+  private static MessageFilter createFilter(MessagesRequest request, int deliveryId) {
+    MessageFilter filter = new MessageFilter(deliveryId, request.getFrom(), request.getTill() == null ? new Date() : request.getTill());
     filter.setMsisdnFilter(request.getAddress().getSimpleAddress());
     return filter;
   }
@@ -84,18 +89,29 @@ class RequestExecutor {
 
                 final int deliveryId = delivery.getId();
 
-                MessageFilter messageFilter = createFilter(request, deliveryId, delivery.getEndDate());
+                MessageFilter messageFilter = createFilter(request, deliveryId);
 
                 dm.countMessages(u.getLogin(), u.getPassword(), messageFilter);
+
+                final Map<String, Message> messageMap = new HashMap<String, Message>();
 
                 dm.getMessages(u.getLogin(), u.getPassword(), messageFilter, 1000,
                     new Visitor<Message>() {
                       public boolean visit(Message message) throws AdminException {
-                        messagesResults[0].write(delivery, message);
+                        if(isMessageFinish(message)) {
+                          messageMap.remove(message.getAbonent().getSimpleAddress());
+                          messagesResults[0].write(delivery, message);
+                        }else {
+                          messageMap.put(message.getAbonent().getSimpleAddress(), message);
+                        }
                         return true;
                       }
                     }
                 );
+                for(Message message : messageMap.values()) {
+                  messagesResults[0].write(delivery, message);
+                }
+
                 deliveryCounter[0]++;
                 request.setProgress((int)(100*deliveryCounter[0]/totalDeliveries));
                 return true;
@@ -110,6 +126,11 @@ class RequestExecutor {
     }finally {
       lock.unlock();
     }
+  }
+
+  private static boolean isMessageFinish(Message m) {
+    MessageState state = m.getState();
+    return state == MessageState.Delivered || state == MessageState.Expired || state == MessageState.Failed;
   }
 
 
@@ -138,15 +159,15 @@ class RequestExecutor {
       try{
         deliveriesResult[0] = resultsManager.createDeliveriesResutls(request.getId());
 
-        final int[] total = new int[] {dm.countDeliveries(u.getLogin(), u.getPassword(), filter)};
+        final int[] total = new int[1];
+
+        total[0] = dm.countDeliveries(u.getLogin(), u.getPassword(), filter);
 
         dm.getDeliveries(u.getLogin(), u.getPassword(), filter, 1000, new Visitor<Delivery>() {
           float counter = 0;
 
           public boolean visit(Delivery value) throws AdminException {
-            final DeliveryStatistics stats = dm.getDeliveryStats(u.getLogin(), u.getPassword(), value.getId());
-            final DeliveryStatusHistory history = dm.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), value.getId());
-            deliveriesResult[0].write(value, stats, history);
+            deliveriesResult[0].write(value);
             request.setProgress((int) (100 * counter / total[0]));
             counter++;
             return true;
@@ -173,10 +194,8 @@ class RequestExecutor {
       try{
         deliveriesResult[0] = resultsManager.createDeliveriesResutls(request.getId());
 
-        final Delivery d = context.getDeliveryManager().getDelivery(u.getLogin(), u.getPassword(), request.getDeliveryId());
-        final DeliveryStatistics stats = dm.getDeliveryStats(u.getLogin(), u.getPassword(), d.getId());
-        final DeliveryStatusHistory history = dm.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), d.getId());
-        deliveriesResult[0].write(d, stats, history);
+        final Delivery d = dm.getDelivery(u.getLogin(), u.getPassword(), request.getDeliveryId());
+        deliveriesResult[0].write(d);
 
         request.setProgress(100);
       }finally {

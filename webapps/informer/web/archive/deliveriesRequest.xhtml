@@ -1,0 +1,119 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.deliveries.archive.request.deliveries']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:buttons>
+        <eye:button rendered="#{deliveriesRequest.reqId == null}">
+          <tr:commandLink text="#{msg['archive.request.create']}" shortDesc="#{msg['archive.request.create.desc']}" action="#{deliveriesRequest.save}" rendered="#{deliveriesRequest.reqId == null}"/>
+        </eye:button>
+        <eye:button rendered="#{deliveriesRequest.reqId == null}">
+          <tr:commandLink text="#{msg['cancel.button']}" shortDesc="#{msg['region.cancel.desc']}" action="ARCHIVE_LIST" immediate="true"/>
+        </eye:button>
+        <eye:button rendered="#{deliveriesRequest.reqId != null}">
+          <tr:commandLink action="#{deliveriesRequest.save}" text="#{msg['archive.request.result.deliveries.requests']}" shortDesc="#{msg['archive.request.result.deliveries.requests.desc']}"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button rendered="#{deliveriesRequest.requestFinished}">
+          <tr:commandLink text="#{msg['archive.request.results']}" shortDesc="#{msg['archive.request.results.desc']}" action="DELIVERIES_RESULTS">
+            <f:param name="reqId" value="#{deliveriesRequest.reqId}"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
+
+      <tr:inputHidden id="reqId" value="#{deliveriesRequest.reqId}"/>
+
+      <h:panelGrid style="padding:10px" columns="1">
+
+        <h:panelGrid style="padding-left:10px; padding-top:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+
+          <h:outputText value="#{deliveriesRBundle.name}" style="white-space:nowrap;"/>
+          <h:inputText value="#{deliveriesRequest.name}" size="30"/>
+
+        </h:panelGrid>
+
+        <eye:pageSubtitle value="#{msg['archive.request.deliveries.period']}"/>
+
+        <h:panelGrid style="padding-left:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+
+
+          <h:outputText value="#{deliveriesRBundle.from}" style="white-space:nowrap;"/>
+          <eye:inputDate type="both" value="#{deliveriesRequest.from}" popupCalendar="true" rendered="#{deliveriesRequest.new}"/>
+          <h:outputText value="#{deliveriesRequest.from}" rendered="#{!deliveriesRequest.new}">
+            <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+          </h:outputText>
+
+          <h:outputText value="#{deliveriesRBundle.till}" style="white-space:nowrap;"/>
+          <eye:inputDate type="both" value="#{deliveriesRequest.till}" popupCalendar="true" rendered="#{deliveriesRequest.new}"/>
+          <h:outputText value="#{deliveriesRequest.till}" rendered="#{!deliveriesRequest.new and deliveriesRequest.till != null}">
+            <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+          </h:outputText>
+          <h:outputText value="-" rendered="#{!deliveriesRequest.new and deliveriesRequest.till == null}"/>
+
+        </h:panelGrid>
+
+        <eye:pageSubtitle value="#{msg['archive.request.deliveries.options']}"/>
+
+        <h:panelGrid style="padding-left:10px" columns="2" columnClasses="column100Width, columnTopLeftAlign">
+
+          <h:outputText value="#{deliveriesRBundle.deliveryName}" style="white-space:nowrap;"/>
+          <h:inputText value="#{deliveriesRequest.deliveryName}" rendered="#{deliveriesRequest.new}"/>
+          <h:outputText value="#{deliveriesRequest.deliveryName}" rendered="#{!deliveriesRequest.new and deliveriesRequest.deliveryName != null}"/>
+          <h:outputText value="-" rendered="#{!deliveriesRequest.new and deliveriesRequest.deliveryName == null}"/>
+
+          <h:outputText value="#{deliveriesRBundle.deliveryId}" style="white-space:nowrap;"/>
+          <h:inputText validatorMessage="#{msg['invalid_param_value']} #{deliveriesRBundle.deliveryId}" value="#{deliveriesRequest.deliveryId}" rendered="#{deliveriesRequest.new}">
+            <f:validateLongRange/>
+          </h:inputText>
+          <h:outputText value="#{deliveriesRequest.deliveryId}" rendered="#{!deliveriesRequest.new and deliveriesRequest.deliveryId != null}"/>
+          <h:outputText value="-" rendered="#{!deliveriesRequest.new and deliveriesRequest.deliveryId == null}"/>
+
+          <h:outputText value="#{deliveriesRBundle.deliveryOwner}" style="white-space:nowrap;" rendered="#{deliveriesRequest.userInAdminRole}"/>
+          <h:selectOneMenu value="#{deliveriesRequest.owner}" rendered="#{deliveriesRequest.userInAdminRole and deliveriesRequest.new}">
+            <f:selectItems value="#{deliveriesRequest.uniqueUsers}"/>
+          </h:selectOneMenu>
+          <h:outputText value="#{deliveriesRequest.owner}" rendered="#{deliveriesRequest.userInAdminRole and !deliveriesRequest.new and deliveriesRequest.owner != null}"/>
+          <h:outputText value="-" rendered="#{deliveriesRequest.userInAdminRole and !deliveriesRequest.new and deliveriesRequest.owner == null}"/>
+
+        </h:panelGrid>
+
+
+      </h:panelGrid>
+
+      <eye:buttons>
+        <eye:button rendered="#{deliveriesRequest.reqId == null}">
+          <!--<tr:commandLink text="#{msg['done.button']}" shortDesc="#{msg['archive.request.save.desc']}" action="#{deliveriesRequest.save}" rendered="#{deliveriesRequest.reqId != null}"/>-->
+          <tr:commandLink text="#{msg['archive.request.create']}" shortDesc="#{msg['archive.request.create.desc']}" action="#{deliveriesRequest.save}" rendered="#{deliveriesRequest.reqId == null}"/>
+        </eye:button>
+        <eye:button rendered="#{deliveriesRequest.reqId == null}">
+          <tr:commandLink text="#{msg['cancel.button']}" shortDesc="#{msg['region.cancel.desc']}" action="ARCHIVE_LIST" immediate="true"/>
+        </eye:button>
+        <eye:button rendered="#{deliveriesRequest.reqId != null}">
+          <tr:commandLink action="#{deliveriesRequest.save}" text="#{msg['archive.request.result.deliveries.requests']}" shortDesc="#{msg['archive.request.result.deliveries.requests.desc']}"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button rendered="#{deliveriesRequest.requestFinished}">
+          <tr:commandLink text="#{msg['archive.request.results']}" shortDesc="#{msg['archive.request.results.desc']}" action="DELIVERIES_RESULTS">
+            <f:param name="reqId" value="#{deliveriesRequest.reqId}"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

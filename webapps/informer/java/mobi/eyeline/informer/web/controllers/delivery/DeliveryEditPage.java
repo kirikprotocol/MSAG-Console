@@ -44,6 +44,11 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
 
   private boolean singleText;
 
+  private boolean archivateCheck;
+
+  private boolean archivateAllowed;
+
+  private String archiveTime;
 
   private final Configuration config;
 
@@ -63,6 +68,14 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     }
 
     User u = config.getUser(user);
+
+    archivateAllowed = u.isCreateArchive();
+    if(archivateAllowed) {
+      if(delivery.getArchiveTime() != null) {
+        archiveTime = Integer.toString(delivery.getArchiveTime());
+        archivateCheck = true;
+      }
+    }
 
     String p = delivery.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
     if (p != null) {
@@ -85,6 +98,29 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
     secretMessage = delivery.getProperty(UserDataConsts.SECRET_TEXT);
   }
 
+  public boolean isArchivateCheck() {
+    return archivateCheck;
+  }
+
+  public void setArchivateCheck(boolean archivateCheck) {
+    this.archivateCheck = archivateCheck;
+  }
+
+  public boolean isArchivateAllowed() {
+    return archivateAllowed;
+  }
+
+  public void setArchivateAllowed(boolean archivateAllowed) {
+    this.archivateAllowed = archivateAllowed;
+  }
+
+  public String getArchiveTime() {
+    return archiveTime;
+  }
+
+  public void setArchiveTime(String archiveTime) {
+    this.archiveTime = archiveTime;
+  }
 
   public Address getSmsNotificationAddress() {
     return smsNotificationAddress;
@@ -157,6 +193,12 @@ public class DeliveryEditPage extends InformerController implements CreateDelive
         delivery.setProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS, emailNotificationAddress);
         delivery.setEnableStateChangeLogging(true);
       }
+    }
+
+    if(archivateCheck && archiveTime != null && archiveTime.length()>0) {
+      delivery.setArchiveTime(Integer.parseInt(archiveTime));
+    }else {
+      delivery.setArchiveTime(null);
     }
 
     if (retryOnFail.equals("off")) {

@@ -31,17 +31,6 @@ public interface UnmodifiableDeliveryManager {
   public Delivery getDelivery(String login, String password, int deliveryId) throws AdminException;
 
   /**
-   * Возвращает статистику по рассылке
-   *
-   * @param login      логин
-   * @param password   пароль
-   * @param deliveryId идентификатор рассылки
-   * @return статистика по рассылке
-   * @throws AdminException ошибка выполнения команды
-   */
-  public DeliveryStatistics getDeliveryStats(String login, String password, int deliveryId) throws AdminException;
-
-  /**
    * Возвращает рассылки, удовлетворяющие фильтру
    *
    * @param login          логин
@@ -76,16 +65,5 @@ public interface UnmodifiableDeliveryManager {
    * @throws AdminException ошибка выполнения команды
    */
   public int countMessages(String login, String password, MessageFilter messageFilter) throws AdminException;
-
-  /**
-   * Возвращает историю изменения статусов рассылки
-   *
-   * @param login      логин
-   * @param password   пароль
-   * @param deliveryId идентификатор рассылки
-   * @return история изменения статусов рассылки
-   * @throws AdminException ошибка выполнения команды
-   */
-  public DeliveryStatusHistory getDeliveryStatusHistory(String login, String password, int deliveryId) throws AdminException;
 
 }

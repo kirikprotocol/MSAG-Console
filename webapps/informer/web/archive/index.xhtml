@@ -1,0 +1,92 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.deliveries.archive']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:buttons>
+        <eye:button>
+          <eye:menubar label="#{msg['archive.request.new']} ...">
+            <eye:menubaritem><tr:commandLink text="#{msg['informer.admin.deliveries.archive.request.deliveries']}" action="DELIVERIES_REQUEST"/></eye:menubaritem>
+            <eye:menubaritem><tr:commandLink text="#{msg['informer.admin.deliveries.archive.request.messages']}" action="MESSAGES_REQUEST"/></eye:menubaritem>
+          </eye:menubar>
+          <eye:button><tr:commandLink text="#{msg['archive.request.remove.selected']}" shortDesc="#{msg['archive.request.remove.selected.desc']}" action="#{requests.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
+      <eye:dataTable value="#{requests.requests}" selectedRows="#{requests.selectedRows}" var="m">
+        <eye:row rowId="#{m.id}">
+          <eye:column name="name" title="#{msg['archive.request.name']}" sortable="true" width="24%" align="left" defaultSortOrder="asc">
+            <tr:commandLink text="#{m.name}" action="DELIVERIES_REQUEST" shortDesc="#{msg['archive.request.name.desc']}" rendered="#{m.type.type == 'deliveries'}">
+              <f:param name="reqId" value="#{m.id}"/>
+            </tr:commandLink>
+            <tr:commandLink text="#{m.name}" action="MESSAGES_REQUEST" shortDesc="#{msg['archive.request.name.desc']}" rendered="#{m.type.type == 'messages'}">
+              <f:param name="reqId" value="#{m.id}"/>
+            </tr:commandLink>
+          </eye:column>
+          <eye:column name="type" title="#{msg['archive.request.type']}" sortable="true" width="17%" align="left">
+            <h:outputText value="#{m.type}" converter="requestTypeConverter"/>
+          </eye:column>
+          <eye:column name="begin" title="#{deliveriesRBundle.from}" sortable="true" width="16%" align="center">
+            <h:outputText value="#{m.from}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+          </eye:column>
+          <eye:column name="finish" title="#{deliveriesRBundle.till}" width="16%" align="center">
+            <h:outputText value="#{m.till}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+          </eye:column>
+          <eye:column name="state" title="#{msg['archive.request.state']}" width="17%" align="center">
+            <h:outputText value="#{m.status}" converter="requestStatusConverter" rendered="#{m.status.status != 'IN_PROCESS'}"/>
+            <eye:progressBar fontSize="10" rendered="#{m.status.status == 'IN_PROCESS'}" current="#{m.progress}" maximum="100" width="150" height="10"/>
+          </eye:column>
+          <eye:column name="action" title="#{msg['archive.request.action']}" width="10%" align="center">
+            <tr:commandLink rendered="#{m.status.status == 'IN_PROCESS'}" text="#{msg['cancel.button']}" action="#{requests.cancel}"
+                            shortDesc="#{msg['archive.request.cancel.desc']}" onclick="if (!confirm('#{msg['archive.request.action.cancel.confirm']}')) return false">
+              <f:param name="requestId" value="#{m.id}"/>
+            </tr:commandLink>
+            <tr:commandLink rendered="#{m.status.status == 'FINISHED' and m.type.type == 'deliveries'}" text="#{msg['archive.request.results']}" action="DELIVERIES_RESULTS" shortDesc="#{msg['archive.request.results.desc']}">
+              <f:param name="reqId" value="#{m.id}"/>
+            </tr:commandLink>
+            <tr:commandLink rendered="#{m.status.status == 'FINISHED' and m.type.type == 'messages'}" text="#{msg['archive.request.results']}" action="MESSAGES_RESULTS" shortDesc="#{msg['archive.request.results.desc']}">
+              <f:param name="reqId" value="#{m.id}"/>
+            </tr:commandLink>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <eye:delimiter/>
+      <eye:buttons>
+        <eye:button>
+          <eye:menubar label="#{msg['archive.request.new']} ...">
+            <eye:menubaritem><tr:commandLink text="#{msg['informer.admin.deliveries.archive.request.deliveries']}" action="DELIVERIES_REQUEST"/></eye:menubaritem>
+            <eye:menubaritem><tr:commandLink text="#{msg['informer.admin.deliveries.archive.request.messages']}" action="MESSAGES_REQUEST"/></eye:menubaritem>
+          </eye:menubar>
+          <eye:button><tr:commandLink text="#{msg['archive.request.remove.selected']}" shortDesc="#{msg['archive.request.remove.selected.desc']}" action="#{requests.remove}" onclick="if (!confirm('#{msg['informer.delete.records']}')) return false"/></eye:button>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

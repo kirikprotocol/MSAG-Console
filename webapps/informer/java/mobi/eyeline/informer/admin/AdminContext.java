@@ -24,7 +24,6 @@ import mobi.eyeline.informer.admin.restriction.Restriction;
 import mobi.eyeline.informer.admin.restriction.RestrictionContext;
 import mobi.eyeline.informer.admin.restriction.RestrictionProvider;
 import mobi.eyeline.informer.admin.restriction.RestrictionsFilter;
-import mobi.eyeline.informer.admin.service.ServiceInfo;
 import mobi.eyeline.informer.admin.siebel.SiebelContext;
 import mobi.eyeline.informer.admin.siebel.SiebelProvider;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
@@ -63,9 +62,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
   protected FileDeliveriesProvider fileDeliveriesProvider;
   protected SiebelProvider siebelProvider;
 
-  protected ArchiveManager archiveManager;
+  protected ArchiveRequestsManager archiveRequestsManager;
 
-  protected UnmodifiableDeliveryManager archiveDeliveryManager;
+  protected DeliveryManager archiveDeliveryManager;
 
   public AdminContext() {
   }
@@ -93,12 +92,10 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
 
       deliveryChangesDetector.start();
 
-      if(isArchiveDaemonDeployed()) {
-        if(is.getArchiveHost() == null) {
-          throw new InitException("Archive host is null");
-        }
-        archiveDeliveryManager = new DeliveryManager(is.getArchiveHost(), is.getArchivePort());
-        archiveManager = new ArchiveManager(this, this.webConfig.getArchiveSettings());
+      if(archiveDaemonManager != null) { //todo?
+        ArchiveDaemonSettings archiveDaemonSettings = archiveDaemonManager.getSettings();
+        archiveDeliveryManager = new DeliveryManager(archiveDaemonSettings.getDcpHost(), archiveDaemonSettings.getDcpPort());
+        archiveRequestsManager = new ArchiveRequestsManager(this, this.webConfig.getArchiveSettings());
       }
 
     } catch (AdminException e) {
@@ -127,16 +124,11 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     } catch (Exception ignored) {
     }
 
-    if(archiveManager != null) {
-      archiveManager.shutdown();
+    if(archiveRequestsManager != null) {
+      archiveRequestsManager.shutdown();
     }
 
     super.shutdown();
-  }
-
-  public boolean isArchiveDaemonDeployed() throws AdminException {
-    ServiceInfo info = serviceManager.getService("ArchiveDaemon");
-    return info != null; //todo
   }
 
 
@@ -698,6 +690,9 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     if (u.getPhone() != null && u.isSmsNotification()) {
       delivery.setProperty(UserDataConsts.SMS_NOTIF_ADDRESS, u.getPhone().getSimpleAddress());
     }
+    if(u.isCreateArchive()) {
+      delivery.setArchiveTime(u.getDeliveryLifetime());
+    }
 
     delivery.setUseDataSm(u.isUseDataSm());
 
@@ -844,41 +839,98 @@ public class AdminContext extends AdminContextBase implements CdrProviderContext
     fileDeliveriesProvider.verifyConnection(u, ucps);
   }
 
-  // ARCHIVE ======================================================================================================
+  // ARCHIVE DAEMON =======================================================================================================
+
+  public void startArchiveDaemon() throws AdminException {
+    if(isArchiveDaemonDeployed()) {
+      archiveDaemonManager.startArchiveDaemon();
+    }
+  }
+
+  public void stopArchiveDaemon() throws AdminException {
+    if(isArchiveDaemonDeployed()) {
+      archiveDaemonManager.stopArchiveDaemon();
+    }
+  }
+
+  public void switchArchiveDaemon(String toHost) throws AdminException {
+    if(isArchiveDaemonDeployed()) {
+      archiveDaemonManager.switchArchiveDaemon(toHost);
+    }
+  }
+
+  public String getArchiveDaemonOnlineHost() throws AdminException {
+    return isArchiveDaemonDeployed() ? archiveDaemonManager.getArchiveDaemonOnlineHost() : null;
+  }
+
+  public List<String> getArchiveDaemonHosts() throws AdminException {
+    return isArchiveDaemonDeployed() ? archiveDaemonManager.getArchiveDaemonHosts() : null;
+  }
+
+
+  // ARCHIVE REQUESTS =====================================================================================================
 
   public DeliveriesRequest createRequest(String login, DeliveriesRequestPrototype request) throws AdminException {
-    return archiveManager.createRequest(login, request);
+    return archiveRequestsManager.createRequest(login, request);
   }
 
   public MessagesRequest createRequest(String login, MessagesRequestPrototype _request) throws AdminException {
-    return archiveManager.createRequest(login, _request);
+    return archiveRequestsManager.createRequest(login, _request);
   }
 
   public Request getRequest(int requestId) throws AdminException {
-    return archiveManager.getRequest(requestId);
+    return archiveRequestsManager.getRequest(requestId);
   }
 
-  public Collection<Request> getRequests() throws AdminException {
-    return archiveManager.getRequests();
+  public List<Request> getRequests() throws AdminException {
+    return archiveRequestsManager.getRequests();
   }
 
   public void modifyRequest(Request request) throws AdminException {
-    archiveManager.modifyRequest(request);
+    archiveRequestsManager.modifyRequest(request);
   }
 
   public void getDeliveriesResult(int requestId, Visitor<ArchiveDelivery> visitor) throws AdminException {
-    archiveManager.getDeliveriesResult(requestId, visitor);
+    archiveRequestsManager.getDeliveriesResult(requestId, visitor);
   }
 
   public void getMessagesResult(int requestId, Visitor<ArchiveMessage> visitor) throws AdminException {
-    archiveManager.getMessagesResult(requestId, visitor);
+    archiveRequestsManager.getMessagesResult(requestId, visitor);
   }
 
   public void removeRequest(int requestId) throws AdminException {
-    archiveManager.removeRequest(requestId);
+    archiveRequestsManager.removeRequest(requestId);
   }
 
   public void cancelRequest(int requestId) throws AdminException {
-    archiveManager.cancelRequest(requestId);
+    archiveRequestsManager.cancelRequest(requestId);
   }
+
+  public Delivery getArchiveDelivery(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    return archiveDeliveryManager.getDelivery(u.getLogin(), u.getPassword(), deliveryId);
+  }
+
+  public DeliveryStatistics getArchiveStatistics(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    return archiveDeliveryManager.getDeliveryStats(u.getLogin(), u.getPassword(), deliveryId);
+  }
+
+  public DeliveryStatusHistory getArchiveHistory(String login, int deliveryId) throws AdminException {
+    User u = getUser(login);
+    return archiveDeliveryManager.getDeliveryStatusHistory(u.getLogin(), u.getPassword(), deliveryId);
+
+  }
+
+  public void getArchiveMessages(String login, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+    User u = getUser(login);
+    archiveDeliveryManager.getMessages(login, u.getPassword(), filter, _pieceSize, visitor);
+
+  }
+
+  public int countArchiveMessages(String login, MessageFilter messageFilter) throws AdminException {
+    User u = getUser(login);
+    return archiveDeliveryManager.countMessages(login, u.getPassword(), messageFilter);
+  }
+
 }

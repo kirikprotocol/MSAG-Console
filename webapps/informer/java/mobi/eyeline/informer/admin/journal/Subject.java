@@ -20,6 +20,7 @@ public enum Subject {
   DAEMONS("subject.daemons"),
   INFORMER("subject.informer"),
   FTPSERVER("subject.ftpserver"),
+  ARCHIVE_DAEMON("subject.archivedaemon"),
   DELIVERIES("subject.deliveries"),
   RESTRICTIONS("subject.restrictions"),
   WEBCONFIG("subject.webconfig");

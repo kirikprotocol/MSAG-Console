@@ -17,6 +17,17 @@ public class MessagesRequestPrototype {
 
   private Address address;
 
+  private String owner;
+
+
+  public String getOwner() {
+    return owner;
+  }
+
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
+
   public String getName() {
     return name;
   }

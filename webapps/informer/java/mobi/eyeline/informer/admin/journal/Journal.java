@@ -44,6 +44,7 @@ public class Journal {
   private final WebconfigDiffHelper webconfig = new WebconfigDiffHelper();
 
   private final FtpServerDiffHelper ftpserver = new FtpServerDiffHelper();
+  private final ArchiveDaemonDiffHelper archiveDaemon = new ArchiveDaemonDiffHelper();
 
   private final JournalDataSource ds;
 
@@ -273,6 +274,36 @@ public class Journal {
    */
   public void logFtpServerSwitch(String toHost, String user) throws AdminException {
     ftpserver.logFtpServerSwitch(this, toHost, user);
+  }
+  /**
+   * Добавляет в журнал запись о старте ArchiveDaemon
+   *
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logArchiveDaemonStart(String user) throws AdminException {
+    archiveDaemon.logArchiveDaemonStart(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись об остановке ArchiveDaemon
+   *
+   * @param user пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logArchiveDaemonStop(String user) throws AdminException {
+    archiveDaemon.logArchiveDaemonStop(this, user);
+  }
+
+  /**
+   * Добавляет в журнал запись о переключении ArchiveDaemon на другой хост
+   *
+   * @param toHost новый хост
+   * @param user   пользователь, от имени которого надо формировать записи
+   * @throws AdminException ошибка сохранения записи
+   */
+  public void logArchiveDaemonSwitch(String toHost, String user) throws AdminException {
+    archiveDaemon.logArchiveDaemonSwitch(this, toHost, user);
   }
 
   /**

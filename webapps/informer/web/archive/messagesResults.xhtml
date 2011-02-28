@@ -1,0 +1,102 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.deliveries.archive.results.messages']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:dataTableFilter bean="#{messagesResults}" clearAction="clearFilter" applyAction="query">
+        <h:panelGrid columns="6" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, column300Width,column50WidthNoWrap, columnTopLeftAlign">
+
+          <h:outputText value="#{msg['informer.deliveries.message.abonent']}"/>
+          <h:inputText value="#{messagesResults.address}" converter="addressConverter"/>
+
+          <h:outputText value="&#160;"/>
+          <h:outputText value="&#160;"/>
+
+          <h:outputText value="&#160;"/>
+          <h:outputText value="&#160;"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
+          <eye:inputDate value="#{messagesResults.from}" type="both" />
+
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
+          <eye:inputDate value="#{messagesResults.till}" type="both"/>
+
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <h:inputHidden id="reqId" value="#{messagesResults.reqId}"/>
+
+      <eye:delimiter/>
+
+      <eye:dataTable value="#{messagesResults.messages}" selectedRows="#{messagesResults.selected}" var="m">
+        <eye:row rowId="#{m.id}">
+          <eye:column name="abonent" title="#{msg['informer.deliveries.message.abonent']}" sortable="true" width="14%" align="left">
+            <h:outputText value="#{m.abonent}" converter="addressConverter"/>
+          </eye:column>
+          <eye:column name="deliveryName" title="#{msg['informer.deliveries.messages.delivery']}" sortable="true" width="14%" align="left" defaultSortOrder="asc">
+            <tr:commandLink text="#{m.deliveryName}" action="RESULT_DELIVERY" shortDesc="#{msg['archive.request.result.deliveries.options.desc']}">
+              <f:param name="reqId" value="#{messagesResults.reqId}"/>
+              <f:param name="deliveryId" value="#{m.deliveryId}"/>
+              <f:param name="action" value="MESSAGES_RESULTS"/>
+            </tr:commandLink>
+          </eye:column>
+          <eye:column name="userId" title="#{deliveryBundle.owner}" sortable="true" width="14%" align="left" rendered="#{messagesResults.userInAdminRole}">
+            <h:outputText value="#{m.owner}" rendered="#{!m.userExist}"/>
+            <tr:commandLink text="#{m.owner}" action="USER_EDIT" shortDesc="#{msg['archive.request.result.deliveries.users.options.desc']}" rendered="#{m.userExist}">
+              <f:param name="userId" value="#{m.owner}"/>
+              <f:param name="user_edit_comeback" value="MESSAGES_RESULTS"/>
+              <f:param name="user_edit_comeback_params" value="#{messagesResults.reqId}"/>
+            </tr:commandLink>
+          </eye:column>
+          <eye:column name="text" title="#{msg['informer.deliveries.message.text']}" width="16%" align="center">
+            <h:outputText value="#{m.text}"/>
+          </eye:column>
+          <eye:column name="date" title="#{msg['informer.deliveries.message.date']}" sortable="true" width="14%" align="center">
+            <h:outputText value="#{m.date}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+          </eye:column>
+          <eye:column name="state" title="#{msg['informer.deliveries.message.state']}" sortable="true" width="14%" align="center">
+            <h:outputText value="#{m.state}" converter="messageStateConverter"/>
+          </eye:column>
+          <eye:column name="errorCode" title="#{msg['informer.deliveries.message.error']}" sortable="true" width="14%" align="center">
+            <h:outputText value="#{m.errorCode}" converter="errorCodeConverter"/>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['archive.request.result.deliveries.requests']}" shortDesc="#{msg['archive.request.result.deliveries.requests.desc']}"
+                          action="ARCHIVE_LIST" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['download.button']}" shortDesc="#{msg['archive.request.result.messages.download.desc']}">
+            <tr:fileDownloadActionListener method="#{messagesResults.download}" contentType="application/csv" filename="messages.csv"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

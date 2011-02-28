@@ -26,14 +26,14 @@
 
       <c:set var="i" value="1"/>
 
-      <eye:dataTable value="#{index1.model}" var="r" selectedRows="#{index1.selected}">
+      <eye:dataTable value="#{index1.model}" var="m" selectedRows="#{index1.selected}">
         <eye:row innerData="#{i == 15}">
 
           <c:set var="i" value="#{i+1}"/>
 
           <eye:column name="mycolumn" title="e1" width="33%" sortable="true" align="center">
 
-            <h:outputText value="#{r}"/>
+            <h:outputText value="#{m}"/>
 
             <f:facet name="footer">
               <h:outputText value="e1 footer"/>
@@ -42,13 +42,13 @@
           </eye:column>
 
           <eye:column name="e2" title="e2" width="33%" sortable="true">
-            <h:outputText value="#{r%2}"/>
+            <h:outputText value="#{m%2}"/>
           </eye:column>
 
 
           <eye:column name="e3" title="e3" width="33%" sortable="true">
 
-            <h:outputText value="#{r%3}"/>
+            <h:outputText value="#{m%3}"/>
 
             <f:facet name="footer">
               <h:outputText value="e3 footer"/>

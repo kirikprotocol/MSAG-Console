@@ -2,7 +2,10 @@ package mobi.eyeline.informer.admin.delivery;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Алгориитм извлечения сообщений из информера для случая, когда требуется достать сообщения не в
@@ -126,6 +129,7 @@ class GetNonFinalMessagesStrategy implements GetMessagesStrategy {
     return false;
   }
 
+  //CHECKME me
   public int countMessages(DcpConnection conn, MessageFilter messageFilter) throws AdminException {
 //    final int counter[] = new int[]{0};
 //    getMessages(conn, messageFilter, 1000, new Visitor<Message>() {

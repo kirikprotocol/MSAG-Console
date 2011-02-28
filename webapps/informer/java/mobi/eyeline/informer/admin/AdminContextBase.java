@@ -2,6 +2,7 @@ package mobi.eyeline.informer.admin;
 
 import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
+import mobi.eyeline.informer.admin.archive.ArchiveDaemonManager;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManager;
 import mobi.eyeline.informer.admin.blacklist.BlacklistManagerImpl;
 import mobi.eyeline.informer.admin.delivery.DeliveryManager;
@@ -66,6 +67,7 @@ class AdminContextBase {
 
   protected FtpServerManager ftpServerManager;
 
+  protected ArchiveDaemonManager archiveDaemonManager;
 
 // delivery ->user ->region->smsc
 
@@ -114,6 +116,14 @@ class AdminContextBase {
       informerManager = new InformerManagerImpl(new File(confDir, "config.xml"),
           new File(confDir, "backup"), fileSystem, serviceManager);
 
+
+      File archiveDir = new File(servicesDir, "ArchiveDaemon" + File.separatorChar + "conf");
+
+      if(serviceManager.getService("ArchiveDaemon") != null) {
+        archiveDaemonManager = new ArchiveDaemonManager(new File(archiveDir, "config.xml"),
+            new File(confDir, "backup"), fileSystem, serviceManager);
+      }
+
       InformerSettings is = informerManager.getConfigSettings();
       infosme = new InfosmeImpl(is.getAdminHost(), is.getAdminPort());
 
@@ -155,6 +165,10 @@ class AdminContextBase {
 
   public boolean isFtpServerDeployed() {
     return ftpServerManager != null;
+  }
+
+  public boolean isArchiveDaemonDeployed() {
+    return archiveDaemonManager!= null;
   }
 
 

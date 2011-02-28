@@ -20,6 +20,10 @@ public class UserSessionController extends InformerController {
     return getUserPrincipal() != null;
   }
 
+  public boolean isArchiveDaemonDeployed() {
+    return getConfig().isArchiveDaemonDeployed();
+  }
+
   public boolean isBlacklistEnabled() {
     try{
       return getConfig().isBlackListEnabled();

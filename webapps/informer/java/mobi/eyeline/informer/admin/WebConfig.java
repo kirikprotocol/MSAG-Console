@@ -1,6 +1,6 @@
 package mobi.eyeline.informer.admin;
 
-import mobi.eyeline.informer.admin.archive.ArchiveSettings;
+import mobi.eyeline.informer.admin.archive.ArchiveRequestSettings;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.notifications.NotificationSettings;
 import mobi.eyeline.informer.admin.siebel.SiebelSettings;
@@ -65,17 +65,17 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
     XmlConfigSection deliveries = config.getOrCreateSection("deliveries");
     deliveries.setBool("allowUssdPush", settings.isAllowUssdPushDeliveries());
 
-    ArchiveSettings archiveSettings = settings.getArchiveSettings();
+    ArchiveRequestSettings archiveRequestSettings = settings.getArchiveRequestSettings();
 
     XmlConfigSection s = config.getOrCreateSection("archive");
-    if(archiveSettings.getResultsDir() != null) {
-      s.setString("resultsDir", archiveSettings.getResultsDir());
+    if(archiveRequestSettings.getResultsDir() != null) {
+      s.setString("resultsDir", archiveRequestSettings.getResultsDir());
     }
-    if(archiveSettings.getRequestsDir() != null) {
-      s.setString("requestsDir", archiveSettings.getRequestsDir());
+    if(archiveRequestSettings.getRequestsDir() != null) {
+      s.setString("requestsDir", archiveRequestSettings.getRequestsDir());
     }
-    s.setInt("chunkSize", archiveSettings.getChunkSize());
-    s.setInt("executorsSize", archiveSettings.getExecutorsSize());
+    s.setInt("chunkSize", archiveRequestSettings.getChunkSize());
+    s.setInt("executorsSize", archiveRequestSettings.getExecutorsSize());
 
     config.save(newFile);
   }
@@ -138,15 +138,15 @@ class WebConfig implements ManagedConfigFile<WebConfigSettings> {
       XmlConfigSection deliveries = webconfig.getSection("deliveries");
       settings.setAllowUssdPushDeliveries(deliveries.getBool("allowUssdPush", false));
 
-      ArchiveSettings archiveSettings = new ArchiveSettings();
+      ArchiveRequestSettings archiveRequestSettings = new ArchiveRequestSettings();
       if(webconfig.containsSection("archive")) {
         XmlConfigSection archive = webconfig.getSection("archive");
-        archiveSettings.setResultsDir(archive.getString("resultsDir", null));
-        archiveSettings.setRequestsDir(archive.getString("requestsDir", null));
-        archiveSettings.setChunkSize(archive.getInt("chunkSize", 10));
-        archiveSettings.setExecutorsSize(archive.getInt("executorsSize", 10));
+        archiveRequestSettings.setResultsDir(archive.getString("resultsDir", null));
+        archiveRequestSettings.setRequestsDir(archive.getString("requestsDir", null));
+        archiveRequestSettings.setChunkSize(archive.getInt("chunkSize", 10));
+        archiveRequestSettings.setExecutorsSize(archive.getInt("executorsSize", 10));
       }
-      settings.setArchiveSettings(archiveSettings);
+      settings.setArchiveRequestSettings(archiveRequestSettings);
       return settings;
     }
     catch (XmlConfigException e) {

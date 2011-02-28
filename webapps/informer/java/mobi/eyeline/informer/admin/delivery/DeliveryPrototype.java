@@ -49,6 +49,8 @@ public class DeliveryPrototype {
   protected boolean enableMsgFinalizationLogging;
   protected boolean enableStateChangeLogging;
 
+  protected Integer archiveTime;
+
   public void setProperty(String name, String value) {
     properties.setProperty(name, value);
   }
@@ -81,6 +83,14 @@ public class DeliveryPrototype {
 
   public void setSourceAddress(Address sourceAddress) {
     this.sourceAddress = sourceAddress;
+  }
+
+  public Integer getArchiveTime() {
+    return archiveTime;
+  }
+
+  public void setArchiveTime(Integer archiveTime) {
+    this.archiveTime = archiveTime;
   }
 
   public String getSingleText() {

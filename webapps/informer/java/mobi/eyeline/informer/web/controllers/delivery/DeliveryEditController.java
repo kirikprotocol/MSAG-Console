@@ -7,6 +7,7 @@ import mobi.eyeline.informer.admin.delivery.DeliveryMode;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatistics;
 import mobi.eyeline.informer.admin.delivery.DeliveryStatusHistory;
 import mobi.eyeline.informer.admin.infosme.TestSms;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Time;
 import mobi.eyeline.informer.web.controllers.users.UserEditController;
@@ -35,6 +36,12 @@ public class DeliveryEditController extends DeliveryController {
   private boolean smsNotificationCheck;
   private boolean emailNotificationCheck;
 
+  private boolean archivateCheck;
+
+  private boolean archivateAllowed;
+
+  private String archiveTime;
+
   public DeliveryEditController() {
     super();
 
@@ -61,6 +68,18 @@ public class DeliveryEditController extends DeliveryController {
     } catch (AdminException e) {
       addError(e);
     }
+  }
+
+  public boolean isArchivateAllowed() {
+    return archivateAllowed;
+  }
+
+  public String getArchiveTime() {
+    return archiveTime;
+  }
+
+  public void setArchiveTime(String archiveTime) {
+    this.archiveTime = archiveTime;
   }
 
   public String getComeBackParam() {
@@ -99,6 +118,13 @@ public class DeliveryEditController extends DeliveryController {
 
     status = getConfig().getDeliveryStats(user.getLogin(), user.getPassword(), id);
     statusHistory = getConfig().getDeliveryStatusHistory(user.getLogin(), user.getPassword(), id);
+
+    User u = getConfig().getUser(delivery.getOwner());
+    if(u != null) {
+      archivateAllowed = u.isCreateArchive();
+    }
+    archiveTime = delivery.getArchiveTime() == null ? null : Integer.toString(delivery.getArchiveTime());
+    archivateCheck = delivery.getArchiveTime() != null;
   }
 
   private String emailNotificationAddress;
@@ -175,6 +201,12 @@ public class DeliveryEditController extends DeliveryController {
       delivery.setEnableStateChangeLogging(true);
     } else {
       delivery.removeProperty(UserDataConsts.SMS_NOTIF_ADDRESS);
+    }
+
+    if(archivateCheck && archiveTime != null && archiveTime.length()>0) {
+      delivery.setArchiveTime(Integer.parseInt(archiveTime));
+    }else {
+      delivery.setArchiveTime(null);
     }
 
     try {
@@ -276,6 +308,14 @@ public class DeliveryEditController extends DeliveryController {
 
   public void setSmsNotificationCheck(boolean smsNotificationCheck) {
     this.smsNotificationCheck = smsNotificationCheck;
+  }
+
+  public boolean isArchivateCheck() {
+    return archivateCheck;
+  }
+
+  public void setArchivateCheck(boolean archivateCheck) {
+    this.archivateCheck = archivateCheck;
   }
 
   public boolean isEmailNotificationCheck() {

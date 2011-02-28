@@ -3,6 +3,7 @@ package mobi.eyeline.informer.web.config;
 import mobi.eyeline.informer.admin.AdminContext;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
+import mobi.eyeline.informer.admin.archive.*;
 import mobi.eyeline.informer.admin.cdr.CdrSettings;
 import mobi.eyeline.informer.admin.delivery.*;
 import mobi.eyeline.informer.admin.delivery.stat.*;
@@ -293,6 +294,10 @@ public class Configuration {
     return context.isFtpServerDeployed();
   }
 
+  public boolean isArchiveDaemonDeployed() {
+    return context.isArchiveDaemonDeployed();
+  }
+
   public String getFtpServerOnlineHost() throws AdminException {
     return context.getFtpServerOnlineHost();
   }
@@ -337,6 +342,29 @@ public class Configuration {
 
   public List<String> getInformerHosts() throws AdminException {
     return context.getInformerHosts();
+  }
+
+  public void startArchiveDaemon(String user) throws AdminException {
+    context.startArchiveDaemon();
+    journal.logArchiveDaemonStart(user);
+  }
+
+  public void stopArchiveDaemon(String user) throws AdminException {
+    context.stopArchiveDaemon();
+    journal.logArchiveDaemonStop(user);
+  }
+
+  public void switchArchiveDaemon(String toHost, String user) throws AdminException {
+    context.switchArchiveDaemon(toHost);
+    journal.logArchiveDaemonSwitch(toHost, user);
+  }
+
+  public String getArchiveDaemonOnlineHost() throws AdminException {
+    return context.getArchiveDaemonOnlineHost();
+  }
+
+  public List<String> getArchiveDaemonHosts() throws AdminException {
+    return context.getArchiveDaemonHosts();
   }
 
   public void statistics(DeliveryStatFilter filter, DeliveryStatVisitor visitor) throws AdminException {
@@ -487,6 +515,62 @@ public class Configuration {
 
   public void validateDeliveryWithIndividualTexts(DeliveryPrototype delivery) throws AdminException {
     context.validateDeliveryWithIndividualTexts(delivery);
+  }
+
+  public void cancelRequest(int requestId) throws AdminException {
+    context.cancelRequest(requestId);
+  }
+
+  public void removeRequest(int requestId) throws AdminException {
+    context.removeRequest(requestId);
+  }
+
+  public void getMessagesResult(int requestId, Visitor<ArchiveMessage> visitor) throws AdminException {
+    context.getMessagesResult(requestId, visitor);
+  }
+
+  public void getDeliveriesResult(int requestId, Visitor<ArchiveDelivery> visitor) throws AdminException {
+    context.getDeliveriesResult(requestId, visitor);
+  }
+
+  public void modifyRequest(Request request) throws AdminException {
+    context.modifyRequest(request);
+  }
+
+  public List<Request> getRequests() throws AdminException {
+    return context.getRequests();
+  }
+
+  public Request getRequest(int requestId) throws AdminException {
+    return context.getRequest(requestId);
+  }
+
+  public MessagesRequest createRequest(String login, MessagesRequestPrototype _request) throws AdminException {
+    return context.createRequest(login, _request);
+  }
+
+  public DeliveriesRequest createRequest(String login, DeliveriesRequestPrototype request) throws AdminException {
+    return context.createRequest(login, request);
+  }
+
+  public Delivery getArchiveDelivery(String login, int deliveryId) throws AdminException {
+    return context.getArchiveDelivery(login, deliveryId);
+  }
+
+  public DeliveryStatusHistory getArchiveHistory(String login, int deliveryId) throws AdminException {
+    return context.getArchiveHistory(login, deliveryId);
+  }
+
+  public DeliveryStatistics getArchiveStatistics(String login, int deliveryId) throws AdminException {
+    return context.getArchiveStatistics(login, deliveryId);
+  }
+
+  public int countArchiveMessages(String login, MessageFilter messageFilter) throws AdminException {
+    return context.countArchiveMessages(login, messageFilter);
+  }
+
+  public void getArchiveMessages(String login, MessageFilter filter, int _pieceSize, Visitor<Message> visitor) throws AdminException {
+    context.getArchiveMessages(login, filter, _pieceSize, visitor);
   }
 
   public enum ConfigType {

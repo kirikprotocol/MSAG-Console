@@ -6,7 +6,7 @@ import mobi.eyeline.informer.util.config.XmlConfigSection;
 /**
  * @author Aleksandr Khalitov
  */
-public class ArchiveSettings {
+public class ArchiveRequestSettings {
 
   private String resultsDir;
 
@@ -16,14 +16,14 @@ public class ArchiveSettings {
 
   private int executorsSize = 10;
 
-  public ArchiveSettings(ArchiveSettings settings) {
-    this.resultsDir = settings.resultsDir;
-    this.requestsDir = settings.requestsDir;
-    this.chunkSize = settings.chunkSize;
-    this.executorsSize = settings.executorsSize;
+  public ArchiveRequestSettings(ArchiveRequestSettings requestSettings) {
+    this.resultsDir = requestSettings.resultsDir;
+    this.requestsDir = requestSettings.requestsDir;
+    this.chunkSize = requestSettings.chunkSize;
+    this.executorsSize = requestSettings.executorsSize;
   }
 
-  public ArchiveSettings() {
+  public ArchiveRequestSettings() {
   }
 
   public String getResultsDir() {

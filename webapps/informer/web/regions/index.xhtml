@@ -71,30 +71,30 @@
 
       <eye:delimiter/>
 
-      <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="r">
-        <eye:row rowId="#{r.regionId}" innerData="#{!(empty r.masks)}">
+      <eye:dataTable value="#{regions.regionsModel}" selectedRows="#{regions.toRemove}" var="m">
+        <eye:row rowId="#{m.regionId}" innerData="#{!(empty m.masks)}">
 
           <eye:column name="name" title="#{regionBundle.name}" sortable="true" width="25%" align="center">
-            <h:commandLink value="#{r.name}" action="REGION_EDIT" title="#{msg['region.details']}">
-              <f:param name="REGION_ID" value="#{r.regionId}"/>
+            <h:commandLink value="#{m.name}" action="REGION_EDIT" title="#{msg['region.details']}">
+              <f:param name="REGION_ID" value="#{m.regionId}"/>
             </h:commandLink>
           </eye:column>
 
           <eye:column name="smsc" title="#{regionBundle.smsc}" sortable="true" width="25%" align="center">
-            <h:outputText value="#{r.smsc}"/>
+            <h:outputText value="#{m.smsc}"/>
           </eye:column>
 
           <eye:column name="timezone" title="#{regionBundle.timeZone}" sortable="true" width="25%" align="center">
-            <h:outputText value="#{r.timeZone}" converter="timeZoneConverter"/>
+            <h:outputText value="#{m.timeZone}" converter="timeZoneConverter"/>
           </eye:column>
 
           <eye:column name="maxPerSecond" title="#{regionBundle.maxSmsPerSecond}" sortable="true" width="25%" align="center">
-            <h:outputText value="#{r.maxSmsPerSecond}"/>
+            <h:outputText value="#{m.maxSmsPerSecond}"/>
           </eye:column>
 
           <f:facet name="innerData">
             <h:panelGroup>
-            <h:dataTable value="#{r.masks}" var="mask" >
+            <h:dataTable value="#{m.masks}" var="mask" >
               <h:column>
 
                   <h:outputText value="#{mask}" converter="addressConverter"/>

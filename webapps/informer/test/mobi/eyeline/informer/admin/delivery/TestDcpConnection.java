@@ -97,6 +97,7 @@ public class TestDcpConnection extends DcpConnection{
       throw new DeliveryException("interaction_error","");
     }
     Delivery d = delivery.cloneDelivery();
+    d.setDeliveryManager(null);
     d.setStatus(deliveries.get(delivery.getId()).getStatus());
     deliveries.put(delivery.getId(), d);
   }

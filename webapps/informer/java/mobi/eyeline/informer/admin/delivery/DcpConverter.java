@@ -143,6 +143,9 @@ class DcpConverter {
     if (di.hasSvcType()) {
       delivery.setSvcType(di.getSvcType());
     }
+    if(di.hasArchivationPeriod()) {
+      delivery.setArchiveTime(Integer.parseInt(di.getArchivationPeriod().substring(0, di.getArchivationPeriod().indexOf(":"))));
+    }
     delivery.setTransactionMode(di.getTransactionMode());
     delivery.setUseDataSm(di.getUseDataSm());
 
@@ -311,6 +314,14 @@ class DcpConverter {
     delivery.setStartDate(convertDateToDcpFormat(di.getStartDate()));
     if (di.getSvcType() != null) {
       delivery.setSvcType(di.getSvcType());
+    }
+    if(di.getArchiveTime() != null) {
+      StringBuilder sb = new StringBuilder(8);
+      if(di.getArchiveTime()<10) {
+        sb.append('0');
+      }
+      sb.append(di.getArchiveTime()).append(":00:00");
+      delivery.setArchivationPeriod(sb.toString());
     }
     delivery.setTransactionMode(di.isTransactionMode());
     delivery.setUseDataSm(di.isUseDataSm());

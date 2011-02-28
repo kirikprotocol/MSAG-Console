@@ -14,7 +14,12 @@ public abstract class Request {
 
   protected static final Logger logger = Logger.getLogger(Request.class);
 
-  public static enum Type {deliveries, messages}
+  public static enum Type {
+    deliveries, messages;
+    public String getType() {
+      return toString();
+    }
+  }
 
   protected int id;
 
@@ -26,13 +31,18 @@ public abstract class Request {
 
   protected String creater;
 
-  public static enum Status {NEW, IN_PROCCESS, CANCELED, FINISHED}
+  public static enum Status {
+    IN_PROCESS, CANCELED, FINISHED;
+    public String getStatus() {
+      return toString();
+    }
+  }
 
-  protected Date startDate = new Date();
+  protected Date from;
 
-  protected Date endDate;
+  protected Date till;
 
-  protected Status status = Status.NEW;
+  protected Status status = Status.IN_PROCESS;
 
   protected Request(Type type) {
     this.type = type;
@@ -46,20 +56,20 @@ public abstract class Request {
     this.creater = creater;
   }
 
-  public Date getStartDate() {
-    return startDate;
+  public Date getFrom() {
+    return from;
   }
 
-  void setStartDate(Date startDate) {
-    this.startDate = startDate;
+  void setFrom(Date from) {
+    this.from = from;
   }
 
-  public Date getEndDate() {
-    return endDate;
+  public Date getTill() {
+    return till;
   }
 
-  void setEndDate(Date endDate) {
-    this.endDate = endDate;
+  void setTill(Date till) {
+    this.till = till;
   }
 
   public Status getStatus() {
@@ -108,12 +118,12 @@ public abstract class Request {
 
     c.setInt("id", id);
 
-    if(startDate != null ) {
-      c.setString("startDate", sdf.format(startDate));
+    if(from != null ) {
+      c.setString("startDate", sdf.format(from));
     }
 
-    if(endDate != null) {
-      c.setString("endDate", sdf.format(endDate));
+    if(till != null) {
+      c.setString("endDate", sdf.format(till));
     }
 
     if(status != null) {
@@ -129,10 +139,10 @@ public abstract class Request {
 
     try{
       String date = c.getString("startDate", null);
-      startDate = date == null ? null : sdf.parse(date);
+      from = date == null ? null : sdf.parse(date);
 
       date = c.getString("endDate", null);
-      endDate = date == null ? null : sdf.parse(date);
+      till = date == null ? null : sdf.parse(date);
 
       creater = c.getString("creater");
 
@@ -158,8 +168,8 @@ public abstract class Request {
         ", type=" + type +
         ", progress=" + progress +
         ", creater='" + creater + '\'' +
-        ", startDate=" + startDate +
-        ", endDate=" + endDate +
+        ", from=" + from +
+        ", till=" + till +
         ", status=" + status +
         '}';
   }

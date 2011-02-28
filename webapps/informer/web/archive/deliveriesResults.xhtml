@@ -1,0 +1,101 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.admin.deliveries.archive.results.deliveries']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <eye:dataTableFilter bean="#{deliveriesResults}" clearAction="clearFilter" applyAction="query">
+        <h:panelGrid columns="6" columnClasses="column50WidthNoWrap, column300Width, column50WidthNoWrap, column300Width,column50WidthNoWrap, columnTopLeftAlign">
+
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.from_date']}"/>
+          <eye:inputDate value="#{deliveriesResults.from}" type="both" />
+
+          <h:outputText value="#{deliveryBundle.name}"/>
+          <h:inputText value="#{deliveriesResults.name}"/>
+
+          <h:outputText value="#{deliveryBundle.owner}" rendered="#{deliveriesResults.userInAdminRole}"/>
+          <h:selectOneMenu value="#{deliveriesResults.owner}" rendered="#{deliveriesResults.userInAdminRole}">
+            <f:selectItems value="#{deliveriesResults.uniqueUsers}"/>
+          </h:selectOneMenu>
+          <h:outputText value="&#160;" rendered="#{!deliveries.userInAdminRole}"/>
+          <h:outputText value="&#160;" rendered="#{!deliveries.userInAdminRole}"/>
+
+          <h:outputText style="white-space:nowrap;" value="#{msg['stat.page.till_date']}"/>
+          <eye:inputDate value="#{deliveriesResults.till}" type="both"/>
+
+          <h:outputText value="#{deliveryBundle.id}"/>
+          <h:inputText value="#{deliveriesResults.id}" converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.id}"/>
+
+        </h:panelGrid>
+      </eye:dataTableFilter>
+
+      <h:inputHidden id="reqId" value="#{deliveriesResults.reqId}"/>
+
+      <eye:delimiter/>
+
+      <eye:dataTable value="#{deliveriesResults.deliveries}" selectedRows="#{deliveriesResults.selected}" var="m">
+        <eye:row rowId="#{m.id}">
+          <eye:column name="id" title="#{deliveryBundle.id}" sortable="true" width="10%" align="left">
+            <h:outputText value="#{m.id}"/>
+          </eye:column>
+          <eye:column name="name" title="#{deliveryBundle.name}" sortable="true" width="30%" align="left" defaultSortOrder="asc">
+            <tr:commandLink text="#{m.name}" action="RESULT_DELIVERY" shortDesc="#{msg['archive.request.result.deliveries.options.desc']}">
+              <f:param name="reqId" value="#{deliveriesResults.reqId}"/>
+              <f:param name="action" value="DELIVERIES_RESULTS"/>
+              <f:param name="deliveryId" value="#{m.id}"/>
+            </tr:commandLink>
+          </eye:column>
+          <eye:column name="userId" title="#{deliveryBundle.owner}" sortable="true" width="20%" align="left" rendered="#{deliveriesResults.userInAdminRole}">
+            <h:outputText value="#{m.owner}" rendered="#{!m.userExist}"/>
+            <tr:commandLink text="#{m.owner}" action="USER_EDIT" shortDesc="#{msg['archive.request.result.deliveries.users.options.desc']}" rendered="#{m.userExist}">
+              <f:param name="userId" value="#{m.owner}"/>
+              <f:param name="user_edit_comeback" value="DELIVERIES_RESULTS"/>
+              <f:param name="user_edit_comeback_params" value="#{deliveriesResults.reqId}"/>
+            </tr:commandLink>
+          </eye:column>
+          <eye:column name="startDate" title="#{deliveryBundle.startDate}" sortable="true" width="20%" align="center">
+            <h:outputText value="#{m.startDate}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+          </eye:column>
+          <eye:column name="endDate" title="#{deliveryBundle.endDate}" sortable="true" width="20%" align="center">
+            <h:outputText value="#{m.endDate}">
+              <f:convertDateTime dateStyle="short" type="both" pattern="yyyy.MM.dd HH:mm"/>
+            </h:outputText>
+          </eye:column>
+        </eye:row>
+      </eye:dataTable>
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['archive.request.result.deliveries.requests']}" shortDesc="#{msg['archive.request.result.deliveries.requests.desc']}"
+                          action="ARCHIVE_LIST" immediate="true"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['archive.request.result.deliveries.statistics']}" shortDesc="#{msg['archive.request.result.deliveries.statistics.desc']}"
+                          action="#{deliveryMessagesByPeriod.setDeliveryParam}" actionListener="#{deliveriesResults.statForSelected}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>
+
+

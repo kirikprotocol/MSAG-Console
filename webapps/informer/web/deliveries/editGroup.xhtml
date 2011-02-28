@@ -108,6 +108,12 @@
       <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
       <tr:inputText id="emailNotification" value="#{deliveryGroupEdit.emailNotification}" simple="true" />
 
+      <h:selectBooleanCheckbox id="editArchiveTime" value="#{deliveryGroupEdit.editArchiveTime}" onchange="document.getElementById('archiveTime').disabled=!this.checked" rendered="#{deliveryGroupEdit.userInAdminRole}"/>
+      <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.archivate}" rendered="#{deliveryGroupEdit.userInAdminRole}"/>
+      <h:inputText id="archiveTime" value="#{deliveryGroupEdit.archiveTime}" validatorMessage="#{msg['invalid_param_value']} #{deliveryBundle.archivate}" rendered="#{deliveryGroupEdit.userInAdminRole}">
+        <f:validateLongRange/>
+      </h:inputText>
+
       <h:selectBooleanCheckbox id="editUseDataSm" value="#{deliveryGroupEdit.editUseDataSm}" onchange="document.getElementById('useDataSm').disabled=!this.checked" style="display:#{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
       <h:outputText style="white-space:nowrap;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.useDataSm}" />
       <h:selectBooleanCheckbox id="useDataSm" value="#{deliveryGroupEdit.useDataSm}" style="white-space:nowrap;display: #{deliveryGroupEdit.allowUssdPushDeliveries ? '' : 'none'}"/>
@@ -220,6 +226,7 @@
       }
       document.getElementById('smsNotification').disabled = !document.getElementById('editSmsNotification').checked;
       document.getElementById('emailNotification').disabled = !document.getElementById('editEmailNotification').checked;
+      document.getElementById('archiveTime').disabled = !document.getElementById('editArchiveTime').checked;
       document.getElementById('flash').disabled = !document.getElementById('editFlash').checked;
 
       document.getElementById('useDataSm').disabled=!document.getElementById('editUseDataSm').checked;

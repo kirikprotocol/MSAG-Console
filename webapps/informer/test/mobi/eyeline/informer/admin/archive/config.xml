@@ -1,0 +1,8 @@
+<config>
+
+  <section name="ArchiveDaemon">
+    <param name="host" type="string">adminHost</param>
+    <param name="port" type="int">8080</param>
+  </section>
+
+</config>

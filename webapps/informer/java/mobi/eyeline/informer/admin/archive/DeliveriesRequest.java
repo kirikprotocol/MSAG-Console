@@ -4,7 +4,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.util.validation.ValidationHelper;
 import mobi.eyeline.informer.util.config.XmlConfig;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -12,11 +11,7 @@ import java.util.Date;
  */
 public class DeliveriesRequest extends Request{
 
-  private static final ValidationHelper vh = new ValidationHelper(DeliveriesRequestPrototype.class);
-
-  private Date from;
-
-  private Date till;
+  private static final ValidationHelper vh = new ValidationHelper(DeliveriesRequest.class);
 
   private String deliveryName;
 
@@ -38,18 +33,8 @@ public class DeliveriesRequest extends Request{
     deliveryName = r.deliveryName;
     creater = r.creater;
     id = r.id;
-    startDate = r.startDate == null ? null : new Date(r.startDate.getTime());
-    endDate = r.endDate == null ? null : new Date(r.endDate.getTime());
     progress = r.progress;
     status = r.status;
-  }
-
-  void setFrom(Date from) {
-    this.from = from;
-  }
-
-  void setTill(Date till) {
-    this.till = till;
   }
 
   void setDeliveryName(String deliveryName) {
@@ -62,18 +47,6 @@ public class DeliveriesRequest extends Request{
 
   void setOwner(String owner) {
     this.owner = owner;
-  }
-
-  void setId(Integer id) {
-    this.id = id;
-  }
-
-  public Date getFrom() {
-    return from;
-  }
-
-  public Date getTill() {
-    return till;
   }
 
   public String getDeliveryName() {
@@ -113,12 +86,12 @@ public class DeliveriesRequest extends Request{
     if (creater != null ? !creater.equals(that.creater) : that.creater != null) return false;
     if (deliveryId != null ? !deliveryId.equals(that.deliveryId) : that.deliveryId != null) return false;
     if (deliveryName != null ? !deliveryName.equals(that.deliveryName) : that.deliveryName != null) return false;
-    if(endDate != null) {
-      if(that.endDate == null || endDate.getTime()/1000 != that.endDate.getTime()/1000) {
+    if(till != null) {
+      if(that.till == null || till.getTime()/1000 != that.till.getTime()/1000) {
         return false;
       }
     }else {
-      if(that.endDate != null) {
+      if(that.till != null) {
         return false;
       }
     }
@@ -134,25 +107,7 @@ public class DeliveriesRequest extends Request{
     if (id != that.id) return false;
     if (name != null ? !name.equals(that.name) : that.name != null) return false;
     if (owner != null ? !owner.equals(that.owner) : that.owner != null) return false;
-    if(startDate != null) {
-      if(that.startDate == null || startDate.getTime()/1000 != that.startDate.getTime()/1000) {
-        return false;
-      }
-    }else {
-      if(that.startDate != null) {
-        return false;
-      }
-    }
     if (status != that.status) return false;
-    if(till != null) {
-      if(that.till == null || till.getTime()/1000 != that.till.getTime()/1000) {
-        return false;
-      }
-    }else {
-      if(that.till != null) {
-        return false;
-      }
-    }
 
     return true;
   }
@@ -167,8 +122,6 @@ public class DeliveriesRequest extends Request{
     result = 31 * result + (deliveryId != null ? deliveryId.hashCode() : 0);
     result = 31 * result + (owner != null ? owner.hashCode() : 0);
     result = 31 * result + id;
-    result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
-    result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
     result = 31 * result + progress;
     result = 31 * result + (status != null ? status.hashCode() : 0);
     return result;
@@ -184,8 +137,6 @@ public class DeliveriesRequest extends Request{
 
     super.save(c);
 
-    final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-
     if(deliveryId != null) {
       c.setInt("deliveryId", deliveryId);
     }
@@ -197,14 +148,6 @@ public class DeliveriesRequest extends Request{
     if(owner != null) {
       c.setString("owner", owner);
     }
-
-    if(from != null) {
-      c.setString("from", sdf.format(from));
-    }
-
-    if(till != null) {
-      c.setString("till", sdf.format(till));
-    }
   }
 
   @Override
@@ -212,20 +155,12 @@ public class DeliveriesRequest extends Request{
 
     super.load(c);
 
-    final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-
     try{
 
       int dId = c.getInt("deliveryId", -1);
       deliveryId = dId == -1 ? null : dId;
       deliveryName = c.getString("deliveryName", null);
       owner = c.getString("owner", null);
-
-      String date = c.getString("from", null);
-      from = date == null ? null : sdf.parse(date);
-
-      date = c.getString("till", null);
-      till = date == null ? null : sdf.parse(date);
 
     }catch (Exception e){
       logger.error(e,e);

@@ -4,6 +4,7 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.UserDataConsts;
 import mobi.eyeline.informer.admin.delivery.Delivery;
 import mobi.eyeline.informer.admin.delivery.DeliveryMode;
+import mobi.eyeline.informer.admin.users.User;
 import mobi.eyeline.informer.util.Address;
 import mobi.eyeline.informer.util.Day;
 import mobi.eyeline.informer.util.Time;
@@ -64,6 +65,12 @@ public class DeliveryEditGroupController extends DeliveryController{
 
   private Address sourceAddress;
   private boolean editSourceAddress;
+
+
+
+  private boolean editArchiveTime;
+
+  private String archiveTime;
 
 
   public DeliveryEditGroupController() {
@@ -158,6 +165,16 @@ public class DeliveryEditGroupController extends DeliveryController{
               d.removeProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS);
             }
           }
+          if(editArchiveTime) {
+            if(archiveTime != null && (archiveTime = archiveTime.trim()).length() != 0) {
+              User u = config.getUser(d.getOwner());
+              if(u != null && u.isCreateArchive()) {
+                d.setArchiveTime(Integer.parseInt(archiveTime));
+              }
+            }else {
+              d.setArchiveTime(null);
+            }
+          }
           config.modifyDelivery(user.getLogin(), user.getPassword(), d);
         }
       }
@@ -166,6 +183,22 @@ public class DeliveryEditGroupController extends DeliveryController{
       addError(e);
     }
     return null;
+  }
+
+  public boolean isEditArchiveTime() {
+    return editArchiveTime;
+  }
+
+  public void setEditArchiveTime(boolean editArchiveTime) {
+    this.editArchiveTime = editArchiveTime;
+  }
+
+  public String getArchiveTime() {
+    return archiveTime;
+  }
+
+  public void setArchiveTime(String archiveTime) {
+    this.archiveTime = archiveTime;
   }
 
   public boolean isSmsDeliveryMode() {

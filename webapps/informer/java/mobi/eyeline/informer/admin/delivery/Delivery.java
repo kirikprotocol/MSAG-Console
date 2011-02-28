@@ -89,6 +89,8 @@ public class Delivery implements Serializable {
   private DeliveryManager m;
   private String login;
   private String password;
+  
+  private Integer archiveTime;
 
   Delivery() {
   }
@@ -350,6 +352,15 @@ public class Delivery implements Serializable {
     this.replaceMessage = replaceMessage;
   }
 
+  public Integer getArchiveTime() { 
+    loadDelivery();
+    return archiveTime;
+  }
+
+  public void setArchiveTime(Integer archiveTime) {
+    this.archiveTime = archiveTime;
+  }
+
   public String getSvcType() {
     loadDelivery();
     return svcType;
@@ -423,6 +434,7 @@ public class Delivery implements Serializable {
     if (startDate != null ? !dateFormat.format(startDate).equals(delivery.startDate == null ? null : dateFormat.format(delivery.startDate)) : delivery.startDate != null)
       return false;
     if (svcType != null ? !svcType.equals(delivery.svcType) : delivery.svcType != null) return false;
+    if (archiveTime != null ? !archiveTime.equals(delivery.archiveTime) : delivery.archiveTime != null) return false;
     if (validityPeriod != null ? !validityPeriod.equals(delivery.validityPeriod) : delivery.validityPeriod != null)
       return false;
     if (singleText != null ? !singleText.equals(delivery.singleText) : delivery.singleText != null)
@@ -485,6 +497,7 @@ public class Delivery implements Serializable {
     d.retryPolicy = retryPolicy;
 
     d.replaceMessage = replaceMessage;
+    d.archiveTime = archiveTime;
     d.svcType = svcType;
 
     d.sourceAddress = sourceAddress == null ? null : new Address(sourceAddress.getSimpleAddress());
@@ -522,6 +535,7 @@ public class Delivery implements Serializable {
     retryPolicy = d.retryPolicy;
 
     replaceMessage = d.replaceMessage;
+    archiveTime = d.archiveTime;
     svcType = d.svcType;
 
     sourceAddress = d.sourceAddress == null ? null : new Address(d.sourceAddress.getSimpleAddress());
@@ -555,6 +569,7 @@ public class Delivery implements Serializable {
     retryPolicy = d.retryPolicy;
 
     replaceMessage = d.replaceMessage;
+    archiveTime = d.archiveTime;
     svcType = d.svcType;
 
     sourceAddress = d.sourceAddress == null ? null : new Address(d.sourceAddress.getSimpleAddress());

@@ -23,9 +23,9 @@ import static org.junit.Assert.*;
 /**
  * @author Aleksandr Khalitov
  */
-public class ArchiveManagerTest {
+public class ArchiveRequestsManagerTest {
 
-  private ArchiveManager manager;
+  private ArchiveRequestsManager requestsManager;
 
   private TestDeliveryManager dm;
 
@@ -38,7 +38,7 @@ public class ArchiveManagerTest {
     final RequestStorage rs = new RequestMemoryStorage();
     final FileSystem fs = new TestFileSystem();
 
-    manager = new ArchiveManager(rs, new ArchiveContext() {
+    requestsManager = new ArchiveRequestsManager(rs, new ArchiveContext() {
       @Override
       public User getUser(String login) {
         User u = new User();
@@ -62,7 +62,7 @@ public class ArchiveManagerTest {
     if(resultDir != null) {
       TestUtils.recursiveDeleteFolder(resultDir);
     }
-    manager.shutdown();
+    requestsManager.shutdown();
     if(dm != null) {
       dm.shutdown();
     }
@@ -72,28 +72,28 @@ public class ArchiveManagerTest {
   public void checkDeliveriesEmptyName() throws AdminException {
     DeliveriesRequestPrototype request = createDeliveriesPrototype();
     request.setName(null);
-    manager.createRequest("", request);
+    requestsManager.createRequest("", request);
   }
 
   @Test(expected = AdminException.class)
   public void checkMessagesEmptyName() throws AdminException {
    MessagesRequestPrototype request = createMessagesPrototype();
     request.setName(null);
-    manager.createRequest("", request);
+    requestsManager.createRequest("", request);
   }
 
   @Test(expected = AdminException.class)
   public void checkMessagesEmptyFrom() throws AdminException {
    MessagesRequestPrototype request = createMessagesPrototype();
     request.setFrom(null);
-    manager.createRequest("", request);
+    requestsManager.createRequest("", request);
   }
 
   @Test(expected = AdminException.class)
   public void checkMessagesEmptyAddress() throws AdminException {
    MessagesRequestPrototype request = createMessagesPrototype();
     request.setAddress(null);
-    manager.createRequest("", request);
+    requestsManager.createRequest("", request);
   }
 
 
@@ -121,11 +121,11 @@ public class ArchiveManagerTest {
 
     DeliveriesRequestPrototype q = createDeliveriesPrototype();
 
-    DeliveriesRequest request = manager.createRequest("", q);
+    DeliveriesRequest request = requestsManager.createRequest("", q);
 
     assertNotNull(request.getId());
 
-    assertNotNull(manager.getRequest(request.getId()));
+    assertNotNull(requestsManager.getRequest(request.getId()));
 
   }
   @Test
@@ -133,11 +133,11 @@ public class ArchiveManagerTest {
 
     MessagesRequestPrototype q = createMessagesPrototype();
 
-    MessagesRequest request = manager.createRequest("", q);
+    MessagesRequest request = requestsManager.createRequest("", q);
 
     assertNotNull(request.getId());
 
-    assertNotNull(manager.getRequest(request.getId()));
+    assertNotNull(requestsManager.getRequest(request.getId()));
 
   }
 
@@ -146,11 +146,11 @@ public class ArchiveManagerTest {
 
     DeliveriesRequestPrototype q = createDeliveriesPrototype();
 
-    DeliveriesRequest request = manager.createRequest("", q);
+    DeliveriesRequest request = requestsManager.createRequest("", q);
 
-    manager.removeRequest(request.getId());
+    requestsManager.removeRequest(request.getId());
 
-    assertNull(manager.getRequest(request.getId()));
+    assertNull(requestsManager.getRequest(request.getId()));
 
   }
 
@@ -159,11 +159,11 @@ public class ArchiveManagerTest {
 
     MessagesRequestPrototype q = createMessagesPrototype();
 
-    MessagesRequest request = manager.createRequest("", q);
+    MessagesRequest request = requestsManager.createRequest("", q);
 
-    manager.removeRequest(request.getId());
+    requestsManager.removeRequest(request.getId());
 
-    assertNull(manager.getRequest(request.getId()));
+    assertNull(requestsManager.getRequest(request.getId()));
 
   }
 
@@ -171,22 +171,22 @@ public class ArchiveManagerTest {
   public void createdDeliveriesStatus() throws AdminException {
     DeliveriesRequestPrototype q = createDeliveriesPrototype();
 
-    DeliveriesRequest request = manager.createRequest("", q);
+    DeliveriesRequest request = requestsManager.createRequest("", q);
 
-    assertNotNull(manager.getRequest(request.getId()).getStatus());
+    assertNotNull(requestsManager.getRequest(request.getId()).getStatus());
 
-    assertNotSame(manager.getRequest(request.getId()).getStatus(), DeliveriesRequest.Status.CANCELED);
+    assertNotSame(requestsManager.getRequest(request.getId()).getStatus(), DeliveriesRequest.Status.CANCELED);
 
   }
   @Test
   public void createdMessagesStatus() throws AdminException {
     MessagesRequestPrototype q = createMessagesPrototype();
 
-   MessagesRequest request = manager.createRequest("", q);
+   MessagesRequest request = requestsManager.createRequest("", q);
 
-    assertNotNull(manager.getRequest(request.getId()).getStatus());
+    assertNotNull(requestsManager.getRequest(request.getId()).getStatus());
 
-    assertNotSame(manager.getRequest(request.getId()).getStatus(), DeliveriesRequest.Status.CANCELED);
+    assertNotSame(requestsManager.getRequest(request.getId()).getStatus(), DeliveriesRequest.Status.CANCELED);
 
   }
 
@@ -194,17 +194,17 @@ public class ArchiveManagerTest {
   @Test
   public void cancelDeliveries() throws AdminException {
     DeliveriesRequestPrototype q = createDeliveriesPrototype();
-    DeliveriesRequest request = manager.createRequest("", q);
-    manager.cancelRequest(request.getId());
-    assertEquals(manager.getRequest(request.getId()).getStatus(), DeliveriesRequest.Status.CANCELED);
+    DeliveriesRequest request = requestsManager.createRequest("", q);
+    requestsManager.cancelRequest(request.getId());
+    assertEquals(requestsManager.getRequest(request.getId()).getStatus(), DeliveriesRequest.Status.CANCELED);
   }
 
   @Test
   public void cancelMessages() throws AdminException {
     DeliveriesRequestPrototype q = createDeliveriesPrototype();
-    DeliveriesRequest request = manager.createRequest("", q);
-    manager.cancelRequest(request.getId());
-    assertEquals(manager.getRequest(request.getId()).getStatus(), DeliveriesRequest.Status.CANCELED);
+    DeliveriesRequest request = requestsManager.createRequest("", q);
+    requestsManager.cancelRequest(request.getId());
+    assertEquals(requestsManager.getRequest(request.getId()).getStatus(), DeliveriesRequest.Status.CANCELED);
   }
 
   private Delivery prepareDelivery() throws AdminException {
@@ -245,22 +245,11 @@ public class ArchiveManagerTest {
   }
 
   private void assertDeliveries(Delivery d, ArchiveDelivery delivery) {
-    assertEquals(delivery.getActivePeriodEnd(), d.getActivePeriodEnd());
-    assertEquals(delivery.getActivePeriodStart(), d.getActivePeriodStart());
-    assertArrayEquals(delivery.getActiveWeekDays(), d.getActiveWeekDays());
-    assertEquals(delivery.getDeliveryMode(), d.getDeliveryMode());
-    assertEquals(delivery.getEmailNotification(), d.getProperty(UserDataConsts.EMAIL_NOTIF_ADDRESS));
-    assertEquals(delivery.getSmsNotification().getSimpleAddress(), d.getProperty(UserDataConsts.SMS_NOTIF_ADDRESS));
     assertEquals(delivery.getStartDate().getTime() / 1000, d.getStartDate().getTime() / 1000);
     assertEquals(delivery.getEndDate().getTime() / 1000, d.getEndDate().getTime() / 1000);
     assertEquals(delivery.getName(), d.getName());
     assertEquals(delivery.getId(), d.getId());
     assertEquals(delivery.getOwner(), d.getOwner());
-    assertEquals(delivery.getPriority(), d.getPriority());
-    assertEquals(delivery.getRetryPolicy(), d.getRetryPolicy());
-    assertEquals(delivery.isRetryOnFail(), d.isRetryOnFail());
-    assertEquals(delivery.isUseDataSm(), d.isUseDataSm());
-    assertEquals(delivery.getSourceAddress(), d.getSourceAddress());
   }
 
   private void assertMessage(ArchiveMessage m, Delivery d) {
@@ -274,7 +263,7 @@ public class ArchiveManagerTest {
   @Test
   public void checkDeliveriesResult() throws AdminException, InterruptedException {
     DeliveriesRequestPrototype q = createDeliveriesPrototype();
-    DeliveriesRequest request = manager.createRequest("", q);
+    DeliveriesRequest request = requestsManager.createRequest("", q);
 
     Request r;
     long wait = 0;
@@ -284,12 +273,10 @@ public class ArchiveManagerTest {
       }
       Thread.sleep(500);
       wait+=1000;
-      r = manager.getRequest(request.getId());
+      r = requestsManager.getRequest(request.getId());
     }while (r.getStatus() != Request.Status.FINISHED);
 
     assertEquals(r.getProgress(), 100);
-    assertNotNull(r.getStartDate());
-    assertNotNull(r.getEndDate());
   }
 
   @Test
@@ -297,7 +284,7 @@ public class ArchiveManagerTest {
     final Delivery d = prepareDelivery();
 
     MessagesRequestPrototype q = createMessagesPrototype();
-    MessagesRequest request = manager.createRequest("", q);
+    MessagesRequest request = requestsManager.createRequest("", q);
 
     Request r;
     long wait = 0;
@@ -307,14 +294,12 @@ public class ArchiveManagerTest {
       }
       Thread.sleep(500);
       wait+=1000;
-      r = manager.getRequest(request.getId());
+      r = requestsManager.getRequest(request.getId());
     }while (r.getStatus() != Request.Status.FINISHED);
 
     assertEquals(r.getProgress(), 100);
-    assertNotNull(r.getStartDate());
-    assertNotNull(r.getEndDate());
 
-    manager.getMessagesResult(r.getId(), new Visitor<ArchiveMessage>() {
+    requestsManager.getMessagesResult(r.getId(), new Visitor<ArchiveMessage>() {
       @Override
       public boolean visit(ArchiveMessage m) throws AdminException {
         assertMessage(m, d);
@@ -328,7 +313,7 @@ public class ArchiveManagerTest {
     final Delivery d = prepareDelivery();
 
     MessagesRequestPrototype q = createMessagesPrototype();
-    MessagesRequest request = manager.createRequest("", q);
+    MessagesRequest request = requestsManager.createRequest("", q);
 
     Request r;
     long wait = 0;
@@ -338,10 +323,10 @@ public class ArchiveManagerTest {
       }
       Thread.sleep(500);
       wait+=1000;
-      r = manager.getRequest(request.getId());
+      r = requestsManager.getRequest(request.getId());
     }while (r.getStatus() != Request.Status.FINISHED);
 
-    manager.getMessagesResult(r.getId(), new Visitor<ArchiveMessage>() {
+    requestsManager.getMessagesResult(r.getId(), new Visitor<ArchiveMessage>() {
       @Override
       public boolean visit(ArchiveMessage m) throws AdminException {
         assertMessage(m, d);
@@ -355,7 +340,7 @@ public class ArchiveManagerTest {
     final Delivery d = prepareDelivery();
 
     DeliveriesRequestPrototype q = createDeliveriesPrototype();
-    DeliveriesRequest request = manager.createRequest("", q);
+    DeliveriesRequest request = requestsManager.createRequest("", q);
 
     Request r;
     long wait = 0;
@@ -365,10 +350,10 @@ public class ArchiveManagerTest {
       }
       Thread.sleep(500);
       wait+=1000;
-      r = manager.getRequest(request.getId());
+      r = requestsManager.getRequest(request.getId());
     }while (r.getStatus() != Request.Status.FINISHED);
 
-    manager.getDeliveriesResult(r.getId(), new Visitor<ArchiveDelivery>() {
+    requestsManager.getDeliveriesResult(r.getId(), new Visitor<ArchiveDelivery>() {
       @Override
       public boolean visit(ArchiveDelivery delivery) throws AdminException {
         assertDeliveries(d, delivery);

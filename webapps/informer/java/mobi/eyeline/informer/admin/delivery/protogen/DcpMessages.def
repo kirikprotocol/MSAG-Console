@@ -89,6 +89,8 @@ message DeliveryInfo
   bool finalDlvRecords 25
   bool finalMsgRecords 26
   
+  //hh:mm:ss
+  string archivationPeriod 27 opt
 end
 
 enum byte MessageType

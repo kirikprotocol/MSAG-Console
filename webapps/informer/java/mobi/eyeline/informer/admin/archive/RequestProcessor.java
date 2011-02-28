@@ -5,7 +5,6 @@ import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.InitException;
 import org.apache.log4j.Logger;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -56,8 +55,7 @@ class RequestProcessor {
           }
           r.execute(executor);
           requestStorage.changeStatus(r.getId(), Request.Status.FINISHED);
-          requestStorage.setEndDate(r.getId(), new Date());
-        } catch (AdminException e) {
+        } catch (Exception e) {
           logger.error(e, e);
         } finally {
           try {

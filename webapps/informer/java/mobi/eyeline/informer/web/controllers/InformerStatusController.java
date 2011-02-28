@@ -24,6 +24,10 @@ public class InformerStatusController extends InformerController {
   private List<String> ftpServerHosts;
   private String ftpServerSwitchTo;
 
+  private String archiveDaemonOnlineHost;
+  private List<String> archiveDaemonHosts;
+  private String archiveDaemonSwitchTo;
+
   public InformerStatusController() {
     try {
       reload();
@@ -41,6 +45,12 @@ public class InformerStatusController extends InformerController {
       this.ftpServerOnlineHost = c.getFtpServerOnlineHost();
     } else {
       ftpServerHosts = Collections.emptyList();
+    }
+    if (c.isArchiveDaemonDeployed()) {
+      this.archiveDaemonHosts = c.getArchiveDaemonHosts();
+      this.archiveDaemonOnlineHost = c.getArchiveDaemonOnlineHost();
+    } else {
+      archiveDaemonHosts = Collections.emptyList();
     }
   }
 
@@ -107,10 +117,26 @@ public class InformerStatusController extends InformerController {
     return getConfig().isFtpServerDeployed();
   }
 
+  public boolean isArchiveDaemonDeployed() {
+    return getConfig().isArchiveDaemonDeployed();
+  }
+
   public String startFtpServer() {
     if (ftpServerOnlineHost == null) {
       try {
         getConfig().startFtpServer(getUserName());
+        reload();
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return null;
+  }
+
+  public String startArchiveDaemon() {
+    if (archiveDaemonOnlineHost == null) {
+      try {
+        getConfig().startArchiveDaemon(getUserName());
         reload();
       } catch (AdminException e) {
         addError(e);
@@ -164,6 +190,53 @@ public class InformerStatusController extends InformerController {
 
   public void setFtpServerSwitchTo(String ftpServerSwitchTo) {
     this.ftpServerSwitchTo = ftpServerSwitchTo;
+  }
+
+  public String stopArchiveDaemon() {
+    if (archiveDaemonOnlineHost != null) {
+      try {
+        getConfig().stopArchiveDaemon(getUserName());
+        reload();
+      } catch (AdminException e) {
+        addError(e);
+      }
+    }
+    return null;
+  }
+
+  public String switchArchiveDaemonHost() {
+    try {
+      getConfig().switchArchiveDaemon(archiveDaemonSwitchTo, getUserName());
+      reload();
+    } catch (AdminException e) {
+      addError(e);
+    }
+    return null;
+  }
+
+  public String getArchiveDaemonOnlineHost() {
+    return archiveDaemonOnlineHost;
+  }
+
+  public List<SelectItem> getArchiveDaemonHosts() {
+    List<SelectItem> items = new ArrayList<SelectItem>(archiveDaemonHosts.size());
+    for (String host : archiveDaemonHosts) {
+      if (archiveDaemonOnlineHost == null || !host.equals(archiveDaemonOnlineHost))
+        items.add(new SelectItem(host, host));
+    }
+    return items;
+  }
+
+  public boolean isArchiveDaemonSwitchAllowed() {
+    return archiveDaemonHosts != null && archiveDaemonHosts.size() > 1;
+  }
+
+  public String getArchiveDaemonSwitchTo() {
+    return archiveDaemonSwitchTo;
+  }
+
+  public void setArchiveDaemonSwitchTo(String archiveDaemonSwitchTo) {
+    this.archiveDaemonSwitchTo = archiveDaemonSwitchTo;
   }
 
 }

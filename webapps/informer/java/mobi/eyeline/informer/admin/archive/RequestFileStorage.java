@@ -13,8 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,7 +47,7 @@ class RequestFileStorage implements RequestStorage {
       try {
         Request r = loadRequest(f);
         if(!isStatusFinished(r.getStatus())) {
-          r.setStatus(DeliveriesRequest.Status.NEW);
+          r.setStatus(DeliveriesRequest.Status.IN_PROCESS);
         }
         requests.put(r.getId(), r);
       } catch (Exception e) {
@@ -89,8 +88,8 @@ class RequestFileStorage implements RequestStorage {
   }
 
   @Override
-  public Collection<Request> getRequests() throws AdminException {
-    Collection<Request> result = new ArrayList<Request>(requests.size());
+  public List<Request> getRequests() throws AdminException {
+    List<Request> result = new ArrayList<Request>(requests.size());
     for(Request r : requests.values()) {
       result.add(r.copy());
     }
@@ -103,21 +102,6 @@ class RequestFileStorage implements RequestStorage {
       throw new ArchiveException("request_not_found", Integer.toString(requestId));
     }
     request.setStatus(status);
-    try {
-      saveRequest(new File(requestsDir, buildFileName(request)), request);
-    } catch (Exception e) {
-      logger.error(e,e);
-      throw new ArchiveException("internal_error");
-    }
-  }
-
-  @Override
-  public synchronized void setEndDate(int requestId, Date date) throws AdminException {
-    Request request = requests.get(requestId);
-    if(request == null) {
-      throw new ArchiveException("request_not_found", Integer.toString(requestId));
-    }
-    request.setEndDate(date);
     try {
       saveRequest(new File(requestsDir, buildFileName(request)), request);
     } catch (Exception e) {

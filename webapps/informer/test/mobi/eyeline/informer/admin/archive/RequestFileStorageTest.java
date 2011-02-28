@@ -44,14 +44,12 @@ public class RequestFileStorageTest {
     r.setCreater("me");
     r.setDeliveryId(1024);
     r.setDeliveryName("my_delivery");
-    r.setEndDate(new Date());
     r.setFrom(new Date(12313131));
     r.setTill(new Date(43434343));
     r.setId(1);
     r.setName("my_request");
     r.setOwner("a");
-    r.setStartDate(new Date(0));
-    r.setStatus(DeliveriesRequest.Status.IN_PROCCESS);
+    r.setStatus(DeliveriesRequest.Status.IN_PROCESS);
     return r;
   }
 
@@ -59,13 +57,11 @@ public class RequestFileStorageTest {
     MessagesRequest r = new MessagesRequest();
     r.setCreater("me");
     r.setAddress(new Address("+79139489906"));
-    r.setEndDate(new Date());
     r.setFrom(new Date(12313131));
     r.setTill(new Date(43434343));
     r.setId(1);
     r.setName("my_request");
-    r.setStartDate(new Date(0));
-    r.setStatus(DeliveriesRequest.Status.IN_PROCCESS);
+    r.setStatus(DeliveriesRequest.Status.IN_PROCESS);
     return r;
   }
 

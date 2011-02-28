@@ -2,9 +2,9 @@ package mobi.eyeline.informer.admin.archive;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.util.Collection;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,14 +33,6 @@ public class RequestMemoryStorage implements RequestStorage {
     r.setStatus(status);
   }
 
-  public void setEndDate(int requestId, Date date) throws AdminException {
-    Request r = requests.get(requestId);
-    if(r == null) {
-      throw new ArchiveException("request_not_found", Integer.toString(requestId));
-    }
-    r.setEndDate(date);
-  }
-
   @Override
   public void rename(int requestId, String name) throws AdminException {
     Request r = requests.get(requestId);
@@ -56,7 +48,7 @@ public class RequestMemoryStorage implements RequestStorage {
   }
 
   @Override
-  public Collection<Request> getRequests() throws AdminException {
-    return requests.values();
+  public List<Request> getRequests() throws AdminException {
+    return new ArrayList<Request>(requests.values());
   }
 }

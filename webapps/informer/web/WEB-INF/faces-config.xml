@@ -62,6 +62,16 @@
       <var>notificationBundle</var>
     </resource-bundle>
 
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.archive.DeliveriesRequest</base-name>
+      <var>deliveriesRBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
+      <base-name>mobi.eyeline.informer.admin.archive.MessagesRequest</base-name>
+      <var>messagesRBundle</var>
+    </resource-bundle>
+
   </application>
 
   <converter>
@@ -126,6 +136,16 @@
   <converter>
     <converter-id>protocolConverter</converter-id>
     <converter-class>mobi.eyeline.informer.web.controllers.users.CpProtocolConverter</converter-class>
+  </converter>
+
+  <converter>
+    <converter-id>requestTypeConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.archive.RequestTypeConverter</converter-class>
+  </converter>
+
+  <converter>
+    <converter-id>requestStatusConverter</converter-id>
+    <converter-class>mobi.eyeline.informer.web.controllers.archive.RequestStatusConverter</converter-class>
   </converter>
 
   <render-kit>
@@ -442,6 +462,42 @@
       <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+      <managed-bean-name>requests</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.archive.RequestListController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>deliveriesRequest</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.archive.DeliveriesRequestController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>messagesRequest</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.archive.MessagesRequestController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>deliveriesResults</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.archive.DeliveriesResultController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>messagesResults</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.archive.MessagesResultController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+      <managed-bean-name>archiveDelivery</managed-bean-name>
+      <managed-bean-class>mobi.eyeline.informer.web.controllers.archive.DeliveryController</managed-bean-class>
+      <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
 
   <navigation-rule>
     <navigation-case>
@@ -643,6 +699,38 @@
       <from-outcome>CP_RESOURCE_LIST</from-outcome>
       <to-view-id>/users/cpResourceList.xhtml</to-view-id>
       <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>ARCHIVE_LIST</from-outcome>
+      <to-view-id>/archive/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>DELIVERIES_REQUEST</from-outcome>
+      <to-view-id>/archive/deliveriesRequest.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>MESSAGES_REQUEST</from-outcome>
+      <to-view-id>/archive/messagesRequest.xhtml</to-view-id>
+    </navigation-case>
+
+
+    <navigation-case>
+      <from-outcome>DELIVERIES_RESULTS</from-outcome>
+      <to-view-id>/archive/deliveriesResults.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>MESSAGES_RESULTS</from-outcome>
+      <to-view-id>/archive/messagesResults.xhtml</to-view-id>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>RESULT_DELIVERY</from-outcome>
+      <to-view-id>/archive/delivery.xhtml</to-view-id>
     </navigation-case>
 
   </navigation-rule>

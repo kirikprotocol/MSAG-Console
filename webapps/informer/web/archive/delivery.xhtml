@@ -1,0 +1,217 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:c="http://java.sun.com/jstl/core"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['archive.request.result.delivery']}"/>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <tr:inputHidden id="deliveryId" value="#{archiveDelivery.deliveryId}"/>
+      <tr:inputHidden id="reqId" value="#{archiveDelivery.reqId}"/>
+      <tr:inputHidden id="action" value="#{archiveDelivery.comeBackAction}"/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['archive.request.requests']}" shortDesc="#{msg['archive.request.requests.desc']}"
+                          action="#{archiveDelivery.getComeBackAction}">
+            <f:param name="reqId" value="#{archiveDelivery.reqId}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
+            <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
+            <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
+            <f:param name="archive" value="true"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
+
+      <eye:delimiter/>
+
+      <eye:pageSubtitle value="#{msg['delivery.edit.settings']}"/>
+
+      <eye:delimiter/>
+
+      <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px;" columnClasses="column100Width, columnTopLeftAlign" >
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.name}"/>
+        <h:outputText value="#{archiveDelivery.delivery.name}"/>
+
+        <h:outputText value="#{deliveryBundle.owner}" rendered="#{userSession.userInAdminRole}"/>
+        <h:outputText value="#{archiveDelivery.delivery.owner}" rendered="#{userSession.userInAdminRole and !archiveDelivery.ownerExist}"/>
+        <tr:commandLink text="#{archiveDelivery.delivery.owner}" action="USER_EDIT" shortDesc="#{msg['archive.request.result.deliveries.users.options.desc']}" rendered="#{userSession.userInAdminRole and archiveDelivery.ownerExist}">
+          <f:param name="userId" value="#{archiveDelivery.delivery.owner}"/>
+          <f:param name="user_edit_comeback" value="RESULT_DELIVERY"/>
+          <f:param name="user_edit_comeback_params" value="#{archiveDelivery.reqId},#{archiveDelivery.deliveryId},#{archiveDelivery.comeBackAction}"/>
+        </tr:commandLink>
+
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.sourceAddress}"/>
+        <h:outputText converter="addressConverter" value="#{archiveDelivery.delivery.sourceAddress}"/>
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.startDate}"/>
+        <h:outputText value="#{archiveDelivery.delivery.startDate}">
+          <f:convertDateTime dateStyle="short" type="both" pattern="dd.MM.yyyy HH:mm"/>
+        </h:outputText>
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.endDate}"/>
+        <h:outputText value="#{archiveDelivery.delivery.endDate}" rendered="#{archiveDelivery.delivery.endDate != null}">
+          <f:convertDateTime dateStyle="short" type="both"/>
+        </h:outputText>
+        <h:outputText value="-" rendered="#{archiveDelivery.delivery.endDate == null}"/>
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.activeWeekDays}"/>
+        <h:panelGrid columns="2" columnClasses="column100Width, columnTopLeftAlign">
+          <h:selectManyCheckbox disabled="true" converterMessage="#{msg['invalid_param_value']} #{deliveryBundle.activeWeekDays}"
+                                value="#{archiveDelivery.delivery.activeWeekDays}" converter="weekDaysConverter">
+            <f:selectItems value="#{archiveDelivery.allDays}"/>
+          </h:selectManyCheckbox>
+          <h:outputText value="&#160;"/>
+        </h:panelGrid>
+
+
+        <h:outputText rendered="#{archiveDelivery.userInAdminRole}" style="white-space:nowrap;" value="#{msg['delivery.edit.activity.period']}"/>
+        <h:panelGroup rendered="#{archiveDelivery.userInAdminRole}">
+          <h:outputText value="#{archiveDelivery.activePeriodStart}"/>
+          <h:outputText value=" - "/>
+          <h:outputText value="#{archiveDelivery.activePeriodEnd}"/>
+        </h:panelGroup>
+
+        <h:outputText rendered="#{archiveDelivery.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.priority}"/>
+        <h:outputText rendered="#{archiveDelivery.userInAdminRole}" value="#{archiveDelivery.delivery.priority}"/>
+
+        <h:outputText rendered="#{archiveDelivery.userInAdminRole}" style="white-space:nowrap;" value="#{deliveryBundle.retryPolicy}"/>
+        <h:panelGroup rendered="#{archiveDelivery.userInAdminRole}">
+          <h:outputText value="#{msg['user.edit.retry.off']}" rendered="#{!archiveDelivery.delivery.retryOnFail}"/>
+          <h:outputText value="#{msg['user.edit.retry.default']}" rendered="#{archiveDelivery.delivery.retryOnFail and (archiveDelivery.delivery.retryPolicy == null or archiveDelivery.delivery.retryPolicy == '')}"/>
+          <h:outputText value="#{msg['user.edit.retry.custom']} #{archiveDelivery.delivery.retryPolicy}" rendered="#{archiveDelivery.delivery.retryOnFail and (archiveDelivery.delivery.retryPolicy != null)}"/>
+        </h:panelGroup>
+
+        <h:outputText rendered="#{archiveDelivery.userInAdminRole}"  id="vPeriodLabel" style="white-space:nowrap;" value="#{deliveryBundle.validityPeriod}"/>
+        <h:outputText rendered="#{archiveDelivery.userInAdminRole}" id="vPeriod" value="#{archiveDelivery.validityPeriod == null ? '-' : archiveDelivery.validityPeriod}" />
+
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.smsNotificationAddress}"/>
+        <h:outputText value="#{archiveDelivery.smsNotificationAddress == null ? '-' : archiveDelivery.smsNotificationAddress}"/>
+
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.emailNotificationAddress}"/>
+        <h:outputText value="#{archiveDelivery.emailNotificationAddress == null ? '-' : archiveDelivery.emailNotificationAddress}"/>
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.singleText}" rendered="#{archiveDelivery.delivery.type.value == 'SingleText'}"/>
+        <h:panelGrid columns="1" rendered="#{archiveDelivery.delivery.type.value == 'SingleText'}">
+          <tr:inputText simple="true" readOnly="true" rows="3" value="#{archiveDelivery.delivery.singleText}"/>
+        </h:panelGrid>
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretMessage}" rendered="#{archiveDelivery.secret}"/>
+        <h:outputText value="#{archiveDelivery.secretMessage}" rendered="#{archiveDelivery.secret}"/>
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.secretFlash}" rendered="#{archiveDelivery.secret}"/>
+        <h:outputText value="#{archiveDelivery.flashSecret ? msg['archive.request.result.delivery.enabled'] : msg['archive.request.result.delivery.disabled']}" rendered="#{archiveDelivery.secret}"/>
+
+        <h:outputText style="white-space:nowrap; display: #{archiveDelivery.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.useDataSm}"/>
+        <h:outputText value="#{archiveDelivery.delivery.useDataSm ? msg['archive.request.result.delivery.enabled'] : msg['archive.request.result.delivery.disabled']}" style="white-space:nowrap; display: #{archiveDelivery.allowUssdPushDeliveries ? '' : 'none'}"/>
+
+        <h:outputText style="white-space:nowrap; display: #{archiveDelivery.allowUssdPushDeliveries ? '' : 'none'}" value="#{deliveryBundle.deliveryMode}"/>
+        <h:outputText value="#{archiveDelivery.deliveryMode}" style="display: #{archiveDelivery.allowUssdPushDeliveries ? '' : 'none'}"/>
+
+        <h:outputText style="white-space:nowrap;" value="#{deliveryBundle.flash}" rendered="#{archiveDelivery.deliveryMode == 'SMS'}"/>
+        <h:outputText value="#{archiveDelivery.delivery.flash ? msg['archive.request.result.delivery.enabled'] : msg['archive.request.result.delivery.disabled']}" rendered="#{archiveDelivery.deliveryMode == 'SMS'}"/>
+
+        <h:outputText rendered="#{archiveDelivery.userInAdminRole and archiveDelivery.deliveryMode == 'SMS'}" style="white-space:nowrap;" value="#{deliveryBundle.transactionMode}"/>
+        <h:outputText rendered="#{archiveDelivery.userInAdminRole and archiveDelivery.deliveryMode == 'SMS'}"  value="#{archiveDelivery.delivery.transactionMode ? msg['archive.request.result.delivery.enabled'] : msg['archive.request.result.delivery.disabled']}"/>
+
+      </h:panelGrid>
+
+      <eye:delimiter/>
+
+
+      <h:panelGrid columns="2" columnClasses="column50ProcWidthTop, columnTopLeftAlign">
+
+        <h:panelGroup>
+
+          <eye:pageSubtitle value="#{msg['delivery.edit.counters']}"/>
+
+          <eye:delimiter/>
+
+          <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px" columnClasses="column100WidthTopLeft, columnTopLeftAlign">
+            <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.edit.messages.delivered']}"/>
+            <h:outputText style="white-space:nowrap;" value="#{archiveDelivery.status.deliveredMessages}"/>
+
+            <h:outputText style="white-space:nowrap; font-weight: bold" value="#{msg['delivery.edit.messages.failed']}"/>
+            <h:outputText style="white-space:nowrap;" value="#{archiveDelivery.status.failedMessages + archiveDelivery.status.expiredMessages}"/>
+
+            <h:outputText style="white-space:nowrap; font-weight: bold; border-bottom: 1px solid BLACK;" value="#{msg['delivery.messages.total']}"/>
+            <h:outputText style="white-space:nowrap; font-weight: bold; border-bottom: 1px solid BLACK;" value="#{archiveDelivery.status.deliveredMessages + archiveDelivery.status.failedMessages + archiveDelivery.status.expiredMessages}"/>
+          </h:panelGrid>
+
+        </h:panelGroup>
+
+        <h:panelGroup>
+          <c:set var="nm" value="delivery.status.#{archiveDelivery.status.deliveryState.status}"/>
+
+          <eye:pageSubtitle value="#{msg['delivery.edit.status']} : #{msg[nm]}"/>
+
+          <eye:delimiter/>
+
+          <h:panelGrid columns="2" styleClass="properties_list" style="padding-left: 10px" columnClasses="column100Width, columnTopLeftAlign" >
+            <c:forEach items="#{archiveDelivery.statusHistory.historyItems}" var="item">
+
+              <c:set var="nm1" value="delivery.status.#{item.status}"/>
+
+              <tr:outputText value="#{item.date}" inlineStyle="white-space:nowrap;font-weight: bold">
+                <f:convertDateTime dateStyle="short" type="both"/>
+              </tr:outputText>
+
+              <h:outputText value=" : #{msg[nm1]}"/>
+            </c:forEach>
+          </h:panelGrid>
+        </h:panelGroup>
+
+      </h:panelGrid>
+
+
+      <eye:delimiter/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['archive.request.requests']}" shortDesc="#{msg['archive.request.requests.desc']}"
+                          action="#{archiveDelivery.getComeBackAction}">
+            <f:param name="reqId" value="#{archiveDelivery.reqId}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <tr:commandLink text="#{msg['informer.stats']}" action="#{deliveryMessagesByPeriod.setDeliveryParam}" shortDesc="#{msg['delivery.details.stats']}">
+            <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['informer.deliveries.messages']}" action="MESSAGES" shortDesc="#{msg['delivery.details.msgs']}">
+            <f:param name="delivery" value="#{archiveDelivery.deliveryId}"/>
+            <f:param name="archive" value="true"/>
+          </tr:commandLink>
+        </eye:button>
+      </eye:buttons>
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

@@ -1,7 +1,10 @@
 package mobi.eyeline.informer.admin.archive;
 
 import mobi.eyeline.informer.admin.AdminException;
-import mobi.eyeline.informer.admin.delivery.*;
+import mobi.eyeline.informer.admin.InitException;
+import mobi.eyeline.informer.admin.delivery.Delivery;
+import mobi.eyeline.informer.admin.delivery.Message;
+import mobi.eyeline.informer.admin.delivery.Visitor;
 import mobi.eyeline.informer.admin.filesystem.FileSystem;
 import org.apache.log4j.Logger;
 
@@ -18,21 +21,24 @@ class ResultsManager {
 
   private FileSystem fs;
 
-  public ResultsManager(File resultsDir, FileSystem fs) {
+  ResultsManager(File resultsDir, FileSystem fs) throws InitException{
     this.resultsDir = resultsDir;
+    if(!resultsDir.exists() && !resultsDir.mkdirs()) {
+      throw new InitException("Can't create dir: "+resultsDir.getAbsolutePath());
+    }
     this.fs = fs;
   }
 
-  public DeliveriesResult createDeliveriesResutls(int requestId) throws AdminException{
+  DeliveriesResult createDeliveriesResutls(int requestId) throws AdminException{
     return new DeliveriesResult(requestId);
   }
 
-  public MessagesResult createMessagesResutls(int requestId) throws AdminException{
+  MessagesResult createMessagesResutls(int requestId) throws AdminException{
     return new MessagesResult(requestId);
   }
 
-  public void getDeliveriesResults(int requestId, Visitor<ArchiveDelivery> visitor) throws AdminException {
-    File file = new File(resultsDir, Request.Type.deliveries+"."+requestId+".csv");
+  void getDeliveriesResults(int requestId, Visitor<ArchiveDelivery> visitor) throws AdminException {
+    File file = new File(resultsDir, buildDeliveriesFile(requestId));
     if(!file.exists()) {
       logger.warn("Results don't exist: requestId="+requestId);
       return;
@@ -65,8 +71,8 @@ class ResultsManager {
     }
   }
 
-  public void getMessagesResults(int requestId, Visitor<ArchiveMessage> visitor) throws AdminException {
-    File file = new File(resultsDir, Request.Type.messages+"."+requestId+".csv");
+  void getMessagesResults(int requestId, Visitor<ArchiveMessage> visitor) throws AdminException {
+    File file = new File(resultsDir, buildMessagesFile(requestId));
     if(!file.exists()) {
       logger.warn("Results don't exist: requestId="+requestId);
       return;
@@ -87,7 +93,6 @@ class ResultsManager {
           }
         }
       } catch (Exception e) {
-        e.printStackTrace();
         logger.error(e,e);
         throw new ArchiveException("internal_error");
       }
@@ -100,7 +105,20 @@ class ResultsManager {
     }
   }
 
+  void removeDeliveriesResult(int requestId) throws AdminException {
+    fs.delete(new File(resultsDir, buildDeliveriesFile(requestId)));
+  }
+  void removeMessagesResult(int requestId) throws AdminException {
+    fs.delete(new File(resultsDir, buildMessagesFile(requestId)));
+  }
 
+  private static String buildDeliveriesFile(int requestId) {
+    return Request.Type.deliveries+"."+requestId+".csv";
+  }
+
+  private static String buildMessagesFile(int requestId) {
+    return Request.Type.messages+"."+requestId+".csv";
+  }
 
   class DeliveriesResult {
 
@@ -108,11 +126,11 @@ class ResultsManager {
 
     private DeliveriesResult(int requestId) throws AdminException {
       w = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(
-          new File(resultsDir, Request.Type.deliveries+"."+requestId+".csv"), false))));
+          new File(resultsDir, buildDeliveriesFile(requestId)), false))));
     }
 
-    void write(Delivery delivery, DeliveryStatistics statistics, DeliveryStatusHistory statusHistory) {
-        RequestSerializer.serialize(w, delivery, statistics, statusHistory);
+    void write(Delivery delivery) {
+      RequestSerializer.serialize(w, delivery);
     }
 
     void close() {
@@ -129,11 +147,11 @@ class ResultsManager {
 
     private MessagesResult(int requestId) throws AdminException {
       w = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(
-          new File(resultsDir, Request.Type.messages+"."+requestId+".csv"), false))));
+          new File(resultsDir, buildMessagesFile(requestId)), false))));
     }
 
     void write(Delivery delivery, Message message) {
-        RequestSerializer.serialize(w, delivery, message);
+      RequestSerializer.serialize(w, delivery, message);
     }
 
     void close() {

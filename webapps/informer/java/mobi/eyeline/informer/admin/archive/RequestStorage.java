@@ -2,8 +2,7 @@ package mobi.eyeline.informer.admin.archive;
 
 import mobi.eyeline.informer.admin.AdminException;
 
-import java.util.Collection;
-import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -17,12 +16,10 @@ public interface RequestStorage {
 
   public void changeStatus(int requestId, Request.Status status) throws AdminException;
 
-  public void setEndDate(int requestId, Date date) throws AdminException;
-
   public void rename(int requestId, String name) throws AdminException;
 
   public void removeRequest(int requestId) throws AdminException;
 
-  public Collection<Request> getRequests() throws AdminException;
+  public List<Request> getRequests() throws AdminException;
 
 }

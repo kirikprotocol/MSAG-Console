@@ -36,6 +36,7 @@
           <eye:menubar label="#{msg['informer.deliveries']}" rendered="#{userSession.logined}">
             <eye:menubaritem><h:commandLink value="#{msg['informer.deliveries.list']}" action="DELIVERIES"/></eye:menubaritem>
             <eye:menubaritem><h:commandLink value="#{msg['informer.deliveries.scheduling']}" action="DELIVERIES_WEEKLY"/></eye:menubaritem>
+            <eye:menubaritem><h:commandLink value="#{msg['informer.admin.deliveries.archive']}" action="ARCHIVE_LIST" rendered="#{userSession.archiveDaemonDeployed}"/></eye:menubaritem>
           </eye:menubar>
         </td>
         <td width="1%">

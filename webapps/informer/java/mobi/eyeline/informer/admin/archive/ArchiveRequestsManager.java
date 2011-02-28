@@ -5,13 +5,13 @@ import mobi.eyeline.informer.admin.InitException;
 import mobi.eyeline.informer.admin.delivery.Visitor;
 
 import java.io.File;
-import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Aleksandr Khalitov
  */
-public class ArchiveManager {
+public class ArchiveRequestsManager {
 
   private final AtomicInteger lastId;
 
@@ -25,24 +25,24 @@ public class ArchiveManager {
     return lastId.incrementAndGet();
   }
 
-  public ArchiveManager(ArchiveContext context, ArchiveSettings settings) throws InitException {
-    this(new RequestFileStorage(new File(settings.getRequestsDir()), context.getFileSystem()),
-        context, new File(settings.getResultsDir()), settings.getChunkSize(), settings.getExecutorsSize());
+  public ArchiveRequestsManager(ArchiveContext context, ArchiveRequestSettings requestSettings) throws InitException {
+    this(new RequestFileStorage(new File(requestSettings.getRequestsDir()), context.getFileSystem()),
+        context, new File(requestSettings.getResultsDir()), requestSettings.getChunkSize(), requestSettings.getExecutorsSize());
   }
 
-  ArchiveManager(RequestStorage storage, ArchiveContext context, File resultDir, int chunkSize, int executorSize) throws InitException {
+  ArchiveRequestsManager(RequestStorage storage, ArchiveContext context, File resultDir, int chunkSize, int executorSize) throws InitException {
     this.storage = storage;
     this.resultsManager = new ResultsManager(resultDir, context.getFileSystem());
     int lastId = 0;
     this.processor = new RequestProcessor(context, storage, resultsManager, chunkSize, executorSize);
     try{
       for(Request r : storage.getRequests()) {
-          if (r.getId() > lastId) {
-            lastId = r.getId();
-          }
-          if(r.getStatus() == Request.Status.NEW) {
-            processor.execute(r);
-          }
+        if (r.getId() > lastId) {
+          lastId = r.getId();
+        }
+        if(r.getStatus() == Request.Status.IN_PROCESS) {
+          processor.execute(r);
+        }
       }
       this.lastId = new AtomicInteger(lastId);
     }catch (AdminException e) {
@@ -89,7 +89,7 @@ public class ArchiveManager {
 
   private void setStatus(Request q) {
     if(q.getStatus() != Request.Status.CANCELED && q.getStatus() != Request.Status.FINISHED) {
-      q.setStatus(Request.Status.IN_PROCCESS);
+      q.setStatus(Request.Status.IN_PROCESS);
       Integer proggress = processor.getProgress(q.getId());
       if(proggress == null) {
         proggress = 100;
@@ -101,8 +101,8 @@ public class ArchiveManager {
 
   }
 
-  public Collection<Request> getRequests() throws AdminException {
-    Collection<Request> c = storage.getRequests();
+  public List<Request> getRequests() throws AdminException {
+    List<Request> c = storage.getRequests();
     for(Request r : c) {
       setStatus(r);
     }
@@ -126,8 +126,15 @@ public class ArchiveManager {
   }
 
   public void removeRequest(int requestId) throws AdminException {
-    processor.cancel(requestId);
-    storage.removeRequest(requestId);
+    Request r = storage.getRequest(requestId);
+    if(r != null) {
+      processor.cancel(requestId);
+      storage.removeRequest(requestId);
+      switch (r.getType()) {
+        case messages:   resultsManager.removeMessagesResult(requestId); break;
+        case deliveries: resultsManager.removeDeliveriesResult(requestId); break;
+      }
+    }
   }
 
   public void cancelRequest(int requestId) throws AdminException {
