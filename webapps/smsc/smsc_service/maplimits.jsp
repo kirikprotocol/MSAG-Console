@@ -41,6 +41,7 @@
 
     param(out, "maplimits.ussd.no_sri_codes", "ussd.no_sri_codes", bean.getStringParam("ussd.no_sri_codes"));
     param(out, "maplimits.ussd.cond_sri_codes", "ussd.cond_sri_codes", bean.getStringParam("ussd.cond_sri_codes"));
+    param(out, "maplimits.ussd.ati_codes", "ussd.ati_codes", bean.getStringParam("ussd.ati_codes"));
 
     finishParams(out);
     finishSection(out);
