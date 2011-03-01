@@ -140,6 +140,14 @@ void FileGuard::unlink( const char* fname )
 void FileGuard::makedirs( const std::string& dir )
 {
     getlog();
+    // first of all try to make the last dir only
+    if ( -1 != mkdir(dir.c_str(),0777)) {
+        smsc_log_debug(log_,"directory '%s' created",dir.c_str());
+        return;
+    } else if ( errno == EEXIST ) {
+        // smsc_log_debug(log_,"directory '%s' already exist, ok",dir.c_str());
+        return;
+    }
     std::string work;
     work.reserve(dir.size());
     for (size_t nextpos = 1; nextpos != std::string::npos;) {
@@ -154,7 +162,7 @@ void FileGuard::makedirs( const std::string& dir )
         if (-1 != mkdir(wk->c_str(),0777)) {
             smsc_log_debug(log_,"directory '%s' created",wk->c_str());
         } else if ( errno == EEXIST ) {
-            smsc_log_debug(log_,"directory '%s' already exist, ok",wk->c_str());
+            // smsc_log_debug(log_,"directory '%s' already exist, ok",wk->c_str());
         } else {
             throw ErrnoException(errno,"mkdir('%s')",wk->c_str());
         }

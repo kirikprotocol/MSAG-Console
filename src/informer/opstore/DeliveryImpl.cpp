@@ -131,7 +131,14 @@ DlvState DeliveryImpl::readState( dlvid_type            dlvId,
     char buf[200];
     sprintf(makeDeliveryPath(buf,dlvId),"status.log");
     FileGuard fg;
-    fg.ropen((getCS()->getStorePath()+buf).c_str());
+    try {
+        fg.ropen((getCS()->getStorePath()+buf).c_str());
+    } catch ( InfosmeException& e ) {
+        if ( e.getCode() == EXC_SYSTEM ) {
+            return state;
+        }
+        throw;
+    }
     struct stat st;
     const size_t pos = fg.getStat(st).st_size > sizeof(buf) ?
         st.st_size - sizeof(buf) : 0;

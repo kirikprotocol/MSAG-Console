@@ -1,3 +1,6 @@
+2011-03-01 15:00 bukind
+  status.log is not necessary for delivery
+
 2011-03-01 14:15 bukind
   dcp item-not-found error code added
   archiving typo fix
