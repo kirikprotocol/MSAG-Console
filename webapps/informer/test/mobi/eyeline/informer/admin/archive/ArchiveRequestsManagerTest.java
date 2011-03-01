@@ -32,7 +32,6 @@ public class ArchiveRequestsManagerTest {
 
   @Before
   public void before() throws Exception {
-    Class.forName("mobi.eyeline.informer.admin.users.User");
     resultDir = TestUtils.createRandomDir("-results");
     dm = new TestDeliveryManager();
     final RequestStorage rs = new RequestMemoryStorage();

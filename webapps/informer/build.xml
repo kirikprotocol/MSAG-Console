@@ -63,7 +63,7 @@ public class Mode {${line.separator}
     <delete dir="${informer.tests.dir}" failonerror="false"/>
     <mkdir dir="${informer.tests.dir}"/>
 
-    <junit showoutput="true" printsummary="yes">
+    <junit showoutput="true" printsummary="yes" fork="true">
       <classpath path="${informer.test.classes}"/>
       <classpath refid="lib"/>
       <formatter type="xml" usefile="true"/>
