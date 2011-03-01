@@ -3,11 +3,13 @@ package mobi.eyeline.informer.admin.delivery;
 import mobi.eyeline.informer.admin.AdminException;
 import mobi.eyeline.informer.admin.delivery.protogen.DcpClient;
 import mobi.eyeline.informer.admin.delivery.protogen.protocol.*;
-import mobi.eyeline.informer.admin.delivery.protogen.protocol.DeliveryFields;
-import static mobi.eyeline.informer.admin.delivery.DcpConverter.*;
+import org.apache.log4j.Logger;
 
 import java.util.Collection;
 import java.util.List;
+
+import static mobi.eyeline.informer.admin.delivery.DcpConverter.convert;
+import static mobi.eyeline.informer.admin.delivery.DcpConverter.convertDateToDcpFormat;
 
 /**
  * Коннект к DCP, упрвление рассылками
@@ -15,6 +17,8 @@ import java.util.List;
  * @author Aleksandr Khalitov
  */
 class DcpConnection {
+
+  private static final Logger logger = Logger.getLogger(DcpConnection.class);
 
   private DcpClient client;
 
@@ -42,6 +46,9 @@ class DcpConnection {
   public int createDelivery(Delivery delivery) throws AdminException {
     CreateDelivery req = new CreateDelivery();
     req.setInfo(convert(delivery));
+    if(logger.isDebugEnabled()) {
+      logger.debug("Create delivery archivate time: "+(req.getInfo().hasArchivationPeriod() ? req.getInfo().getArchivationPeriod() : "null"));
+    }
 
     CreateDeliveryResp resp = client.send(req);
     return resp.getDeliveryId();
