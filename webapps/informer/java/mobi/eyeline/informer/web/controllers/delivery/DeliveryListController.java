@@ -129,7 +129,7 @@ public class DeliveryListController extends DeliveryController {
         sb.append(',');
       sb.append(s);
     }
-    
+
     return sb.toString();
   }
 
@@ -179,7 +179,7 @@ public class DeliveryListController extends DeliveryController {
       return;
 
     getRequest().put("delivery", getSelectedAsString());
-    selected = null;    
+    selected = null;
   }
 
   public String pause() {
@@ -354,6 +354,10 @@ public class DeliveryListController extends DeliveryController {
           delivery[0] = d;
           stats[0] = config.getDeliveryStats(u.getLogin(), u.getPassword(), delivery[0].getId());
         }
+      } catch (DeliveryException e){
+        if(e.getErrorStatus() != DeliveryException.ErrorStatus.NoSuchEntry) {
+          addError(e);
+        }
       } catch (AdminException e) {
         addError(e);
       }
@@ -511,7 +515,7 @@ public class DeliveryListController extends DeliveryController {
 
     public int getTotal() {
       return (int)(stats.getDeliveredMessages()+stats.getExpiredMessages()+
-              stats.getProcessMessages()+stats.getNewMessages()+stats.getFailedMessages());
+          stats.getProcessMessages()+stats.getNewMessages()+stats.getFailedMessages());
     }
 
     public int getFinalized() {

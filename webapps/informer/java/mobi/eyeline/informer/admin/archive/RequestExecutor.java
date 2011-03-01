@@ -194,8 +194,14 @@ class RequestExecutor {
       try{
         deliveriesResult[0] = resultsManager.createDeliveriesResutls(request.getId());
 
-        final Delivery d = dm.getDelivery(u.getLogin(), u.getPassword(), request.getDeliveryId());
-        deliveriesResult[0].write(d);
+        try{
+          final Delivery d = dm.getDelivery(u.getLogin(), u.getPassword(), request.getDeliveryId());
+          deliveriesResult[0].write(d);
+        }catch (DeliveryException e) {
+          if(e.getErrorStatus() != DeliveryException.ErrorStatus.NoSuchEntry) {
+            throw e;
+          }
+        }
 
         request.setProgress(100);
       }finally {

@@ -56,8 +56,22 @@ public class DcpClient extends SyncProtogenConnection {
       PDU resp;
       resp = request(request, response, fail);
       
-      if (resp == fail)
+      if (resp == fail) {
+        if(fail.hasStatus()) {
+          String message = fail.hasStatusMessage() ?  fail.getStatusMessage() : "";
+          switch (fail.getStatus()) {
+            case 1: throw new DeliveryException(DeliveryException.ErrorStatus.NotAuthorized, message);
+            case 2: throw new DeliveryException(DeliveryException.ErrorStatus.CommandHandling, message);
+            case 3: throw new DeliveryException(DeliveryException.ErrorStatus.AdminRoleRequired, message);
+            case 4: throw new DeliveryException(DeliveryException.ErrorStatus.TooManyDeliveries, message);
+            case 5: throw new DeliveryException(DeliveryException.ErrorStatus.AuthFailed, message);
+            case 6: throw new DeliveryException(DeliveryException.ErrorStatus.RequestNotFound, message);
+            case 7: throw new DeliveryException(DeliveryException.ErrorStatus.Expired, message);
+            case 8: throw new DeliveryException(DeliveryException.ErrorStatus.NoSuchEntry, message);
+          }
+        }
         throw new DeliveryException("interaction_error", fail.getStatus() + ": " + fail.getStatusMessage());
+      }
       return response;
     } catch (ServerOfflineException e) {
       throw new DeliveryException("dcp_server_offline");
